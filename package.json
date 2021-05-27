@@ -22,6 +22,8 @@
     "@react-native-community/slider": "^3.0.3",
     "@react-native-firebase/analytics": "^12.0.0",
     "@react-native-firebase/app": "^12.0.0",
+    "@react-native-firebase/auth": "^12.0.0",
+    "@react-native-firebase/firestore": "^12.0.0",
     "@react-native-firebase/messaging": "^12.0.0",
     "@react-navigation/bottom-tabs": "^5.11.10",
     "@react-navigation/native": "^5.9.4",

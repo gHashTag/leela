@@ -1,11 +1,15 @@
 import React, { useCallback, useEffect } from 'react'
-import { Button, Platform } from 'react-native'
+import { Platform } from 'react-native'
 import { observer } from 'mobx-react-lite'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { ms, s } from 'react-native-size-matters'
 import { v4 as uuidv4 } from 'uuid'
+import firestore from '@react-native-firebase/firestore'
+import auth from '@react-native-firebase/auth'
+import { getUniqueId } from 'react-native-device-info'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { RootStackParamList } from '../../'
+import { lang } from '../../utils'
 import { Background, ButtonsSlector, ModalSubscribe, Space } from '../../components'
 import { actionsDice, actionsSubscribe, SubscribeStore } from '../../store'
 import { LocalNotification } from '../../utils/noifications/LocalPushController'
@@ -27,27 +31,43 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         authStatus === messaging.AuthorizationStatus.PROVISIONAL
 
       if (enabled) {
-        getFcmToken()
-        console.log('Authorization status:', authStatus)
+        // Get the device token
+        messaging()
+          .getToken()
+          .then(token => {
+            return saveTokenToDatabase(token)
+          })
+
+        // Listen to whether the token changes
+        return messaging().onTokenRefresh(token => {
+          saveTokenToDatabase(token)
+        })
+        //console.log('Authorization status:', authStatus)
       }
     }
     requestUserPermission()
   }, [])
 
-  // const getMessage = async () => {
-  //   messaging().onMessage(payload => {
-  //     console.log('Message received. ', payload)
-  //     Platform.OS === 'ios'
-  //       ? PushNotificationIOS.addNotificationRequest({
-  //           id: '1',
-  //           title: payload.notification?.title,
-  //           body: payload.notification?.body
-  //         })
-  //       : LocalNotification(payload)
-  //   })
-  // }
+  const saveTokenToDatabase = async (token: string) => {
+    // Assume user is already signed in
+    const uniqueId = getUniqueId()
+    // Add the token to the users datastore
+    try {
+      await firestore()
+        .collection('users')
+        .doc(uniqueId)
+        .set({
+          tokens: firestore.FieldValue.arrayUnion(token),
+          lang: firestore.FieldValue.arrayUnion(lang)
+        })
+    } catch (error) {
+      console.log('error', error)
+    }
+  }
 
   useEffect(() => {
+    auth().signInWithEmailAndPassword('raoffonom@icloud.com', 'J?7$75k}U[Yp0:^y0uk1RykMbcj$H')
+
     actionsSubscribe.purchaserInfo()
     //actionsSubscribe.setToday('12-6-21')
     const checkGame = async () => {
@@ -59,7 +79,6 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
 
     checkGame()
     fetchBusinesses()
-    // getMessage()
 
     const unsubscribe = messaging().onMessage(async payload => {
       Platform.OS === 'ios'
@@ -73,15 +92,6 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
 
     return unsubscribe
   }, [navigation, fetchBusinesses])
-
-  const getFcmToken = async () => {
-    const fcmToken = await messaging().getToken()
-    if (fcmToken) {
-      console.log('Your Firebase Token is:', fcmToken)
-    } else {
-      console.log('Failed', 'No token received')
-    }
-  }
 
   const selectPlayer = async (selectItem: number) => {
     if (selectItem + 1 === 1) {
@@ -104,23 +114,12 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
     }
   }
 
-  const handleButtonPress = () => {
-    //andrroid LocalNotification()
-    Platform.OS === 'ios' &&
-      PushNotificationIOS.addNotificationRequest({
-        id: '1',
-        title: 'Yoga time',
-        body: 'Hello'
-      })
-  }
-
   return (
     <Background>
       <Space height={ms(50, 0.5)} />
       <ButtonsSlector onPress={selectPlayer} />
       <Space height={s(0)} />
       <ModalSubscribe />
-      <Button title={'Local Push Notification'} onPress={handleButtonPress} />
     </Background>
   )
 })
