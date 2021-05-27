@@ -3,7 +3,6 @@ import PushNotification, { Importance } from 'react-native-push-notification'
 PushNotification.configure({
   // (required) Called when a remote or local notification is opened or received
   onNotification: function (notification) {
-    console.log('LOCAL NOTIFICATION ==>', notification)
     LocalNotification(notification)
   },
 
@@ -20,15 +19,15 @@ PushNotification.createChannel(
     importance: Importance.HIGH, // (optional) default: Importance.HIGH. Int value of the Android notification importance
     vibrate: true // (optional) default: true. Creates the default vibration patten if true.
   },
-  created => console.log(`createChannel 'default-channel-id' returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
+  created => `createChannel 'default-channel-id' returned '${created}'` // (optional) callback returns whether the channel was created, false means it already existed.
 )
 
 export const LocalNotification = notification => {
   PushNotification.localNotification({
     channelId: 'default-channel-id',
     ticker: 'My Notification Ticker',
-    bigText: 'test',
-    title: 'test',
+    bigText: notification.body,
+    title: notification.title,
     // bigText: notification.data['pinpoint.notification.body'],
     // title: notification.data['pinpoint.notification.title'],
     largeIconUrl: 'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/logo.png', // (optional) default: undefined

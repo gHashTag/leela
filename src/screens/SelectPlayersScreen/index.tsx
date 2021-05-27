@@ -36,6 +36,7 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         messaging()
           .getToken()
           .then(token => {
+            console.log('Authorization status:', token)
             return saveTokenToDatabase(token)
           })
 
@@ -43,7 +44,6 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         return messaging().onTokenRefresh(token => {
           saveTokenToDatabase(token)
         })
-        //console.log('Authorization status:', authStatus)
       }
     }
     requestUserPermission()
@@ -85,8 +85,8 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
       Platform.OS === 'ios'
         ? PushNotificationIOS.addNotificationRequest({
             id: uuidv4(),
-            title: payload.notification?.title,
-            body: payload.notification?.body
+            title: payload.data?.title,
+            body: payload.data?.body
           })
         : LocalNotification(payload)
     })
@@ -101,7 +101,7 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
       actionsDice.init()
     } else {
       try {
-        if (!SubscribeStore.subscriptionActive) {
+        if (SubscribeStore.subscriptionActive) {
           // Unlock that great "pro" content
           actionsDice.setPlayers(selectItem + 1)
           navigation.navigate('MAIN')
