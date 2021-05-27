@@ -1,0 +1,18 @@
+{
+    "auth": {
+        "cognito7e0e2e8e": {
+            "service": "Cognito",
+            "serviceType": "managed",
+            "providerPlugin": "awscloudformation"
+        }
+    },
+    "notifications": {
+        "leela": {
+            "service": "Pinpoint",
+            "channels": [
+                "APNS",
+                "FCM"
+            ]
+        }
+    }
+}
