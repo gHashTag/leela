@@ -10,11 +10,10 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "postinstall": "npx pod-install ios",
     "device": "npx react-native run-ios --device",
+    "analyzer": "npx react-native-bundle-visualizer",
     "clean": "watchman watch-del-all && rm -f yarn.lock && rm -rf node_modules && yarn && yarn start --reset-cache"
   },
   "dependencies": {
-    "@aws-amplify/pushnotification": "^4.0.2",
-    "@raydeck/useasynceffect": "^1.0.0",
     "@react-native-async-storage/async-storage": "^1.15.4",
     "@react-native-community/masked-view": "^0.1.10",
     "@react-native-community/netinfo": "^6.0.0",
@@ -28,7 +27,6 @@
     "@react-navigation/bottom-tabs": "^5.11.10",
     "@react-navigation/native": "^5.9.4",
     "@react-navigation/stack": "^5.14.4",
-    "aws-amplify": "^4.0.2",
     "i18n-js": "^3.8.0",
     "lodash": "^4.17.21",
     "mobx": "^6.3.0",

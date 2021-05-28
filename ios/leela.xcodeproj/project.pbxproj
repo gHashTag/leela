@@ -30,10 +30,7 @@
 		6DE6BB11A4764D549EEF3EDD /* Montserrat-ExtraLightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 19CF736E79B5441C9A2EA3DF /* Montserrat-ExtraLightItalic.ttf */; };
 		73C311E4265F5E7000677FD5 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */; };
 		73C311E5265F5E7000677FD5 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */; };
-		73C790D12660E398000B6508 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 73C790D42660E398000B6508 /* InfoPlist.strings */; };
-		73C790D22660E398000B6508 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 73C790D42660E398000B6508 /* InfoPlist.strings */; };
 		73C790DA2660E547000B6508 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB61A68108700A75B9A /* Info.plist */; };
-		73C790DD2660E548000B6508 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB61A68108700A75B9A /* Info.plist */; };
 		73CEF698265CDD7500C62E70 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73CEF697265CDD7500C62E70 /* StoreKit.framework */; };
 		7AA5843D02E14C0E9BD2E346 /* KLMN_Flash_Pix.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 13105C6674234230B255408B /* KLMN_Flash_Pix.ttf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
@@ -378,8 +375,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				73C311E5265F5E7000677FD5 /* GoogleService-Info.plist in Resources */,
-				73C790D22660E398000B6508 /* InfoPlist.strings in Resources */,
-				73C790DD2660E548000B6508 /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -388,7 +383,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
-				73C790D12660E398000B6508 /* InfoPlist.strings in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				6BF7074406CB4A7DB7B196F9 /* 3270Narrow.ttf in Resources */,
 				3980855933B0484AA704FD2D /* etna-free-font.otf in Resources */,
