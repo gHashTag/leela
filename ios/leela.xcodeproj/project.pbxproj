@@ -30,7 +30,6 @@
 		6DE6BB11A4764D549EEF3EDD /* Montserrat-ExtraLightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 19CF736E79B5441C9A2EA3DF /* Montserrat-ExtraLightItalic.ttf */; };
 		73C311E4265F5E7000677FD5 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */; };
 		73C311E5265F5E7000677FD5 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */; };
-		73C790DA2660E547000B6508 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB61A68108700A75B9A /* Info.plist */; };
 		73CEF698265CDD7500C62E70 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73CEF697265CDD7500C62E70 /* StoreKit.framework */; };
 		7AA5843D02E14C0E9BD2E346 /* KLMN_Flash_Pix.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 13105C6674234230B255408B /* KLMN_Flash_Pix.ttf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
@@ -397,7 +396,6 @@
 				E367CDCACE094F168842AB5F /* Montserrat-ExtraBoldItalic.ttf in Resources */,
 				5381C6F2BC714060A32BEEE4 /* Montserrat-ExtraLight.ttf in Resources */,
 				6DE6BB11A4764D549EEF3EDD /* Montserrat-ExtraLightItalic.ttf in Resources */,
-				73C790DA2660E547000B6508 /* Info.plist in Resources */,
 				191B34AF39C64B84B52143C2 /* Montserrat-Italic.ttf in Resources */,
 				698392A2AAE747CBB026B3D9 /* Montserrat-Light.ttf in Resources */,
 				EB81E91E1AF04E37B7245566 /* Montserrat-LightItalic.ttf in Resources */,
@@ -687,7 +685,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 3.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -716,7 +714,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 3.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

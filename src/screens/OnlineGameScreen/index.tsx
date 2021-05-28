@@ -96,7 +96,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
                   <PricingCard
                     color={secondary}
                     title={I18n.t('onlineGame')}
-                    price="₽2500"
+                    price="₽ 2 500"
                     info={['6 игроков', 'Одна игра', '2 часа']}
                     button={{ title: ' Купить', icon: 'flight-takeoff' }}
                     containerStyle={containerStyle}
@@ -109,22 +109,28 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
                   <PricingCard
                     color={secondary}
                     title={I18n.t('offline')}
-                    price="₽5000"
+                    price="₽ 5 000"
                     info={['6 игроков', 'Встреча офлайн', '2 часа']}
                     infoStyle={infoStyle}
                     button={{ title: ' Купить', icon: 'flight-takeoff' }}
                     containerStyle={containerStyle}
+                    pricingStyle={{
+                      color: text
+                    }}
                     onButtonPress={() => openUrl('https://securepayments.sberbank.ru/shortlink/RqZH8Pjq')}
                   />
                   <PricingCard
                     color={secondary}
                     title={I18n.t('onlineGame')}
-                    price="₽30000"
+                    price="₽ 30 000"
                     info={['1 игрок', 'Индивидуальная сессия', '2 часа']}
                     infoStyle={infoStyle}
                     button={{ title: ' Купить', icon: 'flight-takeoff' }}
                     containerStyle={containerStyle}
-                    onButtonPress={() => openUrl('https://securepayments.sberbank.ru/shortlink/RqZH8Pjq')}
+                    pricingStyle={{
+                      color: text
+                    }}
+                    onButtonPress={() => openUrl('https://securepayments.sberbank.ru/shortlink/ri6JEBzV')}
                   />
                 </>
               )}
