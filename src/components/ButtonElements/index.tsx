@@ -12,7 +12,7 @@ const theme = {
       fontFamily: Platform.OS === 'ios' ? 'Avenir Next' : 'Montserrat'
     },
     containerStyle: {
-      width: s(250),
+      width: s(240),
       paddingHorizontal: 30,
       alignSelf: 'center'
     }

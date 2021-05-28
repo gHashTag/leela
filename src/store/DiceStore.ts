@@ -10,6 +10,7 @@ const DiceStore = makeAutoObservable({
   players: 1,
   message: ' ',
   multi: 0,
+  rate: false,
   setMessage: (mess: string) => mess,
   changePlayer: () => {},
   finishArr: [] as boolean[]
@@ -63,6 +64,9 @@ const actionsDice = {
   setMessage(mess: string): void {
     DiceStore.message = mess
   },
+  setRate(rate: boolean): void {
+    DiceStore.rate = rate
+  },
   async init(): Promise<void> {
     await AsyncStorage.setItem('@init', 'true')
   }
@@ -70,7 +74,7 @@ const actionsDice = {
 
 persistence({
   name: 'DiceStore',
-  properties: ['count', 'startGame', 'players', 'message', 'multi', 'finishArr', 'init'],
+  properties: ['count', 'startGame', 'players', 'message', 'multi', 'finishArr', 'init', 'rate'],
   adapter: new StorageAdapter({
     read: readStore,
     write: writeStore

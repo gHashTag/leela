@@ -12,8 +12,11 @@ import {
   actionPlayerThree,
   actionPlayerFour,
   actionPlayerFive,
-  actionPlayerSix
+  actionPlayerSix,
+  actionsDice
 } from '../../store'
+import { Button } from 'react-native'
+import Rate from 'react-native-rate'
 
 type navigation = StackNavigationProp<RootStackParamList, 'TAB_BOTTOM_0'>
 
@@ -55,11 +58,27 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
               />
               <Space height={s(10)} />
               <Txt h0 title={`${I18n.t('win')}`} />
+              {!DiceStore.rate && (
+                <Button
+                  title="Оставить отзыв"
+                  onPress={() => {
+                    const options = {
+                      AppleAppID: '1296604457',
+                      GooglePackageName: 'com.leelagame',
+                      OtherAndroidURL: 'https://play.google.com/store/apps/details?id=com.leelagame',
+                      preferInApp: false,
+                      openAppStoreIfInAppFails: true
+                    }
+                    Rate.rate(options, success => actionsDice.setRate(success))
+                  }}
+                />
+              )}
             </>
           )}
         </>
       </Header>
       <Space height={ms(85, 0.1)} />
+
       <GameBoard />
       <Space height={s(0)} />
     </Background>

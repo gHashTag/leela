@@ -17,6 +17,7 @@ interface SelfT {
   finish: boolean
   plan: number
   planPrev: number
+  rate: boolean
   history: HistoryT[]
 }
 
