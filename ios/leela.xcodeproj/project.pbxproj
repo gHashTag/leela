@@ -30,6 +30,10 @@
 		6DE6BB11A4764D549EEF3EDD /* Montserrat-ExtraLightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 19CF736E79B5441C9A2EA3DF /* Montserrat-ExtraLightItalic.ttf */; };
 		73C311E4265F5E7000677FD5 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */; };
 		73C311E5265F5E7000677FD5 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */; };
+		73C790D12660E398000B6508 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 73C790D42660E398000B6508 /* InfoPlist.strings */; };
+		73C790D22660E398000B6508 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 73C790D42660E398000B6508 /* InfoPlist.strings */; };
+		73C790DA2660E547000B6508 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB61A68108700A75B9A /* Info.plist */; };
+		73C790DD2660E548000B6508 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB61A68108700A75B9A /* Info.plist */; };
 		73CEF698265CDD7500C62E70 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73CEF697265CDD7500C62E70 /* StoreKit.framework */; };
 		7AA5843D02E14C0E9BD2E346 /* KLMN_Flash_Pix.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 13105C6674234230B255408B /* KLMN_Flash_Pix.ttf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
@@ -92,6 +96,8 @@
 		6F91AA213B1D48E79CADCBBC /* Montserrat-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-ExtraBold.ttf"; path = "../assets/fonts/Montserrat-ExtraBold.ttf"; sourceTree = "<group>"; };
 		72C69C96F0114956B04D2932 /* Montserrat-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-ExtraLight.ttf"; path = "../assets/fonts/Montserrat-ExtraLight.ttf"; sourceTree = "<group>"; };
 		73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		73C790D32660E398000B6508 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		73C790D72660E3D5000B6508 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		73CEF697265CDD7500C62E70 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		73CEF699265CDD7D00C62E70 /* leela.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = leela.entitlements; path = leela/leela.entitlements; sourceTree = "<group>"; };
 		78BE937D737F4278A6F494CC /* Feather.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Feather.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Feather.ttf"; sourceTree = "<group>"; };
@@ -165,6 +171,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
+				73C790D42660E398000B6508 /* InfoPlist.strings */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB71A68108700A75B9A /* main.m */,
 			);
@@ -352,6 +359,7 @@
 			knownRegions = (
 				en,
 				Base,
+				ru,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
@@ -370,6 +378,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				73C311E5265F5E7000677FD5 /* GoogleService-Info.plist in Resources */,
+				73C790D22660E398000B6508 /* InfoPlist.strings in Resources */,
+				73C790DD2660E548000B6508 /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -378,6 +388,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
+				73C790D12660E398000B6508 /* InfoPlist.strings in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				6BF7074406CB4A7DB7B196F9 /* 3270Narrow.ttf in Resources */,
 				3980855933B0484AA704FD2D /* etna-free-font.otf in Resources */,
@@ -392,6 +403,7 @@
 				E367CDCACE094F168842AB5F /* Montserrat-ExtraBoldItalic.ttf in Resources */,
 				5381C6F2BC714060A32BEEE4 /* Montserrat-ExtraLight.ttf in Resources */,
 				6DE6BB11A4764D549EEF3EDD /* Montserrat-ExtraLightItalic.ttf in Resources */,
+				73C790DA2660E547000B6508 /* Info.plist in Resources */,
 				191B34AF39C64B84B52143C2 /* Montserrat-Italic.ttf in Resources */,
 				698392A2AAE747CBB026B3D9 /* Montserrat-Light.ttf in Resources */,
 				EB81E91E1AF04E37B7245566 /* Montserrat-LightItalic.ttf in Resources */,
@@ -598,6 +610,19 @@
 			targetProxy = 00E356F41AD99517003FC87E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		73C790D42660E398000B6508 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				73C790D32660E398000B6508 /* en */,
+				73C790D72660E3D5000B6508 /* ru */,
+			);
+			name = InfoPlist.strings;
+			path = leela;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		00E356F61AD99517003FC87E /* Debug */ = {

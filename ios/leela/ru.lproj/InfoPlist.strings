@@ -1,0 +1,11 @@
+/* 
+  InfoPlist.strings
+  leela
+
+  Created by Dmitriy Vasilev on 28.05.2021.
+  
+*/
+
+"CFBundleDisplayName" = "Игра Лила";
+
+"CFBundleName" = "Игра Лила";

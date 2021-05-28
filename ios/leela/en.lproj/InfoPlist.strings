@@ -1,0 +1,11 @@
+/* 
+  InfoPlist.strings
+  leela
+
+  Created by Dmitriy Vasilev on 28.05.2021.
+  
+*/
+
+"CFBundleDisplayName" = "Leela Chakra";
+
+"CFBundleName" = "Leela Chakra";
