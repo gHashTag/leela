@@ -81,7 +81,9 @@ const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
             <Space height={s(20)} />
             {videoUrl !== '' && <YouTubePlayer uri={videoUrl} />}
             <Space height={s(20)} />
-            <ButtonPlay type={PlayButtonStore.play} obj={{ id, url: audioUrl, title, artist, artwork }} />
+            {audioUrl !== '' && (
+              <ButtonPlay type={PlayButtonStore.play} obj={{ id, url: audioUrl, title, artist, artwork }} />
+            )}
 
             {mantra !== '' && (
               <>

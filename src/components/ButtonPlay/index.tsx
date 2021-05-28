@@ -6,13 +6,14 @@ import { actionPlay, TrackT } from '../../store'
 import { NetworkCheckingModal } from '../NetworkCheckingModal'
 
 import { ICONS } from './images'
+import { s } from 'react-native-size-matters'
 
 interface ButtonPlayT {
   type: boolean
   obj: TrackT
   onPress?: () => void
 }
-const circle = 60
+const circle = s(60)
 
 const styles = StyleSheet.create({
   container: {
@@ -29,8 +30,8 @@ const styles = StyleSheet.create({
   },
   buttonStyle: {
     top: 2,
-    width: 70,
-    height: 70
+    width: s(70),
+    height: s(70)
   }
 })
 
