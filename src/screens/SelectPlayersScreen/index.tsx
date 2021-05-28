@@ -67,6 +67,7 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   }
 
   useEffect(() => {
+    console.log('Config.ADMIN', Config.ADMIN)
     auth().signInWithEmailAndPassword(Config.ADMIN, Config.ADMIN_PASSWORD)
 
     actionsSubscribe.purchaserInfo()

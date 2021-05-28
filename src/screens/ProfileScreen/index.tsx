@@ -5,7 +5,7 @@ import { observer } from 'mobx-react-lite'
 import { ScaledSheet } from 'react-native-size-matters'
 import { I18n } from '../../utils'
 import { RootStackParamList } from '../../'
-import { AppContainer, Txt, Space, EmojiText, ButtonSimple, ButtonElements } from '../../components'
+import { AppContainer, Txt, Space, EmojiText, ButtonElements } from '../../components'
 import {
   DiceStore,
   PlayerOneStore,
