@@ -36,7 +36,7 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         messaging()
           .getToken()
           .then(token => {
-            console.log('Authorization status:', token)
+            // console.log('Authorization status:', token)
             return saveTokenToDatabase(token)
           })
 
