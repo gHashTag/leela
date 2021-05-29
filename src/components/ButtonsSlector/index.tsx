@@ -1,9 +1,10 @@
-import React, { memo, useState } from 'react'
+import React, { useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { s } from 'react-native-size-matters'
+import { observer } from 'mobx-react-lite'
 import { I18n } from '../../utils'
 import { ButtonElements } from '../ButtonElements'
-import { ButtonSimple } from '../ButtonSimple'
+import { SubscribeStore } from '../../store'
 import { Space } from '../Space'
 import { Txt } from '../Txt'
 
@@ -42,7 +43,7 @@ interface ButtonsSlectorT {
   onPress: (selectItem: number) => void
 }
 
-const ButtonsSlector = memo<ButtonsSlectorT>(({ onPress }: ButtonsSlectorT) => {
+const ButtonsSlector = observer(({ onPress }: ButtonsSlectorT) => {
   const [value, setValue] = useState({
     one: true,
     two: false,
@@ -63,8 +64,11 @@ const ButtonsSlector = memo<ButtonsSlectorT>(({ onPress }: ButtonsSlectorT) => {
 
   return (
     <View style={{ alignSelf: 'center' }}>
-      <Space height={s(100)} />
+      <Space height={s(150)} />
+
       <Txt h1 title={`${I18n.t('selectPlayers')}`} />
+      <Space height={s(20)} />
+      {!SubscribeStore.subscriptionActive && <Txt h3 title={`${I18n.t('free')}`} />}
       <Space height={s(20)} />
       <View style={styles.container}>
         {data.map(({ id }) => {
