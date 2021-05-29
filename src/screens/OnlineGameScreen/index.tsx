@@ -4,7 +4,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s } from 'react-native-size-matters'
-import { PricingCard, Icon, Button, ThemeProvider } from 'react-native-elements'
+import { PricingCard, Icon, ThemeProvider } from 'react-native-elements'
 import { SliderBox } from 'react-native-image-slider-box'
 import { I18n, lang } from '../../utils'
 import { RootStackParamList } from '../../'
@@ -68,7 +68,9 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   const openUrl = async (url: string) => {
     await Linking.openURL(url)
   }
+
   const { container, containerStyle, infoStyle } = styles
+
   return (
     <View style={container}>
       <ThemeProvider theme={theme}>
@@ -78,12 +80,12 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
               <Space height={s(30)} />
               <Txt h1 title={I18n.t('events')} />
               <Space height={s(20)} />
-              <SliderBox images={images} sliderBoxHeight={300} />
+              <SliderBox images={images} sliderBoxHeight={s(300)} />
               <Space height={s(30)} />
               <Space height={s(20)} />
               <Txt h1 title={I18n.t('author')} />
               <Space height={s(20)} />
-              <YouTubePlayer play uri="TDT--lnKSBU" />
+              {lang !== 'en' && <YouTubePlayer play uri="TDT--lnKSBU" />}
               <Space height={s(20)} />
               <Txt h2 title={I18n.t('playra1')} textStyle={{ paddingHorizontal: 40 }} textAlign="center" />
               <Space height={s(20)} />

@@ -1,7 +1,7 @@
 import React, { memo } from 'react'
 import { Platform, StyleProp, TextStyle, Text, StyleSheet } from 'react-native'
 import { useTheme } from '@react-navigation/native'
-import { s } from 'react-native-size-matters'
+import { s, ms } from 'react-native-size-matters'
 import { secondary, white } from '../../constants'
 
 const styles = StyleSheet.create({
@@ -22,10 +22,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat',
     textAlign: 'center',
     textShadowRadius: 1,
-    fontSize: Platform.OS === 'ios' ? s(15) : s(15)
+    fontSize: Platform.OS === 'ios' ? ms(15, 0.8) : s(15)
   },
   h3Style: {
-    fontSize: Platform.OS === 'ios' ? s(15) : s(15),
+    fontSize: Platform.OS === 'ios' ? ms(15, 0.6) : ms(15),
     textAlign: 'center',
     fontFamily: 'Montserrat'
   },

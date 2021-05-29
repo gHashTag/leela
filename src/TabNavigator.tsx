@@ -26,7 +26,7 @@ const styles = ScaledSheet.create({
         height: s(80)
       },
       {
-        height: ms(50, 1.1)
+        height: ms(50, 0.9)
       }
     )
   },

@@ -2,11 +2,11 @@ import { useTheme } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import React from 'react'
 import { Image, TouchableOpacity, View } from 'react-native'
-import { s, ScaledSheet } from 'react-native-size-matters'
+import { s, ms, ScaledSheet } from 'react-native-size-matters'
 import { PlayButtonStore } from '../../store'
 import { ICONS } from './images'
 
-const circle = s(130)
+const circle = ms(130, 0.9)
 
 const styles = ScaledSheet.create({
   container: {

@@ -43,6 +43,7 @@ export default {
   multi: 'To enable multiplayer game mode and unlimited radio, activate the subscription',
   restore: 'Restore purchase',
   buy: 'Buy subscription',
+  limit: 'Free 30 minutes per day on your tariff plan',
   1: 'Unlimited access, month',
   6: 'Unlimited access, 6 months',
   12: 'Unlimited access, 12 months',

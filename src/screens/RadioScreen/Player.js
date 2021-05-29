@@ -184,6 +184,7 @@ const Player = observer(() => {
       <>
         {!SubscribeStore.subscriptionActive && (
           <>
+            <Txt h3 title={I18n.t('limit')} />
             <ButtonSimple h="h1" title={I18n.t('buy')} onPress={() => actionsSubscribe.setVisible(true)} />
             <Space height={20} />
           </>

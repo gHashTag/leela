@@ -92,7 +92,7 @@ const App = () => {
 
   return (
     <NavigationContainer theme={theme}>
-      <StatusBar backgroundColor={scheme === 'dark' ? black : white} barStyle={color} />
+      <StatusBar backgroundColor={scheme !== 'dark' ? black : white} barStyle={color} />
       <Stack.Navigator
         screenOptions={{
           headerShown: false,

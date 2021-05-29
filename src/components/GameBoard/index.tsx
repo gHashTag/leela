@@ -30,7 +30,8 @@ const styles = ScaledSheet.create({
   },
   img: {
     width: W,
-    height: 630 * ratio
+    height: 630 * ratio,
+    marginTop: 50
   },
   box: {
     width: s(31),
