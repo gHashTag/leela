@@ -29,6 +29,7 @@ export type RootStackParamList = {
     title: string
     content: string
     url: string
+    videoUrl: string
   }
   PLANS_SCREEN: undefined
   SELECT_PLAYERS_SCREEN: undefined
@@ -37,6 +38,7 @@ export type RootStackParamList = {
     title: string
     content: string
     url?: string
+    videoUrl: string
   }
   PROFILE_SCREEN: undefined
   ONLINE_GAME_SCREEN: undefined

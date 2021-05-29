@@ -4,7 +4,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { RootStackParamList } from '../../'
-import { AppContainer, ButtonPlay, Txt, Space } from '../../components'
+import { AppContainer, ButtonPlay, Txt, Space, YouTubePlayer } from '../../components'
 import { goBack } from '../../constants'
 import { actionPlay, PlayButtonStore } from '../../store'
 
@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
 })
 
 const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) => {
-  const { title, content } = route.params
+  const { title, content, videoUrl } = route.params
   const { h3 } = styles
 
   useEffect(() => {
@@ -39,7 +39,11 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
       title={title}
     >
       <Space height={10} />
-      <ButtonPlay type={PlayButtonStore.play} obj={route.params} />
+      {videoUrl === '' ? (
+        <ButtonPlay type={PlayButtonStore.play} obj={route.params} />
+      ) : (
+        <YouTubePlayer uri={videoUrl} />
+      )}
       <Txt h3 title={content} textStyle={h3} textAlign="left" />
       <Space height={300} />
     </AppContainer>
