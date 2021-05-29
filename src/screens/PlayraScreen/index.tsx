@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Linking, StyleSheet, View, FlatList } from 'react-native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { observer, Observer } from 'mobx-react-lite'
+import * as Sentry from '@sentry/react-native'
 import { s } from 'react-native-size-matters'
 import { I18n } from '../../utils'
 import { RootStackParamList } from '../../'
@@ -63,7 +64,7 @@ const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
         )
         setArray(await response.json())
       } catch (e) {
-        console.log('e.message', e.message)
+        Sentry.captureException(e)
       }
     }
     getData()

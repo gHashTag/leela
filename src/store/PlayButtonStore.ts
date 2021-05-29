@@ -1,6 +1,7 @@
 import { makeAutoObservable } from 'mobx'
 import TrackPlayer from 'react-native-track-player'
 import _ from 'lodash'
+import * as Sentry from '@sentry/react-native'
 
 const PlayButtonStore = makeAutoObservable({
   id: 0,
@@ -47,6 +48,7 @@ const actionPlay = {
     try {
       await TrackPlayer.skipToNext()
     } catch (e) {
+      Sentry.captureException(e)
       await TrackPlayer.skip('1')
     }
   },
@@ -55,6 +57,7 @@ const actionPlay = {
     try {
       await TrackPlayer.skipToPrevious()
     } catch (e) {
+      Sentry.captureException(e)
       await TrackPlayer.skip((tracks.length - 1).toString())
     }
   }

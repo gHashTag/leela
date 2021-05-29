@@ -2,6 +2,7 @@ import React from 'react'
 import { useColorScheme, StatusBar } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
+import * as Sentry from '@sentry/react'
 import {
   GameScreen,
   RulesScreen,
@@ -114,6 +115,4 @@ const App = () => {
   )
 }
 
-//window.LOG_LEVEL = 'DEBUG'
-
-export default App
+export default Sentry.withProfiler(App)

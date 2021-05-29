@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Platform, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import TrackPlayer, { usePlaybackState, useTrackPlayerEvents } from 'react-native-track-player'
 import BackgroundTimer from 'react-native-background-timer'
+import * as Sentry from '@sentry/react-native'
 import { PlayButtonStore, actionPlay, actionsSubscribe, SubscribeStore } from '../../store'
 import { I18n } from '../../utils'
 import { useTheme } from '@react-navigation/native'
@@ -142,8 +143,8 @@ const Player = observer(() => {
             }, 1800000)
           }
         }
-      } catch (error) {
-        console.log('error', error)
+      } catch (e) {
+        Sentry.captureException(e)
       }
     }
     checkPay()

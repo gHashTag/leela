@@ -1,6 +1,7 @@
 import React, { memo } from 'react'
 import { StyleSheet, TouchableOpacity } from 'react-native'
 import Purchases, { PurchasesPackage } from 'react-native-purchases'
+import * as Sentry from '@sentry/react-native'
 import { secondary, W } from '../../constants'
 import { I18n } from '../../utils'
 import { Txt } from '../Txt'
@@ -43,8 +44,7 @@ const ButtonPurchases = memo<ButtonPurchasesT>(purchasesPackage => {
       }
     } catch (e) {
       if (!e.userCancelled) {
-        //Alert.alert(e.message)
-        console.error('error', e.message)
+        Sentry.captureException(e)
       }
     }
   }

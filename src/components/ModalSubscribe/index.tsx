@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { View, Modal } from 'react-native'
 import { ScaledSheet } from 'react-native-size-matters'
 import Purchases, { PurchasesPackage } from 'react-native-purchases'
+import * as Sentry from '@sentry/react-native'
 import { ButtonPurchases, ButtonSimple, Txt } from '../../components'
 import { Space } from '../Space'
 import { I18n } from '../../utils'
@@ -50,7 +51,7 @@ const ModalSubscribe = observer(() => {
           setPackages(offerings.current.availablePackages)
         }
       } catch (e) {
-        console.log('e.message', e.message)
+        Sentry.captureException(e)
       }
     }
 
@@ -67,9 +68,7 @@ const ModalSubscribe = observer(() => {
       await Purchases.restoreTransactions()
       actionsSubscribe.setVisible(true)
     } catch (e) {
-      // Alert.alert(e.message)
-      console.log('e', e.message)
-      // console.error(`e.message`, e.message)
+      Sentry.captureException(e)
     }
   }
   return (

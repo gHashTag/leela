@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 import firestore from '@react-native-firebase/firestore'
 import messaging from '@react-native-firebase/messaging'
 import auth from '@react-native-firebase/auth'
+import * as Sentry from '@sentry/react-native'
 import PushNotificationIOS from '@react-native-community/push-notification-ios'
 import { getUniqueId } from 'react-native-device-info'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -61,8 +62,8 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
           tokens: firestore.FieldValue.arrayUnion(token),
           lang: firestore.FieldValue.arrayUnion(lang)
         })
-    } catch (error) {
-      console.log('error', error)
+    } catch (e) {
+      Sentry.captureException(e)
     }
   }
 
@@ -109,8 +110,8 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         } else {
           actionsSubscribe.setVisible(true)
         }
-      } catch (error) {
-        console.log('error', error)
+      } catch (e) {
+        Sentry.captureException(e)
       }
     }
   }
