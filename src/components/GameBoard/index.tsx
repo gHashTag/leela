@@ -2,7 +2,7 @@ import React from 'react'
 import { ImageBackground, useColorScheme, View } from 'react-native'
 import { ICONS } from './images'
 import { observer } from 'mobx-react-lite'
-import { ScaledSheet, s } from 'react-native-size-matters'
+import { ScaledSheet, s, ms } from 'react-native-size-matters'
 import { W } from '../../constants'
 import { Gem } from '../Gem'
 import { Txt } from '../Txt'
@@ -31,7 +31,7 @@ const styles = ScaledSheet.create({
   img: {
     width: W,
     height: 630 * ratio,
-    marginTop: 50
+    marginTop: ms(10, 2.9)
   },
   box: {
     width: s(31),

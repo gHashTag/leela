@@ -10,13 +10,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
-    fontSize: Platform.OS === 'ios' ? s(35) : s(35)
+    fontSize: Platform.OS === 'ios' ? ms(35, 0.6) : ms(35, 0.6)
   },
   h1Style: {
     fontFamily: 'Montserrat',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
-    fontSize: Platform.OS === 'ios' ? s(18) : s(18)
+    fontSize: Platform.OS === 'ios' ? ms(18, 0.6) : ms(18, 0.6)
   },
   h2Style: {
     fontFamily: 'Montserrat',
@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     fontSize: Platform.OS === 'ios' ? ms(15, 0.8) : s(15)
   },
   h3Style: {
-    fontSize: Platform.OS === 'ios' ? ms(15, 0.6) : ms(15),
+    fontSize: Platform.OS === 'ios' ? ms(15, 0.6) : ms(15, 0.6),
     textAlign: 'center',
     fontFamily: 'Montserrat'
   },

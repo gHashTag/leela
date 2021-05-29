@@ -75,7 +75,7 @@ const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
     return (
       <Observer>
         {() => (
-          <View key={id} style={{ width: '100%' }}>
+          <View key={id} style={{ width: '90%', alignSelf: 'center' }}>
             <Space height={s(20)} />
             {title !== '' && <Txt h0 title={title} />}
             <Space height={s(20)} />

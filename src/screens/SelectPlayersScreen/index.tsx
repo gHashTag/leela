@@ -102,7 +102,7 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
       actionsDice.init()
     } else {
       try {
-        if (!SubscribeStore.subscriptionActive) {
+        if (SubscribeStore.subscriptionActive) {
           // Unlock that great "pro" content
           actionsDice.setPlayers(selectItem + 1)
           navigation.navigate('MAIN')
