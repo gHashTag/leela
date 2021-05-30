@@ -21,33 +21,22 @@ export interface TrackT {
 const actionPlay = {
   async play({ id, url, title, artist = 'Leela Chakra', artwork }: TrackT): Promise<void> {
     if (PlayButtonStore.play) {
-      await TrackPlayer.stop()
       PlayButtonStore.play = false
     } else {
-      await TrackPlayer.setupPlayer({
-        iosCategory: 'playAndRecord',
-        iosCategoryMode: 'default',
-        iosCategoryOptions: [],
-        waitForBuffer: true
-      })
-      await TrackPlayer.add({ id: id.toString(), url, title, artist, artwork })
-      await TrackPlayer.play()
       PlayButtonStore.play = true
     }
   },
   async stop(): Promise<void> {
-    await TrackPlayer.stop()
     PlayButtonStore.play = false
   },
   async radio(id: number, url: string): Promise<void> {
-    await TrackPlayer.reset()
     PlayButtonStore.id = id
     PlayButtonStore.url = url
     let response = await fetch(url)
     let array = await response.json()
     let shuffleArr = _.shuffle(array)
-    await TrackPlayer.add(shuffleArr)
-    await TrackPlayer.play()
+    // await TrackPlayer.add(shuffleArr)
+    // await TrackPlayer.play()
   },
   async skipToNext() {
     try {

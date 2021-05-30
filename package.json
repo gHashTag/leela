@@ -66,6 +66,7 @@
     "react-native-swift": "^1.2.3",
     "react-native-track-player": "^1.2.7",
     "react-native-vector-icons": "^8.1.0",
+    "react-native-video": "^5.1.1",
     "react-native-youtube": "^2.0.1",
     "uuidv4": "^6.2.7"
   },
@@ -81,6 +82,7 @@
     "@types/react-native-background-timer": "^2.0.0",
     "@types/react-native-dotenv": "^0.2.0",
     "@types/react-native-push-notification": "^7.3.0",
+    "@types/react-native-video": "^5.0.5",
     "@types/react-test-renderer": "^16.9.2",
     "babel-jest": "^26.6.3",
     "eslint": "^7.14.0",

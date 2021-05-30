@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import Video from 'react-native-video'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Platform, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import TrackPlayer, { usePlaybackState, useTrackPlayerEvents } from 'react-native-track-player'
@@ -87,104 +88,107 @@ function ControlButton({ title, onPress }) {
 }
 
 const Player = observer(() => {
-  const playbackState = usePlaybackState()
   const [track, setTrack] = useState('')
+  // const playbackState = usePlaybackState()
+  //
 
-  const setup = async () => {
-    await TrackPlayer.setupPlayer({
-      iosCategory: 'playAndRecord',
-      iosCategoryMode: 'default',
-      iosCategoryOptions: [],
-      waitForBuffer: true
-    })
-    await TrackPlayer.updateOptions({
-      stopWithApp: false,
-      capabilities: [
-        TrackPlayer.CAPABILITY_PLAY,
-        TrackPlayer.CAPABILITY_PAUSE,
-        TrackPlayer.CAPABILITY_SKIP_TO_NEXT,
-        TrackPlayer.CAPABILITY_SKIP_TO_PREVIOUS,
-        TrackPlayer.CAPABILITY_STOP
-      ],
-      compactCapabilities: [TrackPlayer.CAPABILITY_PLAY, TrackPlayer.CAPABILITY_PAUSE]
-    })
-  }
+  // const setup = async () => {
+  //   await TrackPlayer.setupPlayer({
+  //     iosCategory: 'playAndRecord',
+  //     iosCategoryMode: 'default',
+  //     iosCategoryOptions: [],
+  //     waitForBuffer: true
+  //   })
+  //   await TrackPlayer.updateOptions({
+  //     stopWithApp: false,
+  //     capabilities: [
+  //       TrackPlayer.CAPABILITY_PLAY,
+  //       TrackPlayer.CAPABILITY_PAUSE,
+  //       TrackPlayer.CAPABILITY_SKIP_TO_NEXT,
+  //       TrackPlayer.CAPABILITY_SKIP_TO_PREVIOUS,
+  //       TrackPlayer.CAPABILITY_STOP
+  //     ],
+  //     compactCapabilities: [TrackPlayer.CAPABILITY_PLAY, TrackPlayer.CAPABILITY_PAUSE]
+  //   })
+  // }
 
-  const getAsyncStorageData = async () => {
-    const jsonValue = await AsyncStorage.getItem('@track')
-    const value = jsonValue != null ? JSON.parse(jsonValue) : null
-    if (value !== null) {
-      setTrack(value)
-    }
-  }
+  // const getAsyncStorageData = async () => {
+  //   const jsonValue = await AsyncStorage.getItem('@track')
+  //   const value = jsonValue != null ? JSON.parse(jsonValue) : null
+  //   if (value !== null) {
+  //     setTrack(value)
+  //   }
+  // }
 
-  useEffect(() => {
-    const checkPay = async () => {
-      try {
-        if (SubscribeStore.subscriptionActive) {
-          // Unlock that great "pro" content
-          actionPlay.radio(0, defUrl)
-          setup()
-          getAsyncStorageData()
-        } else {
-          const getData = () => {
-            const date = new Date().getDate()
-            const month = new Date().getMonth() + 1
-            const year = new Date().getFullYear()
-            return date + '-' + month + '-' + year
-          }
-          // console.warn('getData() === SubscribeStore.today', getData() === SubscribeStore.today)
-          if (getData() === SubscribeStore.today) {
-            actionPlay.stop()
-            actionsSubscribe.setVisible(true)
-          } else {
-            actionPlay.radio(0, defUrl)
-            setup()
-            getAsyncStorageData()
-            BackgroundTimer.runBackgroundTimer(async () => {
-              actionsSubscribe.setToday(getData())
-              actionPlay.stop()
-              actionsSubscribe.setVisible(true)
-            }, 1800000)
-          }
-        }
-      } catch (e) {
-        Sentry.captureException(e)
-      }
-    }
-    checkPay()
-  }, [])
+  // useEffect(() => {
+  //   const checkPay = async () => {
+  //     try {
+  //       if (SubscribeStore.subscriptionActive) {
+  //         // Unlock that great "pro" content
+  //         actionPlay.radio(0, defUrl)
+  //         setup()
+  //         getAsyncStorageData()
+  //       } else {
+  //         const getData = () => {
+  //           const date = new Date().getDate()
+  //           const month = new Date().getMonth() + 1
+  //           const year = new Date().getFullYear()
+  //           return date + '-' + month + '-' + year
+  //         }
+  //         // console.warn('getData() === SubscribeStore.today', getData() === SubscribeStore.today)
+  //         if (getData() === SubscribeStore.today) {
+  //           actionPlay.stop()
+  //           actionsSubscribe.setVisible(true)
+  //         } else {
+  //           actionPlay.radio(0, defUrl)
+  //           setup()
+  //           getAsyncStorageData()
+  //           BackgroundTimer.runBackgroundTimer(async () => {
+  //             actionsSubscribe.setToday(getData())
+  //             actionPlay.stop()
+  //             actionsSubscribe.setVisible(true)
+  //           }, 1800000)
+  //         }
+  //       }
+  //     } catch (e) {
+  //       Sentry.captureException(e)
+  //     }
+  //   }
+  //   checkPay()
+  // }, [])
 
-  const togglePlayback = async () => {
-    const currentTrack = await TrackPlayer.getCurrentTrack()
-    if (currentTrack == null) {
-      await TrackPlayer.reset()
-      await TrackPlayer.add(PlayButtonStore.array)
-      await TrackPlayer.play()
-    } else if (playbackState === TrackPlayer.STATE_PAUSED) {
-      await TrackPlayer.play()
-    } else {
-      await TrackPlayer.pause()
-    }
-  }
+  // const togglePlayback = async () => {
+  //   const currentTrack = await TrackPlayer.getCurrentTrack()
+  //   if (currentTrack == null) {
+  //     await TrackPlayer.reset()
+  //     await TrackPlayer.add(PlayButtonStore.array)
+  //     await TrackPlayer.play()
+  //   } else if (playbackState === TrackPlayer.STATE_PAUSED) {
+  //     await TrackPlayer.play()
+  //   } else {
+  //     await TrackPlayer.pause()
+  //   }
+  // }
 
-  useTrackPlayerEvents(['playback-track-changed'], async event => {
-    if (event.type === TrackPlayer.TrackPlayerEvents.PLAYBACK_TRACK_CHANGED) {
-      const tr = await TrackPlayer.getTrack(event.nextTrack)
-      const jsonValue = JSON.stringify(tr)
-      await AsyncStorage.setItem('@track', jsonValue)
+  // useTrackPlayerEvents(['playback-track-changed'], async event => {
+  //   if (event.type === TrackPlayer.TrackPlayerEvents.PLAYBACK_TRACK_CHANGED) {
+  //     const tr = await TrackPlayer.getTrack(event.nextTrack)
+  //     const jsonValue = JSON.stringify(tr)
+  //     await AsyncStorage.setItem('@track', jsonValue)
 
-      tr && setTrack(tr)
-    }
-  })
+  //     tr && setTrack(tr)
+  //   }
+  // })
 
-  let middleButtonText = 'Play'
+  // let middleButtonText = 'Play'
 
-  if (playbackState === TrackPlayer.STATE_PLAYING || playbackState === TrackPlayer.STATE_BUFFERING) {
-    middleButtonText = 'Pause'
-  }
+  // if (playbackState === TrackPlayer.STATE_PLAYING || playbackState === TrackPlayer.STATE_BUFFERING) {
+  //   middleButtonText = 'Pause'
+  // }
 
   const { title, artwork, artist } = track
+  const playerRef = useRef(null)
+
   return (
     <View style={[cardStyle]}>
       <>
@@ -199,10 +203,11 @@ const Player = observer(() => {
         <Space height={10} />
         {title !== '' && <Txt h1 title={title} textStyle={h} />}
         <Txt h4 title={artist} textStyle={h} />
+        <Video ignoreSilentSwitch="ignore" ref={playerRef} source={{ uri: PlayButtonStore.url }} audioOnly />
         <Space height={10} />
         <View style={controlsStyle}>
           <ControlButton title={'<<'} onPress={actionPlay.skipToPrevious} />
-          <ControlButton title={middleButtonText} onPress={togglePlayback} />
+          {/* <ControlButton title={middleButtonText} onPress={togglePlayback} /> */}
           <ControlButton title={'>>'} onPress={actionPlay.skipToNext} />
         </View>
       </>

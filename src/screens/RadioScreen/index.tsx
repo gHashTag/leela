@@ -1,10 +1,12 @@
 import * as React from 'react'
 import { FlatList } from 'react-native'
 import { observer } from 'mobx-react-lite'
+
 import { AppContainer, ModalSubscribe, RadioItem, Space } from '../../components'
 import { data } from '../../components/RadioItem/data'
 import { Player } from './Player'
-import { actionPlay } from '../../store'
+import { actionPlay, PlayButtonStore } from '../../store'
+import { useRef } from 'react'
 // import { StackNavigationProp } from '@react-navigation/stack'
 // import { RootStackParamList } from '../..'
 //import { actionPlay, PlayButtonStore } from '../../store/PlayButtonStore'
