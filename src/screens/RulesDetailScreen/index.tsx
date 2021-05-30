@@ -39,11 +39,12 @@ const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) =
       title={title}
     >
       <Space height={10} />
-      {videoUrl === '' ? (
+      {videoUrl !== '' && <YouTubePlayer uri={videoUrl} />}
+      {/* {videoUrl === '' ? (
         <ButtonPlay type={PlayButtonStore.play} obj={route.params} />
       ) : (
         <YouTubePlayer uri={videoUrl} />
-      )}
+      )} */}
       <Txt h3 title={content} textStyle={h3} textAlign="left" />
       <Space height={300} />
     </AppContainer>

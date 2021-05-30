@@ -24,7 +24,12 @@ const actionPlay = {
       await TrackPlayer.stop()
       PlayButtonStore.play = false
     } else {
-      await TrackPlayer.setupPlayer()
+      await TrackPlayer.setupPlayer({
+        iosCategory: 'playAndRecord',
+        iosCategoryMode: 'default',
+        iosCategoryOptions: [],
+        waitForBuffer: true
+      })
       await TrackPlayer.add({ id: id.toString(), url, title, artist, artwork })
       await TrackPlayer.play()
       PlayButtonStore.play = true

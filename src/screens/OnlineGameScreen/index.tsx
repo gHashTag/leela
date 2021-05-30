@@ -85,7 +85,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
               <Space height={s(20)} />
               <Txt h1 title={I18n.t('author')} />
               <Space height={s(20)} />
-              {lang !== 'en' && <YouTubePlayer play uri="TDT--lnKSBU" />}
+              {lang !== 'en' && <YouTubePlayer uri="TDT--lnKSBU" />}
               <Space height={s(20)} />
               <Txt h2 title={I18n.t('playra1')} textStyle={{ paddingHorizontal: 40 }} textAlign="center" />
               <Space height={s(20)} />

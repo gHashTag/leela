@@ -91,7 +91,12 @@ const Player = observer(() => {
   const [track, setTrack] = useState('')
 
   const setup = async () => {
-    await TrackPlayer.setupPlayer({})
+    await TrackPlayer.setupPlayer({
+      iosCategory: 'playAndRecord',
+      iosCategoryMode: 'default',
+      iosCategoryOptions: [],
+      waitForBuffer: true
+    })
     await TrackPlayer.updateOptions({
       stopWithApp: false,
       capabilities: [
@@ -128,7 +133,7 @@ const Player = observer(() => {
             const year = new Date().getFullYear()
             return date + '-' + month + '-' + year
           }
-
+          // console.warn('getData() === SubscribeStore.today', getData() === SubscribeStore.today)
           if (getData() === SubscribeStore.today) {
             actionPlay.stop()
             actionsSubscribe.setVisible(true)

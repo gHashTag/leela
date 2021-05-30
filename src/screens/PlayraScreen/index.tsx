@@ -77,25 +77,29 @@ const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
       <Observer>
         {() => (
           <View key={id} style={{ width: '90%', alignSelf: 'center' }}>
-            <Space height={s(20)} />
-            {title !== '' && <Txt h0 title={title} />}
-            <Space height={s(20)} />
-            {videoUrl !== '' && <YouTubePlayer uri={videoUrl} />}
-            <Space height={s(20)} />
-            {audioUrl !== '' && (
-              <ButtonPlay type={PlayButtonStore.play} obj={{ id, url: audioUrl, title, artist, artwork }} />
-            )}
-
-            {mantra !== '' && (
+            {videoUrl !== '' && (
               <>
                 <Space height={s(20)} />
-                <Txt h3 title={mantra} textStyle={{ paddingHorizontal: 40 }} textAlign="center" />
-                <Space height={s(10)} />
+                {title !== '' && <Txt h0 title={title} />}
+                <Space height={s(20)} />
+                {videoUrl !== '' && <YouTubePlayer uri={videoUrl} />}
+                {/* <Space height={s(20)} /> */}
+                {/* {audioUrl !== '' && (
+   <ButtonPlay type={PlayButtonStore.play} obj={{ id, url: audioUrl, title, artist, artwork }} />
+ )} */}
+
+                {mantra !== '' && (
+                  <>
+                    <Space height={s(20)} />
+                    <Txt h3 title={mantra} textStyle={{ paddingHorizontal: 40 }} textAlign="center" />
+                    <Space height={s(10)} />
+                  </>
+                )}
+
+                {artist !== '' && <Txt h2 title={artist} textStyle={{ paddingHorizontal: 40 }} textAlign="center" />}
+                <Space height={s(70)} />
               </>
             )}
-
-            {artist !== '' && <Txt h2 title={artist} textStyle={{ paddingHorizontal: 40 }} textAlign="center" />}
-            <Space height={s(70)} />
           </View>
         )}
       </Observer>
