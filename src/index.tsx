@@ -81,7 +81,7 @@ const Tab = () => {
       <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_1" component={ProfileScreen} />
       {/* <TabNavigator.Screen name="TAB_BOTTOM_2" component={RadioScreen} /> */}
-      <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_2" component={OnlineGameScreen} />
     </TabNavigator.Navigator>
   )
 }
