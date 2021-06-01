@@ -11,7 +11,6 @@ import {
   PlansDetailScreen,
   ProfileScreen,
   SelectPlayersScreen,
-  RadioScreen,
   OnlineGameScreen,
   PlayraScreen
 } from './screens'

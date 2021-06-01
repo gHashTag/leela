@@ -12,15 +12,13 @@ import * as Sentry from '@sentry/react-native'
 import { revenuecat } from './src/constants'
 import App from './src'
 import { name as appName } from './app.json'
-import { Integrations } from '@sentry/tracing'
 
 const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
 
 Sentry.init({
   dsn: 'https://1d8f316fe05b48f9b712acf5035683fb@o749286.ingest.sentry.io/5791363',
-  release: 'leela@' + process.env.npm_package_version,
+  release: 'leela@' + process.env.npm_package_version + '3.1',
   tracesSampleRate: 0.2,
-
   integrations: [
     new Sentry.ReactNativeTracing({
       tracingOrigins: ['localhost', /^\//],

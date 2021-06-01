@@ -135,7 +135,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.leela"
+        applicationId "com.leelagame"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 3
