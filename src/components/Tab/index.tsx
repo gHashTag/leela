@@ -14,8 +14,8 @@ const styles = ScaledSheet.create({
         marginRight: s(10)
       },
       {
-        width: Platform.OS === 'ios' ? ms(35, 0.7) : ms(30, 0.5),
-        height: Platform.OS === 'ios' ? ms(35, 0.7) : ms(30, 0.5)
+        width: Platform.OS === 'ios' ? ms(35, 0.7) : ms(35, 0.7),
+        height: Platform.OS === 'ios' ? ms(35, 0.7) : ms(35, 0.7)
       }
     )
   }

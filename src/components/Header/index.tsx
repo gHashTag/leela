@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { TouchableOpacity, View, useWindowDimensions } from 'react-native'
+import { TouchableOpacity, View, useWindowDimensions, Platform } from 'react-native'
 import Emoji from 'react-native-emoji'
 import { ScaledSheet, s, ms } from 'react-native-size-matters'
 import { Txt } from '../Txt'
@@ -12,7 +12,7 @@ const styles = ScaledSheet.create({
     alignItems: 'center'
   },
   leftIconStyle: {
-    fontSize: '33@ms',
+    fontSize: Platform.OS === 'ios' ? '33@ms' : '28@ms',
     width: ms(60, 0.5),
     height: ms(60, 0.5),
     textAlign: 'center',
@@ -20,7 +20,7 @@ const styles = ScaledSheet.create({
     left: s(5)
   },
   rightIconStyle: {
-    fontSize: '40@ms',
+    fontSize: Platform.OS === 'ios' ? '40@ms' : '32@ms',
     width: ms(60, 0.5),
     height: ms(60, 0.5),
     textAlign: 'center',
