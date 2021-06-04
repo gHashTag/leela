@@ -1,6 +1,7 @@
 import { makeAutoObservable } from 'mobx'
 import { persistence, StorageAdapter } from 'mobx-persist-store'
 import Purchases from 'react-native-purchases'
+import { ENTITLEMENT_ID } from '../constants'
 import { writeStore, readStore } from './helper'
 
 const SubscribeStore = makeAutoObservable({
@@ -20,12 +21,13 @@ const actionsSubscribe = {
   },
   async purchaserInfo() {
     const purchaserInfo = await Purchases.getPurchaserInfo()
-    if (typeof purchaserInfo.entitlements.active.my_entitlement_identifier !== 'undefined') {
+    // console.warn('purchaserInfo', purchaserInfo.entitlements.active)
+    if (typeof purchaserInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
       SubscribeStore.subscriptionActive = true
-      SubscribeStore.userId = await Purchases.getAppUserID()
-      SubscribeStore.isAnonymous = await Purchases.isAnonymous()
+      SubscribeStore.visible = false
+      SubscribeStore.userId = Purchases.getAppUserID()
     } else {
-      SubscribeStore.isAnonymous = await Purchases.isAnonymous()
+      SubscribeStore.isAnonymous = Purchases.isAnonymous()
       SubscribeStore.subscriptionActive = false
     }
   }

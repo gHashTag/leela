@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { View, StyleSheet } from 'react-native'
+import { View, ViewStyle, StyleProp, StyleSheet } from 'react-native'
 
 const styles = StyleSheet.create({
   container: {
@@ -11,11 +11,12 @@ const styles = StyleSheet.create({
 
 interface RowT {
   children: React.ReactNode
+  viewStyle?: StyleProp<ViewStyle>
 }
 
-const Row = memo<RowT>(({ children }) => {
+const Row = memo<RowT>(({ children, viewStyle }) => {
   const { container } = styles
-  return <View style={[container]}>{children}</View>
+  return <View style={[container, viewStyle]}>{children}</View>
 })
 
 export { Row }

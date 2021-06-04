@@ -57,6 +57,18 @@ const styles = StyleSheet.create({
     fontSize: Platform.OS === 'ios' ? s(15) : s(15),
     textAlign: 'center',
     fontFamily: 'Montserrat'
+  },
+  h10Style: {
+    fontFamily: Platform.OS === 'ios' ? 'Etna' : 'etna-free-font',
+    textAlign: 'center',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+    fontSize: Platform.OS === 'ios' ? ms(35, 0.6) : ms(35, 0.6)
+  },
+  h11Style: {
+    fontSize: Platform.OS === 'ios' ? s(12) : s(12),
+    textAlign: 'center',
+    fontFamily: 'Montserrat'
   }
 })
 
@@ -71,6 +83,8 @@ interface TxtT {
   h7?: boolean
   h8?: boolean
   h9?: boolean
+  h10?: boolean
+  h11?: boolean
   color?: string
   textAlign?: string
   title: string
@@ -91,6 +105,8 @@ const Txt = memo<TxtT>(
     h7,
     h8,
     h9,
+    h10,
+    h11,
     color,
     title,
     textStyle,
@@ -98,7 +114,20 @@ const Txt = memo<TxtT>(
     ellipsizeMode = 'tail',
     textAlign = 'center'
   }) => {
-    const { h0Style, h1Style, h2Style, h3Style, h4Style, h5Style, h6Style, h7Style, h8Style, h9Style } = styles
+    const {
+      h0Style,
+      h1Style,
+      h2Style,
+      h3Style,
+      h4Style,
+      h5Style,
+      h6Style,
+      h7Style,
+      h8Style,
+      h9Style,
+      h10Style,
+      h11Style
+    } = styles
 
     const {
       colors: { primary, text }
@@ -120,7 +149,9 @@ const Txt = memo<TxtT>(
           h7 && StyleSheet.flatten([h7Style, { color: text, textShadowColor: color ? color : primary }]),
           h8 &&
             StyleSheet.flatten([h8Style, { color: secondary, textShadowColor: color ? color : primary, textAlign }]),
-          h9 && StyleSheet.flatten([h9Style, { color: white, textAlign }])
+          h9 && StyleSheet.flatten([h9Style, { color: white, textAlign }]),
+          h10 && StyleSheet.flatten([h10Style, { color: primary }]),
+          h11 && StyleSheet.flatten([h11Style, { color: white, textAlign }])
         ]}
       >
         {title}

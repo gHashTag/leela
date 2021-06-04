@@ -7,12 +7,12 @@ const RemotePushController = () => {
     PushNotification.configure({
       // (optional) Called when Token is generated (iOS and Android)
       onRegister: function (token) {
-        console.log('TOKEN:', token)
+        //console.log('TOKEN:', token)
       },
 
       // (required) Called when a remote or local notification is opened or received
       onNotification: function (notification) {
-        console.log('REMOTE NOTIFICATION 3==>', notification)
+        // console.log('REMOTE NOTIFICATION 3==>', notification)
         LocalNotification(notification)
         // process the notification here
       },
@@ -32,7 +32,8 @@ const RemotePushController = () => {
           importance: Importance.HIGH, // (optional) default: Importance.HIGH. Int value of the Android notification importance
           vibrate: true // (optional) default: true. Creates the default vibration patten if true.
         },
-        created => console.log(`createChannel 'default-channel-id' returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
+        created => created
+        // created => console.log(`createChannel 'default-channel-id' returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
       )
     }
 

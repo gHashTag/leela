@@ -8,7 +8,7 @@ import { I18n } from '../../utils'
 import { RootStackParamList } from '../../'
 import { AppContainer, ButtonPlay, Row, Space, Txt, YouTubePlayer } from '../../components'
 import { Icon, ThemeProvider } from 'react-native-elements'
-import { goBack, secondary } from '../../constants'
+import { goBack, openUrl, secondary } from '../../constants'
 import { actionPlay, PlayButtonStore } from '../../store'
 
 type navigation = StackNavigationProp<RootStackParamList, 'PLAYRA_SCREEN'>
@@ -50,10 +50,6 @@ interface PlayraItemT {
 const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
   const [data, setArray] = useState<string[]>([])
 
-  const openUrl = async (url: string) => {
-    await Linking.openURL(url)
-  }
-
   const { containerStyle } = styles
 
   useEffect(() => {
@@ -71,7 +67,7 @@ const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
   }, [navigation])
 
   const _renderItem = ({ item }: PlayraItemT) => {
-    const { id, title, audioUrl, videoUrl, mantra, artist, artwork } = item
+    const { id, title, videoUrl, mantra, artist } = item
 
     return (
       <Observer>

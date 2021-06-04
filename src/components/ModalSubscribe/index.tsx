@@ -3,24 +3,25 @@ import { View, Modal } from 'react-native'
 import { ScaledSheet } from 'react-native-size-matters'
 import Purchases, { PurchasesPackage } from 'react-native-purchases'
 import * as Sentry from '@sentry/react-native'
-import { ButtonPurchases, ButtonSimple, Txt } from '../../components'
+import { ButtonPurchases, ButtonSimple, Row, Txt } from '../../components'
 import { Space } from '../Space'
 import { I18n } from '../../utils'
 import { actionsSubscribe, SubscribeStore } from '../../store'
 import { observer } from 'mobx-react-lite'
+import { openUrl } from '../../constants'
 
 const styles = ScaledSheet.create({
   container: {
     flex: 1,
     height: '100%',
     width: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)'
+    backgroundColor: 'rgba(0, 0, 0, 0.85)'
   },
   centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 22,
+    marginTop: 0,
     padding: 15
   },
   modalView: {
@@ -47,6 +48,7 @@ const ModalSubscribe = observer(() => {
     const checkGame = async () => {
       try {
         const offerings = await Purchases.getOfferings()
+        console.log('offerings', offerings)
         if (offerings.current !== null) {
           setPackages(offerings.current.availablePackages)
         }
@@ -66,7 +68,7 @@ const ModalSubscribe = observer(() => {
   const restorePurchases = async () => {
     try {
       await Purchases.restoreTransactions()
-      actionsSubscribe.setVisible(true)
+      actionsSubscribe.setVisible(false)
     } catch (e) {
       Sentry.captureException(e)
     }
@@ -76,19 +78,38 @@ const ModalSubscribe = observer(() => {
       <View style={container}>
         <View style={centeredView}>
           <Txt h9 title={I18n.t('multi')} />
-          <Space height={20} />
-          {sortPackages.map(purchasesPackage => {
+          <Space height={10} />
+          {sortPackages.map((purchasesPackage, index) => {
             return (
               <View key={purchasesPackage.identifier}>
-                <ButtonPurchases purchasesPackage={purchasesPackage} />
+                <ButtonPurchases purchasesPackage={purchasesPackage} index={index} />
                 <Space height={10} />
               </View>
             )
           })}
           <Space height={10} />
           <ButtonSimple h="h8" title={I18n.t('hide')} onPress={() => actionsSubscribe.setVisible(false)} />
-          <Space height={15} />
-          <ButtonSimple h="h9" title={I18n.t('restore')} onPress={restorePurchases} />
+          <Space height={10} />
+          <Row>
+            <Space width={40} />
+            <ButtonSimple
+              h="h11"
+              title={I18n.t('terms')}
+              onPress={() =>
+                openUrl('https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/Documentation/TermsOfUse.pdf')
+              }
+              width={100}
+            />
+            <ButtonSimple
+              h="h11"
+              title={I18n.t('privacy')}
+              onPress={() =>
+                openUrl('https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/Documentation/PrivateNotice.pdf')
+              }
+              width={170}
+            />
+            <ButtonSimple h="h11" title={I18n.t('restore')} onPress={restorePurchases} width={100} />
+          </Row>
         </View>
       </View>
     </Modal>

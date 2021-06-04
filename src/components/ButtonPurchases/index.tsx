@@ -2,7 +2,7 @@ import React, { memo } from 'react'
 import { StyleSheet, TouchableOpacity } from 'react-native'
 import Purchases, { PurchasesPackage } from 'react-native-purchases'
 import * as Sentry from '@sentry/react-native'
-import { secondary, W } from '../../constants'
+import { ENTITLEMENT_ID, secondary, W } from '../../constants'
 import { I18n } from '../../utils'
 import { Txt } from '../Txt'
 import { Space } from '../Space'
@@ -14,8 +14,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderColor: secondary,
     borderWidth: 1,
-    paddingVertical: 13,
-    paddingHorizontal: 12,
+    paddingVertical: 5,
+    paddingHorizontal: 5,
     width: W - 60,
     alignSelf: 'center'
   },
@@ -29,32 +29,38 @@ interface ButtonPurchasesT {
   purchasesPackage: PurchasesPackage
 }
 
-const ButtonPurchases = memo<ButtonPurchasesT>(purchasesPackage => {
+const ButtonPurchases = memo<ButtonPurchasesT>(({ purchasesPackage }) => {
   const {
     product: { price_string, description }
-  } = purchasesPackage.purchasesPackage
+  } = purchasesPackage
   const { container } = styles
 
   const onSelection = async () => {
     try {
-      const { purchaserInfo } = await Purchases.purchasePackage(purchasesPackage.purchasesPackage)
-      if (typeof purchaserInfo.entitlements.active.my_entitlement_identifier !== 'undefined') {
+      const { purchaserInfo } = await Purchases.purchasePackage(purchasesPackage)
+      // console.log('purchaserInfo', purchaserInfo)
+      if (typeof purchaserInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
+        // console.log('purchaserInfo.entitlements.active', purchaserInfo.entitlements.active)
         // Unlock that great "pro" content
-        actionsSubscribe.setVisible(true)
+        actionsSubscribe.setVisible(false)
       }
+      //else {
+      //   console.log('else', purchaserInfo.entitlements.active)
+      // }
     } catch (e) {
+      // console.log('e', e)
       if (!e.userCancelled) {
         Sentry.captureException(e)
       }
     }
   }
+
   return (
     <TouchableOpacity onPress={onSelection} style={container}>
-      <Txt h0 title={description} />
+      <Txt h10 title={description} />
+      <Txt h9 title={I18n.t(description)} />
       <Space height={5} />
-      <Txt h3 title={I18n.t(description)} />
-      <Space height={10} />
-      <Txt h2 title={price_string} />
+      <Txt h8 title={price_string} />
     </TouchableOpacity>
   )
 })

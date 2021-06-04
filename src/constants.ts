@@ -1,11 +1,13 @@
-import { Dimensions } from 'react-native'
+import { Dimensions, Linking } from 'react-native'
 
 export const win = Dimensions.get('window')
 export const W = win.width
 export const H = win.height
 export const imgH = Math.round((W * 9) / 16)
 
-export const ENTITLEMENT_ID = ''
+export const openUrl = async (url: string) => {
+  await Linking.openURL(url)
+}
 
 export const Device = {
   select(variants) {
@@ -64,3 +66,5 @@ export const brightTurquoise = '#1EE4EC'
 export const revenuecat = 'BeIMIIfptWXlouosYudFEWQDkwDvJUzv'
 
 export const defUrl = 'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/Mantra/mantra.json'
+
+export const ENTITLEMENT_ID = 'Pro'

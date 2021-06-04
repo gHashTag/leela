@@ -22,6 +22,7 @@ interface RulesItemT {
     title: string
     content: string
     url: string
+    videoUrl: string
   }
 }
 

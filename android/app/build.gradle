@@ -138,9 +138,9 @@ android {
         applicationId "com.leelagame"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
+        versionCode 4
         versionName "1.0"
-        resValue "string", "build_config_package", "com.leela"
+        resValue "string", "build_config_package", "com.leelagame"
     }
     splits {
         abi {

@@ -1,4 +1,4 @@
-package com.leela;
+package com.leelagame;
 
 import com.facebook.react.ReactActivity;
 
