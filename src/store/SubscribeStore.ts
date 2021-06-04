@@ -21,7 +21,7 @@ const actionsSubscribe = {
   },
   async purchaserInfo() {
     const purchaserInfo = await Purchases.getPurchaserInfo()
-    console.log('purchaserInfo', purchaserInfo.entitlements.active)
+    // console.log('purchaserInfo', purchaserInfo.entitlements.active)
     if (typeof purchaserInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
       SubscribeStore.subscriptionActive = true
       SubscribeStore.visible = false
