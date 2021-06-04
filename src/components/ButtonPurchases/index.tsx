@@ -1,4 +1,4 @@
-import React, { memo } from 'react'
+import React from 'react'
 import { StyleSheet, TouchableOpacity } from 'react-native'
 import Purchases, { PurchasesPackage } from 'react-native-purchases'
 import * as Sentry from '@sentry/react-native'
@@ -7,6 +7,7 @@ import { I18n } from '../../utils'
 import { Txt } from '../Txt'
 import { Space } from '../Space'
 import { actionsSubscribe } from '../../store'
+import { observer } from 'mobx-react-lite'
 
 const styles = StyleSheet.create({
   container: {
@@ -29,7 +30,7 @@ interface ButtonPurchasesT {
   purchasesPackage: PurchasesPackage
 }
 
-const ButtonPurchases = memo<ButtonPurchasesT>(({ purchasesPackage }) => {
+const ButtonPurchases = observer(({ purchasesPackage }: ButtonPurchasesT) => {
   const {
     product: { price_string, description }
   } = purchasesPackage
@@ -40,13 +41,11 @@ const ButtonPurchases = memo<ButtonPurchasesT>(({ purchasesPackage }) => {
       const { purchaserInfo } = await Purchases.purchasePackage(purchasesPackage)
       // console.log('purchaserInfo', purchaserInfo)
       if (typeof purchaserInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
-        // console.log('purchaserInfo.entitlements.active', purchaserInfo.entitlements.active)
-        // Unlock that great "pro" content
+        actionsSubscribe.purchaserInfo()
         actionsSubscribe.setVisible(false)
+      } else {
+        //console.log('else', purchaserInfo.entitlements.active)
       }
-      //else {
-      //   console.log('else', purchaserInfo.entitlements.active)
-      // }
     } catch (e) {
       // console.log('e', e)
       if (!e.userCancelled) {

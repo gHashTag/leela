@@ -48,7 +48,7 @@ const ModalSubscribe = observer(() => {
     const checkGame = async () => {
       try {
         const offerings = await Purchases.getOfferings()
-        console.log('offerings', offerings)
+        // console.log('offerings', offerings)
         if (offerings.current !== null) {
           setPackages(offerings.current.availablePackages)
         }
@@ -79,10 +79,10 @@ const ModalSubscribe = observer(() => {
         <View style={centeredView}>
           <Txt h9 title={I18n.t('multi')} />
           <Space height={10} />
-          {sortPackages.map((purchasesPackage, index) => {
+          {sortPackages.map(purchasesPackage => {
             return (
               <View key={purchasesPackage.identifier}>
-                <ButtonPurchases purchasesPackage={purchasesPackage} index={index} />
+                <ButtonPurchases purchasesPackage={purchasesPackage} />
                 <Space height={10} />
               </View>
             )
