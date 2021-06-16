@@ -11,7 +11,8 @@
     "postinstall": "npx pod-install ios",
     "device": "npx react-native run-ios --device",
     "analyzer": "npx react-native-bundle-visualizer",
-    "clean": "watchman watch-del-all && rm -f yarn.lock && rm -rf node_modules && yarn && yarn start --reset-cache"
+    "clean": "watchman watch-del-all && rm -f yarn.lock && rm -rf node_modules && yarn && yarn start --reset-cache",
+    "build": "cd android && ./gradlew bundleRelease"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.15.4",
@@ -65,6 +66,7 @@
     "react-native-statusbar-alert": "^0.4.0",
     "react-native-swift": "^1.2.3",
     "react-native-track-player": "^1.2.7",
+    "react-native-tracking-transparency": "^0.1.1",
     "react-native-vector-icons": "^8.1.0",
     "react-native-video": "^5.1.1",
     "react-native-youtube": "^2.0.1",

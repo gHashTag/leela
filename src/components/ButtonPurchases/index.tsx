@@ -39,15 +39,16 @@ const ButtonPurchases = observer(({ purchasesPackage }: ButtonPurchasesT) => {
   const onSelection = async () => {
     try {
       const { purchaserInfo } = await Purchases.purchasePackage(purchasesPackage)
-      // console.log('purchaserInfo', purchaserInfo)
+      //console.log('purchaserInfo', purchaserInfo)
       if (typeof purchaserInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
         actionsSubscribe.purchaserInfo()
         actionsSubscribe.setVisible(false)
-      } else {
-        //console.log('else', purchaserInfo.entitlements.active)
       }
+      // else {
+      //   console.log('else', purchaserInfo.entitlements.active)
+      // }
     } catch (e) {
-      // console.log('e', e)
+      //console.log('e', e)
       if (!e.userCancelled) {
         Sentry.captureException(e)
       }

@@ -12,7 +12,8 @@ import {
   ProfileScreen,
   SelectPlayersScreen,
   OnlineGameScreen,
-  PlayraScreen
+  PlayraScreen,
+  ChatScreen
 } from './screens'
 
 import TabNavigator from './TabNavigator'
@@ -79,8 +80,8 @@ const Tab = () => {
     <TabNavigator.Navigator initialRouteName="TAB_BOTTOM_0">
       <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_1" component={ProfileScreen} />
-      {/* <TabNavigator.Screen name="TAB_BOTTOM_2" component={RadioScreen} /> */}
-      <TabNavigator.Screen name="TAB_BOTTOM_2" component={OnlineGameScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_2" component={ChatScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
     </TabNavigator.Navigator>
   )
 }

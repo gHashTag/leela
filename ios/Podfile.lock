@@ -657,6 +657,8 @@ PODS:
     - React
   - react-native-track-player (1.2.7):
     - React-Core
+  - react-native-tracking-transparency (0.1.1):
+    - React
   - react-native-video (5.1.1):
     - React-Core
     - react-native-video/Video (= 5.1.1)
@@ -866,6 +868,7 @@ DEPENDENCIES:
   - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - react-native-spinkit (from `../node_modules/react-native-spinkit`)
   - react-native-track-player (from `../node_modules/react-native-track-player`)
+  - react-native-tracking-transparency (from `../node_modules/react-native-tracking-transparency`)
   - react-native-video (from `../node_modules/react-native-video`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
@@ -993,6 +996,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-spinkit"
   react-native-track-player:
     :path: "../node_modules/react-native-track-player"
+  react-native-tracking-transparency:
+    :path: "../node_modules/react-native-tracking-transparency"
   react-native-video:
     :path: "../node_modules/react-native-video"
   React-perflogger:
@@ -1120,6 +1125,7 @@ SPEC CHECKSUMS:
   react-native-slider: e99fc201cefe81270fc9d81714a7a0f5e566b168
   react-native-spinkit: da294fd828216ad211fe36a5c14c1e09f09e62db
   react-native-track-player: 6ec965317dbf9d49f2f4f87d050b53b3f994a5b7
+  react-native-tracking-transparency: b2029ff756f1128b1f2c7c7c7f3003bc3c950f9f
   react-native-video: 0bb76b6d6b77da3009611586c7dbf817b947f30e
   React-perflogger: aad6d4b4a267936b3667260d1f649b6f6069a675
   React-RCTActionSheet: fc376be462c9c8d6ad82c0905442fd77f82a9d2a

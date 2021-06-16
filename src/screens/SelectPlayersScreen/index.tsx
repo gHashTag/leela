@@ -3,6 +3,7 @@ import { Platform } from 'react-native'
 import { observer } from 'mobx-react-lite'
 import { StackNavigationProp } from '@react-navigation/stack'
 import Config from 'react-native-config'
+import { requestTrackingPermission } from 'react-native-tracking-transparency'
 import { ms, s } from 'react-native-size-matters'
 import { v4 as uuidv4 } from 'uuid'
 import firestore from '@react-native-firebase/firestore'
@@ -105,9 +106,14 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
       try {
         if (SubscribeStore.subscriptionActive) {
           // Unlock that great "pro" content
-          actionsDice.setPlayers(selectItem + 1)
-          navigation.navigate('MAIN')
-          actionsDice.init()
+          const trackingStatus = await requestTrackingPermission();
+      
+          if (trackingStatus === 'authorized' || trackingStatus === 'unavailable') {
+            // enable tracking features
+            actionsDice.setPlayers(selectItem + 1)
+            navigation.navigate('MAIN')
+            actionsDice.init()
+          }
         } else {
           actionsSubscribe.setVisible(true)
         }
