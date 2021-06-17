@@ -45,7 +45,8 @@ const styles = StyleSheet.create({
   },
   infoStyle: {
     fontSize: s(14)
-  }
+  },
+  contentContainerStyle: { flexGrow: 1, justifyContent: 'center' }
 })
 
 const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
@@ -69,14 +70,14 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
     await Linking.openURL(url)
   }
 
-  const { container, containerStyle, infoStyle } = styles
+  const { container, containerStyle, infoStyle, contentContainerStyle } = styles
 
   return (
     <View style={container}>
       <ThemeProvider theme={theme}>
         <Background>
           <View>
-            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+            <ScrollView contentContainerStyle={contentContainerStyle}>
               <Space height={s(30)} />
               <Txt h1 title={I18n.t('events')} />
               <Space height={s(20)} />

@@ -24,6 +24,9 @@ export type RootStackParamList = {
   MAIN: undefined
   PLAYRA_SCREEN: undefined
   TAB_BOTTOM_0: undefined
+  TAB_BOTTOM_1: undefined
+  TAB_BOTTOM_2: undefined
+  TAB_BOTTOM_3: undefined
   RULES_SCREEN: undefined
   RULES_DETAIL_SCREEN: {
     id: number
@@ -80,8 +83,7 @@ const Tab = () => {
     <TabNavigator.Navigator initialRouteName="TAB_BOTTOM_0">
       <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_1" component={ProfileScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_2" component={ChatScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_2" component={OnlineGameScreen} />
     </TabNavigator.Navigator>
   )
 }

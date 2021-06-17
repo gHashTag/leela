@@ -98,27 +98,26 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   }, [navigation, fetchBusinesses])
 
   const selectPlayer = async (selectItem: number) => {
-    if (selectItem + 1 === 1) {
-      actionsDice.setPlayers(selectItem + 1)
-      navigation.navigate('MAIN')
-      actionsDice.init()
-    } else {
-      try {
-        if (SubscribeStore.subscriptionActive) {
-          // Unlock that great "pro" content
-          const trackingStatus = await requestTrackingPermission();
-      
-          if (trackingStatus === 'authorized' || trackingStatus === 'unavailable') {
-            // enable tracking features
+    const trackingStatus = await requestTrackingPermission()
+
+    if (trackingStatus === 'authorized' || trackingStatus === 'unavailable') {
+      if (selectItem + 1 === 1) {
+        actionsDice.setPlayers(selectItem + 1)
+        navigation.navigate('MAIN')
+        actionsDice.init()
+      } else {
+        try {
+          if (SubscribeStore.subscriptionActive) {
+            // Unlock that great "pro" content
             actionsDice.setPlayers(selectItem + 1)
             navigation.navigate('MAIN')
             actionsDice.init()
+          } else {
+            actionsSubscribe.setVisible(true)
           }
-        } else {
-          actionsSubscribe.setVisible(true)
+        } catch (e) {
+          Sentry.captureException(e)
         }
-      } catch (e) {
-        Sentry.captureException(e)
       }
     }
   }
