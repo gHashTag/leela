@@ -9,3 +9,5 @@
 "CFBundleDisplayName" = "Игра Лила";
 
 "CFBundleName" = "Игра Лила";
+
+"NSUserTrackingUsageDescription" = "Приложение хочет получить доступ к IDFA для отслеживания";

@@ -28,6 +28,8 @@
 		698392A2AAE747CBB026B3D9 /* Montserrat-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 83CC27A7148F4C41B3E2BD40 /* Montserrat-Light.ttf */; };
 		6BF7074406CB4A7DB7B196F9 /* 3270Narrow.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6107B4A8FB2D47A59F21294D /* 3270Narrow.ttf */; };
 		6DE6BB11A4764D549EEF3EDD /* Montserrat-ExtraLightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 19CF736E79B5441C9A2EA3DF /* Montserrat-ExtraLightItalic.ttf */; };
+		739E1EC1267C786400C3EE11 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 73C790D42660E398000B6508 /* InfoPlist.strings */; };
+		739E1EC2267C786500C3EE11 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 73C790D42660E398000B6508 /* InfoPlist.strings */; };
 		73C311E4265F5E7000677FD5 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */; };
 		73C311E5265F5E7000677FD5 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */; };
 		73CEF698265CDD7500C62E70 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73CEF697265CDD7500C62E70 /* StoreKit.framework */; };
@@ -375,6 +377,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				73C311E5265F5E7000677FD5 /* GoogleService-Info.plist in Resources */,
+				739E1EC2267C786500C3EE11 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -383,6 +386,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
+				739E1EC1267C786400C3EE11 /* InfoPlist.strings in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				6BF7074406CB4A7DB7B196F9 /* 3270Narrow.ttf in Resources */,
 				3980855933B0484AA704FD2D /* etna-free-font.otf in Resources */,
@@ -692,7 +696,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = leela/leela.entitlements;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 5EM4M85VSQ;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = leela/Info.plist;
@@ -722,7 +726,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = leela/leela.entitlements;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 5EM4M85VSQ;
 				INFOPLIST_FILE = leela/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

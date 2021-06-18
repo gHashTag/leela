@@ -12,12 +12,13 @@ import * as Sentry from '@sentry/react-native'
 import { revenuecat } from './src/constants'
 import App from './src'
 import { name as appName } from './app.json'
+import { appVersion, buildVersion } from 'react-native-version-info'
 
 const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
 
 Sentry.init({
   dsn: 'https://1d8f316fe05b48f9b712acf5035683fb@o749286.ingest.sentry.io/5791363',
-  release: 'leela@' + process.env.npm_package_version + '3.1',
+  release: `leela@${appVersion}.${buildVersion}`,
   tracesSampleRate: 0.2,
   integrations: [
     new Sentry.ReactNativeTracing({
