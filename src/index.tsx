@@ -13,12 +13,15 @@ import {
   SelectPlayersScreen,
   OnlineGameScreen,
   PlayraScreen,
-  ChatScreen
+  ChatScreen,
+  WelcomeScreen
 } from './screens'
 
 import TabNavigator from './TabNavigator'
 import { white, black } from './constants'
-// import { UI } from './UI'
+import { UI } from './UI'
+import { action } from '@storybook/addon-actions';
+
 
 export type RootStackParamList = {
   MAIN: undefined
@@ -103,8 +106,10 @@ const App = () => {
           headerShown: false,
           cardStyle: { backgroundColor: scheme === 'dark' ? black : white }
         }}
-        initialRouteName="SELECT_PLAYERS_SCREEN"
+        initialRouteName="WELCOME_SCREEN"
       >
+        <Stack.Screen name="UI" component={UI} />
+        <Stack.Screen name="WELCOME_SCREEN" component={WelcomeScreen} />
         <Stack.Screen name="SELECT_PLAYERS_SCREEN" component={SelectPlayersScreen} />
         <Stack.Screen name="MAIN" component={Tab} />
         <Stack.Screen name="RULES_SCREEN" component={RulesScreen} />

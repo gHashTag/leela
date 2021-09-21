@@ -18,6 +18,7 @@ import { appVersion, buildVersion } from 'react-native-version-info'
 import { LocalNotification } from './src/utils/noifications/LocalPushController'
 const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
 import messaging from '@react-native-firebase/messaging'
+import StorybookUI from './storybook'
 
 messaging().setBackgroundMessageHandler(async payload => {
   Platform.OS === 'ios'
@@ -77,3 +78,4 @@ class Init extends React.Component {
 }
 
 AppRegistry.registerComponent(appName, () => Init)
+//AppRegistry.registerComponent(appName, () => (__DEV__ ? StorybookUI : Init))
