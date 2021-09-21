@@ -4,17 +4,30 @@
 import 'react-native-gesture-handler'
 import 'react-native-get-random-values'
 import React from 'react'
-import { AppRegistry, LogBox } from 'react-native'
+import { AppRegistry, LogBox, Platform } from 'react-native'
 import Purchases from 'react-native-purchases'
 import TrackPlayer from 'react-native-track-player'
 import { configure } from 'mobx'
 import * as Sentry from '@sentry/react-native'
+import PushNotificationIOS from '@react-native-community/push-notification-ios'
+import { v4 as uuidv4 } from 'uuid'
 import { revenuecat } from './src/constants'
 import App from './src'
 import { name as appName } from './app.json'
 import { appVersion, buildVersion } from 'react-native-version-info'
-
+import { LocalNotification } from './src/utils/noifications/LocalPushController'
 const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
+import messaging from '@react-native-firebase/messaging'
+
+messaging().setBackgroundMessageHandler(async payload => {
+  Platform.OS === 'ios'
+    ? PushNotificationIOS.addNotificationRequest({
+        id: uuidv4(),
+        title: payload.data?.title,
+        body: payload.data?.body
+      })
+    : LocalNotification(payload)
+})
 
 Sentry.init({
   dsn: 'https://1d8f316fe05b48f9b712acf5035683fb@o749286.ingest.sentry.io/5791363',
