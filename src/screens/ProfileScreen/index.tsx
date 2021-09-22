@@ -149,7 +149,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                 actionPlayerFour.resetGame()
                 actionPlayerFive.resetGame()
                 actionPlayerSix.resetGame()
-                navigation.pop()
+                navigation.pop(2)
               }}
             />
             <Space height={300} />

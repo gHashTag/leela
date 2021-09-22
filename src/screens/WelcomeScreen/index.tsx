@@ -26,7 +26,77 @@ type SelectPlayersScreenT = {
 }
 
 const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
+  const fetchBusinesses = useCallback(() => {
+    const requestUserPermission = async () => {
+      const authStatus = await messaging().requestPermission()
+      const enabled =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL
 
+      if (enabled) {
+        // Get the device token
+        messaging()
+          .getToken()
+          .then(token => {
+            // console.log('Authorization status:', token)
+            return saveTokenToDatabase(token)
+          })
+
+        // Listen to whether the token changes
+        return messaging().onTokenRefresh(token => {
+          saveTokenToDatabase(token)
+        })
+      }
+    }
+    requestUserPermission()
+  }, [])
+
+  const saveTokenToDatabase = async (token: string) => {
+    // Assume user is already signed in
+    const uniqueId = getUniqueId()
+    // Add the token to the users datastore
+    try {
+      await firestore()
+        .collection('users')
+        .doc(uniqueId)
+        .set({
+          tokens: firestore.FieldValue.arrayUnion(token),
+          lang: firestore.FieldValue.arrayUnion(lang)
+        })
+    } catch (e) {
+      Sentry.captureException(e)
+    }
+  }
+
+  useEffect(() => {
+    //console.warn('SubscribeStore.subscriptionActive', SubscribeStore.subscriptionActive)
+    auth().signInWithEmailAndPassword(Config.ADMIN, Config.ADMIN_PASSWORD)
+
+    actionsSubscribe.purchaserInfo()
+    //actionsSubscribe.setToday('12-6-21')
+    const checkGame = async () => {
+      const init = await AsyncStorage.getItem('@init')
+      if (init === 'true') {
+        navigation.navigate('MAIN')
+      }
+    }
+
+    checkGame()
+    fetchBusinesses()
+
+    const unsubscribe = messaging().onMessage(async payload => {
+      Platform.OS === 'ios'
+        ? PushNotificationIOS.addNotificationRequest({
+            id: uuidv4(),
+            title: payload.data?.title,
+            body: payload.data?.body
+          })
+        : LocalNotification(payload)
+    })
+
+    return unsubscribe
+  }, [navigation, fetchBusinesses])
+  
   return (
     <Background>
       <CenterView>
@@ -34,7 +104,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
       <Space height={s(30)} />
       <ButtonElements title={I18n.t('online')} onPress={() => navigation.navigate('PLAYRA_SCREEN')} />
       <Space height={s(40)} />
-      <ButtonElements title={I18n.t('offline')} onPress={() => navigation.navigate('PLAYRA_SCREEN')} />
+      <ButtonElements title={I18n.t('offline')} onPress={() => navigation.navigate('SELECT_PLAYERS_SCREEN')} />
       <Space height={s(150)} />
       <ModalSubscribe />
       </CenterView>
