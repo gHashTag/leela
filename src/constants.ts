@@ -1,4 +1,18 @@
 import { Dimensions, Linking } from 'react-native'
+import * as Sentry from '@sentry/react-native'
+
+export const captureException = (error) => {
+  if (!error) {
+    console.log(
+      '%c captureException called with messing or incorrect arguments',
+      'background: #555; color: yellow',
+    )
+    return
+  }
+  console.error(error)
+  Sentry.captureException(error)
+}
+
 
 export const win = Dimensions.get('window')
 export const W = win.width
@@ -10,7 +24,50 @@ export const openUrl = async (url: string) => {
 }
 
 export const Device = {
-  select(variants) {
+  select(variants: {
+    mobile300: {
+      top: number
+    }
+     mobile315: {
+      top: number
+    }
+    iphone5: {
+      top: number
+    }
+    mobile342: {
+      top: number
+    }
+    mobile360: {
+      top: number
+    }
+    mobile375: {
+      top: number
+    }
+    mobile400: {
+      top: number
+    }
+    mobile410: {
+      top: number
+    }
+    mobile415: {
+      top: number
+    }
+    mobile480: {
+      top?: number
+    }
+    mi5?: {
+      top: number
+    }
+    iphone678?: {
+      top: number
+    }
+    googlePixel?: {
+      top: number
+    }
+    redmiNote5?: {
+      top: number
+    }
+  }) {
     if (W >= 300 && W <= 314) {
       return variants.mobile300 || {}
     }
@@ -42,10 +99,6 @@ export const Device = {
 }
 
 export const goBack = navigation => () => navigation.goBack()
-
-export const onScreen = (screen, navigation, obj) => () => {
-  navigation.navigate(screen, obj)
-}
 
 export const goHome = navigation => () => navigation.popToTop()()
 

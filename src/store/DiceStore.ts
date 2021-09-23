@@ -5,6 +5,7 @@ import { writeStore, readStore } from './helper'
 
 const DiceStore = makeAutoObservable({
   init: false,
+  online: false,
   count: 6,
   startGame: false,
   players: 1,
@@ -17,7 +18,10 @@ const DiceStore = makeAutoObservable({
 })
 
 const actionsDice = {
-  random() {
+  setOnline(bool: boolean): void {
+    DiceStore.online = bool
+  },
+  random(): void {
     const getRandomNumber = () => Math.floor(Math.random() * 6) + 1
     let get = getRandomNumber()
     if (get === DiceStore.count) {
@@ -74,7 +78,7 @@ const actionsDice = {
 
 persistence({
   name: 'DiceStore',
-  properties: ['count', 'startGame', 'players', 'message', 'multi', 'finishArr', 'init', 'rate'],
+  properties: ['count', 'startGame', 'players', 'message', 'multi', 'finishArr', 'init', 'rate', 'online'],
   adapter: new StorageAdapter({
     read: readStore,
     write: writeStore

@@ -13,49 +13,26 @@ import {
   SelectPlayersScreen,
   OnlineGameScreen,
   PlayraScreen,
-  ChatScreen,
+  //ChatScreen,
   WelcomeScreen
 } from './screens'
+
+import {
+  SignUp,
+  SignUpUsername,
+  SignIn,
+  ConfirmSignUp,
+  User,
+  Forgot,
+  ForgotPassSubmit,
+  Hello,
+  UserEdit
+} from './screens/Authenticator'
 
 import TabNavigator from './TabNavigator'
 import { white, black } from './constants'
 import { UI } from './UI'
-import { action } from '@storybook/addon-actions';
-
-
-export type RootStackParamList = {
-  MAIN: undefined
-  PLAYRA_SCREEN: undefined
-  TAB_BOTTOM_0: undefined
-  TAB_BOTTOM_1: undefined
-  TAB_BOTTOM_2: undefined
-  TAB_BOTTOM_3: undefined
-  RULES_SCREEN: undefined
-  RULES_DETAIL_SCREEN: {
-    id: number
-    title: string
-    content: string
-    url: string
-    videoUrl: string
-  }
-  PLANS_SCREEN: undefined
-  SELECT_PLAYERS_SCREEN: undefined
-  PLANS_DETAIL_SCREEN: {
-    id: number
-    title: string
-    content: string
-    url?: string
-    videoUrl: string
-  }
-  PROFILE_SCREEN: undefined
-  ONLINE_GAME_SCREEN: undefined
-  RADIO_SCREEN: {
-    id: number
-    title: string
-    content: string
-    url: string
-  }
-}
+//import { action } from '@storybook/addon-actions';
 
 const DarkTheme = {
   dark: true,
@@ -110,6 +87,16 @@ const App = () => {
       >
         <Stack.Screen name="UI" component={UI} />
         <Stack.Screen name="WELCOME_SCREEN" component={WelcomeScreen} />
+
+        <Stack.Screen name="HELLO" component={Hello} />
+        <Stack.Screen name="SIGN_UP" component={SignUp} />
+        <Stack.Screen name="SIGN_UP_USERNAME" component={SignUpUsername} />
+        <Stack.Screen name="SIGN_IN" component={SignIn} />
+        <Stack.Screen name="FORGOT" component={Forgot} />
+        <Stack.Screen name="FORGOT_PASSWORD_SUBMIT" component={ForgotPassSubmit} />
+        <Stack.Screen name="CONFIRM_SIGN_UP" component={ConfirmSignUp} />
+        <Stack.Screen name="USER" component={User} />
+
         <Stack.Screen name="SELECT_PLAYERS_SCREEN" component={SelectPlayersScreen} />
         <Stack.Screen name="MAIN" component={Tab} />
         <Stack.Screen name="RULES_SCREEN" component={RulesScreen} />
@@ -117,6 +104,7 @@ const App = () => {
         <Stack.Screen name="PLANS_SCREEN" component={PlansScreen} />
         <Stack.Screen name="PLANS_DETAIL_SCREEN" component={PlansDetailScreen} />
         <Stack.Screen name="PLAYRA_SCREEN" component={PlayraScreen} />
+        <Stack.Screen name="USER_EDIT" component={UserEdit} />
       </Stack.Navigator>
     </NavigationContainer>
   )

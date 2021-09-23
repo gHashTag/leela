@@ -1,0 +1,23 @@
+type Profile @model @auth(rules: [{ allow: owner, ownerField: "owner", operations: [create, update, delete] }]) {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  owner: String
+  plan: Int
+  avatar: String
+}
+
+type MinimalVersion @model @auth(rules: [{ allow: owner, ownerField: "owner", operations: [create, update, delete] }]) {
+  id: ID!
+  build: String!
+  owner: String
+}
+
+type History @model @auth(rules: [{ allow: owner, ownerField: "owner", operations: [create, update, delete] }]) {
+  id: ID!
+  count: Int!
+  plan: Int!
+  cube: Int!
+  status: String!
+}

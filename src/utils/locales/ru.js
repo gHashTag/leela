@@ -29,7 +29,7 @@ export default {
   history: 'История',
   player: 'Игрок',
   startOver: 'Сброс игры',
-  startGame: 'Начать игру',
+  startGame: 'Начать',
   cube: 'кубик',
   snake: 'змея',
   liberation: 'освобождение',

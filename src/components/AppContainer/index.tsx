@@ -57,7 +57,7 @@ const AppContainer = memo<AppContainerT>(
     const { container, sub, statusStyle } = styles
     return (
       <SafeAreaView>
-        <Background status="clean">
+        <Background>
           <View style={container}>
             <StatusBarAlert
               visible={message !== ''}

@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-leela-dev-133847-authRole",
+      "UnauthRoleArn": "arn:aws:iam::123118798050:role/amplify-leela-dev-133847-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::123118798050:role/amplify-leela-dev-133847-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-leela-dev-133847-deployment",
+      "UnauthRoleName": "amplify-leela-dev-133847-unauthRole",
+      "StackName": "amplify-leela-dev-133847",
+      "StackId": "arn:aws:cloudformation:us-east-1:123118798050:stack/amplify-leela-dev-133847/4734c010-1b91-11ec-a0dc-12a634623527",
+      "AmplifyAppId": "d2m7b9eh4pv1xt"
+    },
+    "categories": {
+      "auth": {
+        "leela332a2d7f": {}
+      }
+    }
+  }
+}

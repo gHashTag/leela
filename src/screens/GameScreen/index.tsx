@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { ms, s } from 'react-native-size-matters'
 import { I18n } from '../../utils'
-import { RootStackParamList } from '../../'
+import { RootStackParamList } from '../../types'
 import { Background, Dice, GameBoard, Header, Space, Txt, ButtonElements } from '../../components'
 import {
   DiceStore,

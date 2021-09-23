@@ -41,7 +41,7 @@ module.exports = {
     'react-native/no-inline-styles': 0,
     'react-native/no-color-literals': 0,
     'react-native/no-raw-text': 0,
-    'consistent-return': 0,
+    'consistent-return': 0
     // 'import/extensions': [
     //   'error',
     //   'ignorePackages',
@@ -57,8 +57,8 @@ module.exports = {
     'import/resolver': {
       node: {
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
-        moduleDirectory: ['node_modules', 'src/'],
-      },
-    },
-  },
-};
+        moduleDirectory: ['node_modules', 'src/']
+      }
+    }
+  }
+}

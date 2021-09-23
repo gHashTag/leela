@@ -14,7 +14,7 @@ const CenterView = ({ children }) => {
   const scheme = useColorScheme()
   //const backgroundColor = scheme === 'dark' ? '#1c1c1c' : '#fff'
 
-  console.log(`scheme`, scheme)
+  // console.log(`scheme`, scheme)
   return <View style={styles.main}>{children}</View>
 }
 

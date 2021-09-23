@@ -4,7 +4,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { observer } from 'mobx-react-lite'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { I18n } from '../../utils'
-import { RootStackParamList } from '../../'
+import { RootStackParamList } from '../../types'
 import { Background, ButtonElements } from '../../components'
 
 type navigation = StackNavigationProp<RootStackParamList, 'TAB_BOTTOM_2'>

@@ -29,7 +29,7 @@ export default {
   history: 'History',
   player: 'Player',
   startOver: 'Start Over',
-  startGame: 'Start Game',
+  startGame: 'Start',
   cube: 'cube',
   snake: 'snake',
   liberation: 'liberation',

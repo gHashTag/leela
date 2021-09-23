@@ -8,7 +8,7 @@ import { Player } from './Player'
 import { actionPlay, PlayButtonStore } from '../../store'
 import { useRef } from 'react'
 // import { StackNavigationProp } from '@react-navigation/stack'
-// import { RootStackParamList } from '../..'
+// import { RootStackParamList } from '../../types'
 //import { actionPlay, PlayButtonStore } from '../../store/PlayButtonStore'
 
 // type navigation = StackNavigationProp<RootStackParamList, 'RADIO_SCREEN'>

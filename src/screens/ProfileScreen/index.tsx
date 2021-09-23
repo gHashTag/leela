@@ -1,11 +1,16 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, SectionList } from 'react-native'
+import { Auth, API, graphqlOperation } from 'aws-amplify'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { observer } from 'mobx-react-lite'
 import { ScaledSheet } from 'react-native-size-matters'
+import * as Keychain from 'react-native-keychain'
+import { listProfiles } from '../../../src/graphql/queries'
+import { onUpdateProfile } from '../../graphql/subscriptions'
 import { I18n } from '../../utils'
-import { RootStackParamList } from '../../'
-import { AppContainer, Txt, Space, EmojiText, ButtonElements } from '../../components'
+import { RootStackParamList, UserT } from '../../types'
+import { AppContainer, Txt, Space, EmojiText, Button, HeaderMaster } from '../../components'
+import { captureException } from '../../constants'
 import {
   DiceStore,
   PlayerOneStore,
@@ -19,7 +24,8 @@ import {
   actionPlayerThree,
   actionPlayerFour,
   actionPlayerFive,
-  actionPlayerSix
+  actionPlayerSix,
+  actionsDice
 } from '../../store'
 
 type navigation = StackNavigationProp<RootStackParamList, 'PROFILE_SCREEN'>
@@ -70,6 +76,47 @@ const icon = (status: string) => {
 }
 
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
+  const [loading, setLoading] = useState<boolean>(true)
+  const [data, updateData] = useState<UserT>({
+    id: '0',
+    firstName: '',
+    lastName: '',
+    email: '',
+    plan: 68,
+    avatar: ''
+  })
+
+  const fetchData = async () => {
+    const credentials = await Keychain.getInternetCredentials('auth')
+    if (credentials) {
+      const { username } = credentials
+      const obj = await API.graphql(
+        graphqlOperation(listProfiles, {
+          filter: {
+            email: {
+              eq: username
+            }
+          }
+        })
+      )
+      obj && updateData(obj.data.listProfiles.items[0])
+      obj && setLoading(false)
+    } else {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+
+    const subscriptionUpdate = API.graphql(graphqlOperation(onUpdateProfile)).subscribe({
+      next: (obj: any) => updateData(obj.value.data.onUpdateProfile)
+    })
+    return () => {
+      subscriptionUpdate.unsubscribe()
+    }
+  }, [navigation])
+
   const _renderItem = ({ item, index }: StepsT) => {
     const { id, plan, count, status } = item
     return (
@@ -128,29 +175,46 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
     }
   ].slice(0, DiceStore.multi)
 
+  const _onPress = async (): Promise<void> => {
+    try {
+      await Auth.signOut()
+      await Keychain.resetInternetCredentials('auth')
+      actionPlayerOne.resetGame()
+      actionPlayerTwo.resetGame()
+      actionPlayerThree.resetGame()
+      actionPlayerFour.resetGame()
+      actionPlayerFive.resetGame()
+      actionPlayerSix.resetGame()
+      actionsDice.setOnline(false)
+      navigation.pop(2)
+    } catch (err) {
+      captureException(err.message)
+    }
+  }
+
+  console.log(`data`, PlayerOneStore.history.slice())
+
   return (
-    <AppContainer flatList iconLeft={null} title={I18n.t('history')} textAlign="center">
+    <AppContainer flatList iconLeft={null} title={I18n.t('history')} textAlign="center" loading={loading}>
       <SectionList
         ListHeaderComponent={
           <>
             {/* <Txt h3 title={`Подписка: ${subscriptionActive.toString()}`} /> */}
+            {DiceStore.online && (
+              <HeaderMaster user={data} onPress={() => navigation.navigate('USER_EDIT', data)} loading={loading} />
+            )}
+
+            {/* <Txt h3 title={DiceStore.online.toString()} /> */}
+
             <Space height={10} />
           </>
         }
         ListFooterComponent={
           <>
-            <Space height={20} />
-            <ButtonElements
+            <Space height={70} />
+            <Button
               title={I18n.t('startOver')}
-              onPress={() => {
-                actionPlayerOne.resetGame()
-                actionPlayerTwo.resetGame()
-                actionPlayerThree.resetGame()
-                actionPlayerFour.resetGame()
-                actionPlayerFive.resetGame()
-                actionPlayerSix.resetGame()
-                navigation.pop(2)
-              }}
+              onPress={_onPress}
             />
             <Space height={300} />
           </>
@@ -160,10 +224,12 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
         renderItem={_renderItem}
         keyExtractor={_keyExtractor}
         showsVerticalScrollIndicator={false}
-        renderSectionHeader={({ section: { title } }) => <Txt h1 title={title} textStyle={{ padding: 15 }} />}
+        renderSectionHeader={({ section: { title } }) => <Txt h1 title={DiceStore.online ? '' : title} textStyle={{ padding: 15 }} />}
       />
     </AppContainer>
   )
 })
+
+
 
 export { ProfileScreen }

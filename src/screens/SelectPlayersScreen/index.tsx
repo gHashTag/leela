@@ -4,10 +4,9 @@ import { StackNavigationProp } from '@react-navigation/stack'
 // import { requestTrackingPermission } from 'react-native-tracking-transparency'
 import { ms, s } from 'react-native-size-matters'
 // import * as Sentry from '@sentry/react-native'
-import { RootStackParamList } from '../../'
+import { RootStackParamList } from '../../types'
 import { Background, ButtonsSlector, ModalSubscribe, Space } from '../../components'
 import { actionsDice } from '../../store'
-
 
 type navigation = StackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 
@@ -16,7 +15,6 @@ type SelectPlayersScreenT = {
 }
 
 const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
-
   const selectPlayer = async (selectItem: number) => {
     console.log(`selectItem`, selectItem)
     actionsDice.setPlayers(selectItem + 1)
