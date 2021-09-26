@@ -4,13 +4,15 @@ import { Auth } from 'aws-amplify'
 import * as Keychain from 'react-native-keychain'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
-import { I18n } from '../../../utils'
 import { s } from 'react-native-size-matters'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useTheme } from '@react-navigation/native'
 import { AppContainer, Button, Space, ButtonLink, TextError, Input } from '../../../components'
 import { goBack, white, black, captureException } from '../../../constants'
 import { RootStackParamList } from '../../../types'
-import { useTheme } from '@react-navigation/native'
+import { I18n } from '../../../utils'
+
+import { actionsDice, actionPlayerOne } from '../../../store'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_IN'>
 
@@ -31,6 +33,8 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
       const { email, password } = values
       const user = await Auth.signIn(email, password)
       await Keychain.setInternetCredentials('auth', email, password)
+      actionsDice.setPlayers(1)
+      actionsDice.init()
       user && navigation.navigate('MAIN')
       setLoading(false)
     } catch (err) {
@@ -62,7 +66,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
       colorLeft={color}
     >
       <Formik
-        initialValues={{ email: '', password: '' }}
+        initialValues={{ email: 'raoffonom@icloud.com', password: 'qwerty123' }}
         onSubmit={(values): Promise<void> => _onPress(values)}
         validationSchema={Yup.object().shape({
           email: Yup.string().email().required(),

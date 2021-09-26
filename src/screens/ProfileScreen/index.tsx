@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { View, SectionList } from 'react-native'
-import { Auth, API, graphqlOperation } from 'aws-amplify'
+import { Auth, API, graphqlOperation, DataStore } from 'aws-amplify'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { observer } from 'mobx-react-lite'
 import { ScaledSheet } from 'react-native-size-matters'
 import * as Keychain from 'react-native-keychain'
-import { listProfiles } from '../../../src/graphql/queries'
-import { onUpdateProfile } from '../../graphql/subscriptions'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { listHistories } from '../../../src/graphql/queries'
 import { I18n } from '../../utils'
-import { RootStackParamList, UserT } from '../../types'
+import { RootStackParamList, UserT, HistoryT } from '../../types'
 import { AppContainer, Txt, Space, EmojiText, Button, HeaderMaster } from '../../components'
 import { captureException } from '../../constants'
 import {
@@ -19,14 +19,9 @@ import {
   PlayerFourStore,
   PlayerFiveStore,
   PlayerSixStore,
-  actionPlayerOne,
-  actionPlayerTwo,
-  actionPlayerThree,
-  actionPlayerFour,
-  actionPlayerFive,
-  actionPlayerSix,
-  actionsDice
 } from '../../store'
+import { Profile } from '../../models'
+import { _onPressReset } from '../helper'
 
 type navigation = StackNavigationProp<RootStackParamList, 'PROFILE_SCREEN'>
 
@@ -77,7 +72,7 @@ const icon = (status: string) => {
 
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   const [loading, setLoading] = useState<boolean>(true)
-  const [data, updateData] = useState<UserT>({
+  const [data, updateProfile] = useState<UserT>({
     id: '0',
     firstName: '',
     lastName: '',
@@ -86,21 +81,24 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
     avatar: ''
   })
 
+  const [dataHis, updateHistory] = useState<HistoryT>({
+    count: 1,
+    id: '0',
+    plan: 68,
+    status: ''
+  })
+
   const fetchData = async () => {
     const credentials = await Keychain.getInternetCredentials('auth')
     if (credentials) {
       const { username } = credentials
-      const obj = await API.graphql(
-        graphqlOperation(listProfiles, {
-          filter: {
-            email: {
-              eq: username
-            }
-          }
-        })
-      )
-      obj && updateData(obj.data.listProfiles.items[0])
-      obj && setLoading(false)
+
+      const arrHistory = await API.graphql(graphqlOperation(listHistories))
+      const arrProfile = await DataStore.query(Profile, c => c.email('eq', username))
+
+      arrProfile && updateProfile(arrProfile[0])
+      arrHistory && updateHistory(arrHistory.data.listHistories.items)
+      setLoading(false)
     } else {
       setLoading(false)
     }
@@ -108,12 +106,9 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
   useEffect(() => {
     fetchData()
-
-    const subscriptionUpdate = API.graphql(graphqlOperation(onUpdateProfile)).subscribe({
-      next: (obj: any) => updateData(obj.value.data.onUpdateProfile)
-    })
+    const subscription = DataStore.observe(Profile).subscribe(() => fetchData())
     return () => {
-      subscriptionUpdate.unsubscribe()
+      subscription.unsubscribe()
     }
   }, [navigation])
 
@@ -175,24 +170,26 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
     }
   ].slice(0, DiceStore.multi)
 
-  const _onPress = async (): Promise<void> => {
+  
+  const _onPressSignOut = async (): Promise<void> => {
     try {
-      await Auth.signOut()
+      //await Auth.signOut()
       await Keychain.resetInternetCredentials('auth')
-      actionPlayerOne.resetGame()
-      actionPlayerTwo.resetGame()
-      actionPlayerThree.resetGame()
-      actionPlayerFour.resetGame()
-      actionPlayerFive.resetGame()
-      actionPlayerSix.resetGame()
-      actionsDice.setOnline(false)
-      navigation.pop(2)
+      await AsyncStorage.clear()
+      navigation.pop(3)
     } catch (err) {
-      captureException(err.message)
+      captureException(err)
     }
   }
 
-  console.log(`data`, PlayerOneStore.history.slice())
+  const onlineData = [
+    {
+      title: `${I18n.t('player')} 1`,
+      data: dataHis
+    }
+  ]
+
+  const arrayData = !DiceStore.online ? onlineData : DATA
 
   return (
     <AppContainer flatList iconLeft={null} title={I18n.t('history')} textAlign="center" loading={loading}>
@@ -203,33 +200,30 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
             {DiceStore.online && (
               <HeaderMaster user={data} onPress={() => navigation.navigate('USER_EDIT', data)} loading={loading} />
             )}
-
             {/* <Txt h3 title={DiceStore.online.toString()} /> */}
-
             <Space height={10} />
           </>
         }
         ListFooterComponent={
           <>
             <Space height={70} />
-            <Button
-              title={I18n.t('startOver')}
-              onPress={_onPress}
-            />
+            <Button title={I18n.t('startOver')} onPress={() => _onPressReset(navigation)} />
+            <Space height={20} />
+            {DiceStore.online && <Button title={I18n.t('signOut')} onPress={_onPressSignOut} />}
             <Space height={300} />
           </>
         }
         stickySectionHeadersEnabled={false}
-        sections={DATA}
+        sections={arrayData}
         renderItem={_renderItem}
         keyExtractor={_keyExtractor}
         showsVerticalScrollIndicator={false}
-        renderSectionHeader={({ section: { title } }) => <Txt h1 title={DiceStore.online ? '' : title} textStyle={{ padding: 15 }} />}
+        renderSectionHeader={({ section: { title } }) => (
+          <Txt h1 title={DiceStore.online ? '' : title} textStyle={{ padding: 15 }} />
+        )}
       />
     </AppContainer>
   )
 })
-
-
 
 export { ProfileScreen }

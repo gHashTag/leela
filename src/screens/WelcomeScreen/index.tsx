@@ -16,11 +16,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ScaledSheet } from 'react-native-size-matters'
 import { I18n, lang } from '../../utils'
 import { RootStackParamList } from '../../types'
-import { Background, ModalSubscribe, Space, Button, Txt, CenterView, IconLeela } from '../../components'
-import { actionsSubscribe, actionsDice } from '../../store'
+import { AppContainer, ModalSubscribe, Space, Button, Txt, CenterView, IconLeela } from '../../components'
+import { actionsSubscribe, actionsDice, actionPlayerOne } from '../../store'
 import { LocalNotification } from '../../utils/noifications/LocalPushController'
 import { captureException } from '../../constants'
-
 
 type navigation = StackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 
@@ -32,30 +31,29 @@ const styles = ScaledSheet.create({
   h6: { alignSelf: 'center' }
 })
 
-
 const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string>('')
 
   const key = async (): Promise<void> => {
     try {
-      //await Keychain.resetInternetCredentials('auth')
+      // await Keychain.resetInternetCredentials('auth')
+      // await AsyncStorage.clear()
       const credentials = await Keychain.getInternetCredentials('auth')
       if (credentials) {
         const { username, password } = credentials
         const user = await Auth.signIn(username, password)
         setLoading(false)
         user && navigation.navigate('MAIN')
+        actionsDice.setOnline(true)
+        actionsDice.setPlayers(1)
       } else {
         setLoading(false)
       }
     } catch (err) {
-      captureException(err.message)
-      setError(err.message)
+      captureException(err)
       setLoading(false)
     }
   }
-
 
   const fetchBusinesses = useCallback(() => {
     const requestUserPermission = async () => {
@@ -107,7 +105,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
     //actionsSubscribe.setToday('12-6-21')
     const checkGame = async () => {
       const init = await AsyncStorage.getItem('@init')
-      if (init === 'true') {
+      if (init === 'true') { 
         navigation.navigate('MAIN')
       }
     }
@@ -137,7 +135,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   }
 
   return (
-    <Background >
+    <AppContainer iconLeft={null} title={' '} loading={loading}>
       <CenterView>
         <IconLeela />
         <Space height={s(30)} />
@@ -151,7 +149,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         <Space height={s(150)} />
         <ModalSubscribe />
       </CenterView>
-    </Background>
+    </AppContainer>
   )
 })
 

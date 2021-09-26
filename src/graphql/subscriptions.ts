@@ -12,6 +12,9 @@ export const onCreateProfile = /* GraphQL */ `
       owner
       plan
       avatar
+      _version
+      _deleted
+      _lastChangedAt
       createdAt
       updatedAt
     }
@@ -27,6 +30,9 @@ export const onUpdateProfile = /* GraphQL */ `
       owner
       plan
       avatar
+      _version
+      _deleted
+      _lastChangedAt
       createdAt
       updatedAt
     }
@@ -42,6 +48,9 @@ export const onDeleteProfile = /* GraphQL */ `
       owner
       plan
       avatar
+      _version
+      _deleted
+      _lastChangedAt
       createdAt
       updatedAt
     }
@@ -53,6 +62,9 @@ export const onCreateMinimalVersion = /* GraphQL */ `
       id
       build
       owner
+      _version
+      _deleted
+      _lastChangedAt
       createdAt
       updatedAt
     }
@@ -64,6 +76,9 @@ export const onUpdateMinimalVersion = /* GraphQL */ `
       id
       build
       owner
+      _version
+      _deleted
+      _lastChangedAt
       createdAt
       updatedAt
     }
@@ -75,6 +90,9 @@ export const onDeleteMinimalVersion = /* GraphQL */ `
       id
       build
       owner
+      _version
+      _deleted
+      _lastChangedAt
       createdAt
       updatedAt
     }
@@ -84,12 +102,15 @@ export const onCreateHistory = /* GraphQL */ `
   subscription OnCreateHistory {
     onCreateHistory {
       id
-      step
-      cube
+      count
       plan
+      status
       createdAt
-      updatedAt
       owner
+      _version
+      _deleted
+      _lastChangedAt
+      updatedAt
     }
   }
 `;
@@ -97,12 +118,15 @@ export const onUpdateHistory = /* GraphQL */ `
   subscription OnUpdateHistory {
     onUpdateHistory {
       id
-      step
-      cube
+      count
       plan
+      status
       createdAt
-      updatedAt
       owner
+      _version
+      _deleted
+      _lastChangedAt
+      updatedAt
     }
   }
 `;
@@ -110,12 +134,15 @@ export const onDeleteHistory = /* GraphQL */ `
   subscription OnDeleteHistory {
     onDeleteHistory {
       id
-      step
-      cube
+      count
       plan
+      status
       createdAt
-      updatedAt
       owner
+      _version
+      _deleted
+      _lastChangedAt
+      updatedAt
     }
   }
 `;

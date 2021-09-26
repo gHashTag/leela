@@ -11,11 +11,10 @@ import { UserT } from '../../types'
 const styles = ScaledSheet.create({
   container: {
     flex: 1,
-    top: 20,
+    top: 20
     // top: 12,
     // height: 210,
     // margin: 50,
-    
   },
   avatarStyle: {
     //position: 'absolute',
@@ -50,7 +49,7 @@ const styles = ScaledSheet.create({
       mobile480: {
         top: 160
       }
-    }),
+    })
     // zIndex: 0
   },
   h2: {
@@ -60,7 +59,7 @@ const styles = ScaledSheet.create({
     width: W - 90,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'center'
   }
 })
 
@@ -84,7 +83,6 @@ const HeaderMaster = memo(({ loading, user, onPress }: HeaderMasterT) => {
         <Txt h0 title={firstName} textStyle={h2} />
         <Txt h0 title={lastName} textStyle={h2} />
         <Space width={60} />
-       
       </View>
     </TouchableOpacity>
   )

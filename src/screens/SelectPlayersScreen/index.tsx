@@ -16,10 +16,8 @@ type SelectPlayersScreenT = {
 
 const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   const selectPlayer = async (selectItem: number) => {
-    console.log(`selectItem`, selectItem)
     actionsDice.setPlayers(selectItem + 1)
     navigation.navigate('MAIN')
-    actionsDice.init()
     // const trackingStatus = await requestTrackingPermission()
 
     // if (trackingStatus === 'authorized' || trackingStatus === 'unavailable') {

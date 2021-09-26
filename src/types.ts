@@ -40,15 +40,31 @@ export type RootStackParamList = {
     content: string
     url: string
   }
- 
 }
 
 export interface UserT {
-  id?: string
+  id: string
   firstName: string
   lastName: string
   email?: string
   owner?: string
   plan?: number
   avatar?: string
+}
+
+export interface HistoryT {
+  id: string
+  plan: number
+  count: number
+  status: string
+}
+
+export interface SelfT {
+  player: number
+  start: boolean
+  finish: boolean
+  plan: number
+  planPrev: number
+  rate?: boolean
+  history: HistoryT[]
 }

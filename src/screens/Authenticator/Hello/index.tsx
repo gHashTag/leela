@@ -30,12 +30,7 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
   const color = dark ? white : black
 
   return (
-    <AppContainer 
-      backgroundColor={dark ? black : white}
-      onPress={goBack(navigation)}
-      title=" "
-      colorLeft={color}
-    >
+    <AppContainer backgroundColor={dark ? black : white} onPress={goBack(navigation)} title=" " colorLeft={color}>
       <Space height={s(80)} />
       <IconLeela />
       <Space height={s(30)} />

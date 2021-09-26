@@ -10,6 +10,7 @@ export type CreateProfileInput = {
   owner?: string | null,
   plan?: number | null,
   avatar?: string | null,
+  _version?: number | null,
 };
 
 export type ModelProfileConditionInput = {
@@ -84,6 +85,9 @@ export type Profile = {
   owner?: string | null,
   plan?: number | null,
   avatar?: string | null,
+  _version: number,
+  _deleted?: boolean | null,
+  _lastChangedAt: number,
   createdAt: string,
   updatedAt: string,
 };
@@ -96,16 +100,19 @@ export type UpdateProfileInput = {
   owner?: string | null,
   plan?: number | null,
   avatar?: string | null,
+  _version?: number | null,
 };
 
 export type DeleteProfileInput = {
   id: string,
+  _version?: number | null,
 };
 
 export type CreateMinimalVersionInput = {
   id?: string | null,
   build: string,
   owner?: string | null,
+  _version?: number | null,
 };
 
 export type ModelMinimalVersionConditionInput = {
@@ -120,6 +127,9 @@ export type MinimalVersion = {
   id: string,
   build: string,
   owner?: string | null,
+  _version: number,
+  _deleted?: boolean | null,
+  _lastChangedAt: number,
   createdAt: string,
   updatedAt: string,
 };
@@ -128,10 +138,61 @@ export type UpdateMinimalVersionInput = {
   id: string,
   build?: string | null,
   owner?: string | null,
+  _version?: number | null,
 };
 
 export type DeleteMinimalVersionInput = {
   id: string,
+  _version?: number | null,
+};
+
+export type CreateHistoryInput = {
+  id?: string | null,
+  count: number,
+  plan: number,
+  status: string,
+  createdAt?: string | null,
+  owner: string,
+  _version?: number | null,
+};
+
+export type ModelHistoryConditionInput = {
+  count?: ModelIntInput | null,
+  plan?: ModelIntInput | null,
+  status?: ModelStringInput | null,
+  createdAt?: ModelStringInput | null,
+  and?: Array< ModelHistoryConditionInput | null > | null,
+  or?: Array< ModelHistoryConditionInput | null > | null,
+  not?: ModelHistoryConditionInput | null,
+};
+
+export type History = {
+  __typename: "History",
+  id: string,
+  count: number,
+  plan: number,
+  status: string,
+  createdAt: string,
+  owner: string,
+  _version: number,
+  _deleted?: boolean | null,
+  _lastChangedAt: number,
+  updatedAt: string,
+};
+
+export type UpdateHistoryInput = {
+  id: string,
+  count?: number | null,
+  plan?: number | null,
+  status?: string | null,
+  createdAt?: string | null,
+  owner?: string | null,
+  _version?: number | null,
+};
+
+export type DeleteHistoryInput = {
+  id: string,
+  _version?: number | null,
 };
 
 export type ModelProfileFilterInput = {
@@ -167,6 +228,7 @@ export type ModelProfileConnection = {
   __typename: "ModelProfileConnection",
   items?:  Array<Profile | null > | null,
   nextToken?: string | null,
+  startedAt?: number | null,
 };
 
 export type ModelMinimalVersionFilterInput = {
@@ -182,6 +244,26 @@ export type ModelMinimalVersionConnection = {
   __typename: "ModelMinimalVersionConnection",
   items?:  Array<MinimalVersion | null > | null,
   nextToken?: string | null,
+  startedAt?: number | null,
+};
+
+export type ModelHistoryFilterInput = {
+  id?: ModelIDInput | null,
+  count?: ModelIntInput | null,
+  plan?: ModelIntInput | null,
+  status?: ModelStringInput | null,
+  createdAt?: ModelStringInput | null,
+  owner?: ModelStringInput | null,
+  and?: Array< ModelHistoryFilterInput | null > | null,
+  or?: Array< ModelHistoryFilterInput | null > | null,
+  not?: ModelHistoryFilterInput | null,
+};
+
+export type ModelHistoryConnection = {
+  __typename: "ModelHistoryConnection",
+  items?:  Array<History | null > | null,
+  nextToken?: string | null,
+  startedAt?: number | null,
 };
 
 export type CreateProfileMutationVariables = {
@@ -197,6 +279,11 @@ export type CreateProfileMutation = {
     lastName: string,
     email: string,
     owner?: string | null,
+    plan?: number | null,
+    avatar?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -215,6 +302,11 @@ export type UpdateProfileMutation = {
     lastName: string,
     email: string,
     owner?: string | null,
+    plan?: number | null,
+    avatar?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -233,6 +325,11 @@ export type DeleteProfileMutation = {
     lastName: string,
     email: string,
     owner?: string | null,
+    plan?: number | null,
+    avatar?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -249,6 +346,9 @@ export type CreateMinimalVersionMutation = {
     id: string,
     build: string,
     owner?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -265,6 +365,9 @@ export type UpdateMinimalVersionMutation = {
     id: string,
     build: string,
     owner?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -281,8 +384,104 @@ export type DeleteMinimalVersionMutation = {
     id: string,
     build: string,
     owner?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
+  } | null,
+};
+
+export type CreateHistoryMutationVariables = {
+  input: CreateHistoryInput,
+  condition?: ModelHistoryConditionInput | null,
+};
+
+export type CreateHistoryMutation = {
+  createHistory?:  {
+    __typename: "History",
+    id: string,
+    count: number,
+    plan: number,
+    status: string,
+    createdAt: string,
+    owner: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+    updatedAt: string,
+  } | null,
+};
+
+export type UpdateHistoryMutationVariables = {
+  input: UpdateHistoryInput,
+  condition?: ModelHistoryConditionInput | null,
+};
+
+export type UpdateHistoryMutation = {
+  updateHistory?:  {
+    __typename: "History",
+    id: string,
+    count: number,
+    plan: number,
+    status: string,
+    createdAt: string,
+    owner: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+    updatedAt: string,
+  } | null,
+};
+
+export type DeleteHistoryMutationVariables = {
+  input: DeleteHistoryInput,
+  condition?: ModelHistoryConditionInput | null,
+};
+
+export type DeleteHistoryMutation = {
+  deleteHistory?:  {
+    __typename: "History",
+    id: string,
+    count: number,
+    plan: number,
+    status: string,
+    createdAt: string,
+    owner: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+    updatedAt: string,
+  } | null,
+};
+
+export type SyncProfilesQueryVariables = {
+  filter?: ModelProfileFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+  lastSync?: number | null,
+};
+
+export type SyncProfilesQuery = {
+  syncProfiles?:  {
+    __typename: "ModelProfileConnection",
+    items?:  Array< {
+      __typename: "Profile",
+      id: string,
+      firstName: string,
+      lastName: string,
+      email: string,
+      owner?: string | null,
+      plan?: number | null,
+      avatar?: string | null,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+      createdAt: string,
+      updatedAt: string,
+    } | null > | null,
+    nextToken?: string | null,
+    startedAt?: number | null,
   } | null,
 };
 
@@ -298,6 +497,11 @@ export type GetProfileQuery = {
     lastName: string,
     email: string,
     owner?: string | null,
+    plan?: number | null,
+    avatar?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -320,10 +524,41 @@ export type ListProfilesQuery = {
       email: string,
       owner?: string | null,
       plan?: number | null,
+      avatar?: string | null,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
       createdAt: string,
       updatedAt: string,
     } | null > | null,
     nextToken?: string | null,
+    startedAt?: number | null,
+  } | null,
+};
+
+export type SyncMinimalVersionsQueryVariables = {
+  filter?: ModelMinimalVersionFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+  lastSync?: number | null,
+};
+
+export type SyncMinimalVersionsQuery = {
+  syncMinimalVersions?:  {
+    __typename: "ModelMinimalVersionConnection",
+    items?:  Array< {
+      __typename: "MinimalVersion",
+      id: string,
+      build: string,
+      owner?: string | null,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+      createdAt: string,
+      updatedAt: string,
+    } | null > | null,
+    nextToken?: string | null,
+    startedAt?: number | null,
   } | null,
 };
 
@@ -337,6 +572,9 @@ export type GetMinimalVersionQuery = {
     id: string,
     build: string,
     owner?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -356,10 +594,89 @@ export type ListMinimalVersionsQuery = {
       id: string,
       build: string,
       owner?: string | null,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
       createdAt: string,
       updatedAt: string,
     } | null > | null,
     nextToken?: string | null,
+    startedAt?: number | null,
+  } | null,
+};
+
+export type SyncHistoriesQueryVariables = {
+  filter?: ModelHistoryFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+  lastSync?: number | null,
+};
+
+export type SyncHistoriesQuery = {
+  syncHistories?:  {
+    __typename: "ModelHistoryConnection",
+    items?:  Array< {
+      __typename: "History",
+      id: string,
+      count: number,
+      plan: number,
+      status: string,
+      createdAt: string,
+      owner: string,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+      updatedAt: string,
+    } | null > | null,
+    nextToken?: string | null,
+    startedAt?: number | null,
+  } | null,
+};
+
+export type GetHistoryQueryVariables = {
+  id: string,
+};
+
+export type GetHistoryQuery = {
+  getHistory?:  {
+    __typename: "History",
+    id: string,
+    count: number,
+    plan: number,
+    status: string,
+    createdAt: string,
+    owner: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+    updatedAt: string,
+  } | null,
+};
+
+export type ListHistoriesQueryVariables = {
+  filter?: ModelHistoryFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type ListHistoriesQuery = {
+  listHistories?:  {
+    __typename: "ModelHistoryConnection",
+    items?:  Array< {
+      __typename: "History",
+      id: string,
+      count: number,
+      plan: number,
+      status: string,
+      createdAt: string,
+      owner: string,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+      updatedAt: string,
+    } | null > | null,
+    nextToken?: string | null,
+    startedAt?: number | null,
   } | null,
 };
 
@@ -371,6 +688,11 @@ export type OnCreateProfileSubscription = {
     lastName: string,
     email: string,
     owner?: string | null,
+    plan?: number | null,
+    avatar?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -384,6 +706,11 @@ export type OnUpdateProfileSubscription = {
     lastName: string,
     email: string,
     owner?: string | null,
+    plan?: number | null,
+    avatar?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -397,6 +724,11 @@ export type OnDeleteProfileSubscription = {
     lastName: string,
     email: string,
     owner?: string | null,
+    plan?: number | null,
+    avatar?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -408,6 +740,9 @@ export type OnCreateMinimalVersionSubscription = {
     id: string,
     build: string,
     owner?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -419,6 +754,9 @@ export type OnUpdateMinimalVersionSubscription = {
     id: string,
     build: string,
     owner?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -430,7 +768,58 @@ export type OnDeleteMinimalVersionSubscription = {
     id: string,
     build: string,
     owner?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnCreateHistorySubscription = {
+  onCreateHistory?:  {
+    __typename: "History",
+    id: string,
+    count: number,
+    plan: number,
+    status: string,
+    createdAt: string,
+    owner: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnUpdateHistorySubscription = {
+  onUpdateHistory?:  {
+    __typename: "History",
+    id: string,
+    count: number,
+    plan: number,
+    status: string,
+    createdAt: string,
+    owner: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnDeleteHistorySubscription = {
+  onDeleteHistory?:  {
+    __typename: "History",
+    id: string,
+    count: number,
+    plan: number,
+    status: string,
+    createdAt: string,
+    owner: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
     updatedAt: string,
   } | null,
 };

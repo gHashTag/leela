@@ -62,5 +62,6 @@ export default {
   terms: 'Terms of use',
   gameMode: 'Game mode',
   online: 'Online',
-  offline: 'Offline'
+  offline: 'Offline',
+  leaveFeedback: 'Leave feedback'
 }

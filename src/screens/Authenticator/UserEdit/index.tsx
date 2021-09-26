@@ -1,20 +1,18 @@
 import React, { useState, ReactElement, useRef, useEffect } from 'react'
-import { Auth, API, graphqlOperation } from 'aws-amplify'
+import { DataStore } from "@aws-amplify/datastore"
 import { Formik, FormikProps } from 'formik'
 import * as Yup from 'yup'
 import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from '@react-navigation/native'
 import { RouteProp } from '@react-navigation/native'
-// import { DataStore } from '@aws-amplify/datastore'
 // import { Profile } from '../../models'
 import { AppContainer, Space, Button, Input } from '../../../components'
-import { goBack, white, black } from '../../../constants'
+import { goBack, white, black, captureException } from '../../../constants'
 import { RootStackParamList, UserT } from '../../../types'
 //import config from '../../../aws-exports'
 //import { updateImage, pickAva } from '../../screens/helper'
-import { updateProfile } from '../../../graphql/mutations'
-
+import { Profile } from '../../../models'
 // const { aws_user_files_s3_bucket_region: region, aws_user_files_s3_bucket: bucket } = config
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'USER_EDIT'>
@@ -27,7 +25,6 @@ type UserEditT = {
 
 const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string>('')
   const formikRef = useRef<FormikProps<any>>()
   // const [avatar, setAvatar] = useState<S3ObjectT>({
   //   bucket: '',
@@ -60,13 +57,21 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
     }
   }, [route.params])
 
-  const updateObj = async (input: UserT) => {
+  const updateProfile = async ({ id, firstName, lastName }: UserT) => {
     try {
-      await API.graphql(graphqlOperation(updateProfile, { input }))
-      goBack(navigation)()
+      const original = await DataStore.query(Profile, id)
+      if (original) {
+        const update = await DataStore.save(
+          Profile.copyOf(original, updated => {
+            updated.firstName = firstName
+            updated.lastName = lastName
+          })
+        )
+        update && goBack(navigation)()
+      }
       setLoading(false)
     } catch (err) {
-      setError(err)
+      captureException(err)
     }
   }
 
@@ -77,15 +82,13 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
     //   setLoading(false)
     // } else {
     const { firstName, lastName } = values
-    const owner = await Auth.currentAuthenticatedUser()
     //const key = avatar.key
     // const fileForUpload = {
     //   bucket,
     //   key,
     //   region
     // }
-    updateObj({ id: input.id, firstName, lastName, owner: owner.username })
-    //}
+    updateProfile({ id: input.id, firstName, lastName })
   }
 
   // const onPressAva = async () => {
@@ -108,7 +111,7 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
       >
         <Space height={30} />
         <Formik
-          innerRef={(r) => (formikRef.current = r || undefined)}
+          innerRef={r => (formikRef.current = r || undefined)}
           initialValues={input}
           onSubmit={(values): Promise<void> => _onPress(values)}
           validationSchema={Yup.object().shape({

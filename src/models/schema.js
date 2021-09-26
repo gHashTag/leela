@@ -174,15 +174,8 @@ export const schema = {
                     "isRequired": true,
                     "attributes": []
                 },
-                "step": {
-                    "name": "step",
-                    "isArray": false,
-                    "type": "Int",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "cube": {
-                    "name": "cube",
+                "count": {
+                    "name": "count",
                     "isArray": false,
                     "type": "Int",
                     "isRequired": true,
@@ -195,13 +188,26 @@ export const schema = {
                     "isRequired": true,
                     "attributes": []
                 },
+                "status": {
+                    "name": "status",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": true,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
+                    "type": "String",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "owner": {
+                    "name": "owner",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": true,
+                    "attributes": []
                 },
                 "updatedAt": {
                     "name": "updatedAt",
@@ -242,5 +248,5 @@ export const schema = {
     },
     "enums": {},
     "nonModels": {},
-    "version": "90467eb06fb9ad9e2593f09a8e3c21fc"
+    "version": "5cbeab256956584f60e6413691f731f2"
 };

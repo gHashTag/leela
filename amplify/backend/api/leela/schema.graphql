@@ -18,6 +18,7 @@ type History @model @auth(rules: [{ allow: owner, ownerField: "owner", operation
   id: ID!
   count: Int!
   plan: Int!
-  cube: Int!
   status: String!
+  createdAt: String!
+  owner: String!
 }

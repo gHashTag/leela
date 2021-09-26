@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     fontSize: Platform.OS === 'ios' ? s(95) : s(95)
   },
   h8Style: {
-    fontSize: Platform.OS === 'ios' ? s(19) : s(19),
+    fontSize: Platform.OS === 'ios' ? s(14) : s(14),
     textAlign: 'center',
     fontFamily: 'Montserrat'
   },
@@ -146,7 +146,7 @@ const Txt = memo<TxtT>(
           h4 && StyleSheet.flatten([h4Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
           h5 && StyleSheet.flatten([h5Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
           h6 && StyleSheet.flatten([h6Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h7 && StyleSheet.flatten([h7Style, { color: text, textShadowColor: color ? color : primary }]),
+          h7 && StyleSheet.flatten([h7Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
           h8 &&
             StyleSheet.flatten([h8Style, { color: secondary, textShadowColor: color ? color : primary, textAlign }]),
           h9 && StyleSheet.flatten([h9Style, { color: white, textAlign }]),

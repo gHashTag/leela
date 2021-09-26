@@ -13,7 +13,7 @@ type MinimalVersionMetaData = {
 }
 
 type HistoryMetaData = {
-  readOnlyFields: 'createdAt' | 'updatedAt';
+  readOnlyFields: 'updatedAt';
 }
 
 export declare class Profile {
@@ -42,10 +42,11 @@ export declare class MinimalVersion {
 
 export declare class History {
   readonly id: string;
-  readonly step: number;
-  readonly cube: number;
+  readonly count: number;
   readonly plan: number;
-  readonly createdAt?: string;
+  readonly status: string;
+  readonly createdAt: string;
+  readonly owner: string;
   readonly updatedAt?: string;
   constructor(init: ModelInit<History, HistoryMetaData>);
   static copyOf(source: History, mutator: (draft: MutableModel<History, HistoryMetaData>) => MutableModel<History, HistoryMetaData> | void): History;

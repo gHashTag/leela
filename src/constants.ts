@@ -1,18 +1,14 @@
 import { Dimensions, Linking } from 'react-native'
 import * as Sentry from '@sentry/react-native'
 
-export const captureException = (error) => {
+export const captureException = error => {
   if (!error) {
-    console.log(
-      '%c captureException called with messing or incorrect arguments',
-      'background: #555; color: yellow',
-    )
+    console.log('%c captureException called with messing or incorrect arguments', 'background: #555; color: yellow')
     return
   }
   console.error(error)
   Sentry.captureException(error)
 }
-
 
 export const win = Dimensions.get('window')
 export const W = win.width
@@ -28,7 +24,7 @@ export const Device = {
     mobile300: {
       top: number
     }
-     mobile315: {
+    mobile315: {
       top: number
     }
     iphone5: {

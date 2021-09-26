@@ -1,12 +1,13 @@
 import React, { useState, ReactElement, useRef } from 'react'
-import { Auth, API, graphqlOperation } from 'aws-amplify'
+import { Auth, API, graphqlOperation, DataStore } from 'aws-amplify'
 import { Formik, FormikProps } from 'formik'
 import * as Yup from 'yup'
-import { I18n, lang } from '../../../utils'
+import { v4 as uuidv4 } from 'uuid'
+import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp, useTheme } from '@react-navigation/native'
-
-import { createProfile } from '../../../graphql/mutations'
+import { Profile } from '../../../models'
+import { Profile as ProfileT } from '../../../models'
 import { AppContainer, Space, Button, Input } from '../../../components'
 import { goBack, white, black, captureException } from '../../../constants'
 import { RootStackParamList, UserT } from '../../../types'
@@ -25,19 +26,22 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
   const [error, setError] = useState<string>('')
   const formikRef = useRef<FormikProps<any>>()
 
-  const createObj = async (values: UserT) => {
-    setLoading(true)
-    try {
-      const obj = await API.graphql(graphqlOperation(createProfile, { input: values }))
-      //console.log('obj', obj)
-      obj && navigation.navigate('MAIN')
-      setLoading(false)
-    } catch (err) {
-      captureException(err.message)
-      setError(err.message)
-      
-    }
-  }
+  // const createObj = async (values: UserT) => {
+  //   setLoading(true)
+  //   try {
+  //     const obj = await API.graphql(graphqlOperation(createProfile, { input: values }))
+  //     //console.log('obj', obj)
+  //     obj && navigation.navigate('MAIN')
+  //     setLoading(false)
+  //   } catch (err) {
+  //     captureException(err.message)
+  //     setError(err.message)
+
+  //   }
+  // }
+
+  const createProfile = async (values: ProfileT) =>
+    (await DataStore.save(new Profile({ ...values }))) && navigation.navigate('MAIN')
 
   const _onPress = async (values: { firstName: string; lastName: string }): Promise<void> => {
     setLoading(true)
@@ -49,7 +53,7 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     const { email } = route.params
     const owner = await Auth.currentAuthenticatedUser()
 
-    createObj({ firstName, lastName, email, owner: owner.username })
+    createProfile({ id: uuidv4(), firstName, lastName, email, plan: 68, owner: owner.username })
     setLoading(false)
   }
 
@@ -65,7 +69,13 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
   const color = dark ? white : black
 
   return (
-    <AppContainer backgroundColor={dark ? black : white} onPress={goBack(navigation)} title=" " colorLeft={color}>
+    <AppContainer
+      backgroundColor={dark ? black : white}
+      onPress={goBack(navigation)}
+      title=" "
+      colorLeft={color}
+      loading={loading}
+    >
       <Space height={30} />
       <Formik
         innerRef={r => (formikRef.current = r || undefined)}

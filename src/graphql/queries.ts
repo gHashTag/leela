@@ -2,6 +2,38 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
+export const syncProfiles = /* GraphQL */ `
+  query SyncProfiles(
+    $filter: ModelProfileFilterInput
+    $limit: Int
+    $nextToken: String
+    $lastSync: AWSTimestamp
+  ) {
+    syncProfiles(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      lastSync: $lastSync
+    ) {
+      items {
+        id
+        firstName
+        lastName
+        email
+        owner
+        plan
+        avatar
+        _version
+        _deleted
+        _lastChangedAt
+        createdAt
+        updatedAt
+      }
+      nextToken
+      startedAt
+    }
+  }
+`;
 export const getProfile = /* GraphQL */ `
   query GetProfile($id: ID!) {
     getProfile(id: $id) {
@@ -12,6 +44,9 @@ export const getProfile = /* GraphQL */ `
       owner
       plan
       avatar
+      _version
+      _deleted
+      _lastChangedAt
       createdAt
       updatedAt
     }
@@ -32,10 +67,42 @@ export const listProfiles = /* GraphQL */ `
         owner
         plan
         avatar
+        _version
+        _deleted
+        _lastChangedAt
         createdAt
         updatedAt
       }
       nextToken
+      startedAt
+    }
+  }
+`;
+export const syncMinimalVersions = /* GraphQL */ `
+  query SyncMinimalVersions(
+    $filter: ModelMinimalVersionFilterInput
+    $limit: Int
+    $nextToken: String
+    $lastSync: AWSTimestamp
+  ) {
+    syncMinimalVersions(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      lastSync: $lastSync
+    ) {
+      items {
+        id
+        build
+        owner
+        _version
+        _deleted
+        _lastChangedAt
+        createdAt
+        updatedAt
+      }
+      nextToken
+      startedAt
     }
   }
 `;
@@ -45,6 +112,9 @@ export const getMinimalVersion = /* GraphQL */ `
       id
       build
       owner
+      _version
+      _deleted
+      _lastChangedAt
       createdAt
       updatedAt
     }
@@ -61,10 +131,44 @@ export const listMinimalVersions = /* GraphQL */ `
         id
         build
         owner
+        _version
+        _deleted
+        _lastChangedAt
         createdAt
         updatedAt
       }
       nextToken
+      startedAt
+    }
+  }
+`;
+export const syncHistories = /* GraphQL */ `
+  query SyncHistories(
+    $filter: ModelHistoryFilterInput
+    $limit: Int
+    $nextToken: String
+    $lastSync: AWSTimestamp
+  ) {
+    syncHistories(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      lastSync: $lastSync
+    ) {
+      items {
+        id
+        count
+        plan
+        status
+        createdAt
+        owner
+        _version
+        _deleted
+        _lastChangedAt
+        updatedAt
+      }
+      nextToken
+      startedAt
     }
   }
 `;
@@ -72,12 +176,15 @@ export const getHistory = /* GraphQL */ `
   query GetHistory($id: ID!) {
     getHistory(id: $id) {
       id
-      step
-      cube
+      count
       plan
+      status
       createdAt
-      updatedAt
       owner
+      _version
+      _deleted
+      _lastChangedAt
+      updatedAt
     }
   }
 `;
@@ -90,14 +197,18 @@ export const listHistories = /* GraphQL */ `
     listHistories(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
-        step
-        cube
+        count
         plan
+        status
         createdAt
-        updatedAt
         owner
+        _version
+        _deleted
+        _lastChangedAt
+        updatedAt
       }
       nextToken
+      startedAt
     }
   }
 `;

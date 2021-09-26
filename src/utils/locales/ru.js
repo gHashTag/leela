@@ -62,5 +62,6 @@ export default {
   terms: 'Условия',
   gameMode: 'Режим игры',
   online: 'Онлайн',
-  offline: 'Офлайн'
+  offline: 'Офлайн',
+  leaveFeedback: 'Оставить отзыв'
 }

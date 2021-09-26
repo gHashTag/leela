@@ -9,9 +9,7 @@ const styles = StyleSheet.create({
 })
 
 const IconLeela = memo(() => {
-  return (
-    <Image source={require('../../../assets/icons/120.png')} style={styles.img} />
-  )
+  return <Image source={require('../../../assets/icons/120.png')} style={styles.img} />
 })
 
 export { IconLeela }
