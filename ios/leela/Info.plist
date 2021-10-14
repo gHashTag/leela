@@ -37,8 +37,6 @@
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>App would like to access IDFA for tracking purpose</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>3270Narrow.ttf</string>

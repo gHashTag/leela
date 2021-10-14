@@ -1,6 +1,6 @@
 {
   "name": "leela",
-  "version": "3.1.1",
+  "version": "3.4",
   "private": false,
   "scripts": {
     "android": "react-native run-android",
@@ -12,7 +12,7 @@
     "device": "npx react-native run-ios --device",
     "analyzer": "npx react-native-bundle-visualizer",
     "clean": "watchman watch-del-all && rm -f yarn.lock && rm -rf node_modules && yarn && yarn start --reset-cache",
-    "build": "cd android && ./gradlew bundleRelease"
+    "build": "cd android && ./gradlew bundleRelease -x bundleReleaseJsAndAssets"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.15.4",
@@ -67,7 +67,6 @@
     "react-native-statusbar-alert": "^0.4.0",
     "react-native-swift": "^1.2.3",
     "react-native-track-player": "^1.2.7",
-    "react-native-tracking-transparency": "^0.1.1",
     "react-native-vector-icons": "^8.1.0",
     "react-native-version-info": "^1.1.0",
     "react-native-video": "^5.1.1",

@@ -1093,7 +1093,7 @@ SPEC CHECKSUMS:
   Flipper-PeerTalk: 116d8f857dc6ef55c7a5a75ea3ceaafe878aadc9
   Flipper-RSocket: 127954abe8b162fcaf68d2134d34dc2bd7076154
   FlipperKit: 8a20b5c5fcf9436cac58551dc049867247f64b00
-  glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
+  glog: 7a8788d88d2a384c05df45e95c5e763e4d81f3ad
   GoogleAppMeasurement: c6bbc9753d046b5456dd4f940057fbad2c28419e
   GoogleDataTransport: 11e3a5f2c190327df1a4a5d7e7ae3d4d5b9c9e4c
   GoogleUtilities: f8a43108b38a68eebe8b3540e1f4f2d28843ce20
@@ -1109,7 +1109,7 @@ SPEC CHECKSUMS:
   Purchases: b8b8fb6e856ac8166e217f6e014df894d821dda1
   PurchasesCoreSwift: 8ae0f08e020f0bc97c1befa4e38a0dbc8e9732e0
   PurchasesHybridCommon: 5f5c1c245b12fc5e8760af7d11cb10f888109a9b
-  RCT-Folly: ec7a233ccc97cc556cf7237f0db1ff65b986f27c
+  RCT-Folly: 91521e05ace43e89980cabd1fb54685f7827ddb9
   RCTRequired: ec2ebc96b7bfba3ca5c32740f5a0c6a014a274d2
   RCTTypeSafety: 22567f31e67c3e088c7ac23ea46ab6d4779c0ea5
   RCTYouTube: 4509d59a7de050dd0c7c6cb1f427d37678d63b5c

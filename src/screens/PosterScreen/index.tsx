@@ -16,16 +16,19 @@ type PosterScreenT = {
   navigation: navigation
 }
 
+const ratio = W / 500
+
 const styles = StyleSheet.create({
   container: { justifyContent: 'center' },
   img: {
     width: W,
-    height: H
+    height: 1006 * ratio,
+    resizeMode: 'cover'
   },
   buttonConteiner: {
     flex: 1,
     justifyContent: 'flex-end',
-    bottom: s(200),
+    bottom: 190,
     width: s(150),
     alignSelf: 'center'
   },

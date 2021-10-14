@@ -6475,11 +6475,6 @@ react-native-track-player@^1.2.7:
   resolved "https://registry.yarnpkg.com/react-native-track-player/-/react-native-track-player-1.2.7.tgz#a721662fc32383cf2979a48b33db091140e88962"
   integrity sha512-U1kA25qm398/kY6BvTojGHt4S1tYuKrJNQpXW+dA+p0B+n4LlPyoidUXfu951YM7aoisg8EmQPsevUFmcXG+cg==
 
-react-native-tracking-transparency@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/react-native-tracking-transparency/-/react-native-tracking-transparency-0.1.1.tgz#6426d4c826d0deaed7ed32f707cb2d15b09c3c3f"
-  integrity sha512-yGzpprmZ7dnlScegpoq1uQLuMLR2yDcFVHKF39FB0hxUBmck3G0bKSIbjj1ienM9IgjPvJQPgvG0dX9asyZ7NA==
-
 react-native-vector-icons@^7.0.0:
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/react-native-vector-icons/-/react-native-vector-icons-7.1.0.tgz#145487d617b2a81d395d2cf64e6e065fcab3a454"
