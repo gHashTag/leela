@@ -17,14 +17,15 @@ interface BackgroundT {
   status?: string
   imageStyle?: StyleProp<ImageStyle>
   children?: React.ReactNode
+  sourceImg?: string
 }
 
-const Background = memo(({ status = 'bg', imageStyle, children }: BackgroundT) => {
+const Background = memo(({ status = 'bg', imageStyle, sourceImg, children }: BackgroundT) => {
   const { container, img } = styles
   const source = () => ICONS.filter(x => x.title === status)[0].path
   return (
     <SafeAreaView style={container}>
-      <ImageBackground resizeMode={'contain'} source={source()} style={[img, imageStyle]}>
+      <ImageBackground resizeMode={'contain'} source={!!sourceImg ? { uri: sourceImg} : source()} style={[img, imageStyle]}>
         {children}
       </ImageBackground>
     </SafeAreaView>

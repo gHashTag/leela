@@ -13,11 +13,12 @@ import {
   SelectPlayersScreen,
   OnlineGameScreen,
   PlayraScreen,
-  ChatScreen
+  PosterScreen
 } from './screens'
 
 import TabNavigator from './TabNavigator'
 import { white, black } from './constants'
+import { lang } from './utils'
 // import { UI } from './UI'
 
 export type RootStackParamList = {
@@ -80,10 +81,11 @@ const LightTheme = {
 
 const Tab = () => {
   return (
-    <TabNavigator.Navigator initialRouteName="TAB_BOTTOM_0">
-      <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_1" component={ProfileScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_2" component={OnlineGameScreen} />
+    <TabNavigator.Navigator initialRouteName={'TAB_BOTTOM_0'}>
+      <TabNavigator.Screen name="TAB_BOTTOM_0" component={PosterScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_1" component={GameScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_2" component={ProfileScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
     </TabNavigator.Navigator>
   )
 }
