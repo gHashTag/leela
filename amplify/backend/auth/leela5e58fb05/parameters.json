@@ -1,8 +1,8 @@
 {
-    "identityPoolName": "leelad0000259_identitypool_d0000259",
+    "identityPoolName": "leela5e58fb05_identitypool_5e58fb05",
     "allowUnauthenticatedIdentities": false,
-    "resourceNameTruncated": "leelad0000259",
-    "userPoolName": "leelad0000259_userpool_d0000259",
+    "resourceNameTruncated": "leela5e58fb05",
+    "userPoolName": "leela5e58fb05_userpool_5e58fb05",
     "autoVerifiedAttributes": [
         "email"
     ],
@@ -29,10 +29,10 @@
     "userpoolClientReadAttributes": [
         "email"
     ],
-    "userpoolClientLambdaRole": "leeladd0000259_userpoolclient_lambda_role",
+    "userpoolClientLambdaRole": "leela55e58fb05_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
-    "sharedId": "d0000259",
-    "resourceName": "leelad0000259",
+    "sharedId": "5e58fb05",
+    "resourceName": "leela5e58fb05",
     "authSelections": "identityPoolAndUserPool",
     "authRoleArn": {
         "Fn::GetAtt": [

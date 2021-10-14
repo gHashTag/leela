@@ -13,7 +13,6 @@
  import PushNotificationIOS from '@react-native-community/push-notification-ios'
  import { v4 as uuidv4 } from 'uuid'
  import VersionInfo from 'react-native-version-info'
- import * as Keychain from 'react-native-keychain'
  import { LocalNotification } from './src/utils/noifications/LocalPushController'
  import messaging from '@react-native-firebase/messaging'
  import awsconfig from './src/aws-exports'
@@ -23,9 +22,6 @@
  
  Amplify.Logger.LOG_LEVEL = 'DEBUG'
  
- const MEMORY_KEY_PREFIX = '@MyStorage:'
- 
- let dataMemory: any = {}
 
 Auth.configure(awsconfig)
 
@@ -33,37 +29,6 @@ DataStore.configure({
   storageAdapter: SQLiteAdapter
 })
  
- class MyStorage {
-   static syncPromise = null
- 
-   static setItem(key: string, value: string): boolean {
-     Keychain.setGenericPassword(MEMORY_KEY_PREFIX + key, value)
-     dataMemory[key] = value
-     return dataMemory[key]
-   }
- 
-   static getItem(key: string): boolean {
-     return Object.prototype.hasOwnProperty.call(dataMemory, key) ? dataMemory[key] : undefined
-   }
- 
-   static removeItem(key: string): boolean {
-     Keychain.resetGenericPassword()
-     return delete dataMemory[key]
-   }
- 
-   static clear(): object {
-     dataMemory = {}
-     return dataMemory
-   }
- }
- 
-//  Amplify.configure({
-//    ...awsconfig,
-//    Analytics: {
-//      disabled: false
-//    },
-//    //storage: MyStorage
-//  })
 
 Amplify.configure(awsconfig)
 

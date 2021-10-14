@@ -1,0 +1,9 @@
+type Profile @model @auth(rules: [{ allow: owner, ownerField: "owner", operations: [create, update, delete] }]) {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  owner: String
+  plan: Int
+  avatar: String
+}

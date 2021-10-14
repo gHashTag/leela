@@ -11,6 +11,7 @@ import { Profile as ProfileT } from '../../../models'
 import { AppContainer, Space, Button, Input } from '../../../components'
 import { goBack, white, black, captureException } from '../../../constants'
 import { RootStackParamList, UserT } from '../../../types'
+import { actionsDice } from '../../../store'
 //import { pickAva, createImage } from '../../../screens/helper'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_UP_USERNAME'>
@@ -40,8 +41,18 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
   //   }
   // }
 
-  const createProfile = async (values: ProfileT) =>
-    (await DataStore.save(new Profile({ ...values }))) && navigation.navigate('MAIN')
+  const createProfile = async (values: ProfileT) => {
+    try {
+      await DataStore.save(new Profile({ ...values }))
+      navigation.navigate('MAIN')
+      console.log("Profile saved successfully!");
+      actionsDice.setOnline(true)
+      actionsDice.setPlayers(1)
+    } catch (error) {
+      console.log("Error saving profile", error)
+    }
+  }
+   
 
   const _onPress = async (values: { firstName: string; lastName: string }): Promise<void> => {
     setLoading(true)

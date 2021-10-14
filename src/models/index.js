@@ -4,10 +4,8 @@ import { schema } from './schema';
 
 
 
-const { Profile, MinimalVersion, History } = initSchema(schema);
+const { Profile } = initSchema(schema);
 
 export {
-  Profile,
-  MinimalVersion,
-  History
+  Profile
 };

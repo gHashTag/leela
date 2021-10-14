@@ -89,15 +89,17 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   })
 
   const fetchData = async () => {
+    console.log(`fetchData`)
     const credentials = await Keychain.getInternetCredentials('auth')
+    console.log(`credentials`, credentials)
     if (credentials) {
       const { username } = credentials
 
-      const arrHistory = await API.graphql(graphqlOperation(listHistories))
+     // const arrHistory = await API.graphql(graphqlOperation(listHistories))
       const arrProfile = await DataStore.query(Profile, c => c.email('eq', username))
-
+      console.log(`arrProfile`, arrProfile)
       arrProfile && updateProfile(arrProfile[0])
-      arrHistory && updateHistory(arrHistory.data.listHistories.items)
+      //arrHistory && updateHistory(arrHistory.data.listHistories.items)
       setLoading(false)
     } else {
       setLoading(false)

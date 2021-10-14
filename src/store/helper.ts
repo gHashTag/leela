@@ -20,6 +20,7 @@ export const createObj = async (values: HistoryT) => {
 }
 
 export const updateProfile = async (plan: number) => {
+  console.log(`plan`, plan)
   try {
     const credentials = await Keychain.getInternetCredentials('auth')
 

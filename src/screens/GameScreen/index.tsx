@@ -82,7 +82,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     }
     Rate.rate(options, success => actionsDice.setRate(success))
   }
-
+  
   return (
     <Background>
       {loading ? <Spin/> :

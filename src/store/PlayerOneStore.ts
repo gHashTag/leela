@@ -17,15 +17,15 @@ const PlayerOneStore = makeAutoObservable({
   history: [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }]
 })
 
-const fetchData = async () => {
-  const { idToken } = await Auth.currentSession()
-  const email = idToken.payload.email
-  console.log(`email`, email)
-  if (email) {
-      const user = await DataStore.query(Profile, c => c.email('eq', email))
-      return user
-  }   
-}
+// const fetchData = async () => {
+//   const { idToken } = await Auth.currentSession()
+//   const email = idToken.payload.email
+//   console.log(`email`, email)
+//   if (email) {
+//       const user = await DataStore.query(Profile, c => c.email('eq', email))
+//       return user
+//   }   
+// }
 
 const actionPlayerOne = {
   async initOnlineGame(plan: number): Promise<void> {
