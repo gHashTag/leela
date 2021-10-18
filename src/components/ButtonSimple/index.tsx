@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { StyleSheet, TouchableOpacity, GestureResponderEvent } from 'react-native'
+import { StyleSheet, TouchableOpacity, GestureResponderEvent, ViewStyle, StyleProp } from 'react-native'
 import { Txt } from '../Txt'
 import { s } from 'react-native-size-matters'
 
@@ -18,12 +18,13 @@ interface ButtonSimpleT {
   h?: 'h0' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'h7' | 'h8' | 'h9' | 'h10' | 'h11'
   onPress: (event: GestureResponderEvent) => void
   width?: number
+  viewStyle?: StyleProp<ViewStyle>
 }
 
-const ButtonSimple = memo<ButtonSimpleT>(({ title, onPress, h = 'h0', width = s(200) }) => {
+const ButtonSimple = memo<ButtonSimpleT>(({ title, onPress, h = 'h0', width = s(200), viewStyle }) => {
   const { container, fontStyle } = styles
   return (
-    <TouchableOpacity onPress={onPress} style={[container, { width }]}>
+    <TouchableOpacity onPress={onPress} style={[container, viewStyle, { width }]}>
       {h === 'h0' && <Txt h0 title={title} textStyle={fontStyle} />}
       {h === 'h1' && <Txt h1 title={title} textStyle={fontStyle} />}
       {h === 'h2' && <Txt h2 title={title} textStyle={fontStyle} />}

@@ -13,8 +13,7 @@ import {
   SelectPlayersScreen,
   OnlineGameScreen,
   PlayraScreen,
-  //ChatScreen,
-  WelcomeScreen
+  PosterScreen
 } from './screens'
 
 import {
@@ -31,8 +30,8 @@ import {
 
 import TabNavigator from './TabNavigator'
 import { white, black } from './constants'
-import { UI } from './UI'
-//import { action } from '@storybook/addon-actions';
+import { lang } from './utils'
+// import { UI } from './UI'
 
 const DarkTheme = {
   dark: true,
@@ -60,10 +59,11 @@ const LightTheme = {
 
 const Tab = () => {
   return (
-    <TabNavigator.Navigator initialRouteName="TAB_BOTTOM_0">
-      <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_1" component={ProfileScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_2" component={OnlineGameScreen} />
+    <TabNavigator.Navigator initialRouteName={'TAB_BOTTOM_0'}>
+      <TabNavigator.Screen name="TAB_BOTTOM_0" component={PosterScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_1" component={GameScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_2" component={ProfileScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
     </TabNavigator.Navigator>
   )
 }
