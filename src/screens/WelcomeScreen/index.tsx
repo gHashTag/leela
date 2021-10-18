@@ -36,8 +36,8 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
 
   const key = async (): Promise<void> => {
     try {
-      // await Keychain.resetInternetCredentials('auth')
-      // await AsyncStorage.clear()
+      await Keychain.resetInternetCredentials('auth')
+      await AsyncStorage.clear()
       const credentials = await Keychain.getInternetCredentials('auth')
       if (credentials) {
         const { username, password } = credentials
@@ -105,7 +105,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
     //actionsSubscribe.setToday('12-6-21')
     const checkGame = async () => {
       const init = await AsyncStorage.getItem('@init')
-      if (init === 'true') { 
+      if (init === 'true') {
         navigation.navigate('MAIN')
       }
     }

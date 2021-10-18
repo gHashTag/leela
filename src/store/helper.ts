@@ -6,21 +6,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { I18n } from '../utils'
 import { DiceStore, actionsDice } from './DiceStore'
 import { captureException } from '../constants'
-import { createHistory } from '../graphql/mutations'
+//import { createHistory } from '../graphql/mutations'
 import { HistoryT, SelfT, UserT } from '../types'
 import { Profile } from '../models'
 
-export const createObj = async (values: HistoryT) => {
-  try {
-    await API.graphql(graphqlOperation(createHistory, { input: values }))
-  } catch (err) {
-    console.log(`err`, err)
-    captureException(err)
-  }
-}
+// export const createObj = async (values: HistoryT) => {
+//   try {
+//     await API.graphql(graphqlOperation(createHistory, { input: values }))
+//   } catch (err) {
+//     console.log(`err`, err)
+//     captureException(err)
+//   }
+// }
 
 export const updateProfile = async (plan: number) => {
-  console.log(`plan`, plan)
   try {
     const credentials = await Keychain.getInternetCredentials('auth')
 
@@ -36,6 +35,7 @@ export const updateProfile = async (plan: number) => {
       }
     }
   } catch (err) {
+    console.log(`err`, err)
     captureException(err)
   }
 }
@@ -231,6 +231,7 @@ export const updateStep = (self: SelfT) => {
         self.start = false
         self.finish = true
         self.history.push(lib)
+        DiceStore.startGame = true
         updateProfile(68)
         //createObj(lib)
         actionsDice.setMessage('liberation')

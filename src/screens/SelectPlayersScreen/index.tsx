@@ -1,14 +1,14 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { StackNavigationProp } from '@react-navigation/stack'
-import Config from 'react-native-config'
+import * as Sentry from '@sentry/react-native'
 // import { requestTrackingPermission } from 'react-native-tracking-transparency'
 import { ms, s } from 'react-native-size-matters'
 // import * as Sentry from '@sentry/react-native'
 import { RootStackParamList } from '../../types'
 import { Background, ButtonsSlector, ModalSubscribe, Space } from '../../components'
-import { actionsDice, actionsSubscribe } from '../../store'
-import { LocalNotification } from '../../utils/noifications/LocalPushController'
+import { actionsDice } from '../../store'
+//import { LocalNotification } from '../../utils/noifications/LocalPushController'
 
 type navigation = StackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 

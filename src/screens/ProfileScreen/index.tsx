@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from 'react'
 import { View, SectionList } from 'react-native'
-import { Auth, API, graphqlOperation, DataStore } from 'aws-amplify'
+import { DataStore } from 'aws-amplify'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { observer } from 'mobx-react-lite'
 import { ScaledSheet } from 'react-native-size-matters'
 import * as Keychain from 'react-native-keychain'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { listHistories } from '../../../src/graphql/queries'
 import { I18n } from '../../utils'
 import { RootStackParamList, UserT, HistoryT } from '../../types'
 import { AppContainer, Txt, Space, EmojiText, Button, HeaderMaster } from '../../components'
 import { captureException } from '../../constants'
 import {
   DiceStore,
+  actionPlayerOne,
   PlayerOneStore,
   PlayerTwoStore,
   PlayerThreeStore,
   PlayerFourStore,
   PlayerFiveStore,
-  PlayerSixStore,
+  PlayerSixStore
 } from '../../store'
 import { Profile } from '../../models'
 import { _onPressReset } from '../helper'
@@ -89,17 +89,12 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   })
 
   const fetchData = async () => {
-    console.log(`fetchData`)
     const credentials = await Keychain.getInternetCredentials('auth')
-    console.log(`credentials`, credentials)
     if (credentials) {
       const { username } = credentials
-
-     // const arrHistory = await API.graphql(graphqlOperation(listHistories))
+      // const arrHistory = await API.graphql(graphqlOperation(listHistories))
       const arrProfile = await DataStore.query(Profile, c => c.email('eq', username))
-      console.log(`arrProfile`, arrProfile)
       arrProfile && updateProfile(arrProfile[0])
-      //arrHistory && updateHistory(arrHistory.data.listHistories.items)
       setLoading(false)
     } else {
       setLoading(false)
@@ -114,11 +109,11 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
     }
   }, [navigation])
 
-  const _renderItem = ({ item, index }: StepsT) => {
+  const _renderItem = ({ item }: StepsT) => {
     const { id, plan, count, status } = item
     return (
       <View key={id} style={container}>
-        <Txt h6 title={`${index} => `} />
+        {/* <Txt h6 title={`${index} => `} /> */}
         <Space width={0} />
         {status === 'cube' && (
           <>
@@ -148,36 +143,36 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   const DATA = [
     {
       title: `${I18n.t('player')} 1`,
-      data: PlayerOneStore.history.slice()
+      data: PlayerOneStore.history.slice().reverse()
     },
     {
       title: `${I18n.t('player')} 2`,
-      data: PlayerTwoStore.history.slice()
+      data: PlayerTwoStore.history.slice().reverse()
     },
     {
       title: `${I18n.t('player')} 3`,
-      data: PlayerThreeStore.history.slice()
+      data: PlayerThreeStore.history.slice().reverse()
     },
     {
       title: `${I18n.t('player')} 4`,
-      data: PlayerFourStore.history.slice()
+      data: PlayerFourStore.history.slice().reverse()
     },
     {
       title: `${I18n.t('player')} 5`,
-      data: PlayerFiveStore.history.slice()
+      data: PlayerFiveStore.history.slice().reverse()
     },
     {
       title: `${I18n.t('player')} 6`,
-      data: PlayerSixStore.history.slice()
+      data: PlayerSixStore.history.slice().reverse()
     }
   ].slice(0, DiceStore.multi)
 
-  
   const _onPressSignOut = async (): Promise<void> => {
     try {
       //await Auth.signOut()
       await Keychain.resetInternetCredentials('auth')
       await AsyncStorage.clear()
+      actionPlayerOne.resetGame()
       navigation.pop(3)
     } catch (err) {
       captureException(err)

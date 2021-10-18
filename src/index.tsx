@@ -13,7 +13,8 @@ import {
   SelectPlayersScreen,
   OnlineGameScreen,
   PlayraScreen,
-  PosterScreen
+  PosterScreen,
+  WelcomeScreen
 } from './screens'
 
 import {
@@ -30,8 +31,8 @@ import {
 
 import TabNavigator from './TabNavigator'
 import { white, black } from './constants'
-import { lang } from './utils'
-// import { UI } from './UI'
+
+import { UI } from './UI'
 
 const DarkTheme = {
   dark: true,

@@ -1,12 +1,9 @@
 import { v4 as uuidv4 } from 'uuid'
 import { makeAutoObservable } from 'mobx'
 import { persistence, StorageAdapter } from 'mobx-persist-store'
-import { Auth, DataStore } from 'aws-amplify'
 import { writeStore, readStore } from './helper'
 import { actionsDice, DiceStore } from './'
 import { updateStep, updateProfile } from './helper'
-import { Profile } from '../models'
-import { CAPABILITY_JUMP_FORWARD } from 'react-native-track-player'
 
 const PlayerOneStore = makeAutoObservable({
   player: 1,
@@ -24,17 +21,23 @@ const PlayerOneStore = makeAutoObservable({
 //   if (email) {
 //       const user = await DataStore.query(Profile, c => c.email('eq', email))
 //       return user
-//   }   
+//   }
 // }
 
 const actionPlayerOne = {
   async initOnlineGame(plan: number): Promise<void> {
     if (plan) {
       PlayerOneStore.plan = plan
-      DiceStore.startGame = true
+      if (plan === 68) {
+        DiceStore.startGame = false
+        PlayerOneStore.start = false
+      } else {
+        DiceStore.startGame = true
+        PlayerOneStore.start = true
+      }
     }
   },
-  resetGame(): void {
+  async resetGame(): Promise<void> {
     PlayerOneStore.start = false
     PlayerOneStore.finish = false
     PlayerOneStore.plan = 68
