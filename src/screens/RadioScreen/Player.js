@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import Video from 'react-native-video'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Platform, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import TrackPlayer, { usePlaybackState, useTrackPlayerEvents } from 'react-native-track-player'
+// import TrackPlayer, { usePlaybackState, useTrackPlayerEvents } from 'react-native-track-player'
 import BackgroundTimer from 'react-native-background-timer'
 import * as Sentry from '@sentry/react-native'
 import { PlayButtonStore, actionPlay, actionsSubscribe, SubscribeStore } from '../../store'
@@ -89,6 +89,7 @@ function ControlButton({ title, onPress }) {
 
 const Player = observer(() => {
   const [track, setTrack] = useState('')
+  const [paused, setPaused] = React.useState(false)
   // const playbackState = usePlaybackState()
   //
 
@@ -203,7 +204,13 @@ const Player = observer(() => {
         <Space height={10} />
         {title !== '' && <Txt h1 title={title} textStyle={h} />}
         <Txt h4 title={artist} textStyle={h} />
-        <Video ignoreSilentSwitch="ignore" ref={playerRef} source={{ uri: PlayButtonStore.url }} audioOnly />
+        <Video
+          ignoreSilentSwitch="ignore"
+          // paused={Platform.OS !== 'ios' && paused}
+          ref={playerRef}
+          source={{ uri: PlayButtonStore.url }}
+          // onEnd={() => Platform.OS !== 'ios' && setPaused(true)}
+        />
         <Space height={10} />
         <View style={controlsStyle}>
           <ControlButton title={'<<'} onPress={actionPlay.skipToPrevious} />

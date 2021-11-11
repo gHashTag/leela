@@ -4,7 +4,7 @@ import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { actionPlay, PlayButtonStore } from '../../store'
 import { RootStackParamList } from '../../types'
-import { AppContainer, Txt, Space, ButtonPlay, YouTubePlayer } from '../../components'
+import { AppContainer, Txt, Space, ButtonPlay, VideoPlayer } from '../../components'
 import { goBack } from '../../constants'
 import { StyleSheet } from 'react-native'
 
@@ -30,6 +30,8 @@ const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) =
     actionPlay.stop()
   }, [])
 
+  console.log(`route.params.url`, route.params.url)
+
   return (
     <AppContainer
       onPress={() => {
@@ -39,7 +41,7 @@ const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) =
       title={title}
     >
       <Space height={10} />
-      {videoUrl !== '' && <YouTubePlayer uri={videoUrl} />}
+      {videoUrl !== '' && <VideoPlayer uri={videoUrl} />}
       {/* {videoUrl === '' ? (
         <ButtonPlay type={PlayButtonStore.play} obj={route.params} />
       ) : (

@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
+import { s } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
-import { AppContainer, ButtonPlay, Txt, Space, YouTubePlayer } from '../../components'
+import { AppContainer, ButtonPlay, Txt, Space, VideoPlayer } from '../../components'
 import { goBack } from '../../constants'
 import { actionPlay, PlayButtonStore } from '../../store'
 
@@ -17,8 +18,19 @@ type PlansDetailScreenT = {
 }
 
 const styles = StyleSheet.create({
+  center: {
+    position: 'absolute',
+    height: s(230),
+    width: '100%',
+    top: s(10),
+    left: 0,
+    bottom: 0,
+    right: 0,
+    zIndex: 10
+  },
   h3: {
-    padding: 20
+    padding: 20,
+    top: s(220)
   }
 })
 
@@ -31,22 +43,18 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
   }, [])
 
   return (
-    <AppContainer
-      onPress={() => {
-        goBack(navigation)()
-        actionPlay.stop()
-      }}
-      title={title}
-    >
-      <Space height={10} />
-      {videoUrl === '' ? (
-        <ButtonPlay type={PlayButtonStore.play} obj={route.params} />
-      ) : (
-        <YouTubePlayer uri={videoUrl} />
-      )}
-      <Txt h3 title={content} textStyle={h3} textAlign="left" />
-      <Space height={300} />
-    </AppContainer>
+    <>
+      <AppContainer
+        onPress={() => {
+          goBack(navigation)()
+          actionPlay.stop()
+        }}
+        title={title}
+      >
+        <View style={styles.center}>{videoUrl !== '' && <VideoPlayer uri={videoUrl} />}</View>
+        <Txt h3 title={content} textStyle={h3} textAlign="left" />
+      </AppContainer>
+    </>
   )
 })
 

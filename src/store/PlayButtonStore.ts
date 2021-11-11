@@ -1,5 +1,5 @@
 import { makeAutoObservable } from 'mobx'
-import TrackPlayer from 'react-native-track-player'
+// import TrackPlayer from 'react-native-track-player'
 import _ from 'lodash'
 import * as Sentry from '@sentry/react-native'
 
@@ -38,23 +38,23 @@ const actionPlay = {
     // await TrackPlayer.add(shuffleArr)
     // await TrackPlayer.play()
   },
-  async skipToNext() {
-    try {
-      await TrackPlayer.skipToNext()
-    } catch (e) {
-      Sentry.captureException(e)
-      await TrackPlayer.skip('1')
-    }
-  },
-  async skipToPrevious() {
-    const tracks = await TrackPlayer.getQueue()
-    try {
-      await TrackPlayer.skipToPrevious()
-    } catch (e) {
-      Sentry.captureException(e)
-      await TrackPlayer.skip((tracks.length - 1).toString())
-    }
-  }
+  // async skipToNext() {
+  //   try {
+  //     await TrackPlayer.skipToNext()
+  //   } catch (e) {
+  //     Sentry.captureException(e)
+  //     await TrackPlayer.skip('1')
+  //   }
+  // },
+  // async skipToPrevious() {
+  //   const tracks = await TrackPlayer.getQueue()
+  //   try {
+  //     await TrackPlayer.skipToPrevious()
+  //   } catch (e) {
+  //     Sentry.captureException(e)
+  //     await TrackPlayer.skip((tracks.length - 1).toString())
+  //   }
+  // }
 }
 
 export { PlayButtonStore, actionPlay }

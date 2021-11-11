@@ -6,7 +6,7 @@ import { LogBox, Platform } from 'react-native'
 import Amplify from '@aws-amplify/core'
 import { Auth, DataStore } from 'aws-amplify'
 import Purchases from 'react-native-purchases'
-import TrackPlayer from 'react-native-track-player'
+// import TrackPlayer from 'react-native-track-player'
 import { configure } from 'mobx'
 import * as Sentry from '@sentry/react-native'
 import { SQLiteAdapter } from '@aws-amplify/datastore-storage-adapter'
@@ -76,7 +76,7 @@ LogBox.ignoreLogs([
   'Sending'
 ])
 
-TrackPlayer.registerPlaybackService(() => require('./service'))
+// TrackPlayer.registerPlaybackService(() => require('./service'))
 
 class Init extends React.Component {
   componentDidMount() {
