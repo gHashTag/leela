@@ -2,9 +2,9 @@ import React, { useEffect } from 'react'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
-import { actionPlay, PlayButtonStore } from '../../store'
+import { actionPlay } from '../../store'
 import { RootStackParamList } from '../../types'
-import { AppContainer, Txt, Space, ButtonPlay, VideoPlayer } from '../../components'
+import { AppContainer, TextCopy, Space } from '../../components'
 import { goBack } from '../../constants'
 import { StyleSheet } from 'react-native'
 
@@ -30,8 +30,6 @@ const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) =
     actionPlay.stop()
   }, [])
 
-  console.log(`route.params.url`, route.params.url)
-
   return (
     <AppContainer
       onPress={() => {
@@ -41,13 +39,13 @@ const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) =
       title={title}
     >
       <Space height={10} />
-      {videoUrl !== '' && <VideoPlayer uri={videoUrl} />}
+      {/* {videoUrl !== '' && <VideoPlayer uri={videoUrl} />} */}
       {/* {videoUrl === '' ? (
         <ButtonPlay type={PlayButtonStore.play} obj={route.params} />
       ) : (
         <YouTubePlayer uri={videoUrl} />
       )} */}
-      <Txt h3 title={content} textStyle={h3} textAlign="left" />
+      <TextCopy h3 title={content} textStyle={h3} textAlign="left" />
       <Space height={300} />
     </AppContainer>
   )

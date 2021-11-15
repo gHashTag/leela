@@ -5,7 +5,7 @@ import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
-import { AppContainer, Txt, VideoPlayer } from '../../components'
+import { AppContainer, TextCopy, VideoPlayer, Space } from '../../components'
 import { goBack } from '../../constants'
 import { actionPlay } from '../../store'
 
@@ -56,7 +56,9 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
             <VideoPlayer uri={videoUrl} />
           </View>
         )}
-        <Txt h3 title={content} textStyle={h3} textAlign="left" />
+        <Space height={s(30)} />
+        <TextCopy h3 title={content} textStyle={h3} textAlign="left" />
+        <Space height={300} />
       </AppContainer>
     </>
   )
