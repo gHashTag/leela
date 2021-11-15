@@ -2,12 +2,21 @@ import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import Spinner from 'react-native-spinkit'
 import { useTheme } from '@react-navigation/native'
+import { s } from 'react-native-size-matters'
 import { secondary, black, white } from '../../constants'
+import { Background } from '..'
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'center',
     alignItems: 'center'
+  },
+  activityIndicator: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    bottom: s(50)
   }
 })
 
@@ -36,9 +45,14 @@ interface LoadingT {
 
 const Loading = ({ loading, paddingTop = 0, size = 65, type = 'Pulse' }: LoadingT) => {
   const { dark } = useTheme()
+  const { container, activityIndicator } = styles
   return (
-    <View style={[styles.container, { backgroundColor: dark ? black : white, paddingTop }]}>
-      {loading && <Spinner size={size} type={type} color={secondary} />}
+    <View style={[container, { backgroundColor: 'transparent', paddingTop }]}>
+      {loading && (
+        <View style={activityIndicator}>
+          <Spinner size={size} type={type} color={secondary} />
+        </View>
+      )}
     </View>
   )
 }

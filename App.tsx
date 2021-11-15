@@ -53,7 +53,7 @@ Sentry.init({
       // ... other options
     })
   ]
-  // integrations: [new TracingIntegrations.BrowserTracing()],
+  //debug: true
   // // To set a uniform sample rate
 })
 
@@ -89,4 +89,4 @@ class Init extends React.Component {
   }
 }
 
-export default Init
+export default Sentry.wrap(Init)

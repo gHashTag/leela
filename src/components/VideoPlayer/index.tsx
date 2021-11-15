@@ -1,7 +1,10 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { s } from 'react-native-size-matters'
+import { useTheme } from '@react-navigation/native'
 import Video from 'react-native-video'
+import { secondary, primary } from '../../constants'
+import Spinner from 'react-native-spinkit'
+import { s } from 'react-native-size-matters'
 
 const styles = StyleSheet.create({
   container: {
@@ -10,6 +13,11 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: 0,
     right: 0
+  },
+  activityIndicator: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 })
 
@@ -18,8 +26,29 @@ type VideoPlayerT = {
 }
 
 const VideoPlayer = ({ uri }: VideoPlayerT) => {
+  const [opacity, setOpacity] = useState(0)
   const playerRef = useRef<Video>(null)
-  return <Video style={styles.container} ignoreSilentSwitch="ignore" ref={playerRef} source={{ uri }} />
+  const { dark } = useTheme()
+  const { activityIndicator } = styles
+
+  return (
+    <>
+      <Video
+        onBuffer={({ isBuffering }) => setOpacity(isBuffering ? 1 : 0)}
+        onLoadStart={() => setOpacity(1)}
+        onLoad={() => setOpacity(0)}
+        style={styles.container}
+        ignoreSilentSwitch="ignore"
+        ref={playerRef}
+        source={{ uri }}
+      />
+      {!!opacity && (
+        <View style={activityIndicator}>
+          <Spinner size={s(65)} type="Pulse" color={dark ? primary : secondary} />
+        </View>
+      )}
+    </>
+  )
 }
 
 export { VideoPlayer }

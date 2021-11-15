@@ -5,9 +5,9 @@ import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
-import { AppContainer, ButtonPlay, Txt, Space, VideoPlayer } from '../../components'
+import { AppContainer, Txt, VideoPlayer } from '../../components'
 import { goBack } from '../../constants'
-import { actionPlay, PlayButtonStore } from '../../store'
+import { actionPlay } from '../../store'
 
 type navigation = StackNavigationProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
 type route = RouteProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
@@ -51,7 +51,11 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
         }}
         title={title}
       >
-        <View style={styles.center}>{videoUrl !== '' && <VideoPlayer uri={videoUrl} />}</View>
+        {videoUrl !== '' && (
+          <View style={styles.center}>
+            <VideoPlayer uri={videoUrl} />
+          </View>
+        )}
         <Txt h3 title={content} textStyle={h3} textAlign="left" />
       </AppContainer>
     </>

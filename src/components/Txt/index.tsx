@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
-    fontSize: Platform.OS === 'ios' ? ms(35, 0.6) : ms(35, 0.6)
+    fontSize: Platform.OS === 'ios' ? ms(35, 0.3) : ms(35, 0.6)
   },
   h1Style: {
     fontFamily: 'Montserrat',
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
-    fontSize: Platform.OS === 'ios' ? s(95) : s(95)
+    fontSize: ms(95, 0.5)
   },
   h8Style: {
     fontSize: Platform.OS === 'ios' ? s(14) : s(14),

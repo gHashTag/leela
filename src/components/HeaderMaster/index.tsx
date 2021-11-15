@@ -5,7 +5,7 @@ import { Txt } from '../Txt'
 import { ScaledSheet, s } from 'react-native-size-matters'
 import { Space } from '../Space'
 import { Avatar } from '../Avatar'
-import { Device, W } from '../../constants'
+import { Device } from '../../constants'
 import { UserT } from '../../types'
 
 const styles = ScaledSheet.create({
@@ -56,7 +56,6 @@ const styles = ScaledSheet.create({
     top: 10
   },
   sub: {
-    width: W - 90,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center'
@@ -76,6 +75,7 @@ const HeaderMaster = memo(({ loading, user, onPress }: HeaderMasterT) => {
     <TouchableOpacity style={container} onPress={onPress}>
       <View style={sub}>
         <Avatar avatar={avatar} viewStyle={avatarStyle} size="xLarge" onPress={onPress} loading={loading} />
+        <Space width={s(50)} />
         <Txt h7 title={String(plan)} textStyle={h2} />
       </View>
       <View>

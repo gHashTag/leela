@@ -5,6 +5,7 @@ import { Header } from '../Header'
 import { Space } from '../Space'
 import { Spin } from '../Spin'
 import { Background } from '../Background'
+import { Loading } from '..'
 
 const styles = StyleSheet.create({
   container: {
@@ -52,7 +53,7 @@ const AppContainer = memo<AppContainerT>(
     message = '',
     title,
     loading = false,
-    textAlign
+    textAlign = 'left'
   }) => {
     const { container, sub, statusStyle } = styles
     return (
@@ -81,7 +82,7 @@ const AppContainer = memo<AppContainerT>(
             )}
             <>
               {loading ? (
-                <Spin />
+                <Loading loading={loading} />
               ) : (
                 <>
                   {!flatList ? (

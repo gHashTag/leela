@@ -8,7 +8,7 @@ import { Txt } from '../Txt'
 const styles = ScaledSheet.create({
   container: {
     alignSelf: 'center',
-    width: W - (Platform.OS === 'ios' ? ms(130, 1.8) : ms(130, 1.8)),
+    width: W - (Platform.OS === 'ios' ? ms(130, 2.2) : ms(130, 1.8)),
     height: Platform.OS === 'ios' ? ms(60) : ms(70),
     borderRadius: Platform.OS === 'ios' ? scale(30) : scale(35),
     borderWidth: 1,

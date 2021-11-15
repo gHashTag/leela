@@ -46,9 +46,9 @@ interface HeaderT {
   title?: string
   iconLeft?: string | null
   iconRight?: string | null
-  onPress?: () => void
+  onPress?: () => void | null
   onPressRight?: () => void
-  textAlign?: string
+  textAlign?: string | null
   children?: React.ReactNode
 }
 
