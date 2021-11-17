@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { useTheme } from '@react-navigation/native'
-import Video from 'react-native-video'
+import Video from 'react-native-video-controls'
 import { secondary, primary } from '../../constants'
 import Spinner from 'react-native-spinkit'
 import { s } from 'react-native-size-matters'
@@ -26,27 +26,17 @@ type VideoPlayerT = {
 }
 
 const VideoPlayer = ({ uri }: VideoPlayerT) => {
-  const [opacity, setOpacity] = useState(0)
   const playerRef = useRef<Video>(null)
-  const { dark } = useTheme()
-  const { activityIndicator } = styles
-
   return (
     <>
       <Video
-        onBuffer={({ isBuffering }) => setOpacity(isBuffering ? 1 : 0)}
-        onLoadStart={() => setOpacity(1)}
-        onLoad={() => setOpacity(0)}
         style={styles.container}
         ignoreSilentSwitch="ignore"
         ref={playerRef}
         source={{ uri }}
+        disableFullscreen
+        disableBack
       />
-      {!!opacity && (
-        <View style={activityIndicator}>
-          <Spinner size={s(65)} type="Pulse" color={dark ? primary : secondary} />
-        </View>
-      )}
     </>
   )
 }
