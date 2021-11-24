@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { View, SectionList } from 'react-native'
-import { DataStore } from 'aws-amplify'
+import { Auth, DataStore } from 'aws-amplify'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { observer } from 'mobx-react-lite'
 import { ScaledSheet } from 'react-native-size-matters'
@@ -20,7 +20,8 @@ import {
   PlayerFiveStore,
   PlayerSixStore
 } from '../../store'
-import { Profile } from '../../models'
+import { getCurrentUser, getHistory } from '../../store/helper'
+import { History, Profile } from '../../models'
 import { _onPressReset } from '../helper'
 
 type navigation = StackNavigationProp<RootStackParamList, 'PROFILE_SCREEN'>
@@ -85,18 +86,20 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
     count: 1,
     id: '0',
     plan: 68,
-    status: ''
+    status: '',
+    owner: '',
+    createdAt: ''
   })
 
   const fetchData = async () => {
-    const credentials = await Keychain.getInternetCredentials('auth')
-    if (credentials) {
-      const { username } = credentials
-      // const arrHistory = await API.graphql(graphqlOperation(listHistories))
-      const arrProfile = await DataStore.query(Profile, c => c.email('eq', username))
-      arrProfile && updateProfile(arrProfile[0])
+    try {
+      const arrProfile = await getCurrentUser()
+      updateProfile(arrProfile)
+      const history = await getHistory()
+      updateHistory(history)
       setLoading(false)
-    } else {
+    } catch (error) {
+      console.log(`error`, error)
       setLoading(false)
     }
   }
@@ -104,8 +107,10 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   useEffect(() => {
     fetchData()
     const subscription = DataStore.observe(Profile).subscribe(() => fetchData())
+    const subscriptionHistory = DataStore.observe(History).subscribe(() => fetchData())
     return () => {
       subscription.unsubscribe()
+      subscriptionHistory.unsubscribe()
     }
   }, [navigation])
 
@@ -113,7 +118,6 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
     const { id, plan, count, status } = item
     return (
       <View key={id} style={container}>
-        {/* <Txt h6 title={`${index} => `} /> */}
         <Space width={0} />
         {status === 'cube' && (
           <>
@@ -130,7 +134,6 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
             <EmojiText name={icon(status)} />
           </>
         )}
-
         <Txt h6 title={`=> ${I18n.t('plan')} ${plan}`} />
       </View>
     )
@@ -186,7 +189,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
     }
   ]
 
-  const arrayData = !DiceStore.online ? onlineData : DATA
+  const arrayData = DiceStore.online ? onlineData : DATA
 
   return (
     <AppContainer flatList iconLeft={null} title={I18n.t('history')} textAlign="center" loading={loading}>

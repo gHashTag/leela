@@ -12,9 +12,26 @@ export const createProfile = /* GraphQL */ `
       firstName
       lastName
       email
-      owner
       plan
       avatar
+      owner
+      histories {
+        items {
+          id
+          historyID
+          count
+          plan
+          status
+          _version
+          _deleted
+          _lastChangedAt
+          createdAt
+          updatedAt
+          owner
+        }
+        nextToken
+        startedAt
+      }
       _version
       _deleted
       _lastChangedAt
@@ -33,9 +50,26 @@ export const updateProfile = /* GraphQL */ `
       firstName
       lastName
       email
-      owner
       plan
       avatar
+      owner
+      histories {
+        items {
+          id
+          historyID
+          count
+          plan
+          status
+          _version
+          _deleted
+          _lastChangedAt
+          createdAt
+          updatedAt
+          owner
+        }
+        nextToken
+        startedAt
+      }
       _version
       _deleted
       _lastChangedAt
@@ -54,14 +88,91 @@ export const deleteProfile = /* GraphQL */ `
       firstName
       lastName
       email
-      owner
       plan
       avatar
+      owner
+      histories {
+        items {
+          id
+          historyID
+          count
+          plan
+          status
+          _version
+          _deleted
+          _lastChangedAt
+          createdAt
+          updatedAt
+          owner
+        }
+        nextToken
+        startedAt
+      }
       _version
       _deleted
       _lastChangedAt
       createdAt
       updatedAt
+    }
+  }
+`;
+export const createHistory = /* GraphQL */ `
+  mutation CreateHistory(
+    $input: CreateHistoryInput!
+    $condition: ModelHistoryConditionInput
+  ) {
+    createHistory(input: $input, condition: $condition) {
+      id
+      historyID
+      count
+      plan
+      status
+      _version
+      _deleted
+      _lastChangedAt
+      createdAt
+      updatedAt
+      owner
+    }
+  }
+`;
+export const updateHistory = /* GraphQL */ `
+  mutation UpdateHistory(
+    $input: UpdateHistoryInput!
+    $condition: ModelHistoryConditionInput
+  ) {
+    updateHistory(input: $input, condition: $condition) {
+      id
+      historyID
+      count
+      plan
+      status
+      _version
+      _deleted
+      _lastChangedAt
+      createdAt
+      updatedAt
+      owner
+    }
+  }
+`;
+export const deleteHistory = /* GraphQL */ `
+  mutation DeleteHistory(
+    $input: DeleteHistoryInput!
+    $condition: ModelHistoryConditionInput
+  ) {
+    deleteHistory(input: $input, condition: $condition) {
+      id
+      historyID
+      count
+      plan
+      status
+      _version
+      _deleted
+      _lastChangedAt
+      createdAt
+      updatedAt
+      owner
     }
   }
 `;

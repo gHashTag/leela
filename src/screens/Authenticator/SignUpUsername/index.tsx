@@ -1,5 +1,5 @@
 import React, { useState, ReactElement, useRef } from 'react'
-import { Auth, API, graphqlOperation, DataStore } from 'aws-amplify'
+import { Auth, DataStore } from 'aws-amplify'
 import { Formik, FormikProps } from 'formik'
 import * as Yup from 'yup'
 import { v4 as uuidv4 } from 'uuid'
@@ -24,35 +24,18 @@ type SignUpUsernameT = {
 
 const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string>('')
   const formikRef = useRef<FormikProps<any>>()
-
-  // const createObj = async (values: UserT) => {
-  //   setLoading(true)
-  //   try {
-  //     const obj = await API.graphql(graphqlOperation(createProfile, { input: values }))
-  //     //console.log('obj', obj)
-  //     obj && navigation.navigate('MAIN')
-  //     setLoading(false)
-  //   } catch (err) {
-  //     captureException(err.message)
-  //     setError(err.message)
-
-  //   }
-  // }
 
   const createProfile = async (values: ProfileT) => {
     try {
       await DataStore.save(new Profile({ ...values }))
       navigation.navigate('MAIN')
-      console.log("Profile saved successfully!");
       actionsDice.setOnline(true)
       actionsDice.setPlayers(1)
     } catch (error) {
-      console.log("Error saving profile", error)
+      captureException(error)
     }
   }
-   
 
   const _onPress = async (values: { firstName: string; lastName: string }): Promise<void> => {
     setLoading(true)

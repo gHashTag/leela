@@ -10,7 +10,7 @@ export default {
   resetYourPassword: 'Найден существующий пользователь. Пожалуйста, сбросьте свой пароль',
   forgotPassword: 'Забыли пароль?',
   userDoesNotExist: 'Пользователь не существует!',
-  insertCode: 'Вставьте код',
+  insertCode: 'Вставьте код отправленый на вашу почту',
   confirm: 'Подтвердить',
   resendCode: 'Отправить код еще раз?',
   invalidVerificationCode: 'Предоставлен неверный код подтверждения, попробуйте еще раз.',

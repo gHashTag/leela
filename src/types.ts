@@ -57,6 +57,8 @@ export interface HistoryT {
   plan: number
   count: number
   status: string
+  owner: string
+  createdAt: string
 }
 
 export interface SelfT {

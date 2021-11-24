@@ -9,9 +9,26 @@ export const onCreateProfile = /* GraphQL */ `
       firstName
       lastName
       email
-      owner
       plan
       avatar
+      owner
+      histories {
+        items {
+          id
+          historyID
+          count
+          plan
+          status
+          _version
+          _deleted
+          _lastChangedAt
+          createdAt
+          updatedAt
+          owner
+        }
+        nextToken
+        startedAt
+      }
       _version
       _deleted
       _lastChangedAt
@@ -27,9 +44,26 @@ export const onUpdateProfile = /* GraphQL */ `
       firstName
       lastName
       email
-      owner
       plan
       avatar
+      owner
+      histories {
+        items {
+          id
+          historyID
+          count
+          plan
+          status
+          _version
+          _deleted
+          _lastChangedAt
+          createdAt
+          updatedAt
+          owner
+        }
+        nextToken
+        startedAt
+      }
       _version
       _deleted
       _lastChangedAt
@@ -45,14 +79,82 @@ export const onDeleteProfile = /* GraphQL */ `
       firstName
       lastName
       email
-      owner
       plan
       avatar
+      owner
+      histories {
+        items {
+          id
+          historyID
+          count
+          plan
+          status
+          _version
+          _deleted
+          _lastChangedAt
+          createdAt
+          updatedAt
+          owner
+        }
+        nextToken
+        startedAt
+      }
       _version
       _deleted
       _lastChangedAt
       createdAt
       updatedAt
+    }
+  }
+`;
+export const onCreateHistory = /* GraphQL */ `
+  subscription OnCreateHistory {
+    onCreateHistory {
+      id
+      historyID
+      count
+      plan
+      status
+      _version
+      _deleted
+      _lastChangedAt
+      createdAt
+      updatedAt
+      owner
+    }
+  }
+`;
+export const onUpdateHistory = /* GraphQL */ `
+  subscription OnUpdateHistory {
+    onUpdateHistory {
+      id
+      historyID
+      count
+      plan
+      status
+      _version
+      _deleted
+      _lastChangedAt
+      createdAt
+      updatedAt
+      owner
+    }
+  }
+`;
+export const onDeleteHistory = /* GraphQL */ `
+  subscription OnDeleteHistory {
+    onDeleteHistory {
+      id
+      historyID
+      count
+      plan
+      status
+      _version
+      _deleted
+      _lastChangedAt
+      createdAt
+      updatedAt
+      owner
     }
   }
 `;

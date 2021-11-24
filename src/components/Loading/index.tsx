@@ -3,8 +3,7 @@ import { StyleSheet, View } from 'react-native'
 import Spinner from 'react-native-spinkit'
 import { useTheme } from '@react-navigation/native'
 import { s } from 'react-native-size-matters'
-import { secondary, black, white } from '../../constants'
-import { Background } from '..'
+import { secondary } from '../../constants'
 
 const styles = StyleSheet.create({
   container: {
@@ -16,7 +15,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    bottom: s(50)
+    bottom: s(150)
   }
 })
 

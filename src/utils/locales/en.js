@@ -10,7 +10,7 @@ export default {
   resetYourPassword: 'Existing user found. Please reset your password',
   forgotPassword: 'Forgot Password?',
   userDoesNotExist: 'User does not exist!',
-  insertCode: 'Insert code',
+  insertCode: 'Insert the code sent to your mail',
   confirm: 'Confirm',
   resendCode: 'Resend code?',
   invalidVerificationCode: 'Invalid verification code provided, please try again.',

@@ -73,7 +73,6 @@ const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
       >
         {({ values, handleChange, errors, setFieldTouched, touched, handleSubmit }): ReactElement => (
           <>
-            <Space height={150} />
             <Input
               name="code"
               value={values.code}

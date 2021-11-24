@@ -1,5 +1,6 @@
-import { Auth } from 'aws-amplify'
+import { Auth, DataStore, Predicates } from 'aws-amplify'
 import { captureException } from '../constants'
+import { History } from '../models'
 import {
   DiceStore,
   actionPlayerOne,
@@ -20,6 +21,7 @@ export const _onPressReset = async (navigation): Promise<void> => {
     actionPlayerFive.resetGame()
     actionPlayerSix.resetGame()
     !DiceStore.online && navigation.pop(3)
+    await DataStore.delete(History, Predicates.ALL)
     actionsDice.setPlayers(1)
   } catch (err) {
     captureException(err)

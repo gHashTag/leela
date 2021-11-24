@@ -7,10 +7,13 @@ import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
 import { Background, Dice, GameBoard, Header, Space, Txt, ButtonElements, Spin } from '../../components'
 import { DiceStore, actionPlayerOne, actionsDice } from '../../store'
+import { getCurrentUser } from '../../store/helper'
 import { Button } from 'react-native'
 import Rate from 'react-native-rate'
 import { isLoggedIn, _onPressReset } from '../helper'
 import { Profile } from '../../models'
+import { captureException } from '../../constants'
+import { History } from '../../models'
 
 type navigation = StackNavigationProp<RootStackParamList, 'TAB_BOTTOM_0'>
 
@@ -21,37 +24,19 @@ type GameScreenT = {
 const GameScreen = observer(({ navigation }: GameScreenT) => {
   const [loading, setLoading] = useState<boolean>(true)
 
-  // const fetchData = async () => {
-  //   // let isLog = await isLoggedIn()
-  //   // if (isLog) {
-  //     try {
-  //       const arrProfile = await API.graphql(graphqlOperation(listProfiles))
-  //       console.log(`plan`, arrProfile.data.listProfiles.items[0].plan)
-  //       const plan = arrProfile.data.listProfiles.items[0].plan
-  //       console.log(`plan`, plan)
-  //       if(plan) {
-  //         actionPlayerOne.initOnlineGame(plan)
-  //       }
-  //       setLoading(false)
-  //     } catch (error) {
-  //       console.log(`error`, error)
-  //       setLoading(false)
-  //     }
-  //   //}
-  // }
-
   const fetchData = async () => {
     let isLog = await isLoggedIn()
     if (isLog) {
       try {
-        const arrProfile = await DataStore.query(Profile)
-        const plan = arrProfile[0].plan
+        const arrProfile = await getCurrentUser()
+        const plan = arrProfile?.plan
+        console.log(`plan`, plan)
         if (plan) {
           actionPlayerOne.initOnlineGame(plan)
         }
         setLoading(false)
       } catch (error) {
-        console.log(`error`, error)
+        captureException(error)
         setLoading(false)
       }
     }
@@ -60,8 +45,10 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   useEffect(() => {
     fetchData()
     const subscription = DataStore.observe(Profile).subscribe(() => fetchData())
+    const subscriptionHistory = DataStore.observe(History).subscribe(() => fetchData())
     return () => {
       subscription.unsubscribe()
+      subscriptionHistory.unsubscribe()
     }
   }, [navigation])
 
