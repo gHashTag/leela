@@ -12,7 +12,7 @@ import { AppContainer, Space, Button, Input } from '../../../components'
 import { goBack, white, black, captureException } from '../../../constants'
 import { RootStackParamList, UserT } from '../../../types'
 import { actionsDice } from '../../../store'
-//import { pickAva, createImage } from '../../../screens/helper'
+import { pickAva } from '../../../screens/helper'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_UP_USERNAME'>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'SIGN_UP_USERNAME'>
@@ -54,8 +54,9 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
   // const onPressAva = async () => {
   //   setLoading(true)
   //   const ava = await pickAva()
-  //   const image = await createImage(ava)
-  //   setAvatar(image)
+  //   console.log(`ava`, ava)
+  //   //const image = await createImage(ava)
+  //   //setAvatar(image)
   //   setLoading(false)
   // }
 
@@ -70,7 +71,9 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
       colorLeft={color}
       loading={loading}
     >
+      {/* <Avatar size="xLarge" avatar={avatar} onPress={onPressAva} loading={loading} /> */}
       <Space height={30} />
+
       <Formik
         innerRef={r => (formikRef.current = r || undefined)}
         initialValues={{ firstName: '', lastName: '' }}
@@ -113,6 +116,5 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     </AppContainer>
   )
 }
-//<Avatar size="xLarge" avatar={avatar} onPress={onPressAva} loading={loading} />
 
 export { SignUpUsername }

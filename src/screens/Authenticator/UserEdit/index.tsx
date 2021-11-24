@@ -1,19 +1,14 @@
 import React, { useState, ReactElement, useRef, useEffect } from 'react'
-import { DataStore } from "@aws-amplify/datastore"
 import { Formik, FormikProps } from 'formik'
 import * as Yup from 'yup'
 import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from '@react-navigation/native'
 import { RouteProp } from '@react-navigation/native'
-// import { Profile } from '../../models'
 import { AppContainer, Space, Button, Input } from '../../../components'
-import { goBack, white, black, captureException } from '../../../constants'
+import { goBack, white, black } from '../../../constants'
 import { RootStackParamList, UserT } from '../../../types'
-//import config from '../../../aws-exports'
-//import { updateImage, pickAva } from '../../screens/helper'
-import { Profile } from '../../../models'
-// const { aws_user_files_s3_bucket_region: region, aws_user_files_s3_bucket: bucket } = config
+import { updateProfile } from '../../../store/helper'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'USER_EDIT'>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'USER_EDIT'>
@@ -26,11 +21,6 @@ type UserEditT = {
 const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
   const formikRef = useRef<FormikProps<any>>()
-  // const [avatar, setAvatar] = useState<S3ObjectT>({
-  //   bucket: '',
-  //   region: '',
-  //   key: ''
-  // })
 
   const [input, setObj] = useState<UserT>({
     id: '0',
@@ -38,7 +28,6 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
     lastName: '',
     email: '',
     plan: 68
-    //avatar
   })
 
   useEffect(() => {
@@ -57,45 +46,12 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
     }
   }, [route.params])
 
-  const updateProfile = async ({ id, firstName, lastName }: UserT) => {
-    try {
-      const original = await DataStore.query(Profile, id)
-      if (original) {
-        const update = await DataStore.save(
-          Profile.copyOf(original, updated => {
-            updated.firstName = firstName
-            updated.lastName = lastName
-          })
-        )
-        update && goBack(navigation)()
-      }
-      setLoading(false)
-    } catch (err) {
-      captureException(err)
-    }
-  }
-
   const _onPress = async (values: { firstName: string; lastName: string }): Promise<void> => {
     setLoading(true)
-    // if (avatar.key === '') {
-    //   setError('Pick a face')
-    //   setLoading(false)
-    // } else {
     const { firstName, lastName } = values
-    //const key = avatar.key
-    // const fileForUpload = {
-    //   bucket,
-    //   key,
-    //   region
-    // }
     updateProfile({ id: input.id, firstName, lastName })
+    goBack(navigation)()
   }
-
-  // const onPressAva = async () => {
-  //   const ava = await pickAva()
-  //   const image = await updateImage(avatar.key, ava)
-  //   setAvatar(image)
-  // }
 
   const { dark } = useTheme()
   const color = dark ? white : black
@@ -109,7 +65,6 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
         loading={loading}
         colorLeft={black}
       >
-        <Space height={30} />
         <Formik
           innerRef={r => (formikRef.current = r || undefined)}
           initialValues={input}
@@ -145,6 +100,7 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
               />
               <Space height={30} />
               <Button title={I18n.t('done')} onPress={handleSubmit} color={black} />
+              <Space height={200} />
             </>
           )}
         </Formik>
@@ -152,5 +108,5 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
     </>
   )
 }
-//<Avatar size="xLarge" avatar={avatar} onPress={onPressAva} loading={loading} />
+
 export { UserEdit }

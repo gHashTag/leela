@@ -38,54 +38,27 @@ type sizeType = 'xLarge' | 'large' | 'medium' | 'small'
 
 interface AvatarT {
   loading: boolean
-  avatar?: string
+  uri?: string
   onPress?: () => void
   size?: sizeType
   viewStyle?: StyleProp<ViewStyle>
 }
 
-const Avatar = memo<AvatarT>(({ loading, avatar, size = 'large', onPress, viewStyle }) => {
-  const { container, small, medium, large, xLarge } = styles
-
-  const ava = (status: sizeType): object =>
-    ({
-      small,
-      medium,
-      large,
-      xLarge
-    }[status])
-
-  const [uri, setUri] = useState<string>()
-
-  // const fetchData = async () => {
-  //   try {
-  //     const check = avatar.key !== ''
-  //     const uri = await fetchImage(avatar)
-  //     check && setUri(uri)
-  //   } catch (err) {
-  //     Analytics.record({
-  //       name: 'Avatar - fetchData',
-  //       attributes: err
-  //     })
-  //   }
-  // }
-
-  useEffect(() => {
-    //fetchData()
-  }, [avatar])
+const Avatar = memo<AvatarT>(({ loading, uri, size = 'large', onPress, viewStyle }) => {
+  const { container } = styles
 
   return (
     <>
       <TouchableOpacity onPress={onPress} style={[container, viewStyle]}>
         <>
           {loading ? (
-            <Loading type="Pulse" size={ava(size)} loading={loading} />
+            <Loading type="Pulse" size={styles[size]} loading={loading} />
           ) : (
             <>
               {!uri ? (
-                <FastImage style={ava(size)} source={require('./pickaface.png')} />
+                <FastImage style={styles[size]} source={require('./pickaface.png')} />
               ) : (
-                <FastImage style={ava(size)} source={{ uri, cache: FastImage.cacheControl.immutable }} />
+                <FastImage style={styles[size]} source={{ uri, cache: FastImage.cacheControl.immutable }} />
               )}
             </>
           )}

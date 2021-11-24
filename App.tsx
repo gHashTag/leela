@@ -28,7 +28,9 @@ DataStore.configure({
   storageAdapter: SQLiteAdapter
 })
 
-Amplify.configure(awsconfig)
+Amplify.configure({
+  ...awsconfig
+})
 
 const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
 

@@ -1,12 +1,13 @@
 import 'react-native-get-random-values'
 import { v4 as uuidv4 } from 'uuid'
+import { useNavigation } from '@react-navigation/native'
 import { Auth, DataStore, SortDirection } from 'aws-amplify'
 import * as Keychain from 'react-native-keychain'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { I18n } from '../utils'
 import { DiceStore, actionsDice } from './DiceStore'
 import { captureException } from '../constants'
-import { SelfT, } from '../types'
+import { SelfT, UserT, } from '../types'
 import { Profile, History } from '../models'
 import { History as HistoryT } from '../models'
 
@@ -49,7 +50,7 @@ export const getHistory = async () => {
   }
 }
 
-export const updateProfile = async (plan: number) => {
+export const updatePlan = async (plan: number) => {
   try {
     const credentials = await Keychain.getInternetCredentials('auth')
 
@@ -65,6 +66,38 @@ export const updateProfile = async (plan: number) => {
       }
     }
   } catch (err) {
+    captureException(err)
+  }
+}
+
+export const updateProfile = async ({ id, firstName, lastName }: UserT) => {
+  try {
+    const original = await DataStore.query(Profile, id)
+    if (original) {
+      await DataStore.save(
+        Profile.copyOf(original, updated => {
+          updated.firstName = firstName
+          updated.lastName = lastName
+        })
+      )
+    }
+  } catch (err) {
+    captureException(err)
+  }
+}
+
+export const updateAvatar = async ({ id, avatar }: UserT) => {
+  try {
+    const original = await DataStore.query(Profile, id)
+    if (original) {
+      await DataStore.save(
+        Profile.copyOf(original, updated => {
+          updated.avatar = avatar
+        })
+      )
+    }
+  } catch (err) {
+    console.log(`error`, error)
     captureException(err)
   }
 }
@@ -91,7 +124,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 51
         self.planPrev = 72
         self.history.push(obj51)
-        updateProfile(51)
+        updatePlan(51)
         createHistory(obj51)
         break
       case plan === 63:
@@ -99,7 +132,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 2
         self.planPrev = 63
         self.history.push(obj2)
-        updateProfile(2)
+        updatePlan(2)
         createHistory(obj2)
         break
       case plan === 61:
@@ -107,7 +140,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 13
         self.planPrev = 61
         self.history.push(obj13)
-        updateProfile(13)
+        updatePlan(13)
         createHistory(obj13)
         break
       case plan === 55:
@@ -115,7 +148,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 3
         self.planPrev = 55
         self.history.push(obj3)
-        updateProfile(3)
+        updatePlan(3)
         createHistory(obj3)
         break
       case plan === 52:
@@ -123,7 +156,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 35
         self.planPrev = 52
         self.history.push(obj35)
-        updateProfile(35)
+        updatePlan(35)
         createHistory(obj35)
         break
       case plan === 44:
@@ -131,7 +164,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 9
         self.planPrev = 44
         self.history.push(obj44)
-        updateProfile(9)
+        updatePlan(9)
         createHistory(obj44)
         break
       case plan === 29:
@@ -139,7 +172,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 6
         self.planPrev = 29
         self.history.push(obj6)
-        updateProfile(6)
+        updatePlan(6)
         createHistory(obj6)
         break
       case plan === 24:
@@ -147,7 +180,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 7
         self.planPrev = 24
         self.history.push(obj7)
-        updateProfile(7)
+        updatePlan(7)
         createHistory(obj7)
         break
       case plan === 16:
@@ -155,7 +188,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 4
         self.planPrev = 16
         self.history.push(obj4)
-        updateProfile(4)
+        updatePlan(4)
         createHistory(obj4)
         break
       case plan === 12:
@@ -163,7 +196,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 8
         self.planPrev = 12
         self.history.push(obj8)
-        updateProfile(8)
+        updatePlan(8)
         createHistory(obj8)
         break
       // arrows
@@ -172,7 +205,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 23
         self.planPrev = 10
         self.history.push(obj23)
-        updateProfile(23)
+        updatePlan(23)
         createHistory(obj23)
         break
       case plan === 17:
@@ -180,7 +213,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 69
         self.planPrev = 17
         self.history.push(obj69)
-        updateProfile(69)
+        updatePlan(69)
         createHistory(obj69)
         break
       case plan === 20:
@@ -188,7 +221,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 32
         self.planPrev = 20
         self.history.push(obj32)
-        updateProfile(32)
+        updatePlan(32)
         createHistory(obj32)
         break
       case plan === 22:
@@ -196,7 +229,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 60
         self.planPrev = 22
         self.history.push(obj60)
-        updateProfile(60)
+        updatePlan(60)
         createHistory(obj60)
         break
       case plan === 27:
@@ -204,7 +237,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 41
         self.planPrev = 27
         self.history.push(obj41)
-        updateProfile(41)
+        updatePlan(41)
         createHistory(obj41)
         break
       case plan === 28:
@@ -212,7 +245,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 50
         self.planPrev = 28
         self.history.push(obj50)
-        updateProfile(50)
+        updatePlan(50)
         createHistory(obj50)
         break
       case plan === 37:
@@ -220,7 +253,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 66
         self.planPrev = 37
         self.history.push(obj66)
-        updateProfile(66)
+        updatePlan(66)
         createHistory(obj66)
         break
       case plan === 45:
@@ -228,7 +261,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 67
         self.planPrev = 45
         self.history.push(obj67)
-        updateProfile(67)
+        updatePlan(67)
         createHistory(obj67)
         break
       case plan === 46:
@@ -236,7 +269,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 62
         self.planPrev = 46
         self.history.push(obj62)
-        updateProfile(62)
+        updatePlan(62)
         createHistory(obj62)
         break
       case plan === 54:
@@ -248,7 +281,7 @@ export const updateStep = (self: SelfT) => {
         self.plan = 68
         self.planPrev = 54
         self.history.push(lib)
-        updateProfile(68)
+        updatePlan(68)
         createHistory(lib)
         break
       // final
@@ -261,7 +294,7 @@ export const updateStep = (self: SelfT) => {
         self.finish = true
         self.history.push(lib)
         DiceStore.startGame = true
-        updateProfile(68)
+        updatePlan(68)
         createHistory(lib)
         actionsDice.setMessage('liberation')
         break
@@ -270,7 +303,7 @@ export const updateStep = (self: SelfT) => {
         self.planPrev = self.plan
         self.plan = count + self.planPrev
         self.history.push(obj)
-        updateProfile(count + self.planPrev)
+        updatePlan(count + self.planPrev)
         createHistory(obj)
       }
     }
@@ -281,7 +314,7 @@ export const updateStep = (self: SelfT) => {
       self.plan = 6
       self.planPrev = 68
       self.history.push(obj6)
-      updateProfile(6)
+      updatePlan(6)
       createHistory(obj6)
     }
   }

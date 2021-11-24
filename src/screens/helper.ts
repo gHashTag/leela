@@ -1,6 +1,8 @@
 import { Auth, DataStore, Predicates } from 'aws-amplify'
 import { captureException } from '../constants'
+
 import { History } from '../models'
+
 import {
   DiceStore,
   actionPlayerOne,
