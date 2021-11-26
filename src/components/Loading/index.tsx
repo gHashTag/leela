@@ -42,7 +42,7 @@ interface LoadingT {
     | undefined
 }
 
-const Loading = ({ loading, paddingTop = 0, size = 65, type = 'Pulse' }: LoadingT) => {
+const Loading = ({ loading = true, paddingTop = 0, size = 65, type = 'Pulse' }: LoadingT) => {
   const { dark } = useTheme()
   const { container, activityIndicator } = styles
   return (

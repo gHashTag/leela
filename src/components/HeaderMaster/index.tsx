@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { TouchableOpacity, View } from 'react-native'
 import { ScaledSheet, s } from 'react-native-size-matters'
-import { launchImageLibrary } from 'react-native-image-picker'
+
 import { Txt } from '../Txt'
 import { Space } from '../Space'
 import { Avatar } from '../Avatar'
 import { Device } from '../../constants'
 import { UserT } from '../../types'
-import Storage from '@aws-amplify/storage'
-import { updateAvatar } from '../../store/helper'
 
 const styles = ScaledSheet.create({
   container: {
@@ -16,7 +14,6 @@ const styles = ScaledSheet.create({
     top: 20
   },
   avatarStyle: {
-    //position: 'absolute',
     ...Device.select({
       mobile300: {
         top: 110
@@ -63,65 +60,21 @@ const styles = ScaledSheet.create({
 
 interface HeaderMasterT {
   loading: boolean
+  avatar: string
   user: UserT
-  onPress?: () => void
+  onPress: () => void
+  onPressAva: () => void
 }
 
-const HeaderMaster = ({ loading, user, onPress }: HeaderMasterT) => {
-  const [ava, setAvatar] = useState()
-  const { id, firstName, lastName, avatar, plan } = user
-  useEffect(() => {
-    const getImage = async () => {
-      const imageKey = await Storage.get(avatar, {
-        contentType: 'image/jpeg'
-      })
-      setAvatar({
-        uri: imageKey
-      })
-    }
-    getImage()
-  }, [])
-
+const HeaderMaster = ({ loading = false, user, avatar, onPress, onPressAva }: HeaderMasterT) => {
+  const { firstName, lastName, plan } = user
   const { container, h2, sub, avatarStyle } = styles
-
-  const onPressAva = async () => {
-    let options = {
-      storageOptions: {
-        mediaType: 'photo',
-        includeBase64: false
-      }
-    }
-    launchImageLibrary(options, response => {
-      response?.assets &&
-        response?.assets.map(({ uri, fileName }) => {
-          setAvatar({
-            uri,
-            fileName
-          })
-          const setStorage = async () => {
-            const photo = await fetch(uri)
-            const photoBlob = await photo.blob()
-            try {
-              await Storage.put(fileName, photoBlob, {
-                contentType: 'image/jpeg'
-              })
-              updateAvatar({ id, avatar: fileName })
-            } catch (error) {
-              console.log(`error`, error)
-            }
-          }
-          setStorage()
-        })
-    })
-
-    //const image = await createImage(ava)
-  }
 
   return (
     <>
       <View style={sub}>
         <TouchableOpacity onPress={onPress}>
-          <Avatar uri={ava?.uri} viewStyle={avatarStyle} size="xLarge" onPress={onPressAva} loading={loading} />
+          <Avatar uri={avatar} viewStyle={avatarStyle} size="xLarge" onPress={onPressAva} loading={loading} />
         </TouchableOpacity>
         <Space width={s(50)} />
         <Txt h7 title={String(plan)} textStyle={h2} />

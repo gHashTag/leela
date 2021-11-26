@@ -30,7 +30,6 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       try {
         const arrProfile = await getCurrentUser()
         const plan = arrProfile?.plan
-        console.log(`plan`, plan)
         if (plan) {
           actionPlayerOne.initOnlineGame(plan)
         }

@@ -36,8 +36,8 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
 
   const key = async (): Promise<void> => {
     try {
-      await Keychain.resetInternetCredentials('auth')
-      await AsyncStorage.clear()
+      // await Keychain.resetInternetCredentials('auth')
+      // await AsyncStorage.clear()
       const credentials = await Keychain.getInternetCredentials('auth')
       if (credentials) {
         const { username, password } = credentials

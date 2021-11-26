@@ -33,13 +33,13 @@ const Gem = ({ plan, player }: GemT) => {
     { id: 5, data: PlayerFiveStore.plan },
     { id: 6, data: PlayerSixStore.plan }
   ].slice(0, DiceStore.multi)
-
+  const source = id => (DiceStore.online ? { uri: PlayerOneStore.avatar } : ICONS[id])
   return (
     <View style={container}>
       {DATA.map(
         ({ data, id }) =>
           data === plan && (
-            <Image key={id} style={[gems, { position: 'absolute', zIndex: getIndex(id) }]} source={ICONS[id]} />
+            <Image key={id} style={[gems, { position: 'absolute', zIndex: getIndex(id) }]} source={source(id)} />
           )
       )}
     </View>
@@ -55,7 +55,8 @@ const styles = ScaledSheet.create({
   },
   gems: {
     width: s(42),
-    height: s(42)
+    height: s(42),
+    borderRadius: s(42) / 2
   }
 })
 

@@ -13906,6 +13906,11 @@ react-native-gifted-touch@^0.0.8:
   resolved "https://registry.npmjs.org/react-native-gifted-touch/-/react-native-gifted-touch-0.0.8.tgz"
   integrity sha512-rixhy6xE3oC5dtBsxDRe64Ap0NTHPq4fXQ1vOyw8E+Hpwqa1PrM3AQEvnO2ZI69pOUjnbYc2N4RDMQqcfa1Uzw==
 
+react-native-image-crop-picker@^0.37.2:
+  version "0.37.2"
+  resolved "https://registry.yarnpkg.com/react-native-image-crop-picker/-/react-native-image-crop-picker-0.37.2.tgz#3aadc4ae4812c9975c49a294d9a17ffae057dbb4"
+  integrity sha512-YwZXW21Km8+3tSt0smTaLVgY4398c0/OJcpcH6EP0JDOt1BNNxl/R8m6qdvnwdXdIoa0CCnMVW6TL9IN5ia9OA==
+
 react-native-image-picker@^4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/react-native-image-picker/-/react-native-image-picker-4.3.0.tgz#d68640061d3c5e6bef1d417c8085828318162874"

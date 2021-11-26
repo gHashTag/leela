@@ -2,8 +2,7 @@ import React, { memo, useState, useEffect } from 'react'
 import { StyleSheet, StyleProp, ViewStyle, TouchableOpacity, View } from 'react-native'
 import { primary, secondary } from '../../constants'
 import { s, ms } from 'react-native-size-matters'
-// import { S3ObjectT } from '../../AppNavigator'
-import { Loading } from '../Loading'
+import Spinner from 'react-native-spinkit'
 import FastImage from 'react-native-fast-image'
 
 const styles = StyleSheet.create({
@@ -44,15 +43,14 @@ interface AvatarT {
   viewStyle?: StyleProp<ViewStyle>
 }
 
-const Avatar = memo<AvatarT>(({ loading, uri, size = 'large', onPress, viewStyle }) => {
+const Avatar = memo<AvatarT>(({ loading = true, uri, size = 'large', onPress, viewStyle }) => {
   const { container } = styles
-
   return (
     <>
       <TouchableOpacity onPress={onPress} style={[container, viewStyle]}>
         <>
           {loading ? (
-            <Loading type="Pulse" size={styles[size]} loading={loading} />
+            <Spinner size={styles[size].height} type="Pulse" color={secondary} />
           ) : (
             <>
               {!uri ? (

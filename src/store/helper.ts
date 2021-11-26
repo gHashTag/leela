@@ -1,6 +1,5 @@
 import 'react-native-get-random-values'
 import { v4 as uuidv4 } from 'uuid'
-import { useNavigation } from '@react-navigation/native'
 import { Auth, DataStore, SortDirection } from 'aws-amplify'
 import * as Keychain from 'react-native-keychain'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -82,22 +81,6 @@ export const updateProfile = async ({ id, firstName, lastName }: UserT) => {
       )
     }
   } catch (err) {
-    captureException(err)
-  }
-}
-
-export const updateAvatar = async ({ id, avatar }: UserT) => {
-  try {
-    const original = await DataStore.query(Profile, id)
-    if (original) {
-      await DataStore.save(
-        Profile.copyOf(original, updated => {
-          updated.avatar = avatar
-        })
-      )
-    }
-  } catch (err) {
-    console.log(`error`, error)
     captureException(err)
   }
 }

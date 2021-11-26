@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { View, SectionList } from 'react-native'
-import { Auth, DataStore } from 'aws-amplify'
+import { DataStore } from 'aws-amplify'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { observer } from 'mobx-react-lite'
 import { ScaledSheet } from 'react-native-size-matters'
 import * as Keychain from 'react-native-keychain'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+
 import { I18n } from '../../utils'
-import { RootStackParamList, UserT, HistoryT } from '../../types'
+import { RootStackParamList } from '../../types'
 import { AppContainer, Txt, Space, EmojiText, Button, HeaderMaster } from '../../components'
 import { captureException } from '../../constants'
 import {
@@ -20,7 +21,6 @@ import {
   PlayerFiveStore,
   PlayerSixStore
 } from '../../store'
-import { getCurrentUser, getHistory } from '../../store/helper'
 import { History, Profile } from '../../models'
 import { _onPressReset } from '../helper'
 
@@ -72,42 +72,11 @@ const icon = (status: string) => {
 }
 
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
-  const [loading, setLoading] = useState<boolean>(true)
-  const [data, updateProfile] = useState<UserT>({
-    id: '0',
-    firstName: '',
-    lastName: '',
-    email: '',
-    plan: 68,
-    avatar: ''
-  })
-
-  const [dataHis, updateHistory] = useState<HistoryT>({
-    count: 1,
-    id: '0',
-    plan: 68,
-    status: '',
-    owner: '',
-    createdAt: ''
-  })
-
-  const fetchData = async () => {
-    try {
-      const arrProfile = await getCurrentUser()
-      updateProfile(arrProfile)
-      const history = await getHistory()
-      updateHistory(history)
-      setLoading(false)
-    } catch (error) {
-      console.log(`error`, error)
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    fetchData()
-    const subscription = DataStore.observe(Profile).subscribe(() => fetchData())
-    const subscriptionHistory = DataStore.observe(History).subscribe(() => fetchData())
+    actionPlayerOne.getProfile()
+    actionPlayerOne.getHistory()
+    const subscription = DataStore.observe(Profile).subscribe(() => actionPlayerOne.getProfile())
+    const subscriptionHistory = DataStore.observe(History).subscribe(() => actionPlayerOne.getHistory())
     return () => {
       subscription.unsubscribe()
       subscriptionHistory.unsubscribe()
@@ -172,7 +141,6 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
   const _onPressSignOut = async (): Promise<void> => {
     try {
-      //await Auth.signOut()
       await Keychain.resetInternetCredentials('auth')
       await AsyncStorage.clear()
       actionPlayerOne.resetGame()
@@ -182,23 +150,23 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
     }
   }
 
-  const onlineData = [
-    {
-      title: `${I18n.t('player')} 1`,
-      data: dataHis
-    }
-  ]
-
-  const arrayData = DiceStore.online ? onlineData : DATA
+  const onPressAva = async () => {
+    actionPlayerOne.uploadImage()
+  }
 
   return (
-    <AppContainer flatList iconLeft={null} title={I18n.t('history')} textAlign="center" loading={loading}>
+    <AppContainer flatList iconLeft={null} title={I18n.t('history')} textAlign="center">
       <SectionList
         ListHeaderComponent={
           <>
             {/* <Txt h3 title={`Подписка: ${subscriptionActive.toString()}`} /> */}
             {DiceStore.online && (
-              <HeaderMaster user={data} onPress={() => navigation.navigate('USER_EDIT', data)} loading={loading} />
+              <HeaderMaster
+                user={PlayerOneStore.profile}
+                avatar={PlayerOneStore.avatar}
+                onPress={() => navigation.navigate('USER_EDIT', PlayerOneStore.profile)}
+                onPressAva={onPressAva}
+              />
             )}
             {/* <Txt h3 title={DiceStore.online.toString()} /> */}
             <Space height={10} />
@@ -214,7 +182,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
           </>
         }
         stickySectionHeadersEnabled={false}
-        sections={arrayData}
+        sections={DATA}
         renderItem={_renderItem}
         keyExtractor={_keyExtractor}
         showsVerticalScrollIndicator={false}
