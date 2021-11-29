@@ -3,12 +3,15 @@ import { StyleSheet, ImageBackground } from 'react-native'
 import { observer } from 'mobx-react-lite'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../..'
+import { DiceStore, actionPlayerOne, actionsDice } from '../../store'
 import { Button } from 'react-native-elements'
 import { s } from 'react-native-size-matters'
 import { H, W } from '../../constants'
 import { openUrl } from '../../constants'
 import { captureException } from '@sentry/minimal'
 import I18n from 'i18n-js'
+import { DataStore } from 'aws-amplify'
+import { History, Profile } from '../../models'
 
 type navigation = StackNavigationProp<RootStackParamList, 'TAB_BOTTOM_0'>
 
@@ -33,11 +36,11 @@ const styles = StyleSheet.create({
     alignSelf: 'center'
   },
   button: {
-    borderColor: '#CCA817',
+    borderColor: '#fff',
     borderWidth: 1.5
   },
   titleStyle: {
-    color: '#CCA817'
+    color: '#fff'
   }
 })
 
@@ -64,6 +67,9 @@ const PosterScreen = observer(({}: PosterScreenT) => {
 
   useEffect(() => {
     getPoster()
+    if (DiceStore.online) {
+      actionPlayerOne.getProfile()
+    }
   }, [])
 
   const { button, img, buttonConteiner, titleStyle } = styles

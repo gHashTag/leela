@@ -1,13 +1,12 @@
 import { v4 as uuidv4 } from 'uuid'
 import { makeAutoObservable } from 'mobx'
-import { persistence, StorageAdapter } from 'mobx-persist-store'
-import { writeStore, readStore, getCurrentUser, getHistory } from './helper'
-import { actionsDice, DiceStore } from './'
-import { updateStep, updateProfile } from './helper'
 import { DataStore, Storage } from 'aws-amplify'
+import { persistence, StorageAdapter } from 'mobx-persist-store'
+import { writeStore, readStore, updateStep } from './helper'
+import { actionsDice, DiceStore } from './'
 import { Profile } from '../models'
 import { captureException } from '../constants'
-import { getImagePicker, getIMG, uploadImg } from '../screens/helper'
+import { getCurrentUser, getHistory, getImagePicker, getIMG, updateProfile, uploadImg } from '../screens/helper'
 
 const PlayerOneStore = makeAutoObservable({
   player: 1,
@@ -28,18 +27,6 @@ const PlayerOneStore = makeAutoObservable({
 })
 
 const actionPlayerOne = {
-  async initOnlineGame(plan: number): Promise<void> {
-    if (plan) {
-      PlayerOneStore.plan = plan
-      if (plan === 68) {
-        DiceStore.startGame = false
-        PlayerOneStore.start = false
-      } else {
-        DiceStore.startGame = true
-        PlayerOneStore.start = true
-      }
-    }
-  },
   async resetGame(): Promise<void> {
     PlayerOneStore.start = false
     PlayerOneStore.finish = false
@@ -55,9 +42,21 @@ const actionPlayerOne = {
   async getProfile(): Promise<void> {
     try {
         const arrProfile = await getCurrentUser()
+        const plan = arrProfile?.plan
+        if (plan) {
+          PlayerOneStore.plan = plan
+          if (plan === 68) {
+            DiceStore.startGame = false
+            PlayerOneStore.start = false
+          } else {
+            DiceStore.startGame = true
+            PlayerOneStore.start = true
+          }
+        }
         PlayerOneStore.profile = arrProfile
         PlayerOneStore.history = await getHistory()
-        PlayerOneStore.avatar = await getIMG(arrProfile.avatar)
+        const avatar = arrProfile?.avatar
+        PlayerOneStore.avatar = await getIMG(avatar)
     } catch (error) {
       console.log(`error`, error)
       captureException(error)
@@ -67,7 +66,6 @@ const actionPlayerOne = {
     try {
       PlayerOneStore.history = await getHistory()
     } catch (error) {
-      console.log(`error`, error)
       captureException(error)
     }
   },

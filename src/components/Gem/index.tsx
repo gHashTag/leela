@@ -33,7 +33,9 @@ const Gem = ({ plan, player }: GemT) => {
     { id: 5, data: PlayerFiveStore.plan },
     { id: 6, data: PlayerSixStore.plan }
   ].slice(0, DiceStore.multi)
-  const source = id => (DiceStore.online ? { uri: PlayerOneStore.avatar } : ICONS[id])
+
+  const source = (id: number) => (DiceStore.online ? { uri: PlayerOneStore.avatar } : ICONS[id])
+
   return (
     <View style={container}>
       {DATA.map(

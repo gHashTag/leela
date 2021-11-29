@@ -43,24 +43,23 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
   }, [])
 
   return (
-    <>
-      <AppContainer
-        onPress={() => {
-          goBack(navigation)()
-          actionPlay.stop()
-        }}
-        title={title}
-      >
-        {videoUrl !== '' && (
-          <View style={styles.center}>
-            <VideoPlayer uri={videoUrl} />
-          </View>
-        )}
-        <Space height={s(30)} />
-        <TextCopy h3 title={content} textStyle={h3} textAlign="left" />
-        <Space height={300} />
-      </AppContainer>
-    </>
+    <AppContainer
+      onPress={() => {
+        goBack(navigation)()
+        actionPlay.stop()
+      }}
+      title={title}
+      iconLeft=":heavy_multiplication_x:"
+    >
+      {videoUrl !== '' && (
+        <View style={styles.center}>
+          <VideoPlayer uri={videoUrl} />
+        </View>
+      )}
+      <Space height={s(30)} />
+      <TextCopy h3 title={content} textStyle={h3} textAlign="left" />
+      <Space height={300} />
+    </AppContainer>
   )
 })
 

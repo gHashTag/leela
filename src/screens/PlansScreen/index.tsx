@@ -1,8 +1,8 @@
-import * as React from 'react'
+import React, { useEffect, useState } from 'react'
 import { FlatList } from 'react-native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { I18n, lang } from '../../utils'
-import { RootStackParamList } from '../../types'
+import { PlansT, RootStackParamList } from '../../types'
 import { AppContainer, RenderItem, Space } from '../../components'
 import { goBack } from '../../constants'
 import { ru } from './ru'
@@ -25,16 +25,24 @@ interface RulesItemT {
 }
 
 const PlansScreen = ({ navigation }: PlansScreenT) => {
+  const [data, setData] = useState<PlansT[]>([])
   const _renderItem = ({ item }: RulesItemT) => {
     return <RenderItem title={item.title} onPress={() => navigation.navigate('PLANS_DETAIL_SCREEN', item)} />
   }
 
   const _keyExtractor = (obj: any) => obj.id.toString()
 
-  const data = lang === 'en' ? en : ru
+  useEffect(() => {
+    setData(lang === 'en' ? en : ru)
+  })
 
   return (
-    <AppContainer flatList onPress={goBack(navigation)} title={`${I18n.t('plans')}`}>
+    <AppContainer
+      flatList
+      onPress={goBack(navigation)}
+      title={`${I18n.t('plans')}`}
+      iconLeft=":heavy_multiplication_x:"
+    >
       <FlatList
         ListHeaderComponent={<Space height={50} />}
         ListFooterComponent={<Space height={300} />}

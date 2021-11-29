@@ -649,7 +649,7 @@ PODS:
     - React-Core
   - react-native-netinfo (6.0.2):
     - React-Core
-  - react-native-safe-area-context (3.2.0):
+  - react-native-safe-area-context (3.3.2):
     - React-Core
   - react-native-shake (3.5.2):
     - React-Core
@@ -816,7 +816,7 @@ PODS:
     - React-RCTVibration
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNScreens (3.3.0):
+  - RNScreens (3.9.0):
     - React-Core
     - React-RCTImage
   - RNSentry (3.2.3):
@@ -1155,7 +1155,7 @@ SPEC CHECKSUMS:
   react-native-get-random-values: 237bffb1c7e05fb142092681531810a29ba53015
   react-native-image-picker: 869530859570f2af86ae57bc48886a5e2367a825
   react-native-netinfo: 92e6e4476eb8bf6fc2d7c0a6ca0a1406f663d73a
-  react-native-safe-area-context: f0906bf8bc9835ac9a9d3f97e8bde2a997d8da79
+  react-native-safe-area-context: 584dc04881deb49474363f3be89e4ca0e854c057
   react-native-shake: 885e76525826265f183d1e60e8e735956de6d45b
   react-native-slider: e99fc201cefe81270fc9d81714a7a0f5e566b168
   react-native-spinkit: da294fd828216ad211fe36a5c14c1e09f09e62db
@@ -1194,7 +1194,7 @@ SPEC CHECKSUMS:
   RNPurchases: 42da7176d5091f95d380968e56c1e33a2040c525
   RNRate: cb88d5a0aa7be8bfae67dafbbbba2c9cd5e6faf2
   RNReanimated: 9c13c86454bfd54dab7505c1a054470bfecd2563
-  RNScreens: bf59f17fbf001f1025243eeed5f19419d3c11ef2
+  RNScreens: 4d79118be80f79fa1f4aa131909a1d6e86280af3
   RNSentry: 97bc62fa65b7d663daee16fbf9771470852217cf
   RNVectorIcons: 31cebfcf94e8cf8686eb5303ae0357da64d7a5a4
   SDWebImage: 4dc3e42d9ec0c1028b960a33ac6b637bb432207b

@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react'
-import { Auth, DataStore, Predicates } from 'aws-amplify'
+import { Auth, DataStore, SortDirection, Predicates } from 'aws-amplify'
+import * as Keychain from 'react-native-keychain'
 import Storage from '@aws-amplify/storage'
 import { captureException } from '../constants'
 import ImagePicker from 'react-native-image-crop-picker'
-import { History } from '../models'
-
+import { Profile, History } from '../models'
+import { History as HistoryT } from '../models'
 import {
   DiceStore,
   actionPlayerOne,
@@ -15,6 +15,80 @@ import {
   actionPlayerSix,
   actionsDice
 } from '../store'
+
+export const getCurrentUser = async () => {
+  try {
+    const authUser = await Auth.currentAuthenticatedUser()
+    const arrProfile = await DataStore.query(Profile, c => c.email('eq', authUser.attributes.email))
+    if (!arrProfile || arrProfile.length === 0) {
+        return
+    }
+    return arrProfile[0]
+  } catch (error) {
+    captureException(error)
+  }
+
+}
+
+export const createHistory = async (values: HistoryT) => {
+  try {
+    const { id } = await getCurrentUser() 
+    await DataStore.save(new History({ ...values, historyID: id }))
+  } catch (err) {
+    console.log(`err`, err)
+    captureException(err)
+  }
+}
+
+export const getHistory = async () => {
+  try {
+    const { id } = await getCurrentUser() 
+    const history = (await DataStore.query(History, c => c.historyID("eq", id), {
+      sort: s => s.createdAt(SortDirection.DESCENDING),
+      limit: 10 
+    }))
+    return history
+  } catch (err) {
+    captureException(err)
+  }
+}
+
+export const updatePlan = async (plan: number) => {
+  try {
+    const credentials = await Keychain.getInternetCredentials('auth')
+
+    if (credentials) {
+      const { username } = credentials
+      const original = await DataStore.query(Profile, c => c.email('eq', username))
+      if (original) {
+        await DataStore.save(
+          Profile.copyOf(original[0], updated => {
+            updated.plan = plan
+          })
+        )
+      }
+    }
+  } catch (err) {
+    captureException(err)
+  }
+}
+
+export const updateProfile = async ({ id, firstName, lastName }: UserT) => {
+  try {
+    const original = await DataStore.query(Profile, id)
+    if (original) {
+      await DataStore.save(
+        Profile.copyOf(original, updated => {
+          updated.firstName = firstName
+          updated.lastName = lastName
+        })
+      )
+    }
+  } catch (err) {
+    captureException(err)
+  }
+}
+
 
 export const _onPressReset = async (navigation): Promise<void> => {
   try {

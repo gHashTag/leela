@@ -36,7 +36,12 @@ const RulesScreen = ({ navigation }: RulesScreenT) => {
   const data = lang === 'en' ? en : ru
 
   return (
-    <AppContainer flatList onPress={goBack(navigation)} title={`${I18n.t('rules')}`}>
+    <AppContainer
+      flatList
+      onPress={goBack(navigation)}
+      title={`${I18n.t('rules')}`}
+      iconLeft=":heavy_multiplication_x:"
+    >
       <FlatList
         ListHeaderComponent={<Space height={50} />}
         data={data}

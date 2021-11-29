@@ -42,6 +42,13 @@ export type RootStackParamList = {
   }
 }
 
+export interface PlansT {
+  id: number 
+  title: string
+  content: string
+  url: string 
+  videoUrl: string
+}
 export interface UserT {
   id: string
   firstName: string

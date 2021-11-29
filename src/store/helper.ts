@@ -1,89 +1,10 @@
 import 'react-native-get-random-values'
 import { v4 as uuidv4 } from 'uuid'
-import { Auth, DataStore, SortDirection } from 'aws-amplify'
-import * as Keychain from 'react-native-keychain'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { I18n } from '../utils'
 import { DiceStore, actionsDice } from './DiceStore'
-import { captureException } from '../constants'
-import { SelfT, UserT, } from '../types'
-import { Profile, History } from '../models'
-import { History as HistoryT } from '../models'
-
-export const getCurrentUser = async () => {
-  try {
-    const authUser = await Auth.currentAuthenticatedUser()
-    const arrProfile = await DataStore.query(Profile, c => c.email('eq', authUser.attributes.email))
-    if (!arrProfile || arrProfile.length === 0) {
-        return
-    }
-    return arrProfile[0]
-  } catch (error) {
-    captureException(error)
-  }
-
-}
-
-
-export const createHistory = async (values: HistoryT) => {
-  try {
-    const { id } = await getCurrentUser() 
-    await DataStore.save(new History({ ...values, historyID: id }))
-  } catch (err) {
-    console.log(`err`, err)
-    captureException(err)
-  }
-}
-
-export const getHistory = async () => {
-  try {
-    const { id } = await getCurrentUser() 
-    const history = (await DataStore.query(History, c => c.historyID("eq", id), {
-      sort: s => s.createdAt(SortDirection.DESCENDING),
-      limit: 10 
-    }))
-    return history
-  } catch (err) {
-    console.log(`err`, err)
-    captureException(err)
-  }
-}
-
-export const updatePlan = async (plan: number) => {
-  try {
-    const credentials = await Keychain.getInternetCredentials('auth')
-
-    if (credentials) {
-      const { username } = credentials
-      const original = await DataStore.query(Profile, c => c.email('eq', username))
-      if (original) {
-        await DataStore.save(
-          Profile.copyOf(original[0], updated => {
-            updated.plan = plan
-          })
-        )
-      }
-    }
-  } catch (err) {
-    captureException(err)
-  }
-}
-
-export const updateProfile = async ({ id, firstName, lastName }: UserT) => {
-  try {
-    const original = await DataStore.query(Profile, id)
-    if (original) {
-      await DataStore.save(
-        Profile.copyOf(original, updated => {
-          updated.firstName = firstName
-          updated.lastName = lastName
-        })
-      )
-    }
-  } catch (err) {
-    captureException(err)
-  }
-}
+import { SelfT } from '../types'
+import { createHistory, updatePlan } from '../screens/helper'
 
 export const updateStep = (self: SelfT) => {
   const count = DiceStore.count

@@ -33,6 +33,7 @@ import TabNavigator from './TabNavigator'
 import { white, black } from './constants'
 
 import { UI } from './UI'
+import { verticalAnimation } from './index'
 
 const DarkTheme = {
   dark: true,
@@ -71,6 +72,23 @@ const Tab = () => {
 
 const Stack = createStackNavigator()
 
+const horizontalAnimation = {
+  cardStyleInterpolator: ({ current, layouts }) => {
+    return {
+      cardStyle: {
+        transform: [
+          {
+            translateX: current.progress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [layouts.screen.width, 0]
+            })
+          }
+        ]
+      }
+    }
+  }
+}
+
 const App = () => {
   const scheme = useColorScheme()
   const theme = scheme === 'dark' ? DarkTheme : LightTheme
@@ -85,27 +103,28 @@ const App = () => {
           cardStyle: { backgroundColor: scheme === 'dark' ? black : white }
         }}
         initialRouteName="WELCOME_SCREEN"
+        mode="modal"
       >
-        <Stack.Screen name="UI" component={UI} />
-        <Stack.Screen name="WELCOME_SCREEN" component={WelcomeScreen} />
+        <Stack.Screen name="UI" component={UI} options={horizontalAnimation} options={horizontalAnimation} />
+        <Stack.Screen name="WELCOME_SCREEN" component={WelcomeScreen} options={horizontalAnimation} />
 
-        <Stack.Screen name="HELLO" component={Hello} />
-        <Stack.Screen name="SIGN_UP" component={SignUp} />
-        <Stack.Screen name="SIGN_UP_USERNAME" component={SignUpUsername} />
-        <Stack.Screen name="SIGN_IN" component={SignIn} />
-        <Stack.Screen name="FORGOT" component={Forgot} />
-        <Stack.Screen name="FORGOT_PASSWORD_SUBMIT" component={ForgotPassSubmit} />
-        <Stack.Screen name="CONFIRM_SIGN_UP" component={ConfirmSignUp} />
-        <Stack.Screen name="USER" component={User} />
+        <Stack.Screen name="HELLO" component={Hello} options={horizontalAnimation} />
+        <Stack.Screen name="SIGN_UP" component={SignUp} options={horizontalAnimation} />
+        <Stack.Screen name="SIGN_UP_USERNAME" component={SignUpUsername} options={horizontalAnimation} />
+        <Stack.Screen name="SIGN_IN" component={SignIn} options={horizontalAnimation} />
+        <Stack.Screen name="FORGOT" component={Forgot} options={horizontalAnimation} />
+        <Stack.Screen name="FORGOT_PASSWORD_SUBMIT" component={ForgotPassSubmit} options={horizontalAnimation} />
+        <Stack.Screen name="CONFIRM_SIGN_UP" component={ConfirmSignUp} options={horizontalAnimation} />
+        <Stack.Screen name="USER" component={User} options={horizontalAnimation} />
 
-        <Stack.Screen name="SELECT_PLAYERS_SCREEN" component={SelectPlayersScreen} />
-        <Stack.Screen name="MAIN" component={Tab} />
+        <Stack.Screen name="SELECT_PLAYERS_SCREEN" component={SelectPlayersScreen} options={horizontalAnimation} />
+        <Stack.Screen name="MAIN" component={Tab} options={horizontalAnimation} />
         <Stack.Screen name="RULES_SCREEN" component={RulesScreen} />
         <Stack.Screen name="RULES_DETAIL_SCREEN" component={RulesDetailScreen} />
         <Stack.Screen name="PLANS_SCREEN" component={PlansScreen} />
         <Stack.Screen name="PLANS_DETAIL_SCREEN" component={PlansDetailScreen} />
-        <Stack.Screen name="PLAYRA_SCREEN" component={PlayraScreen} />
-        <Stack.Screen name="USER_EDIT" component={UserEdit} />
+        <Stack.Screen name="PLAYRA_SCREEN" component={PlayraScreen} options={horizontalAnimation} />
+        <Stack.Screen name="USER_EDIT" component={UserEdit} options={horizontalAnimation} />
       </Stack.Navigator>
     </NavigationContainer>
   )

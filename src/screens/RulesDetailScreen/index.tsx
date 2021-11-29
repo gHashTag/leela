@@ -37,6 +37,7 @@ const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) =
         actionPlay.stop()
       }}
       title={title}
+      iconLeft=":heavy_multiplication_x:"
     >
       <Space height={10} />
       <TextCopy h3 title={content} textStyle={h3} textAlign="left" />
