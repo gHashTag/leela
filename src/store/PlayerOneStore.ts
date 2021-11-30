@@ -29,6 +29,7 @@ const PlayerOneStore = makeAutoObservable({
 const actionPlayerOne = {
   async resetGame(): Promise<void> {
     PlayerOneStore.start = false
+    PlayerOneStore.avatar = ''
     PlayerOneStore.finish = false
     PlayerOneStore.plan = 68
     PlayerOneStore.history = [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }]
@@ -77,10 +78,9 @@ const actionPlayerOne = {
             const fileName = await uploadImg(image)
             const arrProfile = await getCurrentUser()
             await Storage.remove(arrProfile.avatar)
-            const original = await DataStore.query(Profile, arrProfile.id)
-            if (original) {
+            if (arrProfile) {
               await DataStore.save(
-                Profile.copyOf(original, updated => {
+                Profile.copyOf(arrProfile, updated => {
                   updated.avatar = fileName
                 })
               )

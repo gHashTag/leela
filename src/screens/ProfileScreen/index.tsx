@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { View, SectionList } from 'react-native'
-import { DataStore } from 'aws-amplify'
+import { DataStore, Predicates } from 'aws-amplify'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { observer } from 'mobx-react-lite'
 import { ScaledSheet } from 'react-native-size-matters'
@@ -144,7 +144,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
       await Keychain.resetInternetCredentials('auth')
       await AsyncStorage.clear()
       actionPlayerOne.resetGame()
-      navigation.pop(3)
+      navigation.popToTop()
     } catch (err) {
       captureException(err)
     }

@@ -8,11 +8,10 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp, useTheme } from '@react-navigation/native'
 import { Profile } from '../../../models'
 import { Profile as ProfileT } from '../../../models'
-import { AppContainer, Space, Button, Input } from '../../../components'
+import { AppContainer, Space, Button, Input, Avatar } from '../../../components'
 import { goBack, white, black, captureException } from '../../../constants'
 import { RootStackParamList, UserT } from '../../../types'
-import { actionsDice } from '../../../store'
-import { pickAva } from '../../../screens/helper'
+import { actionPlayerOne, actionsDice, PlayerOneStore } from '../../../store'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_UP_USERNAME'>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'SIGN_UP_USERNAME'>
@@ -29,7 +28,7 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
   const createProfile = async (values: ProfileT) => {
     try {
       await DataStore.save(new Profile({ ...values }))
-      navigation.navigate('MAIN')
+      navigation.navigate('SIGN_UP_AVATAR')
       actionsDice.setOnline(true)
       actionsDice.setPlayers(1)
     } catch (error) {
@@ -39,26 +38,13 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
 
   const _onPress = async (values: { firstName: string; lastName: string }): Promise<void> => {
     setLoading(true)
-    // if (avatar.key === '') {
-    //   setError('Pick a face')
-    //   setLoading(false)
-    // } else {
     const { firstName, lastName } = values
     const { email } = route.params
     const owner = await Auth.currentAuthenticatedUser()
 
-    createProfile({ id: uuidv4(), firstName, lastName, email, plan: 68, owner: owner.username })
+    createProfile({ id: uuidv4(), firstName, lastName, email, plan: 68, owner: owner.username, avatar: '' })
     setLoading(false)
   }
-
-  // const onPressAva = async () => {
-  //   setLoading(true)
-  //   const ava = await pickAva()
-  //   console.log(`ava`, ava)
-  //   //const image = await createImage(ava)
-  //   //setAvatar(image)
-  //   setLoading(false)
-  // }
 
   const { dark } = useTheme()
   const color = dark ? white : black
@@ -68,12 +54,9 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
       backgroundColor={dark ? black : white}
       onPress={goBack(navigation)}
       title=" "
-      colorLeft={color}
+      iconLeft={null}
       loading={loading}
     >
-      {/* <Avatar size="xLarge" avatar={avatar} onPress={onPressAva} loading={loading} /> */}
-      <Space height={30} />
-
       <Formik
         innerRef={r => (formikRef.current = r || undefined)}
         initialValues={{ firstName: '', lastName: '' }}

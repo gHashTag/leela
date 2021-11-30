@@ -1,4 +1,5 @@
 export * from './AppContainer'
+export * from './Avatar'
 export * from './Txt'
 export * from './SliderStep'
 export * from './ButtonSimple'

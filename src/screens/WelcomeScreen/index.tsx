@@ -20,6 +20,7 @@ import { AppContainer, ModalSubscribe, Space, Button, Txt, CenterView, IconLeela
 import { actionsSubscribe, actionsDice, actionPlayerOne } from '../../store'
 import { LocalNotification } from '../../utils/noifications/LocalPushController'
 import { captureException } from '../../constants'
+import { Profile } from '../../models'
 
 type navigation = StackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 

@@ -26,14 +26,14 @@ import {
   Forgot,
   ForgotPassSubmit,
   Hello,
-  UserEdit
+  UserEdit,
+  SignUpAvatar
 } from './screens/Authenticator'
 
 import TabNavigator from './TabNavigator'
 import { white, black } from './constants'
 
 import { UI } from './UI'
-import { verticalAnimation } from './index'
 
 const DarkTheme = {
   dark: true,
@@ -111,6 +111,7 @@ const App = () => {
         <Stack.Screen name="HELLO" component={Hello} options={horizontalAnimation} />
         <Stack.Screen name="SIGN_UP" component={SignUp} options={horizontalAnimation} />
         <Stack.Screen name="SIGN_UP_USERNAME" component={SignUpUsername} options={horizontalAnimation} />
+        <Stack.Screen name="SIGN_UP_AVATAR" component={SignUpAvatar} options={horizontalAnimation} />
         <Stack.Screen name="SIGN_IN" component={SignIn} options={horizontalAnimation} />
         <Stack.Screen name="FORGOT" component={Forgot} options={horizontalAnimation} />
         <Stack.Screen name="FORGOT_PASSWORD_SUBMIT" component={ForgotPassSubmit} options={horizontalAnimation} />

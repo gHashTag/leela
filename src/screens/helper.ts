@@ -23,7 +23,7 @@ export const getCurrentUser = async () => {
     if (!arrProfile || arrProfile.length === 0) {
         return
     }
-    return arrProfile[0]
+    return arrProfile[arrProfile.length - 1]
   } catch (error) {
     captureException(error)
   }
@@ -117,13 +117,13 @@ export const isLoggedIn = async () => {
 
 export const getImagePicker = async () => {
   const image = await ImagePicker.openPicker({
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     cropping: true,
     cropperCircleOverlay: true,
     sortOrder: 'none',
-    compressImageMaxWidth: 150,
-    compressImageMaxHeight: 150,
+    compressImageMaxWidth: 200,
+    compressImageMaxHeight: 200,
     compressImageQuality: 1,
     compressVideoPreset: 'MediumQuality',
     includeExif: true,
