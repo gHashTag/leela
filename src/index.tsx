@@ -105,7 +105,7 @@ const App = () => {
         initialRouteName="WELCOME_SCREEN"
         mode="modal"
       >
-        <Stack.Screen name="UI" component={UI} options={horizontalAnimation} options={horizontalAnimation} />
+        <Stack.Screen name="UI" component={UI} options={horizontalAnimation} />
         <Stack.Screen name="WELCOME_SCREEN" component={WelcomeScreen} options={horizontalAnimation} />
 
         <Stack.Screen name="HELLO" component={Hello} options={horizontalAnimation} />

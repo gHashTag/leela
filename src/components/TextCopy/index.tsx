@@ -135,6 +135,7 @@ const TextCopy = memo<TxtT>(
         value={title}
         editable={true}
         multiline={true}
+        showSoftInputOnFocus={false}
       />
     )
   }

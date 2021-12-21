@@ -73,7 +73,7 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
         //   password: '',
         //   passwordConfirmation: ''
         // }}
-        initialValues={{ email: 'raoffonom@icloud.com', password: 'qwerty123', passwordConfirmation: 'qwerty123' }}
+        initialValues={{ email: 'aeroluxx@ya.ru', password: 'Password_01', passwordConfirmation: 'Password_01' }}
         onSubmit={(values): Promise<void> => _onPress(values)}
         validationSchema={Yup.object().shape({
           email: Yup.string().email().required(),

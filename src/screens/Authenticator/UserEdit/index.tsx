@@ -8,7 +8,7 @@ import { RouteProp } from '@react-navigation/native'
 import { AppContainer, Space, Button, Input } from '../../../components'
 import { goBack, white, black } from '../../../constants'
 import { RootStackParamList, UserT } from '../../../types'
-import { updateProfile } from '../../../store/helper'
+import { updateProfile } from '../../../screens/helper'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'USER_EDIT'>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'USER_EDIT'>

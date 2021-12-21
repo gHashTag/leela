@@ -17,7 +17,7 @@ import { ScaledSheet } from 'react-native-size-matters'
 import { I18n, lang } from '../../utils'
 import { RootStackParamList } from '../../types'
 import { AppContainer, ModalSubscribe, Space, Button, Txt, CenterView, IconLeela } from '../../components'
-import { actionsSubscribe, actionsDice, actionPlayerOne } from '../../store'
+import { actionsSubscribe, actionsDice, actionPlayerOne, DiceStore } from '../../store'
 import { LocalNotification } from '../../utils/noifications/LocalPushController'
 import { captureException } from '../../constants'
 import { Profile } from '../../models'
@@ -44,6 +44,10 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         const { username, password } = credentials
         const user = await Auth.signIn(username, password)
         setLoading(false)
+        if (DiceStore.online) {
+          actionPlayerOne.getProfile() // костыль
+        }
+        actionPlayerOne.getPoster()
         user && navigation.navigate('MAIN')
         actionsDice.setOnline(true)
         actionsDice.setPlayers(1)

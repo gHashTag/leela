@@ -66,7 +66,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
       colorLeft={color}
     >
       <Formik
-        initialValues={{ email: 'raoffonom@icloud.com', password: 'qwerty123' }}
+        initialValues={{ email: 'aeroluxx@ya.ru', password: 'Password_01' }}
         onSubmit={(values): Promise<void> => _onPress(values)}
         validationSchema={Yup.object().shape({
           email: Yup.string().email().required(),

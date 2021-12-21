@@ -24,8 +24,8 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
 
   useEffect(() => {
     if (DiceStore.online) {
-      actionPlayerOne.getProfile()
-      actionPlayerOne.getHistory()
+      // actionPlayerOne.getProfile()
+      // actionPlayerOne.getHistory()
       const subscription = DataStore.observe(Profile).subscribe(() => actionPlayerOne.getProfile())
       const subscriptionHistory = DataStore.observe(History).subscribe(() => actionPlayerOne.getHistory())
       setLoading(false)

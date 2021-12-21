@@ -1,5 +1,5 @@
 import React, { memo, useState, useEffect } from 'react'
-import { StyleSheet, StyleProp, ViewStyle, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, StyleProp, ViewStyle, TouchableOpacity, View, Image } from 'react-native'
 import { primary, secondary } from '../../constants'
 import { s, ms } from 'react-native-size-matters'
 import Spinner from 'react-native-spinkit'
@@ -56,7 +56,7 @@ const Avatar = memo<AvatarT>(({ loading = true, uri, size = 'large', onPress, vi
               {!uri ? (
                 <FastImage style={styles[size]} source={require('./pickaface.png')} />
               ) : (
-                <FastImage style={styles[size]} source={{ uri, cache: FastImage.cacheControl.immutable }} />
+                <Image style={styles[size]} source={{ uri }} />
               )}
             </>
           )}

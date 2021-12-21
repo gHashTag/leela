@@ -73,15 +73,15 @@ const icon = (status: string) => {
 
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   useEffect(() => {
-    actionPlayerOne.getProfile()
-    actionPlayerOne.getHistory()
+    // actionPlayerOne.getProfile()
+    // actionPlayerOne.getHistory()
     const subscription = DataStore.observe(Profile).subscribe(() => actionPlayerOne.getProfile())
     const subscriptionHistory = DataStore.observe(History).subscribe(() => actionPlayerOne.getHistory())
     return () => {
       subscription.unsubscribe()
       subscriptionHistory.unsubscribe()
     }
-  }, [navigation])
+  }, [])
 
   const _renderItem = ({ item }: StepsT) => {
     const { id, plan, count, status } = item

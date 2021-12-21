@@ -23,7 +23,13 @@ const PlayerOneStore = makeAutoObservable({
     email: '',
     plan: 68,
     avatar: ''
-  }]
+  }],
+  poster: {
+    imgUrl: "https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/poster.jpg",
+    eventUrl: "",
+    buttonColor: '#1c1c1c'
+  },
+  isPosterLoading: false,
 })
 
 const actionPlayerOne = {
@@ -70,6 +76,18 @@ const actionPlayerOne = {
       captureException(error)
     }
   },
+  async getPoster(): Promise<void> {
+    try {
+      PlayerOneStore.isPosterLoading = true
+      const response = await fetch('https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/poster.json')
+      const json = await response.json() 
+      PlayerOneStore.poster = json[0]
+    } catch (error) {
+      captureException(error)
+    } finally {
+      PlayerOneStore.isPosterLoading = false
+    }
+  },
   async uploadImage(): Promise<void> {
     try {
       const image = await getImagePicker()
@@ -98,7 +116,7 @@ const actionPlayerOne = {
 
 persistence({
   name: 'PlayerOneStore',
-  properties: ['player', 'plan', 'planPrev', 'start', 'history', 'finish'],
+  properties: ['player', 'plan', 'planPrev', 'start', 'history', 'finish', 'poster'],
   adapter: new StorageAdapter({
     read: readStore,
     write: writeStore
