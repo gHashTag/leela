@@ -2,6 +2,7 @@ import React, { useState, ReactElement } from 'react'
 import { KeyboardAvoidingView } from 'react-native'
 import { Auth } from 'aws-amplify'
 import * as Keychain from 'react-native-keychain'
+import Config from 'react-native-config'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
 import { s } from 'react-native-size-matters'
@@ -11,8 +12,7 @@ import { AppContainer, Button, Space, ButtonLink, TextError, Input } from '../..
 import { goBack, white, black, captureException } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { I18n } from '../../../utils'
-
-import { actionsDice, actionPlayerOne } from '../../../store'
+import { actionsDice } from '../../../store'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_IN'>
 
@@ -56,7 +56,8 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
 
   const { dark } = useTheme()
   const color = dark ? white : black
-  // initialValues={{ email: 'reactnativeinitru@gmail.com', password: 'qwerty123' }}
+
+  const initialValues = { email: Config.EMAIL, password: Config.PASSWORD }
   return (
     <AppContainer
       backgroundColor={dark ? black : white}
@@ -66,7 +67,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
       colorLeft={color}
     >
       <Formik
-        initialValues={{ email: 'aeroluxx@ya.ru', password: 'Password_01' }}
+        initialValues={__DEV__ ? initialValues : { email: '', password: '' }}
         onSubmit={(values): Promise<void> => _onPress(values)}
         validationSchema={Yup.object().shape({
           email: Yup.string().email().required(),
