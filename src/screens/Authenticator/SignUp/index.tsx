@@ -2,6 +2,7 @@ import React, { useState, ReactElement } from 'react'
 import { Auth } from 'aws-amplify'
 import * as Keychain from 'react-native-keychain'
 import { Formik } from 'formik'
+import Config from 'react-native-config'
 import * as Yup from 'yup'
 import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -54,11 +55,8 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
 
   const { dark } = useTheme()
   const color = dark ? white : black
-  // initialValues={{
-  //   email: 'reactnativeinitru@gmail.com',
-  //   password: 'qwerty123',
-  //   passwordConfirmation: 'qwerty123'
-  // }}
+
+  const initialValues = { email: Config.EMAIL, password: Config.PASSWORD, passwordConfirmation: Config.PASSWORD }
   return (
     <AppContainer
       backgroundColor={dark ? black : white}
@@ -68,12 +66,7 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
       colorLeft={color}
     >
       <Formik
-        // initialValues={{
-        //   email: '',
-        //   password: '',
-        //   passwordConfirmation: ''
-        // }}
-        initialValues={{ email: 'aeroluxx@ya.ru', password: 'Password_01', passwordConfirmation: 'Password_01' }}
+        initialValues={__DEV__ ? initialValues : { email: '', password: '', passwordConfirmation: '' }}
         onSubmit={(values): Promise<void> => _onPress(values)}
         validationSchema={Yup.object().shape({
           email: Yup.string().email().required(),

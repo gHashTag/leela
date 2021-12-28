@@ -46,7 +46,6 @@ const PosterScreen = observer(({}: PosterScreenT) => {
   const { button, img, buttonConteiner } = styles
 
   useEffect(() => {
-    console.log('ok')
     actionPlayerOne.getPoster()
   }, [])
 
