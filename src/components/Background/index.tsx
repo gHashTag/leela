@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { SafeAreaView, StyleSheet, StyleProp, ImageStyle, ImageBackground } from 'react-native'
+import { SafeAreaView, StyleSheet, StyleProp, ImageStyle, ImageBackground, View } from 'react-native'
 import { ICONS } from './images'
 import { W, H } from '../../constants'
 
@@ -25,7 +25,11 @@ const Background = memo(({ status = 'bg', imageStyle, sourceImg, children }: Bac
   const source = () => ICONS.filter(x => x.title === status)[0].path
   return (
     <SafeAreaView style={container}>
-      <ImageBackground resizeMode={'contain'} source={!!sourceImg ? { uri: sourceImg} : source()} style={[img, imageStyle]}>
+      <ImageBackground
+        resizeMode={'contain'}
+        source={!!sourceImg ? { uri: sourceImg } : source()}
+        style={[img, imageStyle]}
+      >
         {children}
       </ImageBackground>
     </SafeAreaView>

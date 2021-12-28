@@ -50,6 +50,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
       }}
       title={title}
       iconLeft=":heavy_multiplication_x:"
+      status="1x1"
     >
       {videoUrl !== '' && (
         <View style={styles.center}>

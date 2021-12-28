@@ -38,6 +38,7 @@ interface AppContainerT {
   loading?: boolean
   header?: boolean
   textAlign?: string | null
+  status?: string
 }
 
 const AppContainer = memo<AppContainerT>(
@@ -53,12 +54,13 @@ const AppContainer = memo<AppContainerT>(
     message = '',
     title,
     loading = false,
-    textAlign = 'left'
+    textAlign = 'left',
+    status
   }) => {
     const { container, sub, statusStyle } = styles
     return (
       <SafeAreaView>
-        <Background>
+        <Background status={status}>
           <View style={container}>
             <StatusBarAlert
               visible={message !== ''}
