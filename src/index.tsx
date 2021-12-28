@@ -1,7 +1,7 @@
 import React from 'react'
 import { useColorScheme, StatusBar } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
-import { createStackNavigator } from '@react-navigation/stack'
+import { createStackNavigator, TransitionPresets } from '@react-navigation/stack'
 import * as Sentry from '@sentry/react'
 import {
   GameScreen,
@@ -99,11 +99,19 @@ const App = () => {
       <StatusBar backgroundColor={scheme === 'dark' ? black : white} barStyle={color} />
       <Stack.Navigator
         screenOptions={{
+          ...TransitionPresets.ModalPresentationIOS,
+          cardOverlayEnabled: true,
+          gestureEnabled: true,
           headerShown: false,
-          cardStyle: { backgroundColor: scheme === 'dark' ? black : white }
+          cardStyle: {
+            backgroundColor: scheme === 'dark' ? black : white,
+            borderTopLeftRadius: 25,
+            borderTopRightRadius: 25
+          }
         }}
         initialRouteName="WELCOME_SCREEN"
         mode="modal"
+        headerMode="none"
       >
         <Stack.Screen name="UI" component={UI} options={horizontalAnimation} />
         <Stack.Screen name="WELCOME_SCREEN" component={WelcomeScreen} options={horizontalAnimation} />
