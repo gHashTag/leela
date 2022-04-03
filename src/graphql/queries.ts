@@ -2,6 +2,78 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
+export const getProfile = /* GraphQL */ `
+  query GetProfile($id: ID!) {
+    getProfile(id: $id) {
+      id
+      firstName
+      lastName
+      email
+      plan
+      mainHelper
+      avatar
+      firstGame
+      lastStepTime
+      histories {
+        items {
+          id
+          ownerProfId
+          profileID
+          count
+          plan
+          status
+          createdAt
+          updatedAt
+          _version
+          _deleted
+          _lastChangedAt
+          owner
+        }
+        nextToken
+        startedAt
+      }
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      owner
+    }
+  }
+`;
+export const listProfiles = /* GraphQL */ `
+  query ListProfiles(
+    $filter: ModelProfileFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listProfiles(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        firstName
+        lastName
+        email
+        plan
+        mainHelper
+        avatar
+        firstGame
+        lastStepTime
+        histories {
+          nextToken
+          startedAt
+        }
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        owner
+      }
+      nextToken
+      startedAt
+    }
+  }
+`;
 export const syncProfiles = /* GraphQL */ `
   query SyncProfiles(
     $filter: ModelProfileFilterInput
@@ -21,82 +93,102 @@ export const syncProfiles = /* GraphQL */ `
         lastName
         email
         plan
+        mainHelper
         avatar
-        owner
+        firstGame
+        lastStepTime
         histories {
           nextToken
           startedAt
         }
+        createdAt
+        updatedAt
         _version
         _deleted
         _lastChangedAt
-        createdAt
-        updatedAt
+        owner
       }
       nextToken
       startedAt
     }
   }
 `;
-export const getProfile = /* GraphQL */ `
-  query GetProfile($id: ID!) {
-    getProfile(id: $id) {
+export const getHistory = /* GraphQL */ `
+  query GetHistory($id: ID!) {
+    getHistory(id: $id) {
       id
-      firstName
-      lastName
-      email
-      plan
-      avatar
-      owner
-      histories {
-        items {
-          id
-          historyID
-          count
-          plan
-          status
-          _version
-          _deleted
-          _lastChangedAt
-          createdAt
-          updatedAt
-          owner
-        }
-        nextToken
-        startedAt
-      }
-      _version
-      _deleted
-      _lastChangedAt
-      createdAt
-      updatedAt
-    }
-  }
-`;
-export const listProfiles = /* GraphQL */ `
-  query ListProfiles(
-    $filter: ModelProfileFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    listProfiles(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
+      ownerProfId
+      profileID
+      profile {
         id
         firstName
         lastName
         email
         plan
+        mainHelper
         avatar
-        owner
+        firstGame
+        lastStepTime
         histories {
           nextToken
           startedAt
         }
+        createdAt
+        updatedAt
         _version
         _deleted
         _lastChangedAt
+        owner
+      }
+      count
+      plan
+      status
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      owner
+    }
+  }
+`;
+export const listHistories = /* GraphQL */ `
+  query ListHistories(
+    $filter: ModelHistoryFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listHistories(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        ownerProfId
+        profileID
+        profile {
+          id
+          firstName
+          lastName
+          email
+          plan
+          mainHelper
+          avatar
+          firstGame
+          lastStepTime
+          createdAt
+          updatedAt
+          _version
+          _deleted
+          _lastChangedAt
+          owner
+        }
+        count
+        plan
+        status
         createdAt
         updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        owner
       }
       nextToken
       startedAt
@@ -118,15 +210,33 @@ export const syncHistories = /* GraphQL */ `
     ) {
       items {
         id
-        historyID
+        ownerProfId
+        profileID
+        profile {
+          id
+          firstName
+          lastName
+          email
+          plan
+          mainHelper
+          avatar
+          firstGame
+          lastStepTime
+          createdAt
+          updatedAt
+          _version
+          _deleted
+          _lastChangedAt
+          owner
+        }
         count
         plan
         status
+        createdAt
+        updatedAt
         _version
         _deleted
         _lastChangedAt
-        createdAt
-        updatedAt
         owner
       }
       nextToken
@@ -134,42 +244,61 @@ export const syncHistories = /* GraphQL */ `
     }
   }
 `;
-export const getHistory = /* GraphQL */ `
-  query GetHistory($id: ID!) {
-    getHistory(id: $id) {
+export const getMainRoom = /* GraphQL */ `
+  query GetMainRoom($id: ID!) {
+    getMainRoom(id: $id) {
       id
-      historyID
-      count
-      plan
-      status
+      code
+      createdAt
+      updatedAt
       _version
       _deleted
       _lastChangedAt
-      createdAt
-      updatedAt
-      owner
     }
   }
 `;
-export const listHistories = /* GraphQL */ `
-  query ListHistories(
-    $filter: ModelHistoryFilterInput
+export const listMainRooms = /* GraphQL */ `
+  query ListMainRooms(
+    $filter: ModelMainRoomFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    listHistories(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    listMainRooms(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
-        historyID
-        count
-        plan
-        status
+        code
+        createdAt
+        updatedAt
         _version
         _deleted
         _lastChangedAt
+      }
+      nextToken
+      startedAt
+    }
+  }
+`;
+export const syncMainRooms = /* GraphQL */ `
+  query SyncMainRooms(
+    $filter: ModelMainRoomFilterInput
+    $limit: Int
+    $nextToken: String
+    $lastSync: AWSTimestamp
+  ) {
+    syncMainRooms(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      lastSync: $lastSync
+    ) {
+      items {
+        id
+        code
         createdAt
         updatedAt
-        owner
+        _version
+        _deleted
+        _lastChangedAt
       }
       nextToken
       startedAt

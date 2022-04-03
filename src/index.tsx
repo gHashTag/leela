@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useColorScheme, StatusBar } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
-import { createStackNavigator, TransitionPresets } from '@react-navigation/stack'
+import { TransitionPresets } from '@react-navigation/stack'
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import * as Sentry from '@sentry/react'
 import {
   GameScreen,
@@ -35,6 +36,11 @@ import { white, black } from './constants'
 
 import { UI } from './UI'
 
+import { DiceStore, actionPlayers, OnlinePlayerStore } from './store'
+import { DataStore, Hub } from 'aws-amplify'
+import { Profile, History } from './models'
+import { useFocusEffect } from '@react-navigation/native'
+
 const DarkTheme = {
   dark: true,
   colors: {
@@ -60,6 +66,38 @@ const LightTheme = {
 }
 
 const Tab = () => {
+  useFocusEffect(
+    React.useCallback(() => {
+    if (DiceStore.online) {
+      const subscription = DataStore.observe(Profile).subscribe(
+      () => {
+        actionPlayers.getProfile()
+      })
+      const subscriptionHistory = DataStore.observe(History).subscribe(
+      () => {
+        actionPlayers.getHistory()
+      })
+      OnlinePlayerStore.subs = {
+        profile: subscription,
+        history: subscriptionHistory
+      }
+      Hub.listen('auth', (event) => {
+        if (event.payload.event === 'signIn' || event.payload.event === 'signUp') {
+          actionPlayers.getProfile()
+          actionPlayers.getHistory()
+        } else if (event.payload.event === 'signOut') {
+          DiceStore.online = false
+          
+        }
+      })
+      return () => {
+        subscription.unsubscribe()
+        subscriptionHistory.unsubscribe()
+      }
+    }
+    }, [])
+  )
+
   return (
     <TabNavigator.Navigator initialRouteName={'TAB_BOTTOM_0'}>
       <TabNavigator.Screen name="TAB_BOTTOM_0" component={PosterScreen} />
@@ -70,7 +108,7 @@ const Tab = () => {
   )
 }
 
-const Stack = createStackNavigator()
+const Stack = createNativeStackNavigator()
 
 const horizontalAnimation = {
   cardStyleInterpolator: ({ current, layouts }) => {

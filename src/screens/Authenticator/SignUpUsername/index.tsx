@@ -11,7 +11,7 @@ import { Profile as ProfileT } from '../../../models'
 import { AppContainer, Space, Button, Input, Avatar } from '../../../components'
 import { goBack, white, black, captureException } from '../../../constants'
 import { RootStackParamList, UserT } from '../../../types'
-import { actionPlayerOne, actionsDice, PlayerOneStore } from '../../../store'
+import { actionsDice } from '../../../store'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_UP_USERNAME'>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'SIGN_UP_USERNAME'>
@@ -40,9 +40,10 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     setLoading(true)
     const { firstName, lastName } = values
     const { email } = route.params
-    const owner = await Auth.currentAuthenticatedUser()
 
-    createProfile({ id: uuidv4(), firstName, lastName, email, plan: 68, owner: owner.username, avatar: '' })
+    createProfile({ id: uuidv4(), firstName, lastName, email, 
+      plan: 68, avatar: '', firstGame: true, 
+      lastStepTime: (Date.now() - 86400000).toString() })
     setLoading(false)
   }
 

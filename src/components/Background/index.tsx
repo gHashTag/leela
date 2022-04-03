@@ -22,7 +22,10 @@ interface BackgroundT {
 
 const Background = memo(({ status = 'bg', imageStyle, sourceImg, children }: BackgroundT) => {
   const { container, img } = styles
-  const source = () => ICONS.filter(x => x.title === status)[0].path
+  const source = () => {
+    const res = ICONS.find(x => x.title === status)
+    return res ? res.path : ''
+  }
   return (
     <SafeAreaView style={container}>
       <ImageBackground

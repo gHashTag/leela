@@ -13,30 +13,34 @@ export const createProfile = /* GraphQL */ `
       lastName
       email
       plan
+      mainHelper
       avatar
-      owner
+      firstGame
+      lastStepTime
       histories {
         items {
           id
-          historyID
+          ownerProfId
+          profileID
           count
           plan
           status
+          createdAt
+          updatedAt
           _version
           _deleted
           _lastChangedAt
-          createdAt
-          updatedAt
           owner
         }
         nextToken
         startedAt
       }
+      createdAt
+      updatedAt
       _version
       _deleted
       _lastChangedAt
-      createdAt
-      updatedAt
+      owner
     }
   }
 `;
@@ -51,30 +55,34 @@ export const updateProfile = /* GraphQL */ `
       lastName
       email
       plan
+      mainHelper
       avatar
-      owner
+      firstGame
+      lastStepTime
       histories {
         items {
           id
-          historyID
+          ownerProfId
+          profileID
           count
           plan
           status
+          createdAt
+          updatedAt
           _version
           _deleted
           _lastChangedAt
-          createdAt
-          updatedAt
           owner
         }
         nextToken
         startedAt
       }
+      createdAt
+      updatedAt
       _version
       _deleted
       _lastChangedAt
-      createdAt
-      updatedAt
+      owner
     }
   }
 `;
@@ -89,30 +97,34 @@ export const deleteProfile = /* GraphQL */ `
       lastName
       email
       plan
+      mainHelper
       avatar
-      owner
+      firstGame
+      lastStepTime
       histories {
         items {
           id
-          historyID
+          ownerProfId
+          profileID
           count
           plan
           status
+          createdAt
+          updatedAt
           _version
           _deleted
           _lastChangedAt
-          createdAt
-          updatedAt
           owner
         }
         nextToken
         startedAt
       }
+      createdAt
+      updatedAt
       _version
       _deleted
       _lastChangedAt
-      createdAt
-      updatedAt
+      owner
     }
   }
 `;
@@ -123,15 +135,37 @@ export const createHistory = /* GraphQL */ `
   ) {
     createHistory(input: $input, condition: $condition) {
       id
-      historyID
+      ownerProfId
+      profileID
+      profile {
+        id
+        firstName
+        lastName
+        email
+        plan
+        mainHelper
+        avatar
+        firstGame
+        lastStepTime
+        histories {
+          nextToken
+          startedAt
+        }
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        owner
+      }
       count
       plan
       status
+      createdAt
+      updatedAt
       _version
       _deleted
       _lastChangedAt
-      createdAt
-      updatedAt
       owner
     }
   }
@@ -143,15 +177,37 @@ export const updateHistory = /* GraphQL */ `
   ) {
     updateHistory(input: $input, condition: $condition) {
       id
-      historyID
+      ownerProfId
+      profileID
+      profile {
+        id
+        firstName
+        lastName
+        email
+        plan
+        mainHelper
+        avatar
+        firstGame
+        lastStepTime
+        histories {
+          nextToken
+          startedAt
+        }
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        owner
+      }
       count
       plan
       status
+      createdAt
+      updatedAt
       _version
       _deleted
       _lastChangedAt
-      createdAt
-      updatedAt
       owner
     }
   }
@@ -163,16 +219,86 @@ export const deleteHistory = /* GraphQL */ `
   ) {
     deleteHistory(input: $input, condition: $condition) {
       id
-      historyID
+      ownerProfId
+      profileID
+      profile {
+        id
+        firstName
+        lastName
+        email
+        plan
+        mainHelper
+        avatar
+        firstGame
+        lastStepTime
+        histories {
+          nextToken
+          startedAt
+        }
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        owner
+      }
       count
       plan
       status
+      createdAt
+      updatedAt
       _version
       _deleted
       _lastChangedAt
+      owner
+    }
+  }
+`;
+export const createMainRoom = /* GraphQL */ `
+  mutation CreateMainRoom(
+    $input: CreateMainRoomInput!
+    $condition: ModelMainRoomConditionInput
+  ) {
+    createMainRoom(input: $input, condition: $condition) {
+      id
+      code
       createdAt
       updatedAt
-      owner
+      _version
+      _deleted
+      _lastChangedAt
+    }
+  }
+`;
+export const updateMainRoom = /* GraphQL */ `
+  mutation UpdateMainRoom(
+    $input: UpdateMainRoomInput!
+    $condition: ModelMainRoomConditionInput
+  ) {
+    updateMainRoom(input: $input, condition: $condition) {
+      id
+      code
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+    }
+  }
+`;
+export const deleteMainRoom = /* GraphQL */ `
+  mutation DeleteMainRoom(
+    $input: DeleteMainRoomInput!
+    $condition: ModelMainRoomConditionInput
+  ) {
+    deleteMainRoom(input: $input, condition: $condition) {
+      id
+      code
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
     }
   }
 `;

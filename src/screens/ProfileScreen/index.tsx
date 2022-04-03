@@ -13,15 +13,11 @@ import { AppContainer, Txt, Space, EmojiText, Button, HeaderMaster } from '../..
 import { captureException } from '../../constants'
 import {
   DiceStore,
-  actionPlayerOne,
-  PlayerOneStore,
-  PlayerTwoStore,
-  PlayerThreeStore,
-  PlayerFourStore,
-  PlayerFiveStore,
-  PlayerSixStore
+  actionPlayers,
+  PlayersStore,
+  OnlinePlayerStore,
+  OnlineOtherPlayers,
 } from '../../store'
-import { History, Profile } from '../../models'
 import { _onPressReset } from '../helper'
 
 type navigation = StackNavigationProp<RootStackParamList, 'PROFILE_SCREEN'>
@@ -72,16 +68,6 @@ const icon = (status: string) => {
 }
 
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
-  useEffect(() => {
-    // actionPlayerOne.getProfile()
-    // actionPlayerOne.getHistory()
-    const subscription = DataStore.observe(Profile).subscribe(() => actionPlayerOne.getProfile())
-    const subscriptionHistory = DataStore.observe(History).subscribe(() => actionPlayerOne.getHistory())
-    return () => {
-      subscription.unsubscribe()
-      subscriptionHistory.unsubscribe()
-    }
-  }, [])
 
   const _renderItem = ({ item }: StepsT) => {
     const { id, plan, count, status } = item
@@ -110,40 +96,52 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
   const { container } = styles
 
-  const _keyExtractor = (obj: any) => obj.id.toString()
+  const _keyExtractor = (obj: any) => obj.id
 
-  const DATA = [
+  const DATA = !DiceStore.online ? [
     {
       title: `${I18n.t('player')} 1`,
-      data: PlayerOneStore.history.slice().reverse()
+      data: PlayersStore.histories[0].slice().reverse()
     },
     {
       title: `${I18n.t('player')} 2`,
-      data: PlayerTwoStore.history.slice().reverse()
+      data: PlayersStore.histories[1].slice().reverse()
     },
     {
       title: `${I18n.t('player')} 3`,
-      data: PlayerThreeStore.history.slice().reverse()
+      data: PlayersStore.histories[2].slice().reverse()
     },
     {
       title: `${I18n.t('player')} 4`,
-      data: PlayerFourStore.history.slice().reverse()
+      data: PlayersStore.histories[3].slice().reverse()
     },
     {
       title: `${I18n.t('player')} 5`,
-      data: PlayerFiveStore.history.slice().reverse()
+      data: PlayersStore.histories[4].slice().reverse()
     },
     {
       title: `${I18n.t('player')} 6`,
-      data: PlayerSixStore.history.slice().reverse()
+      data: PlayersStore.histories[5].slice().reverse()
     }
-  ].slice(0, DiceStore.multi)
+  ].slice(0, DiceStore.multi) 
+  : [
+    {
+      title: `${OnlinePlayerStore.profile.firstName} ${OnlinePlayerStore.profile.lastName}`,
+      data: OnlinePlayerStore.histories.slice().reverse()
+    },
+    ...OnlineOtherPlayers.players.slice().map(a => {
+    return{
+      title: `${a.firstName} ${a.lastName}`,
+      data: a.history
+    }})
+  ]
 
   const _onPressSignOut = async (): Promise<void> => {
     try {
+      actionPlayers.SignOut()
       await Keychain.resetInternetCredentials('auth')
       await AsyncStorage.clear()
-      actionPlayerOne.resetGame()
+      await DataStore.clear()
       navigation.popToTop()
     } catch (err) {
       captureException(err)
@@ -151,7 +149,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   }
 
   const onPressAva = async () => {
-    actionPlayerOne.uploadImage()
+    actionPlayers.uploadImage()
   }
 
   return (
@@ -162,9 +160,9 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
             {/* <Txt h3 title={`Подписка: ${subscriptionActive.toString()}`} /> */}
             {DiceStore.online && (
               <HeaderMaster
-                user={PlayerOneStore.profile}
-                avatar={PlayerOneStore.avatar}
-                onPress={() => navigation.navigate('USER_EDIT', PlayerOneStore.profile)}
+                user={OnlinePlayerStore.profile}
+                avatar={OnlinePlayerStore.avatar}
+                onPress={() => navigation.navigate('USER_EDIT', OnlinePlayerStore.profile)}
                 onPressAva={onPressAva}
               />
             )}
@@ -187,7 +185,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
         keyExtractor={_keyExtractor}
         showsVerticalScrollIndicator={false}
         renderSectionHeader={({ section: { title } }) => (
-          <Txt h1 title={DiceStore.online ? '' : title} textStyle={{ padding: 15 }} />
+          <Txt h1 title={title} textStyle={{ padding: 15, marginTop: 10 }} />
         )}
       />
     </AppContainer>

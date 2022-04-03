@@ -17,7 +17,7 @@ import { ScaledSheet } from 'react-native-size-matters'
 import { I18n, lang } from '../../utils'
 import { RootStackParamList } from '../../types'
 import { AppContainer, ModalSubscribe, Space, Button, Txt, CenterView, IconLeela } from '../../components'
-import { actionsSubscribe, actionsDice, actionPlayerOne, DiceStore } from '../../store'
+import { actionsSubscribe, actionsDice, actionPlayers, DiceStore } from '../../store'
 import { LocalNotification } from '../../utils/noifications/LocalPushController'
 import { captureException } from '../../constants'
 import { Profile } from '../../models'
@@ -45,9 +45,9 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         const user = await Auth.signIn(username, password)
         setLoading(false)
         if (DiceStore.online) {
-          actionPlayerOne.getProfile() // костыль
+          actionPlayers.getProfile() // костыль
         }
-        actionPlayerOne.getPoster()
+        actionPlayers.getPoster()
         user && navigation.navigate('MAIN')
         actionsDice.setOnline(true)
         actionsDice.setPlayers(1)
@@ -105,7 +105,6 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   useEffect(() => {
     //console.warn('SubscribeStore.subscriptionActive', SubscribeStore.subscriptionActive)
     auth().signInWithEmailAndPassword(Config.ADMIN, Config.ADMIN_PASSWORD)
-
     actionsSubscribe.purchaserInfo()
     //actionsSubscribe.setToday('12-6-21')
     const checkGame = async () => {

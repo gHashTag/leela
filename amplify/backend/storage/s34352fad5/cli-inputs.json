@@ -1,7 +1,7 @@
 {
-  "resourceName": "leelaGame",
-  "policyUUID": "dc6150ef",
-  "bucketName": "leelaeecd9ea5f59446cbb291a037e991eff0",
+  "resourceName": "s34352fad5",
+  "policyUUID": "4352fad5",
+  "bucketName": "leela1fbd97462f2d4ca68aab5459a7aab19d",
   "storageAccess": "authAndGuest",
   "guestAccess": [
     "READ"
@@ -11,5 +11,6 @@
     "READ",
     "DELETE"
   ],
+  "triggerFunction": "NONE",
   "groupAccess": {}
 }

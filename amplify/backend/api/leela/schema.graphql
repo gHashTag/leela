@@ -1,0 +1,34 @@
+type Profile @model @auth(rules: [
+  { allow: owner }
+  { allow: private, operations: [read] }]) {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  plan: Int
+  mainHelper: String
+  avatar: String
+  firstGame: Boolean
+  lastStepTime: String
+  histories: [History] @hasMany(indexName: "byHistory", fields: ["id"])
+}
+
+type History
+  @model @auth(rules: [
+  { allow: owner }
+  { allow: private, operations: [read] }]) {
+  id: ID!
+  ownerProfId: String!
+  profileID: ID! @index(name: "byHistory")
+  profile: Profile @belongsTo(fields: ["profileID"])
+  count: Int!
+  plan: Int!
+  status: String!
+}
+
+type MainRoom 
+  @model @auth(rules: [
+    { allow: private, operations: [create, update, read] }]) {
+  id: ID!
+  code: String
+}

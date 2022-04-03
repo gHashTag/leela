@@ -1,10 +1,10 @@
 {
   "version": "1",
   "cognitoConfig": {
-    "identityPoolName": "leela5e58fb05_identitypool_5e58fb05",
+    "identityPoolName": "leela56320dc4_identitypool_56320dc4",
     "allowUnauthenticatedIdentities": true,
-    "resourceNameTruncated": "leela5e58fb05",
-    "userPoolName": "leela5e58fb05_userpool_5e58fb05",
+    "resourceNameTruncated": "leela56320dc4",
+    "userPoolName": "leela56320dc4_userpool_56320dc4",
     "autoVerifiedAttributes": [
       "email"
     ],
@@ -31,18 +31,19 @@
     "userpoolClientReadAttributes": [
       "email"
     ],
-    "userpoolClientLambdaRole": "leela55e58fb05_userpoolclient_lambda_role",
+    "userpoolClientLambdaRole": "leela556320dc4_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
+    "sharedId": "56320dc4",
+    "resourceName": "leela56320dc4",
     "authSelections": "identityPoolAndUserPool",
-    "resourceName": "leela5e58fb05",
-    "serviceName": "Cognito",
     "useDefault": "default",
-    "sharedId": "5e58fb05",
-    "userPoolGroupList": [],
     "usernameAttributes": [
       "email"
     ],
+    "userPoolGroupList": [],
+    "serviceName": "Cognito",
     "usernameCaseSensitive": false,
+    "useEnabledMfas": true,
     "authRoleArn": {
       "Fn::GetAtt": [
         "AuthRole",
@@ -56,7 +57,6 @@
       ]
     },
     "breakCircularDependency": true,
-    "useEnabledMfas": false,
     "dependsOn": []
   }
 }

@@ -8,8 +8,10 @@ export type CreateProfileInput = {
   lastName: string,
   email: string,
   plan?: number | null,
+  mainHelper?: string | null,
   avatar?: string | null,
-  owner?: string | null,
+  firstGame?: boolean | null,
+  lastStepTime?: string | null,
   _version?: number | null,
 };
 
@@ -18,7 +20,10 @@ export type ModelProfileConditionInput = {
   lastName?: ModelStringInput | null,
   email?: ModelStringInput | null,
   plan?: ModelIntInput | null,
+  mainHelper?: ModelStringInput | null,
   avatar?: ModelStringInput | null,
+  firstGame?: ModelBooleanInput | null,
+  lastStepTime?: ModelStringInput | null,
   and?: Array< ModelProfileConditionInput | null > | null,
   or?: Array< ModelProfileConditionInput | null > | null,
   not?: ModelProfileConditionInput | null,
@@ -76,6 +81,13 @@ export type ModelIntInput = {
   attributeType?: ModelAttributeTypes | null,
 };
 
+export type ModelBooleanInput = {
+  ne?: boolean | null,
+  eq?: boolean | null,
+  attributeExists?: boolean | null,
+  attributeType?: ModelAttributeTypes | null,
+};
+
 export type Profile = {
   __typename: "Profile",
   id: string,
@@ -83,19 +95,22 @@ export type Profile = {
   lastName: string,
   email: string,
   plan?: number | null,
+  mainHelper?: string | null,
   avatar?: string | null,
-  owner?: string | null,
+  firstGame?: boolean | null,
+  lastStepTime?: string | null,
   histories?: ModelHistoryConnection | null,
+  createdAt: string,
+  updatedAt: string,
   _version: number,
   _deleted?: boolean | null,
   _lastChangedAt: number,
-  createdAt: string,
-  updatedAt: string,
+  owner?: string | null,
 };
 
 export type ModelHistoryConnection = {
   __typename: "ModelHistoryConnection",
-  items?:  Array<History | null > | null,
+  items:  Array<History | null >,
   nextToken?: string | null,
   startedAt?: number | null,
 };
@@ -103,15 +118,17 @@ export type ModelHistoryConnection = {
 export type History = {
   __typename: "History",
   id: string,
-  historyID: string,
+  ownerProfId: string,
+  profileID: string,
+  profile?: Profile | null,
   count: number,
   plan: number,
   status: string,
+  createdAt: string,
+  updatedAt: string,
   _version: number,
   _deleted?: boolean | null,
   _lastChangedAt: number,
-  createdAt: string,
-  updatedAt: string,
   owner?: string | null,
 };
 
@@ -121,8 +138,10 @@ export type UpdateProfileInput = {
   lastName?: string | null,
   email?: string | null,
   plan?: number | null,
+  mainHelper?: string | null,
   avatar?: string | null,
-  owner?: string | null,
+  firstGame?: boolean | null,
+  lastStepTime?: string | null,
   _version?: number | null,
 };
 
@@ -133,7 +152,8 @@ export type DeleteProfileInput = {
 
 export type CreateHistoryInput = {
   id?: string | null,
-  historyID: string,
+  ownerProfId: string,
+  profileID: string,
   count: number,
   plan: number,
   status: string,
@@ -141,7 +161,8 @@ export type CreateHistoryInput = {
 };
 
 export type ModelHistoryConditionInput = {
-  historyID?: ModelIDInput | null,
+  ownerProfId?: ModelStringInput | null,
+  profileID?: ModelIDInput | null,
   count?: ModelIntInput | null,
   plan?: ModelIntInput | null,
   status?: ModelStringInput | null,
@@ -168,7 +189,8 @@ export type ModelIDInput = {
 
 export type UpdateHistoryInput = {
   id: string,
-  historyID?: string | null,
+  ownerProfId?: string | null,
+  profileID?: string | null,
   count?: number | null,
   plan?: number | null,
   status?: string | null,
@@ -180,14 +202,51 @@ export type DeleteHistoryInput = {
   _version?: number | null,
 };
 
+export type CreateMainRoomInput = {
+  id?: string | null,
+  code?: string | null,
+  _version?: number | null,
+};
+
+export type ModelMainRoomConditionInput = {
+  code?: ModelStringInput | null,
+  and?: Array< ModelMainRoomConditionInput | null > | null,
+  or?: Array< ModelMainRoomConditionInput | null > | null,
+  not?: ModelMainRoomConditionInput | null,
+};
+
+export type MainRoom = {
+  __typename: "MainRoom",
+  id: string,
+  code?: string | null,
+  createdAt: string,
+  updatedAt: string,
+  _version: number,
+  _deleted?: boolean | null,
+  _lastChangedAt: number,
+};
+
+export type UpdateMainRoomInput = {
+  id: string,
+  code?: string | null,
+  _version?: number | null,
+};
+
+export type DeleteMainRoomInput = {
+  id: string,
+  _version?: number | null,
+};
+
 export type ModelProfileFilterInput = {
   id?: ModelIDInput | null,
   firstName?: ModelStringInput | null,
   lastName?: ModelStringInput | null,
   email?: ModelStringInput | null,
   plan?: ModelIntInput | null,
+  mainHelper?: ModelStringInput | null,
   avatar?: ModelStringInput | null,
-  owner?: ModelStringInput | null,
+  firstGame?: ModelBooleanInput | null,
+  lastStepTime?: ModelStringInput | null,
   and?: Array< ModelProfileFilterInput | null > | null,
   or?: Array< ModelProfileFilterInput | null > | null,
   not?: ModelProfileFilterInput | null,
@@ -195,20 +254,36 @@ export type ModelProfileFilterInput = {
 
 export type ModelProfileConnection = {
   __typename: "ModelProfileConnection",
-  items?:  Array<Profile | null > | null,
+  items:  Array<Profile | null >,
   nextToken?: string | null,
   startedAt?: number | null,
 };
 
 export type ModelHistoryFilterInput = {
   id?: ModelIDInput | null,
-  historyID?: ModelIDInput | null,
+  ownerProfId?: ModelStringInput | null,
+  profileID?: ModelIDInput | null,
   count?: ModelIntInput | null,
   plan?: ModelIntInput | null,
   status?: ModelStringInput | null,
   and?: Array< ModelHistoryFilterInput | null > | null,
   or?: Array< ModelHistoryFilterInput | null > | null,
   not?: ModelHistoryFilterInput | null,
+};
+
+export type ModelMainRoomFilterInput = {
+  id?: ModelIDInput | null,
+  code?: ModelStringInput | null,
+  and?: Array< ModelMainRoomFilterInput | null > | null,
+  or?: Array< ModelMainRoomFilterInput | null > | null,
+  not?: ModelMainRoomFilterInput | null,
+};
+
+export type ModelMainRoomConnection = {
+  __typename: "ModelMainRoomConnection",
+  items:  Array<MainRoom | null >,
+  nextToken?: string | null,
+  startedAt?: number | null,
 };
 
 export type CreateProfileMutationVariables = {
@@ -224,32 +299,36 @@ export type CreateProfileMutation = {
     lastName: string,
     email: string,
     plan?: number | null,
+    mainHelper?: string | null,
     avatar?: string | null,
-    owner?: string | null,
+    firstGame?: boolean | null,
+    lastStepTime?: string | null,
     histories?:  {
       __typename: "ModelHistoryConnection",
-      items?:  Array< {
+      items:  Array< {
         __typename: "History",
         id: string,
-        historyID: string,
+        ownerProfId: string,
+        profileID: string,
         count: number,
         plan: number,
         status: string,
+        createdAt: string,
+        updatedAt: string,
         _version: number,
         _deleted?: boolean | null,
         _lastChangedAt: number,
-        createdAt: string,
-        updatedAt: string,
         owner?: string | null,
-      } | null > | null,
+      } | null >,
       nextToken?: string | null,
       startedAt?: number | null,
     } | null,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
+    owner?: string | null,
   } | null,
 };
 
@@ -266,32 +345,36 @@ export type UpdateProfileMutation = {
     lastName: string,
     email: string,
     plan?: number | null,
+    mainHelper?: string | null,
     avatar?: string | null,
-    owner?: string | null,
+    firstGame?: boolean | null,
+    lastStepTime?: string | null,
     histories?:  {
       __typename: "ModelHistoryConnection",
-      items?:  Array< {
+      items:  Array< {
         __typename: "History",
         id: string,
-        historyID: string,
+        ownerProfId: string,
+        profileID: string,
         count: number,
         plan: number,
         status: string,
+        createdAt: string,
+        updatedAt: string,
         _version: number,
         _deleted?: boolean | null,
         _lastChangedAt: number,
-        createdAt: string,
-        updatedAt: string,
         owner?: string | null,
-      } | null > | null,
+      } | null >,
       nextToken?: string | null,
       startedAt?: number | null,
     } | null,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
+    owner?: string | null,
   } | null,
 };
 
@@ -308,32 +391,36 @@ export type DeleteProfileMutation = {
     lastName: string,
     email: string,
     plan?: number | null,
+    mainHelper?: string | null,
     avatar?: string | null,
-    owner?: string | null,
+    firstGame?: boolean | null,
+    lastStepTime?: string | null,
     histories?:  {
       __typename: "ModelHistoryConnection",
-      items?:  Array< {
+      items:  Array< {
         __typename: "History",
         id: string,
-        historyID: string,
+        ownerProfId: string,
+        profileID: string,
         count: number,
         plan: number,
         status: string,
+        createdAt: string,
+        updatedAt: string,
         _version: number,
         _deleted?: boolean | null,
         _lastChangedAt: number,
-        createdAt: string,
-        updatedAt: string,
         owner?: string | null,
-      } | null > | null,
+      } | null >,
       nextToken?: string | null,
       startedAt?: number | null,
     } | null,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
+    owner?: string | null,
   } | null,
 };
 
@@ -346,15 +433,39 @@ export type CreateHistoryMutation = {
   createHistory?:  {
     __typename: "History",
     id: string,
-    historyID: string,
+    ownerProfId: string,
+    profileID: string,
+    profile?:  {
+      __typename: "Profile",
+      id: string,
+      firstName: string,
+      lastName: string,
+      email: string,
+      plan?: number | null,
+      mainHelper?: string | null,
+      avatar?: string | null,
+      firstGame?: boolean | null,
+      lastStepTime?: string | null,
+      histories?:  {
+        __typename: "ModelHistoryConnection",
+        nextToken?: string | null,
+        startedAt?: number | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+      owner?: string | null,
+    } | null,
     count: number,
     plan: number,
     status: string,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
     owner?: string | null,
   } | null,
 };
@@ -368,15 +479,39 @@ export type UpdateHistoryMutation = {
   updateHistory?:  {
     __typename: "History",
     id: string,
-    historyID: string,
+    ownerProfId: string,
+    profileID: string,
+    profile?:  {
+      __typename: "Profile",
+      id: string,
+      firstName: string,
+      lastName: string,
+      email: string,
+      plan?: number | null,
+      mainHelper?: string | null,
+      avatar?: string | null,
+      firstGame?: boolean | null,
+      lastStepTime?: string | null,
+      histories?:  {
+        __typename: "ModelHistoryConnection",
+        nextToken?: string | null,
+        startedAt?: number | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+      owner?: string | null,
+    } | null,
     count: number,
     plan: number,
     status: string,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
     owner?: string | null,
   } | null,
 };
@@ -390,51 +525,94 @@ export type DeleteHistoryMutation = {
   deleteHistory?:  {
     __typename: "History",
     id: string,
-    historyID: string,
-    count: number,
-    plan: number,
-    status: string,
-    _version: number,
-    _deleted?: boolean | null,
-    _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
-    owner?: string | null,
-  } | null,
-};
-
-export type SyncProfilesQueryVariables = {
-  filter?: ModelProfileFilterInput | null,
-  limit?: number | null,
-  nextToken?: string | null,
-  lastSync?: number | null,
-};
-
-export type SyncProfilesQuery = {
-  syncProfiles?:  {
-    __typename: "ModelProfileConnection",
-    items?:  Array< {
+    ownerProfId: string,
+    profileID: string,
+    profile?:  {
       __typename: "Profile",
       id: string,
       firstName: string,
       lastName: string,
       email: string,
       plan?: number | null,
+      mainHelper?: string | null,
       avatar?: string | null,
-      owner?: string | null,
+      firstGame?: boolean | null,
+      lastStepTime?: string | null,
       histories?:  {
         __typename: "ModelHistoryConnection",
         nextToken?: string | null,
         startedAt?: number | null,
       } | null,
+      createdAt: string,
+      updatedAt: string,
       _version: number,
       _deleted?: boolean | null,
       _lastChangedAt: number,
-      createdAt: string,
-      updatedAt: string,
-    } | null > | null,
-    nextToken?: string | null,
-    startedAt?: number | null,
+      owner?: string | null,
+    } | null,
+    count: number,
+    plan: number,
+    status: string,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+    owner?: string | null,
+  } | null,
+};
+
+export type CreateMainRoomMutationVariables = {
+  input: CreateMainRoomInput,
+  condition?: ModelMainRoomConditionInput | null,
+};
+
+export type CreateMainRoomMutation = {
+  createMainRoom?:  {
+    __typename: "MainRoom",
+    id: string,
+    code?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+  } | null,
+};
+
+export type UpdateMainRoomMutationVariables = {
+  input: UpdateMainRoomInput,
+  condition?: ModelMainRoomConditionInput | null,
+};
+
+export type UpdateMainRoomMutation = {
+  updateMainRoom?:  {
+    __typename: "MainRoom",
+    id: string,
+    code?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+  } | null,
+};
+
+export type DeleteMainRoomMutationVariables = {
+  input: DeleteMainRoomInput,
+  condition?: ModelMainRoomConditionInput | null,
+};
+
+export type DeleteMainRoomMutation = {
+  deleteMainRoom?:  {
+    __typename: "MainRoom",
+    id: string,
+    code?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
   } | null,
 };
 
@@ -450,32 +628,36 @@ export type GetProfileQuery = {
     lastName: string,
     email: string,
     plan?: number | null,
+    mainHelper?: string | null,
     avatar?: string | null,
-    owner?: string | null,
+    firstGame?: boolean | null,
+    lastStepTime?: string | null,
     histories?:  {
       __typename: "ModelHistoryConnection",
-      items?:  Array< {
+      items:  Array< {
         __typename: "History",
         id: string,
-        historyID: string,
+        ownerProfId: string,
+        profileID: string,
         count: number,
         plan: number,
         status: string,
+        createdAt: string,
+        updatedAt: string,
         _version: number,
         _deleted?: boolean | null,
         _lastChangedAt: number,
-        createdAt: string,
-        updatedAt: string,
         owner?: string | null,
-      } | null > | null,
+      } | null >,
       nextToken?: string | null,
       startedAt?: number | null,
     } | null,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
+    owner?: string | null,
   } | null,
 };
 
@@ -488,26 +670,159 @@ export type ListProfilesQueryVariables = {
 export type ListProfilesQuery = {
   listProfiles?:  {
     __typename: "ModelProfileConnection",
-    items?:  Array< {
+    items:  Array< {
       __typename: "Profile",
       id: string,
       firstName: string,
       lastName: string,
       email: string,
       plan?: number | null,
+      mainHelper?: string | null,
       avatar?: string | null,
-      owner?: string | null,
+      firstGame?: boolean | null,
+      lastStepTime?: string | null,
       histories?:  {
         __typename: "ModelHistoryConnection",
         nextToken?: string | null,
         startedAt?: number | null,
       } | null,
+      createdAt: string,
+      updatedAt: string,
       _version: number,
       _deleted?: boolean | null,
       _lastChangedAt: number,
+      owner?: string | null,
+    } | null >,
+    nextToken?: string | null,
+    startedAt?: number | null,
+  } | null,
+};
+
+export type SyncProfilesQueryVariables = {
+  filter?: ModelProfileFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+  lastSync?: number | null,
+};
+
+export type SyncProfilesQuery = {
+  syncProfiles?:  {
+    __typename: "ModelProfileConnection",
+    items:  Array< {
+      __typename: "Profile",
+      id: string,
+      firstName: string,
+      lastName: string,
+      email: string,
+      plan?: number | null,
+      mainHelper?: string | null,
+      avatar?: string | null,
+      firstGame?: boolean | null,
+      lastStepTime?: string | null,
+      histories?:  {
+        __typename: "ModelHistoryConnection",
+        nextToken?: string | null,
+        startedAt?: number | null,
+      } | null,
       createdAt: string,
       updatedAt: string,
-    } | null > | null,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+      owner?: string | null,
+    } | null >,
+    nextToken?: string | null,
+    startedAt?: number | null,
+  } | null,
+};
+
+export type GetHistoryQueryVariables = {
+  id: string,
+};
+
+export type GetHistoryQuery = {
+  getHistory?:  {
+    __typename: "History",
+    id: string,
+    ownerProfId: string,
+    profileID: string,
+    profile?:  {
+      __typename: "Profile",
+      id: string,
+      firstName: string,
+      lastName: string,
+      email: string,
+      plan?: number | null,
+      mainHelper?: string | null,
+      avatar?: string | null,
+      firstGame?: boolean | null,
+      lastStepTime?: string | null,
+      histories?:  {
+        __typename: "ModelHistoryConnection",
+        nextToken?: string | null,
+        startedAt?: number | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+      owner?: string | null,
+    } | null,
+    count: number,
+    plan: number,
+    status: string,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+    owner?: string | null,
+  } | null,
+};
+
+export type ListHistoriesQueryVariables = {
+  filter?: ModelHistoryFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type ListHistoriesQuery = {
+  listHistories?:  {
+    __typename: "ModelHistoryConnection",
+    items:  Array< {
+      __typename: "History",
+      id: string,
+      ownerProfId: string,
+      profileID: string,
+      profile?:  {
+        __typename: "Profile",
+        id: string,
+        firstName: string,
+        lastName: string,
+        email: string,
+        plan?: number | null,
+        mainHelper?: string | null,
+        avatar?: string | null,
+        firstGame?: boolean | null,
+        lastStepTime?: string | null,
+        createdAt: string,
+        updatedAt: string,
+        _version: number,
+        _deleted?: boolean | null,
+        _lastChangedAt: number,
+        owner?: string | null,
+      } | null,
+      count: number,
+      plan: number,
+      status: string,
+      createdAt: string,
+      updatedAt: string,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+      owner?: string | null,
+    } | null >,
     nextToken?: string | null,
     startedAt?: number | null,
   } | null,
@@ -523,72 +838,112 @@ export type SyncHistoriesQueryVariables = {
 export type SyncHistoriesQuery = {
   syncHistories?:  {
     __typename: "ModelHistoryConnection",
-    items?:  Array< {
+    items:  Array< {
       __typename: "History",
       id: string,
-      historyID: string,
+      ownerProfId: string,
+      profileID: string,
+      profile?:  {
+        __typename: "Profile",
+        id: string,
+        firstName: string,
+        lastName: string,
+        email: string,
+        plan?: number | null,
+        mainHelper?: string | null,
+        avatar?: string | null,
+        firstGame?: boolean | null,
+        lastStepTime?: string | null,
+        createdAt: string,
+        updatedAt: string,
+        _version: number,
+        _deleted?: boolean | null,
+        _lastChangedAt: number,
+        owner?: string | null,
+      } | null,
       count: number,
       plan: number,
       status: string,
+      createdAt: string,
+      updatedAt: string,
       _version: number,
       _deleted?: boolean | null,
       _lastChangedAt: number,
-      createdAt: string,
-      updatedAt: string,
       owner?: string | null,
-    } | null > | null,
+    } | null >,
     nextToken?: string | null,
     startedAt?: number | null,
   } | null,
 };
 
-export type GetHistoryQueryVariables = {
+export type GetMainRoomQueryVariables = {
   id: string,
 };
 
-export type GetHistoryQuery = {
-  getHistory?:  {
-    __typename: "History",
+export type GetMainRoomQuery = {
+  getMainRoom?:  {
+    __typename: "MainRoom",
     id: string,
-    historyID: string,
-    count: number,
-    plan: number,
-    status: string,
+    code?: string | null,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
-export type ListHistoriesQueryVariables = {
-  filter?: ModelHistoryFilterInput | null,
+export type ListMainRoomsQueryVariables = {
+  filter?: ModelMainRoomFilterInput | null,
   limit?: number | null,
   nextToken?: string | null,
 };
 
-export type ListHistoriesQuery = {
-  listHistories?:  {
-    __typename: "ModelHistoryConnection",
-    items?:  Array< {
-      __typename: "History",
+export type ListMainRoomsQuery = {
+  listMainRooms?:  {
+    __typename: "ModelMainRoomConnection",
+    items:  Array< {
+      __typename: "MainRoom",
       id: string,
-      historyID: string,
-      count: number,
-      plan: number,
-      status: string,
+      code?: string | null,
+      createdAt: string,
+      updatedAt: string,
       _version: number,
       _deleted?: boolean | null,
       _lastChangedAt: number,
-      createdAt: string,
-      updatedAt: string,
-      owner?: string | null,
-    } | null > | null,
+    } | null >,
     nextToken?: string | null,
     startedAt?: number | null,
   } | null,
+};
+
+export type SyncMainRoomsQueryVariables = {
+  filter?: ModelMainRoomFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+  lastSync?: number | null,
+};
+
+export type SyncMainRoomsQuery = {
+  syncMainRooms?:  {
+    __typename: "ModelMainRoomConnection",
+    items:  Array< {
+      __typename: "MainRoom",
+      id: string,
+      code?: string | null,
+      createdAt: string,
+      updatedAt: string,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+    } | null >,
+    nextToken?: string | null,
+    startedAt?: number | null,
+  } | null,
+};
+
+export type OnCreateProfileSubscriptionVariables = {
+  owner?: string | null,
 };
 
 export type OnCreateProfileSubscription = {
@@ -599,33 +954,41 @@ export type OnCreateProfileSubscription = {
     lastName: string,
     email: string,
     plan?: number | null,
+    mainHelper?: string | null,
     avatar?: string | null,
-    owner?: string | null,
+    firstGame?: boolean | null,
+    lastStepTime?: string | null,
     histories?:  {
       __typename: "ModelHistoryConnection",
-      items?:  Array< {
+      items:  Array< {
         __typename: "History",
         id: string,
-        historyID: string,
+        ownerProfId: string,
+        profileID: string,
         count: number,
         plan: number,
         status: string,
+        createdAt: string,
+        updatedAt: string,
         _version: number,
         _deleted?: boolean | null,
         _lastChangedAt: number,
-        createdAt: string,
-        updatedAt: string,
         owner?: string | null,
-      } | null > | null,
+      } | null >,
       nextToken?: string | null,
       startedAt?: number | null,
     } | null,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
+    owner?: string | null,
   } | null,
+};
+
+export type OnUpdateProfileSubscriptionVariables = {
+  owner?: string | null,
 };
 
 export type OnUpdateProfileSubscription = {
@@ -636,33 +999,41 @@ export type OnUpdateProfileSubscription = {
     lastName: string,
     email: string,
     plan?: number | null,
+    mainHelper?: string | null,
     avatar?: string | null,
-    owner?: string | null,
+    firstGame?: boolean | null,
+    lastStepTime?: string | null,
     histories?:  {
       __typename: "ModelHistoryConnection",
-      items?:  Array< {
+      items:  Array< {
         __typename: "History",
         id: string,
-        historyID: string,
+        ownerProfId: string,
+        profileID: string,
         count: number,
         plan: number,
         status: string,
+        createdAt: string,
+        updatedAt: string,
         _version: number,
         _deleted?: boolean | null,
         _lastChangedAt: number,
-        createdAt: string,
-        updatedAt: string,
         owner?: string | null,
-      } | null > | null,
+      } | null >,
       nextToken?: string | null,
       startedAt?: number | null,
     } | null,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
+    owner?: string | null,
   } | null,
+};
+
+export type OnDeleteProfileSubscriptionVariables = {
+  owner?: string | null,
 };
 
 export type OnDeleteProfileSubscription = {
@@ -673,82 +1044,209 @@ export type OnDeleteProfileSubscription = {
     lastName: string,
     email: string,
     plan?: number | null,
+    mainHelper?: string | null,
     avatar?: string | null,
-    owner?: string | null,
+    firstGame?: boolean | null,
+    lastStepTime?: string | null,
     histories?:  {
       __typename: "ModelHistoryConnection",
-      items?:  Array< {
+      items:  Array< {
         __typename: "History",
         id: string,
-        historyID: string,
+        ownerProfId: string,
+        profileID: string,
         count: number,
         plan: number,
         status: string,
+        createdAt: string,
+        updatedAt: string,
         _version: number,
         _deleted?: boolean | null,
         _lastChangedAt: number,
-        createdAt: string,
-        updatedAt: string,
         owner?: string | null,
-      } | null > | null,
+      } | null >,
       nextToken?: string | null,
       startedAt?: number | null,
     } | null,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
+    owner?: string | null,
   } | null,
+};
+
+export type OnCreateHistorySubscriptionVariables = {
+  owner?: string | null,
 };
 
 export type OnCreateHistorySubscription = {
   onCreateHistory?:  {
     __typename: "History",
     id: string,
-    historyID: string,
+    ownerProfId: string,
+    profileID: string,
+    profile?:  {
+      __typename: "Profile",
+      id: string,
+      firstName: string,
+      lastName: string,
+      email: string,
+      plan?: number | null,
+      mainHelper?: string | null,
+      avatar?: string | null,
+      firstGame?: boolean | null,
+      lastStepTime?: string | null,
+      histories?:  {
+        __typename: "ModelHistoryConnection",
+        nextToken?: string | null,
+        startedAt?: number | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+      owner?: string | null,
+    } | null,
     count: number,
     plan: number,
     status: string,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
     owner?: string | null,
   } | null,
+};
+
+export type OnUpdateHistorySubscriptionVariables = {
+  owner?: string | null,
 };
 
 export type OnUpdateHistorySubscription = {
   onUpdateHistory?:  {
     __typename: "History",
     id: string,
-    historyID: string,
+    ownerProfId: string,
+    profileID: string,
+    profile?:  {
+      __typename: "Profile",
+      id: string,
+      firstName: string,
+      lastName: string,
+      email: string,
+      plan?: number | null,
+      mainHelper?: string | null,
+      avatar?: string | null,
+      firstGame?: boolean | null,
+      lastStepTime?: string | null,
+      histories?:  {
+        __typename: "ModelHistoryConnection",
+        nextToken?: string | null,
+        startedAt?: number | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+      owner?: string | null,
+    } | null,
     count: number,
     plan: number,
     status: string,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
-    createdAt: string,
-    updatedAt: string,
     owner?: string | null,
   } | null,
+};
+
+export type OnDeleteHistorySubscriptionVariables = {
+  owner?: string | null,
 };
 
 export type OnDeleteHistorySubscription = {
   onDeleteHistory?:  {
     __typename: "History",
     id: string,
-    historyID: string,
+    ownerProfId: string,
+    profileID: string,
+    profile?:  {
+      __typename: "Profile",
+      id: string,
+      firstName: string,
+      lastName: string,
+      email: string,
+      plan?: number | null,
+      mainHelper?: string | null,
+      avatar?: string | null,
+      firstGame?: boolean | null,
+      lastStepTime?: string | null,
+      histories?:  {
+        __typename: "ModelHistoryConnection",
+        nextToken?: string | null,
+        startedAt?: number | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+      owner?: string | null,
+    } | null,
     count: number,
     plan: number,
     status: string,
+    createdAt: string,
+    updatedAt: string,
     _version: number,
     _deleted?: boolean | null,
     _lastChangedAt: number,
+    owner?: string | null,
+  } | null,
+};
+
+export type OnCreateMainRoomSubscription = {
+  onCreateMainRoom?:  {
+    __typename: "MainRoom",
+    id: string,
+    code?: string | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+  } | null,
+};
+
+export type OnUpdateMainRoomSubscription = {
+  onUpdateMainRoom?:  {
+    __typename: "MainRoom",
+    id: string,
+    code?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+  } | null,
+};
+
+export type OnDeleteMainRoomSubscription = {
+  onDeleteMainRoom?:  {
+    __typename: "MainRoom",
+    id: string,
+    code?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
   } | null,
 };

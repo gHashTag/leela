@@ -4,7 +4,7 @@ import ShakeEvent from 'react-native-shake'
 import { Cube } from './Cube'
 import { observer } from 'mobx-react-lite'
 import withPreventDoubleClick from './withPreventDoubleClick'
-import { DiceStore, actionsDice } from '../../store'
+import { DiceStore, actionsDice, OnlinePlayerStore } from '../../store'
 import { s } from 'react-native-size-matters'
 
 const ButtonEx = withPreventDoubleClick(Pressable)
@@ -26,10 +26,16 @@ const Dice = observer(() => {
     }
   }, [])
 
-  const rollDice = () => actionsDice.random()
+  const rollDice = () => {
+    if (!OnlinePlayerStore.canGo && DiceStore.online) {
+      return
+    }
+    actionsDice.random()
+  }
 
   return (
-    <ButtonEx onPress={rollDice} style={styles.diceContainer}>
+    <ButtonEx onPress={rollDice} style={[styles.diceContainer, 
+     (!OnlinePlayerStore.canGo && DiceStore.online) && {opacity: 0.4}]}>
       <Cube duration={DiceStore.count} />
     </ButtonEx>
   )

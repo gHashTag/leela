@@ -3,12 +3,7 @@ import { Animated, Easing, StyleSheet } from 'react-native'
 import { ms } from 'react-native-size-matters'
 import {
   DiceStore,
-  actionPlayerOne,
-  actionPlayerTwo,
-  actionPlayerThree,
-  actionPlayerFour,
-  actionPlayerFive,
-  actionPlayerSix
+  actionPlayers,
 } from '../../store'
 
 const getImage = (number: number) => {
@@ -35,26 +30,7 @@ const getImage = (number: number) => {
 }
 
 const updateStep = (number: number) => {
-  switch (number) {
-    case 1:
-      actionPlayerOne.updateStep()
-      break
-    case 2:
-      actionPlayerTwo.updateStep()
-      break
-    case 3:
-      actionPlayerThree.updateStep()
-      break
-    case 4:
-      actionPlayerFour.updateStep()
-      break
-    case 5:
-      actionPlayerFive.updateStep()
-      break
-    case 6:
-      actionPlayerSix.updateStep()
-      break
-  }
+  actionPlayers.updateStep(number-1)
 }
 
 const styles = StyleSheet.create({

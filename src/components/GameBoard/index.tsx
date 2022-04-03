@@ -7,13 +7,10 @@ import { W } from '../../constants'
 import { Gem } from '../Gem'
 import { Txt } from '../Txt'
 import {
-  PlayerOneStore,
-  PlayerTwoStore,
-  PlayerThreeStore,
-  PlayerFourStore,
-  PlayerFiveStore,
-  PlayerSixStore,
-  DiceStore
+  PlayersStore,
+  DiceStore,
+  OnlinePlayerStore,
+  OnlineOtherPlayers
 } from '../../store'
 
 const ratio = W / 714
@@ -44,109 +41,69 @@ const styles = ScaledSheet.create({
 })
 
 const GameBoard = observer(() => {
-  const arr = [
+  const arr = !DiceStore.online ? [
     {
-      plan: PlayerOneStore.plan
+      plan: PlayersStore.plans[0]
     },
     {
-      plan: PlayerTwoStore.plan
+      plan: PlayersStore.plans[1]
     },
     {
-      plan: PlayerThreeStore.plan
+      plan: PlayersStore.plans[2]
     },
     {
-      plan: PlayerFourStore.plan
+      plan: PlayersStore.plans[3]
     },
     {
-      plan: PlayerFiveStore.plan
+      plan: PlayersStore.plans[4]
     },
     {
-      plan: PlayerSixStore.plan
+      plan: PlayersStore.plans[5]
     }
-  ].slice(0, DiceStore.multi)
+  ].slice(0, DiceStore.multi) : [
+    {
+      mainPlayer: true,
+      plan: OnlinePlayerStore.plan
+    },
+    ...OnlineOtherPlayers.players.slice().map((a) => {return{plan: a.plan}})
+  ]
 
   const getPlan = (x: number) => arr.filter(y => y.plan === x)
   const { img, container, row } = styles
   const scheme = useColorScheme()
   const source = () => ICONS.filter(x => x.title === (scheme === 'dark' ? 'dark' : 'light'))[0].path
 
-  const row1 = [72, 71, 70, 69, 68, 67, 66, 65, 64]
-  const row2 = [55, 56, 57, 58, 59, 60, 61, 62, 63]
-  const row3 = [54, 53, 52, 51, 50, 49, 48, 47, 46]
-  const row4 = [37, 38, 39, 40, 41, 42, 43, 44, 45]
-  const row5 = [36, 35, 34, 33, 32, 31, 30, 29, 28]
-  const row6 = [19, 20, 21, 22, 23, 24, 25, 26, 27]
-  const row7 = [18, 17, 16, 15, 14, 13, 12, 11, 10]
-  const row8 = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  const rows = [[72, 71, 70, 69, 68, 67, 66, 65, 64],
+  [55, 56, 57, 58, 59, 60, 61, 62, 63],
+  [54, 53, 52, 51, 50, 49, 48, 47, 46],
+  [37, 38, 39, 40, 41, 42, 43, 44, 45],
+  [36, 35, 34, 33, 32, 31, 30, 29, 28],
+  [19, 20, 21, 22, 23, 24, 25, 26, 27],
+  [18, 17, 16, 15, 14, 13, 12, 11, 10],
+  [1, 2, 3, 4, 5, 6, 7, 8, 9]]
 
   const check = (z: number) => (getPlan(z)[0] ? getPlan(z)[0].plan : false)
 
   return (
     <ImageBackground source={source()} style={img}>
       <View style={container}>
-        <View style={row}>
-          {row1.map(x => (
-            <View key={x} style={[styles.box]}>
-              {x === check(x) ? (
-                <Gem plan={x} player={DiceStore.players} />
-              ) : (
-                <Txt h5 title={x !== 68 ? x.toString() : ' '} />
-              )}
-            </View>
-          ))}
-        </View>
-        <View style={row}>
-          {row2.map(x => (
-            <View key={x} style={[styles.box]}>
-              {x === check(x) ? <Gem plan={x} player={DiceStore.players} /> : <Txt h5 title={x.toString()} />}
-            </View>
-          ))}
-        </View>
-        <View style={row}>
-          {row3.map(x => (
-            <View key={x} style={[styles.box]}>
-              {x === check(x) ? <Gem plan={x} player={DiceStore.players} /> : <Txt h5 title={x.toString()} />}
-            </View>
-          ))}
-        </View>
-        <View style={row}>
-          {row4.map(x => (
-            <View key={x} style={[styles.box]}>
-              {x === check(x) ? <Gem plan={x} player={DiceStore.players} /> : <Txt h5 title={x.toString()} />}
-            </View>
-          ))}
-        </View>
-        <View style={row}>
-          {row5.map(x => (
-            <View key={x} style={[styles.box]}>
-              {x === check(x) ? <Gem plan={x} player={DiceStore.players} /> : <Txt h5 title={x.toString()} />}
-            </View>
-          ))}
-        </View>
-        <View style={row}>
-          {row6.map(x => (
-            <View key={x} style={[styles.box]}>
-              {x === check(x) ? <Gem plan={x} player={DiceStore.players} /> : <Txt h5 title={x.toString()} />}
-            </View>
-          ))}
-        </View>
-        <View style={row}>
-          {row7.map(x => (
-            <View key={x} style={[styles.box]}>
-              {x === check(x) ? <Gem plan={x} player={DiceStore.players} /> : <Txt h5 title={x.toString()} />}
-            </View>
-          ))}
-        </View>
-        <View style={row}>
-          {row8.map(x => (
-            <View key={x} style={[styles.box]}>
-              {x === check(x) ? <Gem plan={x} player={DiceStore.players} /> : <Txt h5 title={x.toString()} />}
-            </View>
-          ))}
-        </View>
+        {rows.map((a, i) => <View style={row} key={i}> 
+        {
+          a.map((b) => <View key={b} style={[styles.box]}>
+          {b === check(b) ? (
+            <Gem plan={b} player={DiceStore.players} />
+          ) : (
+            <Txt h5 title={b !== 68 ? b.toString() : ' '} />
+          )}
+          </View>
+          )
+        }</View>)}
       </View>
     </ImageBackground>
   )
 })
 
 export { GameBoard }
+
+
+

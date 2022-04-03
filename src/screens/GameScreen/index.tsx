@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DataStore } from 'aws-amplify'
 import { observer } from 'mobx-react-lite'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { ms, s } from 'react-native-size-matters'
 import { I18n } from '../../utils'
+import { View } from 'react-native'
 import { RootStackParamList } from '../../types'
-import { Background, Dice, GameBoard, Header, Space, Txt, ButtonElements, Spin } from '../../components'
-import { DiceStore, actionPlayerOne, actionsDice } from '../../store'
-import { Button } from 'react-native'
+import { Background, Dice, GameBoard, Header, Space, Txt, ButtonElements, Spin, Button } from '../../components'
+import { DiceStore, actionsDice, OnlinePlayerStore } from '../../store'
 import Rate from 'react-native-rate'
-import { _onPressReset } from '../helper'
-import { Profile } from '../../models'
-import { History } from '../../models'
+import { _onPressReset, getCurrentUser } from '../helper'
+import { Button as ClassicBtn } from 'react-native-elements'
+import { Profile, MainRoom } from '../../models'
 
 type navigation = StackNavigationProp<RootStackParamList, 'TAB_BOTTOM_0'>
 
@@ -21,20 +21,71 @@ type GameScreenT = {
 
 const GameScreen = observer(({ navigation }: GameScreenT) => {
   const [loading, setLoading] = useState<boolean>(true)
+  const [leftTime, setLeftTime] = useState(0)
 
   useEffect(() => {
-    if (DiceStore.online) {
-      // actionPlayerOne.getProfile()
-      // actionPlayerOne.getHistory()
-      const subscription = DataStore.observe(Profile).subscribe(() => actionPlayerOne.getProfile())
-      const subscriptionHistory = DataStore.observe(History).subscribe(() => actionPlayerOne.getHistory())
-      setLoading(false)
-      return () => {
-        subscription.unsubscribe()
-        subscriptionHistory.unsubscribe()
+    const interval = setInterval(() => {
+      const currentDate = Date.now()
+      setLeftTime(currentDate - OnlinePlayerStore.stepTime)
+      if (currentDate - OnlinePlayerStore.stepTime >= 86400000
+        && OnlinePlayerStore.stepTime !== 0) {
+        OnlinePlayerStore.canGo = true
+      } else {
+        OnlinePlayerStore.canGo = false
+      }
+    }, 1000)
+    setLoading(false)
+    return () => clearInterval(interval)
+  }, [])
+
+  const LeftTime = () => {
+    const timeMood = () => {
+      if (!(leftTime >= 86400000)) {
+        const time = 86400000 - leftTime
+        switch (true) {
+          case leftTime > 86340000:
+            return `${(time/1000).toFixed(0)} sec.`
+          case leftTime > 82800000:
+            return `${Math.ceil((time/60/1000)).toFixed(0)} min.`
+          case leftTime <= 82800000:
+            return `${Math.floor((time/60/60/1000)).toFixed(0)} h.`
+        } 
+      } else {
+        return '0'
       }
     }
-  }, [navigation])
+    return <Txt h3 title={`nextStep: ${timeMood()}`} />
+  }
+  
+  const createRoom = async (): Promise<void> => {
+    try {
+      const room = await DataStore.query(MainRoom)
+      if (!room) {
+        DataStore.save(new MainRoom({
+          code: 'dfd041-14dw'
+        }))
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const enterRoom = async (): Promise<void> => {
+    try {
+      const user = await getCurrentUser()
+      const room = await DataStore.query(MainRoom)
+      if (user && room) {
+        OnlinePlayerStore.profile.mainRoomId = room[0].id
+        await DataStore.save(
+          Profile.copyOf(user, updated => {
+          updated.mainHelper = room[0].id
+        }))
+      }
+    } catch (error) {
+      console.log(error)
+    }
+    
+  }
 
   const _onPress = () => {
     const options = {
@@ -59,10 +110,15 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
             iconRight=":books:"
             onPressRight={() => navigation.navigate('PLANS_SCREEN')}
           >
+            {(!DiceStore.online || OnlinePlayerStore.profile.mainRoomId) &&
             <>
               {DiceStore.finishArr.indexOf(true) !== -1 ? (
                 <>
-                  <Txt h3 title={`${I18n.t('playerTurn')} # ${DiceStore.players}`} />
+                  {!OnlinePlayerStore.canGo && DiceStore.online ?
+                    <LeftTime />
+                  : 
+                    <Txt h3 title={DiceStore.online ? 'Your turn' : `${I18n.t('playerTurn')} # ${DiceStore.players}`} />
+                  }
                   <Space height={1} />
                   <Txt h3 title={DiceStore.message} />
                   <Dice />
@@ -73,14 +129,21 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                   <ButtonElements title={I18n.t('startOver')} onPress={() => _onPressReset(navigation)} />
                   <Space height={s(10)} />
                   <Txt h0 title={`${I18n.t('win')}`} />
-                  {!DiceStore.rate && <Button title={I18n.t('leaveFeedback')} onPress={_onPress} />}
+                  {!DiceStore.rate && <ClassicBtn title={I18n.t('leaveFeedback')} onPress={_onPress} />}
                 </>
               )}
-            </>
+            </>}
           </Header>
           <Space height={ms(85, 0.1)} />
-          <GameBoard />
-
+          {DiceStore.online && !OnlinePlayerStore.profile.mainRoomId ? 
+            <View style={{justifyContent: 'center', height: ms(260)}}>
+              <Button title='+room' onPress={() => createRoom()} />
+              <Space height={ms(15)} />
+              <Button title='start?' onPress={() => enterRoom()} />
+            </View>
+          :
+            <GameBoard />
+          }
           <Space height={s(0)} />
         </>
       )}

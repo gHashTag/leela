@@ -4,36 +4,44 @@ import Storage from '@aws-amplify/storage'
 import { captureException } from '../constants'
 import ImagePicker from 'react-native-image-crop-picker'
 import { Profile, History } from '../models'
-import { History as HistoryT } from '../models'
+import { Profile as ProfileT } from '../models'
+import { UserT } from '../types'
 import {
   DiceStore,
-  actionPlayerOne,
-  actionPlayerTwo,
-  actionPlayerThree,
-  actionPlayerFour,
-  actionPlayerFive,
-  actionPlayerSix,
-  actionsDice
+  actionPlayers,
+  actionsDice,
+  OnlinePlayerStore
 } from '../store'
 
-export const getCurrentUser = async () => {
+export const getCurrentUser = async (): Promise<ProfileT | undefined> => {
   try {
     const authUser = await Auth.currentAuthenticatedUser()
     const arrProfile = await DataStore.query(Profile, c => c.email('eq', authUser.attributes.email))
     if (!arrProfile || arrProfile.length === 0) {
-        return
+      return 
     }
     return arrProfile[arrProfile.length - 1]
   } catch (error) {
+    console.log(`err`, error)
     captureException(error)
   }
 
 }
 
-export const createHistory = async (values: HistoryT) => {
+export const createHistory = async (values) => {
   try {
-    const { id } = await getCurrentUser() 
-    await DataStore.save(new History({ ...values, historyID: id }))
+    const user = await getCurrentUser()
+    if (user) {
+      await DataStore.save(
+        Profile.copyOf(user, updated => {
+        updated.lastStepTime = Date.now().toString()
+      }))
+    }
+    OnlinePlayerStore.canGo = false
+    if (user) {
+      await DataStore.save(new History({ ...values, 
+        profileID: user.id, ownerProfId: user.id }))
+    }
   } catch (err) {
     console.log(`err`, err)
     captureException(err)
@@ -42,13 +50,17 @@ export const createHistory = async (values: HistoryT) => {
 
 export const getHistory = async () => {
   try {
-    const { id } = await getCurrentUser() 
-    const history = (await DataStore.query(History, c => c.historyID("eq", id), {
-      sort: s => s.createdAt(SortDirection.DESCENDING),
-      limit: 10 
-    }))
+    const user = await getCurrentUser()
+    let history: any = []
+    if (user) {
+      history = (await DataStore.query(History, c => c.ownerProfId('eq', user.id), {
+        sort: s => s.createdAt(SortDirection.DESCENDING),
+        limit: 20 
+      }))
+    }
     return history
   } catch (err) {
+    console.log(`err`, err)
     captureException(err)
   }
 }
@@ -92,14 +104,13 @@ export const updateProfile = async ({ id, firstName, lastName }: UserT) => {
 
 export const _onPressReset = async (navigation): Promise<void> => {
   try {
-    actionPlayerOne.resetGame()
-    actionPlayerTwo.resetGame()
-    actionPlayerThree.resetGame()
-    actionPlayerFour.resetGame()
-    actionPlayerFive.resetGame()
-    actionPlayerSix.resetGame()
     !DiceStore.online && navigation.pop(3)
-    await DataStore.delete(History, Predicates.ALL)
+    if (DiceStore.online) {
+      const user = await getCurrentUser() 
+      user &&
+      await DataStore.delete(History, c => c.ownerProfId('eq', user.id))
+    }
+    actionPlayers.resetGame()
     actionsDice.setPlayers(1)
   } catch (err) {
     captureException(err)

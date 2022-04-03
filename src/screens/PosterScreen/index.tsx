@@ -3,7 +3,7 @@ import { StyleSheet, ImageBackground } from 'react-native'
 import { observer } from 'mobx-react-lite'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../../types'
-import { actionPlayerOne, PlayerOneStore } from '../../store'
+import { actionPlayers, OnlinePlayerStore } from '../../store'
 import { Button } from 'react-native-elements'
 import { s } from 'react-native-size-matters'
 import { W } from '../../constants'
@@ -46,18 +46,18 @@ const PosterScreen = observer(({}: PosterScreenT) => {
   const { button, img, buttonConteiner } = styles
 
   useEffect(() => {
-    actionPlayerOne.getPoster()
+    actionPlayers.getPoster()
   }, [])
 
   return (
-    <ImageBackground resizeMode={'contain'} source={{ uri: PlayerOneStore.poster.imgUrl }} style={img}>
+    <ImageBackground resizeMode={'contain'} source={{ uri: OnlinePlayerStore.poster.imgUrl }} style={img}>
       <Button
         title={I18n.t('more')}
         type="outline"
-        onPress={() => openUrl(PlayerOneStore.poster.eventUrl)}
+        onPress={() => openUrl(OnlinePlayerStore.poster.eventUrl)}
         containerStyle={buttonConteiner}
-        buttonStyle={[button, { borderColor: PlayerOneStore.poster.buttonColor }]}
-        titleStyle={{ color: PlayerOneStore.poster.buttonColor }}
+        buttonStyle={[button, { borderColor: OnlinePlayerStore.poster.buttonColor }]}
+        titleStyle={{ color: OnlinePlayerStore.poster.buttonColor }}
       />
     </ImageBackground>
   )

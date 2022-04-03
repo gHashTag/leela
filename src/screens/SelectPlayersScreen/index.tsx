@@ -25,6 +25,7 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
       actionsDice.setPlayers(selectItem + 1)
       navigation.navigate('MAIN')
       actionsDice.init()
+      actionsDice.setOnline(false)
     } else {
       try {
         // if (SubscribeStore.subscriptionActive) {
@@ -32,6 +33,7 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         actionsDice.setPlayers(selectItem + 1)
         navigation.navigate('MAIN')
         actionsDice.init()
+        actionsDice.setOnline(false)
         // } else {
         //   actionsSubscribe.setVisible(true)
         // }
