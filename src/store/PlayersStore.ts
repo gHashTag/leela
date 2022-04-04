@@ -163,14 +163,14 @@ const actionPlayers = {
           const res = await Promise.all(filterRes.map(async a => {
             const profHis = await DataStore.query
              (History, c => c.ownerProfId('eq', a.id))
-            const ava = await getIMG(a.avatar)
             return {
               plan: a.plan,
               firstName: a.firstName,
               lastName: a.lastName,
               prevAvatar: OnlineOtherPlayers.players.find(b => b.id === a.id )?.curAvatar,
               curAvatar: a.avatar,
-              avatar: ava,
+              avatar: OnlineOtherPlayers.players.prevAvatar 
+               === a.avatar ? OnlineOtherPlayers.players.avatar : await getIMG(a.avatar),
               history: profHis,
               id: a.id
             }
