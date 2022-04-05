@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import { makeAutoObservable } from 'mobx'
-import { Auth, DataStore, Storage } from 'aws-amplify'
+import { Auth, DataStore, SortDirection, Storage } from 'aws-amplify'
 import { persistence, StorageAdapter } from 'mobx-persist-store'
 import { writeStore, readStore, updateStep } from './helper'
 import { actionsDice, DiceStore } from '.'
@@ -35,13 +35,12 @@ const initProfile = {
   firstName: '',
   lastName: '',
   email: '',
-  plan: 68,
   mainRoomId: undefined as any
 }
 
 const OnlineOtherPlayers = makeAutoObservable({
   players: [
-    {id: 'none', curAvatar: ''}
+    {id: 'none', curAvatar: '', history: [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }]}
   ] as any
 })
 
@@ -61,22 +60,23 @@ const OnlinePlayerStore = makeAutoObservable({
     buttonColor: '#1c1c1c'
   },
   isPosterLoading: false,
-  subs: {
-    profile: '' as any,
-    history: '' as any
-  },
+  subs: undefined as any,
   stepTime: 0,
-  canGo: false
+  canGo: false,
+  loading: true as Boolean
 })
 
 const actionPlayers = {
   async resetGame(): Promise<void> {
-    const user = await getCurrentUser()
-    PlayersStore.start = initStore.start
-    PlayersStore.finish = initStore.finish
-    PlayersStore.plans = initStore.plans
-    PlayersStore.histories = initStore.histories
+    if (!DiceStore.online) {
+      actionsDice.resetPlayer()
+      PlayersStore.start = initStore.start
+      PlayersStore.finish = initStore.finish
+      PlayersStore.plans = initStore.plans
+      PlayersStore.histories = initStore.histories
+    }
     if (DiceStore.online) {
+      const user = await getCurrentUser()
       await DataStore.save(
         Profile.copyOf(user, updated => {
         updated.mainHelper = '',
@@ -94,7 +94,6 @@ const actionPlayers = {
       createHistory({id: uuidv4(), plan: 68, count: 0, status: 'start'})
     }
     actionsDice.setMessage(' ')
-    actionsDice.resetPlayer()
   },
   async SignOut(): Promise<void> {
     OnlinePlayerStore.avatar = ''
@@ -104,8 +103,7 @@ const actionPlayers = {
     OnlinePlayerStore.plan = 68
     OnlinePlayerStore.planPrev = 68
     OnlinePlayerStore.histories = [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }]
-    OnlinePlayerStore.subs.profile.unsubscribe()
-    OnlinePlayerStore.subs.history.unsubscribe()
+    OnlinePlayerStore.subs.unsubscribe()
     Auth.signOut()
   },
   updateStep(id: number | undefined): void {
@@ -113,6 +111,7 @@ const actionPlayers = {
   },
   async getProfile(): Promise<void> {
     try {
+      OnlinePlayerStore.loading = true
       const arrProfile: ProfileT | undefined = await getCurrentUser()
       const plan = arrProfile?.plan
       if (plan) {
@@ -131,8 +130,7 @@ const actionPlayers = {
           id: arrProfile.id,
           firstName: arrProfile.firstName,
           lastName: arrProfile.lastName,
-          email: arrProfile.email,
-          plan: arrProfile.plan,
+          email: arrProfile.email
         }
         OnlinePlayerStore.stepTime = Number(arrProfile.lastStepTime)
       }
@@ -146,8 +144,8 @@ const actionPlayers = {
         OnlinePlayerStore.avatar = await getIMG(arrProfile.avatar)
       }
       OnlinePlayerStore.histories = await getHistory()
-      OnlinePlayerStore.stepTime = Number(arrProfile?.lastStepTime)
-      actionPlayers.getOtherProf()
+      await actionPlayers.getOtherProf()
+      OnlinePlayerStore.loading = false
     } catch (error) {
       console.log(`error`, error)
       captureException(error)
@@ -155,22 +153,27 @@ const actionPlayers = {
   },
   async getOtherProf(): Promise<void> {
     try {
-      if (OnlinePlayerStore.profile.mainRoomId) { 
+      const {profile} = OnlinePlayerStore
+      const {players} = OnlineOtherPlayers
+      if (profile.mainRoomId) { 
         const profiles = await DataStore.query(Profile, c => 
-          c.mainHelper('eq', OnlinePlayerStore.profile.mainRoomId))
-        const filterRes = profiles.filter(a => a.email !== OnlinePlayerStore.profile.email)
+          c.mainHelper('eq', profile.mainRoomId))
+        const filterRes = profiles.filter(a => a.email !== profile.email)
         if (filterRes.length > 0) {
           const res = await Promise.all(filterRes.map(async a => {
             const profHis = await DataStore.query
-             (History, c => c.ownerProfId('eq', a.id))
+             (History, c => c.ownerProfId('eq', a.id), {
+              sort: s => s.createdAt(SortDirection.DESCENDING),
+              limit: 10
+             })
             return {
               plan: a.plan,
               firstName: a.firstName,
               lastName: a.lastName,
-              prevAvatar: OnlineOtherPlayers.players.find(b => b.id === a.id )?.curAvatar,
+              prevAvatar: players.find(b => b.id === a.id )?.curAvatar,
               curAvatar: a.avatar,
-              avatar: OnlineOtherPlayers.players.prevAvatar 
-               === a.avatar ? OnlineOtherPlayers.players.avatar : await getIMG(a.avatar),
+              avatar: players.prevAvatar === a.avatar  ? 
+               players.avatar : await getIMG(a.avatar),
               history: profHis,
               id: a.id
             }
@@ -178,13 +181,6 @@ const actionPlayers = {
           OnlineOtherPlayers.players = res
         }
       }    
-    } catch (error) {
-      captureException(error)
-    }
-  },
-  async getHistory(): Promise<void> {
-    try {
-      OnlinePlayerStore.histories = await getHistory()
     } catch (error) {
       captureException(error)
     }

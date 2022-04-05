@@ -65,7 +65,7 @@ const GameBoard = observer(() => {
       mainPlayer: true,
       plan: OnlinePlayerStore.plan
     },
-    ...OnlineOtherPlayers.players.slice().map((a) => {return{plan: a.plan}})
+    ...OnlineOtherPlayers.players.slice().map((a: any) => {return{plan: a.plan}})
   ]
 
   const getPlan = (x: number) => arr.filter(y => y.plan === x)
@@ -90,11 +90,11 @@ const GameBoard = observer(() => {
         {rows.map((a, i) => <View style={row} key={i}> 
         {
           a.map((b) => <View key={b} style={[styles.box]}>
-          {b === check(b) ? (
+          {b === check(b) ? 
             <Gem plan={b} player={DiceStore.players} />
-          ) : (
+           : 
             <Txt h5 title={b !== 68 ? b.toString() : ' '} />
-          )}
+          }
           </View>
           )
         }</View>)}

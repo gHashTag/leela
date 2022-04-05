@@ -7,7 +7,7 @@ import { I18n } from '../../utils'
 import { View } from 'react-native'
 import { RootStackParamList } from '../../types'
 import { Background, Dice, GameBoard, Header, Space, Txt, ButtonElements, Spin, Button } from '../../components'
-import { DiceStore, actionsDice, OnlinePlayerStore } from '../../store'
+import { DiceStore, actionsDice, OnlinePlayerStore, actionPlayers } from '../../store'
 import Rate from 'react-native-rate'
 import { _onPressReset, getCurrentUser } from '../helper'
 import { Button as ClassicBtn } from 'react-native-elements'
@@ -20,7 +20,6 @@ type GameScreenT = {
 }
 
 const GameScreen = observer(({ navigation }: GameScreenT) => {
-  const [loading, setLoading] = useState<boolean>(true)
   const [leftTime, setLeftTime] = useState(0)
 
   useEffect(() => {
@@ -34,9 +33,14 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
         OnlinePlayerStore.canGo = false
       }
     }, 1000)
-    setLoading(false)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    if(DiceStore.online) {
+      actionPlayers.getProfile()
+    }
+  }, [DiceStore.online])
 
   const LeftTime = () => {
     const timeMood = () => {
@@ -57,6 +61,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     return <Txt h3 title={`nextStep: ${timeMood()}`} />
   }
   
+  // del on release
   const createRoom = async (): Promise<void> => {
     try {
       const room = await DataStore.query(MainRoom)
@@ -98,11 +103,10 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     Rate.rate(options, success => actionsDice.setRate(success))
   }
 
-  return (
-    <Background>
-      {loading ? (
+  return <Background>
+      {OnlinePlayerStore.loading && DiceStore.online ? 
         <Spin />
-      ) : (
+       : 
         <>
           <Header
             iconLeft=":information_source:"
@@ -112,26 +116,26 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           >
             {(!DiceStore.online || OnlinePlayerStore.profile.mainRoomId) &&
             <>
-              {DiceStore.finishArr.indexOf(true) !== -1 ? (
-                <>
-                  {!OnlinePlayerStore.canGo && DiceStore.online ?
-                    <LeftTime />
-                  : 
-                    <Txt h3 title={DiceStore.online ? 'Your turn' : `${I18n.t('playerTurn')} # ${DiceStore.players}`} />
-                  }
-                  <Space height={1} />
-                  <Txt h3 title={DiceStore.message} />
-                  <Dice />
-                </>
-              ) : (
-                <>
-                  <Space height={s(60)} />
-                  <ButtonElements title={I18n.t('startOver')} onPress={() => _onPressReset(navigation)} />
-                  <Space height={s(10)} />
-                  <Txt h0 title={`${I18n.t('win')}`} />
-                  {!DiceStore.rate && <ClassicBtn title={I18n.t('leaveFeedback')} onPress={_onPress} />}
-                </>
-              )}
+              {DiceStore.finishArr.indexOf(true) !== -1 ? 
+              <>
+                {!OnlinePlayerStore.canGo && DiceStore.online ?
+                  <LeftTime />
+                : 
+                  <Txt h3 title={DiceStore.online ? 'Your turn' : `${I18n.t('playerTurn')} # ${DiceStore.players}`} />
+                }
+                <Space height={1} />
+                <Txt h3 title={DiceStore.message} />
+                <Dice />
+              </>
+               : 
+              <>
+                <Space height={s(60)} />
+                <ButtonElements title={I18n.t('startOver')} onPress={() => _onPressReset(navigation)} />
+                <Space height={s(10)} />
+                <Txt h0 title={`${I18n.t('win')}`} />
+                {!DiceStore.rate && <ClassicBtn title={I18n.t('leaveFeedback')} onPress={_onPress} />}
+              </>
+              }
             </>}
           </Header>
           <Space height={ms(85, 0.1)} />
@@ -146,9 +150,9 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           }
           <Space height={s(0)} />
         </>
-      )}
+      }
     </Background>
-  )
+  
 })
 
 export { GameScreen }

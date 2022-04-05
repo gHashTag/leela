@@ -59,15 +59,16 @@ const styles = ScaledSheet.create({
 })
 
 interface HeaderMasterT {
-  loading: boolean
   avatar: string
   user: UserT
+  plan: number
   onPress: () => void
   onPressAva: () => void
+  loading?: boolean
 }
 
-const HeaderMaster = ({ loading = false, user, avatar, onPress, onPressAva }: HeaderMasterT) => {
-  const { firstName, lastName, plan } = user
+const HeaderMaster = ({ user, avatar, onPress, onPressAva, plan, loading = false }: HeaderMasterT) => {
+  const { firstName, lastName } = user
   const { container, h2, sub, avatarStyle } = styles
 
   return (

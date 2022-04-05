@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { View, SectionList } from 'react-native'
-import { DataStore, Predicates } from 'aws-amplify'
+import { DataStore } from 'aws-amplify'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { observer } from 'mobx-react-lite'
 import { ScaledSheet } from 'react-native-size-matters'
@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
-import { AppContainer, Txt, Space, EmojiText, Button, HeaderMaster } from '../../components'
+import { AppContainer, Txt, Space, EmojiText, Button, HeaderMaster, Spin } from '../../components'
 import { captureException } from '../../constants'
 import {
   DiceStore,
@@ -126,15 +126,15 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   ].slice(0, DiceStore.multi) 
   : [
     {
-      title: `${OnlinePlayerStore.profile.firstName} ${OnlinePlayerStore.profile.lastName}`,
+      title: '',
       data: OnlinePlayerStore.histories.slice().reverse()
     },
     ...OnlineOtherPlayers.players.slice().map(a => {
     return{
       title: `${a.firstName} ${a.lastName}`,
-      data: a.history
+      data: a.history.slice().reverse()
     }})
-  ]
+  ].slice() 
 
   const _onPressSignOut = async (): Promise<void> => {
     try {
@@ -154,18 +154,22 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
   return (
     <AppContainer flatList iconLeft={null} title={I18n.t('history')} textAlign="center">
+      {OnlinePlayerStore.loading && DiceStore.online ? 
+      <Spin />
+      :
       <SectionList
         ListHeaderComponent={
           <>
             {/* <Txt h3 title={`Подписка: ${subscriptionActive.toString()}`} /> */}
-            {DiceStore.online && (
+            {DiceStore.online && 
               <HeaderMaster
                 user={OnlinePlayerStore.profile}
+                plan={OnlinePlayerStore.plan}
                 avatar={OnlinePlayerStore.avatar}
                 onPress={() => navigation.navigate('USER_EDIT', OnlinePlayerStore.profile)}
                 onPressAva={onPressAva}
               />
-            )}
+            }
             {/* <Txt h3 title={DiceStore.online.toString()} /> */}
             <Space height={10} />
           </>
@@ -184,10 +188,10 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
         renderItem={_renderItem}
         keyExtractor={_keyExtractor}
         showsVerticalScrollIndicator={false}
-        renderSectionHeader={({ section: { title } }) => (
-          <Txt h1 title={title} textStyle={{ padding: 15, marginTop: 10 }} />
-        )}
-      />
+        renderSectionHeader={({ section: { title } }) => 
+        title ? <Txt h1 title={title} textStyle={{ padding: 15, marginTop: 10 }} /> : <Space height={20} />
+        }
+      />}
     </AppContainer>
   )
 })

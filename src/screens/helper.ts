@@ -17,7 +17,7 @@ export const getCurrentUser = async (): Promise<ProfileT | undefined> => {
   try {
     const authUser = await Auth.currentAuthenticatedUser()
     const arrProfile = await DataStore.query(Profile, c => c.email('eq', authUser.attributes.email))
-    if (!arrProfile || arrProfile.length === 0) {
+    if (arrProfile.length === 0) {
       return 
     }
     return arrProfile[arrProfile.length - 1]
@@ -28,16 +28,17 @@ export const getCurrentUser = async (): Promise<ProfileT | undefined> => {
 
 }
 
-export const createHistory = async (values) => {
+export const createHistory = async (values: any) => {
   try {
     const user = await getCurrentUser()
-    if (user) {
+    if (user && values.count !== 6) {
+      OnlinePlayerStore.canGo = false
+      OnlinePlayerStore.stepTime = Date.now()
       await DataStore.save(
         Profile.copyOf(user, updated => {
         updated.lastStepTime = Date.now().toString()
       }))
     }
-    OnlinePlayerStore.canGo = false
     if (user) {
       await DataStore.save(new History({ ...values, 
         profileID: user.id, ownerProfId: user.id }))

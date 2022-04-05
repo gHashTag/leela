@@ -56,8 +56,6 @@ export interface UserT {
   lastName: string
   email?: string
   owner?: string
-  plan?: number
-  avatar?: string
 }
 
 export interface HistoryT {

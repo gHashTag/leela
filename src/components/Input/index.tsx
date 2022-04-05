@@ -88,7 +88,7 @@ const Input = memo<InputT>(
     return (
       <>
         <TextInput
-          style={ScaledSheet.create(value.length === 0 ? placeholderStyle : input)}
+          style={ScaledSheet.create(value?.length === 0 ? placeholderStyle : input)}
           value={value}
           onChangeText={onChangeText}
           onBlur={onBlur}
@@ -100,11 +100,11 @@ const Input = memo<InputT>(
           multiline={multiline}
           numberOfLines={numberOfLines}
         />
-        {touched[name] && errors[name] ? (
+        {touched[name] && errors[name] ? 
           <Text style={errorStyle}>{errors[name]}</Text>
-        ) : (
+         : 
           <Text style={errorStyle}>{'  '}</Text>
-        )}
+        }
       </>
     )
   }

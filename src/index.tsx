@@ -38,7 +38,7 @@ import { UI } from './UI'
 
 import { DiceStore, actionPlayers, OnlinePlayerStore } from './store'
 import { DataStore, Hub } from 'aws-amplify'
-import { Profile, History } from './models'
+import { Profile } from './models'
 import { useFocusEffect } from '@react-navigation/native'
 
 const DarkTheme = {
@@ -71,28 +71,19 @@ const Tab = () => {
     if (DiceStore.online) {
       const subscription = DataStore.observe(Profile).subscribe(
       () => {
-        actionPlayers.getProfile()
+        actionPlayers.getOtherProf()
       })
-      const subscriptionHistory = DataStore.observe(History).subscribe(
-      () => {
-        actionPlayers.getHistory()
-      })
-      OnlinePlayerStore.subs = {
-        profile: subscription,
-        history: subscriptionHistory
-      }
+      OnlinePlayerStore.subs = subscription
       Hub.listen('auth', (event) => {
         if (event.payload.event === 'signIn' || event.payload.event === 'signUp') {
+          DiceStore.online = true
           actionPlayers.getProfile()
-          actionPlayers.getHistory()
         } else if (event.payload.event === 'signOut') {
           DiceStore.online = false
-          
         }
       })
       return () => {
         subscription.unsubscribe()
-        subscriptionHistory.unsubscribe()
       }
     }
     }, [])
