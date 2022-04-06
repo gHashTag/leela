@@ -23,6 +23,8 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   const [leftTime, setLeftTime] = useState(0)
 
   useEffect(() => {
+    if (!OnlinePlayerStore.profile.id)
+      actionPlayers.getProfile() // ну как то так если
     const interval = setInterval(() => {
       const currentDate = Date.now()
       setLeftTime(currentDate - OnlinePlayerStore.stepTime)
@@ -35,12 +37,6 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     }, 1000)
     return () => clearInterval(interval)
   }, [])
-
-  useEffect(() => {
-    if(DiceStore.online) {
-      actionPlayers.getProfile()
-    }
-  }, [DiceStore.online])
 
   const LeftTime = () => {
     const timeMood = () => {
@@ -61,7 +57,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     return <Txt h3 title={`nextStep: ${timeMood()}`} />
   }
   
-  // del on release
+  // ну нужно комнату создать в DynamoDB
   const createRoom = async (): Promise<void> => {
     try {
       const room = await DataStore.query(MainRoom)
@@ -73,23 +69,6 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     } catch (error) {
       console.log(error)
     }
-  }
-
-  const enterRoom = async (): Promise<void> => {
-    try {
-      const user = await getCurrentUser()
-      const room = await DataStore.query(MainRoom)
-      if (user && room) {
-        OnlinePlayerStore.profile.mainRoomId = room[0].id
-        await DataStore.save(
-          Profile.copyOf(user, updated => {
-          updated.mainHelper = room[0].id
-        }))
-      }
-    } catch (error) {
-      console.log(error)
-    }
-    
   }
 
   const _onPress = () => {
@@ -114,7 +93,6 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
             iconRight=":books:"
             onPressRight={() => navigation.navigate('PLANS_SCREEN')}
           >
-            {(!DiceStore.online || OnlinePlayerStore.profile.mainRoomId) &&
             <>
               {DiceStore.finishArr.indexOf(true) !== -1 ? 
               <>
@@ -136,18 +114,10 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                 {!DiceStore.rate && <ClassicBtn title={I18n.t('leaveFeedback')} onPress={_onPress} />}
               </>
               }
-            </>}
+            </>
           </Header>
           <Space height={ms(85, 0.1)} />
-          {DiceStore.online && !OnlinePlayerStore.profile.mainRoomId ? 
-            <View style={{justifyContent: 'center', height: ms(260)}}>
-              <Button title='+room' onPress={() => createRoom()} />
-              <Space height={ms(15)} />
-              <Button title='start?' onPress={() => enterRoom()} />
-            </View>
-          :
             <GameBoard />
-          }
           <Space height={s(0)} />
         </>
       }

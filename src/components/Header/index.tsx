@@ -59,21 +59,20 @@ const Header = memo<HeaderT>(({ title, iconLeft, iconRight, onPress, onPressRigh
 
   return (
     <View style={[container, { width }]}>
-      {iconLeft && (
+      {iconLeft &&
         <TouchableOpacity onPress={onPress}>
           <Emoji name={iconLeft} style={leftIconStyle} />
         </TouchableOpacity>
-      )}
+      }
       {title && <Txt numberOfLines={1} h4 title={title} textStyle={titleStyle} textAlign={textAlign} />}
       {children && <View style={childrenStyle}>{children}</View>}
-
-      {iconRight ? (
+      {iconRight ? 
         <TouchableOpacity onPress={onPressRight}>
           <Emoji name={iconRight} style={rightIconStyle} />
         </TouchableOpacity>
-      ) : (
+       :
         <View style={rightViewStyle} />
-      )}
+      }
     </View>
   )
 })

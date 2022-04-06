@@ -12,6 +12,7 @@ import { AppContainer, Space, Button, Input, Avatar } from '../../../components'
 import { goBack, white, black, captureException } from '../../../constants'
 import { RootStackParamList, UserT } from '../../../types'
 import { actionsDice } from '../../../store'
+import { MainRoom } from '../../../models'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_UP_USERNAME'>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'SIGN_UP_USERNAME'>
@@ -40,10 +41,12 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     setLoading(true)
     const { firstName, lastName } = values
     const { email } = route.params
-
+    const room = await DataStore.query(MainRoom)
+    room.length > 0 &&
     createProfile({ id: uuidv4(), firstName, lastName, email, 
       plan: 68, avatar: '', firstGame: true, 
-      lastStepTime: (Date.now() - 86400000).toString() })
+      lastStepTime: (Date.now() - 86400000).toString(),
+      mainHelper: room[0].id })
     setLoading(false)
   }
 

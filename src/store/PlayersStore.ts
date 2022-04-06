@@ -8,7 +8,6 @@ import { Profile } from '../models'
 import { Profile as ProfileT } from '../models'
 import { captureException } from '../constants'
 import { createHistory, getCurrentUser, getHistory, getImagePicker, getIMG, updatePlan, uploadImg } from '../screens/helper'
-import { History } from '../models'
 
 const initStore = {
   start: [false, false, false, false,false, false],
@@ -31,11 +30,11 @@ const PlayersStore = makeAutoObservable({
 })
 
 const initProfile = {
-  id: '0',
+  id: '',
   firstName: '',
   lastName: '',
   email: '',
-  mainRoomId: undefined as any
+  mainRoomId: ''
 }
 
 const OnlineOtherPlayers = makeAutoObservable({
@@ -77,16 +76,17 @@ const actionPlayers = {
     }
     if (DiceStore.online) {
       const user = await getCurrentUser()
-      await DataStore.save(
-        Profile.copyOf(user, updated => {
-        updated.mainHelper = '',
-        updated.lastStepTime = (Date.now() - 86400000).toString()
-      }))
+      if (user) {
+        await DataStore.save(
+          Profile.copyOf(user, updated => {
+          updated.mainHelper = ''
+        }))
+      }
       OnlinePlayerStore.start = false
       OnlinePlayerStore.finish = false
       OnlinePlayerStore.plan = 68
       OnlinePlayerStore.planPrev = 68
-      OnlinePlayerStore.profile.mainRoomId = undefined
+      OnlinePlayerStore.profile.mainRoomId = ''
       OnlinePlayerStore.canGo = true
       OnlinePlayerStore.histories = 
        [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }]
@@ -160,12 +160,7 @@ const actionPlayers = {
           c.mainHelper('eq', profile.mainRoomId))
         const filterRes = profiles.filter(a => a.email !== profile.email)
         if (filterRes.length > 0) {
-          const res = await Promise.all(filterRes.map(async a => {
-            const profHis = await DataStore.query
-             (History, c => c.ownerProfId('eq', a.id), {
-              sort: s => s.createdAt(SortDirection.DESCENDING),
-              limit: 10
-             })
+          const res = await Promise.all(filterRes.map(async (a, id) => {
             return {
               plan: a.plan,
               firstName: a.firstName,
@@ -173,8 +168,7 @@ const actionPlayers = {
               prevAvatar: players.find(b => b.id === a.id )?.curAvatar,
               curAvatar: a.avatar,
               avatar: players.prevAvatar === a.avatar  ? 
-               players.avatar : await getIMG(a.avatar),
-              history: profHis,
+               players[id].avatar : await getIMG(a.avatar),
               id: a.id
             }
           }))

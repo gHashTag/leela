@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { View, SectionList } from 'react-native'
 import { DataStore } from 'aws-amplify'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -69,6 +69,11 @@ const icon = (status: string) => {
 
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
+  useEffect(() => {
+    if (!OnlinePlayerStore.profile.id)
+      actionPlayers.getProfile()
+  }, [])
+
   const _renderItem = ({ item }: StepsT) => {
     const { id, plan, count, status } = item
     return (
@@ -128,12 +133,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
     {
       title: '',
       data: OnlinePlayerStore.histories.slice().reverse()
-    },
-    ...OnlineOtherPlayers.players.slice().map(a => {
-    return{
-      title: `${a.firstName} ${a.lastName}`,
-      data: a.history.slice().reverse()
-    }})
+    }
   ].slice() 
 
   const _onPressSignOut = async (): Promise<void> => {

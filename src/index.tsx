@@ -74,14 +74,6 @@ const Tab = () => {
         actionPlayers.getOtherProf()
       })
       OnlinePlayerStore.subs = subscription
-      Hub.listen('auth', (event) => {
-        if (event.payload.event === 'signIn' || event.payload.event === 'signUp') {
-          DiceStore.online = true
-          actionPlayers.getProfile()
-        } else if (event.payload.event === 'signOut') {
-          DiceStore.online = false
-        }
-      })
       return () => {
         subscription.unsubscribe()
       }
@@ -122,7 +114,18 @@ const App = () => {
   const scheme = useColorScheme()
   const theme = scheme === 'dark' ? DarkTheme : LightTheme
   const color = scheme === 'dark' ? 'light-content' : 'dark-content'
-
+ 
+  useEffect(() => {
+    Hub.listen('auth', (event) => {
+      if (event.payload.event === 'signIn' || event.payload.event === 'signUp') {
+        DiceStore.online = true
+        actionPlayers.getProfile()
+      } else if (event.payload.event === 'signOut') {
+        DiceStore.online = false
+      }
+    })
+  }, [])
+ 
   return (
     <NavigationContainer theme={theme}>
       <StatusBar backgroundColor={scheme === 'dark' ? black : white} barStyle={color} />
