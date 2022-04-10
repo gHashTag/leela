@@ -15,7 +15,8 @@ import {
   OnlineGameScreen,
   PlayraScreen,
   PosterScreen,
-  WelcomeScreen
+  WelcomeScreen,
+  ChatScreen
 } from './screens'
 
 import {
@@ -166,6 +167,7 @@ const App = () => {
         <Stack.Screen name="PLANS_DETAIL_SCREEN" component={PlansDetailScreen} />
         <Stack.Screen name="PLAYRA_SCREEN" component={PlayraScreen} options={horizontalAnimation} />
         <Stack.Screen name="USER_EDIT" component={UserEdit} options={horizontalAnimation} />
+        <Stack.Screen name="CHAT_SCREEN" component={ChatScreen} options={horizontalAnimation} />
       </Stack.Navigator>
     </NavigationContainer>
   )

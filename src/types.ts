@@ -17,6 +17,7 @@ export type RootStackParamList = {
   TAB_BOTTOM_2: undefined
   TAB_BOTTOM_3: undefined
   RULES_SCREEN: undefined
+  CHAT_SCREEN: undefined
   RULES_DETAIL_SCREEN: {
     id: number
     title: string

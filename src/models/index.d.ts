@@ -16,6 +16,10 @@ type MainRoomMetaData = {
   readOnlyFields: 'createdAt' | 'updatedAt';
 }
 
+type MessageMetaData = {
+  readOnlyFields: 'createdAt' | 'updatedAt';
+}
+
 export declare class Profile {
   readonly id: string;
   readonly firstName: string;
@@ -53,4 +57,17 @@ export declare class MainRoom {
   readonly updatedAt?: string | null;
   constructor(init: ModelInit<MainRoom, MainRoomMetaData>);
   static copyOf(source: MainRoom, mutator: (draft: MutableModel<MainRoom, MainRoomMetaData>) => MutableModel<MainRoom, MainRoomMetaData> | void): MainRoom;
+}
+
+export declare class Message {
+  readonly id: string;
+  readonly name: string;
+  readonly avatar?: string | null;
+  readonly profId: string;
+  readonly text: string;
+  readonly mainHelper?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  constructor(init: ModelInit<Message, MessageMetaData>);
+  static copyOf(source: Message, mutator: (draft: MutableModel<Message, MessageMetaData>) => MutableModel<Message, MessageMetaData> | void): Message;
 }

@@ -237,6 +237,57 @@ export type DeleteMainRoomInput = {
   _version?: number | null,
 };
 
+export type CreateMessageInput = {
+  id?: string | null,
+  name: string,
+  avatar?: string | null,
+  profId: string,
+  text: string,
+  mainHelper?: string | null,
+  _version?: number | null,
+};
+
+export type ModelMessageConditionInput = {
+  name?: ModelStringInput | null,
+  avatar?: ModelStringInput | null,
+  profId?: ModelStringInput | null,
+  text?: ModelStringInput | null,
+  mainHelper?: ModelStringInput | null,
+  and?: Array< ModelMessageConditionInput | null > | null,
+  or?: Array< ModelMessageConditionInput | null > | null,
+  not?: ModelMessageConditionInput | null,
+};
+
+export type Message = {
+  __typename: "Message",
+  id: string,
+  name: string,
+  avatar?: string | null,
+  profId: string,
+  text: string,
+  mainHelper?: string | null,
+  createdAt: string,
+  updatedAt: string,
+  _version: number,
+  _deleted?: boolean | null,
+  _lastChangedAt: number,
+};
+
+export type UpdateMessageInput = {
+  id: string,
+  name?: string | null,
+  avatar?: string | null,
+  profId?: string | null,
+  text?: string | null,
+  mainHelper?: string | null,
+  _version?: number | null,
+};
+
+export type DeleteMessageInput = {
+  id: string,
+  _version?: number | null,
+};
+
 export type ModelProfileFilterInput = {
   id?: ModelIDInput | null,
   firstName?: ModelStringInput | null,
@@ -282,6 +333,25 @@ export type ModelMainRoomFilterInput = {
 export type ModelMainRoomConnection = {
   __typename: "ModelMainRoomConnection",
   items:  Array<MainRoom | null >,
+  nextToken?: string | null,
+  startedAt?: number | null,
+};
+
+export type ModelMessageFilterInput = {
+  id?: ModelIDInput | null,
+  name?: ModelStringInput | null,
+  avatar?: ModelStringInput | null,
+  profId?: ModelStringInput | null,
+  text?: ModelStringInput | null,
+  mainHelper?: ModelStringInput | null,
+  and?: Array< ModelMessageFilterInput | null > | null,
+  or?: Array< ModelMessageFilterInput | null > | null,
+  not?: ModelMessageFilterInput | null,
+};
+
+export type ModelMessageConnection = {
+  __typename: "ModelMessageConnection",
+  items:  Array<Message | null >,
   nextToken?: string | null,
   startedAt?: number | null,
 };
@@ -616,6 +686,72 @@ export type DeleteMainRoomMutation = {
   } | null,
 };
 
+export type CreateMessageMutationVariables = {
+  input: CreateMessageInput,
+  condition?: ModelMessageConditionInput | null,
+};
+
+export type CreateMessageMutation = {
+  createMessage?:  {
+    __typename: "Message",
+    id: string,
+    name: string,
+    avatar?: string | null,
+    profId: string,
+    text: string,
+    mainHelper?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+  } | null,
+};
+
+export type UpdateMessageMutationVariables = {
+  input: UpdateMessageInput,
+  condition?: ModelMessageConditionInput | null,
+};
+
+export type UpdateMessageMutation = {
+  updateMessage?:  {
+    __typename: "Message",
+    id: string,
+    name: string,
+    avatar?: string | null,
+    profId: string,
+    text: string,
+    mainHelper?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+  } | null,
+};
+
+export type DeleteMessageMutationVariables = {
+  input: DeleteMessageInput,
+  condition?: ModelMessageConditionInput | null,
+};
+
+export type DeleteMessageMutation = {
+  deleteMessage?:  {
+    __typename: "Message",
+    id: string,
+    name: string,
+    avatar?: string | null,
+    profId: string,
+    text: string,
+    mainHelper?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+  } | null,
+};
+
 export type GetProfileQueryVariables = {
   id: string,
 };
@@ -942,6 +1078,84 @@ export type SyncMainRoomsQuery = {
   } | null,
 };
 
+export type GetMessageQueryVariables = {
+  id: string,
+};
+
+export type GetMessageQuery = {
+  getMessage?:  {
+    __typename: "Message",
+    id: string,
+    name: string,
+    avatar?: string | null,
+    profId: string,
+    text: string,
+    mainHelper?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+  } | null,
+};
+
+export type ListMessagesQueryVariables = {
+  filter?: ModelMessageFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type ListMessagesQuery = {
+  listMessages?:  {
+    __typename: "ModelMessageConnection",
+    items:  Array< {
+      __typename: "Message",
+      id: string,
+      name: string,
+      avatar?: string | null,
+      profId: string,
+      text: string,
+      mainHelper?: string | null,
+      createdAt: string,
+      updatedAt: string,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+    } | null >,
+    nextToken?: string | null,
+    startedAt?: number | null,
+  } | null,
+};
+
+export type SyncMessagesQueryVariables = {
+  filter?: ModelMessageFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+  lastSync?: number | null,
+};
+
+export type SyncMessagesQuery = {
+  syncMessages?:  {
+    __typename: "ModelMessageConnection",
+    items:  Array< {
+      __typename: "Message",
+      id: string,
+      name: string,
+      avatar?: string | null,
+      profId: string,
+      text: string,
+      mainHelper?: string | null,
+      createdAt: string,
+      updatedAt: string,
+      _version: number,
+      _deleted?: boolean | null,
+      _lastChangedAt: number,
+    } | null >,
+    nextToken?: string | null,
+    startedAt?: number | null,
+  } | null,
+};
+
 export type OnCreateProfileSubscriptionVariables = {
   owner?: string | null,
 };
@@ -1243,6 +1457,57 @@ export type OnDeleteMainRoomSubscription = {
     __typename: "MainRoom",
     id: string,
     code?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+  } | null,
+};
+
+export type OnCreateMessageSubscription = {
+  onCreateMessage?:  {
+    __typename: "Message",
+    id: string,
+    name: string,
+    avatar?: string | null,
+    profId: string,
+    text: string,
+    mainHelper?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+  } | null,
+};
+
+export type OnUpdateMessageSubscription = {
+  onUpdateMessage?:  {
+    __typename: "Message",
+    id: string,
+    name: string,
+    avatar?: string | null,
+    profId: string,
+    text: string,
+    mainHelper?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    _version: number,
+    _deleted?: boolean | null,
+    _lastChangedAt: number,
+  } | null,
+};
+
+export type OnDeleteMessageSubscription = {
+  onDeleteMessage?:  {
+    __typename: "Message",
+    id: string,
+    name: string,
+    avatar?: string | null,
+    profId: string,
+    text: string,
+    mainHelper?: string | null,
     createdAt: string,
     updatedAt: string,
     _version: number,

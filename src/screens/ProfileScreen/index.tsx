@@ -179,7 +179,11 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
             <Space height={70} />
             <Button title={I18n.t('startOver')} onPress={() => _onPressReset(navigation)} />
             <Space height={20} />
-            {DiceStore.online && <Button title={I18n.t('signOut')} onPress={_onPressSignOut} />}
+            {DiceStore.online && <>
+            <Button title={I18n.t('signOut')} onPress={_onPressSignOut} />
+            <Space height={20} />
+            <Button title={'Chat'} onPress={() => navigation.navigate('CHAT_SCREEN')} />
+            </>}
             <Space height={300} />
           </>
         }
