@@ -12,8 +12,6 @@ const DiceStore = makeAutoObservable({
   message: ' ',
   multi: 0,
   rate: false,
-  setMessage: (mess: string) => mess,
-  changePlayer: () => {},
   finishArr: [] as boolean[]
 })
 
@@ -35,11 +33,8 @@ const actionsDice = {
     DiceStore.finishArr = [true, true, true, true, true, true].slice(0, players)
   },
   changePlayer(): void {
-    //console.log('DiceStore.players', DiceStore.players)
-    // const arr = [true, false, true, true, true, true]
     const arr = DiceStore.finishArr
     const newArr = arr.slice(DiceStore.players, DiceStore.multi)
-    //console.log('newArr', newArr)
     const lengthArray = newArr.length
 
     if (DiceStore.multi === DiceStore.players) {

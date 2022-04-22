@@ -1,18 +1,20 @@
 import React, { useState, ReactElement } from 'react'
 import { KeyboardAvoidingView } from 'react-native'
-import { Auth } from 'aws-amplify'
 import * as Keychain from 'react-native-keychain'
 import Config from 'react-native-config'
-import { Formik } from 'formik'
-import * as Yup from 'yup'
 import { s } from 'react-native-size-matters'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from '@react-navigation/native'
 import { AppContainer, Button, Space, ButtonLink, TextError, Input } from '../../../components'
-import { goBack, white, black, captureException } from '../../../constants'
+import { goBack, white, black, captureException, W } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { I18n } from '../../../utils'
 import { actionsDice } from '../../../store'
+import auth from '@react-native-firebase/auth'
+
+import { useForm, FormProvider, SubmitHandler, SubmitErrorHandler, FieldValues } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import * as yup from "yup"
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_IN'>
 
@@ -20,44 +22,61 @@ type SignUpT = {
   navigation: ProfileScreenNavigationProp
 }
 
+const schema = yup.object().shape({
+  email: yup.string().email().trim().required(),
+  password: yup.string().min(6).required()
+}).required()
+
 const SignIn = ({ navigation }: SignUpT): ReactElement => {
   const [userInfo, setUserInfo] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const _onPress = async (values: { email: string; password: string }): Promise<void> => {
-    setUserInfo(values.email)
+  const initialValues = { email: Config.EMAIL, password: Config.PASSWORD }
+
+  const { ...methods } = useForm({
+    mode: 'onChange',
+    resolver: yupResolver(schema),
+    defaultValues: initialValues
+  })
+
+  const onSubmit: SubmitHandler<FieldValues> = (data) => {
+    setUserInfo(data.email)
     setLoading(true)
     setError('')
-    try {
-      const { email, password } = values
-      const user = await Auth.signIn(email, password)
+    const { email, password } = data
+    auth().signInWithEmailAndPassword(email, password).then(async (user) => {
       await Keychain.setInternetCredentials('auth', email, password)
-      actionsDice.setPlayers(1)
-      actionsDice.init()
-      user && navigation.navigate('MAIN')
-      setLoading(false)
-    } catch (err) {
+      if (user.user.emailVerified) {
+        navigation.navigate('MAIN')
+        actionsDice.init()
+      } else {
+        navigation.navigate('CONFIRM_SIGN_UP', { email })
+      }
+    }).catch((err) => {
       captureException(err.message)
-      setLoading(false)
-      if (err.code === 'UserNotConfirmedException') {
-        setError(I18n.t('accountNotVerifiedYet'))
-      } else if (err.code === 'PasswordResetRequiredException') {
-        setError(I18n.t('resetYourPassword'))
-      } else if (err.code === 'NotAuthorizedException') {
+      if (err.code === 'auth/invalid-email') {
+        setError('Invalid email')
+      } else if (err.code === 'auth/user-not-found') {
+        setError('user not found')
+      } else if (err.code === 'auth/wrong-password') {
         setError(I18n.t('forgotPassword'))
-      } else if (err.code === 'UserNotFoundException') {
-        setError(I18n.t('userDoesNotExist'))
       } else {
         setError(err.code)
+        console.log(err.code)
       }
-    }
+    })
+
+    setLoading(false)
+  }
+
+  const onError: SubmitErrorHandler<FieldValues> = (errors, e) => {
+    return console.log(errors)
   }
 
   const { dark } = useTheme()
   const color = dark ? white : black
 
-  const initialValues = { email: Config.EMAIL, password: Config.PASSWORD }
   return (
     <AppContainer
       backgroundColor={dark ? black : white}
@@ -66,52 +85,36 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
       loading={loading}
       colorLeft={color}
     >
-      <Formik
-        initialValues={__DEV__ ? initialValues : { email: '', password: '' }}
-        onSubmit={(values): Promise<void> => _onPress(values)}
-        validationSchema={Yup.object().shape({
-          email: Yup.string().email().required(),
-          password: Yup.string().min(6).required()
-        })}
-      >
-        {({ values, handleChange, errors, setFieldTouched, touched, handleSubmit }): ReactElement => (
-          <KeyboardAvoidingView behavior="padding">
-            <Input
-              name="email"
-              value={values.email}
-              onChangeText={handleChange('email')}
-              onBlur={(): void => setFieldTouched('email')}
-              placeholder="E-mail"
-              touched={touched}
-              errors={errors}
-              autoCapitalize="none"
-              color={color}
+      <FormProvider {...methods}>
+        <KeyboardAvoidingView behavior="padding">
+          <Input
+            name="email"
+            placeholder="E-mail"
+            autoCapitalize="none"
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Input
+            name="password"
+            placeholder={I18n.t('password')}
+            secureTextEntry
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Space height={s(20)} />
+          {error !== I18n.t('forgotPassword') && <TextError title={error} textStyle={{ alignSelf: 'center' }} />}
+          {error === I18n.t('forgotPassword') && (
+            <ButtonLink
+              title={error}
+              onPress={() => navigation.navigate('FORGOT', { email: userInfo })}
+              textStyle={{ alignSelf: 'center' }}
             />
-            <Input
-              name="password"
-              value={values.password}
-              onChangeText={handleChange('password')}
-              onBlur={(): void => setFieldTouched('password')}
-              placeholder={I18n.t('password')}
-              touched={touched}
-              errors={errors}
-              secureTextEntry
-              color={color}
-            />
-            <Space height={s(20)} />
-            {error !== I18n.t('forgotPassword') && <TextError title={error} textStyle={{ alignSelf: 'center' }} />}
-            {error === I18n.t('forgotPassword') && (
-              <ButtonLink
-                title={error}
-                onPress={() => navigation.navigate('FORGOT', { email: userInfo })}
-                textStyle={{ alignSelf: 'center' }}
-              />
-            )}
-            <Space height={s(30)} />
-            <Button title={I18n.t('signIn')} onPress={handleSubmit} color={color} />
-          </KeyboardAvoidingView>
-        )}
-      </Formik>
+          )}
+          <Space height={s(30)} />
+          <Button title={I18n.t('signIn')} onPress={methods.handleSubmit(onSubmit, onError)}
+            color={color} />
+        </KeyboardAvoidingView>
+      </FormProvider>
     </AppContainer>
   )
 }

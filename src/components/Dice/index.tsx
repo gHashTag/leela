@@ -5,6 +5,8 @@ import { observer } from 'mobx-react-lite'
 import withPreventDoubleClick from './withPreventDoubleClick'
 import { DiceStore, actionsDice, OnlinePlayerStore, actionPlayers } from '../../store'
 import { s, ms } from 'react-native-size-matters'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { RootStackParamList } from '../../types'
 
 const ButtonEx = withPreventDoubleClick(Pressable)
 
@@ -50,10 +52,10 @@ const Dice = observer(() => {
   useEffect(() => {
     ShakeEvent.addEventListener('ShakeEvent', () => rollDice())
     return () => {
-      ShakeEvent.removeEventListener('ShakeEvent', () => {})
+      ShakeEvent.removeEventListener('ShakeEvent', () => { })
     }
   }, [])
- 
+
   const handleSpin = (value: number) => {
     const duration = (value / 2) * 500
     spinValue.setValue(0)
@@ -62,9 +64,9 @@ const Dice = observer(() => {
       duration: duration,
       easing: Easing.linear,
       useNativeDriver: true
-    }).start(() => actionPlayers.updateStep(DiceStore.players-1))
+    }).start(() => actionPlayers.updateStep(DiceStore.players - 1))
   }
-    
+
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg']
@@ -79,8 +81,8 @@ const Dice = observer(() => {
   }
 
   return (
-    <ButtonEx onPress={rollDice} style={[styles.diceContainer, 
-     (!OnlinePlayerStore.canGo && DiceStore.online) && {opacity: 0.4}]}>
+    <ButtonEx onPress={rollDice} style={[styles.diceContainer,
+    (!OnlinePlayerStore.canGo && DiceStore.online) && { opacity: 0.4 }]}>
       <Animated.Image style={[styles.image, { transform: [{ rotate: spin }] }]} source={getImage(DiceStore.count)} />
     </ButtonEx>
   )

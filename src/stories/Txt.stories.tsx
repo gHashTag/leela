@@ -3,7 +3,7 @@ import { text } from '@storybook/addon-knobs'
 import { storiesOf } from '@storybook/react-native'
 import React from 'react'
 import { Txt } from '../components'
-import CenterView from '../components/CenterView'
+import { CenterView } from '../components'
 import { useDarkMode } from 'storybook-dark-mode'
 // your theme provider
 const ThemeContext = React.createContext({})

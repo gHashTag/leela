@@ -7,6 +7,8 @@ import { Space } from '../Space'
 import { Avatar } from '../Avatar'
 import { Device } from '../../constants'
 import { UserT } from '../../types'
+import { OnlinePlayerStore } from '../../store'
+import { observer } from 'mobx-react-lite'
 
 const styles = ScaledSheet.create({
   container: {
@@ -60,15 +62,14 @@ const styles = ScaledSheet.create({
 
 interface HeaderMasterT {
   avatar: string
-  user: UserT
   plan: number
   onPress: () => void
   onPressAva: () => void
   loading?: boolean
 }
 
-const HeaderMaster = ({ user, avatar, onPress, onPressAva, plan, loading = false }: HeaderMasterT) => {
-  const { firstName, lastName } = user
+const HeaderMaster = observer(({ avatar, onPress, onPressAva, plan, loading = false }: HeaderMasterT) => {
+  const { firstName, lastName } = OnlinePlayerStore.profile
   const { container, h2, sub, avatarStyle } = styles
 
   return (
@@ -88,6 +89,6 @@ const HeaderMaster = ({ user, avatar, onPress, onPressAva, plan, loading = false
       </TouchableOpacity>
     </>
   )
-}
+})
 
 export { HeaderMaster }

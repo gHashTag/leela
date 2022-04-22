@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { Platform, StyleProp, TextStyle, TextInput, StyleSheet } from 'react-native'
+import { Platform, StyleProp, TextStyle, StyleSheet, Text, TextProps } from 'react-native'
 import { useTheme } from '@react-navigation/native'
 import { s, ms } from 'react-native-size-matters'
 import { secondary, white } from '../../constants'
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   }
 })
 
-interface TxtT {
+interface TxtT extends TextProps {
   h0?: boolean
   h1?: boolean
   h2?: boolean
@@ -85,16 +85,15 @@ interface TxtT {
   h9?: boolean
   h10?: boolean
   h11?: boolean
-  color?: string
-  textAlign?: string
   title: string
-  numberOfLines?: number
-  ellipsizeMode?: 'head' | 'middle' | 'tail' | 'clip'
   textStyle?: StyleProp<TextStyle>
 }
 
-const TextCopy = memo<TxtT>(
-  ({ h0, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, color, title, textStyle, textAlign = 'center' }) => {
+const TextCopy: React.FC<TxtT> = memo(
+  ({
+    h0, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10,
+    h11, title, textStyle, ...textProps
+  }) => {
     const {
       h0Style,
       h1Style,
@@ -114,30 +113,25 @@ const TextCopy = memo<TxtT>(
       colors: { primary, text }
     } = useTheme()
 
-    return (
-      <TextInput
-        style={[
-          textStyle,
-          h0 && StyleSheet.flatten([h0Style, { color: text, textShadowColor: color ? color : primary }]),
-          h1 && StyleSheet.flatten([h1Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h2 && StyleSheet.flatten([h2Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h3 && StyleSheet.flatten([h3Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h4 && StyleSheet.flatten([h4Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h5 && StyleSheet.flatten([h5Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h6 && StyleSheet.flatten([h6Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h7 && StyleSheet.flatten([h7Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h8 &&
-            StyleSheet.flatten([h8Style, { color: secondary, textShadowColor: color ? color : primary, textAlign }]),
-          h9 && StyleSheet.flatten([h9Style, { color: white, textAlign }]),
-          h10 && StyleSheet.flatten([h10Style, { color: primary }]),
-          h11 && StyleSheet.flatten([h11Style, { color: white, textAlign }])
-        ]}
-        value={title}
-        editable={true}
-        multiline={true}
-        showSoftInputOnFocus={false}
-      />
-    )
+    return <Text
+      style={[
+        h0 && StyleSheet.flatten([h0Style, { color: text, textShadowColor: primary }]),
+        h1 && StyleSheet.flatten([h1Style, { color: text, textShadowColor: primary }]),
+        h2 && StyleSheet.flatten([h2Style, { color: text, textShadowColor: primary }]),
+        h3 && StyleSheet.flatten([h3Style, { color: text, textShadowColor: primary }]),
+        h4 && StyleSheet.flatten([h4Style, { color: text, textShadowColor: primary }]),
+        h5 && StyleSheet.flatten([h5Style, { color: text, textShadowColor: primary }]),
+        h6 && StyleSheet.flatten([h6Style, { color: text, textShadowColor: primary }]),
+        h7 && StyleSheet.flatten([h7Style, { color: text, textShadowColor: primary }]),
+        h8 && StyleSheet.flatten([h8Style, { color: secondary, textShadowColor: primary }]),
+        h9 && StyleSheet.flatten([h9Style, { color: white }]),
+        h10 && StyleSheet.flatten([h10Style, { color: primary }]),
+        h11 && StyleSheet.flatten([h11Style, { color: white }]),
+        textStyle
+      ]}
+      {...textProps}
+      selectable
+    >{title}</Text>
   }
 )
 

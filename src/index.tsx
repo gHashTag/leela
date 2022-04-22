@@ -5,42 +5,29 @@ import { TransitionPresets } from '@react-navigation/stack'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import * as Sentry from '@sentry/react'
 import {
-  GameScreen,
-  RulesScreen,
-  RulesDetailScreen,
-  PlansScreen,
-  PlansDetailScreen,
-  ProfileScreen,
-  SelectPlayersScreen,
-  OnlineGameScreen,
-  PlayraScreen,
-  PosterScreen,
-  WelcomeScreen,
-  ChatScreen
+  GameScreen, RulesScreen, RulesDetailScreen,
+  PlansScreen, PlansDetailScreen, ProfileScreen,
+  SelectPlayersScreen, OnlineGameScreen, PlayraScreen,
+  PosterScreen, WelcomeScreen, PostScreen, CreatePostScreen, DetailPostScreen
 } from './screens'
 
 import {
-  SignUp,
-  SignUpUsername,
-  SignIn,
-  ConfirmSignUp,
-  User,
-  Forgot,
-  ForgotPassSubmit,
-  Hello,
-  UserEdit,
+  SignUp, SignUpUsername, SignIn,
+  ConfirmSignUp, User, Forgot,
+  ForgotPassSubmit, Hello, UserEdit,
   SignUpAvatar
 } from './screens/Authenticator'
 
 import TabNavigator from './TabNavigator'
-import { white, black } from './constants'
+import { white, black, navRef } from './constants'
 
 import { UI } from './UI'
 
-import { DiceStore, actionPlayers, OnlinePlayerStore } from './store'
-import { DataStore, Hub } from 'aws-amplify'
-import { Profile } from './models'
-import { useFocusEffect } from '@react-navigation/native'
+import { actionPlayers, DiceStore, OnlinePlayerStore } from './store'
+import auth from '@react-native-firebase/auth'
+import firestore from '@react-native-firebase/firestore'
+import { getFireBaseRef } from './screens/helper'
+import NetInfo from "@react-native-community/netinfo"
 
 const DarkTheme = {
   dark: true,
@@ -67,20 +54,24 @@ const LightTheme = {
 }
 
 const Tab = () => {
-  useFocusEffect(
-    React.useCallback(() => {
-    if (DiceStore.online) {
-      const subscription = DataStore.observe(Profile).subscribe(
-      () => {
-        actionPlayers.getOtherProf()
-      })
-      OnlinePlayerStore.subs = subscription
+  useEffect(() => {
+    if (auth().currentUser?.uid) {
+      const unsub1 = firestore().collection('Profiles')
+        .where('owner', '!=', auth().currentUser?.uid)
+        .onSnapshot((s) => actionPlayers.getOtherProf({ snapshot: s }))
+      const unsub2 = getFireBaseRef(`/online/`)
+        .on('child_changed', async (changed) => {
+          await firestore().collection('Profiles')
+            .where('owner', '!=', auth().currentUser?.uid).get().then(queryS => {
+              actionPlayers.getOtherProf({ snapshot: queryS })
+            })
+        })
       return () => {
-        subscription.unsubscribe()
+        unsub1()
+        getFireBaseRef('/online/').off('child_changed', unsub2)
       }
     }
-    }, [])
-  )
+  }, [])
 
   return (
     <TabNavigator.Navigator initialRouteName={'TAB_BOTTOM_0'}>
@@ -88,6 +79,7 @@ const Tab = () => {
       <TabNavigator.Screen name="TAB_BOTTOM_1" component={GameScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_2" component={ProfileScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_4" component={PostScreen} />
     </TabNavigator.Navigator>
   )
 }
@@ -115,20 +107,31 @@ const App = () => {
   const scheme = useColorScheme()
   const theme = scheme === 'dark' ? DarkTheme : LightTheme
   const color = scheme === 'dark' ? 'light-content' : 'dark-content'
- 
+
   useEffect(() => {
-    Hub.listen('auth', (event) => {
-      if (event.payload.event === 'signIn' || event.payload.event === 'signUp') {
+    const onAuthStateChanged = async (user: any) => {
+      if (user) {
+        OnlinePlayerStore.profile.email = user.email
+
+        const reference = getFireBaseRef(`/online/${user.uid}`)
+        reference.set(true)
+        reference.onDisconnect().set(false)
         DiceStore.online = true
         actionPlayers.getProfile()
-      } else if (event.payload.event === 'signOut') {
+        console.log(user)
+      } else {
         DiceStore.online = false
+        console.log('No user')
       }
-    })
+    }
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged)
+    return () => {
+      subscriber()
+    }
   }, [])
- 
+
   return (
-    <NavigationContainer theme={theme}>
+    <NavigationContainer ref={navRef} theme={theme}>
       <StatusBar backgroundColor={scheme === 'dark' ? black : white} barStyle={color} />
       <Stack.Navigator
         screenOptions={{
@@ -167,7 +170,9 @@ const App = () => {
         <Stack.Screen name="PLANS_DETAIL_SCREEN" component={PlansDetailScreen} />
         <Stack.Screen name="PLAYRA_SCREEN" component={PlayraScreen} options={horizontalAnimation} />
         <Stack.Screen name="USER_EDIT" component={UserEdit} options={horizontalAnimation} />
-        <Stack.Screen name="CHAT_SCREEN" component={ChatScreen} options={horizontalAnimation} />
+
+        <Stack.Screen name="CREATE_POST_SCREEN" component={CreatePostScreen} options={horizontalAnimation} />
+        <Stack.Screen name="DETAIL_POST_SCREEN" component={DetailPostScreen} options={horizontalAnimation} />
       </Stack.Navigator>
     </NavigationContainer>
   )

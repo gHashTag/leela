@@ -5,7 +5,7 @@ import { ScaledSheet, ms, s } from 'react-native-size-matters'
 import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { AppContainer, Button, IconLeela, Space, Txt } from '../../../components'
-import { white, black, goBack, captureException } from '../../../constants'
+import { white, black, goBack } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'
 

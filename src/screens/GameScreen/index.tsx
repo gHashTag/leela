@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { DataStore } from 'aws-amplify'
 import { observer } from 'mobx-react-lite'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { ms, s } from 'react-native-size-matters'
 import { I18n } from '../../utils'
-import { View } from 'react-native'
 import { RootStackParamList } from '../../types'
-import { Background, Dice, GameBoard, Header, Space, Txt, ButtonElements, Spin, Button } from '../../components'
-import { DiceStore, actionsDice, OnlinePlayerStore, actionPlayers } from '../../store'
+import { Background, Dice, GameBoard, Header, Space, Txt, ButtonElements, Spin } from '../../components'
+import { DiceStore, actionsDice, OnlinePlayerStore } from '../../store'
 import Rate from 'react-native-rate'
-import { _onPressReset, getCurrentUser } from '../helper'
+import { _onPressReset } from '../helper'
 import { Button as ClassicBtn } from 'react-native-elements'
-import { Profile, MainRoom } from '../../models'
 
 type navigation = StackNavigationProp<RootStackParamList, 'TAB_BOTTOM_0'>
 
@@ -23,8 +20,6 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   const [leftTime, setLeftTime] = useState(0)
 
   useEffect(() => {
-    if (!OnlinePlayerStore.profile.id)
-      actionPlayers.getProfile() // ну как то так если
     const interval = setInterval(() => {
       const currentDate = Date.now()
       setLeftTime(currentDate - OnlinePlayerStore.stepTime)
@@ -44,31 +39,17 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
         const time = 86400000 - leftTime
         switch (true) {
           case leftTime > 86340000:
-            return `${(time/1000).toFixed(0)} sec.`
+            return `${(time / 1000).toFixed(0)} sec.`
           case leftTime > 82800000:
-            return `${Math.ceil((time/60/1000)).toFixed(0)} min.`
+            return `${Math.ceil((time / 60 / 1000)).toFixed(0)} min.`
           case leftTime <= 82800000:
-            return `${Math.floor((time/60/60/1000)).toFixed(0)} h.`
-        } 
+            return `${Math.floor((time / 60 / 60 / 1000)).toFixed(0)} h.`
+        }
       } else {
         return '0'
       }
     }
     return <Txt h3 title={`nextStep: ${timeMood()}`} />
-  }
-  
-  // ну нужно комнату создать в DynamoDB
-  const createRoom = async (): Promise<void> => {
-    try {
-      const room = await DataStore.query(MainRoom)
-      if (!room) {
-        DataStore.save(new MainRoom({
-          code: 'dfd041-14dw'
-        }))
-      }
-    } catch (error) {
-      console.log(error)
-    }
   }
 
   const _onPress = () => {
@@ -83,29 +64,29 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   }
 
   return <Background>
-      {OnlinePlayerStore.loading && DiceStore.online ? 
-        <Spin />
-       : 
-        <>
-          <Header
-            iconLeft=":information_source:"
-            onPress={() => navigation.navigate('RULES_SCREEN')}
-            iconRight=":books:"
-            onPressRight={() => navigation.navigate('PLANS_SCREEN')}
-          >
-            <>
-              {DiceStore.finishArr.indexOf(true) !== -1 ? 
+    {OnlinePlayerStore.loading && DiceStore.online ?
+      <Spin />
+      :
+      <>
+        <Header
+          iconLeft=":information_source:"
+          onPress={() => navigation.navigate('RULES_SCREEN')}
+          iconRight=":books:"
+          onPressRight={() => navigation.navigate('PLANS_SCREEN')}
+        >
+          <>
+            {DiceStore.finishArr.indexOf(true) !== -1 ?
               <>
                 {!OnlinePlayerStore.canGo && DiceStore.online ?
                   <LeftTime />
-                : 
+                  :
                   <Txt h3 title={DiceStore.online ? 'Your turn' : `${I18n.t('playerTurn')} # ${DiceStore.players}`} />
                 }
                 <Space height={1} />
                 <Txt h3 title={DiceStore.message} />
                 <Dice />
               </>
-               : 
+              :
               <>
                 <Space height={s(60)} />
                 <ButtonElements title={I18n.t('startOver')} onPress={() => _onPressReset(navigation)} />
@@ -113,16 +94,16 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                 <Txt h0 title={`${I18n.t('win')}`} />
                 {!DiceStore.rate && <ClassicBtn title={I18n.t('leaveFeedback')} onPress={_onPress} />}
               </>
-              }
-            </>
-          </Header>
-          <Space height={ms(85, 0.1)} />
-            <GameBoard />
-          <Space height={s(0)} />
-        </>
-      }
-    </Background>
-  
+            }
+          </>
+        </Header>
+        <Space height={ms(85, 0.1)} />
+        <GameBoard />
+        <Space height={s(0)} />
+      </>
+    }
+  </Background>
+
 })
 
 export { GameScreen }

@@ -25,21 +25,19 @@ const SignUpAvatar = observer(({ navigation }: SignUpAvatarT): ReactElement => {
   const { dark } = useTheme()
   const color = dark ? white : black
   const handleSubmit = () => navigation.navigate('MAIN')
-  return (
-    <AppContainer
-      backgroundColor={dark ? black : white}
-      onPress={goBack(navigation)}
-      title=" "
-      iconLeft={null}
-      loading={false}
-    >
-      <Avatar size="xLarge" uri={OnlinePlayerStore.avatar.slice()} onPress={onPressAva} loading={false} />
-      <Space height={s(50)} />
-      {!!OnlinePlayerStore.avatar && <Button title={I18n.t('done')} onPress={handleSubmit} color={color} />}
+  return <AppContainer
+    backgroundColor={dark ? black : white}
+    onPress={goBack(navigation)}
+    title=" "
+    iconLeft={null}
+    loading={false}
+  >
+    <Avatar size="xLarge" uri={OnlinePlayerStore.avatar.slice()} onPress={onPressAva} loading={false} />
+    <Space height={s(50)} />
+    {!!OnlinePlayerStore.avatar && <Button title={I18n.t('done')} onPress={handleSubmit} color={color} />}
 
-      <Space height={s(150)} />
-    </AppContainer>
-  )
+    <Space height={s(150)} />
+  </AppContainer>
 })
 
 export { SignUpAvatar }

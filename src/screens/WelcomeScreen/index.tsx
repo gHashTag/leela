@@ -2,8 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Platform } from 'react-native'
 import { observer } from 'mobx-react-lite'
 import { StackNavigationProp } from '@react-navigation/stack'
-import Config from 'react-native-config'
-import { Auth } from 'aws-amplify'
 import * as Keychain from 'react-native-keychain'
 import { s } from 'react-native-size-matters'
 import { v4 as uuidv4 } from 'uuid'
@@ -20,7 +18,6 @@ import { AppContainer, ModalSubscribe, Space, Button, Txt, CenterView, IconLeela
 import { actionsSubscribe, actionsDice, actionPlayers, DiceStore } from '../../store'
 import { LocalNotification } from '../../utils/noifications/LocalPushController'
 import { captureException } from '../../constants'
-import { Profile } from '../../models'
 
 type navigation = StackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 
@@ -42,15 +39,18 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
       const credentials = await Keychain.getInternetCredentials('auth')
       if (credentials) {
         const { username, password } = credentials
-        const user = await Auth.signIn(username, password)
+        auth().signInWithEmailAndPassword(username, password).then(user => {
+          if (user.user.emailVerified) {
+            navigation.navigate('MAIN')
+            actionsDice.setOnline(true)
+          } else {
+            navigation.navigate('CONFIRM_SIGN_UP', {
+              email: user.user.email as string
+            })
+            user.user.sendEmailVerification()
+          }
+        })
         setLoading(false)
-        if (DiceStore.online) {
-          actionPlayers.getProfile() // костыль
-        }
-        actionPlayers.getPoster()
-        user && navigation.navigate('MAIN')
-        actionsDice.setOnline(true)
-        actionsDice.setPlayers(1)
       } else {
         setLoading(false)
       }
@@ -104,7 +104,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
 
   useEffect(() => {
     //console.warn('SubscribeStore.subscriptionActive', SubscribeStore.subscriptionActive)
-    auth().signInWithEmailAndPassword(Config.ADMIN, Config.ADMIN_PASSWORD)
+    //auth().signInWithEmailAndPassword(Config.ADMIN, Config.ADMIN_PASSWORD)
     actionsSubscribe.purchaserInfo()
     //actionsSubscribe.setToday('12-6-21')
     const checkGame = async () => {
@@ -123,10 +123,10 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
     const unsubscribe = messaging().onMessage(async payload => {
       Platform.OS === 'ios'
         ? PushNotificationIOS.addNotificationRequest({
-            id: uuidv4(),
-            title: payload.data?.title,
-            body: payload.data?.body
-          })
+          id: uuidv4(),
+          title: payload.data?.title,
+          body: payload.data?.body
+        })
         : LocalNotification(payload)
     })
 
@@ -135,7 +135,6 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
 
   const _onPress = () => {
     navigation.navigate('HELLO')
-    actionsDice.setOnline(true)
   }
 
   return (

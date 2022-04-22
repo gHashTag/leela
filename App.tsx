@@ -1,6 +1,3 @@
-/**
- * @format
- */
 import React from 'react'
 import { LogBox, Platform } from 'react-native'
 import Amplify from '@aws-amplify/core'
@@ -37,10 +34,10 @@ const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
 messaging().setBackgroundMessageHandler(async payload => {
   Platform.OS === 'ios'
     ? PushNotificationIOS.addNotificationRequest({
-        id: uuidv4(),
-        title: payload.data?.title,
-        body: payload.data?.body
-      })
+      id: uuidv4(),
+      title: payload.data?.title,
+      body: payload.data?.body
+    })
     : LocalNotification(payload)
 })
 

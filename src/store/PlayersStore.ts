@@ -1,27 +1,32 @@
-import { v4 as uuidv4 } from 'uuid'
 import { makeAutoObservable } from 'mobx'
-import { Auth, DataStore, SortDirection, Storage } from 'aws-amplify'
 import { persistence, StorageAdapter } from 'mobx-persist-store'
 import { writeStore, readStore, updateStep } from './helper'
 import { actionsDice, DiceStore } from '.'
-import { Profile } from '../models'
-import { Profile as ProfileT } from '../models'
 import { captureException } from '../constants'
-import { createHistory, getCurrentUser, getHistory, getImagePicker, getIMG, updatePlan, uploadImg } from '../screens/helper'
+import { getProfile, getImagePicker, getIMG, updatePlan, uploadImg, getFireBaseRef } from '../screens/helper'
+import auth from '@react-native-firebase/auth'
+import storage from '@react-native-firebase/storage'
+import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
+import { OtherUsersT, UserT } from '../types'
+
+interface GetOtherI {
+  snapshot?: FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
+}
+
 
 const initStore = {
-  start: [false, false, false, false,false, false],
-  finish: [false, false, false, false,false, false],
+  start: [false, false, false, false, false, false],
+  finish: [false, false, false, false, false, false],
   plans: [68, 68, 68, 68, 68, 68],
   plansPrev: [68, 68, 68, 68, 68, 68],
   histories: [
-    [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }],
-    [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }],
-    [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }],
-    [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }],
-    [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }],
-    [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }],
-    [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }],
+    [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
+    [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
+    [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
+    [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
+    [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
+    [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
+    [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
   ]
 }
 
@@ -30,17 +35,13 @@ const PlayersStore = makeAutoObservable({
 })
 
 const initProfile = {
-  id: '',
   firstName: '',
   lastName: '',
-  email: '',
-  mainRoomId: ''
+  email: ''
 }
 
 const OnlineOtherPlayers = makeAutoObservable({
-  players: [
-    {id: 'none', curAvatar: '', history: [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }]}
-  ] as any
+  players: [] as any
 })
 
 const OnlinePlayerStore = makeAutoObservable({
@@ -48,7 +49,7 @@ const OnlinePlayerStore = makeAutoObservable({
   finish: false,
   plan: 68,
   planPrev: 68,
-  histories: [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }],
+  histories: [{ plan: 68, count: 0, status: 'start', createDate: 999999999999999 }],
   avatar: '',
   prevAvatar: '' as any,
   nextAvatar: '' as any,
@@ -59,9 +60,9 @@ const OnlinePlayerStore = makeAutoObservable({
     buttonColor: '#1c1c1c'
   },
   isPosterLoading: false,
-  subs: undefined as any,
   stepTime: 0,
   canGo: false,
+  firstGame: false,
   loading: true as Boolean
 })
 
@@ -75,115 +76,102 @@ const actionPlayers = {
       PlayersStore.histories = initStore.histories
     }
     if (DiceStore.online) {
-      const user = await getCurrentUser()
-      if (user) {
-        await DataStore.save(
-          Profile.copyOf(user, updated => {
-          updated.mainHelper = ''
-        }))
-      }
       OnlinePlayerStore.start = false
       OnlinePlayerStore.finish = false
       OnlinePlayerStore.plan = 68
       OnlinePlayerStore.planPrev = 68
-      OnlinePlayerStore.profile.mainRoomId = ''
-      OnlinePlayerStore.canGo = true
-      OnlinePlayerStore.histories = 
-       [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }]
+      OnlinePlayerStore.histories = [{
+        createDate: Date.now(), plan: 68,
+        count: 0, status: 'start'
+      }]
       updatePlan(68)
-      createHistory({id: uuidv4(), plan: 68, count: 0, status: 'start'})
     }
     actionsDice.setMessage(' ')
   },
   async SignOut(): Promise<void> {
+    const userUid = auth().currentUser?.uid
+    getFireBaseRef(`/online/${userUid}`).set(false)
     OnlinePlayerStore.avatar = ''
     OnlinePlayerStore.profile = initProfile
     OnlinePlayerStore.start = false
     OnlinePlayerStore.finish = false
+    OnlinePlayerStore.nextAvatar = ''
     OnlinePlayerStore.plan = 68
     OnlinePlayerStore.planPrev = 68
-    OnlinePlayerStore.histories = [{ id: uuidv4(), plan: 68, count: 0, status: 'start' }]
-    OnlinePlayerStore.subs.unsubscribe()
-    Auth.signOut()
+    OnlinePlayerStore.histories = [{
+      createDate: 99999999999, plan: 68,
+      count: 0, status: 'start'
+    }]
+    await auth().signOut()
   },
-  updateStep(id: number | undefined): void {
+  updateStep(id: number): void {
     updateStep(id)
   },
   async getProfile(): Promise<void> {
     try {
       OnlinePlayerStore.loading = true
-      const arrProfile: ProfileT | undefined = await getCurrentUser()
-      const plan = arrProfile?.plan
-      if (plan) {
+      const curProf = await getProfile()
+      if (curProf) {
+        const plan = curProf.plan
         OnlinePlayerStore.plan = plan
-        if (plan === 68) {
-          DiceStore.startGame = false
-          OnlinePlayerStore.start = false
-        } else {
-          DiceStore.startGame = true
-          OnlinePlayerStore.start = true
-        }
-      }
-      if (arrProfile !== undefined) {
+        DiceStore.startGame = curProf.start
+        OnlinePlayerStore.start = curProf.start
+        OnlinePlayerStore.firstGame = curProf.firstGame
         OnlinePlayerStore.profile = {
           ...OnlinePlayerStore.profile,
-          id: arrProfile.id,
-          firstName: arrProfile.firstName,
-          lastName: arrProfile.lastName,
-          email: arrProfile.email
+          firstName: curProf.firstName,
+          lastName: curProf.lastName,
+          email: curProf.email
         }
-        OnlinePlayerStore.stepTime = Number(arrProfile.lastStepTime)
+        OnlinePlayerStore.stepTime = curProf.lastStepTime
+        OnlinePlayerStore.canGo = Date.now() - curProf.lastStepTime >= 86400000
+        OnlinePlayerStore.prevAvatar = OnlinePlayerStore.nextAvatar
+        OnlinePlayerStore.nextAvatar = curProf.avatar
+        if (curProf.avatar && OnlinePlayerStore.prevAvatar
+          !== curProf.avatar) {
+          OnlinePlayerStore.avatar = await getIMG(curProf.avatar)
+        }
+        OnlinePlayerStore.histories = curProf.history
+          .sort((a, b) => b.createDate - a.createDate).slice(0, 30)
       }
-      if (arrProfile?.mainHelper) {
-        OnlinePlayerStore.profile.mainRoomId = arrProfile.mainHelper
-      }
-      OnlinePlayerStore.prevAvatar = OnlinePlayerStore.nextAvatar
-      OnlinePlayerStore.nextAvatar = arrProfile?.avatar
-      if (arrProfile?.avatar && OnlinePlayerStore.prevAvatar
-      !== OnlinePlayerStore.nextAvatar && arrProfile.avatar) {
-        OnlinePlayerStore.avatar = await getIMG(arrProfile.avatar)
-      }
-      OnlinePlayerStore.histories = await getHistory()
-      await actionPlayers.getOtherProf()
       OnlinePlayerStore.loading = false
     } catch (error) {
       console.log(`error`, error)
       captureException(error)
     }
   },
-  async getOtherProf(): Promise<void> {
-    try {
-      const {profile} = OnlinePlayerStore
-      const {players} = OnlineOtherPlayers
-      if (profile.mainRoomId) { 
-        const profiles = await DataStore.query(Profile, c => 
-          c.mainHelper('eq', profile.mainRoomId))
-        const filterRes = profiles.filter(a => a.email !== profile.email)
-        if (filterRes.length > 0) {
-          const res = await Promise.all(filterRes.map(async (a, id) => {
+  async getOtherProf({ snapshot }: GetOtherI) {
+    if (snapshot) {
+      const otherData: any = await Promise.all(snapshot.docs.map(async (a, id) => {
+        if (a.exists) {
+          const data: OtherUsersT = a.data() as OtherUsersT
+          let isOnline
+          await getFireBaseRef(`/online/${data.owner}`).once('value')
+            .then(async snapshot => {
+              isOnline = snapshot.val()
+            })
+          if (isOnline) {
             return {
-              plan: a.plan,
-              firstName: a.firstName,
-              lastName: a.lastName,
-              prevAvatar: players.find(b => b.id === a.id )?.curAvatar,
-              curAvatar: a.avatar,
-              avatar: players.prevAvatar === a.avatar  ? 
-               players[id].avatar : await getIMG(a.avatar),
-              id: a.id
+              email: data.email,
+              plan: data.plan,
+              firstName: data.firstName,
+              lastName: data.lastName,
+              avatar: data.avatar ? await getIMG(data.avatar) : undefined,
+              owner: data.owner
             }
-          }))
-          OnlineOtherPlayers.players = res
+          }
         }
-      }    
-    } catch (error) {
-      captureException(error)
+      }))
+      if (otherData) {
+        OnlineOtherPlayers.players = otherData.filter((a: any) => a !== undefined)
+      }
     }
   },
   async getPoster(): Promise<void> {
     try {
       OnlinePlayerStore.isPosterLoading = true
       const response = await fetch('https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/poster.json')
-      const json = await response.json() 
+      const json = await response.json()
       OnlinePlayerStore.poster = json[0]
     } catch (error) {
       captureException(error)
@@ -197,16 +185,15 @@ const actionPlayers = {
       if (image) {
         try {
           const fileName = await uploadImg(image)
-          const arrProfile: ProfileT | undefined = await getCurrentUser()
-          arrProfile?.avatar && 
-          await Storage.remove(arrProfile.avatar)
-          if (arrProfile) {
-            await DataStore.save(
-              Profile.copyOf(arrProfile, updated => {
-                updated.avatar = fileName
-              })
-            )
+          if (auth().currentUser?.photoURL) {
+            await storage().ref(auth().currentUser?.photoURL).delete()
           }
+          auth().currentUser?.updateProfile({
+            photoURL: fileName
+          })
+          firestore().collection('Profiles').doc(auth().currentUser?.uid).update({
+            avatar: fileName
+          })
           OnlinePlayerStore.avatar = await getIMG(fileName)
         } catch (error) {
           captureException(error)

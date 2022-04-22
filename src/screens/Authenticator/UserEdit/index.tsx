@@ -1,14 +1,17 @@
 import React, { useState, ReactElement, useRef, useEffect } from 'react'
-import { Formik, FormikProps } from 'formik'
-import * as Yup from 'yup'
 import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from '@react-navigation/native'
 import { RouteProp } from '@react-navigation/native'
 import { AppContainer, Space, Button, Input } from '../../../components'
-import { goBack, white, black } from '../../../constants'
+import { goBack, white, black, W } from '../../../constants'
 import { RootStackParamList, UserT } from '../../../types'
-import { updateProfile } from '../../../screens/helper'
+import { updateProfName } from '../../../screens/helper'
+
+import { useForm, FormProvider, SubmitHandler, SubmitErrorHandler, FieldValues } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import * as yup from "yup"
+import { s } from 'react-native-size-matters'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'USER_EDIT'>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'USER_EDIT'>
@@ -18,38 +21,24 @@ type UserEditT = {
   route: ProfileScreenRouteProp
 }
 
+const schema = yup.object().shape({
+  firstName: yup.string().trim().min(2).required(),
+  lastName: yup.string().trim().min(2).required()
+}).required()
+
 const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
-  const formikRef = useRef<FormikProps<any>>()
 
-  const [input, setObj] = useState<UserT>({
-    id: '0',
-    firstName: '',
-    lastName: '',
-    email: '',
-    plan: 68
+  const { ...methods } = useForm({
+    mode: 'onChange',
+    resolver: yupResolver(schema),
+    defaultValues: { ...route.params }
   })
 
-  useEffect(() => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setLoading(true)
-    const obj = route.params
-    if (typeof obj !== 'undefined') {
-      setObj(obj)
-      // @ts-expect-error
-      const { setFieldValue } = formikRef.current
-      const { id, firstName, lastName } = obj
-      setFieldValue('id', id)
-      setFieldValue('firstName', firstName)
-      setFieldValue('lastName', lastName)
-      //setAvatar(obj.avatar)
-      setLoading(false)
-    }
-  }, [route.params])
-
-  const _onPress = async (values: { firstName: string; lastName: string }): Promise<void> => {
-    setLoading(true)
-    const { firstName, lastName } = values
-    updateProfile({ id: input.id, firstName, lastName })
+    const { firstName, lastName } = data
+    updateProfName({ firstName, lastName })
     goBack(navigation)()
   }
 
@@ -65,45 +54,26 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
         loading={loading}
         colorLeft={black}
       >
-        <Formik
-          innerRef={r => (formikRef.current = r || undefined)}
-          initialValues={input}
-          onSubmit={(values): Promise<void> => _onPress(values)}
-          validationSchema={Yup.object().shape({
-            firstName: Yup.string().min(2).required(),
-            lastName: Yup.string().min(2).required()
-          })}
-        >
-          {({ values, handleChange, errors, setFieldTouched, touched, handleSubmit }): ReactElement => (
-            <>
-              <Input
-                name="firstName"
-                value={values.firstName}
-                onChangeText={handleChange('firstName')}
-                onBlur={(): void => setFieldTouched('firstName')}
-                placeholder={I18n.t('firstName')}
-                touched={touched}
-                errors={errors}
-                autoCapitalize="none"
-                color={color}
-              />
-              <Input
-                name="lastName"
-                value={values.lastName}
-                onChangeText={handleChange('lastName')}
-                onBlur={(): void => setFieldTouched('lastName')}
-                placeholder={I18n.t('lastName')}
-                touched={touched}
-                errors={errors}
-                autoCapitalize="none"
-                color={color}
-              />
-              <Space height={30} />
-              <Button title={I18n.t('done')} onPress={handleSubmit} color={black} />
-              <Space height={200} />
-            </>
-          )}
-        </Formik>
+        <FormProvider {...methods}>
+          <Input
+            name="firstName"
+            placeholder={I18n.t('firstName')}
+            autoCapitalize="none"
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Input
+            name="lastName"
+            placeholder={I18n.t('lastName')}
+            autoCapitalize="none"
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Space height={30} />
+          <Button title={I18n.t('done')} onPress={methods.handleSubmit(onSubmit,
+            (er) => console.log(er))} color={black} />
+          <Space height={200} />
+        </FormProvider>
       </AppContainer>
     </>
   )

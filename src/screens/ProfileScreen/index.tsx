@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { View, SectionList } from 'react-native'
 import { DataStore } from 'aws-amplify'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -7,7 +7,7 @@ import { ScaledSheet } from 'react-native-size-matters'
 import * as Keychain from 'react-native-keychain'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-import { I18n } from '../../utils'
+import { I18n, lang } from '../../utils'
 import { RootStackParamList } from '../../types'
 import { AppContainer, Txt, Space, EmojiText, Button, HeaderMaster, Spin } from '../../components'
 import { captureException } from '../../constants'
@@ -19,6 +19,9 @@ import {
   OnlineOtherPlayers,
 } from '../../store'
 import { _onPressReset } from '../helper'
+import { nanoid } from 'nanoid/non-secure'
+import { en } from '../PlansScreen/en'
+import { ru } from '../PlansScreen/ru'
 
 type navigation = StackNavigationProp<RootStackParamList, 'PROFILE_SCREEN'>
 
@@ -36,7 +39,7 @@ const styles = ScaledSheet.create({
 
 interface StepsT {
   item: {
-    id: string
+    createDate: number
     plan: number
     count: number
     status: string
@@ -69,15 +72,10 @@ const icon = (status: string) => {
 
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
-  useEffect(() => {
-    if (!OnlinePlayerStore.profile.id)
-      actionPlayers.getProfile()
-  }, [])
-
   const _renderItem = ({ item }: StepsT) => {
-    const { id, plan, count, status } = item
+    const { plan, count, status } = item
     return (
-      <View key={id} style={container}>
+      <View style={container}>
         <Space width={0} />
         {status === 'cube' && (
           <>
@@ -101,7 +99,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
   const { container } = styles
 
-  const _keyExtractor = (obj: any) => obj.id
+  const _keyExtractor = (obj: any) => nanoid(7)
 
   const DATA = !DiceStore.online ? [
     {
@@ -128,13 +126,13 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
       title: `${I18n.t('player')} 6`,
       data: PlayersStore.histories[5].slice().reverse()
     }
-  ].slice(0, DiceStore.multi) 
-  : [
-    {
-      title: '',
-      data: OnlinePlayerStore.histories.slice().reverse()
-    }
-  ].slice() 
+  ].slice(0, DiceStore.multi)
+    : [
+      {
+        title: '',
+        data: OnlinePlayerStore.histories.slice().reverse()
+      }
+    ].slice()
 
   const _onPressSignOut = async (): Promise<void> => {
     try {
@@ -154,48 +152,50 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
   return (
     <AppContainer flatList iconLeft={null} title={I18n.t('history')} textAlign="center">
-      {OnlinePlayerStore.loading && DiceStore.online ? 
-      <Spin />
-      :
-      <SectionList
-        ListHeaderComponent={
-          <>
-            {/* <Txt h3 title={`Подписка: ${subscriptionActive.toString()}`} /> */}
-            {DiceStore.online && 
-              <HeaderMaster
-                user={OnlinePlayerStore.profile}
-                plan={OnlinePlayerStore.plan}
-                avatar={OnlinePlayerStore.avatar}
-                onPress={() => navigation.navigate('USER_EDIT', OnlinePlayerStore.profile)}
-                onPressAva={onPressAva}
-              />
-            }
-            {/* <Txt h3 title={DiceStore.online.toString()} /> */}
-            <Space height={10} />
-          </>
-        }
-        ListFooterComponent={
-          <>
-            <Space height={70} />
-            <Button title={I18n.t('startOver')} onPress={() => _onPressReset(navigation)} />
-            <Space height={20} />
-            {DiceStore.online && <>
-            <Button title={I18n.t('signOut')} onPress={_onPressSignOut} />
-            <Space height={20} />
-            <Button title={'Chat'} onPress={() => navigation.navigate('CHAT_SCREEN')} />
-            </>}
-            <Space height={300} />
-          </>
-        }
-        stickySectionHeadersEnabled={false}
-        sections={DATA}
-        renderItem={_renderItem}
-        keyExtractor={_keyExtractor}
-        showsVerticalScrollIndicator={false}
-        renderSectionHeader={({ section: { title } }) => 
-        title ? <Txt h1 title={title} textStyle={{ padding: 15, marginTop: 10 }} /> : <Space height={20} />
-        }
-      />}
+      {(OnlinePlayerStore.loading && DiceStore.online) ?
+        <Spin />
+        :
+        <SectionList
+          ListHeaderComponent={
+            <>
+              {/* <Txt h3 title={`Подписка: ${subscriptionActive.toString()}`} /> */}
+              {DiceStore.online &&
+                <HeaderMaster
+                  plan={OnlinePlayerStore.plan}
+                  avatar={OnlinePlayerStore.avatar}
+                  onPress={() => navigation.navigate('USER_EDIT', OnlinePlayerStore.profile)}
+                  onPressAva={onPressAva}
+                />
+              }
+              {/* <Txt h3 title={DiceStore.online.toString()} /> */}
+              <Space height={10} />
+            </>
+          }
+          ListFooterComponent={
+            <>
+              <Space height={70} />
+              <Button title={I18n.t('startOver')} onPress={() => _onPressReset(navigation)} />
+              <Space height={20} />
+              {DiceStore.online && <>
+                <Button title={I18n.t('signOut')} onPress={_onPressSignOut} />
+                <Space height={20} />
+                <Button title='testPost' onPress={() => {
+                  const plansLang = lang === 'en' ? en : ru
+                  navigation.navigate('PLANS_DETAIL_SCREEN', { report: true, ...plansLang.find(a => a.id === 23) })
+                }} />
+              </>}
+              <Space height={300} />
+            </>
+          }
+          stickySectionHeadersEnabled={false}
+          sections={DATA}
+          renderItem={_renderItem}
+          keyExtractor={_keyExtractor}
+          showsVerticalScrollIndicator={false}
+          renderSectionHeader={({ section: { title } }) =>
+            title ? <Txt h1 title={title} textStyle={{ padding: 15, marginTop: 10 }} /> : <Space height={20} />
+          }
+        />}
     </AppContainer>
   )
 })

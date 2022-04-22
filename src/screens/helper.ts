@@ -1,133 +1,171 @@
-import { Auth, DataStore, SortDirection, Predicates } from 'aws-amplify'
-import * as Keychain from 'react-native-keychain'
-import Storage from '@aws-amplify/storage'
 import { captureException } from '../constants'
 import ImagePicker from 'react-native-image-crop-picker'
-import { Profile, History } from '../models'
-import { Profile as ProfileT } from '../models'
-import { UserT } from '../types'
+import { UserT, HistoryT } from '../types'
 import {
-  DiceStore,
-  actionPlayers,
-  actionsDice,
-  OnlinePlayerStore
+  DiceStore, actionPlayers,
+  actionsDice, OnlinePlayerStore
 } from '../store'
+import storage from '@react-native-firebase/storage'
+import { nanoid } from 'nanoid/non-secure'
+import auth from '@react-native-firebase/auth'
+import firestore from '@react-native-firebase/firestore'
+import { firebase, FirebaseDatabaseTypes } from '@react-native-firebase/database'
 
-export const getCurrentUser = async (): Promise<ProfileT | undefined> => {
-  try {
-    const authUser = await Auth.currentAuthenticatedUser()
-    const arrProfile = await DataStore.query(Profile, c => c.email('eq', authUser.attributes.email))
-    if (arrProfile.length === 0) {
-      return 
-    }
-    return arrProfile[arrProfile.length - 1]
-  } catch (error) {
-    console.log(`err`, error)
-    captureException(error)
-  }
-
+interface NewProfileI {
+  email: string
+  uid: string
+  firstName: string
+  lastName: string
 }
 
-export const createHistory = async (values: any) => {
+//firebase help
+
+const getFireBaseRef = (path: string): FirebaseDatabaseTypes.Reference => {
+  return firebase.app()
+    .database('https://leela-chakra-default-rtdb.europe-west1.firebasedatabase.app/')
+    .ref(path)
+}
+
+
+// Profile operations
+
+const getProfile = async (): Promise<UserT | undefined> => {
+  const userUid = auth().currentUser?.uid
+  let res = undefined
+  await firestore().collection('Profiles').doc(userUid).get()
+    .then(querySnap => {
+      res = querySnap.data()
+    }).catch((err) => {
+      console.log(`getProfile`, err)
+      captureException(err)
+    })
+  return res
+}
+
+const onWin = async () => {
+  const userUid = auth().currentUser?.uid
+  firestore().collection('Profiles').doc(userUid).update({
+    firstGame: false, finish: true
+  })
+}
+
+const onStart = async () => {
+  const userUid = auth().currentUser?.uid
+  firestore().collection('Profiles').doc(userUid).update({
+    start: true,
+  })
+}
+
+const createProfile = async ({
+  email, uid, firstName, lastName
+}: NewProfileI) => {
+  const hisObj: HistoryT = {
+    count: 0, plan: 68, status: 'start',
+    createDate: Date.now()
+  }
+  await firestore().collection('Profiles').doc(uid).set({
+    email, owner: uid, firstName, lastName, plan: 68,
+    lastStepTime: Date.now() - 86400000, start: false, finish: false,
+    firstGame: true, history: [hisObj]
+  })
+  OnlinePlayerStore.plan = 68
+  OnlinePlayerStore.profile.firstName = firstName
+  OnlinePlayerStore.profile.lastName = lastName
+  OnlinePlayerStore.profile.email = email
+  OnlinePlayerStore.stepTime = Date.now() - 86400000
+  OnlinePlayerStore.canGo = true
+}
+
+const updatePlan = async (plan: number,) => {
+  const userUid = auth().currentUser?.uid
+  if (userUid) {
+    firestore().collection('Profiles').doc(userUid).update({
+      plan
+    }).then(() => {
+
+    }).catch((err) => captureException(err))
+  }
+}
+interface profNameI {
+  firstName: string
+  lastName: string
+}
+const updateProfName = async ({ firstName, lastName }: profNameI) => {
   try {
-    const user = await getCurrentUser()
-    if (user && values.count !== 6) {
-      OnlinePlayerStore.canGo = false
-      OnlinePlayerStore.stepTime = Date.now()
-      await DataStore.save(
-        Profile.copyOf(user, updated => {
-        updated.lastStepTime = Date.now().toString()
-      }))
-    }
-    if (user) {
-      await DataStore.save(new History({ ...values, 
-        profileID: user.id, ownerProfId: user.id }))
-    }
+    await auth().currentUser?.updateProfile({
+      displayName: `${firstName} ${lastName}`
+    })
+    await firestore().collection('Profiles')
+      .doc(auth().currentUser?.uid).update({
+        firstName, lastName
+      })
+    await auth().currentUser?.reload()
+    OnlinePlayerStore.profile.firstName = firstName
+    OnlinePlayerStore.profile.lastName = lastName
   } catch (err) {
-    console.log(`err`, err)
     captureException(err)
   }
 }
 
-export const getHistory = async () => {
-  try {
-    const user = await getCurrentUser()
-    let history: any = []
-    if (user) {
-      history = (await DataStore.query(History, c => c.ownerProfId('eq', user.id), {
-        sort: s => s.createdAt(SortDirection.DESCENDING),
-        limit: 20 
-      }))
-    }
-    return history
-  } catch (err) {
-    console.log(`err`, err)
-    captureException(err)
+const isLoggedIn = async () => {
+  if (auth().currentUser) {
+    return true
+  } else {
+    return false
   }
 }
 
-export const updatePlan = async (plan: number) => {
-  try {
-    const credentials = await Keychain.getInternetCredentials('auth')
-
-    if (credentials) {
-      const { username } = credentials
-      const original = await DataStore.query(Profile, c => c.email('eq', username))
-      if (original) {
-        await DataStore.save(
-          Profile.copyOf(original[0], updated => {
-            updated.plan = plan
-          })
-        )
-      }
-    }
-  } catch (err) {
-    captureException(err)
-  }
-}
-
-export const updateProfile = async ({ id, firstName, lastName }: UserT) => {
-  try {
-    const original = await DataStore.query(Profile, id)
-    if (original) {
-      await DataStore.save(
-        Profile.copyOf(original, updated => {
-          updated.firstName = firstName
-          updated.lastName = lastName
-        })
-      )
-    }
-  } catch (err) {
-    captureException(err)
-  }
-}
-
-
-export const _onPressReset = async (navigation): Promise<void> => {
+const _onPressReset = async (navigation: any): Promise<void> => {
   try {
     !DiceStore.online && navigation.pop(3)
     if (DiceStore.online) {
-      const user = await getCurrentUser() 
-      user &&
-      await DataStore.delete(History, c => c.ownerProfId('eq', user.id))
+      const userUid = auth().currentUser?.uid
+      const hist: HistoryT = {
+        createDate: Date.now(),
+        plan: 68,
+        count: 0,
+        status: 'start'
+      }
+      await firestore().collection('Profiles').doc(userUid).update({
+        plan: 68, start: false, finish: false, history: [hist]
+      })
     }
     actionPlayers.resetGame()
     actionsDice.setPlayers(1)
   } catch (err) {
     captureException(err)
   }
-}
+} // *
 
-export const isLoggedIn = async () => {
+// History operations
+
+const createHistory = async (values: any) => {
   try {
-    await Auth.currentAuthenticatedUser()
-    return true
-  } catch {
-    return false
+    const userUid = auth().currentUser?.uid
+    const hisObj: HistoryT = { ...values, createDate: Date.now() }
+    if (userUid) {
+      if (values.count !== 6) {
+        OnlinePlayerStore.canGo = false
+        OnlinePlayerStore.stepTime = Date.now()
+        await firestore().collection('Profiles').doc(userUid).update({
+          lastStepTime: Date.now(),
+          history: firestore.FieldValue.arrayUnion(hisObj)
+        })
+      } else {
+        await firestore().collection('Profiles').doc(userUid).update({
+          history: firestore.FieldValue.arrayUnion(hisObj)
+        })
+      }
+    }
+  } catch (err) {
+    console.log(`createHistory`, err)
+    captureException(err)
   }
 }
 
-export const getImagePicker = async () => {
+// Image operations
+
+const getImagePicker = async () => {
   const image = await ImagePicker.openPicker({
     width: 100,
     height: 100,
@@ -147,16 +185,22 @@ export const getImagePicker = async () => {
   return image
 }
 
-export const getIMG = async (fileName: string) => {
-  return Storage.get(fileName)
+const getIMG = async (fileName: string) => {
+  return await storage().ref(fileName).getDownloadURL()
 }
 
-export const uploadImg = async (image: { path: string }) => {
-   const photo = await fetch(image.path)
-   const photoBlob = await photo.blob()
-   const fileName = photoBlob._data.name
-   Storage.put(fileName, photoBlob, {
-     contentType: 'image/jpeg' 
-   })
-   return fileName
+const uploadImg = async (image: { path: string }) => {
+  const photo = await fetch(image.path)
+  const photoBlob = await photo.blob()
+  const fileName = `images/${nanoid(7)}${image.path.substring(image.path.lastIndexOf('/') + 1)}`
+  const reference = storage().ref(fileName)
+  await reference.put(photoBlob)
+  return fileName
+}
+
+export {
+  uploadImg, updatePlan, updateProfName,
+  getIMG, getImagePicker, getProfile,
+  createHistory, createProfile, isLoggedIn, _onPressReset,
+  getFireBaseRef, onWin, onStart
 }

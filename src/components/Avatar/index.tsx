@@ -37,9 +37,9 @@ type sizeType = 'xLarge' | 'large' | 'medium' | 'small'
 
 interface AvatarT {
   loading: boolean
-  uri?: string
   onPress?: () => void
   size?: sizeType
+  uri?: string
   viewStyle?: StyleProp<ViewStyle>
 }
 
@@ -56,7 +56,8 @@ const Avatar = memo<AvatarT>(({ loading = true, uri, size = 'large', onPress, vi
               {!uri ? (
                 <FastImage style={styles[size]} source={require('./pickaface.png')} />
               ) : (
-                <Image style={styles[size]} source={{ uri }} />
+                //<Image style={styles[size]} source={{ uri }} />
+                <FastImage style={styles[size]} source={{ uri, priority: FastImage.priority.high }} />
               )}
             </>
           )}

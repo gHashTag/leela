@@ -1,5 +1,14 @@
 import { Dimensions, Linking } from 'react-native'
 import * as Sentry from '@sentry/react-native'
+import { createNavigationContainerRef } from '@react-navigation/native'
+
+export const navRef = createNavigationContainerRef()
+
+export const navigate = (name: string, params?: any) => {
+  if (navRef.isReady()) {
+    navRef.navigate(name, params)
+  }
+}
 
 export const captureException = error => {
   if (!error) {
