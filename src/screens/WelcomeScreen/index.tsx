@@ -5,14 +5,12 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import * as Keychain from 'react-native-keychain'
 import { s } from 'react-native-size-matters'
 import { v4 as uuidv4 } from 'uuid'
-import firestore from '@react-native-firebase/firestore'
 import messaging from '@react-native-firebase/messaging'
 import auth from '@react-native-firebase/auth'
 import PushNotificationIOS from '@react-native-community/push-notification-ios'
-import { getUniqueId } from 'react-native-device-info'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ScaledSheet } from 'react-native-size-matters'
-import { I18n, lang } from '../../utils'
+import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
 import { AppContainer, ModalSubscribe, Space, Button, Txt, CenterView, IconLeela } from '../../components'
 import { actionsSubscribe, actionsDice, actionPlayers, DiceStore } from '../../store'
@@ -34,8 +32,6 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
 
   const key = async (): Promise<void> => {
     try {
-      // await Keychain.resetInternetCredentials('auth')
-      // await AsyncStorage.clear()
       const credentials = await Keychain.getInternetCredentials('auth')
       if (credentials) {
         const { username, password } = credentials
@@ -60,47 +56,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
     }
   }
 
-  const fetchBusinesses = useCallback(() => {
-    const requestUserPermission = async () => {
-      const authStatus = await messaging().requestPermission()
-      const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL
 
-      if (enabled) {
-        // Get the device token
-        messaging()
-          .getToken()
-          .then(token => {
-            // console.log('Authorization status:', token)
-            return saveTokenToDatabase(token)
-          })
-
-        // Listen to whether the token changes
-        return messaging().onTokenRefresh(token => {
-          saveTokenToDatabase(token)
-        })
-      }
-    }
-    requestUserPermission()
-  }, [])
-
-  const saveTokenToDatabase = async (token: string) => {
-    // Assume user is already signed in
-    const uniqueId = getUniqueId()
-    // Add the token to the users datastore
-    try {
-      await firestore()
-        .collection('users')
-        .doc(uniqueId)
-        .set({
-          tokens: firestore.FieldValue.arrayUnion(token),
-          lang: firestore.FieldValue.arrayUnion(lang)
-        })
-    } catch (e) {
-      captureException(e)
-    }
-  }
 
   useEffect(() => {
     //console.warn('SubscribeStore.subscriptionActive', SubscribeStore.subscriptionActive)
@@ -115,8 +71,6 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
     }
 
     checkGame()
-    fetchBusinesses()
-
     setLoading(true)
     key()
 
@@ -131,7 +85,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
     })
 
     return unsubscribe
-  }, [navigation, fetchBusinesses])
+  }, [])
 
   const _onPress = () => {
     navigation.navigate('HELLO')

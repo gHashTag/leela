@@ -3,13 +3,14 @@ import ImagePicker from 'react-native-image-crop-picker'
 import { UserT, HistoryT } from '../types'
 import {
   DiceStore, actionPlayers,
-  actionsDice, OnlinePlayerStore
+  actionsDice, OnlinePlayerStore, PlayersStore
 } from '../store'
 import storage from '@react-native-firebase/storage'
 import { nanoid } from 'nanoid/non-secure'
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
 import { firebase, FirebaseDatabaseTypes } from '@react-native-firebase/database'
+import { lang } from '../utils'
 
 interface NewProfileI {
   email: string
@@ -66,7 +67,7 @@ const createProfile = async ({
   await firestore().collection('Profiles').doc(uid).set({
     email, owner: uid, firstName, lastName, plan: 68,
     lastStepTime: Date.now() - 86400000, start: false, finish: false,
-    firstGame: true, history: [hisObj]
+    firstGame: true, history: [hisObj], lang
   })
   OnlinePlayerStore.plan = 68
   OnlinePlayerStore.profile.firstName = firstName
@@ -139,21 +140,20 @@ const _onPressReset = async (navigation: any): Promise<void> => {
 
 // History operations
 
-const createHistory = async (values: any) => {
+const createHistory = async (values: HistoryT) => {
   try {
     const userUid = auth().currentUser?.uid
-    const hisObj: HistoryT = { ...values, createDate: Date.now() }
     if (userUid) {
       if (values.count !== 6) {
         OnlinePlayerStore.canGo = false
         OnlinePlayerStore.stepTime = Date.now()
         await firestore().collection('Profiles').doc(userUid).update({
           lastStepTime: Date.now(),
-          history: firestore.FieldValue.arrayUnion(hisObj)
+          history: firestore.FieldValue.arrayUnion(values)
         })
       } else {
         await firestore().collection('Profiles').doc(userUid).update({
-          history: firestore.FieldValue.arrayUnion(hisObj)
+          history: firestore.FieldValue.arrayUnion(values)
         })
       }
     }

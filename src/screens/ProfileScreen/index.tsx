@@ -7,7 +7,7 @@ import { ScaledSheet } from 'react-native-size-matters'
 import * as Keychain from 'react-native-keychain'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-import { I18n, lang } from '../../utils'
+import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
 import { AppContainer, Txt, Space, EmojiText, Button, HeaderMaster, Spin } from '../../components'
 import { captureException } from '../../constants'
@@ -16,12 +16,9 @@ import {
   actionPlayers,
   PlayersStore,
   OnlinePlayerStore,
-  OnlineOtherPlayers,
 } from '../../store'
 import { _onPressReset } from '../helper'
 import { nanoid } from 'nanoid/non-secure'
-import { en } from '../PlansScreen/en'
-import { ru } from '../PlansScreen/ru'
 
 type navigation = StackNavigationProp<RootStackParamList, 'PROFILE_SCREEN'>
 
@@ -179,10 +176,6 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
               {DiceStore.online && <>
                 <Button title={I18n.t('signOut')} onPress={_onPressSignOut} />
                 <Space height={20} />
-                <Button title='testPost' onPress={() => {
-                  const plansLang = lang === 'en' ? en : ru
-                  navigation.navigate('PLANS_DETAIL_SCREEN', { report: true, ...plansLang.find(a => a.id === 23) })
-                }} />
               </>}
               <Space height={300} />
             </>

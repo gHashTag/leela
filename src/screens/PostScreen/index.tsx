@@ -1,29 +1,33 @@
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { Header, PostCard, Space, Txt } from '../../components'
 import { goBack } from '../../constants'
 import { OnlinePlayerStore, PostStore } from '../../store'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { PostT, RootStackParamList } from '../../types'
+import { RootStackParamList } from '../../types'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
 import { FlatList } from 'react-native-gesture-handler'
 import { View } from 'react-native'
 import { observer } from 'mobx-react-lite'
 import { vs } from 'react-native-size-matters'
 
-interface Ichat {
+interface Ipost {
   navigation: StackNavigationProp<RootStackParamList, 'POST_SCREEN'>
 }
 
-const PostScreen: React.FC<Ichat> = observer(({ navigation }) => {
+const PostScreen: React.FC<Ipost> = observer(({ navigation }) => {
 
   useEffect(() => {
-    const subscriber = firestore().collection('Posts')
+    const subPosts = firestore().collection('Posts')
       .onSnapshot(PostStore.fetchPosts, (err) => console.log(err))
-    return () => subscriber()
+    const subComments = firestore().collection('Comments')
+      .onSnapshot(PostStore.fetchComments, (err) => console.log(err))
+    return () => {
+      subPosts()
+      subComments()
+    }
   }, [])
 
   return <>
-    <Header iconLeft=':back:' onPress={goBack(navigation)} />
     <FlatList
       data={PostStore.store.posts}
       keyExtractor={a => a.id}

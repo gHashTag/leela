@@ -1,83 +1,90 @@
 import { makeAutoObservable } from 'mobx'
 import { FormPostT, PostT, CommentT, FormCommentT } from '../types'
 import auth from '@react-native-firebase/auth'
-import storage from '@react-native-firebase/storage'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
 import { OnlinePlayerStore } from './PlayersStore'
 import { getIMG } from '../screens/helper'
 import { nanoid } from 'nanoid/non-secure'
 
+type fetchI = FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
+
+interface postStoreT {
+    posts: PostT[]
+    comments: CommentT[]
+}
+
 export const PostStore = {
-    store: makeAutoObservable({
-        posts: [] as Array<any>
+    store: makeAutoObservable<postStoreT>({
+        posts: [],
+        comments: []
     }),
     createPost: async ({ text, plan }: FormPostT) => {
         const userUid = auth().currentUser?.uid
         const imgPath = auth().currentUser?.photoURL
-        //const { posts } = PostStore.store
         if (userUid) {
             const id = nanoid()
             const post: PostT = {
-                text, plan, comments: [],
+                text, plan,
                 firstName: OnlinePlayerStore.profile.firstName,
                 lastName: OnlinePlayerStore.profile.lastName,
                 ownerId: userUid,
                 avatar: imgPath ? imgPath : '',
-                id
+                id, createTime: Date.now()
             }
-            await firestore().collection('Posts').doc(id).set(post)/*.then(async() => {
-                posts.push({...post, avatar: await getIMG(OnlinePlayerStore.avatar)})
-            })*/
+            await firestore().collection('Posts').doc(id).set(post)
         }
     },
-    createComment: async ({ text, id }: FormCommentT & { id: string }) => {
+    createComment: async ({ text, postId, postOwner }: FormCommentT) => {
         const userUid = auth().currentUser?.uid
         const imgPath = auth().currentUser?.photoURL
-        //const { posts } = PostStore.store
         if (userUid) {
             const comment: CommentT = {
-                text,
+                text, postId, postOwner,
                 firstName: OnlinePlayerStore.profile.firstName,
                 lastName: OnlinePlayerStore.profile.lastName,
-                ownerId: userUid,
+                ownerId: userUid, createTime: Date.now(),
                 avatar: imgPath ? imgPath : '',
             }
-            await firestore().collection('Posts').doc(id).update({
-                comments: firestore.FieldValue.arrayUnion(comment)
-            })/*.then(async() => {
-                const index = posts.findIndex(a => a.id === id)
-                if (index >= 0) {
-                    posts[index].comments?.push({
-                        ...comment,
-                        avatar: await getIMG(OnlinePlayerStore.avatar)
-                    })
-                }
-            })*/
+            await firestore().collection('Comments').add(comment)
         }
     },
-    fetchPosts: async (querySnap: FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>) => {
-        console.log('fetch')
+    fetchPosts: async (querySnap: fetchI) => {
         const res: any[] = await Promise.all(
             querySnap.docs.map(async a => {
                 if (a.exists) {
                     const data = a.data()
+                    // const comments = await getComments(data.id)
                     return {
-                        plan: data.plan,
-                        text: data.text,
-                        firstName: data.firstName,
-                        lastName: data.lastName,
-                        ownerId: data.ownerId,
-                        avatar: data.avatar ? await getIMG(data.avatar) : undefined,
-                        comments: await Promise.all(data.comments.map(async (a) => {
-                            return { ...a, avatar: await getIMG(a.avatar) }
-                        })),
-                        id: data.id
+                        ...data,
+                        avatar: data.avatar ? await getIMG(data.avatar) : '',
                     }
                 }
             }).filter((a: any) => a !== undefined)
         )
         if (res.length > 0) {
-            PostStore.store.posts = res
+            PostStore.store.posts = res.sort((a, b) => b.createTime - a.createTime)
         }
     },
+    fetchComments: async (querySnap: fetchI) => {
+        const res: any[] = await Promise.all(
+            querySnap.docs.map(async (a) => {
+                if (a.exists) {
+                    const data = a.data()
+                    return {
+                        ...data,
+                        avatar: data.avatar ? await getIMG(data.avatar) : '',
+                    }
+                }
+            }).filter((a: any) => a !== undefined)
+        )
+        if (res.length > 0) {
+            PostStore.store.comments = res
+        }
+    }
+}
+
+const getComments = async (postId: string): Promise<CommentT[] | any[]> => {
+    const comments = await firestore().collection('Comments')
+        .where('postId', '==', postId).get()
+    return comments.docs
 }

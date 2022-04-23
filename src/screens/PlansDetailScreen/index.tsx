@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react'
-import { KeyboardAvoidingView, StyleSheet, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s, vs } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
-import { AppContainer, TextCopy, VideoPlayer, Space, CreatePostScreen } from '../../components'
+import { AppContainer, TextCopy, VideoPlayer, Space, CreatePost } from '../../components'
 import { goBack } from '../../constants'
 import { actionPlay } from '../../store'
 
@@ -57,11 +57,12 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
     )}
     <Space height={s(30)} />
     <TextCopy h3 title={content} textStyle={h3} />
-    {report &&
-      <CreatePostScreen plan={id} />
+    {!report &&
+      <CreatePost plan={id} />
     }
     <Space height={vs(report ? 260 : 200)} />
   </AppContainer>
 })
 
 export { PlansDetailScreen }
+//<KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? "padding" : 'height'}>

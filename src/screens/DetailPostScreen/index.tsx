@@ -34,7 +34,10 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(({
     const { item, index } = route.params
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
-        PostStore.createComment({ text: data.text, id: item.id })
+        PostStore.createComment({
+            text: data.text, postId: item.id,
+            postOwner: item.ownerId
+        })
         methods.reset()
     }
     const { ...methods } = hookForn
@@ -70,7 +73,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(({
                 <Space height={vs(10)} />
                 <Txt h4 title="No comments yet" />
             </>}
-            data={PostStore.store.posts[index].comments.slice().reverse()}
+            data={PostStore.store.comments.filter(a => a.postId === item.id)}
             renderItem={({ item, index }) => <CommentCard item={item} index={index} />}
         />
     </>

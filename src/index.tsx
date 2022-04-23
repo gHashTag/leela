@@ -8,7 +8,7 @@ import {
   GameScreen, RulesScreen, RulesDetailScreen,
   PlansScreen, PlansDetailScreen, ProfileScreen,
   SelectPlayersScreen, OnlineGameScreen, PlayraScreen,
-  PosterScreen, WelcomeScreen, PostScreen, CreatePostScreen, DetailPostScreen
+  PosterScreen, WelcomeScreen, PostScreen, DetailPostScreen
 } from './screens'
 
 import {
@@ -23,7 +23,7 @@ import { white, black, navRef } from './constants'
 
 import { UI } from './UI'
 
-import { actionPlayers, DiceStore, OnlinePlayerStore } from './store'
+import { actionPlayers, DiceStore, fetchBusinesses, OnlinePlayerStore } from './store'
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
 import { getFireBaseRef } from './screens/helper'
@@ -112,12 +112,12 @@ const App = () => {
     const onAuthStateChanged = async (user: any) => {
       if (user) {
         OnlinePlayerStore.profile.email = user.email
-
         const reference = getFireBaseRef(`/online/${user.uid}`)
         reference.set(true)
         reference.onDisconnect().set(false)
         DiceStore.online = true
         actionPlayers.getProfile()
+        fetchBusinesses()
         console.log(user)
       } else {
         DiceStore.online = false
@@ -171,7 +171,6 @@ const App = () => {
         <Stack.Screen name="PLAYRA_SCREEN" component={PlayraScreen} options={horizontalAnimation} />
         <Stack.Screen name="USER_EDIT" component={UserEdit} options={horizontalAnimation} />
 
-        <Stack.Screen name="CREATE_POST_SCREEN" component={CreatePostScreen} options={horizontalAnimation} />
         <Stack.Screen name="DETAIL_POST_SCREEN" component={DetailPostScreen} options={horizontalAnimation} />
       </Stack.Navigator>
     </NavigationContainer>

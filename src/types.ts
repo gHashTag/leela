@@ -47,13 +47,11 @@ export type RootStackParamList = {
     content: string
     url: string
   },
-  CREATE_POST_SCREEN: {
-    plan: number
-  },
   DETAIL_POST_SCREEN: {
     item: PostT
     index: number
-  }
+  },
+  POST_SCREEN: undefined
 }
 
 export interface PlansT {
@@ -75,6 +73,8 @@ export interface UserT {
   start: boolean
   history: HistoryT[]
   avatar?: string
+  lang?: string
+  tokens?: string[]
 }
 
 export interface OtherUsersT {
@@ -113,12 +113,14 @@ export interface PostT extends FormPostT {
   lastName: string
   ownerId: string
   avatar: string
-  comments?: CommentT[]
   id: string
+  createTime: number
 }
 
 export interface FormCommentT {
   text: string
+  postId: string
+  postOwner: string
 }
 
 export interface CommentT extends FormCommentT {
@@ -126,4 +128,5 @@ export interface CommentT extends FormCommentT {
   lastName: string
   ownerId: string
   avatar: string
+  createTime: number
 }

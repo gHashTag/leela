@@ -30,7 +30,7 @@ export const PostCard: React.FC<postCardI> = ({
         <View style={[border, size]} />
         <View style={{ flexDirection: 'row' }}>
             <Avatar size='small' viewStyle={img}
-                uri={OnlinePlayerStore.avatar} loading={false} />
+                uri={item.avatar} loading={false} />
             <View style={{ flex: 1 }}>
                 <Space height={vs(5)} />
                 <Txt textAlign='left' h1 title={`${item.firstName} ${item.lastName}`} />

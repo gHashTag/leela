@@ -33,24 +33,27 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     return () => clearInterval(interval)
   }, [])
 
-  const LeftTime = () => {
+  useEffect(() => {
     const timeMood = () => {
       if (!(leftTime >= 86400000)) {
+        if (leftTime === 0) {
+          return
+        }
         const time = 86400000 - leftTime
         switch (true) {
           case leftTime > 86340000:
-            return `${(time / 1000).toFixed(0)} sec.`
+            OnlinePlayerStore.timeText = `${(time / 1000).toFixed(0)} sec.`
           case leftTime > 82800000:
-            return `${Math.ceil((time / 60 / 1000)).toFixed(0)} min.`
+            OnlinePlayerStore.timeText = `${Math.ceil((time / 60 / 1000)).toFixed(0)} min.`
           case leftTime <= 82800000:
-            return `${Math.floor((time / 60 / 60 / 1000)).toFixed(0)} h.`
+            OnlinePlayerStore.timeText = `${Math.floor((time / 60 / 60 / 1000)).toFixed(0)} h.`
         }
       } else {
-        return '0'
+        OnlinePlayerStore.timeText = '0'
       }
     }
-    return <Txt h3 title={`nextStep: ${timeMood()}`} />
-  }
+    timeMood()
+  }, [leftTime])
 
   const _onPress = () => {
     const options = {
@@ -78,9 +81,9 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
             {DiceStore.finishArr.indexOf(true) !== -1 ?
               <>
                 {!OnlinePlayerStore.canGo && DiceStore.online ?
-                  <LeftTime />
+                  <Txt h3 title={`nextStep: ${OnlinePlayerStore.timeText}`} />
                   :
-                  <Txt h3 title={DiceStore.online ? 'Your turn' : `${I18n.t('playerTurn')} # ${DiceStore.players}`} />
+                  <Txt h3 title={DiceStore.online ? 'Take a step' : `${I18n.t('playerTurn')} # ${DiceStore.players}`} />
                 }
                 <Space height={1} />
                 <Txt h3 title={DiceStore.message} />

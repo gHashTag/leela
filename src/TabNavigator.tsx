@@ -6,6 +6,7 @@ import { TabRouter, TabActions } from '@react-navigation/routers'
 import { ifIphoneX } from 'react-native-iphone-x-helper'
 import { Tab } from './components'
 import { black, white } from './constants'
+import { DiceStore } from './store'
 
 const styles = ScaledSheet.create({
   container: {
@@ -54,11 +55,11 @@ const TabNavigator = ({ initialRouteName, children, screenOptions, contentStyle 
 
   const { container, sub } = styles
 
-  return (
-    <>
-      <View style={[sub, contentStyle]}>{descriptors[routes[index].key].render()}</View>
-      <View style={[{ backgroundColor: scheme === 'dark' ? black : white }, container]}>
-        {routes.map(({ name, key }) => {
+  return <>
+    <View style={[sub, contentStyle]}>{descriptors[routes[index].key].render()}</View>
+    <View style={[{ backgroundColor: scheme === 'dark' ? black : white }, container]}>
+      {routes.filter(a => DiceStore.online ? true : a.name === 'TAB_BOTTOM_4' ? false : true)
+        .map(({ name, key }) => {
           return (
             <TouchableOpacity
               key={key}
@@ -83,9 +84,8 @@ const TabNavigator = ({ initialRouteName, children, screenOptions, contentStyle 
             </TouchableOpacity>
           )
         })}
-      </View>
-    </>
-  )
+    </View>
+  </>
 }
 
 export default createNavigatorFactory(TabNavigator)()

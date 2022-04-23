@@ -8,11 +8,11 @@ import auth from '@react-native-firebase/auth'
 import storage from '@react-native-firebase/storage'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
 import { OtherUsersT, UserT } from '../types'
+import { delTokenOnSignOut } from './MessagingStore'
 
 interface GetOtherI {
   snapshot?: FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
 }
-
 
 const initStore = {
   start: [false, false, false, false, false, false],
@@ -51,8 +51,8 @@ const OnlinePlayerStore = makeAutoObservable({
   planPrev: 68,
   histories: [{ plan: 68, count: 0, status: 'start', createDate: 999999999999999 }],
   avatar: '',
-  prevAvatar: '' as any,
-  nextAvatar: '' as any,
+  prevAvatar: '',
+  nextAvatar: '',
   profile: initProfile,
   poster: {
     imgUrl: "https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/poster.jpg",
@@ -63,7 +63,8 @@ const OnlinePlayerStore = makeAutoObservable({
   stepTime: 0,
   canGo: false,
   firstGame: false,
-  loading: true as Boolean
+  loading: true as Boolean,
+  timeText: ' '
 })
 
 const actionPlayers = {
@@ -90,7 +91,8 @@ const actionPlayers = {
   },
   async SignOut(): Promise<void> {
     const userUid = auth().currentUser?.uid
-    getFireBaseRef(`/online/${userUid}`).set(false)
+    await getFireBaseRef(`/online/${userUid}`).set(false)
+    await delTokenOnSignOut()
     OnlinePlayerStore.avatar = ''
     OnlinePlayerStore.profile = initProfile
     OnlinePlayerStore.start = false
@@ -126,7 +128,7 @@ const actionPlayers = {
         OnlinePlayerStore.stepTime = curProf.lastStepTime
         OnlinePlayerStore.canGo = Date.now() - curProf.lastStepTime >= 86400000
         OnlinePlayerStore.prevAvatar = OnlinePlayerStore.nextAvatar
-        OnlinePlayerStore.nextAvatar = curProf.avatar
+        OnlinePlayerStore.nextAvatar = curProf.avatar ? curProf.avatar : ''
         if (curProf.avatar && OnlinePlayerStore.prevAvatar
           !== curProf.avatar) {
           OnlinePlayerStore.avatar = await getIMG(curProf.avatar)

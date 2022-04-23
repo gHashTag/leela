@@ -44,6 +44,7 @@
         "amazon-cognito-identity-js": "^5.2.0",
         "aws-amplify": "^4.3.1",
         "aws-amplify-react-native": "^5.0.3",
+        "firebase-admin": "^10.1.0",
         "formik": "^2.2.9",
         "i18n-js": "^3.8.0",
         "lodash": "^4.17.21",

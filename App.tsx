@@ -15,12 +15,12 @@ import messaging from '@react-native-firebase/messaging'
 import awsconfig from './src/aws-exports'
 import { revenuecat } from './src/constants'
 import App from './src'
+
 //import StorybookUI from './storybook'
 
 //Amplify.Logger.LOG_LEVEL = 'DEBUG'
 
 Auth.configure(awsconfig)
-
 DataStore.configure({
   storageAdapter: SQLiteAdapter
 })

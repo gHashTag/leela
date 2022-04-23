@@ -1,6 +1,6 @@
 import React from 'react'
 import { TextInput, StyleSheet, Text, Platform, ColorValue, StyleProp, View, ViewStyle } from 'react-native'
-import { ScaledSheet } from 'react-native-size-matters'
+import { s, ScaledSheet, vs } from 'react-native-size-matters'
 import { W, dimGray, classicRose } from '../../constants'
 import { useController, useFormContext } from 'react-hook-form'
 import { TextInputProps as RNTextInputProps } from 'react-native'
@@ -22,7 +22,7 @@ const Input: React.FC<TextInputProps> = ({
   showError = true,
   ...inputProps
 }) => {
-  const { inputStyle, errorStyle } = styles
+  const { inputStyle, errorStyle, inputArea } = styles
 
   const formContext = useFormContext()
 
@@ -38,21 +38,21 @@ const Input: React.FC<TextInputProps> = ({
   const hasError = Boolean(formState?.errors[name])
 
   const input = ScaledSheet.create([
-    inputStyle,
+    inputProps.multiline ? inputArea : inputStyle,
     {
       fontFamily: 'Avenir Next',
       color,
       borderBottomColor: color,
       fontSize: Platform.OS === 'ios' ? '15@s' : '15@s'
-    }
+    },
   ])
 
   const placeholderStyle = ScaledSheet.create([
-    inputStyle,
+    inputProps.multiline ? inputArea : inputStyle,
     {
       fontFamily: 'Avenir Next',
       color: dimGray,
-      borderBottomColor: classicRose,
+      borderColor: classicRose,
       fontSize: Platform.OS === 'ios' ? '15@s' : '15@s'
     }
   ])
@@ -77,7 +77,6 @@ const Input: React.FC<TextInputProps> = ({
 const styles = StyleSheet.create({
   inputStyle: {
     fontSize: 14,
-    alignSelf: 'center',
     width: '95%',
     borderBottomWidth: 2
   },
@@ -86,6 +85,13 @@ const styles = StyleSheet.create({
     color: 'red',
     paddingTop: 10,
     left: 5
+  },
+  inputArea: {
+    fontSize: 14,
+    width: '95%',
+    borderWidth: s(1.5),
+    height: vs(120),
+    textAlignVertical: 'top'
   }
 })
 
