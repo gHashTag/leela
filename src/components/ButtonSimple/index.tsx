@@ -23,22 +23,20 @@ interface ButtonSimpleT {
 
 const ButtonSimple = memo<ButtonSimpleT>(({ title, onPress, h = 'h0', width = s(200), viewStyle }) => {
   const { container, fontStyle } = styles
-  return (
-    <TouchableOpacity onPress={onPress} style={[container, viewStyle, { width }]}>
-      {h === 'h0' && <Txt h0 title={title} textStyle={fontStyle} />}
-      {h === 'h1' && <Txt h1 title={title} textStyle={fontStyle} />}
-      {h === 'h2' && <Txt h2 title={title} textStyle={fontStyle} />}
-      {h === 'h3' && <Txt h3 title={title} textStyle={fontStyle} />}
-      {h === 'h4' && <Txt h4 title={title} textStyle={fontStyle} />}
-      {h === 'h5' && <Txt h5 title={title} textStyle={fontStyle} />}
-      {h === 'h6' && <Txt h6 title={title} textStyle={fontStyle} />}
-      {h === 'h7' && <Txt h7 title={title} textStyle={fontStyle} />}
-      {h === 'h8' && <Txt h8 title={title} textStyle={fontStyle} />}
-      {h === 'h9' && <Txt h9 title={title} textStyle={fontStyle} />}
-      {h === 'h10' && <Txt h10 title={title} textStyle={fontStyle} />}
-      {h === 'h11' && <Txt h11 title={title} textStyle={fontStyle} />}
-    </TouchableOpacity>
-  )
+  return <TouchableOpacity onPress={onPress} style={[container, viewStyle, { width }]}>
+    {h === 'h0' && <Txt h0 title={title} textStyle={fontStyle} />}
+    {h === 'h1' && <Txt h1 title={title} textStyle={fontStyle} />}
+    {h === 'h2' && <Txt h2 title={title} textStyle={fontStyle} />}
+    {h === 'h3' && <Txt h3 title={title} textStyle={fontStyle} />}
+    {h === 'h4' && <Txt h4 title={title} textStyle={fontStyle} />}
+    {h === 'h5' && <Txt h5 title={title} textStyle={fontStyle} />}
+    {h === 'h6' && <Txt h6 title={title} textStyle={fontStyle} />}
+    {h === 'h7' && <Txt h7 title={title} textStyle={fontStyle} />}
+    {h === 'h8' && <Txt h8 title={title} textStyle={fontStyle} />}
+    {h === 'h9' && <Txt h9 title={title} textStyle={fontStyle} />}
+    {h === 'h10' && <Txt h10 title={title} textStyle={fontStyle} />}
+    {h === 'h11' && <Txt h11 title={title} textStyle={fontStyle} />}
+  </TouchableOpacity>
 })
 
 export { ButtonSimple }

@@ -2,7 +2,7 @@ import React, { useState, ReactElement } from 'react'
 import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp, useTheme } from '@react-navigation/native'
-import { AppContainer, Space, Button, Input, Avatar } from '../../../components'
+import { AppContainer, Space, Button, Input, Avatar, CenterView } from '../../../components'
 import { goBack, white, black, W } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { actionsDice } from '../../../store'
@@ -61,31 +61,32 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
 
   return (
     <AppContainer
-      backgroundColor={dark ? black : white}
       onPress={goBack(navigation)}
       title=" "
       iconLeft={null}
       loading={loading}
     >
-      <FormProvider {...methods}>
-        <Input
-          name="firstName"
-          placeholder={I18n.t('firstName')}
-          autoCapitalize="none"
-          color={color}
-          additionalStyle={{ width: W - s(40) }}
-        />
-        <Input
-          name="lastName"
-          placeholder={I18n.t('lastName')}
-          autoCapitalize="none"
-          color={color}
-          additionalStyle={{ width: W - s(40) }}
-        />
-        <Space height={30} />
-        <Button title={I18n.t('signUp')} onPress={methods.handleSubmit(onSubmit, onError)} color={color} />
-        <Space height={50} />
-      </FormProvider>
+      <CenterView>
+        <FormProvider {...methods}>
+          <Input
+            name="firstName"
+            placeholder={I18n.t('firstName')}
+            autoCapitalize="none"
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Input
+            name="lastName"
+            placeholder={I18n.t('lastName')}
+            autoCapitalize="none"
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Space height={30} />
+          <Button title={I18n.t('signUp')} onPress={methods.handleSubmit(onSubmit, onError)} color={color} />
+          <Space height={50} />
+        </FormProvider>
+      </CenterView>
     </AppContainer>
   )
 }

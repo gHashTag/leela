@@ -6,7 +6,7 @@ import { Txt } from '../Txt'
 
 const styles = ScaledSheet.create({
   container: {
-    height: ms(60, 0.4),
+    height: ms(50, 0.4),
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center'
@@ -16,7 +16,7 @@ const styles = ScaledSheet.create({
     width: ms(60, 0.5),
     height: ms(60, 0.5),
     textAlign: 'center',
-    top: ms(20, 0.8),
+    top: ms(10, 0.8),
     left: s(5)
   },
   rightIconStyle: {
@@ -24,7 +24,7 @@ const styles = ScaledSheet.create({
     width: ms(60, 0.5),
     height: ms(60, 0.5),
     textAlign: 'center',
-    top: ms(20, 0.8),
+    top: ms(10, 0.8),
     right: s(5)
   },
   rightViewStyle: {
@@ -35,7 +35,6 @@ const styles = ScaledSheet.create({
     fontSize: 28,
     textAlign: 'left',
     left: 5,
-    top: s(10)
   },
   childrenStyle: {
     top: ms(5, 2.8)
@@ -48,7 +47,7 @@ interface HeaderT {
   iconRight?: string | null
   onPress?: () => void | null
   onPressRight?: () => void
-  textAlign?: string | null
+  textAlign?: string
   children?: React.ReactNode
 }
 
@@ -66,11 +65,11 @@ const Header = memo<HeaderT>(({ title, iconLeft, iconRight, onPress, onPressRigh
       }
       {title && <Txt numberOfLines={1} h4 title={title} textStyle={titleStyle} textAlign={textAlign} />}
       {children && <View style={childrenStyle}>{children}</View>}
-      {iconRight ? 
+      {iconRight ?
         <TouchableOpacity onPress={onPressRight}>
           <Emoji name={iconRight} style={rightIconStyle} />
         </TouchableOpacity>
-       :
+        :
         <View style={rightViewStyle} />
       }
     </View>

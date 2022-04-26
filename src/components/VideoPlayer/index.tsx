@@ -27,18 +27,14 @@ type VideoPlayerT = {
 
 const VideoPlayer = ({ uri }: VideoPlayerT) => {
   const playerRef = useRef<Video>(null)
-  return (
-    <>
-      <Video
-        style={styles.container}
-        ignoreSilentSwitch="ignore"
-        ref={playerRef}
-        source={{ uri }}
-        disableFullscreen
-        disableBack
-      />
-    </>
-  )
+  return <Video
+    style={styles.container}
+    ignoreSilentSwitch="ignore"
+    ref={playerRef}
+    source={{ uri }}
+    disableFullscreen
+    disableBack
+  />
 }
 
 export { VideoPlayer }

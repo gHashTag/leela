@@ -18,11 +18,9 @@ interface SpinT {
 const Spin = ({ color = secondary }: SpinT) => {
   const scheme = useColorScheme()
   const theme = scheme === 'dark'
-  return (
-    <View style={[styles.container, { backgroundColor: theme ? black : white }]}>
-      <Spinner size={65} type="Pulse" color={color} />
-    </View>
-  )
+  return <View style={[styles.container, { backgroundColor: theme ? black : white }]}>
+    <Spinner size={65} type="Pulse" color={color} />
+  </View>
 }
 
 export { Spin }

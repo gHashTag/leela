@@ -27,11 +27,9 @@ interface RenderItemT {
 const RenderItem = memo<RenderItemT>(({ title, onPress }) => {
   const { container, titleStyle } = styles
 
-  return (
-    <TouchableOpacity onPress={onPress} style={container}>
-      <Txt h2 title={title} textStyle={titleStyle} numberOfLines={1} />
-    </TouchableOpacity>
-  )
+  return <TouchableOpacity onPress={onPress} style={container}>
+    <Txt h2 title={title} textStyle={titleStyle} numberOfLines={1} />
+  </TouchableOpacity>
 })
 
 export { RenderItem }

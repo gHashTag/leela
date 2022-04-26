@@ -20,6 +20,7 @@ const Input: React.FC<TextInputProps> = ({
   defaultValue,
   additionalStyle,
   showError = true,
+  style,
   ...inputProps
 }) => {
   const { inputStyle, errorStyle, inputArea } = styles
@@ -59,7 +60,7 @@ const Input: React.FC<TextInputProps> = ({
 
   return <View style={additionalStyle}>
     <TextInput
-      style={field.value?.length === 0 ? placeholderStyle : input}
+      style={[style, field.value?.length === 0 ? placeholderStyle : input]}
       placeholderTextColor={dimGray}
       onChangeText={field.onChange}
       onBlur={field.onBlur}

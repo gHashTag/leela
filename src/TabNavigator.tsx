@@ -58,7 +58,7 @@ const TabNavigator = ({ initialRouteName, children, screenOptions, contentStyle 
   return <>
     <View style={[sub, contentStyle]}>{descriptors[routes[index].key].render()}</View>
     <View style={[{ backgroundColor: scheme === 'dark' ? black : white }, container]}>
-      {routes.filter(a => DiceStore.online ? true : a.name === 'TAB_BOTTOM_4' ? false : true)
+      {routes.filter(a => DiceStore.online ? true : a.name === 'TAB_BOTTOM_2' ? false : true)
         .map(({ name, key }) => {
           return (
             <TouchableOpacity

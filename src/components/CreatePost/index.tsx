@@ -1,5 +1,4 @@
 import React from "react"
-import { View } from "react-native"
 
 import { useForm, FormProvider, SubmitHandler, FieldValues } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'

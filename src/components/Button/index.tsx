@@ -22,13 +22,12 @@ const styles = ScaledSheet.create({
 
 interface ButtonT {
   title: string
-  color?: string
   cancel?: boolean
   onPress?: () => void
   textStyle?: StyleProp<TextStyle>
 }
 
-const Button = memo<ButtonT>(({ title, onPress, textStyle, color = white }) => {
+const Button = memo<ButtonT>(({ title, onPress, textStyle }) => {
   const { container, h } = styles
   const { dark } = useTheme()
   const borderColor = dark ? white : black

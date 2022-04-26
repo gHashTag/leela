@@ -133,30 +133,28 @@ const Txt = memo<TxtT>(
       colors: { primary, text }
     } = useTheme()
 
-    return (
-      <Text
-        numberOfLines={numberOfLines}
-        ellipsizeMode={ellipsizeMode}
-        style={[
-          textStyle,
-          h0 && StyleSheet.flatten([h0Style, { color: text, textShadowColor: color ? color : primary }]),
-          h1 && StyleSheet.flatten([h1Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h2 && StyleSheet.flatten([h2Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h3 && StyleSheet.flatten([h3Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h4 && StyleSheet.flatten([h4Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h5 && StyleSheet.flatten([h5Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h6 && StyleSheet.flatten([h6Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h7 && StyleSheet.flatten([h7Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
-          h8 &&
-            StyleSheet.flatten([h8Style, { color: secondary, textShadowColor: color ? color : primary, textAlign }]),
-          h9 && StyleSheet.flatten([h9Style, { color: white, textAlign }]),
-          h10 && StyleSheet.flatten([h10Style, { color: primary }]),
-          h11 && StyleSheet.flatten([h11Style, { color: white, textAlign }])
-        ]}
-      >
-        {title}
-      </Text>
-    )
+    return <Text
+      numberOfLines={numberOfLines}
+      ellipsizeMode={ellipsizeMode}
+      style={[
+        h0 && StyleSheet.flatten([h0Style, { color: text, textShadowColor: color ? color : primary }]),
+        h1 && StyleSheet.flatten([h1Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
+        h2 && StyleSheet.flatten([h2Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
+        h3 && StyleSheet.flatten([h3Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
+        h4 && StyleSheet.flatten([h4Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
+        h5 && StyleSheet.flatten([h5Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
+        h6 && StyleSheet.flatten([h6Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
+        h7 && StyleSheet.flatten([h7Style, { color: text, textShadowColor: color ? color : primary, textAlign }]),
+        h8 &&
+        StyleSheet.flatten([h8Style, { color: secondary, textShadowColor: color ? color : primary, textAlign }]),
+        h9 && StyleSheet.flatten([h9Style, { color: white, textAlign }]),
+        h10 && StyleSheet.flatten([h10Style, { color: primary }]),
+        h11 && StyleSheet.flatten([h11Style, { color: white, textAlign }]),
+        textStyle,
+      ]}
+    >
+      {title}
+    </Text>
   }
 )
 

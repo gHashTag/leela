@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
-import { Header, PostCard, Space, Txt } from '../../components'
-import { goBack } from '../../constants'
-import { OnlinePlayerStore, PostStore } from '../../store'
+import { PostCard, Space, Txt } from '../../components'
+import { PostStore } from '../../store'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../../types'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
@@ -33,11 +32,7 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation }) => {
       keyExtractor={a => a.id}
       renderItem={({ item, index }) => <PostCard item={item} index={index} />}
       ItemSeparatorComponent={() => <Space height={vs(10)} />}
-      ListHeaderComponent={<>
-        <Space height={vs(5)} />
-        <Txt h10 title='Plans report' />
-        <Space height={vs(10)} />
-      </>}
+      ListHeaderComponent={<Space height={vs(10)} />}
       ListEmptyComponent={<View>
         <Txt h2 title='No posts yet. Make a move so you can post' />
       </View>}

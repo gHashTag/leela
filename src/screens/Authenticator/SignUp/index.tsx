@@ -3,7 +3,7 @@ import * as Keychain from 'react-native-keychain'
 import Config from 'react-native-config'
 import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { AppContainer, Space, Button, Input, TextError } from '../../../components'
+import { AppContainer, Space, Button, Input, TextError, CenterView } from '../../../components'
 import { goBack, white, black, captureException, W } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'
@@ -74,41 +74,41 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
 
   return (
     <AppContainer
-      backgroundColor={dark ? black : white}
       onPress={goBack(navigation)}
       title=" "
       loading={loading}
       colorLeft={color}
     >
-      <FormProvider {...methods}>
-        <Input
-          name="email"
-          placeholder="E-mail"
-          autoCapitalize="none"
-          color={color}
-          additionalStyle={{ width: W - s(40) }}
-        />
-        <Input
-          name="password"
-          placeholder={I18n.t('password')}
-          secureTextEntry
-          color={color}
-          additionalStyle={{ width: W - s(40) }}
-        />
-        <Input
-          name="passwordConfirmation"
-          placeholder={I18n.t('passwordConfirmation')}
-          secureTextEntry
-          color={color}
-          additionalStyle={{ width: W - s(40) }}
-        />
-        <Space height={30} />
-        {error !== '' && <TextError title={error} textStyle={{ alignSelf: 'center' }} />}
-        <Space height={20} />
-        <Button title={I18n.t('signUp')} onPress={methods.handleSubmit(onSubmit, onError)}
-          color={color} />
-        <Space height={50} />
-      </FormProvider>
+      <CenterView>
+        <FormProvider {...methods}>
+          <Input
+            name="email"
+            placeholder="E-mail"
+            autoCapitalize="none"
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Input
+            name="password"
+            placeholder={I18n.t('password')}
+            secureTextEntry
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Input
+            name="passwordConfirmation"
+            placeholder={I18n.t('passwordConfirmation')}
+            secureTextEntry
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Space height={30} />
+          {error !== '' && <TextError title={error} textStyle={{ alignSelf: 'center' }} />}
+          <Space height={20} />
+          <Button title={I18n.t('signUp')} onPress={methods.handleSubmit(onSubmit, onError)} />
+          <Space height={50} />
+        </FormProvider>
+      </CenterView>
     </AppContainer>
   )
 }

@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
   img: {
     width: W,
     height: 1006 * ratio,
-    resizeMode: 'cover'
+    resizeMode: 'cover',
   },
   buttonConteiner: {
     flex: 1,
@@ -42,7 +42,7 @@ interface PosterPropsT {
   eventUrl: string
 }
 
-const PosterScreen = observer(({}: PosterScreenT) => {
+const PosterScreen = observer(({ }: PosterScreenT) => {
   const { button, img, buttonConteiner } = styles
 
   useEffect(() => {

@@ -3,7 +3,7 @@ import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from '@react-navigation/native'
 import { RouteProp } from '@react-navigation/native'
-import { AppContainer, Space, Button, Input } from '../../../components'
+import { AppContainer, Space, Button, Input, CenterView } from '../../../components'
 import { goBack, white, black, W } from '../../../constants'
 import { RootStackParamList, UserT } from '../../../types'
 import { updateProfName } from '../../../screens/helper'
@@ -11,7 +11,7 @@ import { updateProfName } from '../../../screens/helper'
 import { useForm, FormProvider, SubmitHandler, SubmitErrorHandler, FieldValues } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from "yup"
-import { s } from 'react-native-size-matters'
+import { s, vs } from 'react-native-size-matters'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'USER_EDIT'>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'USER_EDIT'>
@@ -45,38 +45,35 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
   const { dark } = useTheme()
   const color = dark ? white : black
 
-  return (
-    <>
-      <AppContainer
-        backgroundColor={dark ? black : white}
-        onPress={goBack(navigation)}
-        title=" "
-        loading={loading}
-        colorLeft={black}
-      >
-        <FormProvider {...methods}>
-          <Input
-            name="firstName"
-            placeholder={I18n.t('firstName')}
-            autoCapitalize="none"
-            color={color}
-            additionalStyle={{ width: W - s(40) }}
-          />
-          <Input
-            name="lastName"
-            placeholder={I18n.t('lastName')}
-            autoCapitalize="none"
-            color={color}
-            additionalStyle={{ width: W - s(40) }}
-          />
-          <Space height={30} />
-          <Button title={I18n.t('done')} onPress={methods.handleSubmit(onSubmit,
-            (er) => console.log(er))} color={black} />
-          <Space height={200} />
-        </FormProvider>
-      </AppContainer>
-    </>
-  )
+  return <AppContainer
+    onPress={goBack(navigation)}
+    title=" "
+    loading={loading}
+    colorLeft={black}
+  >
+    <CenterView>
+      <FormProvider {...methods}>
+        <Input
+          name="firstName"
+          placeholder={I18n.t('firstName')}
+          autoCapitalize="none"
+          color={color}
+          additionalStyle={{ width: W - s(40) }}
+        />
+        <Input
+          name="lastName"
+          placeholder={I18n.t('lastName')}
+          autoCapitalize="none"
+          color={color}
+          additionalStyle={{ width: W - s(40) }}
+        />
+        <Space height={30} />
+        <Button title={I18n.t('done')} onPress={methods.handleSubmit(onSubmit,
+          (er) => console.log(er))} />
+        <Space height={vs(90)} />
+      </FormProvider>
+    </CenterView>
+  </AppContainer>
 }
 
 export { UserEdit }

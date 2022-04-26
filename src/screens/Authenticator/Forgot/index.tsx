@@ -2,7 +2,7 @@ import React, { useState, ReactElement } from 'react'
 import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp, useTheme } from '@react-navigation/native'
-import { AppContainer, Button, Input } from '../../../components'
+import { AppContainer, Button, CenterView, Input, Space } from '../../../components'
 import { goBack, white, black, captureException, W } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import auth from '@react-native-firebase/auth'
@@ -10,7 +10,7 @@ import auth from '@react-native-firebase/auth'
 import { useForm, FormProvider, SubmitHandler, SubmitErrorHandler, FieldValues } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from "yup"
-import { s } from 'react-native-size-matters'
+import { s, vs } from 'react-native-size-matters'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'FORGOT'>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'FORGOT'>
@@ -52,15 +52,14 @@ const Forgot = ({ route, navigation }: ForgotT): ReactElement => {
   const { dark } = useTheme()
   const color = dark ? white : black
 
-  return <>
-    <AppContainer
-      backgroundColor={dark ? black : white}
-      title=" "
-      onPress={goBack(navigation)}
-      message={error}
-      loading={loading}
-      colorLeft={color}
-    >
+  return <AppContainer
+    title=" "
+    onPress={goBack(navigation)}
+    message={error}
+    loading={loading}
+    colorLeft={color}
+  >
+    <CenterView>
       <FormProvider {...methods}>
         <Input
           name="email"
@@ -69,11 +68,12 @@ const Forgot = ({ route, navigation }: ForgotT): ReactElement => {
           color={color}
           additionalStyle={{ width: W - s(40) }}
         />
-        <Button title={I18n.t('confirm')} onPress={methods.handleSubmit(onSubmit, onError)}
-          color={color} />
+        <Space height={vs(20)} />
+        <Button title={I18n.t('confirm')} onPress={methods.handleSubmit(onSubmit, onError)} />
       </FormProvider>
-    </AppContainer>
-  </>
+      <Space height={vs(40)} />
+    </CenterView>
+  </AppContainer>
 }
 
 export { Forgot }

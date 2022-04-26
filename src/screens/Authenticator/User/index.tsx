@@ -28,9 +28,8 @@ const User = ({ navigation }: UserT): ReactElement => {
       setError(err.message)
     }
   }
-  const { dark } = useTheme()
   return (
-    <AppContainer backgroundColor={dark ? black : white} loading={loading}>
+    <AppContainer loading={loading}>
       <Button title={I18n.t('signOut')} onPress={_onPress} />
     </AppContainer>
   )

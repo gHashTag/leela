@@ -23,6 +23,7 @@ const deviceLanguage =
     : NativeModules.I18nManager.localeIdentifier
 
 const langOS = deviceLanguage.slice(0, 2)
+const AllLang = langOS
 const lang = langOS === 'en' || 'ru' ? langOS : 'en'
 
-export { lang, I18n }
+export { lang, I18n, AllLang }

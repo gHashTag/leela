@@ -15,11 +15,9 @@ interface ButtonEditT {
 
 const ButtonEdit = ({ onPress, viewStyle }: ButtonEditT) => {
   const { img } = styles
-  return (
-    <TouchableOpacity onPress={onPress} style={viewStyle}>
-      <Image style={img} source={require('./edit.png')} />
-    </TouchableOpacity>
-  )
+  return <TouchableOpacity onPress={onPress} style={viewStyle}>
+    <Image style={img} source={require('./edit.png')} />
+  </TouchableOpacity>
 }
 
 export { ButtonEdit }

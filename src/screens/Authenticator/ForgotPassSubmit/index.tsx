@@ -2,7 +2,7 @@ import React, { ReactElement } from 'react'
 import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp } from '@react-navigation/native'
-import { AppContainer, Button, Space, Txt } from '../../../components'
+import { AppContainer, Button, CenterView, Space, Txt } from '../../../components'
 import { goBack, white, black } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'
@@ -25,21 +25,19 @@ const ForgotPassSubmit = ({ route, navigation }: ForgotPassSubmitT): ReactElemen
   const { dark } = useTheme()
   const color = dark ? white : black
 
-  return (
-    <>
-      <AppContainer
-        backgroundColor={dark ? black : white}
-        title=" "
-        onPress={goBack(navigation)}
-        loading={false}
-        colorLeft={color}
-      >
-        <Txt h0 title='Check your email!' />
-        <Space height={vs(40)} />
-        <Button title={I18n.t('confirm')} onPress={handlePress} color={color} />
-      </AppContainer>
-    </>
-  )
+  return <AppContainer
+    title=" "
+    onPress={goBack(navigation)}
+    loading={false}
+    colorLeft={color}
+  >
+    <CenterView>
+      <Txt h0 title='Check your email!' />
+      <Space height={vs(40)} />
+      <Button title={I18n.t('confirm')} onPress={handlePress} />
+    </CenterView>
+  </AppContainer>
+
 }
 
 export { ForgotPassSubmit }

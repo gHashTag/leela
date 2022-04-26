@@ -9,12 +9,13 @@ const styles = StyleSheet.create({
   },
   img: {
     width: W,
-    height: H + 70
+    height: H + 70,
+    position: 'absolute'
   }
 })
 
 interface BackgroundT {
-  status?: string
+  status?: 'bg' | 'clean' | '1x1'
   imageStyle?: StyleProp<ImageStyle>
   children?: React.ReactNode
   sourceImg?: string
@@ -26,17 +27,14 @@ const Background = memo(({ status = 'bg', imageStyle, sourceImg, children }: Bac
     const res = ICONS.find(x => x.title === status)
     return res ? res.path : ''
   }
-  return (
-    <SafeAreaView style={container}>
-      <ImageBackground
-        resizeMode={'contain'}
-        source={!!sourceImg ? { uri: sourceImg } : source()}
-        style={[img, imageStyle]}
-      >
-        {children}
-      </ImageBackground>
-    </SafeAreaView>
-  )
+  return <SafeAreaView style={container}>
+    <ImageBackground
+      resizeMode={'contain'}
+      source={!!sourceImg ? { uri: sourceImg } : source()}
+      style={[img, imageStyle]}
+    />
+    {children}
+  </SafeAreaView>
 })
 
 export { Background }

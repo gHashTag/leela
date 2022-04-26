@@ -41,29 +41,27 @@ const NetworkCheckingModal = () => {
   const netInfo = useNetInfo()
   const { container, centeredView, modalView } = styles
 
-  return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={
-        modalVisible &&
-        netInfo.type !== NetInfoStateType.unknown &&
-        netInfo.isInternetReachable !== null &&
-        netInfo.isInternetReachable !== undefined &&
-        !netInfo.isInternetReachable
-      }
-    >
-      <View style={container}>
-        <View style={centeredView}>
-          <View style={modalView}>
-            <Txt h3 title={I18n.t('disconnected')} />
-            <Space height={20} />
-            <ButtonSimple h="h1" title={I18n.t('hide')} onPress={() => setModalVisible(!modalVisible)} />
-          </View>
+  return <Modal
+    animationType="slide"
+    transparent={true}
+    visible={
+      modalVisible &&
+      netInfo.type !== NetInfoStateType.unknown &&
+      netInfo.isInternetReachable !== null &&
+      netInfo.isInternetReachable !== undefined &&
+      !netInfo.isInternetReachable
+    }
+  >
+    <View style={container}>
+      <View style={centeredView}>
+        <View style={modalView}>
+          <Txt h3 title={I18n.t('disconnected')} />
+          <Space height={20} />
+          <ButtonSimple h="h1" title={I18n.t('hide')} onPress={() => setModalVisible(!modalVisible)} />
         </View>
       </View>
-    </Modal>
-  )
+    </View>
+  </Modal>
 }
 
 export { NetworkCheckingModal }
