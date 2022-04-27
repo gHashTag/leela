@@ -44,7 +44,8 @@ interface PlayraItemT {
     mantra: string
     artist: string
     artwork: string
-  }
+  },
+  index: number
 }
 
 const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
@@ -66,40 +67,37 @@ const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
     getData()
   }, [navigation])
 
-  const _renderItem = ({ item }: PlayraItemT) => {
+  const _renderItem = ({ item, index }: PlayraItemT) => {
     const { id, title, videoUrl, mantra, artist } = item
 
-    return (
-      <Observer>
-        {() => (
-          <View key={id} style={{ width: '90%', alignSelf: 'center' }}>
-            {videoUrl !== '' && (
-              <>
-                <Space height={s(20)} />
-                {title !== '' && <Txt h0 title={title} />}
-                <Space height={s(20)} />
-                {videoUrl !== '' && <YouTubePlayer uri={videoUrl} />}
-                {/* <Space height={s(20)} /> */}
-                {/* {audioUrl !== '' && (
+    return <Observer>
+      {() => (
+        <View style={{ width: '90%', alignSelf: 'center' }}>
+          {videoUrl !== '' && (
+            <>
+              <Space height={s(20)} />
+              {title !== '' && <Txt h0 title={title} />}
+              <Space height={s(20)} />
+              {videoUrl !== '' && <YouTubePlayer uri={videoUrl} />}
+              {/* <Space height={s(20)} /> */}
+              {/* {audioUrl !== '' && (
    <ButtonPlay type={PlayButtonStore.play} obj={{ id, url: audioUrl, title, artist, artwork }} />
  )} */}
 
-                {mantra !== '' && (
-                  <>
-                    <Space height={s(20)} />
-                    <Txt h3 title={mantra} textStyle={{ paddingHorizontal: 40 }} textAlign="center" />
-                    <Space height={s(10)} />
-                  </>
-                )}
-
-                {artist !== '' && <Txt h2 title={artist} textStyle={{ paddingHorizontal: 40 }} textAlign="center" />}
-                <Space height={s(70)} />
-              </>
-            )}
-          </View>
-        )}
-      </Observer>
-    )
+              {mantra !== '' && (
+                <>
+                  <Space height={s(20)} />
+                  <Txt h3 title={mantra} textStyle={{ paddingHorizontal: 40 }} textAlign="center" />
+                  <Space height={s(10)} />
+                </>
+              )}
+              {artist !== '' && <Txt h2 title={artist} textStyle={{ paddingHorizontal: 40 }} textAlign="center" />}
+              <Space height={s(70)} />
+            </>
+          )}
+        </View>
+      )}
+    </Observer>
   }
 
   const _keyExtractor = (obj: any) => obj.id.toString()
@@ -107,7 +105,6 @@ const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
   return (
     <AppContainer
       title="Playra"
-      flatList
       onPress={() => {
         goBack(navigation)()
         actionPlay.stop()

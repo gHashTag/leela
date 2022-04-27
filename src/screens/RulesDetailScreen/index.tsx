@@ -40,7 +40,7 @@ const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) =
       iconLeft=":heavy_multiplication_x:"
     >
       <Space height={10} />
-      <TextCopy h3 title={content} textStyle={h3} textAlign="left" />
+      <TextCopy h3 title={content} textStyle={h3} />
       <Space height={300} />
     </AppContainer>
   )

@@ -83,6 +83,7 @@ export interface OtherUsersT {
   lastName: string
   plan: number
   owner: string
+  isOnline: boolean
   avatar?: string
 }
 
@@ -109,12 +110,11 @@ export interface FormPostT {
 }
 
 export interface PostT extends FormPostT {
-  firstName: string
-  lastName: string
   ownerId: string
-  avatar: string
   id: string
   createTime: number
+  email: string
+  liked?: string[]
 }
 
 export interface FormCommentT {
@@ -127,6 +127,6 @@ export interface CommentT extends FormCommentT {
   firstName: string
   lastName: string
   ownerId: string
-  avatar: string
   createTime: number
+  email: string
 }

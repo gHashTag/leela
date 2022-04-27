@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
 })
 
 interface TxtT extends TextProps {
+  title: string
   h0?: boolean
   h1?: boolean
   h2?: boolean
@@ -85,7 +86,6 @@ interface TxtT extends TextProps {
   h9?: boolean
   h10?: boolean
   h11?: boolean
-  title: string
   textStyle?: StyleProp<TextStyle>
 }
 
@@ -130,6 +130,7 @@ const TextCopy: React.FC<TxtT> = memo(
         textStyle
       ]}
       {...textProps}
+      ellipsizeMode='tail'
       selectable
     >{title}</Text>
   }

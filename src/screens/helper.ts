@@ -1,10 +1,7 @@
 import { captureException } from '../constants'
 import ImagePicker from 'react-native-image-crop-picker'
 import { UserT, HistoryT } from '../types'
-import {
-  DiceStore, actionPlayers,
-  actionsDice, OnlinePlayerStore, PlayersStore
-} from '../store'
+import { OnlinePlayer } from '../store'
 import storage from '@react-native-firebase/storage'
 import { nanoid } from 'nanoid/non-secure'
 import auth from '@react-native-firebase/auth'
@@ -60,33 +57,50 @@ const onStart = async () => {
 const createProfile = async ({
   email, uid, firstName, lastName
 }: NewProfileI) => {
-  const hisObj: HistoryT = {
+  const hisObj: HistoryT[] = [{
     count: 0, plan: 68, status: 'start',
     createDate: Date.now()
-  }
+  }]
   await firestore().collection('Profiles').doc(uid).set({
     email, owner: uid, firstName, lastName, plan: 68,
     lastStepTime: Date.now() - 86400000, start: false, finish: false,
-    firstGame: true, history: [hisObj], lang
+    firstGame: true, history: hisObj, lang
   })
-  OnlinePlayerStore.plan = 68
-  OnlinePlayerStore.profile.firstName = firstName
-  OnlinePlayerStore.profile.lastName = lastName
-  OnlinePlayerStore.profile.email = email
-  OnlinePlayerStore.stepTime = Date.now() - 86400000
-  OnlinePlayerStore.canGo = true
+  // тут не все
+  OnlinePlayer.store = {
+    ...OnlinePlayer.store,
+    plan: 68,
+    profile: {
+      firstName,
+      lastName,
+      email
+    },
+    stepTime: Date.now() - 86400000,
+    canGo: true,
+    history: hisObj,
+    start: false,
+    finish: false,
+    firstGame: true,
+
+  }
 }
 
-const updatePlan = async (plan: number,) => {
+const updatePlan = async (plan: number) => {
   const userUid = auth().currentUser?.uid
   if (userUid) {
-    firestore().collection('Profiles').doc(userUid).update({
+    await firestore().collection('Profiles').doc(userUid).update({
       plan
-    }).then(() => {
-
     }).catch((err) => captureException(err))
   }
 }
+
+const resetPlayer = async () => {
+  const userUid = auth().currentUser?.uid
+  await firestore().collection('Profiles').doc(userUid).update({
+    start: false, finish: false
+  }).catch((err) => captureException(err))
+}
+
 interface profNameI {
   firstName: string
   lastName: string
@@ -101,8 +115,8 @@ const updateProfName = async ({ firstName, lastName }: profNameI) => {
         firstName, lastName
       })
     await auth().currentUser?.reload()
-    OnlinePlayerStore.profile.firstName = firstName
-    OnlinePlayerStore.profile.lastName = lastName
+    OnlinePlayer.store.profile.firstName = firstName
+    OnlinePlayer.store.profile.lastName = lastName
   } catch (err) {
     captureException(err)
   }
@@ -116,27 +130,28 @@ const isLoggedIn = async () => {
   }
 }
 
-const _onPressReset = async (navigation: any): Promise<void> => {
-  try {
-    !DiceStore.online && navigation.pop(3)
-    if (DiceStore.online) {
-      const userUid = auth().currentUser?.uid
-      const hist: HistoryT = {
-        createDate: Date.now(),
-        plan: 68,
-        count: 0,
-        status: 'start'
-      }
-      await firestore().collection('Profiles').doc(userUid).update({
-        plan: 68, start: false, finish: false, history: [hist]
-      })
-    }
-    actionPlayers.resetGame()
-    actionsDice.setPlayers(1)
-  } catch (err) {
-    captureException(err)
-  }
-} // *
+const resetHistory = async () => {
+  const userUid = auth().currentUser?.uid
+  const hist: HistoryT[] = [{
+    createDate: Date.now(),
+    plan: 68,
+    count: 0,
+    status: 'start'
+  }]
+  await firestore().collection('Profiles').doc(userUid).update({
+    history: hist
+  })
+}
+
+// const _onPressReset = async (navigation: any): Promise<void> => {
+//   try {
+//     !DiceStore.online && navigation.pop(3)
+//     actionPlayers.resetGame()
+//     actionsDice.setPlayers(1)
+//   } catch (err) {
+//     captureException(err)
+//   }
+// } // *
 
 // History operations
 
@@ -145,8 +160,8 @@ const createHistory = async (values: HistoryT) => {
     const userUid = auth().currentUser?.uid
     if (userUid) {
       if (values.count !== 6) {
-        OnlinePlayerStore.canGo = false
-        OnlinePlayerStore.stepTime = Date.now()
+        OnlinePlayer.store.canGo = false
+        OnlinePlayer.store.stepTime = Date.now()
         await firestore().collection('Profiles').doc(userUid).update({
           lastStepTime: Date.now(),
           history: firestore.FieldValue.arrayUnion(values)
@@ -158,7 +173,6 @@ const createHistory = async (values: HistoryT) => {
       }
     }
   } catch (err) {
-    console.log(`createHistory`, err)
     captureException(err)
   }
 }
@@ -201,6 +215,6 @@ const uploadImg = async (image: { path: string }) => {
 export {
   uploadImg, updatePlan, updateProfName,
   getIMG, getImagePicker, getProfile,
-  createHistory, createProfile, isLoggedIn, _onPressReset,
-  getFireBaseRef, onWin, onStart
+  createHistory, createProfile, isLoggedIn, resetHistory,
+  getFireBaseRef, onWin, onStart, resetPlayer
 }

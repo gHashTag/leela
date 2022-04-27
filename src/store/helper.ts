@@ -2,11 +2,11 @@ import 'react-native-get-random-values'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { I18n, lang } from '../utils'
 import { DiceStore, actionsDice } from './DiceStore'
-import { PlayersStore, OnlinePlayerStore } from './PlayersStore'
 import { createHistory, updatePlan, onWin, onStart } from '../screens/helper'
-import { navigate } from '../constants'
+import { captureException, navigate } from '../constants'
 import { ru } from '../screens/PlansScreen/ru'
 import { en } from '../screens/PlansScreen/en'
+import { OnlinePlayer, OfflinePlayers } from './'
 
 interface historyI {
   count: number;
@@ -18,17 +18,18 @@ interface stepT {
   plan: number
   history: historyI
   stepCount: number
-  id: number
+  id?: number
 }
 
-const updateFunc = async (step: stepT): Promise<void> => {
-  const { plan, history, stepCount, id } = step
+// ONLINE
+async function upFuncOnline(step: stepT) {
+  const { plan, history, stepCount } = step
   const historyObj = { ...history, createDate: Date.now() }
-  if (DiceStore.online) {
+  try {
     await createHistory(historyObj)
     await updatePlan(plan)
-    OnlinePlayerStore.histories.unshift(historyObj)
-    OnlinePlayerStore.plan = plan
+    OnlinePlayer.store.history.unshift(historyObj)
+    OnlinePlayer.store.plan = plan
     if (stepCount !== 6 || plan === 68) {
       const plansLang = lang === 'en' ? en : ru
       navigate('PLANS_DETAIL_SCREEN', { report: true, ...plansLang.find(a => a.id === plan) })
@@ -36,38 +37,67 @@ const updateFunc = async (step: stepT): Promise<void> => {
     if (plan === 68) {
       actionsDice.setMessage('liberation')
       await onWin()
-      OnlinePlayerStore.start = false
-      OnlinePlayerStore.finish = true
+      OnlinePlayer.store.start = false
+      OnlinePlayer.store.finish = true
     }
+  } catch (err) {
+    captureException(err)
+  }
+}
+
+export function upStepOnline() {
+  if (!OnlinePlayer.store.canGo) return
+  const count = DiceStore.count
+  const plan = OnlinePlayer.store.plan + count
+  if (count === 6) {
+    actionsDice.setMessage(`${I18n.t('oneMoreThrow')}`)
   } else {
-    PlayersStore.histories[id].push(historyObj)
-    PlayersStore.plans[id] = plan
+    actionsDice.setMessage(' ')
+  }
+  const isFinished = OnlinePlayer.store.finish
+  const isStart = OnlinePlayer.store.start
+  function handleStart() {
+    OnlinePlayer.store.start = true
+    onStart()
+  } 
+  const step = entities({ isFinished, plan, isStart, stepCount: count, handleStart })
+  if (step) {
+    upFuncOnline(step)
+  }
+}
+
+// OFFLINE
+const upFuncOffline = async (step: stepT): Promise<void> => {
+  const { plan, history, id } = step
+  const historyObj = { ...history, createDate: Date.now() }
+  if (id) {
+    OfflinePlayers.store.histories[id].unshift(historyObj)
+    OfflinePlayers.store.plans[id] = plan
     if (plan === 68) {
       actionsDice.setMessage('liberation')
-      PlayersStore.start[id] = false
-      PlayersStore.finish[id] = true
+      OfflinePlayers.store.start[id] = false
+      OfflinePlayers.store.finish[id] = true
     }
   }
 }
 
-export const updateStep = (id: number) => {
-  if (!OnlinePlayerStore.canGo && DiceStore.online) {
-    return
-  }
+export const upStepOffline = (id: number) => {
   const count = DiceStore.count
-  const plan = DiceStore.online ? OnlinePlayerStore.plan + count
-    : PlayersStore.plans[id] + count
+  const plan = OfflinePlayers.store.plans[id] + count
   if (count === 6) {
     actionsDice.setMessage(`${I18n.t('oneMoreThrow')}`)
   } else {
     actionsDice.setMessage(' ')
     actionsDice.changePlayer()
   }
-  const isFinished = DiceStore.online ? OnlinePlayerStore.finish
-    : PlayersStore.finish[id]
-  const step = entities({ isFinished, plan, offlinePlayerId: id, stepCount: count })
+  const isFinished = OfflinePlayers.store.finish[id]
+  const isStart = OfflinePlayers.store.start[id]
+  function handleStart() {
+    OfflinePlayers.store.start[id] = true
+  } 
+  const step = entities({ isFinished, plan, isStart, stepCount: count, handleStart })
   if (step) {
-    updateFunc({ ...step, id })
+    upFuncOffline({ ...step, id })
   }
 }
 
@@ -75,12 +105,13 @@ interface entitiesT {
   plan: number
   stepCount: number
   isFinished: boolean
-  offlinePlayerId: number
+  isStart: boolean
+  handleStart?: () => void
 }
 
 const entities = ({ plan, stepCount,
-  isFinished, offlinePlayerId }: entitiesT) => {
-  if (DiceStore.online ? OnlinePlayerStore.start : PlayersStore.start[offlinePlayerId]) {
+  isFinished, isStart, handleStart }: entitiesT) => {
+  if (isStart) {
     const lib = { count: stepCount, plan: 68, status: 'liberation' }
     switch (true) {
       case plan > 72:
@@ -157,12 +188,7 @@ const entities = ({ plan, stepCount,
   } else if (stepCount === 6 && !isFinished) {
     const obj6 = { count: stepCount, plan: 6, status: 'cube' }
 
-    if (DiceStore.online) {
-      OnlinePlayerStore.start = true
-      onStart()
-    } else {
-      PlayersStore.start[offlinePlayerId] = true
-    }
+    handleStart && handleStart()
     return { plan: 6, history: obj6, stepCount }
   }
 }
@@ -177,6 +203,7 @@ export const readStore = (name: string) => {
 export const writeStore = (name: string, content: any) => {
   return new Promise(resolve => {
     AsyncStorage.setItem(name, content)
+    // @ts-expect-error
     resolve()
   })
 }

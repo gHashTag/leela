@@ -13,7 +13,7 @@ import { ScaledSheet } from 'react-native-size-matters'
 import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
 import { AppContainer, ModalSubscribe, Space, Button, Txt, CenterView, IconLeela } from '../../components'
-import { actionsSubscribe, actionsDice, actionPlayers, DiceStore } from '../../store'
+import { actionsSubscribe, actionsDice } from '../../store'
 import { LocalNotification } from '../../utils/noifications/LocalPushController'
 import { captureException } from '../../constants'
 

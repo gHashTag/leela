@@ -38,7 +38,6 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
 
   return (
     <AppContainer
-      flatList
       onPress={goBack(navigation)}
       title={`${I18n.t('plans')}`}
       iconLeft=":heavy_multiplication_x:"

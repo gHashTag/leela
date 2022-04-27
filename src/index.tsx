@@ -23,7 +23,7 @@ import { white, black, navRef } from './constants'
 
 import { UI } from './UI'
 
-import { actionPlayers, DiceStore, fetchBusinesses, OnlinePlayerStore } from './store'
+import { DiceStore, fetchBusinesses, OnlinePlayer, OtherPlayers } from './store'
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
 import { getFireBaseRef } from './screens/helper'
@@ -58,12 +58,12 @@ const Tab = () => {
     if (auth().currentUser?.uid) {
       const unsub1 = firestore().collection('Profiles')
         .where('owner', '!=', auth().currentUser?.uid)
-        .onSnapshot((s) => actionPlayers.getOtherProf({ snapshot: s }))
+        .onSnapshot((s) => OtherPlayers.getOtherProf({ snapshot: s }))
       const unsub2 = getFireBaseRef(`/online/`)
         .on('child_changed', async (changed) => {
           await firestore().collection('Profiles')
             .where('owner', '!=', auth().currentUser?.uid).get().then(queryS => {
-              actionPlayers.getOtherProf({ snapshot: queryS })
+              OtherPlayers.getOtherProf({ snapshot: queryS })
             })
         })
       return () => {
@@ -109,12 +109,12 @@ const App = () => {
   useEffect(() => {
     const onAuthStateChanged = async (user: any) => {
       if (user) {
-        OnlinePlayerStore.profile.email = user.email
+        OnlinePlayer.store.profile.email = user.email
         const reference = getFireBaseRef(`/online/${user.uid}`)
         reference.set(true)
         reference.onDisconnect().set(false)
         DiceStore.online = true
-        actionPlayers.getProfile()
+        OnlinePlayer.getProfile()
         fetchBusinesses()
         console.log(user)
       } else {

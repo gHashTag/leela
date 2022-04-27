@@ -7,7 +7,7 @@ import { Space } from '../Space'
 import { Avatar } from '../Avatar'
 import { Device } from '../../constants'
 import { UserT } from '../../types'
-import { OnlinePlayerStore } from '../../store'
+import { OnlinePlayer } from '../../store'
 import { observer } from 'mobx-react-lite'
 
 const styles = ScaledSheet.create({
@@ -69,7 +69,7 @@ interface HeaderMasterT {
 }
 
 const HeaderMaster = observer(({ avatar, onPress, onPressAva, plan, loading = false }: HeaderMasterT) => {
-  const { firstName, lastName } = OnlinePlayerStore.profile
+  const { firstName, lastName } = OnlinePlayer.store.profile
   const { container, h2, sub, avatarStyle } = styles
 
   return <>

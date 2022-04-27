@@ -75,7 +75,9 @@ persistence({
   name: 'DiceStore',
   properties: ['count', 'startGame', 'players', 'message', 'multi', 'finishArr', 'init', 'rate', 'online'],
   adapter: new StorageAdapter({
+    // @ts-expect-error
     read: readStore,
+    // @ts-expect-error
     write: writeStore
   }),
   reactionOptions: {

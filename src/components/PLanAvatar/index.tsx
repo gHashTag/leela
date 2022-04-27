@@ -20,9 +20,9 @@ export function PlanAvatar({
     useMemo(() => {
         const planStr = plan.toString()
         if (Number(planStr[0]) > Number(planStr[1])) {
-            setBig(0)
-        } else {
             setBig(1)
+        } else {
+            setBig(0)
         }
         if (Number(planStr[big]) <= 5) {
             setDirection('down')
@@ -33,15 +33,15 @@ export function PlanAvatar({
     const translateY = direction === 'down' ? s(-3) : s(3)
     return <Pressable onPress={onPress} style={[styles[size], container, aditionalStyle]}>
         {big === 1 && <Space width={s(3)} />}
-        <Txt h5 title={`${plan.toString()[0]}`}
+        <Txt h12 title={`${plan.toString()[0]}`}
             textStyle={[{
-                fontSize: styles[size].height - s(big ? 24 : 20),
-                fontWeight: 'bold'
-            }, big === 0 && { translateY }]} />
+                bottom: plan.toString().length <= 1 ? vs(3) : 0,
+                fontSize: styles[size].height - s(big ? 20 : 16),
+            }, (big === 0 && plan.toString().length > 1) && { transform: [{ translateY }] }]} />
         {plan.toString().length > 1 &&
-            <Txt title={`${plan.toString()[1]}`}
-                textStyle={[{ fontSize: styles[size].height - s(!big ? 24 : 20), fontWeight: 'bold' },
-                big === 1 && { translateY }]} />}
+            <Txt h12 title={`${plan.toString()[1]}`}
+                textStyle={[{ fontSize: styles[size].height - s(!big ? 20 : 16) },
+                big === 1 && { transform: [{translateY}] }]} />}
         {big === 0 && <Space width={s(3)} />}
     </Pressable>
 }
@@ -54,8 +54,8 @@ const styles = StyleSheet.create({
     },
     large: {
         marginLeft: 1,
-        width: s(75),
-        height: s(75),
+        width: s(55),
+        height: s(55),
     },
     medium: {
         width: s(50),
@@ -72,6 +72,7 @@ const styles = StyleSheet.create({
         borderColor: primary,
         borderWidth: s(1),
         flexDirection: 'row',
+        paddingBottom: vs(5)
     },
 })
 

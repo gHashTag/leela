@@ -4,7 +4,7 @@ import React from "react"
 import { Pressable, StyleSheet, View } from "react-native"
 import { FlatList, TouchableOpacity } from "react-native-gesture-handler"
 import { CommentCard, Header, Input, PostCard, Space, Txt } from "../../components"
-import { black, brightTurquoise, fuchsia, goBack, gray, secondary } from "../../constants"
+import { black, brightTurquoise, fuchsia, goBack, gray, lightGray, secondary } from "../../constants"
 import { PostStore } from "../../store"
 import { RootStackParamList } from "../../types"
 
@@ -42,12 +42,14 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(({
     }
     const { ...methods } = hookForn
 
+    const data = PostStore.store.comments.filter(a => a.postId === item.id)
+
     return <>
         <FlatList
             ListHeaderComponent={<>
                 <Header iconLeft=':back:' onPress={goBack(navigation)} />
-                <PostCard item={item} index={index} hideButton />
-                <Space height={vs(10)} />
+                <PostCard item={item} index={index} isDetail />
+                {/* <Space height={vs(10)} />
                 <FormProvider {...methods} >
                     <View style={inputCont}>
                         <View style={bordered} />
@@ -64,17 +66,20 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(({
                         </View>
                     </View>
                 </FormProvider>
-                <Space height={vs(25)} />
-                <View style={separator} />
+                <Space height={vs(25)} /> */}
+                <View style={line} />
             </>}
-            ItemSeparatorComponent={() => <View style={separator} />}
+            ListFooterComponent={<>
+            <View style={line} />
+            <Space height={vs(30)} />
+            </>}
             keyExtractor={() => nanoid(9)}
             ListEmptyComponent={<>
                 <Space height={vs(10)} />
                 <Txt h4 title="No comments yet" />
             </>}
-            data={PostStore.store.comments.filter(a => a.postId === item.id)}
-            renderItem={({ item, index }) => <CommentCard item={item} index={index} />}
+            data={data}
+            renderItem={({ item, index }) => <CommentCard item={item} index={index} endIndex={data.length - 1} />}
         />
     </>
 })
@@ -100,12 +105,11 @@ const style = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center'
     },
-    separator: {
-        backgroundColor: secondary,
-        height: vs(1),
-        flex: 1,
-        marginHorizontal: s(20),
+    line: {
+        width: '100%',
+        borderBottomColor: lightGray,
+        borderBottomWidth: vs(1)
     }
 })
 
-const { inputCont, bordered, paddingInput, separator } = style
+const { inputCont, bordered, paddingInput, line } = style

@@ -5,9 +5,8 @@ import { ms, s } from 'react-native-size-matters'
 import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
 import { Background, Dice, GameBoard, Header, Space, Txt, ButtonElements, Spin } from '../../components'
-import { DiceStore, actionsDice, OnlinePlayerStore } from '../../store'
+import { DiceStore, actionsDice, OnlinePlayer } from '../../store'
 import Rate from 'react-native-rate'
-import { _onPressReset } from '../helper'
 import { Button as ClassicBtn } from 'react-native-elements'
 
 type navigation = StackNavigationProp<RootStackParamList, 'TAB_BOTTOM_0'>
@@ -22,12 +21,12 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   useEffect(() => {
     const interval = setInterval(() => {
       const currentDate = Date.now()
-      setLeftTime(currentDate - OnlinePlayerStore.stepTime)
-      if (currentDate - OnlinePlayerStore.stepTime >= 86400000
-        && OnlinePlayerStore.stepTime !== 0) {
-        OnlinePlayerStore.canGo = true
+      setLeftTime(currentDate - OnlinePlayer.store.stepTime)
+      if (currentDate - OnlinePlayer.store.stepTime >= 86400000
+        && OnlinePlayer.store.stepTime !== 0) {
+        OnlinePlayer.store.canGo = true
       } else {
-        OnlinePlayerStore.canGo = false
+        OnlinePlayer.store.canGo = false
       }
     }, 1000)
     return () => clearInterval(interval)
@@ -42,14 +41,14 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
         const time = 86400000 - leftTime
         switch (true) {
           case leftTime > 86340000:
-            OnlinePlayerStore.timeText = `${(time / 1000).toFixed(0)} sec.`
+            OnlinePlayer.store.timeText = `${(time / 1000).toFixed(0)} sec.`
           case leftTime > 82800000:
-            OnlinePlayerStore.timeText = `${Math.ceil((time / 60 / 1000)).toFixed(0)} min.`
+            OnlinePlayer.store.timeText = `${Math.ceil((time / 60 / 1000)).toFixed(0)} min.`
           case leftTime <= 82800000:
-            OnlinePlayerStore.timeText = `${Math.floor((time / 60 / 60 / 1000)).toFixed(0)} h.`
+            OnlinePlayer.store.timeText = `${Math.floor((time / 60 / 60 / 1000)).toFixed(0)} h.`
         }
       } else {
-        OnlinePlayerStore.timeText = '0'
+        OnlinePlayer.store.timeText = '0'
       }
     }
     timeMood()
@@ -67,7 +66,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   }
 
   return <Background>
-    {OnlinePlayerStore.loading && DiceStore.online ?
+    {OnlinePlayer.store.loadingProf && DiceStore.online ?
       <Spin />
       :
       <>
@@ -80,8 +79,8 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           <>
             {DiceStore.finishArr.indexOf(true) !== -1 ?
               <>
-                {!OnlinePlayerStore.canGo && DiceStore.online ?
-                  <Txt h3 title={`nextStep: ${OnlinePlayerStore.timeText}`} />
+                {!OnlinePlayer.store.canGo && DiceStore.online ?
+                  <Txt h3 title={`nextStep: ${OnlinePlayer.store.timeText}`} />
                   :
                   <Txt h3 title={DiceStore.online ? 'Take a step' : `${I18n.t('playerTurn')} # ${DiceStore.players}`} />
                 }
@@ -92,7 +91,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
               :
               <>
                 <Space height={s(60)} />
-                <ButtonElements title={I18n.t('startOver')} onPress={() => _onPressReset(navigation)} />
+                <ButtonElements title={I18n.t('startOver')} onPress={OnlinePlayer.resetGame} />
                 <Space height={s(10)} />
                 <Txt h0 title={`${I18n.t('win')}`} />
                 {!DiceStore.rate && <ClassicBtn title={I18n.t('leaveFeedback')} onPress={_onPress} />}

@@ -13,11 +13,9 @@ import { AppContainer, Txt, Space, EmojiText, Button, HeaderMaster, Spin, Center
 import { captureException } from '../../constants'
 import {
   DiceStore,
-  actionPlayers,
-  PlayersStore,
-  OnlinePlayerStore,
+  OfflinePlayers,
+  OnlinePlayer,
 } from '../../store'
-import { _onPressReset } from '../helper'
 import { nanoid } from 'nanoid/non-secure'
 
 type navigation = StackNavigationProp<RootStackParamList, 'PROFILE_SCREEN'>
@@ -71,27 +69,25 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
   const _renderItem = ({ item }: StepsT) => {
     const { plan, count, status } = item
-    return (
-      <View style={container}>
-        <Space width={0} />
-        {status === 'cube' && (
-          <>
-            <EmojiText name={icon('cube')} />
-            <Space width={5} />
-            <Txt h6 title={`${count} `} />
-          </>
-        )}
-        {status !== 'cube' && (
-          <>
-            <EmojiText name={icon('cube')} />
-            <Space width={5} />
-            <Txt h6 title={`${count} => `} />
-            <EmojiText name={icon(status)} />
-          </>
-        )}
-        <Txt h6 title={`=> ${I18n.t('plan')} ${plan}`} />
-      </View>
-    )
+    return <View style={container}>
+      <Space width={0} />
+      {status === 'cube' && (
+        <>
+          <EmojiText name={icon('cube')} />
+          <Space width={5} />
+          <Txt h6 title={`${count} `} />
+        </>
+      )}
+      {status !== 'cube' && (
+        <>
+          <EmojiText name={icon('cube')} />
+          <Space width={5} />
+          <Txt h6 title={`${count} => `} />
+          <EmojiText name={icon(status)} />
+        </>
+      )}
+      <Txt h6 title={`=> ${I18n.t('plan')} ${plan}`} />
+    </View>
   }
 
   const { container } = styles
@@ -101,39 +97,39 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   const DATA = !DiceStore.online ? [
     {
       title: `${I18n.t('player')} 1`,
-      data: PlayersStore.histories[0].slice().reverse()
+      data: OfflinePlayers.store.histories[0].slice().reverse()
     },
     {
       title: `${I18n.t('player')} 2`,
-      data: PlayersStore.histories[1].slice().reverse()
+      data: OfflinePlayers.store.histories[1].slice().reverse()
     },
     {
       title: `${I18n.t('player')} 3`,
-      data: PlayersStore.histories[2].slice().reverse()
+      data: OfflinePlayers.store.histories[2].slice().reverse()
     },
     {
       title: `${I18n.t('player')} 4`,
-      data: PlayersStore.histories[3].slice().reverse()
+      data: OfflinePlayers.store.histories[3].slice().reverse()
     },
     {
       title: `${I18n.t('player')} 5`,
-      data: PlayersStore.histories[4].slice().reverse()
+      data: OfflinePlayers.store.histories[4].slice().reverse()
     },
     {
       title: `${I18n.t('player')} 6`,
-      data: PlayersStore.histories[5].slice().reverse()
+      data: OfflinePlayers.store.histories[5].slice().reverse()
     }
   ].slice(0, DiceStore.multi)
     : [
       {
         title: '',
-        data: OnlinePlayerStore.histories.slice().reverse()
+        data: OnlinePlayer.store.history.slice().reverse()
       }
     ].slice()
 
   const _onPressSignOut = async (): Promise<void> => {
     try {
-      actionPlayers.SignOut()
+      OnlinePlayer.SignOut()
       await Keychain.resetInternetCredentials('auth')
       await AsyncStorage.clear()
       await DataStore.clear()
@@ -144,13 +140,13 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   }
 
   const onPressAva = async () => {
-    actionPlayers.uploadImage()
+    OnlinePlayer.uploadImage()
   }
 
   return (
     <AppContainer iconLeft={null} title={I18n.t('history')} textAlign="center">
       <CenterView>
-        {(OnlinePlayerStore.loading && DiceStore.online) ?
+        {(OnlinePlayer.store.loadingProf && DiceStore.online) ?
           <Spin />
           :
           <SectionList
@@ -160,9 +156,9 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                 {/* <Txt h3 title={`Подписка: ${subscriptionActive.toString()}`} /> */}
                 {DiceStore.online &&
                   <HeaderMaster
-                    plan={OnlinePlayerStore.plan}
-                    avatar={OnlinePlayerStore.avatar}
-                    onPress={() => navigation.navigate('USER_EDIT', OnlinePlayerStore.profile)}
+                    plan={OnlinePlayer.store.plan}
+                    avatar={OnlinePlayer.store.avatar}
+                    onPress={() => navigation.navigate('USER_EDIT', OnlinePlayer.store.profile)}
                     onPressAva={onPressAva}
                   />
                 }
@@ -172,10 +168,11 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
             ListFooterComponent={
               <>
                 <Space height={70} />
-                <Button title={I18n.t('startOver')} onPress={() => _onPressReset(navigation)} />
+                <Button title={I18n.t('startOver')} onPress={DiceStore.online ?
+                 OnlinePlayer.resetGame : OfflinePlayers.resetGame} />
                 <Space height={20} />
                 {DiceStore.online && <>
-                  <Button title={I18n.t('signOut')} onPress={_onPressSignOut} />
+                  <Button title={I18n.t('signOut')} onPress={OnlinePlayer.SignOut} />
                   <Space height={20} />
                 </>}
                 <Space height={200} />

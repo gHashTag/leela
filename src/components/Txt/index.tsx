@@ -69,7 +69,11 @@ const styles = StyleSheet.create({
     fontSize: Platform.OS === 'ios' ? s(12) : s(12),
     textAlign: 'center',
     fontFamily: 'Montserrat'
-  }
+  },
+  h12Style: {
+    textAlign: 'center',
+    fontFamily: 'NeutraText-Bold'
+  },
 })
 
 interface TxtT {
@@ -85,6 +89,7 @@ interface TxtT {
   h9?: boolean
   h10?: boolean
   h11?: boolean
+  h12?: boolean
   color?: string
   textAlign?: string
   title: string
@@ -107,6 +112,7 @@ const Txt = memo<TxtT>(
     h9,
     h10,
     h11,
+    h12,
     color,
     title,
     textStyle,
@@ -126,7 +132,8 @@ const Txt = memo<TxtT>(
       h8Style,
       h9Style,
       h10Style,
-      h11Style
+      h11Style,
+      h12Style,
     } = styles
 
     const {
@@ -150,6 +157,7 @@ const Txt = memo<TxtT>(
         h9 && StyleSheet.flatten([h9Style, { color: white, textAlign }]),
         h10 && StyleSheet.flatten([h10Style, { color: primary }]),
         h11 && StyleSheet.flatten([h11Style, { color: white, textAlign }]),
+        h12 && StyleSheet.flatten([h12Style, { color: text, textAlign }]),
         textStyle,
       ]}
     >
