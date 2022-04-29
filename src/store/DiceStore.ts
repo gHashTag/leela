@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { makeAutoObservable } from 'mobx'
-import { persistence, StorageAdapter } from 'mobx-persist-store'
-import { writeStore, readStore } from './helper'
+import { makePersistable } from 'mobx-persist-store'
 
 const DiceStore = makeAutoObservable({
   init: false,
@@ -71,19 +70,19 @@ const actionsDice = {
   }
 }
 
-persistence({
+makePersistable(DiceStore, {
   name: 'DiceStore',
-  properties: ['count', 'startGame', 'players', 'message', 'multi', 'finishArr', 'init', 'rate', 'online'],
-  adapter: new StorageAdapter({
-    // @ts-expect-error
-    read: readStore,
-    // @ts-expect-error
-    write: writeStore
-  }),
-  reactionOptions: {
-    // optional
-    delay: 200
-  }
-})(DiceStore)
+  properties: [
+    'count',
+    'startGame',
+    'players',
+    'message',
+    'multi',
+    'finishArr',
+    'init',
+    'rate',
+    'online'
+  ]
+})
 
 export { DiceStore, actionsDice }

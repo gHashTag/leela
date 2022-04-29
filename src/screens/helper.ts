@@ -19,21 +19,25 @@ interface NewProfileI {
 //firebase help
 
 const getFireBaseRef = (path: string): FirebaseDatabaseTypes.Reference => {
-  return firebase.app()
+  return firebase
+    .app()
     .database('https://leela-chakra-default-rtdb.europe-west1.firebasedatabase.app/')
     .ref(path)
 }
-
 
 // Profile operations
 
 const getProfile = async (): Promise<UserT | undefined> => {
   const userUid = auth().currentUser?.uid
   let res = undefined
-  await firestore().collection('Profiles').doc(userUid).get()
+  await firestore()
+    .collection('Profiles')
+    .doc(userUid)
+    .get()
     .then(querySnap => {
       res = querySnap.data()
-    }).catch((err) => {
+    })
+    .catch(err => {
       console.log(`getProfile`, err)
       captureException(err)
     })
@@ -43,29 +47,44 @@ const getProfile = async (): Promise<UserT | undefined> => {
 const onWin = async () => {
   const userUid = auth().currentUser?.uid
   firestore().collection('Profiles').doc(userUid).update({
-    firstGame: false, finish: true
+    firstGame: false,
+    finish: true,
+    start: false
   })
 }
 
 const onStart = async () => {
   const userUid = auth().currentUser?.uid
   firestore().collection('Profiles').doc(userUid).update({
-    start: true,
+    start: true
   })
 }
 
-const createProfile = async ({
-  email, uid, firstName, lastName
-}: NewProfileI) => {
-  const hisObj: HistoryT[] = [{
-    count: 0, plan: 68, status: 'start',
-    createDate: Date.now()
-  }]
-  await firestore().collection('Profiles').doc(uid).set({
-    email, owner: uid, firstName, lastName, plan: 68,
-    lastStepTime: Date.now() - 86400000, start: false, finish: false,
-    firstGame: true, history: hisObj, lang
-  })
+const createProfile = async ({ email, uid, firstName, lastName }: NewProfileI) => {
+  const hisObj: HistoryT[] = [
+    {
+      count: 0,
+      plan: 68,
+      status: 'start',
+      createDate: Date.now()
+    }
+  ]
+  await firestore()
+    .collection('Profiles')
+    .doc(uid)
+    .set({
+      email,
+      owner: uid,
+      firstName,
+      lastName,
+      plan: 68,
+      lastStepTime: Date.now() - 86400000,
+      start: false,
+      finish: false,
+      firstGame: true,
+      history: hisObj,
+      lang
+    })
   // тут не все
   OnlinePlayer.store = {
     ...OnlinePlayer.store,
@@ -80,25 +99,33 @@ const createProfile = async ({
     history: hisObj,
     start: false,
     finish: false,
-    firstGame: true,
-
+    firstGame: true
   }
 }
 
 const updatePlan = async (plan: number) => {
   const userUid = auth().currentUser?.uid
   if (userUid) {
-    await firestore().collection('Profiles').doc(userUid).update({
-      plan
-    }).catch((err) => captureException(err))
+    await firestore()
+      .collection('Profiles')
+      .doc(userUid)
+      .update({
+        plan
+      })
+      .catch(err => captureException(err))
   }
 }
 
 const resetPlayer = async () => {
   const userUid = auth().currentUser?.uid
-  await firestore().collection('Profiles').doc(userUid).update({
-    start: false, finish: false
-  }).catch((err) => captureException(err))
+  await firestore()
+    .collection('Profiles')
+    .doc(userUid)
+    .update({
+      start: false,
+      finish: false
+    })
+    .catch(err => captureException(err))
 }
 
 interface profNameI {
@@ -110,10 +137,10 @@ const updateProfName = async ({ firstName, lastName }: profNameI) => {
     await auth().currentUser?.updateProfile({
       displayName: `${firstName} ${lastName}`
     })
-    await firestore().collection('Profiles')
-      .doc(auth().currentUser?.uid).update({
-        firstName, lastName
-      })
+    await firestore().collection('Profiles').doc(auth().currentUser?.uid).update({
+      firstName,
+      lastName
+    })
     await auth().currentUser?.reload()
     OnlinePlayer.store.profile.firstName = firstName
     OnlinePlayer.store.profile.lastName = lastName
@@ -132,12 +159,14 @@ const isLoggedIn = async () => {
 
 const resetHistory = async () => {
   const userUid = auth().currentUser?.uid
-  const hist: HistoryT[] = [{
-    createDate: Date.now(),
-    plan: 68,
-    count: 0,
-    status: 'start'
-  }]
+  const hist: HistoryT[] = [
+    {
+      createDate: Date.now(),
+      plan: 68,
+      count: 0,
+      status: 'start'
+    }
+  ]
   await firestore().collection('Profiles').doc(userUid).update({
     history: hist
   })
@@ -151,7 +180,7 @@ const resetHistory = async () => {
 //   } catch (err) {
 //     captureException(err)
 //   }
-// } // *
+// }
 
 // History operations
 
@@ -162,14 +191,20 @@ const createHistory = async (values: HistoryT) => {
       if (values.count !== 6) {
         OnlinePlayer.store.canGo = false
         OnlinePlayer.store.stepTime = Date.now()
-        await firestore().collection('Profiles').doc(userUid).update({
-          lastStepTime: Date.now(),
-          history: firestore.FieldValue.arrayUnion(values)
-        })
+        await firestore()
+          .collection('Profiles')
+          .doc(userUid)
+          .update({
+            lastStepTime: Date.now(),
+            history: firestore.FieldValue.arrayUnion(values)
+          })
       } else {
-        await firestore().collection('Profiles').doc(userUid).update({
-          history: firestore.FieldValue.arrayUnion(values)
-        })
+        await firestore()
+          .collection('Profiles')
+          .doc(userUid)
+          .update({
+            history: firestore.FieldValue.arrayUnion(values)
+          })
       }
     }
   } catch (err) {
@@ -206,15 +241,27 @@ const getIMG = async (fileName: string) => {
 const uploadImg = async (image: { path: string }) => {
   const photo = await fetch(image.path)
   const photoBlob = await photo.blob()
-  const fileName = `images/${nanoid(7)}${image.path.substring(image.path.lastIndexOf('/') + 1)}`
+  const fileName = `images/${nanoid(7)}${image.path.substring(
+    image.path.lastIndexOf('/') + 1
+  )}`
   const reference = storage().ref(fileName)
   await reference.put(photoBlob)
   return fileName
 }
 
 export {
-  uploadImg, updatePlan, updateProfName,
-  getIMG, getImagePicker, getProfile,
-  createHistory, createProfile, isLoggedIn, resetHistory,
-  getFireBaseRef, onWin, onStart, resetPlayer
+  uploadImg,
+  updatePlan,
+  updateProfName,
+  getIMG,
+  getImagePicker,
+  getProfile,
+  createHistory,
+  createProfile,
+  isLoggedIn,
+  resetHistory,
+  getFireBaseRef,
+  onWin,
+  onStart,
+  resetPlayer
 }

@@ -5,16 +5,30 @@ import Config from 'react-native-config'
 import { s } from 'react-native-size-matters'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from '@react-navigation/native'
-import { AppContainer, Button, Space, ButtonLink, TextError, Input, CenterView } from '../../../components'
+import {
+  AppContainer,
+  Button,
+  Space,
+  ButtonLink,
+  TextError,
+  Input,
+  CenterView
+} from '../../../components'
 import { goBack, white, black, captureException, W } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { I18n } from '../../../utils'
 import { actionsDice } from '../../../store'
 import auth from '@react-native-firebase/auth'
 
-import { useForm, FormProvider, SubmitHandler, SubmitErrorHandler, FieldValues } from 'react-hook-form'
+import {
+  useForm,
+  FormProvider,
+  SubmitHandler,
+  SubmitErrorHandler,
+  FieldValues
+} from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-import * as yup from "yup"
+import * as yup from 'yup'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_IN'>
 
@@ -22,10 +36,13 @@ type SignUpT = {
   navigation: ProfileScreenNavigationProp
 }
 
-const schema = yup.object().shape({
-  email: yup.string().email().trim().required(),
-  password: yup.string().min(6).required()
-}).required()
+const schema = yup
+  .object()
+  .shape({
+    email: yup.string().email().trim().required(),
+    password: yup.string().min(6).required()
+  })
+  .required()
 
 const SignIn = ({ navigation }: SignUpT): ReactElement => {
   const [userInfo, setUserInfo] = useState('')
@@ -40,32 +57,35 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
     defaultValues: initialValues
   })
 
-  const onSubmit: SubmitHandler<FieldValues> = (data) => {
+  const onSubmit: SubmitHandler<FieldValues> = data => {
     setUserInfo(data.email)
     setLoading(true)
     setError('')
     const { email, password } = data
-    auth().signInWithEmailAndPassword(email, password).then(async (user) => {
-      await Keychain.setInternetCredentials('auth', email, password)
-      if (user.user.emailVerified) {
-        navigation.navigate('MAIN')
-        actionsDice.init()
-      } else {
-        navigation.navigate('CONFIRM_SIGN_UP', { email })
-      }
-    }).catch((err) => {
-      captureException(err.message)
-      if (err.code === 'auth/invalid-email') {
-        setError('Invalid email')
-      } else if (err.code === 'auth/user-not-found') {
-        setError('user not found')
-      } else if (err.code === 'auth/wrong-password') {
-        setError(I18n.t('forgotPassword'))
-      } else {
-        setError(err.code)
-        console.log(err.code)
-      }
-    })
+    auth()
+      .signInWithEmailAndPassword(email, password)
+      .then(async user => {
+        await Keychain.setInternetCredentials('auth', email, password)
+        if (user.user.emailVerified) {
+          navigation.navigate('MAIN')
+          actionsDice.init()
+        } else {
+          navigation.navigate('CONFIRM_SIGN_UP', { email })
+        }
+      })
+      .catch(err => {
+        captureException(err.message)
+        if (err.code === 'auth/invalid-email') {
+          setError('Invalid email')
+        } else if (err.code === 'auth/user-not-found') {
+          setError('user not found')
+        } else if (err.code === 'auth/wrong-password') {
+          setError(I18n.t('forgotPassword'))
+        } else {
+          setError(err.code)
+          console.log(err.code)
+        }
+      })
 
     setLoading(false)
   }
@@ -78,12 +98,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
   const color = dark ? white : black
 
   return (
-    <AppContainer
-      onPress={goBack(navigation)}
-      title=" "
-      loading={loading}
-      colorLeft={color}
-    >
+    <AppContainer onPress={goBack(navigation)} title=" " colorLeft={color}>
       <CenterView>
         <FormProvider {...methods}>
           <KeyboardAvoidingView behavior="padding">
@@ -102,7 +117,9 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
               additionalStyle={{ width: W - s(40) }}
             />
             <Space height={s(20)} />
-            {error !== I18n.t('forgotPassword') && <TextError title={error} textStyle={{ alignSelf: 'center' }} />}
+            {error !== I18n.t('forgotPassword') && (
+              <TextError title={error} textStyle={{ alignSelf: 'center' }} />
+            )}
             {error === I18n.t('forgotPassword') && (
               <ButtonLink
                 title={error}
@@ -111,7 +128,10 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
               />
             )}
             <Space height={s(30)} />
-            <Button title={I18n.t('signIn')} onPress={methods.handleSubmit(onSubmit, onError)} />
+            <Button
+              title={I18n.t('signIn')}
+              onPress={methods.handleSubmit(onSubmit, onError)}
+            />
           </KeyboardAvoidingView>
         </FormProvider>
       </CenterView>

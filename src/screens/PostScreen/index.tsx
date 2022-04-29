@@ -1,43 +1,57 @@
 import React, { useEffect } from 'react'
-import { PostCard, Space, Txt } from '../../components'
+import { Loading, PostCard, Space, Text } from '../../components'
 import { PostStore } from '../../store'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../../types'
-import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
+import firestore from '@react-native-firebase/firestore'
 import { FlatList } from 'react-native-gesture-handler'
 import { View } from 'react-native'
 import { observer } from 'mobx-react-lite'
-import { vs } from 'react-native-size-matters'
+import { s, vs } from 'react-native-size-matters'
 
 interface Ipost {
   navigation: StackNavigationProp<RootStackParamList, 'POST_SCREEN'>
 }
 
 const PostScreen: React.FC<Ipost> = observer(({ navigation }) => {
-
   useEffect(() => {
-    const subPosts = firestore().collection('Posts')
-      .onSnapshot(PostStore.fetchPosts, (err) => console.log(err))
-    const subComments = firestore().collection('Comments')
-      .onSnapshot(PostStore.fetchComments, (err) => console.log(err))
+    const subPosts = firestore()
+      .collection('Posts')
+      .onSnapshot(PostStore.fetchPosts, err => console.log(err))
+    const subComments = firestore()
+      .collection('Comments')
+      .onSnapshot(PostStore.fetchComments, err => console.log(err))
     return () => {
       subPosts()
       subComments()
     }
   }, [])
 
-  return <>
-    <FlatList
-      data={PostStore.store.posts}
-      keyExtractor={a => a.id}
-      renderItem={({ item, index }) => <PostCard item={item} index={index} />}
-      ItemSeparatorComponent={() => <Space height={vs(10)} />}
-      ListHeaderComponent={<Space height={vs(10)} />}
-      ListEmptyComponent={<View>
-        <Txt h2 title='No posts yet. Make a move so you can post' />
-      </View>}
-    />
-  </>
+  return (
+    <>
+      {PostStore.store.loadPosts ? (
+        <Loading />
+      ) : (
+        <FlatList
+          removeClippedSubviews={false}
+          data={PostStore.store.posts}
+          keyExtractor={a => a.id}
+          renderItem={({ item, index }) => <PostCard item={item} index={index} />}
+          ItemSeparatorComponent={() => <Space height={vs(10)} />}
+          ListHeaderComponent={<Space height={vs(10)} />}
+          ListEmptyComponent={
+            <View style={{ paddingHorizontal: s(20) }}>
+              <Text
+                textStyle={{ textAlign: 'center' }}
+                h={'h1'}
+                title="No posts yet. Make a move so you can post"
+              />
+            </View>
+          }
+        />
+      )}
+    </>
+  )
 })
 
 export { PostScreen }

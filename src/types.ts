@@ -46,11 +46,11 @@ export type RootStackParamList = {
     title: string
     content: string
     url: string
-  },
+  }
   DETAIL_POST_SCREEN: {
     item: PostT
     index: number
-  },
+  }
   POST_SCREEN: undefined
 }
 

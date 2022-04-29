@@ -4,7 +4,7 @@ import Purchases, { PurchasesPackage } from 'react-native-purchases'
 import * as Sentry from '@sentry/react-native'
 import { ENTITLEMENT_ID, secondary, W } from '../../constants'
 import { I18n } from '../../utils'
-import { Txt } from '../Txt'
+import { Text } from '../Text'
 import { Space } from '../Space'
 import { actionsSubscribe } from '../../store'
 import { observer } from 'mobx-react-lite'
@@ -18,12 +18,12 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 5,
     width: W - 60,
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   h: {
     marginTop: 5,
-    marginBottom: 5
-  }
+    marginBottom: 5,
+  },
 })
 
 interface ButtonPurchasesT {
@@ -32,7 +32,7 @@ interface ButtonPurchasesT {
 
 const ButtonPurchases = observer(({ purchasesPackage }: ButtonPurchasesT) => {
   const {
-    product: { price_string, description }
+    product: { price_string, description },
   } = purchasesPackage
   const { container } = styles
 
@@ -57,10 +57,10 @@ const ButtonPurchases = observer(({ purchasesPackage }: ButtonPurchasesT) => {
 
   return (
     <TouchableOpacity onPress={onSelection} style={container}>
-      <Txt h10 title={description} />
-      <Txt h9 title={I18n.t(description)} />
+      <Text h={'h7'} title={description} />
+      <Text h={'h7'} title={I18n.t(description)} />
       <Space height={5} />
-      <Txt h8 title={price_string} />
+      <Text h={'h7'} title={price_string} />
     </TouchableOpacity>
   )
 })

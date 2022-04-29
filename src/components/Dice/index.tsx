@@ -1,14 +1,9 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { StyleSheet, Pressable, Platform, Animated, Easing } from 'react-native'
 import ShakeEvent from 'react-native-shake'
 import { observer } from 'mobx-react-lite'
-import withPreventDoubleClick from './withPreventDoubleClick'
-import { DiceStore, actionsDice, OnlinePlayerStore, actionPlayers } from '../../store'
+import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../store'
 import { s, ms } from 'react-native-size-matters'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { RootStackParamList } from '../../types'
-
-const ButtonEx = withPreventDoubleClick(Pressable)
 
 const styles = StyleSheet.create({
   diceContainer: {
@@ -28,31 +23,26 @@ const getImage = (number: number) => {
   switch (number) {
     case 1:
       return require('./assets/1.png')
-      break
     case 2:
       return require('./assets/2.png')
-      break
     case 3:
       return require('./assets/3.png')
-      break
     case 4:
       return require('./assets/4.png')
-      break
     case 5:
       return require('./assets/5.png')
-      break
     case 6:
       return require('./assets/6.png')
-      break
   }
 }
 
 const Dice = observer(() => {
+  const [canRoll, setCanRoll] = useState<boolean>(true)
   const spinValue = useRef(new Animated.Value(0)).current
   useEffect(() => {
     ShakeEvent.addEventListener('ShakeEvent', () => rollDice())
     return () => {
-      ShakeEvent.removeEventListener('ShakeEvent', () => { })
+      ShakeEvent.removeEventListener('ShakeEvent', () => {})
     }
   }, [])
 
@@ -64,7 +54,12 @@ const Dice = observer(() => {
       duration: duration,
       easing: Easing.linear,
       useNativeDriver: true
-    }).start(() => actionPlayers.updateStep(DiceStore.players - 1))
+    }).start(() => {
+      DiceStore.online
+        ? OnlinePlayer.updateStep()
+        : OfflinePlayers.updateStep(DiceStore.players - 1)
+      setTimeout(() => setCanRoll(true), 200)
+    })
   }
 
   const spin = spinValue.interpolate({
@@ -73,18 +68,29 @@ const Dice = observer(() => {
   })
 
   const rollDice = (): void => {
-    if (!OnlinePlayerStore.canGo && DiceStore.online) {
+    if (!OnlinePlayer.store.canGo && DiceStore.online) {
       return
     }
+    setCanRoll(false)
     actionsDice.random()
     handleSpin(DiceStore.count)
   }
 
   return (
-    <ButtonEx onPress={rollDice} style={[styles.diceContainer,
-    (!OnlinePlayerStore.canGo && DiceStore.online) && { opacity: 0.4 }]}>
-      <Animated.Image style={[styles.image, { transform: [{ rotate: spin }] }]} source={getImage(DiceStore.count)} />
-    </ButtonEx>
+    <Pressable
+      onPress={() => {
+        canRoll && rollDice()
+      }}
+      style={[
+        styles.diceContainer,
+        !OnlinePlayer.store.canGo && DiceStore.online && { opacity: 0.4 }
+      ]}
+    >
+      <Animated.Image
+        style={[styles.image, { transform: [{ rotate: spin }] }]}
+        source={getImage(DiceStore.count)}
+      />
+    </Pressable>
   )
 })
 

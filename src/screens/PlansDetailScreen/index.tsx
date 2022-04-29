@@ -5,9 +5,10 @@ import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s, vs } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
-import { AppContainer, TextCopy, VideoPlayer, Space, CreatePost } from '../../components'
+import { AppContainer, VideoPlayer, Space, CreatePost, Text } from '../../components'
 import { goBack } from '../../constants'
 import { actionPlay } from '../../store'
+import { ScrollView } from 'react-native-gesture-handler'
 
 type navigation = StackNavigationProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
 type route = RouteProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
@@ -28,8 +29,7 @@ const styles = StyleSheet.create({
     zIndex: 10
   },
   h3: {
-    padding: 20,
-    textAlign: 'left'
+    padding: 20
   }
 })
 
@@ -41,27 +41,29 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
     actionPlay.stop()
   }, [])
 
-  return <AppContainer
-    onPress={() => {
-      goBack(navigation)()
-      actionPlay.stop()
-    }}
-    title={title}
-    iconLeft=":heavy_multiplication_x:"
-    status="1x1"
-  >
-    {videoUrl !== '' && (
-      <View style={styles.center}>
-        <VideoPlayer uri={videoUrl} />
-      </View>
-    )}
-    <Space height={s(30)} />
-    <TextCopy h3 title={content} textStyle={h3} />
-    {!report &&
-      <CreatePost plan={id} />
-    }
-    <Space height={vs(report ? 260 : 200)} />
-  </AppContainer>
+  return (
+    <AppContainer
+      onPress={() => {
+        goBack(navigation)()
+        actionPlay.stop()
+      }}
+      title={title}
+      iconLeft=":heavy_multiplication_x:"
+      status="1x1"
+    >
+      <ScrollView>
+        {videoUrl !== '' && (
+          <View style={styles.center}>
+            <VideoPlayer uri={videoUrl} />
+          </View>
+        )}
+        <Space height={s(30)} />
+        <Text selectable h={'h7'} title={content} textStyle={h3} />
+        {!report && <CreatePost plan={id} />}
+        <Space height={vs(report ? 260 : 50)} />
+      </ScrollView>
+    </AppContainer>
+  )
 })
 
 export { PlansDetailScreen }

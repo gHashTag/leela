@@ -3,6 +3,7 @@ import { LogBox, Platform } from 'react-native'
 import Purchases from 'react-native-purchases'
 // import TrackPlayer from 'react-native-track-player'
 import { configure } from 'mobx'
+import { configurePersistable, StorageAdapter } from 'mobx-persist-store'
 import * as Sentry from '@sentry/react-native'
 import PushNotificationIOS from '@react-native-community/push-notification-ios'
 import { v4 as uuidv4 } from 'uuid'
@@ -12,6 +13,7 @@ import messaging from '@react-native-firebase/messaging'
 import { revenuecat } from './src/constants'
 import App from './src'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 //import StorybookUI from './storybook'
 
@@ -26,6 +28,14 @@ messaging().setBackgroundMessageHandler(async payload => {
     })
     : LocalNotification(payload)
 })
+
+configurePersistable(
+  {
+    storage: AsyncStorage,
+    debugMode: false,
+  },
+  { delay: 200 }
+)
 
 Sentry.init({
   dsn: 'https://1d8f316fe05b48f9b712acf5035683fb@o749286.ingest.sentry.io/5791363',

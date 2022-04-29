@@ -1,7 +1,7 @@
 import React, { useState, ReactElement, useEffect } from 'react'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp } from '@react-navigation/native'
-import { AppContainer, Button, Space, Txt, Loading } from '../../../components'
+import { AppContainer, Button, Space, Text, Loading } from '../../../components'
 import { goBack, white, black } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'
@@ -10,7 +10,10 @@ import { s, vs } from 'react-native-size-matters'
 import { View } from 'react-native'
 import { actionsDice } from '../../../store'
 
-type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CONFIRM_SIGN_UP'>
+type ProfileScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'CONFIRM_SIGN_UP'
+>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'CONFIRM_SIGN_UP'>
 
 type ConfirmSignUpT = {
@@ -24,7 +27,7 @@ const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
   useEffect(() => {
     const verfyCheck = setInterval(() => {
       auth().currentUser?.reload()
-      const { emailVerified } = auth().currentUser
+      const { emailVerified }: { emailVerified?: boolean } = auth().currentUser
       if (emailVerified !== isVerfy) {
         setIsVerfy(emailVerified)
         if (emailVerified) {
@@ -46,19 +49,18 @@ const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
 
   return (
     <AppContainer
-      backgroundColor={dark ? black : white}
       title=" "
       onPress={goBack(navigation)}
       loading={false}
       colorLeft={color}
     >
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, alignItems: 'center' }}>
         <Space height={vs(90)} />
-        <Txt h4 title={'Check your email!'} />
+        <Text h={'h1'} title={'Check your email!'} />
         <Space height={vs(30)} />
       </View>
 
-      <Loading size={s(100)} type='9CubeGrid' loading={true} />
+      <Loading size={s(100)} type="9CubeGrid" loading={true} />
 
       <Button title={'Resend?'} onPress={_onResend} />
       {/*<Txt h4 title={'Resend?'} />*/}

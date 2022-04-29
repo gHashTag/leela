@@ -2,7 +2,7 @@ import React, { memo } from 'react'
 import { TouchableOpacity, View, useWindowDimensions, Platform } from 'react-native'
 import Emoji from 'react-native-emoji'
 import { ScaledSheet, s, ms } from 'react-native-size-matters'
-import { Txt } from '../Txt'
+import { Text } from '../Text'
 
 const styles = ScaledSheet.create({
   container: {
@@ -33,8 +33,7 @@ const styles = ScaledSheet.create({
   titleStyle: {
     flex: 1,
     fontSize: 28,
-    textAlign: 'left',
-    left: 5,
+    left: 5
   },
   childrenStyle: {
     top: ms(5, 2.8)
@@ -47,33 +46,49 @@ interface HeaderT {
   iconRight?: string | null
   onPress?: () => void | null
   onPressRight?: () => void
-  textAlign?: string
+  textAlign?: 'center' | 'auto' | 'left' | 'right' | 'justify'
   children?: React.ReactNode
 }
 
-const Header = memo<HeaderT>(({ title, iconLeft, iconRight, onPress, onPressRight, children, textAlign = 'left' }) => {
-  const { container, leftIconStyle, rightIconStyle, rightViewStyle, titleStyle, childrenStyle } = styles
+const Header = memo<HeaderT>(
+  ({ title, iconLeft, iconRight, onPress, onPressRight, children, textAlign }) => {
+    const {
+      container,
+      leftIconStyle,
+      rightIconStyle,
+      rightViewStyle,
+      titleStyle,
+      childrenStyle
+    } = styles
 
-  const width = useWindowDimensions().width
+    const width = useWindowDimensions().width
 
-  return (
-    <View style={[container, { width }]}>
-      {iconLeft &&
-        <TouchableOpacity onPress={onPress}>
-          <Emoji name={iconLeft} style={leftIconStyle} />
-        </TouchableOpacity>
-      }
-      {title && <Txt numberOfLines={1} h4 title={title} textStyle={titleStyle} textAlign={textAlign} />}
-      {children && <View style={childrenStyle}>{children}</View>}
-      {iconRight ?
-        <TouchableOpacity onPress={onPressRight}>
-          <Emoji name={iconRight} style={rightIconStyle} />
-        </TouchableOpacity>
-        :
-        <View style={rightViewStyle} />
-      }
-    </View>
-  )
-})
+    return (
+      <View style={[container, { width }]}>
+        {iconLeft && (
+          <TouchableOpacity onPress={onPress}>
+            <Emoji name={iconLeft} style={leftIconStyle} />
+          </TouchableOpacity>
+        )}
+        {title && (
+          <Text
+            numberOfLines={1}
+            h={'h2'}
+            title={title}
+            textStyle={[titleStyle, { textAlign }]}
+          />
+        )}
+        {children && <View style={childrenStyle}>{children}</View>}
+        {iconRight ? (
+          <TouchableOpacity onPress={onPressRight}>
+            <Emoji name={iconRight} style={rightIconStyle} />
+          </TouchableOpacity>
+        ) : (
+          <View style={rightViewStyle} />
+        )}
+      </View>
+    )
+  }
+)
 
 export { Header }

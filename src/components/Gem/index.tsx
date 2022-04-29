@@ -2,16 +2,17 @@ import React from 'react'
 import { Image, View } from 'react-native'
 import { ScaledSheet, s } from 'react-native-size-matters'
 import { ICONS } from './images'
-import {
-  PlayersStore,
-  DiceStore,
-  OnlinePlayerStore,
-  OnlineOtherPlayers
-} from '../../store'
+import { DiceStore, OnlinePlayer, OtherPlayers, OfflinePlayers } from '../../store'
 
 interface GemT {
   plan: number
   player: number
+}
+
+interface dataI {
+  data: number
+  id: number
+  ava?: string
 }
 
 const Gem = ({ plan, player }: GemT) => {
@@ -19,32 +20,43 @@ const Gem = ({ plan, player }: GemT) => {
 
   const { container, gems } = styles
 
-  const DATA = !DiceStore.online ? [
-    { id: 1, data: PlayersStore.plans[0] },
-    { id: 2, data: PlayersStore.plans[1] },
-    { id: 3, data: PlayersStore.plans[2] },
-    { id: 4, data: PlayersStore.plans[3] },
-    { id: 5, data: PlayersStore.plans[4] },
-    { id: 6, data: PlayersStore.plans[5] }
-  ].slice(0, DiceStore.multi) : [
-    { id: 1, data: OnlinePlayerStore.plan, ava: OnlinePlayerStore.avatar },
-    ...OnlineOtherPlayers.players.slice().map((a, index) => {
-    return{
-      id: index+2,
-      data: a.plan,
-      ava: a.avatar
-    }})
-  ]
+  const DATA: dataI[] = !DiceStore.online
+    ? OfflinePlayers.store.plans
+        .slice()
+        .map((a, id) => {
+          return {
+            id: id + 1,
+            data: a
+          }
+        })
+        .slice(0, DiceStore.multi)
+    : [
+        { id: 1, data: OnlinePlayer.store.plan, ava: OnlinePlayer.store.avatar },
+        ...OtherPlayers.store.online.slice().map((a, index) => {
+          return {
+            id: index + 2,
+            data: a.plan,
+            ava: a.avatar
+          }
+        })
+      ]
 
-  const source = (id: number, avatar: any) => (DiceStore.online ? { uri: avatar } : ICONS[id-1])
+  const source = (id: number, avatar: any) =>
+    DiceStore.online ? { uri: avatar } : ICONS[id - 1]
   return (
     <View style={container}>
       {DATA.map(
         ({ data, id, ava }) =>
           data === plan && (
-            <Image key={id} style={[gems, { position: 'absolute', zIndex: getIndex(id) },
-             (id === 1 && DiceStore.online) && {zIndex: 2}]} source={source(id, ava)}
-             />
+            <Image
+              key={id}
+              style={[
+                gems,
+                { position: 'absolute', zIndex: getIndex(id) },
+                id === 1 && DiceStore.online && { zIndex: 2 }
+              ]}
+              source={source(id, ava)}
+            />
           )
       )}
     </View>

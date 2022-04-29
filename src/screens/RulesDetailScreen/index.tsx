@@ -4,9 +4,10 @@ import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { actionPlay } from '../../store'
 import { RootStackParamList } from '../../types'
-import { AppContainer, TextCopy, Space } from '../../components'
+import { AppContainer, Space, Text } from '../../components'
 import { goBack } from '../../constants'
 import { StyleSheet } from 'react-native'
+import { ScrollView } from 'react-native-gesture-handler'
 
 type navigation = StackNavigationProp<RootStackParamList, 'RULES_DETAIL_SCREEN'>
 type route = RouteProp<RootStackParamList, 'RULES_DETAIL_SCREEN'>
@@ -39,9 +40,11 @@ const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) =
       title={title}
       iconLeft=":heavy_multiplication_x:"
     >
-      <Space height={10} />
-      <TextCopy h3 title={content} textStyle={h3} />
-      <Space height={300} />
+      <ScrollView>
+        <Space height={10} />
+        <Text selectable h={'h7'} title={content} textStyle={h3} />
+        <Space height={220} />
+      </ScrollView>
     </AppContainer>
   )
 })

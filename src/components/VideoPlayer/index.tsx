@@ -8,17 +8,13 @@ import { s } from 'react-native-size-matters'
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    right: 0
+    flex: 1,
   },
   activityIndicator: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center'
-  }
+    alignItems: 'center',
+  },
 })
 
 type VideoPlayerT = {
@@ -27,14 +23,16 @@ type VideoPlayerT = {
 
 const VideoPlayer = ({ uri }: VideoPlayerT) => {
   const playerRef = useRef<Video>(null)
-  return <Video
-    style={styles.container}
-    ignoreSilentSwitch="ignore"
-    ref={playerRef}
-    source={{ uri }}
-    disableFullscreen
-    disableBack
-  />
+  return (
+    <Video
+      style={styles.container}
+      ignoreSilentSwitch="ignore"
+      ref={playerRef}
+      source={{ uri }}
+      disableFullscreen
+      disableBack
+    />
+  )
 }
 
 export { VideoPlayer }

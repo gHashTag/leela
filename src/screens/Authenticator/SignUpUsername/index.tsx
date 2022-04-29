@@ -2,19 +2,35 @@ import React, { useState, ReactElement } from 'react'
 import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp, useTheme } from '@react-navigation/native'
-import { AppContainer, Space, Button, Input, Avatar, CenterView } from '../../../components'
+import {
+  AppContainer,
+  Space,
+  Button,
+  Input,
+  Avatar,
+  CenterView
+} from '../../../components'
 import { goBack, white, black, W } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { actionsDice } from '../../../store'
 import auth from '@react-native-firebase/auth'
 import { createProfile } from '../../helper'
 
-import { useForm, FormProvider, SubmitHandler, SubmitErrorHandler, FieldValues } from 'react-hook-form'
+import {
+  useForm,
+  FormProvider,
+  SubmitHandler,
+  SubmitErrorHandler,
+  FieldValues
+} from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-import * as yup from "yup"
+import * as yup from 'yup'
 import { s } from 'react-native-size-matters'
 
-type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_UP_USERNAME'>
+type ProfileScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'SIGN_UP_USERNAME'
+>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'SIGN_UP_USERNAME'>
 
 type SignUpUsernameT = {
@@ -22,11 +38,13 @@ type SignUpUsernameT = {
   route: ProfileScreenRouteProp
 }
 
-
-const schema = yup.object().shape({
-  firstName: yup.string().trim().min(2).required(),
-  lastName: yup.string().trim().min(2).required()
-}).required()
+const schema = yup
+  .object()
+  .shape({
+    firstName: yup.string().trim().min(2).required(),
+    lastName: yup.string().trim().min(2).required()
+  })
+  .required()
 
 const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
@@ -36,7 +54,7 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     resolver: yupResolver(schema)
   })
 
-  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+  const onSubmit: SubmitHandler<FieldValues> = async data => {
     setLoading(true)
     const { firstName, lastName } = data
     const { email } = route.params
@@ -44,7 +62,10 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
       displayName: `${firstName} ${lastName}`
     })
     createProfile({
-      email, uid: auth().currentUser?.uid, firstName, lastName
+      email,
+      uid: auth().currentUser?.uid,
+      firstName,
+      lastName
     })
     navigation.navigate('SIGN_UP_AVATAR')
     actionsDice.setOnline(true)
@@ -83,7 +104,10 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
             additionalStyle={{ width: W - s(40) }}
           />
           <Space height={30} />
-          <Button title={I18n.t('signUp')} onPress={methods.handleSubmit(onSubmit, onError)} color={color} />
+          <Button
+            title={I18n.t('signUp')}
+            onPress={methods.handleSubmit(onSubmit, onError)}
+          />
           <Space height={50} />
         </FormProvider>
       </CenterView>

@@ -26,13 +26,13 @@ const styles = StyleSheet.create({
     shadowOffset: { height: 4, width: 0 },
     shadowOpacity: 0.5,
     elevation: 5,
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   buttonStyle: {
     top: 2,
     width: ms(70, 0.5),
-    height: ms(70, 0.5)
-  }
+    height: ms(70, 0.5),
+  },
 })
 
 const ButtonPlay = memo<ButtonPlayT>(({ type = false, obj }) => {
@@ -44,12 +44,12 @@ const ButtonPlay = memo<ButtonPlayT>(({ type = false, obj }) => {
   const netInfo = useNetInfo()
 
   const start = async () => {
-    !netInfo.isConnected && setVisible(!modalVisible)
+    !netInfo.isConnected && setVisible(prev => !prev)
     actionPlay.play(obj)
   }
 
   const {
-    colors: { background }
+    colors: { background },
   } = useTheme()
 
   return (

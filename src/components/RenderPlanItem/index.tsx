@@ -2,7 +2,7 @@ import React, { memo } from 'react'
 import { TouchableOpacity } from 'react-native'
 import { ScaledSheet, s } from 'react-native-size-matters'
 import { W } from '../../constants'
-import { Txt } from '../Txt'
+import { Text } from '../Text'
 
 const styles = ScaledSheet.create({
   container: {
@@ -13,8 +13,6 @@ const styles = ScaledSheet.create({
     right: s(15)
   },
   titleStyle: {
-    fontSize: 28,
-    textAlign: 'left',
     left: s(15)
   }
 })
@@ -24,12 +22,14 @@ interface RenderItemT {
   onPress?: () => void
 }
 
-const RenderItem = memo<RenderItemT>(({ title, onPress }) => {
+const RenderPlanItem = memo<RenderItemT>(({ title, onPress }) => {
   const { container, titleStyle } = styles
 
-  return <TouchableOpacity onPress={onPress} style={container}>
-    <Txt h2 title={title} textStyle={titleStyle} numberOfLines={1} />
-  </TouchableOpacity>
+  return (
+    <TouchableOpacity onPress={onPress} style={container}>
+      <Text h="h4" title={title} textStyle={titleStyle} numberOfLines={1} />
+    </TouchableOpacity>
+  )
 })
 
-export { RenderItem }
+export { RenderPlanItem }

@@ -1,5 +1,4 @@
 import 'react-native-get-random-values'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { I18n, lang } from '../utils'
 import { DiceStore, actionsDice } from './DiceStore'
 import { createHistory, updatePlan, onWin, onStart } from '../screens/helper'
@@ -9,9 +8,9 @@ import { en } from '../screens/PlansScreen/en'
 import { OnlinePlayer, OfflinePlayers } from './'
 
 interface historyI {
-  count: number;
-  plan: number;
-  status: string;
+  count: number
+  plan: number
+  status: string
 }
 
 interface stepT {
@@ -32,7 +31,10 @@ async function upFuncOnline(step: stepT) {
     OnlinePlayer.store.plan = plan
     if (stepCount !== 6 || plan === 68) {
       const plansLang = lang === 'en' ? en : ru
-      navigate('PLANS_DETAIL_SCREEN', { report: true, ...plansLang.find(a => a.id === plan) })
+      navigate('PLANS_DETAIL_SCREEN', {
+        report: true,
+        ...plansLang.find(a => a.id === plan)
+      })
     }
     if (plan === 68) {
       actionsDice.setMessage('liberation')
@@ -59,7 +61,7 @@ export function upStepOnline() {
   function handleStart() {
     OnlinePlayer.store.start = true
     onStart()
-  } 
+  }
   const step = entities({ isFinished, plan, isStart, stepCount: count, handleStart })
   if (step) {
     upFuncOnline(step)
@@ -69,11 +71,15 @@ export function upStepOnline() {
 // OFFLINE
 const upFuncOffline = async (step: stepT): Promise<void> => {
   const { plan, history, id } = step
+
   const historyObj = { ...history, createDate: Date.now() }
-  if (id) {
+  if (id !== undefined) {
     OfflinePlayers.store.histories[id].unshift(historyObj)
     OfflinePlayers.store.plans[id] = plan
     if (plan === 68) {
+      DiceStore.finishArr = DiceStore.finishArr.map((x: boolean, index: number) =>
+        index === id ? (x = false) : x
+      )
       actionsDice.setMessage('liberation')
       OfflinePlayers.store.start[id] = false
       OfflinePlayers.store.finish[id] = true
@@ -94,7 +100,7 @@ export const upStepOffline = (id: number) => {
   const isStart = OfflinePlayers.store.start[id]
   function handleStart() {
     OfflinePlayers.store.start[id] = true
-  } 
+  }
   const step = entities({ isFinished, plan, isStart, stepCount: count, handleStart })
   if (step) {
     upFuncOffline({ ...step, id })
@@ -106,11 +112,10 @@ interface entitiesT {
   stepCount: number
   isFinished: boolean
   isStart: boolean
-  handleStart?: () => void
+  handleStart: () => void
 }
 
-const entities = ({ plan, stepCount,
-  isFinished, isStart, handleStart }: entitiesT) => {
+const entities = ({ plan, stepCount, isFinished, isStart, handleStart }: entitiesT) => {
   if (isStart) {
     const lib = { count: stepCount, plan: 68, status: 'liberation' }
     switch (true) {
@@ -188,22 +193,7 @@ const entities = ({ plan, stepCount,
   } else if (stepCount === 6 && !isFinished) {
     const obj6 = { count: stepCount, plan: 6, status: 'cube' }
 
-    handleStart && handleStart()
+    handleStart()
     return { plan: 6, history: obj6, stepCount }
   }
-}
-
-export const readStore = (name: string) => {
-  return new Promise(resolve => {
-    const data = AsyncStorage.getItem(name)
-    resolve(data)
-  })
-}
-
-export const writeStore = (name: string, content: any) => {
-  return new Promise(resolve => {
-    AsyncStorage.setItem(name, content)
-    // @ts-expect-error
-    resolve()
-  })
 }

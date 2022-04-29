@@ -1,28 +1,28 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import Slider from '@react-native-community/slider'
-import { Txt } from '../Txt'
+import { Text } from '../Text'
 
 const styles = StyleSheet.create({
   container: {
-    top: 10
+    top: 10,
   },
   title: {
     padding: 20,
-    fontSize: 18
+    fontSize: 18,
   },
   slider: {
     alignSelf: 'center',
     height: 60,
-    width: '95%'
+    width: '95%',
   },
   h0: {
-    left: 20
+    left: 20,
   },
   h2: {
     paddingTop: 0,
-    left: 20
-  }
+    left: 20,
+  },
 })
 
 interface SliderplanT {
@@ -33,48 +33,55 @@ interface SliderplanT {
 
 const SliderStep = ({ title, value, onChange }: SliderplanT) => {
   const label = (status: number) =>
-  ({
-    0: 'отсутствует',
-    1: 'легкий',
-    2: 'средний',
-    3: 'сильный',
-    4: 'невыносимый'
-  }[status])
+    ({
+      0: 'отсутствует',
+      1: 'легкий',
+      2: 'средний',
+      3: 'сильный',
+      4: 'невыносимый',
+    }[status])
 
   const color = (status: number) =>
-  ({
-    0: '#0684F8',
-    1: '#FFCC48',
-    2: '#FFA73F',
-    3: '#FC7E56',
-    4: '#FC5656'
-  }[status])
+    ({
+      0: '#0684F8',
+      1: '#FFCC48',
+      2: '#FFA73F',
+      3: '#FC7E56',
+      4: '#FC5656',
+    }[status])
 
   const colorTitle = (status: number) =>
-  ({
-    0: '#A1A9B5',
-    1: '#FFCC48',
-    2: '#FFA73F',
-    3: '#FC7E56',
-    4: '#FC5656'
-  }[status])
+    ({
+      0: '#A1A9B5',
+      1: '#FFCC48',
+      2: '#FFA73F',
+      3: '#FC7E56',
+      4: '#FC5656',
+    }[status])
 
   const { container, h0, h2 } = styles
 
-  return <View style={container}>
-    <Txt h0 textStyle={h0} title={title} />
-    <Txt h2 textStyle={h2} title={label(value) || ''} color={colorTitle(value)} />
-    <Slider
-      style={styles.slider}
-      minimumValue={0}
-      maximumValue={4}
-      thumbTintColor={color(value)}
-      value={value}
-      minimumTrackTintColor={color(value)}
-      maximumTrackTintColor="#E5E5E5"
-      onValueChange={val => onChange(val)}
-    />
-  </View>
+  return (
+    <View style={container}>
+      <Text h={'h4'} textStyle={h0} title={title} />
+      <Text
+        h={'h4'}
+        textStyle={h2}
+        title={label(value) || ''}
+        oneColor={colorTitle(value)}
+      />
+      <Slider
+        style={styles.slider}
+        minimumValue={0}
+        maximumValue={4}
+        thumbTintColor={color(value)}
+        value={value}
+        minimumTrackTintColor={color(value)}
+        maximumTrackTintColor="#E5E5E5"
+        onValueChange={val => onChange(val)}
+      />
+    </View>
+  )
 }
 
 export { SliderStep }

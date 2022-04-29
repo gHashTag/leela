@@ -1,15 +1,15 @@
-import React, { memo } from 'react'
+import React from 'react'
 import { StyleSheet, View } from 'react-native'
+// @ts-expect-error
 import StatusBarAlert from 'react-native-statusbar-alert'
 import { Header } from '../Header'
 import { Background } from '../Background'
-import { Loading } from '..'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: '100%',
+    height: '100%'
   },
   statusStyle: { padding: 5, paddingTop: 5 }
 })
@@ -25,28 +25,26 @@ interface AppContainerT {
   children?: React.ReactNode
   message?: string
   title?: string
-  loading?: boolean
   header?: boolean
-  textAlign?: "center" | "auto" | "left" | "right" | "justify"
+  textAlign?: 'center' | 'auto' | 'left' | 'right' | 'justify'
   status?: 'bg' | 'clean' | '1x1'
 }
 
-const AppContainer = memo<AppContainerT>(
-  ({
-    iconLeft = ':back:',
-    onPress,
-    onPressRight,
-    header = true,
-    iconRight,
-    children,
-    message = '',
-    title,
-    loading = false,
-    textAlign = 'left',
-    status
-  }) => {
-    const { container, statusStyle } = styles
-    return <SafeAreaView style={{ flex: 1 }}>
+function AppContainer({
+  iconLeft = ':back:',
+  onPress,
+  onPressRight,
+  header = true,
+  iconRight,
+  children,
+  message = '',
+  title,
+  textAlign = 'left',
+  status
+}: AppContainerT) {
+  const { container, statusStyle } = styles
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
       <Background status={status}>
         <View style={container}>
           <StatusBarAlert
@@ -68,15 +66,11 @@ const AppContainer = memo<AppContainerT>(
               iconRight={iconRight}
             />
           )}
-          {loading ?
-            <Loading loading={loading} />
-            :
-            <>{children}</>
-          }
+          {children}
         </View>
       </Background>
     </SafeAreaView>
-  }
-)
+  )
+}
 
 export { AppContainer }

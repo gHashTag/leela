@@ -4,8 +4,17 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { ms, s } from 'react-native-size-matters'
 import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
-import { Background, Dice, GameBoard, Header, Space, Txt, ButtonElements, Spin } from '../../components'
-import { DiceStore, actionsDice, OnlinePlayer } from '../../store'
+import {
+  Background,
+  Dice,
+  GameBoard,
+  Header,
+  Space,
+  Text,
+  ButtonElements,
+  Spin
+} from '../../components'
+import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../store'
 import Rate from 'react-native-rate'
 import { Button as ClassicBtn } from 'react-native-elements'
 
@@ -22,8 +31,10 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     const interval = setInterval(() => {
       const currentDate = Date.now()
       setLeftTime(currentDate - OnlinePlayer.store.stepTime)
-      if (currentDate - OnlinePlayer.store.stepTime >= 86400000
-        && OnlinePlayer.store.stepTime !== 0) {
+      if (
+        currentDate - OnlinePlayer.store.stepTime >= 86400000 &&
+        OnlinePlayer.store.stepTime !== 0
+      ) {
         OnlinePlayer.store.canGo = true
       } else {
         OnlinePlayer.store.canGo = false
@@ -43,9 +54,11 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           case leftTime > 86340000:
             OnlinePlayer.store.timeText = `${(time / 1000).toFixed(0)} sec.`
           case leftTime > 82800000:
-            OnlinePlayer.store.timeText = `${Math.ceil((time / 60 / 1000)).toFixed(0)} min.`
+            OnlinePlayer.store.timeText = `${Math.ceil(time / 60 / 1000).toFixed(0)} min.`
           case leftTime <= 82800000:
-            OnlinePlayer.store.timeText = `${Math.floor((time / 60 / 60 / 1000)).toFixed(0)} h.`
+            OnlinePlayer.store.timeText = `${Math.floor(time / 60 / 60 / 1000).toFixed(
+              0
+            )} h.`
         }
       } else {
         OnlinePlayer.store.timeText = '0'
@@ -64,48 +77,74 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     }
     Rate.rate(options, success => actionsDice.setRate(success))
   }
-
-  return <Background>
-    {OnlinePlayer.store.loadingProf && DiceStore.online ?
-      <Spin />
-      :
-      <>
-        <Header
-          iconLeft=":information_source:"
-          onPress={() => navigation.navigate('RULES_SCREEN')}
-          iconRight=":books:"
-          onPressRight={() => navigation.navigate('PLANS_SCREEN')}
-        >
-          <>
-            {DiceStore.finishArr.indexOf(true) !== -1 ?
-              <>
-                {!OnlinePlayer.store.canGo && DiceStore.online ?
-                  <Txt h3 title={`nextStep: ${OnlinePlayer.store.timeText}`} />
-                  :
-                  <Txt h3 title={DiceStore.online ? 'Take a step' : `${I18n.t('playerTurn')} # ${DiceStore.players}`} />
-                }
-                <Space height={1} />
-                <Txt h3 title={DiceStore.message} />
-                <Dice />
-              </>
-              :
-              <>
-                <Space height={s(60)} />
-                <ButtonElements title={I18n.t('startOver')} onPress={OnlinePlayer.resetGame} />
-                <Space height={s(10)} />
-                <Txt h0 title={`${I18n.t('win')}`} />
-                {!DiceStore.rate && <ClassicBtn title={I18n.t('leaveFeedback')} onPress={_onPress} />}
-              </>
-            }
-          </>
-        </Header>
-        <Space height={ms(85, 0.1)} />
-        <GameBoard />
-        <Space height={s(0)} />
-      </>
-    }
-  </Background>
-
+  const endGame = DiceStore.online
+    ? OnlinePlayer.store.finish
+    : DiceStore.finishArr.indexOf(true) === -1
+  return (
+    <Background>
+      {OnlinePlayer.store.loadingProf && DiceStore.online ? (
+        <Spin />
+      ) : (
+        <>
+          <Header
+            iconLeft=":information_source:"
+            onPress={() => navigation.navigate('RULES_SCREEN')}
+            iconRight=":books:"
+            onPressRight={() => navigation.navigate('PLANS_SCREEN')}
+          >
+            <>
+              {endGame ? (
+                <>
+                  <Space height={s(60)} />
+                  <ButtonElements
+                    title={I18n.t('startOver')}
+                    onPress={
+                      DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
+                    }
+                  />
+                  <Space height={s(10)} />
+                  <Text
+                    textStyle={{ textAlign: 'center' }}
+                    h="h1"
+                    title={`${I18n.t('win')}`}
+                  />
+                  {!DiceStore.rate && (
+                    <ClassicBtn title={I18n.t('leaveFeedback')} onPress={_onPress} />
+                  )}
+                </>
+              ) : (
+                <>
+                  {!OnlinePlayer.store.canGo && DiceStore.online ? (
+                    <Text h="h5" title={`nextStep: ${OnlinePlayer.store.timeText}`} />
+                  ) : (
+                    <Text
+                      h="h5"
+                      textStyle={{ textAlign: 'center' }}
+                      title={
+                        DiceStore.online
+                          ? 'Take a step'
+                          : `${I18n.t('playerTurn')} # ${DiceStore.players}`
+                      }
+                    />
+                  )}
+                  <Space height={1} />
+                  <Text
+                    textStyle={{ textAlign: 'center' }}
+                    h="h5"
+                    title={DiceStore.message}
+                  />
+                  <Dice />
+                </>
+              )}
+            </>
+          </Header>
+          <Space height={ms(85, 0.1)} />
+          <GameBoard />
+          <Space height={s(0)} />
+        </>
+      )}
+    </Background>
+  )
 })
 
 export { GameScreen }

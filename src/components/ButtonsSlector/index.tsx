@@ -6,7 +6,7 @@ import { I18n } from '../../utils'
 import { Button } from '../Button'
 //import { SubscribeStore } from '../../store'
 import { Space } from '../Space'
-import { Txt } from '../Txt'
+import { Text } from '../Text'
 
 const styles = StyleSheet.create({
   container: {
@@ -16,75 +16,37 @@ const styles = StyleSheet.create({
   }
 })
 
-const data = [
-  {
-    id: 1
-  },
-  {
-    id: 2
-  },
-  {
-    id: 3
-  },
-  {
-    id: 4
-  },
-  {
-    id: 5
-  },
-  {
-    id: 6
-  }
-]
+const data = [1, 2, 3, 4, 5, 6]
 
-const numbers = ['one', 'two', 'three', 'four', 'five', 'six']
+// const numbers = ['one', 'two', 'three', 'four', 'five', 'six']
 
 interface ButtonsSlectorT {
   onPress: (selectItem: number) => void
 }
 
 const ButtonsSlector = observer(({ onPress }: ButtonsSlectorT) => {
-  const [value, setValue] = useState({
-    one: true,
-    two: false,
-    three: false,
-    four: false,
-    five: false,
-    six: false
-  })
-
-  const _onChangeState = (number: number) => () => {
-    const defaultObject = numbers.reduce((acc, el) => ({ ...acc, [el]: false }), {})
-    setValue({ ...defaultObject, [numbers[number - 1]]: true })
-  }
-
-  const arr = Object.values(value)
-
-  const selectItem = [...arr.keys()].filter(i => arr[i])[0]
+  const [selected, setSelected] = useState<number>(1)
 
   return (
     <View style={{ alignSelf: 'center' }}>
       <Space height={s(150)} />
 
-      <Txt h1 title={`${I18n.t('selectPlayers')}`} />
+      <Text h={'h3'} title={`${I18n.t('selectPlayers')}`} />
       <Space height={s(20)} />
       {/* {!SubscribeStore.subscriptionActive && <Txt h3 title={`${I18n.t('free')}`} />} */}
       <Space height={s(20)} />
       <View style={styles.container}>
-        {data.map(({ id }) => {
-          const check = value[numbers[id - 1]]
-          return (
-            <TouchableOpacity key={id} onPress={_onChangeState(id)}>
-              {check ? (
-                <Txt h7 title={id.toString()} textStyle={{ padding: 10 }} />
-              ) : (
-                <Txt h0 title={id.toString()} textStyle={{ padding: 10 }} />
-              )}
-            </TouchableOpacity>
-          )
-        })}
+        {data.map(a => (
+          <TouchableOpacity key={a} onPress={() => setSelected(a)}>
+            {selected === a ? (
+              <Text h={'h0'} title={a.toString()} textStyle={{ padding: 10 }} />
+            ) : (
+              <Text h={'h1'} title={a.toString()} textStyle={{ padding: 10 }} />
+            )}
+          </TouchableOpacity>
+        ))}
       </View>
-      <Button title={I18n.t('startGame')} onPress={() => onPress(selectItem)} />
+      <Button title={I18n.t('startGame')} onPress={() => onPress(selected - 1)} />
     </View>
   )
 })

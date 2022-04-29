@@ -1,19 +1,25 @@
 import React from 'react'
 import { TouchableOpacity, View } from 'react-native'
-import { ScaledSheet, s } from 'react-native-size-matters'
-
-import { Txt } from '../Txt'
+import { ScaledSheet, s, vs } from 'react-native-size-matters'
+import { Text } from '../Text'
 import { Space } from '../Space'
 import { Avatar } from '../Avatar'
 import { Device } from '../../constants'
-import { UserT } from '../../types'
-import { OnlinePlayer } from '../../store'
+import {
+  DiceStore,
+  OfflinePlayers,
+  OnlinePlayer,
+  OtherPlayers,
+  PostStore
+} from '../../store'
 import { observer } from 'mobx-react-lite'
+import { isObservable } from 'mobx'
 
 const styles = ScaledSheet.create({
   container: {
     flex: 1,
-    top: 20
+    top: 20,
+    alignItems: 'center'
   },
   avatarStyle: {
     ...Device.select({
@@ -50,7 +56,7 @@ const styles = ScaledSheet.create({
     })
   },
   h2: {
-    top: 10
+    top: vs(9)
   },
   sub: {
     flexDirection: 'row',
@@ -61,32 +67,39 @@ const styles = ScaledSheet.create({
 })
 
 interface HeaderMasterT {
-  avatar: string
-  plan: number
   onPress: () => void
   onPressAva: () => void
   loading?: boolean
 }
 
-const HeaderMaster = observer(({ avatar, onPress, onPressAva, plan, loading = false }: HeaderMasterT) => {
-  const { firstName, lastName } = OnlinePlayer.store.profile
-  const { container, h2, sub, avatarStyle } = styles
-
-  return <>
-    <View style={sub}>
-      <TouchableOpacity onPress={onPress}>
-        <Avatar uri={avatar} viewStyle={avatarStyle} size="xLarge" onPress={onPressAva} loading={loading} />
-      </TouchableOpacity>
-      <Space width={s(50)} />
-      <Txt h7 title={String(plan)} textStyle={h2} />
-    </View>
-    <TouchableOpacity style={container} onPress={onPress}>
-      <Space height={30} />
-      <Txt h0 title={firstName} textStyle={h2} />
-      <Txt h0 title={lastName} textStyle={h2} />
-      <Space width={60} />
-    </TouchableOpacity>
-  </>
-})
+const HeaderMaster = observer(
+  ({ onPress, onPressAva, loading = false }: HeaderMasterT) => {
+    const { firstName, lastName } = OnlinePlayer.store.profile
+    const { container, h2, sub, avatarStyle } = styles
+    return (
+      <>
+        <View style={sub}>
+          <TouchableOpacity onPress={onPress}>
+            <Avatar
+              uri={OnlinePlayer.store.avatar}
+              viewStyle={avatarStyle}
+              size="xLarge"
+              onPress={onPressAva}
+              loading={loading}
+            />
+          </TouchableOpacity>
+          <Space width={s(50)} />
+          <Text h={'h0'} title={String(OnlinePlayer.store.plan)} textStyle={h2} />
+        </View>
+        <TouchableOpacity style={container} onPress={onPress}>
+          <Space height={30} />
+          <Text h={'h1'} title={firstName} textStyle={h2} />
+          <Text h={'h1'} title={lastName} textStyle={h2} />
+          <Space width={60} />
+        </TouchableOpacity>
+      </>
+    )
+  }
+)
 
 export { HeaderMaster }

@@ -6,7 +6,13 @@ import * as Sentry from '@sentry/react-native'
 import { ms, s } from 'react-native-size-matters'
 // import * as Sentry from '@sentry/react-native'
 import { RootStackParamList } from '../../types'
-import { Background, ButtonsSlector, CenterView, ModalSubscribe, Space } from '../../components'
+import {
+  Background,
+  ButtonsSlector,
+  CenterView,
+  ModalSubscribe,
+  Space
+} from '../../components'
 import { actionsDice } from '../../store'
 //import { LocalNotification } from '../../utils/noifications/LocalPushController'
 
@@ -18,9 +24,6 @@ type SelectPlayersScreenT = {
 
 const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   const selectPlayer = async (selectItem: number) => {
-    //const trackingStatus = await requestTrackingPermission()
-
-    // if (trackingStatus === 'authorized' || trackingStatus === 'unavailable') {
     if (selectItem + 1 === 1) {
       actionsDice.setPlayers(selectItem + 1)
       navigation.navigate('MAIN')
@@ -44,11 +47,13 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
     //}
   }
 
-  return <Background>
-    <Space height={ms(20, 0.5)} />
-    <ButtonsSlector onPress={selectPlayer} />
-    <ModalSubscribe />
-  </Background>
+  return (
+    <Background>
+      <Space height={ms(20, 0.5)} />
+      <ButtonsSlector onPress={selectPlayer} />
+      <ModalSubscribe />
+    </Background>
+  )
 })
 
 export { SelectPlayersScreen }
