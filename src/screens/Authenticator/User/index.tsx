@@ -1,5 +1,4 @@
-import React, { useState, useEffect, ReactElement } from 'react'
-import { Auth } from 'aws-amplify'
+import React, { useState, ReactElement } from 'react'
 import * as Keychain from 'react-native-keychain'
 import { I18n } from '../../../utils'
 import { useTheme } from '@react-navigation/native'
@@ -7,6 +6,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { AppContainer, Button } from '../../../components'
 import { black, goHome, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
+import auth from '@react-native-firebase/auth'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HELLO'>
 
@@ -18,26 +18,18 @@ const User = ({ navigation }: UserT): ReactElement => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    const checkUser = async (): Promise<void> => {
-      await Auth.currentAuthenticatedUser()
-    }
-    checkUser()
-  }, [navigation])
-
   const _onPress = async (): Promise<void> => {
     setLoading(true)
     try {
-      await Auth.signOut()
+      await auth().signOut()
       await Keychain.resetInternetCredentials('auth')
       goHome(navigation)()
     } catch (err) {
       setError(err.message)
     }
   }
-  const { dark } = useTheme()
   return (
-    <AppContainer backgroundColor={dark ? black : white} loading={loading}>
+    <AppContainer loading={loading}>
       <Button title={I18n.t('signOut')} onPress={_onPress} />
     </AppContainer>
   )

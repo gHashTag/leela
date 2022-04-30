@@ -1,17 +1,23 @@
 import React, { memo } from 'react'
-import { StyleSheet, StyleProp, ViewStyle, TextStyle, TouchableOpacity } from 'react-native'
-import { Txt } from '../Txt'
-import { white, secondary } from '../../constants'
+import {
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+  TextStyle,
+  TouchableOpacity,
+} from 'react-native'
+import { Text } from '../Text'
+import { secondary } from '../../constants'
 
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
-    alignItems: 'flex-start'
+    alignItems: 'flex-start',
   },
   h: {
     textDecorationLine: 'underline',
-    color: secondary
-  }
+    color: secondary,
+  },
 })
 
 interface ButtonLinkT {
@@ -26,7 +32,7 @@ const ButtonLink = memo<ButtonLinkT>(({ title, viewStyle, textStyle, onPress }) 
 
   return (
     <TouchableOpacity onPress={onPress} style={[container, viewStyle]}>
-      <Txt h8 title={title} textStyle={[h, textStyle]} color={secondary} />
+      <Text h={'h5'} title={title} textStyle={[h, textStyle]} />
     </TouchableOpacity>
   )
 })

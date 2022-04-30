@@ -2,19 +2,17 @@ import React from 'react'
 import { Image, View } from 'react-native'
 import { ScaledSheet, s } from 'react-native-size-matters'
 import { ICONS } from './images'
-import {
-  PlayerOneStore,
-  PlayerTwoStore,
-  PlayerThreeStore,
-  PlayerFourStore,
-  PlayerFiveStore,
-  PlayerSixStore,
-  DiceStore
-} from '../../store'
+import { DiceStore, OnlinePlayer, OtherPlayers, OfflinePlayers } from '../../store'
 
 interface GemT {
   plan: number
   player: number
+}
+
+interface dataI {
+  data: number
+  id: number
+  ava?: string
 }
 
 const Gem = ({ plan, player }: GemT) => {
@@ -22,26 +20,43 @@ const Gem = ({ plan, player }: GemT) => {
 
   const { container, gems } = styles
 
-  const DATA = [
-    {
-      id: 1,
-      data: PlayerOneStore.plan
-    },
-    { id: 2, data: PlayerTwoStore.plan },
-    { id: 3, data: PlayerThreeStore.plan },
-    { id: 4, data: PlayerFourStore.plan },
-    { id: 5, data: PlayerFiveStore.plan },
-    { id: 6, data: PlayerSixStore.plan }
-  ].slice(0, DiceStore.multi)
+  const DATA: dataI[] = !DiceStore.online
+    ? OfflinePlayers.store.plans
+        .slice()
+        .map((a, id) => {
+          return {
+            id: id + 1,
+            data: a
+          }
+        })
+        .slice(0, DiceStore.multi)
+    : [
+        { id: 1, data: OnlinePlayer.store.plan, ava: OnlinePlayer.store.avatar },
+        ...OtherPlayers.store.online.slice().map((a, index) => {
+          return {
+            id: index + 2,
+            data: a.plan,
+            ava: a.avatar
+          }
+        })
+      ]
 
-  const source = (id: number) => (DiceStore.online ? { uri: PlayerOneStore.avatar } : ICONS[id])
-
+  const source = (id: number, avatar: any) =>
+    DiceStore.online ? { uri: avatar } : ICONS[id - 1]
   return (
     <View style={container}>
       {DATA.map(
-        ({ data, id }) =>
+        ({ data, id, ava }) =>
           data === plan && (
-            <Image key={id} style={[gems, { position: 'absolute', zIndex: getIndex(id) }]} source={source(id)} />
+            <Image
+              key={id}
+              style={[
+                gems,
+                { position: 'absolute', zIndex: getIndex(id) },
+                id === 1 && DiceStore.online && { zIndex: 2 }
+              ]}
+              source={source(id, ava)}
+            />
           )
       )}
     </View>

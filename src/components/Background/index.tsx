@@ -1,7 +1,8 @@
 import React, { memo } from 'react'
-import { SafeAreaView, StyleSheet, StyleProp, ImageStyle, ImageBackground, View } from 'react-native'
+import { StyleSheet, StyleProp, ImageStyle, ImageBackground } from 'react-native'
 import { ICONS } from './images'
 import { W, H } from '../../constants'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const styles = StyleSheet.create({
   container: {
@@ -9,31 +10,36 @@ const styles = StyleSheet.create({
   },
   img: {
     width: W,
-    height: H + 70
+    height: H + 70,
+    position: 'absolute'
   }
 })
 
 interface BackgroundT {
-  status?: string
+  status?: 'bg' | 'clean' | '1x1'
   imageStyle?: StyleProp<ImageStyle>
   children?: React.ReactNode
   sourceImg?: string
 }
 
-const Background = memo(({ status = 'bg', imageStyle, sourceImg, children }: BackgroundT) => {
-  const { container, img } = styles
-  const source = () => ICONS.filter(x => x.title === status)[0].path
-  return (
-    <SafeAreaView style={container}>
-      <ImageBackground
-        resizeMode={'contain'}
-        source={!!sourceImg ? { uri: sourceImg } : source()}
-        style={[img, imageStyle]}
-      >
+const Background = memo(
+  ({ status = 'bg', imageStyle, sourceImg, children }: BackgroundT) => {
+    const { container, img } = styles
+    const source = () => {
+      const res = ICONS.find(x => x.title === status)
+      return res ? res.path : ''
+    }
+    return (
+      <SafeAreaView style={container}>
+        <ImageBackground
+          resizeMode={'contain'}
+          source={!!sourceImg ? { uri: sourceImg } : source()}
+          style={[img, imageStyle]}
+        />
         {children}
-      </ImageBackground>
-    </SafeAreaView>
-  )
-})
+      </SafeAreaView>
+    )
+  }
+)
 
 export { Background }

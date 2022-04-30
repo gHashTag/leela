@@ -4,12 +4,15 @@ import { observer } from 'mobx-react-lite'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp, useTheme } from '@react-navigation/native'
 import { I18n } from '../../../utils'
-import { AppContainer, Avatar, Button, Space } from '../../../components'
-import { goBack, white, black } from '../../../constants'
+import { AppContainer, Avatar, Button, CenterView, Space } from '../../../components'
+import { goBack } from '../../../constants'
 import { RootStackParamList } from '../../../types'
-import { actionPlayerOne, PlayerOneStore } from '../../../store'
+import { OnlinePlayer } from '../../../store'
 
-type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_UP_AVATAR'>
+type ProfileScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'SIGN_UP_AVATAR'
+>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'SIGN_UP_AVATAR'>
 
 type SignUpAvatarT = {
@@ -19,25 +22,24 @@ type SignUpAvatarT = {
 
 const SignUpAvatar = observer(({ navigation }: SignUpAvatarT): ReactElement => {
   const onPressAva = async () => {
-    actionPlayerOne.uploadImage()
+    OnlinePlayer.uploadImage()
   }
-
-  const { dark } = useTheme()
-  const color = dark ? white : black
   const handleSubmit = () => navigation.navigate('MAIN')
   return (
-    <AppContainer
-      backgroundColor={dark ? black : white}
-      onPress={goBack(navigation)}
-      title=" "
-      iconLeft={null}
-      loading={false}
-    >
-      <Avatar size="xLarge" uri={PlayerOneStore.avatar.slice()} onPress={onPressAva} loading={false} />
-      <Space height={s(50)} />
-      {!!PlayerOneStore.avatar && <Button title={I18n.t('done')} onPress={handleSubmit} color={color} />}
-
-      <Space height={s(150)} />
+    <AppContainer onPress={goBack(navigation)} title=" " iconLeft={null} loading={false}>
+      <CenterView>
+        <Avatar
+          size="xLarge"
+          uri={OnlinePlayer.store.avatar.slice()}
+          onPress={onPressAva}
+          loading={false}
+        />
+        <Space height={s(50)} />
+        {!!OnlinePlayer.store.avatar && (
+          <Button title={I18n.t('done')} onPress={handleSubmit} />
+        )}
+        <Space height={s(150)} />
+      </CenterView>
     </AppContainer>
   )
 })

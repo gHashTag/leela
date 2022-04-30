@@ -1,8 +1,7 @@
 import { makeAutoObservable } from 'mobx'
-import { persistence, StorageAdapter } from 'mobx-persist-store'
+import { makePersistable } from 'mobx-persist-store'
 import Purchases from 'react-native-purchases'
 import { ENTITLEMENT_ID } from '../constants'
-import { writeStore, readStore } from './helper'
 
 const SubscribeStore = makeAutoObservable({
   visible: false,
@@ -33,17 +32,22 @@ const actionsSubscribe = {
   }
 }
 
-persistence({
+makePersistable(SubscribeStore, {
   name: 'SubscribeStore',
-  properties: ['today'],
-  adapter: new StorageAdapter({
-    read: readStore,
-    write: writeStore
-  }),
-  reactionOptions: {
-    // optional
-    delay: 200
-  }
-})(SubscribeStore)
+  properties: ['today']
+})
+
+// persistence({
+//   name: 'SubscribeStore',
+//   properties: ['today'],
+//   adapter: new StorageAdapter({
+//     read: readStore,
+//     write: writeStore
+//   }),
+//   reactionOptions: {
+//     // optional
+//     delay: 200
+//   }
+// })(SubscribeStore)
 
 export { SubscribeStore, actionsSubscribe }

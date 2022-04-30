@@ -34,7 +34,7 @@ const RadioScreen = observer(() => {
   const _keyExtractor = (obj: any) => obj.id.toString()
 
   return (
-    <AppContainer flatList>
+    <AppContainer>
       <FlatList
         showsVerticalScrollIndicator={false}
         numColumns={2}

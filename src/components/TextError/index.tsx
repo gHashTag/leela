@@ -22,7 +22,7 @@ interface TextErrorT {
 const TextError = memo<TextErrorT>(({ title, onPress, textStyle }) => {
   const { container, h1 } = styles
   return (
-    <View style={container}>
+    <View style={[container, /* h,*/ textStyle]}>
       <Text style={[h1, textStyle]} onPress={onPress}>
         {title}
       </Text>

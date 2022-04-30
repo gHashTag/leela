@@ -1,15 +1,18 @@
 import React, { useState, ReactElement } from 'react'
-import { Auth } from 'aws-amplify'
 import * as Keychain from 'react-native-keychain'
-import { Formik } from 'formik'
 import Config from 'react-native-config'
-import * as Yup from 'yup'
 import { I18n } from '../../../utils'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { AppContainer, Space, Button, Input, TextError } from '../../../components'
-import { goBack, white, black, captureException } from '../../../constants'
+import { AppContainer, Space, Button, Input, TextError, CenterView } from '../../../components'
+import { goBack, white, black, captureException, W } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'
+import auth from '@react-native-firebase/auth'
+
+import { useForm, FormProvider, SubmitHandler, SubmitErrorHandler, FieldValues } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import * as yup from "yup"
+import { s } from 'react-native-size-matters'
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_UP'>
 
@@ -17,106 +20,95 @@ type SignUpT = {
   navigation: ProfileScreenNavigationProp
 }
 
+const schema = yup.object().shape({
+  email: yup.string().email().trim().required(),
+  password: yup.string().min(6).required(),
+  passwordConfirmation: yup.string().min(6).required()
+}).required()
+
 const SignUp = ({ navigation }: SignUpT): ReactElement => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const initialValues = { email: Config.EMAIL, password: Config.PASSWORD, passwordConfirmation: Config.PASSWORD }
+  const { ...methods } = useForm({
+    mode: 'onChange',
+    resolver: yupResolver(schema),
+    defaultValues: initialValues
+  })
 
-  const _onPress = async (values: { email: string; password: string; passwordConfirmation: string }): Promise<void> => {
-    const { email, password, passwordConfirmation } = values
+  const onSubmit: SubmitHandler<FieldValues> = (data) => {
+    const { email, password, passwordConfirmation } = data
     if (password !== passwordConfirmation) {
       setError(I18n.t('passwordsDoNotMatch'))
     } else {
       setLoading(true)
       setError('')
-      try {
-        const user = await Auth.signUp(email, password)
-        await Keychain.setInternetCredentials('auth', email, password)
-        user && navigation.navigate('CONFIRM_SIGN_UP', { email, password })
-        setLoading(false)
-      } catch (err) {
-        setLoading(false)
-        captureException(err.message)
-        if (err.code === 'UserNotConfirmedException') {
-          setError(I18n.t('accountNotVerifiedYet'))
-        } else if (err.code === 'PasswordResetRequiredException') {
-          setError(I18n.t('resetYourPassword'))
-        } else if (err.code === 'UsernameExistsException') {
-          setError(I18n.t('usernameExistsException'))
-        } else if (err.code === 'NotAuthorizedException') {
-          setError(I18n.t('forgotPassword'))
-        } else if (err.code === 'UserNotFoundException') {
-          setError(I18n.t('userDoesNotExist'))
-        } else {
-          setError(err.code)
-        }
-      }
+      auth().createUserWithEmailAndPassword(email, password)
+        .then(async () => {
+          await Keychain.setInternetCredentials('auth', email, password)
+          auth().currentUser?.sendEmailVerification()
+          navigation.navigate('CONFIRM_SIGN_UP', { email, password })
+          setLoading(false)
+        })
+        .catch(error => {
+          console.log(error)
+          setLoading(false)
+          captureException(error.code)
+          if (error.code === 'auth/email-already-in-use') {
+            setError(I18n.t('usernameExistsException'))
+          } else if (error.code === 'auth/invalid-email') {
+            setError('Invalid email')
+          } else {
+            setError(error.code)
+          }
+        })
     }
+  }
+
+  const onError: SubmitErrorHandler<FieldValues> = (errors, e) => {
+    return console.log(errors)
   }
 
   const { dark } = useTheme()
   const color = dark ? white : black
 
-  const initialValues = { email: Config.EMAIL, password: Config.PASSWORD, passwordConfirmation: Config.PASSWORD }
   return (
     <AppContainer
-      backgroundColor={dark ? black : white}
       onPress={goBack(navigation)}
       title=" "
       loading={loading}
       colorLeft={color}
     >
-      <Formik
-        initialValues={__DEV__ ? initialValues : { email: '', password: '', passwordConfirmation: '' }}
-        onSubmit={(values): Promise<void> => _onPress(values)}
-        validationSchema={Yup.object().shape({
-          email: Yup.string().email().required(),
-          password: Yup.string().min(6).required(),
-          passwordConfirmation: Yup.string().min(6).required()
-        })}
-      >
-        {({ values, handleChange, errors, setFieldTouched, touched, handleSubmit }): ReactElement => (
-          <>
-            <Input
-              name="email"
-              value={values.email}
-              onChangeText={handleChange('email')}
-              onBlur={(): void => setFieldTouched('email')}
-              placeholder="E-mail"
-              touched={touched}
-              errors={errors}
-              autoCapitalize="none"
-              color={color}
-            />
-            <Input
-              name="password"
-              value={values.password}
-              onChangeText={handleChange('password')}
-              onBlur={(): void => setFieldTouched('password')}
-              placeholder={I18n.t('password')}
-              touched={touched}
-              errors={errors}
-              secureTextEntry
-              color={color}
-            />
-            <Input
-              name="passwordConfirmation"
-              value={values.passwordConfirmation}
-              onChangeText={handleChange('passwordConfirmation')}
-              onBlur={(): void => setFieldTouched('passwordConfirmation')}
-              placeholder={I18n.t('passwordConfirmation')}
-              touched={touched}
-              errors={errors}
-              secureTextEntry
-              color={color}
-            />
-            <Space height={30} />
-            {error !== '' && <TextError title={error} textStyle={{ alignSelf: 'center' }} />}
-            <Space height={20} />
-            <Button title={I18n.t('signUp')} onPress={handleSubmit} color={color} />
-            <Space height={50} />
-          </>
-        )}
-      </Formik>
+      <CenterView>
+        <FormProvider {...methods}>
+          <Input
+            name="email"
+            placeholder="E-mail"
+            autoCapitalize="none"
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Input
+            name="password"
+            placeholder={I18n.t('password')}
+            secureTextEntry
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Input
+            name="passwordConfirmation"
+            placeholder={I18n.t('passwordConfirmation')}
+            secureTextEntry
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Space height={30} />
+          {error !== '' && <TextError title={error} textStyle={{ alignSelf: 'center' }} />}
+          <Space height={20} />
+          <Button title={I18n.t('signUp')} onPress={methods.handleSubmit(onSubmit, onError)} />
+          <Space height={50} />
+        </FormProvider>
+      </CenterView>
     </AppContainer>
   )
 }

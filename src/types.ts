@@ -7,15 +7,20 @@ export type RootStackParamList = {
   SIGN_IN: undefined
   FORGOT: { email: string }
   FORGOT_PASSWORD_SUBMIT: { email: string }
-  CONFIRM_SIGN_UP: { email: string; password: string }
+  CONFIRM_SIGN_UP: { email: string; password?: string }
   SIGN_UP_USERNAME: { email: string }
   USER: undefined
-  USER_EDIT: UserT
+  USER_EDIT: {
+    firstName: string
+    lastName: string
+    email: string
+  }
   PLAYRA_SCREEN: undefined
   TAB_BOTTOM_0: undefined
   TAB_BOTTOM_1: undefined
   TAB_BOTTOM_2: undefined
   TAB_BOTTOM_3: undefined
+  TAB_BOTTOM_4: undefined
   RULES_SCREEN: undefined
   RULES_DETAIL_SCREEN: {
     id: number
@@ -32,6 +37,7 @@ export type RootStackParamList = {
     content: string
     url?: string
     videoUrl: string
+    report?: boolean
   }
   PROFILE_SCREEN: undefined
   ONLINE_GAME_SCREEN: undefined
@@ -41,32 +47,51 @@ export type RootStackParamList = {
     content: string
     url: string
   }
+  DETAIL_POST_SCREEN: {
+    item: PostT
+    index: number
+  }
+  POST_SCREEN: undefined
 }
 
 export interface PlansT {
-  id: number 
+  id: number
   title: string
   content: string
-  url: string 
+  url: string
   videoUrl: string
 }
 export interface UserT {
-  id: string
+  email: string
+  finish: boolean
+  firstGame: boolean
   firstName: string
   lastName: string
-  email?: string
-  owner?: string
-  plan?: number
+  lastStepTime: number
+  owner: string
+  plan: number
+  start: boolean
+  history: HistoryT[]
+  avatar?: string
+  lang?: string
+  tokens?: string[]
+}
+
+export interface OtherUsersT {
+  email: string
+  firstName: string
+  lastName: string
+  plan: number
+  owner: string
+  isOnline: boolean
   avatar?: string
 }
 
 export interface HistoryT {
-  id: string
   plan: number
   count: number
   status: string
-  owner: string
-  createdAt: string
+  createDate: number
 }
 
 export interface SelfT {
@@ -77,4 +102,31 @@ export interface SelfT {
   planPrev: number
   rate?: boolean
   history: HistoryT[]
+}
+
+export interface FormPostT {
+  text: string
+  plan: number
+}
+
+export interface PostT extends FormPostT {
+  ownerId: string
+  id: string
+  createTime: number
+  email: string
+  liked?: string[]
+}
+
+export interface FormCommentT {
+  text: string
+  postId: string
+  postOwner: string
+}
+
+export interface CommentT extends FormCommentT {
+  firstName: string
+  lastName: string
+  ownerId: string
+  createTime: number
+  email: string
 }

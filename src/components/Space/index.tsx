@@ -6,6 +6,8 @@ interface SpaceT {
   width?: number | string
 }
 
-const Space = memo<SpaceT>(({ height, width }) => <View style={{ height: height || 0, width: width || 0 }} />)
+const Space = memo<SpaceT>(({ height, width }) => (
+  <View style={{ height: height || 0, width: width || 0 }} />
+))
 
 export { Space }

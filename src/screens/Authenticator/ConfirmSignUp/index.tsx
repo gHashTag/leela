@@ -1,16 +1,19 @@
-import React, { useState, ReactElement } from 'react'
-import { Auth } from 'aws-amplify'
-import { Formik } from 'formik'
-import { I18n } from '../../../utils'
+import React, { useState, ReactElement, useEffect } from 'react'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp } from '@react-navigation/native'
-import * as Yup from 'yup'
-import { AppContainer, Button, Space, ButtonLink, TextError, Input } from '../../../components'
-import { goBack, white, black, captureException } from '../../../constants'
+import { AppContainer, Button, Space, Text, Loading } from '../../../components'
+import { goBack, white, black } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'
+import auth from '@react-native-firebase/auth'
+import { s, vs } from 'react-native-size-matters'
+import { View } from 'react-native'
+import { actionsDice } from '../../../store'
 
-type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CONFIRM_SIGN_UP'>
+type ProfileScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'CONFIRM_SIGN_UP'
+>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'CONFIRM_SIGN_UP'>
 
 type ConfirmSignUpT = {
@@ -19,38 +22,26 @@ type ConfirmSignUpT = {
 }
 
 const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string>('')
+  const [isVerfy, setIsVerfy] = useState<boolean | undefined>(false)
 
-  const _onPress = async (values: { code: string }): Promise<void> => {
-    setLoading(true)
-    setError('')
-    try {
-      const { code } = values
-      const { email, password } = route.params
-      await Auth.confirmSignUp(email, code, { forceAliasCreation: true })
-      const user = await Auth.signIn(email, password)
-      user && navigation.navigate('SIGN_UP_USERNAME', route.params)
-      setLoading(false)
-    } catch (err) {
-      setLoading(false)
-      if (err.code === 'CodeMismatchException') {
-        setError(I18n.t('invalidVerificationCode'))
-      } else {
-        setError(err.message)
-        captureException(err.message)
+  useEffect(() => {
+    const verfyCheck = setInterval(() => {
+      auth().currentUser?.reload()
+      const { emailVerified }: { emailVerified?: boolean } = auth().currentUser
+      if (emailVerified !== isVerfy) {
+        setIsVerfy(emailVerified)
+        if (emailVerified) {
+          clearInterval(verfyCheck)
+          actionsDice.init()
+          navigation.navigate('SIGN_UP_USERNAME', route.params)
+        }
       }
-    }
-  }
+    }, 2200)
+    return () => clearInterval(verfyCheck)
+  }, [])
 
   const _onResend = async (): Promise<void> => {
-    try {
-      const { email } = route.params
-      await Auth.resendSignUp(email)
-    } catch (err) {
-      captureException(err.message)
-      setError(err.message)
-    }
+    auth().currentUser?.sendEmailVerification()
   }
 
   const { dark } = useTheme()
@@ -58,13 +49,23 @@ const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
 
   return (
     <AppContainer
-      backgroundColor={dark ? black : white}
       title=" "
       onPress={goBack(navigation)}
-      loading={loading}
+      loading={false}
       colorLeft={color}
     >
-      <Formik
+      <View style={{ flex: 1, alignItems: 'center' }}>
+        <Space height={vs(90)} />
+        <Text h={'h1'} title={'Check your email!'} />
+        <Space height={vs(30)} />
+      </View>
+
+      <Loading size={s(100)} type="9CubeGrid" loading={true} />
+
+      <Button title={'Resend?'} onPress={_onResend} />
+      {/*<Txt h4 title={'Resend?'} />*/}
+      <Space height={vs(30)} />
+      {/*<Formik
         initialValues={{ code: '' }}
         onSubmit={(values): Promise<void> => _onPress(values)}
         validationSchema={Yup.object().shape({
@@ -90,7 +91,7 @@ const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
             <Space height={50} />
           </>
         )}
-      </Formik>
+        </Formik>*/}
     </AppContainer>
   )
 }
