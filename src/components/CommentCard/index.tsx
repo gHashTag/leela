@@ -5,7 +5,7 @@ import { s, vs } from 'react-native-size-matters'
 import { gray, lightGray } from '../../constants'
 import { PostStore } from '../../store'
 import { CommentT } from '../../types'
-import { PlanAvatar } from '../PLanAvatar'
+import { PlanAvatar } from '../PlanAvatar'
 import { Text } from '../Text'
 
 interface CommentCardI {

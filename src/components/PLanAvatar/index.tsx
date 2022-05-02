@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
+import { Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native'
 import { ms, s, vs } from 'react-native-size-matters'
 import { primary } from '../../constants'
 import { Space } from '../Space'

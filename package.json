@@ -15,6 +15,7 @@
         "storybook": "start-storybook -p 7007",
         "build-storybook": "build-storybook",
         "prestorybook": "rnstl",
+        "arm:pods": "cd ios && arch -x86_64 gem install ffi && arch -x86_64 pod install",
         "amplify-modelgen": "node amplify/scripts/amplify-modelgen.js",
         "amplify-push": "node amplify/scripts/amplify-push.js"
     },

@@ -15,7 +15,7 @@ import { Text } from '../'
 import { Space } from '../Space'
 import { useNavigation } from '@react-navigation/native'
 import auth from '@react-native-firebase/auth'
-import { PlanAvatar } from '../PLanAvatar'
+import { PlanAvatar } from '../PlanAvatar'
 import { PostStore } from '../../store'
 import { observer } from 'mobx-react-lite'
 

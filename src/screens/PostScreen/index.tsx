@@ -38,7 +38,7 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation }) => {
           keyExtractor={a => a.id}
           renderItem={({ item, index }) => <PostCard item={item} index={index} />}
           ItemSeparatorComponent={() => <Space height={vs(10)} />}
-          ListHeaderComponent={<Space height={vs(10)} />}
+          ListHeaderComponent={<Space height={vs(60)} />}
           ListEmptyComponent={
             <View style={{ paddingHorizontal: s(20) }}>
               <Text
