@@ -134,11 +134,9 @@ const App = () => {
         reference.onDisconnect().set(false)
         DiceStore.online = true
         OnlinePlayer.getProfile()
-        fetchBusinesses()
-        console.log(user)
+        // fetchBusinesses()
       } else {
         DiceStore.online = false
-        console.log('No user')
       }
     }
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged)

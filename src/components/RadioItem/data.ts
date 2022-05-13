@@ -2,13 +2,13 @@ export const data = [
   {
     id: 0,
     title: 'Mantra Radio',
-    url: 'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/Mantra/mantra.json',
+    url: 'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/Mantra/mantra.json',
     artwork: require('./images/1.png')
   },
   {
     id: 1,
     title: 'gHashTag',
-    url: 'https://s3.eu-central-1.wasabisys.com/ghashtag/Radio/gHashTag.json',
+    url: 'https://s3.eu-central-1.wasabisys.com/database999/Radio/gHashTag.json',
     artwork: require('./images/2.png')
   }
   // {

@@ -83,7 +83,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
           setError(I18n.t('forgotPassword'))
         } else {
           setError(err.code)
-          console.log(err.code)
+          // console.log(err.code)
         }
       })
 

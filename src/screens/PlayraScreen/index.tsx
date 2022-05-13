@@ -64,7 +64,7 @@ const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
     const getData = async () => {
       try {
         let response = await fetch(
-          'https://s3.eu-central-1.wasabisys.com/ghashtag/Playra/AlbumMahaKumbhaMela/playraPhoto.json'
+          'https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/playraPhoto.json'
         )
         setArray(await response.json())
       } catch (e) {

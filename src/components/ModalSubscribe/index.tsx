@@ -15,14 +15,14 @@ const styles = ScaledSheet.create({
     flex: 1,
     height: '100%',
     width: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)'
   },
   centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 0,
-    padding: 15,
+    padding: 15
   },
   modalView: {
     margin: 20,
@@ -33,12 +33,12 @@ const styles = ScaledSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 2
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
-  },
+    elevation: 5
+  }
 })
 
 const ModalSubscribe = observer(() => {
@@ -101,7 +101,7 @@ const ModalSubscribe = observer(() => {
               title={I18n.t('terms')}
               onPress={() =>
                 openUrl(
-                  'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/Documentation/TermsOfUse.pdf'
+                  'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/Documentation/TermsOfUse.pdf'
                 )
               }
               width={100}
@@ -111,7 +111,7 @@ const ModalSubscribe = observer(() => {
               title={I18n.t('privacy')}
               onPress={() =>
                 openUrl(
-                  'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/Documentation/PrivateNotice.pdf'
+                  'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/Documentation/PrivateNotice.pdf'
                 )
               }
               width={170}

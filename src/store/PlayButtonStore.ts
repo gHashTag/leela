@@ -1,7 +1,7 @@
 import { makeAutoObservable } from 'mobx'
 // import TrackPlayer from 'react-native-track-player'
 import _ from 'lodash'
-import * as Sentry from '@sentry/react-native'
+
 
 const PlayButtonStore = makeAutoObservable({
   id: 0,
