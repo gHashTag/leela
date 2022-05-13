@@ -5,7 +5,7 @@ import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s, vs } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
-import { AppContainer, VideoPlayer, Space, CreatePost, Text } from '../../components'
+import { AppContainer, VideoPlayer, Space, TextCopy } from '../../components'
 import { goBack } from '../../constants'
 import { actionPlay } from '../../store'
 import { ScrollView } from 'react-native-gesture-handler'
@@ -58,7 +58,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
           </View>
         )}
         <Space height={s(30)} />
-        <Text selectable h={'h7'} title={content} textStyle={h3} />
+        <TextCopy h3 title={content} textStyle={h3} textAlign="left" />
         {/* {!report && <CreatePost plan={id} />} */}
         <Space height={vs(report ? 260 : 50)} />
       </ScrollView>
