@@ -1,5 +1,5 @@
 import { Dimensions, Linking } from 'react-native'
-import * as Sentry from '@sentry/react-native'
+// import * as Sentry from '@sentry/react-native'
 import { createNavigationContainerRef } from '@react-navigation/native'
 
 export const navRef = createNavigationContainerRef()
@@ -16,7 +16,7 @@ export const captureException = error => {
     return
   }
   console.error(error)
-  Sentry.captureException(error)
+  // Sentry.captureException(error)
 }
 
 export const win = Dimensions.get('window')
@@ -123,6 +123,6 @@ export const brightTurquoise = '#1EE4EC'
 
 export const revenuecat = 'BeIMIIfptWXlouosYudFEWQDkwDvJUzv'
 
-export const defUrl = 'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/Mantra/mantra.json'
+export const defUrl = 'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/Mantra/mantra.json'
 
 export const ENTITLEMENT_ID = 'Pro'

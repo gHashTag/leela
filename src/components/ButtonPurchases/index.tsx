@@ -1,7 +1,7 @@
 import React from 'react'
 import { StyleSheet, TouchableOpacity } from 'react-native'
-import Purchases, { PurchasesPackage } from 'react-native-purchases'
-import * as Sentry from '@sentry/react-native'
+// import Purchases, { PurchasesPackage } from 'react-native-purchases'
+// import * as Sentry from '@sentry/react-native'
 import { ENTITLEMENT_ID, secondary, W } from '../../constants'
 import { I18n } from '../../utils'
 import { Text } from '../Text'
@@ -18,40 +18,40 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 5,
     width: W - 60,
-    alignSelf: 'center',
+    alignSelf: 'center'
   },
   h: {
     marginTop: 5,
-    marginBottom: 5,
-  },
+    marginBottom: 5
+  }
 })
 
-interface ButtonPurchasesT {
-  purchasesPackage: PurchasesPackage
-}
+// interface ButtonPurchasesT {
+//   purchasesPackage: PurchasesPackage
+// }
 
-const ButtonPurchases = observer(({ purchasesPackage }: ButtonPurchasesT) => {
+const ButtonPurchases = observer(({ purchasesPackage }) => {
   const {
-    product: { price_string, description },
+    product: { price_string, description }
   } = purchasesPackage
   const { container } = styles
 
   const onSelection = async () => {
     try {
-      const { purchaserInfo } = await Purchases.purchasePackage(purchasesPackage)
+      // const { purchaserInfo } = await Purchases.purchasePackage(purchasesPackage)
       //console.log('purchaserInfo', purchaserInfo)
-      if (typeof purchaserInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
-        actionsSubscribe.purchaserInfo()
-        actionsSubscribe.setVisible(false)
-      }
+      // if (typeof purchaserInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
+      //   actionsSubscribe.purchaserInfo()
+      //   actionsSubscribe.setVisible(false)
+      // }
       // else {
       //   console.log('else', purchaserInfo.entitlements.active)
       // }
     } catch (e) {
       //console.log('e', e)
-      if (!e.userCancelled) {
-        Sentry.captureException(e)
-      }
+      // if (!e.userCancelled) {
+      //   Sentry.captureException(e)
+      // }
     }
   }
 

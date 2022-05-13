@@ -50,7 +50,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
     profile: initProfile,
     // poster
     poster: {
-      imgUrl: 'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/poster.jpg',
+      imgUrl: 'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/poster.jpg',
       eventUrl: '',
       buttonColor: '#1c1c1c'
     },
@@ -160,7 +160,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
     try {
       OnlinePlayer.store.isPosterLoading = true
       const response = await fetch(
-        'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/poster.json'
+        'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/poster.json'
       )
       const json = await response.json()
       OnlinePlayer.store.poster = json[0]

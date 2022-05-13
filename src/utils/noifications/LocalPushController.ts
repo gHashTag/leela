@@ -30,7 +30,7 @@ export const LocalNotification = notification => {
     title: notification.title,
     // bigText: notification.data['pinpoint.notification.body'],
     // title: notification.data['pinpoint.notification.title'],
-    largeIconUrl: 'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/logo.png', // (optional) default: undefined
+    largeIconUrl: 'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/logo.png', // (optional) default: undefined
     autoCancel: true,
     message: 'Expand me to see more',
     vibrate: true,

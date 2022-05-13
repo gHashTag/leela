@@ -3,7 +3,7 @@ import { useColorScheme, StatusBar } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { TransitionPresets } from '@react-navigation/stack'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import * as Sentry from '@sentry/react'
+// import * as Sentry from '@sentry/react'
 import {
   GameScreen,
   RulesScreen,
@@ -91,7 +91,7 @@ const Tab = () => {
   }, [])
 
   return (
-    <TabNavigator.Navigator initialRouteName={'TAB_BOTTOM_0'}>
+    <TabNavigator.Navigator initialRouteName={'TAB_BOTTOM_1'}>
       {/* <TabNavigator.Screen name="TAB_BOTTOM_0" component={PosterScreen} /> */}
       <TabNavigator.Screen name="TAB_BOTTOM_1" component={GameScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_2" component={PostScreen} />
@@ -134,11 +134,9 @@ const App = () => {
         reference.onDisconnect().set(false)
         DiceStore.online = true
         OnlinePlayer.getProfile()
-        fetchBusinesses()
-        console.log(user)
+        // fetchBusinesses()
       } else {
         DiceStore.online = false
-        console.log('No user')
       }
     }
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged)
@@ -230,4 +228,4 @@ const App = () => {
   )
 }
 
-export default Sentry.withProfiler(App)
+export default App

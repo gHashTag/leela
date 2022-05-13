@@ -1,10 +1,9 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { StackNavigationProp } from '@react-navigation/stack'
-import * as Sentry from '@sentry/react-native'
+// import * as Sentry from '@sentry/react-native'
 // import { requestTrackingPermission } from 'react-native-tracking-transparency'
 import { ms, s } from 'react-native-size-matters'
-// import * as Sentry from '@sentry/react-native'
 import { RootStackParamList } from '../../types'
 import {
   Background,
@@ -41,7 +40,7 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         //   actionsSubscribe.setVisible(true)
         // }
       } catch (e) {
-        Sentry.captureException(e)
+        // Sentry.captureException(e)
       }
     }
     //}

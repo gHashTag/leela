@@ -35,8 +35,12 @@ const LightTheme = {
 // create a component that uses the dark mode hook
 function ThemeWrapper(props) {
   // render your custom theme provider
-  console.log(`useDarkMode()`, useDarkMode())
-  return <ThemeContext.Provider value={useDarkMode() ? DarkTheme : LightTheme}>{props.children}</ThemeContext.Provider>
+  // console.log(`useDarkMode()`, useDarkMode())
+  return (
+    <ThemeContext.Provider value={useDarkMode() ? DarkTheme : LightTheme}>
+      {props.children}
+    </ThemeContext.Provider>
+  )
 }
 
 storiesOf('Txt', module)

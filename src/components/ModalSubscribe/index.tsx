@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { View, Modal } from 'react-native'
 import { ScaledSheet } from 'react-native-size-matters'
-import Purchases, { PurchasesPackage } from 'react-native-purchases'
-import * as Sentry from '@sentry/react-native'
+// import Purchases, { PurchasesPackage } from 'react-native-purchases'
+// import * as Sentry from '@sentry/react-native'
 import { ButtonPurchases, ButtonSimple, Row, Text } from '../../components'
 import { Space } from '../Space'
 import { I18n } from '../../utils'
@@ -15,14 +15,14 @@ const styles = ScaledSheet.create({
     flex: 1,
     height: '100%',
     width: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)'
   },
   centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 0,
-    padding: 15,
+    padding: 15
   },
   modalView: {
     margin: 20,
@@ -33,28 +33,28 @@ const styles = ScaledSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 2
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
-  },
+    elevation: 5
+  }
 })
 
 const ModalSubscribe = observer(() => {
-  const [packages, setPackages] = useState<PurchasesPackage[]>([])
+  // const [packages, setPackages] = useState<PurchasesPackage[]>([])
 
   useEffect(() => {
     const checkGame = async () => {
-      try {
-        const offerings = await Purchases.getOfferings()
-        // console.log('offerings', offerings)
-        if (offerings.current !== null) {
-          setPackages(offerings.current.availablePackages)
-        }
-      } catch (e) {
-        Sentry.captureException(e)
-      }
+      // try {
+      //   const offerings = await Purchases.getOfferings()
+      //   // console.log('offerings', offerings)
+      //   if (offerings.current !== null) {
+      //     setPackages(offerings.current.availablePackages)
+      //   }
+      // } catch (e) {
+      //   Sentry.captureException(e)
+      // }
     }
 
     checkGame()
@@ -62,15 +62,15 @@ const ModalSubscribe = observer(() => {
 
   const { container, centeredView } = styles
 
-  const sortPackages = packages.sort((a, b) => b.product.price - a.product.price)
+  // const sortPackages = packages.sort((a, b) => b.product.price - a.product.price)
   const visible = SubscribeStore.visible
 
   const restorePurchases = async () => {
     try {
-      await Purchases.restoreTransactions()
+      // await Purchases.restoreTransactions()
       actionsSubscribe.setVisible(false)
     } catch (e) {
-      Sentry.captureException(e)
+      // Sentry.captureException(e)
     }
   }
   return (
@@ -79,14 +79,14 @@ const ModalSubscribe = observer(() => {
         <View style={centeredView}>
           <Text h="h9" title={I18n.t('multi')} />
           <Space height={10} />
-          {sortPackages.map(purchasesPackage => {
+          {/* {sortPackages.map(purchasesPackage => {
             return (
               <View key={purchasesPackage.identifier}>
                 <ButtonPurchases purchasesPackage={purchasesPackage} />
                 <Space height={10} />
               </View>
             )
-          })}
+          })} */}
           <Space height={10} />
           <ButtonSimple
             h="h8"
@@ -101,7 +101,7 @@ const ModalSubscribe = observer(() => {
               title={I18n.t('terms')}
               onPress={() =>
                 openUrl(
-                  'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/Documentation/TermsOfUse.pdf'
+                  'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/Documentation/TermsOfUse.pdf'
                 )
               }
               width={100}
@@ -111,7 +111,7 @@ const ModalSubscribe = observer(() => {
               title={I18n.t('privacy')}
               onPress={() =>
                 openUrl(
-                  'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/Documentation/PrivateNotice.pdf'
+                  'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/Documentation/PrivateNotice.pdf'
                 )
               }
               width={170}

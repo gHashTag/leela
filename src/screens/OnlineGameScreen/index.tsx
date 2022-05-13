@@ -66,7 +66,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   useEffect(() => {
     const getData = async () => {
       let response = await fetch(
-        'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/PhotoLeela/leelaPhoto.json'
+        'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/PhotoLeela/leelaPhoto.json'
       )
       setImages(await response.json())
     }

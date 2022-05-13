@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Linking, StyleSheet, View, FlatList } from 'react-native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { observer, Observer } from 'mobx-react-lite'
-import * as Sentry from '@sentry/react-native'
+// import * as Sentry from '@sentry/react-native'
 import { s } from 'react-native-size-matters'
 import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
@@ -64,11 +64,11 @@ const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
     const getData = async () => {
       try {
         let response = await fetch(
-          'https://s3.eu-central-1.wasabisys.com/ghashtag/Playra/AlbumMahaKumbhaMela/playraPhoto.json'
+          'https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/playraPhoto.json'
         )
         setArray(await response.json())
       } catch (e) {
-        Sentry.captureException(e)
+        // Sentry.captureException(e)
       }
     }
     getData()
