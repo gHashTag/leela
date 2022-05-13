@@ -92,7 +92,7 @@ const Tab = () => {
 
   return (
     <TabNavigator.Navigator initialRouteName={'TAB_BOTTOM_0'}>
-      <TabNavigator.Screen name="TAB_BOTTOM_0" component={PosterScreen} />
+      {/* <TabNavigator.Screen name="TAB_BOTTOM_0" component={PosterScreen} /> */}
       <TabNavigator.Screen name="TAB_BOTTOM_1" component={GameScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_2" component={PostScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
@@ -162,7 +162,7 @@ const App = () => {
             borderTopRightRadius: 25
           }
         }}
-        initialRouteName="WELCOME_SCREEN"
+        initialRouteName="SELECT_PLAYERS_SCREEN"
         mode="modal"
         headerMode="none"
       >

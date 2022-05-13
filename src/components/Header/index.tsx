@@ -6,7 +6,7 @@ import { Text } from '../Text'
 
 const styles = ScaledSheet.create({
   container: {
-    height: ms(50, 0.4),
+    height: ms(40, 0.4),
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center'

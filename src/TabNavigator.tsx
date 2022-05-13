@@ -42,7 +42,12 @@ interface TabNavigatorT {
   contentStyle?: object
 }
 
-const TabNavigator = ({ initialRouteName, children, screenOptions, contentStyle }: TabNavigatorT) => {
+const TabNavigator = ({
+  initialRouteName,
+  children,
+  screenOptions,
+  contentStyle
+}: TabNavigatorT) => {
   const { state, navigation, descriptors } = useNavigationBuilder(TabRouter, {
     children,
     screenOptions,
@@ -55,37 +60,46 @@ const TabNavigator = ({ initialRouteName, children, screenOptions, contentStyle 
 
   const { container, sub } = styles
 
-  return <>
-    <View style={[sub, contentStyle]}>{descriptors[routes[index].key].render()}</View>
-    <View style={[{ backgroundColor: scheme === 'dark' ? black : white }, container]}>
-      {routes.filter(a => DiceStore.online ? true : a.name === 'TAB_BOTTOM_2' ? false : true)
-        .map(({ name, key }) => {
-          return (
-            <TouchableOpacity
-              key={key}
-              onPress={() => {
-                const event = navigation.emit({
-                  type: 'tabPress',
-                  target: key
-                })
-
-                if (!event.defaultPrevented) {
-                  navigation.dispatch({
-                    ...TabActions.jumpTo(name),
-                    target: state.key
-                  })
-                }
-              }}
-            >
-              <Tab
-                title={`TAB_BOTTOM_${index}` === name ? `TAB_BOTTOM_${index}` : `${name}_DISABLE`}
-                imageStyle={{ alignSelf: 'flex-start' }}
-              />
-            </TouchableOpacity>
+  return (
+    <>
+      <View style={[sub, contentStyle]}>{descriptors[routes[index].key].render()}</View>
+      <View style={[{ backgroundColor: scheme === 'dark' ? black : white }, container]}>
+        {routes
+          .filter(a =>
+            DiceStore.online ? true : a.name === 'TAB_BOTTOM_2' ? false : true
           )
-        })}
-    </View>
-  </>
+          .map(({ name, key }) => {
+            return (
+              <TouchableOpacity
+                key={key}
+                onPress={() => {
+                  const event = navigation.emit({
+                    type: 'tabPress',
+                    target: key
+                  })
+
+                  if (!event.defaultPrevented) {
+                    navigation.dispatch({
+                      ...TabActions.jumpTo(name),
+                      target: state.key
+                    })
+                  }
+                }}
+              >
+                <Tab
+                  title={
+                    `TAB_BOTTOM_${index + 1}` === name
+                      ? `TAB_BOTTOM_${index + 1}`
+                      : `${name}_DISABLE`
+                  }
+                  imageStyle={{ alignSelf: 'flex-start' }}
+                />
+              </TouchableOpacity>
+            )
+          })}
+      </View>
+    </>
+  )
 }
 
 export default createNavigatorFactory(TabNavigator)()

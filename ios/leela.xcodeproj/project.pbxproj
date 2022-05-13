@@ -28,9 +28,9 @@
 		698392A2AAE747CBB026B3D9 /* Montserrat-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 83CC27A7148F4C41B3E2BD40 /* Montserrat-Light.ttf */; };
 		6BF7074406CB4A7DB7B196F9 /* 3270Narrow.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6107B4A8FB2D47A59F21294D /* 3270Narrow.ttf */; };
 		6DE6BB11A4764D549EEF3EDD /* Montserrat-ExtraLightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 19CF736E79B5441C9A2EA3DF /* Montserrat-ExtraLightItalic.ttf */; };
+		73804ACE282F1FE50066792B /* sentry.properties in Resources */ = {isa = PBXBuildFile; fileRef = 73804ACD282F1FE50066792B /* sentry.properties */; };
 		739E1EC1267C786400C3EE11 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 73C790D42660E398000B6508 /* InfoPlist.strings */; };
 		739E1EC2267C786500C3EE11 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 73C790D42660E398000B6508 /* InfoPlist.strings */; };
-		73C036F026FB344B002544B3 /* sentry.properties in Resources */ = {isa = PBXBuildFile; fileRef = 73C036EF26FB344B002544B3 /* sentry.properties */; };
 		73C311E4265F5E7000677FD5 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */; };
 		73C311E5265F5E7000677FD5 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */; };
 		73CEF698265CDD7500C62E70 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73CEF697265CDD7500C62E70 /* StoreKit.framework */; };
@@ -106,7 +106,7 @@
 		6D96C2374F094EE4AC98A846 /* Octicons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Octicons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Octicons.ttf"; sourceTree = "<group>"; };
 		6F91AA213B1D48E79CADCBBC /* Montserrat-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-ExtraBold.ttf"; path = "../assets/fonts/Montserrat-ExtraBold.ttf"; sourceTree = "<group>"; };
 		72C69C96F0114956B04D2932 /* Montserrat-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-ExtraLight.ttf"; path = "../assets/fonts/Montserrat-ExtraLight.ttf"; sourceTree = "<group>"; };
-		73C036EF26FB344B002544B3 /* sentry.properties */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = sentry.properties; path = "../../Dropbox/@ghashtag/leela-main/ios/sentry.properties"; sourceTree = "<group>"; };
+		73804ACD282F1FE50066792B /* sentry.properties */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = sentry.properties; path = ../android/sentry.properties; sourceTree = "<group>"; };
 		73C311E3265F5E7000677FD5 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		73C790D32660E398000B6508 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		73C790D72660E3D5000B6508 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -196,7 +196,7 @@
 				73C790D42660E398000B6508 /* InfoPlist.strings */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB71A68108700A75B9A /* main.m */,
-				73C036EF26FB344B002544B3 /* sentry.properties */,
+				73804ACD282F1FE50066792B /* sentry.properties */,
 			);
 			name = leela;
 			sourceTree = "<group>";
@@ -447,7 +447,7 @@
 				73C311E4265F5E7000677FD5 /* GoogleService-Info.plist in Resources */,
 				E367CDCACE094F168842AB5F /* Montserrat-ExtraBoldItalic.ttf in Resources */,
 				5381C6F2BC714060A32BEEE4 /* Montserrat-ExtraLight.ttf in Resources */,
-				73C036F026FB344B002544B3 /* sentry.properties in Resources */,
+				73804ACE282F1FE50066792B /* sentry.properties in Resources */,
 				6DE6BB11A4764D549EEF3EDD /* Montserrat-ExtraLightItalic.ttf in Resources */,
 				191B34AF39C64B84B52143C2 /* Montserrat-Italic.ttf in Resources */,
 				698392A2AAE747CBB026B3D9 /* Montserrat-Light.ttf in Resources */,
