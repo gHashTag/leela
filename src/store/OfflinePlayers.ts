@@ -34,7 +34,7 @@ export const OfflinePlayers = {
     OfflinePlayers.store.histories = initStore.histories
     OfflinePlayers.store.finish = initStore.finish
     actionsDice.setMessage(' ')
-    navigate('WELCOME_SCREEN')
+    navigate('SELECT_PLAYERS_SCREEN')
   },
   updateStep(id: number): void {
     upStepOffline(id)

@@ -89,14 +89,14 @@ const Tab = () => {
       }
     }
   }, [])
-
+  //tabBar change tab pos, del amplify
   return (
     <TabNavigator.Navigator initialRouteName={'TAB_BOTTOM_0'}>
-      {/* <TabNavigator.Screen name="TAB_BOTTOM_0" component={PosterScreen} /> */}
-      <TabNavigator.Screen name="TAB_BOTTOM_1" component={GameScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_2" component={PostScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_4" component={ProfileScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_0" component={PosterScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_1" component={ProfileScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_2" component={GameScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_3" component={PostScreen} />
+      {/* <TabNavigator.Screen name="TAB_BOTTOM_4" component={OnlineGameScreen} /> */}
     </TabNavigator.Navigator>
   )
 }
@@ -134,9 +134,11 @@ const App = () => {
         reference.onDisconnect().set(false)
         DiceStore.online = true
         OnlinePlayer.getProfile()
-        // fetchBusinesses()
+        fetchBusinesses()
+        console.log(user)
       } else {
         DiceStore.online = false
+        console.log('No user')
       }
     }
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged)
