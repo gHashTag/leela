@@ -2,7 +2,7 @@ import * as React from 'react'
 import { FlatList } from 'react-native'
 import { observer } from 'mobx-react-lite'
 
-import { AppContainer, ModalSubscribe, RadioItem, Space } from '../../components'
+import { AppContainer, RadioItem, Space } from '../../components'
 import { data } from '../../components/RadioItem/data'
 import { Player } from './Player'
 import { actionPlay, PlayButtonStore } from '../../store'
@@ -42,7 +42,7 @@ const RadioScreen = observer(() => {
           <>
             <Space height={20} />
             <Player />
-            <ModalSubscribe />
+            {/* <ModalSubscribe /> */}
           </>
         }
         columnWrapperStyle={{

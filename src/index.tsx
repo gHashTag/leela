@@ -92,11 +92,12 @@ const Tab = () => {
 
   return (
     <TabNavigator.Navigator initialRouteName={'TAB_BOTTOM_0'}>
-      {/* <TabNavigator.Screen name="TAB_BOTTOM_0" component={PosterScreen} /> */}
-      <TabNavigator.Screen name="TAB_BOTTOM_1" component={GameScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_2" component={PostScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_4" component={ProfileScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_1" component={ProfileScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_2" component={OnlineGameScreen} />
+      {/* <TabNavigator.Screen name="TAB_BOTTOM_2" component={OnlineGameScreen} /> */}
+
+      {/* <TabNavigator.Screen name="TAB_BOTTOM_2" component={PostScreen} /> */}
     </TabNavigator.Navigator>
   )
 }

@@ -65,9 +65,9 @@ const TabNavigator = ({
       <View style={[sub, contentStyle]}>{descriptors[routes[index].key].render()}</View>
       <View style={[{ backgroundColor: scheme === 'dark' ? black : white }, container]}>
         {routes
-          .filter(a =>
-            DiceStore.online ? true : a.name === 'TAB_BOTTOM_2' ? false : true
-          )
+          // .filter(a =>
+          //   DiceStore.online ? true : a.name === 'TAB_BOTTOM_2' ? false : true
+          // )
           .map(({ name, key }) => {
             return (
               <TouchableOpacity
@@ -88,8 +88,8 @@ const TabNavigator = ({
               >
                 <Tab
                   title={
-                    `TAB_BOTTOM_${index + 1}` === name
-                      ? `TAB_BOTTOM_${index + 1}`
+                    `TAB_BOTTOM_${index}` === name
+                      ? `TAB_BOTTOM_${index}`
                       : `${name}_DISABLE`
                   }
                   imageStyle={{ alignSelf: 'flex-start' }}

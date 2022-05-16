@@ -10,7 +10,7 @@ import {
   Background,
   ButtonsSlector,
   CenterView,
-  ModalSubscribe,
+  // ModalSubscribe,
   Space
 } from '../../components'
 import { actionsDice } from '../../store'
@@ -51,7 +51,7 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
     <Background>
       <Space height={ms(20, 0.5)} />
       <ButtonsSlector onPress={selectPlayer} />
-      <ModalSubscribe />
+      {/* <ModalSubscribe /> */}
     </Background>
   )
 })

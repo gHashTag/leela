@@ -1,6 +1,6 @@
 {
     "name": "leela",
-    "version": "3.4.1",
+    "version": "3.7.2",
     "private": false,
     "scripts": {
         "android": "react-native run-android",
@@ -12,16 +12,9 @@
         "analyzer": "npx react-native-bundle-visualizer",
         "clean": "watchman watch-del-all && rm -f yarn.lock && rm -rf node_modules && yarn && yarn start --reset-cache",
         "build": "cd android && ./gradlew bundleRelease",
-        "storybook": "start-storybook -p 7007",
-        "build-storybook": "build-storybook",
-        "prestorybook": "rnstl",
-        "arm:pods": "cd ios && arch -x86_64 gem install ffi && arch -x86_64 pod install",
-        "amplify-modelgen": "node amplify/scripts/amplify-modelgen.js",
-        "amplify-push": "node amplify/scripts/amplify-push.js"
+        "arm:pods": "cd ios && arch -x86_64 gem install ffi && arch -x86_64 pod install"
     },
     "dependencies": {
-        "@aws-amplify/core": "^4.2.10",
-        "@aws-amplify/datastore-storage-adapter": "^1.1.7",
         "@hookform/resolvers": "^2.8.8",
         "@react-native-async-storage/async-storage": "^1.15.8",
         "@react-native-community/masked-view": "^0.1.10",
@@ -42,9 +35,6 @@
         "@sentry/react": "^6.19.7",
         "@sentry/react-native": "^3.4.2",
         "@sentry/tracing": "^6.19.7",
-        "amazon-cognito-identity-js": "^5.2.0",
-        "aws-amplify": "^4.3.1",
-        "aws-amplify-react-native": "^5.0.3",
         "firebase-admin": "^10.1.0",
         "formik": "^2.2.9",
         "i18n-js": "^3.8.0",
@@ -74,7 +64,6 @@
         "react-native-keychain": "^7.0.0",
         "react-native-localize": "^2.0.3",
         "react-native-markdown-display": "^7.0.0-alpha.2",
-        "react-native-purchases": "^4.1.2",
         "react-native-push-notification": "^7.3.1",
         "react-native-rate": "^1.2.6",
         "react-native-reanimated": "^2.1.0",
@@ -99,14 +88,6 @@
         "@babel/core": "^7.12.9",
         "@babel/plugin-proposal-decorators": "^7.13.15",
         "@babel/runtime": "^7.12.5",
-        "@storybook/addon-actions": "^5.3",
-        "@storybook/addon-backgrounds": "^6.3.8",
-        "@storybook/addon-knobs": "^5.3",
-        "@storybook/addon-links": "^5.3",
-        "@storybook/addon-ondevice-actions": "^5.3.23",
-        "@storybook/addon-ondevice-knobs": "^5.3.25",
-        "@storybook/react-native": "^5.3.25",
-        "@storybook/react-native-server": "^5.3.23",
         "@types/i18n-js": "^3.8.0",
         "@types/jest": "^26.0.20",
         "@types/lodash": "^4.14.168",
@@ -134,10 +115,7 @@
         "metro-react-native-babel-preset": "^0.64.0",
         "prettier": "2.6.2",
         "react-dom": "17.0.1",
-        "react-native-storybook-loader": "^2.0.4",
         "react-test-renderer": "17.0.1",
-        "storybook-addon-themes": "^6.1.0",
-        "storybook-dark-mode": "^1.0.8",
         "typescript": "^3.8.3"
     },
     "resolutions": {
@@ -155,15 +133,5 @@
             "node"
         ]
     },
-    "isSwift": true,
-    "config": {
-        "react-native-storybook-loader": {
-            "searchDir": [
-                "./src",
-                "./packages"
-            ],
-            "pattern": "**/*.stories.tsx",
-            "outputFile": "./storybook/storyLoader.js"
-        }
-    }
+    "isSwift": true
 }

@@ -14,7 +14,7 @@ import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
 import {
   AppContainer,
-  ModalSubscribe,
+  // ModalSubscribe,
   Space,
   Button,
   Text,
@@ -114,7 +114,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
             onPress={() => navigation.navigate('SELECT_PLAYERS_SCREEN')}
           />
           <Space height={s(140)} />
-          <ModalSubscribe />
+          {/* <ModalSubscribe /> */}
         </CenterView>
       )}
     </AppContainer>
