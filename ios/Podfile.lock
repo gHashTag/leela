@@ -793,8 +793,6 @@ PODS:
     - React
   - react-native-sqlite-storage (6.0.1):
     - React-Core
-  - react-native-tracking-transparency (0.1.1):
-    - React
   - react-native-version-info (1.1.1):
     - React-Core
   - react-native-video (5.2.0):
@@ -1022,7 +1020,6 @@ DEPENDENCIES:
   - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - react-native-spinkit (from `../node_modules/react-native-spinkit`)
   - react-native-sqlite-storage (from `../node_modules/react-native-sqlite-storage`)
-  - react-native-tracking-transparency (from `../node_modules/react-native-tracking-transparency`)
   - react-native-version-info (from `../node_modules/react-native-version-info`)
   - react-native-video (from `../node_modules/react-native-video`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -1156,8 +1153,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-spinkit"
   react-native-sqlite-storage:
     :path: "../node_modules/react-native-sqlite-storage"
-  react-native-tracking-transparency:
-    :path: "../node_modules/react-native-tracking-transparency"
   react-native-version-info:
     :path: "../node_modules/react-native-version-info"
   react-native-video:
@@ -1293,7 +1288,6 @@ SPEC CHECKSUMS:
   react-native-slider: e99fc201cefe81270fc9d81714a7a0f5e566b168
   react-native-spinkit: da294fd828216ad211fe36a5c14c1e09f09e62db
   react-native-sqlite-storage: f6d515e1c446d1e6d026aa5352908a25d4de3261
-  react-native-tracking-transparency: b2029ff756f1128b1f2c7c7c7f3003bc3c950f9f
   react-native-version-info: a106f23009ac0db4ee00de39574eb546682579b9
   react-native-video: a4c2635d0802f983594b7057e1bce8f442f0ad28
   React-perflogger: aad6d4b4a267936b3667260d1f649b6f6069a675
