@@ -1,20 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { Platform } from 'react-native'
 import { observer } from 'mobx-react-lite'
-import { StackNavigationProp } from '@react-navigation/stack'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import * as Keychain from 'react-native-keychain'
 import { s } from 'react-native-size-matters'
-import { v4 as uuidv4 } from 'uuid'
-import messaging from '@react-native-firebase/messaging'
 import auth from '@react-native-firebase/auth'
-import PushNotificationIOS from '@react-native-community/push-notification-ios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ScaledSheet } from 'react-native-size-matters'
 import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
 import {
   AppContainer,
-  ModalSubscribe,
+  // ModalSubscribe,
   Space,
   Button,
   Text,
@@ -23,10 +19,9 @@ import {
   Loading
 } from '../../components'
 import { actionsSubscribe, actionsDice } from '../../store'
-import { LocalNotification } from '../../utils/noifications/LocalPushController'
 import { captureException } from '../../constants'
 
-type navigation = StackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
+type navigation = NativeStackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 
 type SelectPlayersScreenT = {
   navigation: navigation
@@ -77,18 +72,6 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
 
     checkGame()
     key()
-
-    const unsubscribe = messaging().onMessage(async payload => {
-      Platform.OS === 'ios'
-        ? PushNotificationIOS.addNotificationRequest({
-            id: uuidv4(),
-            title: payload.data?.title,
-            body: payload.data?.body
-          })
-        : LocalNotification(payload)
-    })
-
-    return unsubscribe
   }, [])
 
   const _onPress = () => {
@@ -114,7 +97,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
             onPress={() => navigation.navigate('SELECT_PLAYERS_SCREEN')}
           />
           <Space height={s(140)} />
-          <ModalSubscribe />
+          {/* <ModalSubscribe /> */}
         </CenterView>
       )}
     </AppContainer>

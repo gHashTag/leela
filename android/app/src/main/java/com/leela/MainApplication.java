@@ -1,4 +1,4 @@
-package com.leelagame;
+package com.leela;
 
 import android.app.Application;
 import android.content.Context;
@@ -9,8 +9,8 @@ import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.config.ReactFeatureFlags;
 import com.facebook.soloader.SoLoader;
+import com.leela.newarchitecture.MainApplicationReactNativeHost;
 import java.lang.reflect.InvocationTargetException;
-import com.rndiffapp.newarchitecture.MainApplicationReactNativeHost;
 import java.util.List;
 
 public class MainApplication extends Application implements ReactApplication {
@@ -28,8 +28,6 @@ public class MainApplication extends Application implements ReactApplication {
           List<ReactPackage> packages = new PackageList(this).getPackages();
           // Packages that cannot be autolinked yet can be added manually here, for example:
           // packages.add(new MyReactNativePackage());
-//            packages.add(new ReactNativePushNotificationPackage());
-
           return packages;
         }
 
@@ -38,6 +36,9 @@ public class MainApplication extends Application implements ReactApplication {
           return "index";
         }
       };
+
+  private final ReactNativeHost mNewArchitectureNativeHost =
+      new MainApplicationReactNativeHost(this);
 
   @Override
   public ReactNativeHost getReactNativeHost() {
@@ -72,7 +73,7 @@ public class MainApplication extends Application implements ReactApplication {
          We use reflection here to pick up the class that initializes Flipper,
         since Flipper library is not available in release mode
         */
-        Class<?> aClass = Class.forName("com.leelagame.ReactNativeFlipper");
+        Class<?> aClass = Class.forName("com.leela.ReactNativeFlipper");
         aClass
             .getMethod("initializeFlipper", Context.class, ReactInstanceManager.class)
             .invoke(null, context, reactInstanceManager);

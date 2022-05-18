@@ -1,16 +1,11 @@
 import React from 'react'
 import { LogBox, Platform } from 'react-native'
-import Purchases from 'react-native-purchases'
+// import Purchases from 'react-native-purchases'
 // import TrackPlayer from 'react-native-track-player'
 import { configure } from 'mobx'
 import { configurePersistable, StorageAdapter } from 'mobx-persist-store'
 import * as Sentry from '@sentry/react-native'
-import PushNotificationIOS from '@react-native-community/push-notification-ios'
-import { v4 as uuidv4 } from 'uuid'
 import VersionInfo from 'react-native-version-info'
-import { LocalNotification } from './src/utils/noifications/LocalPushController'
-import messaging from '@react-native-firebase/messaging'
-import { revenuecat } from './src/constants'
 import App from './src'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -19,20 +14,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
 
-messaging().setBackgroundMessageHandler(async payload => {
-  Platform.OS === 'ios'
-    ? PushNotificationIOS.addNotificationRequest({
-      id: uuidv4(),
-      title: payload.data?.title,
-      body: payload.data?.body
-    })
-    : LocalNotification(payload)
-})
-
 configurePersistable(
   {
     storage: AsyncStorage,
-    debugMode: false,
+    debugMode: false
   },
   { delay: 200 }
 )
@@ -74,15 +59,17 @@ LogBox.ignoreLogs([
 // TrackPlayer.registerPlaybackService(() => require('./service'))
 
 class Init extends React.Component {
-  componentDidMount() {
-    Purchases.setDebugLogsEnabled(true)
-    Purchases.setup(revenuecat)
-  }
+  // componentDidMount() {
+  //   Purchases.setDebugLogsEnabled(true)
+  //   Purchases.setup(revenuecat)
+  // }
 
   render() {
-    return <SafeAreaProvider>
-      <App />
-    </SafeAreaProvider>
+    return (
+      <SafeAreaProvider>
+        <App />
+      </SafeAreaProvider>
+    )
   }
 }
 

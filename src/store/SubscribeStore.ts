@@ -1,6 +1,6 @@
 import { makeAutoObservable } from 'mobx'
 import { makePersistable } from 'mobx-persist-store'
-import Purchases from 'react-native-purchases'
+// import Purchases from 'react-native-purchases'
 import { ENTITLEMENT_ID } from '../constants'
 
 const SubscribeStore = makeAutoObservable({
@@ -19,16 +19,16 @@ const actionsSubscribe = {
     SubscribeStore.today = date
   },
   async purchaserInfo() {
-    const purchaserInfo = await Purchases.getPurchaserInfo()
-    // console.log('purchaserInfo', purchaserInfo.entitlements.active)
-    if (typeof purchaserInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
-      SubscribeStore.subscriptionActive = true
-      SubscribeStore.visible = false
-      SubscribeStore.userId = Purchases.getAppUserID()
-    } else {
-      SubscribeStore.isAnonymous = Purchases.isAnonymous()
-      SubscribeStore.subscriptionActive = false
-    }
+    // const purchaserInfo = await Purchases.getPurchaserInfo()
+    // // console.log('purchaserInfo', purchaserInfo.entitlements.active)
+    // if (typeof purchaserInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
+    //   SubscribeStore.subscriptionActive = true
+    //   SubscribeStore.visible = false
+    //   SubscribeStore.userId = Purchases.getAppUserID()
+    // } else {
+    //   SubscribeStore.isAnonymous = Purchases.isAnonymous()
+    //   SubscribeStore.subscriptionActive = false
+    // }
   }
 }
 

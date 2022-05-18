@@ -1,6 +1,9 @@
+import { NavigatorScreenParams } from '@react-navigation/native'
+
 export type RootStackParamList = {
-  MAIN: undefined
   HELLO: undefined
+  WELCOME_SCREEN: undefined
+  UI: undefined
   SIGN_UP: undefined
   SIGN_UP_USENAME: undefined
   SIGN_UP_AVATAR: undefined
@@ -16,11 +19,7 @@ export type RootStackParamList = {
     email: string
   }
   PLAYRA_SCREEN: undefined
-  TAB_BOTTOM_0: undefined
-  TAB_BOTTOM_1: undefined
-  TAB_BOTTOM_2: undefined
-  TAB_BOTTOM_3: undefined
-  TAB_BOTTOM_4: undefined
+  MAIN: NavigatorScreenParams<RootTabParamList>
   RULES_SCREEN: undefined
   RULES_DETAIL_SCREEN: {
     id: number
@@ -52,6 +51,16 @@ export type RootStackParamList = {
     index: number
   }
   POST_SCREEN: undefined
+}
+
+export type RootTabParamList = {
+  TAB_BOTTOM_0: undefined
+  TAB_BOTTOM_1: undefined
+  TAB_BOTTOM_2?: {
+    scrollToId?: number
+  }
+  TAB_BOTTOM_3: undefined
+  TAB_BOTTOM_4: undefined
 }
 
 export interface PlansT {

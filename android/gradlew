@@ -63,8 +63,10 @@
 ##############################################################################
 
 # Attempt to set APP_HOME
+
 # Resolve links: $0 may be a link
 app_path=$0
+
 # Need this for daisy-chained symlinks.
 while
     APP_HOME=${app_path%"${app_path##*/}"}  # leaves a trailing /; empty if no leading path
@@ -77,6 +79,7 @@ do
       *)    app_path=$APP_HOME$link ;;
     esac
 done
+
 APP_HOME=$( cd "${APP_HOME:-./}" && pwd -P ) || exit
 
 APP_NAME="Gradle"
@@ -86,7 +89,7 @@ APP_BASE_NAME=${0##*/}
 DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
-MAX_FD="maximum"
+MAX_FD=maximum
 
 warn () {
     echo "$*"
@@ -163,7 +166,9 @@ fi
 if "$cygwin" || "$msys" ; then
     APP_HOME=$( cygpath --path --mixed "$APP_HOME" )
     CLASSPATH=$( cygpath --path --mixed "$CLASSPATH" )
+
     JAVACMD=$( cygpath --unix "$JAVACMD" )
+
     # Now convert the arguments - kludge to limit ourselves to /bin/sh
     for arg do
         if
@@ -176,7 +181,7 @@ if "$cygwin" || "$msys" ; then
         then
             arg=$( cygpath --path --ignore --mixed "$arg" )
         fi
-    # Roll the args list around exactly as many times as the number of
+        # Roll the args list around exactly as many times as the number of
         # args, so each arg winds up back in the position where it started, but
         # possibly modified.
         #
@@ -193,11 +198,13 @@ fi
 #     shell script including quotes and variable substitutions, so put them in
 #     double quotes to make sure that they get re-expanded; and
 #   * put everything else in single quotes, so that it's not re-expanded.
+
 set -- \
         "-Dorg.gradle.appname=$APP_BASE_NAME" \
         -classpath "$CLASSPATH" \
         org.gradle.wrapper.GradleWrapperMain \
         "$@"
+
 # Use "xargs" to parse quoted args.
 #
 # With -n1 it outputs one arg per line, with the quotes and backslashes removed.

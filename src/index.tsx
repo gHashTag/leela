@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react'
 import { useColorScheme, StatusBar } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
-import { TransitionPresets } from '@react-navigation/stack'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
+import TabBar from './TabBar'
 import * as Sentry from '@sentry/react'
 import {
   GameScreen,
@@ -25,7 +26,6 @@ import {
   SignUpUsername,
   SignIn,
   ConfirmSignUp,
-  User,
   Forgot,
   ForgotPassSubmit,
   Hello,
@@ -33,8 +33,7 @@ import {
   SignUpAvatar
 } from './screens/Authenticator'
 
-import TabNavigator from './TabNavigator'
-import { white, black, navRef } from './constants'
+import { white, black, navRef, lightGray } from './constants'
 
 import { UI } from './UI'
 
@@ -42,6 +41,9 @@ import { DiceStore, fetchBusinesses, OnlinePlayer, OtherPlayers } from './store'
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
 import { getFireBaseRef } from './screens/helper'
+import SystemNavigationBar from 'react-native-system-navigation-bar'
+import { Text } from './components'
+import { RootStackParamList, RootTabParamList } from './types'
 
 const DarkTheme = {
   dark: true,
@@ -67,6 +69,8 @@ const LightTheme = {
   }
 }
 
+const TabNavigator = createMaterialTopTabNavigator<RootTabParamList>()
+
 const Tab = () => {
   useEffect(() => {
     if (auth().currentUser?.uid) {
@@ -89,36 +93,26 @@ const Tab = () => {
       }
     }
   }, [])
-  //tabBar change tab pos, del amplify
+
   return (
-    <TabNavigator.Navigator initialRouteName={'TAB_BOTTOM_0'}>
-      <TabNavigator.Screen name="TAB_BOTTOM_0" component={PosterScreen} />
+    <TabNavigator.Navigator
+      tabBar={props => <TabBar {...props} />}
+      tabBarPosition="bottom"
+      screenOptions={{
+        swipeEnabled: false
+      }}
+      initialRouteName={'TAB_BOTTOM_0'}
+    >
+      <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_1" component={ProfileScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_2" component={GameScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_3" component={PostScreen} />
-      {/* <TabNavigator.Screen name="TAB_BOTTOM_4" component={OnlineGameScreen} /> */}
+      {/* <TabNavigator.Screen name="TAB_BOTTOM_2" component={PostScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} /> */}
+      <TabNavigator.Screen name="TAB_BOTTOM_2" component={PosterScreen} />
     </TabNavigator.Navigator>
   )
 }
 
-const Stack = createNativeStackNavigator()
-
-const horizontalAnimation = {
-  cardStyleInterpolator: ({ current, layouts }) => {
-    return {
-      cardStyle: {
-        transform: [
-          {
-            translateX: current.progress.interpolate({
-              inputRange: [0, 1],
-              outputRange: [layouts.screen.width, 0]
-            })
-          }
-        ]
-      }
-    }
-  }
-}
+const Stack = createNativeStackNavigator<RootStackParamList>()
 
 const App = () => {
   const scheme = useColorScheme()
@@ -126,6 +120,12 @@ const App = () => {
   const color = scheme === 'dark' ? 'light-content' : 'dark-content'
 
   useEffect(() => {
+    SystemNavigationBar.setNavigationColor(
+      scheme === 'dark' ? black : white,
+      scheme === 'dark' ? false : true
+    )
+    SystemNavigationBar.setNavigationBarDividerColor(lightGray)
+
     const onAuthStateChanged = async (user: any) => {
       if (user) {
         OnlinePlayer.store.profile.email = user.email
@@ -135,7 +135,7 @@ const App = () => {
         DiceStore.online = true
         OnlinePlayer.getProfile()
         fetchBusinesses()
-        console.log(user)
+        console.log('user exist')
       } else {
         DiceStore.online = false
         console.log('No user')
@@ -144,86 +144,74 @@ const App = () => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged)
     return () => {
       subscriber()
+      // sub()
+      // unsubscribe()
     }
   }, [])
 
   return (
-    <NavigationContainer ref={navRef} theme={theme}>
+    <NavigationContainer
+      fallback={<Text title="fallback" h="h1" />}
+      ref={navRef}
+      theme={theme}
+    >
       <StatusBar backgroundColor={scheme === 'dark' ? black : white} barStyle={color} />
       <Stack.Navigator
         screenOptions={{
-          ...TransitionPresets.ModalPresentationIOS,
-          cardOverlayEnabled: true,
-          gestureEnabled: true,
-          headerShown: false,
-          cardStyle: {
-            backgroundColor: scheme === 'dark' ? black : white,
-            borderTopLeftRadius: 25,
-            borderTopRightRadius: 25
-          }
+          headerShown: false
         }}
         initialRouteName="SELECT_PLAYERS_SCREEN"
-        mode="modal"
-        headerMode="none"
       >
-        <Stack.Screen name="UI" component={UI} options={horizontalAnimation} />
-        <Stack.Screen
-          name="WELCOME_SCREEN"
-          component={WelcomeScreen}
-          options={horizontalAnimation}
-        />
+        <Stack.Screen name="UI" component={UI} />
+        {/* Auth */}
+        <Stack.Group
+          screenOptions={{
+            animation: 'slide_from_right'
+          }}
+        >
+          <Stack.Screen name="SIGN_IN" component={SignIn} />
+          <Stack.Screen name="FORGOT" component={Forgot} />
+          <Stack.Screen name="FORGOT_PASSWORD_SUBMIT" component={ForgotPassSubmit} />
+          <Stack.Screen name="SIGN_UP" component={SignUp} />
+          <Stack.Screen name="SIGN_UP_USERNAME" component={SignUpUsername} />
+          <Stack.Screen name="SIGN_UP_AVATAR" component={SignUpAvatar} />
+          <Stack.Screen name="CONFIRM_SIGN_UP" component={ConfirmSignUp} />
+        </Stack.Group>
 
-        <Stack.Screen name="HELLO" component={Hello} options={horizontalAnimation} />
-        <Stack.Screen name="SIGN_UP" component={SignUp} options={horizontalAnimation} />
-        <Stack.Screen
-          name="SIGN_UP_USERNAME"
-          component={SignUpUsername}
-          options={horizontalAnimation}
-        />
-        <Stack.Screen
-          name="SIGN_UP_AVATAR"
-          component={SignUpAvatar}
-          options={horizontalAnimation}
-        />
-        <Stack.Screen name="SIGN_IN" component={SignIn} options={horizontalAnimation} />
-        <Stack.Screen name="FORGOT" component={Forgot} options={horizontalAnimation} />
-        <Stack.Screen
-          name="FORGOT_PASSWORD_SUBMIT"
-          component={ForgotPassSubmit}
-          options={horizontalAnimation}
-        />
-        <Stack.Screen
-          name="CONFIRM_SIGN_UP"
-          component={ConfirmSignUp}
-          options={horizontalAnimation}
-        />
-        <Stack.Screen name="USER" component={User} options={horizontalAnimation} />
+        <Stack.Screen name="WELCOME_SCREEN" component={WelcomeScreen} />
+        <Stack.Screen name="HELLO" component={Hello} />
+        <Stack.Screen name="SELECT_PLAYERS_SCREEN" component={SelectPlayersScreen} />
 
-        <Stack.Screen
-          name="SELECT_PLAYERS_SCREEN"
-          component={SelectPlayersScreen}
-          options={horizontalAnimation}
-        />
-        <Stack.Screen name="MAIN" component={Tab} options={horizontalAnimation} />
-        <Stack.Screen name="RULES_SCREEN" component={RulesScreen} />
-        <Stack.Screen name="RULES_DETAIL_SCREEN" component={RulesDetailScreen} />
-        <Stack.Screen name="PLANS_SCREEN" component={PlansScreen} />
-        <Stack.Screen name="PLANS_DETAIL_SCREEN" component={PlansDetailScreen} />
-        <Stack.Screen
-          name="PLAYRA_SCREEN"
-          component={PlayraScreen}
-          options={horizontalAnimation}
-        />
-        <Stack.Screen
-          name="USER_EDIT"
-          component={UserEdit}
-          options={horizontalAnimation}
-        />
+        <Stack.Screen name="MAIN" component={Tab} />
+        {/* Rules */}
+        <Stack.Group
+          screenOptions={{
+            animation: 'slide_from_left'
+          }}
+        >
+          <Stack.Screen name="RULES_SCREEN" component={RulesScreen} />
+          <Stack.Screen name="RULES_DETAIL_SCREEN" component={RulesDetailScreen} />
+        </Stack.Group>
 
+        {/* Plans */}
+        <Stack.Group
+          screenOptions={{
+            animation: 'slide_from_right'
+          }}
+        >
+          <Stack.Screen name="PLANS_SCREEN" component={PlansScreen} />
+          <Stack.Screen name="PLANS_DETAIL_SCREEN" component={PlansDetailScreen} />
+        </Stack.Group>
+
+        <Stack.Screen name="PLAYRA_SCREEN" component={PlayraScreen} />
+        <Stack.Screen name="USER_EDIT" component={UserEdit} />
+        {/* Post */}
         <Stack.Screen
+          options={{
+            animation: 'fade_from_bottom'
+          }}
           name="DETAIL_POST_SCREEN"
           component={DetailPostScreen}
-          options={horizontalAnimation}
         />
       </Stack.Navigator>
     </NavigationContainer>

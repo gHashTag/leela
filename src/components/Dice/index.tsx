@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { StyleSheet, Pressable, Platform, Animated, Easing } from 'react-native'
-import ShakeEvent from 'react-native-shake'
+import RNShake from 'react-native-shake'
 import { observer } from 'mobx-react-lite'
 import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../store'
 import { s, ms } from 'react-native-size-matters'
@@ -40,9 +40,9 @@ const Dice = observer(() => {
   const [canRoll, setCanRoll] = useState<boolean>(true)
   const spinValue = useRef(new Animated.Value(0)).current
   useEffect(() => {
-    ShakeEvent.addEventListener('ShakeEvent', () => rollDice())
+    const subscription = RNShake.addListener(() => rollDice())
     return () => {
-      ShakeEvent.removeEventListener('ShakeEvent', () => {})
+      subscription.remove()
     }
   }, [])
 

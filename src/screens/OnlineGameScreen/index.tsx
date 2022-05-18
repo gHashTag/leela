@@ -110,7 +110,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
               textStyle={{ paddingHorizontal: 40 }}
             />
             <Space height={s(20)} />
-            {lang !== 'en' && (
+            {/* {lang !== 'en' && (
               <>
                 <PricingCard
                   color={secondary}
@@ -158,7 +158,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
                   }
                 />
               </>
-            )}
+            )} */}
 
             <Space height={s(20)} />
             <Text
