@@ -83,7 +83,10 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
     <View style={container}>
       <ThemeProvider theme={theme}>
         <Background>
-          <ScrollView contentContainerStyle={contentContainerStyle}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={contentContainerStyle}
+          >
             <Space height={s(10)} />
             <Text textStyle={{ textAlign: 'center' }} h={'h3'} title={I18n.t('events')} />
             <Space height={s(20)} />

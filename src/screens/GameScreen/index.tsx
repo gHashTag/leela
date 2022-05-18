@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { observer } from 'mobx-react-lite'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { ms, s } from 'react-native-size-matters'
 import { I18n } from '../../utils'
-import { RootStackParamList } from '../../types'
+import { RootStackParamList, RootTabParamList } from '../../types'
 import {
   Background,
   Dice,
@@ -17,8 +16,12 @@ import {
 import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../store'
 import Rate from 'react-native-rate'
 import { Button as ClassicBtn } from 'react-native-elements'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
-type navigation = StackNavigationProp<RootStackParamList, 'TAB_BOTTOM_0'>
+type navigation = NativeStackNavigationProp<
+  RootStackParamList & RootTabParamList,
+  'TAB_BOTTOM_0'
+>
 
 type GameScreenT = {
   navigation: navigation

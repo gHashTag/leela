@@ -105,9 +105,9 @@ const Tab = () => {
     >
       <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_1" component={ProfileScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_2" component={OnlineGameScreen} />
       {/* <TabNavigator.Screen name="TAB_BOTTOM_2" component={PostScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} /> */}
-      <TabNavigator.Screen name="TAB_BOTTOM_2" component={PosterScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_3" component={PosterScreen} /> */}
     </TabNavigator.Navigator>
   )
 }
@@ -155,7 +155,7 @@ const App = () => {
       ref={navRef}
       theme={theme}
     >
-      <StatusBar backgroundColor={scheme === 'dark' ? black : white} barStyle={color} />
+      <StatusBar backgroundColor={scheme === 'dark' ? white : black} barStyle={color} />
       <Stack.Navigator
         screenOptions={{
           headerShown: false

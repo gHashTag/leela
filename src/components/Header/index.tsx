@@ -1,7 +1,9 @@
 import React, { memo } from 'react'
-import { TouchableOpacity, View, useWindowDimensions, Platform } from 'react-native'
+import { TouchableOpacity, View, Platform } from 'react-native'
 import Emoji from 'react-native-emoji'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScaledSheet, s, ms } from 'react-native-size-matters'
+import { W } from '../../constants'
 import { Text } from '../Text'
 
 const styles = ScaledSheet.create({
@@ -61,10 +63,12 @@ const Header = memo<HeaderT>(
       childrenStyle
     } = styles
 
-    const width = useWindowDimensions().width
+    const { top } = useSafeAreaInsets()
+
+    const width = W
 
     return (
-      <View style={[container, { width }]}>
+      <View style={[container, { width, paddingTop: top }]}>
         {iconLeft && (
           <TouchableOpacity onPress={onPress}>
             <Emoji name={iconLeft} style={leftIconStyle} />
