@@ -1,4 +1,4 @@
-import { captureException } from '../constants'
+import { captureException, timeStampType } from '../constants'
 import ImagePicker from 'react-native-image-crop-picker'
 import { UserT, HistoryT } from '../types'
 import { OnlinePlayer } from '../store'
@@ -6,8 +6,12 @@ import storage from '@react-native-firebase/storage'
 import { nanoid } from 'nanoid/non-secure'
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
-import { firebase, FirebaseDatabaseTypes } from '@react-native-firebase/database'
+import {
+  firebase,
+  FirebaseDatabaseTypes
+} from '@react-native-firebase/database'
 import { lang } from '../utils'
+import I18n from 'i18n-js'
 
 interface NewProfileI {
   email: string
@@ -21,7 +25,9 @@ interface NewProfileI {
 const getFireBaseRef = (path: string): FirebaseDatabaseTypes.Reference => {
   return firebase
     .app()
-    .database('https://leela-chakra-default-rtdb.europe-west1.firebasedatabase.app/')
+    .database(
+      'https://leela-chakra-default-rtdb.europe-west1.firebasedatabase.app/'
+    )
     .ref(path)
 }
 
@@ -60,7 +66,12 @@ const onStart = async () => {
   })
 }
 
-const createProfile = async ({ email, uid, firstName, lastName }: NewProfileI) => {
+const createProfile = async ({
+  email,
+  uid,
+  firstName,
+  lastName
+}: NewProfileI) => {
   const hisObj: HistoryT[] = [
     {
       count: 0,
@@ -137,10 +148,13 @@ const updateProfName = async ({ firstName, lastName }: profNameI) => {
     await auth().currentUser?.updateProfile({
       displayName: `${firstName} ${lastName}`
     })
-    await firestore().collection('Profiles').doc(auth().currentUser?.uid).update({
-      firstName,
-      lastName
-    })
+    await firestore()
+      .collection('Profiles')
+      .doc(auth().currentUser?.uid)
+      .update({
+        firstName,
+        lastName
+      })
     await auth().currentUser?.reload()
     OnlinePlayer.store.profile.firstName = firstName
     OnlinePlayer.store.profile.lastName = lastName
@@ -249,6 +263,42 @@ const uploadImg = async (image: { path: string }) => {
   return fileName
 }
 
+function getUid() {
+  return auth().currentUser?.uid
+}
+
+interface getTimeT {
+  lastTime: number
+  type?: 0 | 1
+}
+
+function getTimeStamp({ lastTime, type = 0 }: getTimeT) {
+  const dateNow = Date.now()
+  let date: Date = new Date(lastTime)
+
+  const day = 86400000
+  const difference = dateNow - lastTime
+
+  if (difference <= 20000) {
+    return I18n.t(timeStampType[type].now)
+  } else if (difference <= day) {
+    return I18n.t(timeStampType[type].today)
+  } else if (difference <= day * 2) {
+    return I18n.t(timeStampType[type].yesterday)
+  } else if (difference <= 30 * day) {
+    const days = Math.floor(difference / day)
+    return `${days}${I18n.t(timeStampType[type].days)}`
+  } else if (difference < 12 * 30 * day) {
+    const month = Math.floor(difference / (day * 30))
+    return `${month}${I18n.t(timeStampType[type].month)}`
+  } else {
+    return `${date.getHours()}:${date.getMinutes()} · ${date.getDate()}/${date.getMonth()}/${date
+      .getFullYear()
+      .toString()
+      .substr(2, 2)}`
+  }
+}
+
 export {
   uploadImg,
   updatePlan,
@@ -263,5 +313,7 @@ export {
   getFireBaseRef,
   onWin,
   onStart,
-  resetPlayer
+  resetPlayer,
+  getTimeStamp,
+  getUid
 }

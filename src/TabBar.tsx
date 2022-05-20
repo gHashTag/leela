@@ -16,9 +16,9 @@ export default function TabBar({
   const scheme = useColorScheme()
   const { bottom } = useSafeAreaInsets()
 
-  const curRoute = routes //.filter(a =>
-  //   DiceStore.online ? true : a.name === 'TAB_BOTTOM_2' ? false : true
-  // )
+  const curRoute = routes.filter(a =>
+    DiceStore.online ? true : a.name === 'TAB_BOTTOM_3' ? false : true
+  )
   const tabContainer = [
     container,
     {

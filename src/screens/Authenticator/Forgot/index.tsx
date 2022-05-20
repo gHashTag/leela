@@ -1,8 +1,14 @@
 import React, { useState, ReactElement } from 'react'
 import { I18n } from '../../../utils'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp, useTheme } from '@react-navigation/native'
-import { AppContainer, Button, CenterView, Input, Space } from '../../../components'
+import {
+  AppContainer,
+  Button,
+  CenterView,
+  Input,
+  Loading,
+  Space
+} from '../../../components'
 import { goBack, white, black, captureException, W } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import auth from '@react-native-firebase/auth'
@@ -17,8 +23,12 @@ import {
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { s, vs } from 'react-native-size-matters'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
-type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'FORGOT'>
+type ProfileScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'FORGOT'
+>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'FORGOT'>
 
 type ForgotT = {
@@ -69,26 +79,29 @@ const Forgot = ({ route, navigation }: ForgotT): ReactElement => {
       title=" "
       onPress={goBack(navigation)}
       message={error}
-      loading={loading}
       colorLeft={color}
     >
-      <CenterView>
-        <FormProvider {...methods}>
-          <Input
-            name="email"
-            placeholder="E-mail"
-            autoCapitalize="none"
-            color={color}
-            additionalStyle={{ width: W - s(40) }}
-          />
-          <Space height={vs(20)} />
-          <Button
-            title={I18n.t('confirm')}
-            onPress={methods.handleSubmit(onSubmit, onError)}
-          />
-        </FormProvider>
-        <Space height={vs(40)} />
-      </CenterView>
+      {loading ? (
+        <Loading />
+      ) : (
+        <CenterView>
+          <FormProvider {...methods}>
+            <Input
+              name="email"
+              placeholder="E-mail"
+              autoCapitalize="none"
+              color={color}
+              additionalStyle={{ width: W - s(40) }}
+            />
+            <Space height={vs(20)} />
+            <Button
+              title={I18n.t('confirm')}
+              onPress={methods.handleSubmit(onSubmit, onError)}
+            />
+          </FormProvider>
+          <Space height={vs(40)} />
+        </CenterView>
+      )}
     </AppContainer>
   )
 }

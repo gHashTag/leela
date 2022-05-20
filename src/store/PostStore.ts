@@ -1,23 +1,42 @@
 import { makeAutoObservable } from 'mobx'
-import { FormPostT, PostT, CommentT, FormCommentT } from '../types'
+import {
+  FormPostT,
+  PostT,
+  CommentT,
+  FormCommentT,
+  FormReplyCom,
+  ReplyComT
+} from '../types'
 import auth from '@react-native-firebase/auth'
-import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
+import firestore, {
+  FirebaseFirestoreTypes
+} from '@react-native-firebase/firestore'
 import { nanoid } from 'nanoid/non-secure'
 import { OnlinePlayer } from './OnlinePlayer'
 import { OtherPlayers } from './OtherPlayers'
+import * as Keychain from 'react-native-keychain'
+import { getProfile } from '../screens/helper'
+import I18n from 'i18n-js'
 
-type fetchI = FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
-
+type fetchT =
+  FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
 interface postStoreT {
   posts: PostT[]
   comments: CommentT[]
+  replyComments: ReplyComT[]
   loadPosts: boolean
+}
+
+interface delCommentT {
+  commentId: string
+  isReply: boolean
 }
 
 export const PostStore = {
   store: makeAutoObservable<postStoreT>({
     posts: [],
     comments: [],
+    replyComments: [],
     loadPosts: true
   }),
   createPost: async ({ text, plan }: FormPostT) => {
@@ -40,6 +59,7 @@ export const PostStore = {
   createComment: async ({ text, postId, postOwner }: FormCommentT) => {
     const userUid = auth().currentUser?.uid
     const email = auth().currentUser?.email
+    const path = nanoid(22)
     if (userUid && email) {
       const comment: CommentT = {
         text,
@@ -49,12 +69,52 @@ export const PostStore = {
         lastName: OnlinePlayer.store.profile.lastName,
         ownerId: userUid,
         createTime: Date.now(),
-        email
+        email,
+        reply: false,
+        id: path
       }
-      await firestore().collection('Comments').add(comment)
+      await firestore().collection('Comments').doc(path).set(comment)
     }
   },
-  fetchPosts: async (querySnap: fetchI) => {
+  delComment: async ({ commentId, isReply }: delCommentT) => {
+    await firestore().collection('Comments').doc(commentId).delete()
+    PostStore.store.comments = PostStore.store.comments.filter(
+      a => a.id !== commentId
+    )
+    if (!isReply)
+      firestore()
+        .collection('Comments')
+        .where('commentId', '==', commentId)
+        .get()
+        .then(function (querySnap) {
+          querySnap.forEach(function (doc) {
+            doc.ref.delete()
+          })
+        })
+  },
+  replyComment: async ({ text, commentId, commentOwner }: FormReplyCom) => {
+    const userUid = auth().currentUser?.uid
+    const prof = await getProfile()
+    if (prof) {
+      const path = nanoid(23)
+      if (userUid) {
+        const comment: ReplyComT = {
+          text,
+          commentId,
+          commentOwner,
+          firstName: prof.firstName,
+          lastName: prof.lastName,
+          ownerId: userUid,
+          createTime: Date.now(),
+          email: prof.email,
+          reply: true,
+          id: path
+        }
+        await firestore().collection('Comments').doc(path).set(comment)
+      }
+    }
+  },
+  fetchPosts: async (querySnap: fetchT) => {
     PostStore.store.loadPosts = true
     const res: any[] = await Promise.all(
       querySnap.docs
@@ -71,7 +131,7 @@ export const PostStore = {
     }
     PostStore.store.loadPosts = false
   },
-  fetchComments: async (querySnap: fetchI) => {
+  fetchComments: async (querySnap: fetchT) => {
     const res: any[] = await Promise.all(
       querySnap.docs
         .map(async a => {
@@ -81,9 +141,15 @@ export const PostStore = {
           }
         })
         .filter((a: any) => a !== undefined)
+      // (a !== undefined ? (a.reply ? false : true) : false)
     )
     if (res.length > 0) {
       PostStore.store.comments = res
+        .filter(a => (a.reply ? false : true))
+        .sort((a, b) => b.createTime - a.createTime)
+      PostStore.store.replyComments = res
+        .filter(a => (a.reply ? true : false))
+        .sort((a, b) => a.createTime - b.createTime)
     }
   },
   likePost: async (postId: string) => {
@@ -97,9 +163,9 @@ export const PostStore = {
   },
   getOwnerName: (ownerId: string) => {
     const userUid = auth().currentUser?.uid
-    if (userUid === ownerId) return 'You'
+    if (userUid === ownerId) return I18n.t('you')
     const profile = OtherPlayers.store.players.find(a => a.owner === ownerId)
-    if (!profile) return 'Anonymous'
+    if (!profile) return I18n.t('anonymous')
     return `${profile.firstName} ${profile.lastName}`
   },
   getComPlan: (ownerId: string) => {
@@ -108,5 +174,16 @@ export const PostStore = {
     const plan = OtherPlayers.store.players.find(a => a.owner === ownerId)?.plan
     if (!plan) return 0
     return plan
+  },
+  getOncePost: async () => {
+    await firestore()
+      .collection('Profiles')
+      .get()
+      .then(snap => OtherPlayers.getOtherProf({ snapshot: snap }))
+    await firestore().collection('Posts').get().then(PostStore.fetchPosts)
+    await firestore().collection('Comments').get().then(PostStore.fetchComments)
+  },
+  translateText: async (text: string) => {
+    return text
   }
 }

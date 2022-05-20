@@ -13,7 +13,8 @@ export default {
   insertCode: 'Insert the code sent to your mail',
   confirm: 'Confirm',
   resendCode: 'Resend code?',
-  invalidVerificationCode: 'Invalid verification code provided, please try again.',
+  invalidVerificationCode:
+    'Invalid verification code provided, please try again.',
   usernameExistsException: 'An account with the given email already exists.',
   firstName: 'First name',
   lastName: 'Last name',
@@ -63,5 +64,30 @@ export default {
   gameMode: 'Game mode',
   online: 'Online',
   offline: 'Offline',
-  leaveFeedback: 'Leave feedback'
+  leaveFeedback: 'Leave feedback',
+  takeStep: 'Take a step',
+  nextStep: 'Next step through',
+  you: 'you',
+  anonymous: 'Anonymous',
+  placeholderReport: 'Make a plan report',
+  // timestamp
+  now0: 'now',
+  now1: 'now',
+  today0: 'today',
+  today1: 'today',
+  yday0: 'yesterday',
+  yday1: 'yday',
+  d0: ' days ago',
+  d1: 'd',
+  m0: ' month ago',
+  m1: 'm',
+  y0: ' year ago',
+  y1: 'y',
+  checkMail: 'Check your e-mail!',
+  clearly: 'clearly',
+  // action
+  delete: 'Delete',
+  reply: 'Reply',
+  copy: 'Copy',
+  translate: 'Translate'
 }

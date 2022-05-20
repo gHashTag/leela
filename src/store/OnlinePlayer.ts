@@ -91,6 +91,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
         timeText: ' ',
         loadingProf: true
       }
+      actionsDice.resetPlayer()
       await Keychain.resetInternetCredentials('auth')
       await auth().signOut()
       navigate('WELCOME_SCREEN')

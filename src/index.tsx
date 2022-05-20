@@ -18,7 +18,9 @@ import {
   PosterScreen,
   WelcomeScreen,
   PostScreen,
-  DetailPostScreen
+  DetailPostScreen,
+  ReplyModal,
+  InputTextModal
 } from './screens'
 
 import {
@@ -106,8 +108,8 @@ const Tab = () => {
       <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_1" component={ProfileScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_2" component={OnlineGameScreen} />
-      {/* <TabNavigator.Screen name="TAB_BOTTOM_2" component={PostScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_3" component={PosterScreen} /> */}
+      <TabNavigator.Screen name="TAB_BOTTOM_3" component={PostScreen} />
+      {/* <TabNavigator.Screen name="TAB_BOTTOM_3" component={PosterScreen} /> */}
     </TabNavigator.Navigator>
   )
 }
@@ -160,7 +162,7 @@ const App = () => {
         screenOptions={{
           headerShown: false
         }}
-        initialRouteName="SELECT_PLAYERS_SCREEN"
+        initialRouteName="WELCOME_SCREEN"
       >
         <Stack.Screen name="UI" component={UI} />
         {/* Auth */}
@@ -213,6 +215,22 @@ const App = () => {
           name="DETAIL_POST_SCREEN"
           component={DetailPostScreen}
         />
+        {/* Modals */}
+        <Stack.Group
+          screenOptions={{
+            presentation: 'transparentModal',
+            animation: 'slide_from_bottom'
+          }}
+        >
+          <Stack.Screen name="REPLY_MODAL" component={ReplyModal} />
+          <Stack.Screen
+            name="INPUT_TEXT_MODAL"
+            component={InputTextModal}
+            options={{
+              animation: 'fade'
+            }}
+          />
+        </Stack.Group>
       </Stack.Navigator>
     </NavigationContainer>
   )

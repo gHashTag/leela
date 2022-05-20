@@ -1,9 +1,9 @@
 import React, { useState, ReactElement } from 'react'
 import { KeyboardAvoidingView } from 'react-native'
 import * as Keychain from 'react-native-keychain'
-import Config from 'react-native-config'
+// @ts-expect-error
+import { EMAIL, PASSWORD } from '@env'
 import { s } from 'react-native-size-matters'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from '@react-navigation/native'
 import {
   AppContainer,
@@ -12,7 +12,8 @@ import {
   ButtonLink,
   TextError,
   Input,
-  CenterView
+  CenterView,
+  Loading
 } from '../../../components'
 import { goBack, white, black, captureException, W } from '../../../constants'
 import { RootStackParamList } from '../../../types'
@@ -29,8 +30,12 @@ import {
 } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
-type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SIGN_IN'>
+type ProfileScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'SIGN_IN'
+>
 
 type SignUpT = {
   navigation: ProfileScreenNavigationProp
@@ -49,7 +54,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const initialValues = { email: Config.EMAIL, password: Config.PASSWORD }
+  const initialValues = { email: EMAIL, password: PASSWORD }
 
   const { ...methods } = useForm({
     mode: 'onChange',
@@ -67,7 +72,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
       .then(async user => {
         await Keychain.setInternetCredentials('auth', email, password)
         if (user.user.emailVerified) {
-          navigation.navigate('MAIN')
+          navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
           actionsDice.init()
         } else {
           navigation.navigate('CONFIRM_SIGN_UP', { email })
@@ -83,10 +88,9 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
           setError(I18n.t('forgotPassword'))
         } else {
           setError(err.code)
-          // console.log(err.code)
+          console.log(err.code)
         }
       })
-
     setLoading(false)
   }
 
@@ -99,42 +103,46 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
 
   return (
     <AppContainer onPress={goBack(navigation)} title=" " colorLeft={color}>
-      <CenterView>
-        <FormProvider {...methods}>
-          <KeyboardAvoidingView behavior="padding">
-            <Input
-              name="email"
-              placeholder="E-mail"
-              autoCapitalize="none"
-              color={color}
-              additionalStyle={{ width: W - s(40) }}
-            />
-            <Input
-              name="password"
-              placeholder={I18n.t('password')}
-              secureTextEntry
-              color={color}
-              additionalStyle={{ width: W - s(40) }}
-            />
-            <Space height={s(20)} />
-            {error !== I18n.t('forgotPassword') && (
-              <TextError title={error} textStyle={{ alignSelf: 'center' }} />
-            )}
-            {error === I18n.t('forgotPassword') && (
-              <ButtonLink
-                title={error}
-                onPress={() => navigation.navigate('FORGOT', { email: userInfo })}
-                textStyle={{ alignSelf: 'center' }}
+      {loading ? (
+        <Loading />
+      ) : (
+        <CenterView>
+          <FormProvider {...methods}>
+            <KeyboardAvoidingView behavior="padding">
+              <Input
+                name="email"
+                placeholder="E-mail"
+                autoCapitalize="none"
+                color={color}
+                additionalStyle={{ width: W - s(40) }}
               />
-            )}
-            <Space height={s(30)} />
-            <Button
-              title={I18n.t('signIn')}
-              onPress={methods.handleSubmit(onSubmit, onError)}
-            />
-          </KeyboardAvoidingView>
-        </FormProvider>
-      </CenterView>
+              <Input
+                name="password"
+                placeholder={I18n.t('password')}
+                secureTextEntry
+                color={color}
+                additionalStyle={{ width: W - s(40) }}
+              />
+              <Space height={s(20)} />
+              {error !== I18n.t('forgotPassword') && (
+                <TextError title={error} textStyle={{ alignSelf: 'center' }} />
+              )}
+              {error === I18n.t('forgotPassword') && (
+                <ButtonLink
+                  title={error}
+                  onPress={() => navigation.navigate('FORGOT', { email: userInfo })}
+                  textStyle={{ alignSelf: 'center' }}
+                />
+              )}
+              <Space height={s(30)} />
+              <Button
+                title={I18n.t('signIn')}
+                onPress={methods.handleSubmit(onSubmit, onError)}
+              />
+            </KeyboardAvoidingView>
+          </FormProvider>
+        </CenterView>
+      )}
     </AppContainer>
   )
 }

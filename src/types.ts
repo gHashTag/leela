@@ -47,10 +47,18 @@ export type RootStackParamList = {
     url: string
   }
   DETAIL_POST_SCREEN: {
-    item: PostT
-    index: number
+    postId: string
+    comment?: boolean
   }
   POST_SCREEN: undefined
+
+  REPLY_MODAL: {
+    buttons: ButtonsModalT[]
+  }
+  INPUT_TEXT_MODAL: {
+    onSubmit?: (text: string) => void
+    onError?: (err: any) => void
+  }
 }
 
 export type RootTabParamList = {
@@ -138,4 +146,12 @@ export interface CommentT extends FormCommentT {
   ownerId: string
   createTime: number
   email: string
+}
+
+export interface ButtonsModalT {
+  onPress: () => void
+  title: string
+  icon: string
+  key?: string
+  color?: string
 }

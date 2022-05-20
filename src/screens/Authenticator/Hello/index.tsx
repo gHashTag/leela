@@ -3,7 +3,6 @@ import React, { ReactElement } from 'react'
 import { ScaledSheet, ms, s, vs } from 'react-native-size-matters'
 
 import { I18n } from '../../../utils'
-import { StackNavigationProp } from '@react-navigation/stack'
 import {
   AppContainer,
   Button,
@@ -15,8 +14,12 @@ import {
 import { white, black, goBack } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
-type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HELLO'>
+type ProfileScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'HELLO'
+>
 
 type HelloT = {
   navigation: ProfileScreenNavigationProp
@@ -41,11 +44,17 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
       <CenterView>
         <IconLeela />
         <Space height={s(30)} />
-        <Button title={I18n.t('signIn')} onPress={() => navigation.navigate('SIGN_IN')} />
+        <Button
+          title={I18n.t('signIn')}
+          onPress={() => navigation.navigate('SIGN_IN')}
+        />
         <Space height={10} />
         <Text h={'h5'} title={I18n.t('or')} textStyle={styles.h6} />
         <Space height={10} />
-        <Button title={I18n.t('signUp')} onPress={() => navigation.navigate('SIGN_UP')} />
+        <Button
+          title={I18n.t('signUp')}
+          onPress={() => navigation.navigate('SIGN_UP')}
+        />
         <Space height={vs(140)} />
       </CenterView>
     </AppContainer>

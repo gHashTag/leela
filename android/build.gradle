@@ -55,5 +55,8 @@ allprojects {
                 includeModule("com.yqritc", "android-scalablevideoview")
             }
         }
+        maven {
+            url "$rootDir/../node_modules/@notifee/react-native/android/libs"
+        }
     }
 }

@@ -1,15 +1,21 @@
 import React, { ReactElement } from 'react'
 import { s } from 'react-native-size-matters'
 import { observer } from 'mobx-react-lite'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp, useTheme } from '@react-navigation/native'
 import { I18n } from '../../../utils'
-import { AppContainer, Avatar, Button, CenterView, Space } from '../../../components'
+import {
+  AppContainer,
+  Avatar,
+  Button,
+  CenterView,
+  Space
+} from '../../../components'
 import { goBack } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { OnlinePlayer } from '../../../store'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
-type ProfileScreenNavigationProp = StackNavigationProp<
+type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'SIGN_UP_AVATAR'
 >
@@ -24,9 +30,10 @@ const SignUpAvatar = observer(({ navigation }: SignUpAvatarT): ReactElement => {
   const onPressAva = async () => {
     OnlinePlayer.uploadImage()
   }
-  const handleSubmit = () => navigation.navigate('MAIN')
+  const handleSubmit = () =>
+    navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
   return (
-    <AppContainer onPress={goBack(navigation)} title=" " iconLeft={null} loading={false}>
+    <AppContainer onPress={goBack(navigation)} title=" " iconLeft={null}>
       <CenterView>
         <Avatar
           size="xLarge"

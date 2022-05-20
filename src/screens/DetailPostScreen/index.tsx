@@ -1,89 +1,97 @@
 import { RouteProp } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useState } from 'react'
+import React, { useEffect } from 'react'
 import { StyleSheet, View, FlatList } from 'react-native'
-import {
-  CommentCard,
-  CreateComment,
-  Header,
-  Input,
-  PostCard,
-  Space,
-  Text
-} from '../../components'
-import {
-  black,
-  brightTurquoise,
-  fuchsia,
-  goBack,
-  gray,
-  lightGray,
-  paleBlue,
-  secondary
-} from '../../constants'
+import { CommentCard, Header, Loading, PostCard, Space } from '../../components'
+import { lightGray, paleBlue } from '../../constants'
 import { PostStore } from '../../store'
 import { RootStackParamList } from '../../types'
 
 import { s, vs } from 'react-native-size-matters'
 import { nanoid } from 'nanoid/non-secure'
 import { observer } from 'mobx-react-lite'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { getUid } from '../helper'
 
 interface DetailPostI {
-  navigation: StackNavigationProp<RootStackParamList, 'DETAIL_POST_SCREEN'>
+  navigation: NativeStackNavigationProp<RootStackParamList, 'DETAIL_POST_SCREEN'>
   route: RouteProp<RootStackParamList, 'DETAIL_POST_SCREEN'>
 }
 
 export const DetailPostScreen: React.FC<DetailPostI> = observer(
   ({ navigation, route }) => {
-    const [inputVisible, setInputVisible] = useState(false)
-    const { item, index } = route.params
+    const { postId, comment } = route.params
 
-    const data = PostStore.store.comments.filter(a => a.postId === item.id)
+    const curItem = PostStore.store.posts.find(a => a.id === postId)
+    const itemIndex = PostStore.store.posts.findIndex(a => a.id === postId)
+    const commentData = curItem
+      ? PostStore.store.comments.slice().filter(a => a.postId === curItem.id)
+      : []
 
-    return (
-      <>
-        <FlatList
-          removeClippedSubviews={false}
-          ListHeaderComponent={
-            <>
-              <Header iconLeft=":back:" onPress={goBack(navigation)} />
-              <PostCard
-                item={item}
-                index={index}
-                isDetail
-                onPressCom={() => setInputVisible(true)}
-              />
-              <View style={line} />
-            </>
-          }
-          ListFooterComponent={
-            <>
-              <View style={line} />
-              <Space height={vs(30)} />
-            </>
-          }
-          keyExtractor={() => nanoid(9)}
-          ListEmptyComponent={
-            <View style={dotContainer}>
-              <View style={dot} />
-              <View style={dot} />
-              <View style={[dot, { height: s(22), width: s(22) }]} />
-              <View style={dot} />
-              <View style={dot} />
-            </View>
-          }
-          data={data}
-          renderItem={({ item, index }) => (
-            <CommentCard item={item} index={index} endIndex={data.length - 1} />
-          )}
-        />
-        <CreateComment
-          postId={item.id}
-          postOwner={item.ownerId}
-          visible={inputVisible}
-          setVisible={setInputVisible}
-        />
-      </>
+    useEffect(() => {
+      if (getUid() === undefined) {
+        navigation.navigate('WELCOME_SCREEN')
+        return
+      }
+      comment && setTimeout(newComment, 50)
+      if (!curItem) {
+        PostStore.getOncePost()
+      }
+    }, [])
+
+    function newComment() {
+      curItem &&
+        navigation.navigate('INPUT_TEXT_MODAL', {
+          onSubmit: text =>
+            PostStore.createComment({
+              text,
+              postId: curItem.id,
+              postOwner: curItem.ownerId
+            })
+        })
+    }
+
+    function GoPostScreen() {
+      navigation.canGoBack()
+        ? navigation.goBack()
+        : navigation.navigate('MAIN', {
+            screen: 'TAB_BOTTOM_2',
+            params: { scrollToId: itemIndex !== -1 ? itemIndex : 0 }
+          })
+    }
+
+    return curItem ? (
+      <FlatList
+        removeClippedSubviews={false}
+        ListHeaderComponent={
+          <>
+            <Header iconLeft=":back:" onPress={GoPostScreen} />
+            <PostCard postId={postId} isDetail onPressCom={newComment} />
+            <View style={line} />
+          </>
+        }
+        ListFooterComponent={
+          <>
+            <View style={line} />
+            <Space height={vs(30)} />
+          </>
+        }
+        keyExtractor={() => nanoid(9)}
+        ListEmptyComponent={
+          <View style={dotContainer}>
+            <View style={dot} />
+            <View style={dot} />
+            <View style={[dot, { height: s(22), width: s(22) }]} />
+            <View style={dot} />
+            <View style={dot} />
+          </View>
+        }
+        data={commentData}
+        renderItem={({ item, index }) => (
+          <CommentCard item={item} index={index} endIndex={commentData.length - 1} />
+        )}
+      />
+    ) : (
+      <Loading />
     )
   }
 )

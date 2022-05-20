@@ -1,16 +1,16 @@
 import React, { useEffect } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s, vs } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
-import { AppContainer, VideoPlayer, Space, Text } from '../../components'
+import { AppContainer, VideoPlayer, Space, Text, CreatePost } from '../../components'
 import { goBack } from '../../constants'
 import { actionPlay } from '../../store'
 import { ScrollView } from 'react-native-gesture-handler'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
-type navigation = StackNavigationProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
+type navigation = NativeStackNavigationProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
 type route = RouteProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
 
 type PlansDetailScreenT = {
@@ -59,7 +59,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
         )}
         <Space height={s(30)} />
         <Text selectable h={'h7'} title={content} textStyle={h3} />
-        {/* {!report && <CreatePost plan={id} />} */}
+        {!report && <CreatePost plan={id} />}
         <Space height={vs(report ? 260 : 50)} />
       </ScrollView>
     </AppContainer>

@@ -1,6 +1,7 @@
 import { Dimensions, Linking } from 'react-native'
 import * as Sentry from '@sentry/react-native'
 import { createNavigationContainerRef } from '@react-navigation/native'
+import { ButtonsModalT } from './types'
 
 export const navRef = createNavigationContainerRef()
 
@@ -10,9 +11,18 @@ export const navigate = (name: string, params?: any) => {
   }
 }
 
+export function OpenReplyModal(modalButtons: ButtonsModalT[]) {
+  if (navRef.isReady()) {
+    navRef.navigate('REPLY_MODAL', { buttons: modalButtons })
+  }
+}
+
 export const captureException = error => {
   if (!error) {
-    console.log('%c captureException called with messing or incorrect arguments', 'background: #555; color: yellow')
+    console.log(
+      '%c captureException called with messing or incorrect arguments',
+      'background: #555; color: yellow'
+    )
     return
   }
   console.error(error)
@@ -123,6 +133,26 @@ export const brightTurquoise = '#1EE4EC'
 
 export const revenuecat = 'BeIMIIfptWXlouosYudFEWQDkwDvJUzv'
 
-export const defUrl = 'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/Mantra/mantra.json'
+export const defUrl =
+  'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/Mantra/mantra.json'
 
 export const ENTITLEMENT_ID = 'Pro'
+
+export const timeStampType = [
+  {
+    now: 'now0',
+    today: 'today0',
+    yesterday: 'yday0',
+    days: 'd0',
+    month: 'm0',
+    year: 'y0'
+  },
+  {
+    now: 'now1',
+    today: 'today1',
+    yesterday: 'yday1',
+    days: 'd1',
+    month: 'm1',
+    year: 'y1'
+  }
+]

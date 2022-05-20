@@ -1,16 +1,12 @@
 import React from 'react'
 import { LogBox, Platform } from 'react-native'
-// import Purchases from 'react-native-purchases'
-// import TrackPlayer from 'react-native-track-player'
 import { configure } from 'mobx'
-import { configurePersistable, StorageAdapter } from 'mobx-persist-store'
+import { configurePersistable } from 'mobx-persist-store'
 import * as Sentry from '@sentry/react-native'
 import VersionInfo from 'react-native-version-info'
 import App from './src'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-
-//import StorybookUI from './storybook'
 
 const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
 
@@ -44,7 +40,6 @@ configure({
 LogBox.ignoreLogs([
   'Require cycle: node_modules/react-native/Libraries/Network/fetch.js',
   'RCTBridge required',
-  'Warning: AsyncStorage',
   'Warning: componentWillReceiveProps',
   'RCTRootView cancelTouches',
   'not authenticated',
@@ -53,7 +48,8 @@ LogBox.ignoreLogs([
   "Can't perform a React",
   'Trying to load',
   'Setting a timer for a long period of time',
-  'Sending'
+  'Sending',
+  'Non-serializable values were found in the navigation'
 ])
 
 // TrackPlayer.registerPlaybackService(() => require('./service'))
