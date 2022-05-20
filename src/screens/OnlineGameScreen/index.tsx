@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { StyleSheet, Linking, ScrollView, View } from 'react-native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s, vs } from 'react-native-size-matters'
@@ -17,8 +16,9 @@ import {
   YouTubePlayer
 } from '../../components'
 import { secondary } from '../../constants'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
-type navigation = StackNavigationProp<RootStackParamList, 'PROFILE_SCREEN'>
+type navigation = NativeStackNavigationProp<RootStackParamList, 'PROFILE_SCREEN'>
 
 type OnlineGameScreenT = {
   navigation: navigation

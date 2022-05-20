@@ -155,7 +155,7 @@ const App = () => {
       ref={navRef}
       theme={theme}
     >
-      <StatusBar backgroundColor={scheme === 'dark' ? white : black} barStyle={color} />
+      <StatusBar backgroundColor={scheme === 'dark' ? black : white} barStyle={color} />
       <Stack.Navigator
         screenOptions={{
           headerShown: false
