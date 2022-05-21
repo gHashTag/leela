@@ -43,6 +43,7 @@ import { DiceStore, fetchBusinesses, OnlinePlayer, OtherPlayers } from './store'
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
 import { getFireBaseRef } from './screens/helper'
+import { linking } from './utils'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
 import { Text } from './components'
 import { RootStackParamList, RootTabParamList } from './types'
@@ -154,6 +155,7 @@ const App = () => {
   return (
     <NavigationContainer
       fallback={<Text title="fallback" h="h1" />}
+      linking={linking}
       ref={navRef}
       theme={theme}
     >

@@ -19,7 +19,8 @@ I18n.translations = {
 
 const deviceLanguage =
   Platform.OS === 'ios'
-    ? NativeModules.SettingsManager.settings.AppleLocale || NativeModules.SettingsManager.settings.AppleLanguages[0] //iOS 13
+    ? NativeModules.SettingsManager.settings.AppleLocale ||
+      NativeModules.SettingsManager.settings.AppleLanguages[0] //iOS 13
     : NativeModules.I18nManager.localeIdentifier
 
 const langOS = deviceLanguage.slice(0, 2)
@@ -27,3 +28,4 @@ const AllLang = langOS
 const lang = langOS === 'en' || 'ru' ? langOS : 'en'
 
 export { lang, I18n, AllLang }
+export * from './linking'

@@ -1,11 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  Pressable,
-  Share,
-  StyleSheet,
-  TouchableOpacity,
-  View
-} from 'react-native'
+import { Pressable, Share, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import {
   brightTurquoise,
@@ -41,9 +35,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
   const itemIndex = PostStore.store.posts.findIndex(a => a.id === postId)
 
   const [isLiked, setIsLiked] = useState<boolean>(
-    item.liked?.findIndex(a => a === auth().currentUser?.uid) === -1
-      ? false
-      : true
+    item.liked?.findIndex(a => a === auth().currentUser?.uid) === -1 ? false : true
   )
   const [transText, setTransText] = useState('')
   useEffect(() => {
@@ -52,9 +44,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
 
   useMemo(() => {
     setIsLiked(
-      item.liked?.findIndex(a => a === auth().currentUser?.uid) === -1
-        ? false
-        : true
+      item.liked?.findIndex(a => a === auth().currentUser?.uid) === -1 ? false : true
     )
   }, [item.liked])
 
@@ -121,12 +111,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
           </View>
         </View>
         {/* Detail Text */}
-        <HashtagFormat
-          h={'h5'}
-          textStyle={textStyle}
-          title={transText}
-          selectable
-        />
+        <HashtagFormat h={'h5'} textStyle={textStyle} title={transText} selectable />
         {/* Detail Date */}
         <Space height={vs(5)} />
         <View style={headerS}>
@@ -152,11 +137,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
             name="comment-o"
             size={mediumButton}
           />
-          <ButtonVectorIcon
-            viewStyle={mediumBtn}
-            name="compress"
-            size={mediumButton}
-          />
+          <ButtonVectorIcon viewStyle={mediumBtn} name="compress" size={mediumButton} />
           <ButtonVectorIcon
             onPress={handleLike}
             viewStyle={mediumBtn}
@@ -203,11 +184,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
               name="comment-o"
               size={smallButton}
             />
-            <ButtonVectorIcon
-              viewStyle={smallBtn}
-              name="compress"
-              size={smallButton}
-            />
+            <ButtonVectorIcon viewStyle={smallBtn} name="compress" size={smallButton} />
             <ButtonVectorIcon
               count={likeCount}
               onPress={handleLike}
