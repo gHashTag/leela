@@ -6,6 +6,7 @@ import * as yup from 'yup'
 import { Button, Input, Space } from '..'
 import { black, navigate } from '../../constants'
 import { PostStore } from '../../store'
+import I18n from 'i18n-js'
 
 interface CreatePostT {
   plan: number
@@ -22,7 +23,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
   const handleSubmit: SubmitHandler<FieldValues> = async data => {
     methods.reset()
     await PostStore.createPost({ text: data.text, plan: plan })
-    navigate('TAB_BOTTOM_2')
+    navigate('TAB_BOTTOM_3')
   }
 
   const { ...methods } = useForm({
@@ -36,11 +37,12 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
         name="text"
         color={black}
         multiline
+        placeholder={I18n.t('placeholderReport')}
         additionalStyle={{ width: '100%', alignItems: 'center' }}
       />
       <Space height={20} />
       <Button
-        title="Submit"
+        title={I18n.t('confirm')}
         onPress={methods.handleSubmit(handleSubmit, err => console.log(err))}
       />
     </FormProvider>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
@@ -37,10 +37,6 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
   const { id, title, content, videoUrl, report } = route.params
   const { h3 } = styles
 
-  useEffect(() => {
-    actionPlay.stop()
-  }, [])
-
   return (
     <AppContainer
       onPress={() => {
@@ -59,8 +55,8 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
         )}
         <Space height={s(30)} />
         <Text selectable h={'h7'} title={content} textStyle={h3} />
-        {!report && <CreatePost plan={id} />}
-        <Space height={vs(report ? 260 : 50)} />
+        {report && <CreatePost plan={id} />}
+        <Space height={vs(!report ? 260 : 50)} />
       </ScrollView>
     </AppContainer>
   )

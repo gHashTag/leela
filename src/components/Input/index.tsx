@@ -52,27 +52,23 @@ const Input: React.FC<TextInputProps> = ({
   const input = ScaledSheet.create([
     inputProps.multiline ? inputArea : inputStyle,
     {
-      fontFamily: 'Avenir Next',
       color,
-      borderBottomColor: color,
-      fontSize: Platform.OS === 'ios' ? '16@s' : '16@s'
+      borderBottomColor: color
     }
   ])
 
   const placeholderStyle = ScaledSheet.create([
     inputProps.multiline ? inputArea : inputStyle,
     {
-      fontFamily: 'Avenir Next',
       color: dimGray,
-      borderColor: classicRose,
-      fontSize: Platform.OS === 'ios' ? '16@s' : '16@s'
+      borderColor: classicRose
     }
   ])
 
   return (
     <View style={additionalStyle}>
       <TextInput
-        style={[style, field.value?.length === 0 ? placeholderStyle : input]}
+        style={[style, hasError ? placeholderStyle : input]}
         placeholderTextColor={dimGray}
         onChangeText={field.onChange}
         onBlur={() => {
@@ -98,7 +94,7 @@ const Input: React.FC<TextInputProps> = ({
 
 const styles = StyleSheet.create({
   inputStyle: {
-    fontSize: 14,
+    fontSize: s(16),
     width: '95%',
     borderBottomWidth: 2
   },
@@ -109,11 +105,13 @@ const styles = StyleSheet.create({
     left: 5
   },
   inputArea: {
-    fontSize: 14,
+    fontSize: s(16),
     width: '95%',
     borderWidth: s(1.5),
     height: vs(120),
-    textAlignVertical: 'top'
+    textAlignVertical: 'top',
+    paddingHorizontal: s(10),
+    borderRadius: s(10)
   }
 })
 

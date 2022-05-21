@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { StyleSheet, StyleProp, ViewStyle, TouchableOpacity } from 'react-native'
+import { StyleProp, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native'
 import { secondary } from '../../constants'
 import { s, ms } from 'react-native-size-matters'
 import Spinner from 'react-native-spinkit'
@@ -7,30 +7,30 @@ import FastImage from 'react-native-fast-image'
 
 const styles = StyleSheet.create({
   container: {
-    alignSelf: 'center',
+    alignSelf: 'center'
   },
   xLarge: {
     marginLeft: 1,
     width: ms(130),
     height: ms(130),
-    borderRadius: ms(130),
+    borderRadius: ms(130)
   },
   large: {
     marginLeft: 1,
     width: s(75),
     height: s(75),
-    borderRadius: s(75),
+    borderRadius: s(75)
   },
   medium: {
     width: s(50),
     height: s(50),
-    borderRadius: s(50),
+    borderRadius: s(50)
   },
   small: {
     width: s(36),
     height: s(36),
-    borderRadius: s(36),
-  },
+    borderRadius: s(36)
+  }
 })
 
 type sizeType = 'xLarge' | 'large' | 'medium' | 'small'

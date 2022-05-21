@@ -1,5 +1,5 @@
 import React from 'react'
-import { LogBox, Platform } from 'react-native'
+import { LogBox } from 'react-native'
 import { configure } from 'mobx'
 import { configurePersistable } from 'mobx-persist-store'
 import * as Sentry from '@sentry/react-native'
@@ -49,24 +49,16 @@ LogBox.ignoreLogs([
   'Trying to load',
   'Setting a timer for a long period of time',
   'Sending',
-  'Non-serializable values were found in the navigation'
+  'Non-serializable values were found in the navigation',
+  'ViewPropTypes will be removed'
 ])
 
-// TrackPlayer.registerPlaybackService(() => require('./service'))
-
-class Init extends React.Component {
-  // componentDidMount() {
-  //   Purchases.setDebugLogsEnabled(true)
-  //   Purchases.setup(revenuecat)
-  // }
-
-  render() {
-    return (
-      <SafeAreaProvider>
-        <App />
-      </SafeAreaProvider>
-    )
-  }
+function Init() {
+  return (
+    <SafeAreaProvider>
+      <App />
+    </SafeAreaProvider>
+  )
 }
 
 export default Sentry.wrap(Init)
