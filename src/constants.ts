@@ -3,11 +3,17 @@ import * as Sentry from '@sentry/react-native'
 import { createNavigationContainerRef } from '@react-navigation/native'
 import { ButtonsModalT } from './types'
 
-export const navRef = createNavigationContainerRef()
+export const navRef = createNavigationContainerRef<any>()
 
 export const navigate = (name: string, params?: any) => {
   if (navRef.isReady()) {
     navRef.navigate(name, params)
+  }
+}
+
+export function OpenExitModal() {
+  if (navRef.isReady()) {
+    navRef.navigate('EXIT_MODAL')
   }
 }
 
@@ -17,7 +23,7 @@ export function OpenReplyModal(modalButtons: ButtonsModalT[]) {
   }
 }
 
-export const captureException = error => {
+export const captureException = (error: any) => {
   if (!error) {
     console.log(
       '%c captureException called with messing or incorrect arguments',
@@ -36,81 +42,6 @@ export const imgH = Math.round((W * 9) / 16)
 
 export const openUrl = async (url: string) => {
   await Linking.openURL(url)
-}
-
-export const Device = {
-  select(variants: {
-    mobile300: {
-      top: number
-    }
-    mobile315: {
-      top: number
-    }
-    iphone5: {
-      top: number
-    }
-    mobile342: {
-      top: number
-    }
-    mobile360: {
-      top: number
-    }
-    mobile375: {
-      top: number
-    }
-    mobile400: {
-      top: number
-    }
-    mobile410: {
-      top: number
-    }
-    mobile415: {
-      top: number
-    }
-    mobile480: {
-      top?: number
-    }
-    mi5?: {
-      top: number
-    }
-    iphone678?: {
-      top: number
-    }
-    googlePixel?: {
-      top: number
-    }
-    redmiNote5?: {
-      top: number
-    }
-  }) {
-    if (W >= 300 && W <= 314) {
-      return variants.mobile300 || {}
-    }
-    if (W >= 315 && W <= 341) {
-      return variants.iphone5 || {}
-    }
-    if (W >= 342 && W <= 359) {
-      return variants.mobile342 || {}
-    }
-    if (W >= 360 && W <= 374) {
-      return variants.mi5 || {}
-    }
-    if (W >= 375 && W <= 399) {
-      return variants.iphone678 || {}
-    }
-    if (W >= 400 && W <= 409) {
-      return variants.mobile400 || {}
-    }
-    if (W >= 410 && W <= 414) {
-      return variants.googlePixel || {}
-    }
-    if (W >= 415 && W <= 434) {
-      return variants.mobile415 || {}
-    }
-    if (W >= 435 && W <= 480) {
-      return variants.redmiNote5 || {}
-    }
-  }
 }
 
 export const goBack = navigation => () => navigation.goBack()

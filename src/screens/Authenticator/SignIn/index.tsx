@@ -62,12 +62,12 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
     defaultValues: initialValues
   })
 
-  const onSubmit: SubmitHandler<FieldValues> = data => {
+  const onSubmit: SubmitHandler<FieldValues> = async data => {
     setUserInfo(data.email)
     setLoading(true)
     setError('')
     const { email, password } = data
-    auth()
+    await auth()
       .signInWithEmailAndPassword(email, password)
       .then(async user => {
         await Keychain.setInternetCredentials('auth', email, password)
@@ -101,48 +101,46 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
   const { dark } = useTheme()
   const color = dark ? white : black
 
-  return (
+  return loading ? (
+    <Loading />
+  ) : (
     <AppContainer onPress={goBack(navigation)} title=" " colorLeft={color}>
-      {loading ? (
-        <Loading />
-      ) : (
-        <CenterView>
-          <FormProvider {...methods}>
-            <KeyboardAvoidingView behavior="padding">
-              <Input
-                name="email"
-                placeholder="E-mail"
-                autoCapitalize="none"
-                color={color}
-                additionalStyle={{ width: W - s(40) }}
+      <CenterView>
+        <FormProvider {...methods}>
+          <KeyboardAvoidingView behavior="padding">
+            <Input
+              name="email"
+              placeholder="E-mail"
+              autoCapitalize="none"
+              color={color}
+              additionalStyle={{ width: W - s(40) }}
+            />
+            <Input
+              name="password"
+              placeholder={I18n.t('password')}
+              secureTextEntry
+              color={color}
+              additionalStyle={{ width: W - s(40) }}
+            />
+            <Space height={s(20)} />
+            {error !== I18n.t('forgotPassword') && (
+              <TextError title={error} textStyle={{ alignSelf: 'center' }} />
+            )}
+            {error === I18n.t('forgotPassword') && (
+              <ButtonLink
+                title={error}
+                onPress={() => navigation.navigate('FORGOT', { email: userInfo })}
+                textStyle={{ alignSelf: 'center' }}
               />
-              <Input
-                name="password"
-                placeholder={I18n.t('password')}
-                secureTextEntry
-                color={color}
-                additionalStyle={{ width: W - s(40) }}
-              />
-              <Space height={s(20)} />
-              {error !== I18n.t('forgotPassword') && (
-                <TextError title={error} textStyle={{ alignSelf: 'center' }} />
-              )}
-              {error === I18n.t('forgotPassword') && (
-                <ButtonLink
-                  title={error}
-                  onPress={() => navigation.navigate('FORGOT', { email: userInfo })}
-                  textStyle={{ alignSelf: 'center' }}
-                />
-              )}
-              <Space height={s(30)} />
-              <Button
-                title={I18n.t('signIn')}
-                onPress={methods.handleSubmit(onSubmit, onError)}
-              />
-            </KeyboardAvoidingView>
-          </FormProvider>
-        </CenterView>
-      )}
+            )}
+            <Space height={s(30)} />
+            <Button
+              title={I18n.t('signIn')}
+              onPress={methods.handleSubmit(onSubmit, onError)}
+            />
+          </KeyboardAvoidingView>
+        </FormProvider>
+      </CenterView>
     </AppContainer>
   )
 }

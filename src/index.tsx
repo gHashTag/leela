@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
-import { useColorScheme, StatusBar } from 'react-native'
-import { NavigationContainer } from '@react-navigation/native'
+import { useColorScheme, StatusBar, BackHandler } from 'react-native'
+import { NavigationContainer, useFocusEffect } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 import TabBar from './TabBar'
@@ -20,7 +20,8 @@ import {
   PostScreen,
   DetailPostScreen,
   ReplyModal,
-  InputTextModal
+  InputTextModal,
+  ExitPopup
 } from './screens'
 
 import {
@@ -35,7 +36,7 @@ import {
   SignUpAvatar
 } from './screens/Authenticator'
 
-import { white, black, navRef, lightGray } from './constants'
+import { white, black, navRef, lightGray, OpenExitModal } from './constants'
 
 import { UI } from './UI'
 
@@ -96,6 +97,13 @@ const Tab = () => {
       }
     }
   }, [])
+  useFocusEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
+      OpenExitModal()
+      return true
+    })
+    return () => backHandler.remove()
+  })
 
   return (
     <TabNavigator.Navigator
@@ -155,6 +163,7 @@ const App = () => {
   return (
     <NavigationContainer
       fallback={<Text title="fallback" h="h1" />}
+      // @ts-ignore
       linking={linking}
       ref={navRef}
       theme={theme}
@@ -228,6 +237,13 @@ const App = () => {
           <Stack.Screen
             name="INPUT_TEXT_MODAL"
             component={InputTextModal}
+            options={{
+              animation: 'fade'
+            }}
+          />
+          <Stack.Screen
+            name="EXIT_MODAL"
+            component={ExitPopup}
             options={{
               animation: 'fade'
             }}

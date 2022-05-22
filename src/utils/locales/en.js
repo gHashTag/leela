@@ -13,8 +13,7 @@ export default {
   insertCode: 'Insert the code sent to your mail',
   confirm: 'Confirm',
   resendCode: 'Resend code?',
-  invalidVerificationCode:
-    'Invalid verification code provided, please try again.',
+  invalidVerificationCode: 'Invalid verification code provided, please try again.',
   usernameExistsException: 'An account with the given email already exists.',
   firstName: 'First name',
   lastName: 'Last name',
@@ -89,5 +88,8 @@ export default {
   delete: 'Delete',
   reply: 'Reply',
   copy: 'Copy',
-  translate: 'Translate'
+  translate: 'Translate',
+  wantExit: 'Are you sure you want to exit? 😅',
+  exit: 'Exit',
+  cancel: 'Cancel'
 }

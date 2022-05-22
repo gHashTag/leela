@@ -26,18 +26,6 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
     const commentData = curItem
       ? PostStore.store.comments.slice().filter(a => a.postId === curItem.id)
       : []
-
-    useEffect(() => {
-      if (getUid() === undefined) {
-        navigation.navigate('WELCOME_SCREEN')
-        return
-      }
-      comment && setTimeout(newComment, 50)
-      if (!curItem) {
-        PostStore.getOncePost()
-      }
-    }, [])
-
     function newComment() {
       curItem &&
         navigation.navigate('INPUT_TEXT_MODAL', {
@@ -49,6 +37,17 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
             })
         })
     }
+
+    useEffect(() => {
+      if (getUid() === undefined) {
+        navigation.navigate('WELCOME_SCREEN')
+        return
+      }
+      comment && setTimeout(newComment, 900)
+      if (!curItem) {
+        PostStore.getOncePost()
+      }
+    }, [])
 
     function GoPostScreen() {
       navigation.canGoBack()

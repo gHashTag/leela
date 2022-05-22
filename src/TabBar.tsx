@@ -6,8 +6,9 @@ import { black, white } from './constants'
 import { DiceStore } from './store'
 import { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { observer } from 'mobx-react-lite'
 
-export default function TabBar({
+export default observer(function TabBar({
   state,
   descriptors,
   navigation
@@ -58,7 +59,7 @@ export default function TabBar({
       })}
     </View>
   )
-}
+})
 
 const styles = ScaledSheet.create({
   container: {

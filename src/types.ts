@@ -59,6 +59,7 @@ export type RootStackParamList = {
     onSubmit?: (text: string) => void
     onError?: (err: any) => void
   }
+  EXIT_MODAL: undefined
 }
 
 export type RootTabParamList = {

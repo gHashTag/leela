@@ -61,14 +61,14 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
     defaultValues: initialValues
   })
 
-  const onSubmit: SubmitHandler<FieldValues> = data => {
+  const onSubmit: SubmitHandler<FieldValues> = async data => {
     const { email, password, passwordConfirmation } = data
     if (password !== passwordConfirmation) {
       setError(I18n.t('passwordsDoNotMatch'))
     } else {
       setLoading(true)
       setError('')
-      auth()
+      await auth()
         .createUserWithEmailAndPassword(email, password)
         .then(async () => {
           await Keychain.setInternetCredentials('auth', email, password)

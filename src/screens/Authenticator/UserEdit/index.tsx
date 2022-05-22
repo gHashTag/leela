@@ -65,36 +65,34 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
   const { dark } = useTheme()
   const color = dark ? white : black
 
-  return (
+  return loading ? (
+    <Loading />
+  ) : (
     <AppContainer onPress={goBack(navigation)} title=" " colorLeft={black}>
-      {loading ? (
-        <Loading />
-      ) : (
-        <CenterView>
-          <FormProvider {...methods}>
-            <Input
-              name="firstName"
-              placeholder={I18n.t('firstName')}
-              autoCapitalize="none"
-              color={color}
-              additionalStyle={{ width: W - s(40) }}
-            />
-            <Input
-              name="lastName"
-              placeholder={I18n.t('lastName')}
-              autoCapitalize="none"
-              color={color}
-              additionalStyle={{ width: W - s(40) }}
-            />
-            <Space height={30} />
-            <Button
-              title={I18n.t('done')}
-              onPress={methods.handleSubmit(onSubmit, er => console.log(er))}
-            />
-            <Space height={vs(90)} />
-          </FormProvider>
-        </CenterView>
-      )}
+      <CenterView>
+        <FormProvider {...methods}>
+          <Input
+            name="firstName"
+            placeholder={I18n.t('firstName')}
+            autoCapitalize="none"
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Input
+            name="lastName"
+            placeholder={I18n.t('lastName')}
+            autoCapitalize="none"
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Space height={30} />
+          <Button
+            title={I18n.t('done')}
+            onPress={methods.handleSubmit(onSubmit, er => console.log(er))}
+          />
+          <Space height={vs(90)} />
+        </FormProvider>
+      </CenterView>
     </AppContainer>
   )
 }

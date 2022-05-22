@@ -40,8 +40,7 @@ export function InputTextModal({ navigation, route }: ReplyModalT) {
   const [length, setLength] = useState(0)
 
   useEffect(() => {
-    console.log('focus')
-    setTimeout(() => methods.setFocus('text'), 50)
+    setTimeout(() => methods.setFocus('text'), 100)
   }, [])
 
   const handleSubmit: SubmitHandler<FieldValues> = async data => {
@@ -49,22 +48,9 @@ export function InputTextModal({ navigation, route }: ReplyModalT) {
     onSubmit && onSubmit(data.text)
     navigation.goBack()
     methods.reset()
-    // if (reply) {
-    //   await PostStore.replyComment({
-    //     text: data.text,
-    //     commentId: id,
-    //     commentOwner: owner
-    //   })
-    // } else {
-    //   await PostStore.createComment({
-    //     text: data.text,
-    //     postOwner: owner,
-    //     postId: id
-    //   })
-    // }
   }
   return (
-    <Pressable style={transparentView}>
+    <View style={transparentView}>
       <Pressable onPress={() => navigation.goBack()} style={goBackView} />
       <View style={[inputContainer, { backgroundColor: primary }]}>
         <FormProvider {...methods}>
@@ -83,7 +69,7 @@ export function InputTextModal({ navigation, route }: ReplyModalT) {
           <Text h="h9" title={`(${length}/${max})`} />
         </FormProvider>
       </View>
-    </Pressable>
+    </View>
   )
 }
 

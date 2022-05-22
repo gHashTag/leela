@@ -1,7 +1,5 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-// @ts-expect-error
-import StatusBarAlert from 'react-native-statusbar-alert'
 import { Header } from '../Header'
 import { Background } from '../Background'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -37,7 +35,6 @@ function AppContainer({
   header = true,
   iconRight,
   children,
-  message = '',
   title,
   textAlign = 'left',
   status
@@ -47,7 +44,7 @@ function AppContainer({
     <SafeAreaView style={{ flex: 1 }}>
       <Background status={status}>
         <View style={container}>
-          <StatusBarAlert
+          {/* <StatusBarAlert
             visible={message !== ''}
             message={message}
             backgroundColor={RED}
@@ -55,7 +52,7 @@ function AppContainer({
             pulse="background"
             height={40}
             style={statusStyle}
-          />
+          /> */}
           {title && header && (
             <Header
               textAlign={textAlign}
