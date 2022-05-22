@@ -145,10 +145,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                 {DiceStore.online && (
                   <HeaderMaster
                     onPress={() =>
-                      navigation.navigate(
-                        'USER_EDIT',
-                        OnlinePlayer.store.profile
-                      )
+                      navigation.navigate('USER_EDIT', OnlinePlayer.store.profile)
                     }
                     onPressAva={onPressAva}
                   />
@@ -162,18 +159,13 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                 <Button
                   title={I18n.t('startOver')}
                   onPress={
-                    DiceStore.online
-                      ? OnlinePlayer.resetGame
-                      : OfflinePlayers.resetGame
+                    DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
                   }
                 />
                 <Space height={20} />
                 {DiceStore.online && (
                   <>
-                    <Button
-                      title={I18n.t('signOut')}
-                      onPress={OnlinePlayer.SignOut}
-                    />
+                    <Button title={I18n.t('signOut')} onPress={OnlinePlayer.SignOut} />
                     <Space height={20} />
                   </>
                 )}
@@ -189,11 +181,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
             showsVerticalScrollIndicator={false}
             renderSectionHeader={({ section: { title } }) =>
               title ? (
-                <Text
-                  h={'h3'}
-                  title={title}
-                  textStyle={{ padding: 15, marginTop: 10 }}
-                />
+                <Text h={'h3'} title={title} textStyle={{ padding: 15, marginTop: 10 }} />
               ) : (
                 <Space height={20} />
               )

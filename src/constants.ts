@@ -11,6 +11,12 @@ export const navigate = (name: string, params?: any) => {
   }
 }
 
+export function OpenNetworkModal() {
+  if (navRef.isReady()) {
+    navRef.navigate('NETWORK_MODAL')
+  }
+}
+
 export function OpenExitModal() {
   if (navRef.isReady()) {
     navRef.navigate('EXIT_MODAL')

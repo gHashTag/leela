@@ -21,7 +21,8 @@ import {
   DetailPostScreen,
   ReplyModal,
   InputTextModal,
-  ExitPopup
+  ExitPopup,
+  NetworkModal
 } from './screens'
 
 import {
@@ -36,7 +37,14 @@ import {
   SignUpAvatar
 } from './screens/Authenticator'
 
-import { white, black, navRef, lightGray, OpenExitModal } from './constants'
+import {
+  white,
+  black,
+  navRef,
+  lightGray,
+  OpenExitModal,
+  OpenNetworkModal
+} from './constants'
 
 import { UI } from './UI'
 
@@ -46,8 +54,9 @@ import firestore from '@react-native-firebase/firestore'
 import { getFireBaseRef } from './screens/helper'
 import { linking } from './utils'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
-import { Text } from './components'
+import { Fallback, Text } from './components'
 import { RootStackParamList, RootTabParamList } from './types'
+import NetInfo from '@react-native-community/netinfo'
 
 const DarkTheme = {
   dark: true,
@@ -104,6 +113,14 @@ const Tab = () => {
     })
     return () => backHandler.remove()
   })
+  useEffect(() => {
+    const unsub = NetInfo.addEventListener(state => {
+      if (state.isConnected === false && DiceStore.online) {
+        OpenNetworkModal()
+      }
+    })
+    return unsub
+  }, [])
 
   return (
     <TabNavigator.Navigator
@@ -162,7 +179,7 @@ const App = () => {
 
   return (
     <NavigationContainer
-      fallback={<Text title="fallback" h="h1" />}
+      fallback={<Fallback />}
       // @ts-ignore
       linking={linking}
       ref={navRef}
@@ -230,24 +247,19 @@ const App = () => {
         <Stack.Group
           screenOptions={{
             presentation: 'transparentModal',
-            animation: 'slide_from_bottom'
+            animation: 'fade'
           }}
         >
-          <Stack.Screen name="REPLY_MODAL" component={ReplyModal} />
           <Stack.Screen
-            name="INPUT_TEXT_MODAL"
-            component={InputTextModal}
+            name="REPLY_MODAL"
             options={{
-              animation: 'fade'
+              animation: 'slide_from_bottom'
             }}
+            component={ReplyModal}
           />
-          <Stack.Screen
-            name="EXIT_MODAL"
-            component={ExitPopup}
-            options={{
-              animation: 'fade'
-            }}
-          />
+          <Stack.Screen name="INPUT_TEXT_MODAL" component={InputTextModal} />
+          <Stack.Screen name="EXIT_MODAL" component={ExitPopup} />
+          <Stack.Screen name="NETWORK_MODAL" component={NetworkModal} />
         </Stack.Group>
       </Stack.Navigator>
     </NavigationContainer>

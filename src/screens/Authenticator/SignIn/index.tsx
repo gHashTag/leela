@@ -86,6 +86,8 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
           setError('user not found')
         } else if (err.code === 'auth/wrong-password') {
           setError(I18n.t('forgotPassword'))
+        } else if (err.code === 'auth/network-request-failed') {
+          setError(I18n.t('networkRequestFailed'))
         } else {
           setError(err.code)
           console.log(err.code)

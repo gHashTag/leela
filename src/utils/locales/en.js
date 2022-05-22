@@ -91,5 +91,7 @@ export default {
   translate: 'Translate',
   wantExit: 'Are you sure you want to exit? 😅',
   exit: 'Exit',
-  cancel: 'Cancel'
+  cancel: 'Cancel',
+  goOffline: 'Go offline',
+  networkRequestFailed: 'Check internet connection'
 }

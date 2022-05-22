@@ -15,15 +15,10 @@ import I18n from 'i18n-js'
 interface SubComT {
   item: ReplyComT
   index: number
-  lineW: number
 }
 
-export function SubCommentCard({ item, index, lineW }: SubComT) {
+export function SubCommentCard({ item, index }: SubComT) {
   const [isTrans, setIsTrans] = useState(false)
-  const line = StyleSheet.create([
-    branchLine,
-    { width: lineW, transform: [{ translateX: lineW * -1 - s(1) }] }
-  ])
   const date = getTimeStamp({ lastTime: item.createTime, type: 1 })
 
   function OpenModal() {
@@ -64,25 +59,15 @@ export function SubCommentCard({ item, index, lineW }: SubComT) {
   return (
     <View style={container}>
       <View style={commentHead}>
-        <View style={line} />
         <PlanAvatar plan={PostStore.getComPlan(item.ownerId)} size="small" />
         <Space width={s(6)} />
         <View style={{ flexDirection: 'column', flex: 1 }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
             <Text numberOfLines={1} h={'h6'} title={`${item.firstName}`} />
-            <Text
-              numberOfLines={1}
-              h={'h6'}
-              title={` ${date}`}
-              oneColor={lightGray}
-            />
+            <Text numberOfLines={1} h={'h6'} title={` ${date}`} oneColor={lightGray} />
           </View>
         </View>
-        <ButtonVectorIcon
-          size={s(10)}
-          name="chevron-down"
-          onPress={OpenModal}
-        />
+        <ButtonVectorIcon size={s(10)} name="chevron-down" onPress={OpenModal} />
         <Space width={s(8)} />
       </View>
       <Space height={vs(3)} />

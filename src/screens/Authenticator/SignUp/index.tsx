@@ -84,6 +84,8 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
             setError(I18n.t('usernameExistsException'))
           } else if (error.code === 'auth/invalid-email') {
             setError('Invalid email')
+          } else if (error.code === 'auth/network-request-failed') {
+            setError(I18n.t('networkRequestFailed'))
           } else {
             setError(error.code)
           }

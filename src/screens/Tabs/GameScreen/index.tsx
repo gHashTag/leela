@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { observer } from 'mobx-react-lite'
-import { ms, s } from 'react-native-size-matters'
+import { ms, s, vs } from 'react-native-size-matters'
 import { I18n } from '../../../utils'
 import { RootStackParamList, RootTabParamList } from '../../../types'
 import {
@@ -13,12 +13,7 @@ import {
   ButtonElements,
   Spin
 } from '../../../components'
-import {
-  DiceStore,
-  actionsDice,
-  OnlinePlayer,
-  OfflinePlayers
-} from '../../../store'
+import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../../store'
 import Rate from 'react-native-rate'
 import { Button as ClassicBtn } from 'react-native-elements'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -63,13 +58,11 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           case leftTime > 86340000:
             OnlinePlayer.store.timeText = `${(time / 1000).toFixed(0)} sec.`
           case leftTime > 82800000:
-            OnlinePlayer.store.timeText = `${Math.ceil(
-              time / 60 / 1000
-            ).toFixed(0)} min.`
+            OnlinePlayer.store.timeText = `${Math.ceil(time / 60 / 1000).toFixed(0)} min.`
           case leftTime <= 82800000:
-            OnlinePlayer.store.timeText = `${Math.floor(
-              time / 60 / 60 / 1000
-            ).toFixed(0)} h.`
+            OnlinePlayer.store.timeText = `${Math.floor(time / 60 / 60 / 1000).toFixed(
+              0
+            )} h.`
         }
       } else {
         OnlinePlayer.store.timeText = '0'
@@ -82,8 +75,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     const options = {
       AppleAppID: '1296604457',
       GooglePackageName: 'com.leelagame',
-      OtherAndroidURL:
-        'https://play.google.com/store/apps/details?id=com.leelagame',
+      OtherAndroidURL: 'https://play.google.com/store/apps/details?id=com.leelagame',
       preferInApp: false,
       openAppStoreIfInAppFails: true
     }
@@ -110,9 +102,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                 <ButtonElements
                   title={I18n.t('startOver')}
                   onPress={
-                    DiceStore.online
-                      ? OnlinePlayer.resetGame
-                      : OfflinePlayers.resetGame
+                    DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
                   }
                 />
                 <Space height={s(10)} />
@@ -122,10 +112,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                   title={`${I18n.t('win')}`}
                 />
                 {!DiceStore.rate && (
-                  <ClassicBtn
-                    title={I18n.t('leaveFeedback')}
-                    onPress={_onPress}
-                  />
+                  <ClassicBtn title={I18n.t('leaveFeedback')} onPress={_onPress} />
                 )}
               </>
             ) : (
@@ -135,9 +122,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                     <Text
                       h="h5"
                       textStyle={{ textAlign: 'center' }}
-                      title={`${I18n.t('nextStep')}: ${
-                        OnlinePlayer.store.timeText
-                      }`}
+                      title={`${I18n.t('nextStep')}: ${OnlinePlayer.store.timeText}`}
                     />
                   </View>
                 ) : (
@@ -162,6 +147,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                   />
                 </View>
                 <Dice />
+                <Space height={vs(23)} />
               </>
             )}
           </Header>

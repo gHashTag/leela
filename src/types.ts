@@ -60,6 +60,7 @@ export type RootStackParamList = {
     onError?: (err: any) => void
   }
   EXIT_MODAL: undefined
+  NETWORK_MODAL: undefined
 }
 
 export type RootTabParamList = {
@@ -147,6 +148,24 @@ export interface CommentT extends FormCommentT {
   ownerId: string
   createTime: number
   email: string
+  reply: false
+  id: string
+}
+
+export interface FormReplyCom {
+  text: string
+  commentId: string
+  commentOwner: string
+}
+
+export interface ReplyComT extends FormReplyCom {
+  firstName: string
+  lastName: string
+  ownerId: string
+  createTime: number
+  email: string
+  id: string
+  reply: true
 }
 
 export interface ButtonsModalT {

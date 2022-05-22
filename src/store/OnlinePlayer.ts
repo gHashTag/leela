@@ -99,6 +99,27 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       captureException(err)
     }
   },
+  async SignOutToOffline(): Promise<void> {
+    try {
+      OnlinePlayer.store = {
+        ...OnlinePlayer.store,
+        profile: initProfile,
+        avatar: '',
+        start: false,
+        finish: false,
+        plan: 68,
+        history: initHistory(),
+        canGo: false,
+        stepTime: 0,
+        timeText: ' ',
+        loadingProf: true
+      }
+      actionsDice.resetPlayer()
+      await auth().signOut()
+    } catch (err) {
+      captureException(err)
+    }
+  },
   async getProfile(): Promise<void> {
     try {
       OnlinePlayer.store.loadingProf = true
@@ -181,6 +202,7 @@ interface Istore {
   uploadImage: () => Promise<void>
   updateStep: () => Promise<void>
   getPoster: () => Promise<void>
+  SignOutToOffline: () => Promise<void>
 }
 
 interface OnlinePlayerStore {
