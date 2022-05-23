@@ -18,6 +18,7 @@ import Rate from 'react-native-rate'
 import { Button as ClassicBtn } from 'react-native-elements'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { StyleSheet, View } from 'react-native'
+import { H } from '../../../constants'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -84,6 +85,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   const endGame = DiceStore.online
     ? OnlinePlayer.store.finish
     : DiceStore.finishArr.indexOf(true) === -1
+  const space = H > 600 ? vs(120) : vs(85)
   return (
     <Background>
       {OnlinePlayer.store.loadingProf && DiceStore.online ? (
@@ -147,11 +149,10 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                   />
                 </View>
                 <Dice />
-                <Space height={vs(23)} />
               </>
             )}
           </Header>
-          <Space height={ms(85, 0.1)} />
+          <Space height={space} />
           <GameBoard />
           <Space height={s(0)} />
         </>

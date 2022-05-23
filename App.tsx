@@ -26,11 +26,8 @@ Sentry.init({
     new Sentry.ReactNativeTracing({
       tracingOrigins: ['localhost', /^\//],
       routingInstrumentation
-      // ... other options
     })
   ]
-  //debug: true
-  // // To set a uniform sample rate
 })
 
 configure({

@@ -3,7 +3,7 @@ import { StyleSheet, Pressable, Platform, Animated, Easing } from 'react-native'
 import RNShake from 'react-native-shake'
 import { observer } from 'mobx-react-lite'
 import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../store'
-import { s, ms } from 'react-native-size-matters'
+import { s, ms, vs } from 'react-native-size-matters'
 
 const styles = StyleSheet.create({
   diceContainer: {
@@ -13,8 +13,8 @@ const styles = StyleSheet.create({
     top: Platform.OS === 'ios' ? s(20) : s(35)
   },
   image: {
-    height: ms(65, 0.4),
-    width: ms(65, 0.4),
+    height: vs(65),
+    width: vs(65),
     margin: 30
   }
 })

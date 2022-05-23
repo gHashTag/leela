@@ -3,7 +3,7 @@ import { KeyboardAvoidingView } from 'react-native'
 import * as Keychain from 'react-native-keychain'
 // @ts-expect-error
 import { EMAIL, PASSWORD } from '@env'
-import { s } from 'react-native-size-matters'
+import { s, vs } from 'react-native-size-matters'
 import { useTheme } from '@react-navigation/native'
 import {
   AppContainer,
@@ -107,40 +107,39 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
     <Loading />
   ) : (
     <AppContainer onPress={goBack(navigation)} title=" " colorLeft={color}>
+      <Space height={vs(50)} />
       <CenterView>
         <FormProvider {...methods}>
-          <KeyboardAvoidingView behavior="padding">
-            <Input
-              name="email"
-              placeholder="E-mail"
-              autoCapitalize="none"
-              color={color}
-              additionalStyle={{ width: W - s(40) }}
+          <Input
+            name="email"
+            placeholder="E-mail"
+            autoCapitalize="none"
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Input
+            name="password"
+            placeholder={I18n.t('password')}
+            secureTextEntry
+            color={color}
+            additionalStyle={{ width: W - s(40) }}
+          />
+          <Space height={s(20)} />
+          {error !== I18n.t('forgotPassword') && (
+            <TextError title={error} textStyle={{ alignSelf: 'center' }} />
+          )}
+          {error === I18n.t('forgotPassword') && (
+            <ButtonLink
+              title={error}
+              onPress={() => navigation.navigate('FORGOT', { email: userInfo })}
+              textStyle={{ alignSelf: 'center' }}
             />
-            <Input
-              name="password"
-              placeholder={I18n.t('password')}
-              secureTextEntry
-              color={color}
-              additionalStyle={{ width: W - s(40) }}
-            />
-            <Space height={s(20)} />
-            {error !== I18n.t('forgotPassword') && (
-              <TextError title={error} textStyle={{ alignSelf: 'center' }} />
-            )}
-            {error === I18n.t('forgotPassword') && (
-              <ButtonLink
-                title={error}
-                onPress={() => navigation.navigate('FORGOT', { email: userInfo })}
-                textStyle={{ alignSelf: 'center' }}
-              />
-            )}
-            <Space height={s(30)} />
-            <Button
-              title={I18n.t('signIn')}
-              onPress={methods.handleSubmit(onSubmit, onError)}
-            />
-          </KeyboardAvoidingView>
+          )}
+          <Space height={s(30)} />
+          <Button
+            title={I18n.t('signIn')}
+            onPress={methods.handleSubmit(onSubmit, onError)}
+          />
         </FormProvider>
       </CenterView>
     </AppContainer>
