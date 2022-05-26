@@ -37,9 +37,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
     item.liked?.findIndex(a => a === auth().currentUser?.uid) === -1 ? false : true
   )
   const [transText, setTransText] = useState('')
-  useEffect(() => {
-    setTransText(item.text)
-  }, [])
+  const [hideTranslate, setHideTranslate] = useState(true)
 
   useMemo(() => {
     setIsLiked(
@@ -69,8 +67,17 @@ export const PostCard: React.FC<postCardI> = observer(props => {
       }
     }
   }
+  const text = hideTranslate ? item.text : transText
 
-  function handleTranslate() {}
+  async function handleTranslate() {
+    if (item?.text) {
+      if (hideTranslate && transText === '') {
+        const translated = await PostStore.translateText(item?.text)
+        setTransText(translated)
+      }
+      setHideTranslate(pr => !pr)
+    }
+  }
 
   function handleComment() {
     onPressCom && onPressCom()
@@ -116,7 +123,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
           </View>
         </View>
         {/* Detail Text */}
-        <HashtagFormat h={'h5'} textStyle={textStyle} title={transText} selectable />
+        <HashtagFormat h={'h5'} textStyle={textStyle} title={text} selectable />
         {/* Detail Date */}
         <Space height={vs(5)} />
         <View style={headerS}>
@@ -180,12 +187,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
             </TouchableOpacity>
           </View>
           <Space height={vs(5)} />
-          <HashtagFormat
-            textStyle={textStyle}
-            numberOfLines={8}
-            h={'h5'}
-            title={transText}
-          />
+          <HashtagFormat textStyle={textStyle} numberOfLines={8} h={'h5'} title={text} />
           {/* Preview Buttons */}
           <View style={btnsContainer}>
             <ButtonVectorIcon

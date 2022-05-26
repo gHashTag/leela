@@ -18,7 +18,8 @@ interface SubComT {
 }
 
 export function SubCommentCard({ item, index }: SubComT) {
-  const [isTrans, setIsTrans] = useState(false)
+  const [hideTranslate, setHideTranslate] = useState(true)
+  const [transText, setTransText] = useState('')
   const date = getTimeStamp({ lastTime: item.createTime, type: 1 })
   const avaUrl = PostStore.getAvaById(item.ownerId)
 
@@ -29,8 +30,12 @@ export function SubCommentCard({ item, index }: SubComT) {
     function delCom() {
       PostStore.delComment({ commentId: item.id, isReply: item.reply })
     }
-    function transText() {
-      setIsTrans(pr => !pr)
+    async function handleTransText() {
+      if (hideTranslate && transText === '') {
+        const translated = await PostStore.translateText(item.text)
+        setTransText(translated)
+      }
+      setHideTranslate(pr => !pr)
     }
     const isOwner = getUid() === item.ownerId
     const modalButtons: ButtonsModalT[] = [
@@ -42,9 +47,9 @@ export function SubCommentCard({ item, index }: SubComT) {
       },
       {
         key: 'TRANSLATE',
-        onPress: transText,
+        onPress: handleTransText,
         title: I18n.t('translate'),
-        icon: isTrans ? 'translate-off' : 'translate'
+        icon: !hideTranslate ? 'translate-off' : 'translate'
       },
       {
         key: 'DEL',
@@ -56,7 +61,7 @@ export function SubCommentCard({ item, index }: SubComT) {
     ].filter(a => (isOwner ? true : a.key !== 'DEL'))
     OpenReplyModal(modalButtons)
   }
-
+  const text = hideTranslate ? item.text : transText
   return (
     <View style={container}>
       <View style={commentHead}>
@@ -78,7 +83,7 @@ export function SubCommentCard({ item, index }: SubComT) {
       <Space height={vs(3)} />
       <View style={textContainer}>
         <Space width={s(5)} />
-        <HashtagFormat hashTagColor={fuchsia} title={item.text} h="h6" />
+        <HashtagFormat hashTagColor={fuchsia} title={text} h="h6" />
       </View>
     </View>
   )

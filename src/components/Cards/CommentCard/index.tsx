@@ -29,7 +29,9 @@ const PADDING = vs(13)
 export const CommentCard: React.FC<CommentCardI> = observer(
   ({ item, index, endIndex }) => {
     const [lineHeight, setLineHeight] = useState(0)
-    const [isTrans, setIsTrans] = useState(false)
+    const [hideTranslate, setHideTranslate] = useState(true)
+    const [transText, setTransText] = useState('')
+
     const avaUrl = PostStore.getAvaById(item.ownerId)
 
     const date = getTimeStamp({ lastTime: item.createTime, type: 1 })
@@ -53,10 +55,14 @@ export const CommentCard: React.FC<CommentCardI> = observer(
       })
     }
 
-    function transText() {
-      setIsTrans(pr => !pr)
+    async function handleTransText() {
+      if (hideTranslate && transText === '') {
+        const translated = await PostStore.translateText(item.text)
+        setTransText(translated)
+      }
+      setHideTranslate(pr => !pr)
     }
-
+    const text = hideTranslate ? item.text : transText
     function copy() {
       Clipboard.setString(item.text)
     }
@@ -78,9 +84,9 @@ export const CommentCard: React.FC<CommentCardI> = observer(
         },
         {
           key: 'TRANSLATE',
-          onPress: transText,
+          onPress: handleTransText,
           title: I18n.t('translate'),
-          icon: isTrans ? 'translate-off' : 'translate'
+          icon: !hideTranslate ? 'translate-off' : 'translate'
         },
         {
           key: 'DEL',
@@ -127,7 +133,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
               <ButtonVectorIcon size={s(15)} name="chevron-down" onPress={OpenModal} />
               <Space width={s(5)} />
             </View>
-            <HashtagFormat h="h6" title={`${item.text}`} />
+            <HashtagFormat h="h6" title={text} />
             <Space height={vs(20)} />
             <FlatList
               data={subCom}
