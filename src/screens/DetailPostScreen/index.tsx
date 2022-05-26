@@ -1,8 +1,8 @@
-import { RouteProp } from '@react-navigation/native'
+import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import React, { useEffect } from 'react'
 import { StyleSheet, View, FlatList } from 'react-native'
 import { CommentCard, Header, Loading, PostCard, Space } from '../../components'
-import { lightGray, paleBlue } from '../../constants'
+import { captureException, lightGray, paleBlue } from '../../constants'
 import { PostStore } from '../../store'
 import { RootStackParamList } from '../../types'
 
@@ -11,6 +11,7 @@ import { nanoid } from 'nanoid/non-secure'
 import { observer } from 'mobx-react-lite'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { getUid } from '../helper'
+import firestore from '@react-native-firebase/firestore'
 
 interface DetailPostI {
   navigation: NativeStackNavigationProp<RootStackParamList, 'DETAIL_POST_SCREEN'>
@@ -48,6 +49,13 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
         PostStore.getOncePost()
       }
     }, [])
+    useEffect(() => {
+      if (!curItem) {
+        const subComments = firestore()
+          .collection('Comments')
+          .onSnapshot(PostStore.fetchComments, err => captureException(err))
+      }
+    })
 
     function GoPostScreen() {
       navigation.canGoBack()

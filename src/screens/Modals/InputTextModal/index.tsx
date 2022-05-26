@@ -12,6 +12,7 @@ import { black, navigate, primary, W } from '../../../constants'
 import { PostStore } from '../../../store'
 import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
+import I18n from 'i18n-js'
 
 interface CreateCommentT {
   id: string
@@ -57,7 +58,7 @@ export function InputTextModal({ navigation, route }: ReplyModalT) {
           <Input
             onChange={e => setLength(e.nativeEvent.text.length)}
             name="text"
-            placeholder="Comment input"
+            placeholder={I18n.t('uComment')}
             color={black}
             additionalStyle={input}
             showError={false}

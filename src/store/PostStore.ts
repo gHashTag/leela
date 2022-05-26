@@ -8,18 +8,14 @@ import {
   ReplyComT
 } from '../types'
 import auth from '@react-native-firebase/auth'
-import firestore, {
-  FirebaseFirestoreTypes
-} from '@react-native-firebase/firestore'
+import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
 import { nanoid } from 'nanoid/non-secure'
 import { OnlinePlayer } from './OnlinePlayer'
 import { OtherPlayers } from './OtherPlayers'
-import * as Keychain from 'react-native-keychain'
-import { getProfile } from '../screens/helper'
+import { getProfile, getUid } from '../screens/helper'
 import I18n from 'i18n-js'
 
-type fetchT =
-  FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
+type fetchT = FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
 interface postStoreT {
   posts: PostT[]
   comments: CommentT[]
@@ -78,9 +74,7 @@ export const PostStore = {
   },
   delComment: async ({ commentId, isReply }: delCommentT) => {
     await firestore().collection('Comments').doc(commentId).delete()
-    PostStore.store.comments = PostStore.store.comments.filter(
-      a => a.id !== commentId
-    )
+    PostStore.store.comments = PostStore.store.comments.filter(a => a.id !== commentId)
     if (!isReply)
       firestore()
         .collection('Comments')
@@ -169,7 +163,7 @@ export const PostStore = {
     return `${profile.firstName} ${profile.lastName}`
   },
   getComPlan: (ownerId: string) => {
-    const userUid = auth().currentUser?.uid
+    const userUid = getUid()
     if (userUid === ownerId) return OnlinePlayer.store.plan
     const plan = OtherPlayers.store.players.find(a => a.owner === ownerId)?.plan
     if (!plan) return 0
@@ -185,5 +179,11 @@ export const PostStore = {
   },
   translateText: async (text: string) => {
     return text
+  },
+  getAvaById: (uid: string) => {
+    const userUid = getUid()
+    if (userUid === uid) return OnlinePlayer.store.avatar
+    console.log(OtherPlayers.store.players.find(a => a.owner === uid)?.avatar)
+    return OtherPlayers.store.players.find(a => a.owner === uid)?.avatar
   }
 }

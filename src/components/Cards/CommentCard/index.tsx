@@ -30,6 +30,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
   ({ item, index, endIndex }) => {
     const [lineHeight, setLineHeight] = useState(0)
     const [isTrans, setIsTrans] = useState(false)
+    const avaUrl = PostStore.getAvaById(item.ownerId)
 
     const date = getTimeStamp({ lastTime: item.createTime, type: 1 })
 
@@ -102,7 +103,11 @@ export const CommentCard: React.FC<CommentCardI> = observer(
       <>
         <View style={container}>
           <View style={{ marginRight: s(6) }}>
-            <PlanAvatar plan={PostStore.getComPlan(item.ownerId)} size="medium" />
+            <PlanAvatar
+              avaUrl={avaUrl}
+              plan={PostStore.getComPlan(item.ownerId)}
+              size="medium"
+            />
             {showLine && (
               <View style={lineCont} onLayout={_onLayout}>
                 <View style={[verticalLine, { height: lineH }]} />

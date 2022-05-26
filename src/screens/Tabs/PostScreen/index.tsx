@@ -10,6 +10,7 @@ import { s, vs } from 'react-native-size-matters'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
+import { captureException } from '../../../constants'
 
 interface Ipost {
   navigation: NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_2'>
@@ -32,10 +33,10 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
   useEffect(() => {
     const subPosts = firestore()
       .collection('Posts')
-      .onSnapshot(PostStore.fetchPosts, err => console.log(err))
+      .onSnapshot(PostStore.fetchPosts, err => captureException(err))
     const subComments = firestore()
       .collection('Comments')
-      .onSnapshot(PostStore.fetchComments, err => console.log(err))
+      .onSnapshot(PostStore.fetchComments, err => captureException(err))
     return () => {
       subPosts()
       subComments()

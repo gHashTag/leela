@@ -93,5 +93,6 @@ export default {
   exit: 'Exit',
   cancel: 'Cancel',
   goOffline: 'Go offline',
-  networkRequestFailed: 'Check internet connection'
+  networkRequestFailed: 'Check internet connection',
+  uComment: 'Your comment'
 }

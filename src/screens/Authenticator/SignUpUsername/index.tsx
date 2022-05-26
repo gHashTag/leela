@@ -12,7 +12,7 @@ import {
 } from '../../../components'
 import { goBack, white, black, W } from '../../../constants'
 import { RootStackParamList } from '../../../types'
-import { actionsDice } from '../../../store'
+import { actionsDice, fetchBusinesses } from '../../../store'
 import auth from '@react-native-firebase/auth'
 import { createProfile, getUid } from '../../helper'
 
@@ -47,10 +47,7 @@ const schema = yup
   })
   .required()
 
-const SignUpUsername = ({
-  route,
-  navigation
-}: SignUpUsernameT): ReactElement => {
+const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
 
   const { ...methods } = useForm({
@@ -65,12 +62,13 @@ const SignUpUsername = ({
     await auth().currentUser?.updateProfile({
       displayName: `${firstName} ${lastName}`
     })
-    createProfile({
+    await createProfile({
       email,
       uid: getUid(),
       firstName,
       lastName
     })
+    fetchBusinesses()
     navigation.navigate('SIGN_UP_AVATAR')
     actionsDice.setOnline(true)
     actionsDice.setPlayers(1)

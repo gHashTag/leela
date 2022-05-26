@@ -1,12 +1,13 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 import { useForm, FormProvider, SubmitHandler, FieldValues } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { Button, Input, Space } from '..'
-import { black, navigate } from '../../constants'
+import { black, dimGray, navigate } from '../../constants'
 import { PostStore } from '../../store'
 import I18n from 'i18n-js'
+import { Loading } from '../'
 
 interface CreatePostT {
   plan: number
@@ -20,10 +21,14 @@ const schema = yup
   .required()
 
 export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
+  const [loading, setLoading] = useState(false)
+
   const handleSubmit: SubmitHandler<FieldValues> = async data => {
+    setLoading(true)
     methods.reset()
     await PostStore.createPost({ text: data.text, plan: plan })
     navigate('TAB_BOTTOM_3')
+    setLoading(false)
   }
 
   const { ...methods } = useForm({
@@ -31,11 +36,13 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
     resolver: yupResolver(schema)
   })
 
-  return (
+  return loading ? (
+    <Loading />
+  ) : (
     <FormProvider {...methods}>
       <Input
         name="text"
-        color={black}
+        color={dimGray}
         multiline
         placeholder={I18n.t('placeholderReport')}
         additionalStyle={{ width: '100%', alignItems: 'center' }}

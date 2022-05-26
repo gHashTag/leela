@@ -92,5 +92,6 @@ export default {
   exit: 'Выйти',
   cancel: 'Отмена',
   goOffline: 'Уйти в офлайн',
-  networkRequestFailed: 'Проверьте интернет соединение'
+  networkRequestFailed: 'Проверьте интернет соединение',
+  uComment: 'Ваш комментарий'
 }

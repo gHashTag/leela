@@ -14,6 +14,8 @@ import { W, dimGray, classicRose } from '../../constants'
 import { useController, useFormContext } from 'react-hook-form'
 import { TextInputProps as RNTextInputProps } from 'react-native'
 import { UseControllerProps } from 'react-hook-form'
+import { useTheme } from '@react-navigation/native'
+import { Space } from '../Space'
 
 export interface TextInputProps extends RNTextInputProps, UseControllerProps {
   color: ColorValue
@@ -48,19 +50,20 @@ const Input: React.FC<TextInputProps> = ({
   const { formState } = formContext
   const { field } = useController({ name, rules, defaultValue })
   const hasError = Boolean(formState?.errors[name])
-
+  const {
+    colors: { text }
+  } = useTheme()
   const input = ScaledSheet.create([
     inputProps.multiline ? inputArea : inputStyle,
     {
-      color,
-      borderBottomColor: color
+      color: text,
+      borderColor: color
     }
   ])
 
   const placeholderStyle = ScaledSheet.create([
     inputProps.multiline ? inputArea : inputStyle,
     {
-      color: dimGray,
       borderColor: classicRose
     }
   ])

@@ -33,7 +33,6 @@ export const PostCard: React.FC<postCardI> = observer(props => {
     return <Text title="Not found" h="h1" />
   }
   const itemIndex = PostStore.store.posts.findIndex(a => a.id === postId)
-
   const [isLiked, setIsLiked] = useState<boolean>(
     item.liked?.findIndex(a => a === auth().currentUser?.uid) === -1 ? false : true
   )
@@ -94,12 +93,18 @@ export const PostCard: React.FC<postCardI> = observer(props => {
   const heart = isLiked ? 'heart' : 'heart-o'
   const heartColor = isLiked ? classicRose : undefined
   const fullName = PostStore.getOwnerName(item.ownerId)
+  const avaUrl = PostStore.getAvaById(item.ownerId)
   const flag = lang === 'en' ? ':us:' : `:${lang}:`
   if (isDetail)
     return (
       <View style={[container, { borderBottomWidth: 0 }]}>
         <View style={headerS}>
-          <PlanAvatar size={'large'} plan={item.plan} aditionalStyle={img} />
+          <PlanAvatar
+            avaUrl={avaUrl}
+            size={'large'}
+            plan={item.plan}
+            aditionalStyle={img}
+          />
           <View style={headerInfo}>
             {/* name, create date */}
             <Space height={vs(2)} />
@@ -157,7 +162,12 @@ export const PostCard: React.FC<postCardI> = observer(props => {
   return (
     <Pressable onPress={goDetail} style={container}>
       <View style={headerS}>
-        <PlanAvatar size={'medium'} plan={item.plan} aditionalStyle={img} />
+        <PlanAvatar
+          avaUrl={avaUrl}
+          size={'medium'}
+          plan={item.plan}
+          aditionalStyle={img}
+        />
         <View style={headerInfo}>
           {/* name, create date/email */}
           <Space height={vs(2)} />

@@ -20,6 +20,7 @@ interface SubComT {
 export function SubCommentCard({ item, index }: SubComT) {
   const [isTrans, setIsTrans] = useState(false)
   const date = getTimeStamp({ lastTime: item.createTime, type: 1 })
+  const avaUrl = PostStore.getAvaById(item.ownerId)
 
   function OpenModal() {
     function copy() {
@@ -59,7 +60,11 @@ export function SubCommentCard({ item, index }: SubComT) {
   return (
     <View style={container}>
       <View style={commentHead}>
-        <PlanAvatar plan={PostStore.getComPlan(item.ownerId)} size="small" />
+        <PlanAvatar
+          avaUrl={avaUrl}
+          plan={PostStore.getComPlan(item.ownerId)}
+          size="small"
+        />
         <Space width={s(6)} />
         <View style={{ flexDirection: 'column', flex: 1 }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
