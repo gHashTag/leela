@@ -93,3 +93,10 @@ export const timeStampType = [
     year: 'y1'
   }
 ]
+export const timeLeftType = [
+  {
+    h: 'h0',
+    min: 'min0',
+    sec: 'sec0'
+  }
+]

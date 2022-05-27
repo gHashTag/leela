@@ -14,12 +14,7 @@ import { OnlinePlayer } from './OnlinePlayer'
 import { OtherPlayers } from './OtherPlayers'
 import { getProfile, getUid } from '../screens/helper'
 import I18n from 'i18n-js'
-import {
-  PowerTranslator,
-  ProviderTypes,
-  TranslatorConfiguration,
-  TranslatorFactory
-} from 'react-native-power-translator'
+import { TranslatorFactory } from 'react-native-power-translator'
 import { captureException } from '../constants'
 
 type fetchT = FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>

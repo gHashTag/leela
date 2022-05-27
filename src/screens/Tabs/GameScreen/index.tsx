@@ -30,12 +30,10 @@ type GameScreenT = {
 }
 
 const GameScreen = observer(({ navigation }: GameScreenT) => {
-  const [leftTime, setLeftTime] = useState(0)
-
   useEffect(() => {
     const interval = setInterval(() => {
       const currentDate = Date.now()
-      setLeftTime(currentDate - OnlinePlayer.store.stepTime)
+      OnlinePlayer.store.timeText = OnlinePlayer.getLeftTime(OnlinePlayer.store.stepTime)
       if (
         currentDate - OnlinePlayer.store.stepTime >= 86400000 &&
         OnlinePlayer.store.stepTime !== 0
@@ -47,30 +45,6 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     }, 1000)
     return () => clearInterval(interval)
   }, [])
-
-  useEffect(() => {
-    const timeMood = () => {
-      if (!(leftTime >= 86400000)) {
-        if (leftTime === 0) {
-          return
-        }
-        const time = 86400000 - leftTime
-        switch (true) {
-          case leftTime > 86340000:
-            OnlinePlayer.store.timeText = `${(time / 1000).toFixed(0)} sec.`
-          case leftTime > 82800000:
-            OnlinePlayer.store.timeText = `${Math.ceil(time / 60 / 1000).toFixed(0)} min.`
-          case leftTime <= 82800000:
-            OnlinePlayer.store.timeText = `${Math.floor(time / 60 / 60 / 1000).toFixed(
-              0
-            )} h.`
-        }
-      } else {
-        OnlinePlayer.store.timeText = '0'
-      }
-    }
-    timeMood()
-  }, [leftTime])
 
   const _onPress = () => {
     const options = {

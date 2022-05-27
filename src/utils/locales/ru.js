@@ -93,5 +93,9 @@ export default {
   cancel: 'Отмена',
   goOffline: 'Уйти в офлайн',
   networkRequestFailed: 'Проверьте интернет соединение',
-  uComment: 'Ваш комментарий'
+  uComment: 'Ваш комментарий',
+  // timeLeft
+  h0: 'ч.',
+  min0: 'мин.',
+  sec0: 'с.'
 }

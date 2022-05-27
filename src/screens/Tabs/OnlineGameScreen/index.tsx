@@ -91,19 +91,11 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
             contentContainerStyle={contentContainerStyle}
           >
             <Space height={s(10)} />
-            <Text
-              textStyle={{ textAlign: 'center' }}
-              h={'h3'}
-              title={I18n.t('events')}
-            />
+            <Text textStyle={{ textAlign: 'center' }} h={'h3'} title={I18n.t('events')} />
             <Space height={s(20)} />
             <ImageSwiper images={images} height={vs(300)} />
             <Space height={s(30)} />
-            <Text
-              textStyle={{ textAlign: 'center' }}
-              h={'h3'}
-              title={I18n.t('author')}
-            />
+            <Text textStyle={{ textAlign: 'center' }} h={'h3'} title={I18n.t('author')} />
             <Space height={s(20)} />
             {lang !== 'en' && <YouTubePlayer uri="TDT--lnKSBU" />}
             <Space height={s(20)} />
@@ -124,7 +116,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
               textStyle={{ paddingHorizontal: 40 }}
             />
             <Space height={s(20)} />
-            {lang !== 'en' && (
+            {/* {lang !== 'en' && (
               <>
                 <PricingCard
                   color={secondary}
@@ -178,7 +170,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
                   }
                 />
               </>
-            )}
+            )} */}
 
             <Space height={s(20)} />
             <Text
@@ -201,9 +193,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
                 color={secondary}
                 size={40}
                 containerStyle={{ margin: 20 }}
-                onPress={() =>
-                  openUrl('https://www.facebook.com/leelachakraapp')
-                }
+                onPress={() => openUrl('https://www.facebook.com/leelachakraapp')}
               />
               <Icon
                 name="vk"

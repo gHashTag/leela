@@ -94,5 +94,9 @@ export default {
   cancel: 'Cancel',
   goOffline: 'Go offline',
   networkRequestFailed: 'Check internet connection',
-  uComment: 'Your comment'
+  uComment: 'Your comment',
+  // timeLeft
+  h0: 'h.',
+  min0: 'min.',
+  sec0: 'sec.'
 }

@@ -1,7 +1,7 @@
 import { makeAutoObservable } from 'mobx'
 import { upStepOnline } from './helper'
 import { actionsDice, DiceStore } from '.'
-import { captureException, navigate } from '../constants'
+import { captureException, navigate, timeLeftType } from '../constants'
 import {
   getProfile,
   getImagePicker,
@@ -18,6 +18,7 @@ import firestore from '@react-native-firebase/firestore'
 import { delTokenOnSignOut } from './MessagingStore'
 import { HistoryT } from '../types'
 import * as Keychain from 'react-native-keychain'
+import I18n from 'i18n-js'
 
 const initProfile = {
   firstName: '',
@@ -191,6 +192,28 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
     } finally {
       OnlinePlayer.store.isPosterLoading = false
     }
+  },
+  getLeftTime(lastTime) {
+    const day = 86400000
+    const hour = 3600000
+    const min = 60000
+    const sec = 1000
+    const dateNow = Date.now()
+    const passTime = dateNow - lastTime
+    const difference = day - passTime
+
+    if (difference <= 0) {
+      return '0'
+    } else if (difference < min) {
+      const secCount = Math.round(difference / sec)
+      return `${secCount} ${I18n.t(timeLeftType[0].sec)}`
+    } else if (difference < hour) {
+      const minCount = Math.round(difference / min)
+      return `${minCount} ${I18n.t(timeLeftType[0].min)}`
+    } /*(difference <= day)*/ else {
+      const hourCount = Math.round(difference / hour)
+      return `${hourCount} ${I18n.t(timeLeftType[0].h)}`
+    }
   }
 })
 
@@ -203,6 +226,7 @@ interface Istore {
   updateStep: () => Promise<void>
   getPoster: () => Promise<void>
   SignOutToOffline: () => Promise<void>
+  getLeftTime: (lastTime: number) => string
 }
 
 interface OnlinePlayerStore {

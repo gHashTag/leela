@@ -1,8 +1,17 @@
 import React from 'react'
-import { Image, ImageStyle, Pressable, StyleProp, StyleSheet, View } from 'react-native'
+import {
+  Image,
+  ImageBackground,
+  ImageStyle,
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  View
+} from 'react-native'
 import { ms, s } from 'react-native-size-matters'
 import { classicRose, mustard, primary } from '../../constants'
 import { Text } from '..'
+import { useTheme } from '@react-navigation/native'
 
 interface PlanAvatarI {
   plan: number
@@ -19,16 +28,25 @@ export function PlanAvatar({
   aditionalStyle,
   onPress
 }: PlanAvatarI) {
+  const {
+    colors: { background }
+  } = useTheme()
   const textPlan = plan < 10 ? `0${plan}` : `${plan}`
   const fontSize = size === 'small' ? s(6) : s(10)
   const badgeS = size === 'small' || size === 'medium' ? smallBadge : bigBadge
   return (
-    <View style={main}>
-      <Image source={{ uri: avaUrl }} style={[styles[size], container, aditionalStyle]} />
-      <Pressable onPress={onPress} style={[badge, badgeS]}>
+    <ImageBackground
+      source={{ uri: avaUrl }}
+      style={[styles[size], aditionalStyle]}
+      imageStyle={container}
+    >
+      <Pressable
+        onPress={onPress}
+        style={[badge, badgeS, { backgroundColor: background }]}
+      >
         <Text textStyle={{ fontSize }} title={textPlan} h="h12" />
       </Pressable>
-    </View>
+    </ImageBackground>
   )
 }
 
@@ -54,7 +72,7 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: ms(130),
     borderColor: primary,
-    borderWidth: s(0.7)
+    borderWidth: s(0.9)
   },
   badge: {
     alignItems: 'center',
@@ -62,18 +80,18 @@ const styles = StyleSheet.create({
     borderRadius: ms(130),
     flexDirection: 'row',
     position: 'absolute',
-    backgroundColor: classicRose,
-    padding: s(1.5)
+    borderColor: primary,
+    borderWidth: s(0.8),
+    padding: s(2)
   },
   smallBadge: {
-    right: s(2),
-    top: s(2)
+    right: s(-1),
+    bottom: s(1)
   },
   bigBadge: {
-    right: s(8),
-    top: s(4)
-  },
-  main: {}
+    right: s(-1),
+    bottom: s(2)
+  }
 })
 
-const { container, badge, main, bigBadge, smallBadge } = styles
+const { container, badge, bigBadge, smallBadge } = styles

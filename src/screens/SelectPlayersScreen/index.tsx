@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { observer } from 'mobx-react-lite'
 import * as Sentry from '@sentry/react-native'
 import { ms, s } from 'react-native-size-matters'
@@ -14,39 +14,11 @@ type SelectPlayersScreenT = {
 }
 
 const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
-  // useEffect(() => {
-  //   const checkGame = async () => {
-  //     const init = await AsyncStorage.getItem('@init')
-  //     if (init === 'true') {
-  //       navigation.navigate('MAIN')
-  //     }
-  //   }
-
-  //   checkGame()
-  // }, [])
-
   const selectPlayer = async (selectItem: number) => {
-    if (selectItem + 1 === 1) {
-      actionsDice.setPlayers(selectItem + 1)
-      navigation.navigate('MAIN')
-      actionsDice.init()
-      actionsDice.setOnline(false)
-    } else {
-      try {
-        // if (SubscribeStore.subscriptionActive) {
-        // Unlock that great "pro" content
-        actionsDice.setPlayers(selectItem + 1)
-        navigation.navigate('MAIN')
-        actionsDice.init()
-        actionsDice.setOnline(false)
-        // } else {
-        //   actionsSubscribe.setVisible(true)
-        // }
-      } catch (e) {
-        Sentry.captureException(e)
-      }
-    }
-    //}
+    actionsDice.setPlayers(selectItem + 1)
+    navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
+    actionsDice.init()
+    actionsDice.setOnline(false)
   }
 
   return (
