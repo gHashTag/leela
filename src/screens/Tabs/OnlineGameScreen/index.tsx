@@ -10,11 +10,10 @@ import {
   Background,
   ButtonElements,
   ImageSwiper,
-  Row,
   SocialLinks,
   Space,
   Text,
-  YouTubePlayer
+  VideoPlayer
 } from '../../../components'
 import { secondary } from '../../../constants'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -35,7 +34,7 @@ const theme = {
       padding: 30
     },
     containerStyle: {
-      width: s(250),
+      width: s(240),
       alignSelf: 'center'
     }
   },
@@ -50,12 +49,8 @@ const styles = StyleSheet.create({
     flex: 1
   },
   containerStyle: {
-    width: s(300),
-    backgroundColor: 'transparent',
-    alignSelf: 'center'
-  },
-  infoStyle: {
-    fontSize: s(14)
+    height: vs(250),
+    width: '100%'
   },
   contentContainerStyle: { flexGrow: 1, justifyContent: 'center' }
 })
@@ -80,8 +75,11 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   const openUrl = async (url: string) => {
     await Linking.openURL(url)
   }
-  // console.log(images[64]) // 64, 59
-  const { container, containerStyle, infoStyle, contentContainerStyle } = styles
+  const poster =
+    'https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.jpg'
+  const uri =
+    'https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.mp4'
+  const { container, containerStyle, contentContainerStyle } = styles
 
   return (
     <View style={container}>
@@ -98,7 +96,11 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
             <Space height={s(30)} />
             <Text textStyle={{ textAlign: 'center' }} h={'h3'} title={I18n.t('author')} />
             <Space height={s(20)} />
-            {lang !== 'en' && <YouTubePlayer uri="TDT--lnKSBU" />}
+            {lang !== 'en' && (
+              <View style={containerStyle}>
+                <VideoPlayer paused source={{ uri }} poster={poster} />
+              </View>
+            )}
             <Space height={s(20)} />
             <Text
               h={'h4'}

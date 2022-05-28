@@ -21,7 +21,6 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
     navigation.goBack()
   }
   const scheme = useColorScheme()
-  const color = scheme === 'dark' ? 'light-content' : 'dark-content'
   useFocusEffect(() => {
     Orientation.unlockAllOrientations()
     SystemNavigationBar.setNavigationColor('black', false)

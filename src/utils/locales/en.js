@@ -99,5 +99,7 @@ export default {
   h0: 'h.',
   min0: 'min.',
   sec0: 'sec.',
-  look: 'Look'
+  look: 'Look',
+  unknownErr: 'Unknown error',
+  loadErr: 'Loading error'
 }

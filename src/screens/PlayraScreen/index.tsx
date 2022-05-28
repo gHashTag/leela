@@ -9,15 +9,17 @@ import {
   AppContainer,
   ButtonElements,
   ButtonSimple,
+  Loading,
   SocialLinks,
   Space,
   Text,
   VideoPlayer
 } from '../../components'
 import { ThemeProvider } from 'react-native-elements'
-import { goBack, OpenVideoModal, secondary } from '../../constants'
+import { goBack, OpenVideoModal, primary, secondary } from '../../constants'
 import { actionPlay } from '../../store'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import Spin from 'react-native-spinkit'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLAYRA_SCREEN'>
 
@@ -51,6 +53,7 @@ interface PlayraItemT {
 
 export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
   const [data, setArray] = useState<any[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
     const getData = async () => {
@@ -59,8 +62,10 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
           'https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/playraClips.json'
         )
         setArray(await response.json())
+        setLoading(false)
       } catch (e) {
         Sentry.captureException(e)
+        setLoading(false)
       }
     }
     getData()
@@ -81,16 +86,27 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
         ListFooterComponent={
           <>
             <Space height={s(50)} />
-            <Text
-              textStyle={{ textAlign: 'center' }}
-              h={'h1'}
-              title={I18n.t('contacts')}
-            />
+            <Text textStyle={centerTxt} h={'h1'} title={I18n.t('contacts')} />
             <ThemeProvider theme={theme}>
               <SocialLinks music />
               <Space height={vs(270)} />
             </ThemeProvider>
           </>
+        }
+        ListHeaderComponent={
+          loading ? (
+            <View style={loadContainer}>
+              <Spin size={s(80)} type="Bounce" color={primary} />
+            </View>
+          ) : null
+        }
+        ListEmptyComponent={
+          loading ? null : (
+            <View>
+              <Space height={vs(15)} />
+              <Text textStyle={centerTxt} h="h3" title={I18n.t('loadErr')} />
+            </View>
+          )
         }
         data={data.slice()}
         renderItem={({ item, index }) => <RenderItem item={item} index={index} />}
@@ -136,6 +152,13 @@ const styles = StyleSheet.create({
   posterS: {
     flex: 1,
     borderRadius: s(10)
+  },
+  loadContainer: {
+    width: '100%',
+    alignItems: 'center'
+  },
+  centerTxt: {
+    textAlign: 'center'
   }
 })
-const { videoView, posterS } = styles
+const { videoView, posterS, loadContainer, centerTxt } = styles
