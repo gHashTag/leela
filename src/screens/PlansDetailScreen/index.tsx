@@ -50,7 +50,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
       <ScrollView>
         {videoUrl !== '' && (
           <View style={styles.center}>
-            <VideoPlayer uri={videoUrl} />
+            <VideoPlayer source={{ uri: videoUrl }} />
           </View>
         )}
         <Space height={s(30)} />

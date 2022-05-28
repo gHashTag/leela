@@ -1,0 +1,158 @@
+[
+  {
+    "id": 0,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/0.Mula-mantra.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/0.Mula-mantra.jpg",
+    "title": "Mula mantra"
+  },
+  {
+    "id": 1,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/1.Guru-mantra.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/1.Guru-mantra.jpg",
+    "title": "Guru mantra"
+  },
+  {
+    "id": 2,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/2.Мahamṛtyuṃjaya-mantra.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/2.Мahamṛtyuṃjaya-mantra.jpg",
+    "title": "Мahamṛtyuṃjaya mantra"
+  },
+  {
+    "id": 3,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/3.Mantra-ganesha.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/3.Mantra-ganesha.jpg",
+    "title": "Mantra Ganesha"
+  },
+  {
+    "id": 4,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/4.Bali.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/4.Bali.jpg",
+    "title": "Bali"
+  },
+  {
+    "id": 5,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/5.Level2.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/5.Level2.jpg",
+    "title": "Level2"
+  },
+  {
+    "id": 6,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/6.Poison-Club.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/6.Poison-Club.jpg",
+    "title": "Poison Club"
+  },
+  {
+    "id": 7,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/7.Insight.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/7.Insight.jpg",
+    "title": "Insight"
+  },
+  {
+    "id": 8,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/8.Ganesha.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/8.Ganesha.jpg",
+    "title": "Ganesha"
+  },
+  {
+    "id": 9,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/9.Mantra-Trap-party.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/9.Mantra-Trap-party.jpg",
+    "title": "Mantra Trap party"
+  },
+  {
+    "id": 10,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/10.Elementary.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/10.Elementary.jpg",
+    "title": "Elementary"
+  },
+  {
+    "id": 11,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/11.Om-Asatoma-Mantra.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/11.Om-Asatoma-Mantra.jpg",
+    "title": "Om Asatoma Mantra"
+  },
+  {
+    "id": 12,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/12.Ganesha-Mantra.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/12.Ganesha-Mantra.jpg",
+    "title": "Ganesha Mantra"
+  },
+  {
+    "id": 13,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/13.Our-music-temple.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/13.Our-music-temple.jpg",
+    "title": "Наша музыка храм"
+  },
+  {
+    "id": 14,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/14.Ecstatic-Dance.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/14.Ecstatic-Dance.jpg",
+    "title": "Ecstatic Dance"
+  },
+  {
+    "id": 15,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/15.Hello-world.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/15.Hello-world.jpg",
+    "title": "Hello world"
+  },
+  {
+    "id": 16,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/16.Rave-meditation.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/16.Rave-meditation.jpg",
+    "title": "Rave meditation"
+  },
+  {
+    "id": 17,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/17.Mantra-trap.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/17.Mantra-trap.jpg",
+    "title": "Mantra trap"
+  },
+  {
+    "id": 18,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/18.Brahma-Mantra.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/18.Brahma-Mantra.jpg",
+    "title": "Brahma Mantra"
+  },
+  {
+    "id": 19,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/19.Guru-mantra2.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/19.Guru-mantra2.jpg",
+    "title": "PLAYRA - Guru mantra"
+  },
+  {
+    "id": 20,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/20.BOHO-Romantic.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/20.BOHO-Romantic.jpg",
+    "title": "BOHO Romantic"
+  },
+  {
+    "id": 21,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/21.Guru-Mantra-Chill-Trap.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/21.Guru-Mantra-Chill-Trap.jpg",
+    "title": "Guru Mantra Chill Trap"
+  },
+  {
+    "id": 22,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/22.Boho-style.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/22.Boho-style.jpg",
+    "title": "Guru mantra - Boho style"
+  },
+  {
+    "id": 23,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/23.BOHO-New-Year.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/23.BOHO-New-Year.jpg",
+    "title": "BOHO New Year"
+  },
+  {
+    "id": 24,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/24.Luxury-Underground-System.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/24.Luxury-Underground-System.jpg",
+    "title": "Luxury Underground System"
+  },
+  {
+    "id": 25,
+    "videoUrl": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/VideoClips/25.Pray-for-peace.mp4",
+    "poster": "https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/ClipPosters/25.Pray-for-peace.jpg",
+    "title": "Pray for peace - STOP WAR Ukraine"
+  }
+]

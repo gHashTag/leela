@@ -22,7 +22,8 @@ import {
   ReplyModal,
   InputTextModal,
   ExitPopup,
-  NetworkModal
+  NetworkModal,
+  VideoPopup
 } from './screens'
 
 import {
@@ -260,6 +261,7 @@ const App = () => {
           <Stack.Screen name="INPUT_TEXT_MODAL" component={InputTextModal} />
           <Stack.Screen name="EXIT_MODAL" component={ExitPopup} />
           <Stack.Screen name="NETWORK_MODAL" component={NetworkModal} />
+          <Stack.Screen name="VIDEO_MODAL" component={VideoPopup} />
         </Stack.Group>
       </Stack.Navigator>
     </NavigationContainer>

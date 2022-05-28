@@ -1,8 +1,8 @@
-import { RouteProp, useTheme } from '@react-navigation/native'
+import { RouteProp, useFocusEffect, useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import I18n from 'i18n-js'
 import React from 'react'
-import { View } from 'react-native'
+import { BackHandler, View } from 'react-native'
 import { s, ScaledSheet, vs } from 'react-native-size-matters'
 import { ButtonSimple, Space, Text } from '../../../components'
 import { OnlinePlayer } from '../../../store'
@@ -17,6 +17,15 @@ export function NetworkModal({ navigation }: NetworkModalT) {
   const {
     colors: { background }
   } = useTheme()
+
+  useFocusEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      onPress()
+      return true
+    })
+    return () => backHandler.remove()
+  })
+
   function onPress() {
     OnlinePlayer.SignOutToOffline()
     navigation.navigate('SELECT_PLAYERS_SCREEN')

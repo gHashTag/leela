@@ -23,6 +23,17 @@ export function OpenExitModal() {
   }
 }
 
+interface VideoModalT {
+  uri: string
+  poster: string
+}
+
+export function OpenVideoModal({ uri, poster }: VideoModalT) {
+  if (navRef.isReady()) {
+    navRef.navigate('VIDEO_MODAL', { uri, poster })
+  }
+}
+
 export function OpenReplyModal(modalButtons: ButtonsModalT[]) {
   if (navRef.isReady()) {
     navRef.navigate('REPLY_MODAL', { buttons: modalButtons })

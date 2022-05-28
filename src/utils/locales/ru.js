@@ -97,5 +97,6 @@ export default {
   // timeLeft
   h0: 'ч.',
   min0: 'мин.',
-  sec0: 'с.'
+  sec0: 'с.',
+  look: 'Смотреть'
 }

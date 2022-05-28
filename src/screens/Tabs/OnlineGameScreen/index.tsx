@@ -11,6 +11,7 @@ import {
   ButtonElements,
   ImageSwiper,
   Row,
+  SocialLinks,
   Space,
   Text,
   YouTubePlayer
@@ -69,7 +70,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   useEffect(() => {
     const getData = async () => {
       let response = await fetch(
-        'https://s3.eu-central-1.wasabisys.com/ghashtag/LeelaChakra/PhotoLeela/leelaPhoto.json'
+        'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/PhotoLeela/leelaPhoto.json'
       )
       setImages(await response.json())
     }
@@ -116,7 +117,23 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
               textStyle={{ paddingHorizontal: 40 }}
             />
             <Space height={s(20)} />
-            {/* {lang !== 'en' && (
+            <Text
+              textStyle={{ textAlign: 'center' }}
+              h={'h3'}
+              title={I18n.t('contacts')}
+            />
+            <SocialLinks />
+            <Space height={vs(200)} />
+          </ScrollView>
+        </Background>
+      </ThemeProvider>
+    </View>
+  )
+})
+
+export { OnlineGameScreen }
+{
+  /* {lang !== 'en' && (
               <>
                 <PricingCard
                   color={secondary}
@@ -170,54 +187,5 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
                   }
                 />
               </>
-            )} */}
-
-            <Space height={s(20)} />
-            <Text
-              textStyle={{ textAlign: 'center' }}
-              h={'h3'}
-              title={I18n.t('contacts')}
-            />
-            <Row>
-              <Icon
-                name="instagram"
-                type="font-awesome"
-                color={secondary}
-                size={40}
-                containerStyle={{ margin: 20 }}
-                onPress={() => openUrl('https://instagram.com/leela.chakra')}
-              />
-              <Icon
-                name="facebook"
-                type="font-awesome"
-                color={secondary}
-                size={40}
-                containerStyle={{ margin: 20 }}
-                onPress={() => openUrl('https://www.facebook.com/leelachakraapp')}
-              />
-              <Icon
-                name="vk"
-                type="font-awesome"
-                color={secondary}
-                size={40}
-                containerStyle={{ margin: 20 }}
-                onPress={() => openUrl('https://vk.com/leela.chakra')}
-              />
-              <Icon
-                name="telegram"
-                type="font-awesome"
-                color={secondary}
-                size={40}
-                containerStyle={{ margin: 20 }}
-                onPress={() => openUrl('https://t.me/leelachakraapp')}
-              />
-            </Row>
-            <Space height={vs(200)} />
-          </ScrollView>
-        </Background>
-      </ThemeProvider>
-    </View>
-  )
-})
-
-export { OnlineGameScreen }
+            )} */
+}

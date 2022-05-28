@@ -61,6 +61,10 @@ export type RootStackParamList = {
   }
   EXIT_MODAL: undefined
   NETWORK_MODAL: undefined
+  VIDEO_MODAL: {
+    uri: string
+    poster: string
+  }
 }
 
 export type RootTabParamList = {

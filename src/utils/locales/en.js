@@ -98,5 +98,6 @@ export default {
   // timeLeft
   h0: 'h.',
   min0: 'min.',
-  sec0: 'sec.'
+  sec0: 'sec.',
+  look: 'Look'
 }
