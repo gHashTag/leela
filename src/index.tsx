@@ -58,6 +58,7 @@ import SystemNavigationBar from 'react-native-system-navigation-bar'
 import { Fallback, Text } from './components'
 import { RootStackParamList, RootTabParamList } from './types'
 import NetInfo from '@react-native-community/netinfo'
+import Orientation from 'react-native-orientation'
 
 const DarkTheme = {
   dark: true,
@@ -154,7 +155,7 @@ const App = () => {
       scheme === 'dark' ? false : true
     )
     SystemNavigationBar.setNavigationBarDividerColor(lightGray)
-
+    Orientation.lockToPortrait()
     const onAuthStateChanged = async (user: any) => {
       if (user) {
         OnlinePlayer.store.profile.email = user.email

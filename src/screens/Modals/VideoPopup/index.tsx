@@ -1,11 +1,14 @@
-import { RouteProp } from '@react-navigation/native'
+import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { StatusBar } from 'react-native'
+import { StatusBar, useColorScheme } from 'react-native'
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import { s } from 'react-native-size-matters'
 import { ButtonVectorIcon, VideoPlayer } from '../../../components'
 import { RootStackParamList } from '../../../types'
+import Orientation from 'react-native-orientation'
+import SystemNavigationBar from 'react-native-system-navigation-bar'
+import { black, white } from '../../../constants'
 
 interface VideoPopupT {
   navigation: NativeStackNavigationProp<RootStackParamList, 'VIDEO_MODAL'>
@@ -17,6 +20,19 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
   function handleBack() {
     navigation.goBack()
   }
+  const scheme = useColorScheme()
+  const color = scheme === 'dark' ? 'light-content' : 'dark-content'
+  useFocusEffect(() => {
+    Orientation.unlockAllOrientations()
+    SystemNavigationBar.setNavigationColor('black', false)
+    return () => {
+      Orientation.lockToPortrait()
+      SystemNavigationBar.setNavigationColor(
+        scheme === 'dark' ? black : white,
+        scheme === 'dark' ? false : true
+      )
+    }
+  })
   return (
     <>
       <StatusBar backgroundColor="black" barStyle="light-content" />
