@@ -41,7 +41,6 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
     <AppContainer
       onPress={() => {
         goBack(navigation)()
-        actionPlay.stop()
       }}
       title={title}
       iconLeft=":heavy_multiplication_x:"

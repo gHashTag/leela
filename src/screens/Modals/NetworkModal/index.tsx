@@ -23,7 +23,9 @@ export function NetworkModal({ navigation }: NetworkModalT) {
       onPress()
       return true
     })
-    return () => backHandler.remove()
+    return () => {
+      backHandler.remove()
+    }
   })
 
   function onPress() {

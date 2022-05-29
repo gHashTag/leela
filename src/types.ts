@@ -49,6 +49,7 @@ export type RootStackParamList = {
   DETAIL_POST_SCREEN: {
     postId: string
     comment?: boolean
+    translatedText?: string
   }
   POST_SCREEN: undefined
 
@@ -70,10 +71,10 @@ export type RootStackParamList = {
 export type RootTabParamList = {
   TAB_BOTTOM_0: undefined
   TAB_BOTTOM_1: undefined
-  TAB_BOTTOM_2?: {
+  TAB_BOTTOM_2: undefined
+  TAB_BOTTOM_3?: {
     scrollToId?: number
   }
-  TAB_BOTTOM_3: undefined
   TAB_BOTTOM_4: undefined
 }
 

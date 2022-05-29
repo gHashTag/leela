@@ -20,7 +20,7 @@ interface DetailPostI {
 
 export const DetailPostScreen: React.FC<DetailPostI> = observer(
   ({ navigation, route }) => {
-    const { postId, comment } = route.params
+    const { postId, comment, translatedText } = route.params
 
     const curItem = PostStore.store.posts.find(a => a.id === postId)
     const itemIndex = PostStore.store.posts.findIndex(a => a.id === postId)
@@ -61,7 +61,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
       navigation.canGoBack()
         ? navigation.goBack()
         : navigation.navigate('MAIN', {
-            screen: 'TAB_BOTTOM_2',
+            screen: 'TAB_BOTTOM_3',
             params: { scrollToId: itemIndex !== -1 ? itemIndex : 0 }
           })
     }
@@ -72,7 +72,12 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
         ListHeaderComponent={
           <>
             <Header iconLeft=":back:" onPress={GoPostScreen} />
-            <PostCard postId={postId} isDetail onPressCom={newComment} />
+            <PostCard
+              postId={postId}
+              isDetail
+              translatedText={translatedText}
+              onPressCom={newComment}
+            />
             <View style={line} />
           </>
         }

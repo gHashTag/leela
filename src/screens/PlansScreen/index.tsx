@@ -35,6 +35,7 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
         ListHeaderComponent={<Space height={50} />}
         ListFooterComponent={<Space height={300} />}
         data={data}
+        showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
           <RenderPlanItem
             title={item.title}

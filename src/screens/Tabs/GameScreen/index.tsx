@@ -74,19 +74,20 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           >
             {endGame ? (
               <>
-                <Space height={s(60)} />
+                <Space height={s(90)} />
                 <ButtonElements
                   title={I18n.t('startOver')}
                   onPress={
                     DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
                   }
                 />
-                <Space height={s(10)} />
+                <Space height={vs(5)} />
                 <Text
                   textStyle={{ textAlign: 'center' }}
                   h="h1"
                   title={`${I18n.t('win')}`}
                 />
+                <Space height={vs(5)} />
                 {!DiceStore.rate && (
                   <ClassicBtn title={I18n.t('leaveFeedback')} onPress={_onPress} />
                 )}

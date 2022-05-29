@@ -5,16 +5,7 @@ import * as Sentry from '@sentry/react-native'
 import { s, vs } from 'react-native-size-matters'
 import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
-import {
-  AppContainer,
-  ButtonElements,
-  ButtonSimple,
-  Loading,
-  SocialLinks,
-  Space,
-  Text,
-  VideoPlayer
-} from '../../components'
+import { AppContainer, ButtonElements, SocialLinks, Space, Text } from '../../components'
 import { ThemeProvider } from 'react-native-elements'
 import { goBack, OpenVideoModal, primary, secondary } from '../../constants'
 import { actionPlay } from '../../store'
@@ -96,6 +87,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
         ListHeaderComponent={
           loading ? (
             <View style={loadContainer}>
+              <Space height={vs(50)} />
               <Spin size={s(80)} type="Bounce" color={primary} />
             </View>
           ) : null
@@ -108,7 +100,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
             </View>
           )
         }
-        data={data.slice()}
+        data={data.slice().reverse()}
         renderItem={({ item, index }) => <RenderItem item={item} index={index} />}
         keyExtractor={_keyExtractor}
       />

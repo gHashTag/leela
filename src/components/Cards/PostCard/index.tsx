@@ -22,11 +22,12 @@ import { EmojiText } from '../../EmojiText'
 interface postCardI {
   postId: string
   isDetail?: boolean
+  translatedText?: string
   onPressCom?: () => void
 }
 
 export const PostCard: React.FC<postCardI> = observer(props => {
-  const { postId, isDetail = false, onPressCom } = props
+  const { postId, isDetail = false, onPressCom, translatedText } = props
 
   const item = PostStore.store.posts.find(a => a.id === postId)
   if (!item) {
@@ -45,13 +46,20 @@ export const PostCard: React.FC<postCardI> = observer(props => {
     )
   }, [item.liked])
 
+  useEffect(() => {
+    if (translatedText) {
+      setTransText(translatedText)
+      setHideTranslate(false)
+    }
+  }, [])
+
   const likes = PostStore.store.posts[itemIndex].liked
   const likeCount = likes?.filter(a => a !== item.ownerId).length
 
   const date = getTimeStamp({ lastTime: item.createTime })
 
   function goDetail() {
-    item && navigate('DETAIL_POST_SCREEN', { postId: item.id })
+    item && navigate('DETAIL_POST_SCREEN', { postId: item.id, translatedText: transText })
   }
 
   const smallButton = W / 4 - s(70)

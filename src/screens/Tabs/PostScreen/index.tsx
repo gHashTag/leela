@@ -13,8 +13,8 @@ import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { captureException } from '../../../constants'
 
 interface Ipost {
-  navigation: NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_2'>
-  route: RouteProp<RootTabParamList, 'TAB_BOTTOM_2'>
+  navigation: NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_3'>
+  route: RouteProp<RootTabParamList, 'TAB_BOTTOM_3'>
 }
 
 const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {

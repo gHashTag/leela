@@ -28,7 +28,7 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
       Orientation.lockToPortrait()
       SystemNavigationBar.setNavigationColor(
         scheme === 'dark' ? black : white,
-        scheme === 'dark' ? false : true
+        scheme !== 'dark' ? false : true
       )
     }
   })
