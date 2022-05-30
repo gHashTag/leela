@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { FlatList } from 'react-native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { I18n, lang } from '../../utils'
 import { PlansT, RootStackParamList } from '../../types'
 import { AppContainer, RenderPlanItem, Space } from '../../components'
@@ -8,8 +7,9 @@ import { goBack } from '../../constants'
 import { ru } from './ru'
 import { en } from './en'
 import { s } from 'react-native-size-matters'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
-type navigation = StackNavigationProp<RootStackParamList, 'PLANS_SCREEN'>
+type navigation = NativeStackNavigationProp<RootStackParamList, 'PLANS_SCREEN'>
 
 type PlansScreenT = {
   navigation: navigation

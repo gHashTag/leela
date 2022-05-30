@@ -1,5 +1,4 @@
 import React, { useState, ReactElement } from 'react'
-import { KeyboardAvoidingView } from 'react-native'
 import * as Keychain from 'react-native-keychain'
 // @ts-expect-error
 import { EMAIL, PASSWORD } from '@env'
@@ -54,7 +53,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const initialValues = { email: EMAIL, password: PASSWORD }
+  const initialValues = { email: EMAIL ? EMAIL : '', password: PASSWORD ? PASSWORD : '' }
 
   const { ...methods } = useForm({
     mode: 'onChange',

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, Linking, ScrollView, View } from 'react-native'
+import { StyleSheet, ScrollView, View } from 'react-native'
 import { useTheme } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s, vs } from 'react-native-size-matters'
-import { PricingCard, Icon, ThemeProvider } from 'react-native-elements'
+import { ThemeProvider } from 'react-native-elements'
 import { I18n, lang } from '../../../utils'
 import { RootStackParamList, RootTabParamList } from '../../../types'
 import {
@@ -72,9 +72,6 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
     getData()
   }, [navigation])
 
-  const openUrl = async (url: string) => {
-    await Linking.openURL(url)
-  }
   const poster =
     'https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.jpg'
   const uri =

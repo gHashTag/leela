@@ -8,6 +8,8 @@ import { black, dimGray, navigate } from '../../constants'
 import { PostStore } from '../../store'
 import I18n from 'i18n-js'
 import { Loading } from '../'
+import { StyleSheet, View } from 'react-native'
+import { vs } from 'react-native-size-matters'
 
 interface CreatePostT {
   plan: number

@@ -51,9 +51,9 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const initialValues = {
-    email: EMAIL,
-    password: PASSWORD,
-    passwordConfirmation: PASSWORD
+    email: EMAIL ? EMAIL : '',
+    password: PASSWORD ? PASSWORD : '',
+    passwordConfirmation: PASSWORD ? PASSWORD : ''
   }
   const { ...methods } = useForm({
     mode: 'onChange',

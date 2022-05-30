@@ -11,6 +11,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { captureException } from '../../../constants'
+import I18n from 'i18n-js'
 
 interface Ipost {
   navigation: NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_3'>
@@ -62,11 +63,7 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
       ListHeaderComponent={<Space height={top + vs(10)} />}
       ListEmptyComponent={
         <View style={{ paddingHorizontal: s(20) }}>
-          <Text
-            textStyle={{ textAlign: 'center' }}
-            h={'h1'}
-            title="No posts yet. Make a move so you can post"
-          />
+          <Text textStyle={{ textAlign: 'center' }} h={'h1'} title={I18n.t('noPosts')} />
         </View>
       }
     />

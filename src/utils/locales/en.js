@@ -101,5 +101,6 @@ export default {
   sec0: 'sec.',
   look: 'Look',
   unknownErr: 'Unknown error',
-  loadErr: 'Loading error'
+  loadErr: 'Loading error',
+  noPosts: 'No posts yet. Make a move so you can post'
 }

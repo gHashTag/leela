@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
 const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) => {
   const { id, title, content, videoUrl, report } = route.params
   const { h3 } = styles
-
+  console.log(videoUrl)
   return (
     <AppContainer
       onPress={() => {
