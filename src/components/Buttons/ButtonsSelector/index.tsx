@@ -28,13 +28,10 @@ const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
   const [selected, setSelected] = useState<number>(1)
 
   return (
-    <View style={{ alignSelf: 'center' }}>
-      <Space height={s(150)} />
-
+    <View>
       <Text h={'h3'} title={`${I18n.t('selectPlayers')}`} />
       <Space height={s(20)} />
       {/* {!SubscribeStore.subscriptionActive && <Txt h3 title={`${I18n.t('free')}`} />} */}
-      <Space height={s(20)} />
       <View style={styles.container}>
         {data.map(a => (
           <TouchableOpacity key={a} onPress={() => setSelected(a)}>
@@ -46,10 +43,7 @@ const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
           </TouchableOpacity>
         ))}
       </View>
-      <Button
-        title={I18n.t('startGame')}
-        onPress={() => onPress(selected - 1)}
-      />
+      <Button title={I18n.t('startGame')} onPress={() => onPress(selected - 1)} />
     </View>
   )
 })

@@ -104,6 +104,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
     const lineH = isSmallLine
       ? lineHeight + PADDING * 2 - vs(16)
       : lineHeight + PADDING * 2 - vs(4)
+    const curName = PostStore.getOwnerName(item.ownerId, false)
 
     return (
       <>
@@ -122,7 +123,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
           </View>
           <View style={content}>
             <View style={commentHead}>
-              <Text numberOfLines={1} h={'h6'} title={`${item.firstName}`} />
+              <Text numberOfLines={1} h={'h6'} title={curName} />
               <Text
                 numberOfLines={1}
                 colors={{ light: lightGray, dark: gray }}

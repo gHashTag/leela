@@ -62,6 +62,7 @@ export function SubCommentCard({ item, index }: SubComT) {
     OpenReplyModal(modalButtons)
   }
   const text = hideTranslate ? item.text : transText
+  const curName = PostStore.getOwnerName(item.ownerId, false)
   return (
     <View style={container}>
       <View style={commentHead}>
@@ -73,7 +74,7 @@ export function SubCommentCard({ item, index }: SubComT) {
         <Space width={s(6)} />
         <View style={{ flexDirection: 'column', flex: 1 }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-            <Text numberOfLines={1} h={'h6'} title={`${item.firstName}`} />
+            <Text numberOfLines={1} h={'h6'} title={curName} />
             <Text numberOfLines={1} h={'h6'} title={` ${date}`} oneColor={lightGray} />
           </View>
         </View>

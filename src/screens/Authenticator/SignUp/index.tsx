@@ -9,10 +9,10 @@ import {
   Button,
   Input,
   TextError,
-  CenterView,
   Loading
 } from '../../../components'
-import { goBack, white, black, captureException, W } from '../../../constants'
+import { useHeaderHeight } from '@react-navigation/elements'
+import { goBack, white, black, captureException, W, H } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'
 import auth from '@react-native-firebase/auth'
@@ -28,6 +28,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { s, vs } from 'react-native-size-matters'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -51,10 +52,11 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const initialValues = {
-    email: EMAIL ? EMAIL : '',
-    password: PASSWORD ? PASSWORD : '',
-    passwordConfirmation: PASSWORD ? PASSWORD : ''
+    email: EMAIL,
+    password: PASSWORD,
+    passwordConfirmation: PASSWORD
   }
+  const headerHeight = useHeaderHeight()
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
@@ -106,46 +108,59 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
         <Loading />
       ) : (
         <>
-          <Space height={vs(50)} />
-          <CenterView>
-            <FormProvider {...methods}>
-              <Input
-                name="email"
-                placeholder="E-mail"
-                autoCapitalize="none"
-                color={color}
-                additionalStyle={{ width: W - s(40) }}
-              />
-              <Input
-                name="password"
-                placeholder={I18n.t('password')}
-                secureTextEntry
-                color={color}
-                additionalStyle={{ width: W - s(40) }}
-              />
-              <Input
-                name="passwordConfirmation"
-                placeholder={I18n.t('passwordConfirmation')}
-                secureTextEntry
-                color={color}
-                additionalStyle={{ width: W - s(40) }}
-              />
-              <Space height={30} />
-              {error !== '' && (
-                <TextError title={error} textStyle={{ alignSelf: 'center' }} />
-              )}
-              <Space height={20} />
-              <Button
-                title={I18n.t('signUp')}
-                onPress={methods.handleSubmit(onSubmit, onError)}
-              />
-              <Space height={50} />
-            </FormProvider>
-          </CenterView>
+          <KeyboardAvoidingView
+            keyboardVerticalOffset={headerHeight}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.KAV}
+          >
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Space height={H / 7} />
+              <FormProvider {...methods}>
+                <Input
+                  name="email"
+                  placeholder="E-mail"
+                  autoCapitalize="none"
+                  color={color}
+                  additionalStyle={{ width: W - s(40) }}
+                />
+                <Input
+                  name="password"
+                  placeholder={I18n.t('password')}
+                  secureTextEntry
+                  color={color}
+                  additionalStyle={{ width: W - s(40) }}
+                />
+                <Input
+                  name="passwordConfirmation"
+                  placeholder={I18n.t('passwordConfirmation')}
+                  secureTextEntry
+                  color={color}
+                  additionalStyle={{ width: W - s(40) }}
+                />
+                <Space height={30} />
+                {error !== '' && (
+                  <TextError title={error} textStyle={{ alignSelf: 'center' }} />
+                )}
+                <Space height={20} />
+                <Button
+                  title={I18n.t('signUp')}
+                  onPress={methods.handleSubmit(onSubmit, onError)}
+                />
+                <Space height={50} />
+              </FormProvider>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </>
       )}
     </AppContainer>
   )
 }
+
+const styles = StyleSheet.create({
+  KAV: {
+    flex: 1,
+    alignItems: 'center'
+  }
+})
 
 export { SignUp }

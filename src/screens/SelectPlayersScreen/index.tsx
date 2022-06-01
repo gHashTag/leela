@@ -1,9 +1,7 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
-import * as Sentry from '@sentry/react-native'
-import { ms, s } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
-import { Background, ButtonsSelector, Space } from '../../components'
+import { Background, ButtonsSelector, CenterView, Space } from '../../components'
 import { actionsDice } from '../../store'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
@@ -23,9 +21,9 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
 
   return (
     <Background>
-      <Space height={ms(20, 0.5)} />
-      <ButtonsSelector onPress={selectPlayer} />
-      {/* <ModalSubscribe /> */}
+      <CenterView>
+        <ButtonsSelector onPress={selectPlayer} />
+      </CenterView>
     </Background>
   )
 })

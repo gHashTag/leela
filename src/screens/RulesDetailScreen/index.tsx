@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { StackNavigationProp } from '@react-navigation/stack'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { actionPlay } from '../../store'
@@ -8,8 +8,9 @@ import { AppContainer, Space, Text } from '../../components'
 import { goBack } from '../../constants'
 import { StyleSheet } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
+import { vs } from 'react-native-size-matters'
 
-type navigation = StackNavigationProp<RootStackParamList, 'RULES_DETAIL_SCREEN'>
+type navigation = NativeStackNavigationProp<RootStackParamList, 'RULES_DETAIL_SCREEN'>
 type route = RouteProp<RootStackParamList, 'RULES_DETAIL_SCREEN'>
 
 type RulesDetailScreenT = {
@@ -19,7 +20,8 @@ type RulesDetailScreenT = {
 
 const styles = StyleSheet.create({
   h3: {
-    padding: 20
+    padding: 20,
+    letterSpacing: 0.5
   }
 })
 
@@ -35,15 +37,14 @@ const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) =
     <AppContainer
       onPress={() => {
         goBack(navigation)()
-        actionPlay.stop()
       }}
       title={title}
       iconLeft=":heavy_multiplication_x:"
     >
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <Space height={10} />
         <Text selectable h={'h7'} title={content} textStyle={h3} />
-        <Space height={220} />
+        <Space height={vs(200)} />
       </ScrollView>
     </AppContainer>
   )

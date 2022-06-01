@@ -6,7 +6,7 @@ import { AppContainer, RenderPlanItem, Space } from '../../components'
 import { goBack } from '../../constants'
 import { ru } from './ru'
 import { en } from './en'
-import { s } from 'react-native-size-matters'
+import { s, vs } from 'react-native-size-matters'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLANS_SCREEN'>
@@ -32,8 +32,8 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
     >
       <FlatList
         style={{ paddingHorizontal: s(15) }}
-        ListHeaderComponent={<Space height={50} />}
-        ListFooterComponent={<Space height={300} />}
+        ListHeaderComponent={<Space height={vs(15)} />}
+        ListFooterComponent={<Space height={vs(165)} />}
         data={data}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (

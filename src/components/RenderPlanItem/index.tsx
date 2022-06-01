@@ -1,16 +1,16 @@
 import React, { memo } from 'react'
 import { TouchableOpacity } from 'react-native'
-import { ScaledSheet, s } from 'react-native-size-matters'
+import { ScaledSheet, s, vs } from 'react-native-size-matters'
 import { W } from '../../constants'
 import { Text } from '../Text'
 
 const styles = ScaledSheet.create({
   container: {
-    height: 60,
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: W - 30,
-    right: s(15)
+    right: s(15),
+    marginVertical: vs(10)
   },
   titleStyle: {
     left: s(15)

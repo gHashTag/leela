@@ -16,6 +16,7 @@ import { getProfile, getUid } from '../screens/helper'
 import I18n from 'i18n-js'
 import { TranslatorFactory } from 'react-native-power-translator'
 import { captureException } from '../constants'
+import { AllLang } from '../utils'
 
 type fetchT = FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
 interface postStoreT {
@@ -49,7 +50,8 @@ export const PostStore = {
         id,
         createTime: Date.now(),
         email,
-        liked: []
+        liked: [],
+        language: AllLang
       }
       await firestore().collection('Posts').doc(id).set(post)
     }
@@ -157,12 +159,14 @@ export const PostStore = {
         liked: firestore.FieldValue.arrayUnion(userUid)
       })
   },
-  getOwnerName: (ownerId: string) => {
+  getOwnerName: (ownerId: string, full?: boolean) => {
     const userUid = auth().currentUser?.uid
     if (userUid === ownerId) return I18n.t('you')
     const profile = OtherPlayers.store.players.find(a => a.owner === ownerId)
     if (!profile) return I18n.t('anonymous')
-    return `${profile.firstName} ${profile.lastName}`
+    return full !== false
+      ? `${profile.firstName} ${profile.lastName}`
+      : `${profile.firstName}`
   },
   getComPlan: (ownerId: string) => {
     const userUid = getUid()
@@ -183,7 +187,7 @@ export const PostStore = {
     const translator = TranslatorFactory.createTranslator()
     try {
       const res = await translator.translate(text)
-      console.log(res)
+      // console.log(res)
       return res
     } catch (err) {
       captureException(err)

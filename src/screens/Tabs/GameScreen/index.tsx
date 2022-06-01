@@ -59,7 +59,6 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   const endGame = DiceStore.online
     ? OnlinePlayer.store.finish
     : DiceStore.finishArr.indexOf(true) === -1
-  const space = H > 600 ? vs(120) : vs(85)
   return (
     <Background>
       {OnlinePlayer.store.loadingProf && DiceStore.online ? (
@@ -74,22 +73,25 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           >
             {endGame ? (
               <>
-                <Space height={s(90)} />
                 <ButtonElements
                   title={I18n.t('startOver')}
                   onPress={
                     DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
                   }
                 />
-                <Space height={vs(5)} />
+                <Space height={vs(3)} />
                 <Text
                   textStyle={{ textAlign: 'center' }}
                   h="h1"
                   title={`${I18n.t('win')}`}
                 />
-                <Space height={vs(5)} />
                 {!DiceStore.rate && (
-                  <ClassicBtn title={I18n.t('leaveFeedback')} onPress={_onPress} />
+                  <ButtonElements
+                    type="solid"
+                    themeType="classic"
+                    title={I18n.t('leaveFeedback')}
+                    onPress={_onPress}
+                  />
                 )}
               </>
             ) : (
@@ -115,21 +117,15 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                     />
                   </View>
                 )}
-                <Space height={1} />
+                <Space height={s(1)} />
                 <View style={messContainer}>
-                  <Text
-                    textStyle={{ textAlign: 'center' }}
-                    h="h5"
-                    title={DiceStore.message}
-                  />
+                  <Text h="h5" title={DiceStore.message} />
                 </View>
                 <Dice />
               </>
             )}
           </Header>
-          <Space height={space} />
           <GameBoard />
-          <Space height={s(0)} />
         </>
       )}
     </Background>
@@ -139,7 +135,6 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
 const { messContainer } = StyleSheet.create({
   messContainer: {
     flexWrap: 'wrap',
-    flex: 1,
     flexDirection: 'row',
     justifyContent: 'center'
   }

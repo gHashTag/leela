@@ -7,7 +7,7 @@ import { AppContainer, RenderPlanItem, Space } from '../../components'
 import { goBack } from '../../constants'
 import { ru } from './ru'
 import { en } from './en'
-import { s } from 'react-native-size-matters'
+import { s, vs } from 'react-native-size-matters'
 
 type navigation = StackNavigationProp<RootStackParamList, 'RULES_SCREEN'>
 
@@ -47,7 +47,7 @@ const RulesScreen = ({ navigation }: RulesScreenT) => {
     >
       <FlatList
         style={{ paddingHorizontal: s(15) }}
-        ListHeaderComponent={<Space height={50} />}
+        ListHeaderComponent={<Space height={vs(50)} />}
         data={data}
         renderItem={_renderItem}
         keyExtractor={_keyExtractor}

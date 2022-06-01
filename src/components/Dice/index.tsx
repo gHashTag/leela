@@ -7,15 +7,13 @@ import { s, ms, vs } from 'react-native-size-matters'
 
 const styles = StyleSheet.create({
   diceContainer: {
-    position: 'absolute',
     alignItems: 'center',
     alignSelf: 'center',
-    top: Platform.OS === 'ios' ? s(20) : s(35)
+    marginVertical: vs(12)
   },
   image: {
     height: vs(65),
-    width: vs(65),
-    margin: 30
+    width: vs(65)
   }
 })
 

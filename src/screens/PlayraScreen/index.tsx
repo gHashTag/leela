@@ -80,7 +80,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
             <Text textStyle={centerTxt} h={'h1'} title={I18n.t('contacts')} />
             <ThemeProvider theme={theme}>
               <SocialLinks music />
-              <Space height={vs(270)} />
+              <Space height={vs(130)} />
             </ThemeProvider>
           </>
         }

@@ -2,13 +2,15 @@ import React from 'react'
 import { ImageBackground, useColorScheme, View } from 'react-native'
 import { ICONS } from './images'
 import { observer } from 'mobx-react-lite'
-import { ScaledSheet, s, ms } from 'react-native-size-matters'
-import { W } from '../../constants'
+import { ScaledSheet, s, ms, vs, mvs } from 'react-native-size-matters'
+import { H, W } from '../../constants'
 import { Gem } from '../Gem'
 import { Text } from '../Text'
 import { DiceStore, OfflinePlayers, OnlinePlayer, OtherPlayers } from '../../store'
 
 const ratio = W / 714
+const marginTop = H - W > 350 ? 20 : 0
+console.log(marginTop + '  ' + W)
 
 const styles = ScaledSheet.create({
   container: {
@@ -22,8 +24,8 @@ const styles = ScaledSheet.create({
   },
   img: {
     width: W,
-    height: 630 * ratio,
-    marginTop: ms(10, 2.9)
+    height: 620 * ratio,
+    marginTop
   },
   box: {
     width: s(31),

@@ -23,11 +23,20 @@ interface postCardI {
   postId: string
   isDetail?: boolean
   translatedText?: string
+  isHideTranslate?: boolean
+  index?: number
   onPressCom?: () => void
 }
 
 export const PostCard: React.FC<postCardI> = observer(props => {
-  const { postId, isDetail = false, onPressCom, translatedText } = props
+  const {
+    postId,
+    isDetail = false,
+    onPressCom,
+    translatedText,
+    isHideTranslate,
+    index
+  } = props
 
   const item = PostStore.store.posts.find(a => a.id === postId)
   if (!item) {
@@ -49,7 +58,10 @@ export const PostCard: React.FC<postCardI> = observer(props => {
   useEffect(() => {
     if (translatedText) {
       setTransText(translatedText)
-      setHideTranslate(false)
+      setHideTranslate(Boolean(isHideTranslate))
+    }
+    if (index !== undefined && index < 6) {
+      handleTranslate()
     }
   }, [])
 
@@ -59,7 +71,12 @@ export const PostCard: React.FC<postCardI> = observer(props => {
   const date = getTimeStamp({ lastTime: item.createTime })
 
   function goDetail() {
-    item && navigate('DETAIL_POST_SCREEN', { postId: item.id, translatedText: transText })
+    item &&
+      navigate('DETAIL_POST_SCREEN', {
+        postId: item.id,
+        translatedText: transText,
+        hideTranslate
+      })
   }
 
   const smallButton = W / 4 - s(70)
@@ -109,7 +126,13 @@ export const PostCard: React.FC<postCardI> = observer(props => {
   const heartColor = isLiked ? classicRose : undefined
   const fullName = PostStore.getOwnerName(item.ownerId)
   const avaUrl = PostStore.getAvaById(item.ownerId)
-  const flag = lang === 'en' ? ':us:' : `:${lang}:`
+  const flag = hideTranslate
+    ? lang === 'en'
+      ? ':us:'
+      : `:${lang}:`
+    : item.language === 'en'
+    ? ':us:'
+    : `:${item.language}:`
   if (isDetail)
     return (
       <View style={[container, { borderBottomWidth: 0 }]}>
@@ -268,7 +291,7 @@ const style = StyleSheet.create({
     paddingHorizontal: s(5)
   },
   textStyle: {
-    lineHeight: vs(20)
+    lineHeight: s(19)
   },
   headerS: {
     flexDirection: 'row'

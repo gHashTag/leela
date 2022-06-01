@@ -58,7 +58,7 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
       showsVerticalScrollIndicator={false}
       data={PostStore.store.posts}
       keyExtractor={a => a.id}
-      renderItem={({ item }) => <PostCard postId={item.id} />}
+      renderItem={({ item, index }) => <PostCard index={index} postId={item.id} />}
       ItemSeparatorComponent={() => <Space height={vs(10)} />}
       ListHeaderComponent={<Space height={top + vs(10)} />}
       ListEmptyComponent={

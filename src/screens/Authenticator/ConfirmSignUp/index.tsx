@@ -51,12 +51,11 @@ const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
   return (
     <AppContainer title=" " onPress={goBack(navigation)} colorLeft={color}>
       <View style={{ flex: 1, alignItems: 'center' }}>
-        <Space height={vs(90)} />
+        <Space height={vs(15)} />
         <Text h={'h1'} title={I18n.t('checkMail')} />
+        <Loading size={s(100)} type="9CubeGrid" />
         <Space height={vs(30)} />
       </View>
-
-      <Loading size={s(100)} type="9CubeGrid" loading={true} />
       <TouchableOpacity onPress={_onResend} style={{ alignSelf: 'center' }}>
         <Text
           textStyle={{ textDecorationLine: 'underline' }}

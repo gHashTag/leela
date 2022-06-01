@@ -4,7 +4,14 @@ import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s, vs } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
-import { AppContainer, VideoPlayer, Space, Text, CreatePost } from '../../components'
+import {
+  AppContainer,
+  VideoPlayer,
+  Space,
+  Text,
+  CreatePost,
+  Background
+} from '../../components'
 import { goBack } from '../../constants'
 import { actionPlay } from '../../store'
 import { ScrollView } from 'react-native-gesture-handler'
@@ -36,7 +43,6 @@ const styles = StyleSheet.create({
 const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) => {
   const { id, title, content, videoUrl, report } = route.params
   const { h3 } = styles
-  console.log(videoUrl)
   return (
     <AppContainer
       onPress={() => {
@@ -55,7 +61,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
         <Space height={s(30)} />
         <Text selectable h={'h7'} title={content} textStyle={h3} />
         {report && <CreatePost plan={id} />}
-        <Space height={vs(!report ? 260 : 50)} />
+        <Space height={vs(!report ? vs(130) : vs(50))} />
       </ScrollView>
     </AppContainer>
   )

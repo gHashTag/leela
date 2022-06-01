@@ -50,6 +50,7 @@ export type RootStackParamList = {
     postId: string
     comment?: boolean
     translatedText?: string
+    hideTranslate?: boolean
   }
   POST_SCREEN: undefined
 
@@ -139,6 +140,7 @@ export interface PostT extends FormPostT {
   createTime: number
   email: string
   liked?: string[]
+  language: string
 }
 
 export interface FormCommentT {

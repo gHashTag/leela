@@ -20,7 +20,7 @@ interface DetailPostI {
 
 export const DetailPostScreen: React.FC<DetailPostI> = observer(
   ({ navigation, route }) => {
-    const { postId, comment, translatedText } = route.params
+    const { postId, comment, translatedText, hideTranslate } = route.params
 
     const curItem = PostStore.store.posts.find(a => a.id === postId)
     const itemIndex = PostStore.store.posts.findIndex(a => a.id === postId)
@@ -76,6 +76,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
               postId={postId}
               isDetail
               translatedText={translatedText}
+              isHideTranslate={hideTranslate}
               onPressCom={newComment}
             />
             <View style={line} />

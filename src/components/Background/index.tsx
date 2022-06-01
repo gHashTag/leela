@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { StyleSheet, StyleProp, ImageStyle, ImageBackground } from 'react-native'
+import { StyleSheet, StyleProp, ImageStyle, ImageBackground, View } from 'react-native'
 import { ICONS } from './images'
 import { W, H } from '../../constants'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -30,14 +30,14 @@ const Background = memo(
       return res ? res.path : ''
     }
     return (
-      <SafeAreaView style={container}>
+      <View style={container}>
         <ImageBackground
           resizeMode={'contain'}
           source={!!sourceImg ? { uri: sourceImg } : source()}
           style={[img, imageStyle]}
         />
         {children}
-      </SafeAreaView>
+      </View>
     )
   }
 )

@@ -1,44 +1,43 @@
 import React, { memo } from 'react'
-import { TouchableOpacity, View, Platform } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 import Emoji from 'react-native-emoji'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ScaledSheet, s, ms } from 'react-native-size-matters'
+import { ScaledSheet, s, ms, vs, mvs } from 'react-native-size-matters'
 import { W } from '../../constants'
 import { Text } from '../Text'
 
 const styles = ScaledSheet.create({
   container: {
-    height: ms(40, 0.4),
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    paddingBottom: mvs(1, 0.4),
+    zIndex: 20,
+    width: '100%'
   },
   leftIconStyle: {
-    fontSize: Platform.OS === 'ios' ? '33@ms' : '28@ms',
-    width: ms(60, 0.5),
-    height: ms(60, 0.5),
+    fontSize: s(22),
     textAlign: 'center',
-    top: ms(10, 0.8),
-    left: s(5)
+    alignItems: 'center',
+    marginHorizontal: s(8),
+    marginVertical: s(5)
   },
   rightIconStyle: {
-    fontSize: Platform.OS === 'ios' ? '40@ms' : '32@ms',
-    width: ms(60, 0.5),
-    height: ms(60, 0.5),
+    fontSize: s(28),
     textAlign: 'center',
-    top: ms(10, 0.8),
-    right: s(5)
+    alignItems: 'center',
+    marginHorizontal: s(8),
+    marginVertical: s(5)
   },
   rightViewStyle: {
     width: ms(20, 0.5)
   },
   titleStyle: {
     flex: 1,
-    fontSize: 28,
+    fontSize: vs(28),
     left: 5
   },
   childrenStyle: {
-    top: ms(5, 2.8)
+    marginTop: s(2)
   }
 })
 
@@ -64,11 +63,9 @@ const Header = memo<HeaderT>(
     } = styles
 
     const { top } = useSafeAreaInsets()
-
-    const width = W
-
+    const alignItems = children ? 'flex-start' : 'center'
     return (
-      <View style={[container, { width, paddingTop: top }]}>
+      <View style={[container, { paddingTop: top, alignItems }]}>
         {iconLeft && (
           <TouchableOpacity onPress={onPress}>
             <Emoji name={iconLeft} style={leftIconStyle} />
