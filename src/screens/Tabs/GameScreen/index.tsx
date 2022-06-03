@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { observer } from 'mobx-react-lite'
-import { ms, s, vs } from 'react-native-size-matters'
+import { s, vs } from 'react-native-size-matters'
 import { I18n } from '../../../utils'
 import { RootStackParamList, RootTabParamList } from '../../../types'
 import {
@@ -15,10 +15,8 @@ import {
 } from '../../../components'
 import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../../store'
 import Rate from 'react-native-rate'
-import { Button as ClassicBtn } from 'react-native-elements'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { StyleSheet, View } from 'react-native'
-import { H } from '../../../constants'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -59,6 +57,14 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   const endGame = DiceStore.online
     ? OnlinePlayer.store.finish
     : DiceStore.finishArr.indexOf(true) === -1
+  const { isReported, canGo, timeText } = OnlinePlayer.store
+  const textTopMess = DiceStore.online
+    ? !isReported
+      ? I18n.t('notReported')
+      : OnlinePlayer.store.canGo
+      ? I18n.t('takeStep')
+      : `${I18n.t('nextStep')}: ${OnlinePlayer.store.timeText}`
+    : `${I18n.t('playerTurn')} # ${DiceStore.players}`
   return (
     <Background>
       {OnlinePlayer.store.loadingProf && DiceStore.online ? (
@@ -96,27 +102,9 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
               </>
             ) : (
               <>
-                {!OnlinePlayer.store.canGo && DiceStore.online ? (
-                  <View style={messContainer}>
-                    <Text
-                      h="h5"
-                      textStyle={{ textAlign: 'center' }}
-                      title={`${I18n.t('nextStep')}: ${OnlinePlayer.store.timeText}`}
-                    />
-                  </View>
-                ) : (
-                  <View style={messContainer}>
-                    <Text
-                      h="h5"
-                      textStyle={{ textAlign: 'center' }}
-                      title={
-                        DiceStore.online
-                          ? I18n.t('takeStep')
-                          : `${I18n.t('playerTurn')} # ${DiceStore.players}`
-                      }
-                    />
-                  </View>
-                )}
+                <View style={messContainer}>
+                  <Text h="h5" textStyle={{ textAlign: 'center' }} title={textTopMess} />
+                </View>
                 <Space height={s(1)} />
                 <View style={messContainer}>
                   <Text h="h5" title={DiceStore.message} />

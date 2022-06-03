@@ -34,6 +34,12 @@ export function OpenVideoModal({ uri, poster }: VideoModalT) {
   }
 }
 
+export function OpenPlanReportModal(plan: number) {
+  if (navRef.isReady()) {
+    navRef.navigate('PLAN_REPORT_MODAL', { plan })
+  }
+}
+
 export function OpenReplyModal(modalButtons: ButtonsModalT[]) {
   if (navRef.isReady()) {
     navRef.navigate('REPLY_MODAL', { buttons: modalButtons })

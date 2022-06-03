@@ -67,6 +67,9 @@ export type RootStackParamList = {
     uri: string
     poster: string
   }
+  PLAN_REPORT_MODAL: {
+    plan: number
+  }
 }
 
 export type RootTabParamList = {
@@ -97,6 +100,7 @@ export interface UserT {
   plan: number
   start: boolean
   history: HistoryT[]
+  isReported: boolean
   avatar?: string
   lang?: string
   tokens?: string[]

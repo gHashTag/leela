@@ -20,6 +20,8 @@ import {
 } from '../../components'
 import { actionsSubscribe, actionsDice } from '../../store'
 import { captureException } from '../../constants'
+import { useNetInfo } from '@react-native-community/netinfo'
+import { useIsFocused } from '@react-navigation/native'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 
@@ -33,11 +35,11 @@ const styles = ScaledSheet.create({
 
 const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   const [loading, setLoading] = useState<boolean>(true)
-
+  const { isConnected } = useNetInfo()
   const key = async (): Promise<void> => {
     try {
       const credentials = await Keychain.getInternetCredentials('auth')
-      if (credentials) {
+      if (credentials && isConnected) {
         const { username, password } = credentials
         await auth()
           .signInWithEmailAndPassword(username, password)
@@ -53,26 +55,29 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
             }
           })
       }
-      setLoading(false)
+      isConnected !== null && setLoading(false)
     } catch (err) {
       captureException(err)
-      setLoading(false)
+      isConnected !== null && setLoading(false)
     }
   }
+  const isFocus = useIsFocused()
 
   useEffect(() => {
-    //auth().signInWithEmailAndPassword(Config.ADMIN, Config.ADMIN_PASSWORD)
-    actionsSubscribe.purchaserInfo()
-    const checkGame = async () => {
-      const init = await AsyncStorage.getItem('@init')
-      if (init === 'true') {
-        navigation.navigate('MAIN')
+    if (isFocus) {
+      actionsSubscribe.purchaserInfo()
+      const checkGame = async () => {
+        const init = await AsyncStorage.getItem('@init')
+        if (init === 'true') {
+          navigation.navigate('MAIN')
+        }
       }
-    }
 
-    checkGame()
-    key()
-  }, [])
+      checkGame()
+      key()
+    }
+    //auth().signInWithEmailAndPassword(Config.ADMIN, Config.ADMIN_PASSWORD)
+  }, [isConnected])
 
   const _onPress = () => {
     navigation.navigate('HELLO')

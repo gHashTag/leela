@@ -43,7 +43,6 @@ const Dice = observer(() => {
       subscription.remove()
     }
   }, [])
-
   const handleSpin = (value: number) => {
     const duration = (value / 2) * 500
     spinValue.setValue(0)
@@ -59,14 +58,16 @@ const Dice = observer(() => {
       setTimeout(() => setCanRoll(true), 200)
     })
   }
-
+  const isOpacity =
+    (!OnlinePlayer.store.canGo && DiceStore.online) ||
+    (DiceStore.online && !OnlinePlayer.store.isReported)
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg']
   })
 
   const rollDice = (): void => {
-    if (!OnlinePlayer.store.canGo && DiceStore.online) {
+    if (isOpacity) {
       return
     }
     setCanRoll(false)
@@ -79,10 +80,7 @@ const Dice = observer(() => {
       onPress={() => {
         canRoll && rollDice()
       }}
-      style={[
-        styles.diceContainer,
-        !OnlinePlayer.store.canGo && DiceStore.online && { opacity: 0.4 }
-      ]}
+      style={[styles.diceContainer, isOpacity && { opacity: 0.4 }]}
     >
       <Animated.Image
         style={[styles.image, { transform: [{ rotate: spin }] }]}

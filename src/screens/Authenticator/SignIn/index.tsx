@@ -72,7 +72,6 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
         await Keychain.setInternetCredentials('auth', email, password)
         if (user.user.emailVerified) {
           navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
-          actionsDice.init()
         } else {
           navigation.navigate('CONFIRM_SIGN_UP', { email })
         }

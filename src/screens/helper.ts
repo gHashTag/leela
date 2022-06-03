@@ -84,7 +84,8 @@ const createProfile = async ({ email, uid, firstName, lastName }: NewProfileI) =
       finish: false,
       firstGame: true,
       history: hisObj,
-      lang
+      lang,
+      isReported: true
     })
   OnlinePlayer.store = {
     ...OnlinePlayer.store,
@@ -190,12 +191,12 @@ const createHistory = async (values: HistoryT) => {
     if (userUid) {
       if (values.count !== 6) {
         OnlinePlayer.store.canGo = false
-        OnlinePlayer.store.stepTime = Date.now()
+        OnlinePlayer.store.isReported = false
         await firestore()
           .collection('Profiles')
           .doc(userUid)
           .update({
-            lastStepTime: Date.now(),
+            isReported: false,
             history: firestore.FieldValue.arrayUnion(values)
           })
       } else {
@@ -209,6 +210,19 @@ const createHistory = async (values: HistoryT) => {
     }
   } catch (err) {
     captureException(err)
+  }
+}
+
+const startStepTimer = () => {
+  const newTime = Date.now()
+  OnlinePlayer.store.stepTime = newTime
+  OnlinePlayer.store.isReported = true
+  const userUid = getUid()
+  if (userUid) {
+    firestore().collection('Profiles').doc(userUid).update({
+      lastStepTime: newTime,
+      isReported: true
+    })
   }
 }
 
@@ -301,5 +315,6 @@ export {
   onStart,
   resetPlayer,
   getTimeStamp,
-  getUid
+  getUid,
+  startStepTimer
 }

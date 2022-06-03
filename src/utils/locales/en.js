@@ -102,5 +102,9 @@ export default {
   look: 'Look',
   unknownErr: 'Unknown error',
   loadErr: 'Loading error',
-  noPosts: 'No posts yet. Make a move so you can post'
+  noPosts: 'No posts yet. Make a move so you can post',
+  notReported: 'Leave a report',
+  makeReport:
+    'In order for you to make your next move, you need to write a mandatory report.',
+  go: 'Go'
 }

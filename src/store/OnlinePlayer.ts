@@ -1,7 +1,12 @@
 import { makeAutoObservable } from 'mobx'
 import { upStepOnline } from './helper'
 import { actionsDice, DiceStore } from '.'
-import { captureException, navigate, timeLeftType } from '../constants'
+import {
+  captureException,
+  navigate,
+  OpenPlanReportModal,
+  timeLeftType
+} from '../constants'
 import {
   getProfile,
   getImagePicker,
@@ -47,6 +52,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
     firstGame: false,
     loadingProf: true,
     history: initHistory(),
+    isReported: true,
     avatar: '',
     profile: initProfile,
     // poster
@@ -137,6 +143,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
             lastName: curProf.lastName,
             email: curProf.email
           },
+          isReported: curProf.isReported,
           stepTime: curProf.lastStepTime,
           canGo: Date.now() - curProf.lastStepTime >= 86400000,
           avatar: curProf.avatar ? await getIMG(curProf.avatar) : '',
@@ -145,6 +152,9 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
             .slice(0, 30)
         }
         DiceStore.startGame = curProf.start
+      }
+      if (!curProf?.isReported && curProf?.plan) {
+        setTimeout(() => OpenPlanReportModal(curProf.plan), 4000)
       }
       OnlinePlayer.store.loadingProf = false
     } catch (error) {
@@ -241,6 +251,7 @@ interface OnlinePlayerStore {
   firstGame: boolean
   loadingProf: boolean
   history: HistoryT[]
+  isReported: boolean
   avatar: string
   profile: {
     firstName: string

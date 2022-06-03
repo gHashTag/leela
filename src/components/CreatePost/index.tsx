@@ -10,6 +10,7 @@ import I18n from 'i18n-js'
 import { Loading } from '../'
 import { StyleSheet, View } from 'react-native'
 import { vs } from 'react-native-size-matters'
+import { startStepTimer } from '../../screens/helper'
 
 interface CreatePostT {
   plan: number
@@ -28,6 +29,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
   const handleSubmit: SubmitHandler<FieldValues> = async data => {
     setLoading(true)
     methods.reset()
+    startStepTimer()
     await PostStore.createPost({ text: data.text, plan: plan })
     navigate('TAB_BOTTOM_3')
     setLoading(false)

@@ -8,6 +8,7 @@ import { ru } from './ru'
 import { en } from './en'
 import { s, vs } from 'react-native-size-matters'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { OnlinePlayer } from '../../store'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLANS_SCREEN'>
 
@@ -35,11 +36,17 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
         ListHeaderComponent={<Space height={vs(15)} />}
         ListFooterComponent={<Space height={vs(165)} />}
         data={data}
+        windowSize={5}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
           <RenderPlanItem
             title={item.title}
-            onPress={() => navigation.navigate('PLANS_DETAIL_SCREEN', item)}
+            onPress={() =>
+              navigation.navigate('PLANS_DETAIL_SCREEN', {
+                ...item,
+                report: OnlinePlayer.store.plan === item.id ? true : false
+              })
+            }
           />
         )}
         keyExtractor={_keyExtractor}

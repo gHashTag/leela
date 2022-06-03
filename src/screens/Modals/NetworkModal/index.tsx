@@ -36,7 +36,7 @@ export function NetworkModal({ navigation }: NetworkModalT) {
     <View style={container}>
       <View style={[modalView, { backgroundColor: background }]}>
         <Text h={'h3'} title={I18n.t('disconnected')} />
-        <Space height={20} />
+        <Space height={vs(15)} />
         <ButtonSimple h="h1" onPress={onPress} title={I18n.t('goOffline')} />
       </View>
     </View>
@@ -56,7 +56,7 @@ const { container, modalView } = ScaledSheet.create({
     top: vs(22),
     margin: s(20),
     borderRadius: s(20),
-    padding: s(35),
+    padding: s(30),
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
