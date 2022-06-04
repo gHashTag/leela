@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { observer } from 'mobx-react-lite'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import * as Keychain from 'react-native-keychain'
@@ -18,10 +18,10 @@ import {
   IconLeela,
   Loading
 } from '../../components'
-import { actionsSubscribe, actionsDice } from '../../store'
+import { actionsDice } from '../../store'
 import { captureException, OpenPlanReportModal } from '../../constants'
 import { useNetInfo } from '@react-native-community/netinfo'
-import { useFocusEffect, useIsFocused } from '@react-navigation/native'
+import { useFocusEffect } from '@react-navigation/native'
 import { getProfile } from '../helper'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
@@ -69,22 +69,21 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
       return Promise.reject()
     }
   }
-  const isFocus = useIsFocused()
 
   const checkGame = async () => {
     const init = await AsyncStorage.getItem('@init')
-    console.log(init)
     if (init === 'true') {
       navigation.navigate('MAIN')
+    } else {
+      setLoading(false)
     }
   }
 
-  useEffect(() => {
-    if (isFocus) {
+  useFocusEffect(
+    useCallback(() => {
       key().catch(() => checkGame())
-    }
-    //auth().signInWithEmailAndPassword(Config.ADMIN, Config.ADMIN_PASSWORD)
-  }, [isConnected])
+    }, [isConnected])
+  )
 
   const _onPress = () => {
     navigation.navigate('HELLO')

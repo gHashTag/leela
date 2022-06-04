@@ -1,16 +1,10 @@
 import React from 'react'
 import { TouchableOpacity, View } from 'react-native'
 import { ScaledSheet, s, vs } from 'react-native-size-matters'
-import { Text } from '../Text'
+import { Text } from '../'
 import { Space } from '../Space'
 import { Avatar } from '../Avatar'
-import {
-  DiceStore,
-  OfflinePlayers,
-  OnlinePlayer,
-  OtherPlayers,
-  PostStore
-} from '../../store'
+import { OnlinePlayer } from '../../store'
 import { observer } from 'mobx-react-lite'
 
 const styles = ScaledSheet.create({

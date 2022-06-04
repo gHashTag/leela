@@ -2,7 +2,7 @@ import React, { memo } from 'react'
 import { TouchableOpacity } from 'react-native'
 import { ScaledSheet, s, vs } from 'react-native-size-matters'
 import { W } from '../../constants'
-import { Text } from '../Text'
+import { Text } from '../'
 
 const styles = ScaledSheet.create({
   container: {

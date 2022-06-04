@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useColorScheme, StatusBar, BackHandler } from 'react-native'
 import { NavigationContainer, useFocusEffect } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
@@ -15,7 +15,6 @@ import {
   SelectPlayersScreen,
   OnlineGameScreen,
   PlayraScreen,
-  PosterScreen,
   WelcomeScreen,
   PostScreen,
   DetailPostScreen,
@@ -56,7 +55,7 @@ import firestore from '@react-native-firebase/firestore'
 import { getFireBaseRef } from './screens/helper'
 import { linking } from './utils'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
-import { Fallback, Text } from './components'
+import { Fallback } from './components'
 import { RootStackParamList, RootTabParamList } from './types'
 import NetInfo from '@react-native-community/netinfo'
 import Orientation from 'react-native-orientation'
@@ -90,6 +89,7 @@ const TabNavigator = createMaterialTopTabNavigator<RootTabParamList>()
 const Tab = () => {
   useEffect(() => {
     if (auth().currentUser?.uid) {
+      console.log('sub Prof and Online in src/index')
       const unsub1 = firestore()
         .collection('Profiles')
         .where('owner', '!=', auth().currentUser?.uid)
@@ -104,6 +104,7 @@ const Tab = () => {
           })
       })
       return () => {
+        console.log('UNSAB Prof and Online in src/index')
         unsub1()
         getFireBaseRef('/online/').off('child_changed', unsub2)
       }
@@ -159,24 +160,19 @@ const App = () => {
     Orientation.lockToPortrait()
     const onAuthStateChanged = async (user: any) => {
       if (user) {
-        OnlinePlayer.store.profile.email = user.email
         const reference = getFireBaseRef(`/online/${user.uid}`)
         reference.set(true)
         reference.onDisconnect().set(false)
         DiceStore.online = true
         OnlinePlayer.getProfile()
         fetchBusinesses()
-        console.log('user exist')
       } else {
         DiceStore.online = false
-        console.log('No user')
       }
     }
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged)
     return () => {
       subscriber()
-      // sub()
-      // unsubscribe()
     }
   }, [])
 

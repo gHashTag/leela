@@ -63,10 +63,6 @@ export function CreateComment({
             onSubmitEditing={methods.handleSubmit(handleSubmit, err => console.log(err))}
           />
           <Text h="h9" title={`(${length}/250)`} />
-          {/* <Button
-          title="Submit"
-          onPress={methods.handleSubmit(handleSubmit, err => console.log(err))}
-        /> */}
         </FormProvider>
       </Pressable>
     </KeyboardAvoidingView>

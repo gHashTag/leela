@@ -11,9 +11,9 @@ const styles = StyleSheet.create({
   },
   xLarge: {
     marginLeft: 1,
-    width: ms(130),
-    height: ms(130),
-    borderRadius: ms(130)
+    width: s(130),
+    height: s(130),
+    borderRadius: s(130)
   },
   large: {
     marginLeft: 1,

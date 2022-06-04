@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { StyleSheet, Pressable, Platform, Animated, Easing } from 'react-native'
+import { StyleSheet, Pressable, Animated, Easing } from 'react-native'
 import RNShake from 'react-native-shake'
 import { observer } from 'mobx-react-lite'
 import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../store'
-import { s, ms, vs } from 'react-native-size-matters'
+import { vs } from 'react-native-size-matters'
+import { useFocusEffect } from '@react-navigation/native'
 
 const styles = StyleSheet.create({
   diceContainer: {
@@ -18,6 +19,8 @@ const styles = StyleSheet.create({
 })
 
 const getImage = (number: number) => {
+  // так не работает
+  // return require(`./assets/${number}.png`)
   switch (number) {
     case 1:
       return require('./assets/1.png')
@@ -37,12 +40,14 @@ const getImage = (number: number) => {
 const Dice = observer(() => {
   const [canRoll, setCanRoll] = useState<boolean>(true)
   const spinValue = useRef(new Animated.Value(0)).current
-  useEffect(() => {
+
+  useFocusEffect(() => {
     const subscription = RNShake.addListener(() => rollDice())
     return () => {
       subscription.remove()
     }
-  }, [])
+  })
+
   const handleSpin = (value: number) => {
     const duration = (value / 2) * 500
     spinValue.setValue(0)

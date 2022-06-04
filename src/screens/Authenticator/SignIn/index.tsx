@@ -14,7 +14,15 @@ import {
   Input,
   Loading
 } from '../../../components'
-import { goBack, white, black, captureException, W, H } from '../../../constants'
+import {
+  goBack,
+  white,
+  black,
+  captureException,
+  W,
+  H,
+  OpenPlanReportModal
+} from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { I18n } from '../../../utils'
 import { actionsDice } from '../../../store'
@@ -31,6 +39,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { Platform, KeyboardAvoidingView, StyleSheet, ScrollView } from 'react-native'
+import { getProfile } from '../../helper'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -72,6 +81,10 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
         await Keychain.setInternetCredentials('auth', email, password)
         if (user.user.emailVerified) {
           navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
+          const prof = await getProfile()
+          if (prof) {
+            !prof.isReported && OpenPlanReportModal(prof.plan)
+          }
         } else {
           navigation.navigate('CONFIRM_SIGN_UP', { email })
         }

@@ -6,16 +6,16 @@ import {
   ViewStyle,
   StyleProp
 } from 'react-native'
+import { vs } from 'react-native-size-matters'
 import { Text } from '../../'
-import { s } from 'react-native-size-matters'
 
 const styles = StyleSheet.create({
   container: {
     alignSelf: 'center'
   },
   fontStyle: {
-    marginTop: 5,
-    marginBottom: 5
+    marginTop: vs(5),
+    marginBottom: vs(5)
   }
 })
 
@@ -35,23 +35,18 @@ interface ButtonSimpleT {
     | 'h10'
     | 'h11'
     | 'h12'
-  onPress?: (event: GestureResponderEvent) => void
+  onPress?: () => void
   width?: number
   viewStyle?: StyleProp<ViewStyle>
 }
 
-const ButtonSimple = memo<ButtonSimpleT>(
-  ({ title, onPress, h = 'h4', width = s(200), viewStyle }) => {
-    const { container, fontStyle } = styles
-    return (
-      <TouchableOpacity
-        onPress={onPress}
-        style={[container, viewStyle, { width }]}
-      >
-        <Text h={h} title={title} textStyle={fontStyle} />
-      </TouchableOpacity>
-    )
-  }
-)
+const ButtonSimple = memo<ButtonSimpleT>(({ title, onPress, h = 'h4', viewStyle }) => {
+  const { container, fontStyle } = styles
+  return (
+    <TouchableOpacity onPress={onPress} style={[container, viewStyle]}>
+      <Text numberOfLines={1} h={h} title={title} textStyle={fontStyle} />
+    </TouchableOpacity>
+  )
+})
 
 export { ButtonSimple }

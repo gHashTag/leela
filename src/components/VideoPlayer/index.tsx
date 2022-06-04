@@ -1,11 +1,7 @@
-import React, { useRef, useState } from 'react'
-import { StyleSheet, View } from 'react-native'
-import { useTheme } from '@react-navigation/native'
+import React, { useRef } from 'react'
+import { StyleSheet } from 'react-native'
 import Video from 'react-native-video-controls'
 import { VideoProperties } from 'react-native-video'
-import { secondary, primary } from '../../constants'
-import Spinner from 'react-native-spinkit'
-import { s } from 'react-native-size-matters'
 
 const styles = StyleSheet.create({
   container: {

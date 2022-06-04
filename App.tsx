@@ -57,7 +57,8 @@ LogBox.ignoreLogs([
   'Setting a timer for a long period of time',
   'Sending',
   'Non-serializable values were found in the navigation',
-  'ViewPropTypes will be removed'
+  'ViewPropTypes will be removed',
+  'source.uri should not be an empty string'
 ])
 
 function Init() {

@@ -3,8 +3,7 @@ import { TouchableOpacity, View } from 'react-native'
 import Emoji from 'react-native-emoji'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScaledSheet, s, ms, vs, mvs } from 'react-native-size-matters'
-import { W } from '../../constants'
-import { Text } from '../Text'
+import { Text } from '../'
 
 const styles = ScaledSheet.create({
   container: {

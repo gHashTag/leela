@@ -1,18 +1,17 @@
 import React from 'react'
-import { ImageBackground, useColorScheme, View } from 'react-native'
+import { ImageBackground, StyleSheet, useColorScheme, View } from 'react-native'
 import { ICONS } from './images'
 import { observer } from 'mobx-react-lite'
-import { ScaledSheet, s, ms, vs, mvs } from 'react-native-size-matters'
+import { s } from 'react-native-size-matters'
 import { H, W } from '../../constants'
 import { Gem } from '../Gem'
-import { Text } from '../Text'
+import { Text } from '../'
 import { DiceStore, OfflinePlayers, OnlinePlayer, OtherPlayers } from '../../store'
 
 const ratio = W / 714
 const marginTop = H - W > 350 ? 20 : 0
-console.log(marginTop + '  ' + W)
 
-const styles = ScaledSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     top: s(15),
@@ -58,7 +57,7 @@ const GameBoard = observer(() => {
       ]
 
   const getPlan = (x: number) => arr.filter(y => y.plan === x)
-  const { img, container, row } = styles
+  const { img, container, row, box } = styles
   const scheme = useColorScheme()
   const source = () =>
     ICONS.filter(x => x.title === (scheme === 'dark' ? 'dark' : 'light'))[0].path
@@ -82,7 +81,7 @@ const GameBoard = observer(() => {
         {rows.map((a, i) => (
           <View style={row} key={i}>
             {a.map(b => (
-              <View key={b} style={[styles.box]}>
+              <View key={b} style={[box]}>
                 {b === check(b) ? (
                   <Gem plan={b} player={DiceStore.players} />
                 ) : (

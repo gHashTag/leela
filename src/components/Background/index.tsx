@@ -2,7 +2,6 @@ import React, { memo } from 'react'
 import { StyleSheet, StyleProp, ImageStyle, ImageBackground, View } from 'react-native'
 import { ICONS } from './images'
 import { W, H } from '../../constants'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 const styles = StyleSheet.create({
   container: {

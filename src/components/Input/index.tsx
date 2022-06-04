@@ -74,9 +74,9 @@ const Input: React.FC<TextInputProps> = ({
         style={[style, hasError ? placeholderStyle : input]}
         placeholderTextColor={dimGray}
         onChangeText={field.onChange}
-        onBlur={() => {
+        onBlur={e => {
           field.onBlur()
-          onBlur && onBlur()
+          onBlur && onBlur(e)
         }}
         ref={field.ref}
         value={field.value}

@@ -8,11 +8,8 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     height: '100%'
-  },
-  statusStyle: { padding: 5, paddingTop: 5 }
+  }
 })
-
-const RED = '#FC2847'
 
 interface AppContainerT {
   iconLeft?: string | null
@@ -41,20 +38,11 @@ function AppContainer({
   textAlign = 'left',
   status
 }: AppContainerT) {
-  const { container, statusStyle } = styles
+  const { container } = styles
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Background status={status}>
         <View style={container}>
-          {/* <StatusBarAlert
-            visible={message !== ''}
-            message={message}
-            backgroundColor={RED}
-            color="white"
-            pulse="background"
-            height={40}
-            style={statusStyle}
-          /> */}
           {title && header && (
             <Header
               textAlign={textAlign}

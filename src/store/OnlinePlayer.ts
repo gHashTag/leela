@@ -146,11 +146,11 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
           isReported: curProf.isReported,
           stepTime: curProf.lastStepTime,
           canGo: Date.now() - curProf.lastStepTime >= 86400000,
-          avatar: curProf.avatar ? await getIMG(curProf.avatar) : '',
           history: curProf.history
             .sort((a, b) => b.createDate - a.createDate)
             .slice(0, 30)
         }
+        OnlinePlayer.store.avatar = await getIMG(curProf.avatar)
         DiceStore.startGame = curProf.start
       }
       OnlinePlayer.store.loadingProf = false

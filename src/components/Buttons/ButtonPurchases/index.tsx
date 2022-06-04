@@ -47,10 +47,10 @@ const ButtonPurchases = observer(() => {
       //   console.log('else', purchaserInfo.entitlements.active)
       // }
     } catch (e) {
-      //console.log('e', e)
-      if (!e.userCancelled) {
-        Sentry.captureException(e)
-      }
+      // console.log('e', e)
+      // if (!e.userCancelled) {
+      //   Sentry.captureException(e)
+      // }
     }
   }
 

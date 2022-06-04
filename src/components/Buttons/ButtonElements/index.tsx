@@ -2,7 +2,7 @@ import React, { memo } from 'react'
 import { GestureResponderEvent, Platform } from 'react-native'
 import { ThemeProvider, Button } from 'react-native-elements'
 import { s } from 'react-native-size-matters'
-import { brightTurquoise, secondary, trueBlue, white } from '../../../constants'
+import { secondary, trueBlue, white } from '../../../constants'
 
 const themes = {
   default: {

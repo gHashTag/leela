@@ -25,6 +25,10 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
     setData(lang === 'en' ? en : ru)
   })
 
+  const getIsReportItem = (id: number) => {
+    return OnlinePlayer.store.plan === id && !OnlinePlayer.store.isReported
+  }
+
   return (
     <AppContainer
       onPress={goBack(navigation)}
@@ -44,7 +48,7 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
             onPress={() =>
               navigation.navigate('PLANS_DETAIL_SCREEN', {
                 ...item,
-                report: OnlinePlayer.store.plan === item.id ? true : false
+                report: getIsReportItem(item.id)
               })
             }
           />

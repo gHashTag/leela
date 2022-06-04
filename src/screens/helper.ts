@@ -243,8 +243,19 @@ const getImagePicker = async () => {
   return image
 }
 
-const getIMG = async (fileName: string) => {
-  return await storage().ref(fileName).getDownloadURL()
+const getIMG = async (fileName?: string) => {
+  const defaultImg =
+    'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/defaultProfileImage.png'
+  if (fileName) {
+    try {
+      return await storage().ref(fileName).getDownloadURL()
+    } catch (error) {
+      captureException(error)
+      return defaultImg
+    }
+  } else {
+    return defaultImg
+  }
 }
 
 const uploadImg = async (image: { path: string }) => {

@@ -54,7 +54,7 @@ export const captureException = (error: any) => {
     )
     return
   }
-  console.error(error)
+  console.error(`My Error: ${error}`)
   Sentry.captureException(error)
 }
 
@@ -84,6 +84,7 @@ export const fuchsia = '#FF06F4'
 export const trueBlue = '#007ACD'
 export const paleBlue = '#BEFCE5'
 export const brightTurquoise = '#1EE4EC'
+export const RED = '#FC2847'
 
 export const revenuecat = 'BeIMIIfptWXlouosYudFEWQDkwDvJUzv'
 

@@ -4,7 +4,6 @@ import { s } from 'react-native-size-matters'
 import { observer } from 'mobx-react-lite'
 import { I18n } from '../../../utils'
 import { Button } from '../Button'
-//import { SubscribeStore } from '../../store'
 import { Space } from '../../Space'
 import { Text } from '../../'
 
@@ -31,7 +30,6 @@ const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
     <View>
       <Text h={'h3'} title={`${I18n.t('selectPlayers')}`} />
       <Space height={s(20)} />
-      {/* {!SubscribeStore.subscriptionActive && <Txt h3 title={`${I18n.t('free')}`} />} */}
       <View style={styles.container}>
         {data.map(a => (
           <TouchableOpacity key={a} onPress={() => setSelected(a)}>
