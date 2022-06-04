@@ -19,9 +19,10 @@ import {
   Loading
 } from '../../components'
 import { actionsSubscribe, actionsDice } from '../../store'
-import { captureException } from '../../constants'
+import { captureException, OpenPlanReportModal } from '../../constants'
 import { useNetInfo } from '@react-native-community/netinfo'
-import { useIsFocused } from '@react-navigation/native'
+import { useFocusEffect, useIsFocused } from '@react-navigation/native'
+import { getProfile } from '../helper'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 
@@ -43,9 +44,13 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         const { username, password } = credentials
         await auth()
           .signInWithEmailAndPassword(username, password)
-          .then(user => {
+          .then(async user => {
             if (user.user.emailVerified) {
               navigation.navigate('MAIN')
+              const prof = await getProfile()
+              if (prof) {
+                !prof.isReported && OpenPlanReportModal(prof.plan)
+              }
               actionsDice.setOnline(true)
             } else {
               navigation.navigate('CONFIRM_SIGN_UP', {
@@ -54,27 +59,29 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
               user.user.sendEmailVerification()
             }
           })
+      } else if (isConnected !== null) {
+        return Promise.reject()
       }
       isConnected !== null && setLoading(false)
     } catch (err) {
       captureException(err)
       isConnected !== null && setLoading(false)
+      return Promise.reject()
     }
   }
   const isFocus = useIsFocused()
 
+  const checkGame = async () => {
+    const init = await AsyncStorage.getItem('@init')
+    console.log(init)
+    if (init === 'true') {
+      navigation.navigate('MAIN')
+    }
+  }
+
   useEffect(() => {
     if (isFocus) {
-      actionsSubscribe.purchaserInfo()
-      const checkGame = async () => {
-        const init = await AsyncStorage.getItem('@init')
-        if (init === 'true') {
-          navigation.navigate('MAIN')
-        }
-      }
-
-      checkGame()
-      key()
+      key().catch(() => checkGame())
     }
     //auth().signInWithEmailAndPassword(Config.ADMIN, Config.ADMIN_PASSWORD)
   }, [isConnected])

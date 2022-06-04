@@ -24,6 +24,7 @@ interface AppContainerT {
   message?: string
   title?: string
   header?: boolean
+  iconLeftOpacity?: number
   textAlign?: 'center' | 'auto' | 'left' | 'right' | 'justify'
   status?: 'bg' | 'clean' | '1x1'
 }
@@ -36,6 +37,7 @@ function AppContainer({
   iconRight,
   children,
   title,
+  iconLeftOpacity = 1,
   textAlign = 'left',
   status
 }: AppContainerT) {
@@ -58,6 +60,7 @@ function AppContainer({
               textAlign={textAlign}
               title={title}
               onPress={onPress}
+              iconLeftOpacity={iconLeftOpacity}
               onPressRight={onPressRight}
               iconLeft={iconLeft}
               iconRight={iconRight}

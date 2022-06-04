@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     fontSize: ms(15, 0.6),
     fontFamily: 'Montserrat',
     letterSpacing: 0.2,
-    lineHeight: ms(17, 0.6)
+    lineHeight: ms(18.5, 0.6)
   },
   h8: {
     fontSize: Platform.OS === 'ios' ? s(14) : s(14),
@@ -123,10 +123,7 @@ export const Text = memo<TxtT>(
     const hasShadow = h ? !noShadowFonts.includes(h) : false
 
     const hStyle = h
-      ? [
-          { ...styles[h], color: curColor },
-          hasShadow && { textShadowColor: primary }
-        ]
+      ? [{ ...styles[h], color: curColor }, hasShadow && { textShadowColor: primary }]
       : undefined
     return (
       <RNText style={[hStyle, textStyle]} {...textProps}>

@@ -153,9 +153,6 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
         }
         DiceStore.startGame = curProf.start
       }
-      if (!curProf?.isReported && curProf?.plan) {
-        setTimeout(() => OpenPlanReportModal(curProf.plan), 4000)
-      }
       OnlinePlayer.store.loadingProf = false
     } catch (error) {
       captureException(error)

@@ -33,7 +33,7 @@ const styles = ScaledSheet.create({
   },
   titleStyle: {
     flex: 1,
-    fontSize: vs(28),
+    fontSize: vs(21),
     left: 5
   },
   childrenStyle: {
@@ -47,12 +47,22 @@ interface HeaderT {
   iconRight?: string | null
   onPress?: () => void | null
   onPressRight?: () => void
+  iconLeftOpacity?: number
   textAlign?: 'center' | 'auto' | 'left' | 'right' | 'justify'
   children?: React.ReactNode
 }
 
 const Header = memo<HeaderT>(
-  ({ title, iconLeft, iconRight, onPress, onPressRight, children, textAlign }) => {
+  ({
+    title,
+    iconLeft,
+    iconRight,
+    onPress,
+    onPressRight,
+    iconLeftOpacity = 1,
+    children,
+    textAlign
+  }) => {
     const {
       container,
       leftIconStyle,
@@ -67,7 +77,7 @@ const Header = memo<HeaderT>(
     return (
       <View style={[container, { paddingTop: top, alignItems }]}>
         {iconLeft && (
-          <TouchableOpacity onPress={onPress}>
+          <TouchableOpacity style={{ opacity: iconLeftOpacity }} onPress={onPress}>
             <Emoji name={iconLeft} style={leftIconStyle} />
           </TouchableOpacity>
         )}

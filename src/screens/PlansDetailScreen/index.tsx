@@ -1,21 +1,15 @@
 import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import { RouteProp } from '@react-navigation/native'
+import { StyleSheet, View, ToastAndroid, Platform, BackHandler } from 'react-native'
+import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s, vs } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
-import {
-  AppContainer,
-  VideoPlayer,
-  Space,
-  Text,
-  CreatePost,
-  Background
-} from '../../components'
+import { AppContainer, VideoPlayer, Space, Text, CreatePost } from '../../components'
 import { goBack } from '../../constants'
-import { actionPlay } from '../../store'
 import { ScrollView } from 'react-native-gesture-handler'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { OnlinePlayer } from '../../store'
+import I18n from 'i18n-js'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
 type route = RouteProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
@@ -43,12 +37,31 @@ const styles = StyleSheet.create({
 const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) => {
   const { id, title, content, videoUrl, report } = route.params
   const { h3 } = styles
+  const { isReported } = OnlinePlayer.store
+  const handleCross = () => {
+    isReported
+      ? navigation.goBack()
+      : Platform.OS === 'android' &&
+        ToastAndroid.showWithGravityAndOffset(
+          I18n.t('notReported'),
+          ToastAndroid.LONG,
+          ToastAndroid.BOTTOM,
+          25,
+          50
+        )
+  }
+  useFocusEffect(() => {
+    const backhandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleCross()
+      return true
+    })
+    return backhandler.remove
+  })
   return (
     <AppContainer
-      onPress={() => {
-        goBack(navigation)()
-      }}
+      onPress={handleCross}
       title={title}
+      iconLeftOpacity={isReported ? 1 : 0.4}
       iconLeft=":heavy_multiplication_x:"
       status="1x1"
     >

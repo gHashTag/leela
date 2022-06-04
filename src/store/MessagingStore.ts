@@ -43,16 +43,17 @@ const saveTokenToDatabase = async (token: string) => {
 
 const delTokenOnSignOut = async () => {
   const userUid = auth().currentUser?.uid
-  await messaging()
-    .getToken()
-    .then(async token => {
-      await firestore()
-        .collection('Profiles')
-        .doc(userUid)
-        .update({
-          tokens: firestore.FieldValue.arrayRemove(token)
-        })
-    })
+  try {
+    const token = await messaging().getToken()
+    await firestore()
+      .collection('Profiles')
+      .doc(userUid)
+      .update({
+        tokens: firestore.FieldValue.arrayRemove(token)
+      })
+  } catch (error) {
+    captureException(error)
+  }
 }
 
 export { saveTokenToDatabase, fetchBusinesses, delTokenOnSignOut }

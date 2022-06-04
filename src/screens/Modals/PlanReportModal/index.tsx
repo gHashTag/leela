@@ -1,10 +1,11 @@
-import { RouteProp, useTheme } from '@react-navigation/native'
+import { RouteProp, useFocusEffect, useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import I18n from 'i18n-js'
 import React from 'react'
-import { StyleSheet, View } from 'react-native'
+import { BackHandler, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import { ButtonSimple, Space, Text } from '../../../components'
+import { fuchsia } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { lang } from '../../../utils'
 import { en } from '../../PlansScreen/en'
@@ -22,6 +23,10 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
   const { plan } = route.params
   const list = lang === 'ru' ? ru : en
   const item = list.find(a => a.id === plan)
+  useFocusEffect(() => {
+    const listener = BackHandler.addEventListener('hardwareBackPress', () => true)
+    return listener.remove
+  })
   const handlePress = () => {
     navigation.goBack()
     if (item) {
@@ -31,14 +36,16 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
   return (
     <View style={transpCont}>
       <View style={[modalView, { backgroundColor: background }]}>
-        <Text h="h2" title={I18n.t('makeReport')} />
-        <Space height={vs(10)} />
-        <ButtonSimple
-          viewStyle={btnCont}
-          onPress={handlePress}
-          h="h2"
-          title={I18n.t('go')}
-        />
+        <Text h="h2" textStyle={textStyle} title={I18n.t('makeReport')} />
+        <Space height={vs(16)} />
+        <TouchableOpacity onPress={handlePress}>
+          <Text
+            textStyle={{ textDecorationLine: 'underline' }}
+            title={I18n.t('go')}
+            oneColor={fuchsia}
+            h="h2"
+          />
+        </TouchableOpacity>
       </View>
     </View>
   )
@@ -67,9 +74,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5
   },
-  btnCont: {
-    alignItems: 'flex-end'
+  textStyle: {
+    textAlign: 'center'
   }
 })
 
-const { transpCont, modalView, btnCont } = styles
+const { transpCont, modalView, textStyle } = styles

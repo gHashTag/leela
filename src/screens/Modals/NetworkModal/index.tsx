@@ -35,15 +35,20 @@ export function NetworkModal({ navigation }: NetworkModalT) {
   return (
     <View style={container}>
       <View style={[modalView, { backgroundColor: background }]}>
-        <Text h={'h3'} title={I18n.t('disconnected')} />
+        <Text textStyle={textStyle} h={'h3'} title={I18n.t('disconnected')} />
         <Space height={vs(15)} />
-        <ButtonSimple h="h1" onPress={onPress} title={I18n.t('goOffline')} />
+        <ButtonSimple
+          viewStyle={btnCont}
+          h="h2"
+          onPress={onPress}
+          title={I18n.t('goOffline')}
+        />
       </View>
     </View>
   )
 }
 
-const { container, modalView } = ScaledSheet.create({
+const { container, modalView, btnCont, textStyle } = ScaledSheet.create({
   container: {
     height: '100%',
     width: '100%',
@@ -53,8 +58,7 @@ const { container, modalView } = ScaledSheet.create({
     alignItems: 'center'
   },
   modalView: {
-    top: vs(22),
-    margin: s(20),
+    margin: s(10),
     borderRadius: s(20),
     padding: s(30),
     alignItems: 'center',
@@ -66,5 +70,11 @@ const { container, modalView } = ScaledSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5
+  },
+  btnCont: {
+    alignItems: 'center'
+  },
+  textStyle: {
+    textAlign: 'center'
   }
 })

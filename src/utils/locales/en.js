@@ -105,6 +105,6 @@ export default {
   noPosts: 'No posts yet. Make a move so you can post',
   notReported: 'Leave a report',
   makeReport:
-    'In order for you to make your next move, you need to write a mandatory report.',
+    'In order for you to continue using the application, you need to write a mandatory report',
   go: 'Go'
 }
