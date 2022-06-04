@@ -106,5 +106,12 @@ export default {
   notReported: 'Leave a report',
   makeReport:
     'In order for you to continue using the application, you need to write a mandatory report',
-  go: 'Go'
+  go: 'Go',
+  // auth errors
+  userNotFound: 'This user does not exist',
+  invalidEmail: 'This field must be an e-mail',
+  shortPassword: 'password must be 6 characters long',
+  requireField: 'Required field',
+  manyCharacters: 'Too many characters',
+  fewCharacters: 'Too few characters'
 }

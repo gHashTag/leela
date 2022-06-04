@@ -42,9 +42,19 @@ type SignUpT = {
 const schema = yup
   .object()
   .shape({
-    email: yup.string().email().trim().required(),
-    password: yup.string().min(6).required(),
-    passwordConfirmation: yup.string().min(6).required()
+    email: yup
+      .string()
+      .email(I18n.t('invalidEmail'))
+      .trim()
+      .required(I18n.t('requireField')),
+    password: yup
+      .string()
+      .required(I18n.t('requireField'))
+      .min(6, I18n.t('shortPassword')),
+    passwordConfirmation: yup
+      .string()
+      .required(I18n.t('requireField'))
+      .min(6, I18n.t('shortPassword'))
   })
   .required()
 
@@ -85,7 +95,7 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
           if (error.code === 'auth/email-already-in-use') {
             setError(I18n.t('usernameExistsException'))
           } else if (error.code === 'auth/invalid-email') {
-            setError('Invalid email')
+            setError(I18n.t('invalidEmail'))
           } else if (error.code === 'auth/network-request-failed') {
             setError(I18n.t('networkRequestFailed'))
           } else {
@@ -139,7 +149,7 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
                 />
                 <Space height={30} />
                 {error !== '' && (
-                  <TextError title={error} textStyle={{ alignSelf: 'center' }} />
+                  <TextError title={error} textStyle={{ textAlign: 'center' }} />
                 )}
                 <Space height={20} />
                 <Button

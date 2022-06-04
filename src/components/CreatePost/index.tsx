@@ -19,7 +19,12 @@ interface CreatePostT {
 const schema = yup
   .object()
   .shape({
-    text: yup.string().trim().min(20).max(300).required()
+    text: yup
+      .string()
+      .trim()
+      .min(20, I18n.t('fewCharacters'))
+      .max(450, I18n.t('manyCharacters'))
+      .required(I18n.t('requireField'))
   })
   .required()
 

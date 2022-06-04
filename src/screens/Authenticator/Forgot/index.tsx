@@ -25,10 +25,7 @@ import * as yup from 'yup'
 import { s, vs } from 'react-native-size-matters'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
-type ProfileScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'FORGOT'
->
+type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'FORGOT'>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'FORGOT'>
 
 type ForgotT = {
@@ -39,7 +36,11 @@ type ForgotT = {
 const schema = yup
   .object()
   .shape({
-    email: yup.string().email().trim().required()
+    email: yup
+      .string()
+      .email(I18n.t('invalidEmail'))
+      .trim()
+      .required(I18n.t('requireField'))
   })
   .required()
 
