@@ -84,7 +84,6 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
         .createUserWithEmailAndPassword(email, password)
         .then(async () => {
           await Keychain.setInternetCredentials('auth', email, password)
-          auth().currentUser?.sendEmailVerification()
           navigation.navigate('CONFIRM_SIGN_UP', { email, password })
           setLoading(false)
         })

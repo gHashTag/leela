@@ -164,9 +164,9 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       if (image) {
         try {
           const fileName = await uploadImg(image)
-          if (auth().currentUser?.photoURL) {
-            // @ts-expect-error
-            await storage().ref(auth().currentUser?.photoURL).delete()
+          const prevImgUrl = auth().currentUser?.photoURL
+          if (prevImgUrl) {
+            await storage().ref(prevImgUrl).delete()
           }
           await auth().currentUser?.updateProfile({
             photoURL: fileName

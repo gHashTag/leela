@@ -20,7 +20,7 @@ import { StyleSheet, View } from 'react-native'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
-  'TAB_BOTTOM_1'
+  'TAB_BOTTOM_0'
 >
 
 type GameScreenT = {
@@ -57,17 +57,17 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   const endGame = DiceStore.online
     ? OnlinePlayer.store.finish
     : DiceStore.finishArr.indexOf(true) === -1
-  const { isReported, canGo, timeText } = OnlinePlayer.store
+  const { isReported, canGo, timeText, loadingProf } = OnlinePlayer.store
   const textTopMess = DiceStore.online
     ? !isReported
       ? I18n.t('notReported')
-      : OnlinePlayer.store.canGo
+      : canGo
       ? I18n.t('takeStep')
-      : `${I18n.t('nextStep')}: ${OnlinePlayer.store.timeText}`
+      : `${I18n.t('nextStep')}: ${timeText}`
     : `${I18n.t('playerTurn')} # ${DiceStore.players}`
   return (
     <Background>
-      {OnlinePlayer.store.loadingProf && DiceStore.online ? (
+      {loadingProf && DiceStore.online ? (
         <Spin />
       ) : (
         <>

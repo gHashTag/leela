@@ -197,6 +197,9 @@ export const PostStore = {
   getAvaById: (uid: string) => {
     const userUid = getUid()
     if (userUid === uid) return OnlinePlayer.store.avatar
-    return OtherPlayers.store.players.find(a => a.owner === uid)?.avatar
+    const otherUserAva = OtherPlayers.store.players.find(a => a.owner === uid)?.avatar
+    return otherUserAva
+      ? otherUserAva
+      : 'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/anonymous.png'
   }
 }

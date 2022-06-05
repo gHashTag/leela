@@ -1,4 +1,3 @@
-import 'react-native-get-random-values'
 import { I18n, lang } from '../utils'
 import { DiceStore, actionsDice } from './DiceStore'
 import { createHistory, updatePlan, onWin, onStart } from '../screens/helper'

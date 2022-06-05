@@ -1,10 +1,15 @@
-import { captureException, timeStampType } from '../constants'
+import {
+  captureException,
+  navigate,
+  OpenPlanReportModal,
+  timeStampType
+} from '../constants'
 import ImagePicker from 'react-native-image-crop-picker'
 import { UserT, HistoryT } from '../types'
-import { OnlinePlayer } from '../store'
+import { actionsDice, DiceStore, fetchBusinesses, OnlinePlayer } from '../store'
 import storage from '@react-native-firebase/storage'
 import { nanoid } from 'nanoid/non-secure'
-import auth from '@react-native-firebase/auth'
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
 import { firebase, FirebaseDatabaseTypes } from '@react-native-firebase/database'
 import { lang } from '../utils'
@@ -261,7 +266,7 @@ const getIMG = async (fileName?: string) => {
 const uploadImg = async (image: { path: string }) => {
   const photo = await fetch(image.path)
   const photoBlob = await photo.blob()
-  const fileName = `images/${nanoid(7)}${image.path.substring(
+  const fileName = `images/${nanoid(13)}${image.path.substring(
     image.path.lastIndexOf('/') + 1
   )}`
   const reference = storage().ref(fileName)
@@ -305,6 +310,34 @@ function getTimeStamp({ lastTime, type = 0 }: getTimeT) {
   }
 }
 
+const onSignIn = async (user: FirebaseAuthTypes.User) => {
+  try {
+    actionsDice.setOnline(true)
+    if (user.emailVerified) {
+      const prof = await getProfile()
+      if (!prof?.firstGame && !prof?.lastName) {
+        navigate('SIGN_UP_USERNAME', { email: user.email })
+      } else if (!prof.avatar) {
+        navigate('SIGN_UP_AVATAR')
+      } else {
+        navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
+        !prof.isReported && OpenPlanReportModal(prof.plan)
+        const reference = getFireBaseRef(`/online/${prof.owner}`)
+        reference.set(true)
+        reference.onDisconnect().set(false)
+        OnlinePlayer.getProfile()
+        fetchBusinesses()
+      }
+    } else {
+      navigate('CONFIRM_SIGN_UP', {
+        email: user.email
+      })
+    }
+  } catch (error) {
+    captureException(error)
+  }
+}
+
 export {
   uploadImg,
   updatePlan,
@@ -322,5 +355,6 @@ export {
   resetPlayer,
   getTimeStamp,
   getUid,
-  startStepTimer
+  startStepTimer,
+  onSignIn
 }

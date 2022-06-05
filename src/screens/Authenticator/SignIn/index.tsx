@@ -44,7 +44,7 @@ import {
   ScrollView,
   View
 } from 'react-native'
-import { getProfile } from '../../helper'
+import { getProfile, onSignIn } from '../../helper'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -91,15 +91,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
       .signInWithEmailAndPassword(email, password)
       .then(async user => {
         await Keychain.setInternetCredentials('auth', email, password)
-        if (user.user.emailVerified) {
-          navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
-          const prof = await getProfile()
-          if (prof) {
-            !prof.isReported && OpenPlanReportModal(prof.plan)
-          }
-        } else {
-          navigation.navigate('CONFIRM_SIGN_UP', { email })
-        }
+        onSignIn(user.user)
       })
       .catch(err => {
         captureException(err.message)

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useColorScheme, StatusBar, BackHandler } from 'react-native'
 import { NavigationContainer, useFocusEffect } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
@@ -49,7 +49,7 @@ import {
 
 import { UI } from './UI'
 
-import { DiceStore, fetchBusinesses, OnlinePlayer, OtherPlayers } from './store'
+import { DiceStore, OtherPlayers } from './store'
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
 import { getFireBaseRef } from './screens/helper'
@@ -88,7 +88,7 @@ const TabNavigator = createMaterialTopTabNavigator<RootTabParamList>()
 
 const Tab = () => {
   useEffect(() => {
-    if (auth().currentUser?.uid) {
+    if (auth().currentUser?.uid && DiceStore.online) {
       console.log('sub Prof and Online in src/index')
       const unsub1 = firestore()
         .collection('Profiles')
@@ -158,22 +158,6 @@ const App = () => {
     )
     SystemNavigationBar.setNavigationBarDividerColor(lightGray)
     Orientation.lockToPortrait()
-    const onAuthStateChanged = async (user: any) => {
-      if (user) {
-        const reference = getFireBaseRef(`/online/${user.uid}`)
-        reference.set(true)
-        reference.onDisconnect().set(false)
-        DiceStore.online = true
-        OnlinePlayer.getProfile()
-        fetchBusinesses()
-      } else {
-        DiceStore.online = false
-      }
-    }
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged)
-    return () => {
-      subscriber()
-    }
   }, [])
 
   return (

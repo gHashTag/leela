@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { Loading, PostCard, Space, Text } from '../../../components'
-import { PostStore } from '../../../store'
+import { DiceStore, PostStore } from '../../../store'
 import { RootTabParamList } from '../../../types'
 import firestore from '@react-native-firebase/firestore'
 import { FlatList } from 'react-native-gesture-handler'
@@ -32,15 +32,17 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
   })
 
   useEffect(() => {
-    const subPosts = firestore()
-      .collection('Posts')
-      .onSnapshot(PostStore.fetchPosts, err => captureException(err))
-    const subComments = firestore()
-      .collection('Comments')
-      .onSnapshot(PostStore.fetchComments, err => captureException(err))
-    return () => {
-      subPosts()
-      subComments()
+    if (DiceStore.online) {
+      const subPosts = firestore()
+        .collection('Posts')
+        .onSnapshot(PostStore.fetchPosts, err => captureException(err))
+      const subComments = firestore()
+        .collection('Comments')
+        .onSnapshot(PostStore.fetchComments, err => captureException(err))
+      return () => {
+        subPosts()
+        subComments()
+      }
     }
   }, [])
 

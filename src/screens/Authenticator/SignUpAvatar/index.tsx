@@ -1,19 +1,16 @@
 import React, { ReactElement } from 'react'
 import { s } from 'react-native-size-matters'
 import { observer } from 'mobx-react-lite'
-import { RouteProp, useTheme } from '@react-navigation/native'
+import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { I18n } from '../../../utils'
-import {
-  AppContainer,
-  Avatar,
-  Button,
-  CenterView,
-  Space
-} from '../../../components'
+import { AppContainer, Avatar, Button, CenterView, Space } from '../../../components'
 import { goBack } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { OnlinePlayer } from '../../../store'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { onSignIn } from '../../helper'
+import auth from '@react-native-firebase/auth'
+import { BackHandler } from 'react-native'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -30,8 +27,17 @@ const SignUpAvatar = observer(({ navigation }: SignUpAvatarT): ReactElement => {
   const onPressAva = async () => {
     OnlinePlayer.uploadImage()
   }
-  const handleSubmit = () =>
-    navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
+  const handleSubmit = () => {
+    const user = auth().currentUser
+    if (user) {
+      onSignIn(user)
+    }
+  }
+  useFocusEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => true)
+    return () => sub.remove()
+  })
+
   return (
     <AppContainer onPress={goBack(navigation)} title=" " iconLeft={null}>
       <CenterView>

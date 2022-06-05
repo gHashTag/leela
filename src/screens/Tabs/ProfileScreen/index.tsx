@@ -21,7 +21,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
-  'TAB_BOTTOM_4'
+  'TAB_BOTTOM_1'
 >
 
 type ProfileScreenT = {
@@ -91,7 +91,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
   const { container } = styles
 
-  const _keyExtractor = (obj: any) => nanoid(7)
+  const _keyExtractor = () => nanoid(7)
 
   const DATA = !DiceStore.online
     ? [

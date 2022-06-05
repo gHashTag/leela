@@ -22,7 +22,7 @@ import { actionsDice } from '../../store'
 import { captureException, OpenPlanReportModal } from '../../constants'
 import { useNetInfo } from '@react-native-community/netinfo'
 import { useFocusEffect } from '@react-navigation/native'
-import { getProfile } from '../helper'
+import { getProfile, onSignIn } from '../helper'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 
@@ -45,19 +45,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         await auth()
           .signInWithEmailAndPassword(username, password)
           .then(async user => {
-            if (user.user.emailVerified) {
-              navigation.navigate('MAIN')
-              const prof = await getProfile()
-              if (prof) {
-                !prof.isReported && OpenPlanReportModal(prof.plan)
-              }
-              actionsDice.setOnline(true)
-            } else {
-              navigation.navigate('CONFIRM_SIGN_UP', {
-                email: user.user.email as string
-              })
-              user.user.sendEmailVerification()
-            }
+            await onSignIn(user.user)
           })
       } else if (isConnected !== null) {
         return Promise.reject()
@@ -81,7 +69,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
 
   useFocusEffect(
     useCallback(() => {
-      key().catch(() => checkGame())
+      key().catch(checkGame)
     }, [isConnected])
   )
 
