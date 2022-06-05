@@ -69,6 +69,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
 
   useFocusEffect(
     useCallback(() => {
+      setLoading(true)
       key().catch(checkGame)
     }, [isConnected])
   )

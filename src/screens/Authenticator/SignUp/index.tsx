@@ -84,7 +84,7 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
         .createUserWithEmailAndPassword(email, password)
         .then(async () => {
           await Keychain.setInternetCredentials('auth', email, password)
-          navigation.navigate('CONFIRM_SIGN_UP', { email, password })
+          navigation.navigate('CONFIRM_SIGN_UP', { email })
           setLoading(false)
         })
         .catch(error => {
@@ -146,16 +146,16 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
                   color={color}
                   additionalStyle={{ width: W - s(40) }}
                 />
-                <Space height={30} />
+                <Space height={vs(30)} />
                 {error !== '' && (
                   <TextError title={error} textStyle={{ textAlign: 'center' }} />
                 )}
-                <Space height={20} />
+                <Space height={vs(20)} />
                 <Button
                   title={I18n.t('signUp')}
                   onPress={methods.handleSubmit(onSubmit, onError)}
                 />
-                <Space height={50} />
+                <Space height={vs(50)} />
               </FormProvider>
             </ScrollView>
           </KeyboardAvoidingView>

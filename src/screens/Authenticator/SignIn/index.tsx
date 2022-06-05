@@ -91,7 +91,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
       .signInWithEmailAndPassword(email, password)
       .then(async user => {
         await Keychain.setInternetCredentials('auth', email, password)
-        onSignIn(user.user)
+        await onSignIn(user.user)
       })
       .catch(err => {
         captureException(err.message)
@@ -115,6 +115,9 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
     return console.log(errors)
   }
 
+  const handleForgot = () => {
+    navigation.navigate('FORGOT', { email: userInfo })
+  }
   const { dark } = useTheme()
   const color = dark ? white : black
 
@@ -125,11 +128,11 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
       <KeyboardAvoidingView
         keyboardVerticalOffset={headerHeight}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.KAV}
+        style={KAV}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
           <Space height={H / 5} />
-          <View style={styles.KAV}>
+          <View style={KAV}>
             <FormProvider {...methods}>
               <Input
                 name="email"
@@ -147,14 +150,10 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
               />
               <Space height={s(10)} />
               {error !== I18n.t('forgotPassword') && (
-                <TextError title={error} textStyle={{ alignSelf: 'center' }} />
+                <TextError title={error} textStyle={textStyle} />
               )}
               {error === I18n.t('forgotPassword') && (
-                <ButtonLink
-                  title={error}
-                  onPress={() => navigation.navigate('FORGOT', { email: userInfo })}
-                  textStyle={{ alignSelf: 'center' }}
-                />
+                <ButtonLink title={error} onPress={handleForgot} textStyle={textStyle} />
               )}
               <Space height={vs(15)} />
               <Button
@@ -174,7 +173,12 @@ const styles = StyleSheet.create({
   KAV: {
     flex: 1,
     alignItems: 'center'
+  },
+  textStyle: {
+    alignSelf: 'center'
   }
 })
+
+const { KAV, textStyle } = styles
 
 export { SignIn }
