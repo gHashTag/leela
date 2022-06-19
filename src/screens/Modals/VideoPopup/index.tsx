@@ -34,7 +34,7 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
   })
   return (
     <>
-      <StatusBar backgroundColor="black" barStyle="light-content" />
+      <StatusBar hidden backgroundColor="black" barStyle="light-content" />
       <View style={transpView}>
         <VideoPlayer source={{ uri }} poster={poster} />
         <ButtonVectorIcon

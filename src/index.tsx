@@ -221,7 +221,7 @@ const App = () => {
         {/* Post */}
         <Stack.Screen
           options={{
-            animation: 'fade_from_bottom'
+            animation: 'slide_from_right'
           }}
           name="DETAIL_POST_SCREEN"
           component={DetailPostScreen}

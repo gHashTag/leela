@@ -3,7 +3,7 @@ import React, { useEffect } from 'react'
 import { StyleSheet, View, FlatList } from 'react-native'
 import { CommentCard, Header, Loading, PostCard, Space } from '../../components'
 import { captureException, lightGray, paleBlue } from '../../constants'
-import { PostStore } from '../../store'
+import { OnlinePlayer, PostStore } from '../../store'
 import { RootStackParamList } from '../../types'
 
 import { s, vs } from 'react-native-size-matters'
@@ -47,6 +47,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
       comment && setTimeout(newComment, 900)
       if (!curItem) {
         PostStore.getOncePost()
+        OnlinePlayer.getProfile()
       }
     }, [])
     useEffect(() => {

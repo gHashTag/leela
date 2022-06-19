@@ -22,8 +22,7 @@ const schema = yup
     text: yup
       .string()
       .trim()
-      .min(20, I18n.t('fewCharacters'))
-      .max(450, I18n.t('manyCharacters'))
+      .min(100, I18n.t('fewCharacters'))
       .required(I18n.t('requireField'))
   })
   .required()
