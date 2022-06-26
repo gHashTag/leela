@@ -17,6 +17,7 @@ import {
 } from '../../../components'
 import { secondary } from '../../../constants'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -71,7 +72,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
     }
     getData()
   }, [navigation])
-
+  const { top } = useSafeAreaInsets()
   const poster =
     'https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.jpg'
   const uri =
@@ -86,7 +87,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={contentContainerStyle}
           >
-            <Space height={s(10)} />
+            <Space height={top + s(10)} />
             <Text textStyle={{ textAlign: 'center' }} h={'h3'} title={I18n.t('events')} />
             <Space height={s(20)} />
             <ImageSwiper images={images} height={vs(300)} />

@@ -42,6 +42,9 @@ export async function displayNotification(
       ],
       groupSummary: true,
       groupId: 'new-comment'
+    },
+    ios: {
+      categoryId: 'reply'
     }
   })
 }
@@ -108,4 +111,25 @@ export async function notifeePostEvent({ type, detail }: Event) {
         break
     }
   }
+}
+
+export async function setCategories() {
+  await notifee.setNotificationCategories([
+    {
+      id: 'reply',
+      actions: [
+        {
+          id: 'dismiss',
+          title: '<p style="color: #f44336;">Dismiss</p>'
+        },
+        {
+          id: 'reply',
+          title: 'Reply',
+          input: {
+            placeholderText: 'Your comment'
+          }
+        }
+      ]
+    }
+  ])
 }

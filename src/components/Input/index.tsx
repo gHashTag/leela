@@ -64,6 +64,7 @@ const Input: React.FC<TextInputProps> = ({
   const placeholderStyle = ScaledSheet.create([
     inputProps.multiline ? inputArea : inputStyle,
     {
+      color: text,
       borderColor: classicRose
     }
   ])

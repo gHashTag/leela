@@ -40,7 +40,7 @@ function AppContainer({
 }: AppContainerT) {
   const { container } = styles
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <Background status={status}>
         <View style={container}>
           {title && header && (
@@ -57,7 +57,7 @@ function AppContainer({
           {children}
         </View>
       </Background>
-    </SafeAreaView>
+    </View>
   )
 }
 

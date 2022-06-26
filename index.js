@@ -6,13 +6,17 @@ import messaging from '@react-native-firebase/messaging'
 import notifee from '@notifee/react-native'
 import {
   displayNotification,
-  notifeePostEvent
+  notifeePostEvent,
+  setCategories
 } from './src/utils/notifications/LocalPushController'
 
+setCategories()
 messaging().setBackgroundMessageHandler(async payload => {
+  console.log(payload)
   displayNotification(payload)
 })
 messaging().onMessage(async payload => {
+  console.log(payload)
   displayNotification(payload)
 })
 notifee.onBackgroundEvent(async event => {
