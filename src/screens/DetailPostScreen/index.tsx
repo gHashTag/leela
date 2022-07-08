@@ -1,7 +1,14 @@
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import React, { useEffect } from 'react'
 import { StyleSheet, View, FlatList } from 'react-native'
-import { CommentCard, Header, Loading, PostCard, Space } from '../../components'
+import {
+  CommentCard,
+  EmptyComments,
+  Header,
+  Loading,
+  PostCard,
+  Space
+} from '../../components'
 import { captureException, lightGray, paleBlue } from '../../constants'
 import { OnlinePlayer, PostStore } from '../../store'
 import { RootStackParamList } from '../../types'
@@ -12,6 +19,7 @@ import { observer } from 'mobx-react-lite'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { getUid } from '../helper'
 import firestore from '@react-native-firebase/firestore'
+import I18n from 'i18n-js'
 
 interface DetailPostI {
   navigation: NativeStackNavigationProp<RootStackParamList, 'DETAIL_POST_SCREEN'>
@@ -72,7 +80,13 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
         removeClippedSubviews={false}
         ListHeaderComponent={
           <>
-            <Header iconLeft=":back:" onPress={GoPostScreen} />
+            <Header
+              textAlign="center"
+              iconLeft=":back:"
+              iconRight={null}
+              title={I18n.t('post')}
+              onPress={GoPostScreen}
+            />
             <PostCard
               postId={postId}
               isDetail
@@ -90,15 +104,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
           </>
         }
         keyExtractor={() => nanoid(9)}
-        ListEmptyComponent={
-          <View style={dotContainer}>
-            <View style={dot} />
-            <View style={dot} />
-            <View style={[dot, { height: s(22), width: s(22) }]} />
-            <View style={dot} />
-            <View style={dot} />
-          </View>
-        }
+        ListEmptyComponent={<EmptyComments />}
         data={commentData}
         renderItem={({ item, index }) => (
           <CommentCard item={item} index={index} endIndex={commentData.length - 1} />
@@ -114,22 +120,8 @@ const style = StyleSheet.create({
   line: {
     width: '100%',
     borderBottomColor: lightGray,
-    borderBottomWidth: vs(1)
-  },
-  dot: {
-    height: s(18),
-    width: s(18),
-    borderRadius: s(22),
-    backgroundColor: paleBlue,
-    margin: s(8)
-  },
-  dotContainer: {
-    justifyContent: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: vs(20),
-    marginBottom: vs(10)
+    borderBottomWidth: s(0.5)
   }
 })
 
-const { dot, dotContainer, line } = style
+const { line } = style

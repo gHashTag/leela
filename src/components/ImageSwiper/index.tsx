@@ -11,6 +11,7 @@ import {
 } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import { black, W, white } from '../../constants'
+import { Text } from '../TextComponents'
 
 interface renderItemsI {
   item: string
@@ -21,6 +22,7 @@ function RenderSwiperItems({ item, index }: renderItemsI) {
   return (
     <ImageBackground source={{ uri: item }} style={imageBg}>
       {/* ... */}
+      {/* <Text oneColor="red" title={`${index}`} h="h0" /> */}
     </ImageBackground>
   )
 }
@@ -60,9 +62,7 @@ export function ImageSwiper({ images, height }: SwiperI) {
     const dotColor = useColorScheme() === 'dark' ? white : black
     return (
       <AnimDot
-        onPressIn={() =>
-          swiperRef.current.scrollToIndex({ index: index, animated: true })
-        }
+        onPressIn={() => swiperRef.current.scrollTo({ x: index * W, animated: true })}
         key={index.toString()}
         style={[
           dot,
@@ -82,15 +82,11 @@ export function ImageSwiper({ images, height }: SwiperI) {
 
   return (
     <View style={[container, { height }]}>
-      <Animated.FlatList
+      <Animated.ScrollView
         disableIntervalMomentum
-        data={images}
-        initialNumToRender={images.length}
-        keyExtractor={() => nanoid(8)}
-        renderItem={RenderSwiperItems}
         decelerationRate={0.8}
-        refreshing
         ref={swiperRef}
+        removeClippedSubviews={false}
         showsHorizontalScrollIndicator={false}
         horizontal
         snapToInterval={W}
@@ -107,20 +103,28 @@ export function ImageSwiper({ images, height }: SwiperI) {
           ],
           { useNativeDriver: true }
         )}
-      />
+      >
+        {images.map((item, index) => (
+          <RenderSwiperItems key={nanoid()} index={index} item={item} />
+        ))}
+      </Animated.ScrollView>
       {images.length > 0 && (
         <Animated.View
           style={[
             dotContainer,
             {
-              translateX: scrollX.interpolate({
-                inputRange: [
-                  W * (dotsCountInView / 2),
-                  W * images.length + W * (dotsCountInView / 2)
-                ],
-                outputRange: [0, (W * -1 * images.length) / dotsCountInView],
-                extrapolate: 'clamp'
-              })
+              transform: [
+                {
+                  translateX: scrollX.interpolate({
+                    inputRange: [
+                      W * (dotsCountInView / 2),
+                      W * images.length + W * (dotsCountInView / 2)
+                    ],
+                    outputRange: [0, (W * -1 * images.length) / dotsCountInView],
+                    extrapolate: 'clamp'
+                  })
+                }
+              ]
             }
           ]}
         >

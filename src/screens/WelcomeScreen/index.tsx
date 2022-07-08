@@ -45,7 +45,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         await auth()
           .signInWithEmailAndPassword(username, password)
           .then(async user => {
-            await onSignIn(user.user)
+            await onSignIn(user.user, true)
           })
       } else if (isConnected !== null) {
         return Promise.reject()

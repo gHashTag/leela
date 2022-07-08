@@ -16,7 +16,7 @@ interface AppContainerT {
   colorLeft?: string
   onPress?: () => void
   onPressRight?: () => void
-  iconRight?: string
+  iconRight?: string | null
   children?: React.ReactNode
   message?: string
   title?: string
@@ -27,11 +27,11 @@ interface AppContainerT {
 }
 
 function AppContainer({
-  iconLeft = ':back:',
+  iconLeft = null,
   onPress,
   onPressRight,
   header = true,
-  iconRight,
+  iconRight = null,
   children,
   title,
   iconLeftOpacity = 1,

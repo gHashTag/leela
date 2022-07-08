@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { LogBox } from 'react-native'
 import { configure } from 'mobx'
 import { configurePersistable } from 'mobx-persist-store'
@@ -16,6 +16,8 @@ import {
 // @ts-expect-error
 import { GOOGLE_TRANSLATE_API_KEY } from '@env'
 import { lang } from './src/utils'
+import SplashScreen from 'react-native-splash-screen'
+
 const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
 
 configurePersistable(
@@ -62,6 +64,9 @@ LogBox.ignoreLogs([
 ])
 
 function Init() {
+  useEffect(() => {
+    SplashScreen.hide()
+  }, [])
   return (
     <SafeAreaProvider>
       <App />

@@ -29,16 +29,11 @@ const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) =
   const { title, content, videoUrl } = route.params
   const { h3 } = styles
 
-  useEffect(() => {
-    actionPlay.stop()
-  }, [])
-
   return (
     <AppContainer
-      onPress={() => {
-        goBack(navigation)()
-      }}
+      onPress={goBack}
       title={title}
+      iconRight={null}
       iconLeft=":heavy_multiplication_x:"
     >
       <ScrollView showsVerticalScrollIndicator={false}>

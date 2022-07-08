@@ -9,6 +9,7 @@ import { RootStackParamList, RootTabParamList } from '../../../types'
 import {
   Background,
   ButtonElements,
+  Header,
   ImageSwiper,
   SocialLinks,
   Space,
@@ -87,8 +88,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={contentContainerStyle}
           >
-            <Space height={top + s(10)} />
-            <Text textStyle={{ textAlign: 'center' }} h={'h3'} title={I18n.t('events')} />
+            <Header textAlign="center" title={I18n.t('events')} />
             <Space height={s(20)} />
             <ImageSwiper images={images} height={vs(300)} />
             <Space height={s(30)} />

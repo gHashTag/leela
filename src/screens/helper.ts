@@ -1,4 +1,5 @@
 import {
+  accountHasBanAlert,
   captureException,
   navigate,
   OpenPlanReportModal,
@@ -310,11 +311,15 @@ function getTimeStamp({ lastTime, type = 0 }: getTimeT) {
   }
 }
 
-const onSignIn = async (user: FirebaseAuthTypes.User) => {
+const onSignIn = async (user: FirebaseAuthTypes.User, isKeychain?: boolean) => {
   try {
     actionsDice.setOnline(true)
     if (user.emailVerified) {
       const prof = await getProfile()
+      if (prof?.status === 'ban') {
+        !isKeychain && accountHasBanAlert()
+        return
+      }
       if (!prof?.firstGame && !prof?.lastName) {
         navigate('SIGN_UP_USERNAME', { email: user.email })
       } else if (!prof.avatar) {

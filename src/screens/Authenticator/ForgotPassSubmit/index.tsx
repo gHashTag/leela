@@ -28,7 +28,7 @@ const ForgotPassSubmit = ({ route, navigation }: ForgotPassSubmitT): ReactElemen
   const color = dark ? white : black
 
   return (
-    <AppContainer title=" " onPress={goBack(navigation)} colorLeft={color}>
+    <AppContainer iconLeft={'back'} title=" " onPress={goBack} colorLeft={color}>
       <CenterView>
         <Text h={'h1'} title={I18n.t('checkMail')} />
         <Space height={vs(40)} />

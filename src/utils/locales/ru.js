@@ -12,7 +12,7 @@ export default {
   userDoesNotExist: 'Пользователь не существует!',
   insertCode: 'Вставьте код отправленый на вашу почту',
   confirm: 'Подтвердить',
-  resendCode: 'Отправить код еще раз?',
+  resendCode: 'Отправить еще раз?',
   invalidVerificationCode: 'Предоставлен неверный код подтверждения, попробуйте еще раз.',
   usernameExistsException: 'Аккаунт с данным адресом электронной почты уже существует.',
   firstName: 'Имя',
@@ -64,7 +64,7 @@ export default {
   online: 'Онлайн',
   offline: 'Офлайн',
   leaveFeedback: 'Оставить отзыв',
-  takeStep: 'Сделайте шаг',
+  takeStep: 'Нажмите на кубик',
   nextStep: 'Следующий шаг через',
   you: 'Вы',
   anonymous: 'Аноним',
@@ -110,6 +110,15 @@ export default {
   invalidEmail: 'Это поле должно быть e-mail почтой',
   shortPassword: 'пароль должен состоять из 6 символов',
   requireField: 'Обязательное поле',
-  manyCharacters: 'Слишком много символов',
-  fewCharacters: 'Слишком мало символов'
+  manyCharacters: 'Слишком много символов, максимум - ',
+  fewCharacters: 'Минимум должно быть 100 символов',
+  post: 'Пост',
+  send: 'Отправить',
+  // for signUp_username
+  twoSymbolRequire: 'Поле должно содержать не менее 2 символов',
+  posts: 'Посты',
+  youBanned: 'Вас забанили',
+  accountBaned: 'Этот аккаунт забанен',
+  banText:
+    'Мы обнаружили что вы нарушаете "Правила постов и комментариев" и по этой причине решили вас забанить.'
 }

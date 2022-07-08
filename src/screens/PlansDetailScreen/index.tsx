@@ -4,8 +4,14 @@ import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s, vs } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
-import { AppContainer, VideoPlayer, Space, Text, CreatePost } from '../../components'
-import { goBack } from '../../constants'
+import {
+  AppContainer,
+  VideoPlayer,
+  Space,
+  Text,
+  CreatePost,
+  KeyboardContainer
+} from '../../components'
 import { ScrollView } from 'react-native-gesture-handler'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { OnlinePlayer } from '../../store'
@@ -61,21 +67,24 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
     <AppContainer
       onPress={handleCross}
       title={title}
+      iconRight={null}
       iconLeftOpacity={isReported ? 1 : 0.4}
       iconLeft=":heavy_multiplication_x:"
       status="1x1"
     >
-      <ScrollView>
-        {videoUrl !== '' && (
-          <View style={styles.center}>
-            <VideoPlayer source={{ uri: videoUrl }} />
-          </View>
-        )}
-        <Space height={s(30)} />
-        <Text selectable h={'h7'} title={content} textStyle={h3} />
-        {report && <CreatePost plan={id} />}
-        <Space height={vs(!report ? vs(130) : vs(50))} />
-      </ScrollView>
+      <KeyboardContainer>
+        <ScrollView>
+          {videoUrl !== '' && (
+            <View style={styles.center}>
+              <VideoPlayer source={{ uri: videoUrl }} />
+            </View>
+          )}
+          <Space height={s(30)} />
+          <Text selectable h={'h7'} title={content} textStyle={h3} />
+          {report && <CreatePost plan={id} />}
+          <Space height={vs(!report ? vs(130) : vs(75))} />
+        </ScrollView>
+      </KeyboardContainer>
     </AppContainer>
   )
 })

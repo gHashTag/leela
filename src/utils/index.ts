@@ -25,7 +25,8 @@ const deviceLanguage =
 
 const langOS = deviceLanguage.slice(0, 2)
 const AllLang = langOS
-const lang = langOS === 'en' || 'ru' ? langOS : 'en'
 
+const lang = langOS === 'en' || langOS === 'ru' ? langOS : 'en'
+//
 export { lang, I18n, AllLang }
 export * from './linking'

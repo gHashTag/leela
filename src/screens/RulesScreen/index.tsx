@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { FlatList } from 'react-native'
-import { StackNavigationProp } from '@react-navigation/stack'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { I18n, lang } from '../../utils'
 import { RootStackParamList } from '../../types'
 import { AppContainer, RenderPlanItem, Space } from '../../components'
@@ -9,7 +9,7 @@ import { ru } from './ru'
 import { en } from './en'
 import { s, vs } from 'react-native-size-matters'
 
-type navigation = StackNavigationProp<RootStackParamList, 'RULES_SCREEN'>
+type navigation = NativeStackNavigationProp<RootStackParamList, 'RULES_SCREEN'>
 
 type RulesScreenT = {
   navigation: navigation
@@ -41,8 +41,9 @@ const RulesScreen = ({ navigation }: RulesScreenT) => {
 
   return (
     <AppContainer
-      onPress={goBack(navigation)}
+      onPress={goBack}
       title={`${I18n.t('rules')}`}
+      iconRight={null}
       iconLeft=":heavy_multiplication_x:"
     >
       <FlatList

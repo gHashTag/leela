@@ -21,7 +21,7 @@ import auth from '@react-native-firebase/auth'
 import storage from '@react-native-firebase/storage'
 import firestore from '@react-native-firebase/firestore'
 import { delTokenOnSignOut } from './MessagingStore'
-import { HistoryT } from '../types'
+import { HistoryT, status } from '../types'
 import * as Keychain from 'react-native-keychain'
 import I18n from 'i18n-js'
 
@@ -146,6 +146,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
           isReported: curProf.isReported,
           stepTime: curProf.lastStepTime,
           canGo: Date.now() - curProf.lastStepTime >= 86400000,
+          status: curProf.status,
           history: curProf.history
             .sort((a, b) => b.createDate - a.createDate)
             .slice(0, 30)
@@ -262,4 +263,5 @@ interface OnlinePlayerStore {
     buttonColor: string
   }
   isPosterLoading: boolean
+  status?: status
 }

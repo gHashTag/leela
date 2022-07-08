@@ -60,7 +60,7 @@ const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
   const color = dark ? white : black
 
   return (
-    <AppContainer title=" " onPress={onExit} colorLeft={color}>
+    <AppContainer iconLeft={'back'} title=" " onPress={onExit} colorLeft={color}>
       <View style={container}>
         <Space height={vs(15)} />
         <Text h={'h1'} title={I18n.t('checkMail')} />

@@ -1,13 +1,19 @@
 import React, { useState, ReactElement } from 'react'
 import { I18n } from '../../../utils'
 import { RouteProp, useFocusEffect, useTheme } from '@react-navigation/native'
-import { AppContainer, Space, Button, Input, Loading } from '../../../components'
+import {
+  AppContainer,
+  Space,
+  Button,
+  Input,
+  Loading,
+  KeyboardContainer
+} from '../../../components'
 import { goBack, white, black, W, H } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { actionsDice, fetchBusinesses } from '../../../store'
 import auth from '@react-native-firebase/auth'
 import { createProfile, getUid } from '../../helper'
-import { useHeaderHeight } from '@react-navigation/elements'
 import {
   useForm,
   FormProvider,
@@ -17,15 +23,9 @@ import {
 } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
-import { s } from 'react-native-size-matters'
+import { s, vs } from 'react-native-size-matters'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import {
-  BackHandler,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet
-} from 'react-native'
+import { BackHandler, ScrollView, StyleSheet } from 'react-native'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -41,8 +41,18 @@ type SignUpUsernameT = {
 const schema = yup
   .object()
   .shape({
-    firstName: yup.string().trim().min(2).required(),
-    lastName: yup.string().trim().min(2).required()
+    firstName: yup
+      .string()
+      .trim()
+      .min(2, I18n.t('twoSymbolRequire'))
+      .required()
+      .max(15, `${I18n.t('manyCharacters')}15`),
+    lastName: yup
+      .string()
+      .trim()
+      .min(2, I18n.t('twoSymbolRequire'))
+      .required()
+      .max(20, `${I18n.t('manyCharacters')}20`)
   })
   .required()
 
@@ -77,7 +87,6 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     actionsDice.setPlayers(1)
     setLoading(false)
   }
-  const headerHeight = useHeaderHeight()
   const onError: SubmitErrorHandler<FieldValues> = (errors, e) => {
     return console.log(errors)
   }
@@ -86,16 +95,15 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
   const color = dark ? white : black
 
   return (
-    <AppContainer onPress={goBack(navigation)} title=" " iconLeft={null}>
+    <AppContainer onPress={goBack} title=" " iconLeft={null}>
       {loading ? (
         <Loading />
       ) : (
-        <KeyboardAvoidingView
-          keyboardVerticalOffset={headerHeight}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.KAV}
-        >
-          <ScrollView showsVerticalScrollIndicator={false}>
+        <KeyboardContainer>
+          <ScrollView
+            contentContainerStyle={styles.container}
+            showsVerticalScrollIndicator={false}
+          >
             <Space height={H / 5} />
             <FormProvider {...methods}>
               <Input
@@ -112,7 +120,7 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
                 color={color}
                 additionalStyle={{ width: W - s(40) }}
               />
-              <Space height={30} />
+              <Space height={vs(30)} />
               <Button
                 title={I18n.t('signUp')}
                 onPress={methods.handleSubmit(onSubmit, onError)}
@@ -120,15 +128,14 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
               <Space height={50} />
             </FormProvider>
           </ScrollView>
-        </KeyboardAvoidingView>
+        </KeyboardContainer>
       )}
     </AppContainer>
   )
 }
 
 const styles = StyleSheet.create({
-  KAV: {
-    flex: 1,
+  container: {
     alignItems: 'center'
   }
 })

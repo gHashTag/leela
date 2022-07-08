@@ -68,7 +68,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   return (
     <Background>
       {loadingProf && DiceStore.online ? (
-        <Spin />
+        <Spin centered />
       ) : (
         <>
           <Header

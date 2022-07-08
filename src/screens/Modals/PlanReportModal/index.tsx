@@ -36,7 +36,7 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
   return (
     <View style={transpCont}>
       <View style={[modalView, { backgroundColor: background }]}>
-        <Text h="h2" textStyle={textStyle} title={I18n.t('makeReport')} />
+        <Text h="h4" textStyle={textStyle} title={I18n.t('makeReport')} />
         <Space height={vs(16)} />
         <TouchableOpacity onPress={handlePress}>
           <Text

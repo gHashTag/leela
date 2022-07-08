@@ -18,7 +18,7 @@ export default observer(function TabBar({
   const { bottom } = useSafeAreaInsets()
 
   const curRoute = routes.filter(a =>
-    DiceStore.online ? true : a.name === 'TAB_BOTTOM_3' ? false : true
+    DiceStore.online ? true : a.name === 'TAB_BOTTOM_1' ? false : true
   )
   const tabContainer = [
     container,

@@ -14,6 +14,7 @@ import { OnlinePlayer } from './OnlinePlayer'
 import { OtherPlayers } from './OtherPlayers'
 import { getProfile, getUid } from '../screens/helper'
 import I18n from 'i18n-js'
+//@ts-ignore
 import { TranslatorFactory } from 'react-native-power-translator'
 import { captureException } from '../constants'
 import { AllLang } from '../utils'
@@ -159,6 +160,15 @@ export const PostStore = {
         liked: firestore.FieldValue.arrayUnion(userUid)
       })
   },
+  unlikePost: async (postId: string) => {
+    const userUid = auth().currentUser?.uid
+    await firestore()
+      .collection('Posts')
+      .doc(postId)
+      .update({
+        liked: firestore.FieldValue.arrayRemove(userUid)
+      })
+  },
   getOwnerName: (ownerId: string, full?: boolean) => {
     const userUid = auth().currentUser?.uid
     if (userUid === ownerId) return I18n.t('you')
@@ -201,5 +211,57 @@ export const PostStore = {
     return otherUserAva
       ? otherUserAva
       : 'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/anonymous.png'
+  },
+  banUnbanUser: async (uid: string) => {
+    try {
+      const profile = (await firestore().collection('Profiles').doc(uid).get()).data()
+      if (profile && profile.status !== 'Admin') {
+        if (profile.status === 'ban') {
+          firestore().collection('Profiles').doc(uid).update({ status: null })
+        } else {
+          firestore().collection('Profiles').doc(uid).update({ status: 'ban' })
+        }
+      }
+    } catch (error) {
+      captureException(error)
+    }
+  },
+  delPost: (id: string) => {
+    firestore()
+      .collection('Comments')
+      .where('postId', '==', id)
+      .get()
+      .then(querySnap => {
+        querySnap.forEach(async doc => {
+          const comId = doc.data().id
+          PostStore.delComment({ commentId: comId, isReply: false })
+        })
+      })
+    firestore().collection('Posts').doc(id).delete()
+  },
+  delAllUserPosts: async (userUid: string) => {
+    firestore()
+      .collection('Posts')
+      .where('ownerId', '==', userUid)
+      .get()
+      .then(querySnap => {
+        querySnap.forEach(async doc => {
+          const postId = doc.data().id
+          PostStore.delPost(postId)
+        })
+      })
+  },
+  delAllUserComments: async (userUid: string) => {
+    firestore()
+      .collection('Comments')
+      .where('ownerId', '==', userUid)
+      .get()
+      .then(querySnap => {
+        querySnap.forEach(async doc => {
+          const commentId = doc.data().id
+          const isReply = doc.data().reply
+          PostStore.delComment({ commentId, isReply })
+        })
+      })
   }
 }

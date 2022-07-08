@@ -44,7 +44,8 @@ import {
   navRef,
   lightGray,
   OpenExitModal,
-  OpenNetworkModal
+  OpenNetworkModal,
+  banAlert
 } from './constants'
 
 import { UI } from './UI'
@@ -58,7 +59,7 @@ import SystemNavigationBar from 'react-native-system-navigation-bar'
 import { Fallback } from './components'
 import { RootStackParamList, RootTabParamList } from './types'
 import NetInfo from '@react-native-community/netinfo'
-import Orientation from 'react-native-orientation'
+import Orientation from 'react-native-orientation-locker'
 
 const DarkTheme = {
   dark: true,
@@ -89,12 +90,16 @@ const TabNavigator = createMaterialTopTabNavigator<RootTabParamList>()
 const Tab = () => {
   useEffect(() => {
     if (auth().currentUser?.uid && DiceStore.online) {
-      console.log('sub Prof and Online in src/index')
+      const curUid = auth().currentUser?.uid
       const unsub1 = firestore()
         .collection('Profiles')
-        .where('owner', '!=', auth().currentUser?.uid)
+        .where('owner', '!=', curUid)
         .onSnapshot(s => OtherPlayers.getOtherProf({ snapshot: s }))
-      const unsub2 = getFireBaseRef(`/online/`).on('child_changed', async changed => {
+      const unsub2 = firestore()
+        .collection('Profiles')
+        .where('owner', '==', curUid)
+        .onSnapshot(s => s.docs.forEach(a => a.data().status === 'ban' && banAlert()))
+      const unsub3 = getFireBaseRef(`/online/`).on('child_changed', async changed => {
         await firestore()
           .collection('Profiles')
           .where('owner', '!=', auth().currentUser?.uid)
@@ -104,9 +109,9 @@ const Tab = () => {
           })
       })
       return () => {
-        console.log('UNSAB Prof and Online in src/index')
         unsub1()
-        getFireBaseRef('/online/').off('child_changed', unsub2)
+        unsub2()
+        getFireBaseRef('/online/').off('child_changed', unsub3)
       }
     }
   }, [])
@@ -136,9 +141,9 @@ const Tab = () => {
       initialRouteName={'TAB_BOTTOM_0'}
     >
       <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_1" component={ProfileScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_2" component={OnlineGameScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_3" component={PostScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_1" component={PostScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_2" component={ProfileScreen} />
+      <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
       {/* <TabNavigator.Screen name="TAB_BOTTOM_3" component={PosterScreen} /> */}
     </TabNavigator.Navigator>
   )
@@ -227,6 +232,7 @@ const App = () => {
           component={DetailPostScreen}
         />
         {/* Modals */}
+        <Stack.Screen name="VIDEO_SCREEN" component={VideoPopup} />
         <Stack.Group
           screenOptions={{
             presentation: 'transparentModal',
@@ -243,7 +249,6 @@ const App = () => {
           <Stack.Screen name="INPUT_TEXT_MODAL" component={InputTextModal} />
           <Stack.Screen name="EXIT_MODAL" component={ExitPopup} />
           <Stack.Screen name="NETWORK_MODAL" component={NetworkModal} />
-          <Stack.Screen name="VIDEO_MODAL" component={VideoPopup} />
           <Stack.Screen name="PLAN_REPORT_MODAL" component={PlanReportModal} />
         </Stack.Group>
       </Stack.Navigator>

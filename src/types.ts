@@ -62,7 +62,7 @@ export type RootStackParamList = {
   }
   EXIT_MODAL: undefined
   NETWORK_MODAL: undefined
-  VIDEO_MODAL: {
+  VIDEO_SCREEN: {
     uri: string
     poster: string
   }
@@ -103,6 +103,7 @@ export interface UserT {
   avatar?: string
   lang?: string
   tokens?: string[]
+  status?: status
 }
 
 export interface OtherUsersT {
@@ -113,8 +114,9 @@ export interface OtherUsersT {
   owner: string
   isOnline: boolean
   avatar?: string
+  status?: status
 }
-
+export type status = 'ban' | 'Admin' | null
 export interface HistoryT {
   plan: number
   count: number

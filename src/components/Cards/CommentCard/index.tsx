@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { LayoutChangeEvent, StyleSheet, View, FlatList } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import { gray, lightGray, navigate, OpenReplyModal } from '../../../constants'
-import { PostStore } from '../../../store'
+import { OnlinePlayer, OtherPlayers, PostStore } from '../../../store'
 import { ButtonsModalT, CommentT } from '../../../types'
 import {
   ButtonVectorIcon,
@@ -17,6 +17,7 @@ import Clipboard from '@react-native-clipboard/clipboard'
 import { getTimeStamp, getUid } from '../../../screens/helper'
 import { observer } from 'mobx-react-lite'
 import I18n from 'i18n-js'
+import { getActions } from './ModalActions'
 
 interface CommentCardI {
   item: CommentT
@@ -36,68 +37,23 @@ export const CommentCard: React.FC<CommentCardI> = observer(
 
     const date = getTimeStamp({ lastTime: item.createTime, type: 1 })
 
-    function _onLayout(e: LayoutChangeEvent) {
+    const _onLayout = (e: LayoutChangeEvent) => {
       setLineHeight(e.nativeEvent.layout.height)
     }
 
-    function delCom() {
-      PostStore.delComment({ commentId: item.id, isReply: item.reply })
-    }
-
-    function reply() {
-      navigate('INPUT_TEXT_MODAL', {
-        onSubmit: (text: string) =>
-          PostStore.replyComment({
-            text,
-            commentId: item.id,
-            commentOwner: item.ownerId
-          })
-      })
-    }
-
-    async function handleTransText() {
+    const handleTransText = async () => {
       if (hideTranslate && transText === '') {
         const translated = await PostStore.translateText(item.text)
         setTransText(translated)
       }
       setHideTranslate(pr => !pr)
     }
-    const text = hideTranslate ? item.text : transText
-    function copy() {
-      Clipboard.setString(item.text)
-    }
-
-    function OpenModal() {
-      const isOwner = getUid() === item.ownerId
-      const modalButtons: ButtonsModalT[] = [
-        {
-          key: 'REPLY',
-          onPress: reply,
-          title: I18n.t('reply'),
-          icon: 'reply-outline'
-        },
-        {
-          key: 'COPY',
-          onPress: copy,
-          title: I18n.t('copy'),
-          icon: 'content-copy'
-        },
-        {
-          key: 'TRANSLATE',
-          onPress: handleTransText,
-          title: I18n.t('translate'),
-          icon: !hideTranslate ? 'translate-off' : 'translate'
-        },
-        {
-          key: 'DEL',
-          onPress: delCom,
-          title: I18n.t('delete'),
-          color: 'red',
-          icon: 'delete-outline'
-        }
-      ].filter(a => (isOwner ? true : a.key !== 'DEL'))
+    const OpenModal = () => {
+      const modalButtons = getActions({ hideTranslate, item, handleTransText })
       OpenReplyModal(modalButtons)
     }
+    const text = hideTranslate ? item.text : transText
+
     const subCom = PostStore.store.replyComments.filter(a => a.commentId === item.id)
     const showLine = endIndex !== index || subCom.length > 0
     const isSmallLine = subCom.length > 0 && endIndex === index

@@ -84,8 +84,9 @@ const Forgot = ({ route, navigation }: ForgotT): ReactElement => {
 
   return (
     <AppContainer
+      iconLeft={'back'}
       title=" "
-      onPress={goBack(navigation)}
+      onPress={goBack}
       message={error}
       colorLeft={color}
     >

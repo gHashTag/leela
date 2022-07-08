@@ -1,6 +1,7 @@
 import notifee, { AndroidBadgeIconType, Event, EventType } from '@notifee/react-native'
 import { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 import { nanoid } from 'nanoid/non-secure'
+import { Platform } from 'react-native'
 import { PostStore } from '../../store'
 
 export async function displayNotification(
@@ -13,8 +14,14 @@ export async function displayNotification(
   })
 
   await notifee.displayNotification({
-    title: notification.data?.title,
-    body: notification.data?.body,
+    title:
+      Platform.OS === 'ios'
+        ? notification.data?.title.replace(/(<([^>]+)>)/gi, '')
+        : notification.data?.title,
+    body:
+      Platform.OS === 'ios'
+        ? notification.data?.body.replace(/(<([^>]+)>)/gi, '')
+        : notification.data?.body,
     data: notification.data,
     id: nanoid(10),
     android: {
@@ -51,39 +58,36 @@ export async function displayNotification(
 
 async function cancel(id?: string, reply?: boolean) {
   if (id) {
-    if (!reply) {
-      await notifee.cancelDisplayedNotification(id)
-      await notifee.cancelNotification(id)
-    } else {
-      const channelId = await notifee.createChannel({
-        id: 'default',
-        name: 'Default Channel',
-        badge: true
-      })
+    await notifee.cancelDisplayedNotification(id)
+    await notifee.cancelNotification(id)
+    const channelId = await notifee.createChannel({
+      id: 'default',
+      name: 'Default Channel',
+      badge: true
+    })
 
-      await notifee.displayNotification({
-        id,
-        title: 'Done',
-        body: 'Sent successfully!',
-        android: {
-          channelId,
-          smallIcon: 'ic_notifee_cube',
-          color: '#1EE4EC',
-          largeIcon: require('../../../assets/icons/512.png'),
-          badgeIconType: AndroidBadgeIconType.SMALL,
-          actions: [
-            {
-              title: '<p style="color: #f44336;">Dismiss</p>',
-              pressAction: {
-                id: 'dismiss'
-              }
+    await notifee.displayNotification({
+      id,
+      title: 'Done',
+      body: 'Sent successfully!',
+      android: {
+        channelId,
+        smallIcon: 'ic_notifee_cube',
+        color: '#1EE4EC',
+        largeIcon: require('../../../assets/icons/512.png'),
+        badgeIconType: AndroidBadgeIconType.SMALL,
+        actions: [
+          {
+            title: '<p style="color: #f44336;">Dismiss</p>',
+            pressAction: {
+              id: 'dismiss'
             }
-          ],
-          groupSummary: true,
-          groupId: 'new-comment'
-        }
-      })
-    }
+          }
+        ],
+        groupSummary: true,
+        groupId: 'new-comment'
+      }
+    })
   }
 }
 
@@ -120,7 +124,7 @@ export async function setCategories() {
       actions: [
         {
           id: 'dismiss',
-          title: '<p style="color: #f44336;">Dismiss</p>'
+          title: 'Dismiss'
         },
         {
           id: 'reply',

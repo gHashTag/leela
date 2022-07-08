@@ -35,7 +35,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
     methods.reset()
     startStepTimer()
     await PostStore.createPost({ text: data.text, plan: plan })
-    navigate('TAB_BOTTOM_3')
+    navigate('TAB_BOTTOM_1')
     setLoading(false)
   }
 
@@ -57,7 +57,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
       />
       <Space height={20} />
       <Button
-        title={I18n.t('confirm')}
+        title={I18n.t('send')}
         onPress={methods.handleSubmit(handleSubmit, err => console.log(err))}
       />
     </FormProvider>

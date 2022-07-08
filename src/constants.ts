@@ -1,7 +1,8 @@
-import { Dimensions, Linking } from 'react-native'
+import { Alert, Dimensions, Linking } from 'react-native'
 import * as Sentry from '@sentry/react-native'
 import { createNavigationContainerRef } from '@react-navigation/native'
 import { ButtonsModalT } from './types'
+import I18n from 'i18n-js'
 
 export const navRef = createNavigationContainerRef<any>()
 
@@ -30,7 +31,7 @@ interface VideoModalT {
 
 export function OpenVideoModal({ uri, poster }: VideoModalT) {
   if (navRef.isReady()) {
-    navRef.navigate('VIDEO_MODAL', { uri, poster })
+    navRef.navigate('VIDEO_SCREEN', { uri, poster })
   }
 }
 
@@ -46,6 +47,15 @@ export function OpenReplyModal(modalButtons: ButtonsModalT[]) {
   }
 }
 
+export const banAlert = () => {
+  Alert.alert(I18n.t('youBanned'), I18n.t('banText'), [
+    { text: 'OK', onPress: () => navigate('WELCOME_SCREEN') }
+  ])
+}
+export const accountHasBanAlert = () => {
+  Alert.alert(I18n.t('accountBaned'), undefined, [{ text: 'OK' }])
+}
+
 export const captureException = (error: any) => {
   if (!error) {
     console.log(
@@ -55,7 +65,7 @@ export const captureException = (error: any) => {
     return
   }
   console.error(`My Error: ${error}`)
-  Sentry.captureException(error)
+  if (!__DEV__) Sentry.captureException(error)
 }
 
 export const win = Dimensions.get('window')
@@ -67,8 +77,12 @@ export const openUrl = async (url: string) => {
   await Linking.openURL(url)
 }
 
-export const goBack = navigation => () => navigation.goBack()
-
+export const goBack = () => {
+  if (navRef.isReady()) {
+    navRef.goBack()
+  }
+}
+//@ts-ignore
 export const goHome = navigation => () => navigation.popToTop()()
 
 export const primary = '#50E3C2'

@@ -2,7 +2,14 @@ import React, { useState, ReactElement } from 'react'
 import { I18n } from '../../../utils'
 import { useTheme } from '@react-navigation/native'
 import { RouteProp } from '@react-navigation/native'
-import { AppContainer, Space, Button, Input, Loading } from '../../../components'
+import {
+  AppContainer,
+  Space,
+  Button,
+  Input,
+  Loading,
+  KeyboardContainer
+} from '../../../components'
 import { goBack, white, black, W, H } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { updateProfName } from '../../../screens/helper'
@@ -56,13 +63,12 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
   return loading ? (
     <Loading />
   ) : (
-    <AppContainer onPress={goBack(navigation)} title=" " colorLeft={black}>
-      <KeyboardAvoidingView
-        keyboardVerticalOffset={headerHeight}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.KAV}
-      >
-        <ScrollView showsVerticalScrollIndicator={false}>
+    <AppContainer iconLeft={'back'} onPress={goBack} title=" " colorLeft={black}>
+      <KeyboardContainer>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
           <Space height={H / 5} />
           <FormProvider {...methods}>
             <Input
@@ -87,13 +93,13 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
             <Space height={vs(50)} />
           </FormProvider>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardContainer>
     </AppContainer>
   )
 }
 
 const styles = StyleSheet.create({
-  KAV: {
+  container: {
     flex: 1,
     alignItems: 'center'
   }

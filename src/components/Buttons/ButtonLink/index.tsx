@@ -27,16 +27,14 @@ interface ButtonLinkT {
   textStyle?: StyleProp<TextStyle>
 }
 
-const ButtonLink = memo<ButtonLinkT>(
-  ({ title, viewStyle, textStyle, onPress }) => {
-    const { container, h } = styles
+const ButtonLink = memo<ButtonLinkT>(({ title, viewStyle, textStyle, onPress }) => {
+  const { container, h } = styles
 
-    return (
-      <TouchableOpacity onPress={onPress} style={[container, viewStyle]}>
-        <Text h={'h5'} title={title} textStyle={[h, textStyle]} />
-      </TouchableOpacity>
-    )
-  }
-)
+  return (
+    <TouchableOpacity onPress={onPress} style={[container, viewStyle]}>
+      <Text h={'h5'} title={title} textStyle={[h, textStyle]} />
+    </TouchableOpacity>
+  )
+})
 
 export { ButtonLink }

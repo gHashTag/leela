@@ -100,7 +100,9 @@ const styles = StyleSheet.create({
   inputStyle: {
     fontSize: s(16),
     width: '95%',
-    borderBottomWidth: 2
+    borderBottomWidth: 2,
+    paddingBottom: vs(8),
+    paddingTop: vs(8)
   },
   errorStyle: {
     fontSize: 14,
@@ -110,11 +112,13 @@ const styles = StyleSheet.create({
   },
   inputArea: {
     fontSize: s(16),
-    width: '95%',
+    width: '90%',
     borderWidth: s(1.5),
     height: vs(120),
     textAlignVertical: 'top',
-    paddingHorizontal: s(10),
+    padding: s(10),
+    paddingBottom: s(10),
+    paddingTop: s(10),
     borderRadius: s(10)
   }
 })

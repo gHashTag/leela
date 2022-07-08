@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { Loading, PostCard, Space, Text } from '../../../components'
+import { Header, Loading, PostCard, Space, Spin, Text } from '../../../components'
 import { DiceStore, PostStore } from '../../../store'
 import { RootTabParamList } from '../../../types'
 import firestore from '@react-native-firebase/firestore'
@@ -46,12 +46,9 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
     }
   }, [])
 
-  const { top } = useSafeAreaInsets()
   const load = PostStore.store.loadPosts && PostStore.store.posts.length === 0
   return load ? (
-    <SafeAreaView>
-      <Loading />
-    </SafeAreaView>
+    <Spin centered />
   ) : (
     <FlatList
       removeClippedSubviews={false}
@@ -62,7 +59,12 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
       keyExtractor={a => a.id}
       renderItem={({ item, index }) => <PostCard index={index} postId={item.id} />}
       ItemSeparatorComponent={() => <Space height={vs(10)} />}
-      ListHeaderComponent={<Space height={top + vs(10)} />}
+      ListHeaderComponent={
+        <>
+          <Header textAlign="center" title={I18n.t('posts')} />
+          <Space height={vs(10)} />
+        </>
+      }
       ListEmptyComponent={
         <View style={{ paddingHorizontal: s(20) }}>
           <Text textStyle={{ textAlign: 'center' }} h={'h1'} title={I18n.t('noPosts')} />

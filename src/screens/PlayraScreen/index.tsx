@@ -7,10 +7,11 @@ import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
 import { AppContainer, ButtonElements, SocialLinks, Space, Text } from '../../components'
 import { ThemeProvider } from 'react-native-elements'
-import { goBack, OpenVideoModal, primary, secondary } from '../../constants'
-import { actionPlay } from '../../store'
+import { OpenVideoModal, primary, secondary } from '../../constants'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import Spin from 'react-native-spinkit'
+import Orientation from 'react-native-orientation-locker'
+import { useFocusEffect } from '@react-navigation/native'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLAYRA_SCREEN'>
 
@@ -60,23 +61,28 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
       }
     }
     getData()
-  }, [navigation])
+  }, [])
+
+  useFocusEffect(() => {
+    setTimeout(() => Orientation.lockToPortrait(), 500)
+  })
 
   const _keyExtractor = (obj: any) => obj.id.toString()
 
   return (
     <AppContainer
       title="Playra"
+      iconLeft=":back:"
+      iconRight={null}
       onPress={() => {
-        goBack(navigation)()
-        actionPlay.stop()
+        navigation.goBack()
       }}
     >
       <FlatList
         style={{ width: '100%' }}
         ListFooterComponent={
           <>
-            <Space height={s(50)} />
+            <Space height={vs(25)} />
             <Text textStyle={centerTxt} h={'h1'} title={I18n.t('contacts')} />
             <ThemeProvider theme={theme}>
               <SocialLinks music />

@@ -16,10 +16,7 @@ import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
-type ProfileScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'HELLO'
->
+type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HELLO'>
 
 type HelloT = {
   navigation: ProfileScreenNavigationProp
@@ -40,21 +37,15 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
   const color = dark ? white : black
 
   return (
-    <AppContainer onPress={goBack(navigation)} title=" " colorLeft={color}>
+    <AppContainer iconLeft={'back'} onPress={goBack} title=" " colorLeft={color}>
       <CenterView>
         <IconLeela />
         <Space height={s(30)} />
-        <Button
-          title={I18n.t('signIn')}
-          onPress={() => navigation.navigate('SIGN_IN')}
-        />
+        <Button title={I18n.t('signIn')} onPress={() => navigation.navigate('SIGN_IN')} />
         <Space height={10} />
         <Text h={'h5'} title={I18n.t('or')} textStyle={styles.h6} />
         <Space height={10} />
-        <Button
-          title={I18n.t('signUp')}
-          onPress={() => navigation.navigate('SIGN_UP')}
-        />
+        <Button title={I18n.t('signUp')} onPress={() => navigation.navigate('SIGN_UP')} />
         <Space height={vs(140)} />
       </CenterView>
     </AppContainer>

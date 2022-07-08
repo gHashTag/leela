@@ -4,7 +4,6 @@ import * as Keychain from 'react-native-keychain'
 import { EMAIL, PASSWORD } from '@env'
 import { s, vs } from 'react-native-size-matters'
 import { useTheme } from '@react-navigation/native'
-import { useHeaderHeight } from '@react-navigation/elements'
 import {
   AppContainer,
   Button,
@@ -12,17 +11,10 @@ import {
   ButtonLink,
   TextError,
   Input,
-  Loading
+  Loading,
+  KeyboardContainer
 } from '../../../components'
-import {
-  goBack,
-  white,
-  black,
-  captureException,
-  W,
-  H,
-  OpenPlanReportModal
-} from '../../../constants'
+import { goBack, white, black, captureException, W, H } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { I18n } from '../../../utils'
 import auth from '@react-native-firebase/auth'
@@ -37,13 +29,7 @@ import {
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import {
-  Platform,
-  KeyboardAvoidingView,
-  StyleSheet,
-  ScrollView,
-  View
-} from 'react-native'
+import { StyleSheet, ScrollView, View } from 'react-native'
 import { getProfile, onSignIn } from '../../helper'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
@@ -74,8 +60,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
   const [userInfo, setUserInfo] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const initialValues = { email: EMAIL, password: PASSWORD }
-  const headerHeight = useHeaderHeight()
+  const initialValues = { email: __DEV__ ? EMAIL : '', password: __DEV__ ? PASSWORD : '' }
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
@@ -124,12 +109,8 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
   return loading ? (
     <Loading />
   ) : (
-    <AppContainer onPress={goBack(navigation)} title=" " colorLeft={color}>
-      <KeyboardAvoidingView
-        keyboardVerticalOffset={headerHeight}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={KAV}
-      >
+    <AppContainer iconLeft={':back:'} onPress={goBack} title=" " colorLeft={color}>
+      <KeyboardContainer>
         <ScrollView showsVerticalScrollIndicator={false}>
           <Space height={H / 5} />
           <View style={KAV}>
@@ -164,7 +145,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
           </View>
           <Space height={vs(50)} />
         </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardContainer>
     </AppContainer>
   )
 }

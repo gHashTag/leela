@@ -9,9 +9,9 @@ import {
   Button,
   Input,
   TextError,
-  Loading
+  Loading,
+  KeyboardContainer
 } from '../../../components'
-import { useHeaderHeight } from '@react-navigation/elements'
 import { goBack, white, black, captureException, W, H } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'
@@ -28,7 +28,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { s, vs } from 'react-native-size-matters'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native'
+import { ScrollView, StyleSheet } from 'react-native'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -62,11 +62,10 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const initialValues = {
-    email: EMAIL,
-    password: PASSWORD,
-    passwordConfirmation: PASSWORD
+    email: __DEV__ ? EMAIL : '',
+    password: __DEV__ ? PASSWORD : '',
+    passwordConfirmation: __DEV__ ? PASSWORD : ''
   }
-  const headerHeight = useHeaderHeight()
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
@@ -112,17 +111,16 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
   const color = dark ? white : black
 
   return (
-    <AppContainer onPress={goBack(navigation)} title=" " colorLeft={color}>
+    <AppContainer iconLeft={'back'} onPress={goBack} title=" " colorLeft={color}>
       {loading ? (
         <Loading />
       ) : (
         <>
-          <KeyboardAvoidingView
-            keyboardVerticalOffset={headerHeight}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.KAV}
-          >
-            <ScrollView showsVerticalScrollIndicator={false}>
+          <KeyboardContainer>
+            <ScrollView
+              contentContainerStyle={styles.container}
+              showsVerticalScrollIndicator={false}
+            >
               <Space height={H / 7} />
               <FormProvider {...methods}>
                 <Input
@@ -158,7 +156,7 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
                 <Space height={vs(50)} />
               </FormProvider>
             </ScrollView>
-          </KeyboardAvoidingView>
+          </KeyboardContainer>
         </>
       )}
     </AppContainer>
@@ -166,8 +164,7 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
 }
 
 const styles = StyleSheet.create({
-  KAV: {
-    flex: 1,
+  container: {
     alignItems: 'center'
   }
 })

@@ -1,16 +1,14 @@
 import React, { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { ButtonsModalT, ReplyComT } from '../../../types'
+import { ReplyComT } from '../../../types'
 import { Text, HashtagFormat, Space } from '../../'
 import { PostStore } from '../../../store'
 import { PlanAvatar } from '../../'
 import { s, vs } from 'react-native-size-matters'
 import { fuchsia, lightGray, OpenReplyModal } from '../../../constants'
-import { nanoid } from 'nanoid/non-secure'
-import { getTimeStamp, getUid } from '../../../screens/helper'
+import { getTimeStamp } from '../../../screens/helper'
 import { ButtonVectorIcon } from '../../Buttons'
-import Clipboard from '@react-native-clipboard/clipboard'
-import I18n from 'i18n-js'
+import { getActions } from './ModalActions'
 
 interface SubComT {
   item: ReplyComT
@@ -22,43 +20,15 @@ export function SubCommentCard({ item, index }: SubComT) {
   const [transText, setTransText] = useState('')
   const date = getTimeStamp({ lastTime: item.createTime, type: 1 })
   const avaUrl = PostStore.getAvaById(item.ownerId)
-
-  function OpenModal() {
-    function copy() {
-      Clipboard.setString(item.text)
+  async function handleTransText() {
+    if (hideTranslate && transText === '') {
+      const translated = await PostStore.translateText(item.text)
+      setTransText(translated)
     }
-    function delCom() {
-      PostStore.delComment({ commentId: item.id, isReply: item.reply })
-    }
-    async function handleTransText() {
-      if (hideTranslate && transText === '') {
-        const translated = await PostStore.translateText(item.text)
-        setTransText(translated)
-      }
-      setHideTranslate(pr => !pr)
-    }
-    const isOwner = getUid() === item.ownerId
-    const modalButtons: ButtonsModalT[] = [
-      {
-        key: 'COPY',
-        onPress: copy,
-        title: I18n.t('copy'),
-        icon: 'content-copy'
-      },
-      {
-        key: 'TRANSLATE',
-        onPress: handleTransText,
-        title: I18n.t('translate'),
-        icon: !hideTranslate ? 'translate-off' : 'translate'
-      },
-      {
-        key: 'DEL',
-        onPress: delCom,
-        title: I18n.t('delete'),
-        color: 'red',
-        icon: 'delete-outline'
-      }
-    ].filter(a => (isOwner ? true : a.key !== 'DEL'))
+    setHideTranslate(pr => !pr)
+  }
+  const OpenModal = () => {
+    const modalButtons = getActions({ handleTransText, hideTranslate, item })
     OpenReplyModal(modalButtons)
   }
   const text = hideTranslate ? item.text : transText

@@ -8,16 +8,21 @@ import {
   gray,
   lightGray,
   W,
-  navigate
+  navigate,
+  OpenReplyModal,
+  RED
 } from '../../../constants'
 import { Text, Space, ButtonVectorIcon, PlanAvatar } from '../../'
 import auth from '@react-native-firebase/auth'
-import { PostStore } from '../../../store'
+import { OnlinePlayer, OtherPlayers, PostStore } from '../../../store'
 import { observer } from 'mobx-react-lite'
 import { HashtagFormat } from '../../TextComponents'
 import { getTimeStamp, getUid } from '../../../screens/helper'
 import { buildLink, lang } from '../../../utils'
 import { EmojiText } from '../../EmojiText'
+import { ButtonsModalT } from '../../../types'
+import { useNavigation } from '@react-navigation/native'
+import { getActions } from './ModalActions'
 
 interface postCardI {
   postId: string
@@ -48,6 +53,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
   )
   const [transText, setTransText] = useState('')
   const [hideTranslate, setHideTranslate] = useState(true)
+  const { goBack } = useNavigation()
 
   useMemo(() => {
     setIsLiked(
@@ -65,7 +71,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
     }
   }, [])
 
-  const likes = PostStore.store.posts[itemIndex].liked
+  let likes = PostStore.store.posts[itemIndex].liked
   const likeCount = likes?.filter(a => a !== item.ownerId).length
 
   const date = getTimeStamp({ lastTime: item.createTime })
@@ -79,17 +85,21 @@ export const PostCard: React.FC<postCardI> = observer(props => {
       })
   }
 
-  const smallButton = W / 4 - s(70)
-  const mediumButton = W / 4 - s(66)
+  const smallButton = W / 4 - s(72)
+  const mediumButton = W / 4 - s(68)
 
   async function handleLike() {
-    if (item) {
-      setIsLiked(true)
-      if (!isLiked) {
-        await PostStore.likePost(item.id)
-        const uid = getUid()
-        !likes?.includes(item.ownerId) && likes?.push(uid ? uid : '')
+    const uid = getUid()
+    if (item && isLiked) {
+      setIsLiked(false)
+      await PostStore.unlikePost(item.id)
+      if (likes?.includes(item.ownerId)) {
+        likes = likes?.filter(a => a !== uid)
       }
+    } else if (item && !isLiked) {
+      setIsLiked(true)
+      await PostStore.likePost(item.id)
+      !likes?.includes(item.ownerId) && likes?.push(uid ? uid : '')
     }
   }
   const text = hideTranslate ? item.text : transText
@@ -121,9 +131,14 @@ export const PostCard: React.FC<postCardI> = observer(props => {
       })
     }
   }
+  const isAdmin = OnlinePlayer.store.status === 'Admin'
+  const handleAdminMenu = () => {
+    const modalButtons = getActions({ isDetail, item })
+    OpenReplyModal(modalButtons)
+  }
 
-  const heart = isLiked ? 'heart' : 'heart-o'
-  const heartColor = isLiked ? classicRose : undefined
+  const heart = isLiked ? 'heart' : 'heart-outline'
+  const heartColor = isLiked ? fuchsia : undefined
   const fullName = PostStore.getOwnerName(item.ownerId)
   const avaUrl = PostStore.getAvaById(item.ownerId)
   const flag = hideTranslate
@@ -174,23 +189,34 @@ export const PostCard: React.FC<postCardI> = observer(props => {
         </View>
         {/* Detail Buttons */}
         <View style={btnsContainer}>
+          {isAdmin && (
+            <ButtonVectorIcon
+              onPress={handleAdminMenu}
+              viewStyle={mediumBtn}
+              ionicons
+              name="md-ellipsis-vertical-circle"
+              size={mediumButton}
+            />
+          )}
           <ButtonVectorIcon
             onPress={handleComment}
             viewStyle={mediumBtn}
-            name="comment-o"
+            ionicons
+            name="chatbubble-outline"
             size={mediumButton}
           />
-          <ButtonVectorIcon viewStyle={mediumBtn} name="compress" size={mediumButton} />
           <ButtonVectorIcon
             onPress={handleLike}
             viewStyle={mediumBtn}
             color={heartColor}
+            ionicons
             name={heart}
             size={mediumButton}
           />
           <ButtonVectorIcon
             viewStyle={mediumBtn}
-            name="external-link"
+            ionicons
+            name="md-link-outline"
             onPress={handleShareLink}
             size={mediumButton}
           />
@@ -211,7 +237,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
           <Space height={vs(2)} />
           <View style={headerName}>
             <Text numberOfLines={1} h={'h6'} title={fullName} />
-            <Text h={'h6'} textStyle={lightText} title={`  ·  ${date}`} />
+            <Text h={'h6'} textStyle={lightText} title={` · ${date}`} />
             <View style={flex1} />
             <TouchableOpacity onPress={handleTranslate}>
               <EmojiText name={flag} fontSize={s(18)} />
@@ -221,24 +247,35 @@ export const PostCard: React.FC<postCardI> = observer(props => {
           <HashtagFormat textStyle={textStyle} numberOfLines={8} h={'h5'} title={text} />
           {/* Preview Buttons */}
           <View style={btnsContainer}>
+            {isAdmin && (
+              <ButtonVectorIcon
+                onPress={handleAdminMenu}
+                viewStyle={smallBtn}
+                ionicons
+                name="md-ellipsis-vertical-circle"
+                size={smallButton}
+              />
+            )}
             <ButtonVectorIcon
               onPress={handleComment}
               viewStyle={smallBtn}
-              name="comment-o"
+              ionicons
+              name="chatbubble-outline"
               size={smallButton}
             />
-            <ButtonVectorIcon viewStyle={smallBtn} name="compress" size={smallButton} />
             <ButtonVectorIcon
               count={likeCount}
               onPress={handleLike}
               color={heartColor}
+              ionicons
               viewStyle={smallBtn}
               name={heart}
               size={smallButton}
             />
             <ButtonVectorIcon
               viewStyle={smallBtn}
-              name="external-link"
+              name="md-link-outline"
+              ionicons
               onPress={handleShareLink}
               size={smallButton}
             />
@@ -277,7 +314,8 @@ const style = StyleSheet.create({
   smallBtn: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   countersContainer: {
     flexDirection: 'row',
@@ -310,6 +348,10 @@ const style = StyleSheet.create({
   },
   flex1: {
     flex: 1
+  },
+  likeBtn: {
+    flex: 2,
+    justifyContent: 'center'
   }
 })
 
@@ -325,5 +367,6 @@ const {
   headerInfo,
   headerName,
   lightText,
-  flex1
+  flex1,
+  likeBtn
 } = style

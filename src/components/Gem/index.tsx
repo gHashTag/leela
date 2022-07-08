@@ -3,6 +3,7 @@ import { Image, View } from 'react-native'
 import { ScaledSheet, s } from 'react-native-size-matters'
 import { ICONS } from './images'
 import { DiceStore, OnlinePlayer, OtherPlayers, OfflinePlayers } from '../../store'
+import { observer } from 'mobx-react-lite'
 
 interface GemT {
   plan: number
@@ -15,7 +16,7 @@ interface dataI {
   ava?: string
 }
 
-const Gem = ({ plan, player }: GemT) => {
+const Gem = observer(({ plan, player }: GemT) => {
   const getIndex = (num: number) => (num === player ? 2 : 1)
 
   const { container, gems } = styles
@@ -61,7 +62,7 @@ const Gem = ({ plan, player }: GemT) => {
       )}
     </View>
   )
-}
+})
 
 const styles = ScaledSheet.create({
   container: {

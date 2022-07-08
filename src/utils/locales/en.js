@@ -12,7 +12,7 @@ export default {
   userDoesNotExist: 'User does not exist!',
   insertCode: 'Insert the code sent to your mail',
   confirm: 'Confirm',
-  resendCode: 'Resend code?',
+  resendCode: 'Resend message?',
   invalidVerificationCode: 'Invalid verification code provided, please try again.',
   usernameExistsException: 'An account with the given email already exists.',
   firstName: 'First name',
@@ -64,7 +64,7 @@ export default {
   online: 'Online',
   offline: 'Offline',
   leaveFeedback: 'Leave feedback',
-  takeStep: 'Take a step',
+  takeStep: 'Click on the cube',
   nextStep: 'Next step through',
   you: 'you',
   anonymous: 'Anonymous',
@@ -112,6 +112,15 @@ export default {
   invalidEmail: 'This field must be an e-mail',
   shortPassword: 'password must be 6 characters long',
   requireField: 'Required field',
-  manyCharacters: 'Too many characters',
-  fewCharacters: 'Too few characters'
+  manyCharacters: 'Too many symbols, maximum - ',
+  fewCharacters: 'The minimum must be 100 characters',
+  post: 'Post',
+  send: 'Send',
+  // for signUp_username
+  twoSymbolRequire: 'The field must contain at least 2 characters',
+  posts: 'Posts of people',
+  youBanned: 'You have been banned',
+  accountBaned: 'This account is banned',
+  banText:
+    'We found out that you are violating the "Rules of posts and comments" and for this reason we decided to ban you.'
 }

@@ -38,6 +38,7 @@ export const OtherPlayers = {
               lastName: data.lastName,
               avatar: data.avatar ? await getIMG(data.avatar) : '',
               owner: data.owner,
+              status: data.status,
               isOnline
             }
             return result
