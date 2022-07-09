@@ -1,22 +1,22 @@
 import React from 'react'
 import {
-  Image,
   ImageBackground,
   ImageStyle,
   Pressable,
   StyleProp,
-  StyleSheet,
-  View
+  StyleSheet
 } from 'react-native'
 import { ms, s } from 'react-native-size-matters'
-import { classicRose, mustard, primary } from '../../constants'
+import { primary } from '../../constants'
 import { Text } from '..'
+import Ionicons from 'react-native-vector-icons/Ionicons'
 import { useTheme } from '@react-navigation/native'
 
 interface PlanAvatarI {
   plan: number
   size: 'xLarge' | 'large' | 'medium' | 'small'
   avaUrl?: string
+  isAccept?: boolean
   aditionalStyle?: StyleProp<ImageStyle>
   onPress?: () => void
 }
@@ -26,6 +26,7 @@ export function PlanAvatar({
   plan,
   avaUrl,
   aditionalStyle,
+  isAccept,
   onPress
 }: PlanAvatarI) {
   const {
@@ -44,7 +45,11 @@ export function PlanAvatar({
         onPress={onPress}
         style={[badge, badgeS, { backgroundColor: background }]}
       >
-        <Text textStyle={{ fontSize }} title={textPlan} h="h12" />
+        {!isAccept ? (
+          <Ionicons size={s(15)} color={'#FFB700'} name="time-sharp" />
+        ) : (
+          <Text textStyle={{ fontSize }} title={textPlan} h="h12" />
+        )}
       </Pressable>
     </ImageBackground>
   )

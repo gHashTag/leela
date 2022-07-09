@@ -75,7 +75,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       await resetPlayer()
       await resetHistory()
       await updatePlan(68)
-      actionsDice.setMessage(' ')
+      actionsDice.setMessage(I18n.t('sixToBegin'))
     } catch (err) {
       captureException(err)
     }

@@ -146,6 +146,7 @@ export interface PostT extends FormPostT {
   email: string
   liked?: string[]
   language: string
+  accept: boolean
 }
 
 export interface FormCommentT {

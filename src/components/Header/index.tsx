@@ -2,8 +2,8 @@ import React, { memo } from 'react'
 import { Platform, TouchableOpacity, View } from 'react-native'
 import Emoji from 'react-native-emoji'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ScaledSheet, s, ms, vs, mvs } from 'react-native-size-matters'
-import { Text, Space } from '../'
+import { ScaledSheet, s, vs, mvs } from 'react-native-size-matters'
+import { Text, HeaderMessage } from '../'
 import { navigate } from '../../constants'
 const isIos = Platform.OS === 'ios'
 const styles = ScaledSheet.create({
@@ -11,8 +11,7 @@ const styles = ScaledSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingBottom: mvs(1, 0.4),
-    zIndex: 20,
-    width: '100%'
+    zIndex: 20
   },
   leftIconStyle: {
     fontSize: isIos ? s(26) : s(22),
@@ -33,9 +32,7 @@ const styles = ScaledSheet.create({
     width: isIos ? s(60) : s(44)
   },
   titleStyle: {
-    flex: 1,
-    fontSize: vs(18),
-    left: 5
+    fontSize: vs(18)
   },
   childrenStyle: {
     marginTop: s(2)
@@ -51,6 +48,7 @@ interface HeaderT {
   iconLeftOpacity?: number
   textAlign?: 'center' | 'auto' | 'left' | 'right' | 'justify'
   children?: React.ReactNode
+  displayStatus?: boolean
 }
 
 const Header = memo<HeaderT>(
@@ -66,7 +64,8 @@ const Header = memo<HeaderT>(
     },
     iconLeftOpacity = 1,
     children,
-    textAlign
+    textAlign,
+    displayStatus
   }) => {
     const {
       container,
@@ -79,7 +78,7 @@ const Header = memo<HeaderT>(
 
     const { top } = useSafeAreaInsets()
     const alignItems = children ? 'flex-start' : 'center'
-    const marginTop = children ? s(13) : 0
+    const marginTop = children ? s(12) : 0
     return (
       <View style={[container, { paddingTop: top, alignItems }]}>
         {iconLeft && (
@@ -87,17 +86,22 @@ const Header = memo<HeaderT>(
             <Emoji name={iconLeft} style={leftIconStyle} />
           </TouchableOpacity>
         )}
-        {title && (
-          <Text
-            numberOfLines={1}
-            h={'h2'}
-            title={title}
-            textStyle={[titleStyle, { textAlign, marginTop }]}
-          />
-        )}
-        {children && (
-          <View style={[childrenStyle, !title && { marginTop }]}>{children}</View>
-        )}
+        <View style={{ flex: 1 }}>
+          {title && !displayStatus && (
+            <Text
+              numberOfLines={1}
+              h={'h2'}
+              title={title}
+              textStyle={[titleStyle, { textAlign, marginTop }]}
+            />
+          )}
+          {(children || displayStatus) && (
+            <View style={[childrenStyle, !title && { marginTop }]}>
+              {displayStatus && <HeaderMessage />}
+              {children}
+            </View>
+          )}
+        </View>
         {iconRight ? (
           <TouchableOpacity onPress={onPressRight}>
             <Emoji name={iconRight} style={rightIconStyle} />

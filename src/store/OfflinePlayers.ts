@@ -5,6 +5,7 @@ import { actionsDice } from '.'
 import { HistoryT } from '../types'
 import { navigate } from '../constants'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import I18n from 'i18n-js'
 
 export const initStore = {
   start: [false, false, false, false, false, false],
@@ -33,7 +34,7 @@ export const OfflinePlayers = {
     OfflinePlayers.store.start = initStore.start
     OfflinePlayers.store.histories = initStore.histories
     OfflinePlayers.store.finish = initStore.finish
-    actionsDice.setMessage(' ')
+    actionsDice.setMessage(I18n.t('sixToBegin'))
     navigate('WELCOME_SCREEN')
   },
   updateStep(id: number): void {

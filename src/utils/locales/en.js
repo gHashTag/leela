@@ -103,7 +103,7 @@ export default {
   unknownErr: 'Unknown error',
   loadErr: 'Loading error',
   noPosts: 'No posts yet. Make a move so you can post',
-  notReported: 'Leave a report',
+  notReported: 'Write a report to the plan to continue',
   makeReport:
     'In order for you to continue using the application, you need to write a mandatory report',
   go: 'Go',
@@ -118,9 +118,10 @@ export default {
   send: 'Send',
   // for signUp_username
   twoSymbolRequire: 'The field must contain at least 2 characters',
-  posts: 'Posts of people',
+  posts: 'Reports on plans',
   youBanned: 'You have been banned',
   accountBaned: 'This account is banned',
   banText:
-    'We found out that you are violating the "Rules of posts and comments" and for this reason we decided to ban you.'
+    'We found out that you are violating the "Rules of posts and comments" and for this reason we decided to ban you.',
+  sixToBegin: 'To begin with, throw 6 on the cube'
 }

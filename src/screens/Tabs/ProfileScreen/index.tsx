@@ -132,7 +132,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   }
 
   return (
-    <AppContainer title={I18n.t('history')} textAlign="center">
+    <AppContainer displayStatus title={I18n.t('history')} textAlign="center">
       <CenterView>
         {OnlinePlayer.store.loadingProf && DiceStore.online ? (
           <Spin centered />

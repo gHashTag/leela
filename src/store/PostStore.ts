@@ -52,6 +52,7 @@ export const PostStore = {
         createTime: Date.now(),
         email,
         liked: [],
+        accept: false,
         language: AllLang
       }
       await firestore().collection('Posts').doc(id).set(post)
@@ -115,16 +116,17 @@ export const PostStore = {
   },
   fetchPosts: async (querySnap: fetchT) => {
     PostStore.store.loadPosts = true
-    const res: any[] = await Promise.all(
-      querySnap.docs
-        .map(async a => {
-          if (a.exists) {
-            const data = a.data()
-            return data
-          }
-        })
-        .filter((a: any) => a !== undefined)
-    )
+    const uid = getUid()
+    const isAdmin = OnlinePlayer.store.status === 'Admin'
+    const res: any[] = querySnap.docs
+      .map(a => {
+        if (a.exists) {
+          const data = a.data()
+          return data
+        }
+      })
+      .filter(a => a !== undefined)
+      .filter(a => (isAdmin ? true : a?.ownerId === uid ? true : a?.accept))
     if (res.length > 0) {
       PostStore.store.posts = res.sort((a, b) => b.createTime - a.createTime)
     }
@@ -263,5 +265,8 @@ export const PostStore = {
           PostStore.delComment({ commentId, isReply })
         })
       })
+  },
+  acceptPost: (isAccept: boolean, postId: string) => {
+    firestore().collection('Posts').doc(postId).update({ accept: !isAccept })
   }
 }

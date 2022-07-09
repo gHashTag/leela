@@ -20,6 +20,7 @@ interface AppContainerT {
   children?: React.ReactNode
   message?: string
   title?: string
+  displayStatus?: boolean
   header?: boolean
   iconLeftOpacity?: number
   textAlign?: 'center' | 'auto' | 'left' | 'right' | 'justify'
@@ -34,6 +35,7 @@ function AppContainer({
   iconRight = null,
   children,
   title,
+  displayStatus,
   iconLeftOpacity = 1,
   textAlign = 'left',
   status
@@ -45,6 +47,7 @@ function AppContainer({
         <View style={container}>
           {title && header && (
             <Header
+              displayStatus={displayStatus}
               textAlign={textAlign}
               title={title}
               onPress={onPress}

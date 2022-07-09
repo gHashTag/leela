@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { makeAutoObservable } from 'mobx'
+import I18n from 'i18n-js'
+import { autorun, makeAutoObservable } from 'mobx'
 import { makePersistable } from 'mobx-persist-store'
+import { OnlinePlayer } from './OnlinePlayer'
 
 const DiceStore = makeAutoObservable({
   init: false,
@@ -9,11 +11,22 @@ const DiceStore = makeAutoObservable({
   startGame: false,
   players: 1,
   message: ' ',
+  topMessage: ' ',
   multi: 0,
   rate: false,
   finishArr: [] as boolean[]
 })
-
+autorun(() => {
+  const { isReported, canGo, timeText } = OnlinePlayer.store
+  const textTopMess = DiceStore.online
+    ? !isReported
+      ? I18n.t('notReported')
+      : canGo
+      ? I18n.t('takeStep')
+      : `${I18n.t('nextStep')}: ${timeText}`
+    : `${I18n.t('playerTurn')} # ${DiceStore.players}`
+  DiceStore.topMessage = textTopMess
+})
 const actionsDice = {
   setOnline(bool: boolean): void {
     DiceStore.online = bool

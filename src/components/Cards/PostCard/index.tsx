@@ -155,6 +155,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
           <PlanAvatar
             avaUrl={avaUrl}
             size={'large'}
+            isAccept={item.accept}
             plan={item.plan}
             aditionalStyle={img}
           />
@@ -230,6 +231,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
           avaUrl={avaUrl}
           size={'medium'}
           plan={item.plan}
+          isAccept={item.accept}
           aditionalStyle={img}
         />
         <View style={headerInfo}>

@@ -46,17 +46,6 @@ const theme = {
   }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1
-  },
-  containerStyle: {
-    height: vs(250),
-    width: '100%'
-  },
-  contentContainerStyle: { flexGrow: 1, justifyContent: 'center' }
-})
-
 const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   const [images, setImages] = useState<string[]>([])
 
@@ -78,7 +67,6 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
     'https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.jpg'
   const uri =
     'https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.mp4'
-  const { container, containerStyle, contentContainerStyle } = styles
 
   return (
     <View style={container}>
@@ -88,11 +76,12 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={contentContainerStyle}
           >
-            <Header textAlign="center" title={I18n.t('events')} />
+            <Header displayStatus textAlign="center" />
+            <Text textStyle={centered} h={'h3'} title={I18n.t('events')} />
             <Space height={s(20)} />
             <ImageSwiper images={images} height={vs(300)} />
             <Space height={s(30)} />
-            <Text textStyle={{ textAlign: 'center' }} h={'h3'} title={I18n.t('author')} />
+            <Text textStyle={centered} h={'h3'} title={I18n.t('author')} />
             <Space height={s(20)} />
             {lang !== 'en' && (
               <View style={containerStyle}>
@@ -114,14 +103,10 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
             <Text
               h={'h4'}
               title={I18n.t('playra2')}
-              textStyle={{ paddingHorizontal: 40 }}
+              textStyle={[centered, { paddingHorizontal: s(40) }]}
             />
             <Space height={s(20)} />
-            <Text
-              textStyle={{ textAlign: 'center' }}
-              h={'h3'}
-              title={I18n.t('contacts')}
-            />
+            <Text textStyle={centered} h={'h3'} title={I18n.t('contacts')} />
             <SocialLinks />
             <Space height={vs(200)} />
           </ScrollView>
@@ -130,6 +115,24 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
     </View>
   )
 })
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1
+  },
+  containerStyle: {
+    height: vs(250),
+    width: '100%'
+  },
+  contentContainerStyle: {
+    flexGrow: 1,
+    justifyContent: 'center'
+  },
+  centered: {
+    textAlign: 'center'
+  }
+})
+const { centered, container, containerStyle, contentContainerStyle } = styles
 
 export { OnlineGameScreen }
 {

@@ -11,7 +11,8 @@ import {
   Space,
   Text,
   ButtonElements,
-  Spin
+  Spin,
+  HeaderMessage
 } from '../../../components'
 import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../../store'
 import Rate from 'react-native-rate'
@@ -57,14 +58,8 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   const endGame = DiceStore.online
     ? OnlinePlayer.store.finish
     : DiceStore.finishArr.indexOf(true) === -1
-  const { isReported, canGo, timeText, loadingProf } = OnlinePlayer.store
-  const textTopMess = DiceStore.online
-    ? !isReported
-      ? I18n.t('notReported')
-      : canGo
-      ? I18n.t('takeStep')
-      : `${I18n.t('nextStep')}: ${timeText}`
-    : `${I18n.t('playerTurn')} # ${DiceStore.players}`
+  const { loadingProf } = OnlinePlayer.store
+
   return (
     <Background>
       {loadingProf && DiceStore.online ? (
@@ -75,6 +70,8 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
             iconLeft=":information_source:"
             onPress={() => navigation.navigate('RULES_SCREEN')}
             iconRight=":books:"
+            displayStatus
+            textAlign="center"
             onPressRight={() => navigation.navigate('PLANS_SCREEN')}
           >
             {endGame ? (
@@ -101,16 +98,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                 )}
               </>
             ) : (
-              <>
-                <View style={messContainer}>
-                  <Text h="h5" textStyle={{ textAlign: 'center' }} title={textTopMess} />
-                </View>
-                <Space height={s(1)} />
-                <View style={messContainer}>
-                  <Text h="h5" title={DiceStore.message} />
-                </View>
-                <Dice />
-              </>
+              <Dice />
             )}
           </Header>
           <GameBoard />
@@ -118,14 +106,6 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       )}
     </Background>
   )
-})
-
-const { messContainer } = StyleSheet.create({
-  messContainer: {
-    flexWrap: 'wrap',
-    flexDirection: 'row',
-    justifyContent: 'center'
-  }
 })
 
 export { GameScreen }
