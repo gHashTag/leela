@@ -34,7 +34,7 @@ export type RootStackParamList = {
     title: string
     content: string
     url?: string
-    videoUrl: string
+    audioUrl: string
     report?: boolean
   }
   PROFILE_SCREEN: undefined
@@ -73,11 +73,11 @@ export type RootStackParamList = {
 
 export type RootTabParamList = {
   TAB_BOTTOM_0: undefined
-  TAB_BOTTOM_1: undefined
-  TAB_BOTTOM_2: undefined
-  TAB_BOTTOM_3?: {
+  TAB_BOTTOM_1?: {
     scrollToId?: number
   }
+  TAB_BOTTOM_3: undefined
+  TAB_BOTTOM_2: undefined
   TAB_BOTTOM_4: undefined
 }
 
@@ -86,7 +86,7 @@ export interface PlansT {
   title: string
   content: string
   url: string
-  videoUrl: string
+  audioUrl: string
 }
 export interface UserT {
   email: string
@@ -169,6 +169,7 @@ export interface FormReplyCom {
   text: string
   commentId: string
   commentOwner: string
+  postId: string
 }
 
 export interface ReplyComT extends FormReplyCom {

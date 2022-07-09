@@ -92,7 +92,7 @@ export const PostStore = {
           })
         })
   },
-  replyComment: async ({ text, commentId, commentOwner }: FormReplyCom) => {
+  replyComment: async ({ text, commentId, postId, commentOwner }: FormReplyCom) => {
     const userUid = auth().currentUser?.uid
     const prof = await getProfile()
     if (prof) {
@@ -100,6 +100,7 @@ export const PostStore = {
       if (userUid) {
         const comment: ReplyComT = {
           text,
+          postId,
           commentId,
           commentOwner,
           firstName: prof.firstName,

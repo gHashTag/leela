@@ -1,5 +1,5 @@
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
-import React, { useEffect } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { StyleSheet, View, FlatList } from 'react-native'
 import {
   CommentCard,
@@ -11,7 +11,7 @@ import {
 } from '../../components'
 import { captureException, lightGray, paleBlue } from '../../constants'
 import { OnlinePlayer, PostStore } from '../../store'
-import { RootStackParamList } from '../../types'
+import { PostT, RootStackParamList } from '../../types'
 
 import { s, vs } from 'react-native-size-matters'
 import { nanoid } from 'nanoid/non-secure'
@@ -30,11 +30,10 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
   ({ navigation, route }) => {
     const { postId, comment, translatedText, hideTranslate } = route.params
 
-    const curItem = PostStore.store.posts.find(a => a.id === postId)
+    const curItem: PostT | undefined = PostStore.store.posts.find(a => a.id === postId)
+    if (!curItem) return <Loading />
     const itemIndex = PostStore.store.posts.findIndex(a => a.id === postId)
-    const commentData = curItem
-      ? PostStore.store.comments.slice().filter(a => a.postId === curItem.id)
-      : []
+    const commentData = PostStore.store.comments.filter(a => a.postId === curItem.id)
     function newComment() {
       curItem &&
         navigation.navigate('INPUT_TEXT_MODAL', {
@@ -46,6 +45,17 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
             })
         })
     }
+    useFocusEffect(
+      useCallback(() => {
+        if (curItem) {
+          const subComments = firestore()
+            .collection('Comments')
+            .where('postId', '==', curItem.id)
+            .onSnapshot(PostStore.fetchComments, err => captureException(err))
+          return subComments
+        }
+      }, [])
+    )
 
     useEffect(() => {
       if (getUid() === undefined) {
@@ -58,24 +68,17 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
         OnlinePlayer.getProfile()
       }
     }, [])
-    useEffect(() => {
-      if (!curItem) {
-        const subComments = firestore()
-          .collection('Comments')
-          .onSnapshot(PostStore.fetchComments, err => captureException(err))
-      }
-    })
 
     function GoPostScreen() {
       navigation.canGoBack()
         ? navigation.goBack()
         : navigation.navigate('MAIN', {
-            screen: 'TAB_BOTTOM_3',
+            screen: 'TAB_BOTTOM_1',
             params: { scrollToId: itemIndex !== -1 ? itemIndex : 0 }
           })
     }
 
-    return curItem ? (
+    return (
       <FlatList
         removeClippedSubviews={false}
         ListHeaderComponent={
@@ -103,15 +106,13 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
             <Space height={vs(30)} />
           </>
         }
-        keyExtractor={() => nanoid(9)}
+        keyExtractor={a => a.id}
         ListEmptyComponent={<EmptyComments />}
         data={commentData}
         renderItem={({ item, index }) => (
           <CommentCard item={item} index={index} endIndex={commentData.length - 1} />
         )}
       />
-    ) : (
-      <Loading />
     )
   }
 )

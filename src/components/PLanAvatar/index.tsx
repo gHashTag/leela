@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 import {
   ImageBackground,
   ImageStyle,
@@ -21,7 +21,7 @@ interface PlanAvatarI {
   onPress?: () => void
 }
 
-export function PlanAvatar({
+export const PlanAvatar = memo(function ({
   size = 'medium',
   plan,
   avaUrl,
@@ -53,7 +53,7 @@ export function PlanAvatar({
       </Pressable>
     </ImageBackground>
   )
-}
+})
 
 const styles = StyleSheet.create({
   xLarge: {

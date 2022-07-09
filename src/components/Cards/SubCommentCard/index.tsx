@@ -38,6 +38,7 @@ export function SubCommentCard({ item, index }: SubComT) {
       <View style={commentHead}>
         <PlanAvatar
           avaUrl={avaUrl}
+          isAccept={true}
           plan={PostStore.getComPlan(item.ownerId)}
           size="small"
         />

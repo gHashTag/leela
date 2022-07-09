@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { StyleSheet, View, ToastAndroid, Platform, BackHandler } from 'react-native'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
@@ -10,12 +10,14 @@ import {
   Space,
   Text,
   CreatePost,
-  KeyboardContainer
+  KeyboardContainer,
+  ButtonPlay
 } from '../../components'
 import { ScrollView } from 'react-native-gesture-handler'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { OnlinePlayer } from '../../store'
 import I18n from 'i18n-js'
+import Sound from 'react-native-sound'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
 type route = RouteProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
@@ -25,29 +27,18 @@ type PlansDetailScreenT = {
   route: route
 }
 
-const styles = StyleSheet.create({
-  center: {
-    height: s(230),
-    width: '100%',
-    top: s(10),
-    left: 0,
-    bottom: 0,
-    right: 0,
-    zIndex: 10
-  },
-  h3: {
-    padding: 20
-  }
-})
-
 const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) => {
-  const { id, title, content, videoUrl, report } = route.params
+  const { id, title, content, audioUrl, report, url } = route.params
+  const soundRef = useRef<Sound>()
   const { h3 } = styles
   const { isReported } = OnlinePlayer.store
+  const [isPlaying, setIsPaying] = useState<boolean>(false)
   const handleCross = () => {
-    isReported
-      ? navigation.goBack()
-      : Platform.OS === 'android' &&
+    if (isReported) {
+      navigation.goBack()
+      soundRef.current?.stop()
+    } else {
+      Platform.OS === 'android' &&
         ToastAndroid.showWithGravityAndOffset(
           I18n.t('notReported'),
           ToastAndroid.LONG,
@@ -55,14 +46,32 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
           25,
           50
         )
+    }
   }
-  useFocusEffect(() => {
-    const backhandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handleCross()
-      return true
-    })
-    return backhandler.remove
-  })
+  useFocusEffect(
+    useCallback(() => {
+      const sound = new Sound(audioUrl, undefined, () => {
+        sound.play()
+      })
+      soundRef.current = sound
+      const backhandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleCross()
+        return true
+      })
+      return () => {
+        backhandler.remove()
+        soundRef.current?.stop()
+      }
+    }, [])
+  )
+  const onToggle = () => {
+    if (soundRef.current?.isPlaying()) {
+      soundRef.current.pause()
+    } else {
+      soundRef.current?.play()
+    }
+    setIsPaying(Boolean(soundRef.current?.isPlaying()))
+  }
   return (
     <AppContainer
       onPress={handleCross}
@@ -74,19 +83,20 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
     >
       <KeyboardContainer>
         <ScrollView>
-          {videoUrl !== '' && (
-            <View style={styles.center}>
-              <VideoPlayer source={{ uri: videoUrl }} />
-            </View>
-          )}
-          <Space height={s(30)} />
+          <Space height={vs(10)} />
+          <ButtonPlay onPress={onToggle} isStop={!isPlaying} />
+          <Space height={vs(10)} />
           <Text selectable h={'h7'} title={content} textStyle={h3} />
           {report && <CreatePost plan={id} />}
-          <Space height={vs(!report ? vs(130) : vs(75))} />
+          <Space height={vs(!report ? 135 : 80)} />
         </ScrollView>
       </KeyboardContainer>
     </AppContainer>
   )
 })
-
+const styles = StyleSheet.create({
+  h3: {
+    padding: s(20)
+  }
+})
 export { PlansDetailScreen }

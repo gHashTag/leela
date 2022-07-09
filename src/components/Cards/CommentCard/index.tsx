@@ -68,6 +68,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
           <View style={{ marginRight: s(6) }}>
             <PlanAvatar
               avaUrl={avaUrl}
+              isAccept={true}
               plan={PostStore.getComPlan(item.ownerId)}
               size="medium"
             />
@@ -94,7 +95,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
             <Space height={vs(20)} />
             <FlatList
               data={subCom}
-              keyExtractor={() => nanoid(15)}
+              keyExtractor={a => a.id}
               renderItem={({ item, index }) => (
                 <SubCommentCard item={item} index={index} />
               )}

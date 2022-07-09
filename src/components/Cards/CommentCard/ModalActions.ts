@@ -25,7 +25,8 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
             PostStore.replyComment({
               text,
               commentId: item.id,
-              commentOwner: item.ownerId
+              commentOwner: item.ownerId,
+              postId: item.postId
             })
         })
       },

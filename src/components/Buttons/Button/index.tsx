@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { Platform, StyleProp, TextStyle, TouchableOpacity } from 'react-native'
+import { StyleProp, TextStyle, TouchableOpacity } from 'react-native'
 import { useTheme } from '@react-navigation/native'
 import { ScaledSheet, ms, s } from 'react-native-size-matters'
 import { W, white, black } from '../../../constants'

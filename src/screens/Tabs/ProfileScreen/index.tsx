@@ -21,7 +21,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
-  'TAB_BOTTOM_1'
+  'TAB_BOTTOM_3'
 >
 
 type ProfileScreenT = {

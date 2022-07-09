@@ -161,24 +161,29 @@ export const PostCard: React.FC<postCardI> = observer(props => {
           />
           <View style={headerInfo}>
             {/* name, create date */}
-            <Space height={vs(2)} />
+            <Space height={vs(1)} />
             <View style={headerName}>
               <Text numberOfLines={1} h={'h6'} title={fullName} />
             </View>
-            <Text h={'h6'} textStyle={lightText} title={`${item.email}`} />
+            <Text
+              h={'h6'}
+              numberOfLines={1}
+              textStyle={lightText}
+              title={`${item.email}`}
+            />
+            <Text h={'h5'} numberOfLines={1} textStyle={lightText} title={`${date}`} />
             <Space height={vs(5)} />
           </View>
+          <TouchableOpacity onPress={handleTranslate}>
+            <EmojiText name={flag} fontSize={s(18)} />
+          </TouchableOpacity>
         </View>
         {/* Detail Text */}
         <HashtagFormat h={'h5'} textStyle={textStyle} title={text} selectable />
         {/* Detail Date */}
         <Space height={vs(5)} />
         <View style={headerS}>
-          <Text h={'h5'} textStyle={lightText} title={`${date}`} />
           <View style={flex1} />
-          <TouchableOpacity onPress={handleTranslate}>
-            <EmojiText name={flag} fontSize={s(18)} />
-          </TouchableOpacity>
         </View>
         <View style={countersContainer}>
           <Text h={'h6'} title={`${likeCount}  `} />

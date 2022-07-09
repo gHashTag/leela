@@ -65,6 +65,7 @@
     "react-native-screens": "^3.13.1",
     "react-native-shake": "^5.1.1",
     "react-native-size-matters": "^0.4.0",
+    "react-native-sound": "^0.11.2",
     "react-native-spinkit": "^1.5.1",
     "react-native-splash-screen": "^3.3.0",
     "react-native-swift": "^1.2.3",

@@ -41,7 +41,6 @@ export function InputTextModal({ navigation, route }: ReplyModalT) {
   } = useTheme()
 
   const handleSubmit: SubmitHandler<FieldValues> = async data => {
-    console.log('submit')
     onSubmit && onSubmit(data.text)
     navigation.goBack()
     methods.reset()
