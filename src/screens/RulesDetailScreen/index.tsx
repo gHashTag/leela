@@ -4,9 +4,9 @@ import { RouteProp } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { actionPlay } from '../../store'
 import { RootStackParamList } from '../../types'
-import { AppContainer, Space, Text } from '../../components'
+import { AppContainer, SelectableIOS, Space, Text } from '../../components'
 import { goBack } from '../../constants'
-import { StyleSheet } from 'react-native'
+import { Platform, StyleSheet } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { vs } from 'react-native-size-matters'
 
@@ -38,7 +38,11 @@ const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) =
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <Space height={10} />
-        <Text selectable h={'h7'} title={content} textStyle={h3} />
+        {Platform.OS === 'ios' ? (
+          <SelectableIOS h={'h7'} title={content} textStyle={h3} />
+        ) : (
+          <Text selectable h={'h7'} title={content} textStyle={h3} />
+        )}
         <Space height={vs(200)} />
       </ScrollView>
     </AppContainer>

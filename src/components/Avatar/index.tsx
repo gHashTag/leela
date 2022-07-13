@@ -43,31 +43,25 @@ interface AvatarT {
   viewStyle?: StyleProp<ViewStyle>
 }
 
-const Avatar = memo<AvatarT>(
-  ({ loading = true, uri, size = 'large', onPress, viewStyle }) => {
-    const { container } = styles
-    return (
-      <TouchableOpacity onPress={onPress} style={[container, viewStyle]}>
-        <>
-          {loading ? (
-            <Spinner size={styles[size].height} type="Pulse" color={secondary} />
-          ) : (
-            <>
-              {!uri ? (
-                <FastImage style={styles[size]} source={require('./pickaface.png')} />
-              ) : (
-                //<Image style={styles[size]} source={{ uri }} />
-                <FastImage
-                  style={styles[size]}
-                  source={{ uri, priority: FastImage.priority.high }}
-                />
-              )}
-            </>
-          )}
-        </>
-      </TouchableOpacity>
-    )
-  }
-)
+const Avatar = memo<AvatarT>(({ loading, uri, size = 'large', onPress, viewStyle }) => {
+  const { container } = styles
+  return (
+    <TouchableOpacity onPress={onPress} style={[container, viewStyle]}>
+      <>
+        {loading ? (
+          <Spinner size={styles[size].height} type="Pulse" color={secondary} />
+        ) : !uri ? (
+          <FastImage style={styles[size]} source={require('./pickaface.png')} />
+        ) : (
+          //<Image style={styles[size]} source={{ uri }} />
+          <FastImage
+            style={styles[size]}
+            source={{ uri, priority: FastImage.priority.high }}
+          />
+        )}
+      </>
+    </TouchableOpacity>
+  )
+})
 
 export { Avatar }

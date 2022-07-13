@@ -231,15 +231,15 @@ const startStepTimer = () => {
 
 const getImagePicker = async () => {
   const image = await ImagePicker.openPicker({
-    width: 100,
-    height: 100,
+    width: 400,
+    height: 400,
     cropping: true,
     cropperCircleOverlay: true,
     sortOrder: 'none',
-    compressImageMaxWidth: 200,
-    compressImageMaxHeight: 200,
+    compressImageMaxWidth: 400,
+    compressImageMaxHeight: 400,
     compressImageQuality: 1,
-    compressVideoPreset: 'MediumQuality',
+    compressVideoPreset: 'HighestQuality',
     includeExif: true,
     cropperStatusBarColor: 'white',
     cropperToolbarColor: 'white',

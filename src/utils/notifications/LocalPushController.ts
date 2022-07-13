@@ -54,6 +54,7 @@ export async function displayNotification(
       categoryId: 'reply'
     }
   })
+  notifee.incrementBadgeCount()
 }
 
 async function cancel(id?: string, reply?: boolean) {
@@ -88,6 +89,7 @@ async function cancel(id?: string, reply?: boolean) {
         groupId: 'new-comment'
       }
     })
+    notifee.decrementBadgeCount()
   }
 }
 
@@ -106,14 +108,19 @@ export async function notifeePostEvent({ type, detail }: Event) {
           await PostStore.replyComment({
             text: detail?.input,
             commentOwner: notification?.data?.commentOwner,
-            commentId: notification?.data?.commentId
+            commentId: notification?.data?.commentId,
+            postId: notification?.data?.postId
           })
         }
         break
       case 'dismiss':
         cancel(notification?.id)
         break
+      default:
+        notifee.decrementBadgeCount()
     }
+  } else if (type === EventType.DISMISSED) {
+    notifee.decrementBadgeCount()
   }
 }
 

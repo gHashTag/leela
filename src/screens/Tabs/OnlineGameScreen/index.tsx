@@ -76,8 +76,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={contentContainerStyle}
           >
-            <Header displayStatus textAlign="center" />
-            <Text textStyle={centered} h={'h3'} title={I18n.t('events')} />
+            <Header title={I18n.t('events')} textAlign="center" />
             <Space height={s(20)} />
             <ImageSwiper images={images} height={vs(300)} />
             <Space height={s(30)} />

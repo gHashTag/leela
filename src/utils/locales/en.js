@@ -114,7 +114,7 @@ export default {
   requireField: 'Required field',
   manyCharacters: 'Too many symbols, maximum - ',
   fewCharacters: 'The minimum must be 100 characters',
-  post: 'Post',
+  post: 'Report',
   send: 'Send',
   // for signUp_username
   twoSymbolRequire: 'The field must contain at least 2 characters',
@@ -123,5 +123,6 @@ export default {
   accountBaned: 'This account is banned',
   banText:
     'We found out that you are violating the "Rules of posts and comments" and for this reason we decided to ban you.',
-  sixToBegin: 'To begin with, throw 6 on the cube'
+  sixToBegin: 'To begin with, throw 6 on the cube',
+  review: 'On moderation...'
 }

@@ -34,9 +34,7 @@ const styles = ScaledSheet.create({
   titleStyle: {
     fontSize: vs(18)
   },
-  childrenStyle: {
-    marginTop: s(2)
-  }
+  childrenStyle: {}
 })
 
 interface HeaderT {
@@ -78,7 +76,7 @@ const Header = memo<HeaderT>(
 
     const { top } = useSafeAreaInsets()
     const alignItems = children ? 'flex-start' : 'center'
-    const marginTop = children ? s(12) : 0
+    const marginTop = children ? s(2) : 0
     return (
       <View style={[container, { paddingTop: top, alignItems }]}>
         {iconLeft && (
@@ -97,7 +95,7 @@ const Header = memo<HeaderT>(
           )}
           {(children || displayStatus) && (
             <View style={[childrenStyle, !title && { marginTop }]}>
-              {displayStatus && <HeaderMessage />}
+              {displayStatus && !children && <HeaderMessage />}
               {children}
             </View>
           )}

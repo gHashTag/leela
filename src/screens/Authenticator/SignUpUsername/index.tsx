@@ -77,6 +77,7 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     })
     await createProfile({
       email,
+      // @ts-ignore
       uid: getUid(),
       firstName,
       lastName

@@ -99,6 +99,7 @@ export const trueBlue = '#007ACD'
 export const paleBlue = '#BEFCE5'
 export const brightTurquoise = '#1EE4EC'
 export const RED = '#FC2847'
+export const orange = '#FFB700'
 
 export const revenuecat = 'BeIMIIfptWXlouosYudFEWQDkwDvJUzv'
 

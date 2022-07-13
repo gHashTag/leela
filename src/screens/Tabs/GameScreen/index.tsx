@@ -97,10 +97,9 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                   />
                 )}
               </>
-            ) : (
-              <Dice />
-            )}
+            ) : undefined}
           </Header>
+          {!endGame && <Dice />}
           <GameBoard />
         </>
       )}

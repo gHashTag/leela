@@ -11,7 +11,7 @@ import {
 import { useTheme } from '@react-navigation/native'
 import { s, ms } from 'react-native-size-matters'
 
-const styles = StyleSheet.create({
+export const textStyles = StyleSheet.create({
   h0: {
     fontFamily: Platform.OS === 'ios' ? 'Etna' : 'etna-free-font',
     textShadowOffset: { width: 1, height: 1 },
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   }
 })
 
-interface Icolors {
+export interface Icolors {
   dark: string
   light: string
 }
@@ -123,7 +123,7 @@ export const Text = memo<TxtT>(
     const hasShadow = h ? !noShadowFonts.includes(h) : false
 
     const hStyle = h
-      ? [{ ...styles[h], color: curColor }, hasShadow && { textShadowColor: primary }]
+      ? [{ ...textStyles[h], color: curColor }, hasShadow && { textShadowColor: primary }]
       : undefined
     return (
       <RNText style={[hStyle, textStyle]} {...textProps}>

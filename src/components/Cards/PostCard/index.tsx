@@ -1,27 +1,23 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Pressable, Share, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import {
   brightTurquoise,
-  classicRose,
   fuchsia,
-  gray,
   lightGray,
   W,
+  gray,
   navigate,
   OpenReplyModal,
-  RED
+  orange
 } from '../../../constants'
 import { Text, Space, ButtonVectorIcon, PlanAvatar } from '../../'
-import auth from '@react-native-firebase/auth'
-import { OnlinePlayer, OtherPlayers, PostStore } from '../../../store'
+import { OnlinePlayer, PostStore } from '../../../store'
 import { observer } from 'mobx-react-lite'
 import { HashtagFormat } from '../../TextComponents'
 import { getTimeStamp, getUid } from '../../../screens/helper'
-import { buildLink, lang } from '../../../utils'
+import { buildLink, I18n, lang } from '../../../utils'
 import { EmojiText } from '../../EmojiText'
-import { ButtonsModalT } from '../../../types'
-import { useNavigation } from '@react-navigation/native'
 import { getActions } from './ModalActions'
 
 interface postCardI {
@@ -48,18 +44,9 @@ export const PostCard: React.FC<postCardI> = observer(props => {
     return <Text title="Not found" h="h1" />
   }
   const itemIndex = PostStore.store.posts.findIndex(a => a.id === postId)
-  const [isLiked, setIsLiked] = useState<boolean>(
-    item.liked?.findIndex(a => a === auth().currentUser?.uid) === -1 ? false : true
-  )
   const [transText, setTransText] = useState('')
   const [hideTranslate, setHideTranslate] = useState(true)
-  const { goBack } = useNavigation()
-
-  useMemo(() => {
-    setIsLiked(
-      item.liked?.findIndex(a => a === auth().currentUser?.uid) === -1 ? false : true
-    )
-  }, [item.liked])
+  const isLiked = item.liked?.findIndex(a => a === getUid()) === -1 ? false : true
 
   useEffect(() => {
     if (translatedText) {
@@ -71,8 +58,8 @@ export const PostCard: React.FC<postCardI> = observer(props => {
     }
   }, [])
 
-  let likes = PostStore.store.posts[itemIndex].liked
-  const likeCount = likes?.filter(a => a !== item.ownerId).length
+  const likeCount = item.liked?.length
+  const commCount = item.comments?.length
 
   const date = getTimeStamp({ lastTime: item.createTime })
 
@@ -89,17 +76,10 @@ export const PostCard: React.FC<postCardI> = observer(props => {
   const mediumButton = W / 4 - s(68)
 
   async function handleLike() {
-    const uid = getUid()
     if (item && isLiked) {
-      setIsLiked(false)
       await PostStore.unlikePost(item.id)
-      if (likes?.includes(item.ownerId)) {
-        likes = likes?.filter(a => a !== uid)
-      }
     } else if (item && !isLiked) {
-      setIsLiked(true)
       await PostStore.likePost(item.id)
-      !likes?.includes(item.ownerId) && likes?.push(uid ? uid : '')
     }
   }
   const text = hideTranslate ? item.text : transText
@@ -131,6 +111,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
       })
     }
   }
+
   const isAdmin = OnlinePlayer.store.status === 'Admin'
   const handleAdminMenu = () => {
     const modalButtons = getActions({ isDetail, item })
@@ -139,8 +120,10 @@ export const PostCard: React.FC<postCardI> = observer(props => {
 
   const heart = isLiked ? 'heart' : 'heart-outline'
   const heartColor = isLiked ? fuchsia : undefined
+
   const fullName = PostStore.getOwnerName(item.ownerId)
   const avaUrl = PostStore.getAvaById(item.ownerId)
+
   const flag = hideTranslate
     ? lang === 'en'
       ? ':us:'
@@ -148,6 +131,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
     : item.language === 'en'
     ? ':us:'
     : `:${item.language}:`
+
   if (isDetail)
     return (
       <View style={[container, { borderBottomWidth: 0 }]}>
@@ -161,16 +145,10 @@ export const PostCard: React.FC<postCardI> = observer(props => {
           />
           <View style={headerInfo}>
             {/* name, create date */}
-            <Space height={vs(1)} />
+            <Space height={vs(6.5)} />
             <View style={headerName}>
               <Text numberOfLines={1} h={'h6'} title={fullName} />
             </View>
-            <Text
-              h={'h6'}
-              numberOfLines={1}
-              textStyle={lightText}
-              title={`${item.email}`}
-            />
             <Text h={'h5'} numberOfLines={1} textStyle={lightText} title={`${date}`} />
             <Space height={vs(5)} />
           </View>
@@ -185,14 +163,6 @@ export const PostCard: React.FC<postCardI> = observer(props => {
         <View style={headerS}>
           <View style={flex1} />
         </View>
-        <View style={countersContainer}>
-          <Text h={'h6'} title={`${likeCount}  `} />
-          <Text
-            textStyle={{ color: gray }}
-            h={'h6'}
-            title={`Like${likeCount && likeCount > 1 ? 's' : ''}`}
-          />
-        </View>
         {/* Detail Buttons */}
         <View style={btnsContainer}>
           {isAdmin && (
@@ -205,6 +175,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
             />
           )}
           <ButtonVectorIcon
+            count={commCount}
             onPress={handleComment}
             viewStyle={mediumBtn}
             ionicons
@@ -212,6 +183,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
             size={mediumButton}
           />
           <ButtonVectorIcon
+            count={likeCount}
             onPress={handleLike}
             viewStyle={mediumBtn}
             color={heartColor}
@@ -232,13 +204,27 @@ export const PostCard: React.FC<postCardI> = observer(props => {
   return (
     <Pressable onPress={goDetail} style={container}>
       <View style={headerS}>
-        <PlanAvatar
-          avaUrl={avaUrl}
-          size={'medium'}
-          plan={item.plan}
-          isAccept={item.accept}
-          aditionalStyle={img}
-        />
+        <View style={avaContainer}>
+          <PlanAvatar
+            avaUrl={avaUrl}
+            size={'medium'}
+            plan={item.plan}
+            isAccept={item.accept}
+            aditionalStyle={img}
+          />
+          {isAdmin && (
+            <>
+              <ButtonVectorIcon
+                onPress={handleAdminMenu}
+                viewStyle={[smallBtn, { alignItems: 'flex-end', marginRight: s(4) }]}
+                ionicons
+                name="md-ellipsis-vertical-circle"
+                size={smallButton + s(3)}
+              />
+              <Space height={vs(11)} />
+            </>
+          )}
+        </View>
         <View style={headerInfo}>
           {/* name, create date/email */}
           <Space height={vs(2)} />
@@ -252,20 +238,18 @@ export const PostCard: React.FC<postCardI> = observer(props => {
           </View>
           <Space height={vs(5)} />
           <HashtagFormat textStyle={textStyle} numberOfLines={8} h={'h5'} title={text} />
+          {!item.accept && (
+            <>
+              <Space height={vs(5)} />
+              <Text oneColor={orange} h={'h6'} title={I18n.t('review')} />
+            </>
+          )}
           {/* Preview Buttons */}
           <View style={btnsContainer}>
-            {isAdmin && (
-              <ButtonVectorIcon
-                onPress={handleAdminMenu}
-                viewStyle={smallBtn}
-                ionicons
-                name="md-ellipsis-vertical-circle"
-                size={smallButton}
-              />
-            )}
             <ButtonVectorIcon
               onPress={handleComment}
-              viewStyle={smallBtn}
+              count={commCount}
+              viewStyle={[smallBtn, { justifyContent: 'flex-start' }]}
               ionicons
               name="chatbubble-outline"
               size={smallButton}
@@ -277,14 +261,14 @@ export const PostCard: React.FC<postCardI> = observer(props => {
               ionicons
               viewStyle={smallBtn}
               name={heart}
-              size={smallButton}
+              size={smallButton + s(1)}
             />
             <ButtonVectorIcon
-              viewStyle={smallBtn}
+              viewStyle={[smallBtn, { justifyContent: 'flex-end', marginRight: s(5) }]}
               name="md-link-outline"
               ionicons
               onPress={handleShareLink}
-              size={smallButton}
+              size={smallButton + s(1)}
             />
           </View>
         </View>
@@ -292,6 +276,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
     </Pressable>
   )
 })
+const lot = 'fgh'
 const style = StyleSheet.create({
   container: {
     paddingLeft: s(12),
@@ -324,19 +309,8 @@ const style = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
-  countersContainer: {
-    flexDirection: 'row',
-    paddingVertical: vs(9),
-    marginHorizontal: s(8),
-    borderColor: fuchsia,
-    borderBottomWidth: s(1),
-    borderTopWidth: s(1),
-    flex: 1,
-    marginTop: vs(11),
-    paddingHorizontal: s(5)
-  },
   textStyle: {
-    lineHeight: s(19)
+    lineHeight: s(21)
   },
   headerS: {
     flexDirection: 'row'
@@ -359,6 +333,9 @@ const style = StyleSheet.create({
   likeBtn: {
     flex: 2,
     justifyContent: 'center'
+  },
+  avaContainer: {
+    height: '100%'
   }
 })
 
@@ -368,12 +345,12 @@ const {
   btnsContainer,
   smallBtn,
   mediumBtn,
-  countersContainer,
   textStyle,
   headerS,
   headerInfo,
   headerName,
   lightText,
   flex1,
-  likeBtn
+  likeBtn,
+  avaContainer
 } = style

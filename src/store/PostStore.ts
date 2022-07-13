@@ -51,11 +51,16 @@ export const PostStore = {
         id,
         createTime: Date.now(),
         email,
+        comments: [],
         liked: [],
         accept: false,
         language: AllLang
       }
-      await firestore().collection('Posts').doc(id).set(post)
+      try {
+        await firestore().collection('Posts').doc(id).set(post)
+      } catch (error) {
+        captureException(error)
+      }
     }
   },
   createComment: async ({ text, postId, postOwner }: FormCommentT) => {
@@ -75,6 +80,10 @@ export const PostStore = {
         reply: false,
         id: path
       }
+      await firestore()
+        .collection('Posts')
+        .doc(postId)
+        .update({ comments: firestore.FieldValue.arrayUnion(path) })
       await firestore().collection('Comments').doc(path).set(comment)
     }
   },
@@ -111,6 +120,10 @@ export const PostStore = {
           reply: true,
           id: path
         }
+        await firestore()
+          .collection('Posts')
+          .doc(postId)
+          .update({ comments: firestore.FieldValue.arrayUnion(path) })
         await firestore().collection('Comments').doc(path).set(comment)
       }
     }

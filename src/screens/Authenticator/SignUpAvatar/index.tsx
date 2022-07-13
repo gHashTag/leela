@@ -3,14 +3,7 @@ import { s } from 'react-native-size-matters'
 import { observer } from 'mobx-react-lite'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { I18n } from '../../../utils'
-import {
-  AppContainer,
-  Avatar,
-  Button,
-  CenterView,
-  Loading,
-  Space
-} from '../../../components'
+import { AppContainer, Avatar, Button, CenterView, Space } from '../../../components'
 import { RootStackParamList } from '../../../types'
 import { OnlinePlayer } from '../../../store'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -49,23 +42,19 @@ const SignUpAvatar = observer(({ navigation }: SignUpAvatarT): ReactElement => {
 
   return (
     <AppContainer title=" " iconLeft={null}>
-      {load ? (
-        <Loading />
-      ) : (
-        <CenterView>
-          <Avatar
-            size="xLarge"
-            uri={OnlinePlayer.store.avatar.slice()}
-            onPress={onPressAva}
-            loading={false}
-          />
-          <Space height={s(50)} />
-          {!!OnlinePlayer.store.avatar && (
-            <Button title={I18n.t('done')} onPress={handleSubmit} />
-          )}
-          <Space height={s(150)} />
-        </CenterView>
-      )}
+      <CenterView>
+        <Avatar
+          size="xLarge"
+          uri={OnlinePlayer.store.avatar.slice()}
+          onPress={onPressAva}
+          loading={load}
+        />
+        <Space height={s(50)} />
+        {!!OnlinePlayer.store.avatar && (
+          <Button title={I18n.t('done')} onPress={handleSubmit} />
+        )}
+        <Space height={s(150)} />
+      </CenterView>
     </AppContainer>
   )
 })

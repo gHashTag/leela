@@ -13,13 +13,12 @@ import {
 import { goBack, white, black, W, H } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { updateProfName } from '../../../screens/helper'
-import { useHeaderHeight } from '@react-navigation/elements'
 import { useForm, FormProvider, SubmitHandler, FieldValues } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { s, vs } from 'react-native-size-matters'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native'
+import { ScrollView, StyleSheet } from 'react-native'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -35,14 +34,23 @@ type UserEditT = {
 const schema = yup
   .object()
   .shape({
-    firstName: yup.string().trim().min(2).required(),
-    lastName: yup.string().trim().min(2).required()
+    firstName: yup
+      .string()
+      .trim()
+      .min(2, I18n.t('twoSymbolRequire'))
+      .required()
+      .max(15, `${I18n.t('manyCharacters')}15`),
+    lastName: yup
+      .string()
+      .trim()
+      .min(2, I18n.t('twoSymbolRequire'))
+      .required()
+      .max(20, `${I18n.t('manyCharacters')}20`)
   })
   .required()
 
 const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
-  const headerHeight = useHeaderHeight()
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),

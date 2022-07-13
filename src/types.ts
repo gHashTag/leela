@@ -142,6 +142,7 @@ export interface FormPostT {
 export interface PostT extends FormPostT {
   ownerId: string
   id: string
+  comments: string[]
   createTime: number
   email: string
   liked?: string[]

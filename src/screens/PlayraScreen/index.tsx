@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, View, FlatList, Image } from 'react-native'
+import { StyleSheet, View, FlatList, Image, TouchableOpacity } from 'react-native'
 import { observer } from 'mobx-react-lite'
 import * as Sentry from '@sentry/react-native'
 import { s, vs } from 'react-native-size-matters'
@@ -123,13 +123,14 @@ const RenderItem = ({ item, index }: PlayraItemT) => {
   return (
     <View style={{ width: '90%', alignSelf: 'center' }}>
       <Space height={vs(10)} />
-      <Text h={'h1'} title={title} />
-      <Space height={vs(20)} />
-      <View style={videoView}>
-        <Image style={posterS} source={{ uri: poster }} />
-      </View>
+      <TouchableOpacity activeOpacity={0.8} onPress={handlePress}>
+        <Text h={'h1'} title={title} />
+        <Space height={vs(20)} />
+        <View style={videoView}>
+          <Image style={posterS} source={{ uri: poster }} />
+        </View>
+      </TouchableOpacity>
       <Space height={vs(10)} />
-      <ButtonElements onPress={handlePress} title={I18n.t('look')} />
       {/* {artist !== '' && (
             <Text
               h={'h4'}

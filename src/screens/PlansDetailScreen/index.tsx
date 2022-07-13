@@ -1,5 +1,12 @@
-import React, { useCallback, useRef, useState } from 'react'
-import { StyleSheet, View, ToastAndroid, Platform, BackHandler } from 'react-native'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  StyleSheet,
+  View,
+  ToastAndroid,
+  Platform,
+  BackHandler,
+  TextInput
+} from 'react-native'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
 import { s, vs } from 'react-native-size-matters'
@@ -11,7 +18,9 @@ import {
   Text,
   CreatePost,
   KeyboardContainer,
-  ButtonPlay
+  ButtonPlay,
+  SelectableIOS,
+  Loading
 } from '../../components'
 import { ScrollView } from 'react-native-gesture-handler'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -33,6 +42,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
   const { h3 } = styles
   const { isReported } = OnlinePlayer.store
   const [isPlaying, setIsPaying] = useState<boolean>(false)
+  const [soundLoading, setSoundLoading] = useState<boolean>(true)
   const handleCross = () => {
     if (isReported) {
       navigation.goBack()
@@ -48,30 +58,40 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
         )
     }
   }
-  useFocusEffect(
-    useCallback(() => {
-      const sound = new Sound(audioUrl, undefined, () => {
-        sound.play()
-      })
-      soundRef.current = sound
-      const backhandler = BackHandler.addEventListener('hardwareBackPress', () => {
-        handleCross()
-        return true
-      })
-      return () => {
-        backhandler.remove()
-        soundRef.current?.stop()
-      }
-    }, [])
-  )
+  useEffect(() => {
+    const sound = new Sound(audioUrl, undefined)
+    soundRef.current = sound
+    const backhandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleCross()
+      return true
+    })
+    return () => {
+      backhandler.remove()
+      soundRef.current?.stop()
+    }
+  }, [])
   const onToggle = () => {
     if (soundRef.current?.isPlaying()) {
       soundRef.current.pause()
+      setIsPaying(false)
     } else {
       soundRef.current?.play()
+      if (soundRef.current && soundRef.current.isLoaded()) {
+        setIsPaying(true)
+      }
     }
-    setIsPaying(Boolean(soundRef.current?.isPlaying()))
   }
+  useFocusEffect(
+    useCallback(() => {
+      const interval = setInterval(() => {
+        const isLoaded = soundRef.current?.isLoaded()
+        if (!isLoaded !== soundLoading) {
+          setSoundLoading(!isLoaded)
+        }
+      }, 400)
+      return () => clearInterval(interval)
+    }, [])
+  )
   return (
     <AppContainer
       onPress={handleCross}
@@ -84,9 +104,17 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
       <KeyboardContainer>
         <ScrollView>
           <Space height={vs(10)} />
-          <ButtonPlay onPress={onToggle} isStop={!isPlaying} />
+          {soundLoading ? (
+            <Loading type="ThreeBounce" />
+          ) : (
+            <ButtonPlay onPress={onToggle} isStop={isPlaying} />
+          )}
           <Space height={vs(10)} />
-          <Text selectable h={'h7'} title={content} textStyle={h3} />
+          {Platform.OS === 'ios' ? (
+            <SelectableIOS h={'h7'} title={content} textStyle={h3} />
+          ) : (
+            <Text selectable h={'h7'} title={content} textStyle={h3} />
+          )}
           {report && <CreatePost plan={id} />}
           <Space height={vs(!report ? 135 : 80)} />
         </ScrollView>

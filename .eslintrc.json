@@ -4,7 +4,13 @@
     "node": true,
     "react-native/react-native": true
   },
-  "extends": ["plugin:react/recommended", "airbnb", "airbnb/hooks", "prettier", "prettier/react"],
+  "extends": [
+    "plugin:react/recommended",
+    "airbnb",
+    "airbnb/hooks",
+    "prettier",
+    "prettier/react"
+  ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaFeatures": {
@@ -50,7 +56,7 @@
     "no-console": "error",
     "arrow-parens": 0,
     "eol-last": 0,
-    "react-native/no-unused-styles": 0,
+    "react-native/no-unused-styles": "error",
     "react-native/split-platform-components": 0,
     "react-native/no-inline-styles": 0,
     "react-native/no-color-literals": 0,

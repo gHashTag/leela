@@ -45,7 +45,7 @@ const schema = yup
   })
   .required()
 
-const Forgot = ({ route, navigation }: ForgotT): ReactElement => {
+const Forgot = ({ route, navigation }: ForgotT) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -60,8 +60,10 @@ const Forgot = ({ route, navigation }: ForgotT): ReactElement => {
   const onSubmit: SubmitHandler<FieldValues> = async data => {
     setLoading(true)
     const { email } = data
+
     try {
       await auth().sendPasswordResetEmail(email)
+      navigation.navigate('FORGOT_PASSWORD_SUBMIT', { email })
     } catch (error: any) {
       if (error.code === 'auth/user-not-found') {
         setError(I18n.t('userNotFound'))

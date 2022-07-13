@@ -132,7 +132,12 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   }
 
   return (
-    <AppContainer displayStatus title={I18n.t('history')} textAlign="center">
+    <AppContainer
+      iconRight={':books:'}
+      iconLeft={':information_source:'}
+      title={I18n.t('history')}
+      textAlign="center"
+    >
       <CenterView>
         {OnlinePlayer.store.loadingProf && DiceStore.online ? (
           <Spin centered />
@@ -143,12 +148,15 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
               <>
                 {/* <Txt h3 title={`Подписка: ${subscriptionActive.toString()}`} /> */}
                 {DiceStore.online && (
-                  <HeaderMaster
-                    onPress={() =>
-                      navigation.navigate('USER_EDIT', OnlinePlayer.store.profile)
-                    }
-                    onPressAva={onPressAva}
-                  />
+                  <>
+                    <HeaderMaster
+                      onPress={() =>
+                        navigation.navigate('USER_EDIT', OnlinePlayer.store.profile)
+                      }
+                      onPressAva={onPressAva}
+                    />
+                    <Space height={s(20)} />
+                  </>
                 )}
                 <Space height={10} />
               </>

@@ -7,7 +7,7 @@ import {
   StyleSheet
 } from 'react-native'
 import { ms, s } from 'react-native-size-matters'
-import { primary } from '../../constants'
+import { orange, primary } from '../../constants'
 import { Text } from '..'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { useTheme } from '@react-navigation/native'
@@ -46,7 +46,7 @@ export const PlanAvatar = memo(function ({
         style={[badge, badgeS, { backgroundColor: background }]}
       >
         {!isAccept ? (
-          <Ionicons size={s(15)} color={'#FFB700'} name="time-sharp" />
+          <Ionicons size={s(15)} color={orange} name="time-sharp" />
         ) : (
           <Text textStyle={{ fontSize }} title={textPlan} h="h12" />
         )}
