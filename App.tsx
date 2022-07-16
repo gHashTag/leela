@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { LogBox } from 'react-native'
+import { LogBox, Platform } from 'react-native'
 import { configure } from 'mobx'
 import { configurePersistable } from 'mobx-persist-store'
 import * as Sentry from '@sentry/react-native'
@@ -13,6 +13,7 @@ import {
   TranslatorConfiguration,
   TranslatorFactory
 } from 'react-native-power-translator'
+import Purchases from 'react-native-purchases'
 // @ts-expect-error
 import { GOOGLE_TRANSLATE_API_KEY } from '@env'
 import { lang } from './src/utils'
@@ -66,6 +67,11 @@ LogBox.ignoreLogs([
 function Init() {
   useEffect(() => {
     SplashScreen.hide()
+    if (Platform.OS === 'ios') {
+      Purchases.setup('appl_ACmucVIVHSuJWCXwWfYUzJlXKno')
+    } else if (Platform.OS === 'android') {
+      Purchases.setup('goog_hpKzEpktquSkYpVmjVilrzYRvTn')
+    }
   }, [])
   return (
     <SafeAreaProvider>

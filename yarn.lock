@@ -7773,6 +7773,11 @@ react-native-power-translator@^1.1.1:
   resolved "https://registry.npmjs.org/react-native-power-translator/-/react-native-power-translator-1.1.1.tgz"
   integrity sha512-btDroFDjSKO6KXb4kotRjnySS+3vAC7ZgQXbLyyj/O1JA2NB8j415jZWJjIGMFgh2fodVUf8N8W31ScAEbwbcA==
 
+react-native-purchases@^4.6.1:
+  version "4.6.1"
+  resolved "https://registry.yarnpkg.com/react-native-purchases/-/react-native-purchases-4.6.1.tgz#cc67647c8194215804358f234361a070a33041ed"
+  integrity sha512-E6bvjPGdqH62fBZ5ZNpT43IyKgNZIvxrxFoIL7n+jmZ5fd8a8l7Zx7sdeMRtCcKbbiMaa90eDVkegQWt0gfEEQ==
+
 react-native-rate@^1.2.6:
   version "1.2.9"
   resolved "https://registry.npmjs.org/react-native-rate/-/react-native-rate-1.2.9.tgz"

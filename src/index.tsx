@@ -218,7 +218,11 @@ const App = () => {
           }}
         >
           <Stack.Screen name="PLANS_SCREEN" component={PlansScreen} />
-          <Stack.Screen name="PLANS_DETAIL_SCREEN" component={PlansDetailScreen} />
+          <Stack.Screen
+            name="PLANS_DETAIL_SCREEN"
+            component={PlansDetailScreen}
+            options={{ gestureEnabled: false }}
+          />
         </Stack.Group>
 
         <Stack.Screen name="PLAYRA_SCREEN" component={PlayraScreen} />
@@ -236,7 +240,8 @@ const App = () => {
         <Stack.Group
           screenOptions={{
             presentation: 'transparentModal',
-            animation: 'fade'
+            animation: 'fade',
+            gestureEnabled: false
           }}
         >
           <Stack.Screen

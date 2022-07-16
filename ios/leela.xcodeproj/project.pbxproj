@@ -18,6 +18,7 @@
 		2474BD2CD7E047198FB3E43B /* IBM-Logo.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1F9655294F6740819A98E118 /* IBM-Logo.ttf */; };
 		2E9613A2286587B500DB116D /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2E9613A1286587B500DB116D /* GoogleService-Info.plist */; };
 		2E9613A32865919C00DB116D /* OxygenMono-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 1689DBC8BCC54D05B5FA45FC /* OxygenMono-Regular.otf */; };
+		2E9C07922882CB9C0011832A /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E9C07912882CB9C0011832A /* StoreKit.framework */; };
 		37667F73C00F43D1B801826E /* etna-free-font.otf in Resources */ = {isa = PBXBuildFile; fileRef = AF45D636F00C4861B2CBD98F /* etna-free-font.otf */; };
 		44CD414BC1AA4F2E8F2294BE /* NeutraText-BoldItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 9B5084DC2DB5493CAF730539 /* NeutraText-BoldItalic.otf */; };
 		4FDAD5DC03B74974BCB238B8 /* Montserrat-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AF242944E3294FD4A49D5F48 /* Montserrat-ExtraLight.ttf */; };
@@ -77,6 +78,7 @@
 		2B2D96BBD6E64686855B314B /* Montserrat-Thin.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Thin.ttf"; path = "../assets/fonts/Montserrat-Thin.ttf"; sourceTree = "<group>"; };
 		2E4177FC2868684E004ABF0A /* leela.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = leela.entitlements; path = leela/leela.entitlements; sourceTree = "<group>"; };
 		2E9613A1286587B500DB116D /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		2E9C07912882CB9C0011832A /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		2EB7987BF6D6445EA7B2613C /* Montserrat-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Bold.ttf"; path = "../assets/fonts/Montserrat-Bold.ttf"; sourceTree = "<group>"; };
 		2F8EBA35CE5A425B84521A5D /* Montserrat-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Medium.ttf"; path = "../assets/fonts/Montserrat-Medium.ttf"; sourceTree = "<group>"; };
 		2FAAA37ED61E40B1BC3FDD2E /* Feather.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Feather.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Feather.ttf"; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C80B921A6F3F58F76C31292 /* libPods-leela.a in Frameworks */,
+				2E9C07922882CB9C0011832A /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -175,6 +178,7 @@
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2E9C07912882CB9C0011832A /* StoreKit.framework */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				5DCACB8F33CDC322A6C60F78 /* libPods-leela.a */,
 				19F6CBCC0A4E27FBF8BF4A61 /* libPods-leela-leelaTests.a */,

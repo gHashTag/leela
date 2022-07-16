@@ -842,6 +842,11 @@ PODS:
   - nanopb/encode (2.30908.0)
   - OpenSSL-Universal (1.1.1100)
   - PromisesObjC (2.1.1)
+  - Purchases (3.14.1):
+    - PurchasesCoreSwift (= 3.14.1)
+  - PurchasesCoreSwift (3.14.1)
+  - PurchasesHybridCommon (2.0.1):
+    - Purchases (= 3.14.1)
   - RCT-Folly (2021.06.28.00-v2):
     - boost
     - DoubleConversion
@@ -1209,6 +1214,9 @@ PODS:
     - RNNotifee/NotifeeCore (= 5.3.0)
   - RNNotifee/NotifeeCore (5.3.0):
     - React-Core
+  - RNPurchases (4.6.1):
+    - PurchasesHybridCommon (= 2.0.1)
+    - React-Core
   - RNRate (1.2.9):
     - React-Core
   - RNScreens (3.13.1):
@@ -1325,6 +1333,7 @@ DEPENDENCIES:
   - RNKeychain (from `../node_modules/react-native-keychain`)
   - RNLocalize (from `../node_modules/react-native-localize`)
   - "RNNotifee (from `../node_modules/@notifee/react-native`)"
+  - RNPurchases (from `../node_modules/react-native-purchases`)
   - RNRate (from `../node_modules/react-native-rate`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - "RNSentry (from `../node_modules/@sentry/react-native`)"
@@ -1369,6 +1378,9 @@ SPEC REPOS:
     - nanopb
     - OpenSSL-Universal
     - PromisesObjC
+    - Purchases
+    - PurchasesCoreSwift
+    - PurchasesHybridCommon
     - SDWebImage
     - SDWebImageWebPCoder
     - Sentry
@@ -1499,6 +1511,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-localize"
   RNNotifee:
     :path: "../node_modules/@notifee/react-native"
+  RNPurchases:
+    :path: "../node_modules/react-native-purchases"
   RNRate:
     :path: "../node_modules/react-native-rate"
   RNScreens:
@@ -1553,6 +1567,9 @@ SPEC CHECKSUMS:
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
   PromisesObjC: ab77feca74fa2823e7af4249b8326368e61014cb
+  Purchases: b714751c386c2204d2d5aafaa903fd424a25cd59
+  PurchasesCoreSwift: 2cf98c52dd4b785177539fbfd1c32f60c89eafe7
+  PurchasesHybridCommon: e9bc1677cb11fe584ad29c0309f78142a8f14b5a
   RCT-Folly: 4d8508a426467c48885f1151029bc15fa5d7b3b8
   RCTRequired: 3e917ea5377751094f38145fdece525aa90545a0
   RCTTypeSafety: c43c072a4bd60feb49a9570b0517892b4305c45e
@@ -1609,6 +1626,7 @@ SPEC CHECKSUMS:
   RNKeychain: c442b8512802a20cab4db3e3a1cf53e4731615bc
   RNLocalize: 95a43f85e41a966be7bc9cff2437128911c52da0
   RNNotifee: e98a6bb4add6f05e9421ba02683d619b0146d902
+  RNPurchases: 80db47ee6da394f92713dff35738e94fe62828a3
   RNRate: 94f57c773e155ca0d0aeeba9c10a32bce9030daf
   RNScreens: 40a2cb40a02a609938137a1e0acfbf8fc9eebf19
   RNSentry: 85f6525b5fe8d2ada065858026b338605b3c09da
