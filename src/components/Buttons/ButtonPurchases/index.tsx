@@ -1,6 +1,6 @@
 import React from 'react'
 import { StyleSheet, TouchableOpacity } from 'react-native'
-// import Purchases, { PurchasesPackage } from 'react-native-purchases'
+import Purchases, { PurchasesPackage } from 'react-native-purchases'
 import * as Sentry from '@sentry/react-native'
 import { ENTITLEMENT_ID, secondary, W } from '../../../constants'
 import { I18n } from '../../../utils'
@@ -26,33 +26,14 @@ const styles = StyleSheet.create({
   }
 })
 
-// interface ButtonPurchasesT {
-//   purchasesPackage: PurchasesPackage
-// }
+interface ButtonPurchasesT {
+  purchasesPackage: PurchasesPackage
+}
 
 const ButtonPurchases = observer(() => {
   const { container } = styles
 
-  const onSelection = async () => {
-    try {
-      // const { purchaserInfo } = await Purchases.purchasePackage(
-      //   purchasesPackage
-      // )
-      //console.log('purchaserInfo', purchaserInfo)
-      // if (typeof purchaserInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
-      //   actionsSubscribe.purchaserInfo()
-      //   actionsSubscribe.setVisible(false)
-      // }
-      // else {
-      //   console.log('else', purchaserInfo.entitlements.active)
-      // }
-    } catch (e) {
-      // console.log('e', e)
-      // if (!e.userCancelled) {
-      //   Sentry.captureException(e)
-      // }
-    }
-  }
+  const onSelection = async () => {}
 
   return (
     <TouchableOpacity onPress={onSelection} style={container}>

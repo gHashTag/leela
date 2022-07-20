@@ -52,7 +52,6 @@ export type RootStackParamList = {
     hideTranslate?: boolean
   }
   POST_SCREEN: undefined
-
   REPLY_MODAL: {
     buttons: ButtonsModalT[]
   }
@@ -69,6 +68,7 @@ export type RootStackParamList = {
   PLAN_REPORT_MODAL: {
     plan: number
   }
+  UPDATE_VERSION_MODAL: undefined
 }
 
 export type RootTabParamList = {

@@ -31,33 +31,58 @@ export const PurchasesStore = makeAutoObservable<Istore>({
     }
   },
   async getIsSubscribe() {
-    const purchaserInfo = await Purchases.getPurchaserInfo()
-    const file = (
-      await firestore()
-        .collection('Identities')
-        .doc(purchaserInfo.originalAppUserId)
-        .get()
-    ).data()
-    if (file) {
-      const nowDate = Date.now()
-      if (nowDate - file.firstSession >= 2592000000) {
-        if (
-          typeof purchaserInfo.entitlements.active.sixMonth !== 'undefined' ||
-          typeof purchaserInfo.entitlements.active.month !== 'undefined' ||
-          typeof purchaserInfo.entitlements.active.year !== 'undefined'
-        ) {
-          return true
+    try {
+      const purchaserInfo = await Purchases.getPurchaserInfo()
+      const file = (
+        await firestore()
+          .collection('Identities')
+          .doc(purchaserInfo.originalAppUserId)
+          .get()
+      ).data()
+      if (file) {
+        const nowDate = Date.now()
+        if (nowDate - file.firstSession >= 2592000000) {
+          if (
+            typeof purchaserInfo.entitlements.active.sixMonth !== 'undefined' ||
+            typeof purchaserInfo.entitlements.active.month !== 'undefined' ||
+            typeof purchaserInfo.entitlements.active.year !== 'undefined'
+          ) {
+            return true
+          } else {
+            return false
+          }
         } else {
-          return false
+          return true
         }
       } else {
-        return true
+        return false
       }
-    } else {
+    } catch (error) {
+      captureException(error)
       return false
     }
   },
-  async buyOnlineSubscription(period) {}
+  async buyOnlineSubscription(period) {
+    try {
+      switch (period) {
+        case 'sixMonth':
+          await Purchases.purchaseProduct(subscriptionKeys[period])
+          break
+        case 'month':
+          await Purchases.purchaseProduct(subscriptionKeys[period])
+          break
+        case 'year':
+          await Purchases.purchaseProduct(subscriptionKeys[period])
+          break
+        default:
+          break
+      }
+    } catch (e: any) {
+      if (!e.userCancelled) {
+        captureException(e)
+      }
+    }
+  }
 })
 
 const subscriptionKeys = {

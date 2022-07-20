@@ -3,6 +3,7 @@ import {
   captureException,
   navigate,
   OpenPlanReportModal,
+  OpenUpdateVersionModal,
   timeStampType
 } from '../constants'
 import ImagePicker from 'react-native-image-crop-picker'
@@ -21,6 +22,8 @@ import firestore from '@react-native-firebase/firestore'
 import { firebase, FirebaseDatabaseTypes } from '@react-native-firebase/database'
 import { lang } from '../utils'
 import I18n from 'i18n-js'
+import semver from 'semver'
+import { version } from '../../package.json'
 
 interface NewProfileI {
   email: string
@@ -350,6 +353,17 @@ const onSignIn = async (user: FirebaseAuthTypes.User, isKeychain?: boolean) => {
   }
 }
 
+const checkVersion = async () => {
+  const { minVersion } = await (
+    await fetch(
+      'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/minVersion.json'
+    )
+  ).json()
+  if (semver.lt(version, minVersion)) {
+    OpenUpdateVersionModal()
+  }
+}
+
 export {
   uploadImg,
   updatePlan,
@@ -368,5 +382,6 @@ export {
   getTimeStamp,
   getUid,
   startStepTimer,
-  onSignIn
+  onSignIn,
+  checkVersion
 }

@@ -23,7 +23,8 @@ import {
   ExitPopup,
   NetworkModal,
   VideoPopup,
-  PlanReportModal
+  PlanReportModal,
+  UpdateVersionModal
 } from './screens'
 
 import {
@@ -53,7 +54,7 @@ import { UI } from './UI'
 import { DiceStore, OtherPlayers } from './store'
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
-import { getFireBaseRef } from './screens/helper'
+import { checkVersion, getFireBaseRef } from './screens/helper'
 import { linking } from './utils'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
 import { Fallback } from './components'
@@ -128,6 +129,7 @@ const Tab = () => {
         OpenNetworkModal()
       }
     })
+    checkVersion()
     return unsub
   }, [])
 
@@ -244,6 +246,7 @@ const App = () => {
             gestureEnabled: false
           }}
         >
+          <Stack.Screen name="UPDATE_VERSION_MODAL" component={UpdateVersionModal} />
           <Stack.Screen
             name="REPLY_MODAL"
             options={{

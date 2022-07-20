@@ -18,6 +18,12 @@ export function OpenNetworkModal() {
   }
 }
 
+export function OpenUpdateVersionModal() {
+  if (navRef.isReady()) {
+    navRef.navigate('UPDATE_VERSION_MODAL')
+  }
+}
+
 export function OpenExitModal() {
   if (navRef.isReady()) {
     navRef.navigate('EXIT_MODAL')

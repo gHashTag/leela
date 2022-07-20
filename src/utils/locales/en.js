@@ -124,5 +124,7 @@ export default {
   banText:
     'We found out that you are violating the "Rules of posts and comments" and for this reason we decided to ban you.',
   sixToBegin: 'To begin with, throw 6 on the cube',
-  review: 'On moderation...'
+  review: 'On moderation...',
+  updateApp: 'A new update has been released!',
+  update: 'Update'
 }
