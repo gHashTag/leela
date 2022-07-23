@@ -88,13 +88,15 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                   h="h1"
                   title={`${I18n.t('win')}`}
                 />
-                {!DiceStore.rate && (
+                {!DiceStore.rate ? (
                   <ButtonElements
                     type="solid"
                     themeType="classic"
                     title={I18n.t('leaveFeedback')}
                     onPress={_onPress}
                   />
+                ) : (
+                  <Space height={s(38)} />
                 )}
               </>
             ) : undefined}

@@ -104,8 +104,7 @@ export default {
   loadErr: 'Loading error',
   noPosts: 'No posts yet. Make a move so you can post',
   notReported: 'Write a report to the plan to continue',
-  makeReport:
-    'In order for you to continue using the application, you need to write a mandatory report',
+  makeReport: 'To continue the game - write a report',
   go: 'Go',
   // auth errors
   userNotFound: 'This user does not exist',

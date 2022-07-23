@@ -89,7 +89,6 @@ async function cancel(id?: string, reply?: boolean) {
         groupId: 'new-comment'
       }
     })
-    notifee.decrementBadgeCount()
   }
 }
 
@@ -116,11 +115,7 @@ export async function notifeePostEvent({ type, detail }: Event) {
       case 'dismiss':
         cancel(notification?.id)
         break
-      default:
-        notifee.decrementBadgeCount()
     }
-  } else if (type === EventType.DISMISSED) {
-    notifee.decrementBadgeCount()
   }
 }
 

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { View, SectionList } from 'react-native'
 import { observer } from 'mobx-react-lite'
 import { s, ScaledSheet } from 'react-native-size-matters'
@@ -18,6 +18,7 @@ import {
 import { DiceStore, OfflinePlayers, OnlinePlayer } from '../../../store'
 import { nanoid } from 'nanoid/non-secure'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { captureException } from '../../../constants'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -64,6 +65,7 @@ const icon = (status: string) => {
 }
 
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
+  const [loadImage, setLoadImage] = useState(false)
   const _renderItem = ({ item }: StepsT) => {
     const { plan, count, status } = item
     return (
@@ -128,7 +130,13 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
       ].slice()
 
   const onPressAva = async () => {
-    OnlinePlayer.uploadImage()
+    setLoadImage(true)
+    try {
+      await OnlinePlayer.uploadImage()
+    } catch (error) {
+      captureException(error)
+    }
+    setLoadImage(false)
   }
 
   return (
@@ -153,6 +161,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                       onPress={() =>
                         navigation.navigate('USER_EDIT', OnlinePlayer.store.profile)
                       }
+                      loading={loadImage}
                       onPressAva={onPressAva}
                     />
                     <Space height={s(20)} />

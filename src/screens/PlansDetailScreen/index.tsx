@@ -42,7 +42,21 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
   const { h3 } = styles
   const { isReported } = OnlinePlayer.store
   const [isPlaying, setIsPaying] = useState<boolean>(false)
-  const [soundLoading, setSoundLoading] = useState<boolean>(true)
+  const [soundLoading, setSoundLoading] = useState<boolean>(false)
+
+  useFocusEffect(
+    useCallback(() => {
+      const backhandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleCross()
+        return true
+      })
+      return () => {
+        soundRef.current?.stop()
+        backhandler.remove()
+      }
+    }, [])
+  )
+
   const handleCross = () => {
     if (isReported) {
       navigation.goBack()
@@ -58,19 +72,22 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
         )
     }
   }
-  useEffect(() => {
-    const sound = new Sound(audioUrl, undefined)
-    soundRef.current = sound
-    const backhandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handleCross()
-      return true
-    })
-    return () => {
-      backhandler.remove()
-      soundRef.current?.stop()
-    }
-  }, [])
+
   const onToggle = () => {
+    if (!soundRef.current) {
+      const sound = new Sound(audioUrl, undefined)
+      soundRef.current = sound
+      const interval = setInterval(() => {
+        const isLoaded = soundRef.current?.isLoaded()
+        setSoundLoading(!isLoaded)
+        if (isLoaded) {
+          soundRef.current?.play()
+          setIsPaying(true)
+          clearInterval(interval)
+        }
+      }, 400)
+      return
+    }
     if (soundRef.current?.isPlaying()) {
       soundRef.current.pause()
       setIsPaying(false)
@@ -81,17 +98,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
       }
     }
   }
-  useFocusEffect(
-    useCallback(() => {
-      const interval = setInterval(() => {
-        const isLoaded = soundRef.current?.isLoaded()
-        if (!isLoaded !== soundLoading) {
-          setSoundLoading(!isLoaded)
-        }
-      }, 400)
-      return () => clearInterval(interval)
-    }, [])
-  )
+
   return (
     <AppContainer
       onPress={handleCross}

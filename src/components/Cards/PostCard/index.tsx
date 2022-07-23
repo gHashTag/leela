@@ -187,12 +187,14 @@ export const PostCard: React.FC<postCardI> = observer(props => {
             onPress={handleLike}
             viewStyle={mediumBtn}
             color={heartColor}
+            iconSize={mediumButton + s(1)}
             ionicons
             name={heart}
             size={mediumButton}
           />
           <ButtonVectorIcon
             viewStyle={mediumBtn}
+            iconSize={mediumButton + s(1)}
             ionicons
             name="md-link-outline"
             onPress={handleShareLink}
@@ -259,6 +261,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
               onPress={handleLike}
               color={heartColor}
               ionicons
+              iconSize={smallButton + s(1)}
               viewStyle={smallBtn}
               name={heart}
               size={smallButton + s(1)}
@@ -267,6 +270,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
               viewStyle={[smallBtn, { justifyContent: 'flex-end', marginRight: s(5) }]}
               name="md-link-outline"
               ionicons
+              iconSize={smallButton + s(1)}
               onPress={handleShareLink}
               size={smallButton + s(1)}
             />

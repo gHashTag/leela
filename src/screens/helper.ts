@@ -353,12 +353,7 @@ const onSignIn = async (user: FirebaseAuthTypes.User, isKeychain?: boolean) => {
   }
 }
 
-const checkVersion = async () => {
-  const { minVersion } = await (
-    await fetch(
-      'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/minVersion.json'
-    )
-  ).json()
+const checkVersion = async (minVersion: string) => {
   if (semver.lt(version, minVersion)) {
     OpenUpdateVersionModal()
   }

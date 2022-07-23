@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 import TabBar from './TabBar'
 import * as Sentry from '@sentry/react'
+import notifee from '@notifee/react-native'
 import {
   GameScreen,
   RulesScreen,
@@ -116,6 +117,7 @@ const Tab = () => {
       }
     }
   }, [])
+
   useFocusEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
       OpenExitModal()
@@ -123,13 +125,13 @@ const Tab = () => {
     })
     return () => backHandler.remove()
   })
+
   useEffect(() => {
     const unsub = NetInfo.addEventListener(state => {
       if (state.isConnected === false && DiceStore.online) {
         OpenNetworkModal()
       }
     })
-    checkVersion()
     return unsub
   }, [])
 
@@ -154,17 +156,19 @@ const Tab = () => {
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
 const App = () => {
-  const scheme = useColorScheme()
-  const theme = scheme === 'dark' ? DarkTheme : LightTheme
-  const color = scheme === 'dark' ? 'light-content' : 'dark-content'
+  const isDark = useColorScheme() === 'dark'
+  const theme = isDark ? DarkTheme : LightTheme
+  const color = isDark ? 'light-content' : 'dark-content'
 
   useEffect(() => {
-    SystemNavigationBar.setNavigationColor(
-      scheme === 'dark' ? black : white,
-      scheme === 'dark' ? false : true
-    )
+    notifee.setBadgeCount(0)
+    SystemNavigationBar.setNavigationColor(isDark ? black : white, isDark ? false : true)
     SystemNavigationBar.setNavigationBarDividerColor(lightGray)
     Orientation.lockToPortrait()
+    const unsub = getFireBaseRef(`/minVersion/`).on('value', async snap => {
+      checkVersion(snap.val())
+    })
+    return () => getFireBaseRef('/minVersion/').off('value', unsub)
   }, [])
 
   return (
@@ -175,7 +179,7 @@ const App = () => {
       ref={navRef}
       theme={theme}
     >
-      <StatusBar backgroundColor={scheme === 'dark' ? black : white} barStyle={color} />
+      <StatusBar backgroundColor={isDark ? black : white} barStyle={color} />
       <Stack.Navigator
         screenOptions={{
           headerShown: false
