@@ -34,8 +34,10 @@ export const OfflinePlayers = {
     OfflinePlayers.store.start = initStore.start
     OfflinePlayers.store.histories = initStore.histories
     OfflinePlayers.store.finish = initStore.finish
-    actionsDice.setMessage(I18n.t('sixToBegin'))
     navigate('WELCOME_SCREEN')
+  },
+  startGame() {
+    actionsDice.setMessage(I18n.t('sixToBegin'))
   },
   updateStep(id: number): void {
     upStepOffline(id)

@@ -52,7 +52,7 @@ import {
 
 import { UI } from './UI'
 
-import { DiceStore, OtherPlayers } from './store'
+import { DiceStore, OfflinePlayers, OtherPlayers } from './store'
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
 import { checkVersion, getFireBaseRef } from './screens/helper'
@@ -115,6 +115,8 @@ const Tab = () => {
         unsub2()
         getFireBaseRef('/online/').off('child_changed', unsub3)
       }
+    } else if (!DiceStore.online) {
+      OfflinePlayers.startGame()
     }
   }, [])
 

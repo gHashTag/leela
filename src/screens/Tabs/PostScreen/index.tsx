@@ -20,7 +20,7 @@ interface Ipost {
 const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
   const listRef = useRef<any>()
   const scrollToId = route.params?.scrollToId
-  const [limit, setLimit] = useState(10)
+  const [limit, setLimit] = useState(15)
 
   useFocusEffect(() => {
     if (scrollToId) {
@@ -45,7 +45,7 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
   }, [limit])
 
   const newLimit = () => {
-    setLimit(pr => pr + 10)
+    setLimit(pr => pr + 15)
   }
   const load = PostStore.store.loadPosts && PostStore.store.posts.length === 0
   return load ? (

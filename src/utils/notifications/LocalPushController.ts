@@ -61,34 +61,36 @@ async function cancel(id?: string, reply?: boolean) {
   if (id) {
     await notifee.cancelDisplayedNotification(id)
     await notifee.cancelNotification(id)
-    const channelId = await notifee.createChannel({
-      id: 'default',
-      name: 'Default Channel',
-      badge: true
-    })
+    if (reply) {
+      const channelId = await notifee.createChannel({
+        id: 'default',
+        name: 'Default Channel',
+        badge: true
+      })
 
-    await notifee.displayNotification({
-      id,
-      title: 'Done',
-      body: 'Sent successfully!',
-      android: {
-        channelId,
-        smallIcon: 'ic_notifee_cube',
-        color: '#1EE4EC',
-        largeIcon: require('../../../assets/icons/512.png'),
-        badgeIconType: AndroidBadgeIconType.SMALL,
-        actions: [
-          {
-            title: '<p style="color: #f44336;">Dismiss</p>',
-            pressAction: {
-              id: 'dismiss'
+      await notifee.displayNotification({
+        id,
+        title: 'Done',
+        body: 'Sent successfully!',
+        android: {
+          channelId,
+          smallIcon: 'ic_notifee_cube',
+          color: '#1EE4EC',
+          largeIcon: require('../../../assets/icons/512.png'),
+          badgeIconType: AndroidBadgeIconType.SMALL,
+          actions: [
+            {
+              title: '<p style="color: #f44336;">Dismiss</p>',
+              pressAction: {
+                id: 'dismiss'
+              }
             }
-          }
-        ],
-        groupSummary: true,
-        groupId: 'new-comment'
-      }
-    })
+          ],
+          groupSummary: true,
+          groupId: 'new-comment'
+        }
+      })
+    }
   }
 }
 

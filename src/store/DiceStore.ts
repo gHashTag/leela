@@ -27,6 +27,7 @@ autorun(() => {
     : `${I18n.t('playerTurn')} # ${DiceStore.players}`
   DiceStore.topMessage = textTopMess
 })
+
 const actionsDice = {
   setOnline(bool: boolean): void {
     DiceStore.online = bool

@@ -75,7 +75,6 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       await resetPlayer()
       await resetHistory()
       await updatePlan(68)
-      actionsDice.setMessage(I18n.t('sixToBegin'))
     } catch (err) {
       captureException(err)
     }
@@ -150,6 +149,11 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
           history: curProf.history
             .sort((a, b) => b.createDate - a.createDate)
             .slice(0, 30)
+        }
+        if (curProf.plan === 68 && !curProf.finish) {
+          actionsDice.setMessage(I18n.t('sixToBegin'))
+        } else {
+          actionsDice.setMessage(' ')
         }
         OnlinePlayer.store.avatar = await getIMG(curProf.avatar)
         DiceStore.startGame = curProf.start
