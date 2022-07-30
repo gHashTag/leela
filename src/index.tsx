@@ -5,7 +5,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 import TabBar from './TabBar'
 import * as Sentry from '@sentry/react'
-import notifee from '@notifee/react-native'
 import {
   GameScreen,
   RulesScreen,
@@ -163,7 +162,6 @@ const App = () => {
   const color = isDark ? 'light-content' : 'dark-content'
 
   useEffect(() => {
-    notifee.setBadgeCount(0)
     SystemNavigationBar.setNavigationColor(isDark ? black : white, isDark ? false : true)
     SystemNavigationBar.setNavigationBarDividerColor(lightGray)
     Orientation.lockToPortrait()

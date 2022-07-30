@@ -2,6 +2,19 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>branch_key</key>
+	<dict>
+		<key>test</key>
+		<string>key_test_bbX7bfj6UkJAq51lEzzdJccesAg1Kzi1</string>
+		<key>live</key>
+		<string>key_live_mcYXcafYOnTCF05gBCjf5chpszeXGueK</string>
+	</dict>
+	<key>branch_universal_link_domains</key>
+	<array>
+		<string>leelagame.test.app.link</string>
+		<string>leelagame-alternate.app.link</string>
+		<string>leelagame.app.link</string>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>

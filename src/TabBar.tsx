@@ -24,7 +24,7 @@ export default observer(function TabBar({
     container,
     {
       backgroundColor: scheme === 'dark' ? black : white,
-      paddingBottom: bottom + s(5)
+      paddingBottom: bottom + s(10)
     }
   ]
 

@@ -9,12 +9,11 @@ import {
   PostCard,
   Space
 } from '../../components'
-import { captureException, lightGray, paleBlue } from '../../constants'
+import { captureException, goBack, lightGray, paleBlue } from '../../constants'
 import { OnlinePlayer, PostStore } from '../../store'
 import { PostT, RootStackParamList } from '../../types'
 
 import { s, vs } from 'react-native-size-matters'
-import { nanoid } from 'nanoid/non-secure'
 import { observer } from 'mobx-react-lite'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { getUid } from '../helper'
@@ -31,9 +30,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
     const { postId, comment, translatedText, hideTranslate } = route.params
 
     const curItem: PostT | undefined = PostStore.store.posts.find(a => a.id === postId)
-    if (!curItem) return <Loading />
-    const itemIndex = PostStore.store.posts.findIndex(a => a.id === postId)
-    const commentData = PostStore.store.comments.filter(a => a.postId === curItem.id)
+    const commentData = PostStore.store.comments.filter(a => a.postId === curItem?.id)
     function newComment() {
       curItem &&
         navigation.navigate('INPUT_TEXT_MODAL', {
@@ -58,26 +55,21 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
     )
 
     useEffect(() => {
-      if (getUid() === undefined) {
-        navigation.navigate('WELCOME_SCREEN')
-        return
+      const handleLink = async () => {
+        if (getUid() === undefined) {
+          navigation.navigate('WELCOME_SCREEN')
+          return
+        }
+        comment && setTimeout(newComment, 900)
+        if (!curItem) {
+          await PostStore.getOncePost()
+          await OnlinePlayer.getProfile()
+        }
       }
-      comment && setTimeout(newComment, 900)
-      if (!curItem) {
-        PostStore.getOncePost()
-        OnlinePlayer.getProfile()
-      }
+      handleLink()
     }, [])
 
-    function GoPostScreen() {
-      navigation.canGoBack()
-        ? navigation.goBack()
-        : navigation.navigate('MAIN', {
-            screen: 'TAB_BOTTOM_1',
-            params: { scrollToId: itemIndex !== -1 ? itemIndex : 0 }
-          })
-    }
-
+    if (!curItem) return <Loading />
     return (
       <FlatList
         removeClippedSubviews={false}
@@ -88,7 +80,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
               iconLeft=":back:"
               iconRight={null}
               title={I18n.t('post')}
-              onPress={GoPostScreen}
+              onPress={navigation.goBack}
             />
             <PostCard
               postId={postId}

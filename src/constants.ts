@@ -1,4 +1,4 @@
-import { Alert, Dimensions, Linking } from 'react-native'
+import { Alert, Dimensions, Linking, Platform } from 'react-native'
 import * as Sentry from '@sentry/react-native'
 import { createNavigationContainerRef } from '@react-navigation/native'
 import { ButtonsModalT } from './types'
@@ -78,6 +78,7 @@ export const win = Dimensions.get('window')
 export const W = win.width
 export const H = win.height
 export const imgH = Math.round((W * 9) / 16)
+export const isIos = Platform.OS === 'ios'
 
 export const openUrl = async (url: string) => {
   await Linking.openURL(url)

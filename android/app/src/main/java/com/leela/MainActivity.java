@@ -5,10 +5,12 @@ import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.ReactRootView;
 import org.devio.rn.splashscreen.SplashScreen;
 import android.os.Bundle;
+import io.branch.rnbranch.*;
 import android.content.Intent;
 import android.content.res.Configuration;
 
 public class MainActivity extends ReactActivity {
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     SplashScreen.show(this, R.style.SplashTheme, true);  // here
@@ -29,6 +31,18 @@ public class MainActivity extends ReactActivity {
   protected String getMainComponentName() {
     return "leela";
   }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    RNBranchModule.initSession(getIntent().getData(), this);
+  }
+  
+  @Override
+  public void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    RNBranchModule.onNewIntent(intent);
+  }  
 
   /**
    * Returns the instance of the {@link ReactActivityDelegate}. There the RootView is created and

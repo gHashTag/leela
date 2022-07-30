@@ -13,6 +13,7 @@ import com.leela.newarchitecture.MainApplicationReactNativeHost;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import org.wonday.orientation.OrientationActivityLifecycle;
+import io.branch.rnbranch.RNBranchModule;
 
 public class MainApplication extends Application implements ReactApplication {
 
@@ -53,6 +54,9 @@ public class MainApplication extends Application implements ReactApplication {
   @Override
   public void onCreate() {
     super.onCreate();
+    RNBranchModule.enableLogging();
+  
+    RNBranchModule.getAutoInstance(this);
     registerActivityLifecycleCallbacks(OrientationActivityLifecycle.getInstance());
     // If you opted-in for the New Architecture, we enable the TurboModule system
     ReactFeatureFlags.useTurboModules = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;

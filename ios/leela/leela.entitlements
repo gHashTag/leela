@@ -7,6 +7,9 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:leela.page.link</string>
+		<string>applinks:leelagame.app.link</string>
+		<string>applinks:leelagame-alternate.app.link</string>
+		<string>applinks:leelagame.test.app.link</string>
 	</array>
 </dict>
 </plist>

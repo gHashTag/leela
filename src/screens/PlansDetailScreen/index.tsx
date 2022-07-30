@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { observer } from 'mobx-react-lite'
-import { s, vs } from 'react-native-size-matters'
+import { ms, s, vs } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
 import {
   AppContainer,
@@ -112,7 +112,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
         <ScrollView>
           <Space height={vs(10)} />
           {soundLoading ? (
-            <Loading type="ThreeBounce" />
+            <Loading size={ms(70, 0.5)} />
           ) : (
             <ButtonPlay onPress={onToggle} isStop={isPlaying} />
           )}

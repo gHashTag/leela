@@ -207,7 +207,6 @@ export const PostStore = {
       .get()
       .then(snap => OtherPlayers.getOtherProf({ snapshot: snap }))
     await firestore().collection('Posts').get().then(PostStore.fetchPosts)
-    await firestore().collection('Comments').get().then(PostStore.fetchComments)
   },
   translateText: async (text: string) => {
     const translator = TranslatorFactory.createTranslator()

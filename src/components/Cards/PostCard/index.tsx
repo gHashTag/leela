@@ -16,7 +16,7 @@ import { OnlinePlayer, PostStore } from '../../../store'
 import { observer } from 'mobx-react-lite'
 import { HashtagFormat } from '../../TextComponents'
 import { getTimeStamp, getUid } from '../../../screens/helper'
-import { buildLink, I18n, lang } from '../../../utils'
+import { buildReportLink, I18n, lang } from '../../../utils'
 import { EmojiText } from '../../EmojiText'
 import { getActions } from './ModalActions'
 
@@ -72,8 +72,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
       })
   }
 
-  const smallButton = W / 4 - s(72)
-  const mediumButton = W / 4 - s(68)
+  const iconSize = W / 4 - s(72)
 
   async function handleLike() {
     if (item && isLiked) {
@@ -102,12 +101,12 @@ export const PostCard: React.FC<postCardI> = observer(props => {
   }
 
   async function handleShareLink() {
-    // @ts-expect-error
-    const dynamicLink = await buildLink(`/detail_post/${item.id}`)
-    if (typeof dynamicLink === 'string') {
+    const { id, text } = item || {}
+    if (id && text) {
+      const deepLink = await buildReportLink(id, text)
       Share.share({
         title: 'Leela Chakra',
-        message: dynamicLink
+        message: deepLink
       })
     }
   }
@@ -170,8 +169,9 @@ export const PostCard: React.FC<postCardI> = observer(props => {
               onPress={handleAdminMenu}
               viewStyle={mediumBtn}
               ionicons
+              iconSize={iconSize + s(3)}
               name="md-ellipsis-vertical-circle"
-              size={mediumButton}
+              size={iconSize}
             />
           )}
           <ButtonVectorIcon
@@ -180,25 +180,24 @@ export const PostCard: React.FC<postCardI> = observer(props => {
             viewStyle={mediumBtn}
             ionicons
             name="chatbubble-outline"
-            size={mediumButton}
+            size={iconSize}
           />
           <ButtonVectorIcon
             count={likeCount}
             onPress={handleLike}
             viewStyle={mediumBtn}
             color={heartColor}
-            iconSize={mediumButton + s(1)}
+            iconSize={iconSize + s(3)}
             ionicons
             name={heart}
-            size={mediumButton}
+            size={iconSize}
           />
           <ButtonVectorIcon
             viewStyle={mediumBtn}
-            iconSize={mediumButton + s(1)}
+            iconSize={iconSize + s(7)}
             ionicons
             name="md-link-outline"
             onPress={handleShareLink}
-            size={mediumButton}
           />
         </View>
       </View>
@@ -221,9 +220,9 @@ export const PostCard: React.FC<postCardI> = observer(props => {
                 viewStyle={[smallBtn, { alignItems: 'flex-end', marginRight: s(4) }]}
                 ionicons
                 name="md-ellipsis-vertical-circle"
-                size={smallButton + s(3)}
+                size={iconSize + s(3)}
               />
-              <Space height={vs(11)} />
+              <Space height={vs(12)} />
             </>
           )}
         </View>
@@ -254,25 +253,24 @@ export const PostCard: React.FC<postCardI> = observer(props => {
               viewStyle={[smallBtn, { justifyContent: 'flex-start' }]}
               ionicons
               name="chatbubble-outline"
-              size={smallButton}
+              size={iconSize}
             />
             <ButtonVectorIcon
               count={likeCount}
               onPress={handleLike}
               color={heartColor}
               ionicons
-              iconSize={smallButton + s(1)}
+              iconSize={iconSize + s(1.5)}
               viewStyle={smallBtn}
               name={heart}
-              size={smallButton + s(1)}
+              size={iconSize}
             />
             <ButtonVectorIcon
               viewStyle={[smallBtn, { justifyContent: 'flex-end', marginRight: s(5) }]}
               name="md-link-outline"
               ionicons
-              iconSize={smallButton + s(1)}
+              iconSize={iconSize + s(4)}
               onPress={handleShareLink}
-              size={smallButton + s(1)}
             />
           </View>
         </View>
@@ -280,7 +278,7 @@ export const PostCard: React.FC<postCardI> = observer(props => {
     </Pressable>
   )
 })
-const lot = 'fgh'
+
 const style = StyleSheet.create({
   container: {
     paddingLeft: s(12),

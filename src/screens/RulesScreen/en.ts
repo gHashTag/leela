@@ -57,13 +57,13 @@ export const en = [
 
 2. The following topics are strictly prohibited from discussion and mention: racism, Nazism, drugs, pornography, suicide.
 
-3. It is forbidden to insult other users in reports and comments
+3. It is forbidden to insult other users in reports and comments.
 
 4. It is forbidden to flood, flame, spam.
 
-5. It is forbidden to send reports and comments of an advertising nature
+5. It is forbidden to send reports and comments of an advertising nature.
 
-6. Treat all people with kindness and respect)
+6. Treat all people with kindness and respect.
 
 We will introduce moderation of posts and comments, and if we find a violation of the rules, we will most likely, we will block you or delete your report/comment.`,
     url: 'https://s3.eu-central-1.wasabisys.com/database999/Books/LeelaChakra/En/01-Notes.wav',
