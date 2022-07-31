@@ -16,7 +16,6 @@ export const linking: LinkingOptions<RootStackParamList> = {
     const normalUrl = formatLink(lastParams)
 
     if (uri && !!normalUrl) {
-      console.log('🚀 - normalUrl', normalUrl)
       return normalUrl
     }
   },

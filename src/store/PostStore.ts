@@ -30,6 +30,12 @@ interface postStoreT {
 interface delCommentT {
   commentId: string
   isReply: boolean
+  postId?: string
+}
+
+interface delCommentIdT {
+  commentId: string
+  postId?: string
 }
 
 export const PostStore = {
@@ -87,19 +93,31 @@ export const PostStore = {
       await firestore().collection('Comments').doc(path).set(comment)
     }
   },
-  delComment: async ({ commentId, isReply }: delCommentT) => {
+  removeCommentIdInPost: async ({ commentId, postId }: delCommentIdT) => {
+    postId &&
+      firestore()
+        .collection('Posts')
+        .doc(postId)
+        .update({ comments: firestore.FieldValue.arrayRemove(commentId) })
+  },
+  delComment: async ({ commentId, isReply, postId }: delCommentT) => {
     await firestore().collection('Comments').doc(commentId).delete()
     PostStore.store.comments = PostStore.store.comments.filter(a => a.id !== commentId)
-    if (!isReply)
+    PostStore.removeCommentIdInPost({ commentId, postId })
+    if (!isReply) {
       firestore()
         .collection('Comments')
         .where('commentId', '==', commentId)
         .get()
         .then(function (querySnap) {
           querySnap.forEach(function (doc) {
+            const data = doc.data()
+            const commentId = data.id
+            PostStore.removeCommentIdInPost({ commentId, postId })
             doc.ref.delete()
           })
         })
+    }
   },
   replyComment: async ({ text, commentId, postId, commentOwner }: FormReplyCom) => {
     const userUid = auth().currentUser?.uid
@@ -248,8 +266,9 @@ export const PostStore = {
       .get()
       .then(querySnap => {
         querySnap.forEach(async doc => {
-          const comId = doc.data().id
-          PostStore.delComment({ commentId: comId, isReply: false })
+          const data = doc.data()
+          const comId = data.id
+          PostStore.delComment({ commentId: comId, isReply: true })
         })
       })
     firestore().collection('Posts').doc(id).delete()
@@ -273,9 +292,11 @@ export const PostStore = {
       .get()
       .then(querySnap => {
         querySnap.forEach(async doc => {
-          const commentId = doc.data().id
-          const isReply = doc.data().reply
-          PostStore.delComment({ commentId, isReply })
+          const data = doc.data()
+          const commentId = data.id
+          const isReply = data.reply
+          const postId = data.postId
+          PostStore.delComment({ commentId, isReply, postId })
         })
       })
   },

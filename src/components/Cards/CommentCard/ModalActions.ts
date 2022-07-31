@@ -50,7 +50,11 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
     {
       key: 'DEL',
       onPress: () => {
-        PostStore.delComment({ commentId: item.id, isReply: item.reply })
+        PostStore.delComment({
+          commentId: item.id,
+          isReply: item.reply,
+          postId: item.postId
+        })
       },
       title: I18n.t('delete'),
       color: 'red',
