@@ -18,6 +18,12 @@ export function NetworkModal({ navigation }: NetworkModalT) {
     colors: { background }
   } = useTheme()
 
+  function onPress() {
+    OnlinePlayer.SignOutToOffline()
+    navigation.goBack()
+    navigation.navigate('SELECT_PLAYERS_SCREEN')
+  }
+
   useFocusEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       onPress()
@@ -28,10 +34,6 @@ export function NetworkModal({ navigation }: NetworkModalT) {
     }
   })
 
-  function onPress() {
-    OnlinePlayer.SignOutToOffline()
-    navigation.navigate('SELECT_PLAYERS_SCREEN')
-  }
   return (
     <View style={container}>
       <View style={[modalView, { backgroundColor: background }]}>

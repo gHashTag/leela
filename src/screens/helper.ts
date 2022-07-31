@@ -8,13 +8,7 @@ import {
 } from '../constants'
 import ImagePicker from 'react-native-image-crop-picker'
 import { UserT, HistoryT } from '../types'
-import {
-  actionsDice,
-  DiceStore,
-  fetchBusinesses,
-  OnlinePlayer,
-  PurchasesStore
-} from '../store'
+import { actionsDice, fetchBusinesses, OnlinePlayer } from '../store'
 import storage from '@react-native-firebase/storage'
 import { nanoid } from 'nanoid/non-secure'
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
@@ -334,7 +328,6 @@ const onSignIn = async (user: FirebaseAuthTypes.User, isKeychain?: boolean) => {
       } else if (!prof.avatar) {
         navigate('SIGN_UP_AVATAR')
       } else {
-        PurchasesStore.fetchOrCreateIdentiferData()
         navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
         !prof.isReported && OpenPlanReportModal(prof.plan)
         const reference = getFireBaseRef(`/online/${prof.owner}`)

@@ -99,7 +99,7 @@ const Tab = () => {
       const unsub2 = firestore()
         .collection('Profiles')
         .where('owner', '==', curUid)
-        .onSnapshot(s => s.docs.forEach(a => a.data().status === 'ban' && banAlert()))
+        .onSnapshot(s => s?.docs?.forEach(a => a.data().status === 'ban' && banAlert()))
       const unsub3 = getFireBaseRef(`/online/`).on('child_changed', async changed => {
         await firestore()
           .collection('Profiles')

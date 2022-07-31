@@ -76,7 +76,6 @@ function Init() {
       if (state === 'active') {
         await notifee.setBadgeCount(0)
       }
-      console.log(state)
     })
     return () => {
       unsub.remove()
