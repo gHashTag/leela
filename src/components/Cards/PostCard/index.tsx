@@ -6,7 +6,6 @@ import {
   fuchsia,
   lightGray,
   W,
-  gray,
   navigate,
   OpenReplyModal,
   orange
@@ -16,9 +15,10 @@ import { OnlinePlayer, PostStore } from '../../../store'
 import { observer } from 'mobx-react-lite'
 import { HashtagFormat } from '../../TextComponents'
 import { getTimeStamp, getUid } from '../../../screens/helper'
-import { buildReportLink, I18n, lang } from '../../../utils'
+import { I18n, lang } from '../../../utils'
 import { EmojiText } from '../../EmojiText'
 import { getActions } from './ModalActions'
+import { buildReportLink } from '../../../utils/linkHelpers'
 
 interface postCardI {
   postId: string
@@ -43,7 +43,6 @@ export const PostCard: React.FC<postCardI> = observer(props => {
   if (!item) {
     return <Text title="Not found" h="h1" />
   }
-  const itemIndex = PostStore.store.posts.findIndex(a => a.id === postId)
   const [transText, setTransText] = useState('')
   const [hideTranslate, setHideTranslate] = useState(true)
   const isLiked = item.liked?.findIndex(a => a === getUid()) === -1 ? false : true

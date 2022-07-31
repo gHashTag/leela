@@ -9,7 +9,7 @@ import {
   PostCard,
   Space
 } from '../../components'
-import { captureException, goBack, lightGray, paleBlue } from '../../constants'
+import { captureException, lightGray } from '../../constants'
 import { OnlinePlayer, PostStore } from '../../store'
 import { PostT, RootStackParamList } from '../../types'
 
@@ -31,6 +31,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
 
     const curItem: PostT | undefined = PostStore.store.posts.find(a => a.id === postId)
     const commentData = PostStore.store.comments
+
     function newComment() {
       curItem &&
         navigation.navigate('INPUT_TEXT_MODAL', {
@@ -42,6 +43,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
             })
         })
     }
+
     useFocusEffect(
       useCallback(() => {
         if (curItem) {
@@ -51,7 +53,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
             .onSnapshot(PostStore.fetchComments, err => captureException(err))
           return subComments
         }
-      }, [])
+      }, [curItem])
     )
 
     useEffect(() => {

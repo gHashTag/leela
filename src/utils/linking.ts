@@ -4,6 +4,7 @@ import { captureException } from '../constants'
 import { RootStackParamList } from '../types'
 import Branch from 'react-native-branch'
 import { formatLink, subscribeDeepLinkUrl } from './linkHelpers'
+import notifee from '@notifee/react-native'
 
 export const linking: LinkingOptions<RootStackParamList> = {
   prefixes: ['https://leelagame.app.link', 'leelagame://'],
@@ -12,6 +13,11 @@ export const linking: LinkingOptions<RootStackParamList> = {
   // которая используется для открытия приложения.
   async getInitialURL() {
     const uri = await Linking.getInitialURL()
+    const { notification } = (await notifee.getInitialNotification()) || {}
+    const reportId = notification?.data?.postId
+    if (reportId) {
+      return `leelagame://reply_detail/${reportId}`
+    }
     const lastParams = await Branch.getLatestReferringParams()
     const normalUrl = formatLink(lastParams)
 
@@ -50,26 +56,6 @@ export const linking: LinkingOptions<RootStackParamList> = {
       },
       WELCOME_SCREEN: '*'
     }
-  }
-}
-
-export async function buildReportLink(reportId: string, reportText: string) {
-  try {
-    const buo = await Branch.createBranchUniversalObject(`reply_detail/${reportId}`, {
-      title: 'Link to plan report',
-      contentDescription: reportText,
-      contentMetadata: {
-        customMetadata: {
-          reportId
-        }
-      }
-    })
-    let { url } = await buo.generateShortUrl({}, {})
-
-    return url
-  } catch (error) {
-    captureException(error)
-    return 'error'
   }
 }
 

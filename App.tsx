@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { LogBox, Platform } from 'react-native'
+import { AppState, LogBox, Platform } from 'react-native'
 import { configure } from 'mobx'
 import { configurePersistable } from 'mobx-persist-store'
 import * as Sentry from '@sentry/react-native'
@@ -18,7 +18,7 @@ import Purchases from 'react-native-purchases'
 import { GOOGLE_TRANSLATE_API_KEY } from '@env'
 import { lang } from './src/utils'
 import SplashScreen from 'react-native-splash-screen'
-
+import notifee from '@notifee/react-native'
 const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
 
 configurePersistable(
@@ -67,10 +67,19 @@ LogBox.ignoreLogs([
 function Init() {
   useEffect(() => {
     SplashScreen.hide()
-    if (Platform.OS === 'ios') {
-      Purchases.setup('appl_ACmucVIVHSuJWCXwWfYUzJlXKno')
-    } else if (Platform.OS === 'android') {
-      Purchases.setup('goog_hpKzEpktquSkYpVmjVilrzYRvTn')
+    // if (Platform.OS === 'ios') {
+    //   Purchases.setup('appl_ACmucVIVHSuJWCXwWfYUzJlXKno')
+    // } else if (Platform.OS === 'android') {
+    //   Purchases.setup('goog_hpKzEpktquSkYpVmjVilrzYRvTn')
+    // }
+    const unsub = AppState.addEventListener('change', async state => {
+      if (state === 'active') {
+        await notifee.setBadgeCount(0)
+      }
+      console.log(state)
+    })
+    return () => {
+      unsub.remove()
     }
   }, [])
   return (
