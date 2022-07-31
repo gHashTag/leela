@@ -87,18 +87,28 @@ const SignUp = ({ navigation }: SignUpT): ReactElement => {
           setLoading(false)
         })
         .catch(error => {
-          console.log(error)
-          setLoading(false)
-          captureException(error.code)
-          if (error.code === 'auth/email-already-in-use') {
-            setError(I18n.t('usernameExistsException'))
-          } else if (error.code === 'auth/invalid-email') {
-            setError(I18n.t('invalidEmail'))
-          } else if (error.code === 'auth/network-request-failed') {
-            setError(I18n.t('networkRequestFailed'))
-          } else {
-            setError(error.code)
+          switch (error.code) {
+            case 'auth/invalid-email':
+              setError(I18n.t('invalidEmail'))
+              break
+            case 'auth/email-already-in-use':
+              setError(I18n.t('usernameExistsException'))
+              break
+            case 'auth/wrong-password':
+              setError(I18n.t('forgotPassword'))
+              break
+            case 'auth/network-request-failed':
+              setError(I18n.t('networkRequestFailed'))
+              break
+            case 'auth/too-many-requests':
+              setError(I18n.t('manyRequests'))
+              break
+            default:
+              captureException(error.message)
+              setError(error.code)
+              break
           }
+          setLoading(false)
         })
     }
   }

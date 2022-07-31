@@ -8,13 +8,11 @@ export default {
   passwordsDoNotMatch: 'Passwords do not match!',
   accountNotVerifiedYet: 'Account not verified yet',
   resetYourPassword: 'Existing user found. Please reset your password',
-  forgotPassword: 'Forgot Password?',
   userDoesNotExist: 'User does not exist!',
   insertCode: 'Insert the code sent to your mail',
   confirm: 'Confirm',
   resendCode: 'Resend message?',
   invalidVerificationCode: 'Invalid verification code provided, please try again.',
-  usernameExistsException: 'An account with the given email already exists.',
   firstName: 'First name',
   lastName: 'Last name',
   done: 'Done',
@@ -93,7 +91,6 @@ export default {
   exit: 'Exit',
   cancel: 'Cancel',
   goOffline: 'Go offline',
-  networkRequestFailed: 'Check internet connection',
   uComment: 'Your comment',
   // timeLeft
   h0: 'h.',
@@ -109,10 +106,15 @@ export default {
   // auth errors
   userNotFound: 'This user does not exist',
   invalidEmail: 'This field must be an e-mail',
+  forgotPassword: 'Forgot Password?',
+  networkRequestFailed: 'Check internet connection',
+  usernameExistsException: 'An account with the given email already exists',
+  // text files error
   shortPassword: 'password must be 6 characters long',
   requireField: 'Required field',
   manyCharacters: 'Too many symbols, maximum - ',
   fewCharacters: 'The minimum must be 100 characters',
+  manyRequests: 'Too many authentication requests, please try again later',
   post: 'Report',
   send: 'Send',
   // for signUp_username

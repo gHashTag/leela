@@ -79,18 +79,26 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
         await onSignIn(user.user)
       })
       .catch(err => {
-        captureException(err.message)
-        if (err.code === 'auth/invalid-email') {
-          setError(I18n.t('invalidEmail'))
-        } else if (err.code === 'auth/user-not-found') {
-          setError(I18n.t('userNotFound'))
-        } else if (err.code === 'auth/wrong-password') {
-          setError(I18n.t('forgotPassword'))
-        } else if (err.code === 'auth/network-request-failed') {
-          setError(I18n.t('networkRequestFailed'))
-        } else {
-          setError(err.code)
-          console.log(err.code)
+        switch (err.code) {
+          case 'auth/invalid-email':
+            setError(I18n.t('invalidEmail'))
+            break
+          case 'auth/user-not-found':
+            setError(I18n.t('userNotFound'))
+            break
+          case 'auth/wrong-password':
+            setError(I18n.t('forgotPassword'))
+            break
+          case 'auth/network-request-failed':
+            setError(I18n.t('networkRequestFailed'))
+            break
+          case 'auth/too-many-requests':
+            setError(I18n.t('manyRequests'))
+            break
+          default:
+            captureException(err.message)
+            setError(err.code)
+            break
         }
       })
     setLoading(false)
