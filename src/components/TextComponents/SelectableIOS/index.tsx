@@ -26,7 +26,13 @@ export function SelectableIOS({ h, title, textStyle, oneColor, colors }: Selecta
     ? [{ ...textStyles[h], color: curColor }, hasShadow && { textShadowColor: primary }]
     : undefined
   return (
-    <TextInput editable={false} multiline style={[hStyle, textStyle]} value={title} />
+    <TextInput
+      scrollEnabled={false}
+      editable={false}
+      multiline
+      style={[hStyle, textStyle]}
+      value={title}
+    />
   )
 }
 interface SelectableIosT {

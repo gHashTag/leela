@@ -55,7 +55,7 @@ export function SubCommentCard({ item, index }: SubComT) {
       <Space height={vs(3)} />
       <View style={textContainer}>
         <Space width={s(5)} />
-        <HashtagFormat hashTagColor={fuchsia} title={text} h="h6" />
+        <HashtagFormat hashTagColor={fuchsia} title={text} h="h6" selectable />
       </View>
     </View>
   )

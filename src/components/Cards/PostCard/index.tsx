@@ -25,19 +25,11 @@ interface postCardI {
   isDetail?: boolean
   translatedText?: string
   isHideTranslate?: boolean
-  index?: number
   onPressCom?: () => void
 }
 
 export const PostCard: React.FC<postCardI> = observer(props => {
-  const {
-    postId,
-    isDetail = false,
-    onPressCom,
-    translatedText,
-    isHideTranslate,
-    index
-  } = props
+  const { postId, isDetail = false, onPressCom, translatedText, isHideTranslate } = props
 
   const item = PostStore.store.posts.find(a => a.id === postId)
   if (!item) {
@@ -51,9 +43,6 @@ export const PostCard: React.FC<postCardI> = observer(props => {
     if (translatedText) {
       setTransText(translatedText)
       setHideTranslate(Boolean(isHideTranslate))
-    }
-    if (index !== undefined && index < 6) {
-      handleTranslate()
     }
   }, [])
 

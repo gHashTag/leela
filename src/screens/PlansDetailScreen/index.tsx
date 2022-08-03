@@ -112,7 +112,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
         <ScrollView>
           <Space height={vs(10)} />
           {soundLoading ? (
-            <Loading size={ms(70, 0.5)} />
+            <Loading size={s(60)} />
           ) : (
             <ButtonPlay onPress={onToggle} isStop={isPlaying} />
           )}

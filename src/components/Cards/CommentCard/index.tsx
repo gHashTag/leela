@@ -91,7 +91,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
               <ButtonVectorIcon size={s(15)} name="chevron-down" onPress={OpenModal} />
               <Space width={s(5)} />
             </View>
-            <HashtagFormat h="h6" title={text} />
+            <HashtagFormat h="h6" title={text} selectable />
             <Space height={vs(20)} />
             <FlatList
               data={subCom}

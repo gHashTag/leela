@@ -1,7 +1,8 @@
 import notifee, { AndroidBadgeIconType } from '@notifee/react-native'
 import { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 import { nanoid } from 'nanoid/non-secure'
-import { Platform } from 'react-native'
+import { isIos } from '../../constants'
+import { updateAndroidBadgeCount } from './NotificationHelper'
 
 export default async function displayNotification(
   notification: FirebaseMessagingTypes.RemoteMessage
@@ -11,16 +12,15 @@ export default async function displayNotification(
     name: 'Default Channel',
     badge: true
   })
-
+  updateAndroidBadgeCount({ type: 'increment' })
+  notifee.incrementBadgeCount()
   await notifee.displayNotification({
-    title:
-      Platform.OS === 'ios'
-        ? notification.data?.title.replace(/(<([^>]+)>)/gi, '')
-        : notification.data?.title,
-    body:
-      Platform.OS === 'ios'
-        ? notification.data?.body.replace(/(<([^>]+)>)/gi, '')
-        : notification.data?.body,
+    title: isIos
+      ? notification.data?.title.replace(/(<([^>]+)>)/gi, '')
+      : notification.data?.title,
+    body: isIos
+      ? notification.data?.body.replace(/(<([^>]+)>)/gi, '')
+      : notification.data?.body,
     data: notification.data,
     id: nanoid(10),
     android: {

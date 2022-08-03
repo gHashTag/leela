@@ -26,9 +26,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center'
   },
   buttonStyle: {
-    top: 2,
-    width: ms(70, 0.5),
-    height: ms(70, 0.5)
+    width: s(60),
+    height: s(60)
   }
 })
 

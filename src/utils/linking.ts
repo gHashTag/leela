@@ -18,10 +18,9 @@ export const linking: LinkingOptions<RootStackParamList> = {
     if (reportId) {
       return `leelagame://reply_detail/${reportId}`
     }
-    const lastParams = await Branch.getLatestReferringParams()
+    const lastParams = await Branch.getLatestReferringParams(true)
     const normalUrl = formatLink(lastParams)
-
-    if (uri && !!normalUrl) {
+    if (normalUrl && uri) {
       return normalUrl
     }
   },
@@ -31,15 +30,24 @@ export const linking: LinkingOptions<RootStackParamList> = {
 
   // Пользовательская функция для подписки на входящие ссылки
   subscribe(listener) {
-    const unsubscribe = Branch.subscribe(({ error, params, uri }) => {
+    const unsubscribe = Branch.subscribe(async ({ error, params, uri }) => {
       if (error) {
         captureException(error)
         return
       }
+      if (uri) {
+        const url = formatLink(params)
+        subscribeDeepLinkUrl(listener, url)
+        return
+      }
+      const { notification } = (await notifee.getInitialNotification()) || {}
+      const reportId = notification?.data?.postId
 
-      const url = formatLink(params)
+      if (reportId) {
+        subscribeDeepLinkUrl(listener, `leelagame://reply_detail/${reportId}`)
 
-      subscribeDeepLinkUrl(listener, url)
+        return
+      }
     })
 
     return unsubscribe

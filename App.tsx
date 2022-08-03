@@ -7,18 +7,10 @@ import VersionInfo from 'react-native-version-info'
 import App from './src'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import {
-  PowerTranslator,
-  ProviderTypes,
-  TranslatorConfiguration,
-  TranslatorFactory
-} from 'react-native-power-translator'
 import Purchases from 'react-native-purchases'
-// @ts-expect-error
-import { GOOGLE_TRANSLATE_API_KEY } from '@env'
-import { lang } from './src/utils'
 import SplashScreen from 'react-native-splash-screen'
 import notifee from '@notifee/react-native'
+import { updateAndroidBadgeCount } from './src/utils/notifications/NotificationHelper'
 const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
 
 configurePersistable(
@@ -28,8 +20,6 @@ configurePersistable(
   },
   { delay: 200 }
 )
-
-TranslatorConfiguration.setConfig(ProviderTypes.Google, GOOGLE_TRANSLATE_API_KEY, lang)
 
 Sentry.init({
   dsn: 'https://1d8f316fe05b48f9b712acf5035683fb@o749286.ingest.sentry.io/5791363',
@@ -74,6 +64,7 @@ function Init() {
     // }
     const unsub = AppState.addEventListener('change', async state => {
       if (state === 'active') {
+        updateAndroidBadgeCount({ type: 'clear' })
         await notifee.setBadgeCount(0)
       }
     })

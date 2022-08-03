@@ -7644,6 +7644,11 @@ react-is@^16.13.0, react-is@^16.13.1, react-is@^16.7.0:
   resolved "https://registry.npmjs.org/react-is/-/react-is-16.13.1.tgz"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
+react-native-android-badge@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/react-native-android-badge/-/react-native-android-badge-0.5.0.tgz#94231f9eee078158f89ce237b93900f614f2bfe2"
+  integrity sha512-G9exnA4y0y80034HEF7IOHkt4q5e1CKTQGTDd98aVEKDOgZ3mNxQmz55M7zsFDndqGRc2Hhq7w+LVy4RVsh70A==
+
 react-native-app-link@^1.0.1:
   version "1.0.1"
   resolved "https://registry.npmjs.org/react-native-app-link/-/react-native-app-link-1.0.1.tgz"
@@ -7787,11 +7792,6 @@ react-native-pager-view@^5.4.17:
   version "5.4.24"
   resolved "https://registry.npmjs.org/react-native-pager-view/-/react-native-pager-view-5.4.24.tgz"
   integrity sha512-dRMB7i3B+mu4NCeIN6gqbR/kC/rr2wzqO0gisXDdJwJr78G24sWoTNpLEDFo3G8TFHY9nTMutVl5CUvkN2dp6g==
-
-react-native-power-translator@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.npmjs.org/react-native-power-translator/-/react-native-power-translator-1.1.1.tgz"
-  integrity sha512-btDroFDjSKO6KXb4kotRjnySS+3vAC7ZgQXbLyyj/O1JA2NB8j415jZWJjIGMFgh2fodVUf8N8W31ScAEbwbcA==
 
 react-native-purchases@^4.6.1:
   version "4.6.1"

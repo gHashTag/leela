@@ -4,12 +4,13 @@ import notifee, {
   EventType,
   Notification
 } from '@notifee/react-native'
-import { PostStore } from '../../store'
-import Branch from 'react-native-branch'
+import { BadgeAndroidStore, PostStore } from '../../store'
+// @ts-ignore
+import BadgeAndroid from 'react-native-android-badge'
 import { Linking } from 'react-native'
 import { buildReportLink } from '../linkHelpers'
 
-export const postNotificationEvent =
+export const notificationPostEvent =
   (isBackgroundEvent: boolean) =>
   async ({ type, detail }: Event) => {
     const { pressAction, notification } = detail
@@ -43,15 +44,14 @@ export const postNotificationEvent =
       case EventType.PRESS:
         const reportId = notification?.data?.postId || ''
         await notifee.decrementBadgeCount()
+        updateAndroidBadgeCount({ type: 'decrement' })
         if (isBackgroundEvent) {
           const branchLink = await buildReportLink(reportId, ' ')
-          console.log('🚀 - branchLink', branchLink)
           Linking.openURL(branchLink)
-        } else {
-          Branch.openURL(`leelagame://reply_detail/${reportId}`)
         }
         break
       case EventType.DISMISSED:
+        updateAndroidBadgeCount({ type: 'decrement' })
         await notifee.decrementBadgeCount()
     }
   }
@@ -61,6 +61,7 @@ async function cancel({ notification, reply, completeDismiss }: cancelT) {
 
   if (id) {
     if (reply) {
+      updateAndroidBadgeCount({ type: 'decrement' })
       await notifee.decrementBadgeCount()
       const channelId = await notifee.createChannel({
         id: 'default',
@@ -99,6 +100,7 @@ async function cancel({ notification, reply, completeDismiss }: cancelT) {
       await notifee.cancelNotification(id)
     }
     if (completeDismiss) {
+      updateAndroidBadgeCount({ type: 'decrement' })
       await notifee.decrementBadgeCount()
     }
   }
@@ -123,6 +125,36 @@ export async function setCategories() {
       ]
     }
   ])
+}
+
+export const updateAndroidBadgeCount = async ({ type, value }: setAndroidBadgeCountT) => {
+  const previous = BadgeAndroidStore.count
+
+  switch (type) {
+    case 'increment':
+      BadgeAndroidStore.count = previous + 1
+      BadgeAndroid.setBadge(previous + 1)
+      break
+    case 'decrement':
+      if (previous > 0) {
+        BadgeAndroidStore.count = previous - 1
+        BadgeAndroid.setBadge(previous - 1)
+      }
+      break
+    case 'set':
+      BadgeAndroidStore.count = value || 0
+      BadgeAndroid.setBadge(value || 0)
+      break
+    case 'clear':
+      BadgeAndroidStore.count = 0
+      BadgeAndroid.setBadge(0)
+      break
+  }
+}
+
+interface setAndroidBadgeCountT {
+  type: 'increment' | 'decrement' | 'set' | 'clear'
+  value?: number
 }
 
 interface cancelT {

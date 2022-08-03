@@ -30,7 +30,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
     const { postId, comment, translatedText, hideTranslate } = route.params
 
     const curItem: PostT | undefined = PostStore.store.posts.find(a => a.id === postId)
-    const commentData = PostStore.store.comments
+    const commentData = PostStore.store.comments.filter(a => a.postId === curItem?.id)
 
     function newComment() {
       curItem &&

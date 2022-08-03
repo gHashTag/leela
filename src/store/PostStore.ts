@@ -14,8 +14,8 @@ import { OnlinePlayer } from './OnlinePlayer'
 import { OtherPlayers } from './OtherPlayers'
 import { getProfile, getUid } from '../screens/helper'
 import I18n from 'i18n-js'
-//@ts-ignore
-import { TranslatorFactory } from 'react-native-power-translator'
+// @ts-ignore
+import { YANDEX_TRANSLATE_API_KEY, YANDEX_FOLDER_ID } from '@env'
 import { captureException } from '../constants'
 import { AllLang } from '../utils'
 
@@ -227,11 +227,24 @@ export const PostStore = {
     await firestore().collection('Posts').get().then(PostStore.fetchPosts)
   },
   translateText: async (text: string) => {
-    const translator = TranslatorFactory.createTranslator()
     try {
-      const res = await translator.translate(text)
-      // console.log(res)
-      return res
+      const res = await (
+        await fetch('https://translate.api.cloud.yandex.net/translate/v2/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Api-Key ${YANDEX_TRANSLATE_API_KEY}`
+          },
+          body: JSON.stringify({
+            folderId: YANDEX_FOLDER_ID,
+            texts: text,
+            targetLanguageCode: AllLang
+          })
+        })
+      ).json()
+      if (res?.translations && res.translations?.length > 0) {
+        return res.translations[0].text
+      }
     } catch (err) {
       captureException(err)
     }
