@@ -5,7 +5,7 @@ import { s, vs } from 'react-native-size-matters'
 import { gray, lightGray } from '../../constants'
 import { PostStore } from '../../store'
 import { CommentT } from '../../types'
-import { PlanAvatar } from '../PlanAvatar'
+// import { PlanAvatar } from '../PlanAvatar'
 import { Text } from '../Text'
 
 interface CommentCardI {
@@ -38,7 +38,7 @@ export const CommentCard: React.FC<CommentCardI> = ({ item, index, endIndex }) =
   return (
     <View style={container}>
       <View style={{ marginRight: s(6) }}>
-        <PlanAvatar plan={PostStore.getComPlan(item.ownerId)} size="medium" />
+        {/* <PlanAvatar plan={PostStore.getComPlan(item.ownerId)} size="medium" /> */}
         {endIndex !== index && (
           <View style={{ flex: 1, alignItems: 'center' }} onLayout={_onLayout}>
             <View style={[verticalLine, { height: lineHeight + PADDING * 2 - vs(4) }]} />

@@ -15,7 +15,7 @@ import { Text } from '../'
 import { Space } from '../Space'
 import { useNavigation } from '@react-navigation/native'
 import auth from '@react-native-firebase/auth'
-import { PlanAvatar } from '../PlanAvatar'
+// import { PlanAvatar } from '../PlanAvatar'
 import { PostStore } from '../../store'
 import { observer } from 'mobx-react-lite'
 
@@ -84,7 +84,7 @@ export const PostCard: React.FC<postCardI> = observer(
       return (
         <View style={[container, { borderBottomWidth: 0 }]}>
           <View style={{ flexDirection: 'row' }}>
-            <PlanAvatar size={'large'} plan={item.plan} aditionalStyle={img} />
+            {/* <PlanAvatar size={'large'} plan={item.plan} aditionalStyle={img} /> */}
             <View style={{ flexDirection: 'column', flex: 1 }}>
               {/* name, create date/email */}
               <Space height={vs(2)} />
