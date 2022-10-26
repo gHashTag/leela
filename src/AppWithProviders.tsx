@@ -1,16 +1,16 @@
+import Navigation from './Navigation'
 import React, { useEffect } from 'react'
-import { AppState, LogBox, Platform } from 'react-native'
+import { AppState, LogBox } from 'react-native'
 import { configure } from 'mobx'
 import { configurePersistable } from 'mobx-persist-store'
 import * as Sentry from '@sentry/react-native'
 import VersionInfo from 'react-native-version-info'
-import App from './src'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import Purchases from 'react-native-purchases'
 import SplashScreen from 'react-native-splash-screen'
 import notifee from '@notifee/react-native'
-import { updateAndroidBadgeCount } from './src/utils/notifications/NotificationHelper'
+import { updateAndroidBadgeCount } from './utils/notifications/NotificationHelper'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
 
 configurePersistable(
@@ -54,29 +54,25 @@ LogBox.ignoreLogs([
   'source.uri should not be an empty string'
 ])
 
-function Init() {
+function AppWithProviders() {
   useEffect(() => {
     SplashScreen.hide()
-    // if (Platform.OS === 'ios') {
-    //   Purchases.setup('appl_ACmucVIVHSuJWCXwWfYUzJlXKno')
-    // } else if (Platform.OS === 'android') {
-    //   Purchases.setup('goog_hpKzEpktquSkYpVmjVilrzYRvTn')
-    // }
     const unsub = AppState.addEventListener('change', async state => {
       if (state === 'active') {
         updateAndroidBadgeCount({ type: 'clear' })
         await notifee.setBadgeCount(0)
       }
     })
-    return () => {
-      unsub.remove()
-    }
+    return unsub.remove
   }, [])
+
   return (
     <SafeAreaProvider>
-      <App />
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Navigation />
+      </GestureHandlerRootView>
     </SafeAreaProvider>
   )
 }
 
-export default Sentry.wrap(Init)
+export default Sentry.wrap(AppWithProviders)

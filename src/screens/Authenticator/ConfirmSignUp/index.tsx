@@ -1,6 +1,6 @@
 import React, { useState, ReactElement, useEffect } from 'react'
 import { RouteProp } from '@react-navigation/native'
-import { AppContainer, Button, Space, Text, Loading } from '../../../components'
+import { AppContainer, Space, Text, Loading } from '../../../components'
 import { white, black } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'

@@ -1,7 +1,7 @@
 import React, { ReactElement, useState } from 'react'
 import { s } from 'react-native-size-matters'
 import { observer } from 'mobx-react-lite'
-import { RouteProp, useFocusEffect } from '@react-navigation/native'
+import { RouteProp } from '@react-navigation/native'
 import { I18n } from '../../../utils'
 import { AppContainer, Avatar, Button, CenterView, Space } from '../../../components'
 import { RootStackParamList } from '../../../types'
@@ -9,7 +9,7 @@ import { OnlinePlayer } from '../../../store'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { onSignIn } from '../../helper'
 import auth from '@react-native-firebase/auth'
-import { BackHandler } from 'react-native'
+import { useNoBackHandler } from '../../../hooks'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -35,10 +35,7 @@ const SignUpAvatar = observer(({ navigation }: SignUpAvatarT): ReactElement => {
       onSignIn(user)
     }
   }
-  useFocusEffect(() => {
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => true)
-    return () => sub.remove()
-  })
+  useNoBackHandler()
 
   return (
     <AppContainer title=" " iconLeft={null}>

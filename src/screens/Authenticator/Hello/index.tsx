@@ -1,6 +1,6 @@
 import React, { ReactElement } from 'react'
 
-import { ScaledSheet, ms, s, vs } from 'react-native-size-matters'
+import { ms, s, vs } from 'react-native-size-matters'
 
 import { I18n } from '../../../utils'
 import {
@@ -15,6 +15,7 @@ import { white, black, goBack } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { StyleSheet } from 'react-native'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HELLO'>
 
@@ -22,7 +23,7 @@ type HelloT = {
   navigation: ProfileScreenNavigationProp
 }
 
-const styles = ScaledSheet.create({
+const styles = StyleSheet.create({
   img: {
     justifyContent: 'center',
     alignSelf: 'center',

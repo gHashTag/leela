@@ -1,16 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import * as Keychain from 'react-native-keychain'
 import { s, vs } from 'react-native-size-matters'
-import auth from '@react-native-firebase/auth'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { ScaledSheet } from 'react-native-size-matters'
 import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
 import {
   AppContainer,
-  // ModalSubscribe,
   Space,
   Button,
   Text,
@@ -18,11 +13,8 @@ import {
   IconLeela,
   Loading
 } from '../../components'
-import { actionsDice } from '../../store'
-import { captureException, OpenPlanReportModal } from '../../constants'
-import { useNetInfo } from '@react-native-community/netinfo'
-import { useFocusEffect } from '@react-navigation/native'
-import { getProfile, onSignIn } from '../helper'
+import { useKeychain } from '../../hooks'
+import { StyleSheet } from 'react-native'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 
@@ -30,49 +22,8 @@ type SelectPlayersScreenT = {
   navigation: navigation
 }
 
-const styles = ScaledSheet.create({
-  h6: { alignSelf: 'center' }
-})
-
 const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
-  const [loading, setLoading] = useState<boolean>(true)
-  const { isConnected } = useNetInfo()
-  const key = async (): Promise<void> => {
-    try {
-      const credentials = await Keychain.getInternetCredentials('auth')
-      if (credentials && isConnected) {
-        const { username, password } = credentials
-        await auth()
-          .signInWithEmailAndPassword(username, password)
-          .then(async user => {
-            await onSignIn(user.user, true)
-          })
-      } else if (isConnected !== null) {
-        return Promise.reject()
-      }
-      isConnected !== null && setLoading(false)
-    } catch (err) {
-      captureException(err)
-      isConnected !== null && setLoading(false)
-      return Promise.reject()
-    }
-  }
-
-  const checkGame = async () => {
-    const init = await AsyncStorage.getItem('@init')
-    if (init === 'true') {
-      navigation.navigate('MAIN')
-    } else {
-      setLoading(false)
-    }
-  }
-
-  useFocusEffect(
-    useCallback(() => {
-      setLoading(true)
-      key().catch(checkGame)
-    }, [isConnected])
-  )
+  const { loading } = useKeychain()
 
   const _onPress = () => {
     navigation.navigate('HELLO')
@@ -97,11 +48,14 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
             onPress={() => navigation.navigate('SELECT_PLAYERS_SCREEN')}
           />
           <Space height={vs(120)} />
-          {/* <ModalSubscribe /> */}
         </CenterView>
       )}
     </AppContainer>
   )
+})
+
+const styles = StyleSheet.create({
+  h6: { alignSelf: 'center' }
 })
 
 export { WelcomeScreen }

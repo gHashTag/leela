@@ -1,6 +1,6 @@
 import React, { useState, ReactElement } from 'react'
 import { I18n } from '../../../utils'
-import { RouteProp, useFocusEffect, useTheme } from '@react-navigation/native'
+import { RouteProp, useTheme } from '@react-navigation/native'
 import {
   AppContainer,
   Space,
@@ -25,7 +25,8 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { s, vs } from 'react-native-size-matters'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { BackHandler, ScrollView, StyleSheet } from 'react-native'
+import { ScrollView, StyleSheet } from 'react-native'
+import { useNoBackHandler } from '../../../hooks'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -63,10 +64,7 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     mode: 'onChange',
     resolver: yupResolver(schema)
   })
-  useFocusEffect(() => {
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => true)
-    return () => sub.remove()
-  })
+  useNoBackHandler()
 
   const onSubmit: SubmitHandler<FieldValues> = async data => {
     setLoading(true)

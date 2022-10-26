@@ -1,4 +1,4 @@
-import React, { useState, ReactElement } from 'react'
+import React, { useState } from 'react'
 import { I18n } from '../../../utils'
 import { RouteProp, useTheme } from '@react-navigation/native'
 import {

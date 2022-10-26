@@ -11,13 +11,11 @@ import {
   Space,
   Text,
   ButtonElements,
-  Spin,
-  HeaderMessage
+  Spin
 } from '../../../components'
 import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../../store'
 import Rate from 'react-native-rate'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { StyleSheet, View } from 'react-native'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,

@@ -1,7 +1,4 @@
-import React, { useState, ReactElement } from 'react'
-import * as Keychain from 'react-native-keychain'
-// @ts-expect-error
-import { EMAIL, PASSWORD } from '@env'
+import React, { ReactElement } from 'react'
 import { I18n } from '../../../utils'
 import {
   AppContainer,
@@ -12,107 +9,16 @@ import {
   Loading,
   KeyboardContainer
 } from '../../../components'
-import { goBack, white, black, captureException, W, H } from '../../../constants'
-import { RootStackParamList } from '../../../types'
+import { goBack, white, black, W, H } from '../../../constants'
 import { useTheme } from '@react-navigation/native'
-import auth from '@react-native-firebase/auth'
 
-import {
-  useForm,
-  FormProvider,
-  SubmitHandler,
-  SubmitErrorHandler,
-  FieldValues
-} from 'react-hook-form'
-import { yupResolver } from '@hookform/resolvers/yup'
-import * as yup from 'yup'
+import { FormProvider, SubmitErrorHandler, FieldValues } from 'react-hook-form'
 import { s, vs } from 'react-native-size-matters'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { ScrollView, StyleSheet } from 'react-native'
+import { useSignUp } from './useSignUp'
 
-type ProfileScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'SIGN_UP'
->
-
-type SignUpT = {
-  navigation: ProfileScreenNavigationProp
-}
-
-const schema = yup
-  .object()
-  .shape({
-    email: yup
-      .string()
-      .email(I18n.t('invalidEmail'))
-      .trim()
-      .required(I18n.t('requireField')),
-    password: yup
-      .string()
-      .required(I18n.t('requireField'))
-      .min(6, I18n.t('shortPassword')),
-    passwordConfirmation: yup
-      .string()
-      .required(I18n.t('requireField'))
-      .min(6, I18n.t('shortPassword'))
-  })
-  .required()
-
-const SignUp = ({ navigation }: SignUpT): ReactElement => {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const initialValues = {
-    email: __DEV__ ? EMAIL : '',
-    password: __DEV__ ? PASSWORD : '',
-    passwordConfirmation: __DEV__ ? PASSWORD : ''
-  }
-  const { ...methods } = useForm({
-    mode: 'onChange',
-    resolver: yupResolver(schema),
-    defaultValues: initialValues
-  })
-
-  const onSubmit: SubmitHandler<FieldValues> = async data => {
-    const { email, password, passwordConfirmation } = data
-    if (password !== passwordConfirmation) {
-      setError(I18n.t('passwordsDoNotMatch'))
-    } else {
-      setLoading(true)
-      setError('')
-      await auth()
-        .createUserWithEmailAndPassword(email, password)
-        .then(async () => {
-          await Keychain.setInternetCredentials('auth', email, password)
-          navigation.navigate('CONFIRM_SIGN_UP', { email })
-          setLoading(false)
-        })
-        .catch(error => {
-          switch (error.code) {
-            case 'auth/invalid-email':
-              setError(I18n.t('invalidEmail'))
-              break
-            case 'auth/email-already-in-use':
-              setError(I18n.t('usernameExistsException'))
-              break
-            case 'auth/wrong-password':
-              setError(I18n.t('forgotPassword'))
-              break
-            case 'auth/network-request-failed':
-              setError(I18n.t('networkRequestFailed'))
-              break
-            case 'auth/too-many-requests':
-              setError(I18n.t('manyRequests'))
-              break
-            default:
-              captureException(error.message)
-              setError(error.code)
-              break
-          }
-          setLoading(false)
-        })
-    }
-  }
-
+const SignUp = (): ReactElement => {
+  const { loading, error, methods, onSubmit } = useSignUp()
   const onError: SubmitErrorHandler<FieldValues> = (errors, e) => {
     return console.log(errors)
   }

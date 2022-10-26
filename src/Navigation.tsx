@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
-import { useColorScheme, StatusBar, BackHandler } from 'react-native'
-import { NavigationContainer, useFocusEffect } from '@react-navigation/native'
+import { useColorScheme, StatusBar } from 'react-native'
+import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 import TabBar from './TabBar'
@@ -39,28 +39,17 @@ import {
   SignUpAvatar
 } from './screens/Authenticator'
 
-import {
-  white,
-  black,
-  navRef,
-  lightGray,
-  OpenExitModal,
-  OpenNetworkModal,
-  banAlert
-} from './constants'
+import { white, black, navRef, lightGray } from './constants'
 
 import { UI } from './UI'
 
-import { DiceStore, OfflinePlayers, OtherPlayers } from './store'
-import auth from '@react-native-firebase/auth'
-import firestore from '@react-native-firebase/firestore'
 import { checkVersion, getFireBaseRef } from './screens/helper'
 import { linking } from './utils'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
 import { Fallback } from './components'
 import { RootStackParamList, RootTabParamList } from './types'
-import NetInfo from '@react-native-community/netinfo'
 import Orientation from 'react-native-orientation-locker'
+import { useGameAndProfileIsOnline, useNetwork, useExitModal } from './hooks'
 
 const DarkTheme = {
   dark: true,
@@ -89,52 +78,9 @@ const LightTheme = {
 const TabNavigator = createMaterialTopTabNavigator<RootTabParamList>()
 
 const Tab = () => {
-  useEffect(() => {
-    if (auth().currentUser?.uid && DiceStore.online) {
-      const curUid = auth().currentUser?.uid
-      const unsub1 = firestore()
-        .collection('Profiles')
-        .where('owner', '!=', curUid)
-        .onSnapshot(s => OtherPlayers.getOtherProf({ snapshot: s }))
-      const unsub2 = firestore()
-        .collection('Profiles')
-        .where('owner', '==', curUid)
-        .onSnapshot(s => s?.docs?.forEach(a => a.data().status === 'ban' && banAlert()))
-      const unsub3 = getFireBaseRef(`/online/`).on('child_changed', async changed => {
-        await firestore()
-          .collection('Profiles')
-          .where('owner', '!=', auth().currentUser?.uid)
-          .get()
-          .then(queryS => {
-            OtherPlayers.getOtherProf({ snapshot: queryS })
-          })
-      })
-      return () => {
-        unsub1()
-        unsub2()
-        getFireBaseRef('/online/').off('child_changed', unsub3)
-      }
-    } else if (!DiceStore.online) {
-      OfflinePlayers.startGame()
-    }
-  }, [])
-
-  useFocusEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
-      OpenExitModal()
-      return true
-    })
-    return () => backHandler.remove()
-  })
-
-  useEffect(() => {
-    const unsub = NetInfo.addEventListener(state => {
-      if (state.isConnected === false && DiceStore.online) {
-        OpenNetworkModal()
-      }
-    })
-    return unsub
-  }, [])
+  useGameAndProfileIsOnline()
+  useExitModal()
+  useNetwork()
 
   return (
     <TabNavigator.Navigator
@@ -157,6 +103,7 @@ const Tab = () => {
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
 const App = () => {
+  // Themes
   const isDark = useColorScheme() === 'dark'
   const theme = isDark ? DarkTheme : LightTheme
   const color = isDark ? 'light-content' : 'dark-content'
@@ -165,6 +112,7 @@ const App = () => {
     SystemNavigationBar.setNavigationColor(isDark ? black : white, isDark ? false : true)
     SystemNavigationBar.setNavigationBarDividerColor(lightGray)
     Orientation.lockToPortrait()
+    // check version
     const unsub = getFireBaseRef(`/minVersion/`).on('value', async snap => {
       checkVersion(snap.val())
     })

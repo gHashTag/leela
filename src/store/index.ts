@@ -1,4 +1,3 @@
-export * from './PlayButtonStore'
 export * from './SubscribeStore'
 // сверху ерунда
 export * from './PostStore'
