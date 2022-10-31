@@ -1,4 +1,4 @@
-export * from './ReplyModal'
+export * from './ActionsModal'
 export * from './InputTextModal'
 export * from './ExitPopup'
 export * from './NetworkModal'

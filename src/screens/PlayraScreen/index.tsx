@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { memo, useEffect, useState } from 'react'
 import { StyleSheet, View, FlatList, Image, TouchableOpacity } from 'react-native'
-import { observer } from 'mobx-react-lite'
+import { observer } from 'mobx-react'
 import * as Sentry from '@sentry/react-native'
 import { s, vs } from 'react-native-size-matters'
 import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
-import { AppContainer, ButtonElements, SocialLinks, Space, Text } from '../../components'
+import { AppContainer, SocialLinks, Space, Text } from '../../components'
 import { ThemeProvider } from 'react-native-elements'
 import { OpenVideoModal, primary, secondary } from '../../constants'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -40,7 +40,6 @@ interface PlayraItemT {
     artist: string
     poster: string
   }
-  index: number
 }
 
 export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
@@ -107,19 +106,21 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
           )
         }
         data={data.slice().reverse()}
-        renderItem={({ item, index }) => <RenderItem item={item} index={index} />}
+        renderItem={({ item, index }) => <RenderItem item={item} />}
         keyExtractor={_keyExtractor}
       />
     </AppContainer>
   )
 })
 
-const RenderItem = ({ item, index }: PlayraItemT) => {
+const RenderItem = memo(({ item }: PlayraItemT) => {
   const { title, videoUrl, poster } = item
   if (!videoUrl || !title || !poster) return null
+
   function handlePress() {
     OpenVideoModal({ uri: videoUrl, poster })
   }
+
   return (
     <View style={{ width: '90%', alignSelf: 'center' }}>
       <Space height={vs(10)} />
@@ -130,18 +131,10 @@ const RenderItem = ({ item, index }: PlayraItemT) => {
           <Image style={posterS} source={{ uri: poster }} />
         </View>
       </TouchableOpacity>
-      <Space height={vs(10)} />
-      {/* {artist !== '' && (
-            <Text
-              h={'h4'}
-              title={artist}
-              textStyle={{ paddingHorizontal: 40, textAlign: 'center' }}
-            />
-          )} */}
-      <Space height={vs(30)} />
+      <Space height={vs(40)} />
     </View>
   )
-}
+})
 
 const styles = StyleSheet.create({
   videoView: {

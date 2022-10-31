@@ -6,12 +6,9 @@ import * as yup from 'yup'
 import { Button, Input, Space } from '..'
 import { black, dimGray, navigate } from '../../constants'
 import { PostStore } from '../../store'
-import I18n from 'i18n-js'
 import { Loading } from '../'
-import { StyleSheet, View } from 'react-native'
-import { vs } from 'react-native-size-matters'
 import { startStepTimer } from '../../screens/helper'
-
+import { I18n } from '../../utils'
 interface CreatePostT {
   plan: number
 }
@@ -22,7 +19,7 @@ const schema = yup
     text: yup
       .string()
       .trim()
-      .min(100, I18n.t('fewCharacters'))
+      .min(100, I18n.t('fewChars'))
       .required(I18n.t('requireField'))
   })
   .required()

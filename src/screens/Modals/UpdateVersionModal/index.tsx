@@ -1,24 +1,17 @@
-import { useFocusEffect, useTheme } from '@react-navigation/native'
+import { useTheme } from '@react-navigation/native'
 import I18n from 'i18n-js'
 import React from 'react'
-import { BackHandler, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import { ButtonSimple, Space, Text } from '../../../components'
 import AppLink from 'react-native-app-link'
+import { useNoBackHandler } from '../../../hooks'
 
 export function UpdateVersionModal() {
   const {
     colors: { background }
   } = useTheme()
-
-  useFocusEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      return true
-    })
-    return () => {
-      backHandler.remove()
-    }
-  })
+  useNoBackHandler()
 
   const _onPress = () => {
     const options = {

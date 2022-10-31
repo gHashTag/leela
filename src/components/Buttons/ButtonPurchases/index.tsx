@@ -7,7 +7,7 @@ import { I18n } from '../../../utils'
 import { Text } from '../../'
 import { Space } from '../../'
 import { actionsSubscribe } from '../../../store'
-import { observer } from 'mobx-react-lite'
+import { observer } from 'mobx-react'
 
 const styles = StyleSheet.create({
   container: {

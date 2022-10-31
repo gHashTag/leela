@@ -21,14 +21,14 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
     navigation.goBack()
     Orientation.lockToPortrait()
   }
-  const scheme = useColorScheme()
+  const isDark = useColorScheme() === 'dark'
   useFocusEffect(() => {
     Orientation.unlockAllOrientations()
     SystemNavigationBar.setNavigationColor('black', false)
     return () => {
       SystemNavigationBar.setNavigationColor(
-        scheme === 'dark' ? black : white,
-        scheme !== 'dark' ? false : true
+        isDark ? black : white,
+        !isDark ? false : true
       )
       //Orientation.lockToPortrait()
     }

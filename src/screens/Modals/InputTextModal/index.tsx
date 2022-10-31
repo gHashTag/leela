@@ -13,7 +13,7 @@ import { Pressable, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import I18n from 'i18n-js'
 
-interface ReplyModalT {
+interface InputTextT {
   navigation: NativeStackNavigationProp<RootStackParamList, 'INPUT_TEXT_MODAL'>
   route: RouteProp<RootStackParamList, 'INPUT_TEXT_MODAL'>
 }
@@ -25,7 +25,7 @@ const schema = yup
   })
   .required()
 
-export function InputTextModal({ navigation, route }: ReplyModalT) {
+export function InputTextModal({ navigation, route }: InputTextT) {
   const { onError, onSubmit } = route.params
   const { ...methods } = useForm({
     mode: 'onChange',

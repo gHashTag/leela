@@ -3,7 +3,7 @@ import { Image, View } from 'react-native'
 import { ScaledSheet, s } from 'react-native-size-matters'
 import { ICONS } from './images'
 import { DiceStore, OnlinePlayer, OtherPlayers, OfflinePlayers } from '../../store'
-import { observer } from 'mobx-react-lite'
+import { observer } from 'mobx-react'
 
 interface GemT {
   plan: number

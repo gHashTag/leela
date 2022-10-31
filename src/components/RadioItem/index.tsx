@@ -1,5 +1,5 @@
 import { useTheme } from '@react-navigation/native'
-import { observer } from 'mobx-react-lite'
+import { observer } from 'mobx-react'
 import React from 'react'
 import { Image, TouchableOpacity, View } from 'react-native'
 import { s, ms, ScaledSheet } from 'react-native-size-matters'

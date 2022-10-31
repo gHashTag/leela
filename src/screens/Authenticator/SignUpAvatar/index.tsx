@@ -1,6 +1,6 @@
 import React, { ReactElement, useState } from 'react'
 import { s } from 'react-native-size-matters'
-import { observer } from 'mobx-react-lite'
+import { observer } from 'mobx-react'
 import { RouteProp } from '@react-navigation/native'
 import { I18n } from '../../../utils'
 import { AppContainer, Avatar, Button, CenterView, Space } from '../../../components'

@@ -18,7 +18,7 @@ import {
   WelcomeScreen,
   PostScreen,
   DetailPostScreen,
-  ReplyModal,
+  ActionsModal,
   InputTextModal,
   ExitPopup,
   NetworkModal,
@@ -109,7 +109,10 @@ const App = () => {
   const color = isDark ? 'light-content' : 'dark-content'
 
   useEffect(() => {
-    SystemNavigationBar.setNavigationColor(isDark ? black : white, isDark ? false : true)
+    SystemNavigationBar.setNavigationColor(
+      isDark ? black : white,
+      isDark ? 'dark' : 'light'
+    )
     SystemNavigationBar.setNavigationBarDividerColor(lightGray)
     Orientation.lockToPortrait()
     // check version
@@ -204,7 +207,7 @@ const App = () => {
             options={{
               animation: 'slide_from_bottom'
             }}
-            component={ReplyModal}
+            component={ActionsModal}
           />
           <Stack.Screen name="INPUT_TEXT_MODAL" component={InputTextModal} />
           <Stack.Screen name="EXIT_MODAL" component={ExitPopup} />

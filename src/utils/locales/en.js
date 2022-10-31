@@ -25,6 +25,7 @@ export default {
     'Your phone is currently disconnected from the internet.\nPlease wait for it to reconnect and try again.',
   playerTurn: 'Player',
   history: 'History',
+  reports: 'Reports',
   player: 'Player',
   startOver: 'Start Over',
   startGame: 'Start',
@@ -113,7 +114,7 @@ export default {
   shortPassword: 'password must be 6 characters long',
   requireField: 'Required field',
   manyCharacters: 'Too many symbols, maximum - ',
-  fewCharacters: 'The minimum must be 100 characters',
+  fewChars: 'The minimum must be 100 characters',
   manyRequests: 'Too many authentication requests, please try again later',
   post: 'Report',
   send: 'Send',
@@ -127,5 +128,9 @@ export default {
   sixToBegin: 'To begin with, throw 6 on the cube',
   review: 'On moderation...',
   updateApp: 'A new update has been released!',
-  update: 'Update'
+  update: 'Update',
+  profile: 'Profile',
+  edit: 'Edit',
+  shareProfile: 'Share a profile',
+  changeAva: 'Change avatar'
 }

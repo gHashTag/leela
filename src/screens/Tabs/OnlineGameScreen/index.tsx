@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { StyleSheet, ScrollView, View } from 'react-native'
-import { useTheme } from '@react-navigation/native'
-import { observer } from 'mobx-react-lite'
+import { observer } from 'mobx-react'
 import { s, vs } from 'react-native-size-matters'
 import { ThemeProvider } from 'react-native-elements'
 import { I18n, lang } from '../../../utils'
@@ -18,7 +17,6 @@ import {
 } from '../../../components'
 import { secondary } from '../../../constants'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -49,10 +47,6 @@ const theme = {
 const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   const [images, setImages] = useState<string[]>([])
 
-  const {
-    colors: { text }
-  } = useTheme()
-
   useEffect(() => {
     const getData = async () => {
       let response = await fetch(
@@ -62,7 +56,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
     }
     getData()
   }, [navigation])
-  const { top } = useSafeAreaInsets()
+
   const poster =
     'https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.jpg'
   const uri =
@@ -134,60 +128,3 @@ const styles = StyleSheet.create({
 const { centered, container, containerStyle, contentContainerStyle } = styles
 
 export { OnlineGameScreen }
-{
-  /* {lang !== 'en' && (
-              <>
-                <PricingCard
-                  color={secondary}
-                  title={I18n.t('onlineGame')}
-                  price="₽ 1 000"
-                  info={['6 игроков', 'Одна игра', '2 часа']}
-                  button={{ title: ' Купить', icon: 'flight-takeoff' }}
-                  containerStyle={containerStyle}
-                  infoStyle={infoStyle}
-                  pricingStyle={{
-                    color: text
-                  }}
-                  onButtonPress={() =>
-                    openUrl(
-                      'https://securepayments.sberbank.ru/shortlink/FaDdtqXS'
-                    )
-                  }
-                />
-                <PricingCard
-                  color={secondary}
-                  title={I18n.t('offline')}
-                  price="₽ 2 000"
-                  info={['6 игроков', 'Встреча офлайн', '2 часа']}
-                  infoStyle={infoStyle}
-                  button={{ title: ' Купить', icon: 'flight-takeoff' }}
-                  containerStyle={containerStyle}
-                  pricingStyle={{
-                    color: text
-                  }}
-                  onButtonPress={() =>
-                    openUrl(
-                      'https://securepayments.sberbank.ru/shortlink/iIWsaJcS'
-                    )
-                  }
-                />
-                <PricingCard
-                  color={secondary}
-                  title={I18n.t('onlineGame')}
-                  price="₽ 6 000"
-                  info={['1 игрок', 'Индивидуальная сессия', '2 часа']}
-                  infoStyle={infoStyle}
-                  button={{ title: ' Купить', icon: 'flight-takeoff' }}
-                  containerStyle={containerStyle}
-                  pricingStyle={{
-                    color: text
-                  }}
-                  onButtonPress={() =>
-                    openUrl(
-                      'https://securepayments.sberbank.ru/shortlink/odk9KRop'
-                    )
-                  }
-                />
-              </>
-            )} */
-}

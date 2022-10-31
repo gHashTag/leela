@@ -11,7 +11,6 @@ export const getActions: getActionsT = ({ item, isDetail }) => {
   const { id, ownerId, accept } = item
   const isBaned =
     OtherPlayers.store.players.find(a => a.owner === ownerId)?.status === 'ban'
-  const isAdmin = OnlinePlayer.store.status === 'Admin'
   return [
     {
       key: 'DEL_POST',

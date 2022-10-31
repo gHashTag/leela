@@ -1,3 +1,4 @@
+import { useTheme } from '@react-navigation/native'
 import React, { memo } from 'react'
 import { Platform, TouchableOpacity, View } from 'react-native'
 import Emoji from 'react-native-emoji'
@@ -6,36 +7,6 @@ import { ScaledSheet, s, vs, mvs } from 'react-native-size-matters'
 import { Text, HeaderMessage } from '../'
 import { navigate } from '../../constants'
 const isIos = Platform.OS === 'ios'
-const styles = ScaledSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: mvs(1, 0.4),
-    zIndex: 20
-  },
-  leftIconStyle: {
-    fontSize: isIos ? s(26) : s(22),
-    textAlign: 'center',
-    alignItems: 'center',
-    paddingTop: s(2),
-    marginHorizontal: s(8),
-    marginVertical: s(5)
-  },
-  rightIconStyle: {
-    fontSize: isIos ? s(30) : s(28),
-    textAlign: 'center',
-    alignItems: 'center',
-    marginHorizontal: s(8),
-    marginVertical: s(5)
-  },
-  rightViewStyle: {
-    width: isIos ? s(60) : s(44)
-  },
-  titleStyle: {
-    fontSize: vs(18)
-  },
-  childrenStyle: {}
-})
 
 interface HeaderT {
   title?: string
@@ -74,11 +45,18 @@ const Header = memo<HeaderT>(
       childrenStyle
     } = styles
 
+    const {
+      colors: { background }
+    } = useTheme()
+
     const { top } = useSafeAreaInsets()
     const alignItems = children ? 'flex-start' : 'center'
     const marginTop = children ? s(2) : 0
+
     return (
-      <View style={[container, { paddingTop: top, alignItems }]}>
+      <View
+        style={[container, { paddingTop: top, alignItems, backgroundColor: background }]}
+      >
         {iconLeft && (
           <TouchableOpacity style={{ opacity: iconLeftOpacity }} onPress={onPress}>
             <Emoji name={iconLeft} style={leftIconStyle} />
@@ -111,5 +89,36 @@ const Header = memo<HeaderT>(
     )
   }
 )
+
+const styles = ScaledSheet.create({
+  container: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingBottom: mvs(1, 0.4),
+    zIndex: 20
+  },
+  leftIconStyle: {
+    fontSize: isIos ? s(26) : s(22),
+    textAlign: 'center',
+    alignItems: 'center',
+    paddingTop: s(2),
+    marginHorizontal: s(8),
+    marginVertical: s(5)
+  },
+  rightIconStyle: {
+    fontSize: isIos ? s(30) : s(28),
+    textAlign: 'center',
+    alignItems: 'center',
+    marginHorizontal: s(8),
+    marginVertical: s(5)
+  },
+  rightViewStyle: {
+    width: isIos ? s(60) : s(44)
+  },
+  titleStyle: {
+    fontSize: vs(18)
+  },
+  childrenStyle: {}
+})
 
 export { Header }

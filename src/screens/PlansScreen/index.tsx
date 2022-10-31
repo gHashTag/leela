@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { FlatList } from 'react-native'
 import { I18n, lang } from '../../utils'
 import { PlansT, RootStackParamList } from '../../types'
@@ -25,9 +25,17 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
     setData(lang === 'en' ? en : ru)
   })
 
-  const getIsReportItem = (id: number) => {
-    return OnlinePlayer.store.plan === id && !OnlinePlayer.store.isReported
-  }
+  const onPressItem = useCallback(
+    (item: PlansT) => () => {
+      const itemIsReported =
+        OnlinePlayer.store.plan === item.id && !OnlinePlayer.store.isReported
+      navigation.navigate('PLANS_DETAIL_SCREEN', {
+        ...item,
+        report: itemIsReported
+      })
+    },
+    []
+  )
 
   return (
     <AppContainer
@@ -44,15 +52,7 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
         windowSize={5}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
-          <RenderPlanItem
-            title={item.title}
-            onPress={() =>
-              navigation.navigate('PLANS_DETAIL_SCREEN', {
-                ...item,
-                report: getIsReportItem(item.id)
-              })
-            }
-          />
+          <RenderPlanItem title={item.title} onPress={onPressItem(item)} />
         )}
         keyExtractor={_keyExtractor}
       />

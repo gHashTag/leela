@@ -187,6 +187,6 @@ export interface ButtonsModalT {
   onPress: () => void
   title: string
   icon: string
-  key?: string
+  key: string
   color?: string
 }

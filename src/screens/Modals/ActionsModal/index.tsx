@@ -9,12 +9,12 @@ import { Space } from '../../../components'
 import { lightGray } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 
-interface ReplyModalT {
+interface ActionsModalT {
   navigation: NativeStackNavigationProp<RootStackParamList, 'REPLY_MODAL'>
   route: RouteProp<RootStackParamList, 'REPLY_MODAL'>
 }
 
-export function ReplyModal({ navigation, route }: ReplyModalT) {
+export function ActionsModal({ navigation, route }: ActionsModalT) {
   const backgroundColor = useTheme().colors.background
   const schema = useColorScheme()
   const pressedColor = schema === 'dark' ? '#2B2B2B' : '#F5F5F5'
@@ -28,7 +28,7 @@ export function ReplyModal({ navigation, route }: ReplyModalT) {
         <FlatList
           data={route.params.buttons}
           keyExtractor={a => a.key}
-          style={{ paddingHorizontal: s(5) }}
+          style={listContainer}
           renderItem={props => (
             <RenderButtons
               {...props}
@@ -56,7 +56,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingBottom: vs(25)
+  },
+  listContainer: {
+    paddingHorizontal: s(5)
   }
 })
 
-const { modal, transparentView } = styles
+const { modal, transparentView, listContainer } = styles

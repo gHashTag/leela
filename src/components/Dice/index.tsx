@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { StyleSheet, Pressable, Animated, Easing } from 'react-native'
 import RNShake from 'react-native-shake'
-import { observer } from 'mobx-react-lite'
+import { observer } from 'mobx-react'
 import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../store'
 import { vs } from 'react-native-size-matters'
 import { useFocusEffect } from '@react-navigation/native'

@@ -1,18 +1,20 @@
 import React, { memo } from 'react'
-import { StyleProp, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native'
+import { StyleProp, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
 import { secondary } from '../../constants'
-import { s, ms } from 'react-native-size-matters'
+import { s } from 'react-native-size-matters'
 import Spinner from 'react-native-spinkit'
 import FastImage from 'react-native-fast-image'
 
 const styles = StyleSheet.create({
   container: {
-    alignSelf: 'center'
+    alignSelf: 'center',
+    borderRadius: s(130),
+    overflow: 'hidden'
   },
   xLarge: {
     marginLeft: 1,
-    width: s(130),
-    height: s(130),
+    width: s(120),
+    height: s(120),
     borderRadius: s(130)
   },
   large: {
@@ -37,30 +39,26 @@ type sizeType = 'xLarge' | 'large' | 'medium' | 'small'
 
 interface AvatarT {
   loading: boolean
-  onPress?: () => void
   size?: sizeType
   uri?: string
   viewStyle?: StyleProp<ViewStyle>
 }
 
-const Avatar = memo<AvatarT>(({ loading, uri, size = 'large', onPress, viewStyle }) => {
+const Avatar = memo<AvatarT>(({ loading, uri, size = 'large', viewStyle }) => {
   const { container } = styles
   return (
-    <TouchableOpacity onPress={onPress} style={[container, viewStyle]}>
-      <>
-        {loading ? (
-          <Spinner size={styles[size].height} type="Pulse" color={secondary} />
-        ) : !uri ? (
-          <FastImage style={styles[size]} source={require('./pickaface.png')} />
-        ) : (
-          //<Image style={styles[size]} source={{ uri }} />
-          <FastImage
-            style={styles[size]}
-            source={{ uri, priority: FastImage.priority.high }}
-          />
-        )}
-      </>
-    </TouchableOpacity>
+    <View style={[container, viewStyle]}>
+      {loading ? (
+        <Spinner size={styles[size].height} type="Pulse" color={secondary} />
+      ) : !uri ? (
+        <FastImage style={styles[size]} source={require('./pickaface.png')} />
+      ) : (
+        <FastImage
+          style={styles[size]}
+          source={{ uri, priority: FastImage.priority.high }}
+        />
+      )}
+    </View>
   )
 })
 

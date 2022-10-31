@@ -1,19 +1,11 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  StyleSheet,
-  View,
-  ToastAndroid,
-  Platform,
-  BackHandler,
-  TextInput
-} from 'react-native'
+import React, { useCallback, useRef, useState } from 'react'
+import { StyleSheet, ToastAndroid, Platform, BackHandler } from 'react-native'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
-import { observer } from 'mobx-react-lite'
-import { ms, s, vs } from 'react-native-size-matters'
+import { observer } from 'mobx-react'
+import { s, vs } from 'react-native-size-matters'
 import { RootStackParamList } from '../../types'
 import {
   AppContainer,
-  VideoPlayer,
   Space,
   Text,
   CreatePost,

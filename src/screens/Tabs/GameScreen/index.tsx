@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react'
-import { observer } from 'mobx-react-lite'
+import React from 'react'
+import { observer } from 'mobx-react'
 import { s, vs } from 'react-native-size-matters'
 import { I18n } from '../../../utils'
 import { RootStackParamList, RootTabParamList } from '../../../types'
@@ -16,6 +16,7 @@ import {
 import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../../store'
 import Rate from 'react-native-rate'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { useLeftTimeForStep } from '../../../hooks'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -27,21 +28,7 @@ type GameScreenT = {
 }
 
 const GameScreen = observer(({ navigation }: GameScreenT) => {
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const currentDate = Date.now()
-      OnlinePlayer.store.timeText = OnlinePlayer.getLeftTime(OnlinePlayer.store.stepTime)
-      if (
-        currentDate - OnlinePlayer.store.stepTime >= 86400000 &&
-        OnlinePlayer.store.stepTime !== 0
-      ) {
-        OnlinePlayer.store.canGo = true
-      } else {
-        OnlinePlayer.store.canGo = false
-      }
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [])
+  useLeftTimeForStep()
 
   const _onPress = () => {
     const options = {
@@ -53,6 +40,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     }
     Rate.rate(options, success => actionsDice.setRate(success))
   }
+
   const endGame = DiceStore.online
     ? OnlinePlayer.store.finish
     : DiceStore.finishArr.indexOf(true) === -1

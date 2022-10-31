@@ -1,7 +1,7 @@
 import React from 'react'
 import { ImageBackground, StyleSheet, useColorScheme, View } from 'react-native'
 import { ICONS } from './images'
-import { observer } from 'mobx-react-lite'
+import { observer } from 'mobx-react'
 import { s } from 'react-native-size-matters'
 import { H, W } from '../../constants'
 import { Gem } from '../Gem'

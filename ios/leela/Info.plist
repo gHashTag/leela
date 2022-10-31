@@ -2,19 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>branch_key</key>
-	<dict>
-		<key>test</key>
-		<string>key_test_bbX7bfj6UkJAq51lEzzdJccesAg1Kzi1</string>
-		<key>live</key>
-		<string>key_live_mcYXcafYOnTCF05gBCjf5chpszeXGueK</string>
-	</dict>
-	<key>branch_universal_link_domains</key>
-	<array>
-		<string>leelagame.test.app.link</string>
-		<string>leelagame-alternate.app.link</string>
-		<string>leelagame.app.link</string>
-	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -64,13 +51,34 @@
 		</dict>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>In order to download the file, accept this agreement.</string>
 	<key>UIAppFonts</key>
 	<array>
-		<string>3270Narrow.ttf</string>
+		<string>AntDesign.ttf</string>
+		<string>Entypo.ttf</string>
+		<string>EvilIcons.ttf</string>
+		<string>Feather.ttf</string>
+		<string>FontAwesome.ttf</string>
+		<string>FontAwesome5_Brands.ttf</string>
+		<string>FontAwesome5_Regular.ttf</string>
+		<string>FontAwesome5_Solid.ttf</string>
+		<string>Fontisto.ttf</string>
+		<string>Foundation.ttf</string>
+		<string>Ionicons.ttf</string>
+		<string>MaterialCommunityIcons.ttf</string>
+		<string>MaterialIcons.ttf</string>
+		<string>Octicons.ttf</string>
+		<string>SimpleLineIcons.ttf</string>
+		<string>Zocial.ttf</string>
+		<string>NeutraText-Bold.otf</string>
+		<string>NeutraText-BoldItalic.otf</string>
+		<string>NeutraText-Book.otf</string>
+		<string>NeutraText-BookItalic.otf</string>
+		<string>OxygenMono-Regular.otf</string>
 		<string>etna-free-font.otf</string>
+		<string>3270Narrow.ttf</string>
 		<string>IBM-Logo.ttf</string>
 		<string>KLMN_Flash_Pix.ttf</string>
 		<string>Montserrat-Black.ttf</string>
@@ -91,28 +99,7 @@
 		<string>Montserrat-SemiBoldItalic.ttf</string>
 		<string>Montserrat-Thin.ttf</string>
 		<string>Montserrat-ThinItalic.ttf</string>
-		<string>NeutraText-Bold.otf</string>
-		<string>NeutraText-BoldItalic.otf</string>
-		<string>NeutraText-Book.otf</string>
-		<string>NeutraText-BookItalic.otf</string>
 		<string>TheDolbak-Brush.ttf</string>
-		<string>AntDesign.ttf</string>
-		<string>Entypo.ttf</string>
-		<string>EvilIcons.ttf</string>
-		<string>Feather.ttf</string>
-		<string>FontAwesome.ttf</string>
-		<string>FontAwesome5_Brands.ttf</string>
-		<string>FontAwesome5_Regular.ttf</string>
-		<string>FontAwesome5_Solid.ttf</string>
-		<string>Fontisto.ttf</string>
-		<string>Foundation.ttf</string>
-		<string>Ionicons.ttf</string>
-		<string>MaterialCommunityIcons.ttf</string>
-		<string>MaterialIcons.ttf</string>
-		<string>Octicons.ttf</string>
-		<string>SimpleLineIcons.ttf</string>
-		<string>Zocial.ttf</string>
-		<string>OxygenMono-Regular.otf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
@@ -127,12 +114,25 @@
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
-		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>branch_key</key>
+	<dict>
+		<key>live</key>
+		<string>key_live_mcYXcafYOnTCF05gBCjf5chpszeXGueK</string>
+		<key>test</key>
+		<string>key_test_bbX7bfj6UkJAq51lEzzdJccesAg1Kzi1</string>
+	</dict>
+	<key>branch_universal_link_domains</key>
+	<array>
+		<string>leelagame.test.app.link</string>
+		<string>leelagame-alternate.app.link</string>
+		<string>leelagame.app.link</string>
+	</array>
 </dict>
 </plist>

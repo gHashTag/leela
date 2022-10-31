@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { s } from 'react-native-size-matters'
-import { observer } from 'mobx-react-lite'
+import { observer } from 'mobx-react'
 import { I18n } from '../../../utils'
 import { Button } from '../Button'
 import { Space } from '../../Space'

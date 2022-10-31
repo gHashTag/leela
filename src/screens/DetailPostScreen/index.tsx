@@ -14,7 +14,7 @@ import { OnlinePlayer, PostStore } from '../../store'
 import { PostT, RootStackParamList } from '../../types'
 
 import { s, vs } from 'react-native-size-matters'
-import { observer } from 'mobx-react-lite'
+import { observer } from 'mobx-react'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { getUid } from '../helper'
 import firestore from '@react-native-firebase/firestore'

@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { LayoutChangeEvent, StyleSheet, View, FlatList } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { gray, lightGray, navigate, OpenReplyModal } from '../../../constants'
-import { OnlinePlayer, OtherPlayers, PostStore } from '../../../store'
+import { gray, lightGray, OpenActionsModal } from '../../../constants'
+import { PostStore } from '../../../store'
 import { ButtonsModalT, CommentT } from '../../../types'
 import {
   ButtonVectorIcon,
@@ -12,11 +12,8 @@ import {
   PlanAvatar,
   HashtagFormat
 } from '../../'
-import { nanoid } from 'nanoid/non-secure'
-import Clipboard from '@react-native-clipboard/clipboard'
-import { getTimeStamp, getUid } from '../../../screens/helper'
-import { observer } from 'mobx-react-lite'
-import I18n from 'i18n-js'
+import { getTimeStamp } from '../../../screens/helper'
+import { observer } from 'mobx-react'
 import { getActions } from './ModalActions'
 
 interface CommentCardI {
@@ -50,7 +47,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
     }
     const OpenModal = () => {
       const modalButtons = getActions({ hideTranslate, item, handleTransText })
-      OpenReplyModal(modalButtons)
+      OpenActionsModal(modalButtons)
     }
     const text = hideTranslate ? item.text : transText
 

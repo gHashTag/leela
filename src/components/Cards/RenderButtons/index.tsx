@@ -2,7 +2,7 @@ import React from 'react'
 import { useTheme } from '@react-navigation/native'
 import { Pressable, StyleSheet } from 'react-native'
 import { vs, s } from 'react-native-size-matters'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import Icon from 'react-native-vector-icons/Ionicons'
 import { Space, Text } from '../../'
 import { ButtonsModalT } from '../../../types'
 
@@ -13,12 +13,7 @@ interface RenderButtonsT {
   press?: () => void
 }
 
-export function RenderButtons({
-  item,
-  index,
-  colorOnPress,
-  press
-}: RenderButtonsT) {
+export function RenderButtons({ item, index, colorOnPress, press }: RenderButtonsT) {
   const { onPress, key, title, color, icon } = item
   const {
     colors: { text }
@@ -31,15 +26,12 @@ export function RenderButtons({
 
   return (
     <Pressable
-      style={({ pressed }) => [
-        butCont,
-        pressed && { backgroundColor: colorOnPress }
-      ]}
+      style={({ pressed }) => [butCont, pressed && { backgroundColor: colorOnPress }]}
       onPress={handlePress}
     >
       <Icon name={icon} color={curColor} size={s(24)} />
-      <Space width={s(20)} />
-      <Text oneColor={curColor} h="h4" title={title} />
+      <Space width={s(15)} />
+      <Text textStyle={titleStyle} oneColor={curColor} h="h4" title={title} />
     </Pressable>
   )
 }
@@ -52,7 +44,11 @@ const stylesButtons = StyleSheet.create({
     paddingVertical: vs(10),
     alignItems: 'center',
     borderRadius: s(30)
+  },
+  titleStyle: {
+    flexWrap: 'wrap',
+    flex: 1
   }
 })
 
-const { butCont } = stylesButtons
+const { butCont, titleStyle } = stylesButtons

@@ -5,7 +5,7 @@ import { Text, HashtagFormat, Space } from '../../'
 import { PostStore } from '../../../store'
 import { PlanAvatar } from '../../'
 import { s, vs } from 'react-native-size-matters'
-import { fuchsia, lightGray, OpenReplyModal } from '../../../constants'
+import { fuchsia, lightGray, OpenActionsModal } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
 import { ButtonVectorIcon } from '../../Buttons'
 import { getActions } from './ModalActions'
@@ -29,7 +29,7 @@ export function SubCommentCard({ item, index }: SubComT) {
   }
   const OpenModal = () => {
     const modalButtons = getActions({ handleTransText, hideTranslate, item })
-    OpenReplyModal(modalButtons)
+    OpenActionsModal(modalButtons)
   }
   const text = hideTranslate ? item.text : transText
   const curName = PostStore.getOwnerName(item.ownerId, false)

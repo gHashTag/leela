@@ -7,7 +7,7 @@
 // import { Space } from '../Space'
 // import { I18n } from '../../utils'
 // import { actionsSubscribe, SubscribeStore } from '../../store'
-// import { observer } from 'mobx-react-lite'
+// import { observer } from 'mobx-react'
 // import { openUrl } from '../../constants'
 
 // const styles = ScaledSheet.create({

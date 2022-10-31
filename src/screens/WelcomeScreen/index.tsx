@@ -1,5 +1,5 @@
 import React from 'react'
-import { observer } from 'mobx-react-lite'
+import { observer } from 'mobx-react'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { s, vs } from 'react-native-size-matters'
 import { I18n } from '../../utils'

@@ -47,7 +47,7 @@ export function OpenPlanReportModal(plan: number) {
   }
 }
 
-export function OpenReplyModal(modalButtons: ButtonsModalT[]) {
+export function OpenActionsModal(modalButtons: ButtonsModalT[]) {
   if (navRef.isReady()) {
     navRef.navigate('REPLY_MODAL', { buttons: modalButtons })
   }

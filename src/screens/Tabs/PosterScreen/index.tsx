@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { StyleSheet, ImageBackground } from 'react-native'
-import { observer } from 'mobx-react-lite'
-import { RootStackParamList, RootTabParamList } from '../../../types'
+import { observer } from 'mobx-react'
+import { RootTabParamList } from '../../../types'
 import { OnlinePlayer } from '../../../store'
 import { Button } from 'react-native-elements'
 import { s } from 'react-native-size-matters'
@@ -37,12 +37,7 @@ const styles = StyleSheet.create({
   }
 })
 
-interface PosterPropsT {
-  imgUrl: string
-  eventUrl: string
-}
-
-const PosterScreen = observer(({}: PosterPropsT) => {
+const PosterScreen = observer(({}: PosterScreenT) => {
   const { button, img, buttonConteiner } = styles
 
   useEffect(() => {
@@ -60,10 +55,7 @@ const PosterScreen = observer(({}: PosterPropsT) => {
         type="outline"
         onPress={() => openUrl(OnlinePlayer.store.poster.eventUrl)}
         containerStyle={buttonConteiner}
-        buttonStyle={[
-          button,
-          { borderColor: OnlinePlayer.store.poster.buttonColor }
-        ]}
+        buttonStyle={[button, { borderColor: OnlinePlayer.store.poster.buttonColor }]}
         titleStyle={{ color: OnlinePlayer.store.poster.buttonColor }}
       />
     </ImageBackground>
