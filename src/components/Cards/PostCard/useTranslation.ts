@@ -4,7 +4,7 @@ import { PostT } from '../../../types'
 import { lang } from '../../../utils'
 
 interface useTranslationParams {
-  item: PostT
+  item?: PostT
   translatedText?: string
   isHideTranslate?: boolean
 }
@@ -34,15 +34,15 @@ export const useTranslation = ({
     }
   }
 
-  const text = hideTranslate ? item.text : transText
+  const text = hideTranslate ? item?.text : transText
 
   const flag = hideTranslate
     ? lang === 'en'
       ? ':us:'
       : `:${lang}:`
-    : item.language === 'en'
+    : item?.language === 'en'
     ? ':us:'
-    : `:${item.language}:`
+    : `:${item?.language}:`
 
   return { transText, hideTranslate, handleTranslate, flag, text }
 }

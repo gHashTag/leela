@@ -5,7 +5,7 @@ import { s } from 'react-native-size-matters'
 
 import { I18n } from '../../../utils'
 import { RootTabParamList, RootStackParamList } from '../../../types'
-import { AppContainer, Space, HeaderMaster, Spin } from '../../../components'
+import { AppContainer, Space, HeaderMaster, Spin, CenterView } from '../../../components'
 import { DiceStore, OnlinePlayer } from '../../../store'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { SecondaryTab } from '../../../components/SecondaryTab'
@@ -35,7 +35,9 @@ type ProfileScreenT = {
           )} */
 
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
-  const tabViewWidth = useWindowDimensions().width * 0.9
+  const { width: W, height: H } = useWindowDimensions()
+  const tabViewWidth = W * 0.96
+
   return (
     <AppContainer
       iconRight={':books:'}
@@ -44,40 +46,39 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
       textAlign="center"
     >
       <TabContextProvider>
-        {({ tabViewH, screenStyle, headerGesture, blockScrollUntilAtTheTop }: any) => (
-          <GestureDetector gesture={blockScrollUntilAtTheTop}>
-            <Animated.View style={screenStyle}>
+        {({ tabViewH, screenStyle, headerGesture, blockScrollUntilAtTheTop1 }: any) => (
+          <Animated.View style={screenStyle}>
+            {OnlinePlayer.store.loadingProf && DiceStore.online ? (
+              <CenterView>
+                <Spin centered />
+                <Space height={H * 0.5} />
+              </CenterView>
+            ) : (
               <View style={{ alignItems: 'center', width: '100%' }}>
-                {OnlinePlayer.store.loadingProf && DiceStore.online ? (
-                  <Spin centered />
-                ) : (
-                  <View>
-                    {DiceStore.online && (
-                      <HeaderMaster
-                        onPress={() =>
-                          navigation.navigate('USER_EDIT', OnlinePlayer.store.profile)
-                        }
-                      />
-                    )}
-                    <Space height={s(20)} />
-                    <OwnTabView
-                      renderTabBar={props => (
-                        <GestureDetector gesture={headerGesture}>
-                          <SecondaryTab {...props} />
-                        </GestureDetector>
-                      )}
-                      width={tabViewWidth}
-                      screens={[
-                        { key: 'reports', title: I18n.t('reports'), Scene: ReportsScene },
-                        { key: 'history', title: I18n.t('history'), Scene: HistoryScene }
-                      ]}
-                      style={[tabContainer, { height: tabViewH }]}
-                    />
-                  </View>
+                {DiceStore.online && (
+                  <HeaderMaster
+                    onPress={() =>
+                      navigation.navigate('USER_EDIT', OnlinePlayer.store.profile)
+                    }
+                  />
                 )}
+                <Space height={s(20)} />
+                <OwnTabView
+                  renderTabBar={props => (
+                    <GestureDetector gesture={headerGesture}>
+                      <SecondaryTab {...props} />
+                    </GestureDetector>
+                  )}
+                  width={tabViewWidth}
+                  screens={[
+                    { key: 'reports', title: I18n.t('reports'), Scene: ReportsScene },
+                    { key: 'history', title: I18n.t('history'), Scene: HistoryScene }
+                  ]}
+                  style={[tabContainer, { height: tabViewH }]}
+                />
               </View>
-            </Animated.View>
-          </GestureDetector>
+            )}
+          </Animated.View>
         )}
       </TabContextProvider>
     </AppContainer>

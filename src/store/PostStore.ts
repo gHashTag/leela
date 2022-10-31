@@ -22,9 +22,11 @@ import { AllLang } from '../utils'
 type fetchT = FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
 interface postStoreT {
   posts: PostT[]
+  ownPosts: PostT[]
   comments: CommentT[]
   replyComments: ReplyComT[]
   loadPosts: boolean
+  loadOwnPosts: boolean
 }
 
 interface delCommentT {
@@ -41,8 +43,10 @@ interface delCommentIdT {
 export const PostStore = {
   store: makeAutoObservable<postStoreT>({
     posts: [],
+    ownPosts: [],
     comments: [],
     replyComments: [],
+    loadOwnPosts: true,
     loadPosts: true
   }),
   createPost: async ({ text, plan }: FormPostT) => {
@@ -163,6 +167,24 @@ export const PostStore = {
       PostStore.store.posts = res.sort((a, b) => b.createTime - a.createTime)
     }
     PostStore.store.loadPosts = false
+  },
+  fetchOwnPosts: async (querySnap: fetchT) => {
+    PostStore.store.loadOwnPosts = true
+    const uid = getUid()
+    const isAdmin = OnlinePlayer.store.status === 'Admin'
+    const res: any[] = querySnap.docs
+      .map(a => {
+        if (a.exists) {
+          const data = a.data()
+          return data
+        }
+      })
+      .filter(a => a !== undefined)
+      .filter(a => (isAdmin ? true : a?.ownerId === uid ? true : a?.accept))
+    if (res.length > 0) {
+      PostStore.store.ownPosts = res.sort((a, b) => b.createTime - a.createTime)
+    }
+    PostStore.store.loadOwnPosts = false
   },
   fetchComments: async (querySnap: fetchT) => {
     const res: any[] = await Promise.all(

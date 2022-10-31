@@ -8,7 +8,6 @@ import { OnlinePlayer } from '../../store'
 import { observer } from 'mobx-react'
 import { BlurView } from '@react-native-community/blur'
 import Icon from 'react-native-vector-icons/Ionicons'
-import I18n from 'i18n-js'
 import { useTheme } from '@react-navigation/native'
 import { useActions } from './useActions'
 

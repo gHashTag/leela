@@ -43,11 +43,11 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
       }
     }
   }, [limit])
-
+  const data = PostStore.store.posts
   const newLimit = () => {
-    setLimit(pr => pr + 15)
+    if (data.length <= limit) setLimit(pr => pr + 15)
   }
-  const load = PostStore.store.loadPosts && PostStore.store.posts.length === 0
+  const load = PostStore.store.loadPosts && data.length === 0
   return load ? (
     <Spin centered />
   ) : (
@@ -56,7 +56,7 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
       ref={listRef}
       onScrollToIndexFailed={er => console.log(er)}
       showsVerticalScrollIndicator={false}
-      data={PostStore.store.posts}
+      data={data}
       onEndReached={newLimit}
       onEndReachedThreshold={0.1}
       keyExtractor={a => a.id}

@@ -30,7 +30,8 @@ export const useScrollGesture = () => {
   const panGestureRef = useRef(Gesture.Pan())
   const blockScrollUntilAtTheTopRef = useRef(Gesture.Tap())
   const translationY = useSharedValue(0)
-  const scrollOffset = useSharedValue(0)
+  const scrollOffset0 = useSharedValue(0)
+  const scrollOffset1 = useSharedValue(0)
   const bottomSheetTranslateY = useSharedValue(CLOSED_SNAP_POINT)
 
   const onHandlerEndOnJS = (point: number) => {
@@ -64,14 +65,14 @@ export const useScrollGesture = () => {
     })
     runOnJS(onHandlerEndOnJS)(destSnapPoint)
   }
-  const panGesture = Gesture.Pan()
+
+  const panGesture0 = Gesture.Pan()
     .onUpdate(e => {
       // when bottom sheet is not fully opened scroll offset should not influence
       // its position (prevents random snapping when opening bottom sheet when
       // the content is already scrolled)
-
       if (snapPoint === FULLY_OPEN_SNAP_POINT) {
-        translationY.value = e.translationY - scrollOffset.value
+        translationY.value = e.translationY - scrollOffset0.value
       } else {
         translationY.value = e.translationY
       }
@@ -79,21 +80,45 @@ export const useScrollGesture = () => {
     .onEnd(onHandlerEnd)
     .withRef(panGestureRef)
 
-  const blockScrollUntilAtTheTop = Gesture.Tap()
+  const blockScrollUntilAtTheTop0 = Gesture.Tap()
     .maxDeltaY(snapPoint - FULLY_OPEN_SNAP_POINT)
     .maxDuration(100000)
-    .simultaneousWithExternalGesture(panGesture)
+    .simultaneousWithExternalGesture(panGesture0)
     .withRef(blockScrollUntilAtTheTopRef)
+
+  const scrollViewGesture0 = Gesture.Native().requireExternalGestureToFail(
+    blockScrollUntilAtTheTop0
+  )
+
+  const panGesture1 = Gesture.Pan()
+    .onUpdate(e => {
+      // when bottom sheet is not fully opened scroll offset should not influence
+      // its position (prevents random snapping when opening bottom sheet when
+      // the content is already scrolled)
+      if (snapPoint === FULLY_OPEN_SNAP_POINT) {
+        translationY.value = e.translationY - scrollOffset1.value
+      } else {
+        translationY.value = e.translationY
+      }
+    })
+    .onEnd(onHandlerEnd)
+    .withRef(panGestureRef)
+
+  const blockScrollUntilAtTheTop1 = Gesture.Tap()
+    .maxDeltaY(snapPoint - FULLY_OPEN_SNAP_POINT)
+    .maxDuration(100000)
+    .simultaneousWithExternalGesture(panGesture1)
+    .withRef(blockScrollUntilAtTheTopRef)
+
+  const scrollViewGesture1 = Gesture.Native().requireExternalGestureToFail(
+    blockScrollUntilAtTheTop1
+  )
 
   const headerGesture = Gesture.Pan()
     .onUpdate(e => {
       translationY.value = e.translationY
     })
     .onEnd(onHandlerEnd)
-
-  const scrollViewGesture = Gesture.Native().requireExternalGestureToFail(
-    blockScrollUntilAtTheTop
-  )
 
   const screenStyle = useAnimatedStyle(() => {
     const translateY = bottomSheetTranslateY.value + translationY.value
@@ -108,10 +133,14 @@ export const useScrollGesture = () => {
   return {
     tabViewH,
     screenStyle,
-    panGesture,
+    panGesture1,
+    panGesture0,
     headerGesture,
-    scrollViewGesture,
-    scrollOffset,
-    blockScrollUntilAtTheTop
+    scrollViewGesture1,
+    scrollViewGesture0,
+    scrollOffset0,
+    scrollOffset1,
+    blockScrollUntilAtTheTop1,
+    blockScrollUntilAtTheTop0
   }
 }

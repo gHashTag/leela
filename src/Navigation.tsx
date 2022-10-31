@@ -24,7 +24,8 @@ import {
   NetworkModal,
   VideoPopup,
   PlanReportModal,
-  UpdateVersionModal
+  UpdateVersionModal,
+  OfflineProfileScreen
 } from './screens'
 
 import {
@@ -50,6 +51,8 @@ import { Fallback } from './components'
 import { RootStackParamList, RootTabParamList } from './types'
 import Orientation from 'react-native-orientation-locker'
 import { useGameAndProfileIsOnline, useNetwork, useExitModal } from './hooks'
+import { observer } from 'mobx-react'
+import { DiceStore } from './store'
 
 const DarkTheme = {
   dark: true,
@@ -77,7 +80,7 @@ const LightTheme = {
 
 const TabNavigator = createMaterialTopTabNavigator<RootTabParamList>()
 
-const Tab = () => {
+const Tab = observer(() => {
   useGameAndProfileIsOnline()
   useExitModal()
   useNetwork()
@@ -93,12 +96,15 @@ const Tab = () => {
     >
       <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
       <TabNavigator.Screen name="TAB_BOTTOM_1" component={PostScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_2" component={ProfileScreen} />
+      <TabNavigator.Screen
+        name="TAB_BOTTOM_2"
+        component={DiceStore.online ? ProfileScreen : OfflineProfileScreen}
+      />
       <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
       {/* <TabNavigator.Screen name="TAB_BOTTOM_3" component={PosterScreen} /> */}
     </TabNavigator.Navigator>
   )
-}
+})
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 

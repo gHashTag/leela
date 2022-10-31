@@ -46,7 +46,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
       setHideTranslate(pr => !pr)
     }
     const OpenModal = () => {
-      const modalButtons = getActions({ hideTranslate, item, handleTransText })
+      const modalButtons = getActions({ item, handleTransText })
       OpenActionsModal(modalButtons)
     }
     const text = hideTranslate ? item.text : transText

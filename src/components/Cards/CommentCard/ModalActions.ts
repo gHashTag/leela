@@ -9,9 +9,8 @@ type getActionsT = (props: getActionsProps) => ButtonsModalT[]
 interface getActionsProps {
   item: CommentT
   handleTransText: () => void
-  hideTranslate: boolean
 }
-export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }) => {
+export const getActions: getActionsT = ({ item, handleTransText }) => {
   const isOwner = getUid() === item.ownerId
   const isAdmin = OnlinePlayer.store.status === 'Admin'
   const isBaned =
@@ -31,7 +30,7 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
         })
       },
       title: I18n.t('reply'),
-      icon: 'reply-outline'
+      icon: 'ios-paper-plane-outline'
     },
     {
       key: 'COPY',
@@ -39,13 +38,13 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
         Clipboard.setString(item.text)
       },
       title: I18n.t('copy'),
-      icon: 'content-copy'
+      icon: 'ios-copy-outline'
     },
     {
       key: 'TRANSLATE',
       onPress: handleTransText,
       title: I18n.t('translate'),
-      icon: !hideTranslate ? 'translate-off' : 'translate'
+      icon: 'ios-language-outline'
     },
     {
       key: 'DEL',
@@ -58,7 +57,7 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
       },
       title: I18n.t('delete'),
       color: 'red',
-      icon: 'delete-outline'
+      icon: 'md-trash-outline'
     },
     {
       key: 'DEL_ALL_COM',
@@ -67,7 +66,7 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
       },
       title: 'delete all user comments',
       color: 'red',
-      icon: 'delete-alert-outline'
+      icon: 'md-warning-outline'
     },
     {
       key: 'BAN',
@@ -76,7 +75,7 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
       },
       title: isBaned ? 'Unban user' : 'Ban user',
       color: isBaned ? undefined : 'red',
-      icon: isBaned ? 'account-plus-outline' : 'account-off-outline'
+      icon: isBaned ? 'person-add-outline' : 'person-remove-outline'
     }
   ]
     .filter(a => (isOwner ? true : isAdmin ? true : a.key !== 'DEL'))

@@ -32,8 +32,6 @@ export const PostCard: React.FC<postCardI> = memo(
 
     const item = PostStore.store.posts.find(a => a.id === postId)
 
-    if (!item) return <Text title="Not found" h="h1" />
-
     const { transText, hideTranslate, handleTranslate, flag, text } = useTranslation({
       translatedText,
       isHideTranslate,
@@ -48,6 +46,7 @@ export const PostCard: React.FC<postCardI> = memo(
       handleShareLink,
       isLiked
     } = usePostActions({ isDetail, onPressCom, item, transText, hideTranslate })
+    if (!item) return <></>
 
     const likeCount = item.liked?.length
     const commCount = item.comments?.length
@@ -88,7 +87,7 @@ export const PostCard: React.FC<postCardI> = memo(
             </TouchableOpacity>
           </View>
           {/* Detail Text */}
-          <HashtagFormat h={'h5'} textStyle={textStyle} title={text} selectable />
+          <HashtagFormat h={'h5'} textStyle={textStyle} title={text || ' '} selectable />
           {/* Detail Date */}
           <Space height={vs(5)} />
           <View style={headerS}>
@@ -174,7 +173,7 @@ export const PostCard: React.FC<postCardI> = memo(
               textStyle={textStyle}
               numberOfLines={8}
               h={'h5'}
-              title={text}
+              title={text || ' '}
             />
             {!item.accept && (
               <>

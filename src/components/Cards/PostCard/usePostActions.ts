@@ -8,7 +8,7 @@ import { buildReportLink } from '../../../utils/linkHelpers'
 import { getActions } from './ModalActions'
 
 interface usePostActionsParams {
-  item: PostT
+  item?: PostT
   isDetail: boolean
   onPressCom?: () => void
   transText: string
@@ -23,7 +23,7 @@ export const usePostActions = ({
   hideTranslate
 }: usePostActionsParams) => {
   const { navigate } = useTypedNavigation()
-  const isLiked = item.liked?.findIndex(a => a === getUid()) === -1 ? false : true
+  const isLiked = item?.liked?.findIndex(a => a === getUid()) === -1 ? false : true
 
   function goDetail() {
     item &&
