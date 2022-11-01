@@ -9,7 +9,7 @@ import firestore from '@react-native-firebase/firestore'
 import { captureException } from '../../../../constants'
 import { getUid } from '../../../helper'
 import Animated from 'react-native-reanimated'
-import { Gesture, GestureDetector } from 'react-native-gesture-handler'
+import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler'
 import { TabContext } from '../TabContext'
 
 export const ReportsScene = observer(() => {
@@ -51,36 +51,41 @@ export const ReportsScene = observer(() => {
             scrollOffset0.value = e.nativeEvent.contentOffset.y
           }}
         >
-          <FlatList
-            removeClippedSubviews={false}
-            scrollEnabled={false}
-            showsVerticalScrollIndicator={false}
-            data={data}
-            onEndReached={newLimit}
-            onEndReachedThreshold={0.1}
-            keyExtractor={a => a.id}
-            renderItem={({ item }) => <PostCard postId={item.id} />}
-            ItemSeparatorComponent={() => <Space height={vs(10)} />}
-            ListHeaderComponent={<Space height={vs(10)} />}
-            ListEmptyComponent={
-              <View style={{ paddingHorizontal: s(20) }}>
-                <Text
-                  textStyle={{ textAlign: 'center' }}
-                  h={'h1'}
-                  title={I18n.t('noPosts')}
-                />
-              </View>
-            }
-          />
-          <Space height={vs(70)} />
+          <ScrollView horizontal={true} contentContainerStyle={scrollViewTrick}>
+            <FlatList
+              removeClippedSubviews={false}
+              scrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+              data={data}
+              onEndReached={newLimit}
+              onEndReachedThreshold={0.1}
+              keyExtractor={a => a.id}
+              renderItem={({ item }) => <PostCard postId={item.id} />}
+              ItemSeparatorComponent={() => <Space height={vs(10)} />}
+              ListHeaderComponent={<Space height={vs(10)} />}
+              ListEmptyComponent={
+                <View style={{ paddingHorizontal: s(20) }}>
+                  <Text
+                    textStyle={{ textAlign: 'center' }}
+                    h={'h1'}
+                    title={I18n.t('noPosts')}
+                  />
+                </View>
+              }
+            />
+          </ScrollView>
         </Animated.ScrollView>
       </GestureDetector>
+      <Space height={vs(70)} />
     </>
   )
 })
 
 const styles = StyleSheet.create({
-  mainBlock: {}
+  scrollViewTrick: {
+    width: '100%',
+    height: '100%'
+  }
 })
 
-const { mainBlock } = styles
+const { scrollViewTrick } = styles

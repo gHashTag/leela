@@ -5,7 +5,7 @@ import { s, vs } from 'react-native-size-matters'
 
 import { Text, Space, HistoryStep } from '../../../../components'
 import { useHistoryData } from '../../../../hooks/useHistoryData'
-import { Gesture, GestureDetector } from 'react-native-gesture-handler'
+import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler'
 import { TabContext } from '../TabContext'
 import Animated from 'react-native-reanimated'
 
@@ -28,25 +28,31 @@ export const HistoryScene = observer(() => {
             scrollOffset1.value = e.nativeEvent.contentOffset.y
           }}
         >
-          <SectionList
-            style={historyList}
-            scrollEnabled={false}
-            ListFooterComponent={<Space height={vs(50)} />}
-            initialNumToRender={60}
-            maxToRenderPerBatch={60}
-            stickySectionHeadersEnabled={false}
-            sections={DATA} //[...DATA, ...DATA, ...DATA, ...DATA]
-            renderItem={props => <HistoryStep {...props} />}
-            keyExtractor={(e, id) => String(id)}
-            showsVerticalScrollIndicator={false}
-            renderSectionHeader={({ section: { title } }) =>
-              title ? (
-                <Text h={'h3'} title={title} textStyle={{ padding: 15, marginTop: 10 }} />
-              ) : (
-                <Space height={20} />
-              )
-            }
-          />
+          <ScrollView horizontal={true} contentContainerStyle={scrollViewTrick}>
+            <SectionList
+              style={historyList}
+              scrollEnabled={false}
+              ListFooterComponent={<Space height={vs(50)} />}
+              initialNumToRender={60}
+              maxToRenderPerBatch={60}
+              stickySectionHeadersEnabled={false}
+              sections={DATA} //[...DATA, ...DATA, ...DATA, ...DATA]
+              renderItem={props => <HistoryStep {...props} />}
+              keyExtractor={(e, id) => String(id)}
+              showsVerticalScrollIndicator={false}
+              renderSectionHeader={({ section: { title } }) =>
+                title ? (
+                  <Text
+                    h={'h3'}
+                    title={title}
+                    textStyle={{ padding: 15, marginTop: 10 }}
+                  />
+                ) : (
+                  <Space height={20} />
+                )
+              }
+            />
+          </ScrollView>
         </Animated.ScrollView>
       </GestureDetector>
       <Space height={vs(70)} />
@@ -58,7 +64,11 @@ const styles = StyleSheet.create({
   historyList: {
     paddingHorizontal: s(10),
     flex: 1
+  },
+  scrollViewTrick: {
+    width: '100%',
+    height: '100%'
   }
 })
 
-const { historyList } = styles
+const { historyList, scrollViewTrick } = styles

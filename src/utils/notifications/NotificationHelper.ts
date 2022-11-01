@@ -133,21 +133,21 @@ export const updateAndroidBadgeCount = async ({ type, value }: setAndroidBadgeCo
   switch (type) {
     case 'increment':
       BadgeAndroidStore.count = previous + 1
-      BadgeAndroid.setBadge(previous + 1)
+      BadgeAndroid?.setBadge(previous + 1)
       break
     case 'decrement':
       if (previous > 0) {
         BadgeAndroidStore.count = previous - 1
-        BadgeAndroid.setBadge(previous - 1)
+        BadgeAndroid?.setBadge(previous - 1)
       }
       break
     case 'set':
       BadgeAndroidStore.count = value || 0
-      BadgeAndroid.setBadge(value || 0)
+      BadgeAndroid?.setBadge(value || 0)
       break
     case 'clear':
       BadgeAndroidStore.count = 0
-      BadgeAndroid.setBadge(0)
+      BadgeAndroid?.setBadge(0)
       break
   }
 }
