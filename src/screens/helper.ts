@@ -254,7 +254,7 @@ const getImagePicker = async () => {
 
 const getIMG = async (fileName?: string) => {
   const defaultImg =
-    'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/defaultProfileImage.png'
+    'https://leelachakra.com/resource/LeelaChakra/defaultProfileImage.png'
   if (fileName) {
     try {
       return await storage().ref(fileName).getDownloadURL()

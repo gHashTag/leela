@@ -50,7 +50,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   useEffect(() => {
     const getData = async () => {
       let response = await fetch(
-        'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/PhotoLeela/leelaPhoto.json'
+        'https://leelachakra.com/resource/LeelaChakra/PhotoLeela/leelaPhoto.json'
       )
       setImages(await response.json())
     }
@@ -58,9 +58,9 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   }, [navigation])
 
   const poster =
-    'https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.jpg'
+    'https://leelachakra.com/resource/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.jpg'
   const uri =
-    'https://s3.eu-central-1.wasabisys.com/database999/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.mp4'
+    'https://leelachakra.com/resource/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.mp4'
 
   return (
     <View style={container}>
@@ -101,7 +101,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
             <Space height={s(20)} />
             <Text textStyle={centered} h={'h3'} title={I18n.t('contacts')} />
             <SocialLinks />
-            <Space height={vs(200)} />
+            <Space height={vs(160)} />
           </ScrollView>
         </Background>
       </ThemeProvider>

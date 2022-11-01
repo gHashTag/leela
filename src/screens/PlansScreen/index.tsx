@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { FlatList } from 'react-native'
 import { I18n, lang } from '../../utils'
 import { PlansT, RootStackParamList } from '../../types'
@@ -17,13 +17,9 @@ type PlansScreenT = {
 }
 
 const PlansScreen = ({ navigation }: PlansScreenT) => {
-  const [data, setData] = useState<PlansT[]>([])
+  const [data] = useState<PlansT[]>(lang === 'en' ? en : ru)
 
   const _keyExtractor = (obj: any) => obj.id.toString()
-
-  useEffect(() => {
-    setData(lang === 'en' ? en : ru)
-  })
 
   const onPressItem = useCallback(
     (item: PlansT) => () => {

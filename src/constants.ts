@@ -110,8 +110,7 @@ export const orange = '#FFB700'
 
 export const revenuecat = 'BeIMIIfptWXlouosYudFEWQDkwDvJUzv'
 
-export const defUrl =
-  'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/Mantra/mantra.json'
+export const defUrl = 'https://leelachakra.com/resource/LeelaChakra/Mantra/mantra.json'
 
 export const ENTITLEMENT_ID = 'Pro'
 

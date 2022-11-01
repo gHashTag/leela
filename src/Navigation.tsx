@@ -95,7 +95,9 @@ const Tab = observer(() => {
       initialRouteName={'TAB_BOTTOM_0'}
     >
       <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_1" component={PostScreen} />
+      {DiceStore.online && (
+        <TabNavigator.Screen name="TAB_BOTTOM_1" component={PostScreen} />
+      )}
       <TabNavigator.Screen
         name="TAB_BOTTOM_2"
         component={DiceStore.online ? ProfileScreen : OfflineProfileScreen}

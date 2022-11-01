@@ -3,7 +3,6 @@ import { View, TouchableOpacity, useColorScheme } from 'react-native'
 import { ScaledSheet, s } from 'react-native-size-matters'
 import { Tab } from './components'
 import { black, white } from './constants'
-import { DiceStore } from './store'
 import { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { observer } from 'mobx-react'
@@ -13,9 +12,6 @@ export default observer(function TabBar({ state, navigation }: MaterialTopTabBar
   const scheme = useColorScheme()
   const { bottom } = useSafeAreaInsets()
 
-  const curRoute = routes.filter(a =>
-    DiceStore.online ? true : a.name === 'TAB_BOTTOM_1' ? false : true
-  )
   const tabContainer = [
     container,
     {
@@ -26,8 +22,8 @@ export default observer(function TabBar({ state, navigation }: MaterialTopTabBar
 
   return (
     <View style={tabContainer}>
-      {curRoute.map(({ name, key }, id) => {
-        const isFocused = `TAB_BOTTOM_${index}` === name
+      {routes.map(({ name, key }, id) => {
+        const isFocused = index === id
         return (
           <TouchableOpacity
             key={key}

@@ -29,7 +29,7 @@ type PlansDetailScreenT = {
 }
 
 const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) => {
-  const { id, title, content, audioUrl, report, url } = route.params
+  const { id, title, content, report, url } = route.params
   const soundRef = useRef<Sound>()
   const { h3 } = styles
   const { isReported } = OnlinePlayer.store
@@ -67,7 +67,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
 
   const onToggle = () => {
     if (!soundRef.current) {
-      const sound = new Sound(audioUrl, undefined)
+      const sound = new Sound(url, undefined)
       soundRef.current = sound
       const interval = setInterval(() => {
         const isLoaded = soundRef.current?.isLoaded()

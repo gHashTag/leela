@@ -33,8 +33,7 @@ export type RootStackParamList = {
     id: number
     title: string
     content: string
-    url?: string
-    audioUrl: string
+    url: string
     report?: boolean
   }
   PROFILE_SCREEN: undefined
@@ -86,7 +85,6 @@ export interface PlansT {
   title: string
   content: string
   url: string
-  audioUrl: string
 }
 export interface UserT {
   email: string

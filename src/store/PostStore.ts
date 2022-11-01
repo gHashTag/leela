@@ -278,7 +278,7 @@ export const PostStore = {
     const otherUserAva = OtherPlayers.store.players.find(a => a.owner === uid)?.avatar
     return otherUserAva
       ? otherUserAva
-      : 'https://s3.eu-central-1.wasabisys.com/database999/LeelaChakra/anonymous.png'
+      : 'https://leelachakra.com/resource/LeelaChakra/anonymous.png'
   },
   banUnbanUser: async (uid: string) => {
     try {
