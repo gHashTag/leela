@@ -1,5 +1,4 @@
 export * from './HashtagFormat'
 export * from './Text'
 export * from './TextError'
-export * from './TextMarkDown'
 export * from './SelectableIOS'

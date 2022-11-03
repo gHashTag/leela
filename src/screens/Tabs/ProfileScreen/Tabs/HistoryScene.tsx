@@ -28,31 +28,25 @@ export const HistoryScene = observer(() => {
             scrollOffset1.value = e.nativeEvent.contentOffset.y
           }}
         >
-          <ScrollView horizontal={true} contentContainerStyle={scrollViewTrick}>
-            <SectionList
-              style={historyList}
-              scrollEnabled={false}
-              ListFooterComponent={<Space height={vs(50)} />}
-              initialNumToRender={60}
-              maxToRenderPerBatch={60}
-              stickySectionHeadersEnabled={false}
-              sections={DATA} //[...DATA, ...DATA, ...DATA, ...DATA]
-              renderItem={props => <HistoryStep {...props} />}
-              keyExtractor={(e, id) => String(id)}
-              showsVerticalScrollIndicator={false}
-              renderSectionHeader={({ section: { title } }) =>
-                title ? (
-                  <Text
-                    h={'h3'}
-                    title={title}
-                    textStyle={{ padding: 15, marginTop: 10 }}
-                  />
-                ) : (
-                  <Space height={20} />
-                )
-              }
-            />
-          </ScrollView>
+          <SectionList
+            style={historyList}
+            scrollEnabled={false}
+            ListFooterComponent={<Space height={vs(50)} />}
+            initialNumToRender={60}
+            maxToRenderPerBatch={60}
+            stickySectionHeadersEnabled={false}
+            sections={DATA} //[...DATA, ...DATA, ...DATA, ...DATA]
+            renderItem={props => <HistoryStep {...props} />}
+            keyExtractor={(e, id) => String(id)}
+            showsVerticalScrollIndicator={false}
+            renderSectionHeader={({ section: { title } }) =>
+              title ? (
+                <Text h={'h3'} title={title} textStyle={sectionHeaderText} />
+              ) : (
+                <Space height={vs(10)} />
+              )
+            }
+          />
         </Animated.ScrollView>
       </GestureDetector>
       <Space height={vs(70)} />
@@ -65,10 +59,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: s(10),
     flex: 1
   },
-  scrollViewTrick: {
-    width: '100%',
-    height: '100%'
+  sectionHeaderText: {
+    padding: 15,
+    marginTop: 10
   }
 })
 
-const { historyList, scrollViewTrick } = styles
+const { historyList, sectionHeaderText } = styles

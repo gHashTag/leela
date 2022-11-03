@@ -61,7 +61,7 @@ export const SecondaryTab = ({ jumpTo, navigationState, width }: SecondaryTabT) 
 
 const styles = StyleSheet.create({
   tabContainer: {
-    paddingBottom: vs(5),
+    paddingVertical: vs(10),
     flexDirection: 'row'
   },
   line: {

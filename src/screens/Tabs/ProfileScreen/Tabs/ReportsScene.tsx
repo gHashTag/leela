@@ -51,29 +51,23 @@ export const ReportsScene = observer(() => {
             scrollOffset0.value = e.nativeEvent.contentOffset.y
           }}
         >
-          <ScrollView horizontal={true} contentContainerStyle={scrollViewTrick}>
-            <FlatList
-              removeClippedSubviews={false}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-              data={data}
-              onEndReached={newLimit}
-              onEndReachedThreshold={0.1}
-              keyExtractor={a => a.id}
-              renderItem={({ item }) => <PostCard postId={item.id} />}
-              ItemSeparatorComponent={() => <Space height={vs(10)} />}
-              ListHeaderComponent={<Space height={vs(10)} />}
-              ListEmptyComponent={
-                <View style={{ paddingHorizontal: s(20) }}>
-                  <Text
-                    textStyle={{ textAlign: 'center' }}
-                    h={'h1'}
-                    title={I18n.t('noPosts')}
-                  />
-                </View>
-              }
-            />
-          </ScrollView>
+          <FlatList
+            removeClippedSubviews={false}
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+            data={data}
+            onEndReached={newLimit}
+            onEndReachedThreshold={0.1}
+            keyExtractor={a => a.id}
+            renderItem={({ item }) => <PostCard postId={item.id} />}
+            ItemSeparatorComponent={() => <Space height={vs(10)} />}
+            ListHeaderComponent={<Space height={vs(10)} />}
+            ListEmptyComponent={
+              <View style={noPostBlock}>
+                <Text textStyle={noPostText} h={'h1'} title={I18n.t('noPosts')} />
+              </View>
+            }
+          />
         </Animated.ScrollView>
       </GestureDetector>
       <Space height={vs(70)} />
@@ -82,10 +76,12 @@ export const ReportsScene = observer(() => {
 })
 
 const styles = StyleSheet.create({
-  scrollViewTrick: {
-    width: '100%',
-    height: '100%'
+  noPostBlock: {
+    paddingHorizontal: s(10)
+  },
+  noPostText: {
+    textAlign: 'center'
   }
 })
 
-const { scrollViewTrick } = styles
+const { noPostText, noPostBlock } = styles

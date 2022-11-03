@@ -1,7 +1,7 @@
 import React from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { observer } from 'mobx-react-lite'
-import { s } from 'react-native-size-matters'
+import { s, vs } from 'react-native-size-matters'
 
 import { I18n } from '../../../utils'
 import { RootTabParamList, RootStackParamList } from '../../../types'
@@ -62,7 +62,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                     }
                   />
                 )}
-                <Space height={s(20)} />
+                <Space height={vs(5)} />
                 <OwnTabView
                   renderTabBar={props => (
                     <GestureDetector gesture={headerGesture}>

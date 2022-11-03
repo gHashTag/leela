@@ -1074,7 +1074,7 @@ PODS:
     - React-Core
   - react-native-orientation-locker (1.5.0):
     - React-Core
-  - react-native-pager-view (6.0.1):
+  - react-native-pager-view (6.0.2):
     - React-Core
   - react-native-safe-area-context (4.4.1):
     - RCT-Folly
@@ -1094,6 +1094,8 @@ PODS:
     - React-Core
     - react-native-video/Video (= 5.2.1)
   - react-native-video/Video (5.2.1):
+    - React-Core
+  - react-native-webview (11.23.1):
     - React-Core
   - React-perflogger (0.70.4)
   - React-RCTActionSheet (0.70.4):
@@ -1169,7 +1171,7 @@ PODS:
     - React
   - RNDeviceInfo (10.3.0):
     - React-Core
-  - RNFastImage (8.6.1):
+  - RNFastImage (8.6.3):
     - React-Core
     - SDWebImage (~> 5.11.1)
     - SDWebImageWebPCoder (~> 0.8.4)
@@ -1331,6 +1333,7 @@ DEPENDENCIES:
   - react-native-splash-screen (from `../node_modules/react-native-splash-screen`)
   - react-native-version-info (from `../node_modules/react-native-version-info`)
   - react-native-video (from `../node_modules/react-native-video`)
+  - react-native-webview (from `../node_modules/react-native-webview`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -1476,6 +1479,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-version-info"
   react-native-video:
     :path: "../node_modules/react-native-video"
+  react-native-webview:
+    :path: "../node_modules/react-native-webview"
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -1608,13 +1613,14 @@ SPEC CHECKSUMS:
   react-native-branch: a655936d3cb08e238ace630f7067a3a7058c06a5
   react-native-netinfo: f80db8cac2151405633324cb645c60af098ee461
   react-native-orientation-locker: 851f6510d8046ea2f14aa169b1e01fcd309a94ba
-  react-native-pager-view: 3051346698a0ba0c4e13e40097cc11b00ee03cca
+  react-native-pager-view: 592421df0259bf7a7a4fe85b74c24f3f39905605
   react-native-safe-area-context: 99b24a0c5acd0d5dcac2b1a7f18c49ea317be99a
   react-native-shake: 67d43d6af4abfc299400b17fea7d2ec0754c72ac
   react-native-spinkit: da294fd828216ad211fe36a5c14c1e09f09e62db
   react-native-splash-screen: 4312f786b13a81b5169ef346d76d33bc0c6dc457
   react-native-version-info: a106f23009ac0db4ee00de39574eb546682579b9
   react-native-video: c26780b224543c62d5e1b2a7244a5cd1b50e8253
+  react-native-webview: d33e2db8925d090871ffeb232dfa50cb3a727581
   React-perflogger: 5e41b01b35d97cc1b0ea177181eb33b5c77623b6
   React-RCTActionSheet: 48949f30b24200c82f3dd27847513be34e06a3ae
   React-RCTAnimation: 96af42c97966fcd53ed9c31bee6f969c770312b6
@@ -1631,7 +1637,7 @@ SPEC CHECKSUMS:
   RNCClipboard: 2834e1c4af68697089cdd455ee4a4cdd198fa7dd
   RNCMaskedView: 0e1bc4bfa8365eba5fbbb71e07fbdc0555249489
   RNDeviceInfo: 4701f0bf2a06b34654745053db0ce4cb0c53ada7
-  RNFastImage: 3207b9eb17c2425d574ca40db35185db6e324f4e
+  RNFastImage: 5c9c9fed9c076e521b3f509fe79e790418a544e8
   RNFBApp: e4439717c23252458da2b41b81b4b475c86f90c4
   RNFBAuth: 50ac123123b27241927e639c0ac9c8af17f05aa1
   RNFBDatabase: 16daa56d773d353b2ef2752a229cedf195b51cf3

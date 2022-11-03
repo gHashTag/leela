@@ -53,8 +53,6 @@ export default {
   author: 'About authors',
   contacts: 'Contacts:',
   events: 'Our meetings',
-  playra1:
-    'Practitioners and teachers of jnana yoga, creators of the "Game Leela" application, creative group Playra.\nProviders and founders of the electronic ethno movement in Russia.\nThe members of the group firmly connect their lives with the path of liberation and enlightenment and express this through music.\nPlayra demonstrates its love for iOS music software by using touchscreen technology to its fullest, playing multicultural sets rooted in the history of the peoples of the world with a mix of modern sound. Fill your heart with love and peace by not only listening to Playra mixes, but also singing together. ',
   playra2: 'For the Soul to sing, chant the names of God!',
   more: 'More',
   privacy: 'Privacy policy',

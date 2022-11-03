@@ -51,7 +51,8 @@ LogBox.ignoreLogs([
   'Sending',
   'Non-serializable values were found in the navigation',
   'ViewPropTypes will be removed',
-  'source.uri should not be an empty string'
+  'source.uri should not be an empty string',
+  'VirtualizedLists should never be nested inside plain ScrollViews'
 ])
 
 function AppWithProviders() {
