@@ -10,6 +10,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { onSignIn } from '../../helper'
 import auth from '@react-native-firebase/auth'
 import { useNoBackHandler } from '../../../hooks'
+import { TouchableOpacity } from 'react-native'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -40,12 +41,10 @@ const SignUpAvatar = observer(({ navigation }: SignUpAvatarT): ReactElement => {
   return (
     <AppContainer title=" " iconLeft={null}>
       <CenterView>
-        <Avatar
-          size="xLarge"
-          uri={OnlinePlayer.store.avatar.slice()}
-          onPress={onPressAva}
-          loading={load}
-        />
+        <TouchableOpacity onPress={onPressAva}>
+          <Avatar size="xLarge" uri={OnlinePlayer.store.avatar.slice()} loading={load} />
+        </TouchableOpacity>
+
         <Space height={s(50)} />
         {!!OnlinePlayer.store.avatar && (
           <Button title={I18n.t('done')} onPress={handleSubmit} />

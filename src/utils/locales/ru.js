@@ -128,5 +128,8 @@ export default {
   profile: 'Профиль',
   edit: 'Изменить',
   shareProfile: 'Поделится профилем',
-  changeAva: 'Изменить картинку'
+  changeAva: 'Изменить картинку',
+  intention: 'Намерение',
+  createIntention: 'Создайте намерение',
+  updateIntention: 'Обновить намерение'
 }

@@ -5,7 +5,7 @@ import { s, vs } from 'react-native-size-matters'
 
 import { Text, Space, HistoryStep } from '../../../../components'
 import { useHistoryData } from '../../../../hooks/useHistoryData'
-import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { TabContext } from '../TabContext'
 import Animated from 'react-native-reanimated'
 

@@ -10,7 +10,7 @@ import { DiceStore, OnlinePlayer } from '../../../store'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { SecondaryTab } from '../../../components/SecondaryTab'
 import { GestureDetector } from 'react-native-gesture-handler'
-import { HistoryScene, ReportsScene } from './Tabs'
+import { HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
 import Animated from 'react-native-reanimated'
 import { TabContextProvider } from './TabContext'
 import { OwnTabView } from '../../../components/OwnTabView'
@@ -72,7 +72,12 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                   width={tabViewWidth}
                   screens={[
                     { key: 'reports', title: I18n.t('reports'), Scene: ReportsScene },
-                    { key: 'history', title: I18n.t('history'), Scene: HistoryScene }
+                    { key: 'history', title: I18n.t('history'), Scene: HistoryScene },
+                    {
+                      key: 'intentionOfGame',
+                      title: I18n.t('intention'),
+                      Scene: IntentionOfGame
+                    }
                   ]}
                   style={[tabContainer, { height: tabViewH }]}
                 />

@@ -28,7 +28,8 @@ import I18n from 'i18n-js'
 const initProfile = {
   firstName: '',
   lastName: '',
-  email: ''
+  email: '',
+  intention: ''
 }
 
 const initHistory = () => [
@@ -140,7 +141,8 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
           profile: {
             firstName: curProf.firstName,
             lastName: curProf.lastName,
-            email: curProf.email
+            email: curProf.email,
+            intention: curProf.intention || ''
           },
           isReported: curProf.isReported,
           stepTime: curProf.lastStepTime,
@@ -259,6 +261,7 @@ interface OnlinePlayerStore {
     firstName: string
     lastName: string
     email: string
+    intention: string
   }
   // poster
   poster: {

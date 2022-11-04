@@ -30,7 +30,9 @@ export const PostCard: React.FC<postCardI> = memo(
       isHideTranslate
     } = props
 
-    const item = PostStore.store.posts.find(a => a.id === postId)
+    const item =
+      PostStore.store.posts.find(a => a.id === postId) ||
+      PostStore.store.ownPosts.find(a => a.id === postId)
 
     const { transText, hideTranslate, handleTranslate, flag, text } = useTranslation({
       translatedText,

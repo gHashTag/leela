@@ -1,42 +1,26 @@
-import React from 'react'
-import { ImageBackground, StyleSheet, useColorScheme, View } from 'react-native'
+import React, { useCallback, useMemo } from 'react'
+import { Image, StyleSheet, useColorScheme, View } from 'react-native'
 import { ICONS } from './images'
 import { observer } from 'mobx-react'
-import { s } from 'react-native-size-matters'
+import { ms, s } from 'react-native-size-matters'
 import { H, W } from '../../constants'
 import { Gem } from '../Gem'
 import { Text } from '../'
 import { DiceStore, OfflinePlayers, OnlinePlayer, OtherPlayers } from '../../store'
 
-const ratio = W / 714
 const marginTop = H - W > 350 ? 20 : 0
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    top: s(15),
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  row: {
-    flexDirection: 'row'
-  },
-  img: {
-    width: W,
-    height: 620 * ratio,
-    marginTop
-  },
-  box: {
-    width: s(31),
-    height: s(31),
-    marginVertical: s(2.1),
-    marginHorizontal: s(1.0),
-    alignItems: 'center',
-    justifyContent: 'center'
-  }
-})
+const imageHeight = s(248) + s(32)
+const maxImageHeight = ms(248, 0.5) + s(32)
 
-const GameBoard = observer(() => {
+const imageTopMargin = Math.min(ms(27, 0.5), s(27))
+const curImageHeight = Math.min(maxImageHeight, imageHeight) + imageTopMargin
+
+const imageWidth = s(279) + s(18)
+const maxImageWidth = ms(279, 0.5) + s(18)
+const curImageWidth = imageWidth >= maxImageWidth ? maxImageWidth : imageWidth
+
+export const GameBoard = observer(() => {
   const arr = !DiceStore.online
     ? OfflinePlayers.store.plans
         .slice()
@@ -56,11 +40,18 @@ const GameBoard = observer(() => {
         })
       ]
 
-  const getPlan = (x: number) => arr.filter(y => y.plan === x)
-  const { img, container, row, box } = styles
   const scheme = useColorScheme()
-  const source = () =>
-    ICONS.filter(x => x.title === (scheme === 'dark' ? 'dark' : 'light'))[0].path
+
+  const imgObj = useMemo(() => {
+    const image = ICONS.find(x => x.title === scheme)?.path
+    if (image) {
+      const { width, height } = Image.resolveAssetSource(image)
+      const aspect = width / height
+      return { image, aspect }
+    } else {
+      return { image: '', aspect: 1 }
+    }
+  }, [scheme])
 
   const rows = [
     [72, 71, 70, 69, 68, 67, 66, 65, 64],
@@ -73,27 +64,70 @@ const GameBoard = observer(() => {
     [1, 2, 3, 4, 5, 6, 7, 8, 9]
   ]
 
-  const check = (z: number) => (getPlan(z)[0] ? getPlan(z)[0].plan : false)
+  const check = useCallback(
+    (z: number) => {
+      const plan = arr.find(y => y.plan === z)?.plan
+      return plan || false
+    },
+    [arr]
+  )
 
   return (
-    <ImageBackground source={source()} style={img}>
-      <View style={container}>
-        {rows.map((a, i) => (
-          <View style={row} key={i}>
-            {a.map(b => (
-              <View key={b} style={[box]}>
-                {b === check(b) ? (
-                  <Gem plan={b} player={DiceStore.players} />
-                ) : (
-                  <Text h={'h11'} title={b !== 68 ? b.toString() : ' '} />
-                )}
-              </View>
-            ))}
-          </View>
-        ))}
+    <View style={[imageContainer, { width: curImageHeight * imgObj.aspect }]}>
+      <Image source={imgObj.image} style={bgImage} resizeMode="cover" />
+      <View style={gameBoardContainer}>
+        <View style={container}>
+          {rows.map((a, i) => (
+            <View style={row} key={i}>
+              {a.map(b => (
+                <View key={b} style={box}>
+                  {b === check(b) ? (
+                    <Gem plan={b} player={DiceStore.players} />
+                  ) : (
+                    <Text h={'h11'} title={b !== 68 ? b.toString() : ' '} />
+                  )}
+                </View>
+              ))}
+            </View>
+          ))}
+        </View>
       </View>
-    </ImageBackground>
+    </View>
   )
 })
 
-export { GameBoard }
+const styles = StyleSheet.create({
+  container: {
+    marginTop: imageTopMargin
+  },
+  imageContainer: {
+    height: curImageHeight,
+    alignSelf: 'center',
+    alignItems: 'center'
+  },
+  row: {
+    flexDirection: 'row'
+  },
+  gameBoardContainer: {
+    width: curImageWidth,
+    height: curImageHeight,
+    marginTop
+  },
+  box: {
+    width: s(31),
+    height: s(31),
+    maxHeight: ms(31, 0.5),
+    maxWidth: ms(31, 0.5),
+    marginVertical: s(2),
+    marginHorizontal: s(1),
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  bgImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute'
+  }
+})
+
+const { gameBoardContainer, bgImage, container, row, box, imageContainer } = styles

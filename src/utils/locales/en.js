@@ -130,5 +130,8 @@ export default {
   profile: 'Profile',
   edit: 'Edit',
   shareProfile: 'Share a profile',
-  changeAva: 'Change avatar'
+  changeAva: 'Change avatar',
+  intention: 'Intention',
+  createIntention: 'Create intention',
+  updateIntention: 'Update intention'
 }

@@ -97,7 +97,8 @@ const createProfile = async ({ email, uid, firstName, lastName }: NewProfileI) =
     profile: {
       firstName,
       lastName,
-      email
+      email,
+      intention: ''
     },
     stepTime: Date.now() - 86400000,
     canGo: true,
@@ -142,13 +143,23 @@ const updateProfName = async ({ firstName, lastName }: profNameI) => {
     await auth().currentUser?.updateProfile({
       displayName: `${firstName} ${lastName}`
     })
-    await firestore().collection('Profiles').doc(auth().currentUser?.uid).update({
+    await firestore().collection('Profiles').doc(getUid()).update({
       firstName,
       lastName
     })
     await auth().currentUser?.reload()
     OnlinePlayer.store.profile.firstName = firstName
     OnlinePlayer.store.profile.lastName = lastName
+  } catch (err) {
+    captureException(err)
+  }
+}
+const updateIntention = async (newIntention: string) => {
+  try {
+    await firestore().collection('Profiles').doc(getUid()).update({
+      intention: newIntention
+    })
+    OnlinePlayer.store.profile.intention = newIntention
   } catch (err) {
     captureException(err)
   }
@@ -326,6 +337,11 @@ const onSignIn = async (user: FirebaseAuthTypes.User, isKeychain?: boolean) => {
         navigate('SIGN_UP_USERNAME', { email: user.email })
       } else if (!prof.avatar) {
         navigate('SIGN_UP_AVATAR')
+      } else if (!prof.intention) {
+        navigate('CHANGE_INTENTION_SCREEN', {
+          blockGoBack: true,
+          title: I18n.t('createIntention')
+        })
       } else {
         navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
         !prof.isReported && OpenPlanReportModal(prof.plan)
@@ -370,5 +386,6 @@ export {
   getUid,
   startStepTimer,
   onSignIn,
-  checkVersion
+  checkVersion,
+  updateIntention
 }

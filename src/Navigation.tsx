@@ -25,7 +25,8 @@ import {
   VideoPopup,
   PlanReportModal,
   UpdateVersionModal,
-  OfflineProfileScreen
+  OfflineProfileScreen,
+  ChangeIntention
 } from './screens'
 
 import {
@@ -192,6 +193,7 @@ const App = () => {
 
         <Stack.Screen name="PLAYRA_SCREEN" component={PlayraScreen} />
         <Stack.Screen name="USER_EDIT" component={UserEdit} />
+        <Stack.Screen name="CHANGE_INTENTION_SCREEN" component={ChangeIntention} />
         {/* Post */}
         <Stack.Screen
           options={{

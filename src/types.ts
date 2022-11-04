@@ -68,6 +68,11 @@ export type RootStackParamList = {
     plan: number
   }
   UPDATE_VERSION_MODAL: undefined
+  CHANGE_INTENTION_SCREEN: {
+    prevIntention?: string
+    blockGoBack?: boolean
+    title?: string
+  }
 }
 
 export type RootTabParamList = {
@@ -102,6 +107,7 @@ export interface UserT {
   lang?: string
   tokens?: string[]
   status?: status
+  intention?: string
 }
 
 export interface OtherUsersT {
