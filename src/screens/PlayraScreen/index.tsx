@@ -1,13 +1,12 @@
 import React, { memo, useEffect, useState } from 'react'
 import { StyleSheet, View, FlatList, Image, TouchableOpacity } from 'react-native'
 import { observer } from 'mobx-react'
-import * as Sentry from '@sentry/react-native'
 import { s, vs } from 'react-native-size-matters'
 import { I18n } from '../../utils'
 import { RootStackParamList } from '../../types'
 import { AppContainer, SocialLinks, Space, Text } from '../../components'
 import { ThemeProvider } from 'react-native-elements'
-import { OpenVideoModal, primary, secondary } from '../../constants'
+import { captureException, OpenVideoModal, primary, secondary } from '../../constants'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import Spin from 'react-native-spinkit'
 import Orientation from 'react-native-orientation-locker'
@@ -55,7 +54,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
         setArray(await response.json())
         setLoading(false)
       } catch (e) {
-        Sentry.captureException(e)
+        captureException(e)
         setLoading(false)
       }
     }
@@ -95,7 +94,9 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
               <Space height={vs(50)} />
               <Spin size={s(80)} type="Bounce" color={primary} />
             </View>
-          ) : null
+          ) : (
+            <Space height={vs(20)} />
+          )
         }
         ListEmptyComponent={
           loading ? null : (
@@ -106,7 +107,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
           )
         }
         data={data.slice().reverse()}
-        renderItem={({ item, index }) => <RenderItem item={item} />}
+        renderItem={({ item }) => <RenderItem item={item} />}
         keyExtractor={_keyExtractor}
       />
     </AppContainer>

@@ -93,9 +93,7 @@ const styles = ScaledSheet.create({
     right: -s(5),
     top: -s(3)
   },
-  planNumber: {
-    bottom: s(12)
-  },
+  planNumber: {},
   rootContainer: {
     width: '80%',
     alignSelf: 'center'

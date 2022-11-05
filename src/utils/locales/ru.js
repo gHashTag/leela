@@ -131,5 +131,6 @@ export default {
   changeAva: 'Изменить картинку',
   intention: 'Намерение',
   createIntention: 'Создайте намерение',
-  updateIntention: 'Обновить намерение'
+  updateIntention: 'Обновить намерение',
+  clips: 'Клипы'
 }

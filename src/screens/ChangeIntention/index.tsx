@@ -3,7 +3,7 @@ import { I18n } from '../../utils'
 import { useTheme } from '@react-navigation/native'
 import { RouteProp } from '@react-navigation/native'
 import { Space, Button, Input, Loading, AppContainer } from '../../components'
-import { white, black } from '../../constants'
+import { black, lightGray } from '../../constants'
 import { RootStackParamList } from '../../types'
 import { updateIntention } from '../../screens/helper'
 import { useForm, FormProvider, SubmitHandler, FieldValues } from 'react-hook-form'
@@ -21,7 +21,7 @@ const schema = yup
       .trim()
       .min(2, I18n.t('twoSymbolRequire'))
       .required()
-      .max(200, `${I18n.t('manyCharacters')}250`)
+      .max(800, `${I18n.t('manyCharacters')}800`)
   })
   .required()
 
@@ -54,10 +54,8 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
   }
 
   const {
-    dark,
     colors: { background: backgroundColor }
   } = useTheme()
-  const color = dark ? white : black
 
   return (
     <AppContainer
@@ -75,7 +73,7 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
             <Space height={mvs(80, 0.4)} />
             <Input
               name="newIntention"
-              color={color}
+              color={lightGray}
               multiline
               autoCapitalize="none"
               placeholder={I18n.t('intention')}

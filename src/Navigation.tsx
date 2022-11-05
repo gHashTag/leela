@@ -60,10 +60,10 @@ const DarkTheme = {
   colors: {
     primary: '#FF06F4',
     background: '#1c1c1c',
-    card: 'rgb(255, 255, 255)',
-    text: '#FFFF',
-    border: 'rgb(199, 199, 204)',
-    notification: 'rgb(255, 69, 58)'
+    card: '#ffffff',
+    text: '#FFFFFF',
+    border: '#c7c7cc',
+    notification: '#ff453a'
   }
 }
 
@@ -71,11 +71,11 @@ const LightTheme = {
   dark: false,
   colors: {
     primary: '#FF06F4',
-    background: '#FFF',
-    card: 'rgb(255, 255, 255)',
+    background: '#FFFFFF',
+    card: '#ffffff',
     text: '#1c1c1c',
-    border: 'rgb(199, 199, 204)',
-    notification: 'rgb(255, 69, 58)'
+    border: '#c7c7cc',
+    notification: '#ff453a'
   }
 }
 

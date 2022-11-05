@@ -9,7 +9,7 @@ import {
 import { s } from 'react-native-size-matters'
 import Icon from 'react-native-vector-icons/FontAwesome'
 import Ionicons from 'react-native-vector-icons/Ionicons'
-import { dimGray, gray, lightGray, white } from '../../../constants'
+import { dimGray, gray } from '../../../constants'
 import { Space } from '../../Space'
 import { Text } from '../../'
 

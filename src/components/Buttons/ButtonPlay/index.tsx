@@ -1,10 +1,9 @@
 import { useTheme } from '@react-navigation/native'
-import React, { memo, useState } from 'react'
+import React, { memo } from 'react'
 import { TouchableOpacity, Image, StyleSheet, View } from 'react-native'
-import { useNetInfo } from '@react-native-community/netinfo'
 
 import { ICONS } from './images'
-import { s, ms } from 'react-native-size-matters'
+import { s } from 'react-native-size-matters'
 
 interface ButtonPlayT {
   isStop: boolean

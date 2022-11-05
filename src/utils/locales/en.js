@@ -133,5 +133,6 @@ export default {
   changeAva: 'Change avatar',
   intention: 'Intention',
   createIntention: 'Create intention',
-  updateIntention: 'Update intention'
+  updateIntention: 'Update intention',
+  clips: 'Clips'
 }

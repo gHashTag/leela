@@ -1,18 +1,19 @@
-import React, { useEffect, useState } from 'react'
+import React, { Fragment, useEffect, useState } from 'react'
 import { StyleSheet, ScrollView, View } from 'react-native'
 import { observer } from 'mobx-react'
 import { s, vs } from 'react-native-size-matters'
-import { I18n } from '../../../utils'
+import { I18n, lang } from '../../../utils'
 import { RootStackParamList, RootTabParamList } from '../../../types'
 import {
   Background,
+  ButtonWithIcon,
   Header,
   ImageSwiper,
   SocialLinks,
   Space,
   Text
 } from '../../../components'
-import { captureException } from '../../../constants'
+import { captureException, fuchsia } from '../../../constants'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import Markdown from 'react-native-markdown-display'
 import { useMarkdownProps } from '../../../hooks'
@@ -26,26 +27,9 @@ type OnlineGameScreenT = {
   navigation: navigation
 }
 
-// const theme = {
-//   Button: {
-//     titleStyle: {
-//       color: secondary,
-//       padding: 30
-//     },
-//     containerStyle: {
-//       width: s(240),
-//       alignSelf: 'center'
-//     }
-//   },
-
-//   colors: {
-//     primary: secondary
-//   }
-// }
-
 const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   const [images, setImages] = useState<string[]>([])
-  const [mdContent, setMdContent] = useState<string>('')
+  const [mdContent, setMdContent] = useState<string[]>([])
   const mdProps = useMarkdownProps(0.94, 0.94)
 
   useEffect(() => {
@@ -57,12 +41,17 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
           )
         ).json()
         setImages(images)
-        const mdContent = await (
+        const mdContent1 = await (
           await fetch(
-            'https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/ru.md'
+            `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${lang}1.md`
           )
         ).text()
-        setMdContent(mdContent)
+        const mdContent2 = await (
+          await fetch(
+            `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${lang}2.md`
+          )
+        ).text()
+        setMdContent([mdContent1, mdContent2])
       } catch (error) {
         captureException(error)
       }
@@ -70,10 +59,31 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
     getData()
   }, [])
 
-  const poster =
-    'https://leelachakra.com/resource/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.jpg'
-  const uri =
-    'https://leelachakra.com/resource/Playra/AlbumMahaKumbhaMela/Our-way-of-evolution.mp4'
+  const renderMarkdownPart = (part: string, id: number) => {
+    switch (id) {
+      case 0:
+        return (
+          <Fragment key={id}>
+            <Markdown {...mdProps}>{part}</Markdown>
+            <Space height={vs(15)} />
+            <ButtonWithIcon
+              viewStyle={btn}
+              color={fuchsia}
+              onPress={() => navigation.navigate('PLAYRA_SCREEN')}
+              iconName="ios-musical-notes"
+              title={I18n.t('clips')}
+            />
+            <Space height={vs(15)} />
+          </Fragment>
+        )
+      default:
+        return (
+          <Fragment key={id}>
+            <Markdown {...mdProps}>{part}</Markdown>
+          </Fragment>
+        )
+    }
+  }
 
   return (
     <Background>
@@ -82,21 +92,12 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
         <Space height={s(20)} />
         <ImageSwiper images={images} height={vs(300)} />
         <Space height={s(10)} />
-        {/* <Text textStyle={centered} h={'h3'} title={I18n.t('author')} 
-            {lang !== 'en' && (
-              <View style={containerStyle}>
-                <VideoPlayer paused source={{ uri }} poster={poster} />
-              </View>
-            )}*/}
         <View style={mdStyle}>
-          <Markdown {...mdProps}>{mdContent}</Markdown>
-          <Text textStyle={centered} h={'h3'} title={I18n.t('contacts')} />
+          {mdContent?.map(renderMarkdownPart)}
+          <Space height={vs(10)} />
+          <Text textStyle={centered} h="h3" title={I18n.t('contacts')} />
           <SocialLinks />
           <Space height={vs(130)} />
-          {/* <ButtonElements
-            title={I18n.t('more')}
-            onPress={() => navigation.navigate('PLAYRA_SCREEN')}
-          /> */}
         </View>
       </ScrollView>
     </Background>
@@ -104,8 +105,8 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
 })
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1
+  btn: {
+    alignSelf: 'center'
   },
   containerStyle: {
     height: vs(250),
@@ -118,6 +119,6 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   }
 })
-const { centered, container, containerStyle, mdStyle } = styles
+const { centered, btn, containerStyle, mdStyle } = styles
 
 export { OnlineGameScreen }
