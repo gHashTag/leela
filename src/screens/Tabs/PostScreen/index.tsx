@@ -3,12 +3,11 @@ import { Header, PostCard, Space, Spin, Text } from '../../../components'
 import { DiceStore, PostStore } from '../../../store'
 import { RootTabParamList } from '../../../types'
 import firestore from '@react-native-firebase/firestore'
-import { FlatList } from 'react-native-gesture-handler'
-import { View } from 'react-native'
+import { FlatList, View } from 'react-native'
 import { observer } from 'mobx-react'
 import { s, vs } from 'react-native-size-matters'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { RouteProp, useFocusEffect } from '@react-navigation/native'
+import { RouteProp } from '@react-navigation/native'
 import { captureException } from '../../../constants'
 import I18n from 'i18n-js'
 
@@ -18,18 +17,7 @@ interface Ipost {
 }
 
 const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
-  const listRef = useRef<any>()
-  const scrollToId = route.params?.scrollToId
   const [limit, setLimit] = useState(15)
-
-  useFocusEffect(() => {
-    if (scrollToId) {
-      listRef.current?.scrollToIndex({
-        animated: true,
-        index: scrollToId
-      })
-    }
-  })
 
   useEffect(() => {
     if (DiceStore.online) {
@@ -53,7 +41,6 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
   ) : (
     <FlatList
       removeClippedSubviews={false}
-      ref={listRef}
       onScrollToIndexFailed={er => console.log(er)}
       showsVerticalScrollIndicator={false}
       data={data}

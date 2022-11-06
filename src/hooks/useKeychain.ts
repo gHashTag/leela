@@ -4,7 +4,7 @@ import auth from '@react-native-firebase/auth'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { captureException } from '../constants'
 import { useNetInfo } from '@react-native-community/netinfo'
-import { useFocusEffect } from '@react-navigation/native'
+import { useFocusEffect, useLinkTo } from '@react-navigation/native'
 import { onSignIn } from '../screens/helper'
 import { useTypedNavigation } from './useTypedNavigation'
 
@@ -12,7 +12,7 @@ export const useKeychain = () => {
   const { navigate } = useTypedNavigation()
   const [loading, setLoading] = useState<boolean>(true)
   const { isConnected } = useNetInfo()
-
+  const linkTo = useLinkTo()
   const key = async (): Promise<void> => {
     try {
       const credentials = await Keychain.getInternetCredentials('auth')
@@ -21,7 +21,7 @@ export const useKeychain = () => {
         await auth()
           .signInWithEmailAndPassword(username, password)
           .then(async user => {
-            await onSignIn(user.user, true)
+            await onSignIn(user.user, true, linkTo)
           })
       } else if (isConnected !== null) {
         return Promise.reject()

@@ -8,7 +8,7 @@ import {
 } from '../constants'
 import ImagePicker from 'react-native-image-crop-picker'
 import { UserT, HistoryT } from '../types'
-import { actionsDice, fetchBusinesses, OnlinePlayer } from '../store'
+import { actionsDice, fetchBusinesses, MessagingStore, OnlinePlayer } from '../store'
 import storage from '@react-native-firebase/storage'
 import { nanoid } from 'nanoid/non-secure'
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
@@ -18,6 +18,7 @@ import { lang } from '../utils'
 import I18n from 'i18n-js'
 import semver from 'semver'
 import { version } from '../../package.json'
+import branch from 'react-native-branch'
 
 interface NewProfileI {
   email: string
@@ -324,7 +325,11 @@ function getTimeStamp({ lastTime, type = 0 }: getTimeT) {
   }
 }
 
-const onSignIn = async (user: FirebaseAuthTypes.User, isKeychain?: boolean) => {
+const onSignIn = async (
+  user: FirebaseAuthTypes.User,
+  isKeychain?: boolean,
+  linkTo?: any
+) => {
   try {
     actionsDice.setOnline(true)
     if (user.emailVerified) {
@@ -344,7 +349,13 @@ const onSignIn = async (user: FirebaseAuthTypes.User, isKeychain?: boolean) => {
         })
       } else {
         navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
-        !prof.isReported && OpenPlanReportModal(prof.plan)
+        if (!prof.isReported) {
+          OpenPlanReportModal(prof.plan)
+        } else if (MessagingStore.path) {
+          linkTo(MessagingStore.path)
+          console.log('🚀 - MessagingStore.path', MessagingStore.path)
+          MessagingStore.path = ''
+        }
         const reference = getFireBaseRef(`/online/${prof.owner}`)
         reference.set(true)
         reference.onDisconnect().set(false)

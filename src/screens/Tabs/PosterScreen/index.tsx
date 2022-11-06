@@ -3,12 +3,11 @@ import { StyleSheet, ImageBackground } from 'react-native'
 import { observer } from 'mobx-react'
 import { RootTabParamList } from '../../../types'
 import { OnlinePlayer } from '../../../store'
-import { Button } from 'react-native-elements'
-import { s } from 'react-native-size-matters'
-import { W } from '../../../constants'
-import { openUrl } from '../../../constants'
+import { fuchsia, openUrl } from '../../../constants'
 import I18n from 'i18n-js'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { ButtonWithIcon } from '../../../components'
+import { vs } from 'react-native-size-matters'
 
 type navigation = NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_0'>
 
@@ -16,50 +15,43 @@ type PosterScreenT = {
   navigation: navigation
 }
 
-const ratio = W / 500
-
-const styles = StyleSheet.create({
-  container: { justifyContent: 'center' },
-  img: {
-    width: W,
-    height: 1006 * ratio,
-    resizeMode: 'cover'
-  },
-  buttonConteiner: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    bottom: 190,
-    width: s(150),
-    alignSelf: 'center'
-  },
-  button: {
-    borderWidth: 1.5
-  }
-})
-
 const PosterScreen = observer(({}: PosterScreenT) => {
-  const { button, img, buttonConteiner } = styles
-
   useEffect(() => {
     OnlinePlayer.getPoster()
   }, [])
 
   return (
     <ImageBackground
-      resizeMode={'contain'}
+      resizeMode="cover"
       source={{ uri: OnlinePlayer.store.poster.imgUrl }}
       style={img}
     >
-      <Button
+      <ButtonWithIcon
         title={I18n.t('more')}
-        type="outline"
+        color={fuchsia}
+        viewStyle={btnMore}
+        iconName="ios-chevron-forward"
         onPress={() => openUrl(OnlinePlayer.store.poster.eventUrl)}
-        containerStyle={buttonConteiner}
-        buttonStyle={[button, { borderColor: OnlinePlayer.store.poster.buttonColor }]}
-        titleStyle={{ color: OnlinePlayer.store.poster.buttonColor }}
       />
     </ImageBackground>
   )
 })
+
+const styles = StyleSheet.create({
+  container: {
+    justifyContent: 'center'
+  },
+  img: {
+    flex: 1,
+    resizeMode: 'cover'
+  },
+  btnMore: {
+    position: 'absolute',
+    alignSelf: 'center',
+    bottom: vs(100)
+  }
+})
+
+const { img, btnMore } = styles
 
 export { PosterScreen }

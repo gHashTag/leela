@@ -5,18 +5,18 @@ import notifee from '@notifee/react-native'
 
 import messaging from '@react-native-firebase/messaging'
 
-import displayNotification from './src/utils/notifications/DisplayNotification'
+import { setCategories } from './src/utils/notifications/NotificationHelper'
 import {
-  notificationPostEvent,
-  setCategories
-} from './src/utils/notifications/NotificationHelper'
+  displayNotification,
+  notificationActionsHandler
+} from './src/utils/notifications'
 
 setCategories()
 
 messaging().setBackgroundMessageHandler(displayNotification)
 messaging().onMessage(displayNotification)
 
-notifee.onBackgroundEvent(notificationPostEvent(true))
-notifee.onForegroundEvent(notificationPostEvent(false))
+notifee.onBackgroundEvent(e => notificationActionsHandler(e, true))
+notifee.onForegroundEvent(e => notificationActionsHandler(e, false))
 
 AppRegistry.registerComponent(appName, () => App)

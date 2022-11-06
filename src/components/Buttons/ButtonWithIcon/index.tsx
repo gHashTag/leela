@@ -26,7 +26,7 @@ export const ButtonWithIcon = memo<ButtonWithIconT>(
   ({ title, onPress, color, iconName, viewStyle }) => {
     const {
       dark,
-      colors: { text, border }
+      colors: { text }
     } = useTheme()
     const isPressed = useSharedValue(0)
 
@@ -57,7 +57,7 @@ export const ButtonWithIcon = memo<ButtonWithIconT>(
         onPress={onPress}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
-        style={[container, { borderColor: color || border }, viewStyle, animatedStyles]}
+        style={[container, { borderColor: color || text }, viewStyle, animatedStyles]}
       >
         {iconName && (
           <>

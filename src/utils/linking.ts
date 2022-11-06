@@ -4,7 +4,6 @@ import { captureException } from '../constants'
 import { RootStackParamList } from '../types'
 import Branch from 'react-native-branch'
 import { formatLink, subscribeDeepLinkUrl } from './linkHelpers'
-import notifee from '@notifee/react-native'
 
 export const linking: LinkingOptions<RootStackParamList> = {
   prefixes: ['https://leelagame.app.link', 'leelagame://'],
@@ -13,11 +12,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
   // которая используется для открытия приложения.
   async getInitialURL() {
     const uri = await Linking.getInitialURL()
-    const { notification } = (await notifee.getInitialNotification()) || {}
-    const reportId = notification?.data?.postId
-    if (reportId) {
-      return `leelagame://reply_detail/${reportId}`
-    }
+
     const lastParams = await Branch.getLatestReferringParams(true)
     const normalUrl = formatLink(lastParams)
     if (normalUrl && uri) {
@@ -38,14 +33,6 @@ export const linking: LinkingOptions<RootStackParamList> = {
       if (uri) {
         const url = formatLink(params)
         subscribeDeepLinkUrl(listener, url)
-        return
-      }
-      const { notification } = (await notifee.getInitialNotification()) || {}
-      const reportId = notification?.data?.postId
-
-      if (reportId) {
-        subscribeDeepLinkUrl(listener, `leelagame://reply_detail/${reportId}`)
-
         return
       }
     })

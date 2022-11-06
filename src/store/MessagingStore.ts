@@ -3,6 +3,18 @@ import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
 import { captureException } from '../constants'
 
+import { makeAutoObservable } from 'mobx'
+import { makePersistable } from 'mobx-persist-store'
+
+export const MessagingStore = makeAutoObservable({
+  path: ''
+})
+
+makePersistable(MessagingStore, {
+  name: 'MessagingStore',
+  properties: ['path']
+})
+
 const fetchBusinesses = () => {
   const requestUserPermission = async () => {
     const authStatus = await messaging().requestPermission()

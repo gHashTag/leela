@@ -64,8 +64,8 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
         }
         comment && setTimeout(newComment, 900)
         if (!curItem) {
-          await PostStore.getOncePost()
           await OnlinePlayer.getProfile()
+          await PostStore.getOncePost()
         }
       }
       handleLink()

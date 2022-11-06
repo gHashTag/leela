@@ -26,7 +26,8 @@ import {
   PlanReportModal,
   UpdateVersionModal,
   OfflineProfileScreen,
-  ChangeIntention
+  ChangeIntention,
+  PosterScreen
 } from './screens'
 
 import {
@@ -104,7 +105,7 @@ const Tab = observer(() => {
         component={DiceStore.online ? ProfileScreen : OfflineProfileScreen}
       />
       <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
-      {/* <TabNavigator.Screen name="TAB_BOTTOM_3" component={PosterScreen} /> */}
+      <TabNavigator.Screen name="TAB_BOTTOM_4" component={PosterScreen} />
     </TabNavigator.Navigator>
   )
 })
