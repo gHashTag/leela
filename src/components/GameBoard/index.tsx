@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react'
 import { Image, StyleSheet, useColorScheme, View } from 'react-native'
 import { ICONS } from './images'
 import { observer } from 'mobx-react'
-import { ms, s } from 'react-native-size-matters'
+import { ms, mvs, s } from 'react-native-size-matters'
 import { H, W } from '../../constants'
 import { Gem } from '../Gem'
 import { Text } from '../'
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     position: 'absolute',
-    top: 15
+    top: mvs(26, 1.6) - imageTopMargin
   }
 })
 

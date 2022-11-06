@@ -72,6 +72,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
       title="Playra"
       iconLeft=":back:"
       iconRight={null}
+      enableBackgroundBottomInsets
       onPress={() => {
         navigation.goBack()
       }}

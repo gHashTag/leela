@@ -49,7 +49,7 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
     setLoading(true)
     const { newIntention } = data
     await updateIntention(newIntention)
-    navigation.goBack()
+    navigation.navigate('MAIN')
     setLoading(false)
   }
 
@@ -59,6 +59,7 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
 
   return (
     <AppContainer
+      enableBackgroundBottomInsets
       iconLeft={blockGoBack ? undefined : 'back'}
       onPress={navigation.goBack}
       textAlign="center"

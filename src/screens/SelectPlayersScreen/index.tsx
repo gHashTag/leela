@@ -20,7 +20,7 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   }
 
   return (
-    <Background>
+    <Background enableBottomInsets enableTopInsets>
       <CenterView>
         <ButtonsSelector onPress={selectPlayer} />
       </CenterView>

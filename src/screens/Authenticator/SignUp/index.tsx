@@ -27,7 +27,13 @@ const SignUp = (): ReactElement => {
   const color = dark ? white : black
 
   return (
-    <AppContainer iconLeft={'back'} onPress={goBack} title=" " colorLeft={color}>
+    <AppContainer
+      enableBackgroundBottomInsets
+      iconLeft={'back'}
+      onPress={goBack}
+      title=" "
+      colorLeft={color}
+    >
       {loading ? (
         <Loading />
       ) : (

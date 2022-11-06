@@ -46,52 +46,48 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     : DiceStore.finishArr.indexOf(true) === -1
   const { loadingProf } = OnlinePlayer.store
 
-  return (
-    <Background>
-      {loadingProf && DiceStore.online ? (
-        <Spin centered />
-      ) : (
-        <>
-          <Header
-            iconLeft=":information_source:"
-            onPress={() => navigation.navigate('RULES_SCREEN')}
-            iconRight=":books:"
-            displayStatus
-            textAlign="center"
-            onPressRight={() => navigation.navigate('PLANS_SCREEN')}
-          >
-            {endGame ? (
-              <>
-                <ButtonElements
-                  title={I18n.t('startOver')}
-                  onPress={
-                    DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
-                  }
-                />
-                <Space height={vs(3)} />
-                <Text
-                  textStyle={{ textAlign: 'center' }}
-                  h="h1"
-                  title={`${I18n.t('win')}`}
-                />
-                {!DiceStore.rate ? (
-                  <ButtonElements
-                    type="solid"
-                    themeType="classic"
-                    title={I18n.t('leaveFeedback')}
-                    onPress={_onPress}
-                  />
-                ) : (
-                  <Space height={s(38)} />
-                )}
-              </>
-            ) : undefined}
-          </Header>
-          {!endGame && <Dice />}
-          <GameBoard />
-        </>
-      )}
+  return loadingProf && DiceStore.online ? (
+    <Background enableTopInsets>
+      <Spin centered />
     </Background>
+  ) : (
+    <>
+      <Header
+        iconLeft=":information_source:"
+        onPress={() => navigation.navigate('RULES_SCREEN')}
+        iconRight=":books:"
+        displayStatus
+        textAlign="center"
+        onPressRight={() => navigation.navigate('PLANS_SCREEN')}
+      >
+        {endGame ? (
+          <>
+            <ButtonElements
+              title={I18n.t('startOver')}
+              onPress={
+                DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
+              }
+            />
+            <Space height={vs(3)} />
+            <Text textStyle={{ textAlign: 'center' }} h="h1" title={`${I18n.t('win')}`} />
+            {!DiceStore.rate ? (
+              <ButtonElements
+                type="solid"
+                themeType="classic"
+                title={I18n.t('leaveFeedback')}
+                onPress={_onPress}
+              />
+            ) : (
+              <Space height={s(38)} />
+            )}
+          </>
+        ) : undefined}
+      </Header>
+      <Background>
+        {!endGame && <Dice />}
+        <GameBoard />
+      </Background>
+    </>
   )
 })
 

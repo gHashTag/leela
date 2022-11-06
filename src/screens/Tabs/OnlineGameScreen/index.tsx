@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from 'react'
 import { StyleSheet, ScrollView, View } from 'react-native'
 import { observer } from 'mobx-react'
-import { s, vs } from 'react-native-size-matters'
+import { ms, s, vs } from 'react-native-size-matters'
 import { I18n, lang } from '../../../utils'
 import { RootStackParamList, RootTabParamList } from '../../../types'
 import {
@@ -17,6 +17,7 @@ import { captureException, fuchsia } from '../../../constants'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import Markdown from 'react-native-markdown-display'
 import { useMarkdownProps } from '../../../hooks'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -85,8 +86,10 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
     }
   }
 
+  const topBackgroundMargin = useSafeAreaInsets().top + ms(37, 0.5)
+
   return (
-    <Background>
+    <Background style={[bgStyle, { paddingTop: topBackgroundMargin }]}>
       <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
         <Header title={I18n.t('events')} textAlign="center" />
         <Space height={s(20)} />
@@ -97,7 +100,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
           <Space height={vs(10)} />
           <Text textStyle={centered} h="h3" title={I18n.t('contacts')} />
           <SocialLinks />
-          <Space height={vs(130)} />
+          <Space height={vs(80)} />
         </View>
       </ScrollView>
     </Background>
@@ -108,9 +111,8 @@ const styles = StyleSheet.create({
   btn: {
     alignSelf: 'center'
   },
-  containerStyle: {
-    height: vs(250),
-    width: '100%'
+  bgStyle: {
+    opacity: 0.5
   },
   mdStyle: {
     paddingHorizontal: s(8)
@@ -119,6 +121,6 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   }
 })
-const { centered, btn, containerStyle, mdStyle } = styles
+const { centered, btn, bgStyle, mdStyle } = styles
 
 export { OnlineGameScreen }

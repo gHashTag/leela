@@ -68,40 +68,48 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
   const { dark } = useTheme()
   const color = dark ? white : black
 
-  return loading ? (
-    <Loading />
-  ) : (
-    <AppContainer iconLeft={'back'} onPress={goBack} title=" " colorLeft={black}>
-      <KeyboardContainer>
-        <ScrollView
-          contentContainerStyle={styles.container}
-          showsVerticalScrollIndicator={false}
-        >
-          <Space height={H / 5} />
-          <FormProvider {...methods}>
-            <Input
-              name="firstName"
-              placeholder={I18n.t('firstName')}
-              autoCapitalize="none"
-              color={color}
-              additionalStyle={{ width: W - s(40) }}
-            />
-            <Input
-              name="lastName"
-              placeholder={I18n.t('lastName')}
-              autoCapitalize="none"
-              color={color}
-              additionalStyle={{ width: W - s(40) }}
-            />
-            <Space height={30} />
-            <Button
-              title={I18n.t('done')}
-              onPress={methods.handleSubmit(onSubmit, er => console.log(er))}
-            />
-            <Space height={vs(50)} />
-          </FormProvider>
-        </ScrollView>
-      </KeyboardContainer>
+  return (
+    <AppContainer
+      enableBackgroundBottomInsets
+      iconLeft={'back'}
+      onPress={goBack}
+      title=" "
+      colorLeft={black}
+    >
+      {loading ? (
+        <Loading />
+      ) : (
+        <KeyboardContainer>
+          <ScrollView
+            contentContainerStyle={styles.container}
+            showsVerticalScrollIndicator={false}
+          >
+            <Space height={H / 5} />
+            <FormProvider {...methods}>
+              <Input
+                name="firstName"
+                placeholder={I18n.t('firstName')}
+                autoCapitalize="none"
+                color={color}
+                additionalStyle={{ width: W - s(40) }}
+              />
+              <Input
+                name="lastName"
+                placeholder={I18n.t('lastName')}
+                autoCapitalize="none"
+                color={color}
+                additionalStyle={{ width: W - s(40) }}
+              />
+              <Space height={30} />
+              <Button
+                title={I18n.t('done')}
+                onPress={methods.handleSubmit(onSubmit, er => console.log(er))}
+              />
+              <Space height={vs(50)} />
+            </FormProvider>
+          </ScrollView>
+        </KeyboardContainer>
+      )}
     </AppContainer>
   )
 }

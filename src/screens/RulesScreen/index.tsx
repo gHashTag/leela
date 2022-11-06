@@ -42,6 +42,7 @@ const RulesScreen = ({ navigation }: RulesScreenT) => {
   return (
     <AppContainer
       onPress={goBack}
+      enableBackgroundBottomInsets
       title={`${I18n.t('rules')}`}
       iconRight={null}
       iconLeft=":heavy_multiplication_x:"

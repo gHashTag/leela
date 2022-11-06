@@ -30,7 +30,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   }
 
   return (
-    <AppContainer iconLeft={null}>
+    <AppContainer enableBackgroundBottomInsets enableBackgroundTopInsets iconLeft={null}>
       {loading ? (
         <Loading />
       ) : (

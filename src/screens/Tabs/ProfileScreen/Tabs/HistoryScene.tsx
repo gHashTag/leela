@@ -49,7 +49,7 @@ export const HistoryScene = observer(() => {
           />
         </Animated.ScrollView>
       </GestureDetector>
-      <Space height={vs(70)} />
+      <Space height={vs(25)} />
     </>
   )
 })

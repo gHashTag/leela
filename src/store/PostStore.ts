@@ -171,7 +171,6 @@ export const PostStore = {
   fetchOwnPosts: async (querySnap: fetchT) => {
     PostStore.store.loadOwnPosts = true
     const uid = getUid()
-    const isAdmin = OnlinePlayer.store.status === 'Admin'
     const res: any[] = querySnap.docs
       .map(a => {
         if (a.exists) {
@@ -180,7 +179,7 @@ export const PostStore = {
         }
       })
       .filter(a => a !== undefined)
-      .filter(a => (isAdmin ? true : a?.ownerId === uid ? true : a?.accept))
+      .filter(a => a?.ownerId === uid)
     if (res.length > 0) {
       PostStore.store.ownPosts = res.sort((a, b) => b.createTime - a.createTime)
     }

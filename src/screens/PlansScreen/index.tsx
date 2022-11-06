@@ -37,6 +37,7 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
     <AppContainer
       onPress={goBack}
       title={`${I18n.t('plans')}`}
+      enableBackgroundBottomInsets
       iconRight={null}
       iconLeft=":heavy_multiplication_x:"
     >

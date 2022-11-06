@@ -94,7 +94,13 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
   const color = dark ? white : black
 
   return (
-    <AppContainer onPress={goBack} title=" " iconLeft={null}>
+    <AppContainer
+      enableBackgroundBottomInsets
+      enableBackgroundTopInsets
+      onPress={goBack}
+      title=" "
+      iconLeft={null}
+    >
       {loading ? (
         <Loading />
       ) : (

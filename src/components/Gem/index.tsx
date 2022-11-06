@@ -1,6 +1,6 @@
 import React from 'react'
 import { Image, View } from 'react-native'
-import { ScaledSheet, s } from 'react-native-size-matters'
+import { ScaledSheet, s, ms } from 'react-native-size-matters'
 import { ICONS } from './images'
 import { DiceStore, OnlinePlayer, OtherPlayers, OfflinePlayers } from '../../store'
 import { observer } from 'mobx-react'
@@ -72,9 +72,9 @@ const styles = ScaledSheet.create({
     zIndex: 2
   },
   gems: {
-    width: s(42),
-    height: s(42),
-    borderRadius: s(42) / 2
+    width: ms(42, 0.5),
+    height: ms(42, 0.5),
+    borderRadius: ms(42, 0.5) / 2
   }
 })
 

@@ -39,7 +39,12 @@ const SignUpAvatar = observer(({ navigation }: SignUpAvatarT): ReactElement => {
   useNoBackHandler()
 
   return (
-    <AppContainer title=" " iconLeft={null}>
+    <AppContainer
+      enableBackgroundBottomInsets
+      enableBackgroundTopInsets
+      title=" "
+      iconLeft={null}
+    >
       <CenterView>
         <TouchableOpacity onPress={onPressAva}>
           <Avatar size="xLarge" uri={OnlinePlayer.store.avatar.slice()} loading={load} />

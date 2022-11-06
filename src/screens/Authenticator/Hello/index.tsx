@@ -38,7 +38,13 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
   const color = dark ? white : black
 
   return (
-    <AppContainer iconLeft={'back'} onPress={goBack} title=" " colorLeft={color}>
+    <AppContainer
+      enableBackgroundBottomInsets
+      iconLeft={'back'}
+      onPress={goBack}
+      title=" "
+      colorLeft={color}
+    >
       <CenterView>
         <IconLeela />
         <Space height={s(30)} />

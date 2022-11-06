@@ -32,6 +32,7 @@ const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) =
     <AppContainer
       onPress={goBack}
       title={title}
+      enableBackgroundBottomInsets
       iconRight={null}
       iconLeft=":heavy_multiplication_x:"
     >

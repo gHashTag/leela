@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, TouchableOpacity, useColorScheme } from 'react-native'
-import { ScaledSheet, s } from 'react-native-size-matters'
+import { ScaledSheet, s, ms } from 'react-native-size-matters'
 import { Tab } from './components'
 import { black, white } from './constants'
 import { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs'
@@ -65,7 +65,7 @@ const styles = ScaledSheet.create({
     elevation: 5,
     justifyContent: 'space-around',
     alignItems: 'flex-start',
-    paddingTop: s(10),
+    paddingTop: ms(10, 0.5),
     flexDirection: 'row'
   }
 })

@@ -21,18 +21,6 @@ type ProfileScreenT = {
     'TAB_BOTTOM_3'
   >
 }
-/* <Space height={70} />
-          <Button
-            title={I18n.t('startOver')}
-            onPress={DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame}
-          />
-          <Space height={20} />
-          {DiceStore.online && (
-            <>
-              <Button title={I18n.t('signOut')} onPress={OnlinePlayer.SignOut} />
-              <Space height={20} />
-            </>
-          )} */
 
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   const { width: W, height: H } = useWindowDimensions()
@@ -54,7 +42,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                 <Space height={H * 0.5} />
               </CenterView>
             ) : (
-              <View style={{ alignItems: 'center', width: '100%' }}>
+              <View style={container}>
                 {DiceStore.online && (
                   <HeaderMaster
                     onPress={() =>
@@ -92,9 +80,12 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
 const styles = StyleSheet.create({
   tabContainer: {},
-  tabScene: {}
+  container: {
+    alignItems: 'center',
+    width: '100%'
+  }
 })
 
-const { tabContainer, tabScene } = styles
+const { tabContainer, container } = styles
 
 export { ProfileScreen }

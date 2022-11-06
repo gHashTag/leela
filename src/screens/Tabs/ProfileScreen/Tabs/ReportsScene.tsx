@@ -70,7 +70,7 @@ export const ReportsScene = observer(() => {
           />
         </Animated.ScrollView>
       </GestureDetector>
-      <Space height={vs(70)} />
+      <Space height={vs(25)} />
     </>
   )
 })

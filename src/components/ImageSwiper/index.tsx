@@ -144,7 +144,8 @@ const styles = StyleSheet.create({
   },
   swiperContainer: {
     width: W,
-    height: vs(300)
+    height: vs(300),
+    overflow: 'hidden'
   },
   imageBg: {
     width: W,

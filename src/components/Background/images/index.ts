@@ -1,14 +1,14 @@
 export const ICONS = [
   {
-    path: require('./bg.png'),
+    paths: [require('./bgTop.png'), require('./bgBottom.png')],
     title: 'bg'
   },
   {
-    path: require('./clean.png'),
+    paths: [require('./clean.png')],
     title: 'clean'
   },
   {
-    path: require('./1x1.png'),
+    paths: [require('./1x1.png')],
     title: '1x1'
   }
 ]

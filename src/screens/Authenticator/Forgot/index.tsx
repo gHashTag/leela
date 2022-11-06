@@ -89,6 +89,7 @@ const Forgot = ({ route, navigation }: ForgotT) => {
       iconLeft={'back'}
       title=" "
       onPress={goBack}
+      enableBackgroundBottomInsets
       message={error}
       colorLeft={color}
     >

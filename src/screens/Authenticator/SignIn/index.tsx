@@ -46,7 +46,13 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
   return loading ? (
     <Loading />
   ) : (
-    <AppContainer iconLeft={':back:'} onPress={goBack} title=" " colorLeft={color}>
+    <AppContainer
+      enableBackgroundBottomInsets
+      iconLeft={':back:'}
+      onPress={goBack}
+      title=" "
+      colorLeft={color}
+    >
       <KeyboardContainer>
         <ScrollView showsVerticalScrollIndicator={false}>
           <Space height={H / 5} />

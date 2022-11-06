@@ -6,8 +6,8 @@ import { ScaledSheet, ms } from 'react-native-size-matters'
 
 const styles = ScaledSheet.create({
   img: {
-    width: ms(35, 0.7),
-    height: ms(35, 0.7)
+    width: ms(35, 0.5),
+    height: ms(35, 0.5)
   }
 })
 

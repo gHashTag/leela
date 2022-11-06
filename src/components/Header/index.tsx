@@ -3,7 +3,7 @@ import React, { memo } from 'react'
 import { Platform, TouchableOpacity, View } from 'react-native'
 import Emoji from 'react-native-emoji'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ScaledSheet, s, vs, mvs } from 'react-native-size-matters'
+import { ScaledSheet, s, vs, mvs, ms } from 'react-native-size-matters'
 import { Text, HeaderMessage } from '../'
 import { navigate } from '../../constants'
 const isIos = Platform.OS === 'ios'
@@ -98,7 +98,7 @@ const styles = ScaledSheet.create({
     zIndex: 20
   },
   leftIconStyle: {
-    fontSize: isIos ? s(26) : s(22),
+    fontSize: isIos ? ms(26, 0.5) : ms(22, 0.5),
     textAlign: 'center',
     alignItems: 'center',
     paddingTop: s(2),
@@ -106,7 +106,7 @@ const styles = ScaledSheet.create({
     marginVertical: s(5)
   },
   rightIconStyle: {
-    fontSize: isIos ? s(30) : s(28),
+    fontSize: isIos ? ms(30, 0.5) : ms(28, 0.5),
     textAlign: 'center',
     alignItems: 'center',
     marginHorizontal: s(8),

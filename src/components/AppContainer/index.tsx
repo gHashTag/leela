@@ -21,6 +21,8 @@ interface AppContainerT {
   message?: string
   title?: string
   displayStatus?: boolean
+  enableBackgroundBottomInsets?: boolean
+  enableBackgroundTopInsets?: boolean
   header?: boolean
   iconLeftOpacity?: number
   textAlign?: 'center' | 'auto' | 'left' | 'right' | 'justify'
@@ -35,6 +37,8 @@ function AppContainer({
   iconRight = null,
   children,
   title,
+  enableBackgroundBottomInsets,
+  enableBackgroundTopInsets,
   displayStatus,
   iconLeftOpacity = 1,
   textAlign = 'left',
@@ -43,23 +47,27 @@ function AppContainer({
   const { container } = styles
   return (
     <View style={{ flex: 1 }}>
-      <Background status={status}>
-        <View style={container}>
-          {title && header && (
-            <Header
-              displayStatus={displayStatus}
-              textAlign={textAlign}
-              title={title}
-              onPress={onPress}
-              iconLeftOpacity={iconLeftOpacity}
-              onPressRight={onPressRight}
-              iconLeft={iconLeft}
-              iconRight={iconRight}
-            />
-          )}
+      <View style={container}>
+        {title && header && (
+          <Header
+            displayStatus={displayStatus}
+            textAlign={textAlign}
+            title={title}
+            onPress={onPress}
+            iconLeftOpacity={iconLeftOpacity}
+            onPressRight={onPressRight}
+            iconLeft={iconLeft}
+            iconRight={iconRight}
+          />
+        )}
+        <Background
+          enableTopInsets={enableBackgroundTopInsets}
+          enableBottomInsets={enableBackgroundBottomInsets}
+          status={status}
+        >
           {children}
-        </View>
-      </Background>
+        </Background>
+      </View>
     </View>
   )
 }

@@ -17,9 +17,9 @@ export const useActions = () => {
     setLoadImage(false)
   }
 
-  const onPressShare = async () => {
-    console.log('SHARE')
-  }
+  // const onPressShare = async () => {
+  //   console.log('SHARE')
+  // }
 
   const menuItems: ButtonsModalT[] = [
     {
@@ -28,12 +28,12 @@ export const useActions = () => {
       title: I18n.t('changeAva'),
       icon: 'ios-images-outline'
     },
-    {
-      key: 'SHARE',
-      onPress: onPressShare,
-      title: I18n.t('shareProfile'),
-      icon: 'share-outline'
-    },
+    // {
+    //   key: 'SHARE',
+    //   onPress: onPressShare,
+    //   title: I18n.t('shareProfile'),
+    //   icon: 'share-outline'
+    // },
     {
       key: 'EXIT',
       color: 'red',
