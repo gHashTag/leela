@@ -1,0 +1,117 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/3270Narrow.ttf",
+      "sha1": "12fa7f1a4cf24f2d4322b98111995591aabbac7f"
+    },
+    {
+      "path": "assets/fonts/IBM-Logo.ttf",
+      "sha1": "458d9f12f3a362e3bc301dd54289bf0c4d5ad9b1"
+    },
+    {
+      "path": "assets/fonts/KLMN_Flash_Pix.ttf",
+      "sha1": "48722514ca968d0af3d0974654fb9f3ba8a9bea5"
+    },
+    {
+      "path": "assets/fonts/Montserrat-Black.ttf",
+      "sha1": "96d03479269d1ba7a3e38f4b64ff87ead267c998"
+    },
+    {
+      "path": "assets/fonts/Montserrat-BlackItalic.ttf",
+      "sha1": "6e84efcb6bf01c47102d6e9f0dbe5958e74c9f20"
+    },
+    {
+      "path": "assets/fonts/Montserrat-Bold.ttf",
+      "sha1": "3a54407a2b26ff4718708a4726b10cb070d16534"
+    },
+    {
+      "path": "assets/fonts/Montserrat-BoldItalic.ttf",
+      "sha1": "6acf078ad5e1b77e6d68b8ff0cde39d81b9f057c"
+    },
+    {
+      "path": "assets/fonts/Montserrat-ExtraBold.ttf",
+      "sha1": "4b5c27dcf59df165606efa247190c0bfa3c02ff0"
+    },
+    {
+      "path": "assets/fonts/Montserrat-ExtraBoldItalic.ttf",
+      "sha1": "28423e53b60316c09f468055ca8c1d27c06ab45b"
+    },
+    {
+      "path": "assets/fonts/Montserrat-ExtraLight.ttf",
+      "sha1": "fe3c849af6231af6c5c43d1045f2011bf683f317"
+    },
+    {
+      "path": "assets/fonts/Montserrat-ExtraLightItalic.ttf",
+      "sha1": "40d3231d668844dab24536fa0c380bdc2311a992"
+    },
+    {
+      "path": "assets/fonts/Montserrat-Italic.ttf",
+      "sha1": "798c701450f6bc08217f73c1ac569100cddc2947"
+    },
+    {
+      "path": "assets/fonts/Montserrat-Light.ttf",
+      "sha1": "83879cec4c934d446eca63aa5cfedcebfd60d610"
+    },
+    {
+      "path": "assets/fonts/Montserrat-LightItalic.ttf",
+      "sha1": "659632ad8a33d96e6a00319d7b0c020e9cc6cc5b"
+    },
+    {
+      "path": "assets/fonts/Montserrat-Medium.ttf",
+      "sha1": "65a98832079c4d2c67f3acc4f4ce2de630fe6cb0"
+    },
+    {
+      "path": "assets/fonts/Montserrat-MediumItalic.ttf",
+      "sha1": "ceadac9926836d5fc0ee14f94567f0ea25979fa2"
+    },
+    {
+      "path": "assets/fonts/Montserrat-Regular.ttf",
+      "sha1": "d25b35242deb1c6ff888b8162ca2aacc356d3899"
+    },
+    {
+      "path": "assets/fonts/Montserrat-SemiBold.ttf",
+      "sha1": "f829de4c176fb2ccf5e33360920f48de6794434e"
+    },
+    {
+      "path": "assets/fonts/Montserrat-SemiBoldItalic.ttf",
+      "sha1": "3c2759411b32ad6779aba08e4c09ed1b3c0bc4d4"
+    },
+    {
+      "path": "assets/fonts/Montserrat-Thin.ttf",
+      "sha1": "1d00ff2f5bc9331aa6e75b5a82dd698976615dc4"
+    },
+    {
+      "path": "assets/fonts/Montserrat-ThinItalic.ttf",
+      "sha1": "ae19fb168e043e6408692c4bc50dd0aab76fdc22"
+    },
+    {
+      "path": "assets/fonts/NeutraText-Bold.otf",
+      "sha1": "d63528e7dfaae3284050b58dfc0dc17d01facb34"
+    },
+    {
+      "path": "assets/fonts/NeutraText-BoldItalic.otf",
+      "sha1": "bafcadcc1cf1eaab8b57523b945dada58f526df6"
+    },
+    {
+      "path": "assets/fonts/NeutraText-Book.otf",
+      "sha1": "e244313a063401811e6711a984847266c66ee05f"
+    },
+    {
+      "path": "assets/fonts/NeutraText-BookItalic.otf",
+      "sha1": "6184b3d8c69b7a7b39be256f39e2ba6c057c6d5a"
+    },
+    {
+      "path": "assets/fonts/OxygenMono-Regular.otf",
+      "sha1": "bd1427fb09c6d260b9f8bffa3b34f3c1890a754d"
+    },
+    {
+      "path": "assets/fonts/TheDolbak-Brush.ttf",
+      "sha1": "ebe878750912914be8cc8aa157ef6039b702c7a6"
+    },
+    {
+      "path": "assets/fonts/etna-free-font.otf",
+      "sha1": "ccf64d153d3026a24d5a89c2f9d2334ef0f24537"
+    }
+  ]
+}

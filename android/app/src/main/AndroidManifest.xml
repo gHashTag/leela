@@ -1,0 +1,78 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  package="com.leela">
+
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="com.android.vending.BILLING" />
+  <uses-permission android:name="android.permission.VIBRATE" />
+  <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+  <application android:name=".MainApplication"
+    android:label="@string/app_name"
+    android:icon="@mipmap/ic_launcher"
+    android:roundIcon="@mipmap/ic_launcher_round"
+    android:allowBackup="false"
+    android:theme="@style/AppTheme">
+
+    <activity android:name=".MainActivity"
+      android:label="@string/app_name"
+      android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+      android:launchMode="singleTask"
+      android:windowSoftInputMode="adjustResize"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+
+      <!-- Branch URI Scheme -->
+      <intent-filter>
+        <data android:scheme="leelagame"
+          android:host="open" />
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+      </intent-filter>
+      <!-- Branch App Links -->
+
+      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="https"
+          android:host="leelagame.app.link" />
+        <!-- example-alternate domain is required for App Links when the Journeys/Web SDK and Deepviews are used inside your website.  -->
+        <data android:scheme="https"
+          android:host="leelagame-alternate.app.link" />
+      </intent-filter>
+
+      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="https"
+          android:host="leelagame.test-app.link" />
+        <data android:scheme="https"
+          android:host="leelagame-alternate.test-app.link" />
+      </intent-filter>
+
+    </activity>
+
+    <!-- Branch init -->
+    <meta-data android:name="io.branch.sdk.BranchKey"
+      android:value="key_live_mcYXcafYOnTCF05gBCjf5chpszeXGueK" />
+    <meta-data android:name="io.branch.sdk.BranchKey.test"
+      android:value="key_test_bbX7bfj6UkJAq51lEzzdJccesAg1Kzi1" />
+    <meta-data android:name="io.branch.sdk.TestMode"
+      android:value="false" />
+
+  </application>
+
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.SEND" />
+      <data android:mimeType="text/plain" />
+    </intent>
+  </queries>
+
+</manifest>
