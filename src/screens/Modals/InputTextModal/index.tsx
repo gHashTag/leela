@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { RouteProp, useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import I18n from 'i18n-js'
 import { FieldValues, FormProvider, SubmitHandler, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
@@ -27,6 +27,8 @@ const schema = yup
 
 export function InputTextModal({ navigation, route }: InputTextT) {
   const { onError, onSubmit } = route.params
+  const { t } = useTranslation()
+
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
@@ -46,17 +48,17 @@ export function InputTextModal({ navigation, route }: InputTextT) {
     methods.reset()
   }
   return (
-    <View style={transparentView}>
+    <View style={page.transparentView}>
       <KeyboardContainer>
-        <Pressable onPress={() => navigation.goBack()} style={goBackView} />
-        <View style={[inputContainer, { backgroundColor: background }]}>
+        <Pressable onPress={() => navigation.goBack()} style={page.goBackView} />
+        <View style={[page.inputContainer, { backgroundColor: background }]}>
           <FormProvider {...methods}>
             <Input
               onChange={e => setLength(e.nativeEvent.text.length)}
               name="text"
-              placeholder={I18n.t('uComment')}
+              placeholder={t('uComment')}
               color={text}
-              additionalStyle={input}
+              additionalStyle={page.input}
               showError={false}
               onSubmitEditing={methods.handleSubmit(
                 handleSubmit,
@@ -71,7 +73,7 @@ export function InputTextModal({ navigation, route }: InputTextT) {
   )
 }
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   transparentView: {
     flex: 1,
   },
@@ -96,4 +98,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 })
-const { inputContainer, input, transparentView, goBackView } = styles

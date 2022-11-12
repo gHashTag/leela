@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react'
 import firestore from '@react-native-firebase/firestore'
 import { RouteProp } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import I18n from 'i18n-js'
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
@@ -20,6 +20,8 @@ interface Ipost {
 
 export const PostScreen = observer(({}: Ipost) => {
   const [limit, setLimit] = useState(15)
+
+  const { t } = useTranslation()
 
   useEffect(() => {
     if (DiceStore.online) {
@@ -55,13 +57,13 @@ export const PostScreen = observer(({}: Ipost) => {
       ItemSeparatorComponent={() => <Space height={vs(10)} />}
       ListHeaderComponent={
         <>
-          <Header textAlign="center" title={I18n.t('posts')} />
+          <Header textAlign="center" title={t('posts')} />
           <Space height={vs(10)} />
         </>
       }
       ListEmptyComponent={
         <View style={{ paddingHorizontal: s(20) }}>
-          <Text textStyle={page.noPostText} h={'h1'} title={I18n.t('noPosts')} />
+          <Text textStyle={page.noPostText} h={'h1'} title={t('noPosts')} />
         </View>
       }
     />

@@ -2,7 +2,7 @@ import React from 'react'
 
 import { RouteProp, useFocusEffect, useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import I18n from 'i18n-js'
+import { useTranslation } from 'react-i18next'
 import { BackHandler, View } from 'react-native'
 import { ScaledSheet, s, vs } from 'react-native-size-matters'
 
@@ -19,6 +19,7 @@ export function NetworkModal({ navigation }: NetworkModalT) {
   const {
     colors: { background },
   } = useTheme()
+  const { t } = useTranslation()
 
   function onPress() {
     OnlinePlayer.SignOutToOffline()
@@ -39,13 +40,13 @@ export function NetworkModal({ navigation }: NetworkModalT) {
   return (
     <View style={container}>
       <View style={[modalView, { backgroundColor: background }]}>
-        <Text textStyle={textStyle} h={'h3'} title={I18n.t('disconnected')} />
+        <Text textStyle={textStyle} h={'h3'} title={t('disconnected')} />
         <Space height={vs(15)} />
         <ButtonSimple
           viewStyle={btnCont}
           h="h2"
           onPress={onPress}
-          title={I18n.t('goOffline')}
+          title={t('goOffline')}
         />
       </View>
     </View>

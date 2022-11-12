@@ -3,6 +3,7 @@ import React, { memo, useEffect, useState } from 'react'
 import { useFocusEffect } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { ThemeProvider } from 'react-native-elements'
 import Orientation from 'react-native-orientation-locker'
@@ -12,7 +13,6 @@ import Spin from 'react-native-spinkit'
 import { AppContainer, SocialLinks, Space, Text } from '../../components'
 import { OpenVideoModal, captureException, primary, secondary } from '../../constants'
 import { RootStackParamList } from '../../types'
-import { I18n } from '../../utils'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLAYRA_SCREEN'>
 
@@ -46,6 +46,7 @@ interface PlayraItemT {
 export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
   const [data, setArray] = useState<any[]>([])
   const [loading, setLoading] = useState<boolean>(true)
+  const { t } = useTranslation()
 
   useEffect(() => {
     const getData = async () => {
@@ -84,7 +85,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
         ListFooterComponent={
           <>
             <Space height={vs(25)} />
-            <Text textStyle={page.centerTxt} h={'h1'} title={I18n.t('contacts')} />
+            <Text textStyle={page.centerTxt} h={'h1'} title={t('contacts')} />
             <ThemeProvider theme={theme}>
               <SocialLinks music />
               <Space height={vs(130)} />
@@ -105,7 +106,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
           loading ? null : (
             <View>
               <Space height={vs(15)} />
-              <Text textStyle={page.centerTxt} h="h3" title={I18n.t('loadErr')} />
+              <Text textStyle={page.centerTxt} h="h3" title={t('loadErr')} />
             </View>
           )
         }

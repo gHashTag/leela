@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react'
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import I18n from 'i18n-js'
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { ImageBackground, StyleSheet } from 'react-native'
 import { vs } from 'react-native-size-matters'
 
@@ -22,6 +22,8 @@ const PosterScreen = observer(({}: PosterScreenT) => {
     OnlinePlayer.getPoster()
   }, [])
 
+  const { t } = useTranslation()
+
   return (
     <ImageBackground
       resizeMode="cover"
@@ -29,7 +31,7 @@ const PosterScreen = observer(({}: PosterScreenT) => {
       style={img}
     >
       <ButtonWithIcon
-        title={I18n.t('more')}
+        title={t('more')}
         color={fuchsia}
         viewStyle={btnMore}
         iconName="ios-chevron-forward"

@@ -2,10 +2,12 @@ import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
 import { FirebaseDatabaseTypes, firebase } from '@react-native-firebase/database'
 import firestore from '@react-native-firebase/firestore'
 import storage from '@react-native-firebase/storage'
-import I18n from 'i18n-js'
 import { nanoid } from 'nanoid/non-secure'
 import ImagePicker from 'react-native-image-crop-picker'
 import semver from 'semver'
+import i18next from 'src/i18n'
+
+import { lang } from './../i18n'
 
 import { version } from '../../package.json'
 import {
@@ -18,7 +20,6 @@ import {
 } from '../constants'
 import { MessagingStore, OnlinePlayer, actionsDice, fetchBusinesses } from '../store'
 import { HistoryT, UserT } from '../types'
-import { lang } from '../utils'
 
 interface NewProfileI {
   email: string
@@ -306,17 +307,17 @@ function getTimeStamp({ lastTime, type = 0 }: getTimeT) {
   const difference = dateNow - lastTime
 
   if (difference <= 20000) {
-    return I18n.t(timeStampType[type].now)
+    return i18next.t(timeStampType[type].now)
   } else if (difference <= day) {
-    return I18n.t(timeStampType[type].today)
+    return i18next.t(timeStampType[type].today)
   } else if (difference <= day * 2) {
-    return I18n.t(timeStampType[type].yesterday)
+    return i18next.t(timeStampType[type].yesterday)
   } else if (difference <= 30 * day) {
     const days = Math.floor(difference / day)
-    return `${days}${I18n.t(timeStampType[type].days)}`
+    return `${days}${i18next.t(timeStampType[type].days)}`
   } else if (difference < 12 * 30 * day) {
     const month = Math.floor(difference / (day * 30))
-    return `${month}${I18n.t(timeStampType[type].month)}`
+    return `${month}${i18next.t(timeStampType[type].month)}`
   } else {
     return `${date.getHours()}:${date.getMinutes()} · ${date.getDate()}/${date.getMonth()}/${date
       .getFullYear()
@@ -345,7 +346,7 @@ const onSignIn = async (
       } else if (!prof.intention) {
         navigate('CHANGE_INTENTION_SCREEN', {
           blockGoBack: true,
-          title: I18n.t('createIntention'),
+          title: i18next.t('createIntention'),
         })
       } else {
         navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
@@ -353,7 +354,6 @@ const onSignIn = async (
           OpenPlanReportModal(prof.plan)
         } else if (MessagingStore.path) {
           linkTo(MessagingStore.path)
-          console.log('🚀 - MessagingStore.path', MessagingStore.path)
           MessagingStore.path = ''
         }
         const reference = getFireBaseRef(`/online/${prof.owner}`)

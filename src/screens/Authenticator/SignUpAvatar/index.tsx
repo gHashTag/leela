@@ -4,6 +4,7 @@ import auth from '@react-native-firebase/auth'
 import { RouteProp } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { TouchableOpacity } from 'react-native'
 import { s } from 'react-native-size-matters'
 
@@ -11,7 +12,6 @@ import { AppContainer, Avatar, Button, CenterView, Space } from '../../../compon
 import { useNoBackHandler } from '../../../hooks'
 import { OnlinePlayer } from '../../../store'
 import { RootStackParamList } from '../../../types'
-import { I18n } from '../../../utils'
 import { onSignIn } from '../../helper'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
@@ -25,8 +25,10 @@ type SignUpAvatarT = {
   route: ProfileScreenRouteProp
 }
 
-const SignUpAvatar = observer(({ navigation }: SignUpAvatarT): ReactElement => {
+const SignUpAvatar = observer(({}: SignUpAvatarT): ReactElement => {
   const [load, setLoad] = useState(false)
+  const { t } = useTranslation()
+
   const onPressAva = async () => {
     setLoad(true)
     await OnlinePlayer.uploadImage()
@@ -54,7 +56,7 @@ const SignUpAvatar = observer(({ navigation }: SignUpAvatarT): ReactElement => {
 
         <Space height={s(50)} />
         {!!OnlinePlayer.store.avatar && (
-          <Button title={I18n.t('done')} onPress={handleSubmit} />
+          <Button title={t('done')} onPress={handleSubmit} />
         )}
         <Space height={s(150)} />
       </CenterView>

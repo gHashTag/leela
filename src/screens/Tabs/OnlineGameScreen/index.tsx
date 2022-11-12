@@ -2,10 +2,12 @@ import React, { Fragment, useEffect, useState } from 'react'
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import Markdown from 'react-native-markdown-display'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ms, s, vs } from 'react-native-size-matters'
+import { lang } from 'src/i18n'
 
 import {
   Background,
@@ -19,7 +21,6 @@ import {
 import { captureException, fuchsia } from '../../../constants'
 import { useMarkdownProps } from '../../../hooks'
 import { RootStackParamList, RootTabParamList } from '../../../types'
-import { I18n, lang } from '../../../utils'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -34,6 +35,8 @@ export const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => 
   const [images, setImages] = useState<string[]>([])
   const [mdContent, setMdContent] = useState<string[]>([])
   const mdProps = useMarkdownProps(0.94, 0.94)
+
+  const { t } = useTranslation()
 
   useEffect(() => {
     const getData = async () => {
@@ -74,7 +77,7 @@ export const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => 
               color={fuchsia}
               onPress={() => navigation.navigate('PLAYRA_SCREEN')}
               iconName="ios-musical-notes"
-              title={I18n.t('clips')}
+              title={t('clips')}
             />
             <Space height={vs(15)} />
           </Fragment>
@@ -93,14 +96,14 @@ export const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => 
   return (
     <Background style={[page.bgStyle, { paddingTop: topBackgroundMargin }]}>
       <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-        <Header title={I18n.t('events')} textAlign="center" />
+        <Header title={t('events')} textAlign="center" />
         <Space height={s(20)} />
         <ImageSwiper images={images} height={vs(300)} />
         <Space height={s(10)} />
         <View style={page.mdStyle}>
           {mdContent?.map(renderMarkdownPart)}
           <Space height={vs(10)} />
-          <Text textStyle={page.centered} h="h3" title={I18n.t('contacts')} />
+          <Text textStyle={page.centered} h="h3" title={t('contacts')} />
           <SocialLinks />
           <Space height={vs(80)} />
         </View>

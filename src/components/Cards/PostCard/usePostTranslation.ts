@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react'
 
+import { lang } from 'src/i18n'
+
 import { PostStore } from '../../../store'
 import { PostT } from '../../../types'
-import { lang } from '../../../utils'
 
-interface useTranslationParams {
+interface usePostTranslationParams {
   item?: PostT
   translatedText?: string
   isHideTranslate?: boolean
 }
 
-export const useTranslation = ({
+export const usePostTranslation = ({
   item,
   translatedText,
   isHideTranslate,
-}: useTranslationParams) => {
+}: usePostTranslationParams) => {
   const [transText, setTransText] = useState('')
   const [hideTranslate, setHideTranslate] = useState(true)
 

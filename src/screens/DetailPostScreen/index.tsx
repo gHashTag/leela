@@ -3,8 +3,8 @@ import React, { useCallback, useEffect } from 'react'
 import firestore from '@react-native-firebase/firestore'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import I18n from 'i18n-js'
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
@@ -44,7 +44,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
             }),
         })
     }
-
+    const { t } = useTranslation()
     useFocusEffect(
       useCallback(() => {
         if (curItem) {
@@ -84,7 +84,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
               textAlign="center"
               iconLeft=":back:"
               iconRight={null}
-              title={I18n.t('post')}
+              title={t('post')}
               onPress={navigation.goBack}
             />
             <PostCard
@@ -94,12 +94,12 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
               isHideTranslate={hideTranslate}
               onPressCom={newComment}
             />
-            <View style={line} />
+            <View style={page.line} />
           </>
         }
         ListFooterComponent={
           <>
-            <View style={line} />
+            <View style={page.line} />
             <Space height={vs(30)} />
           </>
         }
@@ -114,12 +114,10 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
   },
 )
 
-const style = StyleSheet.create({
+const page = StyleSheet.create({
   line: {
     width: '100%',
     borderBottomColor: lightGray,
     borderBottomWidth: s(0.5),
   },
 })
-
-const { line } = style

@@ -1,5 +1,5 @@
 import Clipboard from '@react-native-clipboard/clipboard'
-import I18n from 'i18n-js'
+import i18next from 'src/i18n'
 
 import { getUid } from '../../../screens/helper'
 import { OnlinePlayer, OtherPlayers, PostStore } from '../../../store'
@@ -21,13 +21,13 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
     {
       key: 'COPY',
       onPress: () => Clipboard.setString(item.text),
-      title: I18n.t('copy'),
+      title: i18next.t('copy'),
       icon: 'content-copy',
     },
     {
       key: 'TRANSLATE',
       onPress: handleTransText,
-      title: I18n.t('translate'),
+      title: i18next.t('translate'),
       icon: !hideTranslate ? 'translate-off' : 'translate',
     },
     {
@@ -39,7 +39,7 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
           postId: item.postId,
         })
       },
-      title: I18n.t('delete'),
+      title: i18next.t('delete'),
       color: 'red',
       icon: 'delete-outline',
     },

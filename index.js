@@ -9,6 +9,7 @@ import {
   notificationActionsHandler,
 } from './src/utils/notifications'
 import { setCategories } from './src/utils/notifications/NotificationHelper'
+import './src/i18n'
 
 setCategories()
 

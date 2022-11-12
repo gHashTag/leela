@@ -3,12 +3,12 @@ import React, { ReactElement } from 'react'
 import { RouteProp } from '@react-navigation/native'
 import { useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { useTranslation } from 'react-i18next'
 import { vs } from 'react-native-size-matters'
 
 import { AppContainer, Button, CenterView, Space, Text } from '../../../components'
 import { black, goBack, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
-import { I18n } from '../../../utils'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -21,11 +21,11 @@ type ForgotPassSubmitT = {
   route: ProfileScreenRouteProp
 }
 
-const ForgotPassSubmit = ({ route, navigation }: ForgotPassSubmitT): ReactElement => {
+const ForgotPassSubmit = ({ navigation }: ForgotPassSubmitT): ReactElement => {
   const handlePress = () => {
     navigation.navigate('WELCOME_SCREEN')
   }
-
+  const { t } = useTranslation()
   const { dark } = useTheme()
   const color = dark ? white : black
 
@@ -38,9 +38,9 @@ const ForgotPassSubmit = ({ route, navigation }: ForgotPassSubmitT): ReactElemen
       colorLeft={color}
     >
       <CenterView>
-        <Text h={'h1'} title={I18n.t('checkMail')} />
+        <Text h={'h1'} title={t('checkMail')} />
         <Space height={vs(40)} />
-        <Button title={I18n.t('clearly')} onPress={handlePress} />
+        <Button title={t('clearly')} onPress={handlePress} />
       </CenterView>
     </AppContainer>
   )

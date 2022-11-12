@@ -1,10 +1,9 @@
 import Clipboard from '@react-native-clipboard/clipboard'
-import I18n from 'i18n-js'
-
-import { navigate } from '../../../constants'
-import { getUid } from '../../../screens/helper'
-import { OnlinePlayer, OtherPlayers, PostStore } from '../../../store'
-import { ButtonsModalT, CommentT } from '../../../types'
+import { navigate } from 'src/constants'
+import i18next from 'src/i18n'
+import { getUid } from 'src/screens/helper'
+import { OnlinePlayer, OtherPlayers, PostStore } from 'src/store'
+import { ButtonsModalT, CommentT } from 'src/types'
 
 type getActionsT = (props: getActionsProps) => ButtonsModalT[]
 interface getActionsProps {
@@ -30,7 +29,7 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
             }),
         })
       },
-      title: I18n.t('reply'),
+      title: i18next.t('reply'),
       icon: 'ios-paper-plane-outline',
     },
     {
@@ -38,13 +37,13 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
       onPress: () => {
         Clipboard.setString(item.text)
       },
-      title: I18n.t('copy'),
+      title: i18next.t('copy'),
       icon: 'ios-copy-outline',
     },
     {
       key: 'TRANSLATE',
       onPress: handleTransText,
-      title: I18n.t('translate'),
+      title: i18next.t('translate'),
       icon: 'ios-language-outline',
     },
     {
@@ -56,7 +55,7 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
           postId: item.postId,
         })
       },
-      title: I18n.t('delete'),
+      title: i18next.t('delete'),
       color: 'red',
       icon: 'md-trash-outline',
     },

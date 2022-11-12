@@ -1,8 +1,10 @@
 import * as React from 'react'
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { useTranslation } from 'react-i18next'
 import { FlatList } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
+import { lang } from 'src/i18n'
 
 import { en } from './en'
 import { ru } from './ru'
@@ -10,7 +12,6 @@ import { ru } from './ru'
 import { AppContainer, RenderPlanItem, Space } from '../../components'
 import { goBack } from '../../constants'
 import { RootStackParamList } from '../../types'
-import { I18n, lang } from '../../utils'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'RULES_SCREEN'>
 
@@ -29,6 +30,8 @@ interface RulesItemT {
 }
 
 const RulesScreen = ({ navigation }: RulesScreenT) => {
+  const { t } = useTranslation()
+
   const _renderItem = ({ item }: RulesItemT) => {
     return (
       <RenderPlanItem
@@ -46,7 +49,7 @@ const RulesScreen = ({ navigation }: RulesScreenT) => {
     <AppContainer
       onPress={goBack}
       enableBackgroundBottomInsets
-      title={`${I18n.t('rules')}`}
+      title={`${t('rules')}`}
       iconRight={null}
       iconLeft=":heavy_multiplication_x:"
     >

@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react'
 
 import firestore from '@react-native-firebase/firestore'
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated from 'react-native-reanimated'
@@ -10,12 +11,12 @@ import { s, vs } from 'react-native-size-matters'
 import { PostCard, Space, Text } from '../../../../components'
 import { captureException } from '../../../../constants'
 import { PostStore } from '../../../../store'
-import { I18n } from '../../../../utils'
 import { getUid } from '../../../helper'
 import { TabContext } from '../TabContext'
 
 export const ReportsScene = observer(() => {
   const [limit, setLimit] = useState(15)
+  const { t } = useTranslation()
 
   const { panGesture0, scrollViewGesture0, scrollOffset0, blockScrollUntilAtTheTop0 } =
     useContext(TabContext) as any
@@ -41,41 +42,38 @@ export const ReportsScene = observer(() => {
   }
 
   return (
-    <>
-      <GestureDetector
-        gesture={Gesture.Simultaneous(
-          Gesture.Race(blockScrollUntilAtTheTop0, panGesture0),
-          scrollViewGesture0,
-        )}
+    <GestureDetector
+      gesture={Gesture.Simultaneous(
+        Gesture.Race(blockScrollUntilAtTheTop0, panGesture0),
+        scrollViewGesture0,
+      )}
+    >
+      <Animated.ScrollView
+        bounces={false}
+        scrollEventThrottle={1}
+        onScrollBeginDrag={e => {
+          scrollOffset0.value = e.nativeEvent.contentOffset.y
+        }}
       >
-        <Animated.ScrollView
-          bounces={false}
-          scrollEventThrottle={1}
-          onScrollBeginDrag={e => {
-            scrollOffset0.value = e.nativeEvent.contentOffset.y
-          }}
-        >
-          <FlatList
-            removeClippedSubviews={false}
-            scrollEnabled={false}
-            showsVerticalScrollIndicator={false}
-            data={data}
-            onEndReached={newLimit}
-            onEndReachedThreshold={0.1}
-            keyExtractor={a => a.id}
-            renderItem={({ item }) => <PostCard postId={item.id} />}
-            ItemSeparatorComponent={() => <Space height={vs(10)} />}
-            ListHeaderComponent={<Space height={vs(10)} />}
-            ListEmptyComponent={
-              <View style={page.noPostBlock}>
-                <Text textStyle={page.noPostText} h={'h1'} title={I18n.t('noPosts')} />
-              </View>
-            }
-          />
-        </Animated.ScrollView>
-      </GestureDetector>
-      <Space height={vs(25)} />
-    </>
+        <FlatList
+          removeClippedSubviews={false}
+          scrollEnabled={false}
+          showsVerticalScrollIndicator={false}
+          data={data}
+          onEndReached={newLimit}
+          onEndReachedThreshold={0.1}
+          keyExtractor={a => a.id}
+          renderItem={({ item }) => <PostCard postId={item.id} />}
+          ItemSeparatorComponent={() => <Space height={vs(10)} />}
+          ListHeaderComponent={<Space height={vs(10)} />}
+          ListEmptyComponent={
+            <View style={page.noPostBlock}>
+              <Text textStyle={page.noPostText} h={'h1'} title={t('noPosts')} />
+            </View>
+          }
+        />
+      </Animated.ScrollView>
+    </GestureDetector>
   )
 })
 

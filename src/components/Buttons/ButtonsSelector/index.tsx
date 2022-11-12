@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { s } from 'react-native-size-matters'
 
 import { Text } from '../../'
-import { I18n } from '../../../utils'
 import { Space } from '../../Space'
 import { Button } from '../Button'
 
@@ -27,10 +27,11 @@ interface ButtonsSelectorT {
 
 const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
   const [selected, setSelected] = useState<number>(1)
+  const { t } = useTranslation()
 
   return (
     <View>
-      <Text h={'h3'} title={`${I18n.t('selectPlayers')}`} />
+      <Text h={'h3'} title={`${t('selectPlayers')}`} />
       <Space height={s(20)} />
       <View style={styles.container}>
         {data.map(a => (
@@ -43,7 +44,7 @@ const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
           </TouchableOpacity>
         ))}
       </View>
-      <Button title={I18n.t('startGame')} onPress={() => onPress(selected - 1)} />
+      <Button title={t('startGame')} onPress={() => onPress(selected - 1)} />
     </View>
   )
 })

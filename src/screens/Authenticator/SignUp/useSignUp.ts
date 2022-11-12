@@ -1,35 +1,16 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 // @ts-expect-error
 import { EMAIL, PASSWORD } from '@env'
 import { yupResolver } from '@hookform/resolvers/yup'
 import auth from '@react-native-firebase/auth'
-import { FieldValues, SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form'
+import { FieldValues, SubmitHandler, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import * as Keychain from 'react-native-keychain'
 import * as yup from 'yup'
 
 import { captureException } from '../../../constants'
 import { useTypedNavigation } from '../../../hooks'
-import { I18n } from '../../../utils'
-
-const schema = yup
-  .object()
-  .shape({
-    email: yup
-      .string()
-      .email(I18n.t('invalidEmail'))
-      .trim()
-      .required(I18n.t('requireField')),
-    password: yup
-      .string()
-      .required(I18n.t('requireField'))
-      .min(6, I18n.t('shortPassword')),
-    passwordConfirmation: yup
-      .string()
-      .required(I18n.t('requireField'))
-      .min(6, I18n.t('shortPassword')),
-  })
-  .required()
 
 const initialValues = {
   email: __DEV__ ? EMAIL : '',
@@ -39,8 +20,32 @@ const initialValues = {
 
 export const useSignUp = () => {
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<any>('')
   const { navigate } = useTypedNavigation()
+  const { t } = useTranslation()
+
+  const schema = useMemo(
+    () =>
+      yup
+        .object()
+        .shape({
+          email: yup
+            .string()
+            .email(t('invalidEmail') || '')
+            .trim()
+            .required(t('requireField') || ''),
+          password: yup
+            .string()
+            .required(t('requireField') || '')
+            .min(6, t('shortPassword') || ''),
+          passwordConfirmation: yup
+            .string()
+            .required(t('requireField') || '')
+            .min(6, t('shortPassword') || ''),
+        })
+        .required(),
+    [t],
+  )
 
   const { ...methods } = useForm({
     mode: 'onChange',
@@ -52,7 +57,7 @@ export const useSignUp = () => {
     async data => {
       const { email, password, passwordConfirmation } = data
       if (password !== passwordConfirmation) {
-        setError(I18n.t('passwordsDoNotMatch'))
+        setError(t('passwordsDoNotMatch'))
       } else {
         setLoading(true)
         setError('')
@@ -63,33 +68,33 @@ export const useSignUp = () => {
             navigate('CONFIRM_SIGN_UP', { email })
             setLoading(false)
           })
-          .catch(error => {
-            switch (error.code) {
+          .catch(exception => {
+            switch (exception.code) {
               case 'auth/invalid-email':
-                setError(I18n.t('invalidEmail'))
+                setError(t('invalidEmail'))
                 break
               case 'auth/email-already-in-use':
-                setError(I18n.t('usernameExistsException'))
+                setError(t('usernameExistsException'))
                 break
               case 'auth/wrong-password':
-                setError(I18n.t('forgotPassword'))
+                setError(t('forgotPassword'))
                 break
               case 'auth/network-request-failed':
-                setError(I18n.t('networkRequestFailed'))
+                setError(t('networkRequestFailed'))
                 break
               case 'auth/too-many-requests':
-                setError(I18n.t('manyRequests'))
+                setError(t('manyRequests'))
                 break
               default:
-                captureException(error.message)
-                setError(error.code)
+                captureException(exception.message)
+                setError(exception.code)
                 break
             }
             setLoading(false)
           })
       }
     },
-    [navigate],
+    [navigate, t],
   )
-  return { loading, error, methods, onSubmit }
+  return { loading, error: error || '', methods, onSubmit }
 }

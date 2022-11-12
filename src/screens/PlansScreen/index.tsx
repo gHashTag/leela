@@ -1,8 +1,10 @@
 import React, { useCallback, useState } from 'react'
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { useTranslation } from 'react-i18next'
 import { FlatList } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
+import { lang } from 'src/i18n'
 
 import { en } from './en'
 import { ru } from './ru'
@@ -11,7 +13,6 @@ import { AppContainer, RenderPlanItem, Space } from '../../components'
 import { goBack } from '../../constants'
 import { OnlinePlayer } from '../../store'
 import { PlansT, RootStackParamList } from '../../types'
-import { I18n, lang } from '../../utils'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLANS_SCREEN'>
 
@@ -21,6 +22,7 @@ type PlansScreenT = {
 
 const PlansScreen = ({ navigation }: PlansScreenT) => {
   const [data] = useState<PlansT[]>(lang === 'en' ? en : ru)
+  const { t } = useTranslation()
 
   const _keyExtractor = (obj: any) => obj.id.toString()
 
@@ -39,7 +41,7 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
   return (
     <AppContainer
       onPress={goBack}
-      title={`${I18n.t('plans')}`}
+      title={`${t('plans')}`}
       enableBackgroundBottomInsets
       iconRight={null}
       iconLeft=":heavy_multiplication_x:"

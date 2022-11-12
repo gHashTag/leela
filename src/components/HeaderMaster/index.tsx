@@ -1,6 +1,5 @@
 import React from 'react'
 
-import { BlurView } from '@react-native-community/blur'
 import { useTheme } from '@react-navigation/native'
 import { observer } from 'mobx-react'
 import { TouchableOpacity, View } from 'react-native'
@@ -22,7 +21,6 @@ const HeaderMaster = observer(({ onPress }: HeaderMasterT) => {
   const { loadImage, onPressEdit } = useActions()
   const { firstName, lastName } = OnlinePlayer.store.profile
   const {
-    dark,
     colors: { border },
   } = useTheme()
 
@@ -104,7 +102,6 @@ const styles = ScaledSheet.create({
 })
 const {
   container,
-  avaContainer,
   subAvaContainer,
   wide,
   editIcon,

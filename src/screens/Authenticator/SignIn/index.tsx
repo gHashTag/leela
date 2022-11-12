@@ -3,6 +3,7 @@ import React, { ReactElement } from 'react'
 import { useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { FieldValues, FormProvider, SubmitErrorHandler } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
@@ -20,7 +21,6 @@ import {
 } from '../../../components'
 import { H, W, black, goBack, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
-import { I18n } from '../../../utils'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -33,8 +33,9 @@ type SignUpT = {
 
 const SignIn = ({ navigation }: SignUpT): ReactElement => {
   const { onSubmit, methods, error, loading, userInfo } = useSignIn()
+  const { t } = useTranslation()
 
-  const onError: SubmitErrorHandler<FieldValues> = (errors, e) => {
+  const onError: SubmitErrorHandler<FieldValues> = errors => {
     return console.log(errors)
   }
 
@@ -69,21 +70,20 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
               />
               <Input
                 name="password"
-                placeholder={I18n.t('password')}
+                placeholder={t('password')}
                 secureTextEntry
                 color={color}
                 additionalStyle={{ width: W - s(40) }}
               />
               <Space height={s(10)} />
-              {error !== I18n.t('forgotPassword') && (
+              {error !== t('forgotPassword') ? (
                 <TextError title={error} textStyle={textStyle} />
-              )}
-              {error === I18n.t('forgotPassword') && (
+              ) : (
                 <ButtonLink title={error} onPress={handleForgot} textStyle={textStyle} />
               )}
               <Space height={vs(15)} />
               <Button
-                title={I18n.t('signIn')}
+                title={t('signIn')}
                 onPress={methods.handleSubmit(onSubmit, onError)}
               />
             </FormProvider>

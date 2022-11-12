@@ -2,7 +2,7 @@
 import { YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
 import auth from '@react-native-firebase/auth'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
-import I18n from 'i18n-js'
+import i18next from 'src/i18n'
 import { makeAutoObservable } from 'mobx'
 import { nanoid } from 'nanoid/non-secure'
 
@@ -10,6 +10,7 @@ import { OnlinePlayer } from './OnlinePlayer'
 import { OtherPlayers } from './OtherPlayers'
 
 import { captureException } from '../constants'
+import { lang } from '../i18n'
 import { getProfile, getUid } from '../screens/helper'
 import {
   CommentT,
@@ -19,7 +20,6 @@ import {
   PostT,
   ReplyComT,
 } from '../types'
-import { AllLang } from '../utils'
 
 type fetchT = FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
 interface postStoreT {
@@ -66,7 +66,7 @@ export const PostStore = {
         comments: [],
         liked: [],
         accept: false,
-        language: AllLang,
+        language: lang,
       }
       try {
         await firestore().collection('Posts').doc(id).set(post)
@@ -228,11 +228,11 @@ export const PostStore = {
   getOwnerName: (ownerId: string, full?: boolean) => {
     const userUid = auth().currentUser?.uid
     if (userUid === ownerId) {
-      return I18n.t('you')
+      return i18next.t('you')
     }
     const profile = OtherPlayers.store.players.find(a => a.owner === ownerId)
     if (!profile) {
-      return I18n.t('anonymous')
+      return i18next.t('anonymous')
     }
     return full !== false
       ? `${profile.firstName} ${profile.lastName}`
@@ -268,7 +268,7 @@ export const PostStore = {
           body: JSON.stringify({
             folderId: YANDEX_FOLDER_ID,
             texts: text,
-            targetLanguageCode: AllLang,
+            targetLanguageCode: lang,
           }),
         })
       ).json()

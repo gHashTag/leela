@@ -2,6 +2,7 @@ import React from 'react'
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import Rate from 'react-native-rate'
 import { s, vs } from 'react-native-size-matters'
@@ -19,7 +20,6 @@ import {
 import { useLeftTimeForStep } from '../../../hooks'
 import { DiceStore, OfflinePlayers, OnlinePlayer, actionsDice } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types'
-import { I18n } from '../../../utils'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -32,6 +32,7 @@ type GameScreenT = {
 
 const GameScreen = observer(({ navigation }: GameScreenT) => {
   useLeftTimeForStep()
+  const { t } = useTranslation()
 
   const _onPress = () => {
     const options = {
@@ -66,18 +67,18 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
         {endGame ? (
           <>
             <ButtonElements
-              title={I18n.t('startOver')}
+              title={t('startOver')}
               onPress={
                 DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
               }
             />
             <Space height={vs(3)} />
-            <Text textStyle={page.centerText} h="h1" title={`${I18n.t('win')}`} />
+            <Text textStyle={page.centerText} h="h1" title={`${t('win')}`} />
             {!DiceStore.rate ? (
               <ButtonElements
                 type="solid"
                 themeType="classic"
-                title={I18n.t('leaveFeedback')}
+                title={t('leaveFeedback')}
                 onPress={_onPress}
               />
             ) : (

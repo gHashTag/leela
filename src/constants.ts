@@ -1,7 +1,7 @@
 import { createNavigationContainerRef } from '@react-navigation/native'
 import * as Sentry from '@sentry/react-native'
-import I18n from 'i18n-js'
 import { Alert, Dimensions, Linking, Platform } from 'react-native'
+import i18next from 'src/i18n'
 
 import { ButtonsModalT } from './types'
 
@@ -55,12 +55,12 @@ export function OpenActionsModal(modalButtons: ButtonsModalT[]) {
 }
 
 export const banAlert = () => {
-  Alert.alert(I18n.t('youBanned'), I18n.t('banText'), [
+  Alert.alert(i18next.t('youBanned'), i18next.t('banText'), [
     { text: 'OK', onPress: () => navigate('WELCOME_SCREEN') },
   ])
 }
 export const accountHasBanAlert = () => {
-  Alert.alert(I18n.t('accountBaned'), undefined, [{ text: 'OK' }])
+  Alert.alert(i18next.t('accountBaned'), undefined, [{ text: 'OK' }])
 }
 
 export const captureException = (error: any) => {

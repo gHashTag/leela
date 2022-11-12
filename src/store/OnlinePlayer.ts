@@ -1,14 +1,13 @@
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
 import storage from '@react-native-firebase/storage'
-import I18n from 'i18n-js'
 import { makeAutoObservable } from 'mobx'
 import * as Keychain from 'react-native-keychain'
+import i18next from 'src/i18n'
 
 import { upStepOnline } from './helper'
 import { delTokenOnSignOut } from './MessagingStore'
 
-import { DiceStore, actionsDice } from '.'
 import { captureException, navigate, timeLeftType } from '../constants'
 import {
   getFireBaseRef,
@@ -21,6 +20,7 @@ import {
   uploadImg,
 } from '../screens/helper'
 import { HistoryT, status } from '../types'
+import { DiceStore, actionsDice } from './'
 
 const initProfile = {
   firstName: '',
@@ -150,7 +150,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
             .slice(0, 30),
         }
         if (curProf.plan === 68 && !curProf.finish) {
-          actionsDice.setMessage(I18n.t('sixToBegin'))
+          actionsDice.setMessage(i18next.t('sixToBegin'))
         } else {
           actionsDice.setMessage(' ')
         }
@@ -217,13 +217,13 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       return '0'
     } else if (difference < min) {
       const secCount = Math.round(difference / sec)
-      return `${secCount} ${I18n.t(timeLeftType[0].sec)}`
+      return `${secCount} ${i18next.t(timeLeftType[0].sec)}`
     } else if (difference < hour) {
       const minCount = Math.round(difference / min)
-      return `${minCount} ${I18n.t(timeLeftType[0].min)}`
-    } /*(difference <= day)*/ else {
+      return `${minCount} ${i18next.t(timeLeftType[0].min)}`
+    } else {
       const hourCount = Math.round(difference / hour)
-      return `${hourCount} ${I18n.t(timeLeftType[0].h)}`
+      return `${hourCount} ${i18next.t(timeLeftType[0].h)}`
     }
   },
 })

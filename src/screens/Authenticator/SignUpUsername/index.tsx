@@ -1,4 +1,5 @@
 import React, { ReactElement, useState } from 'react'
+import { useMemo } from 'react'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 import auth from '@react-native-firebase/auth'
@@ -11,6 +12,7 @@ import {
   SubmitHandler,
   useForm,
 } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
@@ -27,7 +29,6 @@ import { H, W, black, goBack, white } from '../../../constants'
 import { useNoBackHandler } from '../../../hooks'
 import { actionsDice, fetchBusinesses } from '../../../store'
 import { RootStackParamList } from '../../../types'
-import { I18n } from '../../../utils'
 import { createProfile, getUid } from '../../helper'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
@@ -41,26 +42,31 @@ type SignUpUsernameT = {
   route: ProfileScreenRouteProp
 }
 
-const schema = yup
-  .object()
-  .shape({
-    firstName: yup
-      .string()
-      .trim()
-      .min(2, I18n.t('twoSymbolRequire'))
-      .required()
-      .max(15, `${I18n.t('manyCharacters')}15`),
-    lastName: yup
-      .string()
-      .trim()
-      .min(2, I18n.t('twoSymbolRequire'))
-      .required()
-      .max(20, `${I18n.t('manyCharacters')}20`),
-  })
-  .required()
-
 const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
+  const { t } = useTranslation()
+
+  const schema = useMemo(
+    () =>
+      yup
+        .object()
+        .shape({
+          firstName: yup
+            .string()
+            .trim()
+            .min(2, t('twoSymbolRequire') || '')
+            .required()
+            .max(15, `${t('manyCharacters')}15`),
+          lastName: yup
+            .string()
+            .trim()
+            .min(2, t('twoSymbolRequire') || '')
+            .required()
+            .max(20, `${t('manyCharacters')}20`),
+        })
+        .required(),
+    [t],
+  )
 
   const { ...methods } = useForm({
     mode: 'onChange',
@@ -88,7 +94,7 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     actionsDice.setPlayers(1)
     setLoading(false)
   }
-  const onError: SubmitErrorHandler<FieldValues> = (errors, e) => {
+  const onError: SubmitErrorHandler<FieldValues> = errors => {
     return console.log(errors)
   }
 
@@ -115,21 +121,21 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
             <FormProvider {...methods}>
               <Input
                 name="firstName"
-                placeholder={I18n.t('firstName')}
+                placeholder={t('firstName')}
                 autoCapitalize="none"
                 color={color}
                 additionalStyle={{ width: W - s(40) }}
               />
               <Input
                 name="lastName"
-                placeholder={I18n.t('lastName')}
+                placeholder={t('lastName')}
                 autoCapitalize="none"
                 color={color}
                 additionalStyle={{ width: W - s(40) }}
               />
               <Space height={vs(30)} />
               <Button
-                title={I18n.t('signUp')}
+                title={t('signUp')}
                 onPress={methods.handleSubmit(onSubmit, onError)}
               />
               <Space height={vs(10)} />

@@ -1,9 +1,9 @@
 import React from 'react'
 
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
 import { EmojiText, Space, Text } from '../'
-import { I18n } from '../../utils'
 
 const getIconName = (status: string) => {
   switch (status) {
@@ -34,8 +34,10 @@ interface StepsT {
 
 export const HistoryStep = ({ item }: StepsT) => {
   const { plan, count, status } = item
+  const { t } = useTranslation()
+
   return (
-    <View style={container}>
+    <View style={page.container}>
       <Space width={0} />
       {status === 'cube' && (
         <>
@@ -52,17 +54,15 @@ export const HistoryStep = ({ item }: StepsT) => {
           <EmojiText name={getIconName(status)} />
         </>
       )}
-      <Text h={'h5'} title={`=> ${I18n.t('plan')} ${plan}`} />
+      <Text h={'h5'} title={`=> ${t('plan')} ${plan}`} />
     </View>
   )
 }
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
     paddingTop: 10,
   },
 })
-
-const { container } = styles

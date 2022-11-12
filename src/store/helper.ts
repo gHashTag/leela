@@ -1,10 +1,11 @@
+import i18next, { lang } from 'src/i18n'
+
 import { DiceStore, actionsDice } from './DiceStore'
 
 import { captureException, navigate } from '../constants'
 import { createHistory, onStart, onWin, updatePlan } from '../screens/helper'
 import { en } from '../screens/PlansScreen/en'
 import { ru } from '../screens/PlansScreen/ru'
-import { I18n, lang } from '../utils'
 import { OfflinePlayers, OnlinePlayer } from './'
 
 interface historyI {
@@ -54,7 +55,7 @@ export function upStepOnline() {
   const count = DiceStore.count
   const plan = OnlinePlayer.store.plan + count
   if (count === 6) {
-    actionsDice.setMessage(`${I18n.t('oneMoreThrow')}`)
+    actionsDice.setMessage(`${i18next.t('oneMoreThrow')}`)
   } else {
     actionsDice.setMessage(' ')
   }
@@ -93,7 +94,7 @@ export const upStepOffline = (id: number) => {
   const count = DiceStore.count
   const plan = OfflinePlayers.store.plans[id] + count
   if (count === 6) {
-    actionsDice.setMessage(`${I18n.t('oneMoreThrow')}`)
+    actionsDice.setMessage(`${i18next.t('oneMoreThrow')}`)
   } else {
     actionsDice.setMessage(' ')
     actionsDice.changePlayer()

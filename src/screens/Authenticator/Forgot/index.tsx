@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useMemo } from 'react'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 import auth from '@react-native-firebase/auth'
@@ -11,6 +12,7 @@ import {
   SubmitHandler,
   useForm,
 } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
@@ -27,7 +29,6 @@ import {
 } from '../../../components'
 import { W, black, captureException, goBack, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
-import { I18n } from '../../../utils'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'FORGOT'>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'FORGOT'>
@@ -37,20 +38,25 @@ type ForgotT = {
   route: ProfileScreenRouteProp
 }
 
-const schema = yup
-  .object()
-  .shape({
-    email: yup
-      .string()
-      .email(I18n.t('invalidEmail'))
-      .trim()
-      .required(I18n.t('requireField')),
-  })
-  .required()
-
 export const Forgot = ({ route, navigation }: ForgotT) => {
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const { t } = useTranslation()
+
+  const schema = useMemo(
+    () =>
+      yup
+        .object()
+        .shape({
+          email: yup
+            .string()
+            .email(t('invalidEmail') || '')
+            .trim()
+            .required(t('requireField') || ''),
+        })
+        .required(),
+    [t],
+  )
 
   const { ...methods } = useForm({
     mode: 'onChange',
@@ -69,9 +75,9 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
       navigation.navigate('FORGOT_PASSWORD_SUBMIT', { email })
     } catch (error: any) {
       if (error.code === 'auth/user-not-found') {
-        setErrorMessage(I18n.t('userNotFound'))
+        setErrorMessage(t('userNotFound') || '')
       } else if (error.code === 'auth/network-request-failed') {
-        setErrorMessage(I18n.t('networkRequestFailed'))
+        setErrorMessage(t('networkRequestFailed') || '')
       } else {
         setErrorMessage(error.code)
       }
@@ -115,7 +121,7 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
               )}
               <Space height={vs(10)} />
               <Button
-                title={I18n.t('confirm')}
+                title={t('confirm')}
                 onPress={methods.handleSubmit(onSubmit, onError)}
               />
             </FormProvider>

@@ -2,6 +2,7 @@ import React, { ReactElement } from 'react'
 
 import { useTheme } from '@react-navigation/native'
 import { FieldValues, FormProvider, SubmitErrorHandler } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
@@ -17,13 +18,13 @@ import {
   TextError,
 } from '../../../components'
 import { H, W, black, goBack, white } from '../../../constants'
-import { I18n } from '../../../utils'
 
-const SignUp = (): ReactElement => {
+export const SignUp = (): ReactElement => {
   const { loading, error, methods, onSubmit } = useSignUp()
-  const onError: SubmitErrorHandler<FieldValues> = (errors, e) => {
+  const onError: SubmitErrorHandler<FieldValues> = errors => {
     return console.log(errors)
   }
+  const { t } = useTranslation()
 
   const { dark } = useTheme()
   const color = dark ? white : black
@@ -42,7 +43,7 @@ const SignUp = (): ReactElement => {
         <>
           <KeyboardContainer>
             <ScrollView
-              contentContainerStyle={styles.container}
+              contentContainerStyle={page.container}
               showsVerticalScrollIndicator={false}
             >
               <Space height={H / 7} />
@@ -56,25 +57,23 @@ const SignUp = (): ReactElement => {
                 />
                 <Input
                   name="password"
-                  placeholder={I18n.t('password')}
+                  placeholder={t('password')}
                   secureTextEntry
                   color={color}
                   additionalStyle={{ width: W - s(40) }}
                 />
                 <Input
                   name="passwordConfirmation"
-                  placeholder={I18n.t('passwordConfirmation')}
+                  placeholder={t('passwordConfirmation')}
                   secureTextEntry
                   color={color}
                   additionalStyle={{ width: W - s(40) }}
                 />
                 <Space height={vs(30)} />
-                {error !== '' && (
-                  <TextError title={error} textStyle={{ textAlign: 'center' }} />
-                )}
+                {error !== '' && <TextError title={error} textStyle={page.centerText} />}
                 <Space height={vs(20)} />
                 <Button
-                  title={I18n.t('signUp')}
+                  title={t('signUp')}
                   onPress={methods.handleSubmit(onSubmit, onError)}
                 />
                 <Space height={vs(10)} />
@@ -87,10 +86,9 @@ const SignUp = (): ReactElement => {
   )
 }
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   container: {
     alignItems: 'center',
   },
+  centerText: { textAlign: 'center' },
 })
-
-export { SignUp }

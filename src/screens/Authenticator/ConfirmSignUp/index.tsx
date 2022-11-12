@@ -4,7 +4,7 @@ import auth from '@react-native-firebase/auth'
 import { RouteProp } from '@react-navigation/native'
 import { useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import I18n from 'i18n-js'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import * as Keychain from 'react-native-keychain'
 import { s, vs } from 'react-native-size-matters'
@@ -27,6 +27,7 @@ type ConfirmSignUpT = {
 export const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
   const [isVerify, setIsVerify] = useState<boolean | undefined>(false)
   const [canResend, setCanResend] = useState<boolean>(true)
+  const { t } = useTranslation()
 
   useEffect(() => {
     auth().currentUser?.sendEmailVerification()
@@ -71,7 +72,7 @@ export const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactEleme
     >
       <View style={page.container}>
         <Space height={vs(15)} />
-        <Text h={'h1'} title={I18n.t('checkMail')} />
+        <Text h={'h1'} title={t('checkMail')} />
         <Text h={'h2'} title={`(${route.params.email})`} />
         <Loading size={s(100)} type="9CubeGrid" />
         <Space height={vs(30)} />
@@ -81,7 +82,7 @@ export const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactEleme
         onPress={_onResend}
         style={[page.btn, !canResend && page.btnDisabled]}
       >
-        <Text textStyle={page.textStyle} title={I18n.t('resendCode')} h="h3" />
+        <Text textStyle={page.textStyle} title={t('resendCode')} h="h3" />
       </TouchableOpacity>
       <Space height={vs(30)} />
     </AppContainer>

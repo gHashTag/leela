@@ -2,14 +2,14 @@ import React from 'react'
 
 import { RouteProp, useFocusEffect, useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import I18n from 'i18n-js'
+import { useTranslation } from 'react-i18next'
 import { BackHandler, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
+import { lang } from 'src/i18n'
 
 import { Space, Text } from '../../../components'
 import { fuchsia } from '../../../constants'
 import { RootStackParamList } from '../../../types'
-import { lang } from '../../../utils'
 import { en } from '../../PlansScreen/en'
 import { ru } from '../../PlansScreen/ru'
 
@@ -22,9 +22,13 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
   const {
     colors: { background },
   } = useTheme()
+  const { t } = useTranslation()
+
   const { plan } = route.params
+
   const list = lang === 'ru' ? ru : en
   const item = list.find(a => a.id === plan)
+
   useFocusEffect(() => {
     const listener = BackHandler.addEventListener('hardwareBackPress', () => true)
     return listener.remove
@@ -36,24 +40,19 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
     }
   }
   return (
-    <View style={transpCont}>
-      <View style={[modalView, { backgroundColor: background }]}>
-        <Text h="h4" textStyle={textStyle} title={I18n.t('makeReport')} />
+    <View style={page.transpCont}>
+      <View style={[page.modalView, { backgroundColor: background }]}>
+        <Text h="h4" textStyle={page.textStyle} title={t('makeReport')} />
         <Space height={vs(16)} />
         <TouchableOpacity onPress={handlePress}>
-          <Text
-            textStyle={{ textDecorationLine: 'underline' }}
-            title={I18n.t('go')}
-            oneColor={fuchsia}
-            h="h2"
-          />
+          <Text textStyle={page.linkText} title={t('go')} oneColor={fuchsia} h="h2" />
         </TouchableOpacity>
       </View>
     </View>
   )
 }
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   transpCont: {
     height: '100%',
     width: '100%',
@@ -79,6 +78,5 @@ const styles = StyleSheet.create({
   textStyle: {
     textAlign: 'center',
   },
+  linkText: { textDecorationLine: 'underline' },
 })
-
-const { transpCont, modalView, textStyle } = styles

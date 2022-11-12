@@ -2,6 +2,7 @@ import React from 'react'
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react-lite'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, useWindowDimensions } from 'react-native'
 import { GestureDetector } from 'react-native-gesture-handler'
 import Animated from 'react-native-reanimated'
@@ -15,7 +16,6 @@ import { OwnTabView } from '../../../components/OwnTabView'
 import { SecondaryTab } from '../../../components/SecondaryTab'
 import { DiceStore, OnlinePlayer } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types'
-import { I18n } from '../../../utils'
 
 type ProfileScreenT = {
   navigation: NativeStackNavigationProp<
@@ -26,13 +26,15 @@ type ProfileScreenT = {
 
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   const { width: W, height: H } = useWindowDimensions()
+  const { t } = useTranslation()
+
   const tabViewWidth = W * 0.96
 
   return (
     <AppContainer
       iconRight={':books:'}
       iconLeft={':information_source:'}
-      title={I18n.t('profile')}
+      title={t('profile')}
       textAlign="center"
     >
       <TabContextProvider>
@@ -61,11 +63,11 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                   )}
                   width={tabViewWidth}
                   screens={[
-                    { key: 'reports', title: I18n.t('reports'), Scene: ReportsScene },
-                    { key: 'history', title: I18n.t('history'), Scene: HistoryScene },
+                    { key: 'reports', title: t('reports'), Scene: ReportsScene },
+                    { key: 'history', title: t('history'), Scene: HistoryScene },
                     {
                       key: 'intentionOfGame',
-                      title: I18n.t('intention'),
+                      title: t('intention'),
                       Scene: IntentionOfGame,
                     },
                   ]}

@@ -1,6 +1,6 @@
 import Branch, { BranchParams } from 'react-native-branch'
 
-import { captureException } from '../constants'
+import { captureException } from '../../constants'
 
 type listenerT = (url: string) => void
 

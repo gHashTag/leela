@@ -2,6 +2,7 @@ import React from 'react'
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
@@ -16,7 +17,6 @@ import {
 } from '../../components'
 import { useKeychain } from '../../hooks'
 import { RootStackParamList } from '../../types'
-import { I18n } from '../../utils'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 
@@ -26,6 +26,7 @@ type SelectPlayersScreenT = {
 
 const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   const { loading } = useKeychain()
+  const { t } = useTranslation()
 
   const _onPress = () => {
     navigation.navigate('HELLO')
@@ -39,14 +40,14 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
         <CenterView>
           <IconLeela />
           <Space height={s(30)} />
-          <Text h={'h1'} title={I18n.t('gameMode')} />
+          <Text h={'h1'} title={t('gameMode')} />
           <Space height={s(30)} />
-          <Button title={I18n.t('online')} onPress={_onPress} />
+          <Button title={t('online')} onPress={_onPress} />
           <Space height={vs(10)} />
-          <Text h={'h5'} title={I18n.t('or')} textStyle={styles.h6} />
+          <Text h={'h5'} title={t('or')} textStyle={styles.h6} />
           <Space height={vs(15)} />
           <Button
-            title={I18n.t('offline')}
+            title={t('offline')}
             onPress={() => navigation.navigate('SELECT_PLAYERS_SCREEN')}
           />
           <Space height={vs(120)} />

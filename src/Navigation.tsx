@@ -12,6 +12,7 @@ import SystemNavigationBar from 'react-native-system-navigation-bar'
 import { Fallback } from './components'
 import { black, lightGray, navRef, white } from './constants'
 import { useExitModal, useGameAndProfileIsOnline, useNetwork } from './hooks'
+import { lang } from './i18n'
 import {
   ActionsModal,
   ChangeIntention,
@@ -102,7 +103,9 @@ const Tab = observer(() => {
         component={DiceStore.online ? ProfileScreen : OfflineProfileScreen}
       />
       <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
-      <TabNavigator.Screen name="TAB_BOTTOM_4" component={PosterScreen} />
+      {lang === 'ru' && (
+        <TabNavigator.Screen name="TAB_BOTTOM_4" component={PosterScreen} />
+      )}
     </TabNavigator.Navigator>
   )
 })

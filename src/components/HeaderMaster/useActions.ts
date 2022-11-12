@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import I18n from 'i18n-js'
+import { useTranslation } from 'react-i18next'
 
 import { OpenActionsModal, captureException } from '../../constants'
 import { OnlinePlayer } from '../../store'
@@ -8,7 +8,7 @@ import { ButtonsModalT } from '../../types'
 
 export const useActions = () => {
   const [loadImage, setLoadImage] = useState(false)
-
+  const { t } = useTranslation()
   const onPressChangeAva = async () => {
     setLoadImage(true)
     try {
@@ -27,7 +27,7 @@ export const useActions = () => {
     {
       key: 'EDIT',
       onPress: onPressChangeAva,
-      title: I18n.t('changeAva'),
+      title: t('changeAva'),
       icon: 'ios-images-outline',
     },
     // {
@@ -40,14 +40,14 @@ export const useActions = () => {
       key: 'EXIT',
       color: 'red',
       onPress: OnlinePlayer.SignOut,
-      title: I18n.t('signOut'),
+      title: t('signOut'),
       icon: 'ios-exit-outline',
     },
     {
       key: 'RESET',
       color: 'red',
       onPress: OnlinePlayer.resetGame,
-      title: I18n.t('startOver'),
+      title: t('startOver'),
       icon: 'ios-reload',
     },
   ]

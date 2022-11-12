@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useTheme } from '@react-navigation/native'
 import { RouteProp } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { FieldValues, FormProvider, SubmitHandler, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { mvs, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
@@ -13,19 +14,6 @@ import { AppContainer, Button, Input, Loading, Space } from '../../components'
 import { black, lightGray } from '../../constants'
 import { updateIntention } from '../../screens/helper'
 import { RootStackParamList } from '../../types'
-import { I18n } from '../../utils'
-
-const schema = yup
-  .object()
-  .shape({
-    newIntention: yup
-      .string()
-      .trim()
-      .min(2, I18n.t('twoSymbolRequire'))
-      .required()
-      .max(800, `${I18n.t('manyCharacters')}800`),
-  })
-  .required()
 
 type ChangeIntentionScreenNavProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -41,6 +29,24 @@ interface ChangeIntentionT {
 export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
   const { prevIntention, blockGoBack, title } = route.params || {}
   const [loading, setLoading] = useState<boolean>(false)
+  const { t } = useTranslation()
+
+  const schema = useMemo(
+    () =>
+      yup
+        .object()
+        .shape({
+          newIntention: yup
+            .string()
+            .trim()
+            .min(2, t('twoSymbolRequire') || '')
+            .required()
+            .max(800, `${t('manyCharacters')}800`),
+        })
+        .required(),
+    [t],
+  )
+
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
@@ -65,13 +71,13 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
       iconLeft={blockGoBack ? undefined : 'back'}
       onPress={navigation.goBack}
       textAlign="center"
-      title={title || I18n.t('updateIntention')}
+      title={title || t('updateIntention')}
       colorLeft={black}
     >
       {loading ? (
         <Loading />
       ) : (
-        <View style={container}>
+        <View style={page.container}>
           <FormProvider {...methods}>
             <Space height={mvs(80, 0.4)} />
             <Input
@@ -79,12 +85,12 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
               color={lightGray}
               multiline
               autoCapitalize="none"
-              placeholder={I18n.t('intention')}
-              additionalStyle={[bigInput, { backgroundColor }]}
+              placeholder={t('intention')}
+              additionalStyle={[page.bigInput, { backgroundColor }]}
             />
             <Space height={10} />
             <Button
-              title={I18n.t('done')}
+              title={t('done')}
               onPress={methods.handleSubmit(onSubmit, er => console.log(er))}
             />
             <Space height={vs(50)} />
@@ -95,7 +101,7 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
   )
 }
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   container: {
     alignItems: 'center',
   },
@@ -104,5 +110,3 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 })
-
-const { container, bigInput } = styles

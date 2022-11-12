@@ -2,17 +2,17 @@
 import React, { memo } from 'react'
 
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
 import { usePostActions } from './usePostActions'
-import { useTranslation } from './useTranslation'
+import { usePostTranslation } from './usePostTranslation'
 
 import { ButtonVectorIcon, PlanAvatar, Space, Text } from '../../'
 import { W, brightTurquoise, fuchsia, lightGray, orange } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
 import { OnlinePlayer, PostStore } from '../../../store'
-import { I18n } from '../../../utils'
 import { EmojiText } from '../../EmojiText'
 import { HashtagFormat } from '../../TextComponents'
 
@@ -38,7 +38,9 @@ export const PostCard: React.FC<postCardI> = memo(
       PostStore.store.posts.find(a => a.id === postId) ||
       PostStore.store.ownPosts.find(a => a.id === postId)
 
-    const { transText, hideTranslate, handleTranslate, flag, text } = useTranslation({
+    const { t } = useTranslation()
+
+    const { transText, hideTranslate, handleTranslate, flag, text } = usePostTranslation({
       translatedText,
       isHideTranslate,
       item,
@@ -187,7 +189,7 @@ export const PostCard: React.FC<postCardI> = memo(
             {!item.accept && (
               <>
                 <Space height={vs(5)} />
-                <Text oneColor={orange} h={'h6'} title={I18n.t('review')} />
+                <Text oneColor={orange} h={'h6'} title={t('review')} />
               </>
             )}
             {/* Preview Buttons */}

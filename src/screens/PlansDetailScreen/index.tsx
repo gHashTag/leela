@@ -2,8 +2,8 @@ import React, { useCallback, useRef, useState } from 'react'
 
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import I18n from 'i18n-js'
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { BackHandler, Platform, StyleSheet, ToastAndroid } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { s, vs } from 'react-native-size-matters'
@@ -37,6 +37,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
   const { isReported } = OnlinePlayer.store
   const [isPlaying, setIsPaying] = useState<boolean>(false)
   const [soundLoading, setSoundLoading] = useState<boolean>(false)
+  const { t } = useTranslation()
 
   useFocusEffect(
     useCallback(() => {
@@ -58,7 +59,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
     } else {
       Platform.OS === 'android' &&
         ToastAndroid.showWithGravityAndOffset(
-          I18n.t('notReported'),
+          t('notReported'),
           ToastAndroid.LONG,
           ToastAndroid.BOTTOM,
           25,
@@ -117,7 +118,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
             <Text selectable h={'h7'} title={content} textStyle={h3} />
           )}
           {report && <CreatePost plan={id} />}
-          <Space height={vs(!report ? 135 : 80)} />
+          <Space height={!report ? vs(70) : 20} />
         </ScrollView>
       </KeyboardContainer>
     </AppContainer>

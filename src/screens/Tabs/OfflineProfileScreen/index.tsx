@@ -2,6 +2,7 @@ import React from 'react'
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react-lite'
+import { useTranslation } from 'react-i18next'
 import { SectionList, StyleSheet } from 'react-native'
 import { s } from 'react-native-size-matters'
 
@@ -17,7 +18,6 @@ import {
 import { useHistoryData } from '../../../hooks'
 import { DiceStore, OfflinePlayers, OnlinePlayer } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types'
-import { I18n } from '../../../utils'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -30,12 +30,13 @@ type ProfileScreenT = {
 
 export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
   const { DATA } = useHistoryData()
+  const { t } = useTranslation()
 
   return (
     <AppContainer
       iconRight={':books:'}
       iconLeft={':information_source:'}
-      title={I18n.t('history')}
+      title={t('history')}
       textAlign="center"
     >
       <CenterView>
@@ -49,7 +50,7 @@ export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
               <>
                 <Space height={70} />
                 <Button
-                  title={I18n.t('startOver')}
+                  title={t('startOver')}
                   onPress={
                     DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
                   }
@@ -57,7 +58,7 @@ export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
                 <Space height={20} />
                 {DiceStore.online && (
                   <>
-                    <Button title={I18n.t('signOut')} onPress={OnlinePlayer.SignOut} />
+                    <Button title={t('signOut')} onPress={OnlinePlayer.SignOut} />
                     <Space height={20} />
                   </>
                 )}

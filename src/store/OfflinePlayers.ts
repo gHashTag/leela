@@ -1,13 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import I18n from 'i18n-js'
 import { makeAutoObservable } from 'mobx'
 import { makePersistable } from 'mobx-persist-store'
+import i18next from 'src/i18n'
 
 import { upStepOffline } from './helper'
 
-import { actionsDice } from '.'
 import { navigate } from '../constants'
 import { HistoryT } from '../types'
+import { actionsDice } from './'
 
 export const initStore = {
   start: [false, false, false, false, false, false],
@@ -39,7 +39,7 @@ export const OfflinePlayers = {
     navigate('WELCOME_SCREEN')
   },
   startGame() {
-    actionsDice.setMessage(I18n.t('sixToBegin'))
+    actionsDice.setMessage(i18next.t('sixToBegin'))
   },
   updateStep(id: number): void {
     upStepOffline(id)
