@@ -1,12 +1,14 @@
 import React, { ReactElement } from 'react'
-import { I18n } from '../../../utils'
+
 import { RouteProp } from '@react-navigation/native'
-import { AppContainer, Button, CenterView, Space, Text } from '../../../components'
-import { goBack, white, black } from '../../../constants'
-import { RootStackParamList } from '../../../types'
 import { useTheme } from '@react-navigation/native'
-import { vs } from 'react-native-size-matters'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { vs } from 'react-native-size-matters'
+
+import { AppContainer, Button, CenterView, Space, Text } from '../../../components'
+import { black, goBack, white } from '../../../constants'
+import { RootStackParamList } from '../../../types'
+import { I18n } from '../../../utils'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,

@@ -1,12 +1,13 @@
 import React, { memo } from 'react'
-import { View, ViewStyle, StyleProp, StyleSheet } from 'react-native'
+
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: 'row'
-  }
+    flexDirection: 'row',
+  },
 })
 
 interface RowT {

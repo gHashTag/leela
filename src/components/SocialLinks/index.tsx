@@ -1,9 +1,11 @@
 import React from 'react'
+
 import { StyleSheet } from 'react-native'
-import { Row } from '../'
 import { Icon } from 'react-native-elements'
-import { openUrl, secondary } from '../../constants'
 import { s } from 'react-native-size-matters'
+
+import { Row } from '../'
+import { openUrl, secondary } from '../../constants'
 
 interface SocialLinksT {
   music?: boolean
@@ -65,7 +67,7 @@ export function SocialLinks({ music }: SocialLinksT) {
           containerStyle={containerStyle}
           onPress={() =>
             openUrl(
-              'https://music.apple.com/ru/album/maha-kumbha-mela/1551347338?at=1000l9WJ&ct=bq&uo=4&app=music'
+              'https://music.apple.com/ru/album/maha-kumbha-mela/1551347338?at=1000l9WJ&ct=bq&uo=4&app=music',
             )
           }
         />
@@ -127,8 +129,8 @@ export function SocialLinks({ music }: SocialLinksT) {
 
 const styles = StyleSheet.create({
   containerStyle: {
-    margin: s(20)
-  }
+    margin: s(20),
+  },
 })
 
 const { containerStyle } = styles

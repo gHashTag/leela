@@ -1,8 +1,10 @@
 import React, { memo } from 'react'
+
 import { TouchableOpacity } from 'react-native'
 import { ScaledSheet, s, vs } from 'react-native-size-matters'
-import { W } from '../../constants'
+
 import { Text } from '../'
+import { W } from '../../constants'
 
 const styles = ScaledSheet.create({
   container: {
@@ -10,11 +12,11 @@ const styles = ScaledSheet.create({
     justifyContent: 'space-between',
     width: W - 30,
     right: s(15),
-    marginVertical: vs(10)
+    marginVertical: vs(10),
   },
   titleStyle: {
-    left: s(15)
-  }
+    left: s(15),
+  },
 })
 
 interface RenderItemT {

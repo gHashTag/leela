@@ -1,15 +1,17 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+
+import firestore from '@react-native-firebase/firestore'
+import { RouteProp } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import I18n from 'i18n-js'
+import { observer } from 'mobx-react'
+import { FlatList, View } from 'react-native'
+import { s, vs } from 'react-native-size-matters'
+
 import { Header, PostCard, Space, Spin, Text } from '../../../components'
+import { captureException } from '../../../constants'
 import { DiceStore, PostStore } from '../../../store'
 import { RootTabParamList } from '../../../types'
-import firestore from '@react-native-firebase/firestore'
-import { FlatList, View } from 'react-native'
-import { observer } from 'mobx-react'
-import { s, vs } from 'react-native-size-matters'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { RouteProp } from '@react-navigation/native'
-import { captureException } from '../../../constants'
-import I18n from 'i18n-js'
 
 interface Ipost {
   navigation: NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_1'>
@@ -33,7 +35,9 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
   }, [limit])
   const data = PostStore.store.posts
   const newLimit = () => {
-    if (data.length <= limit) setLimit(pr => pr + 15)
+    if (data.length <= limit) {
+      setLimit(pr => pr + 15)
+    }
   }
   const load = PostStore.store.loadPosts && data.length === 0
   return load ? (

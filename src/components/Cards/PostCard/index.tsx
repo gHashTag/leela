@@ -1,16 +1,19 @@
 import React, { memo } from 'react'
+
+import { observer } from 'mobx-react'
 import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { brightTurquoise, fuchsia, lightGray, W, orange } from '../../../constants'
-import { Text, Space, ButtonVectorIcon, PlanAvatar } from '../../'
-import { OnlinePlayer, PostStore } from '../../../store'
-import { observer } from 'mobx-react'
-import { HashtagFormat } from '../../TextComponents'
-import { getTimeStamp } from '../../../screens/helper'
-import { I18n } from '../../../utils'
-import { EmojiText } from '../../EmojiText'
+
 import { usePostActions } from './usePostActions'
 import { useTranslation } from './useTranslation'
+
+import { ButtonVectorIcon, PlanAvatar, Space, Text } from '../../'
+import { W, brightTurquoise, fuchsia, lightGray, orange } from '../../../constants'
+import { getTimeStamp } from '../../../screens/helper'
+import { OnlinePlayer, PostStore } from '../../../store'
+import { I18n } from '../../../utils'
+import { EmojiText } from '../../EmojiText'
+import { HashtagFormat } from '../../TextComponents'
 
 interface postCardI {
   postId: string
@@ -27,7 +30,7 @@ export const PostCard: React.FC<postCardI> = memo(
       isDetail = false,
       onPressCom,
       translatedText,
-      isHideTranslate
+      isHideTranslate,
     } = props
 
     const item =
@@ -37,7 +40,7 @@ export const PostCard: React.FC<postCardI> = memo(
     const { transText, hideTranslate, handleTranslate, flag, text } = useTranslation({
       translatedText,
       isHideTranslate,
-      item
+      item,
     })
 
     const {
@@ -46,9 +49,11 @@ export const PostCard: React.FC<postCardI> = memo(
       handleComment,
       handleAdminMenu,
       handleShareLink,
-      isLiked
+      isLiked,
     } = usePostActions({ isDetail, onPressCom, item, transText, hideTranslate })
-    if (!item) return <></>
+    if (!item) {
+      return <></>
+    }
 
     const likeCount = item.liked?.length
     const commCount = item.comments?.length
@@ -64,7 +69,7 @@ export const PostCard: React.FC<postCardI> = memo(
     const fullName = PostStore.getOwnerName(item.ownerId)
     const avaUrl = PostStore.getAvaById(item.ownerId)
 
-    if (isDetail)
+    if (isDetail) {
       return (
         <View style={[container, { borderBottomWidth: 0 }]}>
           <View style={headerS}>
@@ -135,6 +140,7 @@ export const PostCard: React.FC<postCardI> = memo(
           </View>
         </View>
       )
+    }
     return (
       <Pressable onPress={goDetail} style={container}>
         <View style={headerS}>
@@ -215,7 +221,7 @@ export const PostCard: React.FC<postCardI> = memo(
         </View>
       </Pressable>
     )
-  })
+  }),
 )
 
 const style = StyleSheet.create({
@@ -224,60 +230,60 @@ const style = StyleSheet.create({
     paddingRight: s(12),
     borderBottomColor: brightTurquoise,
     borderBottomWidth: vs(0.4),
-    paddingVertical: s(6)
+    paddingVertical: s(6),
   },
   img: {
     marginRight: s(12),
     marginBottom: s(12),
-    alignSelf: 'flex-start'
+    alignSelf: 'flex-start',
   },
   btnsContainer: {
     flexDirection: 'row',
     padding: s(4),
     paddingBottom: vs(12),
     paddingTop: vs(17),
-    flex: 1
+    flex: 1,
   },
   mediumBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   smallBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   textStyle: {
-    lineHeight: s(21)
+    lineHeight: s(21),
   },
   headerS: {
-    flexDirection: 'row'
+    flexDirection: 'row',
   },
   headerInfo: {
     flexDirection: 'column',
-    flex: 1
+    flex: 1,
   },
   headerName: {
     flexDirection: 'row',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
   },
   lightText: {
     color: lightGray,
-    textAlign: 'left'
+    textAlign: 'left',
   },
   flex1: {
-    flex: 1
+    flex: 1,
   },
   likeBtn: {
     flex: 2,
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   avaContainer: {
-    height: '100%'
-  }
+    height: '100%',
+  },
 })
 
 const {
@@ -293,5 +299,5 @@ const {
   lightText,
   flex1,
   likeBtn,
-  avaContainer
+  avaContainer,
 } = style

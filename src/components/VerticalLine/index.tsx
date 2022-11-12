@@ -1,12 +1,13 @@
 import React from 'react'
-import { StyleProp, ViewStyle, View, StyleSheet } from 'react-native'
+
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 
 const styles = StyleSheet.create({
   container: {
     height: 80,
     width: 1,
-    backgroundColor: '#EEEEEE'
-  }
+    backgroundColor: '#EEEEEE',
+  },
 })
 
 interface VerticalLineT {

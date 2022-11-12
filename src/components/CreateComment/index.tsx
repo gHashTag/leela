@@ -1,14 +1,15 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
-import { useForm, FormProvider, SubmitHandler, FieldValues } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-import * as yup from 'yup'
-import { Input } from '..'
-import { black, navigate, primary, W } from '../../constants'
-import { PostStore } from '../../store'
+import { FieldValues, FormProvider, SubmitHandler, useForm } from 'react-hook-form'
 import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
+import * as yup from 'yup'
+
+import { Input } from '..'
 import { Text } from '../'
+import { W, black, navigate, primary } from '../../constants'
+import { PostStore } from '../../store'
 
 interface CreateCommentT {
   visible: boolean
@@ -20,7 +21,7 @@ interface CreateCommentT {
 const schema = yup
   .object()
   .shape({
-    text: yup.string().trim().min(2).max(250).required()
+    text: yup.string().trim().min(2).max(250).required(),
   })
   .required()
 
@@ -28,16 +29,18 @@ export function CreateComment({
   visible,
   setVisible,
   postId,
-  postOwner
+  postOwner,
 }: CreateCommentT) {
   const { ...methods } = useForm({
     mode: 'onChange',
-    resolver: yupResolver(schema)
+    resolver: yupResolver(schema),
   })
   const charCount = 'methods.getValues().text.length'
   const [length, setLength] = useState(0)
   useEffect(() => {
-    if (visible) setTimeout(() => methods.setFocus('text'), 200)
+    if (visible) {
+      setTimeout(() => methods.setFocus('text'), 200)
+    }
   }, [visible])
   const handleSubmit: SubmitHandler<FieldValues> = async data => {
     methods.reset()
@@ -72,7 +75,7 @@ export function CreateComment({
 const styles = StyleSheet.create({
   input: {
     width: W - s(65),
-    marginBottom: vs(10)
+    marginBottom: vs(10),
   },
   inputContainer: {
     paddingHorizontal: vs(5),
@@ -83,13 +86,13 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: s(8),
     borderTopRightRadius: s(8),
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   avoidingView: {
     width: '100%',
     height: '100%',
     position: 'absolute',
-    zIndex: 20
-  }
+    zIndex: 20,
+  },
 })
 const { inputContainer, input, avoidingView } = styles

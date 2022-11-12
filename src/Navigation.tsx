@@ -1,60 +1,58 @@
 import React, { useEffect } from 'react'
-import { useColorScheme, StatusBar } from 'react-native'
+
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
-import TabBar from './TabBar'
 import * as Sentry from '@sentry/react'
-import {
-  GameScreen,
-  RulesScreen,
-  RulesDetailScreen,
-  PlansScreen,
-  PlansDetailScreen,
-  ProfileScreen,
-  SelectPlayersScreen,
-  OnlineGameScreen,
-  PlayraScreen,
-  WelcomeScreen,
-  PostScreen,
-  DetailPostScreen,
-  ActionsModal,
-  InputTextModal,
-  ExitPopup,
-  NetworkModal,
-  VideoPopup,
-  PlanReportModal,
-  UpdateVersionModal,
-  OfflineProfileScreen,
-  ChangeIntention,
-  PosterScreen
-} from './screens'
+import { observer } from 'mobx-react'
+import { StatusBar, useColorScheme } from 'react-native'
+import Orientation from 'react-native-orientation-locker'
+import SystemNavigationBar from 'react-native-system-navigation-bar'
 
+import { Fallback } from './components'
+import { black, lightGray, navRef, white } from './constants'
+import { useExitModal, useGameAndProfileIsOnline, useNetwork } from './hooks'
 import {
-  SignUp,
-  SignUpUsername,
-  SignIn,
+  ActionsModal,
+  ChangeIntention,
+  DetailPostScreen,
+  ExitPopup,
+  GameScreen,
+  InputTextModal,
+  NetworkModal,
+  OfflineProfileScreen,
+  OnlineGameScreen,
+  PlanReportModal,
+  PlansDetailScreen,
+  PlansScreen,
+  PlayraScreen,
+  PostScreen,
+  PosterScreen,
+  ProfileScreen,
+  RulesDetailScreen,
+  RulesScreen,
+  SelectPlayersScreen,
+  UpdateVersionModal,
+  VideoPopup,
+  WelcomeScreen,
+} from './screens'
+import {
   ConfirmSignUp,
   Forgot,
   ForgotPassSubmit,
   Hello,
+  SignIn,
+  SignUp,
+  SignUpAvatar,
+  SignUpUsername,
   UserEdit,
-  SignUpAvatar
 } from './screens/Authenticator'
-
-import { white, black, navRef, lightGray } from './constants'
-
-import { UI } from './UI'
-
 import { checkVersion, getFireBaseRef } from './screens/helper'
-import { linking } from './utils'
-import SystemNavigationBar from 'react-native-system-navigation-bar'
-import { Fallback } from './components'
-import { RootStackParamList, RootTabParamList } from './types'
-import Orientation from 'react-native-orientation-locker'
-import { useGameAndProfileIsOnline, useNetwork, useExitModal } from './hooks'
-import { observer } from 'mobx-react'
 import { DiceStore } from './store'
+import TabBar from './TabBar'
+import { RootStackParamList, RootTabParamList } from './types'
+import { UI } from './UI'
+import { linking } from './utils'
 
 const DarkTheme = {
   dark: true,
@@ -64,8 +62,8 @@ const DarkTheme = {
     card: '#ffffff',
     text: '#FFFFFF',
     border: '#c7c7cc',
-    notification: '#ff453a'
-  }
+    notification: '#ff453a',
+  },
 }
 
 const LightTheme = {
@@ -76,8 +74,8 @@ const LightTheme = {
     card: '#ffffff',
     text: '#1c1c1c',
     border: '#c7c7cc',
-    notification: '#ff453a'
-  }
+    notification: '#ff453a',
+  },
 }
 
 const TabNavigator = createMaterialTopTabNavigator<RootTabParamList>()
@@ -92,7 +90,7 @@ const Tab = observer(() => {
       tabBar={props => <TabBar {...props} />}
       tabBarPosition="bottom"
       screenOptions={{
-        swipeEnabled: false
+        swipeEnabled: false,
       }}
       initialRouteName={'TAB_BOTTOM_0'}
     >
@@ -121,12 +119,12 @@ const App = () => {
   useEffect(() => {
     SystemNavigationBar.setNavigationColor(
       isDark ? black : white,
-      isDark ? 'dark' : 'light'
+      isDark ? 'dark' : 'light',
     )
     SystemNavigationBar.setNavigationBarDividerColor(lightGray)
     Orientation.lockToPortrait()
     // check version
-    const unsub = getFireBaseRef(`/minVersion/`).on('value', async snap => {
+    const unsub = getFireBaseRef('/minVersion/').on('value', async snap => {
       checkVersion(snap.val())
     })
     return () => getFireBaseRef('/minVersion/').off('value', unsub)
@@ -143,7 +141,7 @@ const App = () => {
       <StatusBar backgroundColor={isDark ? black : white} barStyle={color} />
       <Stack.Navigator
         screenOptions={{
-          headerShown: false
+          headerShown: false,
         }}
         initialRouteName="WELCOME_SCREEN"
       >
@@ -151,7 +149,7 @@ const App = () => {
         {/* Auth */}
         <Stack.Group
           screenOptions={{
-            animation: 'slide_from_right'
+            animation: 'slide_from_right',
           }}
         >
           <Stack.Screen name="SIGN_IN" component={SignIn} />
@@ -171,7 +169,7 @@ const App = () => {
         {/* Rules */}
         <Stack.Group
           screenOptions={{
-            animation: 'slide_from_left'
+            animation: 'slide_from_left',
           }}
         >
           <Stack.Screen name="RULES_SCREEN" component={RulesScreen} />
@@ -181,7 +179,7 @@ const App = () => {
         {/* Plans */}
         <Stack.Group
           screenOptions={{
-            animation: 'slide_from_right'
+            animation: 'slide_from_right',
           }}
         >
           <Stack.Screen name="PLANS_SCREEN" component={PlansScreen} />
@@ -198,7 +196,7 @@ const App = () => {
         {/* Post */}
         <Stack.Screen
           options={{
-            animation: 'slide_from_right'
+            animation: 'slide_from_right',
           }}
           name="DETAIL_POST_SCREEN"
           component={DetailPostScreen}
@@ -209,14 +207,14 @@ const App = () => {
           screenOptions={{
             presentation: 'transparentModal',
             animation: 'fade',
-            gestureEnabled: false
+            gestureEnabled: false,
           }}
         >
           <Stack.Screen name="UPDATE_VERSION_MODAL" component={UpdateVersionModal} />
           <Stack.Screen
             name="REPLY_MODAL"
             options={{
-              animation: 'slide_from_bottom'
+              animation: 'slide_from_bottom',
             }}
             component={ActionsModal}
           />

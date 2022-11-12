@@ -1,17 +1,19 @@
 import React, { useState } from 'react'
-import { I18n } from '../../utils'
+
+import { yupResolver } from '@hookform/resolvers/yup'
 import { useTheme } from '@react-navigation/native'
 import { RouteProp } from '@react-navigation/native'
-import { Space, Button, Input, Loading, AppContainer } from '../../components'
-import { black, lightGray } from '../../constants'
-import { RootStackParamList } from '../../types'
-import { updateIntention } from '../../screens/helper'
-import { useForm, FormProvider, SubmitHandler, FieldValues } from 'react-hook-form'
-import { yupResolver } from '@hookform/resolvers/yup'
-import * as yup from 'yup'
-import { mvs, vs } from 'react-native-size-matters'
-import { StyleSheet, View } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { FieldValues, FormProvider, SubmitHandler, useForm } from 'react-hook-form'
+import { StyleSheet, View } from 'react-native'
+import { mvs, vs } from 'react-native-size-matters'
+import * as yup from 'yup'
+
+import { AppContainer, Button, Input, Loading, Space } from '../../components'
+import { black, lightGray } from '../../constants'
+import { updateIntention } from '../../screens/helper'
+import { RootStackParamList } from '../../types'
+import { I18n } from '../../utils'
 
 const schema = yup
   .object()
@@ -21,7 +23,7 @@ const schema = yup
       .trim()
       .min(2, I18n.t('twoSymbolRequire'))
       .required()
-      .max(800, `${I18n.t('manyCharacters')}800`)
+      .max(800, `${I18n.t('manyCharacters')}800`),
   })
   .required()
 
@@ -42,7 +44,7 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
-    defaultValues: { newIntention: prevIntention || '' }
+    defaultValues: { newIntention: prevIntention || '' },
   })
 
   const onSubmit: SubmitHandler<FieldValues> = async data => {
@@ -54,7 +56,7 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
   }
 
   const {
-    colors: { background: backgroundColor }
+    colors: { background: backgroundColor },
   } = useTheme()
 
   return (
@@ -95,12 +97,12 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center'
+    alignItems: 'center',
   },
   bigInput: {
     width: '100%',
-    alignItems: 'center'
-  }
+    alignItems: 'center',
+  },
 })
 
 const { container, bigInput } = styles

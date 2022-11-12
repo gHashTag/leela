@@ -1,15 +1,17 @@
 import React from 'react'
+
 import { StyleSheet, View } from 'react-native'
-import Spinner from 'react-native-spinkit'
 import { s } from 'react-native-size-matters'
+import Spinner from 'react-native-spinkit'
+
 import { secondary } from '../../constants'
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center'
-  }
+    alignItems: 'center',
+  },
 })
 
 interface LoadingT {

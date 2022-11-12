@@ -1,16 +1,18 @@
 import React, { ReactElement, useState } from 'react'
-import { s } from 'react-native-size-matters'
-import { observer } from 'mobx-react'
-import { RouteProp } from '@react-navigation/native'
-import { I18n } from '../../../utils'
-import { AppContainer, Avatar, Button, CenterView, Space } from '../../../components'
-import { RootStackParamList } from '../../../types'
-import { OnlinePlayer } from '../../../store'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { onSignIn } from '../../helper'
+
 import auth from '@react-native-firebase/auth'
-import { useNoBackHandler } from '../../../hooks'
+import { RouteProp } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { observer } from 'mobx-react'
 import { TouchableOpacity } from 'react-native'
+import { s } from 'react-native-size-matters'
+
+import { AppContainer, Avatar, Button, CenterView, Space } from '../../../components'
+import { useNoBackHandler } from '../../../hooks'
+import { OnlinePlayer } from '../../../store'
+import { RootStackParamList } from '../../../types'
+import { I18n } from '../../../utils'
+import { onSignIn } from '../../helper'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,

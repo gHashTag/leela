@@ -1,18 +1,18 @@
-import messaging from '@react-native-firebase/messaging'
 import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore'
-import { captureException } from '../constants'
-
+import messaging from '@react-native-firebase/messaging'
 import { makeAutoObservable } from 'mobx'
 import { makePersistable } from 'mobx-persist-store'
 
+import { captureException } from '../constants'
+
 export const MessagingStore = makeAutoObservable({
-  path: ''
+  path: '',
 })
 
 makePersistable(MessagingStore, {
   name: 'MessagingStore',
-  properties: ['path']
+  properties: ['path'],
 })
 
 const fetchBusinesses = () => {
@@ -45,7 +45,7 @@ const saveTokenToDatabase = async (token: string) => {
         .collection('Profiles')
         .doc(userUid)
         .update({
-          tokens: firestore.FieldValue.arrayUnion(token)
+          tokens: firestore.FieldValue.arrayUnion(token),
         })
     }
   } catch (e) {
@@ -61,7 +61,7 @@ const delTokenOnSignOut = async () => {
       .collection('Profiles')
       .doc(userUid)
       .update({
-        tokens: firestore.FieldValue.arrayRemove(token)
+        tokens: firestore.FieldValue.arrayRemove(token),
       })
   } catch (error) {
     captureException(error)

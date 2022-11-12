@@ -1,12 +1,13 @@
 import React, { useRef } from 'react'
+
 import { StyleSheet } from 'react-native'
-import Video from 'react-native-video-controls'
 import { VideoProperties } from 'react-native-video'
+import Video from 'react-native-video-controls'
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
-  }
+    flex: 1,
+  },
 })
 
 interface VideoPlayerT extends VideoProperties {}

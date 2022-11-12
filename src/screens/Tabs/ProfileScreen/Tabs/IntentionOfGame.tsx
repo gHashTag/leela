@@ -1,13 +1,14 @@
 import React, { useContext } from 'react'
-import { StyleSheet, View } from 'react-native'
+
 import { observer } from 'mobx-react'
+import { StyleSheet, View } from 'react-native'
+import { GestureDetector } from 'react-native-gesture-handler'
 import { s } from 'react-native-size-matters'
 
-import { Text, Space, ButtonEdit } from '../../../../components'
-import { GestureDetector } from 'react-native-gesture-handler'
-import { TabContext } from '../TabContext'
-import { OnlinePlayer } from '../../../../store'
+import { ButtonEdit, Space, Text } from '../../../../components'
 import { useTypedNavigation } from '../../../../hooks'
+import { OnlinePlayer } from '../../../../store'
+import { TabContext } from '../TabContext'
 
 export const IntentionOfGame = observer(() => {
   const { navigate } = useTypedNavigation()
@@ -33,11 +34,11 @@ export const IntentionOfGame = observer(() => {
 const styles = StyleSheet.create({
   container: {
     padding: s(10),
-    flex: 1
+    flex: 1,
   },
   btnEdit: {
-    alignSelf: 'flex-end'
-  }
+    alignSelf: 'flex-end',
+  },
 })
 
 const { container, btnEdit } = styles

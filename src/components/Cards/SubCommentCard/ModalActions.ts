@@ -1,5 +1,6 @@
 import Clipboard from '@react-native-clipboard/clipboard'
 import I18n from 'i18n-js'
+
 import { getUid } from '../../../screens/helper'
 import { OnlinePlayer, OtherPlayers, PostStore } from '../../../store'
 import { ButtonsModalT, ReplyComT } from '../../../types'
@@ -21,13 +22,13 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
       key: 'COPY',
       onPress: () => Clipboard.setString(item.text),
       title: I18n.t('copy'),
-      icon: 'content-copy'
+      icon: 'content-copy',
     },
     {
       key: 'TRANSLATE',
       onPress: handleTransText,
       title: I18n.t('translate'),
-      icon: !hideTranslate ? 'translate-off' : 'translate'
+      icon: !hideTranslate ? 'translate-off' : 'translate',
     },
     {
       key: 'DEL',
@@ -35,12 +36,12 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
         PostStore.delComment({
           commentId: item.id,
           isReply: item.reply,
-          postId: item.postId
+          postId: item.postId,
         })
       },
       title: I18n.t('delete'),
       color: 'red',
-      icon: 'delete-outline'
+      icon: 'delete-outline',
     },
     {
       key: 'DEL_ALL_COM',
@@ -49,7 +50,7 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
       },
       title: 'delete all user comments',
       color: 'red',
-      icon: 'delete-alert-outline'
+      icon: 'delete-alert-outline',
     },
     {
       key: 'BAN',
@@ -58,8 +59,8 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
       },
       title: isBaned ? 'Unban user' : 'Ban user',
       color: isBaned ? undefined : 'red',
-      icon: isBaned ? 'account-plus-outline' : 'account-off-outline'
-    }
+      icon: isBaned ? 'account-plus-outline' : 'account-off-outline',
+    },
   ]
     .filter(a => (isOwner ? true : isAdmin ? true : a.key !== 'DEL'))
     .filter(a => (isAdmin ? true : a.key !== 'DEL_ALL_COM' && a.key !== 'BAN'))

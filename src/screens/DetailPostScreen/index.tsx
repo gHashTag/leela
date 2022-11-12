@@ -1,24 +1,25 @@
-import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import React, { useCallback, useEffect } from 'react'
-import { StyleSheet, View, FlatList } from 'react-native'
+
+import firestore from '@react-native-firebase/firestore'
+import { RouteProp, useFocusEffect } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import I18n from 'i18n-js'
+import { observer } from 'mobx-react'
+import { FlatList, StyleSheet, View } from 'react-native'
+import { s, vs } from 'react-native-size-matters'
+
 import {
   CommentCard,
   EmptyComments,
   Header,
   Loading,
   PostCard,
-  Space
+  Space,
 } from '../../components'
 import { captureException, lightGray } from '../../constants'
 import { OnlinePlayer, PostStore } from '../../store'
 import { PostT, RootStackParamList } from '../../types'
-
-import { s, vs } from 'react-native-size-matters'
-import { observer } from 'mobx-react'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { getUid } from '../helper'
-import firestore from '@react-native-firebase/firestore'
-import I18n from 'i18n-js'
 
 interface DetailPostI {
   navigation: NativeStackNavigationProp<RootStackParamList, 'DETAIL_POST_SCREEN'>
@@ -39,8 +40,8 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
             PostStore.createComment({
               text,
               postId: curItem.id,
-              postOwner: curItem.ownerId
-            })
+              postOwner: curItem.ownerId,
+            }),
         })
     }
 
@@ -53,7 +54,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
             .onSnapshot(PostStore.fetchComments, err => captureException(err))
           return subComments
         }
-      }, [curItem])
+      }, [curItem]),
     )
 
     useEffect(() => {
@@ -71,7 +72,9 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
       handleLink()
     }, [])
 
-    if (!curItem) return <Loading />
+    if (!curItem) {
+      return <Loading />
+    }
     return (
       <FlatList
         removeClippedSubviews={false}
@@ -108,15 +111,15 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
         )}
       />
     )
-  }
+  },
 )
 
 const style = StyleSheet.create({
   line: {
     width: '100%',
     borderBottomColor: lightGray,
-    borderBottomWidth: s(0.5)
-  }
+    borderBottomWidth: s(0.5),
+  },
 })
 
 const { line } = style

@@ -1,37 +1,39 @@
 import React, { useMemo } from 'react'
+
 import { Theme, useTheme } from '@react-navigation/native'
+import blockEmbedPlugin from 'markdown-it-block-embed'
 import { StyleProp, StyleSheet, TextStyle } from 'react-native'
 import { RenderRules } from 'react-native-markdown-display'
-import { s, vs, ms, mvs } from 'react-native-size-matters'
-import { secondary } from '../constants'
 import { MarkdownIt } from 'react-native-markdown-display'
-// @ts-ignore
-import blockEmbedPlugin from 'markdown-it-block-embed'
+import { ms, mvs, s, vs } from 'react-native-size-matters'
+
 import { Img, YouTubePlayer } from '../components'
+import { secondary } from '../constants'
+// @ts-ignore
 
 const markdownItInstance = MarkdownIt({ typographer: true, breaks: true }).use(
   blockEmbedPlugin,
   {
-    containerClassName: 'video-embed'
-  }
+    containerClassName: 'video-embed',
+  },
 )
 
 const factor = 0.3
 const bodyText = {
   fontSize: ms(14, factor),
   fontFamily: 'Montserrat',
-  lineHeight: ms(22, factor)
+  lineHeight: ms(22, factor),
 }
 
 export const useMarkdownProps = (
   YouTubeContainerWidthCoefficient?: number,
-  ImageWidthCoefficient?: number
+  ImageWidthCoefficient?: number,
 ) => {
   const theme = useTheme()
   const props = useMemo(
     () =>
       getMarkdownStyle(theme, YouTubeContainerWidthCoefficient, ImageWidthCoefficient),
-    [theme, YouTubeContainerWidthCoefficient]
+    [theme, YouTubeContainerWidthCoefficient],
   )
   return { ...props, markdownit: markdownItInstance }
 }
@@ -39,10 +41,10 @@ export const useMarkdownProps = (
 export const getMarkdownStyle = (
   theme: Theme,
   YTwPercent?: number,
-  IMGwPercent?: number
+  IMGwPercent?: number,
 ) => {
   const {
-    colors: { text, border, primary, notification, background, card }
+    colors: { text, border, primary, notification, background, card },
   } = theme
   const paragraph: StyleProp<TextStyle> = {
     flexWrap: 'wrap',
@@ -53,7 +55,7 @@ export const getMarkdownStyle = (
     ...bodyText,
     color: text,
 
-    letterSpacing: ms(0.2, factor)
+    letterSpacing: ms(0.2, factor),
   }
   const style = StyleSheet.create({
     body: {},
@@ -65,7 +67,7 @@ export const getMarkdownStyle = (
       marginTop: vs(10),
       marginBottom: vs(10),
       alignSelf: 'center',
-      color: text
+      color: text,
     },
     heading2: {
       flexDirection: 'row',
@@ -74,7 +76,7 @@ export const getMarkdownStyle = (
       fontSize: ms(22, factor),
       marginTop: vs(8),
       marginBottom: vs(8),
-      marginLeft: ms(8, factor)
+      marginLeft: ms(8, factor),
     },
     heading3: {
       flexDirection: 'row',
@@ -83,7 +85,7 @@ export const getMarkdownStyle = (
       fontSize: ms(20, factor),
       marginTop: vs(6),
       marginBottom: vs(6),
-      marginLeft: ms(8, factor)
+      marginLeft: ms(8, factor),
     },
     heading4: {
       flexDirection: 'row',
@@ -92,7 +94,7 @@ export const getMarkdownStyle = (
       fontSize: ms(18, factor),
       marginTop: vs(6),
       marginBottom: vs(4),
-      marginLeft: ms(8, factor)
+      marginLeft: ms(8, factor),
     },
     heading5: {
       flexDirection: 'row',
@@ -101,7 +103,7 @@ export const getMarkdownStyle = (
       fontSize: ms(16, factor),
       marginTop: vs(4),
       marginBottom: vs(2),
-      marginLeft: ms(8, factor)
+      marginLeft: ms(8, factor),
     },
     heading6: {
       flexDirection: 'row',
@@ -109,40 +111,40 @@ export const getMarkdownStyle = (
       color: text,
       fontSize: ms(14, factor),
       marginTop: vs(4),
-      marginLeft: ms(8, factor)
+      marginLeft: ms(8, factor),
     },
 
     // Text Output
     text: {},
     textgroup: {},
     paragraph: {
-      ...paragraph
+      ...paragraph,
     },
     hardbreak: {},
     softbreak: {},
 
     // Emphasis
     strong: {
-      fontFamily: 'Montserrat'
+      fontFamily: 'Montserrat',
     },
     em: {
       fontFamily: 'Montserrat',
-      fontStyle: 'italic'
+      fontStyle: 'italic',
     },
     // не знаю что это
     s: {
-      textDecorationLine: 'line-through'
+      textDecorationLine: 'line-through',
     },
     // Links
     link: {
       textDecorationLine: 'underline',
       color: primary,
-      fontFamily: 'Montserrat'
+      fontFamily: 'Montserrat',
     },
     blocklink: {
       flex: 1,
       borderColor: '#000000',
-      borderBottomWidth: 1
+      borderBottomWidth: 1,
     },
     // Blockquotes
     blockquote: {
@@ -150,31 +152,31 @@ export const getMarkdownStyle = (
       borderColor: secondary,
       borderLeftWidth: s(1),
       paddingLeft: ms(10, factor),
-      paddingBottom: vs(4)
+      paddingBottom: vs(4),
     },
     // Code
     code_inline: {
       // `code`
-      backgroundColor: card
+      backgroundColor: card,
     },
     code_block: {
       backgroundColor: card,
       paddingVertical: s(10),
       paddingHorizontal: s(5),
-      borderRadius: s(5)
+      borderRadius: s(5),
     },
     fence: {
       // ```code```
       backgroundColor: card,
       paddingVertical: s(10),
       paddingHorizontal: s(5),
-      borderRadius: s(10)
+      borderRadius: s(10),
     },
     list_item: {
       ...paragraph,
       flexDirection: 'row',
       justifyContent: 'flex-start',
-      marginBottom: mvs(10, factor)
+      marginBottom: mvs(10, factor),
     },
     // Images
     image: {},
@@ -182,7 +184,7 @@ export const getMarkdownStyle = (
     table: {
       borderWidth: 0,
       borderColor: border,
-      borderRadius: s(5)
+      borderRadius: s(5),
     },
     thead: {
       color: text,
@@ -190,29 +192,29 @@ export const getMarkdownStyle = (
       fontSize: ms(15, factor),
       flex: 1,
       borderColor: border,
-      borderTopWidth: s(1)
+      borderTopWidth: s(1),
     },
     tbody: {
       color: text,
-      ...bodyText
+      ...bodyText,
     },
     th: {
       borderRightWidth: s(1),
       borderColor: border,
       flex: 1,
-      padding: s(5)
+      padding: s(5),
     },
     tr: {
       borderLeftWidth: s(1),
       borderColor: border,
-      flexDirection: 'row'
+      flexDirection: 'row',
     },
     td: {
       borderRightWidth: s(1),
       borderColor: border,
       flex: 1,
-      padding: s(5)
-    }
+      padding: s(5),
+    },
   })
   const rules: RenderRules = {
     video: (node, children, parent, styles) => {
@@ -233,7 +235,7 @@ export const getMarkdownStyle = (
     image: node => {
       const { src } = node.attributes
       return <Img widthCoefficient={IMGwPercent} key={node.key} uri={src} />
-    }
+    },
     // fence: a => {
     //   // console.log('fence:', a)
     //   // @ts-expect-error
@@ -246,6 +248,6 @@ export const getMarkdownStyle = (
   }
   return {
     style,
-    rules
+    rules,
   }
 }

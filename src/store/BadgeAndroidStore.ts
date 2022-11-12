@@ -2,12 +2,12 @@ import { makeAutoObservable } from 'mobx'
 import { makePersistable } from 'mobx-persist-store'
 
 const BadgeAndroidStore = makeAutoObservable({
-  count: 0
+  count: 0,
 })
 
 makePersistable(BadgeAndroidStore, {
   name: 'BadgeAndroidStore',
-  properties: ['count']
+  properties: ['count'],
 })
 
 export { BadgeAndroidStore }

@@ -1,12 +1,13 @@
 import React, { memo } from 'react'
+
 import { Platform, StyleSheet } from 'react-native'
-import { s } from 'react-native-size-matters'
 import Emoji from 'react-native-emoji'
+import { s } from 'react-native-size-matters'
 
 const styles = StyleSheet.create({
   emoji: {
-    left: Platform.OS === 'ios' ? 1 : 0
-  }
+    left: Platform.OS === 'ios' ? 1 : 0,
+  },
 })
 
 interface EmojiTextT {

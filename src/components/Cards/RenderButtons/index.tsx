@@ -1,8 +1,10 @@
 import React from 'react'
+
 import { useTheme } from '@react-navigation/native'
 import { Pressable, StyleSheet } from 'react-native'
-import { vs, s } from 'react-native-size-matters'
+import { s, vs } from 'react-native-size-matters'
 import Icon from 'react-native-vector-icons/Ionicons'
+
 import { Space, Text } from '../../'
 import { ButtonsModalT } from '../../../types'
 
@@ -16,7 +18,7 @@ interface RenderButtonsT {
 export function RenderButtons({ item, index, colorOnPress, press }: RenderButtonsT) {
   const { onPress, key, title, color, icon } = item
   const {
-    colors: { text }
+    colors: { text },
   } = useTheme()
   const curColor = color ? color : text
   function handlePress() {
@@ -43,12 +45,12 @@ const stylesButtons = StyleSheet.create({
     paddingHorizontal: s(5),
     paddingVertical: vs(10),
     alignItems: 'center',
-    borderRadius: s(30)
+    borderRadius: s(30),
   },
   titleStyle: {
     flexWrap: 'wrap',
-    flex: 1
-  }
+    flex: 1,
+  },
 })
 
 const { butCont, titleStyle } = stylesButtons

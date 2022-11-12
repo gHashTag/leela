@@ -1,21 +1,21 @@
 import React, { ReactElement } from 'react'
 
+import { useTheme } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { StyleSheet } from 'react-native'
 import { ms, s, vs } from 'react-native-size-matters'
 
-import { I18n } from '../../../utils'
 import {
   AppContainer,
   Button,
   CenterView,
   IconLeela,
   Space,
-  Text
+  Text,
 } from '../../../components'
-import { white, black, goBack } from '../../../constants'
+import { black, goBack, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
-import { useTheme } from '@react-navigation/native'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { StyleSheet } from 'react-native'
+import { I18n } from '../../../utils'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HELLO'>
 
@@ -28,9 +28,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'center',
     height: ms(150, 0.5),
-    width: ms(150, 0.5)
+    width: ms(150, 0.5),
   },
-  h6: { alignSelf: 'center' }
+  h6: { alignSelf: 'center' },
 })
 
 const Hello = ({ navigation }: HelloT): ReactElement => {

@@ -1,9 +1,11 @@
-import { getStateFromPath, LinkingOptions } from '@react-navigation/native'
+import { LinkingOptions, getStateFromPath } from '@react-navigation/native'
 import { Linking } from 'react-native'
+import Branch from 'react-native-branch'
+
+import { formatLink, subscribeDeepLinkUrl } from './linkHelpers'
+
 import { captureException } from '../constants'
 import { RootStackParamList } from '../types'
-import Branch from 'react-native-branch'
-import { formatLink, subscribeDeepLinkUrl } from './linkHelpers'
 
 export const linking: LinkingOptions<RootStackParamList> = {
   prefixes: ['https://leelagame.app.link', 'leelagame://'],
@@ -47,11 +49,11 @@ export const linking: LinkingOptions<RootStackParamList> = {
       //   }
       // },
       DETAIL_POST_SCREEN: {
-        path: 'reply_detail/:postId'
+        path: 'reply_detail/:postId',
       },
-      WELCOME_SCREEN: '*'
-    }
-  }
+      WELCOME_SCREEN: '*',
+    },
+  },
 }
 
 // Custom state
@@ -78,18 +80,18 @@ const getDetailPostState = ({ path, config }: getCustomNavStateT) => {
         state: {
           routes: [
             {
-              name: 'TAB_BOTTOM_1'
-            }
-          ]
-        }
+              name: 'TAB_BOTTOM_1',
+            },
+          ],
+        },
       },
       {
         name: 'DETAIL_POST_SCREEN',
         params: {
-          postId
+          postId,
         },
-        path
-      }
-    ]
+        path,
+      },
+    ],
   }
 }

@@ -1,18 +1,20 @@
 import React, { useState } from 'react'
+
+import { observer } from 'mobx-react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { s } from 'react-native-size-matters'
-import { observer } from 'mobx-react'
-import { I18n } from '../../../utils'
-import { Button } from '../Button'
-import { Space } from '../../Space'
+
 import { Text } from '../../'
+import { I18n } from '../../../utils'
+import { Space } from '../../Space'
+import { Button } from '../Button'
 
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: 'row'
-  }
+    flexDirection: 'row',
+  },
 })
 
 const data = [1, 2, 3, 4, 5, 6]

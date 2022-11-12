@@ -1,16 +1,18 @@
 import React, { memo } from 'react'
+
+import { useTheme } from '@react-navigation/native'
 import {
   ImageBackground,
   ImageStyle,
   Pressable,
   StyleProp,
-  StyleSheet
+  StyleSheet,
 } from 'react-native'
 import { ms, s } from 'react-native-size-matters'
-import { orange, primary } from '../../constants'
-import { Text } from '..'
 import Ionicons from 'react-native-vector-icons/Ionicons'
-import { useTheme } from '@react-navigation/native'
+
+import { Text } from '..'
+import { orange, primary } from '../../constants'
 
 interface PlanAvatarI {
   plan: number
@@ -27,10 +29,10 @@ export const PlanAvatar = memo(function ({
   avaUrl,
   aditionalStyle,
   isAccept,
-  onPress
+  onPress,
 }: PlanAvatarI) {
   const {
-    colors: { background }
+    colors: { background },
   } = useTheme()
   const textPlan = plan < 10 ? `0${plan}` : `${plan}`
   const fontSize = size === 'small' ? s(6) : s(10)
@@ -59,25 +61,25 @@ const styles = StyleSheet.create({
   xLarge: {
     marginLeft: 1,
     width: ms(130),
-    height: ms(130)
+    height: ms(130),
   },
   large: {
     marginLeft: 1,
     width: s(55),
-    height: s(55)
+    height: s(55),
   },
   medium: {
     width: s(50),
-    height: s(50)
+    height: s(50),
   },
   small: {
     width: s(36),
-    height: s(36)
+    height: s(36),
   },
   container: {
     borderRadius: ms(130),
     borderColor: primary,
-    borderWidth: s(0.9)
+    borderWidth: s(0.9),
   },
   badge: {
     alignItems: 'center',
@@ -87,16 +89,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     borderColor: primary,
     borderWidth: s(0.8),
-    padding: s(2)
+    padding: s(2),
   },
   smallBadge: {
     right: s(-1),
-    bottom: s(1)
+    bottom: s(1),
   },
   bigBadge: {
     right: s(-1),
-    bottom: s(2)
-  }
+    bottom: s(2),
+  },
 })
 
 const { container, badge, bigBadge, smallBadge } = styles

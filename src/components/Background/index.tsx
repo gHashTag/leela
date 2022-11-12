@@ -1,15 +1,18 @@
 import React, { memo } from 'react'
+
 import {
-  StyleSheet,
-  StyleProp,
-  View,
   Image,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
   useWindowDimensions,
-  ViewStyle
 } from 'react-native'
-import { ICONS } from './images'
-import { useImageAspect } from '../../hooks'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+
+import { ICONS } from './images'
+
+import { useImageAspect } from '../../hooks'
 
 interface BackgroundT {
   status?: 'bg' | 'clean' | '1x1'
@@ -27,7 +30,7 @@ const Background = memo(
     children,
     style,
     enableBottomInsets,
-    enableTopInsets
+    enableTopInsets,
   }: BackgroundT) => {
     const images = ICONS.find(x => x.title === status)?.paths || sourceImages || []
     const { bottom, top } = useSafeAreaInsets()
@@ -39,7 +42,7 @@ const Background = memo(
             imgContainer,
             style,
             enableBottomInsets && { paddingBottom: bottom },
-            enableTopInsets && { paddingTop: top }
+            enableTopInsets && { paddingTop: top },
           ]}
         >
           {images.map((img, id) => (
@@ -55,7 +58,7 @@ const Background = memo(
         {children}
       </View>
     )
-  }
+  },
 )
 
 interface RenderImagePartT {
@@ -82,20 +85,20 @@ const RenderImagePart = ({ img, id, isUri, images }: RenderImagePartT) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
   },
   imgContainer: {
     position: 'absolute',
     height: '100%',
-    width: '100%'
+    width: '100%',
   },
   imgStyle: {
     width: '100%',
-    marginVertical: 10
+    marginVertical: 10,
   },
   subImgContainer: {
-    flex: 1
-  }
+    flex: 1,
+  },
 })
 const { container, imgContainer, imgStyle, subImgContainer } = styles
 

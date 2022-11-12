@@ -1,12 +1,15 @@
 import { useCallback, useState } from 'react'
-import * as Keychain from 'react-native-keychain'
-import auth from '@react-native-firebase/auth'
+
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { captureException } from '../constants'
 import { useNetInfo } from '@react-native-community/netinfo'
+import auth from '@react-native-firebase/auth'
 import { useFocusEffect, useLinkTo } from '@react-navigation/native'
-import { onSignIn } from '../screens/helper'
+import * as Keychain from 'react-native-keychain'
+
 import { useTypedNavigation } from './useTypedNavigation'
+
+import { captureException } from '../constants'
+import { onSignIn } from '../screens/helper'
 
 export const useKeychain = () => {
   const { navigate } = useTypedNavigation()
@@ -47,7 +50,7 @@ export const useKeychain = () => {
     useCallback(() => {
       setLoading(true)
       key().catch(checkGame)
-    }, [isConnected])
+    }, [isConnected]),
   )
   return { loading }
 }

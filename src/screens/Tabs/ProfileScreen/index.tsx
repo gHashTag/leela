@@ -1,19 +1,21 @@
 import React from 'react'
-import { StyleSheet, useWindowDimensions, View } from 'react-native'
+
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react-lite'
+import { StyleSheet, View, useWindowDimensions } from 'react-native'
+import { GestureDetector } from 'react-native-gesture-handler'
+import Animated from 'react-native-reanimated'
 import { s, vs } from 'react-native-size-matters'
 
-import { I18n } from '../../../utils'
-import { RootTabParamList, RootStackParamList } from '../../../types'
-import { AppContainer, Space, HeaderMaster, Spin, CenterView } from '../../../components'
-import { DiceStore, OnlinePlayer } from '../../../store'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { SecondaryTab } from '../../../components/SecondaryTab'
-import { GestureDetector } from 'react-native-gesture-handler'
-import { HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
-import Animated from 'react-native-reanimated'
 import { TabContextProvider } from './TabContext'
+import { HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
+
+import { AppContainer, CenterView, HeaderMaster, Space, Spin } from '../../../components'
 import { OwnTabView } from '../../../components/OwnTabView'
+import { SecondaryTab } from '../../../components/SecondaryTab'
+import { DiceStore, OnlinePlayer } from '../../../store'
+import { RootStackParamList, RootTabParamList } from '../../../types'
+import { I18n } from '../../../utils'
 
 type ProfileScreenT = {
   navigation: NativeStackNavigationProp<
@@ -64,8 +66,8 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                     {
                       key: 'intentionOfGame',
                       title: I18n.t('intention'),
-                      Scene: IntentionOfGame
-                    }
+                      Scene: IntentionOfGame,
+                    },
                   ]}
                   style={[tabContainer, { height: tabViewH }]}
                 />
@@ -82,8 +84,8 @@ const styles = StyleSheet.create({
   tabContainer: {},
   container: {
     alignItems: 'center',
-    width: '100%'
-  }
+    width: '100%',
+  },
 })
 
 const { tabContainer, container } = styles

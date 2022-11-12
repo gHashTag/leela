@@ -1,15 +1,17 @@
-import { observer } from 'mobx-react'
 import React, { useContext, useEffect, useState } from 'react'
+
+import firestore from '@react-native-firebase/firestore'
+import { observer } from 'mobx-react'
 import { FlatList, StyleSheet, View } from 'react-native'
+import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler'
+import Animated from 'react-native-reanimated'
 import { s, vs } from 'react-native-size-matters'
+
 import { PostCard, Space, Text } from '../../../../components'
+import { captureException } from '../../../../constants'
 import { PostStore } from '../../../../store'
 import { I18n } from '../../../../utils'
-import firestore from '@react-native-firebase/firestore'
-import { captureException } from '../../../../constants'
 import { getUid } from '../../../helper'
-import Animated from 'react-native-reanimated'
-import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler'
 import { TabContext } from '../TabContext'
 
 export const ReportsScene = observer(() => {
@@ -33,7 +35,9 @@ export const ReportsScene = observer(() => {
   const data = PostStore.store.ownPosts
 
   const newLimit = () => {
-    if (data.length <= limit) setLimit(pr => pr + 15)
+    if (data.length <= limit) {
+      setLimit(pr => pr + 15)
+    }
   }
 
   return (
@@ -41,7 +45,7 @@ export const ReportsScene = observer(() => {
       <GestureDetector
         gesture={Gesture.Simultaneous(
           Gesture.Race(blockScrollUntilAtTheTop0, panGesture0),
-          scrollViewGesture0
+          scrollViewGesture0,
         )}
       >
         <Animated.ScrollView
@@ -77,11 +81,11 @@ export const ReportsScene = observer(() => {
 
 const styles = StyleSheet.create({
   noPostBlock: {
-    paddingHorizontal: s(10)
+    paddingHorizontal: s(10),
   },
   noPostText: {
-    textAlign: 'center'
-  }
+    textAlign: 'center',
+  },
 })
 
 const { noPostText, noPostBlock } = styles

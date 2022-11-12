@@ -1,9 +1,11 @@
 import React from 'react'
+
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
-import { RootStackParamList } from '../../types'
+
 import { Background, ButtonsSelector, CenterView } from '../../components'
 import { actionsDice } from '../../store'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { RootStackParamList } from '../../types'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 

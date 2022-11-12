@@ -1,15 +1,17 @@
-import React, { useState, ReactElement, useEffect } from 'react'
-import { RouteProp } from '@react-navigation/native'
-import { AppContainer, Space, Text, Loading } from '../../../components'
-import { white, black } from '../../../constants'
-import { RootStackParamList } from '../../../types'
-import { useTheme } from '@react-navigation/native'
+import React, { ReactElement, useEffect, useState } from 'react'
+
 import auth from '@react-native-firebase/auth'
-import { s, vs } from 'react-native-size-matters'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { RouteProp } from '@react-navigation/native'
+import { useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import I18n from 'i18n-js'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import * as Keychain from 'react-native-keychain'
+import { s, vs } from 'react-native-size-matters'
+
+import { AppContainer, Loading, Space, Text } from '../../../components'
+import { black, white } from '../../../constants'
+import { RootStackParamList } from '../../../types'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -22,25 +24,25 @@ type ConfirmSignUpT = {
   route: ProfileScreenRouteProp
 }
 
-const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
-  const [isVerfy, setIsVerfy] = useState<boolean | undefined>(false)
+export const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
+  const [isVerify, setIsVerify] = useState<boolean | undefined>(false)
   const [canResend, setCanResend] = useState<boolean>(true)
 
   useEffect(() => {
     auth().currentUser?.sendEmailVerification()
-    const verfyCheck = setInterval(() => {
+    const verifyCheck = setInterval(() => {
       auth().currentUser?.reload()
       const emailVerified = auth().currentUser?.emailVerified
-      if (emailVerified !== isVerfy) {
-        setIsVerfy(emailVerified)
+      if (emailVerified !== isVerify) {
+        setIsVerify(emailVerified)
         if (emailVerified) {
-          clearInterval(verfyCheck)
+          clearInterval(verifyCheck)
           navigation.navigate('SIGN_UP_USERNAME', route.params)
         }
       }
     }, 2200)
-    return () => clearInterval(verfyCheck)
-  }, [])
+    return () => clearInterval(verifyCheck)
+  }, [navigation, isVerify, route.params])
 
   const _onResend = async (): Promise<void> => {
     if (canResend) {
@@ -67,7 +69,7 @@ const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
       onPress={onExit}
       colorLeft={color}
     >
-      <View style={container}>
+      <View style={page.container}>
         <Space height={vs(15)} />
         <Text h={'h1'} title={I18n.t('checkMail')} />
         <Text h={'h2'} title={`(${route.params.email})`} />
@@ -77,30 +79,27 @@ const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
       <TouchableOpacity
         disabled={!canResend}
         onPress={_onResend}
-        style={[btn, !canResend && btnDisabled]}
+        style={[page.btn, !canResend && page.btnDisabled]}
       >
-        <Text textStyle={textStyle} title={I18n.t('resendCode')} h="h3" />
+        <Text textStyle={page.textStyle} title={I18n.t('resendCode')} h="h3" />
       </TouchableOpacity>
       <Space height={vs(30)} />
     </AppContainer>
   )
 }
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   btn: {
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   btnDisabled: {
-    opacity: 0.5
+    opacity: 0.5,
   },
   container: {
     flex: 1,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   textStyle: {
-    textDecorationLine: 'underline'
-  }
+    textDecorationLine: 'underline',
+  },
 })
-const { btn, btnDisabled, textStyle, container } = styles
-
-export { ConfirmSignUp }

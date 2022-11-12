@@ -1,9 +1,10 @@
 import notifee, { Event, EventType } from '@notifee/react-native'
+
+import { navRef } from '../../../constants'
+import { getUid } from '../../../screens/helper'
 import { MessagingStore, PostStore } from '../../../store'
 import { cancel, updateAndroidBadgeCount } from '../NotificationHelper'
 import { updateAndroidCommentNotificationGroup } from '../replyNotification'
-import { navRef } from '../../../constants'
-import { getUid } from '../../../screens/helper'
 
 export const replyActionHandler = async ({ type, detail }: Event) => {
   const { pressAction, notification, input } = detail
@@ -20,7 +21,7 @@ export const replyActionHandler = async ({ type, detail }: Event) => {
               text: input,
               commentOwner,
               commentId,
-              postId
+              postId,
             })
           }
           break
@@ -33,7 +34,9 @@ export const replyActionHandler = async ({ type, detail }: Event) => {
       updateAndroidBadgeCount({ type: 'decrement' })
 
       if (navRef && navRef.isReady()) {
-        if (getUid()) navRef.navigate('DETAIL_POST_SCREEN', { postId: reportId })
+        if (getUid()) {
+          navRef.navigate('DETAIL_POST_SCREEN', { postId: reportId })
+        }
       } else {
         const path = `/reply_detail/${reportId}`
         MessagingStore.path = path

@@ -1,7 +1,9 @@
-import { useTheme } from '@react-navigation/native'
 import React from 'react'
+
+import { useTheme } from '@react-navigation/native'
 import { StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
+
 import { lightGray, white } from '../../constants'
 
 export function EmptyComments() {
@@ -23,15 +25,15 @@ const style = StyleSheet.create({
     height: s(6),
     width: s(6),
     borderRadius: s(22),
-    margin: s(8)
+    margin: s(8),
   },
   dotContainer: {
     justifyContent: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: vs(10),
-    marginBottom: vs(10)
-  }
+    marginBottom: vs(10),
+  },
 })
 
 const { dot, dotContainer } = style

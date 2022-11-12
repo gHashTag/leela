@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+
 import { PostStore } from '../../../store'
 import { PostT } from '../../../types'
 import { lang } from '../../../utils'
@@ -12,7 +13,7 @@ interface useTranslationParams {
 export const useTranslation = ({
   item,
   translatedText,
-  isHideTranslate
+  isHideTranslate,
 }: useTranslationParams) => {
   const [transText, setTransText] = useState('')
   const [hideTranslate, setHideTranslate] = useState(true)

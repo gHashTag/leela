@@ -1,7 +1,9 @@
 import React, { memo } from 'react'
-import { StyleSheet, Image, View, useWindowDimensions } from 'react-native'
+
+import { Image, StyleSheet, View, useWindowDimensions } from 'react-native'
 import FitImage from 'react-native-fit-image'
 import { s, vs } from 'react-native-size-matters'
+
 import { useImageAspect } from '../../hooks'
 
 interface ImgT {
@@ -29,8 +31,8 @@ export const Img = memo<ImgT>(({ maxHeight = 370, uri = '', widthCoefficient = 1
           {
             width,
             height,
-            maxHeight
-          }
+            maxHeight,
+          },
         ]}
         resizeMode="contain"
         source={{ uri }}
@@ -42,12 +44,12 @@ export const Img = memo<ImgT>(({ maxHeight = 370, uri = '', widthCoefficient = 1
 const styles = StyleSheet.create({
   img: {
     borderRadius: s(12),
-    overflow: 'hidden'
+    overflow: 'hidden',
   },
   mainBlock: {
     width: '100%',
-    alignItems: 'center'
-  }
+    alignItems: 'center',
+  },
 })
 
 const { img, mainBlock } = styles

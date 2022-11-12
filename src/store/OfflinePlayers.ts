@@ -1,11 +1,13 @@
-import { makeAutoObservable } from 'mobx'
-import { makePersistable } from 'mobx-persist-store'
-import { upStepOffline } from './helper'
-import { actionsDice } from '.'
-import { HistoryT } from '../types'
-import { navigate } from '../constants'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import I18n from 'i18n-js'
+import { makeAutoObservable } from 'mobx'
+import { makePersistable } from 'mobx-persist-store'
+
+import { upStepOffline } from './helper'
+
+import { actionsDice } from '.'
+import { navigate } from '../constants'
+import { HistoryT } from '../types'
 
 export const initStore = {
   start: [false, false, false, false, false, false],
@@ -18,8 +20,8 @@ export const initStore = {
     [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
     [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
     [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
-    [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }]
-  ]
+    [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
+  ],
 }
 
 export const OfflinePlayers = {
@@ -28,7 +30,7 @@ export const OfflinePlayers = {
     actionsDice.resetPlayer()
     await AsyncStorage.clear()
     /* вы подумаете тут можно это все заменить 1 строчкой:
-    `` OfflinePlayers.store = {...initStore} ``, а нет. Так 
+    `` OfflinePlayers.store = {...initStore} ``, а нет. Так
     в persist-store результат не сохраняется */
     OfflinePlayers.store.plans = initStore.plans
     OfflinePlayers.store.start = initStore.start
@@ -41,12 +43,12 @@ export const OfflinePlayers = {
   },
   updateStep(id: number): void {
     upStepOffline(id)
-  }
+  },
 }
 
 makePersistable(OfflinePlayers.store, {
   name: 'OfflinePlayers',
-  properties: ['plans', 'start', 'histories', 'finish']
+  properties: ['plans', 'start', 'histories', 'finish'],
 })
 
 interface OfflinePlayersI {

@@ -1,22 +1,24 @@
 import React from 'react'
+
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
+import Rate from 'react-native-rate'
 import { s, vs } from 'react-native-size-matters'
-import { I18n } from '../../../utils'
-import { RootStackParamList, RootTabParamList } from '../../../types'
+
 import {
   Background,
+  ButtonElements,
   Dice,
   GameBoard,
   Header,
   Space,
+  Spin,
   Text,
-  ButtonElements,
-  Spin
 } from '../../../components'
-import { DiceStore, actionsDice, OnlinePlayer, OfflinePlayers } from '../../../store'
-import Rate from 'react-native-rate'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useLeftTimeForStep } from '../../../hooks'
+import { DiceStore, OfflinePlayers, OnlinePlayer, actionsDice } from '../../../store'
+import { RootStackParamList, RootTabParamList } from '../../../types'
+import { I18n } from '../../../utils'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -36,7 +38,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       GooglePackageName: 'com.leelagame',
       OtherAndroidURL: 'https://play.google.com/store/apps/details?id=com.leelagame',
       preferInApp: false,
-      openAppStoreIfInAppFails: true
+      openAppStoreIfInAppFails: true,
     }
     Rate.rate(options, success => actionsDice.setRate(success))
   }

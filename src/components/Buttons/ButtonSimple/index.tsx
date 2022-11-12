@@ -1,22 +1,18 @@
 import React, { memo } from 'react'
-import {
-  StyleSheet,
-  TouchableOpacity,
-  GestureResponderEvent,
-  ViewStyle,
-  StyleProp
-} from 'react-native'
+
+import { StyleProp, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native'
 import { vs } from 'react-native-size-matters'
+
 import { Text } from '../../'
 
 const styles = StyleSheet.create({
   container: {
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   fontStyle: {
     marginTop: vs(5),
-    marginBottom: vs(5)
-  }
+    marginBottom: vs(5),
+  },
 })
 
 interface ButtonSimpleT {

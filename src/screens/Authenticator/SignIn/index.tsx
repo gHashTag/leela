@@ -1,24 +1,26 @@
 import React, { ReactElement } from 'react'
-import { s, vs } from 'react-native-size-matters'
+
 import { useTheme } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { FieldValues, FormProvider, SubmitErrorHandler } from 'react-hook-form'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import { s, vs } from 'react-native-size-matters'
+
+import { useSignIn } from './useSignIn'
+
 import {
   AppContainer,
   Button,
-  Space,
   ButtonLink,
-  TextError,
   Input,
+  KeyboardContainer,
   Loading,
-  KeyboardContainer
+  Space,
+  TextError,
 } from '../../../components'
-import { goBack, white, black, W, H } from '../../../constants'
+import { H, W, black, goBack, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 import { I18n } from '../../../utils'
-
-import { FormProvider, SubmitErrorHandler, FieldValues } from 'react-hook-form'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { StyleSheet, ScrollView, View } from 'react-native'
-import { useSignIn } from './useSignIn'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -96,11 +98,11 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
 const styles = StyleSheet.create({
   KAV: {
     flex: 1,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   textStyle: {
-    alignSelf: 'center'
-  }
+    alignSelf: 'center',
+  },
 })
 
 const { KAV, textStyle } = styles

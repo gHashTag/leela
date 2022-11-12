@@ -1,35 +1,37 @@
+import auth from '@react-native-firebase/auth'
+import firestore from '@react-native-firebase/firestore'
+import storage from '@react-native-firebase/storage'
+import I18n from 'i18n-js'
 import { makeAutoObservable } from 'mobx'
+import * as Keychain from 'react-native-keychain'
+
 import { upStepOnline } from './helper'
-import { actionsDice, DiceStore } from '.'
+import { delTokenOnSignOut } from './MessagingStore'
+
+import { DiceStore, actionsDice } from '.'
 import {
+  OpenPlanReportModal,
   captureException,
   navigate,
-  OpenPlanReportModal,
-  timeLeftType
+  timeLeftType,
 } from '../constants'
 import {
-  getProfile,
-  getImagePicker,
+  getFireBaseRef,
   getIMG,
+  getImagePicker,
+  getProfile,
+  resetHistory,
+  resetPlayer,
   updatePlan,
   uploadImg,
-  getFireBaseRef,
-  resetHistory,
-  resetPlayer
 } from '../screens/helper'
-import auth from '@react-native-firebase/auth'
-import storage from '@react-native-firebase/storage'
-import firestore from '@react-native-firebase/firestore'
-import { delTokenOnSignOut } from './MessagingStore'
 import { HistoryT, status } from '../types'
-import * as Keychain from 'react-native-keychain'
-import I18n from 'i18n-js'
 
 const initProfile = {
   firstName: '',
   lastName: '',
   email: '',
-  intention: ''
+  intention: '',
 }
 
 const initHistory = () => [
@@ -37,8 +39,8 @@ const initHistory = () => [
     createDate: Date.now(),
     plan: 68,
     count: 0,
-    status: 'start'
-  }
+    status: 'start',
+  },
 ]
 
 export const OnlinePlayer = makeAutoObservable<Istore>({
@@ -60,9 +62,9 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
     poster: {
       imgUrl: 'https://leelachakra.com/resource/LeelaChakra/poster.JPG',
       eventUrl: '',
-      buttonColor: '#1c1c1c'
+      buttonColor: '#1c1c1c',
     },
-    isPosterLoading: false
+    isPosterLoading: false,
   },
   async resetGame(): Promise<void> {
     try {
@@ -71,7 +73,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
         start: false,
         finish: false,
         plan: 68,
-        history: initHistory()
+        history: initHistory(),
       }
       await resetPlayer()
       await resetHistory()
@@ -96,7 +98,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
         canGo: false,
         stepTime: 0,
         timeText: ' ',
-        loadingProf: true
+        loadingProf: true,
       }
       actionsDice.resetPlayer()
       await Keychain.resetInternetCredentials('auth')
@@ -119,7 +121,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
         canGo: false,
         stepTime: 0,
         timeText: ' ',
-        loadingProf: true
+        loadingProf: true,
       }
       actionsDice.resetPlayer()
       await auth().signOut()
@@ -142,7 +144,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
             firstName: curProf.firstName,
             lastName: curProf.lastName,
             email: curProf.email,
-            intention: curProf.intention || ''
+            intention: curProf.intention || '',
           },
           isReported: curProf.isReported,
           stepTime: curProf.lastStepTime,
@@ -150,7 +152,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
           status: curProf.status,
           history: curProf.history
             .sort((a, b) => b.createDate - a.createDate)
-            .slice(0, 30)
+            .slice(0, 30),
         }
         if (curProf.plan === 68 && !curProf.finish) {
           actionsDice.setMessage(I18n.t('sixToBegin'))
@@ -176,10 +178,10 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
             await storage().ref(prevImgUrl).delete()
           }
           await auth().currentUser?.updateProfile({
-            photoURL: fileName
+            photoURL: fileName,
           })
           await firestore().collection('Profiles').doc(auth().currentUser?.uid).update({
-            avatar: fileName
+            avatar: fileName,
           })
           OnlinePlayer.store.avatar = await getIMG(fileName)
         } catch (error) {
@@ -197,7 +199,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
     try {
       OnlinePlayer.store.isPosterLoading = true
       const response = await fetch(
-        'https://leelachakra.com/resource/LeelaChakra/poster.json'
+        'https://leelachakra.com/resource/LeelaChakra/poster.json',
       )
       const json = await response.json()
       OnlinePlayer.store.poster = json[0]
@@ -228,7 +230,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       const hourCount = Math.round(difference / hour)
       return `${hourCount} ${I18n.t(timeLeftType[0].h)}`
     }
-  }
+  },
 })
 
 interface Istore {

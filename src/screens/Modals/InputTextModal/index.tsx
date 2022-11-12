@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react'
-import { useForm, FormProvider, SubmitHandler, FieldValues } from 'react-hook-form'
-import * as yup from 'yup'
+
 import { yupResolver } from '@hookform/resolvers/yup'
-
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp, useTheme } from '@react-navigation/native'
-import { RootStackParamList } from '../../../types'
-
-import { Input, KeyboardContainer, Text } from '../../../components'
-import { secondary, W } from '../../../constants'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import I18n from 'i18n-js'
+import { FieldValues, FormProvider, SubmitHandler, useForm } from 'react-hook-form'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import I18n from 'i18n-js'
+import * as yup from 'yup'
+
+import { Input, KeyboardContainer, Text } from '../../../components'
+import { W, secondary } from '../../../constants'
+import { RootStackParamList } from '../../../types'
 
 interface InputTextT {
   navigation: NativeStackNavigationProp<RootStackParamList, 'INPUT_TEXT_MODAL'>
@@ -21,7 +21,7 @@ const max = 250
 const schema = yup
   .object()
   .shape({
-    text: yup.string().trim().min(2).max(max).required()
+    text: yup.string().trim().min(2).max(max).required(),
   })
   .required()
 
@@ -29,7 +29,7 @@ export function InputTextModal({ navigation, route }: InputTextT) {
   const { onError, onSubmit } = route.params
   const { ...methods } = useForm({
     mode: 'onChange',
-    resolver: yupResolver(schema)
+    resolver: yupResolver(schema),
   })
   const [length, setLength] = useState(0)
 
@@ -37,7 +37,7 @@ export function InputTextModal({ navigation, route }: InputTextT) {
     setTimeout(() => methods.setFocus('text'), 100)
   }, [])
   const {
-    colors: { background, text }
+    colors: { background, text },
   } = useTheme()
 
   const handleSubmit: SubmitHandler<FieldValues> = async data => {
@@ -60,7 +60,7 @@ export function InputTextModal({ navigation, route }: InputTextT) {
               showError={false}
               onSubmitEditing={methods.handleSubmit(
                 handleSubmit,
-                err => onError && onError(err)
+                err => onError && onError(err),
               )}
             />
             <Text h="h9" title={`(${length}/${max})`} />
@@ -73,11 +73,11 @@ export function InputTextModal({ navigation, route }: InputTextT) {
 
 const styles = StyleSheet.create({
   transparentView: {
-    flex: 1
+    flex: 1,
   },
   input: {
     width: W - s(65),
-    marginBottom: vs(10)
+    marginBottom: vs(10),
   },
   inputContainer: {
     paddingHorizontal: vs(5),
@@ -90,10 +90,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: s(1),
     borderBottomWidth: 0,
-    borderColor: secondary
+    borderColor: secondary,
   },
   goBackView: {
-    flex: 1
-  }
+    flex: 1,
+  },
 })
 const { inputContainer, input, transparentView, goBackView } = styles

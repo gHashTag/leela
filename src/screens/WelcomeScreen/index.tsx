@@ -1,20 +1,22 @@
 import React from 'react'
-import { observer } from 'mobx-react'
+
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { observer } from 'mobx-react'
+import { StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { I18n } from '../../utils'
-import { RootStackParamList } from '../../types'
+
 import {
   AppContainer,
-  Space,
   Button,
-  Text,
   CenterView,
   IconLeela,
-  Loading
+  Loading,
+  Space,
+  Text,
 } from '../../components'
 import { useKeychain } from '../../hooks'
-import { StyleSheet } from 'react-native'
+import { RootStackParamList } from '../../types'
+import { I18n } from '../../utils'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
 
@@ -55,7 +57,7 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
 })
 
 const styles = StyleSheet.create({
-  h6: { alignSelf: 'center' }
+  h6: { alignSelf: 'center' },
 })
 
 export { WelcomeScreen }

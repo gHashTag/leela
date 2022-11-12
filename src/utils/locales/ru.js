@@ -132,5 +132,5 @@ export default {
   intention: 'Намерение',
   createIntention: 'Создайте намерение',
   updateIntention: 'Обновить намерение',
-  clips: 'Клипы'
+  clips: 'Клипы',
 }

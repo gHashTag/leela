@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
 
-import { useForm, FormProvider, SubmitHandler, FieldValues } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
+import { FieldValues, FormProvider, SubmitHandler, useForm } from 'react-hook-form'
 import * as yup from 'yup'
+
 import { Button, Input, Space } from '..'
-import { black, dimGray, navigate } from '../../constants'
-import { PostStore } from '../../store'
 import { Loading } from '../'
+import { black, dimGray, navigate } from '../../constants'
 import { startStepTimer } from '../../screens/helper'
+import { PostStore } from '../../store'
 import { I18n } from '../../utils'
 interface CreatePostT {
   plan: number
@@ -20,7 +21,7 @@ const schema = yup
       .string()
       .trim()
       .min(100, I18n.t('fewChars'))
-      .required(I18n.t('requireField'))
+      .required(I18n.t('requireField')),
   })
   .required()
 
@@ -38,7 +39,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
 
   const { ...methods } = useForm({
     mode: 'onChange',
-    resolver: yupResolver(schema)
+    resolver: yupResolver(schema),
   })
 
   return loading ? (

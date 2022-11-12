@@ -1,21 +1,23 @@
 import React, { ReactElement } from 'react'
-import { I18n } from '../../../utils'
+
+import { useTheme } from '@react-navigation/native'
+import { FieldValues, FormProvider, SubmitErrorHandler } from 'react-hook-form'
+import { ScrollView, StyleSheet } from 'react-native'
+import { s, vs } from 'react-native-size-matters'
+
+import { useSignUp } from './useSignUp'
+
 import {
   AppContainer,
-  Space,
   Button,
   Input,
-  TextError,
+  KeyboardContainer,
   Loading,
-  KeyboardContainer
+  Space,
+  TextError,
 } from '../../../components'
-import { goBack, white, black, W, H } from '../../../constants'
-import { useTheme } from '@react-navigation/native'
-
-import { FormProvider, SubmitErrorHandler, FieldValues } from 'react-hook-form'
-import { s, vs } from 'react-native-size-matters'
-import { ScrollView, StyleSheet } from 'react-native'
-import { useSignUp } from './useSignUp'
+import { H, W, black, goBack, white } from '../../../constants'
+import { I18n } from '../../../utils'
 
 const SignUp = (): ReactElement => {
   const { loading, error, methods, onSubmit } = useSignUp()
@@ -87,8 +89,8 @@ const SignUp = (): ReactElement => {
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center'
-  }
+    alignItems: 'center',
+  },
 })
 
 export { SignUp }

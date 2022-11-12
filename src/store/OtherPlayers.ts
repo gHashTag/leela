@@ -1,7 +1,8 @@
-import { makeAutoObservable } from 'mobx'
-import { captureException } from '../constants'
-import { getIMG, getFireBaseRef } from '../screens/helper'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
+import { makeAutoObservable } from 'mobx'
+
+import { captureException } from '../constants'
+import { getFireBaseRef, getIMG } from '../screens/helper'
 import { OtherUsersT, UserT } from '../types'
 
 interface storeI {
@@ -16,7 +17,7 @@ interface GetOtherI {
 export const OtherPlayers = {
   store: makeAutoObservable<storeI>({
     players: [],
-    online: []
+    online: [],
   }),
   getOtherProf: async ({ snapshot }: GetOtherI) => {
     if (snapshot) {
@@ -39,11 +40,11 @@ export const OtherPlayers = {
               avatar: data.avatar ? await getIMG(data.avatar) : '',
               owner: data.owner,
               status: data.status,
-              isOnline
+              isOnline,
             }
             return result
           }
-        })
+        }),
       )
       if (otherData) {
         OtherPlayers.store.players = otherData.filter((a: any) => a !== undefined)
@@ -55,5 +56,5 @@ export const OtherPlayers = {
     if (OtherPlayers.store.players.length > 0) {
       OtherPlayers.store.online = OtherPlayers.store.players.filter(a => a.isOnline)
     }
-  }
+  },
 }

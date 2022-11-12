@@ -1,6 +1,8 @@
-import I18n from 'i18n-js'
 import { useState } from 'react'
-import { captureException, OpenActionsModal } from '../../constants'
+
+import I18n from 'i18n-js'
+
+import { OpenActionsModal, captureException } from '../../constants'
 import { OnlinePlayer } from '../../store'
 import { ButtonsModalT } from '../../types'
 
@@ -26,7 +28,7 @@ export const useActions = () => {
       key: 'EDIT',
       onPress: onPressChangeAva,
       title: I18n.t('changeAva'),
-      icon: 'ios-images-outline'
+      icon: 'ios-images-outline',
     },
     // {
     //   key: 'SHARE',
@@ -39,15 +41,15 @@ export const useActions = () => {
       color: 'red',
       onPress: OnlinePlayer.SignOut,
       title: I18n.t('signOut'),
-      icon: 'ios-exit-outline'
+      icon: 'ios-exit-outline',
     },
     {
       key: 'RESET',
       color: 'red',
       onPress: OnlinePlayer.resetGame,
       title: I18n.t('startOver'),
-      icon: 'ios-reload'
-    }
+      icon: 'ios-reload',
+    },
   ]
 
   const onPressEdit = () => OpenActionsModal(menuItems)

@@ -1,15 +1,18 @@
 import React from 'react'
+
+import { BlurView } from '@react-native-community/blur'
+import { useTheme } from '@react-navigation/native'
+import { observer } from 'mobx-react'
 import { TouchableOpacity, View } from 'react-native'
 import { ScaledSheet, s, vs } from 'react-native-size-matters'
-import { Text } from '../'
-import { Space } from '../Space'
-import { Avatar } from '../Avatar'
-import { OnlinePlayer } from '../../store'
-import { observer } from 'mobx-react'
-import { BlurView } from '@react-native-community/blur'
 import Icon from 'react-native-vector-icons/Ionicons'
-import { useTheme } from '@react-navigation/native'
+
 import { useActions } from './useActions'
+
+import { Text } from '../'
+import { OnlinePlayer } from '../../store'
+import { Avatar } from '../Avatar'
+import { Space } from '../Space'
 
 interface HeaderMasterT {
   onPress: () => void
@@ -20,7 +23,7 @@ const HeaderMaster = observer(({ onPress }: HeaderMasterT) => {
   const { firstName, lastName } = OnlinePlayer.store.profile
   const {
     dark,
-    colors: { border }
+    colors: { border },
   } = useTheme()
 
   return (
@@ -53,12 +56,12 @@ const styles = ScaledSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    marginTop: vs(10)
+    marginTop: vs(10),
   },
   avaContainer: {
     position: 'absolute',
     width: '100%',
-    height: '100%'
+    height: '100%',
   },
   subAvaContainer: {
     width: '100%',
@@ -68,20 +71,20 @@ const styles = ScaledSheet.create({
     justifyContent: 'space-between',
     paddingVertical: vs(10),
     paddingRight: s(20),
-    paddingLeft: s(15)
+    paddingLeft: s(15),
   },
   wide: {
     width: '100%',
     overflow: 'hidden',
     backgroundColor: 'transparent',
     borderRadius: s(20),
-    marginTop: vs(25)
+    marginTop: vs(25),
   },
   planAndEditBlock: {
     flex: 1,
     height: '100%',
     flexDirection: 'column-reverse',
-    alignItems: 'flex-end'
+    alignItems: 'flex-end',
   },
   editIcon: {
     flexDirection: 'row',
@@ -91,13 +94,13 @@ const styles = ScaledSheet.create({
     zIndex: 2,
     position: 'absolute',
     right: -s(5),
-    top: -s(3)
+    top: -s(3),
   },
   planNumber: {},
   rootContainer: {
     width: '80%',
-    alignSelf: 'center'
-  }
+    alignSelf: 'center',
+  },
 })
 const {
   container,
@@ -107,7 +110,7 @@ const {
   editIcon,
   planAndEditBlock,
   planNumber,
-  rootContainer
+  rootContainer,
 } = styles
 
 export { HeaderMaster }

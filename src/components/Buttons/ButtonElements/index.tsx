@@ -1,7 +1,9 @@
 import React, { memo } from 'react'
+
 import { GestureResponderEvent, Platform } from 'react-native'
-import { ThemeProvider, Button } from 'react-native-elements'
+import { Button, ThemeProvider } from 'react-native-elements'
 import { s } from 'react-native-size-matters'
+
 import { secondary, trueBlue, white } from '../../../constants'
 
 const themes = {
@@ -10,35 +12,35 @@ const themes = {
       titleStyle: {
         color: secondary,
         fontSize: s(16),
-        fontFamily: Platform.OS === 'ios' ? 'Avenir Next' : 'Montserrat'
+        fontFamily: Platform.OS === 'ios' ? 'Avenir Next' : 'Montserrat',
       },
       containerStyle: {
         width: s(240),
         paddingHorizontal: 30,
-        alignSelf: 'center'
-      }
+        alignSelf: 'center',
+      },
     },
     colors: {
-      primary: secondary
-    }
+      primary: secondary,
+    },
   },
   classic: {
     Button: {
       titleStyle: {
         color: white,
         fontSize: s(16),
-        fontFamily: Platform.OS === 'ios' ? 'Avenir Next' : 'Montserrat'
+        fontFamily: Platform.OS === 'ios' ? 'Avenir Next' : 'Montserrat',
       },
       containerStyle: {
         width: s(260),
         paddingHorizontal: 30,
-        alignSelf: 'center'
-      }
+        alignSelf: 'center',
+      },
     },
     colors: {
-      primary: trueBlue
-    }
-  }
+      primary: trueBlue,
+    },
+  },
 }
 
 interface ButtonElementsT {
@@ -56,7 +58,7 @@ const ButtonElements = memo<ButtonElementsT>(
         <Button title={title} type={type} onPress={onPress} />
       </ThemeProvider>
     )
-  }
+  },
 )
 
 export { ButtonElements }

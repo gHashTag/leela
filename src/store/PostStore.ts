@@ -1,22 +1,26 @@
-import { makeAutoObservable } from 'mobx'
-import {
-  FormPostT,
-  PostT,
-  CommentT,
-  FormCommentT,
-  FormReplyCom,
-  ReplyComT
-} from '../types'
+import { YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
 import auth from '@react-native-firebase/auth'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
+import I18n from 'i18n-js'
+import { makeAutoObservable } from 'mobx'
 import { nanoid } from 'nanoid/non-secure'
+
 import { OnlinePlayer } from './OnlinePlayer'
 import { OtherPlayers } from './OtherPlayers'
-import { getProfile, getUid } from '../screens/helper'
-import I18n from 'i18n-js'
-// @ts-ignore
-import { YANDEX_TRANSLATE_API_KEY, YANDEX_FOLDER_ID } from '@env'
+
 import { captureException } from '../constants'
+import { getProfile, getUid } from '../screens/helper'
+
+// @ts-ignore
+
+import {
+  CommentT,
+  FormCommentT,
+  FormPostT,
+  FormReplyCom,
+  PostT,
+  ReplyComT,
+} from '../types'
 import { AllLang } from '../utils'
 
 type fetchT = FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
@@ -47,7 +51,7 @@ export const PostStore = {
     comments: [],
     replyComments: [],
     loadOwnPosts: true,
-    loadPosts: true
+    loadPosts: true,
   }),
   createPost: async ({ text, plan }: FormPostT) => {
     const userUid = auth().currentUser?.uid
@@ -64,7 +68,7 @@ export const PostStore = {
         comments: [],
         liked: [],
         accept: false,
-        language: AllLang
+        language: AllLang,
       }
       try {
         await firestore().collection('Posts').doc(id).set(post)
@@ -88,7 +92,7 @@ export const PostStore = {
         createTime: Date.now(),
         email,
         reply: false,
-        id: path
+        id: path,
       }
       await firestore()
         .collection('Posts')
@@ -140,7 +144,7 @@ export const PostStore = {
           createTime: Date.now(),
           email: prof.email,
           reply: true,
-          id: path
+          id: path,
         }
         await firestore()
           .collection('Posts')
@@ -194,7 +198,7 @@ export const PostStore = {
             return data
           }
         })
-        .filter((a: any) => a !== undefined)
+        .filter((a: any) => a !== undefined),
       // (a !== undefined ? (a.reply ? false : true) : false)
     )
     if (res.length > 0) {
@@ -212,7 +216,7 @@ export const PostStore = {
       .collection('Posts')
       .doc(postId)
       .update({
-        liked: firestore.FieldValue.arrayUnion(userUid)
+        liked: firestore.FieldValue.arrayUnion(userUid),
       })
   },
   unlikePost: async (postId: string) => {
@@ -221,23 +225,31 @@ export const PostStore = {
       .collection('Posts')
       .doc(postId)
       .update({
-        liked: firestore.FieldValue.arrayRemove(userUid)
+        liked: firestore.FieldValue.arrayRemove(userUid),
       })
   },
   getOwnerName: (ownerId: string, full?: boolean) => {
     const userUid = auth().currentUser?.uid
-    if (userUid === ownerId) return I18n.t('you')
+    if (userUid === ownerId) {
+      return I18n.t('you')
+    }
     const profile = OtherPlayers.store.players.find(a => a.owner === ownerId)
-    if (!profile) return I18n.t('anonymous')
+    if (!profile) {
+      return I18n.t('anonymous')
+    }
     return full !== false
       ? `${profile.firstName} ${profile.lastName}`
       : `${profile.firstName}`
   },
   getComPlan: (ownerId: string) => {
     const userUid = getUid()
-    if (userUid === ownerId) return OnlinePlayer.store.plan
+    if (userUid === ownerId) {
+      return OnlinePlayer.store.plan
+    }
     const plan = OtherPlayers.store.players.find(a => a.owner === ownerId)?.plan
-    if (!plan) return 0
+    if (!plan) {
+      return 0
+    }
     return plan
   },
   getOncePost: async () => {
@@ -254,13 +266,13 @@ export const PostStore = {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Api-Key ${YANDEX_TRANSLATE_API_KEY}`
+            Authorization: `Api-Key ${YANDEX_TRANSLATE_API_KEY}`,
           },
           body: JSON.stringify({
             folderId: YANDEX_FOLDER_ID,
             texts: text,
-            targetLanguageCode: AllLang
-          })
+            targetLanguageCode: AllLang,
+          }),
         })
       ).json()
       if (res?.translations && res.translations?.length > 0) {
@@ -273,7 +285,9 @@ export const PostStore = {
   },
   getAvaById: (uid: string) => {
     const userUid = getUid()
-    if (userUid === uid) return OnlinePlayer.store.avatar
+    if (userUid === uid) {
+      return OnlinePlayer.store.avatar
+    }
     const otherUserAva = OtherPlayers.store.players.find(a => a.owner === uid)?.avatar
     return otherUserAva
       ? otherUserAva
@@ -336,5 +350,5 @@ export const PostStore = {
   },
   acceptPost: (isAccept: boolean, postId: string) => {
     firestore().collection('Posts').doc(postId).update({ accept: !isAccept })
-  }
+  },
 }

@@ -1,6 +1,7 @@
-import { useFocusEffect } from '@react-navigation/native'
 import React, { useCallback, useState } from 'react'
-import { AppState, Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
+
+import { useFocusEffect } from '@react-navigation/native'
+import { AppState, Platform, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import YoutubePlayer, { YoutubeIframeProps } from 'react-native-youtube-iframe'
 
@@ -24,7 +25,7 @@ export const YouTubePlayer = ({ widthCoefficient = 1, ...props }: YouTubeT) => {
         setPlaying(false)
         unsub.remove
       }
-    }, [])
+    }, []),
   )
 
   return (
@@ -42,7 +43,7 @@ export const YouTubePlayer = ({ widthCoefficient = 1, ...props }: YouTubeT) => {
           webViewStyle={webViewStyle}
           webViewProps={{
             androidLayerType:
-              Platform.OS === 'android' && Platform.Version <= 22 ? 'hardware' : 'none'
+              Platform.OS === 'android' && Platform.Version <= 22 ? 'hardware' : 'none',
           }}
           {...props}
         />
@@ -55,15 +56,15 @@ const styles = StyleSheet.create({
   mainBlock: {
     marginVertical: vs(10),
     width: '100%',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   videoContainer: {
     borderRadius: s(7),
-    overflow: 'hidden'
+    overflow: 'hidden',
   },
   webViewStyle: {
     // fix bug https://github.com/LonelyCpp/react-native-youtube-iframe/issues/110
-    opacity: 0.99
-  }
+    opacity: 0.99,
+  },
 })
 const { videoContainer, webViewStyle, mainBlock } = styles

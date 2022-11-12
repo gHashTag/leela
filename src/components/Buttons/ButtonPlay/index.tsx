@@ -1,9 +1,10 @@
-import { useTheme } from '@react-navigation/native'
 import React, { memo } from 'react'
-import { TouchableOpacity, Image, StyleSheet, View } from 'react-native'
+
+import { useTheme } from '@react-navigation/native'
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { s } from 'react-native-size-matters'
 
 import { ICONS } from './images'
-import { s } from 'react-native-size-matters'
 
 interface ButtonPlayT {
   isStop: boolean
@@ -22,12 +23,12 @@ const styles = StyleSheet.create({
     shadowOffset: { height: 4, width: 0 },
     shadowOpacity: 0.5,
     elevation: 5,
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   buttonStyle: {
     width: s(60),
-    height: s(60)
-  }
+    height: s(60),
+  },
 })
 
 const ButtonPlay = memo<ButtonPlayT>(({ isStop = false, onPress }) => {
@@ -35,7 +36,7 @@ const ButtonPlay = memo<ButtonPlayT>(({ isStop = false, onPress }) => {
   const { container, buttonStyle } = styles
 
   const {
-    colors: { background }
+    colors: { background },
   } = useTheme()
 
   return (

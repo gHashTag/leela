@@ -1,24 +1,27 @@
-import Navigation from './Navigation'
 import React, { useEffect } from 'react'
-import { AppState, LogBox } from 'react-native'
+
+import notifee from '@notifee/react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import * as Sentry from '@sentry/react-native'
 import { configure } from 'mobx'
 import { configurePersistable } from 'mobx-persist-store'
-import * as Sentry from '@sentry/react-native'
-import VersionInfo from 'react-native-version-info'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import SplashScreen from 'react-native-splash-screen'
-import notifee from '@notifee/react-native'
-import { updateAndroidBadgeCount } from './utils/notifications/NotificationHelper'
+import { AppState, LogBox } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import SplashScreen from 'react-native-splash-screen'
+import VersionInfo from 'react-native-version-info'
+
+import Navigation from './Navigation'
+import { updateAndroidBadgeCount } from './utils/notifications/NotificationHelper'
+
 const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
 
 configurePersistable(
   {
     storage: AsyncStorage,
-    debugMode: false
+    debugMode: false,
   },
-  { delay: 200 }
+  { delay: 200 },
 )
 
 Sentry.init({
@@ -28,13 +31,13 @@ Sentry.init({
   integrations: [
     new Sentry.ReactNativeTracing({
       tracingOrigins: ['localhost', /^\//],
-      routingInstrumentation
-    })
-  ]
+      routingInstrumentation,
+    }),
+  ],
 })
 
 configure({
-  enforceActions: 'never'
+  enforceActions: 'never',
 })
 
 LogBox.ignoreLogs([
@@ -52,7 +55,7 @@ LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation',
   'ViewPropTypes will be removed',
   'source.uri should not be an empty string',
-  'VirtualizedLists should never be nested inside plain ScrollViews'
+  'VirtualizedLists should never be nested inside plain ScrollViews',
 ])
 
 function AppWithProviders() {

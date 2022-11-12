@@ -1,20 +1,23 @@
 import React, { useState } from 'react'
-import { LayoutChangeEvent, StyleSheet, View, FlatList } from 'react-native'
+
+import { observer } from 'mobx-react'
+import { FlatList, LayoutChangeEvent, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { gray, lightGray, OpenActionsModal } from '../../../constants'
-import { PostStore } from '../../../store'
-import { ButtonsModalT, CommentT } from '../../../types'
+
+import { getActions } from './ModalActions'
+
 import {
   ButtonVectorIcon,
+  HashtagFormat,
+  PlanAvatar,
+  Space,
   SubCommentCard,
   Text,
-  Space,
-  PlanAvatar,
-  HashtagFormat
 } from '../../'
+import { OpenActionsModal, gray, lightGray } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
-import { observer } from 'mobx-react'
-import { getActions } from './ModalActions'
+import { PostStore } from '../../../store'
+import { ButtonsModalT, CommentT } from '../../../types'
 
 interface CommentCardI {
   item: CommentT
@@ -101,7 +104,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
         </View>
       </>
     )
-  }
+  },
 )
 
 const styles = StyleSheet.create({
@@ -109,27 +112,27 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: PADDING,
     flexDirection: 'row',
-    paddingHorizontal: s(13)
+    paddingHorizontal: s(13),
   },
   verticalLine: {
     width: s(2),
     borderRadius: s(3),
     backgroundColor: lightGray,
     position: 'absolute',
-    transform: [{ translateY: vs(2) }]
+    transform: [{ translateY: vs(2) }],
   },
   lineCont: {
     flex: 1,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   content: {
     flexDirection: 'column',
-    flex: 1
+    flex: 1,
   },
   commentHead: {
     flexDirection: 'row',
-    flexWrap: 'wrap'
-  }
+    flexWrap: 'wrap',
+  },
 })
 
 const { container, verticalLine, lineCont, content, commentHead } = styles

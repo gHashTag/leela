@@ -1,10 +1,12 @@
-import { useTheme } from '@react-navigation/native'
 import React, { memo } from 'react'
+
+import { useTheme } from '@react-navigation/native'
 import { Platform, TouchableOpacity, View } from 'react-native'
 import Emoji from 'react-native-emoji'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ScaledSheet, s, vs, mvs, ms } from 'react-native-size-matters'
-import { Text, HeaderMessage } from '../'
+import { ScaledSheet, ms, mvs, s, vs } from 'react-native-size-matters'
+
+import { HeaderMessage, Text } from '../'
 import { navigate } from '../../constants'
 const isIos = Platform.OS === 'ios'
 
@@ -34,7 +36,7 @@ const Header = memo<HeaderT>(
     iconLeftOpacity = 1,
     children,
     textAlign,
-    displayStatus
+    displayStatus,
   }) => {
     const {
       container,
@@ -42,11 +44,11 @@ const Header = memo<HeaderT>(
       rightIconStyle,
       rightViewStyle,
       titleStyle,
-      childrenStyle
+      childrenStyle,
     } = styles
 
     const {
-      colors: { background }
+      colors: { background },
     } = useTheme()
 
     const { top } = useSafeAreaInsets()
@@ -87,7 +89,7 @@ const Header = memo<HeaderT>(
         )}
       </View>
     )
-  }
+  },
 )
 
 const styles = ScaledSheet.create({
@@ -95,7 +97,7 @@ const styles = ScaledSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingBottom: mvs(1, 0.4),
-    zIndex: 20
+    zIndex: 20,
   },
   leftIconStyle: {
     fontSize: isIos ? ms(26, 0.5) : ms(22, 0.5),
@@ -103,22 +105,22 @@ const styles = ScaledSheet.create({
     alignItems: 'center',
     paddingTop: s(2),
     marginHorizontal: s(8),
-    marginVertical: s(5)
+    marginVertical: s(5),
   },
   rightIconStyle: {
     fontSize: isIos ? ms(30, 0.5) : ms(28, 0.5),
     textAlign: 'center',
     alignItems: 'center',
     marginHorizontal: s(8),
-    marginVertical: s(5)
+    marginVertical: s(5),
   },
   rightViewStyle: {
-    width: isIos ? s(60) : s(44)
+    width: isIos ? s(60) : s(44),
   },
   titleStyle: {
-    fontSize: vs(18)
+    fontSize: vs(18),
   },
-  childrenStyle: {}
+  childrenStyle: {},
 })
 
 export { Header }

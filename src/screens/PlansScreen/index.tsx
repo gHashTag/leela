@@ -1,14 +1,17 @@
 import React, { useCallback, useState } from 'react'
+
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { FlatList } from 'react-native'
-import { I18n, lang } from '../../utils'
-import { PlansT, RootStackParamList } from '../../types'
+import { s, vs } from 'react-native-size-matters'
+
+import { en } from './en'
+import { ru } from './ru'
+
 import { AppContainer, RenderPlanItem, Space } from '../../components'
 import { goBack } from '../../constants'
-import { ru } from './ru'
-import { en } from './en'
-import { s, vs } from 'react-native-size-matters'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { OnlinePlayer } from '../../store'
+import { PlansT, RootStackParamList } from '../../types'
+import { I18n, lang } from '../../utils'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLANS_SCREEN'>
 
@@ -27,10 +30,10 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
         OnlinePlayer.store.plan === item.id && !OnlinePlayer.store.isReported
       navigation.navigate('PLANS_DETAIL_SCREEN', {
         ...item,
-        report: itemIsReported
+        report: itemIsReported,
       })
     },
-    []
+    [],
   )
 
   return (

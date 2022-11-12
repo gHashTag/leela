@@ -1,4 +1,5 @@
 import React, { memo } from 'react'
+
 import { Image, StyleSheet } from 'react-native'
 import { s } from 'react-native-size-matters'
 
@@ -7,8 +8,8 @@ const SIZE = 80
 const styles = StyleSheet.create({
   img: {
     width: s(SIZE),
-    height: s(SIZE)
-  }
+    height: s(SIZE),
+  },
 })
 
 const IconLeela = memo(() => {

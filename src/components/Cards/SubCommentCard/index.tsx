@@ -1,14 +1,17 @@
 import React, { useState } from 'react'
+
 import { StyleSheet, View } from 'react-native'
-import { ReplyComT } from '../../../types'
-import { Text, HashtagFormat, Space } from '../../'
-import { PostStore } from '../../../store'
-import { PlanAvatar } from '../../'
 import { s, vs } from 'react-native-size-matters'
-import { fuchsia, lightGray, OpenActionsModal } from '../../../constants'
-import { getTimeStamp } from '../../../screens/helper'
-import { ButtonVectorIcon } from '../../Buttons'
+
 import { getActions } from './ModalActions'
+
+import { HashtagFormat, Space, Text } from '../../'
+import { PlanAvatar } from '../../'
+import { OpenActionsModal, fuchsia, lightGray } from '../../../constants'
+import { getTimeStamp } from '../../../screens/helper'
+import { PostStore } from '../../../store'
+import { ReplyComT } from '../../../types'
+import { ButtonVectorIcon } from '../../Buttons'
 
 interface SubComT {
   item: ReplyComT
@@ -63,22 +66,22 @@ export function SubCommentCard({ item, index }: SubComT) {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: vs(5)
+    marginVertical: vs(5),
   },
   branchLine: {
     height: vs(2),
     borderRadius: vs(5),
     backgroundColor: lightGray,
     position: 'absolute',
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   commentHead: {
     flexDirection: 'row',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
   },
   textContainer: {
-    flexDirection: 'row'
-  }
+    flexDirection: 'row',
+  },
 })
 
 const { container, branchLine, commentHead, textContainer } = styles

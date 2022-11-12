@@ -1,20 +1,22 @@
 import React from 'react'
+
+import { useTheme } from '@react-navigation/native'
+import { useController, useFormContext } from 'react-hook-form'
+import { UseControllerProps } from 'react-hook-form'
 import {
-  TextInput,
+  ColorValue,
+  Platform,
+  StyleProp,
   StyleSheet,
   Text,
-  Platform,
-  ColorValue,
-  StyleProp,
+  TextInput,
   View,
-  ViewStyle
+  ViewStyle,
 } from 'react-native'
-import { s, ScaledSheet, vs } from 'react-native-size-matters'
-import { W, dimGray, classicRose } from '../../constants'
-import { useController, useFormContext } from 'react-hook-form'
 import { TextInputProps as RNTextInputProps } from 'react-native'
-import { UseControllerProps } from 'react-hook-form'
-import { useTheme } from '@react-navigation/native'
+import { ScaledSheet, s, vs } from 'react-native-size-matters'
+
+import { W, classicRose, dimGray } from '../../constants'
 import { Space } from '../Space'
 
 export interface TextInputProps extends RNTextInputProps, UseControllerProps {
@@ -51,22 +53,22 @@ const Input: React.FC<TextInputProps> = ({
   const { field } = useController({ name, rules, defaultValue })
   const hasError = Boolean(formState?.errors[name])
   const {
-    colors: { text }
+    colors: { text },
   } = useTheme()
   const input = ScaledSheet.create([
     inputProps.multiline ? inputArea : inputStyle,
     {
       color: text,
-      borderColor: color
-    }
+      borderColor: color,
+    },
   ])
 
   const placeholderStyle = ScaledSheet.create([
     inputProps.multiline ? inputArea : inputStyle,
     {
       color: text,
-      borderColor: classicRose
-    }
+      borderColor: classicRose,
+    },
   ])
 
   return (
@@ -102,13 +104,13 @@ const styles = StyleSheet.create({
     width: '95%',
     borderBottomWidth: 2,
     paddingBottom: vs(8),
-    paddingTop: vs(8)
+    paddingTop: vs(8),
   },
   errorStyle: {
     fontSize: 14,
     color: 'red',
     paddingTop: 10,
-    left: 5
+    left: 5,
   },
   inputArea: {
     fontSize: s(16),
@@ -119,8 +121,8 @@ const styles = StyleSheet.create({
     padding: s(10),
     paddingBottom: s(10),
     paddingTop: s(10),
-    borderRadius: s(10)
-  }
+    borderRadius: s(10),
+  },
 })
 
 export { Input }

@@ -1,15 +1,15 @@
 import notifee, {
   AndroidBadgeIconType,
   AndroidImportance,
-  Event
+  Event,
 } from '@notifee/react-native'
 import { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
-import { replyActionHandler } from './actionHandlers'
 
+import { replyActionHandler } from './actionHandlers'
 import { replyNotification } from './replyNotification'
 
 export async function displayNotification(
-  notification: FirebaseMessagingTypes.RemoteMessage
+  notification: FirebaseMessagingTypes.RemoteMessage,
 ) {
   switch (notification.data?.notificationType) {
     case 'newComment':

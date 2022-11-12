@@ -1,4 +1,5 @@
 import Branch, { BranchParams } from 'react-native-branch'
+
 import { captureException } from '../constants'
 
 type listenerT = (url: string) => void
@@ -9,7 +10,7 @@ export const subscribeDeepLinkUrl = async (listener: listenerT, url: string) => 
 
 export const formatLink = (params?: BranchParams) => {
   const referringLink = params?.['~referring_link']
-  const canonicalIdentifier = params?.['$canonical_identifier']
+  const canonicalIdentifier = params?.$canonical_identifier
   const nonBranchLink = params?.['+non_branch_link']
 
   let result = ''
@@ -34,9 +35,9 @@ export async function buildReportLink(reportId: string, reportText: string) {
       contentDescription: reportText,
       contentMetadata: {
         customMetadata: {
-          reportId
-        }
-      }
+          reportId,
+        },
+      },
     })
     let { url } = await buo.generateShortUrl({}, {})
 

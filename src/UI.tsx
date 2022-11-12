@@ -1,6 +1,16 @@
 import React from 'react'
+
 import { ScrollView } from 'react-native'
-import { Txt, GameBoard, ButtonSimple, ButtonIcon, Space, Background, Dice } from './components'
+
+import {
+  Background,
+  ButtonIcon,
+  ButtonSimple,
+  Dice,
+  GameBoard,
+  Space,
+  Txt,
+} from './components'
 
 const UI = () => {
   return (

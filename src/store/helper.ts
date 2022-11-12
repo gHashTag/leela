@@ -1,10 +1,11 @@
-import { I18n, lang } from '../utils'
 import { DiceStore, actionsDice } from './DiceStore'
-import { createHistory, updatePlan, onWin, onStart } from '../screens/helper'
+
 import { captureException, navigate } from '../constants'
-import { ru } from '../screens/PlansScreen/ru'
+import { createHistory, onStart, onWin, updatePlan } from '../screens/helper'
 import { en } from '../screens/PlansScreen/en'
-import { OnlinePlayer, OfflinePlayers } from './'
+import { ru } from '../screens/PlansScreen/ru'
+import { I18n, lang } from '../utils'
+import { OfflinePlayers, OnlinePlayer } from './'
 
 interface historyI {
   count: number
@@ -32,7 +33,7 @@ async function upFuncOnline(step: stepT) {
       const plansLang = lang === 'en' ? en : ru
       navigate('PLANS_DETAIL_SCREEN', {
         report: true,
-        ...plansLang.find(a => a.id === plan)
+        ...plansLang.find(a => a.id === plan),
       })
     }
     if (plan === 68) {
@@ -47,7 +48,9 @@ async function upFuncOnline(step: stepT) {
 }
 
 export function upStepOnline() {
-  if (!OnlinePlayer.store.canGo) return
+  if (!OnlinePlayer.store.canGo) {
+    return
+  }
   const count = DiceStore.count
   const plan = OnlinePlayer.store.plan + count
   if (count === 6) {
@@ -77,7 +80,7 @@ const upFuncOffline = async (step: stepT): Promise<void> => {
     OfflinePlayers.store.plans[id] = plan
     if (plan === 68) {
       DiceStore.finishArr = DiceStore.finishArr.map((x: boolean, index: number) =>
-        index === id ? (x = false) : x
+        index === id ? (x = false) : x,
       )
       actionsDice.setMessage('liberation')
       OfflinePlayers.store.start[id] = false

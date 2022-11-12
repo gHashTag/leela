@@ -1,13 +1,15 @@
 import React from 'react'
+
+import * as Sentry from '@sentry/react-native'
+import { observer } from 'mobx-react'
 import { StyleSheet, TouchableOpacity } from 'react-native'
 import Purchases, { PurchasesPackage } from 'react-native-purchases'
-import * as Sentry from '@sentry/react-native'
-import { ENTITLEMENT_ID, secondary, W } from '../../../constants'
-import { I18n } from '../../../utils'
+
 import { Text } from '../../'
 import { Space } from '../../'
+import { ENTITLEMENT_ID, W, secondary } from '../../../constants'
 import { actionsSubscribe } from '../../../store'
-import { observer } from 'mobx-react'
+import { I18n } from '../../../utils'
 
 const styles = StyleSheet.create({
   container: {
@@ -18,12 +20,12 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 5,
     width: W - 60,
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   h: {
     marginTop: 5,
-    marginBottom: 5
-  }
+    marginBottom: 5,
+  },
 })
 
 interface ButtonPurchasesT {

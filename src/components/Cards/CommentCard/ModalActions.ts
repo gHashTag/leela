@@ -1,5 +1,6 @@
 import Clipboard from '@react-native-clipboard/clipboard'
 import I18n from 'i18n-js'
+
 import { navigate } from '../../../constants'
 import { getUid } from '../../../screens/helper'
 import { OnlinePlayer, OtherPlayers, PostStore } from '../../../store'
@@ -25,12 +26,12 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
               text,
               commentId: item.id,
               commentOwner: item.ownerId,
-              postId: item.postId
-            })
+              postId: item.postId,
+            }),
         })
       },
       title: I18n.t('reply'),
-      icon: 'ios-paper-plane-outline'
+      icon: 'ios-paper-plane-outline',
     },
     {
       key: 'COPY',
@@ -38,13 +39,13 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
         Clipboard.setString(item.text)
       },
       title: I18n.t('copy'),
-      icon: 'ios-copy-outline'
+      icon: 'ios-copy-outline',
     },
     {
       key: 'TRANSLATE',
       onPress: handleTransText,
       title: I18n.t('translate'),
-      icon: 'ios-language-outline'
+      icon: 'ios-language-outline',
     },
     {
       key: 'DEL',
@@ -52,12 +53,12 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
         PostStore.delComment({
           commentId: item.id,
           isReply: item.reply,
-          postId: item.postId
+          postId: item.postId,
         })
       },
       title: I18n.t('delete'),
       color: 'red',
-      icon: 'md-trash-outline'
+      icon: 'md-trash-outline',
     },
     {
       key: 'DEL_ALL_COM',
@@ -66,7 +67,7 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
       },
       title: 'delete all user comments',
       color: 'red',
-      icon: 'md-warning-outline'
+      icon: 'md-warning-outline',
     },
     {
       key: 'BAN',
@@ -75,8 +76,8 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
       },
       title: isBaned ? 'Unban user' : 'Ban user',
       color: isBaned ? undefined : 'red',
-      icon: isBaned ? 'person-add-outline' : 'person-remove-outline'
-    }
+      icon: isBaned ? 'person-add-outline' : 'person-remove-outline',
+    },
   ]
     .filter(a => (isOwner ? true : isAdmin ? true : a.key !== 'DEL'))
     .filter(a => (isAdmin ? true : a.key !== 'DEL_ALL_COM' && a.key !== 'BAN'))

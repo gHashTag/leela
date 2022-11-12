@@ -1,13 +1,16 @@
 import * as React from 'react'
-import { FlatList } from 'react-native'
+
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { I18n, lang } from '../../utils'
-import { RootStackParamList } from '../../types'
+import { FlatList } from 'react-native'
+import { s, vs } from 'react-native-size-matters'
+
+import { en } from './en'
+import { ru } from './ru'
+
 import { AppContainer, RenderPlanItem, Space } from '../../components'
 import { goBack } from '../../constants'
-import { ru } from './ru'
-import { en } from './en'
-import { s, vs } from 'react-native-size-matters'
+import { RootStackParamList } from '../../types'
+import { I18n, lang } from '../../utils'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'RULES_SCREEN'>
 

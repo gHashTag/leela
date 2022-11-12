@@ -1,12 +1,15 @@
 import React, { useCallback, useMemo } from 'react'
-import { Image, StyleSheet, useColorScheme, View } from 'react-native'
-import { ICONS } from './images'
+
 import { observer } from 'mobx-react'
+import { Image, StyleSheet, View, useColorScheme } from 'react-native'
 import { ms, mvs, s } from 'react-native-size-matters'
-import { H, W } from '../../constants'
-import { Gem } from '../Gem'
+
+import { ICONS } from './images'
+
 import { Text } from '../'
+import { H, W } from '../../constants'
 import { DiceStore, OfflinePlayers, OnlinePlayer, OtherPlayers } from '../../store'
+import { Gem } from '../Gem'
 
 const marginTop = H - W > 350 ? 20 : 0
 
@@ -26,18 +29,18 @@ export const GameBoard = observer(() => {
         .slice()
         .map(a => {
           return {
-            plan: a
+            plan: a,
           }
         })
         .slice(0, DiceStore.multi)
     : [
         {
           mainPlayer: true,
-          plan: OnlinePlayer.store.plan
+          plan: OnlinePlayer.store.plan,
         },
         ...OtherPlayers.store.online.slice().map((a: any) => {
           return { plan: a.plan }
-        })
+        }),
       ]
 
   const scheme = useColorScheme()
@@ -61,7 +64,7 @@ export const GameBoard = observer(() => {
     [36, 35, 34, 33, 32, 31, 30, 29, 28],
     [19, 20, 21, 22, 23, 24, 25, 26, 27],
     [18, 17, 16, 15, 14, 13, 12, 11, 10],
-    [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    [1, 2, 3, 4, 5, 6, 7, 8, 9],
   ]
 
   const check = useCallback(
@@ -69,7 +72,7 @@ export const GameBoard = observer(() => {
       const plan = arr.find(y => y.plan === z)?.plan
       return plan || false
     },
-    [arr]
+    [arr],
   )
 
   return (
@@ -98,20 +101,20 @@ export const GameBoard = observer(() => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: imageTopMargin
+    marginTop: imageTopMargin,
   },
   imageContainer: {
     height: curImageHeight,
     alignSelf: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   row: {
-    flexDirection: 'row'
+    flexDirection: 'row',
   },
   gameBoardContainer: {
     width: curImageWidth,
     height: curImageHeight,
-    marginTop
+    marginTop,
   },
   box: {
     width: s(31),
@@ -121,14 +124,14 @@ const styles = StyleSheet.create({
     marginVertical: s(2),
     marginHorizontal: s(1),
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   bgImage: {
     width: '100%',
     height: '100%',
     position: 'absolute',
-    top: mvs(26, 1.6) - imageTopMargin
-  }
+    top: mvs(26, 1.6) - imageTopMargin,
+  },
 })
 
 const { gameBoardContainer, bgImage, container, row, box, imageContainer } = styles

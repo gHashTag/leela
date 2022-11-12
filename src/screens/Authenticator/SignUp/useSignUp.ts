@@ -1,15 +1,16 @@
-import { useState, useCallback } from 'react'
-import * as Keychain from 'react-native-keychain'
+import { useCallback, useState } from 'react'
+
 // @ts-expect-error
 import { EMAIL, PASSWORD } from '@env'
-import { I18n } from '../../../utils'
-import { captureException } from '../../../constants'
-import auth from '@react-native-firebase/auth'
-
-import { useForm, SubmitHandler, SubmitErrorHandler, FieldValues } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
+import auth from '@react-native-firebase/auth'
+import { FieldValues, SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form'
+import * as Keychain from 'react-native-keychain'
 import * as yup from 'yup'
+
+import { captureException } from '../../../constants'
 import { useTypedNavigation } from '../../../hooks'
+import { I18n } from '../../../utils'
 
 const schema = yup
   .object()
@@ -26,14 +27,14 @@ const schema = yup
     passwordConfirmation: yup
       .string()
       .required(I18n.t('requireField'))
-      .min(6, I18n.t('shortPassword'))
+      .min(6, I18n.t('shortPassword')),
   })
   .required()
 
 const initialValues = {
   email: __DEV__ ? EMAIL : '',
   password: __DEV__ ? PASSWORD : '',
-  passwordConfirmation: __DEV__ ? PASSWORD : ''
+  passwordConfirmation: __DEV__ ? PASSWORD : '',
 }
 
 export const useSignUp = () => {
@@ -44,7 +45,7 @@ export const useSignUp = () => {
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
-    defaultValues: initialValues
+    defaultValues: initialValues,
   })
 
   const onSubmit: SubmitHandler<FieldValues> = useCallback(
@@ -88,7 +89,7 @@ export const useSignUp = () => {
           })
       }
     },
-    [navigate]
+    [navigate],
   )
   return { loading, error, methods, onSubmit }
 }

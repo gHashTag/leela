@@ -1,13 +1,15 @@
 import React from 'react'
+
 import { StyleSheet, View } from 'react-native'
-import { Header } from '../Header'
+
 import { Background } from '../Background'
+import { Header } from '../Header'
 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: '100%'
-  }
+    height: '100%',
+  },
 })
 
 interface AppContainerT {
@@ -41,7 +43,7 @@ function AppContainer({
   displayStatus,
   iconLeftOpacity = 1,
   textAlign = 'left',
-  status
+  status,
 }: AppContainerT) {
   const { container } = styles
   return (

@@ -1,16 +1,18 @@
 import React, { memo, useEffect, useState } from 'react'
-import { StyleSheet, View, FlatList, Image, TouchableOpacity } from 'react-native'
-import { observer } from 'mobx-react'
-import { s, vs } from 'react-native-size-matters'
-import { I18n } from '../../utils'
-import { RootStackParamList } from '../../types'
-import { AppContainer, SocialLinks, Space, Text } from '../../components'
-import { ThemeProvider } from 'react-native-elements'
-import { captureException, OpenVideoModal, primary, secondary } from '../../constants'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import Spin from 'react-native-spinkit'
-import Orientation from 'react-native-orientation-locker'
+
 import { useFocusEffect } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { observer } from 'mobx-react'
+import { FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ThemeProvider } from 'react-native-elements'
+import Orientation from 'react-native-orientation-locker'
+import { s, vs } from 'react-native-size-matters'
+import Spin from 'react-native-spinkit'
+
+import { AppContainer, SocialLinks, Space, Text } from '../../components'
+import { OpenVideoModal, captureException, primary, secondary } from '../../constants'
+import { RootStackParamList } from '../../types'
+import { I18n } from '../../utils'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLAYRA_SCREEN'>
 
@@ -22,12 +24,12 @@ const theme = {
   Button: {
     titleStyle: {
       color: secondary,
-      padding: 30
-    }
+      padding: 30,
+    },
   },
   colors: {
-    primary: secondary
-  }
+    primary: secondary,
+  },
 }
 
 interface PlayraItemT {
@@ -49,7 +51,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
     const getData = async () => {
       try {
         let response = await fetch(
-          'https://leelachakra.com/resource/Playra/AlbumMahaKumbhaMela/playraClips.json'
+          'https://leelachakra.com/resource/Playra/AlbumMahaKumbhaMela/playraClips.json',
         )
         setArray(await response.json())
         setLoading(false)
@@ -117,7 +119,9 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
 
 const RenderItem = memo(({ item }: PlayraItemT) => {
   const { title, videoUrl, poster } = item
-  if (!videoUrl || !title || !poster) return null
+  if (!videoUrl || !title || !poster) {
+    return null
+  }
 
   function handlePress() {
     OpenVideoModal({ uri: videoUrl, poster })
@@ -141,18 +145,18 @@ const RenderItem = memo(({ item }: PlayraItemT) => {
 const styles = StyleSheet.create({
   videoView: {
     height: s(200),
-    width: '100%'
+    width: '100%',
   },
   posterS: {
     flex: 1,
-    borderRadius: s(10)
+    borderRadius: s(10),
   },
   loadContainer: {
     width: '100%',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   centerTxt: {
-    textAlign: 'center'
-  }
+    textAlign: 'center',
+  },
 })
 const { videoView, posterS, loadContainer, centerTxt } = styles

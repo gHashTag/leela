@@ -1,9 +1,11 @@
+import React from 'react'
+
 import { RouteProp, useFocusEffect, useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import I18n from 'i18n-js'
-import React from 'react'
 import { BackHandler, View } from 'react-native'
-import { s, ScaledSheet, vs } from 'react-native-size-matters'
+import { ScaledSheet, s, vs } from 'react-native-size-matters'
+
 import { ButtonSimple, Space, Text } from '../../../components'
 import { OnlinePlayer } from '../../../store'
 import { RootStackParamList } from '../../../types'
@@ -15,7 +17,7 @@ interface NetworkModalT {
 
 export function NetworkModal({ navigation }: NetworkModalT) {
   const {
-    colors: { background }
+    colors: { background },
   } = useTheme()
 
   function onPress() {
@@ -57,7 +59,7 @@ const { container, modalView, btnCont, textStyle } = ScaledSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   modalView: {
     margin: s(10),
@@ -67,16 +69,16 @@ const { container, modalView, btnCont, textStyle } = ScaledSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5
+    elevation: 5,
   },
   btnCont: {
-    alignItems: 'center'
+    alignItems: 'center',
   },
   textStyle: {
-    textAlign: 'center'
-  }
+    textAlign: 'center',
+  },
 })

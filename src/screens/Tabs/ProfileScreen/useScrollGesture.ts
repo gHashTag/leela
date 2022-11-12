@@ -1,14 +1,16 @@
 import { useRef, useState } from 'react'
+
 import { useWindowDimensions } from 'react-native'
 import { Gesture, PanGestureHandlerEventPayload } from 'react-native-gesture-handler'
 import {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
-  withTiming
+  withTiming,
 } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { s, vs } from 'react-native-size-matters'
+
 import { isIos } from '../../../constants'
 
 export const useScrollGesture = () => {
@@ -61,7 +63,7 @@ export const useScrollGesture = () => {
     translationY.value = 0
 
     bottomSheetTranslateY.value = withTiming(destSnapPoint, {
-      duration: 300
+      duration: 300,
     })
     runOnJS(onHandlerEndOnJS)(destSnapPoint)
   }
@@ -87,7 +89,7 @@ export const useScrollGesture = () => {
     .withRef(blockScrollUntilAtTheTopRef)
 
   const scrollViewGesture0 = Gesture.Native().requireExternalGestureToFail(
-    blockScrollUntilAtTheTop0
+    blockScrollUntilAtTheTop0,
   )
 
   const panGesture1 = Gesture.Pan()
@@ -111,7 +113,7 @@ export const useScrollGesture = () => {
     .withRef(blockScrollUntilAtTheTopRef)
 
   const scrollViewGesture1 = Gesture.Native().requireExternalGestureToFail(
-    blockScrollUntilAtTheTop1
+    blockScrollUntilAtTheTop1,
   )
 
   const headerGesture = Gesture.Pan()
@@ -127,7 +129,7 @@ export const useScrollGesture = () => {
     const clampedTranslateY = Math.min(CLOSED_SNAP_POINT, minTranslateY)
     return {
       height: screenH,
-      transform: [{ translateY: clampedTranslateY }]
+      transform: [{ translateY: clampedTranslateY }],
     }
   })
   return {
@@ -141,6 +143,6 @@ export const useScrollGesture = () => {
     scrollOffset0,
     scrollOffset1,
     blockScrollUntilAtTheTop1,
-    blockScrollUntilAtTheTop0
+    blockScrollUntilAtTheTop0,
   }
 }

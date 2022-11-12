@@ -1,9 +1,11 @@
 import React, { memo } from 'react'
-import { StyleProp, TextStyle, TouchableOpacity } from 'react-native'
+
 import { useTheme } from '@react-navigation/native'
+import { StyleProp, TextStyle, TouchableOpacity } from 'react-native'
 import { ScaledSheet, ms, s } from 'react-native-size-matters'
-import { W, white, black } from '../../../constants'
+
 import { Text } from '../../'
+import { W, black, white } from '../../../constants'
 
 const styles = ScaledSheet.create({
   container: {
@@ -12,11 +14,11 @@ const styles = ScaledSheet.create({
     height: ms(70),
     borderRadius: s(40),
     borderWidth: 1,
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   h: {
-    textAlign: 'center'
-  }
+    textAlign: 'center',
+  },
 })
 
 interface ButtonT {

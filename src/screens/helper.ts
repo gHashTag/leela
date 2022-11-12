@@ -1,24 +1,25 @@
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
+import { FirebaseDatabaseTypes, firebase } from '@react-native-firebase/database'
+import firestore from '@react-native-firebase/firestore'
+import storage from '@react-native-firebase/storage'
+import I18n from 'i18n-js'
+import { nanoid } from 'nanoid/non-secure'
+import branch from 'react-native-branch'
+import ImagePicker from 'react-native-image-crop-picker'
+import semver from 'semver'
+
+import { version } from '../../package.json'
 import {
+  OpenPlanReportModal,
+  OpenUpdateVersionModal,
   accountHasBanAlert,
   captureException,
   navigate,
-  OpenPlanReportModal,
-  OpenUpdateVersionModal,
-  timeStampType
+  timeStampType,
 } from '../constants'
-import ImagePicker from 'react-native-image-crop-picker'
-import { UserT, HistoryT } from '../types'
-import { actionsDice, fetchBusinesses, MessagingStore, OnlinePlayer } from '../store'
-import storage from '@react-native-firebase/storage'
-import { nanoid } from 'nanoid/non-secure'
-import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
-import firestore from '@react-native-firebase/firestore'
-import { firebase, FirebaseDatabaseTypes } from '@react-native-firebase/database'
+import { MessagingStore, OnlinePlayer, actionsDice, fetchBusinesses } from '../store'
+import { HistoryT, UserT } from '../types'
 import { lang } from '../utils'
-import I18n from 'i18n-js'
-import semver from 'semver'
-import { version } from '../../package.json'
-import branch from 'react-native-branch'
 
 interface NewProfileI {
   email: string
@@ -40,7 +41,7 @@ const getFireBaseRef = (path: string): FirebaseDatabaseTypes.Reference => {
 
 const getProfile = async (): Promise<UserT | undefined> => {
   const userUid = auth().currentUser?.uid
-  let res = undefined
+  let res
   try {
     const response = await firestore().collection('Profiles').doc(userUid).get()
     res = response.data() as UserT
@@ -55,14 +56,14 @@ const onWin = async () => {
   firestore().collection('Profiles').doc(userUid).update({
     firstGame: false,
     finish: true,
-    start: false
+    start: false,
   })
 }
 
 const onStart = async () => {
   const userUid = auth().currentUser?.uid
   firestore().collection('Profiles').doc(userUid).update({
-    start: true
+    start: true,
   })
 }
 
@@ -72,8 +73,8 @@ const createProfile = async ({ email, uid, firstName, lastName }: NewProfileI) =
       count: 0,
       plan: 68,
       status: 'start',
-      createDate: Date.now()
-    }
+      createDate: Date.now(),
+    },
   ]
   await firestore()
     .collection('Profiles')
@@ -90,7 +91,7 @@ const createProfile = async ({ email, uid, firstName, lastName }: NewProfileI) =
       firstGame: true,
       history: hisObj,
       lang,
-      isReported: true
+      isReported: true,
     })
   OnlinePlayer.store = {
     ...OnlinePlayer.store,
@@ -99,14 +100,14 @@ const createProfile = async ({ email, uid, firstName, lastName }: NewProfileI) =
       firstName,
       lastName,
       email,
-      intention: ''
+      intention: '',
     },
     stepTime: Date.now() - 86400000,
     canGo: true,
     history: hisObj,
     start: false,
     finish: false,
-    firstGame: true
+    firstGame: true,
   }
 }
 
@@ -117,7 +118,7 @@ const updatePlan = async (plan: number) => {
       .collection('Profiles')
       .doc(userUid)
       .update({
-        plan
+        plan,
       })
       .catch(err => captureException(err))
   }
@@ -130,7 +131,7 @@ const resetPlayer = async () => {
     .doc(userUid)
     .update({
       start: false,
-      finish: false
+      finish: false,
     })
     .catch(err => captureException(err))
 }
@@ -142,11 +143,11 @@ interface profNameI {
 const updateProfName = async ({ firstName, lastName }: profNameI) => {
   try {
     await auth().currentUser?.updateProfile({
-      displayName: `${firstName} ${lastName}`
+      displayName: `${firstName} ${lastName}`,
     })
     await firestore().collection('Profiles').doc(getUid()).update({
       firstName,
-      lastName
+      lastName,
     })
     await auth().currentUser?.reload()
     OnlinePlayer.store.profile.firstName = firstName
@@ -158,7 +159,7 @@ const updateProfName = async ({ firstName, lastName }: profNameI) => {
 const updateIntention = async (newIntention: string) => {
   try {
     await firestore().collection('Profiles').doc(getUid()).update({
-      intention: newIntention
+      intention: newIntention,
     })
     OnlinePlayer.store.profile.intention = newIntention
   } catch (err) {
@@ -181,11 +182,11 @@ const resetHistory = async () => {
       createDate: Date.now(),
       plan: 68,
       count: 0,
-      status: 'start'
-    }
+      status: 'start',
+    },
   ]
   await firestore().collection('Profiles').doc(userUid).update({
-    history: hist
+    history: hist,
   })
 }
 
@@ -213,14 +214,14 @@ const createHistory = async (values: HistoryT) => {
           .doc(userUid)
           .update({
             isReported: false,
-            history: firestore.FieldValue.arrayUnion(values)
+            history: firestore.FieldValue.arrayUnion(values),
           })
       } else {
         await firestore()
           .collection('Profiles')
           .doc(userUid)
           .update({
-            history: firestore.FieldValue.arrayUnion(values)
+            history: firestore.FieldValue.arrayUnion(values),
           })
       }
     }
@@ -237,7 +238,7 @@ const startStepTimer = () => {
   if (userUid) {
     firestore().collection('Profiles').doc(userUid).update({
       lastStepTime: newTime,
-      isReported: true
+      isReported: true,
     })
   }
 }
@@ -259,7 +260,7 @@ const getImagePicker = async () => {
     cropperStatusBarColor: 'white',
     cropperToolbarColor: 'white',
     cropperActiveWidgetColor: 'white',
-    cropperToolbarWidgetColor: '#3498DB'
+    cropperToolbarWidgetColor: '#3498DB',
   })
   return image
 }
@@ -282,7 +283,7 @@ const uploadImg = async (image: { path: string }) => {
   const photo = await fetch(image.path)
   const photoBlob = await photo.blob()
   const fileName = `images/${nanoid(13)}${image.path.substring(
-    image.path.lastIndexOf('/') + 1
+    image.path.lastIndexOf('/') + 1,
   )}`
   const reference = storage().ref(fileName)
   await reference.put(photoBlob)
@@ -328,7 +329,7 @@ function getTimeStamp({ lastTime, type = 0 }: getTimeT) {
 const onSignIn = async (
   user: FirebaseAuthTypes.User,
   isKeychain?: boolean,
-  linkTo?: any
+  linkTo?: any,
 ) => {
   try {
     actionsDice.setOnline(true)
@@ -345,7 +346,7 @@ const onSignIn = async (
       } else if (!prof.intention) {
         navigate('CHANGE_INTENTION_SCREEN', {
           blockGoBack: true,
-          title: I18n.t('createIntention')
+          title: I18n.t('createIntention'),
         })
       } else {
         navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
@@ -364,7 +365,7 @@ const onSignIn = async (
       }
     } else {
       navigate('CONFIRM_SIGN_UP', {
-        email: user.email
+        email: user.email,
       })
     }
   } catch (error) {
@@ -398,5 +399,5 @@ export {
   startStepTimer,
   onSignIn,
   checkVersion,
-  updateIntention
+  updateIntention,
 }

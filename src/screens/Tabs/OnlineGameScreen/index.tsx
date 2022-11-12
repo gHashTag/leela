@@ -1,9 +1,12 @@
 import React, { Fragment, useEffect, useState } from 'react'
-import { StyleSheet, ScrollView, View } from 'react-native'
+
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import Markdown from 'react-native-markdown-display'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ms, s, vs } from 'react-native-size-matters'
-import { I18n, lang } from '../../../utils'
-import { RootStackParamList, RootTabParamList } from '../../../types'
+
 import {
   Background,
   ButtonWithIcon,
@@ -11,13 +14,12 @@ import {
   ImageSwiper,
   SocialLinks,
   Space,
-  Text
+  Text,
 } from '../../../components'
 import { captureException, fuchsia } from '../../../constants'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import Markdown from 'react-native-markdown-display'
 import { useMarkdownProps } from '../../../hooks'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { RootStackParamList, RootTabParamList } from '../../../types'
+import { I18n, lang } from '../../../utils'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -38,18 +40,18 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
       try {
         const images = await (
           await fetch(
-            'https://leelachakra.com/resource/LeelaChakra/PhotoLeela/leelaPhoto.json'
+            'https://leelachakra.com/resource/LeelaChakra/PhotoLeela/leelaPhoto.json',
           )
         ).json()
         setImages(images)
         const mdContent1 = await (
           await fetch(
-            `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${lang}1.md`
+            `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${lang}1.md`,
           )
         ).text()
         const mdContent2 = await (
           await fetch(
-            `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${lang}2.md`
+            `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${lang}2.md`,
           )
         ).text()
         setMdContent([mdContent1, mdContent2])
@@ -109,17 +111,17 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
 
 const styles = StyleSheet.create({
   btn: {
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   bgStyle: {
-    opacity: 0.5
+    opacity: 0.5,
   },
   mdStyle: {
-    paddingHorizontal: s(8)
+    paddingHorizontal: s(8),
   },
   centered: {
-    textAlign: 'center'
-  }
+    textAlign: 'center',
+  },
 })
 const { centered, btn, bgStyle, mdStyle } = styles
 

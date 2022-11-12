@@ -1,16 +1,18 @@
 import React from 'react'
+
 import { StyleSheet, View, useColorScheme } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import Spinner from 'react-native-spinkit'
-import { secondary, black, white } from '../../constants'
+
+import { black, secondary, white } from '../../constants'
 import { CenterView } from '../CenterView'
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    paddingTop: vs(50)
-  }
+    paddingTop: vs(50),
+  },
 })
 
 interface SpinT {

@@ -1,5 +1,6 @@
 import React, { memo } from 'react'
-import { TouchableOpacity, Image } from 'react-native'
+
+import { Image, TouchableOpacity } from 'react-native'
 
 import { ICONS } from './images'
 

@@ -1,13 +1,14 @@
 import React, { useContext } from 'react'
-import { SectionList, StyleSheet } from 'react-native'
+
 import { observer } from 'mobx-react'
+import { SectionList, StyleSheet } from 'react-native'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
+import Animated from 'react-native-reanimated'
 import { s, vs } from 'react-native-size-matters'
 
-import { Text, Space, HistoryStep } from '../../../../components'
+import { HistoryStep, Space, Text } from '../../../../components'
 import { useHistoryData } from '../../../../hooks/useHistoryData'
-import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { TabContext } from '../TabContext'
-import Animated from 'react-native-reanimated'
 
 export const HistoryScene = observer(() => {
   const { DATA } = useHistoryData()
@@ -18,7 +19,7 @@ export const HistoryScene = observer(() => {
       <GestureDetector
         gesture={Gesture.Simultaneous(
           Gesture.Race(blockScrollUntilAtTheTop1, panGesture1),
-          scrollViewGesture1
+          scrollViewGesture1,
         )}
       >
         <Animated.ScrollView
@@ -57,12 +58,12 @@ export const HistoryScene = observer(() => {
 const styles = StyleSheet.create({
   historyList: {
     paddingHorizontal: s(10),
-    flex: 1
+    flex: 1,
   },
   sectionHeaderText: {
     padding: 15,
-    marginTop: 10
-  }
+    marginTop: 10,
+  },
 })
 
 const { historyList, sectionHeaderText } = styles

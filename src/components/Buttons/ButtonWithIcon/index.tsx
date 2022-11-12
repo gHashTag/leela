@@ -1,16 +1,17 @@
 import React, { memo } from 'react'
-import { Pressable, StyleProp, ViewStyle } from 'react-native'
-import { useTheme } from '@react-navigation/native'
-import { s, ScaledSheet } from 'react-native-size-matters'
-import Ionicons from 'react-native-vector-icons/Ionicons'
 
-import { Text, Space } from '../../'
+import { useTheme } from '@react-navigation/native'
+import { Pressable, StyleProp, ViewStyle } from 'react-native'
 import Animated, {
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
-  withTiming
+  withTiming,
 } from 'react-native-reanimated'
+import { ScaledSheet, s } from 'react-native-size-matters'
+import Ionicons from 'react-native-vector-icons/Ionicons'
+
+import { Space, Text } from '../../'
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
@@ -26,18 +27,18 @@ export const ButtonWithIcon = memo<ButtonWithIconT>(
   ({ title, onPress, color, iconName, viewStyle }) => {
     const {
       dark,
-      colors: { text }
+      colors: { text },
     } = useTheme()
     const isPressed = useSharedValue(0)
 
     const onTouchStart = () => {
       isPressed.value = withTiming(1, {
-        duration: 200
+        duration: 200,
       })
     }
     const onTouchEnd = () => {
       isPressed.value = withTiming(0, {
-        duration: 200
+        duration: 200,
       })
     }
 
@@ -45,10 +46,10 @@ export const ButtonWithIcon = memo<ButtonWithIconT>(
       const bgColor = interpolateColor(
         isPressed.value,
         [0, 1],
-        ['#00000000', `${color || text}32`]
+        ['#00000000', `${color || text}32`],
       )
       return {
-        backgroundColor: bgColor
+        backgroundColor: bgColor,
       }
     })
 
@@ -68,7 +69,7 @@ export const ButtonWithIcon = memo<ButtonWithIconT>(
         <Text h="h2" oneColor={color} title={title} />
       </AnimatedPressable>
     )
-  }
+  },
 )
 
 const styles = ScaledSheet.create({
@@ -79,8 +80,8 @@ const styles = ScaledSheet.create({
     borderWidth: s(1),
     borderRadius: s(8),
     alignItems: 'center',
-    alignSelf: 'flex-start'
-  }
+    alignSelf: 'flex-start',
+  },
 })
 
 const { container } = styles

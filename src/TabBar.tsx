@@ -1,11 +1,13 @@
 import React from 'react'
-import { View, TouchableOpacity, useColorScheme } from 'react-native'
-import { ScaledSheet, s, ms } from 'react-native-size-matters'
+
+import { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs'
+import { observer } from 'mobx-react'
+import { TouchableOpacity, View, useColorScheme } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { ScaledSheet, ms, s } from 'react-native-size-matters'
+
 import { Tab } from './components'
 import { black, white } from './constants'
-import { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { observer } from 'mobx-react'
 
 export default observer(function TabBar({ state, navigation }: MaterialTopTabBarProps) {
   const { index, routes } = state
@@ -16,8 +18,8 @@ export default observer(function TabBar({ state, navigation }: MaterialTopTabBar
     container,
     {
       backgroundColor: scheme === 'dark' ? black : white,
-      paddingBottom: bottom + s(10)
-    }
+      paddingBottom: bottom + s(10),
+    },
   ]
 
   return (
@@ -31,13 +33,13 @@ export default observer(function TabBar({ state, navigation }: MaterialTopTabBar
               const event = navigation.emit({
                 type: 'tabPress',
                 target: key,
-                canPreventDefault: true
+                canPreventDefault: true,
               })
 
               if (!isFocused && !event.defaultPrevented) {
                 navigation.navigate('MAIN', {
                   screen: name,
-                  merge: true
+                  merge: true,
                 })
               }
             }}
@@ -58,7 +60,7 @@ const styles = ScaledSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -66,8 +68,8 @@ const styles = ScaledSheet.create({
     justifyContent: 'space-around',
     alignItems: 'flex-start',
     paddingTop: ms(10, 0.5),
-    flexDirection: 'row'
-  }
+    flexDirection: 'row',
+  },
 })
 
 const { container } = styles

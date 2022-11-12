@@ -1,14 +1,16 @@
-import { useState, useRef, useCallback } from 'react'
-import * as Keychain from 'react-native-keychain'
-// @ts-expect-error
+import { useCallback, useRef, useState } from 'react'
+
 import { EMAIL, PASSWORD } from '@env'
+import { yupResolver } from '@hookform/resolvers/yup'
+import auth from '@react-native-firebase/auth'
+import { FieldValues, SubmitHandler, useForm } from 'react-hook-form'
+import * as Keychain from 'react-native-keychain'
+
+// @ts-expect-error
+import * as yup from 'yup'
+
 import { captureException } from '../../../constants'
 import { I18n } from '../../../utils'
-import auth from '@react-native-firebase/auth'
-
-import { useForm, SubmitHandler, FieldValues } from 'react-hook-form'
-import { yupResolver } from '@hookform/resolvers/yup'
-import * as yup from 'yup'
 import { onSignIn } from '../../helper'
 
 const schema = yup
@@ -22,7 +24,7 @@ const schema = yup
     password: yup
       .string()
       .required(I18n.t('requireField'))
-      .min(6, I18n.t('shortPassword'))
+      .min(6, I18n.t('shortPassword')),
   })
   .required()
 
@@ -36,7 +38,7 @@ export const useSignIn = () => {
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
-    defaultValues: initialValues
+    defaultValues: initialValues,
   })
 
   const onSubmit: SubmitHandler<FieldValues> = useCallback(async data => {

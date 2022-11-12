@@ -134,5 +134,5 @@ export default {
   intention: 'Intention',
   createIntention: 'Create intention',
   updateIntention: 'Update intention',
-  clips: 'Clips'
+  clips: 'Clips',
 }

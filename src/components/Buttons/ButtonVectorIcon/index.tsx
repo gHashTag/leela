@@ -1,17 +1,19 @@
 import React from 'react'
+
 import {
   StyleProp,
+  StyleSheet,
   TouchableOpacity,
   ViewStyle,
   useColorScheme,
-  StyleSheet
 } from 'react-native'
 import { s } from 'react-native-size-matters'
 import Icon from 'react-native-vector-icons/FontAwesome'
 import Ionicons from 'react-native-vector-icons/Ionicons'
+
+import { Text } from '../../'
 import { dimGray, gray } from '../../../constants'
 import { Space } from '../../Space'
-import { Text } from '../../'
 
 interface ButtonVectorIconI {
   name: string
@@ -32,7 +34,7 @@ export function ButtonVectorIcon({
   color,
   viewStyle,
   count,
-  ionicons
+  ionicons,
 }: ButtonVectorIconI) {
   const scheme = useColorScheme()
   const colorTheme = scheme === 'dark' ? dimGray : gray
@@ -66,6 +68,6 @@ export function ButtonVectorIcon({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    justifyContent: 'center'
-  }
+    justifyContent: 'center',
+  },
 })

@@ -1,8 +1,9 @@
 import React from 'react'
+
 import { StyleSheet, View } from 'react-native'
 
+import { EmojiText, Space, Text } from '../'
 import { I18n } from '../../utils'
-import { Text, Space, EmojiText } from '../'
 
 const getIconName = (status: string) => {
   switch (status) {
@@ -60,8 +61,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
-    paddingTop: 10
-  }
+    paddingTop: 10,
+  },
 })
 
 const { container } = styles

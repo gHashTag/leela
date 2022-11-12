@@ -1,6 +1,8 @@
 import React from 'react'
+
 import { Platform, StyleSheet, View } from 'react-native'
-import { Text, hT, TxtT, SelectableIOS } from '../'
+
+import { SelectableIOS, Text, TxtT, hT } from '../'
 import { fuchsia } from '../../../constants'
 
 interface HashTagT extends TxtT {
@@ -41,6 +43,6 @@ export function HashtagFormat({ hashTagColor = fuchsia, title, ...textProps }: H
 const { container } = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    flexWrap: 'wrap'
-  }
+    flexWrap: 'wrap',
+  },
 })

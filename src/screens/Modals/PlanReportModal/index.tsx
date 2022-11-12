@@ -1,9 +1,11 @@
+import React from 'react'
+
 import { RouteProp, useFocusEffect, useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import I18n from 'i18n-js'
-import React from 'react'
 import { BackHandler, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
+
 import { Space, Text } from '../../../components'
 import { fuchsia } from '../../../constants'
 import { RootStackParamList } from '../../../types'
@@ -18,7 +20,7 @@ interface PlanReportModalT {
 
 export function PlanReportModal({ navigation, route }: PlanReportModalT) {
   const {
-    colors: { background }
+    colors: { background },
   } = useTheme()
   const { plan } = route.params
   const list = lang === 'ru' ? ru : en
@@ -57,7 +59,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   modalView: {
     top: vs(22),
@@ -68,15 +70,15 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5
+    elevation: 5,
   },
   textStyle: {
-    textAlign: 'center'
-  }
+    textAlign: 'center',
+  },
 })
 
 const { transpCont, modalView, textStyle } = styles

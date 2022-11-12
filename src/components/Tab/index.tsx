@@ -1,14 +1,16 @@
 // @flow
 import React, { memo } from 'react'
+
 import { Image, ImageStyle, StyleProp } from 'react-native'
-import { ICONS } from './images'
 import { ScaledSheet, ms } from 'react-native-size-matters'
+
+import { ICONS } from './images'
 
 const styles = ScaledSheet.create({
   img: {
     width: ms(35, 0.5),
-    height: ms(35, 0.5)
-  }
+    height: ms(35, 0.5),
+  },
 })
 
 interface TabT {

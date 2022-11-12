@@ -8,7 +8,7 @@ import messaging from '@react-native-firebase/messaging'
 import { setCategories } from './src/utils/notifications/NotificationHelper'
 import {
   displayNotification,
-  notificationActionsHandler
+  notificationActionsHandler,
 } from './src/utils/notifications'
 
 setCategories()

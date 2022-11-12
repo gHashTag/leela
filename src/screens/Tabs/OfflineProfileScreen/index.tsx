@@ -1,22 +1,23 @@
 import React from 'react'
-import { SectionList, StyleSheet } from 'react-native'
+
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react-lite'
+import { SectionList, StyleSheet } from 'react-native'
 import { s } from 'react-native-size-matters'
 
-import { I18n } from '../../../utils'
-import { RootTabParamList, RootStackParamList } from '../../../types'
 import {
   AppContainer,
-  Text,
-  Space,
   Button,
-  Spin,
   CenterView,
-  HistoryStep
+  HistoryStep,
+  Space,
+  Spin,
+  Text,
 } from '../../../components'
-import { DiceStore, OfflinePlayers, OnlinePlayer } from '../../../store'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useHistoryData } from '../../../hooks'
+import { DiceStore, OfflinePlayers, OnlinePlayer } from '../../../store'
+import { RootStackParamList, RootTabParamList } from '../../../types'
+import { I18n } from '../../../utils'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -85,7 +86,7 @@ export const OfflineProfileScreen = observer(({ navigation }: ProfileScreenT) =>
 })
 
 const styles = StyleSheet.create({
-  container: {}
+  container: {},
 })
 
 const { container } = styles

@@ -1,13 +1,15 @@
-import { useTheme } from '@react-navigation/native'
 import React, { useEffect } from 'react'
+
+import { useTheme } from '@react-navigation/native'
 import { Pressable, StyleSheet, View } from 'react-native'
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming
+  withTiming,
 } from 'react-native-reanimated'
 import { s, vs } from 'react-native-size-matters'
 import { NavigationState } from 'react-native-tab-view'
+
 import { Text } from '../TextComponents'
 
 type State = NavigationState<{
@@ -33,12 +35,12 @@ export const SecondaryTab = ({ jumpTo, navigationState, width }: SecondaryTabT) 
   }, [index])
 
   const {
-    colors: { primary }
+    colors: { primary },
   } = useTheme()
 
   const lineAnim = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: x.value }]
+      transform: [{ translateX: x.value }],
     }
   })
 
@@ -62,19 +64,19 @@ export const SecondaryTab = ({ jumpTo, navigationState, width }: SecondaryTabT) 
 const styles = StyleSheet.create({
   tabContainer: {
     paddingVertical: vs(10),
-    flexDirection: 'row'
+    flexDirection: 'row',
   },
   line: {
     height: vs(2),
     position: 'absolute',
     bottom: 0,
-    left: 0
+    left: 0,
   },
   tabStyle: {
     flex: 1,
     marginHorizontal: s(2),
-    alignItems: 'center'
-  }
+    alignItems: 'center',
+  },
 })
 
 const { tabContainer, line, tabStyle } = styles

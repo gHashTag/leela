@@ -1,9 +1,12 @@
 import React from 'react'
-import { Image, View } from 'react-native'
-import { ScaledSheet, s, ms } from 'react-native-size-matters'
-import { ICONS } from './images'
-import { DiceStore, OnlinePlayer, OtherPlayers, OfflinePlayers } from '../../store'
+
 import { observer } from 'mobx-react'
+import { Image, View } from 'react-native'
+import { ScaledSheet, ms, s } from 'react-native-size-matters'
+
+import { ICONS } from './images'
+
+import { DiceStore, OfflinePlayers, OnlinePlayer, OtherPlayers } from '../../store'
 
 interface GemT {
   plan: number
@@ -27,7 +30,7 @@ const Gem = observer(({ plan, player }: GemT) => {
         .map((a, id) => {
           return {
             id: id + 1,
-            data: a
+            data: a,
           }
         })
         .slice(0, DiceStore.multi)
@@ -37,9 +40,9 @@ const Gem = observer(({ plan, player }: GemT) => {
           return {
             id: index + 2,
             data: a.plan,
-            ava: a.avatar
+            ava: a.avatar,
           }
-        })
+        }),
       ]
 
   const source = (id: number, avatar: any) =>
@@ -54,11 +57,11 @@ const Gem = observer(({ plan, player }: GemT) => {
               style={[
                 gems,
                 { position: 'absolute', zIndex: getIndex(id) },
-                id === 1 && DiceStore.online && { zIndex: 2 }
+                id === 1 && DiceStore.online && { zIndex: 2 },
               ]}
               source={source(id, ava)}
             />
-          )
+          ),
       )}
     </View>
   )
@@ -69,13 +72,13 @@ const styles = ScaledSheet.create({
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 2
+    zIndex: 2,
   },
   gems: {
     width: ms(42, 0.5),
     height: ms(42, 0.5),
-    borderRadius: ms(42, 0.5) / 2
-  }
+    borderRadius: ms(42, 0.5) / 2,
+  },
 })
 
 export { Gem }

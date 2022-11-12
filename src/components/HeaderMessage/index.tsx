@@ -1,7 +1,9 @@
-import { observer } from 'mobx-react'
 import React from 'react'
+
+import { observer } from 'mobx-react'
 import { StyleSheet, View } from 'react-native'
 import { s } from 'react-native-size-matters'
+
 import { DiceStore } from '../../store'
 import { Space } from '../Space'
 import { Text } from '../TextComponents'
@@ -27,8 +29,8 @@ const styles = StyleSheet.create({
   messContainer: {
     flexWrap: 'wrap',
     flexDirection: 'row',
-    justifyContent: 'center'
-  }
+    justifyContent: 'center',
+  },
 })
 
 const { messContainer } = styles

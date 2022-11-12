@@ -1,23 +1,25 @@
 import React, { memo } from 'react'
+
 import {
-  StyleSheet,
   StyleProp,
-  ViewStyle,
+  StyleSheet,
   TextStyle,
-  TouchableOpacity
+  TouchableOpacity,
+  ViewStyle,
 } from 'react-native'
+
 import { Text } from '../../'
 import { secondary } from '../../../constants'
 
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
-    alignItems: 'flex-start'
+    alignItems: 'flex-start',
   },
   h: {
     textDecorationLine: 'underline',
-    color: secondary
-  }
+    color: secondary,
+  },
 })
 
 interface ButtonLinkT {

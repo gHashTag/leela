@@ -1,24 +1,26 @@
 import React, { useCallback, useRef, useState } from 'react'
-import { StyleSheet, ToastAndroid, Platform, BackHandler } from 'react-native'
+
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import I18n from 'i18n-js'
 import { observer } from 'mobx-react'
+import { BackHandler, Platform, StyleSheet, ToastAndroid } from 'react-native'
+import { ScrollView } from 'react-native-gesture-handler'
 import { s, vs } from 'react-native-size-matters'
-import { RootStackParamList } from '../../types'
+import Sound from 'react-native-sound'
+
 import {
   AppContainer,
-  Space,
-  Text,
+  ButtonPlay,
   CreatePost,
   KeyboardContainer,
-  ButtonPlay,
+  Loading,
   SelectableIOS,
-  Loading
+  Space,
+  Text,
 } from '../../components'
-import { ScrollView } from 'react-native-gesture-handler'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { OnlinePlayer } from '../../store'
-import I18n from 'i18n-js'
-import Sound from 'react-native-sound'
+import { RootStackParamList } from '../../types'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
 type route = RouteProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
@@ -46,7 +48,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
         soundRef.current?.stop()
         backhandler.remove()
       }
-    }, [])
+    }, []),
   )
 
   const handleCross = () => {
@@ -60,7 +62,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
           ToastAndroid.LONG,
           ToastAndroid.BOTTOM,
           25,
-          50
+          50,
         )
     }
   }
@@ -123,7 +125,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
 })
 const styles = StyleSheet.create({
   h3: {
-    padding: s(20)
-  }
+    padding: s(20),
+  },
 })
 export { PlansDetailScreen }

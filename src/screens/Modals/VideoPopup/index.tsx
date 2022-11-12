@@ -1,14 +1,16 @@
+import React from 'react'
+
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { StatusBar, useColorScheme } from 'react-native'
-import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { s } from 'react-native-size-matters'
-import { ButtonVectorIcon, VideoPlayer } from '../../../components'
-import { RootStackParamList } from '../../../types'
 import Orientation from 'react-native-orientation-locker'
+import { s } from 'react-native-size-matters'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
+
+import { ButtonVectorIcon, VideoPlayer } from '../../../components'
 import { black, white } from '../../../constants'
+import { RootStackParamList } from '../../../types'
 
 interface VideoPopupT {
   navigation: NativeStackNavigationProp<RootStackParamList, 'VIDEO_SCREEN'>
@@ -28,7 +30,7 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
     return () => {
       SystemNavigationBar.setNavigationColor(
         isDark ? black : white,
-        !isDark ? false : true
+        !isDark ? false : true,
       )
       //Orientation.lockToPortrait()
     }
@@ -51,14 +53,14 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
 
 const styles = StyleSheet.create({
   transpView: {
-    flex: 1
+    flex: 1,
   },
   btnS: {
     position: 'absolute',
     left: s(10),
     top: s(10),
-    zIndex: 10
-  }
+    zIndex: 10,
+  },
 })
 
 const { transpView, btnS } = styles

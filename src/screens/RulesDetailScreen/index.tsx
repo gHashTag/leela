@@ -1,13 +1,15 @@
 import React from 'react'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+
 import { RouteProp } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
-import { RootStackParamList } from '../../types'
-import { AppContainer, SelectableIOS, Space, Text } from '../../components'
-import { goBack } from '../../constants'
 import { Platform, StyleSheet } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { vs } from 'react-native-size-matters'
+
+import { AppContainer, SelectableIOS, Space, Text } from '../../components'
+import { goBack } from '../../constants'
+import { RootStackParamList } from '../../types'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'RULES_DETAIL_SCREEN'>
 type route = RouteProp<RootStackParamList, 'RULES_DETAIL_SCREEN'>
@@ -20,8 +22,8 @@ type RulesDetailScreenT = {
 const styles = StyleSheet.create({
   h3: {
     padding: 20,
-    letterSpacing: 0.5
-  }
+    letterSpacing: 0.5,
+  },
 })
 
 const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) => {

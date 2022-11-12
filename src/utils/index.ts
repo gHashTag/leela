@@ -1,5 +1,5 @@
-import { Platform, NativeModules } from 'react-native'
 import I18n from 'i18n-js'
+import { NativeModules, Platform } from 'react-native'
 import * as RNLocalize from 'react-native-localize'
 
 import en from './locales/en'
@@ -14,7 +14,7 @@ if (Array.isArray(locales)) {
 I18n.fallbacks = true
 I18n.translations = {
   en,
-  ru
+  ru,
 }
 
 const deviceLanguage =

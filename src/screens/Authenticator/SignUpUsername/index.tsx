@@ -1,32 +1,34 @@
-import React, { useState, ReactElement } from 'react'
-import { I18n } from '../../../utils'
+import React, { ReactElement, useState } from 'react'
+
+import { yupResolver } from '@hookform/resolvers/yup'
+import auth from '@react-native-firebase/auth'
 import { RouteProp, useTheme } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import {
+  FieldValues,
+  FormProvider,
+  SubmitErrorHandler,
+  SubmitHandler,
+  useForm,
+} from 'react-hook-form'
+import { ScrollView, StyleSheet } from 'react-native'
+import { s, vs } from 'react-native-size-matters'
+import * as yup from 'yup'
+
 import {
   AppContainer,
-  Space,
   Button,
   Input,
+  KeyboardContainer,
   Loading,
-  KeyboardContainer
+  Space,
 } from '../../../components'
-import { goBack, white, black, W, H } from '../../../constants'
-import { RootStackParamList } from '../../../types'
-import { actionsDice, fetchBusinesses } from '../../../store'
-import auth from '@react-native-firebase/auth'
-import { createProfile, getUid } from '../../helper'
-import {
-  useForm,
-  FormProvider,
-  SubmitHandler,
-  SubmitErrorHandler,
-  FieldValues
-} from 'react-hook-form'
-import { yupResolver } from '@hookform/resolvers/yup'
-import * as yup from 'yup'
-import { s, vs } from 'react-native-size-matters'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { ScrollView, StyleSheet } from 'react-native'
+import { H, W, black, goBack, white } from '../../../constants'
 import { useNoBackHandler } from '../../../hooks'
+import { actionsDice, fetchBusinesses } from '../../../store'
+import { RootStackParamList } from '../../../types'
+import { I18n } from '../../../utils'
+import { createProfile, getUid } from '../../helper'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -53,7 +55,7 @@ const schema = yup
       .trim()
       .min(2, I18n.t('twoSymbolRequire'))
       .required()
-      .max(20, `${I18n.t('manyCharacters')}20`)
+      .max(20, `${I18n.t('manyCharacters')}20`),
   })
   .required()
 
@@ -62,7 +64,7 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
 
   const { ...methods } = useForm({
     mode: 'onChange',
-    resolver: yupResolver(schema)
+    resolver: yupResolver(schema),
   })
   useNoBackHandler()
 
@@ -71,14 +73,14 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     const { firstName, lastName } = data
     const { email } = route.params
     await auth().currentUser?.updateProfile({
-      displayName: `${firstName} ${lastName}`
+      displayName: `${firstName} ${lastName}`,
     })
     await createProfile({
       email,
       // @ts-ignore
       uid: getUid(),
       firstName,
-      lastName
+      lastName,
     })
     fetchBusinesses()
     navigation.navigate('SIGN_UP_AVATAR')
@@ -141,8 +143,8 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center'
-  }
+    alignItems: 'center',
+  },
 })
 
 export { SignUpUsername }

@@ -1,11 +1,13 @@
 import { Share } from 'react-native'
+
+import { getActions } from './ModalActions'
+
 import { OpenActionsModal } from '../../../constants'
 import { useTypedNavigation } from '../../../hooks'
 import { getUid } from '../../../screens/helper'
 import { PostStore } from '../../../store'
 import { PostT } from '../../../types'
 import { buildReportLink } from '../../../utils/linkHelpers'
-import { getActions } from './ModalActions'
 
 interface usePostActionsParams {
   item?: PostT
@@ -20,7 +22,7 @@ export const usePostActions = ({
   isDetail,
   onPressCom,
   transText,
-  hideTranslate
+  hideTranslate,
 }: usePostActionsParams) => {
   const { navigate } = useTypedNavigation()
   const isLiked = item?.liked?.findIndex(a => a === getUid()) === -1 ? false : true
@@ -30,7 +32,7 @@ export const usePostActions = ({
       navigate('DETAIL_POST_SCREEN', {
         postId: item.id,
         translatedText: transText,
-        hideTranslate
+        hideTranslate,
       })
   }
 
@@ -60,7 +62,7 @@ export const usePostActions = ({
       const deepLink = await buildReportLink(id, text)
       Share.share({
         title: 'Leela Chakra',
-        message: deepLink
+        message: deepLink,
       })
     }
   }
@@ -71,6 +73,6 @@ export const usePostActions = ({
     handleComment,
     handleAdminMenu,
     handleShareLink,
-    isLiked
+    isLiked,
   }
 }

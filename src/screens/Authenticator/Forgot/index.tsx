@@ -11,6 +11,7 @@ import {
   SubmitHandler,
   useForm,
 } from 'react-hook-form'
+import { StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
 
@@ -47,9 +48,9 @@ const schema = yup
   })
   .required()
 
-const Forgot = ({ route, navigation }: ForgotT) => {
+export const Forgot = ({ route, navigation }: ForgotT) => {
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
   const { ...methods } = useForm({
     mode: 'onChange',
@@ -68,18 +69,18 @@ const Forgot = ({ route, navigation }: ForgotT) => {
       navigation.navigate('FORGOT_PASSWORD_SUBMIT', { email })
     } catch (error: any) {
       if (error.code === 'auth/user-not-found') {
-        setError(I18n.t('userNotFound'))
+        setErrorMessage(I18n.t('userNotFound'))
       } else if (error.code === 'auth/network-request-failed') {
-        setError(I18n.t('networkRequestFailed'))
+        setErrorMessage(I18n.t('networkRequestFailed'))
       } else {
-        setError(error.code)
+        setErrorMessage(error.code)
       }
       captureException(error.code)
     }
     setLoading(false)
   }
 
-  const onError: SubmitErrorHandler<FieldValues> = (errors, e) => {
+  const onError: SubmitErrorHandler<FieldValues> = errors => {
     console.log(errors)
   }
 
@@ -92,7 +93,7 @@ const Forgot = ({ route, navigation }: ForgotT) => {
       title=" "
       onPress={goBack}
       enableBackgroundBottomInsets
-      message={error}
+      message={errorMessage}
       colorLeft={color}
     >
       {loading ? (
@@ -109,8 +110,8 @@ const Forgot = ({ route, navigation }: ForgotT) => {
                 additionalStyle={{ width: W - s(40) }}
               />
               <Space height={vs(15)} />
-              {error !== '' && (
-                <TextError title={error} textStyle={{ alignSelf: 'center' }} />
+              {errorMessage !== '' && (
+                <TextError title={errorMessage} textStyle={page.errorText} />
               )}
               <Space height={vs(10)} />
               <Button
@@ -126,4 +127,8 @@ const Forgot = ({ route, navigation }: ForgotT) => {
   )
 }
 
-export { Forgot }
+const page = StyleSheet.create({
+  errorText: {
+    alignSelf: 'center',
+  },
+})

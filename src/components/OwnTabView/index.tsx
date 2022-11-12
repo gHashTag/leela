@@ -1,20 +1,24 @@
 import React, { useEffect, useState } from 'react'
+
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming
+  withTiming,
 } from 'react-native-reanimated'
+
 import { SecondaryTabT } from '../SecondaryTab'
 
 export const OwnTabView = ({ screens, style, width, renderTabBar }: OwnTabViewT) => {
   const [navigationState, setNavState] = useState<navStateT>({
     index: 0,
-    routes: screens.map(obj => ({ key: obj.key, title: obj.title }))
+    routes: screens.map(obj => ({ key: obj.key, title: obj.title })),
   })
 
   const jumpTo = (key: string, id: number) => {
-    if (id !== navigationState.index) setNavState(pr => ({ ...pr, index: id }))
+    if (id !== navigationState.index) {
+      setNavState(pr => ({ ...pr, index: id }))
+    }
   }
 
   const x = useSharedValue(0)
@@ -25,7 +29,7 @@ export const OwnTabView = ({ screens, style, width, renderTabBar }: OwnTabViewT)
 
   const carousel = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: -x.value }]
+      transform: [{ translateX: -x.value }],
     }
   })
 
@@ -48,11 +52,11 @@ export const OwnTabView = ({ screens, style, width, renderTabBar }: OwnTabViewT)
 const styles = StyleSheet.create({
   contentContainer: {
     flexDirection: 'row',
-    flex: 1
+    flex: 1,
   },
   mainContainer: {
-    overflow: 'hidden'
-  }
+    overflow: 'hidden',
+  },
 })
 
 const { contentContainer, mainContainer } = styles

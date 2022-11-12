@@ -1,8 +1,9 @@
-import { Alert, Dimensions, Linking, Platform } from 'react-native'
-import * as Sentry from '@sentry/react-native'
 import { createNavigationContainerRef } from '@react-navigation/native'
-import { ButtonsModalT } from './types'
+import * as Sentry from '@sentry/react-native'
 import I18n from 'i18n-js'
+import { Alert, Dimensions, Linking, Platform } from 'react-native'
+
+import { ButtonsModalT } from './types'
 
 export const navRef = createNavigationContainerRef<any>()
 
@@ -55,7 +56,7 @@ export function OpenActionsModal(modalButtons: ButtonsModalT[]) {
 
 export const banAlert = () => {
   Alert.alert(I18n.t('youBanned'), I18n.t('banText'), [
-    { text: 'OK', onPress: () => navigate('WELCOME_SCREEN') }
+    { text: 'OK', onPress: () => navigate('WELCOME_SCREEN') },
   ])
 }
 export const accountHasBanAlert = () => {
@@ -66,12 +67,14 @@ export const captureException = (error: any) => {
   if (!error) {
     console.log(
       '%c captureException called with messing or incorrect arguments',
-      'background: #555; color: yellow'
+      'background: #555; color: yellow',
     )
     return
   }
   console.error(`My Error: ${error}`)
-  if (!__DEV__) Sentry.captureException(error)
+  if (!__DEV__) {
+    Sentry.captureException(error)
+  }
 }
 
 export const win = Dimensions.get('window')
@@ -121,7 +124,7 @@ export const timeStampType = [
     yesterday: 'yday0',
     days: 'd0',
     month: 'm0',
-    year: 'y0'
+    year: 'y0',
   },
   {
     now: 'now1',
@@ -129,13 +132,13 @@ export const timeStampType = [
     yesterday: 'yday1',
     days: 'd1',
     month: 'm1',
-    year: 'y1'
-  }
+    year: 'y1',
+  },
 ]
 export const timeLeftType = [
   {
     h: 'h0',
     min: 'min0',
-    sec: 'sec0'
-  }
+    sec: 'sec0',
+  },
 ]

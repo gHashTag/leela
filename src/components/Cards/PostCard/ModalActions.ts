@@ -8,7 +8,9 @@ interface getActionsProps {
   isDetail: boolean
 }
 export const getActions: getActionsT = ({ item, isDetail }) => {
-  if (!item) return []
+  if (!item) {
+    return []
+  }
   const { id, ownerId, accept } = item
   const isBaned =
     OtherPlayers.store.players.find(a => a.owner === ownerId)?.status === 'ban'
@@ -21,21 +23,21 @@ export const getActions: getActionsT = ({ item, isDetail }) => {
         PostStore.delPost(id)
       },
       title: 'Delete post',
-      icon: 'md-trash-outline'
+      icon: 'md-trash-outline',
     },
     {
       key: 'BAN_USER',
       color: isBaned ? undefined : 'red',
       onPress: () => PostStore.banUnbanUser(ownerId),
       title: isBaned ? 'Unban user' : 'Ban user',
-      icon: isBaned ? 'person-add-outline' : 'person-remove-outline'
+      icon: isBaned ? 'person-add-outline' : 'person-remove-outline',
     },
     {
       key: 'HIDE_OR_ACCEPT',
       color: accept ? 'red' : 'green',
       onPress: () => PostStore.acceptPost(accept, id),
       title: accept ? 'Hide report' : 'Accept report',
-      icon: accept ? 'ios-close-outline' : 'ios-checkmark'
+      icon: accept ? 'ios-close-outline' : 'ios-checkmark',
     },
     {
       key: 'BAN_AND_DEl',
@@ -46,7 +48,7 @@ export const getActions: getActionsT = ({ item, isDetail }) => {
         PostStore.banUnbanUser(ownerId)
       },
       title: 'Ban and delete all posts',
-      icon: 'md-warning-outline'
-    }
+      icon: 'md-warning-outline',
+    },
   ]
 }

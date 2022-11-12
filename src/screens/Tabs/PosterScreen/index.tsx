@@ -1,13 +1,15 @@
 import React, { useEffect } from 'react'
-import { StyleSheet, ImageBackground } from 'react-native'
-import { observer } from 'mobx-react'
-import { RootTabParamList } from '../../../types'
-import { OnlinePlayer } from '../../../store'
-import { fuchsia, openUrl } from '../../../constants'
-import I18n from 'i18n-js'
+
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { ButtonWithIcon } from '../../../components'
+import I18n from 'i18n-js'
+import { observer } from 'mobx-react'
+import { ImageBackground, StyleSheet } from 'react-native'
 import { vs } from 'react-native-size-matters'
+
+import { ButtonWithIcon } from '../../../components'
+import { fuchsia, openUrl } from '../../../constants'
+import { OnlinePlayer } from '../../../store'
+import { RootTabParamList } from '../../../types'
 
 type navigation = NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_0'>
 
@@ -39,17 +41,17 @@ const PosterScreen = observer(({}: PosterScreenT) => {
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   img: {
     flex: 1,
-    resizeMode: 'cover'
+    resizeMode: 'cover',
   },
   btnMore: {
     position: 'absolute',
     alignSelf: 'center',
-    bottom: vs(100)
-  }
+    bottom: vs(100),
+  },
 })
 
 const { img, btnMore } = styles

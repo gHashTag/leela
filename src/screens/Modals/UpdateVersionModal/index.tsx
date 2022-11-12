@@ -1,15 +1,17 @@
+import React from 'react'
+
 import { useTheme } from '@react-navigation/native'
 import I18n from 'i18n-js'
-import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { s, vs } from 'react-native-size-matters'
-import { ButtonSimple, Space, Text } from '../../../components'
 import AppLink from 'react-native-app-link'
+import { s, vs } from 'react-native-size-matters'
+
+import { ButtonSimple, Space, Text } from '../../../components'
 import { useNoBackHandler } from '../../../hooks'
 
 export function UpdateVersionModal() {
   const {
-    colors: { background }
+    colors: { background },
   } = useTheme()
   useNoBackHandler()
 
@@ -18,13 +20,13 @@ export function UpdateVersionModal() {
       GooglePackageName: 'com.leelagame',
       OtherAndroidURL: 'https://play.google.com/store/apps/details?id=com.leelagame',
       preferInApp: false,
-      openAppStoreIfInAppFails: true
+      openAppStoreIfInAppFails: true,
     }
     AppLink.openInStore({
       appName: 'Leela Chakra',
       appStoreId: 1296604457,
       playStoreId: 'com.leelagame',
-      appStoreLocale: 'en'
+      appStoreLocale: 'en',
     })
   }
   return (
@@ -45,7 +47,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   modalView: {
     margin: s(10),
@@ -55,14 +57,14 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5
+    elevation: 5,
   },
   textStyle: {
-    alignItems: 'center'
-  }
+    alignItems: 'center',
+  },
 })
 const { container, modalView, textStyle } = styles
