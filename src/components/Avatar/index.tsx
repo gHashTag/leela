@@ -1,6 +1,6 @@
 import React, { memo } from 'react'
 
-import { StyleProp, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 import FastImage from 'react-native-fast-image'
 import { s } from 'react-native-size-matters'
 import Spinner from 'react-native-spinkit'

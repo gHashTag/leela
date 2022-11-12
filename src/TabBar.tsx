@@ -44,10 +44,7 @@ export default observer(function TabBar({ state, navigation }: MaterialTopTabBar
               }
             }}
           >
-            <Tab
-              title={isFocused ? name : `${name}_DISABLE`}
-              imageStyle={{ alignSelf: 'flex-start' }}
-            />
+            <Tab title={isFocused ? name : `${name}_DISABLE`} />
           </TouchableOpacity>
         )
       })}

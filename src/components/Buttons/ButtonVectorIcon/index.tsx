@@ -1,12 +1,6 @@
 import React from 'react'
 
-import {
-  StyleProp,
-  StyleSheet,
-  TouchableOpacity,
-  ViewStyle,
-  useColorScheme,
-} from 'react-native'
+import { StyleProp, TouchableOpacity, ViewStyle, useColorScheme } from 'react-native'
 import { s } from 'react-native-size-matters'
 import Icon from 'react-native-vector-icons/FontAwesome'
 import Ionicons from 'react-native-vector-icons/Ionicons'
@@ -64,10 +58,3 @@ export function ButtonVectorIcon({
     </TouchableOpacity>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-})

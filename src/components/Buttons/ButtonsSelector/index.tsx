@@ -36,9 +36,9 @@ const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
         {data.map(a => (
           <TouchableOpacity key={a} onPress={() => setSelected(a)}>
             {selected === a ? (
-              <Text h={'h0'} title={a.toString()} textStyle={{ padding: 10 }} />
+              <Text h={'h0'} title={a.toString()} textStyle={page.numPadding} />
             ) : (
-              <Text h={'h1'} title={a.toString()} textStyle={{ padding: 10 }} />
+              <Text h={'h1'} title={a.toString()} textStyle={page.numPadding} />
             )}
           </TouchableOpacity>
         ))}
@@ -46,6 +46,12 @@ const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
       <Button title={I18n.t('startGame')} onPress={() => onPress(selected - 1)} />
     </View>
   )
+})
+
+const page = StyleSheet.create({
+  numPadding: {
+    padding: 10,
+  },
 })
 
 export { ButtonsSelector }

@@ -28,7 +28,7 @@ type ProfileScreenT = {
   navigation: navigation
 }
 
-export const OfflineProfileScreen = observer(({ navigation }: ProfileScreenT) => {
+export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
   const { DATA } = useHistoryData()
 
   return (
@@ -73,7 +73,7 @@ export const OfflineProfileScreen = observer(({ navigation }: ProfileScreenT) =>
             showsVerticalScrollIndicator={false}
             renderSectionHeader={({ section: { title } }) =>
               title ? (
-                <Text h={'h3'} title={title} textStyle={{ padding: 15, marginTop: 10 }} />
+                <Text h={'h3'} title={title} textStyle={page.headerSectionText} />
               ) : (
                 <Space height={20} />
               )
@@ -85,8 +85,9 @@ export const OfflineProfileScreen = observer(({ navigation }: ProfileScreenT) =>
   )
 })
 
-const styles = StyleSheet.create({
-  container: {},
+const page = StyleSheet.create({
+  headerSectionText: {
+    padding: 15,
+    marginTop: 10,
+  },
 })
-
-const { container } = styles

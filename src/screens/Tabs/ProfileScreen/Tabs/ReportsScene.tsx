@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import firestore from '@react-native-firebase/firestore'
 import { observer } from 'mobx-react'
 import { FlatList, StyleSheet, View } from 'react-native'
-import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated from 'react-native-reanimated'
 import { s, vs } from 'react-native-size-matters'
 
@@ -67,8 +67,8 @@ export const ReportsScene = observer(() => {
             ItemSeparatorComponent={() => <Space height={vs(10)} />}
             ListHeaderComponent={<Space height={vs(10)} />}
             ListEmptyComponent={
-              <View style={noPostBlock}>
-                <Text textStyle={noPostText} h={'h1'} title={I18n.t('noPosts')} />
+              <View style={page.noPostBlock}>
+                <Text textStyle={page.noPostText} h={'h1'} title={I18n.t('noPosts')} />
               </View>
             }
           />
@@ -79,7 +79,7 @@ export const ReportsScene = observer(() => {
   )
 })
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   noPostBlock: {
     paddingHorizontal: s(10),
   },
@@ -87,5 +87,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 })
-
-const { noPostText, noPostBlock } = styles

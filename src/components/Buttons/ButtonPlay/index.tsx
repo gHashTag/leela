@@ -12,7 +12,7 @@ interface ButtonPlayT {
 }
 const circle = s(60)
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -33,7 +33,6 @@ const styles = StyleSheet.create({
 
 const ButtonPlay = memo<ButtonPlayT>(({ isStop = false, onPress }) => {
   const source = () => ICONS[isStop ? 'pause' : 'play']
-  const { container, buttonStyle } = styles
 
   const {
     colors: { background },
@@ -41,8 +40,8 @@ const ButtonPlay = memo<ButtonPlayT>(({ isStop = false, onPress }) => {
 
   return (
     <TouchableOpacity onPress={onPress}>
-      <View style={[container, { backgroundColor: background }]}>
-        <Image source={source()} style={buttonStyle} />
+      <View style={[page.container, { backgroundColor: background }]}>
+        <Image source={source()} style={page.buttonStyle} />
       </View>
     </TouchableOpacity>
   )

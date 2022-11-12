@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import firestore from '@react-native-firebase/firestore'
 import { RouteProp } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import I18n from 'i18n-js'
 import { observer } from 'mobx-react'
-import { FlatList, View } from 'react-native'
+import { FlatList, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
 import { Header, PostCard, Space, Spin, Text } from '../../../components'
@@ -18,7 +18,7 @@ interface Ipost {
   route: RouteProp<RootTabParamList, 'TAB_BOTTOM_1'>
 }
 
-const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
+export const PostScreen = observer(({}: Ipost) => {
   const [limit, setLimit] = useState(15)
 
   useEffect(() => {
@@ -61,11 +61,15 @@ const PostScreen: React.FC<Ipost> = observer(({ navigation, route }) => {
       }
       ListEmptyComponent={
         <View style={{ paddingHorizontal: s(20) }}>
-          <Text textStyle={{ textAlign: 'center' }} h={'h1'} title={I18n.t('noPosts')} />
+          <Text textStyle={page.noPostText} h={'h1'} title={I18n.t('noPosts')} />
         </View>
       }
     />
   )
 })
 
-export { PostScreen }
+const page = StyleSheet.create({
+  noPostText: {
+    textAlign: 'center',
+  },
+})

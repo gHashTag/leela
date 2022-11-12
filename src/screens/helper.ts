@@ -4,7 +4,6 @@ import firestore from '@react-native-firebase/firestore'
 import storage from '@react-native-firebase/storage'
 import I18n from 'i18n-js'
 import { nanoid } from 'nanoid/non-secure'
-import branch from 'react-native-branch'
 import ImagePicker from 'react-native-image-crop-picker'
 import semver from 'semver'
 

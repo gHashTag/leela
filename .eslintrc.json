@@ -5,7 +5,7 @@
   "plugins": ["@typescript-eslint", "react", "react-native", "import"],
   "overrides": [
     {
-      "files": ["*.ts", "*.tsx"],
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
         "import/order": [
           "error",
@@ -37,11 +37,11 @@
         "no-undef": "off",
         "semi": "off",
         "no-catch-shadow": "off",
-        "import/no-default-export": "error",
+        "import/no-default-export": "off",
         "react-native/no-unused-styles": 2,
         "react-native/split-platform-components": "off",
         "react-native/no-inline-styles": 2,
-        "react-native/no-color-literals": 2,
+        "react-native/no-color-literals": "off",
         "react-native/no-single-element-style-arrays": 2
       }
     }

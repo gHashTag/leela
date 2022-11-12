@@ -80,11 +80,11 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
       }}
     >
       <FlatList
-        style={{ width: '100%' }}
+        style={page.fullWidth}
         ListFooterComponent={
           <>
             <Space height={vs(25)} />
-            <Text textStyle={centerTxt} h={'h1'} title={I18n.t('contacts')} />
+            <Text textStyle={page.centerTxt} h={'h1'} title={I18n.t('contacts')} />
             <ThemeProvider theme={theme}>
               <SocialLinks music />
               <Space height={vs(130)} />
@@ -93,7 +93,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
         }
         ListHeaderComponent={
           loading ? (
-            <View style={loadContainer}>
+            <View style={page.loadContainer}>
               <Space height={vs(50)} />
               <Spin size={s(80)} type="Bounce" color={primary} />
             </View>
@@ -105,7 +105,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
           loading ? null : (
             <View>
               <Space height={vs(15)} />
-              <Text textStyle={centerTxt} h="h3" title={I18n.t('loadErr')} />
+              <Text textStyle={page.centerTxt} h="h3" title={I18n.t('loadErr')} />
             </View>
           )
         }
@@ -128,13 +128,13 @@ const RenderItem = memo(({ item }: PlayraItemT) => {
   }
 
   return (
-    <View style={{ width: '90%', alignSelf: 'center' }}>
+    <View style={page.videoContainer}>
       <Space height={vs(10)} />
       <TouchableOpacity activeOpacity={0.8} onPress={handlePress}>
         <Text h={'h1'} title={title} />
         <Space height={vs(20)} />
-        <View style={videoView}>
-          <Image style={posterS} source={{ uri: poster }} />
+        <View style={page.videoView}>
+          <Image style={page.posterS} source={{ uri: poster }} />
         </View>
       </TouchableOpacity>
       <Space height={vs(40)} />
@@ -142,7 +142,7 @@ const RenderItem = memo(({ item }: PlayraItemT) => {
   )
 })
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   videoView: {
     height: s(200),
     width: '100%',
@@ -158,5 +158,11 @@ const styles = StyleSheet.create({
   centerTxt: {
     textAlign: 'center',
   },
+  fullWidth: {
+    width: '100%',
+  },
+  videoContainer: {
+    width: '90%',
+    alignSelf: 'center',
+  },
 })
-const { videoView, posterS, loadContainer, centerTxt } = styles

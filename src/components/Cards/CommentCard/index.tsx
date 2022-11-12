@@ -17,7 +17,7 @@ import {
 import { OpenActionsModal, gray, lightGray } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
 import { PostStore } from '../../../store'
-import { ButtonsModalT, CommentT } from '../../../types'
+import { CommentT } from '../../../types'
 
 interface CommentCardI {
   item: CommentT
@@ -64,7 +64,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
 
     return (
       <>
-        <View style={container}>
+        <View style={page.container}>
           <View style={{ marginRight: s(6) }}>
             <PlanAvatar
               avaUrl={avaUrl}
@@ -73,13 +73,13 @@ export const CommentCard: React.FC<CommentCardI> = observer(
               size="medium"
             />
             {showLine && (
-              <View style={lineCont} onLayout={_onLayout}>
-                <View style={[verticalLine, { height: lineH }]} />
+              <View style={page.lineCont} onLayout={_onLayout}>
+                <View style={[page.verticalLine, { height: lineH }]} />
               </View>
             )}
           </View>
-          <View style={content}>
-            <View style={commentHead}>
+          <View style={page.content}>
+            <View style={page.commentHead}>
               <Text numberOfLines={1} h={'h6'} title={curName} />
               <Text
                 numberOfLines={1}
@@ -87,7 +87,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
                 h={'h6'}
                 title={`  · ${date}`}
               />
-              <View style={{ flex: 1 }} />
+              <View style={page.flexOne} />
               <ButtonVectorIcon size={s(15)} name="chevron-down" onPress={OpenModal} />
               <Space width={s(5)} />
             </View>
@@ -96,8 +96,8 @@ export const CommentCard: React.FC<CommentCardI> = observer(
             <FlatList
               data={subCom}
               keyExtractor={a => a.id}
-              renderItem={({ item, index }) => (
-                <SubCommentCard item={item} index={index} />
+              renderItem={({ item: commentItem, index: id }) => (
+                <SubCommentCard item={commentItem} index={id} />
               )}
             />
           </View>
@@ -107,7 +107,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
   },
 )
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   container: {
     flex: 1,
     paddingVertical: PADDING,
@@ -133,6 +133,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
+  flexOne: {
+    flex: 1,
+  },
 })
-
-const { container, verticalLine, lineCont, content, commentHead } = styles

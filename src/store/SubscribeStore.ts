@@ -1,9 +1,6 @@
 import { makeAutoObservable } from 'mobx'
 import { makePersistable } from 'mobx-persist-store'
 
-// import Purchases from 'react-native-purchases'
-import { ENTITLEMENT_ID } from '../constants'
-
 const SubscribeStore = makeAutoObservable({
   visible: false,
   today: '',

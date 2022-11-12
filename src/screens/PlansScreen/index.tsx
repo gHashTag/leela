@@ -33,7 +33,7 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
         report: itemIsReported,
       })
     },
-    [],
+    [navigation],
   )
 
   return (

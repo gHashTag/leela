@@ -3,7 +3,7 @@ import React from 'react'
 import { Image, StyleProp, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native'
 import { vs } from 'react-native-size-matters'
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   img: {
     width: vs(18),
     height: vs(18),
@@ -16,10 +16,9 @@ interface ButtonEditT {
 }
 
 const ButtonEdit = ({ onPress, viewStyle }: ButtonEditT) => {
-  const { img } = styles
   return (
     <TouchableOpacity onPress={onPress} style={viewStyle}>
-      <Image style={img} source={require('./edit.png')} />
+      <Image style={page.img} source={require('./edit.png')} />
     </TouchableOpacity>
   )
 }

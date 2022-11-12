@@ -21,9 +21,9 @@ export const useTranslation = ({
   useEffect(() => {
     if (translatedText) {
       setTransText(translatedText)
-      setHideTranslate(Boolean(isHideTranslate))
+      setHideTranslate(!!isHideTranslate)
     }
-  }, [])
+  }, [translatedText, isHideTranslate])
 
   async function handleTranslate() {
     if (item?.text) {

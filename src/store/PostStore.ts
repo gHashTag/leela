@@ -1,3 +1,4 @@
+// @ts-ignore
 import { YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
 import auth from '@react-native-firebase/auth'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
@@ -10,9 +11,6 @@ import { OtherPlayers } from './OtherPlayers'
 
 import { captureException } from '../constants'
 import { getProfile, getUid } from '../screens/helper'
-
-// @ts-ignore
-
 import {
   CommentT,
   FormCommentT,
@@ -120,8 +118,7 @@ export const PostStore = {
         .then(function (querySnap) {
           querySnap.forEach(function (doc) {
             const data = doc.data()
-            const commentId = data.id
-            PostStore.removeCommentIdInPost({ commentId, postId })
+            PostStore.removeCommentIdInPost({ commentId: data.id, postId })
             doc.ref.delete()
           })
         })

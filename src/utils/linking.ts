@@ -69,7 +69,7 @@ const getCustomNavState = ({ path, config }: getCustomNavStateT) => {
   return getStateFromPath(path, config)
 }
 
-const getDetailPostState = ({ path, config }: getCustomNavStateT) => {
+const getDetailPostState = ({ path }: getCustomNavStateT) => {
   const splitedPath = path.split('/')
   const postId = splitedPath[splitedPath.length - 1]
 

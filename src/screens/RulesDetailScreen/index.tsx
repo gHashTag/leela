@@ -26,8 +26,8 @@ const styles = StyleSheet.create({
   },
 })
 
-const RulesDetailScreen = observer(({ navigation, route }: RulesDetailScreenT) => {
-  const { title, content, videoUrl } = route.params
+const RulesDetailScreen = observer(({ route }: RulesDetailScreenT) => {
+  const { title, content } = route.params
   const { h3 } = styles
 
   return (

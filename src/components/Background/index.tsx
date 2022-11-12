@@ -23,7 +23,7 @@ interface BackgroundT {
   enableTopInsets?: boolean
 }
 
-const Background = memo(
+export const Background = memo(
   ({
     status = 'bg',
     sourceImages,
@@ -36,10 +36,10 @@ const Background = memo(
     const { bottom, top } = useSafeAreaInsets()
 
     return (
-      <View style={container}>
+      <View style={page.container}>
         <View
           style={[
-            imgContainer,
+            page.imgContainer,
             style,
             enableBottomInsets && { paddingBottom: bottom },
             enableTopInsets && { paddingTop: top },
@@ -68,24 +68,27 @@ interface RenderImagePartT {
   images: any[]
 }
 
-const RenderImagePart = ({ img, id, isUri, images }: RenderImagePartT) => {
+const RenderImagePart = ({ img, id, isUri }: RenderImagePartT) => {
   const { width: W } = useWindowDimensions()
   const aspect = useImageAspect(img, !isUri)
 
   const height = W / aspect
-  const isOne = images?.length
+  //const isOne = images?.length
   const isTop = id === 0
 
   return (
-    <View style={[subImgContainer, !isTop && { justifyContent: 'flex-end' }]}>
-      <Image source={isUri ? { uri: img } : img} style={[imgStyle, { height }]} />
+    <View style={[page.subImgContainer, !isTop && page.bottomImage]}>
+      <Image source={isUri ? { uri: img } : img} style={[page.imgStyle, { height }]} />
     </View>
   )
 }
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  bottomImage: {
+    justifyContent: 'flex-end',
   },
   imgContainer: {
     position: 'absolute',
@@ -100,6 +103,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 })
-const { container, imgContainer, imgStyle, subImgContainer } = styles
-
-export { Background }

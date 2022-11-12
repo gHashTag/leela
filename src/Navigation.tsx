@@ -51,7 +51,6 @@ import { checkVersion, getFireBaseRef } from './screens/helper'
 import { DiceStore } from './store'
 import TabBar from './TabBar'
 import { RootStackParamList, RootTabParamList } from './types'
-import { UI } from './UI'
 import { linking } from './utils'
 
 const DarkTheme = {
@@ -124,6 +123,9 @@ const App = () => {
     SystemNavigationBar.setNavigationBarDividerColor(lightGray)
     Orientation.lockToPortrait()
     // check version
+  }, [isDark])
+
+  useEffect(() => {
     const unsub = getFireBaseRef('/minVersion/').on('value', async snap => {
       checkVersion(snap.val())
     })
@@ -145,7 +147,6 @@ const App = () => {
         }}
         initialRouteName="WELCOME_SCREEN"
       >
-        <Stack.Screen name="UI" component={UI} />
         {/* Auth */}
         <Stack.Group
           screenOptions={{

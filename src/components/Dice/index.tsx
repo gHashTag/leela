@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 
 import { useFocusEffect } from '@react-navigation/native'
 import { observer } from 'mobx-react'
@@ -39,7 +39,7 @@ const getImage = (number: number) => {
   }
 }
 
-const Dice = observer(() => {
+export const Dice = observer(() => {
   const [canRoll, setCanRoll] = useState<boolean>(true)
   const spinValue = useRef(new Animated.Value(0)).current
 
@@ -87,7 +87,7 @@ const Dice = observer(() => {
       onPress={() => {
         canRoll && rollDice()
       }}
-      style={[styles.diceContainer, isOpacity && { opacity: 0.4 }]}
+      style={[styles.diceContainer, isOpacity && page.opacityCube]}
     >
       <Animated.Image
         style={[styles.image, { transform: [{ rotate: spin }] }]}
@@ -97,4 +97,8 @@ const Dice = observer(() => {
   )
 })
 
-export { Dice }
+const page = StyleSheet.create({
+  opacityCube: {
+    opacity: 0.4,
+  },
+})

@@ -26,23 +26,22 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
   const isDark = useColorScheme() === 'dark'
   useFocusEffect(() => {
     Orientation.unlockAllOrientations()
-    SystemNavigationBar.setNavigationColor('black', false)
+    SystemNavigationBar.setNavigationColor('black', 'light')
     return () => {
       SystemNavigationBar.setNavigationColor(
         isDark ? black : white,
-        !isDark ? false : true,
+        !isDark ? 'light' : 'dark',
       )
-      //Orientation.lockToPortrait()
     }
   })
   return (
     <>
       <StatusBar hidden backgroundColor="black" barStyle="light-content" />
-      <View style={transpView}>
+      <View style={page.transpView}>
         <VideoPlayer source={{ uri }} poster={poster} />
         <ButtonVectorIcon
           onPress={handleBack}
-          viewStyle={btnS}
+          viewStyle={page.btnS}
           name="angle-double-left"
           size={s(40)}
         />
@@ -51,7 +50,7 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
   )
 }
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   transpView: {
     flex: 1,
   },
@@ -62,5 +61,3 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
 })
-
-const { transpView, btnS } = styles

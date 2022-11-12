@@ -15,8 +15,8 @@ interface RenderButtonsT {
   press?: () => void
 }
 
-export function RenderButtons({ item, index, colorOnPress, press }: RenderButtonsT) {
-  const { onPress, key, title, color, icon } = item
+export function RenderButtons({ item, colorOnPress, press }: RenderButtonsT) {
+  const { onPress, title, color, icon } = item
   const {
     colors: { text },
   } = useTheme()
@@ -28,17 +28,20 @@ export function RenderButtons({ item, index, colorOnPress, press }: RenderButton
 
   return (
     <Pressable
-      style={({ pressed }) => [butCont, pressed && { backgroundColor: colorOnPress }]}
+      style={({ pressed }) => [
+        page.butCont,
+        pressed && { backgroundColor: colorOnPress },
+      ]}
       onPress={handlePress}
     >
       <Icon name={icon} color={curColor} size={s(24)} />
       <Space width={s(15)} />
-      <Text textStyle={titleStyle} oneColor={curColor} h="h4" title={title} />
+      <Text textStyle={page.titleStyle} oneColor={curColor} h="h4" title={title} />
     </Pressable>
   )
 }
 
-const stylesButtons = StyleSheet.create({
+const page = StyleSheet.create({
   butCont: {
     flex: 1,
     flexDirection: 'row',
@@ -52,5 +55,3 @@ const stylesButtons = StyleSheet.create({
     flex: 1,
   },
 })
-
-const { butCont, titleStyle } = stylesButtons

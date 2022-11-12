@@ -5,7 +5,7 @@ import { observer } from 'mobx-react-lite'
 import { StyleSheet, View, useWindowDimensions } from 'react-native'
 import { GestureDetector } from 'react-native-gesture-handler'
 import Animated from 'react-native-reanimated'
-import { s, vs } from 'react-native-size-matters'
+import { vs } from 'react-native-size-matters'
 
 import { TabContextProvider } from './TabContext'
 import { HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
@@ -36,7 +36,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
       textAlign="center"
     >
       <TabContextProvider>
-        {({ tabViewH, screenStyle, headerGesture, blockScrollUntilAtTheTop1 }: any) => (
+        {({ tabViewH, screenStyle, headerGesture }: any) => (
           <Animated.View style={screenStyle}>
             {OnlinePlayer.store.loadingProf && DiceStore.online ? (
               <CenterView>
@@ -44,7 +44,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                 <Space height={H * 0.5} />
               </CenterView>
             ) : (
-              <View style={container}>
+              <View style={page.container}>
                 {DiceStore.online && (
                   <HeaderMaster
                     onPress={() =>
@@ -69,7 +69,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                       Scene: IntentionOfGame,
                     },
                   ]}
-                  style={[tabContainer, { height: tabViewH }]}
+                  style={[page.tabContainer, { height: tabViewH }]}
                 />
               </View>
             )}
@@ -80,14 +80,12 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   )
 })
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   tabContainer: {},
   container: {
     alignItems: 'center',
     width: '100%',
   },
 })
-
-const { tabContainer, container } = styles
 
 export { ProfileScreen }

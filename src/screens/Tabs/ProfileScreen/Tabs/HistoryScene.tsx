@@ -30,7 +30,7 @@ export const HistoryScene = observer(() => {
           }}
         >
           <SectionList
-            style={historyList}
+            style={page.historyList}
             scrollEnabled={false}
             ListFooterComponent={<Space height={vs(50)} />}
             initialNumToRender={60}
@@ -42,7 +42,7 @@ export const HistoryScene = observer(() => {
             showsVerticalScrollIndicator={false}
             renderSectionHeader={({ section: { title } }) =>
               title ? (
-                <Text h={'h3'} title={title} textStyle={sectionHeaderText} />
+                <Text h={'h3'} title={title} textStyle={page.sectionHeaderText} />
               ) : (
                 <Space height={vs(10)} />
               )
@@ -55,7 +55,7 @@ export const HistoryScene = observer(() => {
   )
 })
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   historyList: {
     paddingHorizontal: s(10),
     flex: 1,
@@ -65,5 +65,3 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 })
-
-const { historyList, sectionHeaderText } = styles

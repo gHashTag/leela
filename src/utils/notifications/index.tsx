@@ -1,8 +1,4 @@
-import notifee, {
-  AndroidBadgeIconType,
-  AndroidImportance,
-  Event,
-} from '@notifee/react-native'
+import { Event } from '@notifee/react-native'
 import { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 
 import { replyActionHandler } from './actionHandlers'

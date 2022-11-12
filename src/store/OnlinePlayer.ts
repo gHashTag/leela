@@ -9,12 +9,7 @@ import { upStepOnline } from './helper'
 import { delTokenOnSignOut } from './MessagingStore'
 
 import { DiceStore, actionsDice } from '.'
-import {
-  OpenPlanReportModal,
-  captureException,
-  navigate,
-  timeLeftType,
-} from '../constants'
+import { captureException, navigate, timeLeftType } from '../constants'
 import {
   getFireBaseRef,
   getIMG,

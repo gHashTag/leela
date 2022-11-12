@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React, { memo } from 'react'
 
 import { observer } from 'mobx-react'
@@ -71,7 +72,7 @@ export const PostCard: React.FC<postCardI> = memo(
 
     if (isDetail) {
       return (
-        <View style={[container, { borderBottomWidth: 0 }]}>
+        <View style={[container, withoutBottomBorder]}>
           <View style={headerS}>
             <PlanAvatar
               avaUrl={avaUrl}
@@ -156,7 +157,7 @@ export const PostCard: React.FC<postCardI> = memo(
               <>
                 <ButtonVectorIcon
                   onPress={handleAdminMenu}
-                  viewStyle={[smallBtn, { alignItems: 'flex-end', marginRight: s(4) }]}
+                  viewStyle={[smallBtn, nonDetailAdminMenuButton]}
                   ionicons
                   name="md-ellipsis-vertical-circle"
                   size={iconSize + s(3)}
@@ -194,7 +195,7 @@ export const PostCard: React.FC<postCardI> = memo(
               <ButtonVectorIcon
                 onPress={handleComment}
                 count={commCount}
-                viewStyle={[smallBtn, { justifyContent: 'flex-start' }]}
+                viewStyle={[smallBtn, nonDetailCommentButton]}
                 ionicons
                 name="chatbubble-outline"
                 size={iconSize}
@@ -210,7 +211,7 @@ export const PostCard: React.FC<postCardI> = memo(
                 size={iconSize}
               />
               <ButtonVectorIcon
-                viewStyle={[smallBtn, { justifyContent: 'flex-end', marginRight: s(5) }]}
+                viewStyle={[smallBtn, nonDetailLinkButton]}
                 name="md-link-outline"
                 ionicons
                 iconSize={iconSize + s(4)}
@@ -224,7 +225,8 @@ export const PostCard: React.FC<postCardI> = memo(
   }),
 )
 
-const style = StyleSheet.create({
+//
+const page = StyleSheet.create({
   container: {
     paddingLeft: s(12),
     paddingRight: s(12),
@@ -284,6 +286,20 @@ const style = StyleSheet.create({
   avaContainer: {
     height: '100%',
   },
+  nonDetailCommentButton: {
+    justifyContent: 'flex-start',
+  },
+  nonDetailLinkButton: {
+    justifyContent: 'flex-end',
+    marginRight: s(5),
+  },
+  nonDetailAdminMenuButton: {
+    alignItems: 'flex-end',
+    marginRight: s(4),
+  },
+  withoutBottomBorder: {
+    borderBottomWidth: 0,
+  },
 })
 
 const {
@@ -298,6 +314,9 @@ const {
   headerName,
   lightText,
   flex1,
-  likeBtn,
   avaContainer,
-} = style
+  nonDetailLinkButton,
+  nonDetailCommentButton,
+  nonDetailAdminMenuButton,
+  withoutBottomBorder,
+} = page

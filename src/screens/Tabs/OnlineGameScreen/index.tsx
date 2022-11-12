@@ -30,7 +30,7 @@ type OnlineGameScreenT = {
   navigation: navigation
 }
 
-const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
+export const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   const [images, setImages] = useState<string[]>([])
   const [mdContent, setMdContent] = useState<string[]>([])
   const mdProps = useMarkdownProps(0.94, 0.94)
@@ -38,12 +38,12 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   useEffect(() => {
     const getData = async () => {
       try {
-        const images = await (
+        const imagesData = await (
           await fetch(
             'https://leelachakra.com/resource/LeelaChakra/PhotoLeela/leelaPhoto.json',
           )
         ).json()
-        setImages(images)
+        setImages(imagesData)
         const mdContent1 = await (
           await fetch(
             `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${lang}1.md`,
@@ -70,7 +70,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
             <Markdown {...mdProps}>{part}</Markdown>
             <Space height={vs(15)} />
             <ButtonWithIcon
-              viewStyle={btn}
+              viewStyle={page.btn}
               color={fuchsia}
               onPress={() => navigation.navigate('PLAYRA_SCREEN')}
               iconName="ios-musical-notes"
@@ -91,16 +91,16 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   const topBackgroundMargin = useSafeAreaInsets().top + ms(37, 0.5)
 
   return (
-    <Background style={[bgStyle, { paddingTop: topBackgroundMargin }]}>
+    <Background style={[page.bgStyle, { paddingTop: topBackgroundMargin }]}>
       <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
         <Header title={I18n.t('events')} textAlign="center" />
         <Space height={s(20)} />
         <ImageSwiper images={images} height={vs(300)} />
         <Space height={s(10)} />
-        <View style={mdStyle}>
+        <View style={page.mdStyle}>
           {mdContent?.map(renderMarkdownPart)}
           <Space height={vs(10)} />
-          <Text textStyle={centered} h="h3" title={I18n.t('contacts')} />
+          <Text textStyle={page.centered} h="h3" title={I18n.t('contacts')} />
           <SocialLinks />
           <Space height={vs(80)} />
         </View>
@@ -109,7 +109,7 @@ const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => {
   )
 })
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   btn: {
     alignSelf: 'center',
   },
@@ -123,6 +123,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 })
-const { centered, btn, bgStyle, mdStyle } = styles
-
-export { OnlineGameScreen }

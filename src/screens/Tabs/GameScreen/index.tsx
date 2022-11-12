@@ -2,6 +2,7 @@ import React from 'react'
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
+import { StyleSheet } from 'react-native'
 import Rate from 'react-native-rate'
 import { s, vs } from 'react-native-size-matters'
 
@@ -71,7 +72,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
               }
             />
             <Space height={vs(3)} />
-            <Text textStyle={{ textAlign: 'center' }} h="h1" title={`${I18n.t('win')}`} />
+            <Text textStyle={page.centerText} h="h1" title={`${I18n.t('win')}`} />
             {!DiceStore.rate ? (
               <ButtonElements
                 type="solid"
@@ -91,6 +92,12 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       </Background>
     </>
   )
+})
+
+const page = StyleSheet.create({
+  centerText: {
+    textAlign: 'center',
+  },
 })
 
 export { GameScreen }

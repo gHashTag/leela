@@ -26,7 +26,6 @@ interface ButtonWithIconT {
 export const ButtonWithIcon = memo<ButtonWithIconT>(
   ({ title, onPress, color, iconName, viewStyle }) => {
     const {
-      dark,
       colors: { text },
     } = useTheme()
     const isPressed = useSharedValue(0)

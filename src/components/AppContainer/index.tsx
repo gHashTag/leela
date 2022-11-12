@@ -5,13 +5,6 @@ import { StyleSheet, View } from 'react-native'
 import { Background } from '../Background'
 import { Header } from '../Header'
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    height: '100%',
-  },
-})
-
 interface AppContainerT {
   iconLeft?: string | null
   colorLeft?: string
@@ -30,7 +23,7 @@ interface AppContainerT {
   status?: 'bg' | 'clean' | '1x1'
 }
 
-function AppContainer({
+export function AppContainer({
   iconLeft = null,
   onPress,
   onPressRight,
@@ -45,9 +38,8 @@ function AppContainer({
   textAlign = 'left',
   status,
 }: AppContainerT) {
-  const { container } = styles
   return (
-    <View style={container}>
+    <View style={page.container}>
       {title && header && (
         <Header
           displayStatus={displayStatus}
@@ -71,4 +63,9 @@ function AppContainer({
   )
 }
 
-export { AppContainer }
+const page = StyleSheet.create({
+  container: {
+    width: '100%',
+    height: '100%',
+  },
+})

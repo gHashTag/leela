@@ -1,5 +1,5 @@
 import { goBack } from '../../../constants'
-import { OnlinePlayer, OtherPlayers, PostStore } from '../../../store'
+import { OtherPlayers, PostStore } from '../../../store'
 import { ButtonsModalT } from '../../../types'
 import { PostT } from '../../../types'
 type getActionsT = (props: getActionsProps) => ButtonsModalT[]

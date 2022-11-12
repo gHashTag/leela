@@ -2,13 +2,13 @@ import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 import { FieldValues, FormProvider, SubmitHandler, useForm } from 'react-hook-form'
-import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet, View } from 'react-native'
+import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
 
 import { Input } from '..'
 import { Text } from '../'
-import { W, black, navigate, primary } from '../../constants'
+import { W, black, primary } from '../../constants'
 import { PostStore } from '../../store'
 
 interface CreateCommentT {
@@ -35,13 +35,12 @@ export function CreateComment({
     mode: 'onChange',
     resolver: yupResolver(schema),
   })
-  const charCount = 'methods.getValues().text.length'
   const [length, setLength] = useState(0)
   useEffect(() => {
     if (visible) {
       setTimeout(() => methods.setFocus('text'), 200)
     }
-  }, [visible])
+  }, [visible, methods])
   const handleSubmit: SubmitHandler<FieldValues> = async data => {
     methods.reset()
     setVisible(false)

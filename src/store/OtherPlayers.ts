@@ -1,4 +1,4 @@
-import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
+import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
 import { makeAutoObservable } from 'mobx'
 
 import { captureException } from '../constants'
@@ -22,14 +22,14 @@ export const OtherPlayers = {
   getOtherProf: async ({ snapshot }: GetOtherI) => {
     if (snapshot) {
       const otherData: any = await Promise.all(
-        snapshot.docs.map(async (a, id) => {
+        snapshot.docs.map(async a => {
           if (a.exists) {
             const data: UserT = a.data() as UserT
             let isOnline = false
             await getFireBaseRef(`/online/${data.owner}`)
               .once('value')
-              .then(async snapshot => {
-                isOnline = snapshot.val()
+              .then(async snapshotOnline => {
+                isOnline = snapshotOnline.val()
               })
               .catch(err => captureException(err))
             const result: OtherUsersT = {

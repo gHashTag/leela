@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Sentry from '@sentry/react-native'
 import { configure } from 'mobx'
 import { configurePersistable } from 'mobx-persist-store'
-import { AppState, LogBox } from 'react-native'
+import { AppState, LogBox, StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import SplashScreen from 'react-native-splash-screen'
@@ -72,11 +72,15 @@ function AppWithProviders() {
 
   return (
     <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={page.flexOne}>
         <Navigation />
       </GestureHandlerRootView>
     </SafeAreaProvider>
   )
 }
+
+const page = StyleSheet.create({
+  flexOne: { flex: 1 },
+})
 
 export default Sentry.wrap(AppWithProviders)

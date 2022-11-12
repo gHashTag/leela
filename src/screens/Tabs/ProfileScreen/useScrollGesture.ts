@@ -51,10 +51,10 @@ export const useScrollGesture = () => {
       return
     }
 
-    for (const snapPoint of SNAP_POINTS_FROM_TOP) {
-      const distFromSnap = Math.abs(snapPoint - endOffsetY)
+    for (const point of SNAP_POINTS_FROM_TOP) {
+      const distFromSnap = Math.abs(point - endOffsetY)
       if (distFromSnap < Math.abs(destSnapPoint - endOffsetY)) {
-        destSnapPoint = snapPoint
+        destSnapPoint = point
       }
     }
 
