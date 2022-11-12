@@ -75,7 +75,7 @@ const SignUp = (): ReactElement => {
                   title={I18n.t('signUp')}
                   onPress={methods.handleSubmit(onSubmit, onError)}
                 />
-                <Space height={vs(50)} />
+                <Space height={vs(10)} />
               </FormProvider>
             </ScrollView>
           </KeyboardContainer>

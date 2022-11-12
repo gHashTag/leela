@@ -105,7 +105,7 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
                 title={I18n.t('done')}
                 onPress={methods.handleSubmit(onSubmit, er => console.log(er))}
               />
-              <Space height={vs(50)} />
+              <Space height={vs(10)} />
             </FormProvider>
           </ScrollView>
         </KeyboardContainer>

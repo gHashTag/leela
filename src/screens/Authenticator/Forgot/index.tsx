@@ -1,30 +1,32 @@
 import React, { useState } from 'react'
-import { I18n } from '../../../utils'
+
+import { yupResolver } from '@hookform/resolvers/yup'
+import auth from '@react-native-firebase/auth'
 import { RouteProp, useTheme } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import {
+  FieldValues,
+  FormProvider,
+  SubmitErrorHandler,
+  SubmitHandler,
+  useForm,
+} from 'react-hook-form'
+import { s, vs } from 'react-native-size-matters'
+import * as yup from 'yup'
+
 import {
   AppContainer,
   Button,
   CenterView,
   Input,
+  KeyboardContainer,
   Loading,
   Space,
-  TextError
+  TextError,
 } from '../../../components'
-import { goBack, white, black, captureException, W } from '../../../constants'
+import { W, black, captureException, goBack, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
-import auth from '@react-native-firebase/auth'
-
-import {
-  useForm,
-  FormProvider,
-  SubmitHandler,
-  SubmitErrorHandler,
-  FieldValues
-} from 'react-hook-form'
-import { yupResolver } from '@hookform/resolvers/yup'
-import * as yup from 'yup'
-import { s, vs } from 'react-native-size-matters'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { I18n } from '../../../utils'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'FORGOT'>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'FORGOT'>
@@ -41,7 +43,7 @@ const schema = yup
       .string()
       .email(I18n.t('invalidEmail'))
       .trim()
-      .required(I18n.t('requireField'))
+      .required(I18n.t('requireField')),
   })
   .required()
 
@@ -53,8 +55,8 @@ const Forgot = ({ route, navigation }: ForgotT) => {
     mode: 'onChange',
     resolver: yupResolver(schema),
     defaultValues: {
-      email: route.params.email
-    }
+      email: route.params.email,
+    },
   })
 
   const onSubmit: SubmitHandler<FieldValues> = async data => {
@@ -96,27 +98,29 @@ const Forgot = ({ route, navigation }: ForgotT) => {
       {loading ? (
         <Loading />
       ) : (
-        <CenterView>
-          <FormProvider {...methods}>
-            <Input
-              name="email"
-              placeholder="E-mail"
-              autoCapitalize="none"
-              color={color}
-              additionalStyle={{ width: W - s(40) }}
-            />
-            <Space height={vs(20)} />
-            {error !== '' && (
-              <TextError title={error} textStyle={{ alignSelf: 'center' }} />
-            )}
+        <KeyboardContainer>
+          <CenterView>
+            <FormProvider {...methods}>
+              <Input
+                name="email"
+                placeholder="E-mail"
+                autoCapitalize="none"
+                color={color}
+                additionalStyle={{ width: W - s(40) }}
+              />
+              <Space height={vs(15)} />
+              {error !== '' && (
+                <TextError title={error} textStyle={{ alignSelf: 'center' }} />
+              )}
+              <Space height={vs(10)} />
+              <Button
+                title={I18n.t('confirm')}
+                onPress={methods.handleSubmit(onSubmit, onError)}
+              />
+            </FormProvider>
             <Space height={vs(10)} />
-            <Button
-              title={I18n.t('confirm')}
-              onPress={methods.handleSubmit(onSubmit, onError)}
-            />
-          </FormProvider>
-          <Space height={vs(40)} />
-        </CenterView>
+          </CenterView>
+        </KeyboardContainer>
       )}
     </AppContainer>
   )

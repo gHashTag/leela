@@ -2,15 +2,12 @@ import React, { memo } from 'react'
 import {
   StyleSheet,
   StyleProp,
-  ImageStyle,
-  ImageBackground,
   View,
   Image,
   useWindowDimensions,
   ViewStyle
 } from 'react-native'
 import { ICONS } from './images'
-import { W, H } from '../../constants'
 import { useImageAspect } from '../../hooks'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -94,7 +91,6 @@ const styles = StyleSheet.create({
   },
   imgStyle: {
     width: '100%',
-
     marginVertical: 10
   },
   subImgContainer: {

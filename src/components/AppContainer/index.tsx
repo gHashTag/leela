@@ -2,7 +2,6 @@ import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Header } from '../Header'
 import { Background } from '../Background'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 const styles = StyleSheet.create({
   container: {
@@ -46,28 +45,26 @@ function AppContainer({
 }: AppContainerT) {
   const { container } = styles
   return (
-    <View style={{ flex: 1 }}>
-      <View style={container}>
-        {title && header && (
-          <Header
-            displayStatus={displayStatus}
-            textAlign={textAlign}
-            title={title}
-            onPress={onPress}
-            iconLeftOpacity={iconLeftOpacity}
-            onPressRight={onPressRight}
-            iconLeft={iconLeft}
-            iconRight={iconRight}
-          />
-        )}
-        <Background
-          enableTopInsets={enableBackgroundTopInsets}
-          enableBottomInsets={enableBackgroundBottomInsets}
-          status={status}
-        >
-          {children}
-        </Background>
-      </View>
+    <View style={container}>
+      {title && header && (
+        <Header
+          displayStatus={displayStatus}
+          textAlign={textAlign}
+          title={title}
+          onPress={onPress}
+          iconLeftOpacity={iconLeftOpacity}
+          onPressRight={onPressRight}
+          iconLeft={iconLeft}
+          iconRight={iconRight}
+        />
+      )}
+      <Background
+        enableTopInsets={enableBackgroundTopInsets}
+        enableBottomInsets={enableBackgroundBottomInsets}
+        status={status}
+      >
+        {children}
+      </Background>
     </View>
   )
 }

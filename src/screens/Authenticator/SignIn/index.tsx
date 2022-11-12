@@ -86,7 +86,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
               />
             </FormProvider>
           </View>
-          <Space height={vs(50)} />
+          <Space height={vs(10)} />
         </ScrollView>
       </KeyboardContainer>
     </AppContainer>

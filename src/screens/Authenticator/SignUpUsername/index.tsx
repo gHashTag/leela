@@ -130,7 +130,7 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
                 title={I18n.t('signUp')}
                 onPress={methods.handleSubmit(onSubmit, onError)}
               />
-              <Space height={50} />
+              <Space height={vs(10)} />
             </FormProvider>
           </ScrollView>
         </KeyboardContainer>
