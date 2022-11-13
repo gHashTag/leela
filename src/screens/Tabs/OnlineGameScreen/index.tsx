@@ -7,7 +7,7 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import Markdown from 'react-native-markdown-display'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ms, s, vs } from 'react-native-size-matters'
-import { lang } from 'src/i18n'
+import { ruOrEnLang } from 'src/i18n'
 
 import {
   Background,
@@ -49,12 +49,12 @@ export const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => 
         setImages(imagesData)
         const mdContent1 = await (
           await fetch(
-            `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${lang}1.md`,
+            `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${ruOrEnLang}1.md`,
           )
         ).text()
         const mdContent2 = await (
           await fetch(
-            `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${lang}2.md`,
+            `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${ruOrEnLang}2.md`,
           )
         ).text()
         setMdContent([mdContent1, mdContent2])

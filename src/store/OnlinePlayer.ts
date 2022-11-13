@@ -8,7 +8,7 @@ import i18next from 'src/i18n'
 import { upStepOnline } from './helper'
 import { delTokenOnSignOut } from './MessagingStore'
 
-import { captureException, navigate, timeLeftType } from '../constants'
+import { captureException, navigate } from '../constants'
 import {
   getFireBaseRef,
   getIMG,
@@ -217,13 +217,13 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       return '0'
     } else if (difference < min) {
       const secCount = Math.round(difference / sec)
-      return `${secCount} ${i18next.t(timeLeftType[0].sec)}`
+      return `${secCount} ${i18next.t('timestamps-short.sec')}`
     } else if (difference < hour) {
       const minCount = Math.round(difference / min)
-      return `${minCount} ${i18next.t(timeLeftType[0].min)}`
+      return `${minCount} ${i18next.t('timestamps-short.min')}`
     } else {
       const hourCount = Math.round(difference / hour)
-      return `${hourCount} ${i18next.t(timeLeftType[0].h)}`
+      return `${hourCount} ${i18next.t('timestamps-short.h')}`
     }
   },
 })

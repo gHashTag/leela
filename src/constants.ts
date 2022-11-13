@@ -116,11 +116,3 @@ export const revenuecat = 'BeIMIIfptWXlouosYudFEWQDkwDvJUzv'
 export const defUrl = 'https://leelachakra.com/resource/LeelaChakra/Mantra/mantra.json'
 
 export const ENTITLEMENT_ID = 'Pro'
-
-export const timeLeftType = [
-  {
-    h: 'h0',
-    min: 'min0',
-    sec: 'sec0',
-  },
-]

@@ -21,11 +21,8 @@ export type RootStackParamList = {
   MAIN: NavigatorScreenParams<RootTabParamList>
   RULES_SCREEN: undefined
   RULES_DETAIL_SCREEN: {
-    id: number
     title: string
     content: string
-    url: string
-    videoUrl: string
   }
   PLANS_SCREEN: undefined
   SELECT_PLAYERS_SCREEN: undefined

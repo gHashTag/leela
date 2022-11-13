@@ -7,6 +7,11 @@ const locales = RNLocalize.getLocales()
 
 export const lang = locales[0].languageCode
 
+export const supportedLngs = ['en', 'ru', 'zh']
+
+export const isSupportedLang = supportedLngs.includes(locales[0].languageCode)
+export const ruOrEnLang = locales[0].languageCode === 'ru' ? 'ru' : 'en'
+
 i18next
   .use(HttpApi)
   .use(initReactI18next)
@@ -17,6 +22,7 @@ i18next
         'https://leelachakra.com/resource/LeelaChakra/translations/{{lng}}/{{ns}}.json',
     },
     compatibilityJSON: 'v3',
+    supportedLngs,
     ns: ['common', 'validation', 'rules', 'plans'],
     defaultNS: 'common',
     lng: lang,

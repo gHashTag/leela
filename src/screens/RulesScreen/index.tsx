@@ -4,10 +4,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useTranslation } from 'react-i18next'
 import { FlatList } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { lang } from 'src/i18n'
 
-import { en } from './en'
-import { ru } from './ru'
+import list from './list.json'
 
 import { AppContainer, RenderPlanItem, Space } from '../../components'
 import { goBack } from '../../constants'
@@ -21,11 +19,8 @@ type RulesScreenT = {
 
 interface RulesItemT {
   item: {
-    id: number
     title: string
     content: string
-    url: string
-    videoUrl: string
   }
 }
 
@@ -35,15 +30,13 @@ const RulesScreen = ({ navigation }: RulesScreenT) => {
   const _renderItem = ({ item }: RulesItemT) => {
     return (
       <RenderPlanItem
-        title={item.title}
+        title={t(item.title)}
         onPress={() => navigation.navigate('RULES_DETAIL_SCREEN', item)}
       />
     )
   }
 
-  const _keyExtractor = (obj: any) => obj.id.toString()
-
-  const data = lang === 'en' ? en : ru
+  const _keyExtractor = (obj: any, index: number) => String(index)
 
   return (
     <AppContainer
@@ -56,7 +49,7 @@ const RulesScreen = ({ navigation }: RulesScreenT) => {
       <FlatList
         style={{ paddingHorizontal: s(15) }}
         ListHeaderComponent={<Space height={vs(50)} />}
-        data={data}
+        data={list}
         renderItem={_renderItem}
         keyExtractor={_keyExtractor}
       />

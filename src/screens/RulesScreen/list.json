@@ -1,0 +1,30 @@
+[
+  {
+    "title": "rules:foreword.title",
+    "content": "rules:foreword.content"
+  },
+  {
+    "title": "rules:rulesOfPlay.title",
+    "content": "rules:rulesOfPlay.content"
+  },
+  {
+    "title": "rules:introduction.title",
+    "content": "rules:introduction.content"
+  },
+  {
+    "title": "rules:gameMeaning.title",
+    "content": "rules:gameMeaning.content"
+  },
+  {
+    "title": "rules:numerology.title",
+    "content": "rules:numerology.content"
+  },
+  {
+    "title": "rules:notes.title",
+    "content": "rules:notes.content"
+  },
+  {
+    "title": "rules:onlineRules.title",
+    "content": "rules:onlineRules.content"
+  }
+]

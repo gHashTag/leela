@@ -4,7 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useTranslation } from 'react-i18next'
 import { FlatList } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { lang } from 'src/i18n'
+import { ruOrEnLang } from 'src/i18n'
 
 import { en } from './en'
 import { ru } from './ru'
@@ -21,7 +21,7 @@ type PlansScreenT = {
 }
 
 const PlansScreen = ({ navigation }: PlansScreenT) => {
-  const [data] = useState<PlansT[]>(lang === 'en' ? en : ru)
+  const [data] = useState<PlansT[]>(ruOrEnLang === 'ru' ? ru : en)
   const { t } = useTranslation()
 
   const _keyExtractor = (obj: any) => obj.id.toString()

@@ -310,13 +310,13 @@ function getTimeStamp({ lastTime, type = '' }: getTimeT) {
   } else if (difference <= day) {
     return i18next.t(`timestamps${type}.today`)
   } else if (difference <= day * 2) {
-    return i18next.t(`timestamps${type}.yesterday`)
+    return i18next.t(`timestamps${type}.yday`)
   } else if (difference <= 30 * day) {
     const days = Math.floor(difference / day)
-    return `${days}${i18next.t(`timestamps${type}.days`)}`
+    return `${days}${i18next.t(`timestamps${type}.d`)}`
   } else if (difference < 12 * 30 * day) {
     const month = Math.floor(difference / (day * 30))
-    return `${month}${i18next.t(`timestamps${type}.month`)}`
+    return `${month}${i18next.t(`timestamps${type}.m`)}`
   } else {
     return `${date.getHours()}:${date.getMinutes()} · ${date.getDate()}/${date.getMonth()}/${date
       .getFullYear()
