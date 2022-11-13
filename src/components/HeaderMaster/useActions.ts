@@ -27,27 +27,27 @@ export const useActions = () => {
     {
       key: 'EDIT',
       onPress: onPressChangeAva,
-      title: t('changeAva'),
+      title: t('actions.changeAva'),
       icon: 'ios-images-outline',
     },
     // {
     //   key: 'SHARE',
     //   onPress: onPressShare,
-    //   title: I18n.t('shareProfile'),
+    //   title: I18n.t('actions.shareProfile'),
     //   icon: 'share-outline'
     // },
     {
       key: 'EXIT',
       color: 'red',
       onPress: OnlinePlayer.SignOut,
-      title: t('signOut'),
+      title: t('auth.signOut'),
       icon: 'ios-exit-outline',
     },
     {
       key: 'RESET',
       color: 'red',
       onPress: OnlinePlayer.resetGame,
-      title: t('startOver'),
+      title: t('actions.startOver'),
       icon: 'ios-reload',
     },
   ]

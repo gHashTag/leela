@@ -54,15 +54,15 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
           firstName: yup
             .string()
             .trim()
-            .min(2, t('twoSymbolRequire') || '')
+            .min(2, t('validation:twoSymbolRequire') || '')
             .required()
-            .max(15, `${t('manyCharacters')}15`),
+            .max(15, `${t('validation:manyCharacters')}15`),
           lastName: yup
             .string()
             .trim()
-            .min(2, t('twoSymbolRequire') || '')
+            .min(2, t('validation:twoSymbolRequire') || '')
             .required()
-            .max(20, `${t('manyCharacters')}20`),
+            .max(20, `${t('validation:manyCharacters')}20`),
         })
         .required(),
     [t],
@@ -121,21 +121,21 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
             <FormProvider {...methods}>
               <Input
                 name="firstName"
-                placeholder={t('firstName')}
+                placeholder={t('auth.firstName')}
                 autoCapitalize="none"
                 color={color}
                 additionalStyle={{ width: W - s(40) }}
               />
               <Input
                 name="lastName"
-                placeholder={t('lastName')}
+                placeholder={t('auth.lastName')}
                 autoCapitalize="none"
                 color={color}
                 additionalStyle={{ width: W - s(40) }}
               />
               <Space height={vs(30)} />
               <Button
-                title={t('signUp')}
+                title={t('auth.signUp')}
                 onPress={methods.handleSubmit(onSubmit, onError)}
               />
               <Space height={vs(10)} />

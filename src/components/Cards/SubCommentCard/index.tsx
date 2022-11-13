@@ -18,10 +18,10 @@ interface SubComT {
   index: number
 }
 
-export function SubCommentCard({ item, index }: SubComT) {
+export function SubCommentCard({ item }: SubComT) {
   const [hideTranslate, setHideTranslate] = useState(true)
   const [transText, setTransText] = useState('')
-  const date = getTimeStamp({ lastTime: item.createTime, type: 1 })
+  const date = getTimeStamp({ lastTime: item.createTime, type: '-short' })
   const avaUrl = PostStore.getAvaById(item.ownerId)
   async function handleTransText() {
     if (hideTranslate && transText === '') {
@@ -37,8 +37,8 @@ export function SubCommentCard({ item, index }: SubComT) {
   const text = hideTranslate ? item.text : transText
   const curName = PostStore.getOwnerName(item.ownerId, false)
   return (
-    <View style={container}>
-      <View style={commentHead}>
+    <View style={page.container}>
+      <View style={page.commentHead}>
         <PlanAvatar
           avaUrl={avaUrl}
           isAccept={true}
@@ -46,8 +46,8 @@ export function SubCommentCard({ item, index }: SubComT) {
           size="small"
         />
         <Space width={s(6)} />
-        <View style={{ flexDirection: 'column', flex: 1 }}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        <View style={page.infoContainer}>
+          <View style={page.infoLine}>
             <Text numberOfLines={1} h={'h6'} title={curName} />
             <Text numberOfLines={1} h={'h6'} title={` ${date}`} oneColor={lightGray} />
           </View>
@@ -56,7 +56,7 @@ export function SubCommentCard({ item, index }: SubComT) {
         <Space width={s(8)} />
       </View>
       <Space height={vs(3)} />
-      <View style={textContainer}>
+      <View style={page.textContainer}>
         <Space width={s(5)} />
         <HashtagFormat hashTagColor={fuchsia} title={text} h="h6" selectable />
       </View>
@@ -64,16 +64,17 @@ export function SubCommentCard({ item, index }: SubComT) {
   )
 }
 
-const styles = StyleSheet.create({
+const page = StyleSheet.create({
   container: {
     marginVertical: vs(5),
   },
-  branchLine: {
-    height: vs(2),
-    borderRadius: vs(5),
-    backgroundColor: lightGray,
-    position: 'absolute',
-    alignSelf: 'center',
+  infoLine: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  infoContainer: {
+    flexDirection: 'column',
+    flex: 1,
   },
   commentHead: {
     flexDirection: 'row',
@@ -83,5 +84,3 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
 })
-
-const { container, branchLine, commentHead, textContainer } = styles

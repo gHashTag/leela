@@ -67,7 +67,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
         {endGame ? (
           <>
             <ButtonElements
-              title={t('startOver')}
+              title={t('actions.startOver')}
               onPress={
                 DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
               }
@@ -78,7 +78,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
               <ButtonElements
                 type="solid"
                 themeType="classic"
-                title={t('leaveFeedback')}
+                title={t('actions.leaveFeedback')}
                 onPress={_onPress}
               />
             ) : (

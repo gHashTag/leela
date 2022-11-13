@@ -38,7 +38,7 @@ const ForgotPassSubmit = ({ navigation }: ForgotPassSubmitT): ReactElement => {
       colorLeft={color}
     >
       <CenterView>
-        <Text h={'h1'} title={t('checkMail')} />
+        <Text h={'h1'} title={t('auth.checkMail')} />
         <Space height={vs(40)} />
         <Button title={t('clearly')} onPress={handlePress} />
       </CenterView>

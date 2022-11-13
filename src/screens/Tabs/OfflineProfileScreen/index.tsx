@@ -50,7 +50,7 @@ export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
               <>
                 <Space height={70} />
                 <Button
-                  title={t('startOver')}
+                  title={t('actions.startOver')}
                   onPress={
                     DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
                   }
@@ -58,11 +58,11 @@ export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
                 <Space height={20} />
                 {DiceStore.online && (
                   <>
-                    <Button title={t('signOut')} onPress={OnlinePlayer.SignOut} />
+                    <Button title={t('auth.signOut')} onPress={OnlinePlayer.SignOut} />
                     <Space height={20} />
                   </>
                 )}
-                <Space height={200} />
+                <Space height={100} />
               </>
             }
             initialNumToRender={60}

@@ -39,9 +39,9 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
           newIntention: yup
             .string()
             .trim()
-            .min(2, t('twoSymbolRequire') || '')
+            .min(2, t('validation:twoSymbolRequire') || '')
             .required()
-            .max(800, `${t('manyCharacters')}800`),
+            .max(800, `${t('validation:manyCharacters')}800`),
         })
         .required(),
     [t],
@@ -71,7 +71,7 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
       iconLeft={blockGoBack ? undefined : 'back'}
       onPress={navigation.goBack}
       textAlign="center"
-      title={title || t('updateIntention')}
+      title={title || t('online-part.updateIntention')}
       colorLeft={black}
     >
       {loading ? (

@@ -16,7 +16,6 @@ import {
   accountHasBanAlert,
   captureException,
   navigate,
-  timeStampType,
 } from '../constants'
 import { MessagingStore, OnlinePlayer, actionsDice, fetchBusinesses } from '../store'
 import { HistoryT, UserT } from '../types'
@@ -296,10 +295,10 @@ function getUid() {
 
 interface getTimeT {
   lastTime: number
-  type?: 0 | 1
+  type?: '' | '-short'
 }
 
-function getTimeStamp({ lastTime, type = 0 }: getTimeT) {
+function getTimeStamp({ lastTime, type = '' }: getTimeT) {
   const dateNow = Date.now()
   let date: Date = new Date(lastTime)
 
@@ -307,17 +306,17 @@ function getTimeStamp({ lastTime, type = 0 }: getTimeT) {
   const difference = dateNow - lastTime
 
   if (difference <= 20000) {
-    return i18next.t(timeStampType[type].now)
+    return i18next.t(`timestamps${type}.now`)
   } else if (difference <= day) {
-    return i18next.t(timeStampType[type].today)
+    return i18next.t(`timestamps${type}.today`)
   } else if (difference <= day * 2) {
-    return i18next.t(timeStampType[type].yesterday)
+    return i18next.t(`timestamps${type}.yesterday`)
   } else if (difference <= 30 * day) {
     const days = Math.floor(difference / day)
-    return `${days}${i18next.t(timeStampType[type].days)}`
+    return `${days}${i18next.t(`timestamps${type}.days`)}`
   } else if (difference < 12 * 30 * day) {
     const month = Math.floor(difference / (day * 30))
-    return `${month}${i18next.t(timeStampType[type].month)}`
+    return `${month}${i18next.t(`timestamps${type}.month`)}`
   } else {
     return `${date.getHours()}:${date.getMinutes()} · ${date.getDate()}/${date.getMonth()}/${date
       .getFullYear()
@@ -346,7 +345,7 @@ const onSignIn = async (
       } else if (!prof.intention) {
         navigate('CHANGE_INTENTION_SCREEN', {
           blockGoBack: true,
-          title: i18next.t('createIntention'),
+          title: i18next.t('online-part.createIntention'),
         })
       } else {
         navigate('MAIN', { screen: 'TAB_BOTTOM_0' })

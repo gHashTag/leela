@@ -29,7 +29,7 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
             }),
         })
       },
-      title: i18next.t('reply'),
+      title: i18next.t('actions.reply'),
       icon: 'ios-paper-plane-outline',
     },
     {
@@ -37,13 +37,13 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
       onPress: () => {
         Clipboard.setString(item.text)
       },
-      title: i18next.t('copy'),
+      title: i18next.t('actions.copy'),
       icon: 'ios-copy-outline',
     },
     {
       key: 'TRANSLATE',
       onPress: handleTransText,
-      title: i18next.t('translate'),
+      title: i18next.t('actions.translate'),
       icon: 'ios-language-outline',
     },
     {
@@ -55,7 +55,7 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
           postId: item.postId,
         })
       },
-      title: i18next.t('delete'),
+      title: i18next.t('actions.delete'),
       color: 'red',
       icon: 'md-trash-outline',
     },

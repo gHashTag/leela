@@ -33,9 +33,9 @@ export function UpdateVersionModal() {
   return (
     <View style={page.container}>
       <View style={[page.modalView, { backgroundColor: background }]}>
-        <Text textStyle={page.textStyle} title={t('updateApp')} h="h2" />
+        <Text textStyle={page.textStyle} title={t('modals.updateApp')} h="h2" />
         <Space height={vs(30)} />
-        <ButtonSimple onPress={_onPress} h="h3" title={t('update')} />
+        <ButtonSimple onPress={_onPress} h="h3" title={t('actions.update')} />
       </View>
     </View>
   )

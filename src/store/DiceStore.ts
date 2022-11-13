@@ -19,14 +19,16 @@ const DiceStore = makeAutoObservable({
 })
 autorun(() => {
   const { isReported, canGo, timeText } = OnlinePlayer.store
-  const textTopMess = DiceStore.online
-    ? !isReported
-      ? i18next.t('notReported')
-      : canGo
-      ? i18next.t('takeStep')
-      : `${i18next.t('nextStep')}: ${timeText}`
-    : `${i18next.t('playerTurn')} # ${DiceStore.players}`
-  DiceStore.topMessage = textTopMess
+  if (i18next.isInitialized) {
+    const textTopMess = DiceStore.online
+      ? !isReported
+        ? i18next.t('online-part.notReported')
+        : canGo
+        ? i18next.t('takeStep')
+        : `${i18next.t('nextStep')}: ${timeText}`
+      : `${i18next.t('playerTurn')} # ${DiceStore.players}`
+    DiceStore.topMessage = textTopMess
+  }
 })
 
 const actionsDice = {

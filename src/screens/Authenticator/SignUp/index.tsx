@@ -57,14 +57,14 @@ export const SignUp = (): ReactElement => {
                 />
                 <Input
                   name="password"
-                  placeholder={t('password')}
+                  placeholder={t('auth.password')}
                   secureTextEntry
                   color={color}
                   additionalStyle={{ width: W - s(40) }}
                 />
                 <Input
                   name="passwordConfirmation"
-                  placeholder={t('passwordConfirmation')}
+                  placeholder={t('auth.passwordConfirmation')}
                   secureTextEntry
                   color={color}
                   additionalStyle={{ width: W - s(40) }}
@@ -73,7 +73,7 @@ export const SignUp = (): ReactElement => {
                 {error !== '' && <TextError title={error} textStyle={page.centerText} />}
                 <Space height={vs(20)} />
                 <Button
-                  title={t('signUp')}
+                  title={t('auth.signUp')}
                   onPress={methods.handleSubmit(onSubmit, onError)}
                 />
                 <Space height={vs(10)} />

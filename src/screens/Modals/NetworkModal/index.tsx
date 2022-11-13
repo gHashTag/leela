@@ -40,13 +40,13 @@ export function NetworkModal({ navigation }: NetworkModalT) {
   return (
     <View style={container}>
       <View style={[modalView, { backgroundColor: background }]}>
-        <Text textStyle={textStyle} h={'h3'} title={t('disconnected')} />
+        <Text textStyle={textStyle} h={'h3'} title={t('modals.disconnected')} />
         <Space height={vs(15)} />
         <ButtonSimple
           viewStyle={btnCont}
           h="h2"
           onPress={onPress}
-          title={t('goOffline')}
+          title={t('actions.goOffline')}
         />
       </View>
     </View>

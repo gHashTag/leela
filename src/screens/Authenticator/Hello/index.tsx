@@ -42,11 +42,11 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
       <CenterView>
         <IconLeela />
         <Space height={s(30)} />
-        <Button title={t('signIn')} onPress={() => navigation.navigate('SIGN_IN')} />
+        <Button title={t('auth.signIn')} onPress={() => navigation.navigate('SIGN_IN')} />
         <Space height={10} />
         <Text h={'h5'} title={t('or')} textStyle={page.h6} />
         <Space height={10} />
-        <Button title={t('signUp')} onPress={() => navigation.navigate('SIGN_UP')} />
+        <Button title={t('auth.signUp')} onPress={() => navigation.navigate('SIGN_UP')} />
         <Space height={vs(140)} />
       </CenterView>
     </AppContainer>

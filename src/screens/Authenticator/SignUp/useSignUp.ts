@@ -31,17 +31,17 @@ export const useSignUp = () => {
         .shape({
           email: yup
             .string()
-            .email(t('invalidEmail') || '')
+            .email(t('validation:invalidEmail') || '')
             .trim()
-            .required(t('requireField') || ''),
+            .required(t('validation:requireField') || ''),
           password: yup
             .string()
-            .required(t('requireField') || '')
-            .min(6, t('shortPassword') || ''),
+            .required(t('validation:requireField') || '')
+            .min(6, t('validation:shortPassword') || ''),
           passwordConfirmation: yup
             .string()
-            .required(t('requireField') || '')
-            .min(6, t('shortPassword') || ''),
+            .required(t('validation:requireField') || '')
+            .min(6, t('validation:shortPassword') || ''),
         })
         .required(),
     [t],
@@ -57,7 +57,7 @@ export const useSignUp = () => {
     async data => {
       const { email, password, passwordConfirmation } = data
       if (password !== passwordConfirmation) {
-        setError(t('passwordsDoNotMatch'))
+        setError(t('validation:passwordsDoNotMatch'))
       } else {
         setLoading(true)
         setError('')
@@ -71,19 +71,19 @@ export const useSignUp = () => {
           .catch(exception => {
             switch (exception.code) {
               case 'auth/invalid-email':
-                setError(t('invalidEmail'))
+                setError(t('validation:invalidEmail'))
                 break
               case 'auth/email-already-in-use':
-                setError(t('usernameExistsException'))
+                setError(t('validation:userNameExistsException'))
                 break
               case 'auth/wrong-password':
-                setError(t('forgotPassword'))
+                setError(t('auth.forgotPassword'))
                 break
               case 'auth/network-request-failed':
-                setError(t('networkRequestFailed'))
+                setError(t('validation:networkRequestFailed'))
                 break
               case 'auth/too-many-requests':
-                setError(t('manyRequests'))
+                setError(t('validation:manyRequests'))
                 break
               default:
                 captureException(exception.message)

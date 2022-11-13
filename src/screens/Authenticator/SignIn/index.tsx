@@ -70,20 +70,20 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
               />
               <Input
                 name="password"
-                placeholder={t('password')}
+                placeholder={t('auth.password')}
                 secureTextEntry
                 color={color}
                 additionalStyle={{ width: W - s(40) }}
               />
               <Space height={s(10)} />
-              {error !== t('forgotPassword') ? (
+              {error !== t('auth.forgotPassword') ? (
                 <TextError title={error} textStyle={textStyle} />
               ) : (
                 <ButtonLink title={error} onPress={handleForgot} textStyle={textStyle} />
               )}
               <Space height={vs(15)} />
               <Button
-                title={t('signIn')}
+                title={t('auth.signIn')}
                 onPress={methods.handleSubmit(onSubmit, onError)}
               />
             </FormProvider>

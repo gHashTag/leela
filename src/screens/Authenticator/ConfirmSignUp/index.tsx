@@ -72,7 +72,7 @@ export const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactEleme
     >
       <View style={page.container}>
         <Space height={vs(15)} />
-        <Text h={'h1'} title={t('checkMail')} />
+        <Text h={'h1'} title={t('auth.checkMail')} />
         <Text h={'h2'} title={`(${route.params.email})`} />
         <Loading size={s(100)} type="9CubeGrid" />
         <Space height={vs(30)} />
@@ -82,7 +82,7 @@ export const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactEleme
         onPress={_onResend}
         style={[page.btn, !canResend && page.btnDisabled]}
       >
-        <Text textStyle={page.textStyle} title={t('resendCode')} h="h3" />
+        <Text textStyle={page.textStyle} title={t('auth.resendCode')} h="h3" />
       </TouchableOpacity>
       <Space height={vs(30)} />
     </AppContainer>

@@ -21,13 +21,13 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
     {
       key: 'COPY',
       onPress: () => Clipboard.setString(item.text),
-      title: i18next.t('copy'),
+      title: i18next.t('actions.copy'),
       icon: 'content-copy',
     },
     {
       key: 'TRANSLATE',
       onPress: handleTransText,
-      title: i18next.t('translate'),
+      title: i18next.t('actions.translate'),
       icon: !hideTranslate ? 'translate-off' : 'translate',
     },
     {
@@ -39,7 +39,7 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
           postId: item.postId,
         })
       },
-      title: i18next.t('delete'),
+      title: i18next.t('actions.delete'),
       color: 'red',
       icon: 'delete-outline',
     },

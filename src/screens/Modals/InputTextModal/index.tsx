@@ -56,7 +56,7 @@ export function InputTextModal({ navigation, route }: InputTextT) {
             <Input
               onChange={e => setLength(e.nativeEvent.text.length)}
               name="text"
-              placeholder={t('uComment')}
+              placeholder={t('online-part.uComment')}
               color={text}
               additionalStyle={page.input}
               showError={false}

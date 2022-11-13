@@ -106,7 +106,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
           loading ? null : (
             <View>
               <Space height={vs(15)} />
-              <Text textStyle={page.centerTxt} h="h3" title={t('loadErr')} />
+              <Text textStyle={page.centerTxt} h="h3" title={t('validation:loadErr')} />
             </View>
           )
         }

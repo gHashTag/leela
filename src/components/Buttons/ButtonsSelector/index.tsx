@@ -44,7 +44,7 @@ const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
           </TouchableOpacity>
         ))}
       </View>
-      <Button title={t('startGame')} onPress={() => onPress(selected - 1)} />
+      <Button title={t('actions.start')} onPress={() => onPress(selected - 1)} />
     </View>
   )
 })

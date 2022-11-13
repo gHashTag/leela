@@ -27,13 +27,13 @@ export const useSignIn = () => {
         .shape({
           email: yup
             .string()
-            .email(t('invalidEmail') || '')
+            .email(t('validation:invalidEmail') || '')
             .trim()
-            .required(t('requireField') || ''),
+            .required(t('validation:requireField') || ''),
           password: yup
             .string()
-            .required(t('requireField') || '')
-            .min(6, t('shortPassword') || ''),
+            .required(t('validation:requireField') || '')
+            .min(6, t('validation:shortPassword') || ''),
         })
         .required(),
     [t],
@@ -60,19 +60,19 @@ export const useSignIn = () => {
         .catch(err => {
           switch (err.code) {
             case 'auth/invalid-email':
-              setError(t('invalidEmail'))
+              setError(t('validation:invalidEmail'))
               break
             case 'auth/user-not-found':
-              setError(t('userNotFound'))
+              setError(t('validation:userNotFound'))
               break
             case 'auth/wrong-password':
-              setError(t('forgotPassword'))
+              setError(t('auth.forgotPassword'))
               break
             case 'auth/network-request-failed':
-              setError(t('networkRequestFailed'))
+              setError(t('validation:networkRequestFailed'))
               break
             case 'auth/too-many-requests':
-              setError(t('manyRequests'))
+              setError(t('validation:manyRequests'))
               break
             default:
               captureException(err.message)

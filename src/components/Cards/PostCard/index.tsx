@@ -189,7 +189,7 @@ export const PostCard: React.FC<postCardI> = memo(
             {!item.accept && (
               <>
                 <Space height={vs(5)} />
-                <Text oneColor={orange} h={'h6'} title={t('review')} />
+                <Text oneColor={orange} h={'h6'} title={t('online-part.review')} />
               </>
             )}
             {/* Preview Buttons */}

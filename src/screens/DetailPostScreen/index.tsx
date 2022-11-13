@@ -84,7 +84,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
               textAlign="center"
               iconLeft=":back:"
               iconRight={null}
-              title={t('post')}
+              title={t('online-part.report')}
               onPress={navigation.goBack}
             />
             <PostCard

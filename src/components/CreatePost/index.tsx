@@ -28,8 +28,8 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
           text: yup
             .string()
             .trim()
-            .min(100, t('fewChars') || '')
-            .required(t('requireField') || ''),
+            .min(100, t('validation:fewChars') || '')
+            .required(t('validation:requireField') || ''),
         })
         .required(),
     [t],
@@ -62,7 +62,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
       />
       <Space height={20} />
       <Button
-        title={t('send')}
+        title={t('actions.send')}
         onPress={methods.handleSubmit(handleSubmit, err => console.log(err))}
       />
     </FormProvider>

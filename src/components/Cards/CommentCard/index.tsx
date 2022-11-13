@@ -35,7 +35,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
 
     const avaUrl = PostStore.getAvaById(item.ownerId)
 
-    const date = getTimeStamp({ lastTime: item.createTime, type: 1 })
+    const date = getTimeStamp({ lastTime: item.createTime, type: '-short' })
 
     const _onLayout = (e: LayoutChangeEvent) => {
       setLineHeight(e.nativeEvent.layout.height)

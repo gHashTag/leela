@@ -42,10 +42,15 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
   return (
     <View style={page.transpCont}>
       <View style={[page.modalView, { backgroundColor: background }]}>
-        <Text h="h4" textStyle={page.textStyle} title={t('makeReport')} />
+        <Text h="h4" textStyle={page.textStyle} title={t('online-part.makeReport')} />
         <Space height={vs(16)} />
         <TouchableOpacity onPress={handlePress}>
-          <Text textStyle={page.linkText} title={t('go')} oneColor={fuchsia} h="h2" />
+          <Text
+            textStyle={page.linkText}
+            title={t('actions.go')}
+            oneColor={fuchsia}
+            h="h2"
+          />
         </TouchableOpacity>
       </View>
     </View>

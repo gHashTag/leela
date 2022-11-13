@@ -57,13 +57,13 @@ export const PostScreen = observer(({}: Ipost) => {
       ItemSeparatorComponent={() => <Space height={vs(10)} />}
       ListHeaderComponent={
         <>
-          <Header textAlign="center" title={t('posts')} />
+          <Header textAlign="center" title={t('online-part.reports')} />
           <Space height={vs(10)} />
         </>
       }
       ListEmptyComponent={
         <View style={{ paddingHorizontal: s(20) }}>
-          <Text textStyle={page.noPostText} h={'h1'} title={t('noPosts')} />
+          <Text textStyle={page.noPostText} h={'h1'} title={t('online-part.noPosts')} />
         </View>
       }
     />

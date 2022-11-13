@@ -31,7 +31,7 @@ export function ExitPopup({ navigation }: ExitPopupT) {
     <View style={page.transparentView}>
       <Pressable style={page.exitArea} onPress={() => navigation.goBack()} />
       <View style={[page.popup, { backgroundColor: background }]}>
-        <Text textStyle={page.btnText} title={t('wantExit')} h="h2" />
+        <Text textStyle={page.btnText} title={t('modals.wantExit')} h="h2" />
         <Space height={vs(20)} />
         <View style={page.btnsCont}>
           <Pressable
@@ -42,7 +42,12 @@ export function ExitPopup({ navigation }: ExitPopupT) {
             ]}
             onPress={exit}
           >
-            <Text oneColor={fuchsia} textStyle={page.btnText} title={t('exit')} h="h2" />
+            <Text
+              oneColor={fuchsia}
+              textStyle={page.btnText}
+              title={t('actions.exit')}
+              h="h2"
+            />
           </Pressable>
           <Pressable
             style={({ pressed }) => [
@@ -55,7 +60,7 @@ export function ExitPopup({ navigation }: ExitPopupT) {
             <Text
               oneColor={primary}
               textStyle={page.btnText}
-              title={t('cancel')}
+              title={t('actions.cancel')}
               h="h2"
             />
           </Pressable>

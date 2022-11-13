@@ -55,12 +55,12 @@ export function OpenActionsModal(modalButtons: ButtonsModalT[]) {
 }
 
 export const banAlert = () => {
-  Alert.alert(i18next.t('youBanned'), i18next.t('banText'), [
+  Alert.alert(i18next.t('online-part.youBanned'), i18next.t('online-part.banText'), [
     { text: 'OK', onPress: () => navigate('WELCOME_SCREEN') },
   ])
 }
 export const accountHasBanAlert = () => {
-  Alert.alert(i18next.t('accountBaned'), undefined, [{ text: 'OK' }])
+  Alert.alert(i18next.t('online-part.accountBanned'), undefined, [{ text: 'OK' }])
 }
 
 export const captureException = (error: any) => {
@@ -117,24 +117,6 @@ export const defUrl = 'https://leelachakra.com/resource/LeelaChakra/Mantra/mantr
 
 export const ENTITLEMENT_ID = 'Pro'
 
-export const timeStampType = [
-  {
-    now: 'now0',
-    today: 'today0',
-    yesterday: 'yday0',
-    days: 'd0',
-    month: 'm0',
-    year: 'y0',
-  },
-  {
-    now: 'now1',
-    today: 'today1',
-    yesterday: 'yday1',
-    days: 'd1',
-    month: 'm1',
-    year: 'y1',
-  },
-]
 export const timeLeftType = [
   {
     h: 'h0',

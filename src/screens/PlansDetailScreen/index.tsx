@@ -59,7 +59,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
     } else {
       Platform.OS === 'android' &&
         ToastAndroid.showWithGravityAndOffset(
-          t('notReported'),
+          t('online-part.notReported'),
           ToastAndroid.LONG,
           ToastAndroid.BOTTOM,
           25,

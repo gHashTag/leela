@@ -50,9 +50,9 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
         .shape({
           email: yup
             .string()
-            .email(t('invalidEmail') || '')
+            .email(t('validation:invalidEmail') || '')
             .trim()
-            .required(t('requireField') || ''),
+            .required(t('validation:requireField') || ''),
         })
         .required(),
     [t],
@@ -75,9 +75,9 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
       navigation.navigate('FORGOT_PASSWORD_SUBMIT', { email })
     } catch (error: any) {
       if (error.code === 'auth/user-not-found') {
-        setErrorMessage(t('userNotFound') || '')
+        setErrorMessage(t('validation:userNotFound') || '')
       } else if (error.code === 'auth/network-request-failed') {
-        setErrorMessage(t('networkRequestFailed') || '')
+        setErrorMessage(t('validation:networkRequestFailed') || '')
       } else {
         setErrorMessage(error.code)
       }
@@ -121,7 +121,7 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
               )}
               <Space height={vs(10)} />
               <Button
-                title={t('confirm')}
+                title={t('actions.confirm')}
                 onPress={methods.handleSubmit(onSubmit, onError)}
               />
             </FormProvider>
