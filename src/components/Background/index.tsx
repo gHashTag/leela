@@ -21,6 +21,7 @@ interface BackgroundT {
   style?: StyleProp<ViewStyle>
   enableBottomInsets?: boolean
   enableTopInsets?: boolean
+  paddingTop?: number
 }
 
 export const Background = memo(
@@ -29,6 +30,7 @@ export const Background = memo(
     sourceImages,
     children,
     style,
+    paddingTop = 0,
     enableBottomInsets,
     enableTopInsets,
   }: BackgroundT) => {
@@ -42,7 +44,7 @@ export const Background = memo(
             page.imgContainer,
             style,
             enableBottomInsets && { paddingBottom: bottom },
-            enableTopInsets && { paddingTop: top },
+            enableTopInsets && { paddingTop: top + paddingTop },
           ]}
         >
           {images.map((img, id) => (

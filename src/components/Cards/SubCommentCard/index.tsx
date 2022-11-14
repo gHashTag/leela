@@ -12,6 +12,7 @@ import { getTimeStamp } from '../../../screens/helper'
 import { PostStore } from '../../../store'
 import { ReplyComT } from '../../../types'
 import { ButtonVectorIcon } from '../../Buttons'
+import { useTypedNavigation } from 'src/hooks'
 
 interface SubComT {
   item: ReplyComT
@@ -21,8 +22,11 @@ interface SubComT {
 export function SubCommentCard({ item }: SubComT) {
   const [hideTranslate, setHideTranslate] = useState(true)
   const [transText, setTransText] = useState('')
+  const { navigate } = useTypedNavigation()
+
   const date = getTimeStamp({ lastTime: item.createTime, type: '-short' })
   const avaUrl = PostStore.getAvaById(item.ownerId)
+
   async function handleTransText() {
     if (hideTranslate && transText === '') {
       const translated = await PostStore.translateText(item.text)
@@ -30,9 +34,16 @@ export function SubCommentCard({ item }: SubComT) {
     }
     setHideTranslate(pr => !pr)
   }
+
   const OpenModal = () => {
     const modalButtons = getActions({ handleTransText, hideTranslate, item })
     OpenActionsModal(modalButtons)
+  }
+
+  const handleProfile = () => {
+    if (item?.ownerId) {
+      navigate('USER_PROFILE_SCREEN', { ownerId: item?.ownerId })
+    }
   }
   const text = hideTranslate ? item.text : transText
   const curName = PostStore.getOwnerName(item.ownerId, false)
@@ -42,6 +53,7 @@ export function SubCommentCard({ item }: SubComT) {
         <PlanAvatar
           avaUrl={avaUrl}
           isAccept={true}
+          onPress={handleProfile}
           plan={PostStore.getComPlan(item.ownerId)}
           size="small"
         />

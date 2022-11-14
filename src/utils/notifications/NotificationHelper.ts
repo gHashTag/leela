@@ -1,8 +1,8 @@
 import notifee, { DisplayedNotification, Notification } from '@notifee/react-native'
+// @ts-ignore
 import BadgeAndroid from 'react-native-android-badge'
 
 import { BadgeAndroidStore } from '../../store'
-// @ts-ignore
 
 export async function setCategories() {
   await notifee.setNotificationCategories([

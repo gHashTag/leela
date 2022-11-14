@@ -29,7 +29,7 @@ type ProfileScreenT = {
 }
 
 export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
-  const { DATA } = useHistoryData()
+  const DATA = useHistoryData() as any
   const { t } = useTranslation()
 
   return (

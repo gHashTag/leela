@@ -11,11 +11,17 @@ import { vs } from 'react-native-size-matters'
 import { TabContextProvider } from './TabContext'
 import { HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
 
-import { AppContainer, CenterView, HeaderMaster, Space, Spin } from '../../../components'
-import { OwnTabView } from '../../../components/OwnTabView'
-import { SecondaryTab } from '../../../components/SecondaryTab'
-import { DiceStore, OnlinePlayer } from '../../../store'
-import { RootStackParamList, RootTabParamList } from '../../../types'
+import {
+  AppContainer,
+  CenterView,
+  HeaderMaster,
+  Space,
+  Spin,
+  SecondaryTab,
+  OwnTabView,
+} from 'src/components'
+import { OnlinePlayer } from 'src/store'
+import { RootStackParamList, RootTabParamList } from 'src/types'
 
 type ProfileScreenT = {
   navigation: NativeStackNavigationProp<
@@ -30,6 +36,12 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
   const tabViewWidth = W * 0.96
 
+  const {
+    avatar,
+    plan,
+    profile: { firstName, lastName },
+  } = OnlinePlayer.store
+
   return (
     <AppContainer
       iconRight={':books:'}
@@ -40,20 +52,23 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
       <TabContextProvider>
         {({ tabViewH, screenStyle, headerGesture }: any) => (
           <Animated.View style={screenStyle}>
-            {OnlinePlayer.store.loadingProf && DiceStore.online ? (
+            {OnlinePlayer.store.loadingProf ? (
               <CenterView>
                 <Spin centered />
                 <Space height={H * 0.5} />
               </CenterView>
             ) : (
               <View style={page.container}>
-                {DiceStore.online && (
-                  <HeaderMaster
-                    onPress={() =>
-                      navigation.navigate('USER_EDIT', OnlinePlayer.store.profile)
-                    }
-                  />
-                )}
+                <HeaderMaster
+                  avatar={avatar}
+                  plan={plan}
+                  firstName={firstName}
+                  lastName={lastName}
+                  editable
+                  onPressName={() =>
+                    navigation.navigate('USER_EDIT', OnlinePlayer.store.profile)
+                  }
+                />
                 <Space height={vs(5)} />
                 <OwnTabView
                   renderTabBar={props => (

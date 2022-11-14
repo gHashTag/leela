@@ -11,7 +11,7 @@ import Animated, {
 import { ScaledSheet, s } from 'react-native-size-matters'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
-import { Space, Text } from '../../'
+import { Space, Text, hT } from '../../'
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
@@ -21,10 +21,11 @@ interface ButtonWithIconT {
   color?: string
   iconName?: string
   viewStyle?: StyleProp<ViewStyle>
+  h?: hT
 }
 
 export const ButtonWithIcon = memo<ButtonWithIconT>(
-  ({ title, onPress, color, iconName, viewStyle }) => {
+  ({ title, onPress, color, iconName, viewStyle, h = 'h2' }) => {
     const {
       colors: { text },
     } = useTheme()
@@ -65,7 +66,7 @@ export const ButtonWithIcon = memo<ButtonWithIconT>(
             <Space width={s(6)} />
           </>
         )}
-        <Text h="h2" oneColor={color} title={title} />
+        <Text h={h} oneColor={color} title={title} />
       </AnimatedPressable>
     )
   },

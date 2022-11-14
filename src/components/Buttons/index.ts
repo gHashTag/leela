@@ -1,6 +1,5 @@
 export * from './Button'
 export * from './ButtonEdit'
-export * from './ButtonElements'
 export * from './ButtonIcon'
 export * from './ButtonLink'
 export * from './ButtonSimple'

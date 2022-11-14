@@ -9,10 +9,10 @@ import { StatusBar, useColorScheme } from 'react-native'
 import Orientation from 'react-native-orientation-locker'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
 
-import { Fallback } from './components'
-import { black, lightGray, navRef, white } from './constants'
-import { useExitModal, useGameAndProfileIsOnline, useNetwork } from './hooks'
-import { lang } from './i18n'
+import { Fallback } from 'src/components'
+import { black, lightGray, navRef, white } from 'src/constants'
+import { useExitModal, useGameAndProfileIsOnline, useNetwork } from 'src/hooks'
+import { lang } from 'src/i18n'
 import {
   ActionsModal,
   ChangeIntention,
@@ -36,7 +36,8 @@ import {
   UpdateVersionModal,
   VideoPopup,
   WelcomeScreen,
-} from './screens'
+  UserProfileScreen,
+} from 'src/screens'
 import {
   ConfirmSignUp,
   Forgot,
@@ -47,12 +48,12 @@ import {
   SignUpAvatar,
   SignUpUsername,
   UserEdit,
-} from './screens/Authenticator'
-import { checkVersion, getFireBaseRef } from './screens/helper'
-import { DiceStore } from './store'
-import TabBar from './TabBar'
-import { RootStackParamList, RootTabParamList } from './types'
-import { linking } from './utils'
+} from 'src/screens/Authenticator'
+import { checkVersion, getFireBaseRef } from 'src/screens/helper'
+import { DiceStore } from 'src/store'
+import TabBar from 'src/TabBar'
+import { RootStackParamList, RootTabParamList } from 'src/types'
+import { linking } from 'src/utils'
 
 const DarkTheme = {
   dark: true,
@@ -147,6 +148,7 @@ const App = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
+          gestureEnabled: false,
         }}
         initialRouteName="WELCOME_SCREEN"
       >
@@ -186,6 +188,7 @@ const App = () => {
             animation: 'slide_from_right',
           }}
         >
+          <Stack.Screen name="USER_PROFILE_SCREEN" component={UserProfileScreen} />
           <Stack.Screen name="PLANS_SCREEN" component={PlansScreen} />
           <Stack.Screen
             name="PLANS_DETAIL_SCREEN"

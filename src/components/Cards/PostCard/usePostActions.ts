@@ -55,6 +55,12 @@ export const usePostActions = ({
     OpenActionsModal(modalButtons)
   }
 
+  const handleProfile = () => {
+    if (item?.ownerId) {
+      navigate('USER_PROFILE_SCREEN', { ownerId: item.ownerId })
+    }
+  }
+
   async function handleShareLink() {
     const { id, text } = item || {}
     if (id && text) {
@@ -73,5 +79,6 @@ export const usePostActions = ({
     handleAdminMenu,
     handleShareLink,
     isLiked,
+    handleProfile,
   }
 }

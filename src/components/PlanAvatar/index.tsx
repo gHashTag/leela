@@ -7,6 +7,7 @@ import {
   Pressable,
   StyleProp,
   StyleSheet,
+  View,
 } from 'react-native'
 import { ms, s } from 'react-native-size-matters'
 import Ionicons from 'react-native-vector-icons/Ionicons'
@@ -38,22 +39,21 @@ export const PlanAvatar = memo(function ({
   const fontSize = size === 'small' ? s(6) : s(10)
   const badgeS = size === 'small' || size === 'medium' ? smallBadge : bigBadge
   return (
-    <ImageBackground
-      source={{ uri: avaUrl }}
-      style={[styles[size], aditionalStyle]}
-      imageStyle={container}
-    >
-      <Pressable
-        onPress={onPress}
-        style={[badge, badgeS, { backgroundColor: background }]}
+    <Pressable onPress={onPress}>
+      <ImageBackground
+        source={{ uri: avaUrl }}
+        style={[styles[size], aditionalStyle]}
+        imageStyle={container}
       >
-        {!isAccept ? (
-          <Ionicons size={s(15)} color={orange} name="time-sharp" />
-        ) : (
-          <Text textStyle={{ fontSize }} title={textPlan} h="h12" />
-        )}
-      </Pressable>
-    </ImageBackground>
+        <View style={[badge, badgeS, { backgroundColor: background }]}>
+          {!isAccept ? (
+            <Ionicons size={s(15)} color={orange} name="time-sharp" />
+          ) : (
+            <Text textStyle={{ fontSize }} title={textPlan} h="h12" />
+          )}
+        </View>
+      </ImageBackground>
+    </Pressable>
   )
 })
 

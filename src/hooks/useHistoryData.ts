@@ -31,12 +31,7 @@ export const useHistoryData = () => {
           data: OfflinePlayers.store.histories[5].slice().reverse(),
         },
       ].slice(0, DiceStore.multi)
-    : [
-        {
-          title: '',
-          data: OnlinePlayer.store.history.slice().reverse(),
-        },
-      ].slice()
+    : OnlinePlayer.store.history.slice().reverse()
 
-  return { DATA }
+  return DATA
 }

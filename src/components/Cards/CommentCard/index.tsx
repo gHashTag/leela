@@ -18,6 +18,7 @@ import { OpenActionsModal, gray, lightGray } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
 import { PostStore } from '../../../store'
 import { CommentT } from '../../../types'
+import { useTypedNavigation } from 'src/hooks'
 
 interface CommentCardI {
   item: CommentT
@@ -32,6 +33,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
     const [lineHeight, setLineHeight] = useState(0)
     const [hideTranslate, setHideTranslate] = useState(true)
     const [transText, setTransText] = useState('')
+    const { navigate } = useTypedNavigation()
 
     const avaUrl = PostStore.getAvaById(item.ownerId)
 
@@ -52,6 +54,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
       const modalButtons = getActions({ item, handleTransText })
       OpenActionsModal(modalButtons)
     }
+
     const text = hideTranslate ? item.text : transText
 
     const subCom = PostStore.store.replyComments.filter(a => a.commentId === item.id)
@@ -62,12 +65,19 @@ export const CommentCard: React.FC<CommentCardI> = observer(
       : lineHeight + PADDING * 2 - vs(4)
     const curName = PostStore.getOwnerName(item.ownerId, false)
 
+    const handleProfile = () => {
+      if (item?.ownerId) {
+        navigate('USER_PROFILE_SCREEN', { ownerId: item?.ownerId })
+      }
+    }
+
     return (
       <>
         <View style={page.container}>
           <View style={{ marginRight: s(6) }}>
             <PlanAvatar
               avaUrl={avaUrl}
+              onPress={handleProfile}
               isAccept={true}
               plan={PostStore.getComPlan(item.ownerId)}
               size="medium"

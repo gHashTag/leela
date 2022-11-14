@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 
 import { observer } from 'mobx-react'
-import { SectionList, StyleSheet } from 'react-native'
+import { FlatList, SectionList, StyleSheet } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated from 'react-native-reanimated'
 import { s, vs } from 'react-native-size-matters'
@@ -9,9 +9,10 @@ import { s, vs } from 'react-native-size-matters'
 import { HistoryStep, Space, Text } from '../../../../components'
 import { useHistoryData } from '../../../../hooks/useHistoryData'
 import { TabContext } from '../TabContext'
+import { HistoryT } from 'src/types'
 
 export const HistoryScene = observer(() => {
-  const { DATA } = useHistoryData()
+  const data = useHistoryData() as HistoryT[]
   const { panGesture1, scrollViewGesture1, scrollOffset1, blockScrollUntilAtTheTop1 } =
     useContext(TabContext) as any
   return (
@@ -28,24 +29,16 @@ export const HistoryScene = observer(() => {
           scrollOffset1.value = e.nativeEvent.contentOffset.y
         }}
       >
-        <SectionList
+        <FlatList
           style={page.historyList}
           scrollEnabled={false}
           ListFooterComponent={<Space height={vs(50)} />}
           initialNumToRender={60}
           maxToRenderPerBatch={60}
-          stickySectionHeadersEnabled={false}
-          sections={DATA} //[...DATA, ...DATA, ...DATA, ...DATA]
+          data={data}
           renderItem={props => <HistoryStep {...props} />}
           keyExtractor={(e, id) => String(id)}
           showsVerticalScrollIndicator={false}
-          renderSectionHeader={({ section: { title } }) =>
-            title ? (
-              <Text h={'h3'} title={title} textStyle={page.sectionHeaderText} />
-            ) : (
-              <Space height={vs(10)} />
-            )
-          }
         />
       </Animated.ScrollView>
     </GestureDetector>

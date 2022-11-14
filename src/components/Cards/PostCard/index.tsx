@@ -53,6 +53,7 @@ export const PostCard: React.FC<postCardI> = memo(
       handleAdminMenu,
       handleShareLink,
       isLiked,
+      handleProfile,
     } = usePostActions({ isDetail, onPressCom, item, transText, hideTranslate })
     if (!item) {
       return <></>
@@ -78,6 +79,7 @@ export const PostCard: React.FC<postCardI> = memo(
           <View style={headerS}>
             <PlanAvatar
               avaUrl={avaUrl}
+              onPress={handleProfile}
               size={'large'}
               isAccept={item.accept}
               plan={item.plan}
@@ -150,6 +152,7 @@ export const PostCard: React.FC<postCardI> = memo(
           <View style={avaContainer}>
             <PlanAvatar
               avaUrl={avaUrl}
+              onPress={handleProfile}
               size={'medium'}
               plan={item.plan}
               isAccept={item.accept}

@@ -9,7 +9,7 @@ import { s, vs } from 'react-native-size-matters'
 
 import {
   Background,
-  ButtonElements,
+  ButtonWithIcon,
   Dice,
   GameBoard,
   Header,
@@ -20,6 +20,7 @@ import {
 import { useLeftTimeForStep } from '../../../hooks'
 import { DiceStore, OfflinePlayers, OnlinePlayer, actionsDice } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types'
+import { trueBlue } from 'src/constants'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -34,7 +35,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   useLeftTimeForStep()
   const { t } = useTranslation()
 
-  const _onPress = () => {
+  const onLeaveFeedback = () => {
     const options = {
       AppleAppID: '1296604457',
       GooglePackageName: 'com.leelagame',
@@ -56,38 +57,41 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     </Background>
   ) : (
     <>
-      <Header
-        iconLeft=":information_source:"
-        onPress={() => navigation.navigate('RULES_SCREEN')}
-        iconRight=":books:"
-        displayStatus
-        textAlign="center"
-        onPressRight={() => navigation.navigate('PLANS_SCREEN')}
-      >
-        {endGame ? (
-          <>
-            <ButtonElements
-              title={t('actions.startOver')}
-              onPress={
-                DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
-              }
-            />
-            <Space height={vs(3)} />
-            <Text textStyle={page.centerText} h="h1" title={`${t('win')}`} />
-            {!DiceStore.rate ? (
-              <ButtonElements
-                type="solid"
-                themeType="classic"
-                title={t('actions.leaveFeedback')}
-                onPress={_onPress}
+      <Background enableTopInsets paddingTop={vs(50)}>
+        <Header
+          iconLeft=":information_source:"
+          onPress={() => navigation.navigate('RULES_SCREEN')}
+          iconRight=":books:"
+          displayStatus
+          textAlign="center"
+          onPressRight={() => navigation.navigate('PLANS_SCREEN')}
+        >
+          {endGame && (
+            <>
+              <ButtonWithIcon
+                viewStyle={page.centerButton}
+                h="h5"
+                title={t('actions.startOver')}
+                onPress={
+                  DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
+                }
               />
-            ) : (
-              <Space height={s(38)} />
-            )}
-          </>
-        ) : undefined}
-      </Header>
-      <Background>
+              <Space height={vs(2)} />
+              <Text textStyle={page.centerText} h="h1" title={`${t('win')}`} />
+              {!DiceStore.rate ? (
+                <ButtonWithIcon
+                  viewStyle={page.centerButton}
+                  h="h5"
+                  color={trueBlue}
+                  title={t('actions.leaveFeedback')}
+                  onPress={onLeaveFeedback}
+                />
+              ) : (
+                <Space height={s(38)} />
+              )}
+            </>
+          )}
+        </Header>
         {!endGame && <Dice />}
         <GameBoard />
       </Background>
@@ -98,6 +102,9 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
 const page = StyleSheet.create({
   centerText: {
     textAlign: 'center',
+  },
+  centerButton: {
+    alignSelf: 'center',
   },
 })
 

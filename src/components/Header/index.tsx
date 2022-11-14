@@ -39,32 +39,22 @@ const Header = memo<HeaderT>(
     displayStatus,
   }) => {
     const {
-      container,
-      leftIconStyle,
-      rightIconStyle,
-      rightViewStyle,
-      titleStyle,
-      childrenStyle,
-    } = styles
-
-    const {
       colors: { background },
     } = useTheme()
 
     const { top } = useSafeAreaInsets()
     const alignItems = children ? 'flex-start' : 'center'
     const marginTop = children ? s(2) : 0
+    const backgroundColor = children ? 'transparent' : background
 
     return (
-      <View
-        style={[container, { paddingTop: top, alignItems, backgroundColor: background }]}
-      >
+      <View style={[container, { paddingTop: top, alignItems, backgroundColor }]}>
         {iconLeft && (
           <TouchableOpacity style={{ opacity: iconLeftOpacity }} onPress={onPress}>
             <Emoji name={iconLeft} style={leftIconStyle} />
           </TouchableOpacity>
         )}
-        <View style={{ flex: 1 }}>
+        <View style={flexOne}>
           {title && !displayStatus && (
             <Text
               numberOfLines={1}
@@ -121,6 +111,17 @@ const styles = ScaledSheet.create({
     fontSize: vs(18),
   },
   childrenStyle: {},
+  flexOne: { flex: 1 },
 })
+
+const {
+  container,
+  leftIconStyle,
+  rightIconStyle,
+  rightViewStyle,
+  titleStyle,
+  childrenStyle,
+  flexOne,
+} = styles
 
 export { Header }

@@ -9,45 +9,74 @@ import Icon from 'react-native-vector-icons/Ionicons'
 import { useActions } from './useActions'
 
 import { Text } from '../'
-import { OnlinePlayer } from '../../store'
 import { Avatar } from '../Avatar'
 import { Space } from '../Space'
 
 interface HeaderMasterT {
-  onPress: () => void
+  avatar: string
+  plan: number
+  firstName?: string
+  lastName?: string
+  fullName?: string
+  onPressName?: () => void
+  editable?: boolean
 }
 
-const HeaderMaster = observer(({ onPress }: HeaderMasterT) => {
-  const { loadImage, onPressEdit } = useActions()
-  const { firstName, lastName } = OnlinePlayer.store.profile
-  const {
-    colors: { border },
-  } = useTheme()
+const HeaderMaster = observer(
+  ({
+    onPressName,
+    editable,
+    avatar,
+    plan,
+    firstName = '',
+    lastName = '',
+    fullName = '',
+  }: HeaderMasterT) => {
+    const { loadImage, onPressEdit } = useActions()
 
-  return (
-    <View style={rootContainer}>
-      <TouchableOpacity activeOpacity={0.8} style={wide} onPress={onPressEdit}>
-        {/* <BlurView
-          style={avaContainer}
-          blurType={dark ? 'dark' : 'light'}
-          blurAmount={5}
-        /> */}
-        <View style={subAvaContainer}>
-          <Avatar uri={OnlinePlayer.store.avatar} size="xLarge" loading={loadImage} />
-          <View style={planAndEditBlock}>
-            <Icon style={editIcon} name="md-pencil" color={border} size={s(12)} />
-            <Text h="h0" textStyle={planNumber} title={String(OnlinePlayer.store.plan)} />
+    const {
+      colors: { border },
+    } = useTheme()
+
+    const activeOpacity = editable ? 0.8 : 1
+
+    return (
+      <View style={rootContainer}>
+        <TouchableOpacity
+          activeOpacity={activeOpacity}
+          style={wide}
+          onPress={editable ? onPressEdit : undefined}
+        >
+          <View style={subAvaContainer}>
+            <Avatar uri={avatar} size="xLarge" loading={loadImage} />
+
+            <View style={planAndEditBlock}>
+              {editable && (
+                <Icon style={editIcon} name="md-pencil" color={border} size={s(12)} />
+              )}
+              <Text h="h0" textStyle={planNumber} title={String(plan)} />
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
-      <TouchableOpacity style={container} onPress={onPress}>
-        <Text h={'h1'} title={firstName} />
-        <Space width={s(10)} />
-        <Text h={'h1'} title={lastName} />
-      </TouchableOpacity>
-    </View>
-  )
-})
+        </TouchableOpacity>
+        <TouchableOpacity
+          activeOpacity={activeOpacity}
+          style={container}
+          onPress={onPressName}
+        >
+          {fullName ? (
+            <Text h={'h1'} title={fullName} />
+          ) : (
+            <>
+              <Text h={'h1'} title={firstName} />
+              <Space width={s(10)} />
+              <Text h={'h1'} title={lastName} />
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+    )
+  },
+)
 
 const styles = ScaledSheet.create({
   container: {

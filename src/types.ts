@@ -70,6 +70,9 @@ export type RootStackParamList = {
     blockGoBack?: boolean
     title?: string
   }
+  USER_PROFILE_SCREEN: {
+    ownerId: string
+  }
 }
 
 export type RootTabParamList = {

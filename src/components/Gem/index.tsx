@@ -1,12 +1,15 @@
 import React from 'react'
 
 import { observer } from 'mobx-react'
-import { Image, View } from 'react-native'
-import { ScaledSheet, ms, s } from 'react-native-size-matters'
+import { Image, Pressable, View } from 'react-native'
+import { ScaledSheet, ms } from 'react-native-size-matters'
 
 import { ICONS } from './images'
 
 import { DiceStore, OfflinePlayers, OnlinePlayer, OtherPlayers } from '../../store'
+import { useTypedNavigation } from 'src/hooks'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
+import { runOnJS } from 'react-native-reanimated'
 
 interface GemT {
   plan: number
@@ -17,11 +20,12 @@ interface dataI {
   data: number
   id: number
   ava?: string
+  ownerId?: string
 }
 
 const Gem = observer(({ plan, player }: GemT) => {
   const getIndex = (num: number) => (num === player ? 2 : 1)
-
+  const { navigate } = useTypedNavigation()
   const { container, gems } = styles
 
   const DATA: dataI[] = !DiceStore.online
@@ -41,6 +45,7 @@ const Gem = observer(({ plan, player }: GemT) => {
             id: index + 2,
             data: a.plan,
             ava: a.avatar,
+            ownerId: a.owner,
           }
         }),
       ]
@@ -49,27 +54,35 @@ const Gem = observer(({ plan, player }: GemT) => {
     DiceStore.online ? { uri: avatar } : ICONS[id - 1]
   return (
     <View style={container}>
-      {DATA.map(
-        ({ data, id, ava }) =>
-          data === plan && (
-            <Image
+      {DATA.map(({ data, id, ava, ownerId }) => {
+        const onPressAva = () => {
+          ownerId && navigate('USER_PROFILE_SCREEN', { ownerId })
+        }
+
+        if (data === plan) {
+          return (
+            <GestureDetector
+              gesture={Gesture.Tap().onTouchesUp(() => runOnJS(onPressAva)())}
               key={id}
-              style={[
-                gems,
-                { position: 'absolute', zIndex: getIndex(id) },
-                id === 1 && DiceStore.online && { zIndex: 2 },
-              ]}
-              source={source(id, ava)}
-            />
-          ),
-      )}
+            >
+              <Image
+                style={[
+                  gems,
+                  { zIndex: getIndex(id) },
+                  id === 1 && DiceStore.online && { zIndex: 2 },
+                ]}
+                source={source(id, ava)}
+              />
+            </GestureDetector>
+          )
+        } else return <></>
+      })}
     </View>
   )
 })
 
 const styles = ScaledSheet.create({
   container: {
-    position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
