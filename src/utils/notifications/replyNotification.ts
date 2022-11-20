@@ -16,7 +16,7 @@ export async function replyNotification(
 ) {
   await notifee.createChannel({
     id: channelId,
-    name: 'Reply Channel',
+    name: 'Reply channel',
     badge: false,
   })
 

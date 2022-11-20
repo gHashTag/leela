@@ -22,3 +22,5 @@ export async function notificationActionsHandler(event: Event, isBackground: boo
       break
   }
 }
+
+export * from './dailyPhrasesNotification'
