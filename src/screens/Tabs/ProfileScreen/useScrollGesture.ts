@@ -13,12 +13,17 @@ import { s, vs } from 'react-native-size-matters'
 
 import { isIos } from '../../../constants'
 
-export const useScrollGesture = () => {
+interface useScrollGestureProps {
+  hasBottomTabs?: boolean
+}
+
+export const useScrollGesture = (props?: useScrollGestureProps) => {
+  const { hasBottomTabs = true } = props || {}
   const { height: H } = useWindowDimensions()
   const { bottom: bottomInsets } = useSafeAreaInsets()
 
   let topPartH = vs(15) + s(120) + bottomInsets
-  topPartH += isIos ? 0 : vs(10) + s(30)
+  topPartH += isIos ? 0 : vs(10) + (hasBottomTabs ? s(30) : 0)
   const tabViewH = H - topPartH
   const screenH = tabViewH + topPartH - vs(10)
 

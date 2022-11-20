@@ -37,10 +37,10 @@ export const OwnTabView = ({ screens, style, width, renderTabBar }: OwnTabViewT)
     <View style={[styles.mainContainer, style, { width }]}>
       {renderTabBar({ jumpTo, navigationState, width })}
       <Animated.View style={[styles.contentContainer, carousel]}>
-        {screens.map(({ Scene, key }) => {
+        {screens.map(({ Scene, key, props }) => {
           return (
             <View key={key} style={{ width }}>
-              <Scene />
+              <Scene {...props} />
             </View>
           )
         })}
@@ -74,5 +74,6 @@ interface navStateT {
 interface scenes {
   key: string
   title: string
-  Scene: () => JSX.Element
+  props?: any
+  Scene: (props?: any) => JSX.Element
 }
