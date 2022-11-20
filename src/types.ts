@@ -28,9 +28,6 @@ export type RootStackParamList = {
   SELECT_PLAYERS_SCREEN: undefined
   PLANS_DETAIL_SCREEN: {
     id: number
-    title: string
-    content: string
-    url: string
     report?: boolean
   }
   PROFILE_SCREEN: undefined
@@ -85,12 +82,7 @@ export type RootTabParamList = {
   TAB_BOTTOM_4: undefined
 }
 
-export interface PlansT {
-  id: number
-  title: string
-  content: string
-  url: string
-}
+export type PlansT = number
 export interface UserT {
   email: string
   finish: boolean

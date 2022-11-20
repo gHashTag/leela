@@ -31,7 +31,7 @@ type PlansDetailScreenT = {
 }
 
 const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) => {
-  const { id, title, content, report, url } = route.params
+  const { id, report } = route.params
   const soundRef = useRef<Sound>()
   const { h3 } = styles
   const { isReported } = OnlinePlayer.store
@@ -70,7 +70,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
 
   const onToggle = () => {
     if (!soundRef.current) {
-      const sound = new Sound(url, undefined)
+      const sound = new Sound(t(`plans:plan_${id}.url`), undefined)
       soundRef.current = sound
       const interval = setInterval(() => {
         const isLoaded = soundRef.current?.isLoaded()
@@ -97,7 +97,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
   return (
     <AppContainer
       onPress={handleCross}
-      title={title}
+      title={t(`plans:plan_${id}.title`)}
       iconRight={null}
       iconLeftOpacity={isReported ? 1 : 0.4}
       iconLeft=":heavy_multiplication_x:"
@@ -113,9 +113,18 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
           )}
           <Space height={vs(10)} />
           {Platform.OS === 'ios' ? (
-            <SelectableIOS h={'h7'} title={content} textStyle={h3} />
+            <SelectableIOS
+              h={'h7'}
+              title={t(`plans:plan_${id}.content`)}
+              textStyle={h3}
+            />
           ) : (
-            <Text selectable h={'h7'} title={content} textStyle={h3} />
+            <Text
+              selectable
+              h={'h7'}
+              title={t(`plans:plan_${id}.content`)}
+              textStyle={h3}
+            />
           )}
           {report && <CreatePost plan={id} />}
           <Space height={!report ? vs(70) : 20} />

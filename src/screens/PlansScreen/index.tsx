@@ -1,13 +1,11 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback } from 'react'
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useTranslation } from 'react-i18next'
 import { FlatList } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { ruOrEnLang } from 'src/i18n'
 
-import { en } from './en'
-import { ru } from './ru'
+import data from './indexes.json'
 
 import { AppContainer, RenderPlanItem, Space } from '../../components'
 import { goBack } from '../../constants'
@@ -21,17 +19,16 @@ type PlansScreenT = {
 }
 
 const PlansScreen = ({ navigation }: PlansScreenT) => {
-  const [data] = useState<PlansT[]>(ruOrEnLang === 'ru' ? ru : en)
   const { t } = useTranslation()
 
-  const _keyExtractor = (obj: any) => obj.id.toString()
+  const _keyExtractor = (obj: number) => String(obj)
 
   const onPressItem = useCallback(
     (item: PlansT) => () => {
       const itemIsReported =
-        OnlinePlayer.store.plan === item.id && !OnlinePlayer.store.isReported
+        OnlinePlayer.store.plan === item && !OnlinePlayer.store.isReported
       navigation.navigate('PLANS_DETAIL_SCREEN', {
-        ...item,
+        id: item,
         report: itemIsReported,
       })
     },
@@ -54,7 +51,10 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
         windowSize={5}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
-          <RenderPlanItem title={item.title} onPress={onPressItem(item)} />
+          <RenderPlanItem
+            title={t(`plans:plan_${item}.title`)}
+            onPress={onPressItem(item)}
+          />
         )}
         keyExtractor={_keyExtractor}
       />

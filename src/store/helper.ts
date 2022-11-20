@@ -1,11 +1,9 @@
-import i18next, { lang } from 'src/i18n'
+import i18next from 'src/i18n'
 
 import { DiceStore, actionsDice } from './DiceStore'
 
 import { captureException, navigate } from '../constants'
 import { createHistory, onStart, onWin, updatePlan } from '../screens/helper'
-import { en } from '../screens/PlansScreen/en'
-import { ru } from '../screens/PlansScreen/ru'
 import { OfflinePlayers, OnlinePlayer } from './'
 
 interface historyI {
@@ -31,10 +29,9 @@ async function upFuncOnline(step: stepT) {
     OnlinePlayer.store.history.unshift(historyObj)
     OnlinePlayer.store.plan = plan
     if (stepCount !== 6 || plan === 68) {
-      const plansLang = lang === 'en' ? en : ru
       navigate('PLANS_DETAIL_SCREEN', {
         report: true,
-        ...plansLang.find(a => a.id === plan),
+        id: plan,
       })
     }
     if (plan === 68) {
