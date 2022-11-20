@@ -1,15 +1,15 @@
 import React, { useEffect } from 'react'
 
+import { BlurView } from '@react-native-community/blur'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
-import { ImageBackground, StyleSheet } from 'react-native'
-import { vs } from 'react-native-size-matters'
-
-import { ButtonWithIcon } from '../../../components'
-import { fuchsia, openUrl } from '../../../constants'
-import { OnlinePlayer } from '../../../store'
-import { RootTabParamList } from '../../../types'
+import { ImageBackground, StyleSheet, View } from 'react-native'
+import { s, vs } from 'react-native-size-matters'
+import { ButtonWithIcon } from 'src/components'
+import { openUrl } from 'src/constants'
+import { OnlinePlayer } from 'src/store'
+import { RootTabParamList } from 'src/types'
 
 type navigation = NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_0'>
 
@@ -22,21 +22,22 @@ const PosterScreen = observer(({}: PosterScreenT) => {
     OnlinePlayer.getPoster()
   }, [])
 
+  const { buttonColor, imgUrl, eventUrl } = OnlinePlayer.store.poster || {}
+
   const { t } = useTranslation()
 
   return (
-    <ImageBackground
-      resizeMode="cover"
-      source={{ uri: OnlinePlayer.store.poster.imgUrl }}
-      style={img}
-    >
-      <ButtonWithIcon
-        title={t('more')}
-        color={fuchsia}
-        viewStyle={btnMore}
-        iconName="ios-chevron-forward"
-        onPress={() => openUrl(OnlinePlayer.store.poster.eventUrl)}
-      />
+    <ImageBackground resizeMode="cover" source={{ uri: imgUrl }} style={img}>
+      <View style={styles.btnMoreContainer}>
+        <BlurView blurType={'light'} blurAmount={10} style={styles.blurBackground} />
+        <ButtonWithIcon
+          title={t('assign')}
+          color={buttonColor || '#AA6100'}
+          h="h6"
+          viewStyle={styles.btnMore}
+          onPress={() => openUrl(eventUrl)}
+        />
+      </View>
     </ImageBackground>
   )
 })
@@ -50,12 +51,27 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   btnMore: {
+    margin: s(5),
+  },
+  btnMoreContainer: {
     position: 'absolute',
     alignSelf: 'center',
-    bottom: vs(100),
+    borderRadius: s(10),
+    bottom: vs(82),
+    overflow: 'hidden',
+  },
+  blurBackground: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    opacity: 0.7,
+    borderRadius: s(10),
+    overflow: 'hidden',
   },
 })
 
-const { img, btnMore } = styles
+const { img } = styles
 
 export { PosterScreen }

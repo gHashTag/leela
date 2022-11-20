@@ -22,10 +22,11 @@ interface ButtonWithIconT {
   iconName?: string
   viewStyle?: StyleProp<ViewStyle>
   h?: hT
+  iconSize?: number
 }
 
 export const ButtonWithIcon = memo<ButtonWithIconT>(
-  ({ title, onPress, color, iconName, viewStyle, h = 'h2' }) => {
+  ({ title, onPress, color, iconName, viewStyle, h = 'h2', iconSize = s(20) }) => {
     const {
       colors: { text },
     } = useTheme()
@@ -62,7 +63,7 @@ export const ButtonWithIcon = memo<ButtonWithIconT>(
       >
         {iconName && (
           <>
-            <Ionicons name={iconName} color={color || text} size={s(20)} />
+            <Ionicons name={iconName} color={color || text} size={iconSize} />
             <Space width={s(6)} />
           </>
         )}
