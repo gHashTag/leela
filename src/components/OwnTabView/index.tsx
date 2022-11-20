@@ -34,9 +34,9 @@ export const OwnTabView = ({ screens, style, width, renderTabBar }: OwnTabViewT)
   })
 
   return (
-    <View style={[mainContainer, style, { width }]}>
+    <View style={[styles.mainContainer, style, { width }]}>
       {renderTabBar({ jumpTo, navigationState, width })}
-      <Animated.View style={[contentContainer, carousel]}>
+      <Animated.View style={[styles.contentContainer, carousel]}>
         {screens.map(({ Scene, key }) => {
           return (
             <View key={key} style={{ width }}>
@@ -58,8 +58,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 })
-
-const { contentContainer, mainContainer } = styles
 
 interface OwnTabViewT {
   screens: scenes[]

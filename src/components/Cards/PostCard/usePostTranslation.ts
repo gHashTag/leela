@@ -38,22 +38,7 @@ export const usePostTranslation = ({
 
   const text = hideTranslate ? item?.text : transText
 
-  const flag = hideTranslate ? flagByLangCode(lang) : flagByLangCode(item?.language)
+  const flag = (hideTranslate ? lang : item?.language) as string
 
   return { transText, hideTranslate, handleTranslate, flag, text }
-}
-
-const flagByLangCode = (language?: string) => {
-  if (language) {
-    switch (language) {
-      case 'en':
-        return ':us:'
-      case 'zh':
-        return ':cn:'
-      default:
-        return language
-    }
-  } else {
-    return ':us:'
-  }
 }

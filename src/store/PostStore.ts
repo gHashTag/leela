@@ -2,9 +2,9 @@
 import { YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
 import auth from '@react-native-firebase/auth'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
-import i18next from 'src/i18n'
 import { makeAutoObservable } from 'mobx'
 import { nanoid } from 'nanoid/non-secure'
+import i18next from 'src/i18n'
 
 import { OnlinePlayer } from './OnlinePlayer'
 import { OtherPlayers } from './OtherPlayers'

@@ -7,21 +7,20 @@ import { StyleSheet, View, useWindowDimensions } from 'react-native'
 import { GestureDetector } from 'react-native-gesture-handler'
 import Animated from 'react-native-reanimated'
 import { vs } from 'react-native-size-matters'
-
-import { TabContextProvider } from './TabContext'
-import { HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
-
 import {
   AppContainer,
   CenterView,
   HeaderMaster,
+  OwnTabView,
+  SecondaryTab,
   Space,
   Spin,
-  SecondaryTab,
-  OwnTabView,
 } from 'src/components'
 import { OnlinePlayer } from 'src/store'
 import { RootStackParamList, RootTabParamList } from 'src/types'
+
+import { TabContextProvider } from './TabContext'
+import { HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
 
 type ProfileScreenT = {
   navigation: NativeStackNavigationProp<

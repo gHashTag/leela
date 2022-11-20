@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 
 import { useTheme } from '@react-navigation/native'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { Pressable, StyleSheet } from 'react-native'
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -45,17 +45,17 @@ export const SecondaryTab = ({ jumpTo, navigationState, width }: SecondaryTabT) 
   })
 
   return (
-    <Animated.View style={[tabContainer, { width }]}>
+    <Animated.View style={[styles.tabContainer, { width }]}>
       {routes.map(({ title, key }, id) => {
         const isFocused = index === id
         return (
-          <Pressable key={key} style={tabStyle} onPress={() => jumpTo(key, id)}>
+          <Pressable key={key} style={styles.tabStyle} onPress={() => jumpTo(key, id)}>
             <Text oneColor={isFocused ? primary : undefined} h="h4" title={title} />
           </Pressable>
         )
       })}
       <Animated.View
-        style={[line, { backgroundColor: primary, width: tabWidth }, lineAnim]}
+        style={[styles.line, { backgroundColor: primary, width: tabWidth }, lineAnim]}
       />
     </Animated.View>
   )
@@ -78,5 +78,3 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 })
-
-const { tabContainer, line, tabStyle } = styles

@@ -7,7 +7,7 @@ const locales = RNLocalize.getLocales()
 
 export const lang = locales[0].languageCode
 
-export const supportedLngs = ['en', 'ru', 'zh']
+export const supportedLngs = ['ar', 'bn', 'en', 'es', 'fr', 'hi', 'id', 'pt', 'ru', 'zh']
 
 export const isSupportedLang = supportedLngs.includes(locales[0].languageCode)
 export const ruOrEnLang = locales[0].languageCode === 'ru' ? 'ru' : 'en'

@@ -8,7 +8,6 @@ import { observer } from 'mobx-react'
 import { StatusBar, useColorScheme } from 'react-native'
 import Orientation from 'react-native-orientation-locker'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
-
 import { Fallback } from 'src/components'
 import { black, lightGray, navRef, white } from 'src/constants'
 import { useExitModal, useGameAndProfileIsOnline, useNetwork } from 'src/hooks'
@@ -34,9 +33,9 @@ import {
   RulesScreen,
   SelectPlayersScreen,
   UpdateVersionModal,
+  UserProfileScreen,
   VideoPopup,
   WelcomeScreen,
-  UserProfileScreen,
 } from 'src/screens'
 import {
   ConfirmSignUp,

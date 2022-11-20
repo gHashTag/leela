@@ -4,17 +4,15 @@ import React, { memo } from 'react'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
+import CountryFlag from 'react-native-country-flag'
 import { s, vs } from 'react-native-size-matters'
+import { ButtonVectorIcon, HashtagFormat, PlanAvatar, Space, Text } from 'src/components'
+import { W, brightTurquoise, fuchsia, lightGray, orange } from 'src/constants'
+import { getTimeStamp } from 'src/screens/helper'
+import { OnlinePlayer, PostStore } from 'src/store'
 
 import { usePostActions } from './usePostActions'
 import { usePostTranslation } from './usePostTranslation'
-
-import { ButtonVectorIcon, PlanAvatar, Space, Text } from '../../'
-import { W, brightTurquoise, fuchsia, lightGray, orange } from '../../../constants'
-import { getTimeStamp } from '../../../screens/helper'
-import { OnlinePlayer, PostStore } from '../../../store'
-import { EmojiText } from '../../EmojiText'
-import { HashtagFormat } from '../../TextComponents'
 
 interface postCardI {
   postId: string
@@ -95,7 +93,7 @@ export const PostCard: React.FC<postCardI> = memo(
               <Space height={vs(5)} />
             </View>
             <TouchableOpacity onPress={handleTranslate}>
-              <EmojiText name={flag} fontSize={s(18)} />
+              <CountryFlag isoCode={flag} size={s(16)} />
             </TouchableOpacity>
           </View>
           {/* Detail Text */}
@@ -179,7 +177,7 @@ export const PostCard: React.FC<postCardI> = memo(
               <Text h={'h6'} textStyle={lightText} title={` · ${date}`} />
               <View style={flex1} />
               <TouchableOpacity onPress={handleTranslate}>
-                <EmojiText name={flag} fontSize={s(18)} />
+                <CountryFlag isoCode={flag} size={s(16)} />
               </TouchableOpacity>
             </View>
             <Space height={vs(5)} />
