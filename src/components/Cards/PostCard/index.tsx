@@ -4,7 +4,6 @@ import React, { memo } from 'react'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
-import CountryFlag from 'react-native-country-flag'
 import { s, vs } from 'react-native-size-matters'
 import { ButtonVectorIcon, HashtagFormat, PlanAvatar, Space, Text } from 'src/components'
 import { W, brightTurquoise, fuchsia, lightGray, orange } from 'src/constants'
@@ -93,7 +92,7 @@ export const PostCard: React.FC<postCardI> = memo(
               <Space height={vs(5)} />
             </View>
             <TouchableOpacity onPress={handleTranslate}>
-              <CountryFlag isoCode={flag} size={s(16)} />
+              <Text title={flag} style={styles.flagEmoji} />
             </TouchableOpacity>
           </View>
           {/* Detail Text */}
@@ -177,7 +176,7 @@ export const PostCard: React.FC<postCardI> = memo(
               <Text h={'h6'} textStyle={lightText} title={` · ${date}`} />
               <View style={flex1} />
               <TouchableOpacity onPress={handleTranslate}>
-                <CountryFlag isoCode={flag} size={s(16)} />
+                <Text title={flag} style={styles.flagEmoji} />
               </TouchableOpacity>
             </View>
             <Space height={vs(5)} />
@@ -228,8 +227,7 @@ export const PostCard: React.FC<postCardI> = memo(
   }),
 )
 
-//
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     paddingLeft: s(12),
     paddingRight: s(12),
@@ -303,6 +301,9 @@ const page = StyleSheet.create({
   withoutBottomBorder: {
     borderBottomWidth: 0,
   },
+  flagEmoji: {
+    fontSize: s(16),
+  },
 })
 
 const {
@@ -322,4 +323,4 @@ const {
   nonDetailCommentButton,
   nonDetailAdminMenuButton,
   withoutBottomBorder,
-} = page
+} = styles

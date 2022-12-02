@@ -4,14 +4,12 @@ import auth from '@react-native-firebase/auth'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
 import { makeAutoObservable } from 'mobx'
 import { nanoid } from 'nanoid/non-secure'
+import { captureException } from 'src/constants'
 import i18next from 'src/i18n'
-
-import { OnlinePlayer } from './OnlinePlayer'
-import { OtherPlayers } from './OtherPlayers'
-
-import { captureException } from '../constants'
-import { lang } from '../i18n'
-import { getProfile, getUid } from '../screens/helper'
+import { flagEmoji, lang } from 'src/i18n'
+import { getProfile, getUid } from 'src/screens/helper'
+import { OnlinePlayer } from 'src/store/OnlinePlayer'
+import { OtherPlayers } from 'src/store/OtherPlayers'
 import {
   CommentT,
   FormCommentT,
@@ -19,7 +17,7 @@ import {
   FormReplyCom,
   PostT,
   ReplyComT,
-} from '../types'
+} from 'src/types'
 
 type fetchT = FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
 interface postStoreT {
@@ -67,6 +65,7 @@ export const PostStore = {
         liked: [],
         accept: false,
         language: lang,
+        flagEmoji,
       }
       try {
         await firestore().collection('Posts').doc(id).set(post)

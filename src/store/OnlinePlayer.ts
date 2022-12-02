@@ -142,6 +142,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
             intention: curProf.intention || '',
           },
           isReported: curProf.isReported,
+          flagEmoji: curProf.flagEmoji,
           stepTime: curProf.lastStepTime,
           canGo: Date.now() - curProf.lastStepTime >= 86400000,
           status: curProf.status,
@@ -267,5 +268,6 @@ interface OnlinePlayerStore {
     buttonColor: string
   }
   isPosterLoading: boolean
+  flagEmoji?: string
   status?: status
 }

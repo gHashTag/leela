@@ -99,6 +99,7 @@ export interface UserT {
   lang?: string
   tokens?: string[]
   status?: status
+  flagEmoji?: string
   intention?: string
 }
 
@@ -144,6 +145,7 @@ export interface PostT extends FormPostT {
   liked?: string[]
   language: string
   accept: boolean
+  flagEmoji: string
 }
 
 export interface FormCommentT {

@@ -8,7 +8,6 @@ import { BackHandler, Platform, StyleSheet, ToastAndroid } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { s, vs } from 'react-native-size-matters'
 import Sound from 'react-native-sound'
-
 import {
   AppContainer,
   ButtonPlay,
@@ -18,9 +17,9 @@ import {
   SelectableIOS,
   Space,
   Text,
-} from '../../components'
-import { OnlinePlayer } from '../../store'
-import { RootStackParamList } from '../../types'
+} from 'src/components'
+import { OnlinePlayer } from 'src/store'
+import { RootStackParamList } from 'src/types'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>
 type route = RouteProp<RootStackParamList, 'PLANS_DETAIL_SCREEN'>

@@ -4797,6 +4797,11 @@ isexe@^2.0.0:
   resolved "https://registry.yarnpkg.com/isexe/-/isexe-2.0.0.tgz#e8fbf374dc556ff8947a10dcb0572d633f2cfa10"
   integrity sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==
 
+iso-country@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/iso-country/-/iso-country-3.0.0.tgz#2dd11c3d10acc0ce759f6970a4c75c2472c2e9fc"
+  integrity sha512-MU5dZBnyKgBS0fFNh0b5IU5zVyDf7NOgLPjUucYQbjcsjh0Fmm5DZ7w3HJmZsQT857SUcPB6rgWv7Hx0NSzaTA==
+
 isobject@^2.0.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/isobject/-/isobject-2.1.0.tgz#f065561096a3f1da2ef46272f815c840d87e0c89"
@@ -6827,11 +6832,6 @@ react-native-codegen@^0.70.6:
     flow-parser "^0.121.0"
     jscodeshift "^0.13.1"
     nullthrows "^1.1.1"
-
-react-native-country-flag@^1.1.9:
-  version "1.1.9"
-  resolved "https://registry.yarnpkg.com/react-native-country-flag/-/react-native-country-flag-1.1.9.tgz#015fa9b4f757f47a800e5f542209e0de27d6836d"
-  integrity sha512-oNeNrx7qf04v75uhqUd9JbqHjAFaH8pSGjoXTincqkSPtwgikH5i+qScBXQUDpuH0SwXgsmgMzecphqeR4015w==
 
 react-native-device-info@^10.3.0:
   version "10.3.0"

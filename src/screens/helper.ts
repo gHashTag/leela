@@ -5,20 +5,18 @@ import storage from '@react-native-firebase/storage'
 import { nanoid } from 'nanoid/non-secure'
 import ImagePicker from 'react-native-image-crop-picker'
 import semver from 'semver'
-import i18next from 'src/i18n'
-
-import { lang } from './../i18n'
-
-import { version } from '../../package.json'
 import {
   OpenPlanReportModal,
   OpenUpdateVersionModal,
   accountHasBanAlert,
   captureException,
   navigate,
-} from '../constants'
-import { MessagingStore, OnlinePlayer, actionsDice, fetchBusinesses } from '../store'
-import { HistoryT, UserT } from '../types'
+} from 'src/constants'
+import i18next, { flagEmoji, lang } from 'src/i18n'
+import { MessagingStore, OnlinePlayer, actionsDice, fetchBusinesses } from 'src/store'
+import { HistoryT, UserT } from 'src/types'
+
+import { version } from '../../package.json'
 
 interface NewProfileI {
   email: string
@@ -90,6 +88,7 @@ const createProfile = async ({ email, uid, firstName, lastName }: NewProfileI) =
       firstGame: true,
       history: hisObj,
       lang,
+      flagEmoji,
       isReported: true,
     })
   OnlinePlayer.store = {
@@ -107,6 +106,14 @@ const createProfile = async ({ email, uid, firstName, lastName }: NewProfileI) =
     start: false,
     finish: false,
     firstGame: true,
+  }
+}
+
+const updateFlagEmojiIfNeed = async () => {
+  const userUid = auth().currentUser?.uid
+  if (OnlinePlayer.store.flagEmoji !== flagEmoji) {
+    await firestore().collection('Profiles').doc(userUid).update({ flagEmoji })
+    OnlinePlayer.store.flagEmoji = flagEmoji
   }
 }
 
@@ -188,18 +195,6 @@ const resetHistory = async () => {
     history: hist,
   })
 }
-
-// const _onPressReset = async (navigation: any): Promise<void> => {
-//   try {
-//     !DiceStore.online && navigation.pop(3)
-//     actionPlayers.resetGame()
-//     actionsDice.setPlayers(1)
-//   } catch (err) {
-//     captureException(err)
-//   }
-// }
-
-// History operations
 
 const createHistory = async (values: HistoryT) => {
   try {
@@ -378,6 +373,7 @@ const checkVersion = async (minVersion: string) => {
 }
 
 export {
+  updateFlagEmojiIfNeed,
   uploadImg,
   updatePlan,
   updateProfName,

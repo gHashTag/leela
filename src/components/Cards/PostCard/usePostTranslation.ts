@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 
-import { lang } from 'src/i18n'
-
-import { PostStore } from '../../../store'
-import { PostT } from '../../../types'
+import { flagEmoji } from 'src/i18n'
+import { PostStore } from 'src/store'
+import { PostT } from 'src/types'
 
 interface usePostTranslationParams {
   item?: PostT
@@ -38,7 +37,7 @@ export const usePostTranslation = ({
 
   const text = hideTranslate ? item?.text : transText
 
-  const flag = (hideTranslate ? lang : item?.language) as string
+  const flag = (hideTranslate ? flagEmoji : item?.flagEmoji ?? '🇷🇺') as string
 
   return { transText, hideTranslate, handleTranslate, flag, text }
 }
