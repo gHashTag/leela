@@ -225,10 +225,6 @@ android {
                 storePassword MYAPP_UPLOAD_STORE_PASSWORD
                 keyAlias MYAPP_UPLOAD_KEY_ALIAS
                 keyPassword MYAPP_UPLOAD_KEY_PASSWORD
-                // keyAlias 'my-key-alias'
-                // keyPassword 'Vishnu8087'
-                // storeFile file('leela-my-release-key.keystore')
-                // storePassword 'Vishnu8087'
             }
         }
     }

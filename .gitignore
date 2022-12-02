@@ -59,4 +59,9 @@ buck-out/
 # Ruby / CocoaPods
 /ios/Pods/
 /vendor/bundle/
+
 *.env
+
+sentry.properties
+google-services.json
+GoogleService-Info.plist

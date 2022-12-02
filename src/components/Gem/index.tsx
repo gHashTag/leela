@@ -1,15 +1,15 @@
 import React from 'react'
 
 import { observer } from 'mobx-react'
-import { Image, Pressable, View } from 'react-native'
-import { ScaledSheet, ms } from 'react-native-size-matters'
-
-import { ICONS } from './images'
-
-import { DiceStore, OfflinePlayers, OnlinePlayer, OtherPlayers } from '../../store'
-import { useTypedNavigation } from 'src/hooks'
+import { Image, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { runOnJS } from 'react-native-reanimated'
+import { ScaledSheet, ms } from 'react-native-size-matters'
+import { useTypedNavigation } from 'src/hooks'
+import { getUid } from 'src/screens/helper'
+import { DiceStore, OfflinePlayers, OnlinePlayer, OtherPlayers } from 'src/store'
+
+import { ICONS } from './images'
 
 interface GemT {
   plan: number
@@ -39,7 +39,12 @@ const Gem = observer(({ plan, player }: GemT) => {
         })
         .slice(0, DiceStore.multi)
     : [
-        { id: 1, data: OnlinePlayer.store.plan, ava: OnlinePlayer.store.avatar },
+        {
+          id: 1,
+          data: OnlinePlayer.store.plan,
+          ava: OnlinePlayer.store.avatar,
+          ownerId: getUid(),
+        },
         ...OtherPlayers.store.online.slice().map((a, index) => {
           return {
             id: index + 2,
@@ -69,13 +74,15 @@ const Gem = observer(({ plan, player }: GemT) => {
                 style={[
                   gems,
                   { zIndex: getIndex(id) },
-                  id === 1 && DiceStore.online && { zIndex: 2 },
+                  id === 1 && DiceStore.online && styles.primaryGem,
                 ]}
                 source={source(id, ava)}
               />
             </GestureDetector>
           )
-        } else return <></>
+        } else {
+          return <></>
+        }
       })}
     </View>
   )
@@ -91,6 +98,9 @@ const styles = ScaledSheet.create({
     width: ms(42, 0.5),
     height: ms(42, 0.5),
     borderRadius: ms(42, 0.5) / 2,
+  },
+  primaryGem: {
+    zIndex: 2,
   },
 })
 
