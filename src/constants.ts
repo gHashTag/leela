@@ -1,6 +1,6 @@
 import { createNavigationContainerRef } from '@react-navigation/native'
 import * as Sentry from '@sentry/react-native'
-import { Alert, Dimensions, I18nManager, Linking, Platform } from 'react-native'
+import { Alert, Dimensions, Linking, Platform } from 'react-native'
 import i18next from 'src/i18n'
 
 import { ButtonsModalT } from './types'

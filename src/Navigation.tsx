@@ -15,6 +15,7 @@ import { lang } from 'src/i18n'
 import {
   ActionsModal,
   ChangeIntention,
+  ChatScreen,
   DetailPostScreen,
   ExitPopup,
   GameScreen,
@@ -106,6 +107,7 @@ const Tab = observer(() => {
       {lang === 'ru' && (
         <TabNavigator.Screen name="TAB_BOTTOM_4" component={PosterScreen} />
       )}
+      <TabNavigator.Screen name="TAB_BOTTOM_5" component={ChatScreen} />
     </TabNavigator.Navigator>
   )
 })

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import Rate from 'react-native-rate'
 import { s, vs } from 'react-native-size-matters'
+import { trueBlue } from 'src/constants'
 
 import {
   Background,
@@ -20,7 +21,6 @@ import {
 import { useLeftTimeForStep } from '../../../hooks'
 import { DiceStore, OfflinePlayers, OnlinePlayer, actionsDice } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types'
-import { trueBlue } from 'src/constants'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,

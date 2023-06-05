@@ -39,4 +39,12 @@ export const ICONS = [
     path: require('./TAB_BOTTOM_4_DISABLE.png'),
     title: 'TAB_BOTTOM_4_DISABLE',
   },
+  {
+    path: require('./TAB_BOTTOM_5.png'),
+    title: 'TAB_BOTTOM_5',
+  },
+  {
+    path: require('./TAB_BOTTOM_5_DISABLE.png'),
+    title: 'TAB_BOTTOM_5_DISABLE',
+  },
 ]
