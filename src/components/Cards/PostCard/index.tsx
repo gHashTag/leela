@@ -1,12 +1,12 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import React, { memo } from 'react'
+import React, { memo, useState } from 'react'
 
 // @ts-expect-error
 import { OPEN_AI_KEY } from '@env'
 import axios from 'axios'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import { ButtonVectorIcon, HashtagFormat, PlanAvatar, Space, Text } from 'src/components'
 import { W, brightTurquoise, fuchsia, lightGray, orange } from 'src/constants'
@@ -35,6 +35,8 @@ export const PostCard: React.FC<postCardI> = memo(
       isHideTranslate,
     } = props
 
+    const [isLoading, setIsLoading] = useState(false)
+    console.log('isLoading', isLoading)
     const item: PostT | undefined =
       PostStore.store.posts.find(a => a.id === postId) ||
       PostStore.store.ownPosts.find(a => a.id === postId)
@@ -48,14 +50,13 @@ export const PostCard: React.FC<postCardI> = memo(
     })
 
     const fullName = PostStore.getOwnerName(item.ownerId)
-    const firstName = fullName.split(' ')[0]
 
-    console.log('system', t('system'))
     // Функция, которая обращается к API OpenAI для генерации комментария
     const generateComment = async (message: string | undefined): Promise<string> => {
+      setIsLoading(true)
       try {
-        const systemMessage = t('system', { name: firstName })
-        console.log('systemMessage', systemMessage)
+        const systemMessage = t('system')
+        // console.log('systemMessage', systemMessage)
         const response = await axios.post(
           'https://api.openai.com/v1/chat/completions',
           {
@@ -71,7 +72,7 @@ export const PostCard: React.FC<postCardI> = memo(
               },
             ],
             max_tokens: 1000,
-            temperature: 0.7,
+            temperature: 0.5,
           },
           {
             headers: {
@@ -80,9 +81,11 @@ export const PostCard: React.FC<postCardI> = memo(
             },
           },
         )
-
+        console.log('response', response)
+        setIsLoading(false)
         return response?.data?.choices[0]?.message?.content ?? ''
       } catch (error) {
+        setIsLoading(false)
         console.error(error)
         return ''
       }
@@ -129,84 +132,97 @@ export const PostCard: React.FC<postCardI> = memo(
 
     if (isDetail) {
       return (
-        <View style={[container, withoutBottomBorder]}>
-          <View style={headerS}>
-            <PlanAvatar
-              avaUrl={avaUrl}
-              onPress={handleProfile}
-              size={'large'}
-              isAccept={item.accept}
-              plan={item.plan}
-              aditionalStyle={img}
-            />
-            <View style={headerInfo}>
-              {/* name, create date */}
-              <Space height={vs(6.5)} />
-              <View style={headerName}>
-                <Text numberOfLines={1} h={'h6'} title={fullName} />
+        <>
+          <View style={[container, withoutBottomBorder]}>
+            <View style={headerS}>
+              <PlanAvatar
+                avaUrl={avaUrl}
+                onPress={handleProfile}
+                size={'large'}
+                isAccept={item.accept}
+                plan={item.plan}
+                aditionalStyle={img}
+              />
+              <View style={headerInfo}>
+                {/* name, create date */}
+                <Space height={vs(6.5)} />
+                <View style={headerName}>
+                  <Text numberOfLines={1} h={'h6'} title={fullName} />
+                </View>
+                <Text
+                  h={'h5'}
+                  numberOfLines={1}
+                  textStyle={lightText}
+                  title={`${date}`}
+                />
+                <Space height={vs(5)} />
               </View>
-              <Text h={'h5'} numberOfLines={1} textStyle={lightText} title={`${date}`} />
-              <Space height={vs(5)} />
-            </View>
-            {/* <TouchableOpacity onPress={handleTranslate}>
+              {/* <TouchableOpacity onPress={handleTranslate}>
               <Text title={flag} style={styles.flagEmoji} />
             </TouchableOpacity> */}
-          </View>
-          {/* Detail Text */}
-          <HashtagFormat h={'h5'} textStyle={textStyle} title={text || ' '} selectable />
-          {/* Detail Date */}
-          <Space height={vs(5)} />
-          <View style={headerS}>
-            <View style={flex1} />
-          </View>
-          {/* Detail Buttons */}
-          <View style={btnsContainer}>
-            {isAdmin && (
+            </View>
+            {/* Detail Text */}
+            <HashtagFormat
+              h={'h5'}
+              textStyle={textStyle}
+              title={text || ' '}
+              selectable
+            />
+            {/* Detail Date */}
+            <Space height={vs(5)} />
+            <View style={headerS}>
+              <View style={flex1} />
+            </View>
+            {/* Detail Buttons */}
+            <View style={btnsContainer}>
+              {isAdmin && (
+                <ButtonVectorIcon
+                  onPress={handleAdminMenu}
+                  viewStyle={mediumBtn}
+                  ionicons
+                  iconSize={iconSize + s(3)}
+                  name="md-ellipsis-vertical-circle"
+                  size={iconSize}
+                />
+              )}
               <ButtonVectorIcon
-                onPress={handleAdminMenu}
+                count={commCount}
+                onPress={handleComment}
                 viewStyle={mediumBtn}
                 ionicons
-                iconSize={iconSize + s(3)}
-                name="md-ellipsis-vertical-circle"
+                name="chatbubble-outline"
                 size={iconSize}
               />
-            )}
-            <ButtonVectorIcon
-              count={commCount}
-              onPress={handleComment}
-              viewStyle={mediumBtn}
-              ionicons
-              name="chatbubble-outline"
-              size={iconSize}
-            />
-            <ButtonVectorIcon
-              count={likeCount}
-              onPress={handleLike}
-              viewStyle={mediumBtn}
-              color={heartColor}
-              iconSize={iconSize + s(3)}
-              ionicons
-              name={heart}
-              size={iconSize}
-            />
-            <ButtonVectorIcon
-              viewStyle={mediumBtn}
-              iconSize={iconSize + s(7)}
-              ionicons
-              name="md-link-outline"
-              onPress={handleShareLink}
-            />
-            {isAdmin && (
+              <ButtonVectorIcon
+                count={likeCount}
+                onPress={handleLike}
+                viewStyle={mediumBtn}
+                color={heartColor}
+                iconSize={iconSize + s(3)}
+                ionicons
+                name={heart}
+                size={iconSize}
+              />
               <ButtonVectorIcon
                 viewStyle={mediumBtn}
                 iconSize={iconSize + s(7)}
                 ionicons
-                name="md-color-wand-outline"
-                onPress={handleCommentAi}
+                name="md-link-outline"
+                onPress={handleShareLink}
               />
-            )}
+              {isAdmin && (
+                <ButtonVectorIcon
+                  viewStyle={mediumBtn}
+                  iconSize={iconSize + s(7)}
+                  ionicons
+                  name="md-color-wand-outline"
+                  onPress={handleCommentAi}
+                />
+              )}
+            </View>
           </View>
-        </View>
+          {isLoading ? <ActivityIndicator size="large" color={brightTurquoise} /> : <></>}
+        </>
       )
     }
     return (
