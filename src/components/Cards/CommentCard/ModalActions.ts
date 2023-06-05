@@ -40,12 +40,12 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
       title: i18next.t('actions.copy'),
       icon: 'ios-copy-outline',
     },
-    {
-      key: 'TRANSLATE',
-      onPress: handleTransText,
-      title: i18next.t('actions.translate'),
-      icon: 'ios-language-outline',
-    },
+    // {
+    //   key: 'TRANSLATE',
+    //   onPress: handleTransText,
+    //   title: i18next.t('actions.translate'),
+    //   icon: 'ios-language-outline',
+    // },
     {
       key: 'DEL',
       onPress: () => {

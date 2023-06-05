@@ -8,6 +8,7 @@ import i18next from 'src/i18n'
 import { upStepOnline } from './helper'
 import { delTokenOnSignOut } from './MessagingStore'
 
+import { DiceStore, actionsDice } from './'
 import { captureException, navigate } from '../constants'
 import {
   getFireBaseRef,
@@ -20,7 +21,6 @@ import {
   uploadImg,
 } from '../screens/helper'
 import { HistoryT, status } from '../types'
-import { DiceStore, actionsDice } from './'
 
 const initProfile = {
   firstName: '',
@@ -197,7 +197,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       const jsonResponse = await (
         await fetch('https://leelachakra.com/resource/LeelaChakra/poster.json')
       ).json()
-      console.log('🚀 - jsonResponse', jsonResponse)
+      // console.log('🚀 - jsonResponse', jsonResponse)
       OnlinePlayer.store.poster = jsonResponse
     } catch (error) {
       captureException(error)

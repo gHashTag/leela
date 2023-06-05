@@ -1,14 +1,18 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import React, { memo } from 'react'
 
+// @ts-expect-error
+import { OPEN_AI_KEY } from '@env'
+import axios from 'axios'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import { ButtonVectorIcon, HashtagFormat, PlanAvatar, Space, Text } from 'src/components'
 import { W, brightTurquoise, fuchsia, lightGray, orange } from 'src/constants'
 import { getTimeStamp } from 'src/screens/helper'
 import { OnlinePlayer, PostStore } from 'src/store'
+import { PostT } from 'src/types'
 
 import { usePostActions } from './usePostActions'
 import { usePostTranslation } from './usePostTranslation'
@@ -31,17 +35,72 @@ export const PostCard: React.FC<postCardI> = memo(
       isHideTranslate,
     } = props
 
-    const item =
+    const item: PostT | undefined =
       PostStore.store.posts.find(a => a.id === postId) ||
       PostStore.store.ownPosts.find(a => a.id === postId)
 
     const { t } = useTranslation()
 
-    const { transText, hideTranslate, handleTranslate, flag, text } = usePostTranslation({
+    const { transText, hideTranslate, text } = usePostTranslation({
       translatedText,
       isHideTranslate,
       item,
     })
+
+    const fullName = PostStore.getOwnerName(item.ownerId)
+    const firstName = fullName.split(' ')[0]
+
+    console.log('system', t('system'))
+    // Функция, которая обращается к API OpenAI для генерации комментария
+    const generateComment = async (message: string | undefined): Promise<string> => {
+      try {
+        const systemMessage = t('system', { name: firstName })
+        console.log('systemMessage', systemMessage)
+        const response = await axios.post(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            model: 'gpt-3.5-turbo',
+            messages: [
+              {
+                role: 'system',
+                content: systemMessage,
+              },
+              {
+                role: 'user',
+                content: message,
+              },
+            ],
+            max_tokens: 1000,
+            temperature: 0.7,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${OPEN_AI_KEY}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        )
+
+        return response?.data?.choices[0]?.message?.content ?? ''
+      } catch (error) {
+        console.error(error)
+        return ''
+      }
+    }
+
+    const curItem: PostT | undefined = PostStore.store.posts.find(a => a.id === postId)
+
+    // Ваша функция handleComment, обновленная для использования generateComment
+    const handleCommentAi = async () => {
+      const aiComment = await generateComment(text)
+      if (curItem) {
+        PostStore.createComment({
+          text: aiComment,
+          postId: curItem.id,
+          postOwner: curItem.ownerId,
+        })
+      }
+    }
 
     const {
       goDetail,
@@ -66,8 +125,6 @@ export const PostCard: React.FC<postCardI> = memo(
 
     const heart = isLiked ? 'heart' : 'heart-outline'
     const heartColor = isLiked ? fuchsia : undefined
-
-    const fullName = PostStore.getOwnerName(item.ownerId)
     const avaUrl = PostStore.getAvaById(item.ownerId)
 
     if (isDetail) {
@@ -91,9 +148,9 @@ export const PostCard: React.FC<postCardI> = memo(
               <Text h={'h5'} numberOfLines={1} textStyle={lightText} title={`${date}`} />
               <Space height={vs(5)} />
             </View>
-            <TouchableOpacity onPress={handleTranslate}>
+            {/* <TouchableOpacity onPress={handleTranslate}>
               <Text title={flag} style={styles.flagEmoji} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
           {/* Detail Text */}
           <HashtagFormat h={'h5'} textStyle={textStyle} title={text || ' '} selectable />
@@ -139,6 +196,15 @@ export const PostCard: React.FC<postCardI> = memo(
               name="md-link-outline"
               onPress={handleShareLink}
             />
+            {isAdmin && (
+              <ButtonVectorIcon
+                viewStyle={mediumBtn}
+                iconSize={iconSize + s(7)}
+                ionicons
+                name="md-color-wand-outline"
+                onPress={handleCommentAi}
+              />
+            )}
           </View>
         </View>
       )
@@ -175,9 +241,9 @@ export const PostCard: React.FC<postCardI> = memo(
               <Text numberOfLines={1} h={'h6'} title={fullName} />
               <Text h={'h6'} textStyle={lightText} title={` · ${date}`} />
               <View style={flex1} />
-              <TouchableOpacity onPress={handleTranslate}>
+              {/* <TouchableOpacity onPress={handleTranslate}>
                 <Text title={flag} style={styles.flagEmoji} />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
             <Space height={vs(5)} />
             <HashtagFormat
