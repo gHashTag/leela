@@ -17,7 +17,7 @@ interface InputTextT {
   navigation: NativeStackNavigationProp<RootStackParamList, 'INPUT_TEXT_MODAL'>
   route: RouteProp<RootStackParamList, 'INPUT_TEXT_MODAL'>
 }
-const max = 250
+const max = 1000
 const schema = yup
   .object()
   .shape({
