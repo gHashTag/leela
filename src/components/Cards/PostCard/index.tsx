@@ -36,7 +36,6 @@ export const PostCard: React.FC<postCardI> = memo(
     } = props
 
     const [isLoading, setIsLoading] = useState(false)
-    console.log('isLoading', isLoading)
     const item: PostT | undefined =
       PostStore.store.posts.find(a => a.id === postId) ||
       PostStore.store.ownPosts.find(a => a.id === postId)

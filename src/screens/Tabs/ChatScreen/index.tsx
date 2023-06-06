@@ -6,7 +6,7 @@ import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { Bubble, GiftedChat, IMessage } from 'react-native-gifted-chat'
-import { Header } from 'src/components'
+import { Background, Header } from 'src/components'
 import { brightTurquoise } from 'src/constants'
 
 const LEELA_AI = 'https://leelachakra.com/resource/LeelaChakra/PhotoLeela/leelaAI.JPG'
@@ -159,7 +159,7 @@ const ChatScreen: React.FC = () => {
   }
 
   return (
-    <>
+    <Background status="clean" style={styles.bg}>
       <Header title="Leela AI" textAlign="center" />
       <GiftedChat
         messages={messages}
@@ -169,7 +169,7 @@ const ChatScreen: React.FC = () => {
           _id: 1,
         }}
       />
-    </>
+    </Background>
   )
 }
 
@@ -179,6 +179,7 @@ const styles = StyleSheet.create({
     top: 1,
     alignItems: 'center',
   },
+  bg: { top: 20 },
 })
 
 export { ChatScreen }
