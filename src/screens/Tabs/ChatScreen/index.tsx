@@ -159,7 +159,7 @@ const ChatScreen: React.FC = () => {
   }
 
   return (
-    <Background status="clean" style={styles.bg}>
+    <>
       <Header title="Leela AI" textAlign="center" />
       <GiftedChat
         messages={messages}
@@ -169,7 +169,7 @@ const ChatScreen: React.FC = () => {
           _id: 1,
         }}
       />
-    </Background>
+    </>
   )
 }
 
@@ -179,7 +179,6 @@ const styles = StyleSheet.create({
     top: 1,
     alignItems: 'center',
   },
-  bg: { top: 20 },
 })
 
 export { ChatScreen }

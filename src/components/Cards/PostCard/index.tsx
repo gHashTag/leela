@@ -80,7 +80,7 @@ export const PostCard: React.FC<postCardI> = memo(
             },
           },
         )
-        console.log('response', response)
+
         setIsLoading(false)
         return response?.data?.choices[0]?.message?.content ?? ''
       } catch (error) {
