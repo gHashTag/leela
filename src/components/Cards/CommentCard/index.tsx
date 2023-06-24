@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { observer } from 'mobx-react'
 import { FlatList, LayoutChangeEvent, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
+import { useTypedNavigation } from 'src/hooks'
 
 import { getActions } from './ModalActions'
 
@@ -18,7 +19,6 @@ import { OpenActionsModal, gray, lightGray } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
 import { PostStore } from '../../../store'
 import { CommentT } from '../../../types'
-import { useTypedNavigation } from 'src/hooks'
 
 interface CommentCardI {
   item: CommentT
@@ -54,7 +54,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
       const modalButtons = getActions({ item, handleTransText })
       OpenActionsModal(modalButtons)
     }
-
+    console.log('item', item)
     const text = hideTranslate ? item.text : transText
 
     const subCom = PostStore.store.replyComments.filter(a => a.commentId === item.id)
@@ -63,7 +63,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
     const lineH = isSmallLine
       ? lineHeight + PADDING * 2 - vs(16)
       : lineHeight + PADDING * 2 - vs(4)
-    const curName = PostStore.getOwnerName(item.ownerId, false)
+    const curName = PostStore.getOwnerName(item.ownerId, false, item)
 
     const handleProfile = () => {
       if (item?.ownerId) {
