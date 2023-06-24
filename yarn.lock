@@ -6923,11 +6923,6 @@ react-native-app-link@^1.0.1:
   resolved "https://registry.yarnpkg.com/react-native-app-link/-/react-native-app-link-1.0.1.tgz#4a17c01df0230a5e49c117baa5037c5689cee1c6"
   integrity sha512-usPcJMZMVvRs/lBSy/UU+ooB+h2YhMXGA47xvWVltyOQerQu4hKSWG+qG2BRKcpHmTkmFynDSf5cLWztXwAA1w==
 
-react-native-background-fetch@^4.1.10:
-  version "4.1.10"
-  resolved "https://registry.yarnpkg.com/react-native-background-fetch/-/react-native-background-fetch-4.1.10.tgz#12c7e85140af67fb05edb7cd9960e4f09a457797"
-  integrity sha512-Ug54vTctZuD/c06ZLk/VyvFdhw/hCVVOHYR5heyMqc6FlT/m9fVhFWyl4uH3JmPCzmWDVR3fO28CzrGpKOrusw==
-
 react-native-branch@5.5.0:
   version "5.5.0"
   resolved "https://registry.yarnpkg.com/react-native-branch/-/react-native-branch-5.5.0.tgz#40d209480b502574681ac7b5b6e0f5afd190da09"

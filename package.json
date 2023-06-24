@@ -46,7 +46,6 @@
     "react-native": "0.70.4",
     "react-native-android-badge": "^0.5.0",
     "react-native-app-link": "^1.0.1",
-    "react-native-background-fetch": "^4.1.10",
     "react-native-branch": "5.5.0",
     "react-native-device-info": "^10.3.0",
     "react-native-dotenv": "^3.3.1",

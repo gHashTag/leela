@@ -6,7 +6,7 @@ import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { Bubble, GiftedChat, IMessage } from 'react-native-gifted-chat'
-import { Background, Header } from 'src/components'
+import { Header } from 'src/components'
 import { brightTurquoise } from 'src/constants'
 
 const LEELA_AI = 'https://leelachakra.com/resource/LeelaChakra/PhotoLeela/leelaAI.JPG'
