@@ -5,6 +5,7 @@ import { I18nManager } from 'react-native'
 
 import { name as appName } from './app.json'
 import App from './src/AppWithProviders'
+import { captureException } from './src/constants'
 import {
   displayNotification,
   notificationActionsHandler,
@@ -14,8 +15,8 @@ import './src/i18n'
 
 try {
   I18nManager.allowRTL(false)
-} catch (e) {
-  console.log(e)
+} catch (error) {
+  captureException(error)
 }
 
 setCategories()

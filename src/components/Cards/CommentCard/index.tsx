@@ -54,7 +54,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
       const modalButtons = getActions({ item, handleTransText })
       OpenActionsModal(modalButtons)
     }
-    console.log('item', item)
+
     const text = hideTranslate ? item.text : transText
 
     const subCom = PostStore.store.replyComments.filter(a => a.commentId === item.id)
