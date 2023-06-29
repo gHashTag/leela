@@ -8,7 +8,7 @@ import * as yup from 'yup'
 
 import { Input } from '..'
 import { Text } from '../'
-import { W, black, primary } from '../../constants'
+import { W, black, captureException, primary } from '../../constants'
 import { PostStore } from '../../store'
 
 interface CreateCommentT {
@@ -62,7 +62,9 @@ export function CreateComment({
             color={black}
             additionalStyle={input}
             showError={false}
-            onSubmitEditing={methods.handleSubmit(handleSubmit, err => console.log(err))}
+            onSubmitEditing={methods.handleSubmit(handleSubmit, error =>
+              captureException(error),
+            )}
           />
           <Text h="h9" title={`(${length}/250)`} />
         </FormProvider>

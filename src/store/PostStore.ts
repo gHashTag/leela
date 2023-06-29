@@ -226,7 +226,7 @@ export const PostStore = {
   },
   getOwnerName: (ownerId: string, full?: boolean, item?: CommentT) => {
     const userUid = auth().currentUser?.uid
-    console.log('userUid', userUid)
+
     const profile = OtherPlayers.store.players.find(a => a.owner === ownerId)
     if (userUid === ownerId) {
       return `${item?.firstName} ${item?.lastName}`

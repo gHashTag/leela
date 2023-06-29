@@ -19,7 +19,7 @@ import {
   Space,
   TextError,
 } from '../../../components'
-import { H, W, black, goBack, white } from '../../../constants'
+import { H, W, black, captureException, goBack, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
@@ -36,7 +36,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
   const { t } = useTranslation()
 
   const onError: SubmitErrorHandler<FieldValues> = errors => {
-    return console.log(errors)
+    captureException(errors)
   }
 
   const handleForgot = () => {

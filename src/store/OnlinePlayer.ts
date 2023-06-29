@@ -197,7 +197,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       const jsonResponse = await (
         await fetch('https://leelachakra.com/resource/LeelaChakra/poster.json')
       ).json()
-      // console.log('🚀 - jsonResponse', jsonResponse)
+
       OnlinePlayer.store.poster = jsonResponse
     } catch (error) {
       captureException(error)

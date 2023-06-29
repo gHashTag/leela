@@ -11,7 +11,7 @@ import { mvs, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
 
 import { AppContainer, Button, Input, Loading, Space } from '../../components'
-import { black, lightGray } from '../../constants'
+import { black, captureException, lightGray } from '../../constants'
 import { updateIntention } from '../../screens/helper'
 import { RootStackParamList } from '../../types'
 
@@ -91,7 +91,7 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
             <Space height={10} />
             <Button
               title={t('done')}
-              onPress={methods.handleSubmit(onSubmit, er => console.log(er))}
+              onPress={methods.handleSubmit(onSubmit, errors => captureException(errors))}
             />
             <Space height={vs(50)} />
           </FormProvider>

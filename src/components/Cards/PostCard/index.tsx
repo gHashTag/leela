@@ -48,7 +48,7 @@ export const PostCard: React.FC<postCardI> = memo(
       item,
     })
 
-    const fullName = PostStore.getOwnerName(item.ownerId)
+    const fullName = item ? PostStore.getOwnerName(item.ownerId) : ''
 
     // Функция, которая обращается к API OpenAI для генерации комментария
     const generateComment = async (message: string | undefined): Promise<string> => {

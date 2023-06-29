@@ -25,7 +25,7 @@ import {
   Loading,
   Space,
 } from '../../../components'
-import { H, W, black, goBack, white } from '../../../constants'
+import { H, W, black, captureException, goBack, white } from '../../../constants'
 import { useNoBackHandler } from '../../../hooks'
 import { actionsDice, fetchBusinesses } from '../../../store'
 import { RootStackParamList } from '../../../types'
@@ -95,7 +95,7 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     setLoading(false)
   }
   const onError: SubmitErrorHandler<FieldValues> = errors => {
-    return console.log(errors)
+    captureException(errors)
   }
 
   const { dark } = useTheme()

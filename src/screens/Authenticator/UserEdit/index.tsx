@@ -19,7 +19,7 @@ import {
   Loading,
   Space,
 } from '../../../components'
-import { H, W, black, goBack, white } from '../../../constants'
+import { H, W, black, captureException, goBack, white } from '../../../constants'
 import { updateProfName } from '../../../screens/helper'
 import { RootStackParamList } from '../../../types'
 
@@ -111,7 +111,7 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
               <Space height={30} />
               <Button
                 title={t('done')}
-                onPress={methods.handleSubmit(onSubmit, er => console.log(er))}
+                onPress={methods.handleSubmit(onSubmit, error => captureException(error))}
               />
               <Space height={vs(10)} />
             </FormProvider>

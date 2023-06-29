@@ -17,12 +17,12 @@ import {
   Space,
   TextError,
 } from '../../../components'
-import { H, W, black, goBack, white } from '../../../constants'
+import { H, W, black, captureException, goBack, white } from '../../../constants'
 
 export const SignUp = (): ReactElement => {
   const { loading, error, methods, onSubmit } = useSignUp()
   const onError: SubmitErrorHandler<FieldValues> = errors => {
-    return console.log(errors)
+    captureException(errors)
   }
   const { t } = useTranslation()
 

@@ -87,7 +87,7 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
   }
 
   const onError: SubmitErrorHandler<FieldValues> = errors => {
-    console.log(errors)
+    captureException(errors)
   }
 
   const { dark } = useTheme()

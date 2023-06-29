@@ -44,7 +44,7 @@ export const getMarkdownStyle = (
   IMGwPercent?: number,
 ) => {
   const {
-    colors: { text, border, primary, notification, background, card },
+    colors: { text, border, primary, card },
   } = theme
   const paragraph: StyleProp<TextStyle> = {
     flexWrap: 'wrap',
@@ -217,7 +217,7 @@ export const getMarkdownStyle = (
     },
   })
   const rules: RenderRules = {
-    video: (node, children, parent, styles) => {
+    video: node => {
       const { videoID, serviceName } = (node as any).sourceInfo
       switch (serviceName) {
         case 'youtube':
@@ -236,15 +236,6 @@ export const getMarkdownStyle = (
       const { src } = node.attributes
       return <Img widthCoefficient={IMGwPercent} key={node.key} uri={src} />
     },
-    // fence: a => {
-    //   // console.log('fence:', a)
-    //   // @ts-expect-error
-    //   return <CodeHighlighter key={nanoid()} type={a.sourceInfo} codeText={a.content} />
-    // },
-    // code_inline: a => {
-    //   // console.log('code_inline:', a)
-    //   return <CodeHighlighter key={nanoid()} type={'js'} codeText={a.content} />
-    // }
   }
   return {
     style,
