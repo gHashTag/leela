@@ -1,4 +1,4 @@
-/* индонизийски */
+/* индонезийский */
 {
   "auth": {
     "signIn": "Masuk",
@@ -69,6 +69,7 @@
     "changeAva": "Ubah avatar",
     "start": "Mulai",
     "startOver": "Mulai Dari Awal",
+    "deleteAcc": "Hapus Akun",
     "leaveFeedback": "Tinggalkan umpan balik"
   },
   "or": "atau",

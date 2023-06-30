@@ -227,6 +227,23 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       return `${hourCount} ${i18next.t('timestamps-short.h')}`
     }
   },
+  async deleteUser() {
+    try {
+      const userUid = auth().currentUser?.uid
+      await getFireBaseRef(`/online/${userUid}`).set(false)
+      await delTokenOnSignOut()
+      let user = auth().currentUser
+      user === null
+        ? null
+        : user
+            .delete()
+            .then(() => console.log('User deleted'))
+            .catch(error => console.log(error))
+      navigate('WELCOME_SCREEN')
+    } catch (err) {
+      captureException(err)
+    }
+  },
 })
 
 interface Istore {
@@ -239,6 +256,7 @@ interface Istore {
   getPoster: () => Promise<void>
   SignOutToOffline: () => Promise<void>
   getLeftTime: (lastTime: number) => string
+  deleteUser: () => Promise<void>
 }
 
 interface OnlinePlayerStore {

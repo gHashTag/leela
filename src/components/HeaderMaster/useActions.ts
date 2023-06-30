@@ -50,6 +50,13 @@ export const useActions = () => {
       title: t('actions.startOver'),
       icon: 'ios-reload',
     },
+    {
+      key: 'DELETE',
+      color: 'red',
+      onPress: OnlinePlayer.deleteUser,
+      title: t('auth.deleteAcc'),
+      icon: 'trash-bin-outline',
+    },
   ]
 
   const onPressEdit = () => OpenActionsModal(menuItems)
