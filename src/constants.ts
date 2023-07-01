@@ -1,9 +1,13 @@
+//@ts-expect-error
+import { OPEN_AI_KEY } from '@env'
 import { createNavigationContainerRef } from '@react-navigation/native'
 import * as Sentry from '@sentry/react-native'
+import axios from 'axios'
 import { Alert, Dimensions, Linking, Platform } from 'react-native'
 import i18next from 'src/i18n'
 
-import { ButtonsModalT } from './types'
+import { PostStore } from './store'
+import { ButtonsModalT, MessageAIT, PostT } from './types'
 
 export const navRef = createNavigationContainerRef<any>()
 
@@ -13,6 +17,66 @@ export const navigate = (name: string, params?: any) => {
   }
 }
 
+// Функция, которая обращается к API OpenAI для генерации комментария
+export const generateComment = async ({
+  message,
+  systemMessage,
+}: MessageAIT): Promise<string> => {
+  try {
+    // console.log('systemMessage', systemMessage)
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: systemMessage,
+          },
+          {
+            role: 'user',
+            content: message,
+          },
+        ],
+        max_tokens: 1000,
+        temperature: 0.5,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${OPEN_AI_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+
+    return response?.data?.choices[0]?.message?.content ?? ''
+  } catch (error) {
+    captureException(error)
+    throw error
+  }
+}
+
+// Ваша функция handleComment, обновленная для использования generateComment
+interface HandleCommentAiParams {
+  curItem: PostT | undefined
+  systemMessage: string
+  message: string
+}
+
+export const handleCommentAi = async ({
+  curItem,
+  systemMessage,
+  message,
+}: HandleCommentAiParams): Promise<void> => {
+  const aiComment: string = await generateComment({ message, systemMessage })
+  if (curItem) {
+    PostStore.createComment({
+      text: aiComment,
+      postId: curItem.id,
+      postOwner: curItem.ownerId,
+    })
+  }
+}
 export function OpenNetworkModal() {
   if (navRef.isReady()) {
     navRef.navigate('NETWORK_MODAL')

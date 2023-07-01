@@ -21,7 +21,8 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
   } = useTheme()
   const { t } = useTranslation()
 
-  const { plan } = route.params
+  const plan = 1
+  // const { plan } = route.params
 
   useFocusEffect(() => {
     const listener = BackHandler.addEventListener('hardwareBackPress', () => true)
@@ -30,7 +31,7 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
   const handlePress = () => {
     navigation.goBack()
     if (plan) {
-      navigation.navigate('PLANS_DETAIL_SCREEN', { id: plan, report: true })
+      navigation.navigate('PLANS_DETAIL_SCREEN', { plan, report: true })
     }
   }
   return (

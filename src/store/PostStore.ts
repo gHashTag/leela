@@ -1,7 +1,8 @@
 // @ts-ignore
-import { YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
+import { OPEN_AI_KEY, YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
 import auth from '@react-native-firebase/auth'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
+import axios from 'axios'
 import { makeAutoObservable } from 'mobx'
 import { nanoid } from 'nanoid/non-secure'
 import { captureException } from 'src/constants'
@@ -40,6 +41,43 @@ interface delCommentIdT {
   postId?: string
 }
 
+const generateComment = async (
+  message: string | undefined,
+  systemMessage: string | undefined,
+): Promise<string> => {
+  try {
+    // console.log('systemMessage', systemMessage)
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: systemMessage,
+          },
+          {
+            role: 'user',
+            content: message,
+          },
+        ],
+        max_tokens: 1000,
+        temperature: 0.5,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${OPEN_AI_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+    return response?.data?.choices[0]?.message?.content ?? ''
+  } catch (error) {
+    console.error(error)
+    return ''
+  }
+}
+
 export const PostStore = {
   store: makeAutoObservable<postStoreT>({
     posts: [],
@@ -49,7 +87,7 @@ export const PostStore = {
     loadOwnPosts: true,
     loadPosts: true,
   }),
-  createPost: async ({ text, plan }: FormPostT) => {
+  createPost: async ({ text, plan, systemMessage }: FormPostT) => {
     const userUid = auth().currentUser?.uid
     const email = auth().currentUser?.email
     if (userUid && email) {
@@ -68,11 +106,27 @@ export const PostStore = {
         flagEmoji,
       }
       try {
-        await firestore().collection('Posts').doc(id).set(post)
+        const response = await firestore().collection('Posts').doc(id).set(post)
+        console.log(response)
+        // Получение данных созданного документа
+        const docSnapshot = await firestore().collection('Posts').doc(id).get()
+        if (docSnapshot.exists) {
+          const createdPostData = docSnapshot.data()
+          console.log('Created Post:', createdPostData)
+          const textMessage = createdPostData === undefined ? null : createdPostData.text
+          const responseAI = await generateComment(textMessage, systemMessage)
+          console.log(responseAI, 'responseAI')
+          return createdPostData // Возвращает данные созданного поста
+        } else {
+          console.log('Post does not exist')
+          return null
+        }
       } catch (error) {
         captureException(error)
+        throw error
       }
     }
+    throw new Error('Missing userUid or email') // добавлено для случая отсутствия userUid или email
   },
   createComment: async ({ text, postId, postOwner }: FormCommentT) => {
     const userUid = auth().currentUser?.uid

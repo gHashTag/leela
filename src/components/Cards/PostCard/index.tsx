@@ -1,15 +1,19 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import React, { memo, useState } from 'react'
 
-// @ts-expect-error
-import { OPEN_AI_KEY } from '@env'
-import axios from 'axios'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import { ButtonVectorIcon, HashtagFormat, PlanAvatar, Space, Text } from 'src/components'
-import { W, brightTurquoise, fuchsia, lightGray, orange } from 'src/constants'
+import {
+  W,
+  brightTurquoise,
+  fuchsia,
+  handleCommentAi,
+  lightGray,
+  orange,
+} from 'src/constants'
 import { getTimeStamp } from 'src/screens/helper'
 import { OnlinePlayer, PostStore } from 'src/store'
 import { PostT } from 'src/types'
@@ -48,61 +52,16 @@ export const PostCard: React.FC<postCardI> = memo(
       item,
     })
 
-    const fullName = item ? PostStore.getOwnerName(item.ownerId) : ''
-
-    // Функция, которая обращается к API OpenAI для генерации комментария
-    const generateComment = async (message: string | undefined): Promise<string> => {
-      setIsLoading(true)
-      try {
-        const systemMessage = t('system')
-        // console.log('systemMessage', systemMessage)
-        const response = await axios.post(
-          'https://api.openai.com/v1/chat/completions',
-          {
-            model: 'gpt-3.5-turbo',
-            messages: [
-              {
-                role: 'system',
-                content: systemMessage,
-              },
-              {
-                role: 'user',
-                content: message,
-              },
-            ],
-            max_tokens: 1000,
-            temperature: 0.5,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${OPEN_AI_KEY}`,
-              'Content-Type': 'application/json',
-            },
-          },
-        )
-
-        setIsLoading(false)
-        return response?.data?.choices[0]?.message?.content ?? ''
-      } catch (error) {
-        setIsLoading(false)
-        console.error(error)
-        return ''
-      }
-    }
-
     const curItem: PostT | undefined = PostStore.store.posts.find(a => a.id === postId)
 
-    // Ваша функция handleComment, обновленная для использования generateComment
-    const handleCommentAi = async () => {
-      const aiComment = await generateComment(text)
-      if (curItem) {
-        PostStore.createComment({
-          text: aiComment,
-          postId: curItem.id,
-          postOwner: curItem.ownerId,
-        })
-      }
+    const onPressAI = () => {
+      const systemMessage = t('system')
+      setIsLoading(true)
+      handleCommentAi({ curItem, systemMessage, message: text as string })
+      setIsLoading(false)
     }
+
+    const fullName = item ? PostStore.getOwnerName(item.ownerId) : ''
 
     const {
       goDetail,
@@ -215,7 +174,7 @@ export const PostCard: React.FC<postCardI> = memo(
                   iconSize={iconSize + s(7)}
                   ionicons
                   name="md-color-wand-outline"
-                  onPress={handleCommentAi}
+                  onPress={onPressAI}
                 />
               )}
             </View>

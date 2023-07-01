@@ -27,7 +27,7 @@ export type RootStackParamList = {
   PLANS_SCREEN: undefined
   SELECT_PLAYERS_SCREEN: undefined
   PLANS_DETAIL_SCREEN: {
-    id: number
+    plan: number
     report?: boolean
   }
   PROFILE_SCREEN: undefined
@@ -135,8 +135,13 @@ export interface SelfT {
 export interface FormPostT {
   text: string
   plan: number
+  systemMessage?: string
 }
 
+export interface MessageAIT {
+  systemMessage: string
+  message: string
+}
 export interface PostT extends FormPostT {
   ownerId: string
   id: string

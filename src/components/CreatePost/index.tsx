@@ -20,6 +20,8 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
   const [loading, setLoading] = useState(false)
   const { t } = useTranslation()
 
+  const systemMessage = t('system')
+
   const schema = useMemo(
     () =>
       yup
@@ -28,7 +30,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
           text: yup
             .string()
             .trim()
-            .min(100, t('validation:fewChars') || '')
+            .min(1, t('validation:fewChars') || '')
             .required(t('validation:requireField') || ''),
         })
         .required(),
@@ -39,8 +41,13 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
     setLoading(true)
     methods.reset()
     startStepTimer()
-    await PostStore.createPost({ text: data.text, plan: plan })
-    navigate('TAB_BOTTOM_1')
+    const response = await PostStore.createPost({
+      text: data.text,
+      plan: plan,
+      systemMessage,
+    })
+    // navigate('TAB_BOTTOM_1')
+    console.log(response, 'response')
     setLoading(false)
   }
 
