@@ -168,7 +168,7 @@ export const PostCard: React.FC<postCardI> = memo(
                 name="md-link-outline"
                 onPress={handleShareLink}
               />
-              {isAdmin && (
+              {!isAdmin && (
                 <ButtonVectorIcon
                   viewStyle={mediumBtn}
                   iconSize={iconSize + s(7)}

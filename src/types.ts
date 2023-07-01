@@ -158,6 +158,7 @@ export interface FormCommentT {
   text: string
   postId: string
   postOwner: string
+  ownerId: string
 }
 
 export interface CommentT extends FormCommentT {

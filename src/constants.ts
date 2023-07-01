@@ -1,5 +1,5 @@
 //@ts-expect-error
-import { OPEN_AI_KEY } from '@env'
+import { LEELA_ID, OPEN_AI_KEY } from '@env'
 import { createNavigationContainerRef } from '@react-navigation/native'
 import * as Sentry from '@sentry/react-native'
 import axios from 'axios'
@@ -69,11 +69,13 @@ export const handleCommentAi = async ({
   message,
 }: HandleCommentAiParams): Promise<void> => {
   const aiComment: string = await generateComment({ message, systemMessage })
+  console.log('aiComment', aiComment)
   if (curItem) {
     PostStore.createComment({
       text: aiComment,
       postId: curItem.id,
       postOwner: curItem.ownerId,
+      ownerId: LEELA_ID,
     })
   }
 }

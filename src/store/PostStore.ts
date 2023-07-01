@@ -1,5 +1,5 @@
 // @ts-ignore
-import { OPEN_AI_KEY, YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
+import { LEELA_ID, OPEN_AI_KEY, YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
 import auth from '@react-native-firebase/auth'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
 import axios from 'axios'
@@ -122,34 +122,44 @@ export const PostStore = {
           return null
         }
       } catch (error) {
+        console.error(error)
         captureException(error)
         throw error
       }
     }
     throw new Error('Missing userUid or email') // добавлено для случая отсутствия userUid или email
   },
-  createComment: async ({ text, postId, postOwner }: FormCommentT) => {
-    const userUid = auth().currentUser?.uid
-    const email = auth().currentUser?.email
-    const path = nanoid(22)
-    if (userUid && email) {
-      const comment: CommentT = {
-        text,
-        postId,
-        postOwner,
-        firstName: OnlinePlayer.store.profile.firstName,
-        lastName: OnlinePlayer.store.profile.lastName,
-        ownerId: userUid,
-        createTime: Date.now(),
-        email,
-        reply: false,
-        id: path,
+  createComment: async ({ text, postId, postOwner, ownerId }: FormCommentT) => {
+    try {
+      const userUid = ownerId !== LEELA_ID ? auth().currentUser?.uid : ownerId
+      console.log('ownerId', ownerId)
+      console.log('userId', userUid)
+      const email = auth().currentUser?.email
+      const path = nanoid(22)
+      if (userUid && email) {
+        const comment: CommentT = {
+          text,
+          postId,
+          postOwner,
+          firstName: OnlinePlayer.store.profile.firstName,
+          lastName: OnlinePlayer.store.profile.lastName,
+          ownerId: userUid,
+          createTime: Date.now(),
+          email: email,
+          reply: false,
+          id: path,
+        }
+        console.log('comment', comment)
+        await firestore()
+          .collection('Posts')
+          .doc(postId)
+          .update({ comments: firestore.FieldValue.arrayUnion(path) })
+        await firestore().collection('Comments').doc(path).set(comment)
       }
-      await firestore()
-        .collection('Posts')
-        .doc(postId)
-        .update({ comments: firestore.FieldValue.arrayUnion(path) })
-      await firestore().collection('Comments').doc(path).set(comment)
+    } catch (error) {
+      console.error(error)
+      captureException(error)
+      throw error
     }
   },
   removeCommentIdInPost: async ({ commentId, postId }: delCommentIdT) => {
