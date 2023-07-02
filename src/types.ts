@@ -141,7 +141,7 @@ export interface FormPostT {
 export interface MessageAIT {
   systemMessage: string
   message: string
-  planText?: string
+  planText: string
 }
 export interface PostT extends FormPostT {
   postOwner: string
