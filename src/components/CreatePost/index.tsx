@@ -1,14 +1,16 @@
 import React, { useMemo, useState } from 'react'
 
 import { yupResolver } from '@hookform/resolvers/yup'
+import auth from '@react-native-firebase/auth'
 import { FieldValues, FormProvider, SubmitHandler, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
+import { PostT } from 'src/types'
 import * as yup from 'yup'
 
 import { Button, Input, Space } from '..'
 import { Loading } from '../'
-import { dimGray, navigate } from '../../constants'
+import { dimGray, handleCommentAi, navigate } from '../../constants'
 import { startStepTimer } from '../../screens/helper'
 import { PostStore } from '../../store'
 
@@ -38,17 +40,35 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
   )
 
   const handleSubmit: SubmitHandler<FieldValues> = async data => {
-    setLoading(true)
-    methods.reset()
-    startStepTimer()
-    const response = await PostStore.createPost({
-      text: data.text,
-      plan: plan,
-      systemMessage,
-    })
-    // navigate('TAB_BOTTOM_1')
-    console.log(response, 'response')
-    setLoading(false)
+    try {
+      setLoading(true)
+      const userUid = auth().currentUser?.uid
+      methods.reset()
+      startStepTimer()
+      const postId = await PostStore.createPost({
+        text: data.text,
+        plan: plan,
+        systemMessage,
+      })
+      const curItem: PostT = {
+        ...(PostStore.store.posts.find(a => a.id === postId?.id) || {}),
+        postOwner: userUid || '',
+        id: postId?.id || '',
+      }
+
+      console.log('postId', postId?.id)
+      console.log('curItem', curItem)
+      handleCommentAi({
+        curItem,
+        message: data.text,
+        systemMessage,
+        planText: t(`plan_${plan}:content`),
+      })
+      navigate('TAB_BOTTOM_1')
+      setLoading(false)
+    } catch (error) {
+      console.error('error')
+    }
   }
 
   const { ...methods } = useForm({

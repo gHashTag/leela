@@ -57,11 +57,16 @@ export const PostCard: React.FC<postCardI> = memo(
     const onPressAI = () => {
       const systemMessage = t('system')
       setIsLoading(true)
-      handleCommentAi({ curItem, systemMessage, message: text as string })
+      handleCommentAi({
+        curItem,
+        systemMessage,
+        message: text as string,
+        planText: t(`plan_${item?.plan}:content`),
+      })
       setIsLoading(false)
     }
 
-    const fullName = item ? PostStore.getOwnerName(item.ownerId) : ''
+    const fullName = item ? PostStore.getOwnerName(item.postOwner) : ''
 
     const {
       goDetail,
@@ -79,14 +84,14 @@ export const PostCard: React.FC<postCardI> = memo(
     const likeCount = item.liked?.length
     const commCount = item.comments?.length
 
-    const date = getTimeStamp({ lastTime: item.createTime })
+    const date = getTimeStamp({ lastTime: item.createTime as number })
     const iconSize = W / 4 - s(72)
 
     const isAdmin = OnlinePlayer.store.status === 'Admin'
 
     const heart = isLiked ? 'heart' : 'heart-outline'
     const heartColor = isLiked ? fuchsia : undefined
-    const avaUrl = PostStore.getAvaById(item.ownerId)
+    const avaUrl = PostStore.getAvaById(item.postOwner)
 
     if (isDetail) {
       return (
@@ -98,7 +103,7 @@ export const PostCard: React.FC<postCardI> = memo(
                 onPress={handleProfile}
                 size={'large'}
                 isAccept={item.accept}
-                plan={item.plan}
+                plan={item.plan as number}
                 aditionalStyle={img}
               />
               <View style={headerInfo}>
@@ -191,7 +196,7 @@ export const PostCard: React.FC<postCardI> = memo(
               avaUrl={avaUrl}
               onPress={handleProfile}
               size={'medium'}
-              plan={item.plan}
+              plan={item.plan as number}
               isAccept={item.accept}
               aditionalStyle={img}
             />

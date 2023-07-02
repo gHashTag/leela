@@ -133,32 +133,40 @@ export interface SelfT {
 }
 
 export interface FormPostT {
-  text: string
-  plan: number
+  text?: string
+  plan?: number
   systemMessage?: string
 }
 
 export interface MessageAIT {
   systemMessage: string
   message: string
+  planText?: string
 }
 export interface PostT extends FormPostT {
-  ownerId: string
+  postOwner: string
   id: string
-  comments: string[]
-  createTime: number
-  email: string
+  comments?: string[]
+  createTime?: number
+  email?: string
   liked?: string[]
-  language: string
-  accept: boolean
-  flagEmoji: string
+  language?: string
+  accept?: boolean
+  flagEmoji?: string
 }
 
 export interface FormCommentT {
   text: string
   postId: string
   postOwner: string
-  ownerId: string
+  ownerId?: string
+}
+
+export interface HandleCommentAiParamsT {
+  curItem: PostT | undefined
+  systemMessage: string
+  message: string
+  planText: string
 }
 
 export interface CommentT extends FormCommentT {

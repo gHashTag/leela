@@ -95,7 +95,7 @@ export const PostStore = {
       const post: PostT = {
         text,
         plan,
-        ownerId: userUid,
+        postOwner: userUid,
         id,
         createTime: Date.now(),
         email,

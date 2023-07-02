@@ -7,7 +7,7 @@ import { Alert, Dimensions, Linking, Platform } from 'react-native'
 import i18next from 'src/i18n'
 
 import { PostStore } from './store'
-import { ButtonsModalT, MessageAIT, PostT } from './types'
+import { ButtonsModalT, HandleCommentAiParamsT, MessageAIT } from './types'
 
 export const navRef = createNavigationContainerRef<any>()
 
@@ -21,6 +21,7 @@ export const navigate = (name: string, params?: any) => {
 export const generateComment = async ({
   message,
   systemMessage,
+  planText,
 }: MessageAIT): Promise<string> => {
   try {
     // console.log('systemMessage', systemMessage)
@@ -36,6 +37,10 @@ export const generateComment = async ({
           {
             role: 'user',
             content: message,
+          },
+          {
+            role: 'assistant',
+            content: planText,
           },
         ],
         max_tokens: 1000,
@@ -57,24 +62,23 @@ export const generateComment = async ({
 }
 
 // Ваша функция handleComment, обновленная для использования generateComment
-interface HandleCommentAiParams {
-  curItem: PostT | undefined
-  systemMessage: string
-  message: string
-}
 
 export const handleCommentAi = async ({
   curItem,
   systemMessage,
   message,
-}: HandleCommentAiParams): Promise<void> => {
-  const aiComment: string = await generateComment({ message, systemMessage })
+  planText,
+}: HandleCommentAiParamsT): Promise<void> => {
+  const aiComment: string = await generateComment({ message, systemMessage, planText })
   console.log('aiComment', aiComment)
+  console.log('systemMessage', systemMessage)
+  console.log('message', message)
+  console.log('planText', planText)
   if (curItem) {
-    PostStore.createComment({
+    await PostStore.createComment({
       text: aiComment,
       postId: curItem.id,
-      postOwner: curItem.ownerId,
+      postOwner: curItem.postOwner,
       ownerId: LEELA_ID,
     })
   }

@@ -28,7 +28,7 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
       const itemIsReported =
         OnlinePlayer.store.plan === item && !OnlinePlayer.store.isReported
       navigation.navigate('PLANS_DETAIL_SCREEN', {
-        id: item,
+        plan: item,
         report: itemIsReported,
       })
     },
