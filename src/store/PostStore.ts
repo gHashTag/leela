@@ -1,11 +1,10 @@
 // @ts-ignore
-import { LEELA_ID, OPEN_AI_KEY, YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
+import { LEELA_ID, YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
 import auth from '@react-native-firebase/auth'
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
-import axios from 'axios'
 import { makeAutoObservable } from 'mobx'
 import { nanoid } from 'nanoid/non-secure'
-import { captureException } from 'src/constants'
+import { captureException, generateComment } from 'src/constants'
 import i18next from 'src/i18n'
 import { flagEmoji, lang } from 'src/i18n'
 import { getProfile, getUid } from 'src/screens/helper'
@@ -41,43 +40,6 @@ interface delCommentIdT {
   postId?: string
 }
 
-const generateComment = async (
-  message: string | undefined,
-  systemMessage: string | undefined,
-): Promise<string> => {
-  try {
-    // console.log('systemMessage', systemMessage)
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: systemMessage,
-          },
-          {
-            role: 'user',
-            content: message,
-          },
-        ],
-        max_tokens: 1000,
-        temperature: 0.5,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${OPEN_AI_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      },
-    )
-    return response?.data?.choices[0]?.message?.content ?? ''
-  } catch (error) {
-    console.error(error)
-    return ''
-  }
-}
-
 export const PostStore = {
   store: makeAutoObservable<postStoreT>({
     posts: [],
@@ -93,6 +55,7 @@ export const PostStore = {
     if (userUid && email) {
       const id = nanoid()
       const post: PostT = {
+        systemMessage,
         text,
         plan,
         postOwner: userUid,
@@ -113,8 +76,12 @@ export const PostStore = {
         if (docSnapshot.exists) {
           const createdPostData = docSnapshot.data()
           console.log('Created Post:', createdPostData)
-          const textMessage = createdPostData === undefined ? null : createdPostData.text
-          const responseAI = await generateComment(textMessage, systemMessage)
+          const textMessage: string =
+            createdPostData === undefined ? null : createdPostData.text
+          const responseAI = await generateComment({
+            message: textMessage,
+            systemMessage,
+          })
           console.log(responseAI, 'responseAI')
           return createdPostData // Возвращает данные созданного поста
         } else {
@@ -132,8 +99,6 @@ export const PostStore = {
   createComment: async ({ text, postId, postOwner, ownerId }: FormCommentT) => {
     try {
       const userUid = ownerId !== LEELA_ID ? auth().currentUser?.uid : ownerId
-      console.log('ownerId', ownerId)
-      console.log('userId', userUid)
       const email = auth().currentUser?.email
       const path = nanoid(22)
       if (userUid && email) {

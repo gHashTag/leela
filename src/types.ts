@@ -135,7 +135,7 @@ export interface SelfT {
 export interface FormPostT {
   text?: string
   plan?: number
-  systemMessage?: string
+  systemMessage: string
 }
 
 export interface MessageAIT {

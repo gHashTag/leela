@@ -70,10 +70,6 @@ export const handleCommentAi = async ({
   planText,
 }: HandleCommentAiParamsT): Promise<void> => {
   const aiComment: string = await generateComment({ message, systemMessage, planText })
-  console.log('aiComment', aiComment)
-  console.log('systemMessage', systemMessage)
-  console.log('message', message)
-  console.log('planText', planText)
   if (curItem) {
     await PostStore.createComment({
       text: aiComment,

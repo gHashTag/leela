@@ -52,12 +52,10 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
       })
       const curItem: PostT = {
         ...(PostStore.store.posts.find(a => a.id === postId?.id) || {}),
+        systemMessage,
         postOwner: userUid || '',
         id: postId?.id || '',
       }
-
-      console.log('postId', postId?.id)
-      console.log('curItem', curItem)
       handleCommentAi({
         curItem,
         message: data.text,
