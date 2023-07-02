@@ -49,7 +49,7 @@ export const PostStore = {
     loadOwnPosts: true,
     loadPosts: true,
   }),
-  createPost: async ({ text, plan, systemMessage }: FormPostT) => {
+  createPost: async ({ text, plan, systemMessage, planText }: FormPostT) => {
     const userUid = auth().currentUser?.uid
     const email = auth().currentUser?.email
     if (userUid && email) {
@@ -67,25 +67,22 @@ export const PostStore = {
         accept: false,
         language: lang,
         flagEmoji,
+        planText,
       }
       try {
-        const response = await firestore().collection('Posts').doc(id).set(post)
-        console.log(response)
-        // Получение данных созданного документа
+        await firestore().collection('Posts').doc(id).set(post)
         const docSnapshot = await firestore().collection('Posts').doc(id).get()
         if (docSnapshot.exists) {
           const createdPostData = docSnapshot.data()
-          console.log('Created Post:', createdPostData)
           const textMessage: string =
             createdPostData === undefined ? null : createdPostData.text
-          const responseAI = await generateComment({
+          await generateComment({
             message: textMessage,
             systemMessage,
+            planText,
           })
-          console.log(responseAI, 'responseAI')
-          return createdPostData // Возвращает данные созданного поста
+          return createdPostData
         } else {
-          console.log('Post does not exist')
           return null
         }
       } catch (error) {
@@ -94,7 +91,7 @@ export const PostStore = {
         throw error
       }
     }
-    throw new Error('Missing userUid or email') // добавлено для случая отсутствия userUid или email
+    throw new Error('Missing userUid or email')
   },
   createComment: async ({ text, postId, postOwner, ownerId }: FormCommentT) => {
     try {

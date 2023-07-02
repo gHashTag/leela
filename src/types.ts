@@ -136,6 +136,7 @@ export interface FormPostT {
   text?: string
   plan?: number
   systemMessage: string
+  planText: string
 }
 
 export interface MessageAIT {

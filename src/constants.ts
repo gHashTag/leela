@@ -17,7 +17,6 @@ export const navigate = (name: string, params?: any) => {
   }
 }
 
-// Функция, которая обращается к API OpenAI для генерации комментария
 export const generateComment = async ({
   message,
   systemMessage,
@@ -60,8 +59,6 @@ export const generateComment = async ({
     throw error
   }
 }
-
-// Ваша функция handleComment, обновленная для использования generateComment
 
 export const handleCommentAi = async ({
   curItem,
