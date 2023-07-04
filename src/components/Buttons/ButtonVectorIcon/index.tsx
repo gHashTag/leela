@@ -18,6 +18,7 @@ interface ButtonVectorIconI {
   viewStyle?: StyleProp<ViewStyle>
   count?: number
   ionicons?: boolean
+  onPressIn?: () => void
 }
 
 export function ButtonVectorIcon({
@@ -29,13 +30,19 @@ export function ButtonVectorIcon({
   viewStyle,
   count,
   ionicons,
+  onPressIn,
 }: ButtonVectorIconI) {
   const scheme = useColorScheme()
   const colorTheme = scheme === 'dark' ? dimGray : gray
   const summaryIconSize = iconSize ? iconSize : size
   const summaryIoniconsSize = iconSize ? iconSize + s(2) : size + s(2)
   return (
-    <TouchableOpacity style={viewStyle} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={viewStyle}
+      onPress={onPress}
+      activeOpacity={0.7}
+      onPressIn={onPressIn}
+    >
       {ionicons ? (
         <Ionicons
           name={name}

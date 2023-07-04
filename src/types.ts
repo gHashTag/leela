@@ -167,7 +167,7 @@ export interface HandleCommentAiParamsT {
   curItem: PostT | undefined
   systemMessage: string
   message: string
-  planText: string
+  planText?: string
 }
 
 export interface CommentT extends FormCommentT {

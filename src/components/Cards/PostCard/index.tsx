@@ -44,7 +44,7 @@ export const PostCard: React.FC<postCardI> = memo(
       PostStore.store.posts.find(a => a.id === postId) ||
       PostStore.store.ownPosts.find(a => a.id === postId)
 
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
 
     const { transText, hideTranslate, text } = usePostTranslation({
       translatedText,
@@ -54,20 +54,27 @@ export const PostCard: React.FC<postCardI> = memo(
 
     const curItem: PostT | undefined = PostStore.store.posts.find(a => a.id === postId)
 
-    const onPressAI = () => {
+    const onPressAI = async () => {
       const systemMessage = t('system')
-      setIsLoading(true)
       const postLanguage = item?.language
       console.log('postLanguage', postLanguage)
-      // handleCommentAi({
-      //   curItem,
-      //   systemMessage,
-      //   message: text as string,
-      //   planText: t(`plans:plan_${item?.plan}.content`),
-      // })
-      setIsLoading(false)
+      const currentLanguage = i18n.language
+      await i18n.changeLanguage(postLanguage)
+      const planText = t(`plans:plan_${item?.plan}.content`)
+      await i18n.changeLanguage(currentLanguage)
+      console.log('planText💫', planText)
+      handleCommentAi({
+        curItem,
+        systemMessage,
+        message: text as string,
+        planText: planText,
+      })
     }
 
+    const onPressWand = () => {
+      onPressAI()
+      setIsLoading(false)
+    }
     const fullName = item ? PostStore.getOwnerName(item.ownerId, true) : ''
 
     const {
@@ -175,18 +182,23 @@ export const PostCard: React.FC<postCardI> = memo(
                 name="md-link-outline"
                 onPress={handleShareLink}
               />
-              {!isAdmin && (
+              {isAdmin && (
                 <ButtonVectorIcon
                   viewStyle={mediumBtn}
                   iconSize={iconSize + s(7)}
                   ionicons
                   name="md-color-wand-outline"
-                  onPress={onPressAI}
+                  onPress={onPressWand}
+                  onPressIn={() => setIsLoading(true)}
                 />
               )}
             </View>
           </View>
-          {isLoading ? <ActivityIndicator size="large" color={brightTurquoise} /> : <></>}
+          {isLoading ? (
+            <ActivityIndicator size="large" color={brightTurquoise} />
+          ) : (
+            <ActivityIndicator size="large" color={'transparent'} />
+          )}
         </>
       )
     }
