@@ -32,7 +32,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
           text: yup
             .string()
             .trim()
-            .min(1, t('validation:fewChars') || '')
+            .min(100, t('validation:fewChars') || '')
             .required(t('validation:requireField') || ''),
         })
         .required(),

@@ -57,12 +57,10 @@ export const PostCard: React.FC<postCardI> = memo(
     const onPressAI = async () => {
       const systemMessage = t('system')
       const postLanguage = item?.language
-      console.log('postLanguage', postLanguage)
       const currentLanguage = i18n.language
       await i18n.changeLanguage(postLanguage)
       const planText = t(`plans:plan_${item?.plan}.content`)
       await i18n.changeLanguage(currentLanguage)
-      console.log('planText💫', planText)
       handleCommentAi({
         curItem,
         systemMessage,
