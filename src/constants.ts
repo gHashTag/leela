@@ -52,7 +52,7 @@ export const generateComment = async ({
         },
       },
     )
-
+    console.log('planText', planText)
     return response?.data?.choices[0]?.message?.content ?? ''
   } catch (error) {
     captureException(error)
@@ -71,7 +71,7 @@ export const handleCommentAi = async ({
     await PostStore.createComment({
       text: aiComment,
       postId: curItem.id,
-      postOwner: curItem.postOwner,
+      postOwner: curItem.ownerId,
       ownerId: LEELA_ID,
     })
   }

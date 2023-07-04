@@ -57,16 +57,18 @@ export const PostCard: React.FC<postCardI> = memo(
     const onPressAI = () => {
       const systemMessage = t('system')
       setIsLoading(true)
-      handleCommentAi({
-        curItem,
-        systemMessage,
-        message: text as string,
-        planText: t(`plan_${item?.plan}:content`),
-      })
+      const postLanguage = item?.language
+      console.log('postLanguage', postLanguage)
+      // handleCommentAi({
+      //   curItem,
+      //   systemMessage,
+      //   message: text as string,
+      //   planText: t(`plans:plan_${item?.plan}.content`),
+      // })
       setIsLoading(false)
     }
 
-    const fullName = item ? PostStore.getOwnerName(item.postOwner) : ''
+    const fullName = item ? PostStore.getOwnerName(item.ownerId, true) : ''
 
     const {
       goDetail,
@@ -91,7 +93,7 @@ export const PostCard: React.FC<postCardI> = memo(
 
     const heart = isLiked ? 'heart' : 'heart-outline'
     const heartColor = isLiked ? fuchsia : undefined
-    const avaUrl = PostStore.getAvaById(item.postOwner)
+    const avaUrl = PostStore.getAvaById(item.ownerId)
 
     if (isDetail) {
       return (
@@ -173,7 +175,7 @@ export const PostCard: React.FC<postCardI> = memo(
                 name="md-link-outline"
                 onPress={handleShareLink}
               />
-              {isAdmin && (
+              {!isAdmin && (
                 <ButtonVectorIcon
                   viewStyle={mediumBtn}
                   iconSize={iconSize + s(7)}

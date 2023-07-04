@@ -145,7 +145,6 @@ export interface MessageAIT {
   planText: string
 }
 export interface PostT extends FormPostT {
-  postOwner: string
   id: string
   comments?: string[]
   createTime?: number
@@ -154,6 +153,7 @@ export interface PostT extends FormPostT {
   language?: string
   accept?: boolean
   flagEmoji?: string
+  ownerId: string
 }
 
 export interface FormCommentT {

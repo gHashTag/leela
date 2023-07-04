@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 
 import { StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
+import { useTypedNavigation } from 'src/hooks'
 
 import { getActions } from './ModalActions'
 
@@ -12,7 +13,6 @@ import { getTimeStamp } from '../../../screens/helper'
 import { PostStore } from '../../../store'
 import { ReplyComT } from '../../../types'
 import { ButtonVectorIcon } from '../../Buttons'
-import { useTypedNavigation } from 'src/hooks'
 
 interface SubComT {
   item: ReplyComT

@@ -58,7 +58,6 @@ export const PostStore = {
         systemMessage,
         text,
         plan,
-        postOwner: userUid,
         id,
         createTime: Date.now(),
         email,
@@ -68,6 +67,7 @@ export const PostStore = {
         language: lang,
         flagEmoji,
         planText,
+        ownerId: userUid,
       }
       try {
         await firestore().collection('Posts').doc(id).set(post)
@@ -111,7 +111,6 @@ export const PostStore = {
           reply: false,
           id: path,
         }
-        console.log('comment', comment)
         await firestore()
           .collection('Posts')
           .doc(postId)
@@ -252,13 +251,12 @@ export const PostStore = {
   },
   getOwnerName: (ownerId: string, full?: boolean, item?: CommentT) => {
     const userUid = auth().currentUser?.uid
-
-    const profile = OtherPlayers.store.players.find(a => a.owner === ownerId)
     if (userUid === ownerId) {
       return `${item?.firstName} ${item?.lastName}`
     }
-
+    const profile = OtherPlayers.store.players.find(a => a.owner === ownerId)
     if (!profile) {
+      // console.log('profile exist', profile)
       return i18next.t('anonymous')
     }
     return full !== false
