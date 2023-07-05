@@ -54,7 +54,7 @@ export const useActions = () => {
       key: 'DELETE',
       color: 'red',
       onPress: OnlinePlayer.deleteUser,
-      title: t('auth.deleteAcc'),
+      title: t('actions.deleteAcc'),
       icon: 'trash-bin-outline',
     },
   ]

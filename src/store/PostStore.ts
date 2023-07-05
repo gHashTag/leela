@@ -249,14 +249,14 @@ export const PostStore = {
         liked: firestore.FieldValue.arrayRemove(userUid),
       })
   },
-  getOwnerName: (ownerId: string, full?: boolean, item?: CommentT) => {
+  getOwnerName: (ownerId: string, full?: boolean) => {
     const userUid = auth().currentUser?.uid
+    const displayName = auth().currentUser?.displayName
     if (userUid === ownerId) {
-      return `${item?.firstName} ${item?.lastName}`
+      return displayName
     }
     const profile = OtherPlayers.store.players.find(a => a.owner === ownerId)
     if (!profile) {
-      // console.log('profile exist', profile)
       return i18next.t('anonymous')
     }
     return full !== false

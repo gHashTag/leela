@@ -43,7 +43,6 @@ export const PostCard: React.FC<postCardI> = memo(
     const item: PostT | undefined =
       PostStore.store.posts.find(a => a.id === postId) ||
       PostStore.store.ownPosts.find(a => a.id === postId)
-
     const { t, i18n } = useTranslation()
 
     const { transText, hideTranslate, text } = usePostTranslation({
@@ -74,7 +73,6 @@ export const PostCard: React.FC<postCardI> = memo(
       setIsLoading(false)
     }
     const fullName = item ? PostStore.getOwnerName(item.ownerId, true) : ''
-
     const {
       goDetail,
       handleLike,
@@ -117,7 +115,7 @@ export const PostCard: React.FC<postCardI> = memo(
                 {/* name, create date */}
                 <Space height={vs(6.5)} />
                 <View style={headerName}>
-                  <Text numberOfLines={1} h={'h6'} title={fullName} />
+                  <Text numberOfLines={1} h={'h6'} title={fullName as string} />
                 </View>
                 <Text
                   h={'h5'}
@@ -229,7 +227,7 @@ export const PostCard: React.FC<postCardI> = memo(
             {/* name, create date/email */}
             <Space height={vs(2)} />
             <View style={headerName}>
-              <Text numberOfLines={1} h={'h6'} title={fullName} />
+              <Text numberOfLines={1} h={'h6'} title={fullName as string} />
               <Text h={'h6'} textStyle={lightText} title={` · ${date}`} />
               <View style={flex1} />
               {/* <TouchableOpacity onPress={handleTranslate}>

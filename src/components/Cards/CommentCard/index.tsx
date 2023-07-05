@@ -63,7 +63,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
     const lineH = isSmallLine
       ? lineHeight + PADDING * 2 - vs(16)
       : lineHeight + PADDING * 2 - vs(4)
-    const curName = PostStore.getOwnerName(item.ownerId, false, item)
+    const curName = PostStore.getOwnerName(item.ownerId, false)
 
     const handleProfile = () => {
       if (item?.ownerId) {
@@ -90,7 +90,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
           </View>
           <View style={page.content}>
             <View style={page.commentHead}>
-              <Text numberOfLines={1} h={'h6'} title={curName} />
+              <Text numberOfLines={1} h={'h6'} title={curName as string} />
               <Text
                 numberOfLines={1}
                 colors={{ light: lightGray, dark: gray }}

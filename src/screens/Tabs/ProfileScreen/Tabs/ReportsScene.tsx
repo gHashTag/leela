@@ -34,7 +34,6 @@ export const ReportsScene = observer(() => {
   }, [limit])
 
   const data = PostStore.store.ownPosts
-
   const newLimit = () => {
     if (data.length <= limit) {
       setLimit(pr => pr + 15)

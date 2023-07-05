@@ -52,7 +52,6 @@ export const generateComment = async ({
         },
       },
     )
-    console.log('planText', planText)
     return response?.data?.choices[0]?.message?.content ?? ''
   } catch (error) {
     captureException(error)

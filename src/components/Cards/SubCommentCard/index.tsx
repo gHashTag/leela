@@ -60,7 +60,7 @@ export function SubCommentCard({ item }: SubComT) {
         <Space width={s(6)} />
         <View style={page.infoContainer}>
           <View style={page.infoLine}>
-            <Text numberOfLines={1} h={'h6'} title={curName} />
+            <Text numberOfLines={1} h={'h6'} title={curName as string} />
             <Text numberOfLines={1} h={'h6'} title={` ${date}`} oneColor={lightGray} />
           </View>
         </View>
