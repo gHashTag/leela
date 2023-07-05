@@ -68,7 +68,6 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   const postsCount = PostStore.store.ownPosts.length
 
   const postsBool = postsCount >= 3
-  console.log('postsCount', postsCount)
   return loadingProf && DiceStore.online ? (
     <Background enableTopInsets>
       <Spin centered />
