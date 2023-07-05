@@ -6,8 +6,10 @@ import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { Bubble, GiftedChat, IMessage } from 'react-native-gifted-chat'
-import { Header } from 'src/components'
-import { brightTurquoise } from 'src/constants'
+import { s } from 'react-native-size-matters'
+import { ButtonWithIcon, Header, Space } from 'src/components'
+import { brightTurquoise, onLeaveFeedback, trueBlue } from 'src/constants'
+import { DiceStore, actionsDice } from 'src/store'
 
 const LEELA_AI = 'https://leelachakra.com/resource/LeelaChakra/PhotoLeela/leelaAI.JPG'
 
@@ -131,6 +133,10 @@ const ChatScreen: React.FC = () => {
     )
   }
 
+  const onPressRate = () => {
+    onLeaveFeedback(success => actionsDice.setRate(success))
+  }
+
   const renderBubble = props => {
     if (props.currentMessage._id === LOADING_MESSAGE_ID) {
       return (
@@ -158,9 +164,23 @@ const ChatScreen: React.FC = () => {
     )
   }
 
+  const messagesCount = messages.length
+
   return (
     <>
       <Header title="Leela AI" textAlign="center" />
+      {DiceStore.rate && messagesCount >= 7 ? (
+        <View>
+          <ButtonWithIcon
+            viewStyle={styles.feadbackContainer}
+            h="h5"
+            color={trueBlue}
+            title={t('actions.leaveFeedback')}
+            onPress={onPressRate}
+          />
+          <Space height={s(7)} />
+        </View>
+      ) : null}
       <GiftedChat
         messages={messages}
         renderBubble={renderBubble}
@@ -178,6 +198,9 @@ const styles = StyleSheet.create({
     padding: 10,
     top: 1,
     alignItems: 'center',
+  },
+  feadbackContainer: {
+    alignSelf: 'center',
   },
 })
 
