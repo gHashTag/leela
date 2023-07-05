@@ -4,6 +4,7 @@ import { createNavigationContainerRef } from '@react-navigation/native'
 import * as Sentry from '@sentry/react-native'
 import axios from 'axios'
 import { Alert, Dimensions, Linking, Platform } from 'react-native'
+import Rate from 'react-native-rate'
 import i18next from 'src/i18n'
 
 import { PostStore } from './store'
@@ -57,6 +58,17 @@ export const generateComment = async ({
     captureException(error)
     throw error
   }
+}
+
+export const onLeaveFeedback = (onAction: (success: any) => void) => {
+  const options = {
+    AppleAppID: '1296604457',
+    GooglePackageName: 'com.leelagame',
+    OtherAndroidURL: 'https://play.google.com/store/apps/details?id=com.leelagame',
+    preferInApp: false,
+    openAppStoreIfInAppFails: true,
+  }
+  Rate.rate(options, onAction)
 }
 
 export const handleCommentAi = async ({

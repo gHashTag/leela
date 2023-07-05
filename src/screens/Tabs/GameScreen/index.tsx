@@ -4,9 +4,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
-import Rate from 'react-native-rate'
 import { s, vs } from 'react-native-size-matters'
-import { trueBlue } from 'src/constants'
+import { onLeaveFeedback, trueBlue } from 'src/constants'
 
 import {
   Background,
@@ -35,15 +34,8 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   useLeftTimeForStep()
   const { t } = useTranslation()
 
-  const onLeaveFeedback = () => {
-    const options = {
-      AppleAppID: '1296604457',
-      GooglePackageName: 'com.leelagame',
-      OtherAndroidURL: 'https://play.google.com/store/apps/details?id=com.leelagame',
-      preferInApp: false,
-      openAppStoreIfInAppFails: true,
-    }
-    Rate.rate(options, success => actionsDice.setRate(success))
+  const onPressRate = () => {
+    onLeaveFeedback(success => actionsDice.setRate(success))
   }
 
   const endGame = DiceStore.online
@@ -66,7 +58,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           textAlign="center"
           onPressRight={() => navigation.navigate('PLANS_SCREEN')}
         >
-          {endGame && (
+          {!endGame && (
             <>
               <ButtonWithIcon
                 viewStyle={page.centerButton}
@@ -84,7 +76,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                   h="h5"
                   color={trueBlue}
                   title={t('actions.leaveFeedback')}
-                  onPress={onLeaveFeedback}
+                  onPress={onPressRate}
                 />
               ) : (
                 <Space height={s(38)} />
@@ -92,7 +84,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
             </>
           )}
         </Header>
-        {!endGame && <Dice />}
+        {endGame && <Dice />}
         <GameBoard />
       </Background>
     </>
