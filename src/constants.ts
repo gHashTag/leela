@@ -65,7 +65,7 @@ export const onLeaveFeedback = (onAction: (success: any) => void) => {
     AppleAppID: '1296604457',
     GooglePackageName: 'com.leelagame',
     OtherAndroidURL: 'https://play.google.com/store/apps/details?id=com.leelagame',
-    preferInApp: false,
+    preferInApp: true,
     openAppStoreIfInAppFails: true,
   }
   Rate.rate(options, onAction)

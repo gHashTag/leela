@@ -1,11 +1,13 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
+import firestore from '@react-native-firebase/firestore'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { onLeaveFeedback, trueBlue } from 'src/constants'
+import { captureException, onLeaveFeedback, trueBlue } from 'src/constants'
+import { getUid } from 'src/screens/helper'
 
 import {
   Background,
@@ -18,7 +20,13 @@ import {
   Text,
 } from '../../../components'
 import { useLeftTimeForStep } from '../../../hooks'
-import { DiceStore, OfflinePlayers, OnlinePlayer, actionsDice } from '../../../store'
+import {
+  DiceStore,
+  OfflinePlayers,
+  OnlinePlayer,
+  PostStore,
+  actionsDice,
+} from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types'
 
 type navigation = NativeStackNavigationProp<
@@ -32,6 +40,20 @@ type GameScreenT = {
 
 const GameScreen = observer(({ navigation }: GameScreenT) => {
   useLeftTimeForStep()
+
+  const limit = 15
+  useEffect(() => {
+    const subPosts = firestore()
+      .collection('Posts')
+      .where('ownerId', '==', getUid())
+      .orderBy('createTime', 'desc')
+      .limit(limit)
+      .onSnapshot(PostStore.fetchOwnPosts, captureException)
+    return () => {
+      subPosts()
+    }
+  }, [limit])
+
   const { t } = useTranslation()
 
   const onPressRate = () => {
@@ -43,6 +65,10 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     : DiceStore.finishArr.indexOf(true) === -1
   const { loadingProf } = OnlinePlayer.store
 
+  const postsCount = PostStore.store.ownPosts.length
+
+  const postsBool = postsCount >= 3
+  console.log('postsCount', postsCount)
   return loadingProf && DiceStore.online ? (
     <Background enableTopInsets>
       <Spin centered />
@@ -58,7 +84,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           textAlign="center"
           onPressRight={() => navigation.navigate('PLANS_SCREEN')}
         >
-          {!endGame && (
+          {endGame && (
             <>
               <ButtonWithIcon
                 viewStyle={page.centerButton}
@@ -70,7 +96,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
               />
               <Space height={vs(2)} />
               <Text textStyle={page.centerText} h="h1" title={`${t('win')}`} />
-              {!DiceStore.rate ? (
+              {DiceStore.rate && postsBool ? (
                 <ButtonWithIcon
                   viewStyle={page.centerButton}
                   h="h5"
@@ -84,7 +110,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
             </>
           )}
         </Header>
-        {endGame && <Dice />}
+        {!endGame && <Dice />}
         <GameBoard />
       </Background>
     </>
