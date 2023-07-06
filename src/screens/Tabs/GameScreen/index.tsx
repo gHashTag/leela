@@ -99,7 +99,6 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                 <ButtonWithIcon
                   viewStyle={page.centerButton}
                   h="h5"
-                  color={trueBlue}
                   title={t('actions.leaveFeedback')}
                   onPress={onPressRate}
                 />
