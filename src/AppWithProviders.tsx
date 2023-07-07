@@ -43,6 +43,7 @@ configure({
 LogBox.ignoreLogs([
   'Please report: Excessive number of pending callbacks: 501',
   'i18next::translator: key "gameMode" for languages "ru, en"',
+  'i18next: hasLoadedNamespace: i18next was not initialized',
   // 'Require cycle: node_modules/react-native/Libraries/Network/fetch.js',
   // 'RCTBridge required',
   // 'Warning: componentWillReceiveProps',
