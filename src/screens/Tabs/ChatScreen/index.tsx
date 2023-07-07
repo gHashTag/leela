@@ -31,14 +31,17 @@ const ChatScreen: React.FC = () => {
   const { t } = useTranslation()
 
   const updateContextSummary = (message: IMessage) => {
+    const messageLimit = -5
     if (message.user._id === 1) {
       setContextSummary(prevState => {
-        const newUserMessages = [...prevState.user, message.text].slice(-3)
+        const newUserMessages = [...prevState.user, message.text].slice(messageLimit)
         return { ...prevState, user: newUserMessages }
       })
     } else {
       setContextSummary(prevState => {
-        const newAssistantMessages = [...prevState.assistant, message.text].slice(-3)
+        const newAssistantMessages = [...prevState.assistant, message.text].slice(
+          messageLimit,
+        )
         return { ...prevState, assistant: newAssistantMessages }
       })
     }
@@ -57,7 +60,7 @@ const ChatScreen: React.FC = () => {
         },
       },
     ])
-  }, [])
+  }, [t])
 
   const onSend = async (newMessages: IMessage[] = []) => {
     setLoading(true)
@@ -94,7 +97,7 @@ const ChatScreen: React.FC = () => {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4-0314',
         messages: apiMessages,
         max_tokens: 1000,
         temperature: 0.2,
