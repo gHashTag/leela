@@ -64,7 +64,7 @@ export const UserProfileScreen = observer(({ navigation, route }: UserProfileScr
       })
 
     return unsub
-  }, [])
+  }, [ownerId])
 
   const { width: W, height: H } = useWindowDimensions()
   const tabViewWidth = W * 0.96

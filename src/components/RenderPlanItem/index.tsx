@@ -1,6 +1,6 @@
 import React, { memo } from 'react'
 
-import { TouchableOpacity } from 'react-native'
+import { TouchableOpacity } from 'react-native-gesture-handler'
 import { ScaledSheet, s, vs } from 'react-native-size-matters'
 
 import { Text } from '../'

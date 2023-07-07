@@ -2,7 +2,8 @@ import React from 'react'
 
 import { useTheme } from '@react-navigation/native'
 import { observer } from 'mobx-react'
-import { TouchableOpacity, View } from 'react-native'
+import { View } from 'react-native'
+import { TouchableOpacity } from 'react-native-gesture-handler'
 import { ScaledSheet, s, vs } from 'react-native-size-matters'
 import Icon from 'react-native-vector-icons/Ionicons'
 

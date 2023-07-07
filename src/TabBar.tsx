@@ -2,7 +2,8 @@ import React from 'react'
 
 import { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs'
 import { observer } from 'mobx-react'
-import { TouchableOpacity, View, useColorScheme } from 'react-native'
+import { View, useColorScheme } from 'react-native'
+import { TouchableOpacity } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScaledSheet, ms, s } from 'react-native-size-matters'
 

@@ -5,7 +5,6 @@ import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
-import Animated from 'react-native-reanimated'
 import { s, vs } from 'react-native-size-matters'
 
 import { PostCard, Space, Text } from '../../../../components'
@@ -18,8 +17,9 @@ export const ReportsScene = observer(() => {
   const [limit, setLimit] = useState(15)
   const { t } = useTranslation()
 
-  const { panGesture0, scrollViewGesture0, scrollOffset0, blockScrollUntilAtTheTop0 } =
-    useContext(TabContext) as any
+  const { panGesture0, scrollViewGesture0, blockScrollUntilAtTheTop0 } = useContext(
+    TabContext,
+  ) as any
 
   useEffect(() => {
     const subPosts = firestore()
@@ -47,35 +47,23 @@ export const ReportsScene = observer(() => {
         scrollViewGesture0,
       )}
     >
-      <Animated.ScrollView
-        bounces={false}
-        scrollEventThrottle={1}
-        onScrollBeginDrag={e => {
-          scrollOffset0.value = e.nativeEvent.contentOffset.y
-        }}
-      >
-        <FlatList
-          removeClippedSubviews={false}
-          scrollEnabled={false}
-          showsVerticalScrollIndicator={false}
-          data={data}
-          onEndReached={newLimit}
-          onEndReachedThreshold={0.1}
-          keyExtractor={a => a.id}
-          renderItem={({ item }) => <PostCard postId={item.id} />}
-          ItemSeparatorComponent={() => <Space height={vs(10)} />}
-          ListHeaderComponent={<Space height={vs(10)} />}
-          ListEmptyComponent={
-            <View style={page.noPostBlock}>
-              <Text
-                textStyle={page.noPostText}
-                h={'h1'}
-                title={t('online-part.noPosts')}
-              />
-            </View>
-          }
-        />
-      </Animated.ScrollView>
+      <FlatList
+        removeClippedSubviews={false}
+        scrollEnabled={false}
+        showsVerticalScrollIndicator={false}
+        data={data}
+        onEndReached={newLimit}
+        onEndReachedThreshold={0.1}
+        keyExtractor={a => a.id}
+        renderItem={({ item }) => <PostCard postId={item.id} />}
+        ItemSeparatorComponent={() => <Space height={vs(10)} />}
+        ListHeaderComponent={<Space height={vs(10)} />}
+        ListEmptyComponent={
+          <View style={page.noPostBlock}>
+            <Text textStyle={page.noPostText} h={'h1'} title={t('online-part.noPosts')} />
+          </View>
+        }
+      />
     </GestureDetector>
   )
 })

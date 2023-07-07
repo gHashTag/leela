@@ -37,7 +37,7 @@ export function InputTextModal({ navigation, route }: InputTextT) {
 
   useEffect(() => {
     setTimeout(() => methods.setFocus('text'), 100)
-  }, [])
+  }, [methods])
   const {
     colors: { background, text },
   } = useTheme()

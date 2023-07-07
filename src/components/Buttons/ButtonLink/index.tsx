@@ -1,12 +1,7 @@
 import React, { memo } from 'react'
 
-import {
-  StyleProp,
-  StyleSheet,
-  TextStyle,
-  TouchableOpacity,
-  ViewStyle,
-} from 'react-native'
+import { StyleProp, StyleSheet, TextStyle, ViewStyle } from 'react-native'
+import { TouchableOpacity } from 'react-native-gesture-handler'
 
 import { Text } from '../../'
 import { secondary } from '../../../constants'

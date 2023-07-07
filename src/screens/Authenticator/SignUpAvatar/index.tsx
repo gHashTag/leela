@@ -5,7 +5,7 @@ import { RouteProp } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
-import { TouchableOpacity } from 'react-native'
+import { TouchableOpacity } from 'react-native-gesture-handler'
 import { s } from 'react-native-size-matters'
 
 import { AppContainer, Avatar, Button, CenterView, Space } from '../../../components'

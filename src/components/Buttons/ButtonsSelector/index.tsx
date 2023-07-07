@@ -2,7 +2,8 @@ import React, { useState } from 'react'
 
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
+import { TouchableOpacity } from 'react-native-gesture-handler'
 import { s } from 'react-native-size-matters'
 
 import { Text } from '../../'

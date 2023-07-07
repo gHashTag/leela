@@ -1,6 +1,7 @@
 import React from 'react'
 
-import { Image, StyleProp, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native'
+import { Image, StyleProp, StyleSheet, ViewStyle } from 'react-native'
+import { TouchableOpacity } from 'react-native-gesture-handler'
 import { vs } from 'react-native-size-matters'
 
 const page = StyleSheet.create({

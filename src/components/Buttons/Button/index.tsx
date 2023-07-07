@@ -1,7 +1,8 @@
 import React, { memo } from 'react'
 
 import { useTheme } from '@react-navigation/native'
-import { StyleProp, TextStyle, TouchableOpacity } from 'react-native'
+import { StyleProp, TextStyle } from 'react-native'
+import { TouchableOpacity } from 'react-native-gesture-handler'
 import { ScaledSheet, ms, s } from 'react-native-size-matters'
 
 import { Text } from '../../'

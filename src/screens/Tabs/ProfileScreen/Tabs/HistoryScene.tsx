@@ -22,25 +22,25 @@ export const HistoryScene = observer(() => {
         scrollViewGesture1,
       )}
     >
-      <Animated.ScrollView
+      {/* <Animated.ScrollView
         bounces={false}
         scrollEventThrottle={1}
         onScrollBeginDrag={e => {
           scrollOffset1.value = e.nativeEvent.contentOffset.y
         }}
-      >
-        <FlatList
-          style={page.historyList}
-          scrollEnabled={false}
-          ListFooterComponent={<Space height={vs(50)} />}
-          initialNumToRender={60}
-          maxToRenderPerBatch={60}
-          data={data}
-          renderItem={props => <HistoryStep {...props} />}
-          keyExtractor={(e, id) => String(id)}
-          showsVerticalScrollIndicator={false}
-        />
-      </Animated.ScrollView>
+      > */}
+      <FlatList
+        style={page.historyList}
+        scrollEnabled={false}
+        ListFooterComponent={<Space height={vs(50)} />}
+        initialNumToRender={60}
+        maxToRenderPerBatch={60}
+        data={data}
+        renderItem={props => <HistoryStep {...props} />}
+        keyExtractor={(e, id) => String(id)}
+        showsVerticalScrollIndicator={false}
+      />
+      {/* </Animated.ScrollView> */}
     </GestureDetector>
   )
 })

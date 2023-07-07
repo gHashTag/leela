@@ -1,7 +1,8 @@
 import React, { memo } from 'react'
 
 import { useTheme } from '@react-navigation/native'
-import { Image, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Image, StyleSheet, View } from 'react-native'
+import { TouchableOpacity } from 'react-native-gesture-handler'
 import { s } from 'react-native-size-matters'
 
 import { ICONS } from './images'

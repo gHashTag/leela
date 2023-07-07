@@ -1,6 +1,7 @@
 import React from 'react'
 
-import { StyleProp, TouchableOpacity, ViewStyle, useColorScheme } from 'react-native'
+import { StyleProp, ViewStyle, useColorScheme } from 'react-native'
+import { TouchableOpacity } from 'react-native-gesture-handler'
 import { s } from 'react-native-size-matters'
 import Icon from 'react-native-vector-icons/FontAwesome'
 import Ionicons from 'react-native-vector-icons/Ionicons'

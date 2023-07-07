@@ -1,8 +1,9 @@
 import React, { memo } from 'react'
 
 import { useTheme } from '@react-navigation/native'
-import { Platform, TouchableOpacity, View } from 'react-native'
+import { Platform, View } from 'react-native'
 import Emoji from 'react-native-emoji'
+import { TouchableOpacity } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScaledSheet, ms, mvs, s, vs } from 'react-native-size-matters'
 
