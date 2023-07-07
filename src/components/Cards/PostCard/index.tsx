@@ -51,27 +51,27 @@ export const PostCard: React.FC<postCardI> = memo(
       item,
     })
 
-    const curItem: PostT | undefined = PostStore.store.posts.find(a => a.id === postId)
-
-    const onPressAI = async () => {
+    const onPressWand = async () => {
+      const curItem: PostT | undefined = PostStore.store.posts.find(a => a.id === postId)
+      // console.log('curItem', curItem)
       const systemMessage = t('system')
       const postLanguage = item?.language
       const currentLanguage = i18n.language
+
       await i18n.changeLanguage(postLanguage)
       const planText = t(`plans:plan_${item?.plan}.content`)
       await i18n.changeLanguage(currentLanguage)
-      handleCommentAi({
+
+      await handleCommentAi({
         curItem,
         systemMessage,
         message: text as string,
         planText: planText,
       })
-    }
 
-    const onPressWand = () => {
-      onPressAI()
       setIsLoading(false)
     }
+
     const fullName = item ? PostStore.getOwnerName(item.ownerId, true) : ''
     const {
       goDetail,

@@ -24,7 +24,6 @@ export const generateComment = async ({
   planText,
 }: MessageAIT): Promise<string> => {
   try {
-    // console.log('systemMessage', systemMessage)
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -53,8 +52,10 @@ export const generateComment = async ({
         },
       },
     )
+
     return response?.data?.choices[0]?.message?.content ?? ''
   } catch (error) {
+    console.log('error', error)
     captureException(error)
     throw error
   }
@@ -82,7 +83,8 @@ export const handleCommentAi = async ({
     systemMessage,
     planText,
   })
-  if (curItem) {
+  if (curItem && aiComment) {
+    console.log('aiComment', aiComment)
     await PostStore.createComment({
       text: aiComment,
       postId: curItem.id,
@@ -91,6 +93,7 @@ export const handleCommentAi = async ({
     })
   }
 }
+
 export function OpenNetworkModal() {
   if (navRef.isReady()) {
     navRef.navigate('NETWORK_MODAL')

@@ -60,8 +60,8 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
       }
       handleCommentAi({
         curItem,
-        message: data.text,
         systemMessage,
+        message: data.text,
         planText: t(`plans:plan_${plan}.content`),
       })
       navigate('TAB_BOTTOM_1')

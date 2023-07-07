@@ -96,6 +96,7 @@ export const PostStore = {
   createComment: async ({ text, postId, postOwner, ownerId }: FormCommentT) => {
     try {
       const userUid = ownerId !== LEELA_ID ? auth().currentUser?.uid : ownerId
+
       const email = auth().currentUser?.email
       const path = nanoid(22)
       if (userUid && email) {
@@ -111,6 +112,7 @@ export const PostStore = {
           reply: false,
           id: path,
         }
+
         await firestore()
           .collection('Posts')
           .doc(postId)
