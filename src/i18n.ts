@@ -30,28 +30,48 @@ export const supportedLngs = [
 export const isSupportedLang = supportedLngs.includes(locales[0].languageCode)
 export const ruOrEnLang = locales[0].languageCode === 'ru' ? 'ru' : 'en'
 
-i18next
-  .use(HttpApi)
-  .use(initReactI18next)
-  .init({
-    backend: {
-      allowMultiLoading: false,
-      loadPath:
-        'https://leelachakra.com/resource/LeelaChakra/translations/{{lng}}/{{ns}}.json',
-    },
-    compatibilityJSON: 'v3',
-    supportedLngs,
-    ns: ['common', 'validation', 'rules', 'plans'],
-    defaultNS: 'common',
-    lng: lang,
-    fallbackLng: 'en',
-    debug: __DEV__,
-    interpolation: {
-      escapeValue: true,
-    },
-    react: {
-      useSuspense: false,
-    },
+function initializeI18n() {
+  return new Promise((resolve, reject) => {
+    i18next
+      .use(HttpApi)
+      .use(initReactI18next)
+      .init({
+        backend: {
+          allowMultiLoading: false,
+          loadPath:
+            'https://leelachakra.com/resource/LeelaChakra/translations/{{lng}}/{{ns}}.json',
+        },
+        compatibilityJSON: 'v3',
+        supportedLngs,
+        ns: ['common', 'validation', 'rules', 'plans'],
+        defaultNS: 'common',
+        lng: lang,
+        fallbackLng: 'en',
+        debug: __DEV__,
+        interpolation: {
+          escapeValue: true,
+        },
+        react: {
+          useSuspense: false,
+        },
+        initImmediate: false,
+      })
+
+    i18next.on('initialized', resolve)
+    i18next.on('failedLoading', reject)
   })
+}
+
+initializeI18n()
+  .then(() => {
+    const translatedText = i18next.t('gameMode')
+    console.log(translatedText)
+    console.log('Translations are loaded')
+  })
+  .catch(error => {
+    console.error('Error while initializing i18next:', error)
+  })
+
+console.log('Waiting for i18next to initialize...')
 
 export default i18next
