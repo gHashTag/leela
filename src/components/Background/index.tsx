@@ -49,11 +49,11 @@ export const Background = memo(
         >
           {images.map((img, id) => (
             <RenderImagePart
-              key={id}
               img={img}
               id={id}
               images={images}
               isUri={!!sourceImages}
+              key={`${img}-${id}`}
             />
           ))}
         </View>
@@ -77,9 +77,8 @@ const RenderImagePart = ({ img, id, isUri }: RenderImagePartT) => {
   const height = W / aspect
   //const isOne = images?.length
   const isTop = id === 0
-
   return (
-    <View style={[page.subImgContainer, !isTop && page.bottomImage]}>
+    <View style={[page.subImgContainer, !isTop && page.bottomImage]} key={`${img}-${id}`}>
       <Image source={isUri ? { uri: img } : img} style={[page.imgStyle, { height }]} />
     </View>
   )

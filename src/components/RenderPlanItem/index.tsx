@@ -22,13 +22,14 @@ const styles = ScaledSheet.create({
 interface RenderItemT {
   title: string
   onPress?: () => void
+  key?: number
 }
 
-const RenderPlanItem = memo<RenderItemT>(({ title, onPress }) => {
+const RenderPlanItem = memo<RenderItemT>(({ title, onPress, key }) => {
   const { container, titleStyle } = styles
 
   return (
-    <TouchableOpacity onPress={onPress} style={container}>
+    <TouchableOpacity onPress={onPress} style={container} key={key}>
       <Text h="h4" title={title} textStyle={titleStyle} numberOfLines={1} />
     </TouchableOpacity>
   )
