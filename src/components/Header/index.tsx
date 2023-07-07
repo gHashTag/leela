@@ -3,12 +3,12 @@ import React, { memo } from 'react'
 import { useTheme } from '@react-navigation/native'
 import { Platform, View } from 'react-native'
 import Emoji from 'react-native-emoji'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScaledSheet, ms, mvs, s, vs } from 'react-native-size-matters'
 
 import { HeaderMessage, Text } from '../'
 import { navigate } from '../../constants'
+import { Pressable } from '../Pressable'
 const isIos = Platform.OS === 'ios'
 
 interface HeaderT {
@@ -51,9 +51,9 @@ const Header = memo<HeaderT>(
     return (
       <View style={[container, { paddingTop: top, alignItems, backgroundColor }]}>
         {iconLeft && (
-          <TouchableOpacity style={{ opacity: iconLeftOpacity }} onPress={onPress}>
+          <Pressable style={{ opacity: iconLeftOpacity }} onPress={onPress}>
             <Emoji name={iconLeft} style={leftIconStyle} />
-          </TouchableOpacity>
+          </Pressable>
         )}
         <View style={flexOne}>
           {title && !displayStatus && (
@@ -72,9 +72,9 @@ const Header = memo<HeaderT>(
           )}
         </View>
         {iconRight ? (
-          <TouchableOpacity onPress={onPressRight}>
+          <Pressable onPress={onPressRight}>
             <Emoji name={iconRight} style={rightIconStyle} />
-          </TouchableOpacity>
+          </Pressable>
         ) : (
           iconLeft && <View style={rightViewStyle} />
         )}

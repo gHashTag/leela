@@ -1,8 +1,9 @@
 import React from 'react'
 
 import { Image, StyleProp, StyleSheet, ViewStyle } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { vs } from 'react-native-size-matters'
+
+import { Pressable } from '../../Pressable'
 
 const page = StyleSheet.create({
   img: {
@@ -18,9 +19,9 @@ interface ButtonEditT {
 
 const ButtonEdit = ({ onPress, viewStyle }: ButtonEditT) => {
   return (
-    <TouchableOpacity onPress={onPress} style={viewStyle}>
+    <Pressable onPress={onPress} style={viewStyle}>
       <Image style={page.img} source={require('./edit.png')} />
-    </TouchableOpacity>
+    </Pressable>
   )
 }
 

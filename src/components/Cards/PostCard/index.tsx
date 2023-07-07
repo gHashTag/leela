@@ -125,9 +125,9 @@ export const PostCard: React.FC<postCardI> = memo(
                 />
                 <Space height={vs(5)} />
               </View>
-              {/* <TouchableOpacity onPress={handleTranslate}>
+              {/* <Pressable onPress={handleTranslate}>
               <Text title={flag} style={styles.flagEmoji} />
-            </TouchableOpacity> */}
+            </Pressable> */}
             </View>
             {/* Detail Text */}
             <HashtagFormat
@@ -230,9 +230,9 @@ export const PostCard: React.FC<postCardI> = memo(
               <Text numberOfLines={1} h={'h6'} title={fullName as string} />
               <Text h={'h6'} textStyle={lightText} title={` · ${date}`} />
               <View style={flex1} />
-              {/* <TouchableOpacity onPress={handleTranslate}>
+              {/* <Pressable onPress={handleTranslate}>
                 <Text title={flag} style={styles.flagEmoji} />
-              </TouchableOpacity> */}
+              </Pressable> */}
             </View>
             <Space height={vs(5)} />
             <HashtagFormat

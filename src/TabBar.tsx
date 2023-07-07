@@ -3,11 +3,10 @@ import React from 'react'
 import { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs'
 import { observer } from 'mobx-react'
 import { View, useColorScheme } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScaledSheet, ms, s } from 'react-native-size-matters'
 
-import { Tab } from './components'
+import { Pressable, Tab } from './components'
 import { black, white } from './constants'
 
 export default observer(function TabBar({ state, navigation }: MaterialTopTabBarProps) {
@@ -28,7 +27,7 @@ export default observer(function TabBar({ state, navigation }: MaterialTopTabBar
       {routes.map(({ name, key }, id) => {
         const isFocused = index === id
         return (
-          <TouchableOpacity
+          <Pressable
             key={key}
             onPress={() => {
               const event = navigation.emit({
@@ -46,7 +45,7 @@ export default observer(function TabBar({ state, navigation }: MaterialTopTabBar
             }}
           >
             <Tab title={isFocused ? name : `${name}_DISABLE`} />
-          </TouchableOpacity>
+          </Pressable>
         )
       })}
     </View>

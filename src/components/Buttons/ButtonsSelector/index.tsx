@@ -3,10 +3,10 @@ import React, { useState } from 'react'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { s } from 'react-native-size-matters'
 
 import { Text } from '../../'
+import { Pressable } from '../../Pressable'
 import { Space } from '../../Space'
 import { Button } from '../Button'
 
@@ -36,13 +36,13 @@ const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
       <Space height={s(20)} />
       <View style={styles.container}>
         {data.map(a => (
-          <TouchableOpacity key={a} onPress={() => setSelected(a)}>
+          <Pressable key={a} onPress={() => setSelected(a)}>
             {selected === a ? (
               <Text h={'h0'} title={a.toString()} textStyle={page.numPadding} />
             ) : (
               <Text h={'h1'} title={a.toString()} textStyle={page.numPadding} />
             )}
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
       <Button title={t('actions.start')} onPress={() => onPress(selected - 1)} />

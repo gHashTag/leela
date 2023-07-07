@@ -5,10 +5,10 @@ import { RouteProp } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { s } from 'react-native-size-matters'
 
 import { AppContainer, Avatar, Button, CenterView, Space } from '../../../components'
+import { Pressable } from '../../../components/Pressable'
 import { useNoBackHandler } from '../../../hooks'
 import { OnlinePlayer } from '../../../store'
 import { RootStackParamList } from '../../../types'
@@ -50,9 +50,9 @@ const SignUpAvatar = observer(({}: SignUpAvatarT): ReactElement => {
       iconLeft={null}
     >
       <CenterView>
-        <TouchableOpacity onPress={onPressAva}>
+        <Pressable onPress={onPressAva}>
           <Avatar size="xLarge" uri={OnlinePlayer.store.avatar.slice()} loading={load} />
-        </TouchableOpacity>
+        </Pressable>
 
         <Space height={s(50)} />
         {!!OnlinePlayer.store.avatar && (

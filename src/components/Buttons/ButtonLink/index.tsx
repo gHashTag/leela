@@ -1,10 +1,10 @@
 import React, { memo } from 'react'
 
 import { StyleProp, StyleSheet, TextStyle, ViewStyle } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 
 import { Text } from '../../'
 import { secondary } from '../../../constants'
+import { Pressable } from '../../Pressable'
 
 const styles = StyleSheet.create({
   container: {
@@ -28,9 +28,9 @@ const ButtonLink = memo<ButtonLinkT>(({ title, viewStyle, textStyle, onPress }) 
   const { container, h } = styles
 
   return (
-    <TouchableOpacity onPress={onPress} style={[container, viewStyle]}>
+    <Pressable onPress={onPress} style={[container, viewStyle]}>
       <Text h={'h5'} title={title} textStyle={[h, textStyle]} />
-    </TouchableOpacity>
+    </Pressable>
   )
 })
 

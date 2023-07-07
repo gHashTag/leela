@@ -6,11 +6,11 @@ import { useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import * as Keychain from 'react-native-keychain'
 import { s, vs } from 'react-native-size-matters'
 
 import { AppContainer, Loading, Space, Text } from '../../../components'
+import { Pressable } from '../../../components/Pressable'
 import { black, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 
@@ -78,13 +78,13 @@ export const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactEleme
         <Loading size={s(100)} type="9CubeGrid" />
         <Space height={vs(30)} />
       </View>
-      <TouchableOpacity
+      <Pressable
         disabled={!canResend}
         onPress={_onResend}
         style={[page.btn, !canResend && page.btnDisabled]}
       >
         <Text textStyle={page.textStyle} title={t('auth.resendCode')} h="h3" />
-      </TouchableOpacity>
+      </Pressable>
       <Space height={vs(30)} />
     </AppContainer>
   )

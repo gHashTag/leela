@@ -6,7 +6,7 @@ import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { captureException, onLeaveFeedback, trueBlue } from 'src/constants'
+import { captureException, onLeaveFeedback } from 'src/constants'
 import { getUid } from 'src/screens/helper'
 
 import {

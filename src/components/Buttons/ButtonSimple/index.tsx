@@ -1,10 +1,10 @@
 import React, { memo } from 'react'
 
 import { StyleProp, StyleSheet, ViewStyle } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { vs } from 'react-native-size-matters'
 
 import { Text } from '../../'
+import { Pressable } from '../../Pressable'
 
 const styles = StyleSheet.create({
   container: {
@@ -40,9 +40,9 @@ interface ButtonSimpleT {
 const ButtonSimple = memo<ButtonSimpleT>(({ title, onPress, h = 'h4', viewStyle }) => {
   const { container, fontStyle } = styles
   return (
-    <TouchableOpacity onPress={onPress} style={[container, viewStyle]}>
+    <Pressable onPress={onPress} style={[container, viewStyle]}>
       <Text numberOfLines={1} h={h} title={title} textStyle={fontStyle} />
-    </TouchableOpacity>
+    </Pressable>
   )
 })
 

@@ -4,10 +4,10 @@ import { RouteProp, useFocusEffect, useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useTranslation } from 'react-i18next'
 import { BackHandler, StyleSheet, View } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { s, vs } from 'react-native-size-matters'
 
 import { Space, Text } from '../../../components'
+import { Pressable } from '../../../components/Pressable'
 import { fuchsia } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 
@@ -39,14 +39,14 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
       <View style={[page.modalView, { backgroundColor: background }]}>
         <Text h="h4" textStyle={page.textStyle} title={t('online-part.makeReport')} />
         <Space height={vs(16)} />
-        <TouchableOpacity onPress={handlePress}>
+        <Pressable onPress={handlePress}>
           <Text
             textStyle={page.linkText}
             title={t('actions.go')}
             oneColor={fuchsia}
             h="h2"
           />
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </View>
   )

@@ -1,13 +1,13 @@
 import React from 'react'
 
 import { StyleProp, ViewStyle, useColorScheme } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { s } from 'react-native-size-matters'
 import Icon from 'react-native-vector-icons/FontAwesome'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
 import { Text } from '../../'
 import { dimGray, gray } from '../../../constants'
+import { Pressable } from '../../Pressable'
 import { Space } from '../../Space'
 
 interface ButtonVectorIconI {
@@ -38,7 +38,7 @@ export function ButtonVectorIcon({
   const summaryIconSize = iconSize ? iconSize : size
   const summaryIoniconsSize = iconSize ? iconSize + s(2) : size + s(2)
   return (
-    <TouchableOpacity
+    <Pressable
       style={viewStyle}
       onPress={onPress}
       activeOpacity={0.7}
@@ -63,6 +63,6 @@ export function ButtonVectorIcon({
           />
         </>
       )}
-    </TouchableOpacity>
+    </Pressable>
   )
 }

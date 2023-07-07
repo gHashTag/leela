@@ -3,7 +3,6 @@ import React from 'react'
 import { useTheme } from '@react-navigation/native'
 import { observer } from 'mobx-react'
 import { View } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { ScaledSheet, s, vs } from 'react-native-size-matters'
 import Icon from 'react-native-vector-icons/Ionicons'
 
@@ -11,6 +10,7 @@ import { useActions } from './useActions'
 
 import { Text } from '../'
 import { Avatar } from '../Avatar'
+import { Pressable } from '../Pressable'
 import { Space } from '../Space'
 
 interface HeaderMasterT {
@@ -43,7 +43,7 @@ const HeaderMaster = observer(
 
     return (
       <View style={rootContainer}>
-        <TouchableOpacity
+        <Pressable
           activeOpacity={activeOpacity}
           style={wide}
           onPress={editable ? onPressEdit : undefined}
@@ -58,12 +58,8 @@ const HeaderMaster = observer(
               <Text h="h0" textStyle={planNumber} title={String(plan)} />
             </View>
           </View>
-        </TouchableOpacity>
-        <TouchableOpacity
-          activeOpacity={activeOpacity}
-          style={container}
-          onPress={onPressName}
-        >
+        </Pressable>
+        <Pressable activeOpacity={activeOpacity} style={container} onPress={onPressName}>
           {fullName ? (
             <Text h={'h1'} title={fullName} />
           ) : (
@@ -73,7 +69,7 @@ const HeaderMaster = observer(
               <Text h={'h1'} title={lastName} />
             </>
           )}
-        </TouchableOpacity>
+        </Pressable>
       </View>
     )
   },

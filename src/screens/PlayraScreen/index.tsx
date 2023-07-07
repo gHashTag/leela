@@ -6,12 +6,12 @@ import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, Image, StyleSheet, View } from 'react-native'
 import { ThemeProvider } from 'react-native-elements'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import Orientation from 'react-native-orientation-locker'
 import { s, vs } from 'react-native-size-matters'
 import Spin from 'react-native-spinkit'
 
 import { AppContainer, SocialLinks, Space, Text } from '../../components'
+import { Pressable } from '../../components/Pressable'
 import { OpenVideoModal, captureException, primary, secondary } from '../../constants'
 import { RootStackParamList } from '../../types'
 
@@ -132,13 +132,13 @@ const RenderItem = memo(({ item }: PlayraItemT) => {
   return (
     <View style={page.videoContainer}>
       <Space height={vs(10)} />
-      <TouchableOpacity activeOpacity={0.8} onPress={handlePress}>
+      <Pressable activeOpacity={0.8} onPress={handlePress}>
         <Text h={'h1'} title={title} />
         <Space height={vs(20)} />
         <View style={page.videoView}>
           <Image style={page.posterS} source={{ uri: poster }} />
         </View>
-      </TouchableOpacity>
+      </Pressable>
       <Space height={vs(40)} />
     </View>
   )

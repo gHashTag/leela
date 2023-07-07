@@ -1,9 +1,10 @@
 import React, { memo } from 'react'
 
 import { Image } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 
 import { ICONS } from './images'
+
+import { Pressable } from '../../Pressable'
 
 interface ButtonIconT {
   type: 'hamburger' | 'plus' | 'clock' | 'power' | 'power-disable'
@@ -15,9 +16,9 @@ interface ButtonIconT {
 const ButtonIcon = memo<ButtonIconT>(({ type, width, height, onPress }) => {
   const source = () => ICONS[type]
   return (
-    <TouchableOpacity onPress={onPress}>
+    <Pressable onPress={onPress}>
       <Image source={source()} style={{ width, height }} />
-    </TouchableOpacity>
+    </Pressable>
   )
 })
 

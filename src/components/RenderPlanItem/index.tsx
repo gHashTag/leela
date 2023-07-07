@@ -1,9 +1,9 @@
 import React, { memo } from 'react'
 
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { ScaledSheet, s, vs } from 'react-native-size-matters'
 
 import { Text } from '../'
+import { Pressable } from '../../components/Pressable'
 import { W } from '../../constants'
 
 const styles = ScaledSheet.create({
@@ -29,9 +29,9 @@ const RenderPlanItem = memo<RenderItemT>(({ title, onPress, key }) => {
   const { container, titleStyle } = styles
 
   return (
-    <TouchableOpacity onPress={onPress} style={container} key={key}>
+    <Pressable onPress={onPress} style={container} key={key}>
       <Text h="h4" title={title} textStyle={titleStyle} numberOfLines={1} />
-    </TouchableOpacity>
+    </Pressable>
   )
 })
 

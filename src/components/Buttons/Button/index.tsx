@@ -2,11 +2,11 @@ import React, { memo } from 'react'
 
 import { useTheme } from '@react-navigation/native'
 import { StyleProp, TextStyle } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { ScaledSheet, ms, s } from 'react-native-size-matters'
 
 import { Text } from '../../'
 import { W, black, white } from '../../../constants'
+import { Pressable } from '../../Pressable'
 
 const styles = ScaledSheet.create({
   container: {
@@ -35,12 +35,9 @@ const Button = memo<ButtonT>(({ title, onPress, textStyle }) => {
   const borderColor = dark ? white : black
   const backgroundColor = dark ? black : white
   return (
-    <TouchableOpacity
-      style={[container, { backgroundColor, borderColor }]}
-      onPress={onPress}
-    >
+    <Pressable style={[container, { backgroundColor, borderColor }]} onPress={onPress}>
       <Text h="h1" textStyle={[h, textStyle]} title={title} />
-    </TouchableOpacity>
+    </Pressable>
   )
 })
 

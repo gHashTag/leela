@@ -2,10 +2,11 @@ import React, { memo } from 'react'
 
 import { useTheme } from '@react-navigation/native'
 import { Image, StyleSheet, View } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { s } from 'react-native-size-matters'
 
 import { ICONS } from './images'
+
+import { Pressable } from '../../Pressable'
 
 interface ButtonPlayT {
   isStop: boolean
@@ -40,11 +41,11 @@ const ButtonPlay = memo<ButtonPlayT>(({ isStop = false, onPress }) => {
   } = useTheme()
 
   return (
-    <TouchableOpacity onPress={onPress}>
+    <Pressable onPress={onPress}>
       <View style={[page.container, { backgroundColor: background }]}>
         <Image source={source()} style={page.buttonStyle} />
       </View>
-    </TouchableOpacity>
+    </Pressable>
   )
 })
 

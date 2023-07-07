@@ -1,11 +1,13 @@
+/* eslint-disable react-native/no-unused-styles */
 import React, { memo } from 'react'
 
-import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 import FastImage from 'react-native-fast-image'
 import { s } from 'react-native-size-matters'
 import Spinner from 'react-native-spinkit'
 
 import { secondary } from '../../constants'
+import { Pressable } from '../Pressable'
 
 const styles = StyleSheet.create({
   container: {
@@ -47,9 +49,8 @@ interface AvatarT {
 }
 
 export const Avatar = memo<AvatarT>(({ loading, uri, size = 'large', viewStyle }) => {
-  const { container } = styles
   return (
-    <View style={[container, viewStyle]}>
+    <View style={[styles.container, viewStyle]}>
       {loading ? (
         <Spinner size={styles[size].height} type="Pulse" color={secondary} />
       ) : !uri ? (
