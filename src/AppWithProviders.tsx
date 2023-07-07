@@ -41,21 +41,22 @@ configure({
 })
 
 LogBox.ignoreLogs([
-  'Require cycle: node_modules/react-native/Libraries/Network/fetch.js',
-  'RCTBridge required',
-  'Warning: componentWillReceiveProps',
-  'RCTRootView cancelTouches',
-  'not authenticated',
-  'Sending `onAnimatedValueUpdate`',
-  'Animated: `useNativeDriver`',
-  "Can't perform a React",
-  'Trying to load',
-  'Setting a timer for a long period of time',
-  'Sending',
-  'Non-serializable values were found in the navigation',
-  'ViewPropTypes will be removed',
-  'source.uri should not be an empty string',
-  'VirtualizedLists should never be nested inside plain ScrollViews',
+  'Please report: Excessive number of pending callbacks: 501',
+  // 'Require cycle: node_modules/react-native/Libraries/Network/fetch.js',
+  // 'RCTBridge required',
+  // 'Warning: componentWillReceiveProps',
+  // 'RCTRootView cancelTouches',
+  // 'not authenticated',
+  // 'Sending `onAnimatedValueUpdate`',
+  // 'Animated: `useNativeDriver`',
+  // "Can't perform a React",
+  // 'Trying to load',
+  // 'Setting a timer for a long period of time',
+  // 'Sending',
+  // 'Non-serializable values were found in the navigation',
+  // 'ViewPropTypes will be removed',
+  // 'source.uri should not be an empty string',
+  // 'VirtualizedLists should never be nested inside plain ScrollViews',
 ])
 
 function AppWithProviders() {

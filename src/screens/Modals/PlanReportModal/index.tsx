@@ -22,8 +22,7 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
   } = useTheme()
   const { t } = useTranslation()
 
-  const plan = 1
-  // const { plan } = route.params
+  const { plan } = route.params
 
   useFocusEffect(() => {
     const listener = BackHandler.addEventListener('hardwareBackPress', () => true)
