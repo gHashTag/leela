@@ -2,9 +2,9 @@ import i18next from 'src/i18n'
 
 import { DiceStore, actionsDice } from './DiceStore'
 
+import { OfflinePlayers, OnlinePlayer } from './'
 import { captureException, navigate } from '../constants'
 import { createHistory, onStart, onWin, updatePlan } from '../screens/helper'
-import { OfflinePlayers, OnlinePlayer } from './'
 
 interface historyI {
   count: number

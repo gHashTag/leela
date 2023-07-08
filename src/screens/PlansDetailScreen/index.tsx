@@ -30,9 +30,7 @@ type PlansDetailScreenT = {
 }
 
 const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) => {
-  // const { plan, report } = route.params
-  const plan = 1
-  const report = true
+  const { plan, report } = route.params
   const soundRef = useRef<Sound>()
   const { h3 } = styles
   const { isReported } = OnlinePlayer.store
