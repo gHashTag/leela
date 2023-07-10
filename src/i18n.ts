@@ -83,6 +83,7 @@ i18next.use(initReactI18next).init(
     react: {
       useSuspense: false,
     },
+    // keySeparator: false,
   },
   err => {
     if (err) {

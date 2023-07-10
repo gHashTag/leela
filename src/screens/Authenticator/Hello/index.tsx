@@ -34,20 +34,19 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
   return (
     <AppContainer
       enableBackgroundBottomInsets
-      iconLeft={'back'}
       onPress={goBack}
       title=" "
       colorLeft={color}
     >
       <CenterView>
         <IconLeela />
-        <Space height={s(30)} />
+        <Space height={s(70)} />
         <Button title={t('auth.signIn')} onPress={() => navigation.navigate('SIGN_IN')} />
         <Space height={10} />
         <Text h={'h5'} title={t('or')} textStyle={page.h6} />
         <Space height={10} />
         <Button title={t('auth.signUp')} onPress={() => navigation.navigate('SIGN_UP')} />
-        <Space height={vs(140)} />
+        <Space height={vs(50)} />
       </CenterView>
     </AppContainer>
   )

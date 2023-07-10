@@ -46,10 +46,10 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
           <Space height={vs(10)} />
           <Text h={'h5'} title={t('or')} textStyle={styles.h6} />
           <Space height={vs(15)} />
-          <Button
+          {/* <Button
             title={t('offline')}
             onPress={() => navigation.navigate('SELECT_PLAYERS_SCREEN')}
-          />
+          /> */}
           <Space height={vs(120)} />
         </CenterView>
       )}

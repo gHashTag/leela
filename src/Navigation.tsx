@@ -151,7 +151,7 @@ const App = () => {
           headerShown: false,
           gestureEnabled: false,
         }}
-        initialRouteName="WELCOME_SCREEN"
+        initialRouteName="HELLO"
       >
         {/* Auth */}
         <Stack.Group

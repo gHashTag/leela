@@ -59,6 +59,7 @@ LogBox.ignoreLogs([
   'ViewPropTypes will be removed',
   'source.uri should not be an empty string',
   'VirtualizedLists should never be nested inside plain ScrollViews',
+  'i18next::translator: Seems the loaded translations',
 ])
 
 function AppWithProviders() {
