@@ -1,30 +1,30 @@
 [
   {
-    "title": "rules:foreword.title",
-    "content": "rules:foreword.content"
+    "title": "foreword.title",
+    "content": "foreword.content"
   },
   {
-    "title": "rules:rulesOfPlay.title",
-    "content": "rules:rulesOfPlay.content"
+    "title": "rulesOfPlay.title",
+    "content": "rulesOfPlay.content"
   },
   {
-    "title": "rules:introduction.title",
-    "content": "rules:introduction.content"
+    "title": "introduction.title",
+    "content": "introduction.content"
   },
   {
-    "title": "rules:gameMeaning.title",
-    "content": "rules:gameMeaning.content"
+    "title": "gameMeaning.title",
+    "content": "gameMeaning.content"
   },
   {
-    "title": "rules:numerology.title",
-    "content": "rules:numerology.content"
+    "title": "numerology.title",
+    "content": "numerology.content"
   },
   {
-    "title": "rules:notes.title",
-    "content": "rules:notes.content"
+    "title": "notes.title",
+    "content": "notes.content"
   },
   {
-    "title": "rules:onlineRules.title",
-    "content": "rules:onlineRules.content"
+    "title": "onlineRules.title",
+    "content": "onlineRules.content"
   }
 ]
