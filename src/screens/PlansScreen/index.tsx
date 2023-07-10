@@ -51,10 +51,7 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
         windowSize={5}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
-          <RenderPlanItem
-            title={t(`plans:plan_${item}.title`)}
-            onPress={onPressItem(item)}
-          />
+          <RenderPlanItem title={t(`plan_${item}.title`)} onPress={onPressItem(item)} />
         )}
         keyExtractor={_keyExtractor}
       />

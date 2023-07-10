@@ -1,0 +1,16 @@
+{
+  "userNotFound": "このユーザーは存在しません",
+  "invalidEmail": "このフィールドは電子メールである必要があります",
+  "userNameExistsException": "このメールアドレスを持つアカウントは既に存在します。",
+  "manyRequests": "認証要求が多すぎる場合は、後で再試行してください",
+
+  "loadErr": "読み込みエラー",
+  "networkRequestFailed": "インターネット接続を確認する",
+
+  "passwordsDoNotMatch": "パスワードが一致しません！",
+  "shortPassword": "パスワードは6文字で構成する必要があります",
+  "requireField": "必須フィールド",
+  "manyCharacters": "あまりにも多くのシンボル、最大 -",
+  "fewChars": "最小値は100文字である必要があります",
+  "twoSymbolRequire": "フィールドには2文字以上の文字を含める必要があります"
+}

@@ -1,0 +1,14 @@
+{
+    "userNotFound": "Bu kullanıcı mevcut değil",
+    "invalidEmail": "Bu alan bir e-posta olmalıdır",
+    "userNameExistsException": "Verilen e-postaya sahip bir hesap zaten mevcut",
+    "manyRequests": "Çok fazla kimlik doğrulama isteği, lütfen daha sonra tekrar deneyin",
+    "loadErr": "Yükleme hatası",
+    "networkRequestFailed": "İnternet bağlantısını kontrol et",
+    "passwordsDoNotMatch": "Şifreler eşleşmiyor!",
+    "shortPassword": "Şifre 6 karakter uzunluğunda olmalıdır",
+    "requireField": "Zorunlu alan",
+    "manyCharacters": "Çok fazla sembol, maksimum - ",
+    "fewChars": "En az 100 karakter olmalıdır",
+    "twoSymbolRequire": "Alan en az 2 karakter içermelidir"
+}

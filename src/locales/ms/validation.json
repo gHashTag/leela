@@ -1,0 +1,14 @@
+{
+    "userNotFound": "Pengguna ini tidak wujud",
+    "invalidEmail": "Medan ini mestilah e-mel",
+    "userNameExistsException": "Akaun dengan E-mel yang diberikan sudah wujud",
+    "manyRequests": "Terlalu banyak permintaan pengesahan, sila cuba lagi kemudian",
+    "loadErr": "Ralat Memuatkan",
+    "networkRequestFailed": "Semak sambungan internet",
+    "passwordsDoNotMatch": "Kata laluan tidak sepadan!",
+    "shortPassword": "Kata laluan mestilah 6 aksara panjang",
+    "requireField": "Medan yang diperlukan",
+    "manyCharacters": "Terlalu banyak simbol, maksimum - ",
+    "fewChars": "Minimum mestilah 100 aksara",
+    "twoSymbolRequire": "Medan mesti mengandungi sekurang-kurangnya 2 aksara"
+}

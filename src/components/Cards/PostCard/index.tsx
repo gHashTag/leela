@@ -59,7 +59,7 @@ export const PostCard: React.FC<postCardI> = memo(
       const currentLanguage = i18n.language
 
       await i18n.changeLanguage(postLanguage)
-      const planText = t(`plans:plan_${item?.plan}.content`)
+      const planText = t(`plan_${item?.plan}.content`)
       await i18n.changeLanguage(currentLanguage)
 
       await handleCommentAi({

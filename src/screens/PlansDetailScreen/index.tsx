@@ -69,7 +69,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
 
   const onToggle = () => {
     if (!soundRef.current) {
-      const sound = new Sound(t(`plans:plan_${plan}.url`), undefined)
+      const sound = new Sound(t(`plan_${plan}.url`), undefined)
       soundRef.current = sound
       const interval = setInterval(() => {
         const isLoaded = soundRef.current?.isLoaded()
@@ -96,7 +96,7 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
   return (
     <AppContainer
       onPress={handleCross}
-      title={t(`plans:plan_${plan}.title`)}
+      title={t(`plan_${plan}.title`)}
       iconRight={null}
       iconLeftOpacity={isReported ? 1 : 0.4}
       iconLeft=":heavy_multiplication_x:"
@@ -112,18 +112,9 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
           )}
           <Space height={vs(10)} />
           {Platform.OS === 'ios' ? (
-            <SelectableIOS
-              h={'h7'}
-              title={t(`plans:plan_${plan}.content`)}
-              textStyle={h3}
-            />
+            <SelectableIOS h={'h7'} title={t(`plan_${plan}.content`)} textStyle={h3} />
           ) : (
-            <Text
-              selectable
-              h={'h7'}
-              title={t(`plans:plan_${plan}.content`)}
-              textStyle={h3}
-            />
+            <Text selectable h={'h7'} title={t(`plan_${plan}.content`)} textStyle={h3} />
           )}
           {report && <CreatePost plan={plan} />}
           <Space height={!report ? vs(70) : 20} />

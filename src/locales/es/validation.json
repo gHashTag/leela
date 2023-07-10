@@ -1,0 +1,14 @@
+{
+    "userNotFound": "Este usuario no existe",
+    "invalidEmail": "Este campo debe ser un correo electrónico",
+    "userNameExistsException": "Ya existe una cuenta con el correo electrónico dado",
+    "manyRequests": "Demasiadas solicitudes de autenticación, inténtelo de nuevo más tarde",
+    "loadErr": "Error de carga",
+    "networkRequestFailed": "Comprobar la conexión a Internet",
+    "passwordsDoNotMatch": "Las contraseñas no coinciden!",
+    "shortPassword": "La contraseña debe tener 6 caracteres",
+    "requireField": "Campo obligatorio",
+    "manyCharacters": "Demasiados símbolos, máximo - ",
+    "fewChars": "El mínimo debe ser de 100 caracteres",
+    "twoSymbolRequire": "El campo debe contener al menos 2 caracteres"
+}

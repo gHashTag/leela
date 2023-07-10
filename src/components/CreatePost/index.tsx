@@ -49,20 +49,20 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
         text: data.text,
         plan: plan,
         systemMessage,
-        planText: t(`plans:plan_${plan}.content`),
+        planText: t(`plan_${plan}.content`),
       })
       const curItem: PostT = {
         ...(PostStore.store.posts.find(a => a.id === postId?.id) || {}),
         systemMessage,
         ownerId: userUid || '',
         id: postId?.id || '',
-        planText: t(`plans:plan_${plan}.content`),
+        planText: t(`plan_${plan}.content`),
       }
       handleCommentAi({
         curItem,
         systemMessage,
         message: data.text,
-        planText: t(`plans:plan_${plan}.content`),
+        planText: t(`plan_${plan}.content`),
       })
       navigate('TAB_BOTTOM_1')
       setLoading(false)
