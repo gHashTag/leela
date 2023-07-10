@@ -24,25 +24,6 @@ const maxImageWidth = ms(279, 0.5) + s(18)
 const curImageWidth = imageWidth >= maxImageWidth ? maxImageWidth : imageWidth
 
 export const GameBoard = observer(() => {
-  const arr = !DiceStore.online
-    ? OfflinePlayers.store.plans
-        .slice()
-        .map(a => {
-          return {
-            plan: a,
-          }
-        })
-        .slice(0, DiceStore.multi)
-    : [
-        {
-          mainPlayer: true,
-          plan: OnlinePlayer.store.plan,
-        },
-        ...OtherPlayers.store.online.slice().map((a: any) => {
-          return { plan: a.plan }
-        }),
-      ]
-
   const scheme = useColorScheme()
 
   const imgObj = useMemo(() => {
@@ -67,27 +48,44 @@ export const GameBoard = observer(() => {
     [1, 2, 3, 4, 5, 6, 7, 8, 9],
   ]
 
-  const check = useCallback(
-    (z: number) => {
-      const plan = arr.find(y => y.plan === z)?.plan
-      return plan || false
-    },
-    [arr],
-  )
+  const check = useCallback((z: number) => {
+    const arr = useMemo(() => {
+      return !DiceStore.online
+        ? OfflinePlayers.store.plans
+            .slice()
+            .map(a => {
+              return {
+                plan: a,
+              }
+            })
+            .slice(0, DiceStore.multi)
+        : [
+            {
+              mainPlayer: true,
+              plan: OnlinePlayer.store.plan,
+            },
+            ...OtherPlayers.store.online.slice().map((a: any) => {
+              return { plan: a.plan }
+            }),
+          ]
+    }, [])
+    const plan = arr.find(y => y.plan === z)?.plan
+    return plan || false
+  }, [])
 
   return (
-    <View style={[imageContainer, { width: curImageHeight * imgObj.aspect }]}>
-      <Image source={imgObj.image} style={bgImage} resizeMode="cover" />
-      <View style={gameBoardContainer}>
-        <View style={container}>
+    <View style={[styles.imageContainer, { width: curImageHeight * imgObj.aspect }]}>
+      <Image source={imgObj.image} style={styles.bgImage} resizeMode="cover" />
+      <View style={styles.gameBoardContainer}>
+        <View style={styles.container}>
           {rows.map((a, i) => (
-            <View style={row} key={i}>
-              {a.map(b => (
-                <View key={b} style={box}>
+            <View style={styles.row} key={i}>
+              {a.map((b, index) => (
+                <View key={index} style={styles.box}>
                   {b === check(b) ? (
-                    <Gem plan={b} player={DiceStore.players} />
+                    <Gem key={b} plan={b} player={DiceStore.players} />
                   ) : (
-                    <Text h={'h11'} title={b !== 68 ? b.toString() : ' '} />
+                    <Text key={index} h={'h11'} title={b !== 68 ? b.toString() : ' '} />
                   )}
                 </View>
               ))}
@@ -125,6 +123,7 @@ const styles = StyleSheet.create({
     marginHorizontal: s(1),
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: s(31) / 2,
   },
   bgImage: {
     width: '100%',
@@ -134,4 +133,4 @@ const styles = StyleSheet.create({
   },
 })
 
-const { gameBoardContainer, bgImage, container, row, box, imageContainer } = styles
+export default GameBoard
