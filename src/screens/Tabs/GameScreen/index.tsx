@@ -43,14 +43,20 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
 
   const limit = 15
   useEffect(() => {
-    const subPosts = firestore()
-      .collection('Posts')
-      .where('ownerId', '==', getUid())
-      .orderBy('createTime', 'desc')
-      .limit(limit)
-      .onSnapshot(PostStore.fetchOwnPosts, captureException)
+    const uid = getUid()
+
+    const query = uid
+      ? firestore()
+          .collection('Posts')
+          .where('ownerId', '==', uid)
+          .orderBy('createTime', 'desc')
+          .limit(limit)
+      : firestore().collection('Posts').orderBy('createTime', 'desc').limit(limit)
+
+    const unsubscribe = query.onSnapshot(PostStore.fetchOwnPosts, captureException)
+
     return () => {
-      subPosts()
+      unsubscribe()
     }
   }, [limit])
 

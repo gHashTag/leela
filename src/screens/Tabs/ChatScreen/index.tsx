@@ -172,7 +172,7 @@ const ChatScreen: React.FC = () => {
   return (
     <>
       <Header title="Leela AI" textAlign="center" />
-      {DiceStore.rate && messagesCount >= 7 ? (
+      {DiceStore.rate && messagesCount === 7 ? (
         <View>
           <ButtonWithIcon
             viewStyle={styles.feadbackContainer}
