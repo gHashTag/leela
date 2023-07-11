@@ -5,9 +5,9 @@ import i18next from 'src/i18n'
 
 import { upStepOffline } from './helper'
 
+import { actionsDice } from './'
 import { navigate } from '../constants'
 import { HistoryT } from '../types'
-import { actionsDice } from './'
 
 export const initStore = {
   start: [false, false, false, false, false, false],
@@ -36,7 +36,7 @@ export const OfflinePlayers = {
     OfflinePlayers.store.start = initStore.start
     OfflinePlayers.store.histories = initStore.histories
     OfflinePlayers.store.finish = initStore.finish
-    navigate('WELCOME_SCREEN')
+    navigate('HELLO')
   },
   startGame() {
     actionsDice.setMessage(i18next.t('sixToBegin'))

@@ -18,7 +18,7 @@ interface CreatePostT {
   plan: number
 }
 
-export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
+export const CreatePost: React.FC<CreatePostT> = ({ plan = 6 }) => {
   const [loading, setLoading] = useState(false)
   const { t } = useTranslation()
 

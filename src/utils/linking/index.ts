@@ -51,7 +51,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       DETAIL_POST_SCREEN: {
         path: 'reply_detail/:postId',
       },
-      WELCOME_SCREEN: '*',
+      HELLO: '*',
     },
   },
 }

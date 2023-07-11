@@ -60,7 +60,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
     useEffect(() => {
       const handleLink = async () => {
         if (getUid() === undefined) {
-          navigation.navigate('WELCOME_SCREEN')
+          navigation.navigate('HELLO')
           return
         }
         comment && setTimeout(newComment, 900)

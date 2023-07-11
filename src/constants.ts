@@ -137,7 +137,7 @@ export function OpenActionsModal(modalButtons: ButtonsModalT[]) {
 
 export const banAlert = () => {
   Alert.alert(i18next.t('online-part.youBanned'), i18next.t('online-part.banText'), [
-    { text: 'OK', onPress: () => navigate('WELCOME_SCREEN') },
+    { text: 'OK', onPress: () => navigate('HELLO') },
   ])
 }
 export const accountHasBanAlert = () => {

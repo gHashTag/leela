@@ -98,7 +98,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       actionsDice.resetPlayer()
       await Keychain.resetInternetCredentials('auth')
       await auth().signOut()
-      navigate('WELCOME_SCREEN')
+      navigate('HELLO')
     } catch (err) {
       captureException(err)
     }
@@ -239,7 +239,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
             .delete()
             .then(() => console.log('User deleted'))
             .catch(error => console.log(error))
-      navigate('WELCOME_SCREEN')
+      navigate('HELLO')
     } catch (err) {
       captureException(err)
     }

@@ -23,7 +23,7 @@ type ForgotPassSubmitT = {
 
 const ForgotPassSubmit = ({ navigation }: ForgotPassSubmitT): ReactElement => {
   const handlePress = () => {
-    navigation.navigate('WELCOME_SCREEN')
+    navigation.navigate('HELLO')
   }
   const { t } = useTranslation()
   const { dark } = useTheme()
