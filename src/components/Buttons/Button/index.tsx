@@ -11,7 +11,7 @@ import { Pressable } from '../../Pressable'
 const styles = ScaledSheet.create({
   container: {
     alignSelf: 'center',
-    width: W - ms(130, 1.8),
+    width: W - ms(70, 1.8),
     height: ms(70),
     borderRadius: s(40),
     borderWidth: 1,
@@ -19,6 +19,7 @@ const styles = ScaledSheet.create({
   },
   h: {
     textAlign: 'center',
+    paddingHorizontal: 15,
   },
 })
 

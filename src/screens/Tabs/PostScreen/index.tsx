@@ -42,6 +42,7 @@ export const PostScreen = observer(({}: Ipost) => {
     }
   }
   const load = PostStore.store.loadPosts && data.length === 0
+
   return load ? (
     <Spin centered />
   ) : (
