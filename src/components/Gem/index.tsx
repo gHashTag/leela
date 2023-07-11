@@ -14,6 +14,7 @@ import { ICONS } from './images'
 interface GemT {
   plan: number
   player: number
+  index: number
 }
 
 interface dataI {
@@ -23,8 +24,7 @@ interface dataI {
   ownerId?: string
 }
 
-const Gem = observer(({ plan, player }: GemT) => {
-  const getIndex = (num: number) => (num === player ? 2 : 1)
+const Gem = observer(({ plan, index }: GemT) => {
   const { navigate } = useTypedNavigation()
   const { container, gems } = styles
 
@@ -45,9 +45,9 @@ const Gem = observer(({ plan, player }: GemT) => {
           ava: OnlinePlayer.store.avatar,
           ownerId: getUid(),
         },
-        ...OtherPlayers.store.online.slice().map((a, index) => {
+        ...OtherPlayers.store.online.slice().map((a, i) => {
           return {
-            id: index + 2,
+            id: i + 2,
             data: a.plan,
             ava: a.avatar,
             ownerId: a.owner,
@@ -57,6 +57,7 @@ const Gem = observer(({ plan, player }: GemT) => {
 
   const source = (id: number, avatar: any) =>
     DiceStore.online ? { uri: avatar } : ICONS[id - 1]
+
   return (
     <View style={container}>
       {DATA.map(({ data, id, ava, ownerId }) => {
@@ -73,7 +74,9 @@ const Gem = observer(({ plan, player }: GemT) => {
               <Image
                 style={[
                   gems,
-                  { zIndex: getIndex(id) },
+                  {
+                    zIndex: -index,
+                  },
                   id === 1 && DiceStore.online && styles.primaryGem,
                 ]}
                 source={source(id, ava)}
@@ -95,6 +98,7 @@ const styles = ScaledSheet.create({
     zIndex: 2,
   },
   gems: {
+    position: 'absolute',
     width: ms(42, 0.5),
     height: ms(42, 0.5),
     borderRadius: ms(42, 0.5) / 2,

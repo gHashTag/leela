@@ -83,7 +83,7 @@ export const GameBoard = observer(() => {
               {a.map((b, index) => (
                 <View key={index} style={styles.box}>
                   {b === check(b) ? (
-                    <Gem key={b} plan={b} player={DiceStore.players} />
+                    <Gem key={b} plan={b} player={DiceStore.players} index={index} />
                   ) : (
                     <Text key={index} h={'h11'} title={b !== 68 ? b.toString() : ' '} />
                   )}
