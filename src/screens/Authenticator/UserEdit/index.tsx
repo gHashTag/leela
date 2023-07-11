@@ -46,15 +46,15 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
           firstName: yup
             .string()
             .trim()
-            .min(2, t('validation:twoSymbolRequire') || '')
+            .min(2, t('twoSymbolRequire') || '')
             .required()
-            .max(15, `${t('validation:manyCharacters')}15`),
+            .max(15, `${t('manyCharacters')}15`),
           lastName: yup
             .string()
             .trim()
-            .min(2, t('validation:twoSymbolRequire') || '')
+            .min(2, t('twoSymbolRequire') || '')
             .required()
-            .max(20, `${t('validation:manyCharacters')}20`),
+            .max(20, `${t('manyCharacters')}20`),
         })
         .required(),
     [t],

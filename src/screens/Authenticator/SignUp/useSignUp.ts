@@ -31,17 +31,17 @@ export const useSignUp = () => {
         .shape({
           email: yup
             .string()
-            .email(t('validation:invalidEmail') || '')
+            .email(t('invalidEmail') || '')
             .trim()
-            .required(t('validation:requireField') || ''),
+            .required(t('requireField') || ''),
           password: yup
             .string()
-            .required(t('validation:requireField') || '')
-            .min(6, t('validation:shortPassword') || ''),
+            .required(t('requireField') || '')
+            .min(6, t('shortPassword') || ''),
           passwordConfirmation: yup
             .string()
-            .required(t('validation:requireField') || '')
-            .min(6, t('validation:shortPassword') || ''),
+            .required(t('requireField') || '')
+            .min(6, t('shortPassword') || ''),
         })
         .required(),
     [t],
@@ -57,7 +57,7 @@ export const useSignUp = () => {
     async data => {
       const { email, password, passwordConfirmation } = data
       if (password !== passwordConfirmation) {
-        setError(t('validation:passwordsDoNotMatch'))
+        setError(t('passwordsDoNotMatch'))
       } else {
         setLoading(true)
         setError('')
@@ -71,19 +71,19 @@ export const useSignUp = () => {
           .catch(exception => {
             switch (exception.code) {
               case 'auth/invalid-email':
-                setError(t('validation:invalidEmail'))
+                setError(t('invalidEmail'))
                 break
               case 'auth/email-already-in-use':
-                setError(t('validation:userNameExistsException'))
+                setError(t('userNameExistsException'))
                 break
               case 'auth/wrong-password':
                 setError(t('auth.forgotPassword'))
                 break
               case 'auth/network-request-failed':
-                setError(t('validation:networkRequestFailed'))
+                setError(t('networkRequestFailed'))
                 break
               case 'auth/too-many-requests':
-                setError(t('validation:manyRequests'))
+                setError(t('manyRequests'))
                 break
               default:
                 captureException(exception.message)

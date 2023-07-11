@@ -50,9 +50,9 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
         .shape({
           email: yup
             .string()
-            .email(t('validation:invalidEmail') || '')
+            .email(t('invalidEmail') || '')
             .trim()
-            .required(t('validation:requireField') || ''),
+            .required(t('requireField') || ''),
         })
         .required(),
     [t],
@@ -75,9 +75,9 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
       navigation.navigate('FORGOT_PASSWORD_SUBMIT', { email })
     } catch (error: any) {
       if (error.code === 'auth/user-not-found') {
-        setErrorMessage(t('validation:userNotFound') || '')
+        setErrorMessage(t('userNotFound') || '')
       } else if (error.code === 'auth/network-request-failed') {
-        setErrorMessage(t('validation:networkRequestFailed') || '')
+        setErrorMessage(t('networkRequestFailed') || '')
       } else {
         setErrorMessage(error.code)
       }
