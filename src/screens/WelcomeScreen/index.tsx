@@ -3,7 +3,7 @@ import React from 'react'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
+// import { StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
 import {
@@ -57,8 +57,8 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   )
 })
 
-const styles = StyleSheet.create({
-  h6: { alignSelf: 'center' },
-})
+// const styles = StyleSheet.create({
+//   h6: { alignSelf: 'center' },
+// })
 
 export { WelcomeScreen }

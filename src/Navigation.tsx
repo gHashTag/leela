@@ -22,7 +22,7 @@ import {
   InputTextModal,
   NetworkModal,
   OfflineProfileScreen,
-  OnlineGameScreen,
+  // OnlineGameScreen,
   PlanReportModal,
   PlansDetailScreen,
   PlansScreen,
@@ -103,7 +103,7 @@ const Tab = observer(() => {
         name="TAB_BOTTOM_2"
         component={DiceStore.online ? ProfileScreen : OfflineProfileScreen}
       />
-      <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} />
+      {/* <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} /> */}
       {lang === 'ru' && (
         <TabNavigator.Screen name="TAB_BOTTOM_4" component={PosterScreen} />
       )}

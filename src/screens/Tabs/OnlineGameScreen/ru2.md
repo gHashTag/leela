@@ -10,6 +10,6 @@
 
 ### 🙏🏻 Намасте
 
-### Запись на [Игра Лила](https://band.link/A4Iny?qr) в телеграм: [@playom Гая Камская](https://t.me/playom)
+### Запись на Игра Лила в телеграм: [@playom Гая Камская](https://t.me/playom)
 
 ![](https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/images/tg_playom.JPG)
