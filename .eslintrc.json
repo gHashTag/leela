@@ -2,15 +2,31 @@
   "root": true,
   "extends": "@react-native-community",
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint", "react", "prettier", "react-native", "import"],
+  "plugins": [
+    "@typescript-eslint",
+    "react",
+    "prettier",
+    "react-native",
+    "import"
+  ],
   "overrides": [
     {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "files": [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx"
+      ],
       "rules": {
         "import/order": [
           "error",
           {
-            "groups": ["builtin", "external", "internal", "sibling"],
+            "groups": [
+              "builtin",
+              "external",
+              "internal",
+              "sibling"
+            ],
             "pathGroups": [
               {
                 "pattern": "react",
@@ -18,7 +34,9 @@
                 "position": "before"
               }
             ],
-            "pathGroupsExcludedImportTypes": ["react"],
+            "pathGroupsExcludedImportTypes": [
+              "react"
+            ],
             "newlines-between": "always",
             "alphabetize": {
               "order": "asc",
@@ -32,7 +50,9 @@
             "ignoreDeclarationSort": true
           }
         ],
-        "@typescript-eslint/no-shadow": ["error"],
+        "@typescript-eslint/no-shadow": [
+          "error"
+        ],
         "no-shadow": "off",
         "no-undef": "off",
         "semi": "off",

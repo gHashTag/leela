@@ -6,10 +6,17 @@ import { ms, mvs, s } from 'react-native-size-matters'
 
 import { ICONS } from './images'
 
-import { Text } from '../'
+import { Space, Text } from '../'
 import { H, W } from '../../constants'
 import { DiceStore, OfflinePlayers, OnlinePlayer, OtherPlayers } from '../../store'
 import { Gem } from '../Gem'
+
+type OffLineProps = {
+  b: number
+  index: number
+  check: (z: number) => number | false
+  DiceStore: any // Тип DiceStore может отличаться, укажите соответствующий тип данных
+}
 
 const marginTop = H - W > 350 ? 20 : 0
 
@@ -48,30 +55,32 @@ export const GameBoard = observer(() => {
     [1, 2, 3, 4, 5, 6, 7, 8, 9],
   ]
 
-  const check = useCallback((z: number) => {
-    const arr = useMemo(() => {
-      return !DiceStore.online
-        ? OfflinePlayers.store.plans
-            .slice()
-            .map(a => {
-              return {
-                plan: a,
-              }
-            })
-            .slice(0, DiceStore.multi)
-        : [
-            {
-              mainPlayer: true,
-              plan: OnlinePlayer.store.plan,
-            },
-            ...OtherPlayers.store.online.slice().map((a: any) => {
-              return { plan: a.plan }
-            }),
-          ]
-    }, [])
-    const plan = arr.find(y => y.plan === z)?.plan
-    return plan || false
-  }, [])
+  // const check = useCallback((z: number) => {
+  //   const arr = useMemo(() => {
+  //     return !DiceStore.online
+  //       ? OfflinePlayers.store.plans
+  //           .slice()
+  //           .map(a => {
+  //             return {
+  //               plan: a,
+  //             }
+  //           })
+  //           .slice(0, DiceStore.multi)
+  //       : [
+  //           {
+  //             mainPlayer: true,
+  //             plan: OnlinePlayer.store.plan,
+  //           },
+  //           ...OtherPlayers.store.online.slice().map((a: any) => {
+  //             return { plan: a.plan }
+  //           }),
+  //         ]
+  //   }, [])
+
+  //   const plan = arr.find(y => y.plan === z)?.plan
+
+  //   return plan || false
+  // }, [])
 
   return (
     <View style={[styles.imageContainer, { width: curImageHeight * imgObj.aspect }]}>
@@ -82,11 +91,10 @@ export const GameBoard = observer(() => {
             <View style={styles.row} key={i}>
               {a.map((b, index) => (
                 <View key={index} style={styles.box}>
-                  {b === check(b) ? (
+                  <View style={styles.numberStyle}>
                     <Gem key={b} plan={b} player={DiceStore.players} index={index} />
-                  ) : (
                     <Text key={index} h={'h11'} title={b !== 68 ? b.toString() : ' '} />
-                  )}
+                  </View>
                 </View>
               ))}
             </View>
@@ -131,6 +139,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: mvs(26, 1.6) - imageTopMargin,
   },
+  numberStyle: { bottom: 3 },
 })
 
 export default GameBoard

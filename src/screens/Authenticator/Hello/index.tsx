@@ -52,11 +52,18 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
             onPress={() => navigation.navigate('SIGN_IN')}
           />
           <Space height={10} />
-          <Text h={'h5'} title={t('or')} textStyle={page.h6} />
+          {/* <Text h={'h5'} title={t('or')} textStyle={page.h6} /> */}
           <Space height={10} />
           <Button
             title={t('auth.signUp')}
             onPress={() => navigation.navigate('SIGN_UP')}
+          />
+          <Space height={10} />
+          <Text h={'h5'} title={t('or')} textStyle={page.h6} />
+          <Space height={10} />
+          <Button
+            title={t('offline')}
+            onPress={() => navigation.navigate('SELECT_PLAYERS_SCREEN')}
           />
           <Space height={vs(50)} />
         </CenterView>
