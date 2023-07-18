@@ -3,7 +3,7 @@ import React, { useRef, useState } from 'react'
 import { useFocusEffect } from '@react-navigation/native'
 import { observer } from 'mobx-react'
 import { Animated, Easing, Pressable, StyleSheet } from 'react-native'
-import RNShake from 'react-native-shake'
+
 import { vs } from 'react-native-size-matters'
 
 import { DiceStore, OfflinePlayers, OnlinePlayer, actionsDice } from '../../store'
@@ -42,13 +42,6 @@ const getImage = (number: number) => {
 export const Dice = observer(() => {
   const [canRoll, setCanRoll] = useState<boolean>(true)
   const spinValue = useRef(new Animated.Value(0)).current
-
-  useFocusEffect(() => {
-    const subscription = RNShake.addListener(() => rollDice())
-    return () => {
-      subscription.remove()
-    }
-  })
 
   const handleSpin = (value: number) => {
     const duration = (value / 2) * 500

@@ -30,8 +30,8 @@ async function upFuncOnline(step: stepT) {
     OnlinePlayer.store.plan = plan
     if (stepCount !== 6 || plan === 68) {
       navigate('PLANS_DETAIL_SCREEN', {
+        plan,
         report: true,
-        id: plan,
       })
     }
     if (plan === 68) {

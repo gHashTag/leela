@@ -84,7 +84,6 @@ export const handleCommentAi = async ({
     planText,
   })
   if (curItem && aiComment) {
-    console.log('aiComment', aiComment)
     await PostStore.createComment({
       text: aiComment,
       postId: curItem.id,
