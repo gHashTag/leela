@@ -17,7 +17,7 @@ export const textStyles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Etna' : 'etna-free-font',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
-    fontSize: ms(95, 0.5),
+    fontSize: Platform.OS === 'ios' ? ms(95, 0.5) : ms(95, 0.3),
   },
   h1: {
     fontFamily: Platform.OS === 'ios' ? 'Etna' : 'etna-free-font',
