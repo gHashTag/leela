@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef } from 'react'
 
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -10,10 +10,10 @@ import { s, vs } from 'react-native-size-matters'
 import Sound from 'react-native-sound'
 import {
   AppContainer,
-  ButtonPlay,
+  // ButtonPlay,
   CreatePost,
   KeyboardContainer,
-  Loading,
+  // Loading,
   SelectableIOS,
   Space,
   Text,
@@ -34,8 +34,8 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
   const soundRef = useRef<Sound>()
   const { h3 } = styles
   const { isReported } = OnlinePlayer.store
-  const [isPlaying, setIsPaying] = useState<boolean>(false)
-  const [soundLoading, setSoundLoading] = useState<boolean>(false)
+  // const [isPlaying, setIsPaying] = useState<boolean>(false)
+  // const [soundLoading, setSoundLoading] = useState<boolean>(false)
   const { t } = useTranslation()
 
   useFocusEffect(
@@ -67,31 +67,31 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
     }
   }
 
-  const onToggle = () => {
-    if (!soundRef.current) {
-      const sound = new Sound(t(`plan_${plan}.url`), undefined)
-      soundRef.current = sound
-      const interval = setInterval(() => {
-        const isLoaded = soundRef.current?.isLoaded()
-        setSoundLoading(!isLoaded)
-        if (isLoaded) {
-          soundRef.current?.play()
-          setIsPaying(true)
-          clearInterval(interval)
-        }
-      }, 400)
-      return
-    }
-    if (soundRef.current?.isPlaying()) {
-      soundRef.current.pause()
-      setIsPaying(false)
-    } else {
-      soundRef.current?.play()
-      if (soundRef.current && soundRef.current.isLoaded()) {
-        setIsPaying(true)
-      }
-    }
-  }
+  // const onToggle = () => {
+  //   if (!soundRef.current) {
+  //     const sound = new Sound(t(`plan_${plan}.url`), undefined)
+  //     soundRef.current = sound
+  //     const interval = setInterval(() => {
+  //       const isLoaded = soundRef.current?.isLoaded()
+  //       setSoundLoading(!isLoaded)
+  //       if (isLoaded) {
+  //         soundRef.current?.play()
+  //         setIsPaying(true)
+  //         clearInterval(interval)
+  //       }
+  //     }, 400)
+  //     return
+  //   }
+  //   if (soundRef.current?.isPlaying()) {
+  //     soundRef.current.pause()
+  //     setIsPaying(false)
+  //   } else {
+  //     soundRef.current?.play()
+  //     if (soundRef.current && soundRef.current.isLoaded()) {
+  //       setIsPaying(true)
+  //     }
+  //   }
+  // }
 
   return (
     <AppContainer
@@ -105,11 +105,11 @@ const PlansDetailScreen = observer(({ navigation, route }: PlansDetailScreenT) =
       <KeyboardContainer>
         <ScrollView>
           <Space height={vs(10)} />
-          {soundLoading ? (
+          {/* {soundLoading ? (
             <Loading size={s(60)} />
           ) : (
             <ButtonPlay onPress={onToggle} isStop={isPlaying} />
-          )}
+          )} */}
           <Space height={vs(10)} />
           {Platform.OS === 'ios' ? (
             <SelectableIOS h={'h7'} title={t(`plan_${plan}.content`)} textStyle={h3} />

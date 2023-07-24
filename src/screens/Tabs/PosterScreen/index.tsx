@@ -22,12 +22,16 @@ const PosterScreen = observer(({}: PosterScreenT) => {
     OnlinePlayer.getPoster()
   }, [])
 
-  const { buttonColor, imgUrl, eventUrl } = OnlinePlayer.store.poster || {}
+  const buttonColor = '#AA6100'
+  const imgUrl = './poster.jpg'
+  const eventUrl = 'https://t.me/playom'
 
   const { t } = useTranslation()
-
+  console.log('buttonColor', buttonColor)
+  console.log('imgUrl', imgUrl)
+  console.log('eventUrl', eventUrl)
   return (
-    <ImageBackground resizeMode="cover" source={{ uri: imgUrl }} style={img}>
+    <ImageBackground resizeMode="cover" source={require(imgUrl)} style={img}>
       <View style={styles.btnMoreContainer}>
         <BlurView blurType={'light'} blurAmount={10} style={styles.blurBackground} />
         <ButtonWithIcon
