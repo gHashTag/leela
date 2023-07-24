@@ -260,8 +260,7 @@ const getImagePicker = async () => {
 }
 
 const getIMG = async (fileName?: string) => {
-  const defaultImg =
-    'https://leelachakra.com/resource/LeelaChakra/defaultProfileImage.png'
+  const defaultImg = require('../../assets/defaultImage/defaultProfileImage.png')
   if (fileName) {
     try {
       return await storage().ref(fileName).getDownloadURL()

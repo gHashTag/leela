@@ -1,13 +1,17 @@
 import React, { Fragment, useEffect, useState } from 'react'
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+// import en1 from 'assets/about/en1.md'
+// import en2 from 'assets/about/en2.md'
+// import ru1 from 'assets/about/ru1.md'
+// import ru2 from 'assets/about/ru2.md'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import Markdown from 'react-native-markdown-display'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ms, s, vs } from 'react-native-size-matters'
-import { ruOrEnLang } from 'src/i18n'
+// import { ruOrEnLang } from 'src/i18n'
 
 import {
   Background,
@@ -38,6 +42,8 @@ export const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => 
 
   const { t } = useTranslation()
 
+  // const md1 = ruOrEnLang === 'ru' ? ru1 : en1
+  // const md2 = ruOrEnLang === 'ru' ? ru2 : en2
   useEffect(() => {
     const getData = async () => {
       try {
@@ -47,16 +53,8 @@ export const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => 
           )
         ).json()
         setImages(imagesData)
-        const mdContent1 = await (
-          await fetch(
-            `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${ruOrEnLang}1.md`,
-          )
-        ).text()
-        const mdContent2 = await (
-          await fetch(
-            `https://leelachakra.com/resource/LeelaChakra/InfoAboutGameAndAuthors/${ruOrEnLang}2.md`,
-          )
-        ).text()
+        const mdContent1 = await (await fetch(md1)).text()
+        const mdContent2 = await (await fetch(md2)).text()
         setMdContent([mdContent1, mdContent2])
       } catch (error) {
         captureException(error)

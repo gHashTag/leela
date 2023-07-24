@@ -11,7 +11,7 @@ import { ButtonWithIcon, Header, Space } from 'src/components'
 import { brightTurquoise, onLeaveFeedback, trueBlue } from 'src/constants'
 import { DiceStore, actionsDice } from 'src/store'
 
-const LEELA_AI = 'https://leelachakra.com/resource/LeelaChakra/PhotoLeela/leelaAI.JPG'
+const LEELA_AI = require('../../../../assets/defaultImage/leelaAI.jpg')
 
 interface IContextSummary {
   user: string[]
