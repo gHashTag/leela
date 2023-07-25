@@ -41,7 +41,7 @@ async function upFuncOnline(step: stepT) {
       OnlinePlayer.store.finish = true
     }
   } catch (err) {
-    captureException(err)
+    captureException(err, 'upFuncOnline')
   }
 }
 

@@ -86,7 +86,7 @@ export const useSignUp = () => {
                 setError(t('manyRequests'))
                 break
               default:
-                captureException(exception.message)
+                captureException(exception.message, 'useSignUp')
                 setError(exception.code)
                 break
             }

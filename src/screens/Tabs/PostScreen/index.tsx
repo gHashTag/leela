@@ -29,7 +29,9 @@ export const PostScreen = observer(({}: Ipost) => {
         .collection('Posts')
         .orderBy('createTime', 'desc')
         .limit(limit)
-        .onSnapshot(PostStore.fetchPosts, err => captureException(err))
+        .onSnapshot(PostStore.fetchPosts, err =>
+          captureException(err, 'PostStore.fetchPosts'),
+        )
       return () => {
         subPosts()
       }

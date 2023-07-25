@@ -29,7 +29,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
   subscribe(listener) {
     const unsubscribe = Branch.subscribe(async ({ error, params, uri }) => {
       if (error) {
-        captureException(error)
+        captureException(error, 'linking')
         return
       }
       if (uri) {

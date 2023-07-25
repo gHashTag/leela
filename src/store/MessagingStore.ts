@@ -49,7 +49,7 @@ const saveTokenToDatabase = async (token: string) => {
         })
     }
   } catch (e) {
-    captureException(e)
+    captureException(e, 'saveTokenToDatabase')
   }
 }
 
@@ -64,7 +64,7 @@ const delTokenOnSignOut = async () => {
         tokens: firestore.FieldValue.arrayRemove(token),
       })
   } catch (error) {
-    captureException(error)
+    captureException(error, 'delTokenOnSignOut')
   }
 }
 

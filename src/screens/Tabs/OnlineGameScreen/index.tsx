@@ -57,7 +57,7 @@ export const OnlineGameScreen = observer(({ navigation }: OnlineGameScreenT) => 
         const mdContent2 = await (await fetch(md2)).text()
         setMdContent([mdContent1, mdContent2])
       } catch (error) {
-        captureException(error)
+        captureException(error, 'leelaPhoto.json')
       }
     }
     getData()

@@ -111,7 +111,9 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
               <Space height={30} />
               <Button
                 title={t('done')}
-                onPress={methods.handleSubmit(onSubmit, error => captureException(error))}
+                onPress={methods.handleSubmit(onSubmit, error =>
+                  captureException(error, 'UserEdit'),
+                )}
               />
               <Space height={vs(10)} />
             </FormProvider>

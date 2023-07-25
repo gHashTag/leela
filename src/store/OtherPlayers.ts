@@ -31,7 +31,7 @@ export const OtherPlayers = {
               .then(async snapshotOnline => {
                 isOnline = snapshotOnline.val()
               })
-              .catch(err => captureException(err))
+              .catch(err => captureException(err, 'getOtherProf'))
             const result: OtherUsersT = {
               email: data.email,
               plan: data.plan,

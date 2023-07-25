@@ -31,7 +31,7 @@ export const useKeychain = () => {
       }
       isConnected !== null && setLoading(false)
     } catch (err) {
-      captureException(err)
+      captureException(err, 'key')
       isConnected !== null && setLoading(false)
       return Promise.reject()
     }

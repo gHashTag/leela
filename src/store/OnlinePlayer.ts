@@ -53,12 +53,6 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
     isReported: true,
     avatar: '',
     profile: initProfile,
-    // poster
-    poster: {
-      imgUrl: 'https://leelachakra.com/resource/LeelaChakra/poster.JPG',
-      eventUrl: '',
-      buttonColor: '#1c1c1c',
-    },
     isPosterLoading: false,
   },
   async resetGame(): Promise<void> {
@@ -74,7 +68,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       await resetHistory()
       await updatePlan(68)
     } catch (err) {
-      captureException(err)
+      captureException(err, 'resetGame')
     }
   },
   async SignOut(): Promise<void> {
@@ -100,7 +94,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       await auth().signOut()
       navigate('HELLO')
     } catch (err) {
-      captureException(err)
+      captureException(err, 'SignOut')
     }
   },
   async SignOutToOffline(): Promise<void> {
@@ -121,7 +115,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       actionsDice.resetPlayer()
       await auth().signOut()
     } catch (err) {
-      captureException(err)
+      captureException(err, 'SignOutToOffline')
     }
   },
   async getProfile(): Promise<void> {
@@ -160,7 +154,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       }
       OnlinePlayer.store.loadingProf = false
     } catch (error) {
-      captureException(error)
+      captureException(error, 'getProfile')
     }
   },
   async uploadImage(): Promise<void> {
@@ -181,29 +175,15 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
           })
           OnlinePlayer.store.avatar = await getIMG(fileName)
         } catch (error) {
-          captureException(error)
+          captureException(error, 'uploadImage')
         }
       }
     } catch (error) {
-      captureException(error)
+      captureException(error, 'uploadImage')
     }
   },
   async updateStep(): Promise<void> {
     upStepOnline()
-  },
-  async getPoster(): Promise<void> {
-    try {
-      OnlinePlayer.store.isPosterLoading = true
-      const jsonResponse = await (
-        await fetch('https://leelachakra.com/resource/LeelaChakra/poster.json')
-      ).json()
-
-      OnlinePlayer.store.poster = jsonResponse
-    } catch (error) {
-      captureException(error)
-    } finally {
-      OnlinePlayer.store.isPosterLoading = false
-    }
   },
   getLeftTime(lastTime) {
     const day = 86400000
@@ -241,7 +221,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
             .catch(error => console.log(error))
       navigate('HELLO')
     } catch (err) {
-      captureException(err)
+      captureException(err, 'deleteUser')
     }
   },
 })
@@ -253,7 +233,6 @@ interface Istore {
   getProfile: () => Promise<void>
   uploadImage: () => Promise<void>
   updateStep: () => Promise<void>
-  getPoster: () => Promise<void>
   SignOutToOffline: () => Promise<void>
   getLeftTime: (lastTime: number) => string
   deleteUser: () => Promise<void>
@@ -278,12 +257,6 @@ interface OnlinePlayerStore {
     lastName: string
     email: string
     intention: string
-  }
-  // poster
-  poster: {
-    imgUrl: string
-    eventUrl: string
-    buttonColor: string
   }
   isPosterLoading: boolean
   flagEmoji?: string

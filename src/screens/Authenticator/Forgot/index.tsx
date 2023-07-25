@@ -81,13 +81,13 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
       } else {
         setErrorMessage(error.code)
       }
-      captureException(error.code)
+      captureException(error.code, 'onSubmit')
     }
     setLoading(false)
   }
 
   const onError: SubmitErrorHandler<FieldValues> = errors => {
-    captureException(errors)
+    captureException(errors, 'Forgot')
   }
 
   const { dark } = useTheme()

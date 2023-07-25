@@ -43,7 +43,7 @@ const getProfile = async (): Promise<UserT | undefined> => {
     const response = await firestore().collection('Profiles').doc(userUid).get()
     res = response.data() as UserT
   } catch (err) {
-    captureException(err)
+    captureException(err, 'getProfile')
   }
   return res
 }
@@ -159,7 +159,7 @@ const updateProfName = async ({ firstName, lastName }: profNameI) => {
     OnlinePlayer.store.profile.firstName = firstName
     OnlinePlayer.store.profile.lastName = lastName
   } catch (err) {
-    captureException(err)
+    captureException(err, 'updateProfName')
   }
 }
 const updateIntention = async (newIntention: string) => {
@@ -169,7 +169,7 @@ const updateIntention = async (newIntention: string) => {
     })
     OnlinePlayer.store.profile.intention = newIntention
   } catch (err) {
-    captureException(err)
+    captureException(err, 'updateIntention')
   }
 }
 
@@ -220,7 +220,7 @@ const createHistory = async (values: HistoryT) => {
       }
     }
   } catch (err) {
-    captureException(err)
+    captureException(err, 'createHistory')
   }
 }
 
@@ -361,7 +361,7 @@ const onSignIn = async (
       })
     }
   } catch (error) {
-    captureException(error)
+    captureException(error, 'onSignIn')
   }
 }
 

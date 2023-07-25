@@ -91,7 +91,9 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
             <Space height={10} />
             <Button
               title={t('done')}
-              onPress={methods.handleSubmit(onSubmit, errors => captureException(errors))}
+              onPress={methods.handleSubmit(onSubmit, errors =>
+                captureException(errors, 'ChangeIntention'),
+              )}
             />
             <Space height={vs(50)} />
           </FormProvider>

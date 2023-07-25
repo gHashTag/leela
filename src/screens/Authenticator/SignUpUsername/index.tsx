@@ -95,7 +95,7 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     setLoading(false)
   }
   const onError: SubmitErrorHandler<FieldValues> = errors => {
-    captureException(errors)
+    captureException(errors, 'SignUpUsername')
   }
 
   const { dark } = useTheme()

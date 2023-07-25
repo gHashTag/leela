@@ -43,7 +43,7 @@ export async function buildReportLink(reportId: string, reportText: string) {
 
     return url
   } catch (error) {
-    captureException(error)
+    captureException(error, 'buildReportLink')
     return 'error'
   }
 }

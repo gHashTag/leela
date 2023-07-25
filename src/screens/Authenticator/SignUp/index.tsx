@@ -22,7 +22,7 @@ import { H, W, black, captureException, goBack, white } from '../../../constants
 export const SignUp = (): ReactElement => {
   const { loading, error, methods, onSubmit } = useSignUp()
   const onError: SubmitErrorHandler<FieldValues> = errors => {
-    captureException(errors)
+    captureException(errors, 'SignUp')
   }
   const { t } = useTranslation()
 

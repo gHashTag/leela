@@ -58,7 +58,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
         setArray(await response.json())
         setLoading(false)
       } catch (e) {
-        captureException(e)
+        captureException(e, 'getData')
         setLoading(false)
       }
     }

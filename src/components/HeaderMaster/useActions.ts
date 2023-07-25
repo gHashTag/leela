@@ -14,7 +14,7 @@ export const useActions = () => {
     try {
       await OnlinePlayer.uploadImage()
     } catch (error) {
-      captureException(error)
+      captureException(error, 'useActions')
     }
     setLoadImage(false)
   }

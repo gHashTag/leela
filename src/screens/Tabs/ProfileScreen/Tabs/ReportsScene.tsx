@@ -27,7 +27,7 @@ export const ReportsScene = observer(() => {
       .where('ownerId', '==', getUid())
       .orderBy('createTime', 'desc')
       .limit(limit)
-      .onSnapshot(PostStore.fetchOwnPosts, captureException)
+      .onSnapshot(PostStore.fetchOwnPosts, error => captureException(error, 'subPosts'))
     return () => {
       subPosts()
     }

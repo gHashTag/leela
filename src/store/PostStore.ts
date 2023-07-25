@@ -87,7 +87,7 @@ export const PostStore = {
         }
       } catch (error) {
         console.error(error)
-        captureException(error)
+        captureException(error, 'createPost')
         throw error
       }
     }
@@ -121,7 +121,7 @@ export const PostStore = {
       }
     } catch (error) {
       console.error(error)
-      captureException(error)
+      captureException(error, 'createComment')
       throw error
     }
   },
@@ -303,7 +303,7 @@ export const PostStore = {
         return res.translations[0].text
       }
     } catch (err) {
-      captureException(err)
+      captureException(err, 'translateText')
     }
     return text
   },
@@ -328,7 +328,7 @@ export const PostStore = {
         }
       }
     } catch (error) {
-      captureException(error)
+      captureException(error, 'banUnbanUser')
     }
   },
   delPost: (id: string) => {

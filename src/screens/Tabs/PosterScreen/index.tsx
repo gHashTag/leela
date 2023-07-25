@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 
 import { BlurView } from '@react-native-community/blur'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -8,7 +8,6 @@ import { ImageBackground, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import { ButtonWithIcon } from 'src/components'
 import { openUrl } from 'src/constants'
-import { OnlinePlayer } from 'src/store'
 import { RootTabParamList } from 'src/types'
 
 type navigation = NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_0'>
@@ -18,18 +17,12 @@ type PosterScreenT = {
 }
 
 const PosterScreen = observer(({}: PosterScreenT) => {
-  useEffect(() => {
-    OnlinePlayer.getPoster()
-  }, [])
-
   const buttonColor = '#AA6100'
   const imgUrl = './poster.jpg'
   const eventUrl = 'https://t.me/playom'
 
   const { t } = useTranslation()
-  console.log('buttonColor', buttonColor)
-  console.log('imgUrl', imgUrl)
-  console.log('eventUrl', eventUrl)
+
   return (
     <ImageBackground resizeMode="cover" source={require(imgUrl)} style={img}>
       <View style={styles.btnMoreContainer}>

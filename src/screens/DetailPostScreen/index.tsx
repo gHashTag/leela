@@ -51,7 +51,9 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
           const subComments = firestore()
             .collection('Comments')
             .where('postId', '==', curItem.id)
-            .onSnapshot(PostStore.fetchComments, err => captureException(err))
+            .onSnapshot(PostStore.fetchComments, err =>
+              captureException(err, 'DetailPostScreen'),
+            )
           return subComments
         }
       }, [curItem]),

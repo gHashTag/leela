@@ -55,8 +55,7 @@ export const generateComment = async ({
 
     return response?.data?.choices[0]?.message?.content ?? ''
   } catch (error) {
-    console.log('error', error)
-    captureException(error)
+    captureException(error, 'generateComment')
     throw error
   }
 }
@@ -143,7 +142,7 @@ export const accountHasBanAlert = () => {
   Alert.alert(i18next.t('online-part.accountBanned'), undefined, [{ text: 'OK' }])
 }
 
-export const captureException = (error: any) => {
+export const captureException = (error: any, target: string) => {
   if (!error) {
     console.log(
       '%c captureException called with messing or incorrect arguments',
@@ -151,7 +150,7 @@ export const captureException = (error: any) => {
     )
     return
   }
-  console.error(`My Error: ${error}`)
+  console.error(`On:${target}/ My Error: ${error} `)
   if (!__DEV__) {
     Sentry.captureException(error)
   }

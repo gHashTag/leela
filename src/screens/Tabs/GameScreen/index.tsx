@@ -53,7 +53,9 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           .limit(limit)
       : firestore().collection('Posts').orderBy('createTime', 'desc').limit(limit)
 
-    const unsubscribe = query.onSnapshot(PostStore.fetchOwnPosts, captureException)
+    const unsubscribe = query.onSnapshot(PostStore.fetchOwnPosts, error =>
+      captureException(error, 'fetchOwnPosts'),
+    )
 
     return () => {
       unsubscribe()

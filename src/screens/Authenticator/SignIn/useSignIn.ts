@@ -75,7 +75,7 @@ export const useSignIn = () => {
               setError(t('manyRequests'))
               break
             default:
-              captureException(err.message)
+              captureException(err.message, 'onSubmit')
               setError(err.code)
               break
           }

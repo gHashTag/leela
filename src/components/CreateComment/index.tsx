@@ -63,7 +63,7 @@ export function CreateComment({
             additionalStyle={input}
             showError={false}
             onSubmitEditing={methods.handleSubmit(handleSubmit, error =>
-              captureException(error),
+              captureException(error, 'CreateComment'),
             )}
           />
           <Text h="h9" title={`(${length}/250)`} />

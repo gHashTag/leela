@@ -36,7 +36,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
   const { t } = useTranslation()
 
   const onError: SubmitErrorHandler<FieldValues> = errors => {
-    captureException(errors)
+    captureException(errors, 'SignIn')
   }
 
   const handleForgot = () => {
