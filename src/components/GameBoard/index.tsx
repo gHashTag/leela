@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react'
+import React, { useMemo } from 'react'
 
 import { observer } from 'mobx-react'
 import { Image, StyleSheet, View, useColorScheme } from 'react-native'
@@ -6,17 +6,17 @@ import { ms, mvs, s } from 'react-native-size-matters'
 
 import { ICONS } from './images'
 
-import { Space, Text } from '../'
+import { Text } from '../'
 import { H, W } from '../../constants'
-import { DiceStore, OfflinePlayers, OnlinePlayer, OtherPlayers } from '../../store'
+import { DiceStore } from '../../store'
 import { Gem } from '../Gem'
 
-type OffLineProps = {
-  b: number
-  index: number
-  check: (z: number) => number | false
-  DiceStore: any // Тип DiceStore может отличаться, укажите соответствующий тип данных
-}
+// type OffLineProps = {
+//   b: number
+//   index: number
+//   check: (z: number) => number | false
+//   DiceStore: any // Тип DiceStore может отличаться, укажите соответствующий тип данных
+// }
 
 const marginTop = H - W > 350 ? 20 : 0
 

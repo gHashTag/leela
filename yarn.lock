@@ -6992,6 +6992,11 @@ react-native-parsed-text@0.0.22:
   dependencies:
     prop-types "^15.7.x"
 
+react-native-purchases@^6.3.0:
+  version "6.3.0"
+  resolved "https://registry.yarnpkg.com/react-native-purchases/-/react-native-purchases-6.3.0.tgz#9526da263d146f09626ffcbd096b51fd749d78c0"
+  integrity sha512-7kBP8ixxdY8sMan55okHNfrPkUks3+FCNKZn0NvCqg9n8pEhFDySZMwlD/1I6QZHiJBByybnXPMRgLNtkmH4nw==
+
 react-native-rate@^1.2.9:
   version "1.2.12"
   resolved "https://registry.yarnpkg.com/react-native-rate/-/react-native-rate-1.2.12.tgz#d4307b2994f9c849b987eb65599ec467db4aee04"

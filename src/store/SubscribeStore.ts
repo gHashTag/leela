@@ -1,5 +1,6 @@
 import { makeAutoObservable } from 'mobx'
 import { makePersistable } from 'mobx-persist-store'
+import Purchases from 'react-native-purchases'
 
 const SubscribeStore = makeAutoObservable({
   visible: false,
@@ -16,9 +17,10 @@ const actionsSubscribe = {
   setToday(date: string) {
     SubscribeStore.today = date
   },
-  async purchaserInfo() {
-    // const purchaserInfo = await Purchases.getPurchaserInfo()
-    // // console.log('purchaserInfo', purchaserInfo.entitlements.active)
+  async getOfferings() {
+    const purchaserInfo = await Purchases.getOfferings()
+    console.log('purchaserInfo', purchaserInfo)
+    //const availablePackages = offerings.all.default.availablePackages;
     // if (typeof purchaserInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
     //   SubscribeStore.subscriptionActive = true
     //   SubscribeStore.visible = false

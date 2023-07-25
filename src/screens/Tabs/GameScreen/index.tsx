@@ -4,7 +4,7 @@ import firestore from '@react-native-firebase/firestore'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
+import { Button, StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import { captureException, onLeaveFeedback } from 'src/constants'
 import { getUid } from 'src/screens/helper'
@@ -16,7 +16,6 @@ import {
   GameBoard,
   Header,
   Space,
-  Spin,
   Text,
 } from '../../../components'
 import { useLeftTimeForStep } from '../../../hooks'
@@ -26,6 +25,7 @@ import {
   OnlinePlayer,
   PostStore,
   actionsDice,
+  actionsSubscribe,
 } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types'
 
@@ -69,16 +69,11 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   const endGame = DiceStore.online
     ? OnlinePlayer.store.finish
     : DiceStore.finishArr.indexOf(true) === -1
-  const { loadingProf } = OnlinePlayer.store
 
   const postsCount = PostStore.store.ownPosts.length
 
   const postsBool = postsCount >= 3
-  return loadingProf && DiceStore.online ? (
-    <Background enableTopInsets>
-      <Spin centered />
-    </Background>
-  ) : (
+  return (
     <>
       <Background enableTopInsets paddingTop={vs(50)}>
         <Header
@@ -115,6 +110,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           )}
         </Header>
         {!endGame && <Dice />}
+        <Button title="getOffering" onPress={() => actionsSubscribe.getOfferings()} />
         <GameBoard />
       </Background>
     </>
