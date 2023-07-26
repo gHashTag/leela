@@ -503,5 +503,9 @@
   "requireField": "Zorunlu alan",
   "manyCharacters": "Çok fazla sembol, maksimum - ",
   "fewChars": "En az 100 karakter olmalıdır",
-  "twoSymbolRequire": "Alan en az 2 karakter içermelidir"
+  "twoSymbolRequire": "Alan en az 2 karakter içermelidir",
+  "descriptionSubscriptions": "Leela AI oyununun deneme sürümü sona erdi. Devam etmek için bir abonelik satın almanız gerekmektedir.",
+  "buy": "Satın Al",
+  "alreadyBought": "Zaten Satın Alındı mı?",
+  "chooseSubscription": "Abonelik Seçin:"
 }

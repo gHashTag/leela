@@ -504,5 +504,9 @@
   "requireField": "Champ obligatoire",
   "manyCharacters": "Trop de symboles, maximum - ",
   "fewChars": "Le minimum doit être de 100 caractères",
-  "twoSymbolRequire": "Le champ doit contenir au moins 2 caractères"
+  "twoSymbolRequire": "Le champ doit contenir au moins 2 caractères",
+  "descriptionSubscriptions": "La version d'essai du jeu Leela AI est terminée. Pour continuer, vous devez souscrire à un abonnement.",
+  "buy": "Acheter",
+  "alreadyBought": "Déjà acheté ?",
+  "chooseSubscription": "Choisissez l'abonnement :"
 }

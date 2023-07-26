@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react'
-
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import * as Sentry from '@sentry/react'
 import { observer } from 'mobx-react'
+import React, { useEffect } from 'react'
 import { StatusBar, useColorScheme } from 'react-native'
 import Orientation from 'react-native-orientation-locker'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
+import TabBar from 'src/TabBar'
 import { Fallback } from 'src/components'
 import { black, lightGray, navRef, white } from 'src/constants'
 import { useExitModal, useGameAndProfileIsOnline, useNetwork } from 'src/hooks'
@@ -21,8 +21,7 @@ import {
   GameScreen,
   InputTextModal,
   NetworkModal,
-  OfflineProfileScreen,
-  // OnlineGameScreen,
+  OfflineProfileScreen, // OnlineGameScreen,
   PlanReportModal,
   PlansDetailScreen,
   PlansScreen,
@@ -33,6 +32,7 @@ import {
   RulesDetailScreen,
   RulesScreen,
   SelectPlayersScreen,
+  SubscriptionScreen,
   UpdateVersionModal,
   UserProfileScreen,
   VideoPopup,
@@ -51,7 +51,6 @@ import {
 } from 'src/screens/Authenticator'
 import { checkVersion, getFireBaseRef } from 'src/screens/helper'
 import { DiceStore } from 'src/store'
-import TabBar from 'src/TabBar'
 import { RootStackParamList, RootTabParamList } from 'src/types'
 import { linking } from 'src/utils'
 
@@ -88,7 +87,7 @@ const Tab = observer(() => {
 
   return (
     <TabNavigator.Navigator
-      tabBar={props => <TabBar {...props} />}
+      tabBar={(props) => <TabBar {...props} />}
       tabBarPosition="bottom"
       screenOptions={{
         swipeEnabled: false,
@@ -131,7 +130,7 @@ const App = () => {
   }, [isDark])
 
   useEffect(() => {
-    const unsub = getFireBaseRef('/minVersion/').on('value', async snap => {
+    const unsub = getFireBaseRef('/minVersion/').on('value', async (snap) => {
       checkVersion(snap.val())
     })
     return () => getFireBaseRef('/minVersion/').off('value', unsub)
@@ -161,7 +160,10 @@ const App = () => {
         >
           <Stack.Screen name="SIGN_IN" component={SignIn} />
           <Stack.Screen name="FORGOT" component={Forgot} />
-          <Stack.Screen name="FORGOT_PASSWORD_SUBMIT" component={ForgotPassSubmit} />
+          <Stack.Screen
+            name="FORGOT_PASSWORD_SUBMIT"
+            component={ForgotPassSubmit}
+          />
           <Stack.Screen name="SIGN_UP" component={SignUp} />
           <Stack.Screen name="SIGN_UP_USERNAME" component={SignUpUsername} />
           <Stack.Screen name="SIGN_UP_AVATAR" component={SignUpAvatar} />
@@ -170,7 +172,10 @@ const App = () => {
 
         <Stack.Screen name="WELCOME_SCREEN" component={WelcomeScreen} />
         <Stack.Screen name="HELLO" component={Hello} />
-        <Stack.Screen name="SELECT_PLAYERS_SCREEN" component={SelectPlayersScreen} />
+        <Stack.Screen
+          name="SELECT_PLAYERS_SCREEN"
+          component={SelectPlayersScreen}
+        />
 
         <Stack.Screen name="MAIN" component={Tab} />
         {/* Rules */}
@@ -180,7 +185,10 @@ const App = () => {
           }}
         >
           <Stack.Screen name="RULES_SCREEN" component={RulesScreen} />
-          <Stack.Screen name="RULES_DETAIL_SCREEN" component={RulesDetailScreen} />
+          <Stack.Screen
+            name="RULES_DETAIL_SCREEN"
+            component={RulesDetailScreen}
+          />
         </Stack.Group>
 
         {/* Plans */}
@@ -189,7 +197,10 @@ const App = () => {
             animation: 'slide_from_right',
           }}
         >
-          <Stack.Screen name="USER_PROFILE_SCREEN" component={UserProfileScreen} />
+          <Stack.Screen
+            name="USER_PROFILE_SCREEN"
+            component={UserProfileScreen}
+          />
           <Stack.Screen name="PLANS_SCREEN" component={PlansScreen} />
           <Stack.Screen
             name="PLANS_DETAIL_SCREEN"
@@ -200,7 +211,10 @@ const App = () => {
 
         <Stack.Screen name="PLAYRA_SCREEN" component={PlayraScreen} />
         <Stack.Screen name="USER_EDIT" component={UserEdit} />
-        <Stack.Screen name="CHANGE_INTENTION_SCREEN" component={ChangeIntention} />
+        <Stack.Screen
+          name="CHANGE_INTENTION_SCREEN"
+          component={ChangeIntention}
+        />
         {/* Post */}
         <Stack.Screen
           options={{
@@ -211,6 +225,7 @@ const App = () => {
         />
         {/* Modals */}
         <Stack.Screen name="VIDEO_SCREEN" component={VideoPopup} />
+
         <Stack.Group
           screenOptions={{
             presentation: 'transparentModal',
@@ -218,7 +233,14 @@ const App = () => {
             gestureEnabled: false,
           }}
         >
-          <Stack.Screen name="UPDATE_VERSION_MODAL" component={UpdateVersionModal} />
+          <Stack.Screen
+            name="SUBSCRIPTION_SCREEN"
+            component={SubscriptionScreen}
+          />
+          <Stack.Screen
+            name="UPDATE_VERSION_MODAL"
+            component={UpdateVersionModal}
+          />
           <Stack.Screen
             name="REPLY_MODAL"
             options={{

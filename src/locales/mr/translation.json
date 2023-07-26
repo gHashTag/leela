@@ -1,3 +1,4 @@
+//Bengali
 {
   "foreword": {
     "title": "प्रस्तावना",
@@ -503,5 +504,9 @@
   "requireField": "आवश्यक फील्ड",
   "manyCharacters": "खूप जास्त चिन्हे, कमाल - ",
   "fewChars": "किमान असणे आवश्यक आहे 100 वर्ण",
-  "twoSymbolRequire": "फील्ड किमान 2 वर्ण असणे आवश्यक आहे"
+  "twoSymbolRequire": "फील्ड किमान 2 वर्ण असणे आवश्यक आहे",
+  "descriptionSubscriptions": "Leela AI গেমের পরীক্ষামূলক সংস্করণ শেষ হয়েছে। চালিয়ে যাওয়ার জন্য, একটি সাবস্ক্রিপশন কিনতে হবে।",
+  "buy": "কিনুন",
+  "alreadyBought": "ইতিমধ্যে কিনেছেন?",
+  "chooseSubscription": "সাবস্ক্রিপশন বেছে নিন:"
 }

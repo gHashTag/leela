@@ -20,6 +20,7 @@ export type RootStackParamList = {
   PLAYRA_SCREEN: undefined
   MAIN: NavigatorScreenParams<RootTabParamList>
   RULES_SCREEN: undefined
+  SUBSCRIPTION_SCREEN: undefined
   RULES_DETAIL_SCREEN: {
     title: string
     content: string

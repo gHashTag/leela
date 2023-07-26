@@ -1,8 +1,7 @@
-import React, { memo, useEffect, useState } from 'react'
-
 import { useFocusEffect } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
+import React, { memo, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, Image, StyleSheet, View } from 'react-native'
 import { ThemeProvider } from 'react-native-elements'
@@ -12,7 +11,12 @@ import Spin from 'react-native-spinkit'
 
 import { AppContainer, SocialLinks, Space, Text } from '../../components'
 import { Pressable } from '../../components/Pressable'
-import { OpenVideoModal, captureException, primary, secondary } from '../../constants'
+import {
+  OpenVideoModal,
+  captureException,
+  primary,
+  secondary,
+} from '../../constants'
 import { RootStackParamList } from '../../types'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLAYRA_SCREEN'>
@@ -132,7 +136,7 @@ const RenderItem = memo(({ item }: PlayraItemT) => {
   return (
     <View style={page.videoContainer}>
       <Space height={vs(10)} />
-      <Pressable activeOpacity={0.8} onPress={handlePress}>
+      <Pressable onPress={handlePress}>
         <Text h={'h1'} title={title} />
         <Space height={vs(20)} />
         <View style={page.videoView}>

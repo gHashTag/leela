@@ -1,3 +1,4 @@
+//bahasa Melayu
 {
   "foreword": {
     "title": "Kata pengantar",
@@ -503,5 +504,9 @@
   "requireField": "Medan yang diperlukan",
   "manyCharacters": "Terlalu banyak simbol, maksimum - ",
   "fewChars": "Minimum mestilah 100 aksara",
-  "twoSymbolRequire": "Medan mesti mengandungi sekurang-kurangnya 2 aksara"
+  "twoSymbolRequire": "Medan mesti mengandungi sekurang-kurangnya 2 aksara",
+  "descriptionSubscriptions": "Versi percubaan permainan Leela AI telah berakhir. Untuk meneruskan, anda perlu melanggan langganan.",
+  "buy": "Beli",
+  "alreadyBought": "Sudah dibeli?",
+  "chooseSubscription": "Pilih langganan:"
 }

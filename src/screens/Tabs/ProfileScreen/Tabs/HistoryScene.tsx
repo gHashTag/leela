@@ -15,6 +15,7 @@ export const HistoryScene = observer(() => {
   const data = useHistoryData() as HistoryT[]
   const { panGesture1, scrollViewGesture1, scrollOffset1, blockScrollUntilAtTheTop1 } =
     useContext(TabContext) as any
+
   return (
     <GestureDetector
       gesture={Gesture.Simultaneous(
@@ -37,7 +38,7 @@ export const HistoryScene = observer(() => {
           maxToRenderPerBatch={60}
           data={data}
           renderItem={props => <HistoryStep {...props} />}
-          keyExtractor={(e, id) => String(id)}
+          keyExtractor={item => String(item.createDate)}
           showsVerticalScrollIndicator={false}
         />
       </Animated.ScrollView>

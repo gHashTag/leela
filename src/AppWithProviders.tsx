@@ -5,17 +5,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Sentry from '@sentry/react-native'
 import { configure } from 'mobx'
 import { configurePersistable } from 'mobx-persist-store'
-import { AppState, LogBox, Platform, StyleSheet } from 'react-native'
+import { AppState, LogBox, StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import Purchases from 'react-native-purchases'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import SplashScreen from 'react-native-splash-screen'
 import VersionInfo from 'react-native-version-info'
 
 import Navigation from './Navigation'
+import { RevenueCatProvider } from './providers/RevenueCatProvider'
 import { updateAndroidBadgeCount } from './utils/notifications/NotificationHelper'
 
-const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation()
+const routingInstrumentation = new Sentry.ReactNavigationInstrumentation()
 
 configurePersistable(
   {
@@ -66,13 +66,6 @@ LogBox.ignoreLogs([
 function AppWithProviders() {
   useEffect(() => {
     SplashScreen.hide()
-    Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG)
-
-    if (Platform.OS === 'ios') {
-      Purchases.configure({ apiKey: 'appl_lUqsdGtWOfPfZjhMGqkZtWMSCOw' })
-    } else if (Platform.OS === 'android') {
-      Purchases.configure({ apiKey: 'goog_VsfSsFuEEZyfcnSmgOpTusMRyfl' })
-    }
     const unsub = AppState.addEventListener('change', async state => {
       if (state === 'active') {
         updateAndroidBadgeCount({ type: 'clear' })
@@ -83,11 +76,13 @@ function AppWithProviders() {
   }, [])
 
   return (
-    <SafeAreaProvider>
-      <GestureHandlerRootView style={page.flexOne}>
-        <Navigation />
-      </GestureHandlerRootView>
-    </SafeAreaProvider>
+    <RevenueCatProvider>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={page.flexOne}>
+          <Navigation />
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
+    </RevenueCatProvider>
   )
 }
 

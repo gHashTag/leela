@@ -506,5 +506,9 @@
   "requireField": "Required field",
   "manyCharacters": "Too many symbols, maximum - ",
   "fewChars": "The minimum must be 100 characters",
-  "twoSymbolRequire": "The field must contain at least 2 characters"
+  "twoSymbolRequire": "The field must contain at least 2 characters",
+  "descriptionSubscriptions": "The Leela AI test game has ended. You must subscribe to continue.",
+  "buy": "Buy",
+  "alreadyBought": "Bought already?",
+  "chooseSubscription": "Choose Subscription:"
 }

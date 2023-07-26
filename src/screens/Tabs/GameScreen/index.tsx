@@ -25,7 +25,6 @@ import {
   OnlinePlayer,
   PostStore,
   actionsDice,
-  actionsSubscribe,
 } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types'
 
@@ -112,7 +111,10 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           )}
         </Header>
         {!endGame && <Dice />}
-        <Button title="getOffering" onPress={() => actionsSubscribe.getOfferings()} />
+        <Button
+          title="getOffering"
+          onPress={() => navigation.navigate('SUBSCRIPTION_SCREEN')}
+        />
         <GameBoard />
       </Background>
     </>
