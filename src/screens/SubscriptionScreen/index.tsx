@@ -11,14 +11,22 @@ import {
 import Emoji from 'react-native-emoji'
 import { PurchasesPackage } from 'react-native-purchases'
 import { Spin, Text } from 'src/components'
-import { black, goBack, primary, secondary, white } from 'src/constants'
+import {
+  black,
+  captureException,
+  goBack,
+  primary,
+  secondary,
+  white,
+} from 'src/constants'
 
 import { useRevenueCat } from '../../providers/RevenueCatProvider'
+// @ts-ignore
 import Ganesha from './ganesha.jpg'
 
 const SubscriptionScreen: React.FC = () => {
   const { t } = useTranslation()
-  const { packages, purchasePackage } = useRevenueCat()
+  const { packages, purchasePackage, restorePermissions } = useRevenueCat()
   const [loading, setLoading] = useState<boolean>(true)
   const [selectedPackage, setSelectedPackage] =
     useState<PurchasesPackage | null>(null)
@@ -42,6 +50,15 @@ const SubscriptionScreen: React.FC = () => {
   }
   const onPress = () => goBack()
 
+  const onAlreadyBought = async () => {
+    try {
+      if (restorePermissions) {
+        await restorePermissions()
+      }
+    } catch (error) {
+      captureException(error, 'onAlreadyBought')
+    }
+  }
   return (
     <View style={styles.root}>
       <ImageBackground style={styles.poster} source={Ganesha}>
@@ -74,7 +91,7 @@ const SubscriptionScreen: React.FC = () => {
             <Text
               h="h0"
               textStyle={styles.packageTitle}
-              title={pack.product.title}
+              title={t(`${[pack.identifier]}.title`)}
             />
             <Text
               h="h0"
@@ -93,7 +110,12 @@ const SubscriptionScreen: React.FC = () => {
         >
           <Text h="h0" textStyle={styles.buttonText} title={t('buy')} />
         </TouchableOpacity>
-        <Text h="h4" textStyle={styles.bought} title={t('alreadyBought')} />
+        <Text
+          h="h4"
+          textStyle={styles.bought}
+          title={t('alreadyBought')}
+          onPress={onAlreadyBought}
+        />
       </View>
     </View>
   )
@@ -173,14 +195,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   disabledButton: {
+    width: 200,
     backgroundColor: secondary,
   },
   buttonText: {
     color: '#fff',
     fontSize: 30,
     fontWeight: 'bold',
-    width: 100,
+    width: 200,
     textAlign: 'center',
+    alignSelf: 'center',
   },
 })
 

@@ -508,5 +508,20 @@
   "descriptionSubscriptions": "Versi percubaan permainan Leela AI telah berakhir. Untuk meneruskan, anda perlu melanggan langganan.",
   "buy": "Beli",
   "alreadyBought": "Sudah dibeli?",
-  "chooseSubscription": "Pilih langganan:"
+  "chooseSubscription": "Pilih langganan:",
+  "oneMonth": "Satu bulan",
+  "sixMonths": "Enam bulan",
+  "oneYear": "Satu tahun",
+  "$rc_monthly": {
+    "title": "Sebulan",
+    "description": "Akses selama sebulan"
+  },
+  "$rc_six_month": {
+    "title": "Enam bulan",
+    "description": "Akses selama enam bulan"
+  },
+  "$rc_annual": {
+    "title": "Setahun",
+    "description": "Akses selama dua belas bulan"
+  }
 }

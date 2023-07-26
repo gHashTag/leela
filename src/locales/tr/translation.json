@@ -507,5 +507,20 @@
   "descriptionSubscriptions": "Leela AI oyununun deneme sürümü sona erdi. Devam etmek için bir abonelik satın almanız gerekmektedir.",
   "buy": "Satın Al",
   "alreadyBought": "Zaten Satın Alındı mı?",
-  "chooseSubscription": "Abonelik Seçin:"
+  "chooseSubscription": "Abonelik Seçin:",
+  "oneMonth": "Bir ay",
+  "sixMonths": "Altı ay",
+  "oneYear": "Bir yıl",
+  "$rc_monthly": {
+    "title": "Bir ay",
+    "description": "Bir aylık erişim"
+  },
+  "$rc_six_month": {
+    "title": "Altı ay",
+    "description": "Altı aylık erişim"
+  },
+  "$rc_annual": {
+    "title": "Bir yıl",
+    "description": "On iki aylık erişim"
+  }
 }

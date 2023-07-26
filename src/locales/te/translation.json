@@ -507,5 +507,17 @@
   "descriptionSubscriptions": "Leela AI గేమ్‌కి ప్రయోగ వెనుకవాటి వెనుక ఉన్నది. కొనసాగించడానికి, మీరు సభ్యత్వం చేసుకోవాలి.",
   "buy": "కొనుగోలు చేయి",
   "alreadyBought": "ఇప్పుడు కొన్నారా?",
-  "chooseSubscription": "సభ్యత్వం ఎంచుకోండి:"
+  "chooseSubscription": "సభ్యత్వం ఎంచుకోండి:",
+  "$rc_monthly": {
+    "title": "ఒక నెల",
+    "description": "ఒక నెల యాక్సెస్"
+  },
+  "$rc_six_month": {
+    "title": "ఆరు నెలలు",
+    "description": "ఆరు నెలల యాక్సెస్"
+  },
+  "$rc_annual": {
+    "title": "ఒక సంవత్సరం",
+    "description": "పదకొండి నెలల యాక్సెస్"
+  }
 }

@@ -362,5 +362,17 @@
   "descriptionSubscriptions": "Leela AI গেমের পরীক্ষামূলক সংস্করণ শেষ। চালিয়ে যাওয়ার জন্য, আপনাকে একটি সাবস্ক্রিপশন সাজাতে হবে।",
   "buy": "ক্রয় করুন",
   "alreadyBought": "ইতিমধ্যে কিনেছেন?",
-  "chooseSubscription": "সাবস্ক্রিপশন চয়ন করুন:"
+  "chooseSubscription": "সাবস্ক্রিপশন চয়ন করুন:",
+  "$rc_monthly": {
+    "title": "এক মাস",
+    "description": "এক মাসের জন্য অ্যাক্সেস"
+  },
+  "$rc_six_month": {
+    "title": "ছয় মাস",
+    "description": "ছয় মাসের জন্য অ্যাক্সেস"
+  },
+  "$rc_annual": {
+    "title": "এক বছর",
+    "description": "বারো মাসের জন্য অ্যাক্সেস"
+  }
 }

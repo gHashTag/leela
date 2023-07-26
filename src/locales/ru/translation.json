@@ -508,5 +508,17 @@
   "descriptionSubscriptions": "Тестовая версия игры Leela AI закончена. Чтобы продолжить, необходимо оформить подписку.",
   "buy": "Купить",
   "alreadyBought": "Уже купили?",
-  "chooseSubscription": "Выбрать подписку:"
+  "chooseSubscription": "Выбрать подписку:",
+  "$rc_monthly": {
+    "title": "Один месяц",
+    "description": "Доступ на один месяц"
+  },
+  "$rc_six_month": {
+    "title": "Шесть месяцев",
+    "description": "Доступ на шесть месяцев"
+  },
+  "$rc_annual": {
+    "title": "Один год",
+    "description": "Доступ на двенадцать месяцев"
+  }
 }

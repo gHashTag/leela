@@ -508,5 +508,17 @@
   "descriptionSubscriptions": "La version d'essai du jeu Leela AI est terminée. Pour continuer, vous devez souscrire à un abonnement.",
   "buy": "Acheter",
   "alreadyBought": "Déjà acheté ?",
-  "chooseSubscription": "Choisissez l'abonnement :"
+  "chooseSubscription": "Choisissez l'abonnement :",
+  "$rc_monthly": {
+    "title": "Un mois",
+    "description": "Accès pendant un mois"
+  },
+  "$rc_six_month": {
+    "title": "Six mois",
+    "description": "Accès pendant six mois"
+  },
+  "$rc_annual": {
+    "title": "Un an",
+    "description": "Accès pendant douze mois"
+  }
 }

@@ -510,5 +510,17 @@
   "descriptionSubscriptions": "The Leela AI test game has ended. You must subscribe to continue.",
   "buy": "Buy",
   "alreadyBought": "Bought already?",
-  "chooseSubscription": "Choose Subscription:"
+  "chooseSubscription": "Choose Subscription:",
+  "$rc_monthly": {
+    "title": "One month",
+    "description": "Access for one month"
+  },
+  "$rc_six_month": {
+    "title": "Six months",
+    "description": "Access for six months"
+  },
+  "$rc_annual": {
+    "title": "One year",
+    "description": "Access for twelve months"
+  }
 }

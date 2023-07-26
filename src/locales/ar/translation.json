@@ -508,5 +508,17 @@
   "descriptionSubscriptions": "انتهى الإصدار التجريبي من لعبة Leela AI. يجب عليك الاشتراك للمتابعة.",
   "buy": "يشتري",
   "alreadyBought": "اشترى بالفعل؟",
-  "chooseSubscription": "اختر اشتراكًا:"
+  "chooseSubscription": "اختر اشتراكًا:",
+  "$rc_monthly": {
+    "title": "شهر واحد",
+    "description": "الوصول لمدة شهر واحد"
+  },
+  "$rc_six_month": {
+    "title": "ستة أشهر",
+    "description": "الوصول لمدة ستة أشهر"
+  },
+  "$rc_annual": {
+    "title": "سنة واحدة",
+    "description": "الوصول لمدة اثنتا عشرة شهرًا"
+  }
 }
