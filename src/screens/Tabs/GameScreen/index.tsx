@@ -121,7 +121,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
             </>
           )}
         </Header>
-        {!endGame && isBlockGame && <Dice />}
+        {!endGame && <Dice />}
 
         {!user.pro && isBlockGame && (
           <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />

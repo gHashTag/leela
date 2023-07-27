@@ -23,7 +23,7 @@ interface HeaderT {
   textAlign?: 'center' | 'auto' | 'left' | 'right' | 'justify'
   children?: React.ReactNode
   displayStatus?: boolean
-  hidestar: boolean
+  hidestar?: boolean
 }
 
 const Header = memo<HeaderT>(
