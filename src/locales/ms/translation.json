@@ -505,13 +505,14 @@
   "manyCharacters": "Terlalu banyak simbol, maksimum - ",
   "fewChars": "Minimum mestilah 100 aksara",
   "twoSymbolRequire": "Medan mesti mengandungi sekurang-kurangnya 2 aksara",
-  "descriptionSubscriptions": "Versi percubaan permainan Leela AI telah berakhir. Untuk meneruskan, anda perlu melanggan langganan.",
+  "descriptionSubscriptions": "Versi percubaan permainan Leela AI membolehkan membuat 5 laporan. Untuk meneruskan, sila langgan.",
   "buy": "Beli",
   "alreadyBought": "Sudah dibeli?",
   "chooseSubscription": "Pilih langganan:",
   "oneMonth": "Satu bulan",
   "sixMonths": "Enam bulan",
   "oneYear": "Satu tahun",
+  "paySub": "Bayar untuk teruskan langganan",
   "$rc_monthly": {
     "title": "Sebulan",
     "description": "Akses selama sebulan"

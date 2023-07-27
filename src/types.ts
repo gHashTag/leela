@@ -82,6 +82,7 @@ export type RootTabParamList = {
   TAB_BOTTOM_2: undefined
   TAB_BOTTOM_4: undefined
   TAB_BOTTOM_5: undefined
+  SUBSCRIPTION_SCREEN: undefined
 }
 
 export type PlansT = number

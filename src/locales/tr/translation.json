@@ -504,13 +504,14 @@
   "manyCharacters": "Çok fazla sembol, maksimum - ",
   "fewChars": "En az 100 karakter olmalıdır",
   "twoSymbolRequire": "Alan en az 2 karakter içermelidir",
-  "descriptionSubscriptions": "Leela AI oyununun deneme sürümü sona erdi. Devam etmek için bir abonelik satın almanız gerekmektedir.",
+  "descriptionSubscriptions": "Leela AI oyununun deneme sürümü, 5 rapor oluşturmaya izin verir. Devam etmek için lütfen abone olun.",
   "buy": "Satın Al",
   "alreadyBought": "Zaten Satın Alındı mı?",
   "chooseSubscription": "Abonelik Seçin:",
   "oneMonth": "Bir ay",
   "sixMonths": "Altı ay",
   "oneYear": "Bir yıl",
+  "paySub": "Devam etmek için abonelik ödeyin",
   "$rc_monthly": {
     "title": "Bir ay",
     "description": "Bir aylık erişim"

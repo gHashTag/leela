@@ -505,10 +505,11 @@
   "manyCharacters": "الكثير من الرموز ، الحد الأقصى - ",
   "fewChars": "يجب أن يكون الحد الأدنى 100 حرف",
   "twoSymbolRequire": "يجب أن يحتوي الحقل على أحرف 2 على الأقل",
-  "descriptionSubscriptions": "انتهى الإصدار التجريبي من لعبة Leela AI. يجب عليك الاشتراك للمتابعة.",
+  "descriptionSubscriptions": "نسخة تجريبية من لعبة Leela AI تتيح إنشاء 5 تقارير. لمتابعة، يرجى تفعيل الاشتراك.",
   "buy": "يشتري",
   "alreadyBought": "اشترى بالفعل؟",
   "chooseSubscription": "اختر اشتراكًا:",
+  "paySub": "ادفع للاشتراك للاستمرار",
   "$rc_monthly": {
     "title": "شهر واحد",
     "description": "الوصول لمدة شهر واحد"

@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react'
-
 import firestore from '@react-native-firebase/firestore'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
@@ -11,10 +10,12 @@ import { getUid } from 'src/screens/helper'
 
 import {
   Background,
+  ButtonSimple,
   ButtonWithIcon,
   Dice,
   GameBoard,
   Header,
+  PurchaseButton,
   Space,
   Text,
 } from '../../../components'
@@ -50,9 +51,12 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           .where('ownerId', '==', uid)
           .orderBy('createTime', 'desc')
           .limit(limit)
-      : firestore().collection('Posts').orderBy('createTime', 'desc').limit(limit)
+      : firestore()
+          .collection('Posts')
+          .orderBy('createTime', 'desc')
+          .limit(limit)
 
-    const unsubscribe = query.onSnapshot(PostStore.fetchOwnPosts, error =>
+    const unsubscribe = query.onSnapshot(PostStore.fetchOwnPosts, (error) =>
       captureException(error, 'fetchOwnPosts'),
     )
 
@@ -64,7 +68,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   const { t } = useTranslation()
 
   const onPressRate = () => {
-    onLeaveFeedback(success => actionsDice.setRate(success))
+    onLeaveFeedback((success) => actionsDice.setRate(success))
   }
 
   const endGame = DiceStore.online
@@ -73,7 +77,10 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
 
   const postsCount = PostStore.store.ownPosts.length
 
-  const postsBool = postsCount >= 3
+  const isMoreThree = postsCount >= 3
+  const _onPress = () => navigation.navigate('SUBSCRIPTION_SCREEN')
+  const isSubscribe = PostStore.store.isSubscribe
+
   return (
     <>
       <Background enableTopInsets paddingTop={vs(50)}>
@@ -92,12 +99,14 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
                 h="h5"
                 title={t('actions.startOver')}
                 onPress={
-                  DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
+                  DiceStore.online
+                    ? OnlinePlayer.resetGame
+                    : OfflinePlayers.resetGame
                 }
               />
               <Space height={vs(2)} />
               <Text textStyle={page.centerText} h="h1" title={`${t('win')}`} />
-              {DiceStore.rate && postsBool ? (
+              {DiceStore.rate && isMoreThree ? (
                 <ButtonWithIcon
                   viewStyle={page.centerButton}
                   h="h5"
@@ -110,11 +119,11 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
             </>
           )}
         </Header>
-        {!endGame && <Dice />}
-        <Button
-          title="getOffering"
-          onPress={() => navigation.navigate('SUBSCRIPTION_SCREEN')}
-        />
+        {!endGame && !isSubscribe && <Dice />}
+
+        {isSubscribe && (
+          <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
+        )}
         <GameBoard />
       </Background>
     </>

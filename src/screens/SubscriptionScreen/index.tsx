@@ -1,3 +1,4 @@
+import { useTheme } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -10,11 +11,12 @@ import {
 } from 'react-native'
 import Emoji from 'react-native-emoji'
 import { PurchasesPackage } from 'react-native-purchases'
-import { Spin, Text } from 'src/components'
+import { PurchaseButton, Spin, Text } from 'src/components'
 import {
   black,
   captureException,
   goBack,
+  gray,
   primary,
   secondary,
   white,
@@ -59,8 +61,11 @@ const SubscriptionScreen: React.FC = () => {
       captureException(error, 'onAlreadyBought')
     }
   }
+  const { dark } = useTheme()
+  const backgroundColor = dark ? black : white
+
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor }]}>
       <ImageBackground style={styles.poster} source={Ganesha}>
         <Pressable onPress={onPress} style={styles.iconStyle}>
           <Emoji name=":heavy_multiplication_x:" style={styles.leftIconStyle} />
@@ -96,20 +101,16 @@ const SubscriptionScreen: React.FC = () => {
             <Text
               h="h0"
               textStyle={styles.packagePrice}
-              title={pack.product.priceString}
+              title={pack.product.priceString.slice(0, 4)}
             />
           </TouchableOpacity>
         ))}
-        <TouchableOpacity
+
+        <PurchaseButton
+          title="buy"
+          selectedPackage={selectedPackage}
           onPress={handlePurchase}
-          disabled={!selectedPackage}
-          style={[
-            styles.purchaseButton,
-            !selectedPackage && styles.disabledButton,
-          ]}
-        >
-          <Text h="h0" textStyle={styles.buttonText} title={t('buy')} />
-        </TouchableOpacity>
+        />
         <Text
           h="h4"
           textStyle={styles.bought}
@@ -124,20 +125,17 @@ const SubscriptionScreen: React.FC = () => {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: white,
   },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: white,
   },
   poster: {
     flex: 1,
     width: '100%',
-    height: '100%',
-    backgroundColor: white,
+    height: '95%',
   },
   iconStyle: {
     marginTop: 60,
@@ -152,16 +150,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   bought: {
-    top: 20,
+    top: 10,
     fontSize: 13,
     fontWeight: 'bold',
-    color: black,
+    color: gray,
     alignSelf: 'center',
   },
   test: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: black,
     alignSelf: 'center',
     textAlign: 'center',
     width: '80%',

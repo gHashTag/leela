@@ -50,7 +50,7 @@ import {
   UserEdit,
 } from 'src/screens/Authenticator'
 import { checkVersion, getFireBaseRef } from 'src/screens/helper'
-import { DiceStore } from 'src/store'
+import { DiceStore, PostStore } from 'src/store'
 import { RootStackParamList, RootTabParamList } from 'src/types'
 import { linking } from 'src/utils'
 
@@ -84,7 +84,7 @@ const Tab = observer(() => {
   useGameAndProfileIsOnline()
   useExitModal()
   useNetwork()
-
+  const isSubscribe = PostStore.store.isSubscribe
   return (
     <TabNavigator.Navigator
       tabBar={(props) => <TabBar {...props} />}
@@ -106,7 +106,12 @@ const Tab = observer(() => {
       {lang === 'ru' && (
         <TabNavigator.Screen name="TAB_BOTTOM_4" component={PosterScreen} />
       )}
-      <TabNavigator.Screen name="TAB_BOTTOM_5" component={ChatScreen} />
+      {
+        <TabNavigator.Screen
+          name="TAB_BOTTOM_5"
+          component={isSubscribe ? SubscriptionScreen : ChatScreen}
+        />
+      }
     </TabNavigator.Navigator>
   )
 })

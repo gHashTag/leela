@@ -1,19 +1,27 @@
-import React from 'react'
-
 import { observer } from 'mobx-react'
+import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { s } from 'react-native-size-matters'
 
-import { DiceStore } from '../../store'
+import { DiceStore, PostStore } from '../../store'
 import { Space } from '../Space'
 import { Text } from '../TextComponents'
 
 export const HeaderMessage = observer(() => {
+  const { t } = useTranslation()
+  const isSubscribe = PostStore.store.isSubscribe
+  const subscribeMess = isSubscribe ? t('paySub') : DiceStore.topMessage
   return (
     <>
       {DiceStore.topMessage !== ' ' && DiceStore.topMessage && (
         <View style={messContainer}>
-          <Text numberOfLines={1} h="h5" title={DiceStore.topMessage} />
+          <Text
+            numberOfLines={2}
+            h="h5"
+            title={subscribeMess}
+            textStyle={styles.textStyle}
+          />
         </View>
       )}
       <Space height={s(1)} />
@@ -25,11 +33,17 @@ export const HeaderMessage = observer(() => {
     </>
   )
 })
+
 const styles = StyleSheet.create({
   messContainer: {
     flexWrap: 'wrap',
     flexDirection: 'row',
     justifyContent: 'center',
+  },
+  textStyle: {
+    lineHeight: 22,
+    width: '100%',
+    textAlign: 'center',
   },
 })
 

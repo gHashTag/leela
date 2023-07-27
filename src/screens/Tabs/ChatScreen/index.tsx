@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react'
-
 // @ts-expect-error
 import { OPEN_AI_KEY } from '@env'
 import axios from 'axios'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { Bubble, GiftedChat, IMessage } from 'react-native-gifted-chat'
@@ -33,15 +32,18 @@ const ChatScreen: React.FC = () => {
   const updateContextSummary = (message: IMessage) => {
     const messageLimit = -5
     if (message.user._id === 1) {
-      setContextSummary(prevState => {
-        const newUserMessages = [...prevState.user, message.text].slice(messageLimit)
+      setContextSummary((prevState) => {
+        const newUserMessages = [...prevState.user, message.text].slice(
+          messageLimit,
+        )
         return { ...prevState, user: newUserMessages }
       })
     } else {
-      setContextSummary(prevState => {
-        const newAssistantMessages = [...prevState.assistant, message.text].slice(
-          messageLimit,
-        )
+      setContextSummary((prevState) => {
+        const newAssistantMessages = [
+          ...prevState.assistant,
+          message.text,
+        ].slice(messageLimit)
         return { ...prevState, assistant: newAssistantMessages }
       })
     }
@@ -64,7 +66,9 @@ const ChatScreen: React.FC = () => {
 
   const onSend = async (newMessages: IMessage[] = []) => {
     setLoading(true)
-    setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages))
+    setMessages((previousMessages) =>
+      GiftedChat.append(previousMessages, newMessages),
+    )
 
     updateContextSummary(newMessages[0])
 
@@ -73,12 +77,15 @@ const ChatScreen: React.FC = () => {
         role: 'system',
         content: t('system'),
       },
-      ...contextSummary.user.map(content => ({ role: 'user', content })),
-      ...contextSummary.assistant.map(content => ({ role: 'assistant', content })),
+      ...contextSummary.user.map((content) => ({ role: 'user', content })),
+      ...contextSummary.assistant.map((content) => ({
+        role: 'assistant',
+        content,
+      })),
       { role: 'user', content: newMessages[0].text },
     ]
 
-    setMessages(previousMessages =>
+    setMessages((previousMessages) =>
       GiftedChat.append(previousMessages, [
         {
           _id: LOADING_MESSAGE_ID,
@@ -112,15 +119,15 @@ const ChatScreen: React.FC = () => {
 
     setLoading(false)
 
-    setMessages(previousMessages =>
-      previousMessages.filter(message => message._id !== LOADING_MESSAGE_ID),
+    setMessages((previousMessages) =>
+      previousMessages.filter((message) => message._id !== LOADING_MESSAGE_ID),
     )
 
     const assistantReply = response.data.choices[0].message.content
 
     const loadingMessageId = Date.now().toString()
 
-    setMessages(previousMessages =>
+    setMessages((previousMessages) =>
       GiftedChat.append(previousMessages, [
         {
           _id: loadingMessageId,
@@ -137,10 +144,10 @@ const ChatScreen: React.FC = () => {
   }
 
   const onPressRate = () => {
-    onLeaveFeedback(success => actionsDice.setRate(success))
+    onLeaveFeedback((success) => actionsDice.setRate(success))
   }
 
-  const renderBubble = props => {
+  const renderBubble = (props) => {
     if (props.currentMessage._id === LOADING_MESSAGE_ID) {
       return (
         <View>
@@ -187,7 +194,7 @@ const ChatScreen: React.FC = () => {
       <GiftedChat
         messages={messages}
         renderBubble={renderBubble}
-        onSend={newMessages => onSend(newMessages)}
+        onSend={(newMessages) => onSend(newMessages)}
         user={{
           _id: 1,
         }}

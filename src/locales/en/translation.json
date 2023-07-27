@@ -507,10 +507,11 @@
   "manyCharacters": "Too many symbols, maximum - ",
   "fewChars": "The minimum must be 100 characters",
   "twoSymbolRequire": "The field must contain at least 2 characters",
-  "descriptionSubscriptions": "The Leela AI test game has ended. You must subscribe to continue.",
-  "buy": "Buy",
+  "descriptionSubscriptions": "The trial version of Leela AI game allows creating 5 reports. To continue, please subscribe.",
+  "buy": "Buy Pro",
   "alreadyBought": "Bought already?",
   "chooseSubscription": "Choose Subscription:",
+  "paySub": "Pay to continue the subscription",
   "$rc_monthly": {
     "title": "One month",
     "description": "Access for one month"

@@ -1,6 +1,5 @@
-import React, { memo } from 'react'
-
 import { useTheme } from '@react-navigation/native'
+import React, { memo } from 'react'
 import {
   Platform,
   Text as RNText,
@@ -124,7 +123,10 @@ export const Text = memo<TxtT>(
     const hasShadow = h ? !noShadowFonts.includes(h) : false
 
     const hStyle = h
-      ? [{ ...textStyles[h], color: curColor }, hasShadow && { textShadowColor: primary }]
+      ? [
+          { ...textStyles[h], color: curColor },
+          hasShadow && { textShadowColor: primary },
+        ]
       : undefined
     return (
       <RNText style={[hStyle, textStyle]} {...textProps}>
