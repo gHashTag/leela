@@ -104,7 +104,7 @@ const SubscriptionScreen: React.FC = () => {
                 <Text
                   h="h0"
                   textStyle={styles.packagePrice}
-                  title={pack.product.priceString.slice(0, 5)}
+                  title={pack.product.priceString}
                 />
               </TouchableOpacity>
             ))}
