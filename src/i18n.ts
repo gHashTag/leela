@@ -66,7 +66,18 @@ for (const [key, value] of Object.entries(resources)) {
   }
 }
 
-export const supportedLngs = ['ar', 'bn', 'en', 'fr', 'mr', 'ms', 'ru', 'te', 'tr', 'uk']
+export const supportedLngs = [
+  'ar',
+  'bn',
+  'en',
+  'fr',
+  'mr',
+  'ms',
+  'ru',
+  'te',
+  'tr',
+  'uk',
+]
 
 export const isSupportedLang = supportedLngs.includes(lang)
 export const ruOrEnLang = lang === 'ru' ? 'ru' : 'en'
@@ -85,9 +96,9 @@ i18next.use(initReactI18next).init(
     },
     // keySeparator: false,
   },
-  err => {
+  (err) => {
     if (err) {
-      console.error('Error initializing i18next:', err)
+      __DEV__ && console.error('Error initializing i18next:', err)
     }
   },
 )

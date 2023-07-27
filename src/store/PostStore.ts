@@ -21,6 +21,8 @@ import {
   ReplyComT,
 } from 'src/types'
 
+import { actionSubscribeStore } from './SubscribeStore'
+
 type fetchT =
   FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
 interface postStoreT {
@@ -30,7 +32,6 @@ interface postStoreT {
   replyComments: ReplyComT[]
   loadPosts: boolean
   loadOwnPosts: boolean
-  isBlockGame: boolean
 }
 
 interface delCommentT {
@@ -52,14 +53,10 @@ export const PostStore = {
     replyComments: [],
     loadOwnPosts: true,
     loadPosts: true,
-    isBlockGame: false,
   }),
-  unBlock: async () => {
-    PostStore.store.isBlockGame = false
-  },
   createPost: async ({ text, plan, systemMessage, planText }: FormPostT) => {
     if (PostStore.store.posts.length > 5) {
-      PostStore.store.isBlockGame = true
+      actionSubscribeStore.blockGame()
     }
     const userUid = auth().currentUser?.uid
     const email = auth().currentUser?.email
@@ -339,7 +336,7 @@ export const PostStore = {
     )?.avatar
     return otherUserAva
       ? otherUserAva
-      : 'https://leelachakra.com/resource/LeelaChakra/anonymous.png'
+      : 'https://www.siriusgem.com/new/wp-content/uploads/2013/06/Round_cut-1-300x300.jpg'
   },
   banUnbanUser: async (uid: string) => {
     try {

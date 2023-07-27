@@ -5,7 +5,7 @@ import { StyleSheet, View } from 'react-native'
 import { s } from 'react-native-size-matters'
 import { useRevenueCat } from 'src/providers/RevenueCatProvider'
 
-import { DiceStore, PostStore } from '../../store'
+import { DiceStore, PostStore, SubscribeStore } from '../../store'
 import { Space } from '../Space'
 import { Text } from '../TextComponents'
 
@@ -18,7 +18,7 @@ export const HeaderMessage = observer(() => {
   if (user.pro) {
     subscribeMess = DiceStore.topMessage
   } else {
-    subscribeMess = PostStore.store.isBlockGame
+    subscribeMess = SubscribeStore.isBlockGame
       ? t('paySub')
       : DiceStore.topMessage
   }

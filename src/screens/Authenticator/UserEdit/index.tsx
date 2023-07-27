@@ -1,11 +1,15 @@
-import React, { ReactElement, useState } from 'react'
-import { useMemo } from 'react'
-
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useTheme } from '@react-navigation/native'
 import { RouteProp } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { FieldValues, FormProvider, SubmitHandler, useForm } from 'react-hook-form'
+import React, { ReactElement, useState } from 'react'
+import { useMemo } from 'react'
+import {
+  FieldValues,
+  FormProvider,
+  SubmitHandler,
+  useForm,
+} from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
@@ -19,7 +23,14 @@ import {
   Loading,
   Space,
 } from '../../../components'
-import { H, W, black, captureException, goBack, white } from '../../../constants'
+import {
+  H,
+  W,
+  black,
+  captureException,
+  goBack,
+  white,
+} from '../../../constants'
 import { updateProfName } from '../../../screens/helper'
 import { RootStackParamList } from '../../../types'
 
@@ -65,7 +76,7 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
     defaultValues: { ...route.params },
   })
 
-  const onSubmit: SubmitHandler<FieldValues> = async data => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setLoading(true)
     const { firstName, lastName } = data
     await updateProfName({ firstName, lastName })
@@ -83,6 +94,7 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
       onPress={goBack}
       title=" "
       colorLeft={black}
+      hidestar
     >
       {loading ? (
         <Loading />
@@ -111,7 +123,7 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
               <Space height={30} />
               <Button
                 title={t('done')}
-                onPress={methods.handleSubmit(onSubmit, error =>
+                onPress={methods.handleSubmit(onSubmit, (error) =>
                   captureException(error, 'UserEdit'),
                 )}
               />

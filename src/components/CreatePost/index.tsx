@@ -1,8 +1,12 @@
-import React, { useMemo, useState } from 'react'
-
 import { yupResolver } from '@hookform/resolvers/yup'
 import auth from '@react-native-firebase/auth'
-import { FieldValues, FormProvider, SubmitHandler, useForm } from 'react-hook-form'
+import React, { useMemo, useState } from 'react'
+import {
+  FieldValues,
+  FormProvider,
+  SubmitHandler,
+  useForm,
+} from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { PostT } from 'src/types'
@@ -32,14 +36,14 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
           text: yup
             .string()
             .trim()
-            .min(1, t('fewChars') || '')
+            .min(100, t('fewChars') || '')
             .required(t('requireField') || ''),
         })
         .required(),
     [t],
   )
 
-  const handleSubmit: SubmitHandler<FieldValues> = async data => {
+  const handleSubmit: SubmitHandler<FieldValues> = async (data) => {
     try {
       setLoading(true)
       const userUid = auth().currentUser?.uid
@@ -52,7 +56,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
         planText: t(`plan_${plan}.content`),
       })
       const curItem: PostT = {
-        ...(PostStore.store.posts.find(a => a.id === postId?.id) || {}),
+        ...(PostStore.store.posts.find((a) => a.id === postId?.id) || {}),
         systemMessage,
         ownerId: userUid || '',
         id: postId?.id || '',
@@ -90,7 +94,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
       <Space height={20} />
       <Button
         title={t('actions.send')}
-        onPress={methods.handleSubmit(handleSubmit, err => console.log(err))}
+        onPress={methods.handleSubmit(handleSubmit, (err) => console.log(err))}
       />
     </FormProvider>
   )

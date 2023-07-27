@@ -1,5 +1,4 @@
 import React from 'react'
-
 import { StyleSheet, View } from 'react-native'
 
 import { Background } from '../Background'
@@ -21,6 +20,7 @@ interface AppContainerT {
   iconLeftOpacity?: number
   textAlign?: 'center' | 'auto' | 'left' | 'right' | 'justify'
   status?: 'bg' | 'clean' | '1x1'
+  hidestar?: boolean
 }
 
 export function AppContainer({
@@ -37,6 +37,7 @@ export function AppContainer({
   iconLeftOpacity = 1,
   textAlign = 'left',
   status,
+  hidestar = false,
 }: AppContainerT) {
   return (
     <View style={page.container}>
@@ -50,6 +51,7 @@ export function AppContainer({
           onPressRight={onPressRight}
           iconLeft={iconLeft}
           iconRight={iconRight}
+          hidestar={hidestar}
         />
       )}
       <Background

@@ -26,6 +26,7 @@ import {
   OfflinePlayers,
   OnlinePlayer,
   PostStore,
+  SubscribeStore,
   actionsDice,
 } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types'
@@ -78,7 +79,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     : DiceStore.finishArr.indexOf(true) === -1
 
   const postsCount = PostStore.store.ownPosts.length
-  const isBlockGame = PostStore.store.isBlockGame
+  const isBlockGame = SubscribeStore.isBlockGame
   const isMoreThree = postsCount >= 3
   const _onPress = () => navigation.navigate('SUBSCRIPTION_SCREEN')
 

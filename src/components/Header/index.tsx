@@ -23,6 +23,7 @@ interface HeaderT {
   textAlign?: 'center' | 'auto' | 'left' | 'right' | 'justify'
   children?: React.ReactNode
   displayStatus?: boolean
+  hidestar: boolean
 }
 
 const Header = memo<HeaderT>(
@@ -40,6 +41,7 @@ const Header = memo<HeaderT>(
     children,
     textAlign,
     displayStatus,
+    hidestar,
   }) => {
     const {
       colors: { background },
@@ -60,7 +62,7 @@ const Header = memo<HeaderT>(
             <Emoji name={iconLeft} style={leftIconStyle} />
           </Pressable>
         )}
-        {!user.pro && (
+        {!user.pro && !hidestar && (
           <Pressable
             style={{ opacity: iconLeftOpacity, bottom: 3, right: 10 }}
             onPress={onPressSub}
@@ -85,7 +87,7 @@ const Header = memo<HeaderT>(
             </View>
           )}
         </View>
-        {!user.pro && (
+        {!user.pro && !hidestar && (
           <Pressable
             style={{ opacity: iconLeftOpacity, bottom: 3, left: 10 }}
             onPress={onPressSub}

@@ -50,11 +50,9 @@ import {
   UserEdit,
 } from 'src/screens/Authenticator'
 import { checkVersion, getFireBaseRef } from 'src/screens/helper'
-import { DiceStore, PostStore } from 'src/store'
+import { DiceStore, PostStore, SubscribeStore } from 'src/store'
 import { RootStackParamList, RootTabParamList } from 'src/types'
 import { linking } from 'src/utils'
-
-import { useRevenueCat } from './providers/RevenueCatProvider'
 
 const DarkTheme = {
   dark: true,
@@ -86,7 +84,7 @@ const Tab = observer(() => {
   useGameAndProfileIsOnline()
   useExitModal()
   useNetwork()
-  const { user } = useRevenueCat()
+  const isBlockGame = SubscribeStore.isBlockGame
   return (
     <TabNavigator.Navigator
       tabBar={(props) => <TabBar {...props} />}
@@ -111,7 +109,7 @@ const Tab = observer(() => {
       {
         <TabNavigator.Screen
           name="TAB_BOTTOM_5"
-          component={!user.pro ? SubscriptionScreen : ChatScreen}
+          component={isBlockGame ? SubscriptionScreen : ChatScreen}
         />
       }
     </TabNavigator.Navigator>
@@ -159,6 +157,9 @@ const App = () => {
         }}
         initialRouteName="HELLO"
       >
+        <Stack.Screen name="HELLO" component={Hello} />
+        <Stack.Screen name="WELCOME_SCREEN" component={WelcomeScreen} />
+
         {/* Auth */}
         <Stack.Group
           screenOptions={{
@@ -177,8 +178,6 @@ const App = () => {
           <Stack.Screen name="CONFIRM_SIGN_UP" component={ConfirmSignUp} />
         </Stack.Group>
 
-        <Stack.Screen name="WELCOME_SCREEN" component={WelcomeScreen} />
-        <Stack.Screen name="HELLO" component={Hello} />
         <Stack.Screen
           name="SELECT_PLAYERS_SCREEN"
           component={SelectPlayersScreen}

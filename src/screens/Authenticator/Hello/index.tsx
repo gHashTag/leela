@@ -1,7 +1,6 @@
-import React, { ReactElement } from 'react'
-
 import { useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import React, { ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
@@ -19,7 +18,10 @@ import {
 import { black, goBack, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 
-type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HELLO'>
+type ProfileScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'HELLO'
+>
 
 type HelloT = {
   navigation: ProfileScreenNavigationProp
@@ -40,6 +42,7 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
       onPress={goBack}
       title=" "
       colorLeft={color}
+      hidestar
     >
       {loading ? (
         <Loading />

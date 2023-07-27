@@ -156,6 +156,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: gray,
     alignSelf: 'center',
+    textDecorationLine: 'underline',
   },
   test: {
     fontSize: ms(15, 0.6),
