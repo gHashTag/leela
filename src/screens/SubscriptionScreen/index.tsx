@@ -1,8 +1,7 @@
 import { useTheme } from '@react-navigation/native'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  Image,
   ImageBackground,
   Pressable,
   StyleSheet,
@@ -12,7 +11,7 @@ import {
 import Emoji from 'react-native-emoji'
 import { PurchasesPackage } from 'react-native-purchases'
 import { ms, s } from 'react-native-size-matters'
-import { PurchaseButton, Space, Spin, Text } from 'src/components'
+import { Loading, PurchaseButton, Space, Spin, Text } from 'src/components'
 import {
   black,
   captureException,
@@ -29,13 +28,10 @@ import Ganesha from './ganesha.jpg'
 const SubscriptionScreen: React.FC = () => {
   const { t } = useTranslation()
   const { packages, purchasePackage, restorePermissions } = useRevenueCat()
-  const [loading, setLoading] = useState<boolean>(true)
+  const { isLoading } = useRevenueCat()
   const [selectedPackage, setSelectedPackage] =
     useState<PurchasesPackage | null>(null)
-
-  useEffect(() => {
-    setLoading(false)
-  }, [])
+  const [purchaseSuccessful, setPurchaseSuccessful] = useState(false)
 
   const handlePackageSelection = (pack: PurchasesPackage) => {
     setSelectedPackage(pack)
@@ -43,13 +39,17 @@ const SubscriptionScreen: React.FC = () => {
 
   const handlePurchase = async () => {
     if (purchasePackage && selectedPackage) {
-      await purchasePackage(selectedPackage)
+      try {
+        await purchasePackage(selectedPackage)
+        setPurchaseSuccessful(true)
+        goBack()
+      } catch (error) {
+        setPurchaseSuccessful(false)
+        captureException(error, 'handlePurchase')
+      }
     }
   }
 
-  if (loading) {
-    return <Spin />
-  }
   const onPress = () => goBack()
 
   const onAlreadyBought = async () => {
@@ -83,28 +83,33 @@ const SubscriptionScreen: React.FC = () => {
           textStyle={styles.header}
           title={t('chooseSubscription')}
         />
-
-        {packages.map((pack) => (
-          <TouchableOpacity
-            key={pack.identifier}
-            onPress={() => handlePackageSelection(pack)}
-            style={[
-              styles.packageItem,
-              selectedPackage === pack && styles.selectedPackage,
-            ]}
-          >
-            <Text
-              h="h0"
-              textStyle={styles.packageTitle}
-              title={t(`${[pack.identifier]}.title`)}
-            />
-            <Text
-              h="h0"
-              textStyle={styles.packagePrice}
-              title={pack.product.priceString.slice(0, 5)}
-            />
-          </TouchableOpacity>
-        ))}
+        {isLoading ? (
+          <Loading />
+        ) : (
+          <>
+            {packages.map((pack) => (
+              <TouchableOpacity
+                key={pack.identifier}
+                onPress={() => handlePackageSelection(pack)}
+                style={[
+                  styles.packageItem,
+                  selectedPackage === pack && styles.selectedPackage,
+                ]}
+              >
+                <Text
+                  h="h0"
+                  textStyle={styles.packageTitle}
+                  title={t(`${[pack.identifier]}.title`)}
+                />
+                <Text
+                  h="h0"
+                  textStyle={styles.packagePrice}
+                  title={pack.product.priceString.slice(0, 5)}
+                />
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
 
         <PurchaseButton
           title="buy"

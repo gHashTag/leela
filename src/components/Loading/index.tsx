@@ -1,5 +1,4 @@
 import React from 'react'
-
 import { StyleSheet, View } from 'react-native'
 import { s } from 'react-native-size-matters'
 import Spinner from 'react-native-spinkit'
@@ -35,7 +34,11 @@ interface LoadingT {
     | 'Plane'
 }
 
-const Loading = ({ paddingTop = 0, size = s(65), type = 'Pulse' }: LoadingT) => {
+const Loading = ({
+  paddingTop = 0,
+  size = s(65),
+  type = 'Pulse',
+}: LoadingT) => {
   const { container } = styles
   return (
     <View style={[container, { paddingTop }]}>

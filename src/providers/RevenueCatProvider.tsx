@@ -1,3 +1,5 @@
+//@ts-expect-error
+import { APPLE, GOOGLE } from '@env'
 import React from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Platform } from 'react-native'
@@ -9,8 +11,8 @@ import { actionSubscribeStore } from 'src/store/SubscribeStore'
 
 // Use your RevenueCat API keys
 const APIKeys = {
-  apple: 'appl_sLbsBYxSJUxCchEHnPTWyIeYtiX',
-  google: 'goog_KfcnsOLBLwJvAbxGuHzzAFCVmwh',
+  apple: APPLE,
+  google: GOOGLE,
 }
 
 interface RevenueCatProps {
@@ -18,6 +20,7 @@ interface RevenueCatProps {
   restorePermissions?: () => Promise<CustomerInfo>
   user: UserState
   packages: PurchasesPackage[]
+  isLoading: boolean
 }
 
 export interface UserState {
@@ -29,6 +32,7 @@ const RevenueCatContext = createContext<RevenueCatProps>({
   restorePermissions: async () => ({} as CustomerInfo),
   user: { pro: false },
   packages: [],
+  isLoading: false,
 })
 
 // Export context for easy usage
@@ -41,6 +45,7 @@ export const RevenueCatProvider = ({ children }: any) => {
   const [user, setUser] = useState<UserState>({ pro: false })
   const [packages, setPackages] = useState<PurchasesPackage[]>([])
   const [isReady, setIsReady] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     const init = async () => {
@@ -86,19 +91,30 @@ export const RevenueCatProvider = ({ children }: any) => {
 
   // Purchase a package
   const purchasePackage = async (pack: PurchasesPackage) => {
+    setIsLoading(true)
     try {
       await Purchases.purchasePackage(pack)
     } catch (e: any) {
       if (!e.userCancelled) {
         captureException(e, 'userCancelled')
       }
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  // // Restore previous purchases
+  // Restore previous purchases
   const restorePermissions = async () => {
-    const customer = await Purchases.restorePurchases()
-    return customer
+    setIsLoading(true)
+    try {
+      const customer = await Purchases.restorePurchases()
+      return customer ?? {} // Возвращаем customer или пустой объект, если customer равен null или undefined
+    } catch (error) {
+      captureException(error, 'restorePermissions')
+      return {} // Возвращаем пустой объект в случае ошибки
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const value = {
@@ -106,6 +122,7 @@ export const RevenueCatProvider = ({ children }: any) => {
     user,
     packages,
     purchasePackage,
+    isLoading,
   }
 
   // Return empty fragment if provider is not ready (Purchase not yet initialised)
