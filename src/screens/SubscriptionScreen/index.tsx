@@ -11,13 +11,13 @@ import {
 } from 'react-native'
 import Emoji from 'react-native-emoji'
 import { PurchasesPackage } from 'react-native-purchases'
-import { PurchaseButton, Spin, Text } from 'src/components'
+import { ms, s } from 'react-native-size-matters'
+import { PurchaseButton, Space, Spin, Text } from 'src/components'
 import {
   black,
   captureException,
   goBack,
   gray,
-  primary,
   secondary,
   white,
 } from 'src/constants'
@@ -101,7 +101,7 @@ const SubscriptionScreen: React.FC = () => {
             <Text
               h="h0"
               textStyle={styles.packagePrice}
-              title={pack.product.priceString.slice(0, 4)}
+              title={pack.product.priceString.slice(0, 5)}
             />
           </TouchableOpacity>
         ))}
@@ -117,6 +117,7 @@ const SubscriptionScreen: React.FC = () => {
           title={t('alreadyBought')}
           onPress={onAlreadyBought}
         />
+        <Space height={50} />
       </View>
     </View>
   )
@@ -135,29 +136,29 @@ const styles = StyleSheet.create({
   poster: {
     flex: 1,
     width: '100%',
-    height: '95%',
+    height: '90%',
   },
   iconStyle: {
     marginTop: 60,
     marginLeft: 20,
   },
   leftIconStyle: {
-    fontSize: 30,
+    fontSize: ms(30, 0.6),
   },
   header: {
-    fontSize: 25,
+    fontSize: ms(23, 0.6),
     fontWeight: 'bold',
     marginBottom: 20,
   },
   bought: {
     top: 10,
-    fontSize: 13,
+    fontSize: ms(13, 0.6),
     fontWeight: 'bold',
     color: gray,
     alignSelf: 'center',
   },
   test: {
-    fontSize: 15,
+    fontSize: ms(15, 0.6),
     fontWeight: 'bold',
     alignSelf: 'center',
     textAlign: 'center',
@@ -179,11 +180,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e0e0',
   },
   packageTitle: {
-    fontSize: 23,
+    fontSize: ms(21, 0.6),
     fontWeight: 'bold',
   },
   packagePrice: {
-    fontSize: 26,
+    fontSize: ms(23, 0.6),
   },
   purchaseButton: {
     backgroundColor: '#007bff',
@@ -192,14 +193,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   disabledButton: {
-    width: 200,
+    width: s(200),
     backgroundColor: secondary,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 30,
+    fontSize: s(30),
     fontWeight: 'bold',
-    width: 200,
+    width: s(200),
     textAlign: 'center',
     alignSelf: 'center',
   },

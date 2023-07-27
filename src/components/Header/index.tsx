@@ -4,6 +4,7 @@ import { Platform, View } from 'react-native'
 import Emoji from 'react-native-emoji'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScaledSheet, ms, mvs, s, vs } from 'react-native-size-matters'
+import { useRevenueCat } from 'src/providers/RevenueCatProvider'
 import { PostStore } from 'src/store/PostStore'
 
 import { HeaderMessage, Text } from '../'
@@ -43,7 +44,7 @@ const Header = memo<HeaderT>(
     const {
       colors: { background },
     } = useTheme()
-    const isSubscribe = PostStore.store.isSubscribe
+    const { user } = useRevenueCat()
     const { top } = useSafeAreaInsets()
     const alignItems = children ? 'flex-start' : 'center'
     const marginTop = children ? s(2) : 0
@@ -59,7 +60,7 @@ const Header = memo<HeaderT>(
             <Emoji name={iconLeft} style={leftIconStyle} />
           </Pressable>
         )}
-        {!isSubscribe && (
+        {!user.pro && (
           <Pressable
             style={{ opacity: iconLeftOpacity, bottom: 3, right: 10 }}
             onPress={onPressSub}
@@ -84,7 +85,7 @@ const Header = memo<HeaderT>(
             </View>
           )}
         </View>
-        {!isSubscribe && (
+        {!user.pro && (
           <Pressable
             style={{ opacity: iconLeftOpacity, bottom: 3, left: 10 }}
             onPress={onPressSub}

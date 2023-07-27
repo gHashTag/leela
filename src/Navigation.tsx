@@ -54,6 +54,8 @@ import { DiceStore, PostStore } from 'src/store'
 import { RootStackParamList, RootTabParamList } from 'src/types'
 import { linking } from 'src/utils'
 
+import { useRevenueCat } from './providers/RevenueCatProvider'
+
 const DarkTheme = {
   dark: true,
   colors: {
@@ -84,7 +86,7 @@ const Tab = observer(() => {
   useGameAndProfileIsOnline()
   useExitModal()
   useNetwork()
-  const isSubscribe = PostStore.store.isSubscribe
+  const { user } = useRevenueCat()
   return (
     <TabNavigator.Navigator
       tabBar={(props) => <TabBar {...props} />}
@@ -109,7 +111,7 @@ const Tab = observer(() => {
       {
         <TabNavigator.Screen
           name="TAB_BOTTOM_5"
-          component={isSubscribe ? SubscriptionScreen : ChatScreen}
+          component={!user.pro ? SubscriptionScreen : ChatScreen}
         />
       }
     </TabNavigator.Navigator>

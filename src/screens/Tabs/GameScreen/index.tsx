@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { Button, StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import { captureException, onLeaveFeedback } from 'src/constants'
+import { useRevenueCat } from 'src/providers/RevenueCatProvider'
 import { getUid } from 'src/screens/helper'
 
 import {
@@ -39,6 +40,7 @@ type GameScreenT = {
 }
 
 const GameScreen = observer(({ navigation }: GameScreenT) => {
+  const { user } = useRevenueCat()
   useLeftTimeForStep()
 
   const limit = 15
@@ -76,10 +78,9 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     : DiceStore.finishArr.indexOf(true) === -1
 
   const postsCount = PostStore.store.ownPosts.length
-
+  const isBlockGame = PostStore.store.isBlockGame
   const isMoreThree = postsCount >= 3
   const _onPress = () => navigation.navigate('SUBSCRIPTION_SCREEN')
-  const isSubscribe = PostStore.store.isSubscribe
 
   return (
     <>
@@ -119,9 +120,9 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
             </>
           )}
         </Header>
-        {!endGame && !isSubscribe && <Dice />}
+        {!endGame && !isBlockGame && <Dice />}
 
-        {isSubscribe && (
+        {!user.pro && isBlockGame && (
           <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
         )}
         <GameBoard />

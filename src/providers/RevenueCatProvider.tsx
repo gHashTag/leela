@@ -1,16 +1,18 @@
 import React from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
-
 import { Platform } from 'react-native'
 import Purchases, { LOG_LEVEL, PurchasesPackage } from 'react-native-purchases'
 import { CustomerInfo } from 'react-native-purchases'
 import { Spin } from 'src/components'
 import { captureException } from 'src/constants'
+import { PostStore } from 'src/store/PostStore'
+
+import { PostCard } from '../components/Cards/PostCard/index'
 
 // Use your RevenueCat API keys
 const APIKeys = {
   apple: 'appl_sLbsBYxSJUxCchEHnPTWyIeYtiX',
-  google: 'goog_KfcnsOLBLwJvAbxGuHzzAFCVmwh'
+  google: 'goog_KfcnsOLBLwJvAbxGuHzzAFCVmwh',
 }
 
 interface RevenueCatProps {
@@ -28,7 +30,7 @@ const RevenueCatContext = createContext<RevenueCatProps>({
   purchasePackage: async () => {},
   restorePermissions: async () => ({} as CustomerInfo),
   user: { pro: false },
-  packages: []
+  packages: [],
 })
 
 // Export context for easy usage
@@ -55,7 +57,7 @@ export const RevenueCatProvider = ({ children }: any) => {
       Purchases.setLogLevel(LOG_LEVEL.DEBUG)
 
       // Listen for customer updates
-      Purchases.addCustomerInfoUpdateListener(async info => {
+      Purchases.addCustomerInfoUpdateListener(async (info) => {
         updateCustomerInformation(info)
       })
 
@@ -75,12 +77,11 @@ export const RevenueCatProvider = ({ children }: any) => {
 
   // Update user state based on previous purchases
   const updateCustomerInformation = async (customerInfo: CustomerInfo) => {
-    let newUser: UserState = { pro: false }
-
-    if (customerInfo?.entitlements.active['pro plan'] !== undefined) {
+    let newUser: UserState = { pro: true }
+    if (customerInfo?.entitlements.active.hasOwnProperty('pro plan')) {
       newUser.pro = true
+      PostStore.unBlock()
     }
-
     setUser(newUser)
   }
 
@@ -105,7 +106,7 @@ export const RevenueCatProvider = ({ children }: any) => {
     restorePermissions,
     user,
     packages,
-    purchasePackage
+    purchasePackage,
   }
 
   // Return empty fragment if provider is not ready (Purchase not yet initialised)
@@ -113,5 +114,9 @@ export const RevenueCatProvider = ({ children }: any) => {
     return <Spin />
   }
 
-  return <RevenueCatContext.Provider value={value}>{children}</RevenueCatContext.Provider>
+  return (
+    <RevenueCatContext.Provider value={value}>
+      {children}
+    </RevenueCatContext.Provider>
+  )
 }

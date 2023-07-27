@@ -3,6 +3,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { s } from 'react-native-size-matters'
+import { useRevenueCat } from 'src/providers/RevenueCatProvider'
 
 import { DiceStore, PostStore } from '../../store'
 import { Space } from '../Space'
@@ -10,8 +11,18 @@ import { Text } from '../TextComponents'
 
 export const HeaderMessage = observer(() => {
   const { t } = useTranslation()
-  const isSubscribe = PostStore.store.isSubscribe
-  const subscribeMess = isSubscribe ? t('paySub') : DiceStore.topMessage
+  const { user } = useRevenueCat()
+
+  let subscribeMess
+
+  if (user.pro) {
+    subscribeMess = DiceStore.topMessage
+  } else {
+    subscribeMess = PostStore.store.isBlockGame
+      ? t('paySub')
+      : DiceStore.topMessage
+  }
+
   return (
     <>
       {DiceStore.topMessage !== ' ' && DiceStore.topMessage && (
@@ -41,7 +52,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   textStyle: {
-    lineHeight: 22,
+    lineHeight: s(22),
     width: '100%',
     textAlign: 'center',
   },

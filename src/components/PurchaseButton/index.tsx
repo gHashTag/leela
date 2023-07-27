@@ -6,6 +6,7 @@ import {
   TouchableOpacityProps,
 } from 'react-native'
 import { PurchasesPackage } from 'react-native-purchases'
+import { ms, s } from 'react-native-size-matters'
 import { Text } from 'src/components'
 
 interface PurchaseButtonProps extends TouchableOpacityProps {
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontSize: 30,
+    fontSize: ms(30, 0.3),
     fontWeight: 'bold',
     width: 200,
     textAlign: 'center',

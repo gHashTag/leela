@@ -30,7 +30,7 @@ interface postStoreT {
   replyComments: ReplyComT[]
   loadPosts: boolean
   loadOwnPosts: boolean
-  isSubscribe: boolean
+  isBlockGame: boolean
 }
 
 interface delCommentT {
@@ -52,11 +52,14 @@ export const PostStore = {
     replyComments: [],
     loadOwnPosts: true,
     loadPosts: true,
-    isSubscribe: false,
+    isBlockGame: false,
   }),
+  unBlock: async () => {
+    PostStore.store.isBlockGame = false
+  },
   createPost: async ({ text, plan, systemMessage, planText }: FormPostT) => {
     if (PostStore.store.posts.length > 5) {
-      PostStore.store.isSubscribe = true
+      PostStore.store.isBlockGame = true
     }
     const userUid = auth().currentUser?.uid
     const email = auth().currentUser?.email
@@ -100,6 +103,7 @@ export const PostStore = {
     }
     throw new Error('Missing userUid or email')
   },
+
   createComment: async ({ text, postId, postOwner, ownerId }: FormCommentT) => {
     try {
       const userUid = ownerId !== LEELA_ID ? auth().currentUser?.uid : ownerId
