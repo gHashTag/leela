@@ -72,9 +72,13 @@ export const RevenueCatProvider = ({ children }: any) => {
 
   // Load all offerings a user can (currently) purchase
   const loadOfferings = async () => {
-    const offerings = await Purchases.getOfferings()
-    if (offerings.current) {
-      setPackages(offerings.current.availablePackages)
+    try {
+      const offerings = await Purchases.getOfferings()
+      if (offerings.current) {
+        setPackages(offerings.current.availablePackages)
+      }
+    } catch (error) {
+      captureException(error, 'loadOfferings')
     }
   }
 

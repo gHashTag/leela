@@ -1,6 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  Platform,
   StyleSheet,
   TouchableOpacity,
   TouchableOpacityProps,
@@ -36,7 +37,7 @@ const PurchaseButton: React.FC<PurchaseButtonProps> = ({
 const styles = StyleSheet.create({
   purchaseButton: {
     backgroundColor: '#007bff',
-    paddingVertical: 12,
+    paddingVertical: Platform.OS === 'ios' ? s(12) : s(5),
     paddingHorizontal: 24,
     borderRadius: 8,
     width: 200,
@@ -48,7 +49,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontSize: ms(30, 0.3),
+    fontSize: Platform.OS === 'ios' ? s(30) : s(23),
     fontWeight: 'bold',
     width: 200,
     textAlign: 'center',

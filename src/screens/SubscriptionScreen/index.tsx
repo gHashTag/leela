@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ImageBackground,
+  Platform,
   Pressable,
   StyleSheet,
   TouchableOpacity,
@@ -63,7 +64,7 @@ const SubscriptionScreen: React.FC = () => {
   }
   const { dark } = useTheme()
   const backgroundColor = dark ? black : white
-
+  console.log('packages', packages)
   return (
     <View style={[styles.root, { backgroundColor }]}>
       <ImageBackground style={styles.poster} source={Ganesha}>
@@ -148,7 +149,8 @@ const styles = StyleSheet.create({
     marginLeft: 20,
   },
   leftIconStyle: {
-    fontSize: ms(30, 0.6),
+    fontSize: Platform.OS === 'ios' ? ms(30, 0.6) : ms(20, 0.6),
+    bottom: Platform.OS === 'ios' ? 0 : 30,
   },
   header: {
     fontSize: ms(23, 0.6),
@@ -169,7 +171,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     textAlign: 'center',
     width: '80%',
-    bottom: 30,
+    bottom: Platform.OS === 'ios' ? ms(30, 0.6) : ms(10, 0.6),
   },
   packageItem: {
     borderWidth: 1,
@@ -190,11 +192,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   packagePrice: {
-    fontSize: ms(23, 0.6),
+    fontSize: ms(22, 0.6),
   },
   purchaseButton: {
     backgroundColor: '#007bff',
-    paddingVertical: 12,
+    paddingVertical: 1,
     paddingHorizontal: 24,
     borderRadius: 8,
   },
