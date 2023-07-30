@@ -1,7 +1,7 @@
 import React from 'react'
 
 import { observer } from 'mobx-react'
-import { Image, View } from 'react-native'
+import { Image, ImageSourcePropType, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { runOnJS } from 'react-native-reanimated'
 import { ScaledSheet, ms } from 'react-native-size-matters'
@@ -60,8 +60,9 @@ const Gem = observer(({ plan, index }: GemT) => {
         })
       ]
 
-  const source = (id: number, avatar: any) =>
-    DiceStore.online ? { uri: avatar } : ICONS[id - 1]
+  const source = (id: number, ava: string): ImageSourcePropType => {
+    return DiceStore.online ? { uri: ava } : ICONS[id - 1]
+  }
 
   return (
     <View style={container}>
@@ -70,7 +71,7 @@ const Gem = observer(({ plan, index }: GemT) => {
           ownerId && navigate('USER_PROFILE_SCREEN', { ownerId })
         }
 
-        if (data === plan) {
+        if (data === plan && ava !== undefined) {
           return (
             <GestureDetector
               gesture={Gesture.Tap().onTouchesUp(() => runOnJS(onPressAva)())}
