@@ -86,49 +86,53 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
 
   return (
     <>
-      {/* <Background enableTopInsets paddingTop={vs(50)}> */}
-      <Header
-        iconLeft=":information_source:"
-        onPress={() => navigation.navigate('RULES_SCREEN')}
-        iconRight=":books:"
-        displayStatus
-        textAlign="center"
-        onPressRight={() => navigation.navigate('PLANS_SCREEN')}
-      >
-        {endGame && (
-          <>
-            <ButtonWithIcon
-              viewStyle={styles.centerButton}
-              h="h5"
-              title={t('actions.startOver')}
-              onPress={
-                DiceStore.online
-                  ? OnlinePlayer.resetGame
-                  : OfflinePlayers.resetGame
-              }
-            />
-            <Space height={vs(2)} />
-            <Text textStyle={styles.centerText} h="h1" title={`${t('win')}`} />
-            {DiceStore.rate && isMoreThree ? (
+      <Background enableTopInsets paddingTop={vs(50)}>
+        <Header
+          iconLeft=":information_source:"
+          onPress={() => navigation.navigate('RULES_SCREEN')}
+          iconRight=":books:"
+          displayStatus
+          textAlign="center"
+          onPressRight={() => navigation.navigate('PLANS_SCREEN')}
+        >
+          {endGame && (
+            <>
               <ButtonWithIcon
                 viewStyle={styles.centerButton}
                 h="h5"
-                title={t('actions.leaveFeedback')}
-                onPress={onPressRate}
+                title={t('actions.startOver')}
+                onPress={
+                  DiceStore.online
+                    ? OnlinePlayer.resetGame
+                    : OfflinePlayers.resetGame
+                }
               />
-            ) : (
-              <Space height={s(38)} />
-            )}
-          </>
-        )}
-      </Header>
-      {!endGame && <Dice />}
+              <Space height={vs(2)} />
+              <Text
+                textStyle={styles.centerText}
+                h="h1"
+                title={`${t('win')}`}
+              />
+              {DiceStore.rate && isMoreThree ? (
+                <ButtonWithIcon
+                  viewStyle={styles.centerButton}
+                  h="h5"
+                  title={t('actions.leaveFeedback')}
+                  onPress={onPressRate}
+                />
+              ) : (
+                <Space height={s(38)} />
+              )}
+            </>
+          )}
+        </Header>
+        {!endGame && <Dice />}
 
-      {!user.pro && isBlockGame && online && (
-        <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
-      )}
-      <GameBoard />
-      {/* </Background> */}
+        {!user.pro && isBlockGame && online && (
+          <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
+        )}
+        <GameBoard />
+      </Background>
     </>
   )
 })

@@ -13,8 +13,7 @@ import {
 } from '../../store'
 
 const getImage = (number: number) => {
-  // так не работает
-  // return require(`./assets/${number}.png`)
+  // don`t working return require(`./assets/${number}.png`)
   switch (number) {
     case 1:
       return require('./assets/1.png')

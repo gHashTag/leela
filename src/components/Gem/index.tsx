@@ -32,7 +32,7 @@ interface dataI {
 const Gem = observer(({ plan, index }: GemT) => {
   const { navigate } = useTypedNavigation()
   const { container, gems } = styles
-  console.log('OfflinePlayers.store.plans', OfflinePlayers.store.plans)
+
   const DATA: dataI[] = !DiceStore.online
     ? OfflinePlayers.store.plans
         .slice()
