@@ -64,7 +64,7 @@ export const ReportsScene = observer(() => {
           <View style={styles.noPostBlock}>
             <Text
               textStyle={styles.noPostText}
-              h={'h1'}
+              h={'h4'}
               title={t('online-part.noPosts')}
             />
           </View>

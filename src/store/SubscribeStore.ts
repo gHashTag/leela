@@ -1,5 +1,5 @@
 import { makeAutoObservable } from 'mobx'
-import { hydrateStore, makePersistable } from 'mobx-persist-store'
+import { makePersistable } from 'mobx-persist-store'
 
 const SubscribeStore = makeAutoObservable({
   isBlockGame: false // defaut false
@@ -14,7 +14,6 @@ const actionSubscribeStore = {
   },
   resetStore: async () => {
     SubscribeStore.isBlockGame = false
-    await hydrateStore(SubscribeStore)
   }
 }
 

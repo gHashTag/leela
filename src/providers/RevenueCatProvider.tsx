@@ -8,6 +8,7 @@ import { CustomerInfo } from 'react-native-purchases'
 import { Spin } from '../components'
 import { captureException } from '../constants'
 import { actionSubscribeStore } from '../store/SubscribeStore'
+import { PostStore } from '../store/PostStore'
 
 // Use your RevenueCat API keys
 const APIKeys = {
@@ -85,7 +86,7 @@ export const RevenueCatProvider = ({ children }: any) => {
   // Update user state based on previous purchases
   const updateCustomerInformation = async (customerInfo: CustomerInfo) => {
     let newUser: UserState = { pro: false }
-    actionSubscribeStore.blockGame()
+
     if (customerInfo?.entitlements.active.hasOwnProperty('pro plan')) {
       newUser.pro = true
       actionSubscribeStore.unBlock()

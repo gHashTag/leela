@@ -72,7 +72,7 @@ const Header = memo<HeaderT>(
         <View style={flexOne}>
           {title && !displayStatus && (
             <Text
-              numberOfLines={1}
+              numberOfLines={2}
               h={'h2'}
               title={title}
               textStyle={[titleStyle, { textAlign, marginTop }]}
@@ -122,7 +122,7 @@ const styles = ScaledSheet.create({
   },
   rightIconStyle: {
     fontSize: isIos ? ms(30, 0.5) : ms(28, 0.5),
-    textAlign: 'center',
+    textAlign: 'left',
     alignItems: 'center',
     marginHorizontal: s(8),
     marginVertical: s(5)
@@ -136,8 +136,7 @@ const styles = ScaledSheet.create({
   childrenStyle: {},
   flexOne: { flex: 1 },
   pressStyle: {
-    bottom: 3,
-    right: 10
+    bottom: 3
   }
 })
 

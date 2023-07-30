@@ -40,7 +40,12 @@ export const HeaderMessage = observer(() => {
       <Space height={s(1)} />
       {DiceStore.message !== ' ' && DiceStore.message && (
         <View style={messContainer}>
-          <Text numberOfLines={1} h="h5" title={DiceStore.message} />
+          <Text
+            numberOfLines={2}
+            h="h5"
+            title={DiceStore.message}
+            textStyle={styles.textStyle}
+          />
         </View>
       )}
     </>
