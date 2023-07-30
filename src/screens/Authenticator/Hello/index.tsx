@@ -27,7 +27,7 @@ type HelloT = {
   navigation: ProfileScreenNavigationProp
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   h6: { alignSelf: 'center' }
 })
 
@@ -55,14 +55,14 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
             onPress={() => navigation.navigate('SIGN_IN')}
           />
           <Space height={10} />
-          {/* <Text h={'h5'} title={t('or')} textStyle={page.h6} /> */}
+          {/* <Text h={'h5'} title={t('or')} textStyle={styles.h6} /> */}
           <Space height={10} />
           <Button
             title={t('auth.signUp')}
             onPress={() => navigation.navigate('SIGN_UP')}
           />
           <Space height={10} />
-          <Text h={'h5'} title={t('or')} textStyle={page.h6} />
+          <Text h={'h5'} title={t('or')} textStyle={styles.h6} />
           <Space height={10} />
           <Button
             title={t('offline')}

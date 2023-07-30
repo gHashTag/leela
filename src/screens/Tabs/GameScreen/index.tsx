@@ -79,61 +79,61 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
 
   const postsCount = PostStore.store.ownPosts.length
   const isBlockGame = SubscribeStore.isBlockGame
-  console.warn('isBlockGame', isBlockGame)
+
   const isMoreThree = postsCount >= 3
   const _onPress = () => navigation.navigate('SUBSCRIPTION_SCREEN')
   const online = DiceStore.online
 
   return (
     <>
-      <Background enableTopInsets paddingTop={vs(50)}>
-        <Header
-          iconLeft=":information_source:"
-          onPress={() => navigation.navigate('RULES_SCREEN')}
-          iconRight=":books:"
-          displayStatus
-          textAlign="center"
-          onPressRight={() => navigation.navigate('PLANS_SCREEN')}
-        >
-          {endGame && (
-            <>
+      {/* <Background enableTopInsets paddingTop={vs(50)}> */}
+      <Header
+        iconLeft=":information_source:"
+        onPress={() => navigation.navigate('RULES_SCREEN')}
+        iconRight=":books:"
+        displayStatus
+        textAlign="center"
+        onPressRight={() => navigation.navigate('PLANS_SCREEN')}
+      >
+        {endGame && (
+          <>
+            <ButtonWithIcon
+              viewStyle={styles.centerButton}
+              h="h5"
+              title={t('actions.startOver')}
+              onPress={
+                DiceStore.online
+                  ? OnlinePlayer.resetGame
+                  : OfflinePlayers.resetGame
+              }
+            />
+            <Space height={vs(2)} />
+            <Text textStyle={styles.centerText} h="h1" title={`${t('win')}`} />
+            {DiceStore.rate && isMoreThree ? (
               <ButtonWithIcon
-                viewStyle={page.centerButton}
+                viewStyle={styles.centerButton}
                 h="h5"
-                title={t('actions.startOver')}
-                onPress={
-                  DiceStore.online
-                    ? OnlinePlayer.resetGame
-                    : OfflinePlayers.resetGame
-                }
+                title={t('actions.leaveFeedback')}
+                onPress={onPressRate}
               />
-              <Space height={vs(2)} />
-              <Text textStyle={page.centerText} h="h1" title={`${t('win')}`} />
-              {DiceStore.rate && isMoreThree ? (
-                <ButtonWithIcon
-                  viewStyle={page.centerButton}
-                  h="h5"
-                  title={t('actions.leaveFeedback')}
-                  onPress={onPressRate}
-                />
-              ) : (
-                <Space height={s(38)} />
-              )}
-            </>
-          )}
-        </Header>
-        {!endGame && <Dice />}
-
-        {!user.pro && isBlockGame && online && (
-          <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
+            ) : (
+              <Space height={s(38)} />
+            )}
+          </>
         )}
-        <GameBoard />
-      </Background>
+      </Header>
+      {!endGame && <Dice />}
+
+      {!user.pro && isBlockGame && online && (
+        <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
+      )}
+      <GameBoard />
+      {/* </Background> */}
     </>
   )
 })
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   centerText: {
     textAlign: 'center'
   },

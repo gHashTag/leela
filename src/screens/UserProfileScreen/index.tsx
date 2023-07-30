@@ -92,7 +92,7 @@ export const UserProfileScreen = observer(
           <TabContextProvider hasBottomTabs={false}>
             {({ tabViewH, screenStyle, headerGesture }: any) => (
               <Animated.View style={screenStyle}>
-                <View style={page.mainContainer}>
+                <View style={styles.mainContainer}>
                   <HeaderMaster
                     avatar={data.avatar}
                     plan={data.plan}
@@ -148,7 +148,7 @@ const RenderHistoryTab = ({ history }: any) => {
     >
       <Animated.ScrollView
         bounces={false}
-        style={page.flexOne}
+        style={styles.flexOne}
         scrollEventThrottle={1}
         showsVerticalScrollIndicator={false}
         onScrollBeginDrag={(e) => {
@@ -157,7 +157,7 @@ const RenderHistoryTab = ({ history }: any) => {
       >
         <Space height={vs(10)} />
         {history.map((item: any, index: number) => (
-          <View key={String(index)} style={page.withPaddings}>
+          <View key={String(index)} style={styles.withPaddings}>
             <HistoryStep item={item} index={index} />
           </View>
         ))}
@@ -171,7 +171,7 @@ const RenderIntentionOfGameTab = ({ intention }: { intention: string }) => {
   const { headerGesture } = useContext(TabContext) as any
   return (
     <GestureDetector gesture={headerGesture}>
-      <View style={[page.flexOne, page.withPaddings]}>
+      <View style={[styles.flexOne, styles.withPaddings]}>
         {intention && (
           <>
             <Space height={vs(5)} />
@@ -183,7 +183,7 @@ const RenderIntentionOfGameTab = ({ intention }: { intention: string }) => {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   withPaddings: {
     paddingHorizontal: s(20)
   },

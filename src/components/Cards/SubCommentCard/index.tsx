@@ -48,8 +48,8 @@ export function SubCommentCard({ item }: SubComT) {
   const text = hideTranslate ? item.text : transText
   const curName = PostStore.getOwnerName(item.ownerId, false)
   return (
-    <View style={page.container}>
-      <View style={page.commentHead}>
+    <View style={styles.container}>
+      <View style={styles.commentHead}>
         <PlanAvatar
           avaUrl={avaUrl}
           isAccept={true}
@@ -58,8 +58,8 @@ export function SubCommentCard({ item }: SubComT) {
           size="small"
         />
         <Space width={s(6)} />
-        <View style={page.infoContainer}>
-          <View style={page.infoLine}>
+        <View style={styles.infoContainer}>
+          <View style={styles.infoLine}>
             <Text numberOfLines={1} h={'h6'} title={curName as string} />
             <Text
               numberOfLines={1}
@@ -77,7 +77,7 @@ export function SubCommentCard({ item }: SubComT) {
         <Space width={s(8)} />
       </View>
       <Space height={vs(3)} />
-      <View style={page.textContainer}>
+      <View style={styles.textContainer}>
         <Space width={s(5)} />
         <HashtagFormat hashTagColor={fuchsia} title={text} h="h6" selectable />
       </View>
@@ -85,7 +85,7 @@ export function SubCommentCard({ item }: SubComT) {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     marginVertical: vs(5)
   },

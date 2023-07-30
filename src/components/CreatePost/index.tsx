@@ -89,7 +89,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
         color={dimGray}
         multiline
         placeholder={t('placeholderReport')}
-        additionalStyle={page.input}
+        additionalStyle={styles.input}
       />
       <Space height={20} />
       <Button
@@ -100,7 +100,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   input: {
     width: '100%',
     alignItems: 'center'

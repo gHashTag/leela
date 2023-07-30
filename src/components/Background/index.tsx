@@ -39,10 +39,10 @@ export const Background = memo(
     const { bottom, top } = useSafeAreaInsets()
 
     return (
-      <View style={page.container}>
+      <View style={styles.container}>
         <View
           style={[
-            page.imgContainer,
+            styles.imgContainer,
             style,
             enableBottomInsets && { paddingBottom: bottom },
             enableTopInsets && { paddingTop: top + paddingTop }
@@ -80,18 +80,18 @@ const RenderImagePart = ({ img, id, isUri }: RenderImagePartT) => {
   const isTop = id === 0
   return (
     <View
-      style={[page.subImgContainer, !isTop && page.bottomImage]}
+      style={[styles.subImgContainer, !isTop && styles.bottomImage]}
       key={`${img}-${id}`}
     >
       <Image
         source={isUri ? { uri: img } : img}
-        style={[page.imgStyle, { height }]}
+        style={[styles.imgStyle, { height }]}
       />
     </View>
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1
   },

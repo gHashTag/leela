@@ -77,7 +77,7 @@ function AppWithProviders() {
   return (
     <RevenueCatProvider>
       <SafeAreaProvider>
-        <GestureHandlerRootView style={page.flexOne}>
+        <GestureHandlerRootView style={styles.flexOne}>
           <Navigation />
         </GestureHandlerRootView>
       </SafeAreaProvider>
@@ -85,7 +85,7 @@ function AppWithProviders() {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   flexOne: { flex: 1 }
 })
 

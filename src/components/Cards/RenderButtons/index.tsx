@@ -29,7 +29,7 @@ export function RenderButtons({ item, colorOnPress, press }: RenderButtonsT) {
   return (
     <Pressable
       style={({ pressed }) => [
-        page.butCont,
+        styles.butCont,
         pressed && { backgroundColor: colorOnPress }
       ]}
       onPress={handlePress}
@@ -37,7 +37,7 @@ export function RenderButtons({ item, colorOnPress, press }: RenderButtonsT) {
       <Icon name={icon} color={curColor} size={s(24)} />
       <Space width={s(15)} />
       <Text
-        textStyle={page.titleStyle}
+        textStyle={styles.titleStyle}
         oneColor={curColor}
         h="h4"
         title={title}
@@ -46,7 +46,7 @@ export function RenderButtons({ item, colorOnPress, press }: RenderButtonsT) {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   butCont: {
     flex: 1,
     flexDirection: 'row',

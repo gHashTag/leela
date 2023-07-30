@@ -86,11 +86,11 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
       }}
     >
       <FlatList
-        style={page.fullWidth}
+        style={styles.fullWidth}
         ListFooterComponent={
           <>
             <Space height={vs(25)} />
-            <Text textStyle={page.centerTxt} h={'h1'} title={t('contacts')} />
+            <Text textStyle={styles.centerTxt} h={'h1'} title={t('contacts')} />
             <ThemeProvider theme={theme}>
               <SocialLinks music />
               <Space height={vs(130)} />
@@ -99,7 +99,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
         }
         ListHeaderComponent={
           loading ? (
-            <View style={page.loadContainer}>
+            <View style={styles.loadContainer}>
               <Space height={vs(50)} />
               <Spin size={s(80)} type="Bounce" color={primary} />
             </View>
@@ -111,7 +111,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
           loading ? null : (
             <View>
               <Space height={vs(15)} />
-              <Text textStyle={page.centerTxt} h="h3" title={t('loadErr')} />
+              <Text textStyle={styles.centerTxt} h="h3" title={t('loadErr')} />
             </View>
           )
         }
@@ -134,13 +134,13 @@ const RenderItem = memo(({ item }: PlayraItemT) => {
   }
 
   return (
-    <View style={page.videoContainer}>
+    <View style={styles.videoContainer}>
       <Space height={vs(10)} />
       <Pressable onPress={handlePress}>
         <Text h={'h1'} title={title} />
         <Space height={vs(20)} />
-        <View style={page.videoView}>
-          <Image style={page.posterS} source={{ uri: poster }} />
+        <View style={styles.videoView}>
+          <Image style={styles.posterS} source={{ uri: poster }} />
         </View>
       </Pressable>
       <Space height={vs(40)} />
@@ -148,7 +148,7 @@ const RenderItem = memo(({ item }: PlayraItemT) => {
   )
 })
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   videoView: {
     height: s(200),
     width: '100%'

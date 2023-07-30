@@ -82,7 +82,7 @@ export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
                 <Text
                   h={'h3'}
                   title={title}
-                  textStyle={page.headerSectionText}
+                  textStyle={styles.headerSectionText}
                 />
               ) : (
                 <Space height={20} />
@@ -95,7 +95,7 @@ export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
   )
 })
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   headerSectionText: {
     padding: 15,
     marginTop: 10

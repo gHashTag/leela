@@ -32,9 +32,13 @@ export function UpdateVersionModal() {
     })
   }
   return (
-    <View style={page.container}>
-      <View style={[page.modalView, { backgroundColor: background }]}>
-        <Text textStyle={page.textStyle} title={t('modals.updateApp')} h="h2" />
+    <View style={styles.container}>
+      <View style={[styles.modalView, { backgroundColor: background }]}>
+        <Text
+          textStyle={styles.textStyle}
+          title={t('modals.updateApp')}
+          h="h2"
+        />
         <Space height={vs(30)} />
         <ButtonSimple onPress={_onPress} h="h3" title={t('actions.update')} />
       </View>
@@ -42,7 +46,7 @@ export function UpdateVersionModal() {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     height: '100%',
     width: '100%',

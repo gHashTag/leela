@@ -38,17 +38,17 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
     }
   }
   return (
-    <View style={page.transpCont}>
-      <View style={[page.modalView, { backgroundColor: background }]}>
+    <View style={styles.transpCont}>
+      <View style={[styles.modalView, { backgroundColor: background }]}>
         <Text
           h="h4"
-          textStyle={page.textStyle}
+          textStyle={styles.textStyle}
           title={t('online-part.makeReport')}
         />
         <Space height={vs(16)} />
         <Pressable onPress={handlePress}>
           <Text
-            textStyle={page.linkText}
+            textStyle={styles.linkText}
             title={t('actions.go')}
             oneColor={fuchsia}
             h="h2"
@@ -59,7 +59,7 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   transpCont: {
     height: '100%',
     width: '100%',

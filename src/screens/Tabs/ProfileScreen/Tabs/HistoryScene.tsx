@@ -5,7 +5,7 @@ import { FlatList, StyleSheet } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated from 'react-native-reanimated'
 import { s, vs } from 'react-native-size-matters'
-import { HistoryT } from 'src/types'
+import { HistoryT } from '../../../../types'
 
 import { HistoryStep, Space } from '../../../../components'
 import { useHistoryData } from '../../../../hooks/useHistoryData'
@@ -35,7 +35,7 @@ export const HistoryScene = observer(() => {
         }}
       >
         <FlatList
-          style={page.historyList}
+          style={styles.historyList}
           scrollEnabled={false}
           ListFooterComponent={<Space height={vs(250)} />}
           initialNumToRender={60}
@@ -50,7 +50,7 @@ export const HistoryScene = observer(() => {
   )
 })
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   historyList: {
     paddingHorizontal: s(10),
     flex: 1

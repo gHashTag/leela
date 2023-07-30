@@ -105,12 +105,12 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
               isHideTranslate={hideTranslate}
               onPressCom={newComment}
             />
-            <View style={page.line} />
+            <View style={styles.line} />
           </>
         }
         ListFooterComponent={
           <>
-            <View style={page.line} />
+            <View style={styles.line} />
             <Space height={vs(30)} />
           </>
         }
@@ -129,7 +129,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
   }
 )
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   line: {
     width: '100%',
     borderBottomColor: lightGray,

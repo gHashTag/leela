@@ -85,7 +85,7 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
       {loading ? (
         <Loading />
       ) : (
-        <View style={page.container}>
+        <View style={styles.container}>
           <FormProvider {...methods}>
             <Space height={mvs(80, 0.4)} />
             <Input
@@ -94,7 +94,7 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
               multiline
               autoCapitalize="none"
               placeholder={t('intention')}
-              additionalStyle={[page.bigInput, { backgroundColor }]}
+              additionalStyle={[styles.bigInput, { backgroundColor }]}
             />
             <Space height={10} />
             <Button
@@ -111,7 +111,7 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     alignItems: 'center'
   },

@@ -75,7 +75,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
 
     return (
       <>
-        <View style={page.container}>
+        <View style={styles.container}>
           <View style={{ marginRight: s(6) }}>
             <PlanAvatar
               avaUrl={avaUrl}
@@ -85,13 +85,13 @@ export const CommentCard: React.FC<CommentCardI> = observer(
               size="medium"
             />
             {showLine && (
-              <View style={page.lineCont} onLayout={_onLayout}>
-                <View style={[page.verticalLine, { height: lineH }]} />
+              <View style={styles.lineCont} onLayout={_onLayout}>
+                <View style={[styles.verticalLine, { height: lineH }]} />
               </View>
             )}
           </View>
-          <View style={page.content}>
-            <View style={page.commentHead}>
+          <View style={styles.content}>
+            <View style={styles.commentHead}>
               <Text numberOfLines={1} h={'h6'} title={curName as string} />
               <Text
                 numberOfLines={1}
@@ -99,7 +99,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
                 h={'h6'}
                 title={`  · ${date}`}
               />
-              <View style={page.flexOne} />
+              <View style={styles.flexOne} />
               <ButtonVectorIcon
                 size={s(15)}
                 name="chevron-down"
@@ -123,7 +123,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
   }
 )
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingVertical: PADDING,

@@ -15,9 +15,9 @@ import {
   SecondaryTab,
   Space,
   Spin
-} from 'src/components'
-import { OnlinePlayer } from 'src/store'
-import { RootStackParamList, RootTabParamList } from 'src/types'
+} from '../../../components'
+import { OnlinePlayer } from '../../../store'
+import { RootStackParamList, RootTabParamList } from '../../../types'
 
 import { TabContextProvider } from './TabContext'
 import { HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
@@ -57,7 +57,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                 <Space height={H * 0.5} />
               </CenterView>
             ) : (
-              <View style={page.container}>
+              <View style={styles.container}>
                 <HeaderMaster
                   avatar={avatar}
                   plan={plan}
@@ -93,7 +93,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                       Scene: IntentionOfGame
                     }
                   ]}
-                  style={[page.tabContainer, { height: tabViewH }]}
+                  style={[styles.tabContainer, { height: tabViewH }]}
                 />
               </View>
             )}
@@ -104,7 +104,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   )
 })
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   tabContainer: {},
   container: {
     alignItems: 'center',

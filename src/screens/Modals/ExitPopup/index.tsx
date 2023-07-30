@@ -28,38 +28,38 @@ export function ExitPopup({ navigation }: ExitPopupT) {
     BackHandler.exitApp()
   }
   return (
-    <View style={page.transparentView}>
-      <Pressable style={page.exitArea} onPress={() => navigation.goBack()} />
-      <View style={[page.popup, { backgroundColor: background }]}>
-        <Text textStyle={page.btnText} title={t('modals.wantExit')} h="h2" />
+    <View style={styles.transparentView}>
+      <Pressable style={styles.exitArea} onPress={() => navigation.goBack()} />
+      <View style={[styles.popup, { backgroundColor: background }]}>
+        <Text textStyle={styles.btnText} title={t('modals.wantExit')} h="h2" />
         <Space height={vs(20)} />
-        <View style={page.btnsCont}>
+        <View style={styles.btnsCont}>
           <Pressable
             style={({ pressed }) => [
-              page.btn,
+              styles.btn,
               { borderBottomLeftRadius: s(12) },
-              pressed && page.pressedBtn
+              pressed && styles.pressedBtn
             ]}
             onPress={exit}
           >
             <Text
               oneColor={fuchsia}
-              textStyle={page.btnText}
+              textStyle={styles.btnText}
               title={t('actions.exit')}
               h="h2"
             />
           </Pressable>
           <Pressable
             style={({ pressed }) => [
-              page.btn,
+              styles.btn,
               { borderBottomRightRadius: s(12) },
-              pressed && page.pressedBtn
+              pressed && styles.pressedBtn
             ]}
             onPress={cancel}
           >
             <Text
               oneColor={primary}
-              textStyle={page.btnText}
+              textStyle={styles.btnText}
               title={t('actions.cancel')}
               h="h2"
             />
@@ -70,7 +70,7 @@ export function ExitPopup({ navigation }: ExitPopupT) {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   transparentView: {
     flex: 1,
     alignItems: 'center',

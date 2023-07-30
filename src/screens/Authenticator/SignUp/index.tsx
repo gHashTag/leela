@@ -50,7 +50,7 @@ export const SignUp = (): ReactElement => {
         <>
           <KeyboardContainer>
             <ScrollView
-              contentContainerStyle={page.container}
+              contentContainerStyle={styles.container}
               showsVerticalScrollIndicator={false}
             >
               <Space height={H / 7} />
@@ -78,7 +78,7 @@ export const SignUp = (): ReactElement => {
                 />
                 <Space height={vs(30)} />
                 {error !== '' && (
-                  <TextError title={error} textStyle={page.centerText} />
+                  <TextError title={error} textStyle={styles.centerText} />
                 )}
                 <Space height={vs(20)} />
                 <Button
@@ -95,7 +95,7 @@ export const SignUp = (): ReactElement => {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     alignItems: 'center'
   },

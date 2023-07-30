@@ -37,11 +37,11 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
   return (
     <>
       <StatusBar hidden backgroundColor="black" barStyle="light-content" />
-      <View style={page.transpView}>
+      <View style={styles.transpView}>
         <VideoPlayer source={{ uri }} poster={poster} />
         <ButtonVectorIcon
           onPress={handleBack}
-          viewStyle={page.btnS}
+          viewStyle={styles.btnS}
           name="angle-double-left"
           size={s(40)}
         />
@@ -50,7 +50,7 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   transpView: {
     flex: 1
   },

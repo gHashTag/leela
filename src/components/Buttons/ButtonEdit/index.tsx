@@ -5,7 +5,7 @@ import { vs } from 'react-native-size-matters'
 
 import { Pressable } from '../../Pressable'
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   img: {
     width: vs(18),
     height: vs(18)
@@ -20,7 +20,7 @@ interface ButtonEditT {
 const ButtonEdit = ({ onPress, viewStyle }: ButtonEditT) => {
   return (
     <Pressable onPress={onPress} style={viewStyle}>
-      <Image style={page.img} source={require('./edit.png')} />
+      <Image style={styles.img} source={require('./edit.png')} />
     </Pressable>
   )
 }

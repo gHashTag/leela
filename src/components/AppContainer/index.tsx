@@ -40,7 +40,7 @@ export function AppContainer({
   hidestar = true
 }: AppContainerT) {
   return (
-    <View style={page.container}>
+    <View style={styles.container}>
       {title && header && (
         <Header
           displayStatus={displayStatus}
@@ -65,7 +65,7 @@ export function AppContainer({
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     width: '100%',
     height: '100%'

@@ -72,7 +72,7 @@ export const OnlineGameScreen = observer(
               <Markdown {...mdProps}>{part}</Markdown>
               <Space height={vs(15)} />
               <ButtonWithIcon
-                viewStyle={page.btn}
+                viewStyle={styles.btn}
                 color={fuchsia}
                 onPress={() => navigation.navigate('PLAYRA_SCREEN')}
                 iconName="ios-musical-notes"
@@ -93,16 +93,16 @@ export const OnlineGameScreen = observer(
     const topBackgroundMargin = useSafeAreaInsets().top + ms(37, 0.5)
 
     return (
-      <Background style={[page.bgStyle, { paddingTop: topBackgroundMargin }]}>
+      <Background style={[styles.bgStyle, { paddingTop: topBackgroundMargin }]}>
         <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
           <Header title={t('events')} textAlign="center" />
           <Space height={s(20)} />
           <ImageSwiper images={images} height={vs(300)} />
           <Space height={s(10)} />
-          <View style={page.mdStyle}>
+          <View style={styles.mdStyle}>
             {mdContent?.map(renderMarkdownPart)}
             <Space height={vs(10)} />
-            <Text textStyle={page.centered} h="h3" title={t('contacts')} />
+            <Text textStyle={styles.centered} h="h3" title={t('contacts')} />
             <SocialLinks />
             <Space height={vs(80)} />
           </View>
@@ -112,7 +112,7 @@ export const OnlineGameScreen = observer(
   }
 )
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   btn: {
     alignSelf: 'center'
   },

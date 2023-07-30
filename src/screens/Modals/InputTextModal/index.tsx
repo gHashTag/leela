@@ -53,20 +53,20 @@ export function InputTextModal({ navigation, route }: InputTextT) {
     methods.reset()
   }
   return (
-    <View style={page.transparentView}>
+    <View style={styles.transparentView}>
       <KeyboardContainer>
         <Pressable
           onPress={() => navigation.goBack()}
-          style={page.goBackView}
+          style={styles.goBackView}
         />
-        <View style={[page.inputContainer, { backgroundColor: background }]}>
+        <View style={[styles.inputContainer, { backgroundColor: background }]}>
           <FormProvider {...methods}>
             <Input
               onChange={(e) => setLength(e.nativeEvent.text.length)}
               name="text"
               placeholder={t('online-part.uComment')}
               color={text}
-              additionalStyle={page.input}
+              additionalStyle={styles.input}
               showError={false}
               onSubmitEditing={methods.handleSubmit(
                 handleSubmit,
@@ -81,7 +81,7 @@ export function InputTextModal({ navigation, route }: InputTextT) {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   transparentView: {
     flex: 1
   },

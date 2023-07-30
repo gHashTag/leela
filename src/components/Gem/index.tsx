@@ -5,14 +5,14 @@ import { Image, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { runOnJS } from 'react-native-reanimated'
 import { ScaledSheet, ms } from 'react-native-size-matters'
-import { useTypedNavigation } from 'src/hooks'
-import { getUid } from 'src/screens/helper'
+import { useTypedNavigation } from '../../hooks'
+import { getUid } from '../../screens/helper'
 import {
   DiceStore,
   OfflinePlayers,
   OnlinePlayer,
   OtherPlayers
-} from 'src/store'
+} from '../../store'
 
 import { ICONS } from './images'
 
@@ -32,7 +32,7 @@ interface dataI {
 const Gem = observer(({ plan, index }: GemT) => {
   const { navigate } = useTypedNavigation()
   const { container, gems } = styles
-
+  console.log('OfflinePlayers.store.plans', OfflinePlayers.store.plans)
   const DATA: dataI[] = !DiceStore.online
     ? OfflinePlayers.store.plans
         .slice()

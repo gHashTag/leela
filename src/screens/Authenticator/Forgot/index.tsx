@@ -120,7 +120,7 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
               />
               <Space height={vs(15)} />
               {errorMessage !== '' && (
-                <TextError title={errorMessage} textStyle={page.errorText} />
+                <TextError title={errorMessage} textStyle={styles.errorText} />
               )}
               <Space height={vs(10)} />
               <Button
@@ -136,7 +136,7 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   errorText: {
     alignSelf: 'center'
   }

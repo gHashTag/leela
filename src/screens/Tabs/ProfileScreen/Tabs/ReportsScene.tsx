@@ -61,9 +61,9 @@ export const ReportsScene = observer(() => {
         ListHeaderComponent={<Space height={vs(10)} />}
         ListFooterComponent={<Space height={vs(250)} />}
         ListEmptyComponent={
-          <View style={page.noPostBlock}>
+          <View style={styles.noPostBlock}>
             <Text
-              textStyle={page.noPostText}
+              textStyle={styles.noPostText}
               h={'h1'}
               title={t('online-part.noPosts')}
             />
@@ -74,7 +74,7 @@ export const ReportsScene = observer(() => {
   )
 })
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   noPostBlock: {
     paddingHorizontal: s(10)
   },

@@ -74,7 +74,7 @@ export const ConfirmSignUp = ({
       onPress={onExit}
       colorLeft={color}
     >
-      <View style={page.container}>
+      <View style={styles.container}>
         <Space height={vs(15)} />
         <Text h={'h1'} title={t('auth.checkMail')} />
         <Text h={'h2'} title={`(${route.params.email})`} />
@@ -84,16 +84,20 @@ export const ConfirmSignUp = ({
       <Pressable
         disabled={!canResend}
         onPress={_onResend}
-        style={[page.btn, !canResend && page.btnDisabled]}
+        style={[styles.btn, !canResend && styles.btnDisabled]}
       >
-        <Text textStyle={page.textStyle} title={t('auth.resendCode')} h="h3" />
+        <Text
+          textStyle={styles.textStyle}
+          title={t('auth.resendCode')}
+          h="h3"
+        />
       </Pressable>
       <Space height={vs(30)} />
     </AppContainer>
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   btn: {
     alignSelf: 'center'
   },

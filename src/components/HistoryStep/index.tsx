@@ -37,7 +37,7 @@ export const HistoryStep = ({ item }: StepsT) => {
   const { t } = useTranslation()
 
   return (
-    <View style={page.container}>
+    <View style={styles.container}>
       <Space width={0} />
       {status === 'cube' && (
         <>
@@ -59,7 +59,7 @@ export const HistoryStep = ({ item }: StepsT) => {
   )
 }
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',

@@ -12,18 +12,6 @@ import {
   actionsDice
 } from '../../store'
 
-const styles = StyleSheet.create({
-  diceContainer: {
-    alignItems: 'center',
-    alignSelf: 'center',
-    marginVertical: vs(12)
-  },
-  image: {
-    height: vs(65),
-    width: vs(65)
-  }
-})
-
 const getImage = (number: number) => {
   // так не работает
   // return require(`./assets/${number}.png`)
@@ -84,7 +72,7 @@ export const Dice = observer(() => {
       onPress={() => {
         canRoll && rollDice()
       }}
-      style={[styles.diceContainer, isOpacity && page.opacityCube]}
+      style={[styles.diceContainer, isOpacity && styles.opacityCube]}
     >
       <Animated.Image
         style={[styles.image, { transform: [{ rotate: spin }] }]}
@@ -94,7 +82,16 @@ export const Dice = observer(() => {
   )
 })
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
+  diceContainer: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginVertical: vs(12)
+  },
+  image: {
+    height: vs(65),
+    width: vs(65)
+  },
   opacityCube: {
     opacity: 0.4
   }

@@ -67,7 +67,7 @@ export const PostScreen = observer(({}: Ipost) => {
       ListEmptyComponent={
         <View style={{ paddingHorizontal: s(20) }}>
           <Text
-            textStyle={page.noPostText}
+            textStyle={styles.noPostText}
             h={'h1'}
             title={t('online-part.noPosts')}
           />
@@ -77,7 +77,7 @@ export const PostScreen = observer(({}: Ipost) => {
   )
 })
 
-const page = StyleSheet.create({
+const styles = StyleSheet.create({
   noPostText: {
     textAlign: 'center'
   }
