@@ -9,7 +9,8 @@
     "test": "jest",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "clean": "watchman watch-del-all && rm -f yarn.lock && cd android && ./gradlew clean && cd .. && yarn && yarn start --reset-cache",
-    "build": "cd android && ./gradlew bundleRelease"
+    "build": "cd android && ./gradlew bundleRelease",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@hookform/resolvers": "^2.8.8",
@@ -39,6 +40,8 @@
     "mobx-react": "^7.5.3",
     "mobx-react-lite": "^4.0.3",
     "nanoid": "^3.3.4",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "react": "18.1.0",
     "react-hook-form": "^7.30.0",
     "react-i18next": "^12.0.0",
