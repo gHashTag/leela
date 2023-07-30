@@ -15,7 +15,7 @@ import {
   secondary,
   white
 } from '../../constants'
-import { Loading, PurchaseButton, Space, Spin, Text } from '../../components'
+import { Loading, PurchaseButton, Space, Text } from '../../components'
 
 import { PurchasesPackage } from 'react-native-purchases'
 
