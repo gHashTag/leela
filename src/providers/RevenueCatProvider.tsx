@@ -85,13 +85,19 @@ export const RevenueCatProvider = ({ children }: any) => {
 
   // Update user state based on previous purchases
   const updateCustomerInformation = async (customerInfo: CustomerInfo) => {
-    let newUser: UserState = { pro: false }
+    try {
+      let newUser: UserState = { pro: false }
 
-    if (customerInfo?.entitlements.active.hasOwnProperty('pro plan')) {
-      newUser.pro = true
-      actionSubscribeStore.unBlock()
+      if (customerInfo?.entitlements.active.hasOwnProperty('pro plan')) {
+        newUser.pro = true
+        actionSubscribeStore.unBlock()
+      } else if (PostStore.store.posts.length > 5) {
+        actionSubscribeStore.blockGame()
+      }
+      setUser(newUser)
+    } catch (error) {
+      captureException(error, 'updateCustomerInformation')
     }
-    setUser(newUser)
   }
 
   // Purchase a package

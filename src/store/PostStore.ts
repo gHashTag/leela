@@ -55,9 +55,6 @@ export const PostStore = {
     loadPosts: true
   }),
   createPost: async ({ text, plan, systemMessage, planText }: FormPostT) => {
-    if (PostStore.store.posts.length > 5) {
-      actionSubscribeStore.blockGame()
-    }
     const userUid = auth().currentUser?.uid
     const email = auth().currentUser?.email
     if (userUid && email) {
@@ -71,7 +68,7 @@ export const PostStore = {
         email,
         comments: [],
         liked: [],
-        accept: false,
+        accept: true,
         language: lang,
         flagEmoji,
         planText,
