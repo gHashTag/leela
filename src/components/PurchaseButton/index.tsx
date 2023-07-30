@@ -4,11 +4,12 @@ import {
   Platform,
   StyleSheet,
   TouchableOpacity,
-  TouchableOpacityProps,
+  TouchableOpacityProps
 } from 'react-native'
 import { PurchasesPackage } from 'react-native-purchases'
-import { ms, s } from 'react-native-size-matters'
-import { Text } from 'src/components'
+import { s } from 'react-native-size-matters'
+import { Text } from '../../components'
+import { gray, trueBlue, white } from '../../constants'
 
 interface PurchaseButtonProps extends TouchableOpacityProps {
   title: string
@@ -19,7 +20,7 @@ interface PurchaseButtonProps extends TouchableOpacityProps {
 const PurchaseButton: React.FC<PurchaseButtonProps> = ({
   title,
   selectedPackage,
-  onPress,
+  onPress
 }) => {
   const { t } = useTranslation()
 
@@ -36,25 +37,25 @@ const PurchaseButton: React.FC<PurchaseButtonProps> = ({
 
 const styles = StyleSheet.create({
   purchaseButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: trueBlue,
     paddingVertical: Platform.OS === 'ios' ? s(12) : s(5),
     paddingHorizontal: 24,
     borderRadius: 8,
     width: 200,
-    alignSelf: 'center',
+    alignSelf: 'center'
   },
   disabledButton: {
     width: 200,
-    backgroundColor: 'gray',
+    backgroundColor: gray
   },
   buttonText: {
-    color: '#fff',
+    color: white,
     fontSize: Platform.OS === 'ios' ? s(30) : s(23),
     fontWeight: 'bold',
     width: 200,
     textAlign: 'center',
-    alignSelf: 'center',
-  },
+    alignSelf: 'center'
+  }
 })
 
 export { PurchaseButton }

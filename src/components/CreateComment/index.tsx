@@ -1,8 +1,18 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 
 import { yupResolver } from '@hookform/resolvers/yup'
-import { FieldValues, FormProvider, SubmitHandler, useForm } from 'react-hook-form'
-import { Keyboard, KeyboardAvoidingView, Pressable, StyleSheet } from 'react-native'
+import {
+  FieldValues,
+  FormProvider,
+  SubmitHandler,
+  useForm
+} from 'react-hook-form'
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Pressable,
+  StyleSheet
+} from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
 
@@ -21,7 +31,7 @@ interface CreateCommentT {
 const schema = yup
   .object()
   .shape({
-    text: yup.string().trim().min(2).max(250).required(),
+    text: yup.string().trim().min(2).max(250).required()
   })
   .required()
 
@@ -29,11 +39,11 @@ export function CreateComment({
   visible,
   setVisible,
   postId,
-  postOwner,
+  postOwner
 }: CreateCommentT) {
   const { ...methods } = useForm({
     mode: 'onChange',
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema)
   })
   const [length, setLength] = useState(0)
   useEffect(() => {
@@ -41,7 +51,7 @@ export function CreateComment({
       setTimeout(() => methods.setFocus('text'), 200)
     }
   }, [visible, methods])
-  const handleSubmit: SubmitHandler<FieldValues> = async data => {
+  const handleSubmit: SubmitHandler<FieldValues> = async (data) => {
     methods.reset()
     setVisible(false)
     await PostStore.createComment({ text: data.text, postOwner, postId })
@@ -55,15 +65,15 @@ export function CreateComment({
       <Pressable style={[inputContainer, { backgroundColor: primary }]}>
         <FormProvider {...methods}>
           <Input
-            onChange={e => setLength(e.nativeEvent.text.length)}
+            onChange={(e) => setLength(e.nativeEvent.text.length)}
             onBlur={() => setVisible(false)}
             name="text"
             placeholder="Comment input"
             color={black}
             additionalStyle={input}
             showError={false}
-            onSubmitEditing={methods.handleSubmit(handleSubmit, error =>
-              captureException(error, 'CreateComment'),
+            onSubmitEditing={methods.handleSubmit(handleSubmit, (error) =>
+              captureException(error, 'CreateComment')
             )}
           />
           <Text h="h9" title={`(${length}/250)`} />
@@ -76,7 +86,7 @@ export function CreateComment({
 const styles = StyleSheet.create({
   input: {
     width: W - s(65),
-    marginBottom: vs(10),
+    marginBottom: vs(10)
   },
   inputContainer: {
     paddingHorizontal: vs(5),
@@ -87,13 +97,13 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: s(8),
     borderTopRightRadius: s(8),
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   avoidingView: {
     width: '100%',
     height: '100%',
     position: 'absolute',
-    zIndex: 20,
-  },
+    zIndex: 20
+  }
 })
 const { inputContainer, input, avoidingView } = styles

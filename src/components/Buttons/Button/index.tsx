@@ -15,12 +15,12 @@ const styles = ScaledSheet.create({
     height: ms(70),
     borderRadius: s(40),
     borderWidth: 1,
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   h: {
     textAlign: 'center',
-    paddingHorizontal: 15,
-  },
+    paddingHorizontal: 15
+  }
 })
 
 interface ButtonT {
@@ -36,7 +36,10 @@ const Button = memo<ButtonT>(({ title, onPress, textStyle }) => {
   const borderColor = dark ? white : black
   const backgroundColor = dark ? black : white
   return (
-    <Pressable style={[container, { backgroundColor, borderColor }]} onPress={onPress}>
+    <Pressable
+      style={[container, { backgroundColor, borderColor }]}
+      onPress={onPress}
+    >
       <Text h="h1" textStyle={[h, textStyle]} title={title} />
     </Pressable>
   )

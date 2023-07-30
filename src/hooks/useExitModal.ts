@@ -5,10 +5,13 @@ import { OpenExitModal } from '../constants'
 
 export const useExitModal = () => {
   useFocusEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
-      OpenExitModal()
-      return true
-    })
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      function () {
+        OpenExitModal()
+        return true
+      }
+    )
     return () => backHandler.remove()
   })
 }

@@ -6,7 +6,9 @@ export const useLeftTimeForStep = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       const currentDate = Date.now()
-      OnlinePlayer.store.timeText = OnlinePlayer.getLeftTime(OnlinePlayer.store.stepTime)
+      OnlinePlayer.store.timeText = OnlinePlayer.getLeftTime(
+        OnlinePlayer.store.stepTime
+      )
       if (
         currentDate - OnlinePlayer.store.stepTime >= 86400000 &&
         OnlinePlayer.store.stepTime !== 0

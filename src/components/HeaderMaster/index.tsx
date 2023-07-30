@@ -31,12 +31,12 @@ const HeaderMaster = observer(
     plan,
     firstName = '',
     lastName = '',
-    fullName = '',
+    fullName = ''
   }: HeaderMasterT) => {
     const { loadImage, onPressEdit } = useActions()
 
     const {
-      colors: { border },
+      colors: { border }
     } = useTheme()
 
     const activeOpacity = editable ? 0.8 : 1
@@ -53,13 +53,22 @@ const HeaderMaster = observer(
 
             <View style={planAndEditBlock}>
               {editable && (
-                <Icon style={editIcon} name="md-pencil" color={border} size={s(12)} />
+                <Icon
+                  style={editIcon}
+                  name="md-pencil"
+                  color={border}
+                  size={s(12)}
+                />
               )}
               <Text h="h0" textStyle={planNumber} title={String(plan)} />
             </View>
           </View>
         </Pressable>
-        <Pressable activeOpacity={activeOpacity} style={container} onPress={onPressName}>
+        <Pressable
+          activeOpacity={activeOpacity}
+          style={container}
+          onPress={onPressName}
+        >
           {fullName ? (
             <Text h={'h1'} title={fullName} />
           ) : (
@@ -72,7 +81,7 @@ const HeaderMaster = observer(
         </Pressable>
       </View>
     )
-  },
+  }
 )
 
 const styles = ScaledSheet.create({
@@ -80,12 +89,12 @@ const styles = ScaledSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    marginTop: vs(10),
+    marginTop: vs(10)
   },
   avaContainer: {
     position: 'absolute',
     width: '100%',
-    height: '100%',
+    height: '100%'
   },
   subAvaContainer: {
     width: '100%',
@@ -95,20 +104,20 @@ const styles = ScaledSheet.create({
     justifyContent: 'space-between',
     paddingVertical: vs(10),
     paddingRight: s(20),
-    paddingLeft: s(15),
+    paddingLeft: s(15)
   },
   wide: {
     width: '100%',
     overflow: 'hidden',
     backgroundColor: 'transparent',
     borderRadius: s(20),
-    marginTop: vs(25),
+    marginTop: vs(25)
   },
   planAndEditBlock: {
     flex: 1,
     height: '100%',
     flexDirection: 'column-reverse',
-    alignItems: 'flex-end',
+    alignItems: 'flex-end'
   },
   editIcon: {
     flexDirection: 'row',
@@ -118,13 +127,13 @@ const styles = ScaledSheet.create({
     zIndex: 2,
     position: 'absolute',
     right: -s(5),
-    top: -s(3),
+    top: -s(3)
   },
   planNumber: {},
   rootContainer: {
     width: '80%',
-    alignSelf: 'center',
-  },
+    alignSelf: 'center'
+  }
 })
 const {
   container,
@@ -133,7 +142,7 @@ const {
   editIcon,
   planAndEditBlock,
   planNumber,
-  rootContainer,
+  rootContainer
 } = styles
 
 export { HeaderMaster }

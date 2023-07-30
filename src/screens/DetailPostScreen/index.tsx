@@ -14,7 +14,7 @@ import {
   Header,
   Loading,
   PostCard,
-  Space,
+  Space
 } from '../../components'
 import { captureException, lightGray } from '../../constants'
 import { OnlinePlayer, PostStore } from '../../store'
@@ -22,7 +22,10 @@ import { PostT, RootStackParamList } from '../../types'
 import { getUid } from '../helper'
 
 interface DetailPostI {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'DETAIL_POST_SCREEN'>
+  navigation: NativeStackNavigationProp<
+    RootStackParamList,
+    'DETAIL_POST_SCREEN'
+  >
   route: RouteProp<RootStackParamList, 'DETAIL_POST_SCREEN'>
 }
 
@@ -30,20 +33,26 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
   ({ navigation, route }) => {
     const { postId, comment, translatedText, hideTranslate } = route.params
 
-    const curItem: PostT | undefined = PostStore.store.posts.find(a => a.id === postId)
-    const commentData = PostStore.store.comments.filter(a => a.postId === curItem?.id)
+    const curItem: PostT | undefined = PostStore.store.posts.find(
+      (a) => a.id === postId
+    )
+    const commentData = PostStore.store.comments.filter(
+      (a) => a.postId === curItem?.id
+    )
 
-    function newComment() {
-      curItem &&
+    const newComment = useCallback(() => {
+      if (curItem) {
         navigation.navigate('INPUT_TEXT_MODAL', {
-          onSubmit: text =>
+          onSubmit: (text) =>
             PostStore.createComment({
               text,
               postId: curItem.id,
-              postOwner: curItem.ownerId,
-            }),
+              postOwner: curItem.ownerId
+            })
         })
-    }
+      }
+    }, [curItem, navigation])
+
     const { t } = useTranslation()
     useFocusEffect(
       useCallback(() => {
@@ -51,12 +60,12 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
           const subComments = firestore()
             .collection('Comments')
             .where('postId', '==', curItem.id)
-            .onSnapshot(PostStore.fetchComments, err =>
-              captureException(err, 'DetailPostScreen'),
+            .onSnapshot(PostStore.fetchComments, (err) =>
+              captureException(err, 'DetailPostScreen')
             )
           return subComments
         }
-      }, [curItem]),
+      }, [curItem])
     )
 
     useEffect(() => {
@@ -72,7 +81,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
         }
       }
       handleLink()
-    }, [])
+    }, [comment, curItem, navigation, newComment])
 
     if (!curItem) {
       return <Loading />
@@ -105,21 +114,25 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
             <Space height={vs(30)} />
           </>
         }
-        keyExtractor={a => a.id}
+        keyExtractor={(a) => a.id}
         ListEmptyComponent={<EmptyComments />}
         data={commentData}
         renderItem={({ item, index }) => (
-          <CommentCard item={item} index={index} endIndex={commentData.length - 1} />
+          <CommentCard
+            item={item}
+            index={index}
+            endIndex={commentData.length - 1}
+          />
         )}
       />
     )
-  },
+  }
 )
 
 const page = StyleSheet.create({
   line: {
     width: '100%',
     borderBottomColor: lightGray,
-    borderBottomWidth: s(0.5),
-  },
+    borderBottomWidth: s(0.5)
+  }
 })

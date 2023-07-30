@@ -29,10 +29,10 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
         OnlinePlayer.store.plan === item && !OnlinePlayer.store.isReported
       navigation.navigate('PLANS_DETAIL_SCREEN', {
         plan: item,
-        report: itemIsReported,
+        report: itemIsReported
       })
     },
-    [navigation],
+    [navigation]
   )
 
   return (
@@ -51,7 +51,10 @@ const PlansScreen = ({ navigation }: PlansScreenT) => {
         windowSize={5}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
-          <RenderPlanItem title={t(`plan_${item}.title`)} onPress={onPressItem(item)} />
+          <RenderPlanItem
+            title={t(`plan_${item}.title`)}
+            onPress={onPressItem(item)}
+          />
         )}
         keyExtractor={_keyExtractor}
       />

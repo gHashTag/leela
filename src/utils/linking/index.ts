@@ -49,11 +49,11 @@ export const linking: LinkingOptions<RootStackParamList> = {
       //   }
       // },
       DETAIL_POST_SCREEN: {
-        path: 'reply_detail/:postId',
+        path: 'reply_detail/:postId'
       },
-      HELLO: '*',
-    },
-  },
+      HELLO: '*'
+    }
+  }
 }
 
 // Custom state
@@ -80,19 +80,19 @@ const getDetailPostState = ({ path }: getCustomNavStateT) => {
         state: {
           routes: [
             {
-              name: 'TAB_BOTTOM_1',
-            },
-          ],
-        },
+              name: 'TAB_BOTTOM_1'
+            }
+          ]
+        }
       },
       {
         name: 'DETAIL_POST_SCREEN',
         params: {
-          postId,
+          postId
         },
-        path,
-      },
-    ],
+        path
+      }
+    ]
   }
 }
 

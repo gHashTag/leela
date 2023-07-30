@@ -12,11 +12,11 @@ const styles = ScaledSheet.create({
     justifyContent: 'space-between',
     width: W - 30,
     right: s(15),
-    marginVertical: vs(10),
+    marginVertical: vs(10)
   },
   titleStyle: {
-    left: s(15),
-  },
+    left: s(15)
+  }
 })
 
 interface RenderItemT {

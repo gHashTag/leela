@@ -17,21 +17,21 @@ interface GetOtherI {
 export const OtherPlayers = {
   store: makeAutoObservable<storeI>({
     players: [],
-    online: [],
+    online: []
   }),
   getOtherProf: async ({ snapshot }: GetOtherI) => {
     if (snapshot) {
       const otherData: any = await Promise.all(
-        snapshot.docs.map(async a => {
+        snapshot.docs.map(async (a) => {
           if (a.exists) {
             const data: UserT = a.data() as UserT
             let isOnline = false
             await getFireBaseRef(`/online/${data.owner}`)
               .once('value')
-              .then(async snapshotOnline => {
+              .then(async (snapshotOnline) => {
                 isOnline = snapshotOnline.val()
               })
-              .catch(err => captureException(err, 'getOtherProf'))
+              .catch((err) => captureException(err, 'getOtherProf'))
             const result: OtherUsersT = {
               email: data.email,
               plan: data.plan,
@@ -40,21 +40,25 @@ export const OtherPlayers = {
               avatar: data.avatar ? await getIMG(data.avatar) : '',
               owner: data.owner,
               status: data.status,
-              isOnline,
+              isOnline
             }
             return result
           }
-        }),
+        })
       )
       if (otherData) {
-        OtherPlayers.store.players = otherData.filter((a: any) => a !== undefined)
+        OtherPlayers.store.players = otherData.filter(
+          (a: any) => a !== undefined
+        )
       }
       OtherPlayers.getOnlineProf()
     }
   },
   getOnlineProf: async () => {
     if (OtherPlayers.store.players.length > 0) {
-      OtherPlayers.store.online = OtherPlayers.store.players.filter(a => a.isOnline)
+      OtherPlayers.store.online = OtherPlayers.store.players.filter(
+        (a) => a.isOnline
+      )
     }
-  },
+  }
 }

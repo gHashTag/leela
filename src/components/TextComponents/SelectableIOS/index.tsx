@@ -7,10 +7,16 @@ import { TextInput } from 'react-native-gesture-handler'
 import { Icolors, hT } from '../Text'
 import { textStyles } from '../Text'
 
-export function SelectableIOS({ h, title, textStyle, oneColor, colors }: SelectableIosT) {
+export function SelectableIOS({
+  h,
+  title,
+  textStyle,
+  oneColor,
+  colors
+}: SelectableIosT) {
   const {
     dark,
-    colors: { primary, text },
+    colors: { primary, text }
   } = useTheme()
 
   // если добавлен шрифт и у к нему не нужна тень
@@ -25,7 +31,10 @@ export function SelectableIOS({ h, title, textStyle, oneColor, colors }: Selecta
     : text
 
   const hStyle = h
-    ? [{ ...textStyles[h], color: curColor }, hasShadow && { textShadowColor: primary }]
+    ? [
+        { ...textStyles[h], color: curColor },
+        hasShadow && { textShadowColor: primary }
+      ]
     : undefined
   return (
     <TextInput

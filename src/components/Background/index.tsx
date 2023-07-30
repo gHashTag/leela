@@ -6,7 +6,7 @@ import {
   StyleSheet,
   View,
   ViewStyle,
-  useWindowDimensions,
+  useWindowDimensions
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -32,9 +32,10 @@ export const Background = memo(
     style,
     paddingTop = 0,
     enableBottomInsets,
-    enableTopInsets,
+    enableTopInsets
   }: BackgroundT) => {
-    const images = ICONS.find(x => x.title === status)?.paths || sourceImages || []
+    const images =
+      ICONS.find((x) => x.title === status)?.paths || sourceImages || []
     const { bottom, top } = useSafeAreaInsets()
 
     return (
@@ -44,7 +45,7 @@ export const Background = memo(
             page.imgContainer,
             style,
             enableBottomInsets && { paddingBottom: bottom },
-            enableTopInsets && { paddingTop: top + paddingTop },
+            enableTopInsets && { paddingTop: top + paddingTop }
           ]}
         >
           {images.map((img, id) => (
@@ -60,7 +61,7 @@ export const Background = memo(
         {children}
       </View>
     )
-  },
+  }
 )
 
 interface RenderImagePartT {
@@ -78,29 +79,35 @@ const RenderImagePart = ({ img, id, isUri }: RenderImagePartT) => {
   //const isOne = images?.length
   const isTop = id === 0
   return (
-    <View style={[page.subImgContainer, !isTop && page.bottomImage]} key={`${img}-${id}`}>
-      <Image source={isUri ? { uri: img } : img} style={[page.imgStyle, { height }]} />
+    <View
+      style={[page.subImgContainer, !isTop && page.bottomImage]}
+      key={`${img}-${id}`}
+    >
+      <Image
+        source={isUri ? { uri: img } : img}
+        style={[page.imgStyle, { height }]}
+      />
     </View>
   )
 }
 
 const page = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 1
   },
   bottomImage: {
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-end'
   },
   imgContainer: {
     position: 'absolute',
     height: '100%',
-    width: '100%',
+    width: '100%'
   },
   imgStyle: {
     width: '100%',
-    marginVertical: 10,
+    marginVertical: 10
   },
   subImgContainer: {
-    flex: 1,
-  },
+    flex: 1
+  }
 })

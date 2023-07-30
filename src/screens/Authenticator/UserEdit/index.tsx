@@ -8,7 +8,7 @@ import {
   FieldValues,
   FormProvider,
   SubmitHandler,
-  useForm,
+  useForm
 } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet } from 'react-native'
@@ -21,7 +21,7 @@ import {
   Input,
   KeyboardContainer,
   Loading,
-  Space,
+  Space
 } from '../../../components'
 import {
   H,
@@ -29,7 +29,7 @@ import {
   black,
   captureException,
   goBack,
-  white,
+  white
 } from '../../../constants'
 import { updateProfName } from '../../../screens/helper'
 import { RootStackParamList } from '../../../types'
@@ -65,15 +65,15 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
             .trim()
             .min(2, t('twoSymbolRequire') || '')
             .required()
-            .max(20, `${t('manyCharacters')}20`),
+            .max(20, `${t('manyCharacters')}20`)
         })
         .required(),
-    [t],
+    [t]
   )
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
-    defaultValues: { ...route.params },
+    defaultValues: { ...route.params }
   })
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
@@ -124,7 +124,7 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
               <Button
                 title={t('done')}
                 onPress={methods.handleSubmit(onSubmit, (error) =>
-                  captureException(error, 'UserEdit'),
+                  captureException(error, 'UserEdit')
                 )}
               />
               <Space height={vs(10)} />
@@ -139,8 +139,8 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-  },
+    alignItems: 'center'
+  }
 })
 
 export { UserEdit }

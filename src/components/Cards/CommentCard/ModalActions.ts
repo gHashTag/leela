@@ -1,20 +1,21 @@
 import Clipboard from '@react-native-clipboard/clipboard'
-import { navigate } from 'src/constants'
-import i18next from 'src/i18n'
-import { getUid } from 'src/screens/helper'
-import { OnlinePlayer, OtherPlayers, PostStore } from 'src/store'
-import { ButtonsModalT, CommentT } from 'src/types'
+import { navigate } from '../../../constants'
+import i18next from '../../../i18n'
+import { getUid } from '../../../screens/helper'
+import { OnlinePlayer, OtherPlayers, PostStore } from '../../../store'
+import { ButtonsModalT, CommentT } from '../../../types'
 
 type getActionsT = (props: getActionsProps) => ButtonsModalT[]
 interface getActionsProps {
   item: CommentT
   handleTransText: () => void
 }
-export const getActions: getActionsT = ({ item, handleTransText }) => {
+export const getActions: getActionsT = ({ item }) => {
   const isOwner = getUid() === item.ownerId
   const isAdmin = OnlinePlayer.store.status === 'Admin'
   const isBaned =
-    OtherPlayers.store.players.find(a => a.owner === item.ownerId)?.status === 'ban'
+    OtherPlayers.store.players.find((a) => a.owner === item.ownerId)?.status ===
+    'ban'
   return [
     {
       key: 'REPLY',
@@ -25,12 +26,12 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
               text,
               commentId: item.id,
               commentOwner: item.ownerId,
-              postId: item.postId,
-            }),
+              postId: item.postId
+            })
         })
       },
       title: i18next.t('actions.reply'),
-      icon: 'ios-paper-plane-outline',
+      icon: 'ios-paper-plane-outline'
     },
     {
       key: 'COPY',
@@ -38,7 +39,7 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
         Clipboard.setString(item.text)
       },
       title: i18next.t('actions.copy'),
-      icon: 'ios-copy-outline',
+      icon: 'ios-copy-outline'
     },
     // {
     //   key: 'TRANSLATE',
@@ -52,12 +53,12 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
         PostStore.delComment({
           commentId: item.id,
           isReply: item.reply,
-          postId: item.postId,
+          postId: item.postId
         })
       },
       title: i18next.t('actions.delete'),
       color: 'red',
-      icon: 'md-trash-outline',
+      icon: 'md-trash-outline'
     },
     {
       key: 'DEL_ALL_COM',
@@ -66,7 +67,7 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
       },
       title: 'delete all user comments',
       color: 'red',
-      icon: 'md-warning-outline',
+      icon: 'md-warning-outline'
     },
     {
       key: 'BAN',
@@ -75,9 +76,11 @@ export const getActions: getActionsT = ({ item, handleTransText }) => {
       },
       title: isBaned ? 'Unban user' : 'Ban user',
       color: isBaned ? undefined : 'red',
-      icon: isBaned ? 'person-add-outline' : 'person-remove-outline',
-    },
+      icon: isBaned ? 'person-add-outline' : 'person-remove-outline'
+    }
   ]
-    .filter(a => (isOwner ? true : isAdmin ? true : a.key !== 'DEL'))
-    .filter(a => (isAdmin ? true : a.key !== 'DEL_ALL_COM' && a.key !== 'BAN'))
+    .filter((a) => (isOwner ? true : isAdmin ? true : a.key !== 'DEL'))
+    .filter((a) =>
+      isAdmin ? true : a.key !== 'DEL_ALL_COM' && a.key !== 'BAN'
+    )
 }

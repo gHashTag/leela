@@ -8,8 +8,8 @@ const SIZE = 80
 const styles = StyleSheet.create({
   img: {
     width: s(SIZE),
-    height: s(SIZE),
-  },
+    height: s(SIZE)
+  }
 })
 
 const IconLeela = memo(() => {

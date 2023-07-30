@@ -10,7 +10,7 @@ import {
   FormProvider,
   SubmitErrorHandler,
   SubmitHandler,
-  useForm,
+  useForm
 } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet } from 'react-native'
@@ -23,9 +23,16 @@ import {
   Input,
   KeyboardContainer,
   Loading,
-  Space,
+  Space
 } from '../../../components'
-import { H, W, black, captureException, goBack, white } from '../../../constants'
+import {
+  H,
+  W,
+  black,
+  captureException,
+  goBack,
+  white
+} from '../../../constants'
 import { useNoBackHandler } from '../../../hooks'
 import { actionsDice, fetchBusinesses } from '../../../store'
 import { RootStackParamList } from '../../../types'
@@ -42,7 +49,10 @@ type SignUpUsernameT = {
   route: ProfileScreenRouteProp
 }
 
-const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement => {
+const SignUpUsername = ({
+  route,
+  navigation
+}: SignUpUsernameT): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
   const { t } = useTranslation()
 
@@ -62,31 +72,31 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
             .trim()
             .min(2, t('twoSymbolRequire') || '')
             .required()
-            .max(20, `${t('manyCharacters')}20`),
+            .max(20, `${t('manyCharacters')}20`)
         })
         .required(),
-    [t],
+    [t]
   )
 
   const { ...methods } = useForm({
     mode: 'onChange',
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema)
   })
   useNoBackHandler()
 
-  const onSubmit: SubmitHandler<FieldValues> = async data => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setLoading(true)
     const { firstName, lastName } = data
     const { email } = route.params
     await auth().currentUser?.updateProfile({
-      displayName: `${firstName} ${lastName}`,
+      displayName: `${firstName} ${lastName}`
     })
     await createProfile({
       email,
       // @ts-ignore
       uid: getUid(),
       firstName,
-      lastName,
+      lastName
     })
     fetchBusinesses()
     navigation.navigate('SIGN_UP_AVATAR')
@@ -94,7 +104,7 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
     actionsDice.setPlayers(1)
     setLoading(false)
   }
-  const onError: SubmitErrorHandler<FieldValues> = errors => {
+  const onError: SubmitErrorHandler<FieldValues> = (errors) => {
     captureException(errors, 'SignUpUsername')
   }
 
@@ -149,8 +159,8 @@ const SignUpUsername = ({ route, navigation }: SignUpUsernameT): ReactElement =>
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
-  },
+    alignItems: 'center'
+  }
 })
 
 export { SignUpUsername }

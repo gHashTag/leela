@@ -8,7 +8,7 @@ import { s, vs } from 'react-native-size-matters'
 
 import { RenderButtons } from '../../../components'
 import { Space } from '../../../components'
-import { lightGray } from '../../../constants'
+import { red, lightGray } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 
 interface ActionsModalT {
@@ -21,14 +21,17 @@ export function ActionsModal({ navigation, route }: ActionsModalT) {
   const schema = useColorScheme()
   const pressedColor = schema === 'dark' ? '#2B2B2B' : '#F5F5F5'
   return (
-    <Pressable onPress={() => navigation.goBack()} style={transparentView}>
-      <View style={[modal, { backgroundColor }]}>
+    <Pressable
+      onPress={() => navigation.goBack()}
+      style={styles.transparentView}
+    >
+      <View style={[styles.modal, { backgroundColor }]}>
         <Space height={vs(10)} />
         <FlatList
           data={route.params.buttons}
-          keyExtractor={a => a.key}
-          style={listContainer}
-          renderItem={props => (
+          keyExtractor={(a) => a.key}
+          style={styles.listContainer}
+          renderItem={(props) => (
             <RenderButtons
               {...props}
               colorOnPress={pressedColor}
@@ -45,20 +48,18 @@ export function ActionsModal({ navigation, route }: ActionsModalT) {
 const styles = StyleSheet.create({
   modal: {
     width: '95%',
-    backgroundColor: 'red',
+    backgroundColor: red,
     borderRadius: s(15),
     borderWidth: s(2),
-    borderColor: lightGray,
+    borderColor: lightGray
   },
   transparentView: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingBottom: vs(25),
+    paddingBottom: vs(25)
   },
   listContainer: {
-    paddingHorizontal: s(5),
-  },
+    paddingHorizontal: s(5)
+  }
 })
-
-const { modal, transparentView, listContainer } = styles

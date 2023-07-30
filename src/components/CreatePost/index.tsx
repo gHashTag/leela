@@ -5,7 +5,7 @@ import {
   FieldValues,
   FormProvider,
   SubmitHandler,
-  useForm,
+  useForm
 } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
@@ -37,10 +37,10 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
             .string()
             .trim()
             .min(100, t('fewChars') || '')
-            .required(t('requireField') || ''),
+            .required(t('requireField') || '')
         })
         .required(),
-    [t],
+    [t]
   )
 
   const handleSubmit: SubmitHandler<FieldValues> = async (data) => {
@@ -53,20 +53,20 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
         text: data.text,
         plan: plan,
         systemMessage,
-        planText: t(`plan_${plan}.content`),
+        planText: t(`plan_${plan}.content`)
       })
       const curItem: PostT = {
         ...(PostStore.store.posts.find((a) => a.id === postId?.id) || {}),
         systemMessage,
         ownerId: userUid || '',
         id: postId?.id || '',
-        planText: t(`plan_${plan}.content`),
+        planText: t(`plan_${plan}.content`)
       }
       handleCommentAi({
         curItem,
         systemMessage,
         message: data.text,
-        planText: t(`plan_${plan}.content`),
+        planText: t(`plan_${plan}.content`)
       })
       navigate('TAB_BOTTOM_1')
       setLoading(false)
@@ -77,7 +77,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
 
   const { ...methods } = useForm({
     mode: 'onChange',
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema)
   })
 
   return loading ? (
@@ -103,6 +103,6 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
 const page = StyleSheet.create({
   input: {
     width: '100%',
-    alignItems: 'center',
-  },
+    alignItems: 'center'
+  }
 })

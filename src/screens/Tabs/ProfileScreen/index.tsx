@@ -14,7 +14,7 @@ import {
   OwnTabView,
   SecondaryTab,
   Space,
-  Spin,
+  Spin
 } from 'src/components'
 import { OnlinePlayer } from 'src/store'
 import { RootStackParamList, RootTabParamList } from 'src/types'
@@ -38,7 +38,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   const {
     avatar,
     plan,
-    profile: { firstName, lastName },
+    profile: { firstName, lastName }
   } = OnlinePlayer.store
 
   return (
@@ -70,20 +70,28 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                 />
                 <Space height={vs(5)} />
                 <OwnTabView
-                  renderTabBar={props => (
+                  renderTabBar={(props) => (
                     <GestureDetector gesture={headerGesture}>
                       <SecondaryTab {...props} />
                     </GestureDetector>
                   )}
                   width={tabViewWidth}
                   screens={[
-                    { key: 'reports', title: t('reports'), Scene: ReportsScene },
-                    { key: 'history', title: t('history'), Scene: HistoryScene },
+                    {
+                      key: 'reports',
+                      title: t('reports'),
+                      Scene: ReportsScene
+                    },
+                    {
+                      key: 'history',
+                      title: t('history'),
+                      Scene: HistoryScene
+                    },
                     {
                       key: 'intentionOfGame',
                       title: t('intention'),
-                      Scene: IntentionOfGame,
-                    },
+                      Scene: IntentionOfGame
+                    }
                   ]}
                   style={[page.tabContainer, { height: tabViewH }]}
                 />
@@ -100,8 +108,8 @@ const page = StyleSheet.create({
   tabContainer: {},
   container: {
     alignItems: 'center',
-    width: '100%',
-  },
+    width: '100%'
+  }
 })
 
 export { ProfileScreen }

@@ -8,8 +8,8 @@ import { Pressable } from '../../Pressable'
 const page = StyleSheet.create({
   img: {
     width: vs(18),
-    height: vs(18),
-  },
+    height: vs(18)
+  }
 })
 
 interface ButtonEditT {

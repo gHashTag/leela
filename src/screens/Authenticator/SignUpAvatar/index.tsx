@@ -7,7 +7,13 @@ import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { s } from 'react-native-size-matters'
 
-import { AppContainer, Avatar, Button, CenterView, Space } from '../../../components'
+import {
+  AppContainer,
+  Avatar,
+  Button,
+  CenterView,
+  Space
+} from '../../../components'
 import { Pressable } from '../../../components/Pressable'
 import { useNoBackHandler } from '../../../hooks'
 import { OnlinePlayer } from '../../../store'
@@ -51,7 +57,11 @@ const SignUpAvatar = observer(({}: SignUpAvatarT): ReactElement => {
     >
       <CenterView>
         <Pressable onPress={onPressAva}>
-          <Avatar size="xLarge" uri={OnlinePlayer.store.avatar.slice()} loading={load} />
+          <Avatar
+            size="xLarge"
+            uri={OnlinePlayer.store.avatar.slice()}
+            loading={load}
+          />
         </Pressable>
 
         <Space height={s(50)} />

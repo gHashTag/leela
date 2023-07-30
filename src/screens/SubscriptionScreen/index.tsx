@@ -12,6 +12,7 @@ import {
   captureException,
   goBack,
   gray,
+  lightGray,
   secondary,
   white
 } from '../../constants'
@@ -20,7 +21,7 @@ import { Loading, PurchaseButton, Space, Text } from '../../components'
 import { PurchasesPackage } from 'react-native-purchases'
 
 import { useTheme } from '@react-navigation/native'
-import { ms, s } from 'react-native-size-matters'
+import { ms } from 'react-native-size-matters'
 import { useTranslation } from 'react-i18next'
 
 import React, { useState } from 'react'
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   selectedPackage: {
-    backgroundColor: '#e0e0e0'
+    backgroundColor: lightGray
   },
   packageTitle: {
     fontSize: ms(21, 0.6),
@@ -204,24 +205,6 @@ const styles = StyleSheet.create({
   },
   packagePrice: {
     fontSize: ms(22, 0.6)
-  },
-  purchaseButton: {
-    backgroundColor: '#007bff',
-    paddingVertical: 1,
-    paddingHorizontal: 24,
-    borderRadius: 8
-  },
-  disabledButton: {
-    width: s(200),
-    backgroundColor: secondary
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: s(30),
-    fontWeight: 'bold',
-    width: s(200),
-    textAlign: 'center',
-    alignSelf: 'center'
   }
 })
 

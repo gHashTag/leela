@@ -5,7 +5,7 @@ import {
   Pressable as RNPressable,
   PressableProps as RNPressableProps,
   StyleProp,
-  ViewStyle,
+  ViewStyle
 } from 'react-native'
 
 type PressableProps = Omit<RNPressableProps, 'style'> & {
@@ -22,10 +22,13 @@ const Pressable: React.FC<PressableProps> = ({
   const defaultPressedStyle: StyleProp<ViewStyle> = { opacity: 0.2 } // default Pressable-like press style
 
   const handlePressStyle = ({
-    pressed,
+    pressed
   }: PressableStateCallbackType): StyleProp<ViewStyle> => {
     if (pressed) {
-      return [style, pressedStyle || defaultPressedStyle] as StyleProp<ViewStyle>
+      return [
+        style,
+        pressedStyle || defaultPressedStyle
+      ] as StyleProp<ViewStyle>
     }
     return style as StyleProp<ViewStyle>
   }

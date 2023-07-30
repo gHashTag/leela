@@ -4,5 +4,5 @@ export const ICONS = [
   require('./three.png'),
   require('./four.png'),
   require('./five.png'),
-  require('./six.png'),
+  require('./six.png')
 ]

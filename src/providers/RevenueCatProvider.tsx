@@ -12,7 +12,7 @@ import { actionSubscribeStore } from 'src/store/SubscribeStore'
 // Use your RevenueCat API keys
 const APIKeys = {
   apple: APPLE,
-  google: GOOGLE,
+  google: GOOGLE
 }
 
 interface RevenueCatProps {
@@ -29,10 +29,10 @@ export interface UserState {
 
 const RevenueCatContext = createContext<RevenueCatProps>({
   purchasePackage: async () => {},
-  restorePermissions: async () => ({} as CustomerInfo),
+  restorePermissions: async () => ({}) as CustomerInfo,
   user: { pro: false },
   packages: [],
-  isLoading: false,
+  isLoading: false
 })
 
 // Export context for easy usage
@@ -126,7 +126,7 @@ export const RevenueCatProvider = ({ children }: any) => {
     user,
     packages,
     purchasePackage,
-    isLoading,
+    isLoading
   }
 
   // Return empty fragment if provider is not ready (Purchase not yet initialised)

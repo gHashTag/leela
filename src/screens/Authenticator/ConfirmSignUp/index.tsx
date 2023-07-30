@@ -25,7 +25,10 @@ type ConfirmSignUpT = {
   route: ProfileScreenRouteProp
 }
 
-export const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactElement => {
+export const ConfirmSignUp = ({
+  route,
+  navigation
+}: ConfirmSignUpT): ReactElement => {
   const [isVerify, setIsVerify] = useState<boolean | undefined>(false)
   const [canResend, setCanResend] = useState<boolean>(true)
   const { t } = useTranslation()
@@ -92,16 +95,16 @@ export const ConfirmSignUp = ({ route, navigation }: ConfirmSignUpT): ReactEleme
 
 const page = StyleSheet.create({
   btn: {
-    alignSelf: 'center',
+    alignSelf: 'center'
   },
   btnDisabled: {
-    opacity: 0.5,
+    opacity: 0.5
   },
   container: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: 'center'
   },
   textStyle: {
-    textDecorationLine: 'underline',
-  },
+    textDecorationLine: 'underline'
+  }
 })

@@ -15,7 +15,7 @@ import { useTypedNavigation } from '../../../hooks'
 const initialValues = {
   email: __DEV__ ? EMAIL : '',
   password: __DEV__ ? PASSWORD : '',
-  passwordConfirmation: __DEV__ ? PASSWORD : '',
+  passwordConfirmation: __DEV__ ? PASSWORD : ''
 }
 
 export const useSignUp = () => {
@@ -41,20 +41,20 @@ export const useSignUp = () => {
           passwordConfirmation: yup
             .string()
             .required(t('requireField') || '')
-            .min(6, t('shortPassword') || ''),
+            .min(6, t('shortPassword') || '')
         })
         .required(),
-    [t],
+    [t]
   )
 
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
-    defaultValues: initialValues,
+    defaultValues: initialValues
   })
 
   const onSubmit: SubmitHandler<FieldValues> = useCallback(
-    async data => {
+    async (data) => {
       const { email, password, passwordConfirmation } = data
       if (password !== passwordConfirmation) {
         setError(t('passwordsDoNotMatch'))
@@ -68,7 +68,7 @@ export const useSignUp = () => {
             navigate('CONFIRM_SIGN_UP', { email })
             setLoading(false)
           })
-          .catch(exception => {
+          .catch((exception) => {
             switch (exception.code) {
               case 'auth/invalid-email':
                 setError(t('invalidEmail'))
@@ -94,7 +94,7 @@ export const useSignUp = () => {
           })
       }
     },
-    [navigate, t],
+    [navigate, t]
   )
   return { loading, error: error || '', methods, onSubmit }
 }

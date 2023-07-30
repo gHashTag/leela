@@ -12,7 +12,10 @@ import * as yup from 'yup'
 import { captureException } from '../../../constants'
 import { onSignIn } from '../../helper'
 
-const initialValues = { email: __DEV__ ? EMAIL : '', password: __DEV__ ? PASSWORD : '' }
+const initialValues = {
+  email: __DEV__ ? EMAIL : '',
+  password: __DEV__ ? PASSWORD : ''
+}
 
 export const useSignIn = () => {
   const userInfo = useRef('')
@@ -33,31 +36,31 @@ export const useSignIn = () => {
           password: yup
             .string()
             .required(t('requireField') || '')
-            .min(6, t('shortPassword') || ''),
+            .min(6, t('shortPassword') || '')
         })
         .required(),
-    [t],
+    [t]
   )
 
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
-    defaultValues: initialValues,
+    defaultValues: initialValues
   })
 
   const onSubmit: SubmitHandler<FieldValues> = useCallback(
-    async data => {
+    async (data) => {
       userInfo.current = data.email
       setLoading(true)
       setError('')
       const { email, password } = data
       await auth()
         .signInWithEmailAndPassword(email, password)
-        .then(async user => {
+        .then(async (user) => {
           await Keychain.setInternetCredentials('auth', email, password)
           await onSignIn(user.user)
         })
-        .catch(err => {
+        .catch((err) => {
           switch (err.code) {
             case 'auth/invalid-email':
               setError(t('invalidEmail'))
@@ -82,7 +85,7 @@ export const useSignIn = () => {
         })
       setLoading(false)
     },
-    [t],
+    [t]
   )
 
   return { onSubmit, methods, error: error || '', loading, userInfo }

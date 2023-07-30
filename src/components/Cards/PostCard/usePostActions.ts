@@ -21,17 +21,18 @@ export const usePostActions = ({
   isDetail,
   onPressCom,
   transText,
-  hideTranslate,
+  hideTranslate
 }: usePostActionsParams) => {
   const { navigate } = useTypedNavigation()
-  const isLiked = item?.liked?.findIndex(a => a === getUid()) === -1 ? false : true
+  const isLiked =
+    item?.liked?.findIndex((a) => a === getUid()) === -1 ? false : true
 
   function goDetail() {
     item &&
       navigate('DETAIL_POST_SCREEN', {
         postId: item.id,
         translatedText: transText,
-        hideTranslate,
+        hideTranslate
       })
   }
 
@@ -67,7 +68,7 @@ export const usePostActions = ({
       const deepLink = await buildReportLink(id, text)
       Share.share({
         title: 'Leela Chakra',
-        message: deepLink,
+        message: deepLink
       })
     }
   }
@@ -79,6 +80,6 @@ export const usePostActions = ({
     handleAdminMenu,
     handleShareLink,
     isLiked,
-    handleProfile,
+    handleProfile
   }
 }

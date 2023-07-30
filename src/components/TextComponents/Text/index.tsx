@@ -7,7 +7,7 @@ import {
   StyleSheet,
   TextProps,
   TextStyle,
-  useColorScheme,
+  useColorScheme
 } from 'react-native'
 import { ms, s } from 'react-native-size-matters'
 
@@ -16,63 +16,63 @@ export const textStyles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Etna' : 'etna-free-font',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
-    fontSize: Platform.OS === 'ios' ? ms(95, 0.5) : ms(95, 0.3),
+    fontSize: Platform.OS === 'ios' ? ms(95, 0.5) : ms(95, 0.3)
   },
   h1: {
     fontFamily: Platform.OS === 'ios' ? 'Etna' : 'etna-free-font',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
-    fontSize: Platform.OS === 'ios' ? ms(35, 0.3) : ms(35, 0.6),
+    fontSize: Platform.OS === 'ios' ? ms(35, 0.3) : ms(35, 0.6)
   },
   h2: {
     fontSize: Platform.OS === 'ios' ? s(20) : s(20),
-    fontFamily: 'Montserrat',
+    fontFamily: 'Montserrat'
   },
   h3: {
     fontFamily: 'Montserrat',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
-    fontSize: Platform.OS === 'ios' ? ms(18, 0.6) : ms(18, 0.6),
+    fontSize: Platform.OS === 'ios' ? ms(18, 0.6) : ms(18, 0.6)
   },
   h4: {
     fontFamily: 'Montserrat',
     textShadowRadius: 1,
-    fontSize: Platform.OS === 'ios' ? ms(15, 0.8) : s(15),
+    fontSize: Platform.OS === 'ios' ? ms(15, 0.8) : s(15)
   },
   h5: {
     fontSize: Platform.OS === 'ios' ? s(15) : s(15),
-    fontFamily: Platform.OS === 'ios' ? 'Avenir Next' : 'Montserrat',
+    fontFamily: Platform.OS === 'ios' ? 'Avenir Next' : 'Montserrat'
   },
   h6: {
     fontSize: Platform.OS === 'ios' ? s(15) : s(15),
-    fontFamily: 'Montserrat',
+    fontFamily: 'Montserrat'
   },
   h7: {
     fontSize: ms(15, 0.6),
     fontFamily: 'Montserrat',
     letterSpacing: 0.2,
-    lineHeight: ms(18.5, 0.6),
+    lineHeight: ms(18.5, 0.6)
   },
   h8: {
     fontSize: Platform.OS === 'ios' ? s(14) : s(14),
-    fontFamily: 'Montserrat',
+    fontFamily: 'Montserrat'
   },
   h9: {
     fontSize: Platform.OS === 'ios' ? s(13) : s(13),
-    fontFamily: 'NeutraText-Bold',
+    fontFamily: 'NeutraText-Bold'
   },
   h10: {
     fontSize: Platform.OS === 'ios' ? s(12) : s(12),
-    fontFamily: 'Montserrat',
+    fontFamily: 'Montserrat'
   },
   h11: {
     fontSize: Platform.OS === 'ios' ? s(10) : s(10),
-    fontFamily: 'Montserrat',
+    fontFamily: 'Montserrat'
   },
   h12: {
     fontSize: Platform.OS === 'ios' ? s(10) : s(10),
-    fontFamily: 'OxygenMono-Regular',
-  },
+    fontFamily: 'OxygenMono-Regular'
+  }
 })
 
 export interface Icolors {
@@ -106,7 +106,7 @@ export interface TxtT extends TextProps {
 export const Text = memo<TxtT>(
   ({ h, colors, title, oneColor, textStyle, ...textProps }) => {
     const {
-      colors: { primary, text },
+      colors: { primary, text }
     } = useTheme()
     const scheme = useColorScheme()
     const isDark = scheme === 'dark'
@@ -125,7 +125,7 @@ export const Text = memo<TxtT>(
     const hStyle = h
       ? [
           { ...textStyles[h], color: curColor },
-          hasShadow && { textShadowColor: primary },
+          hasShadow && { textShadowColor: primary }
         ]
       : undefined
     return (
@@ -133,5 +133,5 @@ export const Text = memo<TxtT>(
         {title}
       </RNText>
     )
-  },
+  }
 )

@@ -9,12 +9,12 @@ import { Pressable } from '../../Pressable'
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
-    alignItems: 'flex-start',
+    alignItems: 'flex-start'
   },
   h: {
     textDecorationLine: 'underline',
-    color: secondary,
-  },
+    color: secondary
+  }
 })
 
 interface ButtonLinkT {
@@ -24,14 +24,16 @@ interface ButtonLinkT {
   textStyle?: StyleProp<TextStyle>
 }
 
-const ButtonLink = memo<ButtonLinkT>(({ title, viewStyle, textStyle, onPress }) => {
-  const { container, h } = styles
+const ButtonLink = memo<ButtonLinkT>(
+  ({ title, viewStyle, textStyle, onPress }) => {
+    const { container, h } = styles
 
-  return (
-    <Pressable onPress={onPress} style={[container, viewStyle]}>
-      <Text h={'h5'} title={title} textStyle={[h, textStyle]} />
-    </Pressable>
-  )
-})
+    return (
+      <Pressable onPress={onPress} style={[container, viewStyle]}>
+        <Text h={'h5'} title={title} textStyle={[h, textStyle]} />
+      </Pressable>
+    )
+  }
+)
 
 export { ButtonLink }

@@ -4,7 +4,10 @@ import { captureException } from '../../constants'
 
 type listenerT = (url: string) => void
 
-export const subscribeDeepLinkUrl = async (listener: listenerT, url: string) => {
+export const subscribeDeepLinkUrl = async (
+  listener: listenerT,
+  url: string
+) => {
   listener(url)
 }
 
@@ -30,15 +33,18 @@ export const formatLink = (params?: BranchParams) => {
 
 export async function buildReportLink(reportId: string, reportText: string) {
   try {
-    const buo = await Branch.createBranchUniversalObject(`reply_detail/${reportId}`, {
-      title: 'Link to plan report',
-      contentDescription: reportText,
-      contentMetadata: {
-        customMetadata: {
-          reportId,
-        },
-      },
-    })
+    const buo = await Branch.createBranchUniversalObject(
+      `reply_detail/${reportId}`,
+      {
+        title: 'Link to plan report',
+        contentDescription: reportText,
+        contentMetadata: {
+          customMetadata: {
+            reportId
+          }
+        }
+      }
+    )
     let { url } = await buo.generateShortUrl({}, {})
 
     return url

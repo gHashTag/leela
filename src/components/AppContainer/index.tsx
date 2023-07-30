@@ -37,7 +37,7 @@ export function AppContainer({
   iconLeftOpacity = 1,
   textAlign = 'left',
   status,
-  hidestar = false,
+  hidestar = false
 }: AppContainerT) {
   return (
     <View style={page.container}>
@@ -68,6 +68,6 @@ export function AppContainer({
 const page = StyleSheet.create({
   container: {
     width: '100%',
-    height: '100%',
-  },
+    height: '100%'
+  }
 })

@@ -1,23 +1,27 @@
 import React, { useRef, useState } from 'react'
 
-import { useFocusEffect } from '@react-navigation/native'
 import { observer } from 'mobx-react'
 import { Animated, Easing, Pressable, StyleSheet } from 'react-native'
 
 import { vs } from 'react-native-size-matters'
 
-import { DiceStore, OfflinePlayers, OnlinePlayer, actionsDice } from '../../store'
+import {
+  DiceStore,
+  OfflinePlayers,
+  OnlinePlayer,
+  actionsDice
+} from '../../store'
 
 const styles = StyleSheet.create({
   diceContainer: {
     alignItems: 'center',
     alignSelf: 'center',
-    marginVertical: vs(12),
+    marginVertical: vs(12)
   },
   image: {
     height: vs(65),
-    width: vs(65),
-  },
+    width: vs(65)
+  }
 })
 
 const getImage = (number: number) => {
@@ -50,7 +54,7 @@ export const Dice = observer(() => {
       toValue: value,
       duration: duration,
       easing: Easing.linear,
-      useNativeDriver: true,
+      useNativeDriver: true
     }).start(() => {
       DiceStore.online
         ? OnlinePlayer.updateStep()
@@ -63,7 +67,7 @@ export const Dice = observer(() => {
     (DiceStore.online && !OnlinePlayer.store.isReported)
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
+    outputRange: ['0deg', '360deg']
   })
 
   const rollDice = (): void => {
@@ -92,6 +96,6 @@ export const Dice = observer(() => {
 
 const page = StyleSheet.create({
   opacityCube: {
-    opacity: 0.4,
-  },
+    opacity: 0.4
+  }
 })

@@ -7,7 +7,7 @@ import { DiceStore } from '../store'
 
 export const useNetwork = () => {
   useEffect(() => {
-    const unsub = NetInfo.addEventListener(state => {
+    const unsub = NetInfo.addEventListener((state) => {
       if (state.isConnected === false && DiceStore.online) {
         OpenNetworkModal()
       }

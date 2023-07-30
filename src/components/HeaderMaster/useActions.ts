@@ -28,7 +28,7 @@ export const useActions = () => {
       key: 'EDIT',
       onPress: onPressChangeAva,
       title: t('actions.changeAva'),
-      icon: 'ios-images-outline',
+      icon: 'ios-images-outline'
     },
     // {
     //   key: 'SHARE',
@@ -41,22 +41,22 @@ export const useActions = () => {
       color: 'red',
       onPress: OnlinePlayer.SignOut,
       title: t('auth.signOut'),
-      icon: 'ios-exit-outline',
+      icon: 'ios-exit-outline'
     },
     {
       key: 'RESET',
       color: 'red',
       onPress: OnlinePlayer.resetGame,
       title: t('actions.startOver'),
-      icon: 'ios-reload',
+      icon: 'ios-reload'
     },
     {
       key: 'DELETE',
       color: 'red',
       onPress: OnlinePlayer.deleteUser,
       title: t('actions.deleteAcc'),
-      icon: 'trash-bin-outline',
-    },
+      icon: 'trash-bin-outline'
+    }
   ]
 
   const onPressEdit = () => OpenActionsModal(menuItems)

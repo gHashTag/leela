@@ -3,9 +3,9 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { s } from 'react-native-size-matters'
-import { useRevenueCat } from 'src/providers/RevenueCatProvider'
+import { useRevenueCat } from '../../providers/RevenueCatProvider'
 
-import { DiceStore, PostStore, SubscribeStore } from '../../store'
+import { DiceStore, SubscribeStore } from '../../store'
 import { Space } from '../Space'
 import { Text } from '../TextComponents'
 
@@ -49,13 +49,13 @@ const styles = StyleSheet.create({
   messContainer: {
     flexWrap: 'wrap',
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   textStyle: {
     lineHeight: s(22),
     width: '100%',
-    textAlign: 'center',
-  },
+    textAlign: 'center'
+  }
 })
 
 const { messContainer } = styles

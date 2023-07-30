@@ -15,13 +15,20 @@ import {
   KeyboardContainer,
   Loading,
   Space,
-  TextError,
+  TextError
 } from '../../../components'
-import { H, W, black, captureException, goBack, white } from '../../../constants'
+import {
+  H,
+  W,
+  black,
+  captureException,
+  goBack,
+  white
+} from '../../../constants'
 
 export const SignUp = (): ReactElement => {
   const { loading, error, methods, onSubmit } = useSignUp()
-  const onError: SubmitErrorHandler<FieldValues> = errors => {
+  const onError: SubmitErrorHandler<FieldValues> = (errors) => {
     captureException(errors, 'SignUp')
   }
   const { t } = useTranslation()
@@ -70,7 +77,9 @@ export const SignUp = (): ReactElement => {
                   additionalStyle={{ width: W - s(40) }}
                 />
                 <Space height={vs(30)} />
-                {error !== '' && <TextError title={error} textStyle={page.centerText} />}
+                {error !== '' && (
+                  <TextError title={error} textStyle={page.centerText} />
+                )}
                 <Space height={vs(20)} />
                 <Button
                   title={t('auth.signUp')}
@@ -88,7 +97,7 @@ export const SignUp = (): ReactElement => {
 
 const page = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: 'center'
   },
-  centerText: { textAlign: 'center' },
+  centerText: { textAlign: 'center' }
 })

@@ -13,7 +13,7 @@ export const TabContextProvider = observer(
         {children?.(values) || children}
       </TabContext.Provider>
     )
-  },
+  }
 )
 
 interface TabContextProviderT {

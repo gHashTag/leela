@@ -6,7 +6,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useTranslation } from 'react-i18next'
 import { vs } from 'react-native-size-matters'
 
-import { AppContainer, Button, CenterView, Space, Text } from '../../../components'
+import {
+  AppContainer,
+  Button,
+  CenterView,
+  Space,
+  Text
+} from '../../../components'
 import { black, goBack, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 
@@ -14,7 +20,10 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'FORGOT_PASSWORD_SUBMIT'
 >
-type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'FORGOT_PASSWORD_SUBMIT'>
+type ProfileScreenRouteProp = RouteProp<
+  RootStackParamList,
+  'FORGOT_PASSWORD_SUBMIT'
+>
 
 type ForgotPassSubmitT = {
   navigation: ProfileScreenNavigationProp

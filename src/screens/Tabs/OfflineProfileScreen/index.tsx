@@ -13,7 +13,7 @@ import {
   HistoryStep,
   Space,
   Spin,
-  Text,
+  Text
 } from '../../../components'
 import { useHistoryData } from '../../../hooks'
 import { DiceStore, OfflinePlayers, OnlinePlayer } from '../../../store'
@@ -52,13 +52,18 @@ export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
                 <Button
                   title={t('actions.startOver')}
                   onPress={
-                    DiceStore.online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
+                    DiceStore.online
+                      ? OnlinePlayer.resetGame
+                      : OfflinePlayers.resetGame
                   }
                 />
                 <Space height={20} />
                 {DiceStore.online && (
                   <>
-                    <Button title={t('auth.signOut')} onPress={OnlinePlayer.SignOut} />
+                    <Button
+                      title={t('auth.signOut')}
+                      onPress={OnlinePlayer.SignOut}
+                    />
                     <Space height={20} />
                   </>
                 )}
@@ -69,12 +74,16 @@ export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
             maxToRenderPerBatch={60}
             stickySectionHeadersEnabled={false}
             sections={DATA}
-            renderItem={props => <HistoryStep {...props} />}
+            renderItem={(props) => <HistoryStep {...props} />}
             keyExtractor={(e, id) => String(id)}
             showsVerticalScrollIndicator={false}
             renderSectionHeader={({ section: { title } }) =>
               title ? (
-                <Text h={'h3'} title={title} textStyle={page.headerSectionText} />
+                <Text
+                  h={'h3'}
+                  title={title}
+                  textStyle={page.headerSectionText}
+                />
               ) : (
                 <Space height={20} />
               )
@@ -89,6 +98,6 @@ export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
 const page = StyleSheet.create({
   headerSectionText: {
     padding: 15,
-    marginTop: 10,
-  },
+    marginTop: 10
+  }
 })

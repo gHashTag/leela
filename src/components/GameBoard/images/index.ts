@@ -1,10 +1,10 @@
 export const ICONS = [
   {
     path: require('./light.png'),
-    title: 'light',
+    title: 'light'
   },
   {
     path: require('./dark.png'),
-    title: 'dark',
-  },
+    title: 'dark'
+  }
 ]

@@ -10,7 +10,7 @@ import {
   FormProvider,
   SubmitErrorHandler,
   SubmitHandler,
-  useForm,
+  useForm
 } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
@@ -25,12 +25,15 @@ import {
   KeyboardContainer,
   Loading,
   Space,
-  TextError,
+  TextError
 } from '../../../components'
 import { W, black, captureException, goBack, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 
-type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'FORGOT'>
+type ProfileScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'FORGOT'
+>
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'FORGOT'>
 
 type ForgotT = {
@@ -52,21 +55,21 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
             .string()
             .email(t('invalidEmail') || '')
             .trim()
-            .required(t('requireField') || ''),
+            .required(t('requireField') || '')
         })
         .required(),
-    [t],
+    [t]
   )
 
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
     defaultValues: {
-      email: route.params.email,
-    },
+      email: route.params.email
+    }
   })
 
-  const onSubmit: SubmitHandler<FieldValues> = async data => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setLoading(true)
     const { email } = data
 
@@ -86,7 +89,7 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
     setLoading(false)
   }
 
-  const onError: SubmitErrorHandler<FieldValues> = errors => {
+  const onError: SubmitErrorHandler<FieldValues> = (errors) => {
     captureException(errors, 'Forgot')
   }
 
@@ -135,6 +138,6 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
 
 const page = StyleSheet.create({
   errorText: {
-    alignSelf: 'center',
-  },
+    alignSelf: 'center'
+  }
 })

@@ -30,7 +30,7 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
     return () => {
       SystemNavigationBar.setNavigationColor(
         isDark ? black : white,
-        !isDark ? 'light' : 'dark',
+        !isDark ? 'light' : 'dark'
       )
     }
   })
@@ -52,12 +52,12 @@ export function VideoPopup({ navigation, route }: VideoPopupT) {
 
 const page = StyleSheet.create({
   transpView: {
-    flex: 1,
+    flex: 1
   },
   btnS: {
     position: 'absolute',
     left: s(10),
     top: s(10),
-    zIndex: 10,
-  },
+    zIndex: 10
+  }
 })

@@ -26,7 +26,11 @@ const PosterScreen = observer(({}: PosterScreenT) => {
   return (
     <ImageBackground resizeMode="cover" source={require(imgUrl)} style={img}>
       <View style={styles.btnMoreContainer}>
-        <BlurView blurType={'light'} blurAmount={10} style={styles.blurBackground} />
+        <BlurView
+          blurType={'light'}
+          blurAmount={10}
+          style={styles.blurBackground}
+        />
         <ButtonWithIcon
           title={t('assign')}
           color={buttonColor || '#AA6100'}
@@ -41,21 +45,21 @@ const PosterScreen = observer(({}: PosterScreenT) => {
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   img: {
     flex: 1,
-    resizeMode: 'cover',
+    resizeMode: 'cover'
   },
   btnMore: {
-    margin: s(5),
+    margin: s(5)
   },
   btnMoreContainer: {
     position: 'absolute',
     alignSelf: 'center',
     borderRadius: s(10),
     bottom: vs(82),
-    overflow: 'hidden',
+    overflow: 'hidden'
   },
   blurBackground: {
     width: '100%',
@@ -65,8 +69,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     opacity: 0.7,
     borderRadius: s(10),
-    overflow: 'hidden',
-  },
+    overflow: 'hidden'
+  }
 })
 
 const { img } = styles

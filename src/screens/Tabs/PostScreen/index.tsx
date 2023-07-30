@@ -29,8 +29,8 @@ export const PostScreen = observer(({}: Ipost) => {
         .collection('Posts')
         .orderBy('createTime', 'desc')
         .limit(limit)
-        .onSnapshot(PostStore.fetchPosts, err =>
-          captureException(err, 'PostStore.fetchPosts'),
+        .onSnapshot(PostStore.fetchPosts, (err) =>
+          captureException(err, 'PostStore.fetchPosts')
         )
       return () => {
         subPosts()
@@ -40,7 +40,7 @@ export const PostScreen = observer(({}: Ipost) => {
   const data = PostStore.store.posts
   const newLimit = () => {
     if (data.length <= limit) {
-      setLimit(pr => pr + 15)
+      setLimit((pr) => pr + 15)
     }
   }
   const load = PostStore.store.loadPosts && data.length === 0
@@ -50,12 +50,12 @@ export const PostScreen = observer(({}: Ipost) => {
   ) : (
     <FlatList
       removeClippedSubviews={false}
-      onScrollToIndexFailed={er => console.log(er)}
+      onScrollToIndexFailed={(er) => console.log(er)}
       showsVerticalScrollIndicator={false}
       data={data}
       onEndReached={newLimit}
       onEndReachedThreshold={0.1}
-      keyExtractor={a => a.id}
+      keyExtractor={(a) => a.id}
       renderItem={({ item }) => <PostCard postId={item.id} />}
       ItemSeparatorComponent={() => <Space height={vs(10)} />}
       ListHeaderComponent={
@@ -66,7 +66,11 @@ export const PostScreen = observer(({}: Ipost) => {
       }
       ListEmptyComponent={
         <View style={{ paddingHorizontal: s(20) }}>
-          <Text textStyle={page.noPostText} h={'h1'} title={t('online-part.noPosts')} />
+          <Text
+            textStyle={page.noPostText}
+            h={'h1'}
+            title={t('online-part.noPosts')}
+          />
         </View>
       }
     />
@@ -75,6 +79,6 @@ export const PostScreen = observer(({}: Ipost) => {
 
 const page = StyleSheet.create({
   noPostText: {
-    textAlign: 'center',
-  },
+    textAlign: 'center'
+  }
 })

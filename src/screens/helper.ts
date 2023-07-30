@@ -1,5 +1,8 @@
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
-import { FirebaseDatabaseTypes, firebase } from '@react-native-firebase/database'
+import {
+  FirebaseDatabaseTypes,
+  firebase
+} from '@react-native-firebase/database'
 import firestore from '@react-native-firebase/firestore'
 import storage from '@react-native-firebase/storage'
 import { nanoid } from 'nanoid/non-secure'
@@ -10,10 +13,15 @@ import {
   OpenUpdateVersionModal,
   accountHasBanAlert,
   captureException,
-  navigate,
+  navigate
 } from 'src/constants'
 import i18next, { flagEmoji, lang } from 'src/i18n'
-import { MessagingStore, OnlinePlayer, actionsDice, fetchBusinesses } from 'src/store'
+import {
+  MessagingStore,
+  OnlinePlayer,
+  actionsDice,
+  fetchBusinesses
+} from 'src/store'
 import { HistoryT, UserT } from 'src/types'
 
 import { version } from '../../package.json'
@@ -30,7 +38,9 @@ interface NewProfileI {
 const getFireBaseRef = (path: string): FirebaseDatabaseTypes.Reference => {
   return firebase
     .app()
-    .database('https://leela-chakra-default-rtdb.europe-west1.firebasedatabase.app/')
+    .database(
+      'https://leela-chakra-default-rtdb.europe-west1.firebasedatabase.app/'
+    )
     .ref(path)
 }
 
@@ -53,25 +63,30 @@ const onWin = async () => {
   firestore().collection('Profiles').doc(userUid).update({
     firstGame: false,
     finish: true,
-    start: false,
+    start: false
   })
 }
 
 const onStart = async () => {
   const userUid = auth().currentUser?.uid
   firestore().collection('Profiles').doc(userUid).update({
-    start: true,
+    start: true
   })
 }
 
-const createProfile = async ({ email, uid, firstName, lastName }: NewProfileI) => {
+const createProfile = async ({
+  email,
+  uid,
+  firstName,
+  lastName
+}: NewProfileI) => {
   const hisObj: HistoryT[] = [
     {
       count: 0,
       plan: 68,
       status: 'start',
-      createDate: Date.now(),
-    },
+      createDate: Date.now()
+    }
   ]
   await firestore()
     .collection('Profiles')
@@ -89,7 +104,7 @@ const createProfile = async ({ email, uid, firstName, lastName }: NewProfileI) =
       history: hisObj,
       lang,
       flagEmoji,
-      isReported: true,
+      isReported: true
     })
   OnlinePlayer.store = {
     ...OnlinePlayer.store,
@@ -98,14 +113,14 @@ const createProfile = async ({ email, uid, firstName, lastName }: NewProfileI) =
       firstName,
       lastName,
       email,
-      intention: '',
+      intention: ''
     },
     stepTime: Date.now() - 86400000,
     canGo: true,
     history: hisObj,
     start: false,
     finish: false,
-    firstGame: true,
+    firstGame: true
   }
 }
 
@@ -124,9 +139,9 @@ const updatePlan = async (plan: number) => {
       .collection('Profiles')
       .doc(userUid)
       .update({
-        plan,
+        plan
       })
-      .catch(err => captureException(err))
+      .catch((err) => captureException(err))
   }
 }
 
@@ -137,9 +152,9 @@ const resetPlayer = async () => {
     .doc(userUid)
     .update({
       start: false,
-      finish: false,
+      finish: false
     })
-    .catch(err => captureException(err))
+    .catch((err) => captureException(err))
 }
 
 interface profNameI {
@@ -149,11 +164,11 @@ interface profNameI {
 const updateProfName = async ({ firstName, lastName }: profNameI) => {
   try {
     await auth().currentUser?.updateProfile({
-      displayName: `${firstName} ${lastName}`,
+      displayName: `${firstName} ${lastName}`
     })
     await firestore().collection('Profiles').doc(getUid()).update({
       firstName,
-      lastName,
+      lastName
     })
     await auth().currentUser?.reload()
     OnlinePlayer.store.profile.firstName = firstName
@@ -165,7 +180,7 @@ const updateProfName = async ({ firstName, lastName }: profNameI) => {
 const updateIntention = async (newIntention: string) => {
   try {
     await firestore().collection('Profiles').doc(getUid()).update({
-      intention: newIntention,
+      intention: newIntention
     })
     OnlinePlayer.store.profile.intention = newIntention
   } catch (err) {
@@ -188,11 +203,11 @@ const resetHistory = async () => {
       createDate: Date.now(),
       plan: 68,
       count: 0,
-      status: 'start',
-    },
+      status: 'start'
+    }
   ]
   await firestore().collection('Profiles').doc(userUid).update({
-    history: hist,
+    history: hist
   })
 }
 
@@ -208,14 +223,14 @@ const createHistory = async (values: HistoryT) => {
           .doc(userUid)
           .update({
             isReported: false,
-            history: firestore.FieldValue.arrayUnion(values),
+            history: firestore.FieldValue.arrayUnion(values)
           })
       } else {
         await firestore()
           .collection('Profiles')
           .doc(userUid)
           .update({
-            history: firestore.FieldValue.arrayUnion(values),
+            history: firestore.FieldValue.arrayUnion(values)
           })
       }
     }
@@ -232,7 +247,7 @@ const startStepTimer = () => {
   if (userUid) {
     firestore().collection('Profiles').doc(userUid).update({
       lastStepTime: newTime,
-      isReported: true,
+      isReported: true
     })
   }
 }
@@ -254,7 +269,7 @@ const getImagePicker = async () => {
     cropperStatusBarColor: 'white',
     cropperToolbarColor: 'white',
     cropperActiveWidgetColor: 'white',
-    cropperToolbarWidgetColor: '#3498DB',
+    cropperToolbarWidgetColor: '#3498DB'
   })
   return image
 }
@@ -276,7 +291,7 @@ const uploadImg = async (image: { path: string }) => {
   const photo = await fetch(image.path)
   const photoBlob = await photo.blob()
   const fileName = `images/${nanoid(13)}${image.path.substring(
-    image.path.lastIndexOf('/') + 1,
+    image.path.lastIndexOf('/') + 1
   )}`
   const reference = storage().ref(fileName)
   await reference.put(photoBlob)
@@ -322,7 +337,7 @@ function getTimeStamp({ lastTime, type = '' }: getTimeT) {
 const onSignIn = async (
   user: FirebaseAuthTypes.User,
   isKeychain?: boolean,
-  linkTo?: any,
+  linkTo?: any
 ) => {
   try {
     actionsDice.setOnline(true)
@@ -339,7 +354,7 @@ const onSignIn = async (
       } else if (!prof.intention) {
         navigate('CHANGE_INTENTION_SCREEN', {
           blockGoBack: true,
-          title: i18next.t('online-part.createIntention'),
+          title: i18next.t('online-part.createIntention')
         })
       } else {
         navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
@@ -357,7 +372,7 @@ const onSignIn = async (
       }
     } else {
       navigate('CONFIRM_SIGN_UP', {
-        email: user.email,
+        email: user.email
       })
     }
   } catch (error) {
@@ -392,5 +407,5 @@ export {
   startStepTimer,
   onSignIn,
   checkVersion,
-  updateIntention,
+  updateIntention
 }

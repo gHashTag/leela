@@ -4,8 +4,7 @@ import { Platform, View } from 'react-native'
 import Emoji from 'react-native-emoji'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScaledSheet, ms, mvs, s, vs } from 'react-native-size-matters'
-import { useRevenueCat } from 'src/providers/RevenueCatProvider'
-import { PostStore } from 'src/store/PostStore'
+import { useRevenueCat } from '../../providers/RevenueCatProvider'
 
 import { HeaderMessage, Text } from '../'
 import { navigate } from '../../constants'
@@ -41,10 +40,10 @@ const Header = memo<HeaderT>(
     children,
     textAlign,
     displayStatus,
-    hidestar,
+    hidestar
   }) => {
     const {
-      colors: { background },
+      colors: { background }
     } = useTheme()
     const { user } = useRevenueCat()
     const { top } = useSafeAreaInsets()
@@ -63,10 +62,7 @@ const Header = memo<HeaderT>(
           </Pressable>
         )}
         {!user.pro && !hidestar && (
-          <Pressable
-            style={{ opacity: iconLeftOpacity, bottom: 3, right: 10 }}
-            onPress={onPressSub}
-          >
+          <Pressable style={{ opacity: iconLeftOpacity }} onPress={onPressSub}>
             <Emoji name="star" style={leftIconStyle} />
           </Pressable>
         )}
@@ -89,7 +85,7 @@ const Header = memo<HeaderT>(
         </View>
         {!user.pro && !hidestar && (
           <Pressable
-            style={{ opacity: iconLeftOpacity, bottom: 3, left: 10 }}
+            style={[styles.pressStyle, { opacity: iconLeftOpacity }]}
             onPress={onPressSub}
           >
             <Emoji name="star" style={leftIconStyle} />
@@ -104,7 +100,7 @@ const Header = memo<HeaderT>(
         )}
       </View>
     )
-  },
+  }
 )
 
 const styles = ScaledSheet.create({
@@ -112,7 +108,7 @@ const styles = ScaledSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingBottom: mvs(1, 0.4),
-    zIndex: 20,
+    zIndex: 20
   },
   leftIconStyle: {
     fontSize: isIos ? ms(26, 0.5) : ms(22, 0.5),
@@ -120,23 +116,27 @@ const styles = ScaledSheet.create({
     alignItems: 'center',
     paddingTop: s(2),
     marginHorizontal: s(8),
-    marginVertical: s(5),
+    marginVertical: s(5)
   },
   rightIconStyle: {
     fontSize: isIos ? ms(30, 0.5) : ms(28, 0.5),
     textAlign: 'center',
     alignItems: 'center',
     marginHorizontal: s(8),
-    marginVertical: s(5),
+    marginVertical: s(5)
   },
   rightViewStyle: {
-    width: isIos ? s(60) : s(44),
+    width: isIos ? s(60) : s(44)
   },
   titleStyle: {
-    fontSize: vs(18),
+    fontSize: vs(18)
   },
   childrenStyle: {},
   flexOne: { flex: 1 },
+  pressStyle: {
+    bottom: 3,
+    right: 10
+  }
 })
 
 const {
@@ -146,7 +146,7 @@ const {
   rightViewStyle,
   titleStyle,
   childrenStyle,
-  flexOne,
+  flexOne
 } = styles
 
 export { Header }

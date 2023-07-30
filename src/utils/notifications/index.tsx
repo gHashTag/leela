@@ -5,7 +5,7 @@ import { replyActionHandler } from './actionHandlers'
 import { replyNotification } from './replyNotification'
 
 export async function displayNotification(
-  notification: FirebaseMessagingTypes.RemoteMessage,
+  notification: FirebaseMessagingTypes.RemoteMessage
 ) {
   switch (notification.data?.notificationType) {
     case 'newComment':
@@ -14,7 +14,7 @@ export async function displayNotification(
   }
 }
 
-export async function notificationActionsHandler(event: Event, isBackground: boolean) {
+export async function notificationActionsHandler(event: Event) {
   const notificationType = event.detail.notification?.data?.notificationType
   switch (notificationType) {
     case 'newComment':

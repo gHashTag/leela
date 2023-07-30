@@ -8,7 +8,7 @@ import { s, vs } from 'react-native-size-matters'
 
 import { Space, Text } from '../../../components'
 import { Pressable } from '../../../components/Pressable'
-import { fuchsia } from '../../../constants'
+import { black, blackOpacity, fuchsia } from '../../../constants'
 import { RootStackParamList } from '../../../types'
 
 interface PlanReportModalT {
@@ -18,14 +18,17 @@ interface PlanReportModalT {
 
 export function PlanReportModal({ navigation, route }: PlanReportModalT) {
   const {
-    colors: { background },
+    colors: { background }
   } = useTheme()
   const { t } = useTranslation()
 
   const { plan } = route.params
 
   useFocusEffect(() => {
-    const listener = BackHandler.addEventListener('hardwareBackPress', () => true)
+    const listener = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => true
+    )
     return listener.remove
   })
   const handlePress = () => {
@@ -37,7 +40,11 @@ export function PlanReportModal({ navigation, route }: PlanReportModalT) {
   return (
     <View style={page.transpCont}>
       <View style={[page.modalView, { backgroundColor: background }]}>
-        <Text h="h4" textStyle={page.textStyle} title={t('online-part.makeReport')} />
+        <Text
+          h="h4"
+          textStyle={page.textStyle}
+          title={t('online-part.makeReport')}
+        />
         <Space height={vs(16)} />
         <Pressable onPress={handlePress}>
           <Text
@@ -56,9 +63,9 @@ const page = StyleSheet.create({
   transpCont: {
     height: '100%',
     width: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: blackOpacity,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   modalView: {
     top: vs(22),
@@ -66,17 +73,17 @@ const page = StyleSheet.create({
     borderRadius: s(20),
     padding: s(20),
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: black,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 2
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    elevation: 5
   },
   textStyle: {
-    textAlign: 'center',
+    textAlign: 'center'
   },
-  linkText: { textDecorationLine: 'underline' },
+  linkText: { textDecorationLine: 'underline' }
 })

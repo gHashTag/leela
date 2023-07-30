@@ -1,4 +1,7 @@
-import notifee, { DisplayedNotification, Notification } from '@notifee/react-native'
+import notifee, {
+  DisplayedNotification,
+  Notification
+} from '@notifee/react-native'
 // @ts-ignore
 import BadgeAndroid from 'react-native-android-badge'
 
@@ -13,15 +16,18 @@ export async function setCategories() {
           id: 'reply',
           title: 'Reply',
           input: {
-            placeholderText: 'Your comment',
-          },
-        },
-      ],
-    },
+            placeholderText: 'Your comment'
+          }
+        }
+      ]
+    }
   ])
 }
 
-export const updateAndroidBadgeCount = async ({ type, value }: setAndroidBadgeCountT) => {
+export const updateAndroidBadgeCount = async ({
+  type,
+  value
+}: setAndroidBadgeCountT) => {
   const previous = BadgeAndroidStore.count
 
   switch (type) {
@@ -53,7 +59,7 @@ export async function cancel({ notification, isInput }: cancelT) {
     if (isInput) {
       const channelId = await notifee.createChannel({
         id: 'cancel',
-        name: 'Cancel Channel',
+        name: 'Cancel Channel'
       })
 
       await notifee.displayNotification({
@@ -65,8 +71,8 @@ export async function cancel({ notification, isInput }: cancelT) {
           channelId,
           smallIcon: 'ic_notifee_cube',
           color: '#1EE4EC',
-          groupId: 'new-comment',
-        },
+          groupId: 'new-comment'
+        }
       })
     }
 
@@ -83,12 +89,12 @@ interface cancelT {
 
 export const getNotificationsByGroupAndroid = (
   notifications: DisplayedNotification[],
-  groupName: string,
+  groupName: string
 ) => {
   return notifications.filter(
-    a =>
+    (a) =>
       !a.notification.android?.groupSummary &&
-      a.notification.android?.groupId === groupName,
+      a.notification.android?.groupId === groupName
   )
 }
 

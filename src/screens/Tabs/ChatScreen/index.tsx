@@ -23,7 +23,7 @@ const ChatScreen: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[]>([])
   const [contextSummary, setContextSummary] = useState<IContextSummary>({
     user: [],
-    assistant: [],
+    assistant: []
   })
   const [loading, setLoading] = useState(false)
 
@@ -34,7 +34,7 @@ const ChatScreen: React.FC = () => {
     if (message.user._id === 1) {
       setContextSummary((prevState) => {
         const newUserMessages = [...prevState.user, message.text].slice(
-          messageLimit,
+          messageLimit
         )
         return { ...prevState, user: newUserMessages }
       })
@@ -42,7 +42,7 @@ const ChatScreen: React.FC = () => {
       setContextSummary((prevState) => {
         const newAssistantMessages = [
           ...prevState.assistant,
-          message.text,
+          message.text
         ].slice(messageLimit)
         return { ...prevState, assistant: newAssistantMessages }
       })
@@ -58,16 +58,16 @@ const ChatScreen: React.FC = () => {
         user: {
           _id: 2,
           name: 'Assistant',
-          avatar: LEELA_AI,
-        },
-      },
+          avatar: LEELA_AI
+        }
+      }
     ])
   }, [t])
 
   const onSend = async (newMessages: IMessage[] = []) => {
     setLoading(true)
     setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, newMessages),
+      GiftedChat.append(previousMessages, newMessages)
     )
 
     updateContextSummary(newMessages[0])
@@ -75,14 +75,14 @@ const ChatScreen: React.FC = () => {
     const apiMessages = [
       {
         role: 'system',
-        content: t('system'),
+        content: t('system')
       },
       ...contextSummary.user.map((content) => ({ role: 'user', content })),
       ...contextSummary.assistant.map((content) => ({
         role: 'assistant',
-        content,
+        content
       })),
-      { role: 'user', content: newMessages[0].text },
+      { role: 'user', content: newMessages[0].text }
     ]
 
     setMessages((previousMessages) =>
@@ -94,10 +94,10 @@ const ChatScreen: React.FC = () => {
           user: {
             _id: 2,
             name: 'Assistant',
-            avatar: LEELA_AI,
-          },
-        },
-      ]),
+            avatar: LEELA_AI
+          }
+        }
+      ])
     )
 
     // Запрос к OpenAI API
@@ -107,20 +107,20 @@ const ChatScreen: React.FC = () => {
         model: 'gpt-4-0314',
         messages: apiMessages,
         max_tokens: 1000,
-        temperature: 0.2,
+        temperature: 0.2
       },
       {
         headers: {
           Authorization: `Bearer ${OPEN_AI_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      },
+          'Content-Type': 'application/json'
+        }
+      }
     )
 
     setLoading(false)
 
     setMessages((previousMessages) =>
-      previousMessages.filter((message) => message._id !== LOADING_MESSAGE_ID),
+      previousMessages.filter((message) => message._id !== LOADING_MESSAGE_ID)
     )
 
     const assistantReply = response.data.choices[0].message.content
@@ -136,10 +136,10 @@ const ChatScreen: React.FC = () => {
           user: {
             _id: 2,
             name: 'Assistant',
-            avatar: LEELA_AI,
-          },
-        },
-      ]),
+            avatar: LEELA_AI
+          }
+        }
+      ])
     )
   }
 
@@ -164,11 +164,11 @@ const ChatScreen: React.FC = () => {
       <Bubble
         {...props}
         wrapperStyle={{
-          right: { backgroundColor: `${brightTurquoise}` },
+          right: { backgroundColor: `${brightTurquoise}` }
         }}
         textStyle={{
           left: { fontFamily: 'Montserrat' },
-          right: { color: '#000', fontFamily: 'Montserrat' },
+          right: { color: '#000', fontFamily: 'Montserrat' }
         }}
       />
     )
@@ -196,7 +196,7 @@ const ChatScreen: React.FC = () => {
         renderBubble={renderBubble}
         onSend={(newMessages) => onSend(newMessages)}
         user={{
-          _id: 1,
+          _id: 1
         }}
       />
     </>
@@ -207,11 +207,11 @@ const styles = StyleSheet.create({
   bubble: {
     padding: 10,
     top: 1,
-    alignItems: 'center',
+    alignItems: 'center'
   },
   feadbackContainer: {
-    alignSelf: 'center',
-  },
+    alignSelf: 'center'
+  }
 })
 
 export { ChatScreen }

@@ -6,13 +6,13 @@ import { ScaledSheet } from 'react-native-size-matters'
 const styles = ScaledSheet.create({
   container: {
     alignItems: 'center',
-    margin: 10,
+    margin: 10
   },
   h1: {
     color: 'red',
     fontFamily: '3270Narrow',
-    fontSize: Platform.OS === 'ios' ? '15@s' : '17@s',
-  },
+    fontSize: Platform.OS === 'ios' ? '15@s' : '17@s'
+  }
 })
 interface TextErrorT {
   title: string

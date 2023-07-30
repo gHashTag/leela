@@ -63,6 +63,6 @@ const page = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
-    paddingTop: 10,
-  },
+    paddingTop: 10
+  }
 })

@@ -43,7 +43,7 @@ export const GameBoard = observer(() => {
     [36, 35, 34, 33, 32, 31, 30, 29, 28],
     [19, 20, 21, 22, 23, 24, 25, 26, 27],
     [18, 17, 16, 15, 14, 13, 12, 11, 10],
-    [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9]
   ]
 
   return (
@@ -82,20 +82,20 @@ export const GameBoard = observer(() => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: imageTopMargin,
+    marginTop: imageTopMargin
   },
   imageContainer: {
     height: curImageHeight,
     alignSelf: 'center',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: 'row'
   },
   gameBoardContainer: {
     width: curImageWidth,
     height: curImageHeight,
-    marginTop,
+    marginTop
   },
   box: {
     width: s(31),
@@ -106,15 +106,15 @@ const styles = StyleSheet.create({
     marginHorizontal: s(1),
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: s(31) / 2,
+    borderRadius: s(31) / 2
   },
   bgImage: {
     width: '100%',
     height: '100%',
     position: 'absolute',
-    top: mvs(26, 1.6) - imageTopMargin,
+    top: mvs(26, 1.6) - imageTopMargin
   },
-  numberStyle: { bottom: 3 },
+  numberStyle: { bottom: 3 }
 })
 
 export default GameBoard

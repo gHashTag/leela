@@ -9,7 +9,10 @@ import { ScaledSheet, ms, s } from 'react-native-size-matters'
 import { Pressable, Tab } from './components'
 import { black, white } from './constants'
 
-export default observer(function TabBar({ state, navigation }: MaterialTopTabBarProps) {
+export default observer(function TabBar({
+  state,
+  navigation
+}: MaterialTopTabBarProps) {
   const { index, routes } = state
   const scheme = useColorScheme()
   const { bottom } = useSafeAreaInsets()
@@ -18,8 +21,8 @@ export default observer(function TabBar({ state, navigation }: MaterialTopTabBar
     container,
     {
       backgroundColor: scheme === 'dark' ? black : white,
-      paddingBottom: bottom + s(10),
-    },
+      paddingBottom: bottom + s(10)
+    }
   ]
 
   return (
@@ -33,13 +36,13 @@ export default observer(function TabBar({ state, navigation }: MaterialTopTabBar
               const event = navigation.emit({
                 type: 'tabPress',
                 target: key,
-                canPreventDefault: true,
+                canPreventDefault: true
               })
 
               if (!isFocused && !event.defaultPrevented) {
                 navigation.navigate('MAIN', {
                   screen: name,
-                  merge: true,
+                  merge: true
                 })
               }
             }}
@@ -57,7 +60,7 @@ const styles = ScaledSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 2
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -65,8 +68,8 @@ const styles = ScaledSheet.create({
     justifyContent: 'space-around',
     alignItems: 'flex-start',
     paddingTop: ms(10, 0.5),
-    flexDirection: 'row',
-  },
+    flexDirection: 'row'
+  }
 })
 
 const { container } = styles

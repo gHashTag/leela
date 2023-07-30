@@ -20,8 +20,8 @@ export const initStore = {
     [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
     [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
     [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
-    [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }],
-  ],
+    [{ createDate: Date.now(), plan: 68, count: 0, status: 'start' }]
+  ]
 }
 
 export const OfflinePlayers = {
@@ -43,12 +43,12 @@ export const OfflinePlayers = {
   },
   updateStep(id: number): void {
     upStepOffline(id)
-  },
+  }
 }
 
 makePersistable(OfflinePlayers.store, {
   name: 'OfflinePlayers',
-  properties: ['plans', 'start', 'histories', 'finish'],
+  properties: ['plans', 'start', 'histories', 'finish']
 })
 
 interface OfflinePlayersI {

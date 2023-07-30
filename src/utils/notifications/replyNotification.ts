@@ -1,10 +1,13 @@
-import notifee, { AndroidBadgeIconType, AndroidImportance } from '@notifee/react-native'
+import notifee, {
+  AndroidBadgeIconType,
+  AndroidImportance
+} from '@notifee/react-native'
 import { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 import { nanoid } from 'nanoid/non-secure'
 
 import {
   getNotificationsByGroupAndroid,
-  updateAndroidBadgeCount,
+  updateAndroidBadgeCount
 } from './NotificationHelper'
 
 import { isIos } from '../../constants'
@@ -12,12 +15,12 @@ import { isIos } from '../../constants'
 const channelId = 'replyAndroid'
 
 export async function replyNotification(
-  notification: FirebaseMessagingTypes.RemoteMessage,
+  notification: FirebaseMessagingTypes.RemoteMessage
 ) {
   await notifee.createChannel({
     id: channelId,
     name: 'Reply channel',
-    badge: false,
+    badge: false
   })
 
   const { title, body } = notification.data || {}
@@ -41,21 +44,21 @@ export async function replyNotification(
         {
           title: 'Reply',
           pressAction: {
-            id: 'reply',
+            id: 'reply'
           },
           input: {
-            placeholder: 'Your comment',
-          },
-        },
+            placeholder: 'Your comment'
+          }
+        }
       ],
       pressAction: {
-        id: 'default',
+        id: 'default'
       },
-      groupId: 'new-comment',
+      groupId: 'new-comment'
     },
     ios: {
-      categoryId: 'reply',
-    },
+      categoryId: 'reply'
+    }
   })
   updateAndroidCommentNotificationGroup()
 }
@@ -76,8 +79,8 @@ export const updateAndroidCommentNotificationGroup = async () => {
         groupSummary: true,
         color: '#1EE4EC',
         smallIcon: 'ic_notifee_cube',
-        groupId: 'new-comment',
-      },
+        groupId: 'new-comment'
+      }
     })
   } else {
     await notifee.cancelNotification('count-of-messages')

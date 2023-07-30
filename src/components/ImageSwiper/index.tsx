@@ -1,13 +1,12 @@
 import React, { useRef } from 'react'
 
-import { nanoid } from 'nanoid/non-secure'
 import {
   Animated,
   ImageBackground,
   Pressable,
   StyleSheet,
   View,
-  useColorScheme,
+  useColorScheme
 } from 'react-native'
 import { vs } from 'react-native-size-matters'
 
@@ -19,29 +18,29 @@ const dotMargin = vs(5)
 const styles = StyleSheet.create({
   container: {
     width: W,
-    height: vs(300),
+    height: vs(300)
   },
   swiperContainer: {
     width: W,
     height: vs(300),
-    overflow: 'hidden',
+    overflow: 'hidden'
   },
   imageBg: {
     width: W,
-    height: '100%',
+    height: '100%'
   },
   dot: {
     borderRadius: vs(50),
     width: dotWidth,
     height: dotWidth,
-    marginHorizontal: dotMargin,
+    marginHorizontal: dotMargin
   },
   dotContainer: {
     position: 'absolute',
     flexDirection: 'row',
     zIndex: 1,
-    bottom: vs(10),
-  },
+    bottom: vs(10)
+  }
 })
 
 interface renderItemsI {
@@ -76,35 +75,38 @@ export function ImageSwiper({ images, height }: SwiperI) {
 
   const dotsCountInView = Math.floor(W / fullDotWidth)
 
+  // eslint-disable-next-line react/no-unstable-nested-components
   function RenderDots({ index }: renderDotsI) {
     const inputRange = [W * (index - 1), W * index, W * (index + 1)]
     const scale = scrollX.interpolate({
       inputRange,
       outputRange: [1, 1.3, 1],
-      extrapolate: 'clamp',
+      extrapolate: 'clamp'
     })
     const opacity = scrollX.interpolate({
       inputRange,
       outputRange: [0.6, 1, 0.6],
-      extrapolate: 'clamp',
+      extrapolate: 'clamp'
     })
     const dotColor = useColorScheme() === 'dark' ? white : black
 
     return (
       <AnimDot
-        onPressIn={() => swiperRef.current.scrollTo({ x: index * W, animated: true })}
+        onPressIn={() =>
+          swiperRef.current.scrollTo({ x: index * W, animated: true })
+        }
         key={index.toString()}
         style={[
           styles.dot,
           {
             transform: [
               {
-                scale,
-              },
+                scale
+              }
             ],
             opacity,
-            backgroundColor: dotColor,
-          },
+            backgroundColor: dotColor
+          }
         ]}
       />
     )
@@ -126,16 +128,16 @@ export function ImageSwiper({ images, height }: SwiperI) {
             {
               nativeEvent: {
                 contentOffset: {
-                  x: scrollX,
-                },
-              },
-            },
+                  x: scrollX
+                }
+              }
+            }
           ],
-          { useNativeDriver: true },
+          { useNativeDriver: true }
         )}
       >
         {images.map((item, index) => (
-          <RenderSwiperItems key={nanoid()} index={index} item={item} />
+          <RenderSwiperItems key={item} index={index} item={item} />
         ))}
       </Animated.ScrollView>
       {images.length > 0 && (
@@ -148,14 +150,17 @@ export function ImageSwiper({ images, height }: SwiperI) {
                   translateX: scrollX.interpolate({
                     inputRange: [
                       W * (dotsCountInView / 2),
-                      W * images.length + W * (dotsCountInView / 2),
+                      W * images.length + W * (dotsCountInView / 2)
                     ],
-                    outputRange: [0, (W * -1 * images.length) / dotsCountInView],
-                    extrapolate: 'clamp',
-                  }),
-                },
-              ],
-            },
+                    outputRange: [
+                      0,
+                      (W * -1 * images.length) / dotsCountInView
+                    ],
+                    extrapolate: 'clamp'
+                  })
+                }
+              ]
+            }
           ]}
         >
           {images.map((a, id) => (

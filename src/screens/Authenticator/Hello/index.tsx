@@ -13,7 +13,7 @@ import {
   IconLeela,
   Loading,
   Space,
-  Text,
+  Text
 } from '../../../components'
 import { black, goBack, white } from '../../../constants'
 import { RootStackParamList } from '../../../types'
@@ -28,7 +28,7 @@ type HelloT = {
 }
 
 const page = StyleSheet.create({
-  h6: { alignSelf: 'center' },
+  h6: { alignSelf: 'center' }
 })
 
 const Hello = ({ navigation }: HelloT): ReactElement => {

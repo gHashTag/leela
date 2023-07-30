@@ -31,7 +31,7 @@ export function ButtonVectorIcon({
   viewStyle,
   count,
   ionicons,
-  onPressIn,
+  onPressIn
 }: ButtonVectorIconI) {
   const scheme = useColorScheme()
   const colorTheme = scheme === 'dark' ? dimGray : gray
@@ -51,7 +51,11 @@ export function ButtonVectorIcon({
           color={color ? color : colorTheme}
         />
       ) : (
-        <Icon name={name} size={summaryIconSize} color={color ? color : colorTheme} />
+        <Icon
+          name={name}
+          size={summaryIconSize}
+          color={color ? color : colorTheme}
+        />
       )}
       {count !== undefined && (
         <>

@@ -18,120 +18,132 @@ import {
   SecondaryTab,
   Space,
   Spin,
-  Text,
+  Text
 } from 'src/components'
 import { RootStackParamList, UserT } from 'src/types'
 
 import { getIMG } from '../helper'
-import { TabContext, TabContextProvider } from '../Tabs/ProfileScreen/TabContext'
+import {
+  TabContext,
+  TabContextProvider
+} from '../Tabs/ProfileScreen/TabContext'
 
-type navigation = NativeStackNavigationProp<RootStackParamList, 'USER_PROFILE_SCREEN'>
+type navigation = NativeStackNavigationProp<
+  RootStackParamList,
+  'USER_PROFILE_SCREEN'
+>
 
 type UserProfileScreenT = {
   navigation: navigation
   route: RouteProp<RootStackParamList, 'USER_PROFILE_SCREEN'>
 }
 
-export const UserProfileScreen = observer(({ navigation, route }: UserProfileScreenT) => {
-  const { ownerId } = route.params
-  const [data, setData] = useState({
-    intention: '',
-    history: [],
-    avatar: '',
-    plan: 0,
-    fullName: '',
-  })
+export const UserProfileScreen = observer(
+  ({ navigation, route }: UserProfileScreenT) => {
+    const { ownerId } = route.params
+    const [data, setData] = useState({
+      intention: '',
+      history: [],
+      avatar: '',
+      plan: 0,
+      fullName: ''
+    })
 
-  const [load, setLoad] = useState(true)
-  const { t } = useTranslation()
+    const [load, setLoad] = useState(true)
+    const { t } = useTranslation()
 
-  useEffect(() => {
-    const unsub = firestore()
-      .collection('Profiles')
-      .doc(ownerId)
-      .onSnapshot(async snap => {
-        const { avatar, intention, history, plan, firstName, lastName } =
-          snap.data() as UserT
-        const avaUrl = await getIMG(avatar)
-        setData({
-          intention: intention || '',
-          history: history as any,
-          avatar: avaUrl,
-          plan: plan,
-          fullName: `${firstName} ${lastName}`,
+    useEffect(() => {
+      const unsub = firestore()
+        .collection('Profiles')
+        .doc(ownerId)
+        .onSnapshot(async (snap) => {
+          const { avatar, intention, history, plan, firstName, lastName } =
+            snap.data() as UserT
+          const avaUrl = await getIMG(avatar)
+          setData({
+            intention: intention || '',
+            history: history as any,
+            avatar: avaUrl,
+            plan: plan,
+            fullName: `${firstName} ${lastName}`
+          })
+          setLoad(false)
         })
-        setLoad(false)
-      })
 
-    return unsub
-  }, [ownerId])
+      return unsub
+    }, [ownerId])
 
-  const { width: W, height: H } = useWindowDimensions()
-  const tabViewWidth = W * 0.96
+    const { width: W, height: H } = useWindowDimensions()
+    const tabViewWidth = W * 0.96
 
-  return (
-    <AppContainer
-      enableBackgroundBottomInsets
-      iconLeft={':back:'}
-      onPress={navigation.goBack}
-      title=" "
-    >
-      {load ? (
-        <CenterView>
-          <Spin centered />
-          <Space height={H * 0.5} />
-        </CenterView>
-      ) : (
-        <TabContextProvider hasBottomTabs={false}>
-          {({ tabViewH, screenStyle, headerGesture }: any) => (
-            <Animated.View style={screenStyle}>
-              <View style={page.mainContainer}>
-                <HeaderMaster
-                  avatar={data.avatar}
-                  plan={data.plan}
-                  fullName={data.fullName}
-                />
-                <Space height={vs(5)} />
-                <OwnTabView
-                  renderTabBar={props => (
-                    <GestureDetector gesture={headerGesture}>
-                      <SecondaryTab {...props} />
-                    </GestureDetector>
-                  )}
-                  width={tabViewWidth}
-                  screens={[
-                    {
-                      key: 'history',
-                      title: t('history'),
-                      props: { history: data.history },
-                      Scene: RenderHistoryTab,
-                    },
-                    {
-                      key: 'intentionOfGame',
-                      title: t('intention'),
-                      props: { intention: data.intention },
-                      Scene: RenderIntentionOfGameTab,
-                    },
-                  ]}
-                  style={{ height: tabViewH }}
-                />
-              </View>
-            </Animated.View>
-          )}
-        </TabContextProvider>
-      )}
-    </AppContainer>
-  )
-})
+    return (
+      <AppContainer
+        enableBackgroundBottomInsets
+        iconLeft={':back:'}
+        onPress={navigation.goBack}
+        title=" "
+      >
+        {load ? (
+          <CenterView>
+            <Spin centered />
+            <Space height={H * 0.5} />
+          </CenterView>
+        ) : (
+          <TabContextProvider hasBottomTabs={false}>
+            {({ tabViewH, screenStyle, headerGesture }: any) => (
+              <Animated.View style={screenStyle}>
+                <View style={page.mainContainer}>
+                  <HeaderMaster
+                    avatar={data.avatar}
+                    plan={data.plan}
+                    fullName={data.fullName}
+                  />
+                  <Space height={vs(5)} />
+                  <OwnTabView
+                    renderTabBar={(props) => (
+                      <GestureDetector gesture={headerGesture}>
+                        <SecondaryTab {...props} />
+                      </GestureDetector>
+                    )}
+                    width={tabViewWidth}
+                    screens={[
+                      {
+                        key: 'history',
+                        title: t('history'),
+                        props: { history: data.history },
+                        Scene: RenderHistoryTab
+                      },
+                      {
+                        key: 'intentionOfGame',
+                        title: t('intention'),
+                        props: { intention: data.intention },
+                        Scene: RenderIntentionOfGameTab
+                      }
+                    ]}
+                    style={{ height: tabViewH }}
+                  />
+                </View>
+              </Animated.View>
+            )}
+          </TabContextProvider>
+        )}
+      </AppContainer>
+    )
+  }
+)
 
 const RenderHistoryTab = ({ history }: any) => {
-  const { panGesture1, scrollViewGesture1, scrollOffset1, blockScrollUntilAtTheTop1 } =
-    useContext(TabContext) as any
+  const {
+    panGesture1,
+    scrollViewGesture1,
+    scrollOffset1,
+    blockScrollUntilAtTheTop1
+  } = useContext(TabContext) as any
   return (
     <GestureDetector
       gesture={Gesture.Simultaneous(
         Gesture.Race(blockScrollUntilAtTheTop1, panGesture1),
-        scrollViewGesture1,
+        scrollViewGesture1
       )}
     >
       <Animated.ScrollView
@@ -139,7 +151,7 @@ const RenderHistoryTab = ({ history }: any) => {
         style={page.flexOne}
         scrollEventThrottle={1}
         showsVerticalScrollIndicator={false}
-        onScrollBeginDrag={e => {
+        onScrollBeginDrag={(e) => {
           scrollOffset1.value = e.nativeEvent.contentOffset.y
         }}
       >
@@ -173,13 +185,13 @@ const RenderIntentionOfGameTab = ({ intention }: { intention: string }) => {
 
 const page = StyleSheet.create({
   withPaddings: {
-    paddingHorizontal: s(20),
+    paddingHorizontal: s(20)
   },
   flexOne: {
-    flex: 1,
+    flex: 1
   },
   mainContainer: {
     alignItems: 'center',
-    width: '100%',
-  },
+    width: '100%'
+  }
 })

@@ -32,7 +32,7 @@ export function SubCommentCard({ item }: SubComT) {
       const translated = await PostStore.translateText(item.text)
       setTransText(translated)
     }
-    setHideTranslate(pr => !pr)
+    setHideTranslate((pr) => !pr)
   }
 
   const OpenModal = () => {
@@ -61,10 +61,19 @@ export function SubCommentCard({ item }: SubComT) {
         <View style={page.infoContainer}>
           <View style={page.infoLine}>
             <Text numberOfLines={1} h={'h6'} title={curName as string} />
-            <Text numberOfLines={1} h={'h6'} title={` ${date}`} oneColor={lightGray} />
+            <Text
+              numberOfLines={1}
+              h={'h6'}
+              title={` ${date}`}
+              oneColor={lightGray}
+            />
           </View>
         </View>
-        <ButtonVectorIcon size={s(10)} name="chevron-down" onPress={OpenModal} />
+        <ButtonVectorIcon
+          size={s(10)}
+          name="chevron-down"
+          onPress={OpenModal}
+        />
         <Space width={s(8)} />
       </View>
       <Space height={vs(3)} />
@@ -78,21 +87,21 @@ export function SubCommentCard({ item }: SubComT) {
 
 const page = StyleSheet.create({
   container: {
-    marginVertical: vs(5),
+    marginVertical: vs(5)
   },
   infoLine: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap'
   },
   infoContainer: {
     flexDirection: 'column',
-    flex: 1,
+    flex: 1
   },
   commentHead: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap'
   },
   textContainer: {
-    flexDirection: 'row',
-  },
+    flexDirection: 'row'
+  }
 })

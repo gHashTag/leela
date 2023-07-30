@@ -21,7 +21,9 @@ export function SocialLinks({ music }: SocialLinksT) {
           color={secondary}
           size={s(40)}
           containerStyle={containerStyle}
-          onPress={() => openUrl('https://soundcloud.com/play_ra/sets/all-mix-playra')}
+          onPress={() =>
+            openUrl('https://soundcloud.com/play_ra/sets/all-mix-playra')
+          }
         />
         <Icon
           name="instagram"
@@ -67,7 +69,7 @@ export function SocialLinks({ music }: SocialLinksT) {
           containerStyle={containerStyle}
           onPress={() =>
             openUrl(
-              'https://music.apple.com/ru/album/maha-kumbha-mela/1551347338?at=1000l9WJ&ct=bq&uo=4&app=music',
+              'https://music.apple.com/ru/album/maha-kumbha-mela/1551347338?at=1000l9WJ&ct=bq&uo=4&app=music'
             )
           }
         />
@@ -129,8 +131,8 @@ export function SocialLinks({ music }: SocialLinksT) {
 
 const styles = StyleSheet.create({
   containerStyle: {
-    margin: s(20),
-  },
+    margin: s(20)
+  }
 })
 
 const { containerStyle } = styles

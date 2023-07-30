@@ -17,7 +17,7 @@ interface NetworkModalT {
 
 export function NetworkModal({ navigation }: NetworkModalT) {
   const {
-    colors: { background },
+    colors: { background }
   } = useTheme()
   const { t } = useTranslation()
 
@@ -28,10 +28,13 @@ export function NetworkModal({ navigation }: NetworkModalT) {
   }
 
   useFocusEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      onPress()
-      return true
-    })
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        onPress()
+        return true
+      }
+    )
     return () => {
       backHandler.remove()
     }
@@ -60,7 +63,7 @@ const { container, modalView, btnCont, textStyle } = ScaledSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   modalView: {
     margin: s(10),
@@ -70,16 +73,16 @@ const { container, modalView, btnCont, textStyle } = ScaledSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 2
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    elevation: 5
   },
   btnCont: {
-    alignItems: 'center',
+    alignItems: 'center'
   },
   textStyle: {
-    textAlign: 'center',
-  },
+    textAlign: 'center'
+  }
 })

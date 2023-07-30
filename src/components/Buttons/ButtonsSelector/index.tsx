@@ -14,8 +14,8 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: 'row',
-  },
+    flexDirection: 'row'
+  }
 })
 
 const data = [1, 2, 3, 4, 5, 6]
@@ -35,7 +35,7 @@ const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
       <Text h={'h3'} title={`${t('selectPlayers')}`} />
       <Space height={s(20)} />
       <View style={styles.container}>
-        {data.map(a => (
+        {data.map((a) => (
           <Pressable key={a} onPress={() => setSelected(a)}>
             {selected === a ? (
               <Text h={'h0'} title={a.toString()} textStyle={page.numPadding} />
@@ -45,15 +45,18 @@ const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
           </Pressable>
         ))}
       </View>
-      <Button title={t('actions.start')} onPress={() => onPress(selected - 1)} />
+      <Button
+        title={t('actions.start')}
+        onPress={() => onPress(selected - 1)}
+      />
     </View>
   )
 })
 
 const page = StyleSheet.create({
   numPadding: {
-    padding: 10,
-  },
+    padding: 10
+  }
 })
 
 export { ButtonsSelector }

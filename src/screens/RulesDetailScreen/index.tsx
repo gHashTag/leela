@@ -12,7 +12,10 @@ import { AppContainer, SelectableIOS, Space, Text } from '../../components'
 import { goBack } from '../../constants'
 import { RootStackParamList } from '../../types'
 
-type navigation = NativeStackNavigationProp<RootStackParamList, 'RULES_DETAIL_SCREEN'>
+type navigation = NativeStackNavigationProp<
+  RootStackParamList,
+  'RULES_DETAIL_SCREEN'
+>
 type route = RouteProp<RootStackParamList, 'RULES_DETAIL_SCREEN'>
 
 type RulesDetailScreenT = {
@@ -23,8 +26,8 @@ type RulesDetailScreenT = {
 const styles = StyleSheet.create({
   h3: {
     padding: 20,
-    letterSpacing: 0.5,
-  },
+    letterSpacing: 0.5
+  }
 })
 
 const RulesDetailScreen = observer(({ route }: RulesDetailScreenT) => {

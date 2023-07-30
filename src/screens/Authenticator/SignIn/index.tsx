@@ -17,9 +17,16 @@ import {
   KeyboardContainer,
   Loading,
   Space,
-  TextError,
+  TextError
 } from '../../../components'
-import { H, W, black, captureException, goBack, white } from '../../../constants'
+import {
+  H,
+  W,
+  black,
+  captureException,
+  goBack,
+  white
+} from '../../../constants'
 import { RootStackParamList } from '../../../types'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
@@ -35,7 +42,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
   const { onSubmit, methods, error, loading, userInfo } = useSignIn()
   const { t } = useTranslation()
 
-  const onError: SubmitErrorHandler<FieldValues> = errors => {
+  const onError: SubmitErrorHandler<FieldValues> = (errors) => {
     captureException(errors, 'SignIn')
   }
 
@@ -79,7 +86,11 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
               {error !== t('auth.forgotPassword') ? (
                 <TextError title={error} textStyle={textStyle} />
               ) : (
-                <ButtonLink title={error} onPress={handleForgot} textStyle={textStyle} />
+                <ButtonLink
+                  title={error}
+                  onPress={handleForgot}
+                  textStyle={textStyle}
+                />
               )}
               <Space height={vs(15)} />
               <Button
@@ -98,11 +109,11 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
 const styles = StyleSheet.create({
   KAV: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: 'center'
   },
   textStyle: {
-    alignSelf: 'center',
-  },
+    alignSelf: 'center'
+  }
 })
 
 const { KAV, textStyle } = styles

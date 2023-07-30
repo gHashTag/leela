@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Image } from 'react-native'
 
@@ -13,7 +13,7 @@ export const useImageAspect = (image: string | any, isAsset?: boolean) => {
     } else {
       return 1
     }
-  }, [image])
+  }, [image, isAsset])
 
   useEffect(() => {
     if (!isAsset) {
@@ -21,7 +21,7 @@ export const useImageAspect = (image: string | any, isAsset?: boolean) => {
         setAspect(w / h)
       })
     }
-  }, [])
+  }, [image, isAsset])
 
   return isAsset ? imgObj : aspect
 }

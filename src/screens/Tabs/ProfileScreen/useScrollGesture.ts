@@ -1,12 +1,15 @@
 import { useRef, useState } from 'react'
 
 import { useWindowDimensions } from 'react-native'
-import { Gesture, PanGestureHandlerEventPayload } from 'react-native-gesture-handler'
+import {
+  Gesture,
+  PanGestureHandlerEventPayload
+} from 'react-native-gesture-handler'
 import {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
+  withTiming
 } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { s, vs } from 'react-native-size-matters'
@@ -30,7 +33,8 @@ export const useScrollGesture = (props?: useScrollGestureProps) => {
   const SNAP_POINTS_FROM_TOP = [-topPartH, 0]
 
   const FULLY_OPEN_SNAP_POINT = SNAP_POINTS_FROM_TOP[0]
-  const CLOSED_SNAP_POINT = SNAP_POINTS_FROM_TOP[SNAP_POINTS_FROM_TOP.length - 1]
+  const CLOSED_SNAP_POINT =
+    SNAP_POINTS_FROM_TOP[SNAP_POINTS_FROM_TOP.length - 1]
 
   const [snapPoint, setSnapPoint] = useState(CLOSED_SNAP_POINT)
 
@@ -52,7 +56,10 @@ export const useScrollGesture = (props?: useScrollGestureProps) => {
     // calculate nearest snap point
     let destSnapPoint = FULLY_OPEN_SNAP_POINT
 
-    if (snapPoint === FULLY_OPEN_SNAP_POINT && endOffsetY < FULLY_OPEN_SNAP_POINT) {
+    if (
+      snapPoint === FULLY_OPEN_SNAP_POINT &&
+      endOffsetY < FULLY_OPEN_SNAP_POINT
+    ) {
       return
     }
 
@@ -64,17 +71,18 @@ export const useScrollGesture = (props?: useScrollGestureProps) => {
     }
 
     // update current translation to be able to animate withSpring to snapPoint
-    bottomSheetTranslateY.value = bottomSheetTranslateY.value + translationY.value
+    bottomSheetTranslateY.value =
+      bottomSheetTranslateY.value + translationY.value
     translationY.value = 0
 
     bottomSheetTranslateY.value = withTiming(destSnapPoint, {
-      duration: 300,
+      duration: 300
     })
     runOnJS(onHandlerEndOnJS)(destSnapPoint)
   }
 
   const panGesture0 = Gesture.Pan()
-    .onUpdate(e => {
+    .onUpdate((e) => {
       // when bottom sheet is not fully opened scroll offset should not influence
       // its position (prevents random snapping when opening bottom sheet when
       // the content is already scrolled)
@@ -94,11 +102,11 @@ export const useScrollGesture = (props?: useScrollGestureProps) => {
     .withRef(blockScrollUntilAtTheTopRef)
 
   const scrollViewGesture0 = Gesture.Native().requireExternalGestureToFail(
-    blockScrollUntilAtTheTop0,
+    blockScrollUntilAtTheTop0
   )
 
   const panGesture1 = Gesture.Pan()
-    .onUpdate(e => {
+    .onUpdate((e) => {
       // when bottom sheet is not fully opened scroll offset should not influence
       // its position (prevents random snapping when opening bottom sheet when
       // the content is already scrolled)
@@ -118,11 +126,11 @@ export const useScrollGesture = (props?: useScrollGestureProps) => {
     .withRef(blockScrollUntilAtTheTopRef)
 
   const scrollViewGesture1 = Gesture.Native().requireExternalGestureToFail(
-    blockScrollUntilAtTheTop1,
+    blockScrollUntilAtTheTop1
   )
 
   const headerGesture = Gesture.Pan()
-    .onUpdate(e => {
+    .onUpdate((e) => {
       translationY.value = e.translationY
     })
     .onEnd(onHandlerEnd)
@@ -134,7 +142,7 @@ export const useScrollGesture = (props?: useScrollGestureProps) => {
     const clampedTranslateY = Math.min(CLOSED_SNAP_POINT, minTranslateY)
     return {
       height: screenH,
-      transform: [{ translateY: clampedTranslateY }],
+      transform: [{ translateY: clampedTranslateY }]
     }
   })
   return {
@@ -148,6 +156,6 @@ export const useScrollGesture = (props?: useScrollGestureProps) => {
     scrollOffset0,
     scrollOffset1,
     blockScrollUntilAtTheTop1,
-    blockScrollUntilAtTheTop0,
+    blockScrollUntilAtTheTop0
   }
 }

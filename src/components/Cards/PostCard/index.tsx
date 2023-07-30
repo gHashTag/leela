@@ -5,14 +5,20 @@ import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { ButtonVectorIcon, HashtagFormat, PlanAvatar, Space, Text } from 'src/components'
+import {
+  ButtonVectorIcon,
+  HashtagFormat,
+  PlanAvatar,
+  Space,
+  Text
+} from 'src/components'
 import {
   W,
   brightTurquoise,
   fuchsia,
   handleCommentAi,
   lightGray,
-  orange,
+  orange
 } from 'src/constants'
 import { getTimeStamp } from 'src/screens/helper'
 import { OnlinePlayer, PostStore } from 'src/store'
@@ -30,29 +36,31 @@ interface postCardI {
 }
 
 export const PostCard: React.FC<postCardI> = memo(
-  observer(props => {
+  observer((props) => {
     const {
       postId,
       isDetail = false,
       onPressCom,
       translatedText,
-      isHideTranslate,
+      isHideTranslate
     } = props
 
     const [isLoading, setIsLoading] = useState(false)
     const item: PostT | undefined =
-      PostStore.store.posts.find(a => a.id === postId) ||
-      PostStore.store.ownPosts.find(a => a.id === postId)
+      PostStore.store.posts.find((a) => a.id === postId) ||
+      PostStore.store.ownPosts.find((a) => a.id === postId)
     const { t, i18n } = useTranslation()
 
     const { transText, hideTranslate, text } = usePostTranslation({
       translatedText,
       isHideTranslate,
-      item,
+      item
     })
 
     const onPressWand = async () => {
-      const curItem: PostT | undefined = PostStore.store.posts.find(a => a.id === postId)
+      const curItem: PostT | undefined = PostStore.store.posts.find(
+        (a) => a.id === postId
+      )
       // console.log('curItem', curItem)
       const systemMessage = t('system')
       const postLanguage = item?.language
@@ -66,7 +74,7 @@ export const PostCard: React.FC<postCardI> = memo(
         curItem,
         systemMessage,
         message: text as string,
-        planText: planText,
+        planText: planText
       })
 
       setIsLoading(false)
@@ -80,7 +88,7 @@ export const PostCard: React.FC<postCardI> = memo(
       handleAdminMenu,
       handleShareLink,
       isLiked,
-      handleProfile,
+      handleProfile
     } = usePostActions({ isDetail, onPressCom, item, transText, hideTranslate })
     if (!item) {
       return <></>
@@ -244,7 +252,11 @@ export const PostCard: React.FC<postCardI> = memo(
             {!item.accept && (
               <>
                 <Space height={vs(5)} />
-                <Text oneColor={orange} h={'h6'} title={t('online-part.review')} />
+                <Text
+                  oneColor={orange}
+                  h={'h6'}
+                  title={t('online-part.review')}
+                />
               </>
             )}
             {/* Preview Buttons */}
@@ -279,7 +291,7 @@ export const PostCard: React.FC<postCardI> = memo(
         </View>
       </Pressable>
     )
-  }),
+  })
 )
 
 const styles = StyleSheet.create({
@@ -288,77 +300,77 @@ const styles = StyleSheet.create({
     paddingRight: s(12),
     borderBottomColor: brightTurquoise,
     borderBottomWidth: vs(0.4),
-    paddingVertical: s(6),
+    paddingVertical: s(6)
   },
   img: {
     marginRight: s(12),
     marginBottom: s(12),
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-start'
   },
   btnsContainer: {
     flexDirection: 'row',
     padding: s(4),
     paddingBottom: vs(12),
     paddingTop: vs(17),
-    flex: 1,
+    flex: 1
   },
   mediumBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   smallBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   textStyle: {
-    lineHeight: s(21),
+    lineHeight: s(21)
   },
   headerS: {
-    flexDirection: 'row',
+    flexDirection: 'row'
   },
   headerInfo: {
     flexDirection: 'column',
-    flex: 1,
+    flex: 1
   },
   headerName: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap'
   },
   lightText: {
     color: lightGray,
-    textAlign: 'left',
+    textAlign: 'left'
   },
   flex1: {
-    flex: 1,
+    flex: 1
   },
   likeBtn: {
     flex: 2,
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   avaContainer: {
-    height: '100%',
+    height: '100%'
   },
   nonDetailCommentButton: {
-    justifyContent: 'flex-start',
+    justifyContent: 'flex-start'
   },
   nonDetailLinkButton: {
     justifyContent: 'flex-end',
-    marginRight: s(5),
+    marginRight: s(5)
   },
   nonDetailAdminMenuButton: {
     alignItems: 'flex-end',
-    marginRight: s(4),
+    marginRight: s(4)
   },
   withoutBottomBorder: {
-    borderBottomWidth: 0,
+    borderBottomWidth: 0
   },
   flagEmoji: {
-    fontSize: s(16),
-  },
+    fontSize: s(16)
+  }
 })
 
 const {
@@ -377,5 +389,5 @@ const {
   nonDetailLinkButton,
   nonDetailCommentButton,
   nonDetailAdminMenuButton,
-  withoutBottomBorder,
+  withoutBottomBorder
 } = styles

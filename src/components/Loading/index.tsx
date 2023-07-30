@@ -9,8 +9,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-  },
+    alignItems: 'center'
+  }
 })
 
 interface LoadingT {
@@ -37,11 +37,10 @@ interface LoadingT {
 const Loading = ({
   paddingTop = 0,
   size = s(65),
-  type = 'Pulse',
+  type = 'Pulse'
 }: LoadingT) => {
-  const { container } = styles
   return (
-    <View style={[container, { paddingTop }]}>
+    <View style={[styles.container, { paddingTop }]}>
       <Spinner size={size} type={type} color={secondary} isVisible={true} />
     </View>
   )

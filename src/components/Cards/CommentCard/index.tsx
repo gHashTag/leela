@@ -13,7 +13,7 @@ import {
   PlanAvatar,
   Space,
   SubCommentCard,
-  Text,
+  Text
 } from '../../'
 import { OpenActionsModal, gray, lightGray } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
@@ -48,7 +48,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
         const translated = await PostStore.translateText(item.text)
         setTransText(translated)
       }
-      setHideTranslate(pr => !pr)
+      setHideTranslate((pr) => !pr)
     }
     const OpenModal = () => {
       const modalButtons = getActions({ item, handleTransText })
@@ -57,7 +57,9 @@ export const CommentCard: React.FC<CommentCardI> = observer(
 
     const text = hideTranslate ? item.text : transText
 
-    const subCom = PostStore.store.replyComments.filter(a => a.commentId === item.id)
+    const subCom = PostStore.store.replyComments.filter(
+      (a) => a.commentId === item.id
+    )
     const showLine = endIndex !== index || subCom.length > 0
     const isSmallLine = subCom.length > 0 && endIndex === index
     const lineH = isSmallLine
@@ -98,14 +100,18 @@ export const CommentCard: React.FC<CommentCardI> = observer(
                 title={`  · ${date}`}
               />
               <View style={page.flexOne} />
-              <ButtonVectorIcon size={s(15)} name="chevron-down" onPress={OpenModal} />
+              <ButtonVectorIcon
+                size={s(15)}
+                name="chevron-down"
+                onPress={OpenModal}
+              />
               <Space width={s(5)} />
             </View>
             <HashtagFormat h="h6" title={text} selectable />
             <Space height={vs(20)} />
             <FlatList
               data={subCom}
-              keyExtractor={a => a.id}
+              keyExtractor={(a) => a.id}
               renderItem={({ item: commentItem, index: id }) => (
                 <SubCommentCard item={commentItem} index={id} />
               )}
@@ -114,7 +120,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
         </View>
       </>
     )
-  },
+  }
 )
 
 const page = StyleSheet.create({
@@ -122,28 +128,28 @@ const page = StyleSheet.create({
     flex: 1,
     paddingVertical: PADDING,
     flexDirection: 'row',
-    paddingHorizontal: s(13),
+    paddingHorizontal: s(13)
   },
   verticalLine: {
     width: s(2),
     borderRadius: s(3),
     backgroundColor: lightGray,
     position: 'absolute',
-    transform: [{ translateY: vs(2) }],
+    transform: [{ translateY: vs(2) }]
   },
   lineCont: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: 'center'
   },
   content: {
     flexDirection: 'column',
-    flex: 1,
+    flex: 1
   },
   commentHead: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap'
   },
   flexOne: {
-    flex: 1,
-  },
+    flex: 1
+  }
 })

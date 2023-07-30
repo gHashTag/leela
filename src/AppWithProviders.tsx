@@ -19,9 +19,9 @@ const routingInstrumentation = new Sentry.ReactNavigationInstrumentation()
 configurePersistable(
   {
     storage: AsyncStorage,
-    debugMode: false,
+    debugMode: false
   },
-  { delay: 200 },
+  { delay: 200 }
 )
 
 Sentry.init({
@@ -31,13 +31,13 @@ Sentry.init({
   integrations: [
     new Sentry.ReactNativeTracing({
       tracingOrigins: ['localhost', /^\//],
-      routingInstrumentation,
-    }),
-  ],
+      routingInstrumentation
+    })
+  ]
 })
 
 configure({
-  enforceActions: 'never',
+  enforceActions: 'never'
 })
 
 LogBox.ignoreLogs([
@@ -59,7 +59,7 @@ LogBox.ignoreLogs([
   'ViewPropTypes will be removed',
   'source.uri should not be an empty string',
   'VirtualizedLists should never be nested inside plain ScrollViews',
-  'i18next::translator: Seems the loaded translations',
+  'i18next::translator: Seems the loaded translations'
 ])
 
 function AppWithProviders() {
@@ -86,7 +86,7 @@ function AppWithProviders() {
 }
 
 const page = StyleSheet.create({
-  flexOne: { flex: 1 },
+  flexOne: { flex: 1 }
 })
 
 export default Sentry.wrap(AppWithProviders)

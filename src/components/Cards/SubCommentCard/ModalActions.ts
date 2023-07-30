@@ -12,23 +12,28 @@ interface getActionsProps {
   hideTranslate: boolean
 }
 
-export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }) => {
+export const getActions: getActionsT = ({
+  item,
+  handleTransText,
+  hideTranslate
+}) => {
   const isOwner = getUid() === item.ownerId
   const isAdmin = OnlinePlayer.store.status === 'Admin'
   const isBaned =
-    OtherPlayers.store.players.find(a => a.owner === item.ownerId)?.status === 'ban'
+    OtherPlayers.store.players.find((a) => a.owner === item.ownerId)?.status ===
+    'ban'
   return [
     {
       key: 'COPY',
       onPress: () => Clipboard.setString(item.text),
       title: i18next.t('actions.copy'),
-      icon: 'content-copy',
+      icon: 'content-copy'
     },
     {
       key: 'TRANSLATE',
       onPress: handleTransText,
       title: i18next.t('actions.translate'),
-      icon: !hideTranslate ? 'translate-off' : 'translate',
+      icon: !hideTranslate ? 'translate-off' : 'translate'
     },
     {
       key: 'DEL',
@@ -36,12 +41,12 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
         PostStore.delComment({
           commentId: item.id,
           isReply: item.reply,
-          postId: item.postId,
+          postId: item.postId
         })
       },
       title: i18next.t('actions.delete'),
       color: 'red',
-      icon: 'delete-outline',
+      icon: 'delete-outline'
     },
     {
       key: 'DEL_ALL_COM',
@@ -50,7 +55,7 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
       },
       title: 'delete all user comments',
       color: 'red',
-      icon: 'delete-alert-outline',
+      icon: 'delete-alert-outline'
     },
     {
       key: 'BAN',
@@ -59,9 +64,11 @@ export const getActions: getActionsT = ({ item, handleTransText, hideTranslate }
       },
       title: isBaned ? 'Unban user' : 'Ban user',
       color: isBaned ? undefined : 'red',
-      icon: isBaned ? 'account-plus-outline' : 'account-off-outline',
-    },
+      icon: isBaned ? 'account-plus-outline' : 'account-off-outline'
+    }
   ]
-    .filter(a => (isOwner ? true : isAdmin ? true : a.key !== 'DEL'))
-    .filter(a => (isAdmin ? true : a.key !== 'DEL_ALL_COM' && a.key !== 'BAN'))
+    .filter((a) => (isOwner ? true : isAdmin ? true : a.key !== 'DEL'))
+    .filter((a) =>
+      isAdmin ? true : a.key !== 'DEL_ALL_COM' && a.key !== 'BAN'
+    )
 }

@@ -17,7 +17,7 @@ interface ExitPopupT {
 
 export function ExitPopup({ navigation }: ExitPopupT) {
   const {
-    colors: { background },
+    colors: { background }
   } = useTheme()
   const { t } = useTranslation()
 
@@ -38,7 +38,7 @@ export function ExitPopup({ navigation }: ExitPopupT) {
             style={({ pressed }) => [
               page.btn,
               { borderBottomLeftRadius: s(12) },
-              pressed && page.pressedBtn,
+              pressed && page.pressedBtn
             ]}
             onPress={exit}
           >
@@ -53,7 +53,7 @@ export function ExitPopup({ navigation }: ExitPopupT) {
             style={({ pressed }) => [
               page.btn,
               { borderBottomRightRadius: s(12) },
-              pressed && page.pressedBtn,
+              pressed && page.pressedBtn
             ]}
             onPress={cancel}
           >
@@ -74,7 +74,7 @@ const page = StyleSheet.create({
   transparentView: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   popup: {
     width: '75%',
@@ -86,30 +86,30 @@ const page = StyleSheet.create({
     shadowColor: fuchsia,
     shadowOffset: {
       width: 0,
-      height: 5,
+      height: 5
     },
     shadowOpacity: 0.51,
     shadowRadius: 13.16,
-    elevation: 20,
+    elevation: 20
   },
   exitArea: {
     width: '100%',
     height: '100%',
-    position: 'absolute',
+    position: 'absolute'
   },
   btnsCont: {
-    flexDirection: 'row',
+    flexDirection: 'row'
   },
   btn: {
     flex: 1,
     alignItems: 'center',
-    padding: s(7),
+    padding: s(7)
   },
   pressedBtn: {
-    transform: [{ translateY: vs(-2) }],
+    transform: [{ translateY: vs(-2) }]
   },
   btnText: {
     textAlign: 'center',
-    marginHorizontal: s(8),
-  },
+    marginHorizontal: s(8)
+  }
 })

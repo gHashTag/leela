@@ -15,7 +15,7 @@ import {
   OpenVideoModal,
   captureException,
   primary,
-  secondary,
+  secondary
 } from '../../constants'
 import { RootStackParamList } from '../../types'
 
@@ -29,12 +29,12 @@ const theme = {
   Button: {
     titleStyle: {
       color: secondary,
-      padding: 30,
-    },
+      padding: 30
+    }
   },
   colors: {
-    primary: secondary,
-  },
+    primary: secondary
+  }
 }
 
 interface PlayraItemT {
@@ -57,7 +57,7 @@ export const PlayraScreen = observer(({ navigation }: PlayraScreenT) => {
     const getData = async () => {
       try {
         let response = await fetch(
-          'https://leelachakra.com/resource/Playra/AlbumMahaKumbhaMela/playraClips.json',
+          'https://leelachakra.com/resource/Playra/AlbumMahaKumbhaMela/playraClips.json'
         )
         setArray(await response.json())
         setLoading(false)
@@ -151,24 +151,24 @@ const RenderItem = memo(({ item }: PlayraItemT) => {
 const page = StyleSheet.create({
   videoView: {
     height: s(200),
-    width: '100%',
+    width: '100%'
   },
   posterS: {
     flex: 1,
-    borderRadius: s(10),
+    borderRadius: s(10)
   },
   loadContainer: {
     width: '100%',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   centerTxt: {
-    textAlign: 'center',
+    textAlign: 'center'
   },
   fullWidth: {
-    width: '100%',
+    width: '100%'
   },
   videoContainer: {
     width: '90%',
-    alignSelf: 'center',
-  },
+    alignSelf: 'center'
+  }
 })

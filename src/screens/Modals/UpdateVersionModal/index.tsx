@@ -8,10 +8,11 @@ import { s, vs } from 'react-native-size-matters'
 
 import { ButtonSimple, Space, Text } from '../../../components'
 import { useNoBackHandler } from '../../../hooks'
+import { black, blackOpacity } from '../../../constants'
 
 export function UpdateVersionModal() {
   const {
-    colors: { background },
+    colors: { background }
   } = useTheme()
   useNoBackHandler()
   const { t } = useTranslation()
@@ -27,7 +28,7 @@ export function UpdateVersionModal() {
       appName: 'Leela Chakra',
       appStoreId: 1296604457,
       playStoreId: 'com.leelagame',
-      appStoreLocale: 'en',
+      appStoreLocale: 'en'
     })
   }
   return (
@@ -45,26 +46,26 @@ const page = StyleSheet.create({
   container: {
     height: '100%',
     width: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: blackOpacity,
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   modalView: {
     margin: s(10),
     borderRadius: s(10),
     padding: s(20),
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: black,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 2
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    elevation: 5
   },
   textStyle: {
-    alignItems: 'center',
-  },
+    alignItems: 'center'
+  }
 })

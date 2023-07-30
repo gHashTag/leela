@@ -2,7 +2,7 @@
 import { LEELA_ID, YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
 import auth from '@react-native-firebase/auth'
 import firestore, {
-  FirebaseFirestoreTypes,
+  FirebaseFirestoreTypes
 } from '@react-native-firebase/firestore'
 import { makeAutoObservable } from 'mobx'
 import { nanoid } from 'nanoid/non-secure'
@@ -18,7 +18,7 @@ import {
   FormPostT,
   FormReplyCom,
   PostT,
-  ReplyComT,
+  ReplyComT
 } from 'src/types'
 
 import { actionSubscribeStore } from './SubscribeStore'
@@ -52,7 +52,7 @@ export const PostStore = {
     comments: [],
     replyComments: [],
     loadOwnPosts: true,
-    loadPosts: true,
+    loadPosts: true
   }),
   createPost: async ({ text, plan, systemMessage, planText }: FormPostT) => {
     if (PostStore.store.posts.length > 5) {
@@ -75,7 +75,7 @@ export const PostStore = {
         language: lang,
         flagEmoji,
         planText,
-        ownerId: userUid,
+        ownerId: userUid
       }
       try {
         await firestore().collection('Posts').doc(id).set(post)
@@ -87,7 +87,7 @@ export const PostStore = {
           await generateComment({
             message: textMessage,
             systemMessage,
-            planText,
+            planText
           })
           return createdPostData
         } else {
@@ -118,7 +118,7 @@ export const PostStore = {
           createTime: Date.now(),
           email: email,
           reply: false,
-          id: path,
+          id: path
         }
 
         await firestore()
@@ -142,7 +142,7 @@ export const PostStore = {
   delComment: async ({ commentId, isReply, postId }: delCommentT) => {
     await firestore().collection('Comments').doc(commentId).delete()
     PostStore.store.comments = PostStore.store.comments.filter(
-      (a) => a.id !== commentId,
+      (a) => a.id !== commentId
     )
     PostStore.removeCommentIdInPost({ commentId, postId })
     if (!isReply) {
@@ -163,7 +163,7 @@ export const PostStore = {
     text,
     commentId,
     postId,
-    commentOwner,
+    commentOwner
   }: FormReplyCom) => {
     const userUid = auth().currentUser?.uid
     const prof = await getProfile()
@@ -181,7 +181,7 @@ export const PostStore = {
           createTime: Date.now(),
           email: prof.email,
           reply: true,
-          id: path,
+          id: path
         }
         await firestore()
           .collection('Posts')
@@ -235,7 +235,7 @@ export const PostStore = {
             return data
           }
         })
-        .filter((a: any) => a !== undefined),
+        .filter((a: any) => a !== undefined)
       // (a !== undefined ? (a.reply ? false : true) : false)
     )
     if (res.length > 0) {
@@ -253,7 +253,7 @@ export const PostStore = {
       .collection('Posts')
       .doc(postId)
       .update({
-        liked: firestore.FieldValue.arrayUnion(userUid),
+        liked: firestore.FieldValue.arrayUnion(userUid)
       })
   },
   unlikePost: async (postId: string) => {
@@ -262,7 +262,7 @@ export const PostStore = {
       .collection('Posts')
       .doc(postId)
       .update({
-        liked: firestore.FieldValue.arrayRemove(userUid),
+        liked: firestore.FieldValue.arrayRemove(userUid)
       })
   },
   getOwnerName: (ownerId: string, full?: boolean) => {
@@ -284,9 +284,8 @@ export const PostStore = {
     if (userUid === ownerId) {
       return OnlinePlayer.store.plan
     }
-    const plan = OtherPlayers.store.players.find(
-      (a) => a.owner === ownerId,
-    )?.plan
+    const plan = OtherPlayers.store.players.find((a) => a.owner === ownerId)
+      ?.plan
     if (!plan) {
       return 0
     }
@@ -308,14 +307,14 @@ export const PostStore = {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Api-Key ${YANDEX_TRANSLATE_API_KEY}`,
+              Authorization: `Api-Key ${YANDEX_TRANSLATE_API_KEY}`
             },
             body: JSON.stringify({
               folderId: YANDEX_FOLDER_ID,
               texts: text,
-              targetLanguageCode: lang,
-            }),
-          },
+              targetLanguageCode: lang
+            })
+          }
         )
       ).json()
       if (res?.translations && res.translations?.length > 0) {
@@ -331,9 +330,8 @@ export const PostStore = {
     if (userUid === uid) {
       return OnlinePlayer.store.avatar
     }
-    const otherUserAva = OtherPlayers.store.players.find(
-      (a) => a.owner === uid,
-    )?.avatar
+    const otherUserAva = OtherPlayers.store.players.find((a) => a.owner === uid)
+      ?.avatar
     return otherUserAva
       ? otherUserAva
       : 'https://www.siriusgem.com/new/wp-content/uploads/2013/06/Round_cut-1-300x300.jpg'
@@ -397,5 +395,5 @@ export const PostStore = {
   },
   acceptPost: (isAccept: boolean, postId: string) => {
     firestore().collection('Posts').doc(postId).update({ accept: !isAccept })
-  },
+  }
 }

@@ -34,11 +34,11 @@ export const IntentionOfGame = observer(() => {
 const styles = StyleSheet.create({
   container: {
     padding: s(10),
-    flex: 1,
+    flex: 1
   },
   btnEdit: {
-    alignSelf: 'flex-end',
-  },
+    alignSelf: 'flex-end'
+  }
 })
 
 const { container, btnEdit } = styles

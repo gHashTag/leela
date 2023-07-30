@@ -4,7 +4,12 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { useTheme } from '@react-navigation/native'
 import { RouteProp } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { FieldValues, FormProvider, SubmitHandler, useForm } from 'react-hook-form'
+import {
+  FieldValues,
+  FormProvider,
+  SubmitHandler,
+  useForm
+} from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { mvs, vs } from 'react-native-size-matters'
@@ -19,7 +24,10 @@ type ChangeIntentionScreenNavProp = NativeStackNavigationProp<
   RootStackParamList,
   'CHANGE_INTENTION_SCREEN'
 >
-type ChangeIntentionRouteProp = RouteProp<RootStackParamList, 'CHANGE_INTENTION_SCREEN'>
+type ChangeIntentionRouteProp = RouteProp<
+  RootStackParamList,
+  'CHANGE_INTENTION_SCREEN'
+>
 
 interface ChangeIntentionT {
   navigation: ChangeIntentionScreenNavProp
@@ -41,19 +49,19 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
             .trim()
             .min(2, t('twoSymbolRequire') || '')
             .required()
-            .max(800, `${t('manyCharacters')}800`),
+            .max(800, `${t('manyCharacters')}800`)
         })
         .required(),
-    [t],
+    [t]
   )
 
   const { ...methods } = useForm({
     mode: 'onChange',
     resolver: yupResolver(schema),
-    defaultValues: { newIntention: prevIntention || '' },
+    defaultValues: { newIntention: prevIntention || '' }
   })
 
-  const onSubmit: SubmitHandler<FieldValues> = async data => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setLoading(true)
     const { newIntention } = data
     await updateIntention(newIntention)
@@ -62,7 +70,7 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
   }
 
   const {
-    colors: { background: backgroundColor },
+    colors: { background: backgroundColor }
   } = useTheme()
 
   return (
@@ -91,8 +99,8 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
             <Space height={10} />
             <Button
               title={t('done')}
-              onPress={methods.handleSubmit(onSubmit, errors =>
-                captureException(errors, 'ChangeIntention'),
+              onPress={methods.handleSubmit(onSubmit, (errors) =>
+                captureException(errors, 'ChangeIntention')
               )}
             />
             <Space height={vs(50)} />
@@ -105,10 +113,10 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
 
 const page = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: 'center'
   },
   bigInput: {
     width: '100%',
-    alignItems: 'center',
-  },
+    alignItems: 'center'
+  }
 })

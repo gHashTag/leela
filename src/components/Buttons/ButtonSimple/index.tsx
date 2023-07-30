@@ -8,12 +8,12 @@ import { Pressable } from '../../Pressable'
 
 const styles = StyleSheet.create({
   container: {
-    alignSelf: 'center',
+    alignSelf: 'center'
   },
   fontStyle: {
     marginTop: vs(5),
-    marginBottom: vs(5),
-  },
+    marginBottom: vs(5)
+  }
 })
 
 interface ButtonSimpleT {
@@ -37,13 +37,15 @@ interface ButtonSimpleT {
   viewStyle?: StyleProp<ViewStyle>
 }
 
-const ButtonSimple = memo<ButtonSimpleT>(({ title, onPress, h = 'h4', viewStyle }) => {
-  const { container, fontStyle } = styles
-  return (
-    <Pressable onPress={onPress} style={[container, viewStyle]}>
-      <Text numberOfLines={1} h={h} title={title} textStyle={fontStyle} />
-    </Pressable>
-  )
-})
+const ButtonSimple = memo<ButtonSimpleT>(
+  ({ title, onPress, h = 'h4', viewStyle }) => {
+    const { container, fontStyle } = styles
+    return (
+      <Pressable onPress={onPress} style={[container, viewStyle]}>
+        <Text numberOfLines={1} h={h} title={title} textStyle={fontStyle} />
+      </Pressable>
+    )
+  }
+)
 
 export { ButtonSimple }

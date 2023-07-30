@@ -7,7 +7,10 @@ import { Background, ButtonsSelector, CenterView } from '../../components'
 import { actionsDice } from '../../store'
 import { RootStackParamList } from '../../types'
 
-type navigation = NativeStackNavigationProp<RootStackParamList, 'SELECT_PLAYERS_SCREEN'>
+type navigation = NativeStackNavigationProp<
+  RootStackParamList,
+  'SELECT_PLAYERS_SCREEN'
+>
 
 type SelectPlayersScreenT = {
   navigation: navigation

@@ -12,7 +12,7 @@ import {
   IconLeela,
   Loading,
   Space,
-  Text,
+  Text
 } from '../../components'
 import { useKeychain } from '../../hooks'
 import { RootStackParamList } from '../../types'

@@ -7,11 +7,19 @@ import React, { useEffect } from 'react'
 import { StatusBar, useColorScheme } from 'react-native'
 import Orientation from 'react-native-orientation-locker'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
-import TabBar from 'src/TabBar'
-import { Fallback } from 'src/components'
-import { black, lightGray, navRef, white } from 'src/constants'
-import { useExitModal, useGameAndProfileIsOnline, useNetwork } from 'src/hooks'
-import { lang } from 'src/i18n'
+import TabBar from './TabBar'
+import { Fallback } from './components'
+import {
+  black,
+  dimGray,
+  lightGray,
+  navRef,
+  red,
+  secondary,
+  white
+} from './constants'
+import { useExitModal, useGameAndProfileIsOnline, useNetwork } from './hooks'
+import { lang } from './i18n'
 import {
   ActionsModal,
   ChangeIntention,
@@ -36,8 +44,8 @@ import {
   UpdateVersionModal,
   UserProfileScreen,
   VideoPopup,
-  WelcomeScreen,
-} from 'src/screens'
+  WelcomeScreen
+} from './screens'
 import {
   ConfirmSignUp,
   Forgot,
@@ -47,35 +55,35 @@ import {
   SignUp,
   SignUpAvatar,
   SignUpUsername,
-  UserEdit,
-} from 'src/screens/Authenticator'
-import { checkVersion, getFireBaseRef } from 'src/screens/helper'
-import { DiceStore, PostStore, SubscribeStore } from 'src/store'
-import { RootStackParamList, RootTabParamList } from 'src/types'
-import { linking } from 'src/utils'
+  UserEdit
+} from './screens/Authenticator'
+import { checkVersion, getFireBaseRef } from './screens/helper'
+import { DiceStore, SubscribeStore } from './store'
+import { RootStackParamList, RootTabParamList } from './types'
+import { linking } from './utils'
 
 const DarkTheme = {
   dark: true,
   colors: {
-    primary: '#FF06F4',
-    background: '#1c1c1c',
-    card: '#ffffff',
-    text: '#FFFFFF',
-    border: '#c7c7cc',
-    notification: '#ff453a',
-  },
+    primary: secondary,
+    background: black,
+    card: white,
+    text: white,
+    border: dimGray,
+    notification: red
+  }
 }
 
 const LightTheme = {
   dark: false,
   colors: {
-    primary: '#FF06F4',
-    background: '#FFFFFF',
-    card: '#ffffff',
-    text: '#1c1c1c',
-    border: '#c7c7cc',
-    notification: '#ff453a',
-  },
+    primary: secondary,
+    background: white,
+    card: white,
+    text: black,
+    border: dimGray,
+    notification: red
+  }
 }
 
 const TabNavigator = createMaterialTopTabNavigator<RootTabParamList>()
@@ -90,7 +98,7 @@ const Tab = observer(() => {
       tabBar={(props) => <TabBar {...props} />}
       tabBarPosition="bottom"
       screenOptions={{
-        swipeEnabled: false,
+        swipeEnabled: false
       }}
       initialRouteName={'TAB_BOTTOM_0'}
     >
@@ -127,7 +135,7 @@ const App = () => {
   useEffect(() => {
     SystemNavigationBar.setNavigationColor(
       isDark ? black : white,
-      isDark ? 'dark' : 'light',
+      isDark ? 'dark' : 'light'
     )
     SystemNavigationBar.setNavigationBarDividerColor(lightGray)
     Orientation.lockToPortrait()
@@ -153,7 +161,7 @@ const App = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          gestureEnabled: false,
+          gestureEnabled: false
         }}
         initialRouteName="HELLO"
       >
@@ -163,7 +171,7 @@ const App = () => {
         {/* Auth */}
         <Stack.Group
           screenOptions={{
-            animation: 'slide_from_right',
+            animation: 'slide_from_right'
           }}
         >
           <Stack.Screen name="SIGN_IN" component={SignIn} />
@@ -187,7 +195,7 @@ const App = () => {
         {/* Rules */}
         <Stack.Group
           screenOptions={{
-            animation: 'slide_from_left',
+            animation: 'slide_from_left'
           }}
         >
           <Stack.Screen name="RULES_SCREEN" component={RulesScreen} />
@@ -200,7 +208,7 @@ const App = () => {
         {/* Plans */}
         <Stack.Group
           screenOptions={{
-            animation: 'slide_from_right',
+            animation: 'slide_from_right'
           }}
         >
           <Stack.Screen
@@ -224,7 +232,7 @@ const App = () => {
         {/* Post */}
         <Stack.Screen
           options={{
-            animation: 'slide_from_right',
+            animation: 'slide_from_right'
           }}
           name="DETAIL_POST_SCREEN"
           component={DetailPostScreen}
@@ -236,7 +244,7 @@ const App = () => {
           screenOptions={{
             presentation: 'transparentModal',
             animation: 'fade',
-            gestureEnabled: false,
+            gestureEnabled: false
           }}
         >
           <Stack.Screen
@@ -250,7 +258,7 @@ const App = () => {
           <Stack.Screen
             name="REPLY_MODAL"
             options={{
-              animation: 'slide_from_bottom',
+              animation: 'slide_from_bottom'
             }}
             component={ActionsModal}
           />

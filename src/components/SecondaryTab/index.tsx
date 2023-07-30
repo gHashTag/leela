@@ -5,7 +5,7 @@ import { Pressable, StyleSheet } from 'react-native'
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
+  withTiming
 } from 'react-native-reanimated'
 import { s, vs } from 'react-native-size-matters'
 import { NavigationState } from 'react-native-tab-view'
@@ -23,7 +23,11 @@ export interface SecondaryTabT {
   width: number
 }
 
-export const SecondaryTab = ({ jumpTo, navigationState, width }: SecondaryTabT) => {
+export const SecondaryTab = ({
+  jumpTo,
+  navigationState,
+  width
+}: SecondaryTabT) => {
   const { routes, index } = navigationState
   const tabsCount = routes.length
   const tabWidth = width / tabsCount
@@ -32,15 +36,15 @@ export const SecondaryTab = ({ jumpTo, navigationState, width }: SecondaryTabT) 
 
   useEffect(() => {
     x.value = withTiming(tabWidth * index, { duration: 300 })
-  }, [index])
+  }, [index, tabWidth, x])
 
   const {
-    colors: { primary },
+    colors: { primary }
   } = useTheme()
 
   const lineAnim = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: x.value }],
+      transform: [{ translateX: x.value }]
     }
   })
 
@@ -49,13 +53,25 @@ export const SecondaryTab = ({ jumpTo, navigationState, width }: SecondaryTabT) 
       {routes.map(({ title, key }, id) => {
         const isFocused = index === id
         return (
-          <Pressable key={key} style={styles.tabStyle} onPress={() => jumpTo(key, id)}>
-            <Text oneColor={isFocused ? primary : undefined} h="h4" title={title} />
+          <Pressable
+            key={key}
+            style={styles.tabStyle}
+            onPress={() => jumpTo(key, id)}
+          >
+            <Text
+              oneColor={isFocused ? primary : undefined}
+              h="h4"
+              title={title}
+            />
           </Pressable>
         )
       })}
       <Animated.View
-        style={[styles.line, { backgroundColor: primary, width: tabWidth }, lineAnim]}
+        style={[
+          styles.line,
+          { backgroundColor: primary, width: tabWidth },
+          lineAnim
+        ]}
       />
     </Animated.View>
   )
@@ -64,17 +80,17 @@ export const SecondaryTab = ({ jumpTo, navigationState, width }: SecondaryTabT) 
 const styles = StyleSheet.create({
   tabContainer: {
     paddingVertical: vs(10),
-    flexDirection: 'row',
+    flexDirection: 'row'
   },
   line: {
     height: vs(2),
     position: 'absolute',
     bottom: 0,
-    left: 0,
+    left: 0
   },
   tabStyle: {
     flex: 1,
     marginHorizontal: s(2),
-    alignItems: 'center',
-  },
+    alignItems: 'center'
+  }
 })

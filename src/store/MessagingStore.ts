@@ -7,12 +7,12 @@ import { makePersistable } from 'mobx-persist-store'
 import { captureException } from '../constants'
 
 export const MessagingStore = makeAutoObservable({
-  path: '',
+  path: ''
 })
 
 makePersistable(MessagingStore, {
   name: 'MessagingStore',
-  properties: ['path'],
+  properties: ['path']
 })
 
 const fetchBusinesses = () => {
@@ -25,11 +25,11 @@ const fetchBusinesses = () => {
     if (enabled) {
       messaging()
         .getToken()
-        .then(token => {
+        .then((token) => {
           return saveTokenToDatabase(token)
         })
 
-      return messaging().onTokenRefresh(token => {
+      return messaging().onTokenRefresh((token) => {
         saveTokenToDatabase(token)
       })
     }
@@ -45,7 +45,7 @@ const saveTokenToDatabase = async (token: string) => {
         .collection('Profiles')
         .doc(userUid)
         .update({
-          tokens: firestore.FieldValue.arrayUnion(token),
+          tokens: firestore.FieldValue.arrayUnion(token)
         })
     }
   } catch (e) {
@@ -61,7 +61,7 @@ const delTokenOnSignOut = async () => {
       .collection('Profiles')
       .doc(userUid)
       .update({
-        tokens: firestore.FieldValue.arrayRemove(token),
+        tokens: firestore.FieldValue.arrayRemove(token)
       })
   } catch (error) {
     captureException(error, 'delTokenOnSignOut')

@@ -18,7 +18,7 @@ import {
   resetHistory,
   resetPlayer,
   updatePlan,
-  uploadImg,
+  uploadImg
 } from '../screens/helper'
 import { HistoryT, status } from '../types'
 
@@ -26,7 +26,7 @@ const initProfile = {
   firstName: '',
   lastName: '',
   email: '',
-  intention: '',
+  intention: ''
 }
 
 const initHistory = () => [
@@ -34,8 +34,8 @@ const initHistory = () => [
     createDate: Date.now(),
     plan: 68,
     count: 0,
-    status: 'start',
-  },
+    status: 'start'
+  }
 ]
 
 export const OnlinePlayer = makeAutoObservable<Istore>({
@@ -53,7 +53,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
     isReported: true,
     avatar: '',
     profile: initProfile,
-    isPosterLoading: false,
+    isPosterLoading: false
   },
   async resetGame(): Promise<void> {
     try {
@@ -62,7 +62,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
         start: false,
         finish: false,
         plan: 68,
-        history: initHistory(),
+        history: initHistory()
       }
       await resetPlayer()
       await resetHistory()
@@ -87,7 +87,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
         canGo: false,
         stepTime: 0,
         timeText: ' ',
-        loadingProf: true,
+        loadingProf: true
       }
       actionsDice.resetPlayer()
       await Keychain.resetInternetCredentials('auth')
@@ -110,7 +110,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
         canGo: false,
         stepTime: 0,
         timeText: ' ',
-        loadingProf: true,
+        loadingProf: true
       }
       actionsDice.resetPlayer()
       await auth().signOut()
@@ -133,7 +133,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
             firstName: curProf.firstName,
             lastName: curProf.lastName,
             email: curProf.email,
-            intention: curProf.intention || '',
+            intention: curProf.intention || ''
           },
           isReported: curProf.isReported,
           flagEmoji: curProf.flagEmoji,
@@ -142,7 +142,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
           status: curProf.status,
           history: curProf.history
             .sort((a, b) => b.createDate - a.createDate)
-            .slice(0, 30),
+            .slice(0, 30)
         }
         if (curProf.plan === 68 && !curProf.finish) {
           actionsDice.setMessage(i18next.t('sixToBegin'))
@@ -168,11 +168,14 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
             await storage().ref(prevImgUrl).delete()
           }
           await auth().currentUser?.updateProfile({
-            photoURL: fileName,
+            photoURL: fileName
           })
-          await firestore().collection('Profiles').doc(auth().currentUser?.uid).update({
-            avatar: fileName,
-          })
+          await firestore()
+            .collection('Profiles')
+            .doc(auth().currentUser?.uid)
+            .update({
+              avatar: fileName
+            })
           OnlinePlayer.store.avatar = await getIMG(fileName)
         } catch (error) {
           captureException(error, 'uploadImage')
@@ -218,12 +221,12 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
         : user
             .delete()
             .then(() => console.log('User deleted'))
-            .catch(error => console.log(error))
+            .catch((error) => console.log(error))
       navigate('HELLO')
     } catch (err) {
       captureException(err, 'deleteUser')
     }
-  },
+  }
 })
 
 interface Istore {

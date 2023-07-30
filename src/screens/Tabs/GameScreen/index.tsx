@@ -3,11 +3,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, StyleSheet } from 'react-native'
+import { StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { captureException, onLeaveFeedback } from 'src/constants'
-import { useRevenueCat } from 'src/providers/RevenueCatProvider'
-import { getUid } from 'src/screens/helper'
+import { captureException, onLeaveFeedback } from '../../../constants'
+import { useRevenueCat } from '../../../providers/RevenueCatProvider'
+import { getUid } from '../../../screens/helper'
 
 import {
   Background,
@@ -16,9 +16,8 @@ import {
   Dice,
   GameBoard,
   Header,
-  PurchaseButton,
   Space,
-  Text,
+  Text
 } from '../../../components'
 import { useLeftTimeForStep } from '../../../hooks'
 import {
@@ -27,7 +26,7 @@ import {
   OnlinePlayer,
   PostStore,
   SubscribeStore,
-  actionsDice,
+  actionsDice
 } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types'
 
@@ -60,7 +59,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           .limit(limit)
 
     const unsubscribe = query.onSnapshot(PostStore.fetchOwnPosts, (error) =>
-      captureException(error, 'fetchOwnPosts'),
+      captureException(error, 'fetchOwnPosts')
     )
 
     return () => {
@@ -134,11 +133,11 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
 
 const page = StyleSheet.create({
   centerText: {
-    textAlign: 'center',
+    textAlign: 'center'
   },
   centerButton: {
-    alignSelf: 'center',
-  },
+    alignSelf: 'center'
+  }
 })
 
 export { GameScreen }

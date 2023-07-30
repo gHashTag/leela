@@ -16,14 +16,15 @@ export const useKeychain = () => {
   const [loading, setLoading] = useState<boolean>(true)
   const { isConnected } = useNetInfo()
   const linkTo = useLinkTo()
-  const key = async (): Promise<void> => {
+
+  const key = useCallback(async (): Promise<void> => {
     try {
       const credentials = await Keychain.getInternetCredentials('auth')
       if (credentials && isConnected) {
         const { username, password } = credentials
         await auth()
           .signInWithEmailAndPassword(username, password)
-          .then(async user => {
+          .then(async (user) => {
             await onSignIn(user.user, true, linkTo)
           })
       } else if (isConnected !== null) {
@@ -35,22 +36,22 @@ export const useKeychain = () => {
       isConnected !== null && setLoading(false)
       return Promise.reject()
     }
-  }
+  }, [isConnected, linkTo, setLoading])
 
-  const checkGame = async () => {
+  const checkGame = useCallback(async () => {
     const init = await AsyncStorage.getItem('@init')
     if (init === 'true') {
       navigate('MAIN')
     } else {
       setLoading(false)
     }
-  }
+  }, [navigate, setLoading]) // Don't forget to add all dependencies here
 
   useFocusEffect(
     useCallback(() => {
       setLoading(true)
       key().catch(checkGame)
-    }, [isConnected]),
+    }, [checkGame, key])
   )
   return { loading }
 }

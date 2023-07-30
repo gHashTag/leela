@@ -17,9 +17,8 @@ export const ReportsScene = observer(() => {
   const [limit, setLimit] = useState(15)
   const { t } = useTranslation()
 
-  const { panGesture0, scrollViewGesture0, blockScrollUntilAtTheTop0 } = useContext(
-    TabContext,
-  ) as any
+  const { panGesture0, scrollViewGesture0, blockScrollUntilAtTheTop0 } =
+    useContext(TabContext) as any
 
   useEffect(() => {
     const subPosts = firestore()
@@ -27,7 +26,9 @@ export const ReportsScene = observer(() => {
       .where('ownerId', '==', getUid())
       .orderBy('createTime', 'desc')
       .limit(limit)
-      .onSnapshot(PostStore.fetchOwnPosts, error => captureException(error, 'subPosts'))
+      .onSnapshot(PostStore.fetchOwnPosts, (error) =>
+        captureException(error, 'subPosts')
+      )
     return () => {
       subPosts()
     }
@@ -36,7 +37,7 @@ export const ReportsScene = observer(() => {
   const data = PostStore.store.ownPosts
   const newLimit = () => {
     if (data.length <= limit) {
-      setLimit(pr => pr + 15)
+      setLimit((pr) => pr + 15)
     }
   }
 
@@ -44,7 +45,7 @@ export const ReportsScene = observer(() => {
     <GestureDetector
       gesture={Gesture.Simultaneous(
         Gesture.Race(blockScrollUntilAtTheTop0, panGesture0),
-        scrollViewGesture0,
+        scrollViewGesture0
       )}
     >
       <FlatList
@@ -54,14 +55,18 @@ export const ReportsScene = observer(() => {
         data={data}
         onEndReached={newLimit}
         onEndReachedThreshold={0.1}
-        keyExtractor={a => a.id}
+        keyExtractor={(a) => a.id}
         renderItem={({ item }) => <PostCard postId={item.id} />}
         ItemSeparatorComponent={() => <Space height={vs(10)} />}
         ListHeaderComponent={<Space height={vs(10)} />}
         ListFooterComponent={<Space height={vs(250)} />}
         ListEmptyComponent={
           <View style={page.noPostBlock}>
-            <Text textStyle={page.noPostText} h={'h1'} title={t('online-part.noPosts')} />
+            <Text
+              textStyle={page.noPostText}
+              h={'h1'}
+              title={t('online-part.noPosts')}
+            />
           </View>
         }
       />
@@ -71,9 +76,9 @@ export const ReportsScene = observer(() => {
 
 const page = StyleSheet.create({
   noPostBlock: {
-    paddingHorizontal: s(10),
+    paddingHorizontal: s(10)
   },
   noPostText: {
-    textAlign: 'center',
-  },
+    textAlign: 'center'
+  }
 })

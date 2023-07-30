@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-unused-styles */
 import React from 'react'
 
 import { useTheme } from '@react-navigation/native'
@@ -5,19 +6,17 @@ import { useController, useFormContext } from 'react-hook-form'
 import { UseControllerProps } from 'react-hook-form'
 import {
   ColorValue,
-  Platform,
   StyleProp,
   StyleSheet,
   Text,
   TextInput,
   View,
-  ViewStyle,
+  ViewStyle
 } from 'react-native'
 import { TextInputProps as RNTextInputProps } from 'react-native'
 import { ScaledSheet, s, vs } from 'react-native-size-matters'
 
-import { W, classicRose, dimGray } from '../../constants'
-import { Space } from '../Space'
+import { classicRose, dimGray, red } from '../../constants'
 
 export interface TextInputProps extends RNTextInputProps, UseControllerProps {
   color: ColorValue
@@ -40,6 +39,13 @@ const Input: React.FC<TextInputProps> = ({
   const { inputStyle, errorStyle, inputArea } = styles
 
   const formContext = useFormContext()
+  const { formState } = formContext
+
+  const { field } = useController({ name, rules, defaultValue })
+
+  const {
+    colors: { text }
+  } = useTheme()
 
   if (!formContext || !name) {
     const msg = !formContext
@@ -49,26 +55,22 @@ const Input: React.FC<TextInputProps> = ({
     return null
   }
 
-  const { formState } = formContext
-  const { field } = useController({ name, rules, defaultValue })
   const hasError = Boolean(formState?.errors[name])
-  const {
-    colors: { text },
-  } = useTheme()
+
   const input = ScaledSheet.create([
     inputProps.multiline ? inputArea : inputStyle,
     {
       color: text,
-      borderColor: color,
-    },
+      borderColor: color
+    }
   ])
 
   const placeholderStyle = ScaledSheet.create([
     inputProps.multiline ? inputArea : inputStyle,
     {
       color: text,
-      borderColor: classicRose,
-    },
+      borderColor: classicRose
+    }
   ])
 
   return (
@@ -77,7 +79,7 @@ const Input: React.FC<TextInputProps> = ({
         style={[style, hasError ? placeholderStyle : input]}
         placeholderTextColor={dimGray}
         onChangeText={field.onChange}
-        onBlur={e => {
+        onBlur={(e) => {
           field.onBlur()
           onBlur && onBlur(e)
         }}
@@ -88,6 +90,7 @@ const Input: React.FC<TextInputProps> = ({
       {showError && (
         <>
           {hasError ? (
+            // @ts-ignore
             <Text style={errorStyle}>{formState.errors[name].message}</Text>
           ) : (
             <Text style={errorStyle}>{'  '}</Text>
@@ -104,13 +107,13 @@ const styles = StyleSheet.create({
     width: '95%',
     borderBottomWidth: 2,
     paddingBottom: vs(8),
-    paddingTop: vs(8),
+    paddingTop: vs(8)
   },
   errorStyle: {
     fontSize: 14,
-    color: 'red',
+    color: red,
     paddingTop: 10,
-    left: 5,
+    left: 5
   },
   inputArea: {
     fontSize: s(16),
@@ -121,8 +124,8 @@ const styles = StyleSheet.create({
     padding: s(10),
     paddingBottom: s(10),
     paddingTop: s(10),
-    borderRadius: s(10),
-  },
+    borderRadius: s(10)
+  }
 })
 
 export { Input }

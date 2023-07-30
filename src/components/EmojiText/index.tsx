@@ -6,8 +6,8 @@ import { s } from 'react-native-size-matters'
 
 const styles = StyleSheet.create({
   emoji: {
-    left: Platform.OS === 'ios' ? 1 : 0,
-  },
+    left: Platform.OS === 'ios' ? 1 : 0
+  }
 })
 
 interface EmojiTextT {

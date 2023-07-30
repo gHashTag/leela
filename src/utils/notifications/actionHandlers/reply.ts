@@ -21,7 +21,7 @@ export const replyActionHandler = async ({ type, detail }: Event) => {
               text: input,
               commentOwner,
               commentId,
-              postId,
+              postId
             })
           }
           break

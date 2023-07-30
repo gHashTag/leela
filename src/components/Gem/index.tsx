@@ -7,7 +7,12 @@ import { runOnJS } from 'react-native-reanimated'
 import { ScaledSheet, ms } from 'react-native-size-matters'
 import { useTypedNavigation } from 'src/hooks'
 import { getUid } from 'src/screens/helper'
-import { DiceStore, OfflinePlayers, OnlinePlayer, OtherPlayers } from 'src/store'
+import {
+  DiceStore,
+  OfflinePlayers,
+  OnlinePlayer,
+  OtherPlayers
+} from 'src/store'
 
 import { ICONS } from './images'
 
@@ -34,7 +39,7 @@ const Gem = observer(({ plan, index }: GemT) => {
         .map((a, id) => {
           return {
             id: id + 1,
-            data: a,
+            data: a
           }
         })
         .slice(0, DiceStore.multi)
@@ -43,16 +48,16 @@ const Gem = observer(({ plan, index }: GemT) => {
           id: 1,
           data: OnlinePlayer.store.plan,
           ava: OnlinePlayer.store.avatar,
-          ownerId: getUid(),
+          ownerId: getUid()
         },
         ...OtherPlayers.store.online.slice().map((a, i) => {
           return {
             id: i + 2,
             data: a.plan,
             ava: a.avatar,
-            ownerId: a.owner,
+            ownerId: a.owner
           }
-        }),
+        })
       ]
 
   const source = (id: number, avatar: any) =>
@@ -75,9 +80,9 @@ const Gem = observer(({ plan, index }: GemT) => {
                 style={[
                   gems,
                   {
-                    zIndex: -index,
+                    zIndex: -index
                   },
-                  id === 1 && DiceStore.online && styles.primaryGem,
+                  id === 1 && DiceStore.online && styles.primaryGem
                 ]}
                 source={source(id, ava)}
               />
@@ -95,17 +100,17 @@ const styles = ScaledSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 2,
+    zIndex: 2
   },
   gems: {
     position: 'absolute',
     width: ms(42, 0.5),
     height: ms(42, 0.5),
-    borderRadius: ms(42, 0.5) / 2,
+    borderRadius: ms(42, 0.5) / 2
   },
   primaryGem: {
-    zIndex: 2,
-  },
+    zIndex: 2
+  }
 })
 
 export { Gem }

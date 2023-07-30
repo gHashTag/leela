@@ -31,7 +31,7 @@ async function upFuncOnline(step: stepT) {
     if (stepCount !== 6 || plan === 68) {
       navigate('PLANS_DETAIL_SCREEN', {
         plan,
-        report: true,
+        report: true
       })
     }
     if (plan === 68) {
@@ -62,7 +62,13 @@ export function upStepOnline() {
     OnlinePlayer.store.start = true
     onStart()
   }
-  const step = entities({ isFinished, plan, isStart, stepCount: count, handleStart })
+  const step = entities({
+    isFinished,
+    plan,
+    isStart,
+    stepCount: count,
+    handleStart
+  })
   if (step) {
     upFuncOnline(step)
   }
@@ -77,8 +83,8 @@ const upFuncOffline = async (step: stepT): Promise<void> => {
     OfflinePlayers.store.histories[id].unshift(historyObj)
     OfflinePlayers.store.plans[id] = plan
     if (plan === 68) {
-      DiceStore.finishArr = DiceStore.finishArr.map((x: boolean, index: number) =>
-        index === id ? (x = false) : x,
+      DiceStore.finishArr = DiceStore.finishArr.map(
+        (x: boolean, index: number) => (index === id ? (x = false) : x)
       )
       actionsDice.setMessage('liberation')
       OfflinePlayers.store.start[id] = false
@@ -101,7 +107,13 @@ export const upStepOffline = (id: number) => {
   function handleStart() {
     OfflinePlayers.store.start[id] = true
   }
-  const step = entities({ isFinished, plan, isStart, stepCount: count, handleStart })
+  const step = entities({
+    isFinished,
+    plan,
+    isStart,
+    stepCount: count,
+    handleStart
+  })
   if (step) {
     upFuncOffline({ ...step, id })
   }
@@ -115,7 +127,13 @@ interface entitiesT {
   handleStart: () => void
 }
 
-const entities = ({ plan, stepCount, isFinished, isStart, handleStart }: entitiesT) => {
+const entities = ({
+  plan,
+  stepCount,
+  isFinished,
+  isStart,
+  handleStart
+}: entitiesT) => {
   if (isStart) {
     const lib = { count: stepCount, plan: 68, status: 'liberation' }
     switch (true) {

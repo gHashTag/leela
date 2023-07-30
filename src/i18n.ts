@@ -29,35 +29,35 @@ export const flagEmoji = isoCountry(locales[0]?.countryCode)?.emoji ?? '🇷🇺
 
 const resources = {
   ar: {
-    translation: ar,
+    translation: ar
   },
   bn: {
-    translation: bn,
+    translation: bn
   },
   en: {
-    translation: en,
+    translation: en
   },
   fr: {
-    translation: fr,
+    translation: fr
   },
   mr: {
-    translation: mr,
+    translation: mr
   },
   ms: {
-    translation: ms,
+    translation: ms
   },
   ru: {
-    translation: ru,
+    translation: ru
   },
   te: {
-    translation: te,
+    translation: te
   },
   tr: {
-    translation: tr,
+    translation: tr
   },
   uk: {
-    translation: uk,
-  },
+    translation: uk
+  }
 }
 
 for (const [key, value] of Object.entries(resources)) {
@@ -76,7 +76,7 @@ export const supportedLngs = [
   'ru',
   'te',
   'tr',
-  'uk',
+  'uk'
 ]
 
 export const isSupportedLang = supportedLngs.includes(lang)
@@ -89,18 +89,18 @@ i18next.use(initReactI18next).init(
     lng: isSupportedLang ? lang : ruOrEnLang,
     debug: __DEV__,
     interpolation: {
-      escapeValue: true,
+      escapeValue: true
     },
     react: {
-      useSuspense: false,
-    },
+      useSuspense: false
+    }
     // keySeparator: false,
   },
   (err) => {
     if (err) {
       __DEV__ && console.error('Error initializing i18next:', err)
     }
-  },
+  }
 )
 
 export default i18next

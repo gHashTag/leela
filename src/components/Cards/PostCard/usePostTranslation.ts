@@ -13,7 +13,7 @@ interface usePostTranslationParams {
 export const usePostTranslation = ({
   item,
   translatedText,
-  isHideTranslate,
+  isHideTranslate
 }: usePostTranslationParams) => {
   const [transText, setTransText] = useState('')
   const [hideTranslate, setHideTranslate] = useState(true)
@@ -31,7 +31,7 @@ export const usePostTranslation = ({
         const translated = await PostStore.translateText(item?.text)
         setTransText(translated)
       }
-      setHideTranslate(pr => !pr)
+      setHideTranslate((pr) => !pr)
     }
   }
 

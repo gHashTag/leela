@@ -6,8 +6,8 @@ import Video from 'react-native-video-controls'
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
+    flex: 1
+  }
 })
 
 interface VideoPlayerT extends VideoProperties {}

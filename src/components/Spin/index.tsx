@@ -11,8 +11,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    paddingTop: vs(50),
-  },
+    paddingTop: vs(50)
+  }
 })
 
 interface SpinT {
@@ -29,7 +29,9 @@ const Spin = ({ color = secondary, size = s(65), centered = false }: SpinT) => {
       <Spinner size={size} type="Pulse" color={color} />
     </CenterView>
   ) : (
-    <View style={[styles.container, { backgroundColor: theme ? black : white }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme ? black : white }]}
+    >
       <Spinner size={size} type="Pulse" color={color} />
     </View>
   )
