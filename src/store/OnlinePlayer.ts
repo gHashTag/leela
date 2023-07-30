@@ -8,7 +8,7 @@ import i18next from 'src/i18n'
 import { upStepOnline } from './helper'
 import { delTokenOnSignOut } from './MessagingStore'
 
-import { DiceStore, actionsDice } from './'
+import { DiceStore, actionSubscribeStore, actionsDice } from './'
 import { captureException, navigate } from '../constants'
 import {
   getFireBaseRef,
@@ -92,6 +92,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       actionsDice.resetPlayer()
       await Keychain.resetInternetCredentials('auth')
       await auth().signOut()
+      actionSubscribeStore.resetStore()
       navigate('HELLO')
     } catch (err) {
       captureException(err, 'SignOut')
@@ -113,6 +114,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
         loadingProf: true
       }
       actionsDice.resetPlayer()
+      actionSubscribeStore.resetStore()
       await auth().signOut()
     } catch (err) {
       captureException(err, 'SignOutToOffline')

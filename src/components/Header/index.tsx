@@ -9,6 +9,7 @@ import { useRevenueCat } from '../../providers/RevenueCatProvider'
 import { HeaderMessage, Text } from '../'
 import { navigate } from '../../constants'
 import { Pressable } from '../Pressable'
+import { DiceStore } from '../../store'
 
 const isIos = Platform.OS === 'ios'
 
@@ -51,6 +52,7 @@ const Header = memo<HeaderT>(
     const marginTop = children ? s(2) : 0
     const onPressSub = () => navigate('SUBSCRIPTION_SCREEN')
     const backgroundColor = children ? 'transparent' : background
+    const online = DiceStore.online
 
     return (
       <View
@@ -61,7 +63,7 @@ const Header = memo<HeaderT>(
             <Emoji name={iconLeft} style={leftIconStyle} />
           </Pressable>
         )}
-        {!user.pro && !hidestar && (
+        {!user.pro && !hidestar && online && (
           <Pressable style={{ opacity: iconLeftOpacity }} onPress={onPressSub}>
             <Emoji name="star" style={leftIconStyle} />
           </Pressable>
@@ -83,7 +85,7 @@ const Header = memo<HeaderT>(
             </View>
           )}
         </View>
-        {!user.pro && !hidestar && (
+        {!user.pro && !hidestar && online && (
           <Pressable
             style={[styles.pressStyle, { opacity: iconLeftOpacity }]}
             onPress={onPressSub}

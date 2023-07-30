@@ -25,7 +25,9 @@ export const GameBoard = observer(() => {
   const scheme = useColorScheme()
 
   const imgObj = useMemo(() => {
-    const image = ICONS.find((x) => x.title === scheme)?.path
+    const image = ICONS.find((x) => {
+      return x.title === scheme
+    })?.path
     if (image) {
       const { width, height } = Image.resolveAssetSource(image)
       const aspect = width / height

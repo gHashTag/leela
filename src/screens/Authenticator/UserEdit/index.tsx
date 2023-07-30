@@ -33,6 +33,7 @@ import {
 } from '../../../constants'
 import { updateProfName } from '../../../screens/helper'
 import { RootStackParamList } from '../../../types'
+import { SubscribeStore } from '../../../store/SubscribeStore'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -86,7 +87,7 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
 
   const { dark } = useTheme()
   const color = dark ? white : black
-
+  const isBlockGame = SubscribeStore.isBlockGame
   return (
     <AppContainer
       enableBackgroundBottomInsets
@@ -94,7 +95,7 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
       onPress={goBack}
       title=" "
       colorLeft={black}
-      hidestar
+      hidestar={isBlockGame}
     >
       {loading ? (
         <Loading />

@@ -79,8 +79,10 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
 
   const postsCount = PostStore.store.ownPosts.length
   const isBlockGame = SubscribeStore.isBlockGame
+  console.warn('isBlockGame', isBlockGame)
   const isMoreThree = postsCount >= 3
   const _onPress = () => navigation.navigate('SUBSCRIPTION_SCREEN')
+  const online = DiceStore.online
 
   return (
     <>
@@ -122,7 +124,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
         </Header>
         {!endGame && <Dice />}
 
-        {!user.pro && isBlockGame && (
+        {!user.pro && isBlockGame && online && (
           <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
         )}
         <GameBoard />

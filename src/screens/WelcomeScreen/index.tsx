@@ -2,7 +2,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-// import { StyleSheet } from 'react-native'
+
 import { s, vs } from 'react-native-size-matters'
 
 import {
@@ -33,13 +33,11 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   const _onPress = () => {
     navigation.navigate('HELLO')
   }
-
   return (
     <AppContainer
       enableBackgroundBottomInsets
       enableBackgroundTopInsets
       iconLeft={null}
-      hidestar
     >
       {loading ? (
         <Loading />

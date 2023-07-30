@@ -114,12 +114,12 @@ const Tab = observer(() => {
       {lang === 'ru' && (
         <TabNavigator.Screen name="TAB_BOTTOM_4" component={PosterScreen} />
       )}
-      {
+      {DiceStore.online && (
         <TabNavigator.Screen
           name="TAB_BOTTOM_5"
           component={isBlockGame ? SubscriptionScreen : ChatScreen}
         />
-      }
+      )}
     </TabNavigator.Navigator>
   )
 })

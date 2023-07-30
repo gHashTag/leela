@@ -6,9 +6,9 @@ import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { ImageBackground, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { ButtonWithIcon } from 'src/components'
-import { openUrl } from 'src/constants'
-import { RootTabParamList } from 'src/types'
+import { ButtonWithIcon } from '../../../components'
+import { openUrl } from '../../../constants'
+import { RootTabParamList } from '../../../types'
 
 type navigation = NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_0'>
 
@@ -24,7 +24,11 @@ const PosterScreen = observer(({}: PosterScreenT) => {
   const { t } = useTranslation()
 
   return (
-    <ImageBackground resizeMode="cover" source={require(imgUrl)} style={img}>
+    <ImageBackground
+      resizeMode="cover"
+      source={require(imgUrl)}
+      style={styles.img}
+    >
       <View style={styles.btnMoreContainer}>
         <BlurView
           blurType={'light'}
@@ -72,7 +76,5 @@ const styles = StyleSheet.create({
     overflow: 'hidden'
   }
 })
-
-const { img } = styles
 
 export { PosterScreen }

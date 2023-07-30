@@ -17,10 +17,12 @@ export const HeaderMessage = observer(() => {
 
   if (user.pro) {
     subscribeMess = DiceStore.topMessage
-  } else {
+  } else if (DiceStore.online) {
     subscribeMess = SubscribeStore.isBlockGame
       ? t('paySub')
       : DiceStore.topMessage
+  } else {
+    subscribeMess = DiceStore.topMessage
   }
 
   return (
@@ -28,7 +30,7 @@ export const HeaderMessage = observer(() => {
       {DiceStore.topMessage !== ' ' && DiceStore.topMessage && (
         <View style={messContainer}>
           <Text
-            numberOfLines={2}
+            numberOfLines={3}
             h="h5"
             title={subscribeMess}
             textStyle={styles.textStyle}

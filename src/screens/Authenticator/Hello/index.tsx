@@ -4,7 +4,7 @@ import React, { ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { useKeychain } from 'src/hooks'
+import { useKeychain } from '../../../hooks'
 
 import {
   AppContainer,
@@ -36,13 +36,13 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
   const { dark } = useTheme()
   const color = dark ? white : black
   const { t } = useTranslation()
+
   return (
     <AppContainer
       enableBackgroundBottomInsets
       onPress={goBack}
       title=" "
       colorLeft={color}
-      hidestar
     >
       {loading ? (
         <Loading />

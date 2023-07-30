@@ -37,7 +37,7 @@ export function AppContainer({
   iconLeftOpacity = 1,
   textAlign = 'left',
   status,
-  hidestar = false
+  hidestar = true
 }: AppContainerT) {
   return (
     <View style={page.container}>

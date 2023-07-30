@@ -167,6 +167,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: ms(23, 0.6),
     fontWeight: 'bold',
+
     marginBottom: 20
   },
   bought: {
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     textAlign: 'center',
     width: '80%',
-    bottom: Platform.OS === 'ios' ? ms(30, 0.6) : ms(10, 0.6)
+    bottom: Platform.OS === 'ios' ? ms(15, 0.6) : ms(10, 0.6)
   },
   packageItem: {
     borderWidth: 1,
