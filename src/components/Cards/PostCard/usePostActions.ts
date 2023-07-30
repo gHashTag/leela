@@ -1,10 +1,10 @@
 import { Share } from 'react-native'
-import { OpenActionsModal } from 'src/constants'
-import { useTypedNavigation } from 'src/hooks'
-import { getUid } from 'src/screens/helper'
-import { PostStore } from 'src/store'
-import { PostT } from 'src/types'
-import { buildReportLink } from 'src/utils'
+import { OpenActionsModal } from '../../../constants'
+import { useTypedNavigation } from '../../../hooks'
+import { getUid } from '../../../screens/helper'
+import { PostStore } from '../../../store'
+import { PostT } from '../../../types'
+import { buildReportLink } from '../../../utils'
 
 import { getActions } from './ModalActions'
 

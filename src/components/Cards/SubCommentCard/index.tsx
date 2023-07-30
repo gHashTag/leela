@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 
 import { StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
-import { useTypedNavigation } from 'src/hooks'
+import { useTypedNavigation } from '../../../hooks'
 
 import { getActions } from './ModalActions'
 

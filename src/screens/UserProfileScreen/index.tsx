@@ -19,8 +19,8 @@ import {
   Space,
   Spin,
   Text
-} from 'src/components'
-import { RootStackParamList, UserT } from 'src/types'
+} from '../../components'
+import { RootStackParamList, UserT } from '../../types'
 
 import { getIMG } from '../helper'
 import {

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
-import { flagEmoji } from 'src/i18n'
-import { PostStore } from 'src/store'
-import { PostT } from 'src/types'
+import { flagEmoji } from '../../../i18n'
+import { PostStore } from '../../../store'
+import { PostT } from '../../../types'
 
 interface usePostTranslationParams {
   item?: PostT

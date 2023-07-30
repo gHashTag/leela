@@ -6,9 +6,9 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { Bubble, GiftedChat, IMessage } from 'react-native-gifted-chat'
 import { s } from 'react-native-size-matters'
-import { ButtonWithIcon, Header, Space } from 'src/components'
-import { brightTurquoise, onLeaveFeedback, trueBlue } from 'src/constants'
-import { DiceStore, actionsDice } from 'src/store'
+import { ButtonWithIcon, Header, Space } from '../../../components'
+import { brightTurquoise, onLeaveFeedback, trueBlue } from '../../../constants'
+import { DiceStore, actionsDice } from '../../../store'
 
 const LEELA_AI = require('../../../../assets/defaultImage/leelaAI.jpg')
 

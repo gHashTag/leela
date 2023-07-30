@@ -11,7 +11,6 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import Markdown from 'react-native-markdown-display'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ms, s, vs } from 'react-native-size-matters'
-// import { ruOrEnLang } from 'src/i18n'
 
 import {
   Background,

@@ -3,7 +3,7 @@ import firestore from '@react-native-firebase/firestore'
 import storage from '@react-native-firebase/storage'
 import { makeAutoObservable } from 'mobx'
 import * as Keychain from 'react-native-keychain'
-import i18next from 'src/i18n'
+import i18next from '../i18n'
 
 import { upStepOnline } from './helper'
 import { delTokenOnSignOut } from './MessagingStore'

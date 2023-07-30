@@ -14,15 +14,15 @@ import {
   accountHasBanAlert,
   captureException,
   navigate
-} from 'src/constants'
-import i18next, { flagEmoji, lang } from 'src/i18n'
+} from '../constants'
+import i18next, { flagEmoji, lang } from '../i18n'
 import {
   MessagingStore,
   OnlinePlayer,
   actionsDice,
   fetchBusinesses
-} from 'src/store'
-import { HistoryT, UserT } from 'src/types'
+} from '../store'
+import { HistoryT, UserT } from '../types'
 
 import { version } from '../../package.json'
 

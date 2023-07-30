@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { autorun, makeAutoObservable } from 'mobx'
 import { makePersistable } from 'mobx-persist-store'
-import i18next from 'src/i18n'
+import i18next from '../i18n'
 
 import { OnlinePlayer } from './OnlinePlayer'
 

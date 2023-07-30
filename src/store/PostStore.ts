@@ -6,12 +6,12 @@ import firestore, {
 } from '@react-native-firebase/firestore'
 import { makeAutoObservable } from 'mobx'
 import { nanoid } from 'nanoid/non-secure'
-import { captureException, generateComment } from 'src/constants'
-import i18next from 'src/i18n'
-import { flagEmoji, lang } from 'src/i18n'
-import { getProfile, getUid } from 'src/screens/helper'
-import { OnlinePlayer } from 'src/store/OnlinePlayer'
-import { OtherPlayers } from 'src/store/OtherPlayers'
+import { captureException, generateComment } from '../constants'
+import i18next from '../i18n'
+import { flagEmoji, lang } from '../i18n'
+import { getProfile, getUid } from '../screens/helper'
+import { OnlinePlayer } from '../store/OnlinePlayer'
+import { OtherPlayers } from '../store/OtherPlayers'
 import {
   CommentT,
   FormCommentT,
@@ -19,7 +19,7 @@ import {
   FormReplyCom,
   PostT,
   ReplyComT
-} from 'src/types'
+} from '../types'
 
 import { actionSubscribeStore } from './SubscribeStore'
 

@@ -1,5 +1,5 @@
 import Clipboard from '@react-native-clipboard/clipboard'
-import i18next from 'src/i18n'
+import i18next from '../../../i18n'
 
 import { getUid } from '../../../screens/helper'
 import { OnlinePlayer, OtherPlayers, PostStore } from '../../../store'

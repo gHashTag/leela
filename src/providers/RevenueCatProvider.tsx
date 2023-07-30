@@ -5,9 +5,9 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { Platform } from 'react-native'
 import Purchases, { LOG_LEVEL, PurchasesPackage } from 'react-native-purchases'
 import { CustomerInfo } from 'react-native-purchases'
-import { Spin } from 'src/components'
-import { captureException } from 'src/constants'
-import { actionSubscribeStore } from 'src/store/SubscribeStore'
+import { Spin } from '../components'
+import { captureException } from '../constants'
+import { actionSubscribeStore } from '../store/SubscribeStore'
 
 // Use your RevenueCat API keys
 const APIKeys = {

@@ -9,7 +9,7 @@ import {
 } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
-import { PostT } from 'src/types'
+import { PostT } from '../../types'
 import * as yup from 'yup'
 
 import { Button, Input, Space } from '..'

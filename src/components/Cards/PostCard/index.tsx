@@ -11,7 +11,7 @@ import {
   PlanAvatar,
   Space,
   Text
-} from 'src/components'
+} from '../../'
 import {
   W,
   brightTurquoise,
@@ -19,10 +19,10 @@ import {
   handleCommentAi,
   lightGray,
   orange
-} from 'src/constants'
-import { getTimeStamp } from 'src/screens/helper'
-import { OnlinePlayer, PostStore } from 'src/store'
-import { PostT } from 'src/types'
+} from '../../../constants'
+import { getTimeStamp } from '../../../screens/helper'
+import { OnlinePlayer, PostStore } from '../../../store'
+import { PostT } from '../../../types'
 
 import { usePostActions } from './usePostActions'
 import { usePostTranslation } from './usePostTranslation'
