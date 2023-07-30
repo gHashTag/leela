@@ -101,7 +101,7 @@ export interface UserT {
   avatar?: string
   lang?: string
   tokens?: string[]
-  status?: status
+  status?: statusT
   flagEmoji?: string
   intention?: string
 }
@@ -114,9 +114,9 @@ export interface OtherUsersT {
   owner: string
   isOnline: boolean
   avatar?: string
-  status?: status
+  status?: statusT
 }
-export type status = 'ban' | 'Admin' | null
+export type statusT = 'ban' | 'Admin' | 'Free' | null
 export interface HistoryT {
   plan: number
   count: number

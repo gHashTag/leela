@@ -83,7 +83,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   const isMoreThree = postsCount >= 3
   const _onPress = () => navigation.navigate('SUBSCRIPTION_SCREEN')
   const online = DiceStore.online
-  console.warn('isBlockGame', isBlockGame)
+
   return (
     <Background enableTopInsets paddingTop={vs(50)}>
       <Header

@@ -19,10 +19,6 @@ export const useActions = () => {
     setLoadImage(false)
   }
 
-  // const onPressShare = async () => {
-  //   console.log('SHARE')
-  // }
-
   const menuItems: ButtonsModalT[] = [
     {
       key: 'EDIT',

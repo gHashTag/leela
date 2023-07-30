@@ -9,6 +9,8 @@ import { Spin } from '../components'
 import { captureException } from '../constants'
 import { actionSubscribeStore } from '../store/SubscribeStore'
 import { PostStore } from '../store/PostStore'
+import { getProfile } from '../screens/helper'
+import { UserT } from '../types'
 
 // Use your RevenueCat API keys
 const APIKeys = {
@@ -22,6 +24,12 @@ interface RevenueCatProps {
   user: UserState
   packages: PurchasesPackage[]
   isLoading: boolean
+}
+
+interface CustomerInfoT {
+  entitlements: {
+    active: { [key: string]: unknown }
+  }
 }
 
 export interface UserState {
@@ -84,16 +92,26 @@ export const RevenueCatProvider = ({ children }: any) => {
   }
 
   // Update user state based on previous purchases
-  const updateCustomerInformation = async (customerInfo: CustomerInfo) => {
+  const updateCustomerInformation = async (customerInfo: CustomerInfoT) => {
     try {
       let newUser: UserState = { pro: false }
 
-      if (customerInfo?.entitlements.active.hasOwnProperty('pro plan')) {
+      const curProf: UserT | undefined = await getProfile()
+      const status = curProf?.status
+      console.log('status', status)
+      const isAdmin = status === 'Admin' || status === 'Free'
+      const hasProPlan =
+        customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
+
+      if (isAdmin || hasProPlan) {
         newUser.pro = true
         actionSubscribeStore.unBlock()
       } else if (PostStore.store.posts.length > 5) {
         actionSubscribeStore.blockGame()
+      } else {
+        actionSubscribeStore.unBlock()
       }
+
       setUser(newUser)
     } catch (error) {
       captureException(error, 'updateCustomerInformation')

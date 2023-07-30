@@ -61,7 +61,6 @@ export const PostCard: React.FC<postCardI> = memo(
       const curItem: PostT | undefined = PostStore.store.posts.find(
         (a) => a.id === postId
       )
-      // console.log('curItem', curItem)
       const systemMessage = t('system')
       const postLanguage = item?.language
       const currentLanguage = i18n.language

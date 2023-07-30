@@ -21,8 +21,6 @@ import {
   ReplyComT
 } from '../types'
 
-import { actionSubscribeStore } from './SubscribeStore'
-
 type fetchT =
   FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
 interface postStoreT {

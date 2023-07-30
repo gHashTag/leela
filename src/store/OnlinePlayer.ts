@@ -20,7 +20,7 @@ import {
   updatePlan,
   uploadImg
 } from '../screens/helper'
-import { HistoryT, status } from '../types'
+import { HistoryT, statusT } from '../types'
 
 const initProfile = {
   firstName: '',
@@ -141,7 +141,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
           flagEmoji: curProf.flagEmoji,
           stepTime: curProf.lastStepTime,
           canGo: Date.now() - curProf.lastStepTime >= 86400000,
-          status: curProf.status,
+          status: curProf?.status,
           history: curProf.history
             .sort((a, b) => b.createDate - a.createDate)
             .slice(0, 30)
@@ -220,10 +220,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       let user = auth().currentUser
       user === null
         ? null
-        : user
-            .delete()
-            .then(() => console.log('User deleted'))
-            .catch((error) => console.log(error))
+        : user.delete().catch((error) => captureException(error, 'deleteUser'))
       navigate('HELLO')
     } catch (err) {
       captureException(err, 'deleteUser')
@@ -265,5 +262,5 @@ interface OnlinePlayerStore {
   }
   isPosterLoading: boolean
   flagEmoji?: string
-  status?: status
+  status?: statusT
 }

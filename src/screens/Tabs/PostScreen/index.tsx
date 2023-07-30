@@ -50,7 +50,9 @@ export const PostScreen = observer(({}: Ipost) => {
   ) : (
     <FlatList
       removeClippedSubviews={false}
-      onScrollToIndexFailed={(er) => console.log(er)}
+      onScrollToIndexFailed={(error) =>
+        captureException(error, 'PostScreen: Flatlist')
+      }
       showsVerticalScrollIndicator={false}
       data={data}
       onEndReached={newLimit}
@@ -68,7 +70,7 @@ export const PostScreen = observer(({}: Ipost) => {
         <View style={{ paddingHorizontal: s(20) }}>
           <Text
             textStyle={styles.noPostText}
-            h={'h1'}
+            h={'h4'}
             title={t('online-part.noPosts')}
           />
         </View>

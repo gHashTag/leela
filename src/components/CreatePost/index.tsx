@@ -14,7 +14,12 @@ import * as yup from 'yup'
 
 import { Button, Input, Space } from '..'
 import { Loading } from '../'
-import { dimGray, handleCommentAi, navigate } from '../../constants'
+import {
+  captureException,
+  dimGray,
+  handleCommentAi,
+  navigate
+} from '../../constants'
 import { startStepTimer } from '../../screens/helper'
 import { PostStore } from '../../store'
 
@@ -94,7 +99,9 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
       <Space height={20} />
       <Button
         title={t('actions.send')}
-        onPress={methods.handleSubmit(handleSubmit, (err) => console.log(err))}
+        onPress={methods.handleSubmit(handleSubmit, (err) =>
+          captureException(err, 'CreatePost: handleSubmit')
+        )}
       />
     </FormProvider>
   )

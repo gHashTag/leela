@@ -42,6 +42,7 @@ export const OtherPlayers = {
               status: data.status,
               isOnline
             }
+
             return result
           }
         })
