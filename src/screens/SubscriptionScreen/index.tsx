@@ -1,26 +1,30 @@
-import { useTheme } from '@react-navigation/native'
-import React, { useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import {
+  Alert,
   ImageBackground,
   Platform,
   Pressable,
   StyleSheet,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native'
-import Emoji from 'react-native-emoji'
-import { PurchasesPackage } from 'react-native-purchases'
-import { ms, s } from 'react-native-size-matters'
-import { Loading, PurchaseButton, Space, Spin, Text } from 'src/components'
 import {
   black,
   captureException,
   goBack,
   gray,
   secondary,
-  white,
-} from 'src/constants'
+  white
+} from '../../constants'
+import { Loading, PurchaseButton, Space, Spin, Text } from '../../components'
+
+import { PurchasesPackage } from 'react-native-purchases'
+
+import { useTheme } from '@react-navigation/native'
+import { ms, s } from 'react-native-size-matters'
+import { useTranslation } from 'react-i18next'
+
+import React, { useState } from 'react'
+import Emoji from 'react-native-emoji'
 
 import { useRevenueCat } from '../../providers/RevenueCatProvider'
 // @ts-ignore
@@ -28,11 +32,12 @@ import Ganesha from './ganesha.jpg'
 
 const SubscriptionScreen: React.FC = () => {
   const { t } = useTranslation()
-  const { packages, purchasePackage, restorePermissions } = useRevenueCat()
-  const { isLoading } = useRevenueCat()
+
+  const { packages, purchasePackage, restorePermissions, isLoading } =
+    useRevenueCat()
+
   const [selectedPackage, setSelectedPackage] =
     useState<PurchasesPackage | null>(null)
-  const [purchaseSuccessful, setPurchaseSuccessful] = useState(false)
 
   const handlePackageSelection = (pack: PurchasesPackage) => {
     setSelectedPackage(pack)
@@ -42,11 +47,13 @@ const SubscriptionScreen: React.FC = () => {
     if (purchasePackage && selectedPackage) {
       try {
         await purchasePackage(selectedPackage)
-        setPurchaseSuccessful(true)
         goBack()
       } catch (error) {
-        setPurchaseSuccessful(false)
         captureException(error, 'handlePurchase')
+        Alert.alert(
+          'Error',
+          `There was an error processing your purchase. ${error}}`
+        )
       }
     }
   }
@@ -60,11 +67,15 @@ const SubscriptionScreen: React.FC = () => {
       }
     } catch (error) {
       captureException(error, 'onAlreadyBought')
+      Alert.alert(
+        'Error',
+        `There was an error processing your purchase. ${error}}`
+      )
     }
   }
   const { dark } = useTheme()
   const backgroundColor = dark ? black : white
-  console.log('packages', packages)
+
   return (
     <View style={[styles.root, { backgroundColor }]}>
       <ImageBackground style={styles.poster} source={Ganesha}>
@@ -94,7 +105,7 @@ const SubscriptionScreen: React.FC = () => {
                 onPress={() => handlePackageSelection(pack)}
                 style={[
                   styles.packageItem,
-                  selectedPackage === pack && styles.selectedPackage,
+                  selectedPackage === pack && styles.selectedPackage
                 ]}
               >
                 <Text
@@ -131,31 +142,31 @@ const SubscriptionScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
+    flex: 1
   },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 20
   },
   poster: {
     flex: 1,
     width: '100%',
-    height: '90%',
+    height: '90%'
   },
   iconStyle: {
     marginTop: 60,
-    marginLeft: 20,
+    marginLeft: 20
   },
   leftIconStyle: {
     fontSize: Platform.OS === 'ios' ? ms(30, 0.6) : ms(20, 0.6),
-    bottom: Platform.OS === 'ios' ? 0 : 30,
+    bottom: Platform.OS === 'ios' ? 0 : 30
   },
   header: {
     fontSize: ms(23, 0.6),
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 20
   },
   bought: {
     top: 10,
@@ -163,7 +174,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: gray,
     alignSelf: 'center',
-    textDecorationLine: 'underline',
+    textDecorationLine: 'underline'
   },
   test: {
     fontSize: ms(15, 0.6),
@@ -171,7 +182,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     textAlign: 'center',
     width: '80%',
-    bottom: Platform.OS === 'ios' ? ms(30, 0.6) : ms(10, 0.6),
+    bottom: Platform.OS === 'ios' ? ms(30, 0.6) : ms(10, 0.6)
   },
   packageItem: {
     borderWidth: 1,
@@ -182,27 +193,27 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   selectedPackage: {
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#e0e0e0'
   },
   packageTitle: {
     fontSize: ms(21, 0.6),
-    fontWeight: 'bold',
+    fontWeight: 'bold'
   },
   packagePrice: {
-    fontSize: ms(22, 0.6),
+    fontSize: ms(22, 0.6)
   },
   purchaseButton: {
     backgroundColor: '#007bff',
     paddingVertical: 1,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 8
   },
   disabledButton: {
     width: s(200),
-    backgroundColor: secondary,
+    backgroundColor: secondary
   },
   buttonText: {
     color: '#fff',
@@ -210,8 +221,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     width: s(200),
     textAlign: 'center',
-    alignSelf: 'center',
-  },
+    alignSelf: 'center'
+  }
 })
 
 export { SubscriptionScreen }

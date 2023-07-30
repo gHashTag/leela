@@ -1,15 +1,13 @@
-import React, { useMemo } from 'react'
-
 import { observer } from 'mobx-react'
+import React, { useMemo } from 'react'
 import { Image, StyleSheet, View, useColorScheme } from 'react-native'
 import { ms, mvs, s } from 'react-native-size-matters'
-
-import { ICONS } from './images'
 
 import { Text } from '../'
 import { H, W } from '../../constants'
 import { DiceStore } from '../../store'
 import { Gem } from '../Gem'
+import { ICONS } from './images'
 
 const marginTop = H - W > 350 ? 20 : 0
 
@@ -27,7 +25,7 @@ export const GameBoard = observer(() => {
   const scheme = useColorScheme()
 
   const imgObj = useMemo(() => {
-    const image = ICONS.find(x => x.title === scheme)?.path
+    const image = ICONS.find((x) => x.title === scheme)?.path
     if (image) {
       const { width, height } = Image.resolveAssetSource(image)
       const aspect = width / height
@@ -49,7 +47,9 @@ export const GameBoard = observer(() => {
   ]
 
   return (
-    <View style={[styles.imageContainer, { width: curImageHeight * imgObj.aspect }]}>
+    <View
+      style={[styles.imageContainer, { width: curImageHeight * imgObj.aspect }]}
+    >
       <Image source={imgObj.image} style={styles.bgImage} resizeMode="cover" />
       <View style={styles.gameBoardContainer}>
         <View style={styles.container}>
@@ -64,7 +64,11 @@ export const GameBoard = observer(() => {
                       player={DiceStore.players}
                       index={index}
                     />
-                    <Text key={index} h={'h11'} title={b !== 68 ? b.toString() : ' '} />
+                    <Text
+                      key={index}
+                      h={'h11'}
+                      title={b !== 68 ? b.toString() : ' '}
+                    />
                   </View>
                 </View>
               ))}
