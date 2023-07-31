@@ -67,6 +67,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       await resetPlayer()
       await resetHistory()
       await updatePlan(68)
+      DiceStore.online = false
     } catch (err) {
       captureException(err, 'resetGame')
     }
@@ -93,6 +94,7 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       await Keychain.resetInternetCredentials('auth')
       await auth().signOut()
       actionSubscribeStore.resetStore()
+      DiceStore.online = false
       navigate('HELLO')
     } catch (err) {
       captureException(err, 'SignOut')

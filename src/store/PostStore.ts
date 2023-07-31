@@ -352,7 +352,7 @@ export const PostStore = {
       ?.avatar
     return otherUserAva
       ? otherUserAva
-      : 'https://www.siriusgem.com/new/wp-content/uploads/2013/06/Round_cut-1-300x300.jpg'
+      : 'https://bafkreiftrmfmimlvo26xaxfvt2ypnjjaavq5mgnkjljs6mczfekii4cmtq.ipfs.nftstorage.link/'
   },
   banUnbanUser: async (uid: string) => {
     try {

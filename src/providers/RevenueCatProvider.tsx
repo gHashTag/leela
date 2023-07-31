@@ -11,6 +11,7 @@ import { actionSubscribeStore } from '../store/SubscribeStore'
 import { PostStore } from '../store/PostStore'
 import { getProfile } from '../screens/helper'
 import { UserT } from '../types'
+import { DiceStore } from '../store/DiceStore'
 
 // Use your RevenueCat API keys
 const APIKeys = {
@@ -95,23 +96,39 @@ export const RevenueCatProvider = ({ children }: any) => {
   const updateCustomerInformation = async (customerInfo: CustomerInfoT) => {
     try {
       let newUser: UserState = { pro: false }
+      const online = DiceStore.online
+      if (online) {
+        const curProf: UserT | undefined = await getProfile()
+        const status = curProf?.status
+        const countPosts = await PostStore.countPosts()
 
-      const curProf: UserT | undefined = await getProfile()
-      const status = curProf?.status
-      const countPosts = await PostStore.countPosts()
+        const isAdmin = status === 'Admin' || status === 'Free'
+        const hasProPlan =
+          customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
 
-      const isAdmin = status === 'Admin' || status === 'Free'
-      const hasProPlan =
-        customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
-
-      if (isAdmin || hasProPlan) {
-        newUser.pro = true
-        actionSubscribeStore.unBlock()
-      } else if ((countPosts ?? 0) > 5) {
-        actionSubscribeStore.blockGame()
-      } else {
-        actionSubscribeStore.unBlock()
+        if (isAdmin || hasProPlan) {
+          newUser.pro = true
+          actionSubscribeStore.unBlock()
+        } else if ((countPosts ?? 0) > 5) {
+          actionSubscribeStore.blockGame()
+        } else {
+          actionSubscribeStore.unBlock()
+        }
       }
+      // else {
+      //   const hasProPlan =
+      //     customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
+      //   const count = OfflinePlayers.store.player1MoveCount
+      //   console.warn('count', count)
+      //   if (hasProPlan) {
+      //     newUser.pro = true
+      //     actionSubscribeStore.unBlock()
+      //   } else if (count > 10) {
+      //     actionSubscribeStore.blockGame()
+      //   } else {
+      //     actionSubscribeStore.unBlock()
+      //   }
+      // }
 
       setUser(newUser)
     } catch (error) {

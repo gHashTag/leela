@@ -33,7 +33,9 @@ const Gem = observer(({ plan, index }: GemT) => {
   const { navigate } = useTypedNavigation()
   const { container, gems } = styles
 
-  const DATA: dataI[] = !DiceStore.online
+  const online = DiceStore.online
+
+  const DATA: dataI[] = !online
     ? OfflinePlayers.store.plans
         .slice()
         .map((a, id) => {
@@ -60,8 +62,15 @@ const Gem = observer(({ plan, index }: GemT) => {
         })
       ]
 
-  const source = (id: number, ava: string): ImageSourcePropType => {
-    return DiceStore.online ? { uri: ava } : ICONS[id - 1]
+  const source = (id: number, ava?: string): ImageSourcePropType => {
+    let uri
+    if (ava !== undefined) {
+      uri = ava
+    } else {
+      uri =
+        'https://bafkreiftrmfmimlvo26xaxfvt2ypnjjaavq5mgnkjljs6mczfekii4cmtq.ipfs.nftstorage.link/'
+    }
+    return online ? { uri } : ICONS[id - 1]
   }
 
   return (
@@ -71,7 +80,7 @@ const Gem = observer(({ plan, index }: GemT) => {
           ownerId && navigate('USER_PROFILE_SCREEN', { ownerId })
         }
 
-        if (data === plan && ava !== undefined) {
+        if (data === plan && (!online || (online && ava !== undefined))) {
           return (
             <GestureDetector
               gesture={Gesture.Tap().onTouchesUp(() => runOnJS(onPressAva)())}
@@ -83,7 +92,7 @@ const Gem = observer(({ plan, index }: GemT) => {
                   {
                     zIndex: -index
                   },
-                  id === 1 && DiceStore.online && styles.primaryGem
+                  id === 1 && online && styles.primaryGem
                 ]}
                 source={source(id, ava)}
               />

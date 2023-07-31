@@ -58,6 +58,7 @@ export function upStepOnline() {
   }
   const isFinished = OnlinePlayer.store.finish
   const isStart = OnlinePlayer.store.start
+
   function handleStart() {
     OnlinePlayer.store.start = true
     onStart()
@@ -77,7 +78,6 @@ export function upStepOnline() {
 // OFFLINE
 const upFuncOffline = async (step: stepT): Promise<void> => {
   const { plan, history, id } = step
-
   const historyObj = { ...history, createDate: Date.now() }
   if (id !== undefined) {
     OfflinePlayers.store.histories[id].unshift(historyObj)
