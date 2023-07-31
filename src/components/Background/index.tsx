@@ -1,5 +1,4 @@
 import React, { memo } from 'react'
-
 import {
   Image,
   StyleProp,
@@ -9,14 +8,12 @@ import {
   useWindowDimensions
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-
 import { ICONS } from './images'
-
 import { useImageAspect } from '../../hooks'
 
 interface BackgroundT {
   status?: 'bg' | 'clean' | '1x1'
-  children?: React.ReactNode
+  children: React.ReactNode
   sourceImages?: [string, string] | [string]
   style?: StyleProp<ViewStyle>
   enableBottomInsets?: boolean
@@ -39,8 +36,9 @@ export const Background = memo(
     const { bottom, top } = useSafeAreaInsets()
 
     return (
-      <View style={styles.container}>
+      <View style={styles.container} testID="container">
         <View
+          testID="imgContainer"
           style={[
             styles.imgContainer,
             style,
@@ -71,19 +69,20 @@ interface RenderImagePartT {
   images: any[]
 }
 
-const RenderImagePart = ({ img, id, isUri }: RenderImagePartT) => {
+export const RenderImagePart = ({ img, id, isUri }: RenderImagePartT) => {
   const { width: W } = useWindowDimensions()
   const aspect = useImageAspect(img, !isUri)
 
   const height = W / aspect
-  //const isOne = images?.length
   const isTop = id === 0
   return (
     <View
       style={[styles.subImgContainer, !isTop && styles.bottomImage]}
       key={`${img}-${id}`}
+      testID="subImgContainer"
     >
       <Image
+        testID="imgStyle"
         source={isUri ? { uri: img } : img}
         style={[styles.imgStyle, { height }]}
       />

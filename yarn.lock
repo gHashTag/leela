@@ -81,7 +81,7 @@
     json5 "^2.2.2"
     semver "^6.3.0"
 
-"@babel/eslint-parser@^7.18.2", "@babel/eslint-parser@^7.20.0":
+"@babel/eslint-parser@^7.18.2", "@babel/eslint-parser@^7.19.0":
   version "7.22.9"
   resolved "https://registry.yarnpkg.com/@babel/eslint-parser/-/eslint-parser-7.22.9.tgz#75f8aa978d1e76c87cc6f26c1ea16ae58804d390"
   integrity sha512-xdMkt39/nviO/4vpVdrEYPwXCsYIXSSAr6mC7WQsNIlGnuxKyKE7GZjalcnbSWiC4OXGNNN3UQPeHfjSC6sTDA==
@@ -2427,13 +2427,13 @@
   resolved "https://registry.yarnpkg.com/@react-native/assets/-/assets-1.0.0.tgz#c6f9bf63d274bafc8e970628de24986b30a55c8e"
   integrity sha512-KrwSpS1tKI70wuKl68DwJZYEvXktDHdZMG0k2AXD/rJVSlB23/X2CB2cutVR0HwNMJIal9HOUOBB2rVfa6UGtQ==
 
-"@react-native/eslint-config@^0.72.2":
-  version "0.72.2"
-  resolved "https://registry.yarnpkg.com/@react-native/eslint-config/-/eslint-config-0.72.2.tgz#31da4cec65ad2805d4db9fdda138452821d72133"
-  integrity sha512-rAYuQQXzi63W7+9Pu/+23od/b/lTSzHjMFibum3sKgdG2LIyvhoMEWQ5+Chu7TqebqYy1b9SDn/KEMHvpWFtNg==
+"@react-native/eslint-config@0.70.4":
+  version "0.72.1"
+  resolved "https://registry.yarnpkg.com/@react-native/eslint-config/-/eslint-config-0.72.1.tgz#5e8ab45505d5cd73d8f6c7811a8dd3b799de516f"
+  integrity sha512-fxnU+LPgFEdvYAIwyxXx2hXEjUGxP0dzZ0uDc0eu13uONjo7M50OKplF8zVgJMrCky3khM0s7RP5YKOFVidnwg==
   dependencies:
     "@babel/core" "^7.20.0"
-    "@babel/eslint-parser" "^7.20.0"
+    "@babel/eslint-parser" "^7.19.0"
     "@react-native/eslint-plugin" "^0.72.0"
     "@typescript-eslint/eslint-plugin" "^5.30.5"
     "@typescript-eslint/parser" "^5.30.5"
@@ -2936,7 +2936,7 @@
     "@types/react" "*"
     "@types/react-native" "*"
 
-"@types/react-native@*", "@types/react-native@^0.72.2":
+"@types/react-native@*":
   version "0.72.2"
   resolved "https://registry.yarnpkg.com/@types/react-native/-/react-native-0.72.2.tgz#27c931a899c555b28e20cdd12e570b017808de96"
   integrity sha512-/eEjr04Zqo7mTMszuSdrLx90+j5nWhDMMOgtnKZfAYyV3RwmlpSb7F17ilmMMxZWJY81n/JZ4e6wdhMJFpjrCg==
@@ -2944,7 +2944,7 @@
     "@react-native/virtualized-lists" "^0.72.4"
     "@types/react" "*"
 
-"@types/react-native@^0.70":
+"@types/react-native@^0.70", "@types/react-native@^0.70.4":
   version "0.70.14"
   resolved "https://registry.yarnpkg.com/@types/react-native/-/react-native-0.70.14.tgz#8619b8c94296f6456c5362d74a3d1b4fad3f54ab"
   integrity sha512-Kwc+BYBrnDqvacNxKp1UtcZJnJJnTih2NYmi/ieAKlHdxEPN6sYMwmIwgHdoLHggvml6bf3DYRaH2jt+gzaLjw==
