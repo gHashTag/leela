@@ -8,7 +8,10 @@ interface SpaceT {
 }
 
 const Space = memo<SpaceT>(({ height, width }) => (
-  <View style={{ height: height || 0, width: width || 0 }} />
+  <View
+    testID="space-component"
+    style={{ height: height || 0, width: width || 0 }}
+  />
 ))
 
 export { Space }

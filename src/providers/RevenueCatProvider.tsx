@@ -178,6 +178,7 @@ export const RevenueCatProvider = ({ children }: any) => {
   }
 
   return (
+    // @ts-ignore
     <RevenueCatContext.Provider value={value}>
       {children}
     </RevenueCatContext.Provider>

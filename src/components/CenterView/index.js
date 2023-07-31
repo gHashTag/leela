@@ -10,8 +10,12 @@ const styles = StyleSheet.create({
   }
 })
 
-const CenterView = ({ children }) => {
-  return <View style={styles.main}>{children}</View>
+const CenterView = ({ children, testID }) => {
+  return (
+    <View testID={testID} style={styles.main}>
+      {children}
+    </View>
+  )
 }
 
 export { CenterView }
