@@ -12,6 +12,7 @@ import { flagEmoji, lang } from '../i18n'
 import { getProfile, getUid } from '../screens/helper'
 import { OnlinePlayer } from '../store/OnlinePlayer'
 import { OtherPlayers } from '../store/OtherPlayers'
+
 import {
   CommentT,
   FormCommentT,
@@ -30,6 +31,7 @@ interface postStoreT {
   replyComments: ReplyComT[]
   loadPosts: boolean
   loadOwnPosts: boolean
+  myCountPosts: number
 }
 
 interface delCommentT {
@@ -43,6 +45,8 @@ interface delCommentIdT {
   postId?: string
 }
 
+const limit = 6
+
 export const PostStore = {
   store: makeAutoObservable<postStoreT>({
     posts: [],
@@ -50,8 +54,27 @@ export const PostStore = {
     comments: [],
     replyComments: [],
     loadOwnPosts: true,
-    loadPosts: true
+    loadPosts: true,
+    myCountPosts: 0
   }),
+  countPosts: async () => {
+    try {
+      const userUid = auth().currentUser?.uid
+      firestore()
+        .collection('Posts')
+        .where('ownerId', '==', userUid)
+        .orderBy('createTime', 'desc')
+        .limit(limit)
+        .onSnapshot((querySnapshot) => {
+          // On each change, fetch own posts
+          PostStore.fetchOwnPosts(querySnapshot)
+          PostStore.store.myCountPosts = querySnapshot.size
+        })
+      return PostStore.store.myCountPosts
+    } catch (error) {
+      captureException(error, 'getNumberOfPosts')
+    }
+  },
   createPost: async ({ text, plan, systemMessage, planText }: FormPostT) => {
     const userUid = auth().currentUser?.uid
     const email = auth().currentUser?.email

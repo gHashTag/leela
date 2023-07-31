@@ -49,7 +49,6 @@ const getFireBaseRef = (path: string): FirebaseDatabaseTypes.Reference => {
 const getProfile = async (): Promise<UserT | undefined> => {
   const userUid = auth().currentUser?.uid
   let res
-  console.log('res', res)
   try {
     const response = await firestore().collection('Profiles').doc(userUid).get()
     res = response.data() as UserT

@@ -126,6 +126,11 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       {!user.pro && isBlockGame && online && (
         <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
       )}
+
+      {/* DEBUG
+      <Text h="h3" title={`user.pro: ${user.pro}`} />
+      <Text h="h3" title={`isBlockGame: ${isBlockGame}`} /> */}
+
       <GameBoard />
     </Background>
   )

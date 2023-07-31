@@ -98,7 +98,8 @@ export const RevenueCatProvider = ({ children }: any) => {
 
       const curProf: UserT | undefined = await getProfile()
       const status = curProf?.status
-      console.log('status', status)
+      const countPosts = await PostStore.countPosts()
+
       const isAdmin = status === 'Admin' || status === 'Free'
       const hasProPlan =
         customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
@@ -106,7 +107,7 @@ export const RevenueCatProvider = ({ children }: any) => {
       if (isAdmin || hasProPlan) {
         newUser.pro = true
         actionSubscribeStore.unBlock()
-      } else if (PostStore.store.posts.length > 5) {
+      } else if ((countPosts ?? 0) > 5) {
         actionSubscribeStore.blockGame()
       } else {
         actionSubscribeStore.unBlock()
