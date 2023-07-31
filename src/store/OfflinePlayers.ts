@@ -8,6 +8,7 @@ import { upStepOffline } from './helper'
 import { actionsDice } from './'
 import { navigate } from '../constants'
 import { HistoryT } from '../types'
+import { storageAdapter } from './storageAdapter'
 
 export const initStore = {
   start: [false, false, false, false, false, false],
@@ -48,7 +49,8 @@ export const OfflinePlayers = {
 
 makePersistable(OfflinePlayers.store, {
   name: 'OfflinePlayers',
-  properties: ['plans', 'start', 'histories', 'finish']
+  properties: ['plans', 'start', 'histories', 'finish'],
+  storage: storageAdapter
 })
 
 interface OfflinePlayersI {

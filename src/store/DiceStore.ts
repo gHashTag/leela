@@ -4,6 +4,7 @@ import { makePersistable } from 'mobx-persist-store'
 import i18next from '../i18n'
 
 import { OnlinePlayer } from './OnlinePlayer'
+import { storageAdapter } from './storageAdapter'
 
 const DiceStore = makeAutoObservable({
   init: false,
@@ -18,16 +19,18 @@ const DiceStore = makeAutoObservable({
   finishArr: [] as boolean[]
 })
 autorun(() => {
-  const { isReported, canGo, timeText } = OnlinePlayer.store
-  if (i18next.isInitialized) {
-    const textTopMess = DiceStore.online
-      ? !isReported
-        ? i18next.t('online-part.notReported')
-        : canGo
-        ? i18next.t('takeStep')
-        : `${i18next.t('nextStep')}: ${timeText}`
-      : `${i18next.t('playerTurn')} # ${DiceStore.players}`
-    DiceStore.topMessage = textTopMess
+  if (OnlinePlayer && OnlinePlayer.store) {
+    const { isReported, canGo, timeText } = OnlinePlayer.store
+    if (i18next.isInitialized) {
+      const textTopMess = DiceStore.online
+        ? !isReported
+          ? i18next.t('online-part.notReported')
+          : canGo
+          ? i18next.t('takeStep')
+          : `${i18next.t('nextStep')}: ${timeText}`
+        : `${i18next.t('playerTurn')} # ${DiceStore.players}`
+      DiceStore.topMessage = textTopMess
+    }
   }
 })
 
@@ -99,7 +102,8 @@ makePersistable(DiceStore, {
     'init',
     'rate',
     'online'
-  ]
+  ],
+  storage: storageAdapter
 })
 
 export { DiceStore, actionsDice }

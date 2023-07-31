@@ -1,0 +1,167 @@
+f4178b26bc9369e680299057fa4dd95b
+
+
+
+
+
+
+
+
+
+
+'use strict';function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}
+
+
+
+
+
+
+
+
+
+
+
+var PixelRatio = require("../Utilities/PixelRatio");
+var _require = require("./AssetUtils"),pickScale = _require.pickScale;
+var Platform = require("../Utilities/Platform");
+
+var invariant = require('invariant');
+
+var _require2 =
+
+
+
+  require('@react-native/assets/path-support'),getAndroidResourceFolderName = _require2.getAndroidResourceFolderName,getAndroidResourceIdentifier = _require2.getAndroidResourceIdentifier,getBasePath = _require2.getBasePath;
+
+
+
+
+function getScaledAssetPath(asset) {
+  var scale = pickScale(asset.scales, PixelRatio.get());
+  var scaleSuffix = scale === 1 ? '' : '@' + scale + 'x';
+  var assetDir = getBasePath(asset);
+  return assetDir + '/' + asset.name + scaleSuffix + '.' + asset.type;
+}
+
+
+
+
+function getAssetPathInDrawableFolder(asset) {
+  var scale = pickScale(asset.scales, PixelRatio.get());
+  var drawbleFolder = getAndroidResourceFolderName(asset, scale);
+  var fileName = getAndroidResourceIdentifier(asset);
+  return drawbleFolder + '/' + fileName + '.' + asset.type;
+}var
+
+AssetSourceResolver = function () {
+
+
+
+
+
+
+  function AssetSourceResolver(serverUrl, jsbundleUrl, asset) {_classCallCheck(this, AssetSourceResolver);
+    this.serverUrl = serverUrl;
+    this.jsbundleUrl = jsbundleUrl;
+    this.asset = asset;
+  }_createClass(AssetSourceResolver, [{ key: "isLoadedFromServer", value:
+
+    function isLoadedFromServer() {
+      return !!this.serverUrl;
+    } }, { key: "isLoadedFromFileSystem", value:
+
+    function isLoadedFromFileSystem() {
+      return !!(this.jsbundleUrl && this.jsbundleUrl.startsWith('file://'));
+    } }, { key: "defaultAsset", value:
+
+    function defaultAsset() {
+      if (this.isLoadedFromServer()) {
+        return this.assetServerURL();
+      }
+
+      if (Platform.OS === 'android') {
+        return this.isLoadedFromFileSystem() ?
+        this.drawableFolderInBundle() :
+        this.resourceIdentifierWithoutScale();
+      } else {
+        return this.scaledAssetURLNearBundle();
+      }
+    } }, { key: "assetServerURL", value:
+
+
+
+
+
+    function assetServerURL() {
+      invariant(!!this.serverUrl, 'need server to load from');
+      return this.fromSource(
+        this.serverUrl +
+        getScaledAssetPath(this.asset) +
+        '?platform=' +
+        Platform.OS +
+        '&hash=' +
+        this.asset.hash
+      );
+    } }, { key: "scaledAssetPath", value:
+
+
+
+
+
+    function scaledAssetPath() {
+      return this.fromSource(getScaledAssetPath(this.asset));
+    } }, { key: "scaledAssetURLNearBundle", value:
+
+
+
+
+
+    function scaledAssetURLNearBundle() {
+      var path = this.jsbundleUrl || 'file://';
+      return this.fromSource(
+
+
+
+        path + getScaledAssetPath(this.asset).replace(/\.\.\//g, '_')
+      );
+    } }, { key: "resourceIdentifierWithoutScale", value:
+
+
+
+
+
+
+
+    function resourceIdentifierWithoutScale() {
+      invariant(
+        Platform.OS === 'android',
+        'resource identifiers work on Android'
+      );
+      return this.fromSource(getAndroidResourceIdentifier(this.asset));
+    } }, { key: "drawableFolderInBundle", value:
+
+
+
+
+
+
+    function drawableFolderInBundle() {
+      var path = this.jsbundleUrl || 'file://';
+      return this.fromSource(path + getAssetPathInDrawableFolder(this.asset));
+    } }, { key: "fromSource", value:
+
+    function fromSource(source) {
+      return {
+        __packager_asset: true,
+        width: this.asset.width,
+        height: this.asset.height,
+        uri: source,
+        scale: pickScale(this.asset.scales, PixelRatio.get())
+      };
+    } }]);return AssetSourceResolver;}();AssetSourceResolver.
+
+pickScale =
+pickScale;
+
+
+module.exports = AssetSourceResolver;

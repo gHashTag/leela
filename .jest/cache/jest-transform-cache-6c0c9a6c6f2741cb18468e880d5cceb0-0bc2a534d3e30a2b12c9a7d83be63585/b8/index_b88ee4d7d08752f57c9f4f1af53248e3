@@ -1,0 +1,394 @@
+37ffe99f2f074492c242e973cc5ee85f
+Object.defineProperty(exports, "__esModule", { value: true });exports.STORAGE_TYPE = exports.SECURITY_RULES = exports.SECURITY_LEVEL = exports.BIOMETRY_TYPE = exports.AUTHENTICATION_TYPE = exports.ACCESS_CONTROL = exports.ACCESSIBLE = void 0;exports.canImplyAuthentication = canImplyAuthentication;exports.default = void 0;exports.getAllGenericPasswordServices = getAllGenericPasswordServices;exports.getGenericPassword = getGenericPassword;exports.getInternetCredentials = getInternetCredentials;exports.getSecurityLevel = getSecurityLevel;exports.getSupportedBiometryType = getSupportedBiometryType;exports.hasInternetCredentials = hasInternetCredentials;exports.requestSharedWebCredentials = requestSharedWebCredentials;exports.resetGenericPassword = resetGenericPassword;exports.resetInternetCredentials = resetInternetCredentials;exports.setGenericPassword = setGenericPassword;exports.setInternetCredentials = setInternetCredentials;exports.setSharedWebCredentials = setSharedWebCredentials;
+var _reactNative = require("react-native");
+
+var RNKeychainManager = _reactNative.NativeModules.RNKeychainManager;
+
+var SECURITY_LEVEL =
+
+
+
+Object.freeze({
+  ANY: RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_ANY,
+  SECURE_SOFTWARE:
+  RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_SECURE_SOFTWARE,
+  SECURE_HARDWARE:
+  RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_SECURE_HARDWARE
+});exports.SECURITY_LEVEL = SECURITY_LEVEL;
+
+var ACCESSIBLE = Object.freeze({
+  WHEN_UNLOCKED: 'AccessibleWhenUnlocked',
+  AFTER_FIRST_UNLOCK: 'AccessibleAfterFirstUnlock',
+  ALWAYS: 'AccessibleAlways',
+  WHEN_PASSCODE_SET_THIS_DEVICE_ONLY: 'AccessibleWhenPasscodeSetThisDeviceOnly',
+  WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'AccessibleWhenUnlockedThisDeviceOnly',
+  AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY:
+  'AccessibleAfterFirstUnlockThisDeviceOnly'
+});exports.ACCESSIBLE = ACCESSIBLE;
+
+var ACCESS_CONTROL = Object.freeze({
+  USER_PRESENCE: 'UserPresence',
+  BIOMETRY_ANY: 'BiometryAny',
+  BIOMETRY_CURRENT_SET: 'BiometryCurrentSet',
+  DEVICE_PASSCODE: 'DevicePasscode',
+  APPLICATION_PASSWORD: 'ApplicationPassword',
+  BIOMETRY_ANY_OR_DEVICE_PASSCODE: 'BiometryAnyOrDevicePasscode',
+  BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE: 'BiometryCurrentSetOrDevicePasscode'
+});exports.ACCESS_CONTROL = ACCESS_CONTROL;
+
+var AUTHENTICATION_TYPE = Object.freeze({
+  DEVICE_PASSCODE_OR_BIOMETRICS: 'AuthenticationWithBiometricsDevicePasscode',
+  BIOMETRICS: 'AuthenticationWithBiometrics'
+});exports.AUTHENTICATION_TYPE = AUTHENTICATION_TYPE;
+
+var BIOMETRY_TYPE = Object.freeze({
+  TOUCH_ID: 'TouchID',
+  FACE_ID: 'FaceID',
+  FINGERPRINT: 'Fingerprint',
+  FACE: 'Face',
+  IRIS: 'Iris'
+});exports.BIOMETRY_TYPE = BIOMETRY_TYPE;
+
+var STORAGE_TYPE = Object.freeze({
+  FB: 'FacebookConceal',
+  AES: 'KeystoreAESCBC',
+  RSA: 'KeystoreRSAECB',
+  KC: 'keychain'
+});exports.STORAGE_TYPE = STORAGE_TYPE;
+
+var SECURITY_RULES = Object.freeze({
+  NONE: 'none',
+  AUTOMATIC_UPGRADE: 'automaticUpgradeToMoreSecuredStorage'
+});exports.SECURITY_RULES = SECURITY_RULES;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var AUTH_PROMPT_DEFAULTS = {
+  title: 'Authenticate to retrieve secret',
+  cancel: 'Cancel'
+};
+
+function normalizeServiceOption(serviceOrOptions) {
+  if (typeof serviceOrOptions === 'string') {
+    console.warn("You passed a service string as an argument to one of the react-native-keychain functions.\n      This way of passing service is deprecated and will be removed in a future major.\n      Please update your code to use { service: " +
+
+
+    JSON.stringify(
+      serviceOrOptions
+    ) + " }"
+    );
+    return { service: serviceOrOptions };
+  }
+  return serviceOrOptions || {};
+}
+
+function normalizeOptions(
+serviceOrOptions)
+{
+  var options = Object.assign({}, normalizeServiceOption(serviceOrOptions));
+  var authenticationPrompt = options.authenticationPrompt;
+
+  if (typeof authenticationPrompt === 'string') {
+    console.warn("You passed a authenticationPrompt string as an argument to one of the react-native-keychain functions.\n      This way of passing authenticationPrompt is deprecated and will be removed in a future major.\n      Please update your code to use { authenticationPrompt: { title: " +
+
+
+    JSON.stringify(
+      authenticationPrompt
+    ) + " }"
+    );
+    options.authenticationPrompt = Object.assign({},
+    AUTH_PROMPT_DEFAULTS, {
+      title: authenticationPrompt });
+
+  } else {
+    options.authenticationPrompt = Object.assign({},
+    AUTH_PROMPT_DEFAULTS,
+    authenticationPrompt);
+
+  }
+
+
+  return options;
+}
+
+
+
+
+
+
+
+
+
+
+function setGenericPassword(
+username,
+password,
+serviceOrOptions)
+{
+  var options = normalizeOptions(serviceOrOptions);
+  return RNKeychainManager.setGenericPasswordForOptions(
+    options,
+    username,
+    password
+  );
+}
+
+
+
+
+
+
+function getGenericPassword(
+serviceOrOptions)
+{
+  var options = normalizeOptions(serviceOrOptions);
+  return RNKeychainManager.getGenericPasswordForOptions(options);
+}
+
+
+
+
+
+
+function resetGenericPassword(
+serviceOrOptions)
+{
+  var options = normalizeOptions(serviceOrOptions);
+  return RNKeychainManager.resetGenericPasswordForOptions(options);
+}
+
+
+
+
+
+function getAllGenericPasswordServices() {
+  return RNKeychainManager.getAllGenericPasswordServices();
+}
+
+
+
+
+
+
+function hasInternetCredentials(
+server)
+{
+  return RNKeychainManager.hasInternetCredentialsForServer(server);
+}
+
+
+
+
+
+
+
+
+
+function setInternetCredentials(
+server,
+username,
+password,
+options)
+{
+  return RNKeychainManager.setInternetCredentialsForServer(
+    server,
+    username,
+    password,
+    options
+  );
+}
+
+
+
+
+
+
+
+function getInternetCredentials(
+server,
+options)
+{
+  return RNKeychainManager.getInternetCredentialsForServer(
+    server,
+    normalizeOptions(options)
+  );
+}
+
+
+
+
+
+
+
+function resetInternetCredentials(server) {
+  return RNKeychainManager.resetInternetCredentialsForServer(server);
+}
+
+
+
+
+
+
+function getSupportedBiometryType() {
+  if (!RNKeychainManager.getSupportedBiometryType) {
+    return Promise.resolve(null);
+  }
+
+  return RNKeychainManager.getSupportedBiometryType();
+}
+
+
+
+
+
+
+
+
+function requestSharedWebCredentials()
+
+{
+  if (_reactNative.Platform.OS !== 'ios') {
+    return Promise.reject(
+      new Error("requestSharedWebCredentials() is not supported on " +
+      _reactNative.Platform.OS + " yet"
+      )
+    );
+  }
+  return RNKeychainManager.requestSharedWebCredentials();
+}
+
+
+
+
+
+
+
+
+function setSharedWebCredentials(
+server,
+username,
+password)
+{
+  if (_reactNative.Platform.OS !== 'ios') {
+    return Promise.reject(
+      new Error("setSharedWebCredentials() is not supported on " +
+      _reactNative.Platform.OS + " yet"
+      )
+    );
+  }
+  return RNKeychainManager.setSharedWebCredentialsForServer(
+    server,
+    username,
+    password
+  );
+}
+
+
+
+
+
+
+
+function canImplyAuthentication(options) {
+  if (!RNKeychainManager.canCheckAuthentication) {
+    return Promise.resolve(false);
+  }
+  return RNKeychainManager.canCheckAuthentication(options);
+}
+
+
+
+
+
+
+
+
+
+function getSecurityLevel(
+options)
+{
+  if (!RNKeychainManager.getSecurityLevel) {
+    return Promise.resolve(null);
+  }
+  return RNKeychainManager.getSecurityLevel(options);
+}var _default =
+
+
+
+{
+  SECURITY_LEVEL: SECURITY_LEVEL,
+  ACCESSIBLE: ACCESSIBLE,
+  ACCESS_CONTROL: ACCESS_CONTROL,
+  AUTHENTICATION_TYPE: AUTHENTICATION_TYPE,
+  BIOMETRY_TYPE: BIOMETRY_TYPE,
+  STORAGE_TYPE: STORAGE_TYPE,
+  SECURITY_RULES: SECURITY_RULES,
+  getSecurityLevel: getSecurityLevel,
+  canImplyAuthentication: canImplyAuthentication,
+  getSupportedBiometryType: getSupportedBiometryType,
+  setInternetCredentials: setInternetCredentials,
+  getInternetCredentials: getInternetCredentials,
+  resetInternetCredentials: resetInternetCredentials,
+  setGenericPassword: setGenericPassword,
+  getGenericPassword: getGenericPassword,
+  getAllGenericPasswordServices: getAllGenericPasswordServices,
+  resetGenericPassword: resetGenericPassword,
+  requestSharedWebCredentials: requestSharedWebCredentials,
+  setSharedWebCredentials: setSharedWebCredentials
+};exports.default = _default;

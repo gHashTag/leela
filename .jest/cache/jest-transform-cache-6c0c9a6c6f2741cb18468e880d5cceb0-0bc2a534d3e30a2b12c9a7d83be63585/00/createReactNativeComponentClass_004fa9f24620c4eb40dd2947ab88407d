@@ -1,0 +1,37 @@
+15a46a43cedac499d731584de4e8d468
+
+
+
+
+
+
+
+
+
+
+
+
+
+'use strict';
+
+var _ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/ReactNativePrivateInterface");
+
+
+var register = _ReactNativePrivateInterface.ReactNativeViewConfigRegistry.register;
+
+
+
+
+
+
+
+
+
+var createReactNativeComponentClass = function createReactNativeComponentClass(
+name,
+callback)
+{
+  return register(name, callback);
+};
+
+module.exports = createReactNativeComponentClass;

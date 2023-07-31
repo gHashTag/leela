@@ -1,0 +1,89 @@
+32f5bc9f94053af4868d46cce86f5766
+"use strict";function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];return arr2;}function _iterableToArrayLimit(arr, i) {var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];if (null != _i) {var _s,_e,_x,_r,_arr = [],_n = !0,_d = !1;try {if (_x = (_i = _i.call(arr)).next, 0 === i) {if (Object(_i) !== _i) return;_n = !1;} else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0);} catch (err) {_d = !0, _e = err;} finally {try {if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;} finally {if (_d) throw _e;}}return _arr;}}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = getActionFromState;
+function getActionFromState(state, options) {var _state$index;
+  var _normalizedConfig$scr;
+
+  var normalizedConfig = options ? createNormalizedConfigItem(options) : {};
+  var routes = state.index != null ? state.routes.slice(0, state.index + 1) : state.routes;
+  if (routes.length === 0) {
+    return undefined;
+  }
+  if (!(routes.length === 1 && routes[0].key === undefined || routes.length === 2 && routes[0].key === undefined && routes[0].name === (normalizedConfig === null || normalizedConfig === void 0 ? void 0 : normalizedConfig.initialRouteName) && routes[1].key === undefined)) {
+    return {
+      type: 'RESET',
+      payload: state
+    };
+  }
+  var route = state.routes[(_state$index = state.index) != null ? _state$index : state.routes.length - 1];
+  var current = route === null || route === void 0 ? void 0 : route.state;
+  var config = normalizedConfig === null || normalizedConfig === void 0 ? void 0 : (_normalizedConfig$scr = normalizedConfig.screens) === null || _normalizedConfig$scr === void 0 ? void 0 : _normalizedConfig$scr[route === null || route === void 0 ? void 0 : route.name];
+  var params = Object.assign({},
+  route.params);
+
+  var payload = route ? {
+    name: route.name,
+    path: route.path,
+    params: params
+  } : undefined;
+  while (current) {
+    var _config, _config2, _config2$screens;
+    if (current.routes.length === 0) {
+      return undefined;
+    }
+    var _routes = current.index != null ? current.routes.slice(0, current.index + 1) : current.routes;
+    var _route = _routes[_routes.length - 1];
+
+
+    Object.assign(params, {
+      initial: undefined,
+      screen: undefined,
+      params: undefined,
+      state: undefined
+    });
+    if (_routes.length === 1 && _routes[0].key === undefined) {
+      params.initial = true;
+      params.screen = _route.name;
+    } else if (_routes.length === 2 && _routes[0].key === undefined && _routes[0].name === ((_config = config) === null || _config === void 0 ? void 0 : _config.initialRouteName) && _routes[1].key === undefined) {
+      params.initial = false;
+      params.screen = _route.name;
+    } else {
+      params.state = current;
+      break;
+    }
+    if (_route.state) {
+      params.params = Object.assign({},
+      _route.params);
+
+      params = params.params;
+    } else {
+      params.path = _route.path;
+      params.params = _route.params;
+    }
+    current = _route.state;
+    config = (_config2 = config) === null || _config2 === void 0 ? void 0 : (_config2$screens = _config2.screens) === null || _config2$screens === void 0 ? void 0 : _config2$screens[_route.name];
+  }
+  if (!payload) {
+    return;
+  }
+
+
+
+  return {
+    type: 'NAVIGATE',
+    payload: payload
+  };
+}
+var createNormalizedConfigItem = function createNormalizedConfigItem(config) {return typeof config === 'object' && config != null ? {
+    initialRouteName: config.initialRouteName,
+    screens: config.screens != null ? createNormalizedConfigs(config.screens) : undefined
+  } : {};};
+var createNormalizedConfigs = function createNormalizedConfigs(options) {return Object.entries(options).reduce(function (acc, _ref) {
+    var _ref2 = _slicedToArray(_ref, 2),k = _ref2[0],v = _ref2[1];
+    acc[k] = createNormalizedConfigItem(v);
+    return acc;
+  }, {});};

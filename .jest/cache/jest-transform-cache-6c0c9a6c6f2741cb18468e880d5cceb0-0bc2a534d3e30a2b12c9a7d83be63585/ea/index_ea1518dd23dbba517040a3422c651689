@@ -1,0 +1,78 @@
+25321a8bd2b4ae09902ab448cc63001d
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = exports.AndroidMarket = void 0;var _reactNative = require("react-native");function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}
+
+var AppleNativePrefix = 'itms-apps://itunes.apple.com/app/id';
+var AppleWebPrefix = 'https://itunes.apple.com/app/id';
+var GooglePrefix = 'https://play.google.com/store/apps/details?id=';
+var AmazonPrefix = 'amzn://apps/android?p=';
+
+var AndroidMarket = {
+  Google: 1,
+  Amazon: 2,
+  Other: 3
+};exports.AndroidMarket = AndroidMarket;
+
+var noop = function noop() {};var
+
+Rate = function () {function Rate() {_classCallCheck(this, Rate);}_createClass(Rate, null, [{ key: "filterOptions", value:
+    function filterOptions(inputOptions) {
+      var options = {
+        AppleAppID: '',
+        GooglePackageName: '',
+        AmazonPackageName: '',
+        OtherAndroidURL: '',
+        preferredAndroidMarket: AndroidMarket.Google,
+        preferInApp: false,
+        openAppStoreIfInAppFails: true,
+        inAppDelay: 3.0,
+        fallbackPlatformURL: ''
+      };
+      Object.keys(inputOptions).forEach(function (key) {
+        options[key] = inputOptions[key];
+      });
+      return options;
+    } }, { key: "rate", value:
+
+    function rate(inputOptions) {var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
+      var RNRate = _reactNative.NativeModules.RNRate;
+      var options = Rate.filterOptions(inputOptions);
+      if (_reactNative.Platform.OS === 'ios') {
+        options.AppleNativePrefix = AppleNativePrefix;
+        RNRate.rate(options, function (response, error) {
+          callback(response, error);
+        });
+      } else if (_reactNative.Platform.OS === 'android') {
+        if (options.preferredAndroidMarket === AndroidMarket.Google) {
+          if (options.preferInApp) {
+            RNRate.rate(options, function (response, error) {
+              if (!response) {
+                if (options.openAppStoreIfInAppFails) {
+                  Rate.openURL(GooglePrefix + options.GooglePackageName, callback);
+                } else {
+                  callback(false, error);
+                }
+              } else {
+                callback(response, error);
+              }
+            });
+          } else {
+            Rate.openURL(GooglePrefix + options.GooglePackageName, callback);
+          }
+        } else if (options.preferredAndroidMarket === AndroidMarket.Amazon) {
+          Rate.openURL(AmazonPrefix + options.AmazonPackageName, callback);
+        } else if (options.preferredAndroidMarket === AndroidMarket.Other) {
+          Rate.openURL(options.OtherAndroidURL, callback);
+        }
+      } else {
+        Rate.openURL(options.fallbackPlatformURL, callback);
+      }
+    } }, { key: "openURL", value:
+
+    function openURL(url) {var callback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
+      _reactNative.Linking.canOpenURL(url).then(function (supported) {
+        callback(supported);
+        if (supported) {
+          _reactNative.Linking.openURL(url);
+        }
+      });
+    } }]);return Rate;}();exports.default = Rate;

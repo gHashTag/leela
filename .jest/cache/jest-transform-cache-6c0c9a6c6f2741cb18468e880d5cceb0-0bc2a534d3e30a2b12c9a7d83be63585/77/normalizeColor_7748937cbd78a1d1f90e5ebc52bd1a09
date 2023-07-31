@@ -1,0 +1,35 @@
+eac9dfc60580a39e423f9cd3a129a6fc
+
+
+
+
+
+
+
+
+
+
+
+
+var _normalizeColor2 = _interopRequireDefault(require("@react-native/normalize-color"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+
+
+
+
+function normalizeColor(
+color)
+{
+  if (typeof color === 'object' && color != null) {
+    var _require = require("./PlatformColorValueTypes"),normalizeColorObject = _require.normalizeColorObject;
+    var normalizedColor = normalizeColorObject(color);
+    if (normalizedColor != null) {
+      return normalizedColor;
+    }
+  }
+
+  if (typeof color === 'string' || typeof color === 'number') {
+    return (0, _normalizeColor2.default)(color);
+  }
+}
+
+module.exports = normalizeColor;

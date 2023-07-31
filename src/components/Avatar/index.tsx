@@ -9,6 +9,46 @@ import Spinner from 'react-native-spinkit'
 import { secondary } from '../../constants'
 import { Pressable } from '../Pressable'
 
+type sizeType = 'xLarge' | 'large' | 'medium' | 'small'
+
+interface AvatarT {
+  loading: boolean
+  size?: sizeType
+  uri?: string
+  viewStyle?: StyleProp<ViewStyle>
+}
+
+export const Avatar = memo<AvatarT>(
+  ({ loading, uri, size = 'large', viewStyle }) => {
+    return (
+      <View style={[styles.container, viewStyle]} testID="avatar">
+        {loading ? (
+          <Spinner size={styles[size].height} type="Pulse" color={secondary} />
+        ) : !uri ? (
+          <FastImage style={styles[size]} source={require('./pickaface.png')} />
+        ) : (
+          <FastImage
+            style={styles[size]}
+            source={{ uri, priority: FastImage.priority.high }}
+          />
+        )}
+      </View>
+    )
+  }
+)
+
+interface PressableAvatarT extends AvatarT {
+  onPress?: () => void
+}
+
+export const PressableAvatar = ({ onPress, ...props }: PressableAvatarT) => {
+  return (
+    <Pressable onPress={onPress}>
+      <Avatar {...props} />
+    </Pressable>
+  )
+}
+
 const styles = StyleSheet.create({
   container: {
     alignSelf: 'center',
@@ -38,43 +78,3 @@ const styles = StyleSheet.create({
     borderRadius: s(36)
   }
 })
-
-type sizeType = 'xLarge' | 'large' | 'medium' | 'small'
-
-interface AvatarT {
-  loading: boolean
-  size?: sizeType
-  uri?: string
-  viewStyle?: StyleProp<ViewStyle>
-}
-
-export const Avatar = memo<AvatarT>(
-  ({ loading, uri, size = 'large', viewStyle }) => {
-    return (
-      <View style={[styles.container, viewStyle]}>
-        {loading ? (
-          <Spinner size={styles[size].height} type="Pulse" color={secondary} />
-        ) : !uri ? (
-          <FastImage style={styles[size]} source={require('./pickaface.png')} />
-        ) : (
-          <FastImage
-            style={styles[size]}
-            source={{ uri, priority: FastImage.priority.high }}
-          />
-        )}
-      </View>
-    )
-  }
-)
-
-interface PressableAvatarT extends AvatarT {
-  onPress?: () => void
-}
-
-export const PressableAvatar = ({ onPress, ...props }: PressableAvatarT) => {
-  return (
-    <Pressable onPress={onPress}>
-      <Avatar {...props} />
-    </Pressable>
-  )
-}

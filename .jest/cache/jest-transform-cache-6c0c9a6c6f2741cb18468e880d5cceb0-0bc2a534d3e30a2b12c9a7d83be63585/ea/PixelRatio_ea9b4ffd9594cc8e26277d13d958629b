@@ -1,0 +1,128 @@
+c258baadcf2ca9875661723032066b0a
+
+
+
+
+
+
+
+
+
+
+'use strict';function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}
+
+var Dimensions = require("./Dimensions");var
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PixelRatio = function () {function PixelRatio() {_classCallCheck(this, PixelRatio);}_createClass(PixelRatio, null, [{ key: "get", value:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    function get() {
+      return Dimensions.get('window').scale;
+    } }, { key: "getFontScale", value:
+
+
+
+
+
+
+
+
+
+
+
+
+    function getFontScale() {
+      return Dimensions.get('window').fontScale || PixelRatio.get();
+    } }, { key: "getPixelSizeForLayoutSize", value:
+
+
+
+
+
+
+    function getPixelSizeForLayoutSize(layoutSize) {
+      return Math.round(layoutSize * PixelRatio.get());
+    } }, { key: "roundToNearestPixel", value:
+
+
+
+
+
+
+
+    function roundToNearestPixel(layoutSize) {
+      var ratio = PixelRatio.get();
+      return Math.round(layoutSize * ratio) / ratio;
+    } }, { key: "startDetecting", value:
+
+
+    function startDetecting() {} }]);return PixelRatio;}();
+
+
+module.exports = PixelRatio;

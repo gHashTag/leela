@@ -1,0 +1,379 @@
+c7bfe7bb7ff29092da889717f7867f56
+Object.defineProperty(exports, "__esModule", { value: true });exports.firebase = exports.default = exports.SDK_VERSION = void 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var _common = require("@react-native-firebase/app/lib/common");
+
+
+
+
+
+
+
+
+var _internal = require("@react-native-firebase/app/lib/internal");
+
+
+
+
+var _FirestoreCollectionReference = _interopRequireDefault(require("./FirestoreCollectionReference"));
+var _FirestoreDocumentReference = _interopRequireDefault(require("./FirestoreDocumentReference"));
+var _FirestorePath = _interopRequireDefault(require("./FirestorePath"));
+var _FirestoreQuery = _interopRequireDefault(require("./FirestoreQuery"));
+var _FirestoreQueryModifiers = _interopRequireDefault(require("./FirestoreQueryModifiers"));
+var _FirestoreStatics = _interopRequireDefault(require("./FirestoreStatics"));
+var _FirestoreTransactionHandler = _interopRequireDefault(require("./FirestoreTransactionHandler"));
+var _FirestoreWriteBatch = _interopRequireDefault(require("./FirestoreWriteBatch"));
+var _version = _interopRequireDefault(require("./version"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}function _inherits(subClass, superClass) {if (typeof superClass !== "function" && superClass !== null) {throw new TypeError("Super expression must either be null or a function");}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } });Object.defineProperty(subClass, "prototype", { writable: false });if (superClass) _setPrototypeOf(subClass, superClass);}function _setPrototypeOf(o, p) {_setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {o.__proto__ = p;return o;};return _setPrototypeOf(o, p);}function _createSuper(Derived) {var hasNativeReflectConstruct = _isNativeReflectConstruct();return function _createSuperInternal() {var Super = _getPrototypeOf(Derived),result;if (hasNativeReflectConstruct) {var NewTarget = _getPrototypeOf(this).constructor;result = Reflect.construct(Super, arguments, NewTarget);} else {result = Super.apply(this, arguments);}return _possibleConstructorReturn(this, result);};}function _possibleConstructorReturn(self, call) {if (call && (typeof call === "object" || typeof call === "function")) {return call;} else if (call !== void 0) {throw new TypeError("Derived constructors may only return object or undefined");}return _assertThisInitialized(self);}function _assertThisInitialized(self) {if (self === void 0) {throw new ReferenceError("this hasn't been initialised - super() hasn't been called");}return self;}function _isNativeReflectConstruct() {if (typeof Reflect === "undefined" || !Reflect.construct) return false;if (Reflect.construct.sham) return false;if (typeof Proxy === "function") return true;try {Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));return true;} catch (e) {return false;}}function _getPrototypeOf(o) {_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {return o.__proto__ || Object.getPrototypeOf(o);};return _getPrototypeOf(o);}
+
+var namespace = 'firestore';
+
+var nativeModuleName = [
+'RNFBFirestoreModule',
+'RNFBFirestoreCollectionModule',
+'RNFBFirestoreDocumentModule',
+'RNFBFirestoreTransactionModule'];
+
+
+var nativeEvents = [
+'firestore_collection_sync_event',
+'firestore_document_sync_event',
+'firestore_transaction_event'];var
+
+
+FirebaseFirestoreModule = function (_FirebaseModule) {_inherits(FirebaseFirestoreModule, _FirebaseModule);var _super = _createSuper(FirebaseFirestoreModule);
+  function FirebaseFirestoreModule(app, config) {var _this;_classCallCheck(this, FirebaseFirestoreModule);
+    _this = _super.call(this, app, config);
+    _this._referencePath = new _FirestorePath.default();
+    _this._transactionHandler = new _FirestoreTransactionHandler.default(_assertThisInitialized(_this));
+
+
+    _this.emitter.addListener(_this.eventNameForApp('firestore_collection_sync_event'), function (event) {
+      _this.emitter.emit(
+        _this.eventNameForApp("firestore_collection_sync_event:" + event.listenerId),
+        event
+      );
+    });
+
+    _this.emitter.addListener(_this.eventNameForApp('firestore_document_sync_event'), function (event) {
+      _this.emitter.emit(
+        _this.eventNameForApp("firestore_document_sync_event:" + event.listenerId),
+        event
+      );
+    });
+
+    _this._settings = {
+      ignoreUndefinedProperties: false
+    };return _this;
+  }_createClass(FirebaseFirestoreModule, [{ key: "batch", value:
+
+    function batch() {
+      return new _FirestoreWriteBatch.default(this);
+    } }, { key: "loadBundle", value:
+
+    function loadBundle(bundle) {
+      if (!(0, _common.isString)(bundle)) {
+        throw new Error("firebase.firestore().loadBundle(*) 'bundle' must be a string value.");
+      }
+
+      if (bundle === '') {
+        throw new Error("firebase.firestore().loadBundle(*) 'bundle' must be a non-empty string.");
+      }
+
+      return this.native.loadBundle(bundle);
+    } }, { key: "namedQuery", value:
+
+    function namedQuery(queryName) {
+      if (!(0, _common.isString)(queryName)) {
+        throw new Error("firebase.firestore().namedQuery(*) 'queryName' must be a string value.");
+      }
+
+      if (queryName === '') {
+        throw new Error("firebase.firestore().namedQuery(*) 'queryName' must be a non-empty string.");
+      }
+
+      return new _FirestoreQuery.default(this, this._referencePath, new _FirestoreQueryModifiers.default(), queryName);
+    } }, { key: "clearPersistence", value: function () {var _clearPersistence = _asyncToGenerator(
+
+        function* () {
+          yield this.native.clearPersistence();
+        });function clearPersistence() {return _clearPersistence.apply(this, arguments);}return clearPersistence;}() }, { key: "waitForPendingWrites", value: function () {var _waitForPendingWrites = _asyncToGenerator(
+
+        function* () {
+          yield this.native.waitForPendingWrites();
+        });function waitForPendingWrites() {return _waitForPendingWrites.apply(this, arguments);}return waitForPendingWrites;}() }, { key: "terminate", value: function () {var _terminate = _asyncToGenerator(
+
+        function* () {
+          yield this.native.terminate();
+        });function terminate() {return _terminate.apply(this, arguments);}return terminate;}() }, { key: "useEmulator", value:
+
+    function useEmulator(host, port) {
+      if (!host || !(0, _common.isString)(host) || !port || !(0, _common.isNumber)(port)) {
+        throw new Error('firebase.firestore().useEmulator() takes a non-empty host and port');
+      }
+      var _host = host;
+      var androidBypassEmulatorUrlRemap =
+      typeof this.firebaseJson.android_bypass_emulator_url_remap === 'boolean' &&
+      this.firebaseJson.android_bypass_emulator_url_remap;
+      if (!androidBypassEmulatorUrlRemap && _common.isAndroid && _host) {
+        if (_host === 'localhost' || _host === '127.0.0.1') {
+          _host = '10.0.2.2';
+
+          console.log(
+            'Mapping firestore host to "10.0.2.2" for android emulators. Use real IP on real devices. You can bypass this behaviour with "android_bypass_emulator_url_remap" flag.'
+          );
+        }
+      }
+      this.native.useEmulator(_host, port);
+      return [_host, port];
+    } }, { key: "collection", value:
+
+    function collection(collectionPath) {
+      if (!(0, _common.isString)(collectionPath)) {
+        throw new Error(
+          "firebase.firestore().collection(*) 'collectionPath' must be a string value."
+        );
+      }
+
+      if (collectionPath === '') {
+        throw new Error(
+          "firebase.firestore().collection(*) 'collectionPath' must be a non-empty string."
+        );
+      }
+
+      var path = this._referencePath.child(collectionPath);
+
+      if (!path.isCollection) {
+        throw new Error(
+          "firebase.firestore().collection(*) 'collectionPath' must point to a collection."
+        );
+      }
+
+      return new _FirestoreCollectionReference.default(this, path);
+    } }, { key: "collectionGroup", value:
+
+    function collectionGroup(collectionId) {
+      if (!(0, _common.isString)(collectionId)) {
+        throw new Error(
+          "firebase.firestore().collectionGroup(*) 'collectionId' must be a string value."
+        );
+      }
+
+      if (collectionId === '') {
+        throw new Error(
+          "firebase.firestore().collectionGroup(*) 'collectionId' must be a non-empty string."
+        );
+      }
+
+      if (collectionId.indexOf('/') >= 0) {
+        throw new Error(
+          "firebase.firestore().collectionGroup(*) 'collectionId' must not contain '/'."
+        );
+      }
+
+      return new _FirestoreQuery.default(
+        this,
+        this._referencePath.child(collectionId),
+        new _FirestoreQueryModifiers.default().asCollectionGroupQuery(),
+        undefined
+      );
+    } }, { key: "disableNetwork", value: function () {var _disableNetwork = _asyncToGenerator(
+
+        function* () {
+          yield this.native.disableNetwork();
+        });function disableNetwork() {return _disableNetwork.apply(this, arguments);}return disableNetwork;}() }, { key: "doc", value:
+
+    function doc(documentPath) {
+      if (!(0, _common.isString)(documentPath)) {
+        throw new Error("firebase.firestore().doc(*) 'documentPath' must be a string value.");
+      }
+
+      if (documentPath === '') {
+        throw new Error("firebase.firestore().doc(*) 'documentPath' must be a non-empty string.");
+      }
+
+      var path = this._referencePath.child(documentPath);
+
+      if (!path.isDocument) {
+        throw new Error("firebase.firestore().doc(*) 'documentPath' must point to a document.");
+      }
+
+      return new _FirestoreDocumentReference.default(this, path);
+    } }, { key: "enableNetwork", value: function () {var _enableNetwork = _asyncToGenerator(
+
+        function* () {
+          yield this.native.enableNetwork();
+        });function enableNetwork() {return _enableNetwork.apply(this, arguments);}return enableNetwork;}() }, { key: "runTransaction", value:
+
+    function runTransaction(updateFunction) {
+      if (!(0, _common.isFunction)(updateFunction)) {
+        return Promise.reject(
+          new Error("firebase.firestore().runTransaction(*) 'updateFunction' must be a function.")
+        );
+      }
+
+      return this._transactionHandler._add(updateFunction);
+    } }, { key: "settings", value:
+
+    function settings(_settings) {
+      if (!(0, _common.isObject)(_settings)) {
+        return Promise.reject(
+          new Error("firebase.firestore().settings(*) 'settings' must be an object.")
+        );
+      }
+
+      var keys = Object.keys(_settings);
+
+      var opts = [
+      'cacheSizeBytes',
+      'host',
+      'persistence',
+      'ssl',
+      'ignoreUndefinedProperties',
+      'serverTimestampBehavior'];
+
+
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        if (!opts.includes(key)) {
+          return Promise.reject(
+            new Error("firebase.firestore().settings(*) 'settings." +
+            key + "' is not a valid settings field."
+            )
+          );
+        }
+      }
+
+      if (!(0, _common.isUndefined)(_settings.cacheSizeBytes)) {
+        if (!(0, _common.isNumber)(_settings.cacheSizeBytes)) {
+          return Promise.reject(
+            new Error(
+              "firebase.firestore().settings(*) 'settings.cacheSizeBytes' must be a number value."
+            )
+          );
+        }
+
+        if (
+        _settings.cacheSizeBytes !== _FirestoreStatics.default.CACHE_SIZE_UNLIMITED &&
+        _settings.cacheSizeBytes < 1048576)
+        {
+          return Promise.reject(
+            new Error(
+              "firebase.firestore().settings(*) 'settings.cacheSizeBytes' the minimum cache size is 1048576 bytes (1MB)."
+            )
+          );
+        }
+      }
+
+      if (!(0, _common.isUndefined)(_settings.host)) {
+
+        console.warn(
+          'host in settings to connect with firestore emulator is deprecated. Use useEmulator instead.'
+        );
+        if (!(0, _common.isString)(_settings.host)) {
+          return Promise.reject(
+            new Error("firebase.firestore().settings(*) 'settings.host' must be a string value.")
+          );
+        }
+
+        if (_settings.host === '') {
+          return Promise.reject(
+            new Error(
+              "firebase.firestore().settings(*) 'settings.host' must not be an empty string."
+            )
+          );
+        }
+
+        if (_common.isAndroid) {
+          if (_settings.host.startsWith('localhost')) {
+            _settings.host = _settings.host.replace('localhost', '10.0.2.2');
+
+            console.log(
+              'Mapping firestore host "localhost" to "10.0.2.2" for android emulators. Use real IP on real devices.'
+            );
+          }
+          if (_settings.host.startsWith('127.0.0.1')) {
+            _settings.host = _settings.host.replace('127.0.0.1', '10.0.2.2');
+
+            console.log(
+              'Mapping firestore host "127.0.0.1" to "10.0.2.2" for android emulators. Use real IP on real devices.'
+            );
+          }
+        }
+      }
+
+      if (!(0, _common.isUndefined)(_settings.persistence) && !(0, _common.isBoolean)(_settings.persistence)) {
+        return Promise.reject(
+          new Error(
+            "firebase.firestore().settings(*) 'settings.persistence' must be a boolean value."
+          )
+        );
+      }
+
+      if (!(0, _common.isUndefined)(_settings.ssl) && !(0, _common.isBoolean)(_settings.ssl)) {
+        throw new Error("firebase.firestore().settings(*) 'settings.ssl' must be a boolean value.");
+      }
+
+      if (
+      !(0, _common.isUndefined)(_settings.serverTimestampBehavior) &&
+      !['estimate', 'previous', 'none'].includes(_settings.serverTimestampBehavior))
+      {
+        return Promise.reject(
+          new Error(
+            "firebase.firestore().settings(*) 'settings.serverTimestampBehavior' must be one of 'estimate', 'previous', 'none'."
+          )
+        );
+      }
+
+      if (!(0, _common.isUndefined)(_settings.ignoreUndefinedProperties)) {
+        if (!(0, _common.isBoolean)(_settings.ignoreUndefinedProperties)) {
+          return Promise.reject(
+            new Error(
+              "firebase.firestore().settings(*) 'settings.ignoreUndefinedProperties' must be a boolean value."
+            )
+          );
+        } else {
+          this._settings.ignoreUndefinedProperties = _settings.ignoreUndefinedProperties;
+        }
+
+        delete _settings.ignoreUndefinedProperties;
+      }
+
+      return this.native.settings(_settings);
+    } }]);return FirebaseFirestoreModule;}(_internal.FirebaseModule);
+
+
+
+var SDK_VERSION = _version.default;exports.SDK_VERSION = SDK_VERSION;var _default =
+
+
+
+(0, _internal.createModuleNamespace)({
+  statics: _FirestoreStatics.default,
+  version: _version.default,
+  namespace: namespace,
+  nativeModuleName: nativeModuleName,
+  nativeEvents: nativeEvents,
+  hasMultiAppSupport: true,
+  hasCustomUrlOrRegionSupport: false,
+  ModuleClass: FirebaseFirestoreModule
+});exports.default = _default;
+
+
+
+
+var firebase = (0, _internal.getFirebaseRoot)();exports.firebase = firebase;

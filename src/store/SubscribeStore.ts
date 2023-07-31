@@ -1,5 +1,6 @@
 import { makeAutoObservable } from 'mobx'
 import { makePersistable } from 'mobx-persist-store'
+import { storageAdapter } from './storageAdapter'
 
 const SubscribeStore = makeAutoObservable({
   isBlockGame: false // defaut false
@@ -19,7 +20,8 @@ const actionSubscribeStore = {
 
 makePersistable(SubscribeStore, {
   name: 'SubscribeStore',
-  properties: ['isBlockGame']
+  properties: ['isBlockGame'],
+  storage: storageAdapter
 })
 
 export { SubscribeStore, actionSubscribeStore }

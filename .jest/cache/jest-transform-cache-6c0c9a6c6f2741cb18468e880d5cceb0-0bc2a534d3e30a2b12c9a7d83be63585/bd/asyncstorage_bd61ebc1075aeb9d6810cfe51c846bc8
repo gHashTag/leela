@@ -1,0 +1,11 @@
+fa0891f859466f456f158e45d891f23e
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default =
+
+{
+  setItem: jest.fn().mockResolvedValue(null),
+  getItem: jest.fn().mockResolvedValue(null),
+  removeItem: jest.fn().mockResolvedValue(null),
+  mergeItem: jest.fn().mockResolvedValue(null),
+  clear: jest.fn().mockResolvedValue(null),
+  getAllKeys: jest.fn().mockResolvedValue([])
+};exports.default = _default;

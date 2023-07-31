@@ -1,0 +1,57 @@
+f793a8826bb91becdbc0affa629bd000
+Object.defineProperty(exports, "__esModule", { value: true });exports.isHoverEnabled = isHoverEnabled;
+
+
+
+
+
+
+
+
+
+var _Platform = _interopRequireDefault(require("../Utilities/Platform"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+
+var isEnabled = false;
+
+if (_Platform.default.OS === 'web') {
+  var canUseDOM = Boolean(
+    typeof window !== 'undefined' &&
+    window.document &&
+    window.document.createElement
+  );
+
+  if (canUseDOM) {
+
+
+
+
+
+
+
+
+    var HOVER_THRESHOLD_MS = 1000;
+    var lastTouchTimestamp = 0;
+
+    var enableHover = function enableHover() {
+      if (isEnabled || Date.now() - lastTouchTimestamp < HOVER_THRESHOLD_MS) {
+        return;
+      }
+      isEnabled = true;
+    };
+
+    var disableHover = function disableHover() {
+      lastTouchTimestamp = Date.now();
+      if (isEnabled) {
+        isEnabled = false;
+      }
+    };
+
+    document.addEventListener('touchstart', disableHover, true);
+    document.addEventListener('touchmove', disableHover, true);
+    document.addEventListener('mousemove', enableHover, true);
+  }
+}
+
+function isHoverEnabled() {
+  return isEnabled;
+}

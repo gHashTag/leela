@@ -1,0 +1,9 @@
+8784f112dd0c44af5a42ffd0548757f5
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  collection: jest.fn(function () {return {
+      doc: jest.fn(function () {return {
+          get: jest.fn(function () {return Promise.resolve({ data: function data() {return {};} });}),
+          set: jest.fn(function () {return Promise.resolve();})
+        };})
+    };})
+};exports.default = _default;

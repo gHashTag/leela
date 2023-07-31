@@ -1,0 +1,22 @@
+3bf35483c55f6692a6e957b0aff921de
+
+
+
+
+
+
+
+
+
+
+var _NativeSoundManager = _interopRequireDefault(require("./NativeSoundManager"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+
+var SoundManager = {
+  playTouchSound: function playTouchSound() {
+    if (_NativeSoundManager.default) {
+      _NativeSoundManager.default.playTouchSound();
+    }
+  }
+};
+
+module.exports = SoundManager;

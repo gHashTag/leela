@@ -1,0 +1,366 @@
+4af47a1ac346d65b6c2c150487f73609
+"use strict";function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];return arr2;}function _iterableToArrayLimit(arr, i) {var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];if (null != _i) {var _s,_e,_x,_r,_arr = [],_n = !0,_d = !1;try {if (_x = (_i = _i.call(arr)).next, 0 === i) {if (Object(_i) !== _i) return;_n = !1;} else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0);} catch (err) {_d = !0, _e = err;} finally {try {if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;} finally {if (_d) throw _e;}}return _arr;}}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _helpers = require("./helpers");
+
+var _RCTAsyncStorage = _interopRequireDefault(require("./RCTAsyncStorage"));
+
+function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+
+
+
+
+
+
+
+if (!_RCTAsyncStorage.default) {
+  throw new Error("[@RNC/AsyncStorage]: NativeModule: AsyncStorage is null.\n\nTo fix this issue try these steps:\n\n  \u2022 Rebuild and restart the app.\n\n  \u2022 Run the packager with `--reset-cache` flag.\n\n  \u2022 If you are using CocoaPods on iOS, run `pod install` in the `ios` directory and then rebuild and re-run the app.\n\n  \u2022 If this happens while testing with Jest, check out docs how to integrate AsyncStorage with it: https://react-native-async-storage.github.io/async-storage/docs/advanced/jest\n\nIf none of these fix the issue, please open an issue on the Github repository: https://github.com/react-native-async-storage/async-storage/issues\n"
+
+
+
+
+
+
+
+
+
+
+
+
+  );
+}
+
+
+
+
+
+
+
+
+
+var AsyncStorage = function () {
+  var _getRequests = [];
+  var _getKeys = [];
+  var _immediate = null;
+  return {
+
+
+
+
+
+    getItem: function getItem(key, callback) {
+      return new Promise(function (resolve, reject) {
+        (0, _helpers.checkValidInput)(key);
+
+        _RCTAsyncStorage.default.multiGet([key], function (errors, result) {
+          var _result$;
+
+
+          var value = result !== null && result !== void 0 && (_result$ = result[0]) !== null && _result$ !== void 0 && _result$[1] ? result[0][1] : null;
+          var errs = (0, _helpers.convertErrors)(errors);
+          callback === null || callback === void 0 ? void 0 : callback(errs === null || errs === void 0 ? void 0 : errs[0], value);
+
+          if (errs) {
+            reject(errs[0]);
+          } else {
+            resolve(value);
+          }
+        });
+      });
+    },
+
+
+
+
+
+
+    setItem: function setItem(key, value, callback) {
+      return new Promise(function (resolve, reject) {
+        (0, _helpers.checkValidInput)(key, value);
+
+        _RCTAsyncStorage.default.multiSet([[key, value]], function (errors) {
+          var errs = (0, _helpers.convertErrors)(errors);
+          callback === null || callback === void 0 ? void 0 : callback(errs === null || errs === void 0 ? void 0 : errs[0]);
+
+          if (errs) {
+            reject(errs[0]);
+          } else {
+            resolve();
+          }
+        });
+      });
+    },
+
+
+
+
+
+
+    removeItem: function removeItem(key, callback) {
+      return new Promise(function (resolve, reject) {
+        (0, _helpers.checkValidInput)(key);
+
+        _RCTAsyncStorage.default.multiRemove([key], function (errors) {
+          var errs = (0, _helpers.convertErrors)(errors);
+          callback === null || callback === void 0 ? void 0 : callback(errs === null || errs === void 0 ? void 0 : errs[0]);
+
+          if (errs) {
+            reject(errs[0]);
+          } else {
+            resolve();
+          }
+        });
+      });
+    },
+
+
+
+
+
+
+
+    mergeItem: function mergeItem(key, value, callback) {
+      return new Promise(function (resolve, reject) {
+        (0, _helpers.checkValidInput)(key, value);
+
+        _RCTAsyncStorage.default.multiMerge([[key, value]], function (errors) {
+          var errs = (0, _helpers.convertErrors)(errors);
+          callback === null || callback === void 0 ? void 0 : callback(errs === null || errs === void 0 ? void 0 : errs[0]);
+
+          if (errs) {
+            reject(errs[0]);
+          } else {
+            resolve();
+          }
+        });
+      });
+    },
+
+
+
+
+
+
+
+
+    clear: function clear(callback) {
+      return new Promise(function (resolve, reject) {
+        _RCTAsyncStorage.default.clear(function (error) {
+          var err = (0, _helpers.convertError)(error);
+          callback === null || callback === void 0 ? void 0 : callback(err);
+
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+    },
+
+
+
+
+
+
+    getAllKeys: function getAllKeys(callback) {
+      return new Promise(function (resolve, reject) {
+        _RCTAsyncStorage.default.getAllKeys(function (error, keys) {
+          var err = (0, _helpers.convertError)(error);
+          callback === null || callback === void 0 ? void 0 : callback(err, keys);
+
+          if (keys) {
+            resolve(keys);
+          } else {
+            reject(err);
+          }
+        });
+      });
+    },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    flushGetRequests: function flushGetRequests() {
+      var getRequests = _getRequests;
+      var getKeys = _getKeys;
+      _getRequests = [];
+      _getKeys = [];
+
+      _RCTAsyncStorage.default.multiGet(getKeys, function (errors, result) {
+
+
+
+
+
+
+        var map = {};
+        result === null || result === void 0 ? void 0 : result.forEach(function (_ref) {
+          var _ref3 = _slicedToArray(_ref, 2),key = _ref3[0],value = _ref3[1];
+          map[key] = value;
+          return value;
+        });
+        var reqLength = getRequests.length;
+
+
+
+
+
+
+
+
+
+
+        var errorList = (0, _helpers.convertErrors)(errors);
+        var error = errorList !== null && errorList !== void 0 && errorList.length ? errorList[0] : null;
+
+        for (var i = 0; i < reqLength; i++) {
+          var _request$callback2, _request$resolve;
+
+          var request = getRequests[i];
+
+          if (error) {
+            var _request$callback, _request$reject;
+
+            (_request$callback = request.callback) === null || _request$callback === void 0 ? void 0 : _request$callback.call(request, errorList);
+            (_request$reject = request.reject) === null || _request$reject === void 0 ? void 0 : _request$reject.call(request, error);
+            continue;
+          }
+
+          var requestResult = request.keys.map(function (key) {return [key, map[key]];});
+          (_request$callback2 = request.callback) === null || _request$callback2 === void 0 ? void 0 : _request$callback2.call(request, null, requestResult);
+          (_request$resolve = request.resolve) === null || _request$resolve === void 0 ? void 0 : _request$resolve.call(request, requestResult);
+        }
+      });
+    },
+
+
+
+
+
+
+
+
+    multiGet: function multiGet(keys, callback) {
+      if (!_immediate) {
+        _immediate = setImmediate(function () {
+          _immediate = null;
+          AsyncStorage.flushGetRequests();
+        });
+      }
+
+      var getRequest = {
+        keys: keys,
+        callback: callback,
+
+        keyIndex: _getKeys.length,
+        resolve: null,
+        reject: null
+      };
+      var promiseResult = new Promise(function (resolve, reject) {
+        getRequest.resolve = resolve;
+        getRequest.reject = reject;
+      });
+
+      _getRequests.push(getRequest);
+
+
+      keys.forEach(function (key) {
+        if (_getKeys.indexOf(key) === -1) {
+          _getKeys.push(key);
+        }
+      });
+      return promiseResult;
+    },
+
+
+
+
+
+
+
+    multiSet: function multiSet(keyValuePairs, callback) {
+      (0, _helpers.checkValidArgs)(keyValuePairs, callback);
+      return new Promise(function (resolve, reject) {
+        keyValuePairs.forEach(function (_ref2) {
+          var _ref4 = _slicedToArray(_ref2, 2),key = _ref4[0],value = _ref4[1];
+          (0, _helpers.checkValidInput)(key, value);
+        });
+
+        _RCTAsyncStorage.default.multiSet(keyValuePairs, function (errors) {
+          var error = (0, _helpers.convertErrors)(errors);
+          callback === null || callback === void 0 ? void 0 : callback(error);
+
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
+        });
+      });
+    },
+
+
+
+
+
+
+    multiRemove: function multiRemove(keys, callback) {
+      return new Promise(function (resolve, reject) {
+        keys.forEach(function (key) {return (0, _helpers.checkValidInput)(key);});
+
+        _RCTAsyncStorage.default.multiRemove(keys, function (errors) {
+          var error = (0, _helpers.convertErrors)(errors);
+          callback === null || callback === void 0 ? void 0 : callback(error);
+
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
+        });
+      });
+    },
+
+
+
+
+
+
+
+    multiMerge: function multiMerge(keyValuePairs, callback) {
+      return new Promise(function (resolve, reject) {
+        _RCTAsyncStorage.default.multiMerge(keyValuePairs, function (errors) {
+          var error = (0, _helpers.convertErrors)(errors);
+          callback === null || callback === void 0 ? void 0 : callback(error);
+
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
+        });
+      });
+    }
+  };
+}();
+
+var _default = AsyncStorage;
+exports.default = _default;

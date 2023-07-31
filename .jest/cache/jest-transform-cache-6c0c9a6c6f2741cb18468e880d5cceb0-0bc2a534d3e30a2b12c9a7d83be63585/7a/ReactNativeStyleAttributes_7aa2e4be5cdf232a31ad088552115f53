@@ -1,0 +1,146 @@
+41a1186c7fbfbb16483020b25bb04c7c
+
+
+
+
+
+
+
+
+
+
+
+var _processColor = _interopRequireDefault(require("../../StyleSheet/processColor"));
+var _processTransform = _interopRequireDefault(require("../../StyleSheet/processTransform"));
+var _sizesDiffer = _interopRequireDefault(require("../../Utilities/differ/sizesDiffer"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+
+var colorAttributes = { process: _processColor.default };
+
+var ReactNativeStyleAttributes = {
+
+
+
+  alignContent: true,
+  alignItems: true,
+  alignSelf: true,
+  aspectRatio: true,
+  borderBottomWidth: true,
+  borderEndWidth: true,
+  borderLeftWidth: true,
+  borderRightWidth: true,
+  borderStartWidth: true,
+  borderTopWidth: true,
+  borderWidth: true,
+  bottom: true,
+  direction: true,
+  display: true,
+  end: true,
+  flex: true,
+  flexBasis: true,
+  flexDirection: true,
+  flexGrow: true,
+  flexShrink: true,
+  flexWrap: true,
+  height: true,
+  justifyContent: true,
+  left: true,
+  margin: true,
+  marginBottom: true,
+  marginEnd: true,
+  marginHorizontal: true,
+  marginLeft: true,
+  marginRight: true,
+  marginStart: true,
+  marginTop: true,
+  marginVertical: true,
+  maxHeight: true,
+  maxWidth: true,
+  minHeight: true,
+  minWidth: true,
+  overflow: true,
+  padding: true,
+  paddingBottom: true,
+  paddingEnd: true,
+  paddingHorizontal: true,
+  paddingLeft: true,
+  paddingRight: true,
+  paddingStart: true,
+  paddingTop: true,
+  paddingVertical: true,
+  position: true,
+  right: true,
+  start: true,
+  top: true,
+  width: true,
+  zIndex: true,
+
+
+
+
+  elevation: true,
+  shadowColor: colorAttributes,
+  shadowOffset: { diff: _sizesDiffer.default },
+  shadowOpacity: true,
+  shadowRadius: true,
+
+
+
+
+  transform: { process: _processTransform.default },
+
+
+
+
+  backfaceVisibility: true,
+  backgroundColor: colorAttributes,
+  borderBottomColor: colorAttributes,
+  borderBottomEndRadius: true,
+  borderBottomLeftRadius: true,
+  borderBottomRightRadius: true,
+  borderBottomStartRadius: true,
+  borderColor: colorAttributes,
+  borderEndColor: colorAttributes,
+  borderLeftColor: colorAttributes,
+  borderRadius: true,
+  borderRightColor: colorAttributes,
+  borderStartColor: colorAttributes,
+  borderStyle: true,
+  borderTopColor: colorAttributes,
+  borderTopEndRadius: true,
+  borderTopLeftRadius: true,
+  borderTopRightRadius: true,
+  borderTopStartRadius: true,
+  opacity: true,
+
+
+
+
+  color: colorAttributes,
+  fontFamily: true,
+  fontSize: true,
+  fontStyle: true,
+  fontVariant: true,
+  fontWeight: true,
+  includeFontPadding: true,
+  letterSpacing: true,
+  lineHeight: true,
+  textAlign: true,
+  textAlignVertical: true,
+  textDecorationColor: colorAttributes,
+  textDecorationLine: true,
+  textDecorationStyle: true,
+  textShadowColor: colorAttributes,
+  textShadowOffset: true,
+  textShadowRadius: true,
+  textTransform: true,
+  writingDirection: true,
+
+
+
+
+  overlayColor: colorAttributes,
+  resizeMode: true,
+  tintColor: colorAttributes
+};
+
+module.exports = ReactNativeStyleAttributes;

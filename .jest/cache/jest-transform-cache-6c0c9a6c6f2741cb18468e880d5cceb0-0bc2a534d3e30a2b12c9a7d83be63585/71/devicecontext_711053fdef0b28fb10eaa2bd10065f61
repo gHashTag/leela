@@ -1,0 +1,43 @@
+5230b8f884b65f0843ffc606d832e144
+Object.defineProperty(exports, "__esModule", { value: true });exports.DeviceContext = void 0;var _tslib = require("tslib");
+var _core = require("@sentry/core");
+var _utils = require("@sentry/utils");
+var _wrapper = require("../wrapper");function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}var
+
+DeviceContext = function () {
+  function DeviceContext() {_classCallCheck(this, DeviceContext);
+
+
+
+    this.name = DeviceContext.id;
+  }_createClass(DeviceContext, [{ key: "setupOnce", value:
+
+
+
+    function setupOnce() {var _this = this;
+      (0, _core.addGlobalEventProcessor)(function (event) {return (0, _tslib.__awaiter)(_this, void 0, void 0, function* () {
+          var _a, _b;
+          var self = (0, _core.getCurrentHub)().getIntegration(DeviceContext);
+          if (!self) {
+            return event;
+          }
+          try {
+            var contexts = yield _wrapper.NATIVE.fetchNativeDeviceContexts();
+            var context = (_a = contexts['context']) !== null && _a !== void 0 ? _a : {};
+            var user = (_b = contexts['user']) !== null && _b !== void 0 ? _b : {};
+            event.contexts = Object.assign(Object.assign({}, context), event.contexts);
+            if (!event.user) {
+              event.user = Object.assign({}, user);
+            }
+          }
+          catch (e) {
+            _utils.logger.log("Failed to get device context from native: " + e);
+          }
+          return event;
+        });});
+    } }]);return DeviceContext;}();exports.DeviceContext = DeviceContext;
+
+
+
+
+DeviceContext.id = 'DeviceContext';

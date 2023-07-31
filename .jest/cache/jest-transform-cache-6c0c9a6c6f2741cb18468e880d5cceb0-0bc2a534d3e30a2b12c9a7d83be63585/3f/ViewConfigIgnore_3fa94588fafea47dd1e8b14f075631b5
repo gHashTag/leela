@@ -1,0 +1,55 @@
+3fc3be20efb4bb838985bd54542f2f05
+Object.defineProperty(exports, "__esModule", { value: true });exports.ConditionallyIgnoredEventHandlers = ConditionallyIgnoredEventHandlers;exports.DynamicallyInjectedByGestureHandler = DynamicallyInjectedByGestureHandler;exports.isIgnored = isIgnored;
+
+
+
+
+
+
+
+
+
+var _Platform = _interopRequireDefault(require("../Utilities/Platform"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+
+var ignoredViewConfigProps = new WeakSet();
+
+
+
+
+
+function DynamicallyInjectedByGestureHandler(object) {
+  ignoredViewConfigProps.add(object);
+  return object;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function ConditionallyIgnoredEventHandlers(
+value)
+{
+  if (
+  _Platform.default.OS === 'ios' &&
+  !(global.RN$ViewConfigEventValidAttributesDisabled === true))
+  {
+    return value;
+  }
+  return undefined;
+}
+
+function isIgnored(value) {
+  if (typeof value === 'object' && value != null) {
+    return ignoredViewConfigProps.has(value);
+  }
+  return false;
+}

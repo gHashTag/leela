@@ -1,0 +1,67 @@
+19573395e7e891856898155ba318fb04
+Object.defineProperty(exports, "__esModule", { value: true });exports.MARGIN_OF_ERROR_SECONDS = void 0;exports.adjustTransactionDuration = adjustTransactionDuration;exports.getBlankTransactionContext = void 0;exports.getTimeOriginMilliseconds = getTimeOriginMilliseconds;exports.instrumentChildSpanFinish = instrumentChildSpanFinish;exports.isNearToNow = isNearToNow;var _utils = require("@sentry/utils");
+var getBlankTransactionContext = function getBlankTransactionContext(name) {
+  return {
+    name: 'Route Change',
+    op: 'navigation',
+    tags: {
+      'routing.instrumentation': name
+    },
+    data: {}
+  };
+};exports.getBlankTransactionContext = getBlankTransactionContext;
+
+
+
+
+var MARGIN_OF_ERROR_SECONDS = 0.05;exports.MARGIN_OF_ERROR_SECONDS = MARGIN_OF_ERROR_SECONDS;
+var timeOriginMilliseconds = Date.now();
+
+
+
+
+function secToMs(time) {
+  return time * 1000;
+}
+
+
+
+function adjustTransactionDuration(maxDuration,
+transaction, endTimestamp) {
+  var diff = endTimestamp - transaction.startTimestamp;
+  var isOutdatedTransaction = endTimestamp && (diff > secToMs(maxDuration) || diff < 0);
+  if (isOutdatedTransaction) {
+    transaction.setStatus('deadline_exceeded');
+    transaction.setTag('maxTransactionDurationExceeded', 'true');
+  }
+}
+
+
+
+function getTimeOriginMilliseconds() {
+  return timeOriginMilliseconds;
+}
+
+
+
+function instrumentChildSpanFinish(transaction, callback) {
+  if (transaction.spanRecorder) {
+
+    var originalAdd = transaction.spanRecorder.add;
+    transaction.spanRecorder.add = function (span) {
+      originalAdd.apply(transaction.spanRecorder, [span]);
+
+      var originalSpanFinish = span.finish;
+      span.finish = function (endTimestamp) {
+        originalSpanFinish.apply(span, [endTimestamp]);
+        callback(span, endTimestamp);
+      };
+    };
+  }
+}
+
+
+
+function isNearToNow(timestamp) {
+  return Math.abs((0, _utils.timestampInSeconds)() - timestamp) <= MARGIN_OF_ERROR_SECONDS;
+}

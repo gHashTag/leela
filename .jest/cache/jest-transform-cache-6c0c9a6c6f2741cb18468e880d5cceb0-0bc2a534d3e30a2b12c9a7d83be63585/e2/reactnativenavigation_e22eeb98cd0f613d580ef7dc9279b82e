@@ -1,0 +1,99 @@
+25bfea01f7e1d5519fcda38d264d0ed2
+Object.defineProperty(exports, "__esModule", { value: true });exports.ReactNativeNavigationInstrumentation = void 0;var _utils = require("@sentry/utils");
+var _routingInstrumentation = require("./routingInstrumentation");
+var _utils2 = require("./utils");function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}function _get() {if (typeof Reflect !== "undefined" && Reflect.get) {_get = Reflect.get.bind();} else {_get = function _get(target, property, receiver) {var base = _superPropBase(target, property);if (!base) return;var desc = Object.getOwnPropertyDescriptor(base, property);if (desc.get) {return desc.get.call(arguments.length < 3 ? target : receiver);}return desc.value;};}return _get.apply(this, arguments);}function _superPropBase(object, property) {while (!Object.prototype.hasOwnProperty.call(object, property)) {object = _getPrototypeOf(object);if (object === null) break;}return object;}function _inherits(subClass, superClass) {if (typeof superClass !== "function" && superClass !== null) {throw new TypeError("Super expression must either be null or a function");}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } });Object.defineProperty(subClass, "prototype", { writable: false });if (superClass) _setPrototypeOf(subClass, superClass);}function _setPrototypeOf(o, p) {_setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {o.__proto__ = p;return o;};return _setPrototypeOf(o, p);}function _createSuper(Derived) {var hasNativeReflectConstruct = _isNativeReflectConstruct();return function _createSuperInternal() {var Super = _getPrototypeOf(Derived),result;if (hasNativeReflectConstruct) {var NewTarget = _getPrototypeOf(this).constructor;result = Reflect.construct(Super, arguments, NewTarget);} else {result = Super.apply(this, arguments);}return _possibleConstructorReturn(this, result);};}function _possibleConstructorReturn(self, call) {if (call && (typeof call === "object" || typeof call === "function")) {return call;} else if (call !== void 0) {throw new TypeError("Derived constructors may only return object or undefined");}return _assertThisInitialized(self);}function _assertThisInitialized(self) {if (self === void 0) {throw new ReferenceError("this hasn't been initialised - super() hasn't been called");}return self;}function _isNativeReflectConstruct() {if (typeof Reflect === "undefined" || !Reflect.construct) return false;if (Reflect.construct.sham) return false;if (typeof Proxy === "function") return true;try {Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));return true;} catch (e) {return false;}}function _getPrototypeOf(o) {_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {return o.__proto__ || Object.getPrototypeOf(o);};return _getPrototypeOf(o);}
+var defaultOptions = {
+  routeChangeTimeoutMs: 1000
+};var
+
+
+
+
+
+
+
+
+ReactNativeNavigationInstrumentation = function (_InternalRoutingInstr) {_inherits(ReactNativeNavigationInstrumentation, _InternalRoutingInstr);var _super = _createSuper(ReactNativeNavigationInstrumentation);
+  function ReactNativeNavigationInstrumentation(
+
+  navigation) {var _this;var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};_classCallCheck(this, ReactNativeNavigationInstrumentation);
+    _this = _super.call(this);
+    _this._prevComponentEvent = null;
+    _this._recentComponentIds = [];
+    _this._navigation = navigation;
+    _this._options = Object.assign(Object.assign({}, defaultOptions), options);return _this;
+  }_createClass(ReactNativeNavigationInstrumentation, [{ key: "registerRoutingInstrumentation", value:
+
+
+
+    function registerRoutingInstrumentation(listener, beforeNavigate, onConfirmRoute) {
+      _get(_getPrototypeOf(ReactNativeNavigationInstrumentation.prototype), "registerRoutingInstrumentation", this).call(this, listener, beforeNavigate, onConfirmRoute);
+      this._navigation.
+      events().
+      registerCommandListener(this._onCommand.bind(this));
+      this._navigation.
+      events().
+      registerComponentWillAppearListener(this._onComponentWillAppear.bind(this));
+    } }, { key: "_onCommand", value:
+
+
+
+    function _onCommand() {
+      if (this._latestTransaction) {
+        this._discardLatestTransaction();
+      }
+      this._latestTransaction = this.onRouteWillChange((0, _utils2.getBlankTransactionContext)(ReactNativeNavigationInstrumentation.name));
+      this._stateChangeTimeout = setTimeout(this._discardLatestTransaction.bind(this), this._options.routeChangeTimeoutMs);
+    } }, { key: "_onComponentWillAppear", value:
+
+
+
+    function _onComponentWillAppear(event) {
+      var _a, _b, _c;
+
+      if (this._latestTransaction) {
+        if (!this._prevComponentEvent ||
+        event.componentId != this._prevComponentEvent.componentId) {
+          this._clearStateChangeTimeout();
+          var originalContext = this._latestTransaction.toContext();
+          var routeHasBeenSeen = this._recentComponentIds.includes(event.componentId);
+          var data = Object.assign(Object.assign({}, originalContext.data), { route: Object.assign(Object.assign({}, event), { name: event.componentName, hasBeenSeen: routeHasBeenSeen }), previousRoute: this._prevComponentEvent ?
+            Object.assign(Object.assign({}, this._prevComponentEvent), { name: (_a = this._prevComponentEvent) === null || _a === void 0 ? void 0 : _a.componentName }) : null });
+          var updatedContext = Object.assign(Object.assign({}, originalContext), { name: event.componentName, tags: Object.assign(Object.assign({}, originalContext.tags), { 'routing.route.name': event.componentName }), data: data });
+          var finalContext = (_b = this._beforeNavigate) === null || _b === void 0 ? void 0 : _b.call(this, updatedContext);
+
+          if (!finalContext) {
+            _utils.logger.error("[" + ReactNativeNavigationInstrumentation.name + "] beforeNavigate returned " + finalContext + ", return context.sampled = false to not send transaction.");
+            finalContext = Object.assign(Object.assign({}, updatedContext), { sampled: false });
+          }
+          if (finalContext.sampled === false) {
+            _utils.logger.log("[" + ReactNativeNavigationInstrumentation.name + "] Will not send transaction \"" + finalContext.name + "\" due to beforeNavigate.");
+          }
+          this._latestTransaction.updateWithContext(finalContext);
+          (_c = this._onConfirmRoute) === null || _c === void 0 ? void 0 : _c.call(this, finalContext);
+          this._prevComponentEvent = event;
+        } else
+        {
+          this._discardLatestTransaction();
+        }
+        this._latestTransaction = undefined;
+      }
+    } }, { key: "_discardLatestTransaction", value:
+
+    function _discardLatestTransaction() {
+      if (this._latestTransaction) {
+        this._latestTransaction.sampled = false;
+        this._latestTransaction.finish();
+        this._latestTransaction = undefined;
+      }
+      this._clearStateChangeTimeout();
+    } }, { key: "_clearStateChangeTimeout", value:
+
+    function _clearStateChangeTimeout() {
+      if (typeof this._stateChangeTimeout !== 'undefined') {
+        clearTimeout(this._stateChangeTimeout);
+        this._stateChangeTimeout = undefined;
+      }
+    } }]);return ReactNativeNavigationInstrumentation;}(_routingInstrumentation.InternalRoutingInstrumentation);exports.ReactNativeNavigationInstrumentation = ReactNativeNavigationInstrumentation;
+
+ReactNativeNavigationInstrumentation.instrumentationName = 'react-native-navigation';
