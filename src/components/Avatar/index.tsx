@@ -8,6 +8,7 @@ import Spinner from 'react-native-spinkit'
 
 import { secondary } from '../../constants'
 import { Pressable } from '../Pressable'
+import { Image } from 'react-native'
 
 const styles = StyleSheet.create({
   container: {
@@ -46,16 +47,19 @@ interface AvatarT {
   size?: sizeType
   uri?: string
   viewStyle?: StyleProp<ViewStyle>
+  localImageSource: StyleProp<Image>
 }
-
 export const Avatar = memo<AvatarT>(
-  ({ loading, uri, size = 'large', viewStyle }) => {
+  ({ loading, uri, localImageSource, size = 'large', viewStyle }) => {
     return (
       <View style={[styles.container, viewStyle]}>
         {loading ? (
           <Spinner size={styles[size].height} type="Pulse" color={secondary} />
         ) : !uri ? (
-          <FastImage style={styles[size]} source={require('./pickaface.png')} />
+          <FastImage
+            style={styles[size]}
+            source={localImageSource || require('./pickaface.png')}
+          />
         ) : (
           <FastImage
             style={styles[size]}

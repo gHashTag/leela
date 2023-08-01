@@ -12,7 +12,7 @@ import {
 } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet } from 'react-native'
-import { s, vs } from 'react-native-size-matters'
+import { ms, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
 
 import {
@@ -112,14 +112,14 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
                 placeholder={t('auth.firstName')}
                 autoCapitalize="none"
                 color={color}
-                additionalStyle={{ width: W - s(40) }}
+                additionalStyle={{ width: W - ms(140, 0.9) }}
               />
               <Input
                 name="lastName"
                 placeholder={t('auth.lastName')}
                 autoCapitalize="none"
                 color={color}
-                additionalStyle={{ width: W - s(40) }}
+                additionalStyle={{ width: W - ms(140, 0.9) }}
               />
               <Space height={30} />
               <Button

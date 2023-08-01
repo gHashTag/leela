@@ -3,11 +3,17 @@ import { OPEN_AI_KEY } from '@env'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
-import { Bubble, GiftedChat, IMessage } from 'react-native-gifted-chat'
+import { StyleSheet, View } from 'react-native'
+import { GiftedChat, IMessage, InputToolbar } from 'react-native-gifted-chat'
 import { s } from 'react-native-size-matters'
-import { ButtonWithIcon, Header, Space } from '../../../components'
-import { brightTurquoise, onLeaveFeedback, trueBlue } from '../../../constants'
+import {
+  Avatar,
+  ButtonWithIcon,
+  CustomBubble,
+  Header,
+  Space
+} from '../../../components'
+import { onLeaveFeedback, trueBlue } from '../../../constants'
 import { DiceStore, actionsDice } from '../../../store'
 
 const LEELA_AI = require('../../../../assets/defaultImage/leelaAI.jpg')
@@ -147,33 +153,6 @@ const ChatScreen: React.FC = () => {
     onLeaveFeedback((success) => actionsDice.setRate(success))
   }
 
-  const renderBubble = (props) => {
-    if (props.currentMessage._id === LOADING_MESSAGE_ID) {
-      return (
-        <View>
-          {loading ? (
-            <View style={styles.bubble}>
-              <ActivityIndicator size="small" color={brightTurquoise} />
-            </View>
-          ) : null}
-        </View>
-      )
-    }
-
-    return (
-      <Bubble
-        {...props}
-        wrapperStyle={{
-          right: { backgroundColor: `${brightTurquoise}` }
-        }}
-        textStyle={{
-          left: { fontFamily: 'Montserrat' },
-          right: { color: '#000', fontFamily: 'Montserrat' }
-        }}
-      />
-    )
-  }
-
   const messagesCount = messages.length
 
   return (
@@ -193,22 +172,20 @@ const ChatScreen: React.FC = () => {
       ) : null}
       <GiftedChat
         messages={messages}
-        renderBubble={renderBubble}
+        renderBubble={(props) => <CustomBubble {...props} loading={loading} />}
         onSend={(newMessages) => onSend(newMessages)}
         user={{
           _id: 1
         }}
+        renderAvatar={() => (
+          <Avatar size="small" loading={loading} localImageSource={LEELA_AI} />
+        )}
       />
     </>
   )
 }
 
 const styles = StyleSheet.create({
-  bubble: {
-    padding: 10,
-    top: 1,
-    alignItems: 'center'
-  },
   feadbackContainer: {
     alignSelf: 'center'
   }

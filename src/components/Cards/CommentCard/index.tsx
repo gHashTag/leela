@@ -26,7 +26,7 @@ interface CommentCardI {
   endIndex: number
 }
 
-const PADDING = vs(13)
+const PADDING = vs(1)
 
 export const CommentCard: React.FC<CommentCardI> = observer(
   ({ item, index, endIndex }) => {

@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { FieldValues, FormProvider, SubmitErrorHandler } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { s, vs } from 'react-native-size-matters'
+import { ms, s, vs } from 'react-native-size-matters'
 
 import { useSignIn } from './useSignIn'
 
@@ -73,14 +73,14 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
                 placeholder="E-mail"
                 autoCapitalize="none"
                 color={color}
-                additionalStyle={{ width: W - s(40) }}
+                additionalStyle={{ width: W - ms(140, 0.9) }}
               />
               <Input
                 name="password"
                 placeholder={t('auth.password')}
                 secureTextEntry
                 color={color}
-                additionalStyle={{ width: W - s(40) }}
+                additionalStyle={{ width: W - ms(140, 0.9) }}
               />
               <Space height={s(10)} />
               {error !== t('auth.forgotPassword') ? (

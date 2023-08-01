@@ -14,7 +14,7 @@ import {
 } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
-import { s, vs } from 'react-native-size-matters'
+import { ms, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
 
 import {
@@ -116,7 +116,7 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
                 placeholder="E-mail"
                 autoCapitalize="none"
                 color={color}
-                additionalStyle={{ width: W - s(40) }}
+                additionalStyle={{ width: W - ms(140, 0.9) }}
               />
               <Space height={vs(15)} />
               {errorMessage !== '' && (

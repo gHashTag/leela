@@ -25,7 +25,7 @@ export const textStyles = StyleSheet.create({
     fontSize: Platform.OS === 'ios' ? ms(35, 0.3) : ms(35, 0.6)
   },
   h2: {
-    fontSize: Platform.OS === 'ios' ? s(20) : s(20),
+    fontSize: Platform.OS === 'ios' ? ms(20, 0.9) : ms(20, 0.9),
     fontFamily: 'Montserrat'
   },
   h3: {
@@ -37,14 +37,14 @@ export const textStyles = StyleSheet.create({
   h4: {
     fontFamily: 'Montserrat',
     textShadowRadius: 1,
-    fontSize: Platform.OS === 'ios' ? ms(15, 0.8) : s(15)
+    fontSize: Platform.OS === 'ios' ? ms(15, 0.3) : ms(15, 0.3)
   },
   h5: {
-    fontSize: Platform.OS === 'ios' ? s(15) : s(15),
+    fontSize: Platform.OS === 'ios' ? ms(15, 0.5) : ms(15, 0.5),
     fontFamily: Platform.OS === 'ios' ? 'Avenir Next' : 'Montserrat'
   },
   h6: {
-    fontSize: Platform.OS === 'ios' ? s(15) : s(15),
+    fontSize: Platform.OS === 'ios' ? ms(15, 0.5) : ms(15, 0.5),
     fontFamily: 'Montserrat'
   },
   h7: {

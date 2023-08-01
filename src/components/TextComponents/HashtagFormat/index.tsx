@@ -45,7 +45,7 @@ export function HashtagFormat({
             if (Platform.OS === 'ios' && textProps.selectable) {
               return <SelectableIOS h={textProps.h} key={id} title={el} />
             }
-            return <Text key={id} {...textProps} title={el} />
+            return <Text h={'h4'} key={id} title={el} />
           }
         })}
     </View>

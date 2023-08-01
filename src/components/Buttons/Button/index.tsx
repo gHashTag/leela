@@ -5,14 +5,14 @@ import { StyleProp, TextStyle } from 'react-native'
 import { ScaledSheet, ms, s } from 'react-native-size-matters'
 
 import { Text } from '../../'
-import { W, black, white } from '../../../constants'
+import { black, white } from '../../../constants'
 import { Pressable } from '../../Pressable'
 
 const styles = ScaledSheet.create({
   container: {
     alignSelf: 'center',
-    width: W - ms(70, 1.8),
-    height: ms(70),
+    width: ms(230, 0.9),
+    height: ms(50, 0.9),
     borderRadius: s(40),
     borderWidth: 1,
     justifyContent: 'center'
