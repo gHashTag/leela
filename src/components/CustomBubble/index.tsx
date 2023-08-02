@@ -11,6 +11,7 @@ interface CustomBubbleProps extends BubbleProps<IMessage> {
 }
 
 const CustomBubble = ({ currentMessage, user, loading }: CustomBubbleProps) => {
+  console.log('currentMessage, user, loading', currentMessage, user, loading)
   const isCurrentUser =
     currentMessage && user && currentMessage.user._id === user._id
 
