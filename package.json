@@ -10,7 +10,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "clean": "watchman watch-del-all && rm -f yarn.lock && cd android && ./gradlew clean && cd .. && yarn && yarn start --reset-cache",
     "build": "cd android && ./gradlew bundleRelease",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package && cd ios && arch -arm64 pod install && cd .."
   },
   "dependencies": {
     "@hookform/resolvers": "^2.8.8",
@@ -49,6 +49,7 @@
     "react-native-android-badge": "^0.5.0",
     "react-native-app-link": "^1.0.1",
     "react-native-branch": "5.5.0",
+    "react-native-device-info": "^10.8.0",
     "react-native-dotenv": "^3.4.9",
     "react-native-elements": "^3.4.2",
     "react-native-emoji": "^1.8.0",

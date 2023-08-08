@@ -1,11 +1,13 @@
+import React, { useEffect } from 'react'
+import { StyleSheet } from 'react-native'
 import firestore from '@react-native-firebase/firestore'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
-import React, { useEffect } from 'react'
+
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
+
 import { s, vs } from 'react-native-size-matters'
-import { captureException, onLeaveFeedback } from '../../../constants'
+import { captureException, gray, onLeaveFeedback } from '../../../constants'
 import { useRevenueCat } from '../../../providers/RevenueCatProvider'
 import { getUid } from '../../../screens/helper'
 
@@ -142,7 +144,8 @@ const styles = StyleSheet.create({
   },
   centerButton: {
     alignSelf: 'center'
-  }
+  },
+  textStyle: { color: gray, fontSize: 19 }
 })
 
 export { GameScreen }

@@ -141,7 +141,7 @@ const updatePlan = async (plan: number) => {
       .update({
         plan
       })
-      .catch((err) => captureException(err))
+      .catch((err) => captureException(err, 'updatePlan'))
   }
 }
 
@@ -154,7 +154,7 @@ const resetPlayer = async () => {
       start: false,
       finish: false
     })
-    .catch((err) => captureException(err))
+    .catch((err) => captureException(err, 'updatePlan'))
 }
 
 interface profNameI {

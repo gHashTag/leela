@@ -13,7 +13,6 @@ import {
   Text
 } from '../../'
 import {
-  W,
   brightTurquoise,
   fuchsia,
   handleCommentAi,

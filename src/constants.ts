@@ -203,3 +203,18 @@ export const defUrl =
   'https://leelachakra.com/resource/LeelaChakra/Mantra/mantra.json'
 
 export const ENTITLEMENT_ID = 'Pro'
+
+export const openURLPolicy = () => {
+  Linking.openURL('https://www.leelachakra.com/docs/policy').catch((error) =>
+    captureException(error, 'Linking.openURL')
+  )
+}
+
+export const openURLEula = () => {
+  Linking.openURL('https://www.leelachakra.com/docs/eula').catch((error) =>
+    captureException(error, 'Linking.openURL')
+  )
+}
+
+export const bundleVersion = DeviceInfo.getVersion()
+export const buildVersion = DeviceInfo.getBuildNumber()

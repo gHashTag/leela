@@ -19,7 +19,8 @@ const styles = ScaledSheet.create({
   },
   h: {
     textAlign: 'center',
-    paddingHorizontal: 15
+    paddingHorizontal: 15,
+    top: 3
   }
 })
 

@@ -146,7 +146,7 @@ const ChatScreen: React.FC = () => {
   const onPressRate = () => {
     onLeaveFeedback((success) => actionsDice.setRate(success))
   }
-
+  // @ts-expect-error
   const renderBubble = (props) => {
     if (props.currentMessage._id === LOADING_MESSAGE_ID) {
       return (
