@@ -33,7 +33,8 @@ Sentry.init({
       tracingOrigins: ['localhost', /^\//],
       routingInstrumentation
     })
-  ]
+  ],
+  enabled: process.env.NODE_ENV !== 'development'
 })
 
 configure({
