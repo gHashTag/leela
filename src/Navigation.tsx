@@ -146,6 +146,7 @@ const App = () => {
     const unsub = getFireBaseRef('/minVersion/').on('value', async (snap) => {
       checkVersion(snap.val())
     })
+    //https://console.firebase.google.com/u/0/project/leela-chakra/database/leela-chakra-default-rtdb/data/minVersion
     return () => getFireBaseRef('/minVersion/').off('value', unsub)
   }, [])
 

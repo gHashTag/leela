@@ -381,6 +381,7 @@ const onSignIn = async (
 }
 
 const checkVersion = async (minVersion: string) => {
+  console.log('version', version)
   if (semver.lt(version, minVersion)) {
     OpenUpdateVersionModal()
   }

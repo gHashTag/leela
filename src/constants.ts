@@ -1,5 +1,6 @@
 //@ts-expect-error
 import { LEELA_ID, OPEN_AI_KEY } from '@env'
+import DeviceInfo from 'react-native-device-info'
 import { createNavigationContainerRef } from '@react-navigation/native'
 import * as Sentry from '@sentry/react-native'
 import axios from 'axios'
@@ -27,7 +28,7 @@ export const generateComment = async ({
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-4-0314',
+        model: 'gpt-3.5-turbo',
         messages: [
           {
             role: 'system',

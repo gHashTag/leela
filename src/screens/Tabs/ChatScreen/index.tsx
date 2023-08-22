@@ -104,7 +104,7 @@ const ChatScreen: React.FC = () => {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-4-0314',
+        model: 'gpt-3.5-turbo',
         messages: apiMessages,
         max_tokens: 1000,
         temperature: 0.2
