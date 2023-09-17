@@ -5,12 +5,12 @@ import { Platform } from 'react-native'
 import Purchases, { LOG_LEVEL, PurchasesPackage } from 'react-native-purchases'
 import { CustomerInfo } from 'react-native-purchases'
 import { Spin } from '../components'
-import { captureException } from '../constants'
+import { captureException, onLeaveFeedback } from '../constants'
 import { actionSubscribeStore } from '../store/SubscribeStore'
 import { PostStore } from '../store/PostStore'
 import { getProfile } from '../screens/helper'
 import { UserT } from '../types/types'
-import { DiceStore } from '../store/DiceStore'
+import { DiceStore, actionsDice } from '../store/DiceStore'
 
 // Use your RevenueCat API keys
 const APIKeys = {
@@ -110,6 +110,8 @@ export const RevenueCatProvider = ({ children }: any) => {
           actionSubscribeStore.unBlock()
         } else if ((countPosts ?? 0) < 5) {
           actionSubscribeStore.unBlock()
+        } else if (countPosts === 10) {
+          onLeaveFeedback((success) => actionsDice.setRate(success))
         } else {
           actionSubscribeStore.blockGame()
         }
