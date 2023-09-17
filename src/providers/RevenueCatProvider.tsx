@@ -108,11 +108,10 @@ export const RevenueCatProvider = ({ children }: any) => {
         if (isAdmin || hasProPlan) {
           newUser.pro = true
           actionSubscribeStore.unBlock()
-        } else if ((countPosts ?? 0) > 5) {
-          console.log('blockGame')
-          actionSubscribeStore.blockGame()
-        } else {
+        } else if ((countPosts ?? 0) < 5) {
           actionSubscribeStore.unBlock()
+        } else {
+          actionSubscribeStore.blockGame()
         }
       }
       // else {
@@ -155,10 +154,10 @@ export const RevenueCatProvider = ({ children }: any) => {
     setIsLoading(true)
     try {
       const customer = await Purchases.restorePurchases()
-      return customer ?? {} // Возвращаем customer или пустой объект, если customer равен null или undefined
+      return customer ?? {}
     } catch (error) {
       captureException(error, 'restorePermissions')
-      return {} // Возвращаем пустой объект в случае ошибки
+      return {}
     } finally {
       setIsLoading(false)
     }
@@ -172,7 +171,7 @@ export const RevenueCatProvider = ({ children }: any) => {
     isLoading
   }
 
-  // Return empty fragment if provider is not ready (Purchase not yet initialised)
+  // // Return empty fragment if provider is not ready (Purchase not yet initialised)
   if (!isReady) {
     return <Spin />
   }

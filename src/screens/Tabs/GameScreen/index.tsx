@@ -46,6 +46,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   useLeftTimeForStep()
 
   const limit = 15
+
   useEffect(() => {
     const uid = getUid()
 

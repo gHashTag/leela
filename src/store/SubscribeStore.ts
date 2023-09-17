@@ -2,7 +2,7 @@ import { makeAutoObservable } from 'mobx'
 import { makePersistable } from 'mobx-persist-store'
 
 const SubscribeStore = makeAutoObservable({
-  isBlockGame: false // defaut false
+  isBlockGame: true // defaut true
 })
 
 const actionSubscribeStore = {
