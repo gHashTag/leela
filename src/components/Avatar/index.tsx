@@ -47,7 +47,7 @@ interface AvatarT {
   size?: sizeType
   uri?: string
   viewStyle?: StyleProp<ViewStyle>
-  localImageSource: StyleProp<Image>
+  localImageSource?: StyleProp<Image>
 }
 export const Avatar = memo<AvatarT>(
   ({ loading, uri, localImageSource, size = 'large', viewStyle }) => {

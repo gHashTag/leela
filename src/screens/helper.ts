@@ -13,7 +13,9 @@ import {
   OpenUpdateVersionModal,
   accountHasBanAlert,
   captureException,
-  navigate
+  navigate,
+  secondary,
+  white
 } from '../constants'
 import i18next, { flagEmoji, lang } from '../i18n'
 import {
@@ -255,33 +257,39 @@ const startStepTimer = () => {
 // Image operations
 
 const getImagePicker = async () => {
-  const image = await ImagePicker.openPicker({
-    width: 400,
-    height: 400,
-    cropping: true,
-    cropperCircleOverlay: true,
-    sortOrder: 'none',
-    compressImageMaxWidth: 400,
-    compressImageMaxHeight: 400,
-    compressImageQuality: 1,
-    compressVideoPreset: 'HighestQuality',
-    includeExif: true,
-    cropperStatusBarColor: 'white',
-    cropperToolbarColor: 'white',
-    cropperActiveWidgetColor: 'white',
-    cropperToolbarWidgetColor: '#3498DB'
-  })
-  return image
+  try {
+    const image = await ImagePicker.openPicker({
+      width: 400,
+      height: 400,
+      cropping: true,
+      cropperCircleOverlay: true,
+      sortOrder: 'none',
+      compressImageMaxWidth: 400,
+      compressImageMaxHeight: 400,
+      compressImageQuality: 1,
+      compressVideoPreset: 'HighestQuality',
+      includeExif: true,
+      cropperStatusBarColor: white,
+      cropperToolbarColor: white,
+      cropperActiveWidgetColor: white,
+      cropperToolbarWidgetColor: secondary
+    })
+    return image
+  } catch (error: any) {
+    captureException(error, 'getImagePicker')
+  }
 }
 
 const getIMG = async (fileName?: string) => {
   const defaultImg = require('../../assets/defaultImage/defaultProfileImage.png')
-  if (fileName) {
+  if (fileName?.includes('images/')) {
     try {
       return await storage().ref(fileName).getDownloadURL()
     } catch (error) {
       return defaultImg
     }
+  } else if (fileName?.includes('https://')) {
+    return fileName
   } else {
     return defaultImg
   }

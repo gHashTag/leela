@@ -1,4 +1,4 @@
-import React, { ReactElement, useState } from 'react'
+import React, { ReactElement } from 'react'
 
 import auth from '@react-native-firebase/auth'
 import { RouteProp } from '@react-navigation/native'
@@ -19,6 +19,7 @@ import { useNoBackHandler } from '../../../hooks'
 import { OnlinePlayer } from '../../../store'
 import { RootStackParamList } from '../../../types/types'
 import { onSignIn } from '../../helper'
+import { useChooseAvatarImage } from '../../../hooks/useChooseAvatarImage'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -32,14 +33,9 @@ type SignUpAvatarT = {
 }
 
 const SignUpAvatar = observer(({}: SignUpAvatarT): ReactElement => {
-  const [load, setLoad] = useState(false)
   const { t } = useTranslation()
+  const { ava, chooseAvatarImage, isLoading } = useChooseAvatarImage()
 
-  const onPressAva = async () => {
-    setLoad(true)
-    await OnlinePlayer.uploadImage()
-    setLoad(false)
-  }
   const handleSubmit = () => {
     const user = auth().currentUser
     if (user) {
@@ -56,12 +52,8 @@ const SignUpAvatar = observer(({}: SignUpAvatarT): ReactElement => {
       iconLeft={null}
     >
       <CenterView>
-        <Pressable onPress={onPressAva}>
-          <Avatar
-            size="xLarge"
-            uri={OnlinePlayer.store.avatar.slice()}
-            loading={load}
-          />
+        <Pressable onPress={chooseAvatarImage}>
+          <Avatar size="xLarge" uri={ava} loading={isLoading} />
         </Pressable>
 
         <Space height={s(50)} />

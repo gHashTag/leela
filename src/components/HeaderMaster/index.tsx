@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import { useTheme } from '@react-navigation/native'
 import { observer } from 'mobx-react'
@@ -9,9 +9,11 @@ import Icon from 'react-native-vector-icons/Ionicons'
 import { useActions } from './useActions'
 
 import { Text } from '../'
-import { Avatar } from '../Avatar'
+import { PressableAvatar } from '../Avatar'
 import { Pressable } from '../Pressable'
 import { Space } from '../Space'
+import { useChooseAvatarImage } from '../../hooks/useChooseAvatarImage'
+import { captureException } from '../../constants'
 
 interface HeaderMasterT {
   avatar: string
@@ -33,42 +35,54 @@ const HeaderMaster = observer(
     lastName = '',
     fullName = ''
   }: HeaderMasterT) => {
-    const { loadImage, onPressEdit } = useActions()
+    const { onPressEdit } = useActions()
+    const { ava, chooseAvatarImage, isLoading, setAva } = useChooseAvatarImage()
 
     const {
       colors: { border }
     } = useTheme()
 
-    const activeOpacity = editable ? 0.8 : 1
+    useEffect(() => {
+      setAva(avatar)
+    }, [avatar, setAva])
+
+    const onPressChangeAva = async () => {
+      try {
+        chooseAvatarImage()
+      } catch (error) {
+        captureException(error, 'useActions')
+      }
+    }
 
     return (
       <View style={rootContainer}>
-        <Pressable
-          activeOpacity={activeOpacity}
-          style={wide}
-          onPress={editable ? onPressEdit : undefined}
-        >
-          <View style={subAvaContainer}>
-            <Avatar uri={avatar} size="xLarge" loading={loadImage} />
+        <View style={subAvaContainer}>
+          <PressableAvatar
+            uri={ava}
+            size="xLarge"
+            loading={isLoading}
+            onPress={onPressChangeAva}
+          />
 
-            <View style={planAndEditBlock}>
-              {editable && (
-                <Icon
-                  style={editIcon}
-                  name="md-pencil"
-                  color={border}
-                  size={s(12)}
-                />
-              )}
+          <View style={planAndEditBlock}>
+            {editable && (
+              <Icon
+                style={editIcon}
+                name="md-pencil"
+                color={border}
+                size={s(22)}
+              />
+            )}
+            <Pressable
+              style={wide}
+              onPress={editable ? onPressEdit : undefined}
+            >
               <Text h="h0" textStyle={planNumber} title={String(plan)} />
-            </View>
+            </Pressable>
           </View>
-        </Pressable>
-        <Pressable
-          activeOpacity={activeOpacity}
-          style={container}
-          onPress={onPressName}
-        >
+        </View>
+
+        <Pressable style={container} onPress={onPressName}>
           {fullName ? (
             <Text h={'h1'} title={fullName} />
           ) : (
@@ -114,7 +128,6 @@ const styles = ScaledSheet.create({
     marginTop: vs(25)
   },
   planAndEditBlock: {
-    flex: 1,
     height: '100%',
     flexDirection: 'column-reverse',
     alignItems: 'flex-end'
@@ -126,7 +139,7 @@ const styles = ScaledSheet.create({
     padding: s(5),
     zIndex: 2,
     position: 'absolute',
-    right: -s(5),
+    right: s(65),
     top: -s(3)
   },
   planNumber: {},

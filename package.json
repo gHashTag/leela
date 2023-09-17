@@ -59,7 +59,7 @@
     "react-native-fit-image": "^1.5.5",
     "react-native-gesture-handler": "^2.9.0",
     "react-native-gifted-chat": "^2.1.0",
-    "react-native-image-crop-picker": "^0.38.1",
+    "react-native-image-crop-picker": "^0.40.0",
     "react-native-keychain": "^8.1.1",
     "react-native-localize": "^2.2.4",
     "react-native-markdown-display": "^7.0.0-alpha.2",
@@ -82,6 +82,7 @@
     "react-native-video-controls": "^2.8.1",
     "react-native-webview": "^11.23.1",
     "react-native-youtube-iframe": "^2.2.2",
+    "rn-fetch-blob": "^0.12.0",
     "semver": "^7.3.8",
     "src": "^1.1.2",
     "yup": "^0.32.11"
