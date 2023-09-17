@@ -32,7 +32,7 @@ import {
   white
 } from '../../../constants'
 import { updateProfName } from '../../../screens/helper'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 import { SubscribeStore } from '../../../store/SubscribeStore'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<

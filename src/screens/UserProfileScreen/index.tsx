@@ -20,7 +20,7 @@ import {
   Spin,
   Text
 } from '../../components'
-import { RootStackParamList, UserT } from '../../types'
+import { RootStackParamList, UserT } from '../../types/types'
 
 import { getIMG } from '../helper'
 import {

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { OpenActionsModal, captureException } from '../../constants'
 import { OnlinePlayer } from '../../store'
-import { ButtonsModalT } from '../../types'
+import { ButtonsModalT } from '../../types/types'
 
 export const useActions = () => {
   const [loadImage, setLoadImage] = useState(false)

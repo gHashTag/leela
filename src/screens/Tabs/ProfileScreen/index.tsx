@@ -17,7 +17,7 @@ import {
   Spin
 } from '../../../components'
 import { OnlinePlayer } from '../../../store'
-import { RootStackParamList, RootTabParamList } from '../../../types'
+import { RootStackParamList, RootTabParamList } from '../../../types/types'
 
 import { TabContextProvider } from './TabContext'
 import { HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'

@@ -18,7 +18,7 @@ import {
 } from '../../components'
 import { captureException, lightGray } from '../../constants'
 import { OnlinePlayer, PostStore } from '../../store'
-import { PostT, RootStackParamList } from '../../types'
+import { PostT, RootStackParamList } from '../../types/types'
 import { getUid } from '../helper'
 
 interface DetailPostI {

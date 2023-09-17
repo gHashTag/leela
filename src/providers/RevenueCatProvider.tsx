@@ -1,4 +1,3 @@
-//@ts-expect-error
 import { APPLE, GOOGLE } from '@env'
 import React from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
@@ -10,7 +9,7 @@ import { captureException } from '../constants'
 import { actionSubscribeStore } from '../store/SubscribeStore'
 import { PostStore } from '../store/PostStore'
 import { getProfile } from '../screens/helper'
-import { UserT } from '../types'
+import { UserT } from '../types/types'
 import { DiceStore } from '../store/DiceStore'
 
 // Use your RevenueCat API keys
@@ -110,6 +109,7 @@ export const RevenueCatProvider = ({ children }: any) => {
           newUser.pro = true
           actionSubscribeStore.unBlock()
         } else if ((countPosts ?? 0) > 5) {
+          console.log('blockGame')
           actionSubscribeStore.blockGame()
         } else {
           actionSubscribeStore.unBlock()

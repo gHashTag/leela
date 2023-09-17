@@ -25,7 +25,7 @@ import {
   gray,
   openURLEula
 } from '../../../constants'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,

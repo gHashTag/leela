@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 
-// @ts-expect-error
 import { EMAIL, PASSWORD } from '@env'
 import { yupResolver } from '@hookform/resolvers/yup'
 import auth from '@react-native-firebase/auth'

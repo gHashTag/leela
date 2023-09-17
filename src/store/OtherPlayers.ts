@@ -3,7 +3,7 @@ import { makeAutoObservable } from 'mobx'
 
 import { captureException } from '../constants'
 import { getFireBaseRef, getIMG } from '../screens/helper'
-import { OtherUsersT, UserT } from '../types'
+import { OtherUsersT, UserT } from '../types/types'
 
 interface storeI {
   players: OtherUsersT[]

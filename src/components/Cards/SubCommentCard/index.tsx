@@ -11,7 +11,7 @@ import { PlanAvatar } from '../../'
 import { OpenActionsModal, fuchsia, lightGray } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
 import { PostStore } from '../../../store'
-import { ReplyComT } from '../../../types'
+import { ReplyComT } from '../../../types/types'
 import { ButtonVectorIcon } from '../../Buttons'
 
 interface SubComT {

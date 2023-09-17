@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
 
-// @ts-expect-error
 import { EMAIL, PASSWORD } from '@env'
 import { yupResolver } from '@hookform/resolvers/yup'
 import auth from '@react-native-firebase/auth'
@@ -11,6 +10,7 @@ import * as yup from 'yup'
 
 import { captureException } from '../../../constants'
 import { useTypedNavigation } from '../../../hooks'
+import { postEmailToSendPulse } from './sendpulse'
 
 const initialValues = {
   email: __DEV__ ? EMAIL : '',
@@ -65,6 +65,7 @@ export const useSignUp = () => {
           .createUserWithEmailAndPassword(email, password)
           .then(async () => {
             await Keychain.setInternetCredentials('auth', email, password)
+            await postEmailToSendPulse(email)
             navigate('CONFIRM_SIGN_UP', { email })
             setLoading(false)
           })

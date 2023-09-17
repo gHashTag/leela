@@ -15,7 +15,7 @@ import {
   Text
 } from '../../components'
 import { useKeychain } from '../../hooks'
-import { RootStackParamList } from '../../types'
+import { RootStackParamList } from '../../types/types'
 
 type navigation = NativeStackNavigationProp<
   RootStackParamList,

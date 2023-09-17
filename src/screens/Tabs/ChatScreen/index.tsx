@@ -1,4 +1,3 @@
-// @ts-expect-error
 import { OPEN_AI_KEY } from '@env'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'

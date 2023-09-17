@@ -21,7 +21,7 @@ import {
 } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
 import { OnlinePlayer, PostStore } from '../../../store'
-import { PostT } from '../../../types'
+import { PostT } from '../../../types/types'
 
 import { usePostActions } from './usePostActions'
 import { usePostTranslation } from './usePostTranslation'

@@ -17,7 +17,7 @@ import {
 import { Pressable } from '../../../components/Pressable'
 import { useNoBackHandler } from '../../../hooks'
 import { OnlinePlayer } from '../../../store'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 import { onSignIn } from '../../helper'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<

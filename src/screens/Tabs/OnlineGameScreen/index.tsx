@@ -23,7 +23,7 @@ import {
 } from '../../../components'
 import { captureException, fuchsia } from '../../../constants'
 import { useMarkdownProps } from '../../../hooks'
-import { RootStackParamList, RootTabParamList } from '../../../types'
+import { RootStackParamList, RootTabParamList } from '../../../types/types'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,

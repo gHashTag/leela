@@ -28,7 +28,7 @@ import {
   TextError
 } from '../../../components'
 import { W, black, captureException, goBack, white } from '../../../constants'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,

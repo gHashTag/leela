@@ -8,6 +8,7 @@
     "start": "react-native start",
     "test": "jest",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "reset": "yarn start --reset-cache",
     "clean": "watchman watch-del-all && rm -f yarn.lock && cd android && ./gradlew clean && cd .. && yarn && yarn start --reset-cache",
     "build": "cd android && ./gradlew bundleRelease",
     "postinstall": "patch-package && cd ios && arch -arm64 pod install && cd .."

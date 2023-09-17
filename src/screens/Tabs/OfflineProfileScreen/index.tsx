@@ -17,7 +17,7 @@ import {
 } from '../../../components'
 import { useHistoryData } from '../../../hooks'
 import { DiceStore, OfflinePlayers, OnlinePlayer } from '../../../store'
-import { RootStackParamList, RootTabParamList } from '../../../types'
+import { RootStackParamList, RootTabParamList } from '../../../types/types'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,

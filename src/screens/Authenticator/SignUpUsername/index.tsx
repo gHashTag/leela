@@ -35,7 +35,7 @@ import {
 } from '../../../constants'
 import { useNoBackHandler } from '../../../hooks'
 import { actionsDice, fetchBusinesses } from '../../../store'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 import { createProfile, getUid } from '../../helper'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<

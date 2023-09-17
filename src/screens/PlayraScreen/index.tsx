@@ -17,7 +17,7 @@ import {
   primary,
   secondary
 } from '../../constants'
-import { RootStackParamList } from '../../types'
+import { RootStackParamList } from '../../types/types'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLAYRA_SCREEN'>
 

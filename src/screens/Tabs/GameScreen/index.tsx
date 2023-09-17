@@ -30,7 +30,7 @@ import {
   SubscribeStore,
   actionsDice
 } from '../../../store'
-import { RootStackParamList, RootTabParamList } from '../../../types'
+import { RootStackParamList, RootTabParamList } from '../../../types/types'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,

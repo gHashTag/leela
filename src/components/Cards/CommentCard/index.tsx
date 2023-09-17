@@ -18,7 +18,7 @@ import {
 import { OpenActionsModal, gray, lightGray } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
 import { PostStore } from '../../../store'
-import { CommentT } from '../../../types'
+import { CommentT } from '../../../types/types'
 
 interface CommentCardI {
   item: CommentT

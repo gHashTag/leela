@@ -22,7 +22,7 @@ import {
   actionsDice,
   fetchBusinesses
 } from '../store'
-import { HistoryT, UserT } from '../types'
+import { HistoryT, UserT } from '../types/types'
 
 import { version } from '../../package.json'
 

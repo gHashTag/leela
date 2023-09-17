@@ -1,4 +1,3 @@
-// @ts-ignore
 import { LEELA_ID, YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
 import auth from '@react-native-firebase/auth'
 import firestore, {
@@ -20,7 +19,7 @@ import {
   FormReplyCom,
   PostT,
   ReplyComT
-} from '../types'
+} from '../types/types'
 
 type fetchT =
   FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>

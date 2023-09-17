@@ -16,7 +16,7 @@ import * as yup from 'yup'
 
 import { Input, KeyboardContainer, Text } from '../../../components'
 import { W, secondary } from '../../../constants'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 
 interface InputTextT {
   navigation: NativeStackNavigationProp<RootStackParamList, 'INPUT_TEXT_MODAL'>

@@ -1,4 +1,3 @@
-//@ts-expect-error
 import { LEELA_ID, OPEN_AI_KEY } from '@env'
 import DeviceInfo from 'react-native-device-info'
 import { createNavigationContainerRef } from '@react-navigation/native'
@@ -9,7 +8,11 @@ import Rate from 'react-native-rate'
 import i18next from './i18n'
 
 import { PostStore } from './store'
-import { ButtonsModalT, HandleCommentAiParamsT, MessageAIT } from './types'
+import {
+  ButtonsModalT,
+  HandleCommentAiParamsT,
+  MessageAIT
+} from './types/types'
 
 export const navRef = createNavigationContainerRef<any>()
 

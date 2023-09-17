@@ -20,7 +20,7 @@ import {
   updatePlan,
   uploadImg
 } from '../screens/helper'
-import { HistoryT, statusT } from '../types'
+import { HistoryT, statusT } from '../types/types'
 
 const initProfile = {
   firstName: '',

@@ -1,7 +1,7 @@
 import { goBack } from '../../../constants'
 import { OtherPlayers, PostStore } from '../../../store'
-import { ButtonsModalT } from '../../../types'
-import { PostT } from '../../../types'
+import { ButtonsModalT } from '../../../types/types'
+import { PostT } from '../../../types/types'
 type getActionsT = (props: getActionsProps) => ButtonsModalT[]
 interface getActionsProps {
   item?: PostT

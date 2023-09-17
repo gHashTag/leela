@@ -7,7 +7,7 @@ import { upStepOffline } from './helper'
 
 import { actionsDice } from './'
 import { navigate } from '../constants'
-import { HistoryT } from '../types'
+import { HistoryT } from '../types/types'
 
 export const initStore = {
   start: [false, false, false, false, false, false],

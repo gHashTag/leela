@@ -59,7 +59,7 @@ import {
 } from './screens/Authenticator'
 import { checkVersion, getFireBaseRef } from './screens/helper'
 import { DiceStore, SubscribeStore } from './store'
-import { RootStackParamList, RootTabParamList } from './types'
+import { RootStackParamList, RootTabParamList } from './types/types'
 import { linking } from './utils'
 
 const DarkTheme = {
