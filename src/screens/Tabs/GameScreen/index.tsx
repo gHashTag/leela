@@ -42,7 +42,7 @@ type GameScreenT = {
 }
 
 const GameScreen = observer(({ navigation }: GameScreenT) => {
-  const { user } = useRevenueCat()
+  // const { user } = useRevenueCat()
   useLeftTimeForStep()
 
   const limit = 15
@@ -71,12 +71,12 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   }, [limit])
 
   const { t } = useTranslation()
-
+  const online = DiceStore.online
   const onPressRate = () => {
     onLeaveFeedback((success) => actionsDice.setRate(success))
   }
 
-  const endGame = DiceStore.online
+  const endGame = online
     ? OnlinePlayer.store.finish
     : DiceStore.finishArr.indexOf(true) === -1
 
@@ -85,7 +85,6 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
 
   const isMoreThree = postsCount >= 3
   const _onPress = () => navigation.navigate('SUBSCRIPTION_SCREEN')
-  const online = DiceStore.online
 
   return (
     <Background enableTopInsets paddingTop={vs(50)}>
@@ -104,9 +103,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
               h="h5"
               title={t('actions.startOver')}
               onPress={
-                DiceStore.online
-                  ? OnlinePlayer.resetGame
-                  : OfflinePlayers.resetGame
+                online ? OnlinePlayer.resetGame : OfflinePlayers.resetGame
               }
             />
             <Space height={vs(2)} />
@@ -124,14 +121,13 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           </>
         )}
       </Header>
-      {!endGame && <Dice />}
+      {!endGame && !isBlockGame ? <Dice /> : <Space height={s(99)} />}
 
-      {!user.pro && isBlockGame && online && (
+      {isBlockGame && (
         <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
       )}
 
-      {/* DEBUG
-      <Text h="h3" title={`user.pro: ${user.pro}`} />
+      {/* <Text h="h3" title={`user.pro: ${user.pro}`} />
       <Text h="h3" title={`isBlockGame: ${isBlockGame}`} /> */}
 
       <GameBoard />

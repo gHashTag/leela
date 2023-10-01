@@ -65,14 +65,6 @@ const HeaderMaster = observer(
           />
 
           <View style={planAndEditBlock}>
-            {editable && (
-              <Icon
-                style={editIcon}
-                name="md-pencil"
-                color={border}
-                size={s(22)}
-              />
-            )}
             <Pressable
               style={wide}
               onPress={editable ? onPressEdit : undefined}
