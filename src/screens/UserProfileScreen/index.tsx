@@ -40,7 +40,7 @@ type UserProfileScreenT = {
 
 export const UserProfileScreen = observer(
   ({ navigation, route }: UserProfileScreenT) => {
-    const { ownerId } = route.params
+    const { ownerId, editable } = route.params
     const [data, setData] = useState({
       intention: '',
       history: [],
@@ -97,6 +97,7 @@ export const UserProfileScreen = observer(
                     avatar={data.avatar}
                     plan={data.plan}
                     fullName={data.fullName}
+                    editable={editable}
                   />
                   <Space height={vs(5)} />
                   <OwnTabView

@@ -58,7 +58,10 @@ export const usePostActions = ({
 
   const handleProfile = () => {
     if (item?.ownerId) {
-      navigate('USER_PROFILE_SCREEN', { ownerId: item.ownerId })
+      navigate('USER_PROFILE_SCREEN', {
+        ownerId: item.ownerId,
+        editable: false
+      })
     }
   }
 

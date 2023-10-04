@@ -8,27 +8,23 @@ import { OnlinePlayer } from '../store'
 
 // Function to get image from picker
 const getImagePicker = async () => {
-  try {
-    const image = await ImagePicker.openPicker({
-      width: 400,
-      height: 400,
-      cropping: true,
-      cropperCircleOverlay: true,
-      sortOrder: 'none',
-      compressImageMaxWidth: 400,
-      compressImageMaxHeight: 400,
-      compressImageQuality: 1,
-      compressVideoPreset: 'HighestQuality',
-      includeExif: true,
-      cropperStatusBarColor: white,
-      cropperToolbarColor: white,
-      cropperActiveWidgetColor: white,
-      cropperToolbarWidgetColor: secondary
-    })
-    return image
-  } catch (error: any) {
-    throw new Error('Error selecting image: ' + error.message)
-  }
+  const image = await ImagePicker.openPicker({
+    width: 400,
+    height: 400,
+    cropping: true,
+    cropperCircleOverlay: true,
+    sortOrder: 'none',
+    compressImageMaxWidth: 400,
+    compressImageMaxHeight: 400,
+    compressImageQuality: 1,
+    compressVideoPreset: 'HighestQuality',
+    includeExif: true,
+    cropperStatusBarColor: white,
+    cropperToolbarColor: white,
+    cropperActiveWidgetColor: white,
+    cropperToolbarWidgetColor: secondary
+  })
+  return image
 }
 
 export const useChooseAvatarImage = () => {

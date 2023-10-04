@@ -21,4 +21,5 @@ declare module '@env' {
   export const YANDEX_TRANSLATE_API_KEY: string
   export const EMAIL: string
   export const PASSWORD: string
+  export const RU_STORE: string
 }

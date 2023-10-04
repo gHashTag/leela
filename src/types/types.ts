@@ -70,6 +70,7 @@ export type RootStackParamList = {
   }
   USER_PROFILE_SCREEN: {
     ownerId: string
+    editable: boolean
   }
 }
 

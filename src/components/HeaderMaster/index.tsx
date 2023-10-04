@@ -1,10 +1,8 @@
 import React, { useEffect } from 'react'
 
-import { useTheme } from '@react-navigation/native'
 import { observer } from 'mobx-react'
 import { View } from 'react-native'
 import { ScaledSheet, s, vs } from 'react-native-size-matters'
-import Icon from 'react-native-vector-icons/Ionicons'
 
 import { useActions } from './useActions'
 
@@ -38,10 +36,6 @@ const HeaderMaster = observer(
     const { onPressEdit } = useActions()
     const { ava, chooseAvatarImage, isLoading, setAva } = useChooseAvatarImage()
 
-    const {
-      colors: { border }
-    } = useTheme()
-
     useEffect(() => {
       setAva(avatar)
     }, [avatar, setAva])
@@ -61,7 +55,7 @@ const HeaderMaster = observer(
             uri={ava}
             size="xLarge"
             loading={isLoading}
-            onPress={onPressChangeAva}
+            onPress={editable ? onPressChangeAva : undefined}
           />
 
           <View style={planAndEditBlock}>

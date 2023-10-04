@@ -3,12 +3,11 @@ import { StyleSheet } from 'react-native'
 import firestore from '@react-native-firebase/firestore'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
-
+import { RU_STORE } from '@env'
 import { useTranslation } from 'react-i18next'
 
 import { s, vs } from 'react-native-size-matters'
 import { captureException, gray, onLeaveFeedback } from '../../../constants'
-import { useRevenueCat } from '../../../providers/RevenueCatProvider'
 import { getUid } from '../../../screens/helper'
 
 import {
@@ -123,7 +122,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       </Header>
       {!endGame && !isBlockGame ? <Dice /> : <Space height={s(99)} />}
 
-      {isBlockGame && (
+      {!RU_STORE && isBlockGame && (
         <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
       )}
 

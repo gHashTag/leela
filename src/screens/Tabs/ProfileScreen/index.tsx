@@ -21,6 +21,7 @@ import { RootStackParamList, RootTabParamList } from '../../../types/types'
 
 import { TabContextProvider } from './TabContext'
 import { HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
+import { useActions } from '../../../components/HeaderMaster/useActions'
 
 type ProfileScreenT = {
   navigation: NativeStackNavigationProp<
@@ -32,7 +33,7 @@ type ProfileScreenT = {
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   const { width: W, height: H } = useWindowDimensions()
   const { t } = useTranslation()
-
+  const { onPressEdit } = useActions()
   const tabViewWidth = W * 0.96
 
   const {
@@ -43,10 +44,11 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
 
   return (
     <AppContainer
-      iconRight={':books:'}
       iconLeft={':information_source:'}
       title={t('profile')}
       textAlign="center"
+      iconRight={':leftwards_arrow_with_hook:'}
+      onPressRight={onPressEdit}
     >
       <TabContextProvider>
         {({ tabViewH, screenStyle, headerGesture }: any) => (
