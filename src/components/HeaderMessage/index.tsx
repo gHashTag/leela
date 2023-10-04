@@ -8,6 +8,7 @@ import { useRevenueCat } from '../../providers/RevenueCatProvider'
 import { DiceStore, SubscribeStore } from '../../store'
 import { Space } from '../Space'
 import { Text } from '../TextComponents'
+import { RU_STORE } from '@env'
 
 export const HeaderMessage = observer(() => {
   const { t } = useTranslation()
@@ -15,12 +16,12 @@ export const HeaderMessage = observer(() => {
 
   let subscribeMess
 
+  const rustore = RU_STORE === 1 ? t('paySub') : DiceStore.topMessage
+
   if (user.pro) {
     subscribeMess = DiceStore.topMessage
   } else if (DiceStore.online) {
-    subscribeMess = SubscribeStore.isBlockGame
-      ? t('paySub')
-      : DiceStore.topMessage
+    subscribeMess = SubscribeStore.isBlockGame ? rustore : DiceStore.topMessage
   } else {
     subscribeMess = DiceStore.topMessage
   }

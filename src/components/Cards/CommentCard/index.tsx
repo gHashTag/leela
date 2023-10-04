@@ -69,7 +69,10 @@ export const CommentCard: React.FC<CommentCardI> = observer(
 
     const handleProfile = () => {
       if (item?.ownerId) {
-        navigate('USER_PROFILE_SCREEN', { ownerId: item?.ownerId })
+        navigate('USER_PROFILE_SCREEN', {
+          ownerId: item?.ownerId,
+          editable: false
+        })
       }
     }
 
@@ -125,16 +128,15 @@ export const CommentCard: React.FC<CommentCardI> = observer(
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     paddingVertical: PADDING,
     flexDirection: 'row',
-    paddingHorizontal: s(13)
+    paddingHorizontal: s(13),
+    paddingTop: 15
   },
   verticalLine: {
     width: s(2),
     borderRadius: s(3),
     backgroundColor: lightGray,
-    position: 'absolute',
     transform: [{ translateY: vs(2) }]
   },
   lineCont: {
@@ -142,6 +144,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   content: {
+    top: 10,
     flexDirection: 'column',
     flex: 1
   },

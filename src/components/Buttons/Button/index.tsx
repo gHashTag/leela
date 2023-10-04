@@ -5,7 +5,7 @@ import { StyleProp, TextStyle } from 'react-native'
 import { ScaledSheet, ms, s } from 'react-native-size-matters'
 
 import { Text } from '../../'
-import { black, white } from '../../../constants'
+import { black, isIos, white } from '../../../constants'
 import { Pressable } from '../../Pressable'
 
 const styles = ScaledSheet.create({
@@ -20,7 +20,7 @@ const styles = ScaledSheet.create({
   h: {
     textAlign: 'center',
     paddingHorizontal: 15,
-    top: 3
+    top: isIos ? 3 : -2
   }
 })
 

@@ -143,7 +143,6 @@ export const PostCard: React.FC<postCardI> = memo(
               selectable
             />
             {/* Detail Date */}
-            <Space height={vs(5)} />
             <View style={headerS}>
               <View style={flex1} />
             </View>
@@ -196,10 +195,12 @@ export const PostCard: React.FC<postCardI> = memo(
               )}
             </View>
           </View>
-          {isLoading ? (
-            <ActivityIndicator size="large" color={brightTurquoise} />
-          ) : (
-            <ActivityIndicator size="large" color={'transparent'} />
+          <View style={line} />
+          {isLoading && (
+            <>
+              <Space height={vs(20)} />
+              <ActivityIndicator size="large" color={brightTurquoise} />
+            </>
           )}
         </>
       )
@@ -246,6 +247,7 @@ export const PostCard: React.FC<postCardI> = memo(
               </>
             )}
             {/* Preview Buttons */}
+
             <View style={btnsContainer}>
               {isAdmin && (
                 <>
@@ -309,8 +311,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: s(4),
     paddingBottom: vs(12),
-    paddingTop: vs(17),
-    flex: 1
+    paddingTop: vs(17)
   },
   mediumBtn: {
     flex: 1,
@@ -368,6 +369,11 @@ const styles = StyleSheet.create({
   },
   flagEmoji: {
     fontSize: s(16)
+  },
+  line: {
+    width: '100%',
+    borderBottomColor: lightGray,
+    borderBottomWidth: s(0.5)
   }
 })
 
@@ -387,5 +393,6 @@ const {
   nonDetailLinkButton,
   nonDetailCommentButton,
   nonDetailAdminMenuButton,
-  withoutBottomBorder
+  withoutBottomBorder,
+  line
 } = styles

@@ -65,3 +65,4 @@ buck-out/
 sentry.properties
 google-services.json
 GoogleService-Info.plist
+.gpt-runner/copilot.gpt.md

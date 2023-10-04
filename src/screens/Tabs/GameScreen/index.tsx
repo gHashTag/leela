@@ -120,7 +120,11 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           </>
         )}
       </Header>
-      {!endGame && !isBlockGame ? <Dice /> : <Space height={s(99)} />}
+      {!endGame && (!isBlockGame || RU_STORE) ? (
+        <Dice />
+      ) : (
+        <Space height={s(99)} />
+      )}
 
       {!RU_STORE && isBlockGame && (
         <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />

@@ -105,7 +105,6 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
               isHideTranslate={hideTranslate}
               onPressCom={newComment}
             />
-            <View style={styles.line} />
           </>
         }
         ListFooterComponent={
