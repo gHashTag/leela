@@ -1,11 +1,11 @@
 import { makeAutoObservable } from 'mobx'
 import { makePersistable } from 'mobx-persist-store'
-import { RU_STORE } from '@env'
+// import { RU_STORE } from '@env'
 
 const SubscribeStore = makeAutoObservable({
-  isBlockGame: RU_STORE !== 1 // defaut true
+  isBlockGame: true // defaut true
 })
-console.log('RU_STORE === 1', RU_STORE === 1)
+
 const actionSubscribeStore = {
   unBlock: async () => {
     SubscribeStore.isBlockGame = false
@@ -19,8 +19,8 @@ const actionSubscribeStore = {
 }
 
 makePersistable(SubscribeStore, {
-  name: 'SubscribeStore',
-  properties: ['isBlockGame']
+  name: 'SubscribeStore'
+  //properties: ['isBlockGame']
 })
 
 export { SubscribeStore, actionSubscribeStore }

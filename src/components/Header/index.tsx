@@ -9,7 +9,7 @@ import { RU_STORE } from '@env'
 import { HeaderMessage, Text } from '../'
 import { navigate } from '../../constants'
 import { Pressable } from '../Pressable'
-import { DiceStore } from '../../store'
+import { DiceStore, SubscribeStore } from '../../store'
 
 const isIos = Platform.OS === 'ios'
 
@@ -53,6 +53,7 @@ const Header = memo<HeaderT>(
     const onPressSub = () => navigate('SUBSCRIPTION_SCREEN')
     const backgroundColor = children ? 'transparent' : background
     const online = DiceStore.online
+    const isBlockGame = SubscribeStore.isBlockGame
 
     return (
       <View
@@ -63,7 +64,7 @@ const Header = memo<HeaderT>(
             <Emoji name={iconLeft} style={leftIconStyle} />
           </Pressable>
         )}
-        {!RU_STORE && !user.pro && !hidestar && online && (
+        {isBlockGame && !user.pro && !hidestar && online && (
           <Pressable style={{ opacity: iconLeftOpacity }} onPress={onPressSub}>
             <Emoji name="star" style={leftIconStyle} />
           </Pressable>
@@ -85,7 +86,7 @@ const Header = memo<HeaderT>(
             </View>
           )}
         </View>
-        {!RU_STORE && !user.pro && !hidestar && online && (
+        {isBlockGame && !user.pro && !hidestar && online && (
           <Pressable
             style={[styles.pressStyle, { opacity: iconLeftOpacity }]}
             onPress={onPressSub}

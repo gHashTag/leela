@@ -3,7 +3,6 @@ import { StyleSheet } from 'react-native'
 import firestore from '@react-native-firebase/firestore'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
-import { RU_STORE } from '@env'
 import { useTranslation } from 'react-i18next'
 
 import { s, vs } from 'react-native-size-matters'
@@ -30,6 +29,7 @@ import {
   actionsDice
 } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types/types'
+// import { useRevenueCat } from '../../../providers/RevenueCatProvider'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -79,10 +79,8 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     ? OnlinePlayer.store.finish
     : DiceStore.finishArr.indexOf(true) === -1
 
-  const postsCount = PostStore.store.ownPosts.length
   const isBlockGame = SubscribeStore.isBlockGame
 
-  const isMoreThree = postsCount >= 3
   const _onPress = () => navigation.navigate('SUBSCRIPTION_SCREEN')
 
   return (
@@ -107,7 +105,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
             />
             <Space height={vs(2)} />
             <Text textStyle={styles.centerText} h="h1" title={`${t('win')}`} />
-            {DiceStore.rate && isMoreThree ? (
+            {DiceStore.rate ? (
               <ButtonWithIcon
                 viewStyle={styles.centerButton}
                 h="h5"
@@ -120,13 +118,9 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           </>
         )}
       </Header>
-      {!endGame && (!isBlockGame || RU_STORE) ? (
-        <Dice />
-      ) : (
-        <Space height={s(99)} />
-      )}
+      {!endGame && <Dice disabled={isBlockGame} />}
 
-      {!RU_STORE && isBlockGame && (
+      {isBlockGame && (
         <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
       )}
 
