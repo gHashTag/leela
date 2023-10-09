@@ -1,31 +1,13 @@
-import { useState } from 'react'
-
 import { useTranslation } from 'react-i18next'
 
-import { OpenActionsModal, captureException } from '../../constants'
+import { OpenActionsModal } from '../../constants'
 import { OnlinePlayer } from '../../store'
-import { ButtonsModalT } from '../../types'
+import { ButtonsModalT } from '../../types/types'
 
 export const useActions = () => {
-  const [loadImage, setLoadImage] = useState(false)
   const { t } = useTranslation()
-  const onPressChangeAva = async () => {
-    setLoadImage(true)
-    try {
-      await OnlinePlayer.uploadImage()
-    } catch (error) {
-      captureException(error, 'useActions')
-    }
-    setLoadImage(false)
-  }
 
   const menuItems: ButtonsModalT[] = [
-    {
-      key: 'EDIT',
-      onPress: onPressChangeAva,
-      title: t('actions.changeAva'),
-      icon: 'ios-images-outline'
-    },
     // {
     //   key: 'SHARE',
     //   onPress: onPressShare,
@@ -57,5 +39,5 @@ export const useActions = () => {
 
   const onPressEdit = () => OpenActionsModal(menuItems)
 
-  return { loadImage, onPressEdit }
+  return { onPressEdit }
 }

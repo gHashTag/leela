@@ -14,7 +14,7 @@ import {
 } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet } from 'react-native'
-import { s, vs } from 'react-native-size-matters'
+import { ms, s, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
 
 import {
@@ -35,7 +35,7 @@ import {
 } from '../../../constants'
 import { useNoBackHandler } from '../../../hooks'
 import { actionsDice, fetchBusinesses } from '../../../store'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 import { createProfile, getUid } from '../../helper'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
@@ -134,14 +134,14 @@ const SignUpUsername = ({
                 placeholder={t('auth.firstName')}
                 autoCapitalize="none"
                 color={color}
-                additionalStyle={{ width: W - s(40) }}
+                additionalStyle={{ width: W - ms(140, 0.9) }}
               />
               <Input
                 name="lastName"
                 placeholder={t('auth.lastName')}
                 autoCapitalize="none"
                 color={color}
-                additionalStyle={{ width: W - s(40) }}
+                additionalStyle={{ width: W - ms(140, 0.9) }}
               />
               <Space height={vs(30)} />
               <Button

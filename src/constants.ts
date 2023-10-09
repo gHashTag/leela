@@ -1,5 +1,5 @@
-//@ts-expect-error
 import { LEELA_ID, OPEN_AI_KEY } from '@env'
+import DeviceInfo from 'react-native-device-info'
 import { createNavigationContainerRef } from '@react-navigation/native'
 import * as Sentry from '@sentry/react-native'
 import axios from 'axios'
@@ -8,7 +8,11 @@ import Rate from 'react-native-rate'
 import i18next from './i18n'
 
 import { PostStore } from './store'
-import { ButtonsModalT, HandleCommentAiParamsT, MessageAIT } from './types'
+import {
+  ButtonsModalT,
+  HandleCommentAiParamsT,
+  MessageAIT
+} from './types/types'
 
 export const navRef = createNavigationContainerRef<any>()
 
@@ -27,7 +31,7 @@ export const generateComment = async ({
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-4-0314',
+        model: 'gpt-3.5-turbo',
         messages: [
           {
             role: 'system',
@@ -203,3 +207,18 @@ export const defUrl =
   'https://leelachakra.com/resource/LeelaChakra/Mantra/mantra.json'
 
 export const ENTITLEMENT_ID = 'Pro'
+
+export const openURLPolicy = () => {
+  Linking.openURL('https://www.leelachakra.com/docs/policy').catch((error) =>
+    captureException(error, 'Linking.openURL')
+  )
+}
+
+export const openURLEula = () => {
+  Linking.openURL('https://www.leelachakra.com/docs/eula').catch((error) =>
+    captureException(error, 'Linking.openURL')
+  )
+}
+
+export const bundleVersion = DeviceInfo.getVersion()
+export const buildVersion = DeviceInfo.getBuildNumber()

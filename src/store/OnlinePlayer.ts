@@ -13,14 +13,12 @@ import { captureException, navigate } from '../constants'
 import {
   getFireBaseRef,
   getIMG,
-  getImagePicker,
   getProfile,
   resetHistory,
   resetPlayer,
-  updatePlan,
-  uploadImg
+  updatePlan
 } from '../screens/helper'
-import { HistoryT, statusT } from '../types'
+import { HistoryT, statusT } from '../types/types'
 
 const initProfile = {
   firstName: '',
@@ -161,28 +159,27 @@ export const OnlinePlayer = makeAutoObservable<Istore>({
       captureException(error, 'getProfile')
     }
   },
-  async uploadImage(): Promise<void> {
+  async uploadImage(ipfsImageUrl: string): Promise<void> {
     try {
-      const image = await getImagePicker()
-      if (image) {
-        try {
-          const fileName = await uploadImg(image)
-          const prevImgUrl = auth().currentUser?.photoURL
+      if (ipfsImageUrl) {
+        const currentUser = auth().currentUser
+        if (currentUser) {
+          await currentUser.updateProfile({
+            photoURL: ipfsImageUrl
+          })
+
+          await firestore().collection('Profiles').doc(currentUser.uid).update({
+            avatar: ipfsImageUrl
+          })
+
+          OnlinePlayer.store.avatar = ipfsImageUrl
+
+          const prevImgUrl = currentUser.photoURL
           if (prevImgUrl) {
             await storage().ref(prevImgUrl).delete()
           }
-          await auth().currentUser?.updateProfile({
-            photoURL: fileName
-          })
-          await firestore()
-            .collection('Profiles')
-            .doc(auth().currentUser?.uid)
-            .update({
-              avatar: fileName
-            })
-          OnlinePlayer.store.avatar = await getIMG(fileName)
-        } catch (error) {
-          captureException(error, 'uploadImage')
+        } else {
+          captureException('User is not authenticated.', 'uploadImage')
         }
       }
     } catch (error) {
@@ -235,7 +232,7 @@ interface Istore {
   resetGame: () => Promise<void>
   SignOut: () => Promise<void>
   getProfile: () => Promise<void>
-  uploadImage: () => Promise<void>
+  uploadImage: (ipfsImageUrl: string) => Promise<void>
   updateStep: () => Promise<void>
   SignOutToOffline: () => Promise<void>
   getLeftTime: (lastTime: number) => string

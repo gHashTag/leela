@@ -77,7 +77,8 @@ const Gem = observer(({ plan, index }: GemT) => {
     <View style={container}>
       {DATA.map(({ data, id, ava, ownerId }) => {
         const onPressAva = () => {
-          ownerId && navigate('USER_PROFILE_SCREEN', { ownerId })
+          ownerId &&
+            navigate('USER_PROFILE_SCREEN', { ownerId, editable: false })
         }
 
         if (data === plan && (!online || (online && ava !== undefined))) {

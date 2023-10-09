@@ -11,7 +11,7 @@ import { s, vs } from 'react-native-size-matters'
 import { Header, PostCard, Space, Spin, Text } from '../../../components'
 import { captureException } from '../../../constants'
 import { DiceStore, PostStore } from '../../../store'
-import { RootTabParamList } from '../../../types'
+import { RootTabParamList } from '../../../types/types'
 
 interface Ipost {
   navigation: NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_1'>

@@ -13,6 +13,7 @@ import {
   goBack,
   gray,
   lightGray,
+  openUrl,
   secondary,
   white
 } from '../../constants'
@@ -74,6 +75,10 @@ const SubscriptionScreen: React.FC = () => {
       )
     }
   }
+
+  const onFree = async () =>
+    openUrl('https://zealy.io/c/leelaai/invite/qHjc-3WznJ-3su7ChaAOw')
+
   const { dark } = useTheme()
   const backgroundColor = dark ? black : white
 
@@ -123,12 +128,21 @@ const SubscriptionScreen: React.FC = () => {
             ))}
           </>
         )}
-
+        <Space height={10} />
         <PurchaseButton
           title="buy"
           selectedPackage={selectedPackage}
           onPress={handlePurchase}
         />
+        <Space height={10} />
+        <Text
+          h="h4"
+          textStyle={styles.bought}
+          title={t('free')}
+          onPress={onFree}
+        />
+
+        <Text h="h4" title={t('or')} onPress={onAlreadyBought} />
         <Text
           h="h4"
           textStyle={styles.bought}
@@ -171,7 +185,6 @@ const styles = StyleSheet.create({
     marginBottom: 20
   },
   bought: {
-    top: 10,
     fontSize: ms(13, 0.6),
     fontWeight: 'bold',
     color: gray,

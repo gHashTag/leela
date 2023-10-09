@@ -4,7 +4,7 @@ import { useTheme } from '@react-navigation/native'
 import { FieldValues, FormProvider, SubmitErrorHandler } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet } from 'react-native'
-import { s, vs } from 'react-native-size-matters'
+import { ms, vs } from 'react-native-size-matters'
 
 import { useSignUp } from './useSignUp'
 
@@ -60,21 +60,21 @@ export const SignUp = (): ReactElement => {
                   placeholder="E-mail"
                   autoCapitalize="none"
                   color={color}
-                  additionalStyle={{ width: W - s(40) }}
+                  additionalStyle={{ width: W - ms(140, 0.9) }}
                 />
                 <Input
                   name="password"
                   placeholder={t('auth.password')}
                   secureTextEntry
                   color={color}
-                  additionalStyle={{ width: W - s(40) }}
+                  additionalStyle={{ width: W - ms(140, 0.9) }}
                 />
                 <Input
                   name="passwordConfirmation"
                   placeholder={t('auth.passwordConfirmation')}
                   secureTextEntry
                   color={color}
-                  additionalStyle={{ width: W - s(40) }}
+                  additionalStyle={{ width: W - ms(140, 0.9) }}
                 />
                 <Space height={vs(30)} />
                 {error !== '' && (

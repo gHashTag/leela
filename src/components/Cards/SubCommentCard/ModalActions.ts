@@ -3,7 +3,7 @@ import i18next from '../../../i18n'
 
 import { getUid } from '../../../screens/helper'
 import { OnlinePlayer, OtherPlayers, PostStore } from '../../../store'
-import { ButtonsModalT, ReplyComT } from '../../../types'
+import { ButtonsModalT, ReplyComT } from '../../../types/types'
 
 type getActionsT = (props: getActionsProps) => ButtonsModalT[]
 interface getActionsProps {

@@ -521,5 +521,6 @@
   "$rc_annual": {
     "title": "Un an",
     "description": "Accès pendant douze mois"
-  }
+  },
+  "free": "Accès gratuit"
 }

@@ -18,7 +18,7 @@ import * as yup from 'yup'
 import { AppContainer, Button, Input, Loading, Space } from '../../components'
 import { black, captureException, lightGray } from '../../constants'
 import { updateIntention } from '../../screens/helper'
-import { RootStackParamList } from '../../types'
+import { RootStackParamList } from '../../types/types'
 
 type ChangeIntentionScreenNavProp = NativeStackNavigationProp<
   RootStackParamList,

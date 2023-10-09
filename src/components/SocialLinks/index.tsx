@@ -48,7 +48,7 @@ export function SocialLinks({ music }: SocialLinksT) {
           size={s(40)}
           containerStyle={containerStyle}
           onPress={() =>
-            openUrl(' https://open.spotify.com/album/3oYpszdQXVgtGzVq02u79Z')
+            openUrl('https://open.spotify.com/album/3oYpszdQXVgtGzVq02u79Z')
           }
         />
       </Row>

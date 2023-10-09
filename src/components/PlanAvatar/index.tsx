@@ -69,8 +69,8 @@ const styles = StyleSheet.create({
     height: s(55)
   },
   medium: {
-    width: s(50),
-    height: s(50)
+    width: ms(50, 0.9),
+    height: ms(50, 0.9)
   },
   small: {
     width: s(36),

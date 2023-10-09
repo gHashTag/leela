@@ -1,4 +1,3 @@
-// @ts-ignore
 import { LEELA_ID, YANDEX_FOLDER_ID, YANDEX_TRANSLATE_API_KEY } from '@env'
 import auth from '@react-native-firebase/auth'
 import firestore, {
@@ -20,7 +19,7 @@ import {
   FormReplyCom,
   PostT,
   ReplyComT
-} from '../types'
+} from '../types/types'
 
 type fetchT =
   FirebaseFirestoreTypes.QuerySnapshot<FirebaseFirestoreTypes.DocumentData>
@@ -45,7 +44,7 @@ interface delCommentIdT {
   postId?: string
 }
 
-const limit = 6
+const limit = 10
 
 export const PostStore = {
   store: makeAutoObservable<postStoreT>({
@@ -60,21 +59,22 @@ export const PostStore = {
   countPosts: async () => {
     try {
       const userUid = auth().currentUser?.uid
-      firestore()
+      const querySnapshot = await firestore()
         .collection('Posts')
         .where('ownerId', '==', userUid)
         .orderBy('createTime', 'desc')
         .limit(limit)
-        .onSnapshot((querySnapshot) => {
-          // On each change, fetch own posts
-          PostStore.fetchOwnPosts(querySnapshot)
-          PostStore.store.myCountPosts = querySnapshot.size
-        })
+        .get()
+
+      PostStore.fetchOwnPosts(querySnapshot)
+      PostStore.store.myCountPosts = querySnapshot.size
+
       return PostStore.store.myCountPosts
     } catch (error) {
       captureException(error, 'getNumberOfPosts')
     }
   },
+
   createPost: async ({ text, plan, systemMessage, planText }: FormPostT) => {
     const userUid = auth().currentUser?.uid
     const email = auth().currentUser?.email

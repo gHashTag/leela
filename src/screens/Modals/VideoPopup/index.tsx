@@ -10,7 +10,7 @@ import SystemNavigationBar from 'react-native-system-navigation-bar'
 
 import { ButtonVectorIcon, VideoPlayer } from '../../../components'
 import { black, white } from '../../../constants'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 
 interface VideoPopupT {
   navigation: NativeStackNavigationProp<RootStackParamList, 'VIDEO_SCREEN'>

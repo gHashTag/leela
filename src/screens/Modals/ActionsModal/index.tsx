@@ -9,7 +9,7 @@ import { s, vs } from 'react-native-size-matters'
 import { RenderButtons } from '../../../components'
 import { Space } from '../../../components'
 import { red, lightGray } from '../../../constants'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 
 interface ActionsModalT {
   navigation: NativeStackNavigationProp<RootStackParamList, 'REPLY_MODAL'>

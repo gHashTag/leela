@@ -4,7 +4,7 @@ import React, { memo, useState } from 'react'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
-import { s, vs } from 'react-native-size-matters'
+import { ms, s, vs } from 'react-native-size-matters'
 import {
   ButtonVectorIcon,
   HashtagFormat,
@@ -13,7 +13,6 @@ import {
   Text
 } from '../../'
 import {
-  W,
   brightTurquoise,
   fuchsia,
   handleCommentAi,
@@ -22,7 +21,7 @@ import {
 } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
 import { OnlinePlayer, PostStore } from '../../../store'
-import { PostT } from '../../../types'
+import { PostT } from '../../../types/types'
 
 import { usePostActions } from './usePostActions'
 import { usePostTranslation } from './usePostTranslation'
@@ -97,7 +96,7 @@ export const PostCard: React.FC<postCardI> = memo(
     const commCount = item.comments?.length
 
     const date = getTimeStamp({ lastTime: item.createTime as number })
-    const iconSize = W / 4 - s(72)
+    const iconSize = ms(15, 0.8)
 
     const isAdmin = OnlinePlayer.store.status === 'Admin'
 
@@ -144,7 +143,6 @@ export const PostCard: React.FC<postCardI> = memo(
               selectable
             />
             {/* Detail Date */}
-            <Space height={vs(5)} />
             <View style={headerS}>
               <View style={flex1} />
             </View>
@@ -197,10 +195,12 @@ export const PostCard: React.FC<postCardI> = memo(
               )}
             </View>
           </View>
-          {isLoading ? (
-            <ActivityIndicator size="large" color={brightTurquoise} />
-          ) : (
-            <ActivityIndicator size="large" color={'transparent'} />
+          <View style={line} />
+          {isLoading && (
+            <>
+              <Space height={vs(20)} />
+              <ActivityIndicator size="large" color={brightTurquoise} />
+            </>
           )}
         </>
       )
@@ -217,18 +217,6 @@ export const PostCard: React.FC<postCardI> = memo(
               isAccept={item.accept}
               aditionalStyle={img}
             />
-            {isAdmin && (
-              <>
-                <ButtonVectorIcon
-                  onPress={handleAdminMenu}
-                  viewStyle={[smallBtn, nonDetailAdminMenuButton]}
-                  ionicons
-                  name="md-ellipsis-vertical-circle"
-                  size={iconSize + s(3)}
-                />
-                <Space height={vs(12)} />
-              </>
-            )}
           </View>
           <View style={headerInfo}>
             {/* name, create date/email */}
@@ -259,7 +247,20 @@ export const PostCard: React.FC<postCardI> = memo(
               </>
             )}
             {/* Preview Buttons */}
+
             <View style={btnsContainer}>
+              {isAdmin && (
+                <>
+                  <ButtonVectorIcon
+                    onPress={handleAdminMenu}
+                    viewStyle={[smallBtn, nonDetailAdminMenuButton]}
+                    ionicons
+                    name="md-ellipsis-vertical-circle"
+                    size={iconSize + s(3)}
+                  />
+                  <Space height={vs(12)} />
+                </>
+              )}
               <ButtonVectorIcon
                 onPress={handleComment}
                 count={commCount}
@@ -310,8 +311,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: s(4),
     paddingBottom: vs(12),
-    paddingTop: vs(17),
-    flex: 1
+    paddingTop: vs(17)
   },
   mediumBtn: {
     flex: 1,
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'flex-start'
   },
   textStyle: {
     lineHeight: s(21)
@@ -369,6 +369,11 @@ const styles = StyleSheet.create({
   },
   flagEmoji: {
     fontSize: s(16)
+  },
+  line: {
+    width: '100%',
+    borderBottomColor: lightGray,
+    borderBottomWidth: s(0.5)
   }
 })
 
@@ -388,5 +393,6 @@ const {
   nonDetailLinkButton,
   nonDetailCommentButton,
   nonDetailAdminMenuButton,
-  withoutBottomBorder
+  withoutBottomBorder,
+  line
 } = styles

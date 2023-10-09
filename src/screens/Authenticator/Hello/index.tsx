@@ -15,8 +15,17 @@ import {
   Space,
   Text
 } from '../../../components'
-import { black, goBack, white } from '../../../constants'
-import { RootStackParamList } from '../../../types'
+import {
+  black,
+  bundleVersion,
+  goBack,
+  openURLPolicy,
+  white,
+  buildVersion,
+  gray,
+  openURLEula
+} from '../../../constants'
+import { RootStackParamList } from '../../../types/types'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -28,7 +37,8 @@ type HelloT = {
 }
 
 const styles = StyleSheet.create({
-  h6: { alignSelf: 'center' }
+  h6: { alignSelf: 'center' },
+  textStyle: { color: gray, fontSize: 19 }
 })
 
 const Hello = ({ navigation }: HelloT): ReactElement => {
@@ -49,7 +59,26 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
       ) : (
         <CenterView>
           <IconLeela />
-          <Space height={s(70)} />
+          <Space height={70} />
+          <Text
+            onPress={openURLPolicy}
+            style={styles.textStyle}
+            title="Privacy Policy"
+          />
+          <Space height={10} />
+          <Text
+            onPress={openURLEula}
+            style={styles.textStyle}
+            title="Terms of Use (EULA)"
+          />
+          <Space height={10} />
+          <Text
+            onPress={openURLPolicy}
+            style={styles.textStyle}
+            title={`Version: ${bundleVersion} (${buildVersion})`}
+            testID="welcome"
+          />
+          <Space height={50} />
           <Button
             title={t('auth.signIn')}
             onPress={() => navigation.navigate('SIGN_IN')}
@@ -68,7 +97,9 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
             title={t('offline')}
             onPress={() => navigation.navigate('SELECT_PLAYERS_SCREEN')}
           />
-          <Space height={vs(50)} />
+          <Space height={vs(20)} />
+
+          <Space height={150} />
         </CenterView>
       )}
     </AppContainer>

@@ -5,7 +5,7 @@ import { observer } from 'mobx-react'
 
 import { Background, ButtonsSelector, CenterView } from '../../components'
 import { actionsDice } from '../../store'
-import { RootStackParamList } from '../../types'
+import { RootStackParamList } from '../../types/types'
 
 type navigation = NativeStackNavigationProp<
   RootStackParamList,

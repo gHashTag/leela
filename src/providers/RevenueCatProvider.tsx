@@ -1,17 +1,15 @@
-//@ts-expect-error
-import { APPLE, GOOGLE } from '@env'
+import { APPLE, GOOGLE, RU_STORE } from '@env'
 import React from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Platform } from 'react-native'
 import Purchases, { LOG_LEVEL, PurchasesPackage } from 'react-native-purchases'
 import { CustomerInfo } from 'react-native-purchases'
-import { Spin } from '../components'
-import { captureException } from '../constants'
+import { captureException, onLeaveFeedback } from '../constants'
 import { actionSubscribeStore } from '../store/SubscribeStore'
 import { PostStore } from '../store/PostStore'
 import { getProfile } from '../screens/helper'
-import { UserT } from '../types'
-import { DiceStore } from '../store/DiceStore'
+import { UserT } from '../types/types'
+import { DiceStore, actionsDice } from '../store/DiceStore'
 
 // Use your RevenueCat API keys
 const APIKeys = {
@@ -54,8 +52,6 @@ export const useRevenueCat = () => {
 export const RevenueCatProvider = ({ children }: any) => {
   const [user, setUser] = useState<UserState>({ pro: false })
   const [packages, setPackages] = useState<PurchasesPackage[]>([])
-  const [isReady, setIsReady] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     const init = async () => {
@@ -64,7 +60,6 @@ export const RevenueCatProvider = ({ children }: any) => {
       } else {
         Purchases.configure({ apiKey: APIKeys.apple })
       }
-      setIsReady(true)
 
       // Use more logging during debug if want!
       Purchases.setLogLevel(LOG_LEVEL.DEBUG)
@@ -94,73 +89,72 @@ export const RevenueCatProvider = ({ children }: any) => {
 
   // Update user state based on previous purchases
   const updateCustomerInformation = async (customerInfo: CustomerInfoT) => {
-    try {
-      let newUser: UserState = { pro: false }
-      const online = DiceStore.online
-      if (online) {
-        const curProf: UserT | undefined = await getProfile()
-        const status = curProf?.status
-        const countPosts = await PostStore.countPosts()
+    // if (!RU_STORE) {
 
-        const isAdmin = status === 'Admin' || status === 'Free'
-        const hasProPlan =
-          customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
+    let newUser: UserState = { pro: false }
+    const online = DiceStore.online
+    if (online) {
+      const curProf: UserT | undefined = await getProfile()
+      const status = curProf?.status
+      const countPosts = await PostStore.countPosts()
 
-        if (isAdmin || hasProPlan) {
-          newUser.pro = true
-          actionSubscribeStore.unBlock()
-        } else if ((countPosts ?? 0) > 5) {
-          actionSubscribeStore.blockGame()
-        } else {
-          actionSubscribeStore.unBlock()
-        }
+      const isAdmin = status === 'Admin' || status === 'Free'
+
+      const hasProPlan =
+        customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
+
+      if (isAdmin || hasProPlan) {
+        newUser.pro = true
+        actionSubscribeStore.unBlock()
+      } else if ((countPosts ?? 0) < 5) {
+        actionSubscribeStore.unBlock()
+      } else if (countPosts === 10) {
+        onLeaveFeedback((success) => actionsDice.setRate(success))
+      } else {
+        actionSubscribeStore.blockGame()
       }
-      // else {
-      //   const hasProPlan =
-      //     customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
-      //   const count = OfflinePlayers.store.player1MoveCount
-      //   console.warn('count', count)
-      //   if (hasProPlan) {
-      //     newUser.pro = true
-      //     actionSubscribeStore.unBlock()
-      //   } else if (count > 10) {
-      //     actionSubscribeStore.blockGame()
-      //   } else {
-      //     actionSubscribeStore.unBlock()
-      //   }
-      // }
-
-      setUser(newUser)
-    } catch (error) {
-      captureException(error, 'updateCustomerInformation')
     }
+    // else {
+    //   const hasProPlan =
+    //     customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
+    //   const count = OfflinePlayers.store.player1MoveCount
+    //   console.warn('count', count)
+    //   if (hasProPlan) {
+    //     newUser.pro = true
+    //     actionSubscribeStore.unBlock()
+    //   } else if (count > 10) {
+    //     actionSubscribeStore.blockGame()
+    //   } else {
+    //     actionSubscribeStore.unBlock()
+    //   }
+    // }
+
+    setUser(newUser)
+
+    // }
   }
 
   // Purchase a package
   const purchasePackage = async (pack: PurchasesPackage) => {
-    setIsLoading(true)
-    try {
-      await Purchases.purchasePackage(pack)
-    } catch (e: any) {
-      if (!e.userCancelled) {
-        captureException(e, 'userCancelled')
+    if (!RU_STORE) {
+      try {
+        await Purchases.purchasePackage(pack)
+      } catch (e: any) {
+        if (!e.userCancelled) {
+          captureException(e, 'userCancelled')
+        }
       }
-    } finally {
-      setIsLoading(false)
     }
   }
 
   // Restore previous purchases
   const restorePermissions = async () => {
-    setIsLoading(true)
     try {
       const customer = await Purchases.restorePurchases()
-      return customer ?? {} // Возвращаем customer или пустой объект, если customer равен null или undefined
+      return customer ?? {}
     } catch (error) {
       captureException(error, 'restorePermissions')
-      return {} // Возвращаем пустой объект в случае ошибки
-    } finally {
-      setIsLoading(false)
+      return {}
     }
   }
 
@@ -168,17 +162,11 @@ export const RevenueCatProvider = ({ children }: any) => {
     restorePermissions,
     user,
     packages,
-    purchasePackage,
-    isLoading
-  }
-
-  // Return empty fragment if provider is not ready (Purchase not yet initialised)
-  if (!isReady) {
-    return <Spin />
+    purchasePackage
   }
 
   return (
-    // @ts-ignore
+    // @ts-expect-error
     <RevenueCatContext.Provider value={value}>
       {children}
     </RevenueCatContext.Provider>

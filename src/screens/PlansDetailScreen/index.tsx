@@ -20,7 +20,7 @@ import {
   Text
 } from '../../components'
 import { OnlinePlayer } from '../../store'
-import { RootStackParamList } from '../../types'
+import { RootStackParamList } from '../../types/types'
 
 type navigation = NativeStackNavigationProp<
   RootStackParamList,

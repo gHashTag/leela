@@ -8,7 +8,7 @@ import { s, vs } from 'react-native-size-matters'
 
 import { Space, Text } from '../../../components'
 import { fuchsia, primary } from '../../../constants'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 
 interface ExitPopupT {
   navigation: NativeStackNavigationProp<RootStackParamList, 'INPUT_TEXT_MODAL'>

@@ -8,7 +8,7 @@ import { ScaledSheet, s, vs } from 'react-native-size-matters'
 
 import { ButtonSimple, Space, Text } from '../../../components'
 import { OnlinePlayer } from '../../../store'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 
 interface NetworkModalT {
   navigation: NativeStackNavigationProp<RootStackParamList, 'NETWORK_MODAL'>

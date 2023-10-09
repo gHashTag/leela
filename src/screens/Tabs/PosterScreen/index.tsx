@@ -8,7 +8,7 @@ import { ImageBackground, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import { ButtonWithIcon } from '../../../components'
 import { openUrl } from '../../../constants'
-import { RootTabParamList } from '../../../types'
+import { RootTabParamList } from '../../../types/types'
 
 type navigation = NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_0'>
 

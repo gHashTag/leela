@@ -30,7 +30,11 @@ const getImage = (number: number) => {
   }
 }
 
-export const Dice = observer(() => {
+type DiceT = {
+  disabled?: boolean
+}
+
+export const Dice = observer(({ disabled }: DiceT) => {
   const [canRoll, setCanRoll] = useState<boolean>(true)
   const spinValue = useRef(new Animated.Value(0)).current
 
@@ -72,6 +76,7 @@ export const Dice = observer(() => {
         canRoll && rollDice()
       }}
       style={[styles.diceContainer, isOpacity && styles.opacityCube]}
+      disabled={disabled}
     >
       <Animated.Image
         style={[styles.image, { transform: [{ rotate: spin }] }]}

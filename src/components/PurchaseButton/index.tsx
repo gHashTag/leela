@@ -30,7 +30,7 @@ const PurchaseButton: React.FC<PurchaseButtonProps> = ({
       disabled={!selectedPackage}
       style={[styles.purchaseButton, !selectedPackage && styles.disabledButton]}
     >
-      <Text h="h0" textStyle={styles.buttonText} title={t(title)} />
+      <Text h="h3" textStyle={styles.buttonText} title={t(title)} />
     </TouchableOpacity>
   )
 }
@@ -41,18 +41,16 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === 'ios' ? s(12) : s(5),
     paddingHorizontal: 24,
     borderRadius: 8,
-    width: 200,
-    alignSelf: 'center'
+    alignSelf: 'center',
+    width: s(170)
   },
   disabledButton: {
-    width: 200,
+    width: s(170),
     backgroundColor: gray
   },
   buttonText: {
     color: white,
-    fontSize: Platform.OS === 'ios' ? s(30) : s(23),
     fontWeight: 'bold',
-    width: 200,
     textAlign: 'center',
     alignSelf: 'center'
   }

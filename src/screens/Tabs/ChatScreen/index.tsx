@@ -1,4 +1,3 @@
-// @ts-expect-error
 import { OPEN_AI_KEY } from '@env'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
@@ -104,7 +103,7 @@ const ChatScreen: React.FC = () => {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-4-0314',
+        model: 'gpt-3.5-turbo',
         messages: apiMessages,
         max_tokens: 1000,
         temperature: 0.2
@@ -146,7 +145,7 @@ const ChatScreen: React.FC = () => {
   const onPressRate = () => {
     onLeaveFeedback((success) => actionsDice.setRate(success))
   }
-
+  // @ts-expect-error
   const renderBubble = (props) => {
     if (props.currentMessage._id === LOADING_MESSAGE_ID) {
       return (

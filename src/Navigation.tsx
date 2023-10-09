@@ -8,6 +8,7 @@ import { StatusBar, useColorScheme } from 'react-native'
 import Orientation from 'react-native-orientation-locker'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
 import TabBar from './TabBar'
+import { RU_STORE } from '@env'
 import { Fallback } from './components'
 import {
   black,
@@ -59,7 +60,7 @@ import {
 } from './screens/Authenticator'
 import { checkVersion, getFireBaseRef } from './screens/helper'
 import { DiceStore, SubscribeStore } from './store'
-import { RootStackParamList, RootTabParamList } from './types'
+import { RootStackParamList, RootTabParamList } from './types/types'
 import { linking } from './utils'
 
 const DarkTheme = {
@@ -87,7 +88,7 @@ const LightTheme = {
 }
 
 const TabNavigator = createMaterialTopTabNavigator<RootTabParamList>()
-
+console.log('RU_STORE', RU_STORE)
 const Tab = observer(() => {
   useGameAndProfileIsOnline()
   useExitModal()
@@ -117,7 +118,13 @@ const Tab = observer(() => {
       {DiceStore.online && (
         <TabNavigator.Screen
           name="TAB_BOTTOM_5"
-          component={isBlockGame ? SubscriptionScreen : ChatScreen}
+          component={
+            RU_STORE
+              ? ChatScreen
+              : isBlockGame
+              ? SubscriptionScreen
+              : ChatScreen
+          }
         />
       )}
     </TabNavigator.Navigator>
@@ -146,6 +153,7 @@ const App = () => {
     const unsub = getFireBaseRef('/minVersion/').on('value', async (snap) => {
       checkVersion(snap.val())
     })
+    //https://console.firebase.google.com/u/0/project/leela-chakra/database/leela-chakra-default-rtdb/data/minVersion
     return () => getFireBaseRef('/minVersion/').off('value', unsub)
   }, [])
 

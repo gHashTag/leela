@@ -33,7 +33,8 @@ Sentry.init({
       tracingOrigins: ['localhost', /^\//],
       routingInstrumentation
     })
-  ]
+  ],
+  enabled: process.env.NODE_ENV !== 'development'
 })
 
 configure({
@@ -75,13 +76,13 @@ function AppWithProviders() {
   }, [])
 
   return (
-    <RevenueCatProvider>
-      <SafeAreaProvider>
-        <GestureHandlerRootView style={styles.flexOne}>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={styles.flexOne}>
+        <RevenueCatProvider>
           <Navigation />
-        </GestureHandlerRootView>
-      </SafeAreaProvider>
-    </RevenueCatProvider>
+        </RevenueCatProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   )
 }
 

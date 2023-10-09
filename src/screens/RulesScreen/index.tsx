@@ -9,7 +9,7 @@ import list from './list.json'
 
 import { AppContainer, RenderPlanItem, Space } from '../../components'
 import { goBack } from '../../constants'
-import { RootStackParamList } from '../../types'
+import { RootStackParamList } from '../../types/types'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'RULES_SCREEN'>
 

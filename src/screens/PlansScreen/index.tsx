@@ -10,7 +10,7 @@ import data from './indexes.json'
 import { AppContainer, RenderPlanItem, Space } from '../../components'
 import { goBack } from '../../constants'
 import { OnlinePlayer } from '../../store'
-import { PlansT, RootStackParamList } from '../../types'
+import { PlansT, RootStackParamList } from '../../types/types'
 
 type navigation = NativeStackNavigationProp<RootStackParamList, 'PLANS_SCREEN'>
 

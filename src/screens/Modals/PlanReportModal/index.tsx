@@ -9,7 +9,7 @@ import { s, vs } from 'react-native-size-matters'
 import { Space, Text } from '../../../components'
 import { Pressable } from '../../../components/Pressable'
 import { black, blackOpacity, fuchsia } from '../../../constants'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 
 interface PlanReportModalT {
   navigation: NativeStackNavigationProp<RootStackParamList, 'PLAN_REPORT_MODAL'>

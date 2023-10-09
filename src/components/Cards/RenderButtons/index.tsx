@@ -6,7 +6,7 @@ import { s, vs } from 'react-native-size-matters'
 import Icon from 'react-native-vector-icons/Ionicons'
 
 import { Space, Text } from '../../'
-import { ButtonsModalT } from '../../../types'
+import { ButtonsModalT } from '../../../types/types'
 
 interface RenderButtonsT {
   item: ButtonsModalT

@@ -3,7 +3,7 @@ import { OpenActionsModal } from '../../../constants'
 import { useTypedNavigation } from '../../../hooks'
 import { getUid } from '../../../screens/helper'
 import { PostStore } from '../../../store'
-import { PostT } from '../../../types'
+import { PostT } from '../../../types/types'
 import { buildReportLink } from '../../../utils'
 
 import { getActions } from './ModalActions'
@@ -58,7 +58,10 @@ export const usePostActions = ({
 
   const handleProfile = () => {
     if (item?.ownerId) {
-      navigate('USER_PROFILE_SCREEN', { ownerId: item.ownerId })
+      navigate('USER_PROFILE_SCREEN', {
+        ownerId: item.ownerId,
+        editable: false
+      })
     }
   }
 

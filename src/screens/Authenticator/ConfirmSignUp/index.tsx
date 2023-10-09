@@ -12,7 +12,7 @@ import { s, vs } from 'react-native-size-matters'
 import { AppContainer, Loading, Space, Text } from '../../../components'
 import { Pressable } from '../../../components/Pressable'
 import { black, white } from '../../../constants'
-import { RootStackParamList } from '../../../types'
+import { RootStackParamList } from '../../../types/types'
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,

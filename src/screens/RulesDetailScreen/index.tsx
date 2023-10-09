@@ -10,7 +10,7 @@ import { vs } from 'react-native-size-matters'
 
 import { AppContainer, SelectableIOS, Space, Text } from '../../components'
 import { goBack } from '../../constants'
-import { RootStackParamList } from '../../types'
+import { RootStackParamList } from '../../types/types'
 
 type navigation = NativeStackNavigationProp<
   RootStackParamList,

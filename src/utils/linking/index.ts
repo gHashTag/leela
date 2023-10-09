@@ -5,7 +5,7 @@ import Branch from 'react-native-branch'
 import { formatLink, subscribeDeepLinkUrl } from './linkHelpers'
 
 import { captureException } from '../../constants'
-import { RootStackParamList } from '../../types'
+import { RootStackParamList } from '../../types/types'
 
 export const linking: LinkingOptions<RootStackParamList> = {
   prefixes: ['https://leelagame.app.link', 'leelagame://'],
