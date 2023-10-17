@@ -12,6 +12,7 @@ import { Header, PostCard, Space, Spin, Text } from '../../../components'
 import { captureException } from '../../../constants'
 import { DiceStore, PostStore } from '../../../store'
 import { RootTabParamList } from '../../../types/types'
+import { lang } from '../../../i18n'
 
 interface Ipost {
   navigation: NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_1'>
@@ -28,15 +29,15 @@ export const PostScreen = observer(({}: Ipost) => {
       const subPosts = firestore()
         .collection('Posts')
         .orderBy('createTime', 'desc')
+        .where('language', '==', lang)
         .limit(limit)
-        .onSnapshot(PostStore.fetchPosts, (err) =>
-          captureException(err, 'PostStore.fetchPosts')
-        )
+        .onSnapshot(PostStore.fetchPosts)
       return () => {
         subPosts()
       }
     }
   }, [limit])
+
   const data = PostStore.store.posts
   const newLimit = () => {
     if (data.length <= limit) {

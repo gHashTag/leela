@@ -88,7 +88,7 @@ const LightTheme = {
 }
 
 const TabNavigator = createMaterialTopTabNavigator<RootTabParamList>()
-console.log('RU_STORE', RU_STORE)
+
 const Tab = observer(() => {
   useGameAndProfileIsOnline()
   useExitModal()
