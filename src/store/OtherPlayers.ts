@@ -1,7 +1,6 @@
 import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
 import { makeAutoObservable } from 'mobx'
 
-import { captureException } from '../constants'
 import { getFireBaseRef, getIMG } from '../screens/helper'
 import { OtherUsersT, UserT } from '../types/types'
 
@@ -31,7 +30,7 @@ export const OtherPlayers = {
               .then(async (snapshotOnline) => {
                 isOnline = snapshotOnline.val()
               })
-              .catch((err) => captureException(err, 'getOtherProf'))
+
             const result: OtherUsersT = {
               email: data.email,
               plan: data.plan,
