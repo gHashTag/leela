@@ -2,6 +2,8 @@ package com.leela;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Build;
+
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactInstanceManager;
@@ -57,8 +59,10 @@ public class MainApplication extends Application implements ReactApplication {
     RNBranchModule.enableLogging();
   
     RNBranchModule.getAutoInstance(this);
-    registerActivityLifecycleCallbacks(OrientationActivityLifecycle.getInstance());
-    // If you opted-in for the New Architecture, we enable the TurboModule system
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+          registerActivityLifecycleCallbacks(OrientationActivityLifecycle.getInstance());
+      }
+      // If you opted-in for the New Architecture, we enable the TurboModule system
     ReactFeatureFlags.useTurboModules = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;
     SoLoader.init(this, /* native exopackage */ false);
     initializeFlipper(this, getReactNativeHost().getReactInstanceManager());

@@ -29,7 +29,7 @@ import {
   actionsDice
 } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types/types'
-// import { useRevenueCat } from '../../../providers/RevenueCatProvider'
+import { useRevenueCat } from '../../../providers/RevenueCatProvider'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -124,8 +124,8 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
         <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
       )}
 
-      <Text h="h3" title={`user.pro: ${user.pro}`} />
-      <Text h="h3" title={`isBlockGame: ${isBlockGame}`} />
+      {/* <Text h="h3" title={`user.pro: ${user.pro}`} />
+      <Text h="h3" title={`isBlockGame: ${isBlockGame}`} /> */}
 
       <GameBoard />
     </Background>
