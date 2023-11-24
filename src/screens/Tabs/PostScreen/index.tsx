@@ -10,7 +10,7 @@ import { s, vs } from 'react-native-size-matters'
 
 import { Header, PostCard, Space, Spin, Text } from '../../../components'
 import { captureException } from '../../../constants'
-import { DiceStore, PostStore } from '../../../store'
+import { DiceStore, OnlinePlayer, PostStore } from '../../../store'
 import { RootTabParamList } from '../../../types/types'
 import { lang } from '../../../i18n'
 
@@ -23,20 +23,29 @@ export const PostScreen = observer(({}: Ipost) => {
   const [limit, setLimit] = useState(15)
 
   const { t } = useTranslation()
+  const isAdmin = OnlinePlayer.store.status === 'Admin'
 
   useEffect(() => {
-    if (DiceStore.online) {
-      const subPosts = firestore()
-        .collection('Posts')
-        .orderBy('createTime', 'desc')
-        .where('language', '==', lang)
-        .limit(limit)
-        .onSnapshot(PostStore.fetchPosts)
-      return () => {
-        subPosts()
+    const fetchPosts = async () => {
+      if (DiceStore.online) {
+        let query = firestore()
+          .collection('Posts')
+          .orderBy('createTime', 'desc')
+          .limit(limit)
+
+        if (!isAdmin) {
+          query = query.where('language', '==', lang)
+        }
+
+        const subPosts = query.onSnapshot(PostStore.fetchPosts)
+        return () => {
+          subPosts()
+        }
       }
     }
-  }, [limit])
+
+    fetchPosts()
+  }, [limit, isAdmin])
 
   const data = PostStore.store.posts
   const newLimit = () => {

@@ -140,12 +140,14 @@ export interface FormPostT {
   plan?: number
   systemMessage: string
   planText: string
+  pro: boolean
 }
 
 export interface MessageAIT {
   systemMessage: string
   message: string
   planText: string
+  pro: boolean
 }
 export interface PostT extends FormPostT {
   id: string
@@ -164,6 +166,7 @@ export interface FormCommentT {
   postId: string
   postOwner: string
   ownerId?: string
+  pro?: boolean
 }
 
 export interface HandleCommentAiParamsT {
@@ -171,6 +174,7 @@ export interface HandleCommentAiParamsT {
   systemMessage: string
   message: string
   planText?: string
+  pro: boolean
 }
 
 export interface CommentT extends FormCommentT {

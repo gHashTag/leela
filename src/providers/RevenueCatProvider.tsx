@@ -107,6 +107,7 @@ export const RevenueCatProvider = ({ children }: any) => {
         newUser.pro = true
         actionSubscribeStore.unBlock()
       } else if ((countPosts ?? 0) < 5) {
+        newUser.pro = true
         actionSubscribeStore.unBlock()
       } else if (countPosts === 10) {
         onLeaveFeedback((success) => actionsDice.setRate(success))

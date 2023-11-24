@@ -25,13 +25,16 @@ export const navigate = (name: string, params?: any) => {
 export const generateComment = async ({
   message,
   systemMessage,
-  planText
-}: MessageAIT): Promise<string> => {
+  planText,
+  pro
+}: MessageAIT): Promise<{ response: string; gpt: string }> => {
+  const modelGPT = pro ? 'gpt-4-1106-preview' : 'gpt-3.5-turbo'
+
   try {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-3.5-turbo',
+        model: modelGPT,
         messages: [
           {
             role: 'system',
@@ -46,7 +49,7 @@ export const generateComment = async ({
             content: planText
           }
         ],
-        max_tokens: 1000,
+        max_tokens: 222,
         temperature: 0.5
       },
       {
@@ -57,7 +60,10 @@ export const generateComment = async ({
       }
     )
 
-    return response?.data?.choices[0]?.message?.content ?? ''
+    return {
+      response: response?.data?.choices[0]?.message?.content ?? '',
+      gpt: response?.data?.model
+    }
   } catch (error) {
     captureException(error, 'generateComment')
     throw error
@@ -80,16 +86,18 @@ export const handleCommentAi = async ({
   curItem,
   systemMessage,
   message,
-  planText = ' '
+  planText = ' ',
+  pro
 }: HandleCommentAiParamsT): Promise<void> => {
-  const aiComment: string = await generateComment({
+  const aiComment: { response: string; gpt: string } = await generateComment({
     message,
     systemMessage,
-    planText
+    planText,
+    pro
   })
   if (curItem && aiComment) {
     await PostStore.createComment({
-      text: aiComment,
+      text: aiComment.response,
       postId: curItem.id,
       postOwner: curItem.ownerId,
       ownerId: LEELA_ID
