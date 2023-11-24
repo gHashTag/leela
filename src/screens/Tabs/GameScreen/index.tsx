@@ -41,7 +41,7 @@ type GameScreenT = {
 }
 
 const GameScreen = observer(({ navigation }: GameScreenT) => {
-  // const { user } = useRevenueCat()
+  const { user } = useRevenueCat()
   useLeftTimeForStep()
 
   const limit = 15
@@ -124,8 +124,8 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
         <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
       )}
 
-      {/* <Text h="h3" title={`user.pro: ${user.pro}`} />
-      <Text h="h3" title={`isBlockGame: ${isBlockGame}`} /> */}
+      <Text h="h3" title={`user.pro: ${user.pro}`} />
+      <Text h="h3" title={`isBlockGame: ${isBlockGame}`} />
 
       <GameBoard />
     </Background>
