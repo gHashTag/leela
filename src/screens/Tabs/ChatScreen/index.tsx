@@ -100,7 +100,7 @@ const ChatScreen: React.FC = () => {
         }
       ])
     )
-    const modelGPT = user.pro ? 'gpt-4-1106-preview' : 'gpt-3.5-turbo'
+    const modelGPT = user.pro ? 'gpt-4-1106-preview' : 'gpt-4-1106-preview'
 
     // Запрос к OpenAI API
     const response = await axios.post(
@@ -108,8 +108,8 @@ const ChatScreen: React.FC = () => {
       {
         model: modelGPT,
         messages: apiMessages,
-        max_tokens: 222,
-        temperature: 0.2
+        max_tokens: 800,
+        temperature: 0.1
       },
       {
         headers: {

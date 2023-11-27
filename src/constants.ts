@@ -28,7 +28,7 @@ export const generateComment = async ({
   planText,
   pro
 }: MessageAIT): Promise<{ response: string; gpt: string }> => {
-  const modelGPT = pro ? 'gpt-4-1106-preview' : 'gpt-3.5-turbo'
+  const modelGPT = pro ? 'gpt-4-1106-preview' : 'gpt-4-1106-preview'
 
   try {
     const response = await axios.post(
@@ -49,8 +49,8 @@ export const generateComment = async ({
             content: planText
           }
         ],
-        max_tokens: 222,
-        temperature: 0.5
+        max_tokens: 800,
+        temperature: 0.1
       },
       {
         headers: {

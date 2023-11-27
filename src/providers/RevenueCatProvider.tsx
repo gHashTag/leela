@@ -103,10 +103,7 @@ export const RevenueCatProvider = ({ children }: any) => {
       const hasProPlan =
         customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
 
-      if (isAdmin || hasProPlan) {
-        newUser.pro = true
-        actionSubscribeStore.unBlock()
-      } else if (countPosts < 5) {
+      if (hasProPlan || isAdmin || countPosts < 5) {
         newUser.pro = true
         actionSubscribeStore.unBlock()
       } else if (countPosts === 10) {
