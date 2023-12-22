@@ -1,0 +1,56 @@
+b2258ebc71e110864c8aa6889022482b
+"use strict";
+
+var _jsxRuntime = require("react/jsx-runtime");
+var _this = this,
+  _jsxFileName = "/Users/playra/leela/src/components/Space/index.tsx";
+var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  var desc = Object.getOwnPropertyDescriptor(m, k);
+  if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+    desc = {
+      enumerable: true,
+      get: function get() {
+        return m[k];
+      }
+    };
+  }
+  Object.defineProperty(o, k2, desc);
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+var __setModuleDefault = this && this.__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+var __importStar = this && this.__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+  __setModuleDefault(result, mod);
+  return result;
+};
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Space = void 0;
+var react_1 = __importStar(require("react"));
+var react_native_1 = require("react-native");
+var Space = (0, react_1.memo)(function (_ref) {
+  var height = _ref.height,
+    width = _ref.width;
+  return (0, _jsxRuntime.jsx)(react_native_1.View, {
+    testID: "space-component",
+    style: {
+      height: Number(height) || 0,
+      width: Number(width) || 0
+    }
+  });
+});
+exports.Space = Space;
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJyZWFjdF8xIiwiX19pbXBvcnRTdGFyIiwicmVxdWlyZSIsInJlYWN0X25hdGl2ZV8xIiwiU3BhY2UiLCJtZW1vIiwiX3JlZiIsImhlaWdodCIsIndpZHRoIiwiX2pzeFJ1bnRpbWUiLCJqc3giLCJWaWV3IiwidGVzdElEIiwic3R5bGUiLCJOdW1iZXIiLCJleHBvcnRzIl0sInNvdXJjZXMiOlsiL1VzZXJzL3BsYXlyYS9sZWVsYS9zcmMvY29tcG9uZW50cy9TcGFjZS9pbmRleC50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IFJlYWN0LCB7IG1lbW8gfSBmcm9tICdyZWFjdCdcblxuaW1wb3J0IHsgVmlldyB9IGZyb20gJ3JlYWN0LW5hdGl2ZSdcblxuaW50ZXJmYWNlIFNwYWNlVCB7XG4gIGhlaWdodD86IG51bWJlciB8IHN0cmluZ1xuICB3aWR0aD86IG51bWJlciB8IHN0cmluZ1xufVxuXG5jb25zdCBTcGFjZSA9IG1lbW88U3BhY2VUPigoeyBoZWlnaHQsIHdpZHRoIH0pID0+IChcbiAgPFZpZXdcbiAgICB0ZXN0SUQ9XCJzcGFjZS1jb21wb25lbnRcIlxuICAgIHN0eWxlPXt7IGhlaWdodDogTnVtYmVyKGhlaWdodCkgfHwgMCwgd2lkdGg6IE51bWJlcih3aWR0aCkgfHwgMCB9fVxuICAvPlxuKSlcblxuZXhwb3J0IHsgU3BhY2UgfVxuIl0sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsSUFBQUEsT0FBQSxHQUFBQyxZQUFBLENBQUFDLE9BQUE7QUFFQSxJQUFBQyxjQUFBLEdBQUFELE9BQUE7QUFPQSxJQUFNRSxLQUFLLEdBQUcsSUFBQUosT0FBQSxDQUFBSyxJQUFJLEVBQVMsVUFBQUMsSUFBQTtFQUFBLElBQUdDLE1BQU0sR0FBQUQsSUFBQSxDQUFOQyxNQUFNO0lBQUVDLEtBQUssR0FBQUYsSUFBQSxDQUFMRSxLQUFLO0VBQUEsT0FDekMsSUFBQUMsV0FBQSxDQUFBQyxHQUFBLEVBQUNQLGNBQUEsQ0FBQVEsSUFBSTtJQUNIQyxNQUFNLEVBQUMsaUJBQWlCO0lBQ3hCQyxLQUFLLEVBQUU7TUFBRU4sTUFBTSxFQUFFTyxNQUFNLENBQUNQLE1BQU0sQ0FBQyxJQUFJLENBQUM7TUFBRUMsS0FBSyxFQUFFTSxNQUFNLENBQUNOLEtBQUssQ0FBQyxJQUFJO0lBQUM7RUFBRyxFQUNsRTtBQUFBLENBQ0gsQ0FBQztBQUVPTyxPQUFBLENBQUFYLEtBQUEsR0FBQUEsS0FBQSJ9

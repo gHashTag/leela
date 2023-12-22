@@ -4,6 +4,7 @@ import { makePersistable } from 'mobx-persist-store'
 import i18next from '../i18n'
 
 import { OnlinePlayer } from './OnlinePlayer'
+import { storageAdapter } from './storageAdapter'
 
 const DiceStore = makeAutoObservable({
   init: false,
@@ -107,7 +108,8 @@ makePersistable(DiceStore, {
     'init',
     'rate',
     'online'
-  ]
+  ],
+  storage: storageAdapter
 })
 
 export { DiceStore, actionsDice }

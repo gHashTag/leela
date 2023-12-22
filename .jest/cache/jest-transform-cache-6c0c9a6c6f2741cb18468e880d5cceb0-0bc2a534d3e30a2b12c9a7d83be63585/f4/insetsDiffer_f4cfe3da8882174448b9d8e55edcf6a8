@@ -1,0 +1,41 @@
+6bff8cb948038a344c3b75857d6c708d
+
+
+
+
+
+
+
+
+
+
+'use strict';
+
+
+
+
+
+
+
+
+
+var dummyInsets = {
+  top: undefined,
+  left: undefined,
+  right: undefined,
+  bottom: undefined
+};
+
+var insetsDiffer = function insetsDiffer(one, two) {
+  one = one || dummyInsets;
+  two = two || dummyInsets;
+  return (
+    one !== two && (
+    one.top !== two.top ||
+    one.left !== two.left ||
+    one.right !== two.right ||
+    one.bottom !== two.bottom));
+
+};
+
+module.exports = insetsDiffer;

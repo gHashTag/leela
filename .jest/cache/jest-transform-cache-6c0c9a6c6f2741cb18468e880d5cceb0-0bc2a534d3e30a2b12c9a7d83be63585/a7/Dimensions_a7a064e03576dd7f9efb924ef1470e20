@@ -1,0 +1,131 @@
+9a1cec1a489077b149d144a4c6194f15
+
+
+
+
+
+
+
+
+
+
+var _EventEmitter = _interopRequireDefault(require("../vendor/emitter/EventEmitter"));
+
+
+var _RCTDeviceEventEmitter = _interopRequireDefault(require("../EventEmitter/RCTDeviceEventEmitter"));
+var _NativeDeviceInfo = _interopRequireDefault(require("./NativeDeviceInfo"));
+
+
+
+
+var _invariant = _interopRequireDefault(require("invariant"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}
+
+var eventEmitter = new _EventEmitter.default(
+
+);
+var dimensionsInitialized = false;
+var dimensions;var
+
+Dimensions = function () {function Dimensions() {_classCallCheck(this, Dimensions);}_createClass(Dimensions, null, [{ key: "get", value:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    function get(dim) {
+      (0, _invariant.default)(dimensions[dim], 'No dimension set for key ' + dim);
+      return dimensions[dim];
+    } }, { key: "set", value:
+
+
+
+
+
+
+
+    function set(dims) {
+
+
+
+      var screen = dims.screen,window = dims.window;
+      var windowPhysicalPixels = dims.windowPhysicalPixels;
+      if (windowPhysicalPixels) {
+        window = {
+          width: windowPhysicalPixels.width / windowPhysicalPixels.scale,
+          height: windowPhysicalPixels.height / windowPhysicalPixels.scale,
+          scale: windowPhysicalPixels.scale,
+          fontScale: windowPhysicalPixels.fontScale
+        };
+      }
+      var screenPhysicalPixels = dims.screenPhysicalPixels;
+      if (screenPhysicalPixels) {
+        screen = {
+          width: screenPhysicalPixels.width / screenPhysicalPixels.scale,
+          height: screenPhysicalPixels.height / screenPhysicalPixels.scale,
+          scale: screenPhysicalPixels.scale,
+          fontScale: screenPhysicalPixels.fontScale
+        };
+      } else if (screen == null) {
+        screen = window;
+      }
+
+      dimensions = { window: window, screen: screen };
+      if (dimensionsInitialized) {
+
+        eventEmitter.emit('change', dimensions);
+      } else {
+        dimensionsInitialized = true;
+      }
+    } }, { key: "addEventListener", value:
+
+
+
+
+
+
+
+
+
+    function addEventListener(
+    type,
+    handler)
+    {
+      (0, _invariant.default)(
+        type === 'change',
+        'Trying to subscribe to unknown event: "%s"',
+        type
+      );
+      return eventEmitter.addListener(type, handler);
+    } }]);return Dimensions;}();
+
+
+var initialDims =
+global.nativeExtensions &&
+global.nativeExtensions.DeviceInfo &&
+global.nativeExtensions.DeviceInfo.Dimensions;
+if (!initialDims) {
+
+  _RCTDeviceEventEmitter.default.addListener(
+    'didUpdateDimensions',
+    function (update) {
+      Dimensions.set(update);
+    }
+  );
+  initialDims = _NativeDeviceInfo.default.getConstants().Dimensions;
+}
+
+Dimensions.set(initialDims);
+
+module.exports = Dimensions;

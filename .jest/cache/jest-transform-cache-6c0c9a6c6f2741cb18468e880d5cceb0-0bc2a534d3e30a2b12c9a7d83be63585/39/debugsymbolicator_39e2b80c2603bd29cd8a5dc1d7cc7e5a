@@ -1,0 +1,173 @@
+35c8665a814e9a99194104cdf1eefa41
+Object.defineProperty(exports, "__esModule", { value: true });exports.DebugSymbolicator = void 0;var _tslib = require("tslib");
+var _core = require("@sentry/core");
+var _utils = require("@sentry/utils");function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}
+var INTERNAL_CALLSITES_REGEX = new RegExp(['ReactNativeRenderer-dev\\.js$', 'MessageQueue\\.js$'].join('|'));var
+
+DebugSymbolicator = function () {
+  function DebugSymbolicator() {_classCallCheck(this, DebugSymbolicator);
+
+
+
+    this.name = DebugSymbolicator.id;
+  }_createClass(DebugSymbolicator, [{ key: "setupOnce", value:
+
+
+
+    function setupOnce() {var _this = this;
+      (0, _core.addGlobalEventProcessor)(function (event, hint) {return (0, _tslib.__awaiter)(_this, void 0, void 0, function* () {
+          var self = (0, _core.getCurrentHub)().getIntegration(DebugSymbolicator);
+          if (!self || hint === undefined || hint.originalException === undefined) {
+            return event;
+          }
+          var reactError = hint.originalException;
+
+          var parseErrorStack = require('react-native/Libraries/Core/Devtools/parseErrorStack');
+          var stack;
+          try {
+            stack = parseErrorStack(reactError);
+          }
+          catch (e) {
+
+            stack = parseErrorStack(reactError.stack);
+          }
+
+          event.extra = Object.assign(Object.assign({}, event.extra), { componentStack: reactError.componentStack, jsEngine: reactError.jsEngine });
+          yield self._symbolicate(event, stack);
+          event.platform = 'node';
+          return event;
+        });});
+    } }, { key: "_symbolicate", value:
+
+
+
+
+    function _symbolicate(event, stack) {
+      return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+        try {
+
+          var symbolicateStackTrace = require('react-native/Libraries/Core/Devtools/symbolicateStackTrace');
+          var prettyStack = yield symbolicateStackTrace(stack);
+          if (prettyStack) {
+            var newStack = prettyStack;
+
+            if (prettyStack.stack) {
+
+
+              newStack = prettyStack.stack;
+            }
+
+            var stackWithoutInternalCallsites = newStack.filter(function (frame) {return (
+
+                frame.file && frame.file.match(INTERNAL_CALLSITES_REGEX) === null);});
+            var symbolicatedFrames = yield this._convertReactNativeFramesToSentryFrames(stackWithoutInternalCallsites);
+            this._replaceFramesInEvent(event, symbolicatedFrames);
+          } else
+          {
+            _utils.logger.error('The stack is null');
+          }
+        }
+        catch (error) {
+          if (error instanceof Error) {
+            _utils.logger.warn("Unable to symbolicate stack trace: " + error.message);
+          }
+        }
+      });
+    } }, { key: "_convertReactNativeFramesToSentryFrames", value:
+
+
+
+
+    function _convertReactNativeFramesToSentryFrames(frames) {
+      return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {var _this2 = this;
+        var getDevServer;
+        try {
+          getDevServer = require('react-native/Libraries/Core/Devtools/getDevServer');
+        }
+        catch (_oO) {
+
+        }
+
+
+        return Promise.all(frames.map(function (frame) {return (0, _tslib.__awaiter)(_this2, void 0, void 0, function* () {
+            var inApp = !!frame.column && !!frame.lineNumber;
+            inApp =
+            inApp &&
+            frame.file !== undefined &&
+            !frame.file.includes('node_modules') &&
+            !frame.file.includes('native code');
+            var newFrame = {
+              colno: frame.column,
+              filename: frame.file,
+              function: frame.methodName,
+              in_app: inApp,
+              lineno: inApp ? frame.lineNumber : undefined,
+              platform: inApp ? 'javascript' : 'node'
+            };
+
+
+
+
+            if (newFrame.function) {
+              var addressAtPos = newFrame.function.indexOf('(address at');
+              if (addressAtPos >= 0) {
+                newFrame.function = newFrame.function.
+                substr(0, addressAtPos).
+                trim();
+              }
+            }
+            if (inApp) {
+              yield this._addSourceContext(newFrame, getDevServer);
+            }
+            return newFrame;
+          });}));
+      });
+    } }, { key: "_replaceFramesInEvent", value:
+
+
+
+
+
+    function _replaceFramesInEvent(event, frames) {
+      if (event.exception &&
+      event.exception.values &&
+      event.exception.values[0] &&
+      event.exception.values[0].stacktrace) {
+        event.exception.values[0].stacktrace.frames = frames.reverse();
+      }
+    } }, { key: "_addSourceContext", value:
+
+
+
+
+
+
+    function _addSourceContext(frame, getDevServer) {
+      var _a, _b;
+      return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+        var response;
+        var segments = (_b = (_a = frame.filename) === null || _a === void 0 ? void 0 : _a.split('/')) !== null && _b !== void 0 ? _b : [];
+        if (getDevServer) {
+          for (var idx in segments) {
+            if (Object.prototype.hasOwnProperty.call(segments, idx)) {
+              response = yield fetch("" + getDevServer().url + segments.slice(-idx).join('/'), {
+                method: 'GET'
+              });
+              if (response.ok) {
+                break;
+              }
+            }
+          }
+        }
+        if (response && response.ok) {
+          var content = yield response.text();
+          var lines = content.split('\n');
+          (0, _utils.addContextToFrame)(lines, frame);
+        }
+      });
+    } }]);return DebugSymbolicator;}();exports.DebugSymbolicator = DebugSymbolicator;
+
+
+
+
+DebugSymbolicator.id = 'DebugSymbolicator';

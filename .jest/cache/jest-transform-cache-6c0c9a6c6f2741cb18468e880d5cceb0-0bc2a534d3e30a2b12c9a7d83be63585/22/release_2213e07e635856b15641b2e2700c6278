@@ -1,0 +1,64 @@
+5e40f7ccc91ef9dbff6c20a11a9af817
+Object.defineProperty(exports, "__esModule", { value: true });exports.Release = void 0;var _tslib = require("tslib");
+var _core = require("@sentry/core");
+var _wrapper = require("../wrapper");function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}var
+
+Release = function () {
+  function Release() {_classCallCheck(this, Release);
+
+
+
+    this.name = Release.id;
+  }_createClass(Release, [{ key: "setupOnce", value:
+
+
+
+    function setupOnce() {var _this = this;
+      (0, _core.addGlobalEventProcessor)(function (event) {return (0, _tslib.__awaiter)(_this, void 0, void 0, function* () {
+          var _a, _b, _c;
+          var self = (0, _core.getCurrentHub)().getIntegration(Release);
+          if (!self) {
+            return event;
+          }
+          var options = (_a = (0, _core.getCurrentHub)().getClient()) === null || _a === void 0 ? void 0 : _a.getOptions();
+
+
+
+
+          if (typeof ((_b = event.extra) === null || _b === void 0 ? void 0 : _b.__sentry_release) === 'string') {
+            event.release = "" + event.extra.__sentry_release;
+          } else
+          if (typeof (options === null || options === void 0 ? void 0 : options.release) === 'string') {
+            event.release = options.release;
+          }
+          if (typeof ((_c = event.extra) === null || _c === void 0 ? void 0 : _c.__sentry_dist) === 'string') {
+            event.dist = "" + event.extra.__sentry_dist;
+          } else
+          if (typeof (options === null || options === void 0 ? void 0 : options.dist) === 'string') {
+            event.dist = options.dist;
+          }
+          if (event.release && event.dist) {
+            return event;
+          }
+          try {
+            var nativeRelease = yield _wrapper.NATIVE.fetchNativeRelease();
+            if (nativeRelease) {
+              if (!event.release) {
+                event.release = nativeRelease.id + "@" + nativeRelease.version + "+" + nativeRelease.build;
+              }
+              if (!event.dist) {
+                event.dist = "" + nativeRelease.build;
+              }
+            }
+          }
+          catch (_Oo) {
+
+          }
+          return event;
+        });});
+    } }]);return Release;}();exports.Release = Release;
+
+
+
+
+Release.id = 'Release';

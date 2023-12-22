@@ -1,0 +1,50 @@
+2e95fe01544257f1bc918eb3af0a6925
+Object.defineProperty(exports, "__esModule", { value: true });exports._addTracingExtensions = _addTracingExtensions;var _hub = require("@sentry/hub");
+var _tracing = require("./tracing");
+
+
+
+function _addTracingExtensions() {
+  var carrier = (0, _hub.getMainCarrier)();
+  if (carrier.__SENTRY__) {
+    carrier.__SENTRY__.extensions = carrier.__SENTRY__.extensions || {};
+    if (carrier.__SENTRY__.extensions.startTransaction) {
+      var originalStartTransaction = carrier.__SENTRY__.extensions.
+      startTransaction;
+
+
+
+
+      var _startTransaction = _patchStartTransaction(originalStartTransaction);
+      carrier.__SENTRY__.extensions.startTransaction = _startTransaction;
+    }
+  }
+}
+
+
+
+var _patchStartTransaction = function _patchStartTransaction(originalStartTransaction) {
+
+
+
+  function _startTransaction(transactionContext, customSamplingContext) {
+    var transaction = originalStartTransaction.apply(this, [
+    transactionContext,
+    customSamplingContext]
+    );
+    var reactNativeTracing = (0, _hub.getCurrentHub)().getIntegration(_tracing.ReactNativeTracing);
+    if (reactNativeTracing) {
+      reactNativeTracing.onTransactionStart(transaction);
+
+      var originalFinish = transaction.finish;
+      transaction.finish = function (endTimestamp) {
+        if (reactNativeTracing) {
+          reactNativeTracing.onTransactionFinish(transaction);
+        }
+        return originalFinish.apply(transaction, [endTimestamp]);
+      };
+    }
+    return transaction;
+  }
+  return _startTransaction;
+};

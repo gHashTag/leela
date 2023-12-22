@@ -1,0 +1,143 @@
+cb2ba294a174611e3dd592def08aa2db
+Object.defineProperty(exports, "__esModule", { value: true });exports.withTouchEventBoundary = exports.TouchEventBoundary = void 0;var _core = require("@sentry/core");
+var _types = require("@sentry/types");
+var _utils = require("@sentry/utils");
+var React = _interopRequireWildcard(require("react"));
+var _reactNative = require("react-native");var _jsxRuntime = require("react/jsx-runtime");var _jsxFileName = "/Users/playra/leela/node_modules/@sentry/react-native/dist/js/touchevents.js",_this = this;function _getRequireWildcardCache(nodeInterop) {if (typeof WeakMap !== "function") return null;var cacheBabelInterop = new WeakMap();var cacheNodeInterop = new WeakMap();return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) {return nodeInterop ? cacheNodeInterop : cacheBabelInterop;})(nodeInterop);}function _interopRequireWildcard(obj, nodeInterop) {if (!nodeInterop && obj && obj.__esModule) {return obj;}if (obj === null || typeof obj !== "object" && typeof obj !== "function") {return { default: obj };}var cache = _getRequireWildcardCache(nodeInterop);if (cache && cache.has(obj)) {return cache.get(obj);}var newObj = {};var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;for (var key in obj) {if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;if (desc && (desc.get || desc.set)) {Object.defineProperty(newObj, key, desc);} else {newObj[key] = obj[key];}}}newObj.default = obj;if (cache) {cache.set(obj, newObj);}return newObj;}function _toConsumableArray(arr) {return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();}function _nonIterableSpread() {throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _iterableToArray(iter) {if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);}function _arrayWithoutHoles(arr) {if (Array.isArray(arr)) return _arrayLikeToArray(arr);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];return arr2;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}function _inherits(subClass, superClass) {if (typeof superClass !== "function" && superClass !== null) {throw new TypeError("Super expression must either be null or a function");}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } });Object.defineProperty(subClass, "prototype", { writable: false });if (superClass) _setPrototypeOf(subClass, superClass);}function _setPrototypeOf(o, p) {_setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {o.__proto__ = p;return o;};return _setPrototypeOf(o, p);}function _createSuper(Derived) {var hasNativeReflectConstruct = _isNativeReflectConstruct();return function _createSuperInternal() {var Super = _getPrototypeOf(Derived),result;if (hasNativeReflectConstruct) {var NewTarget = _getPrototypeOf(this).constructor;result = Reflect.construct(Super, arguments, NewTarget);} else {result = Super.apply(this, arguments);}return _possibleConstructorReturn(this, result);};}function _possibleConstructorReturn(self, call) {if (call && (typeof call === "object" || typeof call === "function")) {return call;} else if (call !== void 0) {throw new TypeError("Derived constructors may only return object or undefined");}return _assertThisInitialized(self);}function _assertThisInitialized(self) {if (self === void 0) {throw new ReferenceError("this hasn't been initialised - super() hasn't been called");}return self;}function _isNativeReflectConstruct() {if (typeof Reflect === "undefined" || !Reflect.construct) return false;if (Reflect.construct.sham) return false;if (typeof Proxy === "function") return true;try {Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));return true;} catch (e) {return false;}}function _getPrototypeOf(o) {_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {return o.__proto__ || Object.getPrototypeOf(o);};return _getPrototypeOf(o);}
+var touchEventStyles = _reactNative.StyleSheet.create({
+  wrapperView: {
+    flex: 1
+  }
+});
+var DEFAULT_BREADCRUMB_CATEGORY = 'touch';
+var DEFAULT_BREADCRUMB_TYPE = 'user';
+var DEFAULT_MAX_COMPONENT_TREE_SIZE = 20;
+var PROP_KEY = 'sentry-label';var
+
+
+
+TouchEventBoundary = function (_React$Component) {_inherits(TouchEventBoundary, _React$Component);var _super = _createSuper(TouchEventBoundary);function TouchEventBoundary() {_classCallCheck(this, TouchEventBoundary);return _super.apply(this, arguments);}_createClass(TouchEventBoundary, [{ key: "render", value:
+
+
+
+    function render() {
+      return (0, _jsxRuntime.jsx)(_reactNative.View, { style: touchEventStyles.wrapperView,
+
+        onTouchStart: this._onTouchStart.bind(this), children:
+        this.props.children }
+      );
+    } }, { key: "_logTouchEvent", value:
+
+
+
+    function _logTouchEvent(componentTreeNames, activeLabel) {
+      var crumb = {
+        category: this.props.breadcrumbCategory,
+        data: { componentTree: componentTreeNames },
+        level: _types.Severity.Info,
+        message: activeLabel ? "Touch event within element: " +
+        activeLabel :
+        'Touch event within component tree',
+        type: this.props.breadcrumbType
+      };
+      (0, _core.addBreadcrumb)(crumb);
+      _utils.logger.log("[TouchEvents] " + crumb.message);
+    } }, { key: "_isNameIgnored", value:
+
+
+
+    function _isNameIgnored(name) {
+      var ignoreNames = this.props.ignoreNames || [];
+
+      if (this.props.ignoredDisplayNames) {
+
+
+        ignoreNames = [].concat(_toConsumableArray(ignoreNames), _toConsumableArray(this.props.ignoredDisplayNames));
+      }
+      return ignoreNames.some(function (ignoreName) {return typeof ignoreName === 'string' && name === ignoreName ||
+        ignoreName instanceof RegExp && name.match(ignoreName);});
+    } }, { key: "_onTouchStart", value:
+
+
+
+
+
+
+
+
+    function _onTouchStart(e) {
+      var _a;
+      if (e._targetInst) {
+        var currentInst = e._targetInst;
+        var activeLabel;
+        var activeDisplayName;
+        var componentTreeNames = [];
+        while (currentInst &&
+
+        this.props.maxComponentTreeSize &&
+        componentTreeNames.length < this.props.maxComponentTreeSize) {
+          if (
+
+          ((_a = currentInst.elementType) === null || _a === void 0 ? void 0 : _a.displayName) ===
+          TouchEventBoundary.displayName) {
+            break;
+          }
+          var props = currentInst.memoizedProps;
+          var label = typeof (props === null || props === void 0 ? void 0 : props[PROP_KEY]) !== 'undefined' ? "" +
+          props[PROP_KEY] :
+          undefined;
+
+          if (label && !this._isNameIgnored(label)) {
+            if (!activeLabel) {
+              activeLabel = label;
+            }
+            componentTreeNames.push(label);
+          } else
+          if (typeof (props === null || props === void 0 ? void 0 : props.accessibilityLabel) === 'string' &&
+          !this._isNameIgnored(props.accessibilityLabel)) {
+            if (!activeLabel) {
+              activeLabel = props.accessibilityLabel;
+            }
+            componentTreeNames.push(props.accessibilityLabel);
+          } else
+          if (currentInst.elementType) {
+            var _currentInst = currentInst,elementType = _currentInst.elementType;
+            if (elementType.displayName &&
+            !this._isNameIgnored(elementType.displayName)) {
+
+              if (!activeDisplayName) {
+                activeDisplayName = elementType.displayName;
+              }
+              componentTreeNames.push(elementType.displayName);
+            }
+          }
+          currentInst = currentInst.return;
+        }
+        var finalLabel = activeLabel !== null && activeLabel !== void 0 ? activeLabel : activeDisplayName;
+        if (componentTreeNames.length > 0 || finalLabel) {
+          this._logTouchEvent(componentTreeNames, finalLabel);
+        }
+      }
+    } }]);return TouchEventBoundary;}(React.Component);exports.TouchEventBoundary = TouchEventBoundary;
+
+TouchEventBoundary.displayName = '__Sentry.TouchEventBoundary';
+TouchEventBoundary.defaultProps = {
+  breadcrumbCategory: DEFAULT_BREADCRUMB_CATEGORY,
+  breadcrumbType: DEFAULT_BREADCRUMB_TYPE,
+  ignoreNames: [],
+  maxComponentTreeSize: DEFAULT_MAX_COMPONENT_TREE_SIZE
+};
+
+
+
+
+
+var withTouchEventBoundary = function withTouchEventBoundary(
+
+InnerComponent, boundaryProps) {
+  var WrappedComponent = function WrappedComponent(props) {return (0, _jsxRuntime.jsx)(TouchEventBoundary, Object.assign({}, boundaryProps !== null && boundaryProps !== void 0 ? boundaryProps : {}, { children:
+      (0, _jsxRuntime.jsx)(InnerComponent, Object.assign({}, props)) })
+    );};
+  WrappedComponent.displayName = 'WithTouchEventBoundary';
+  return WrappedComponent;
+};exports.withTouchEventBoundary = withTouchEventBoundary;

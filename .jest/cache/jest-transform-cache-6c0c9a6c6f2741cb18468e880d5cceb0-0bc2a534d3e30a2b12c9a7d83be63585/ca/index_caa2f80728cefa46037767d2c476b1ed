@@ -1,0 +1,6 @@
+6be8c8056529332ce7558ab223e2d616
+Object.defineProperty(exports, "__esModule", { value: true });var _exportNames = { ScaledSheet: true };exports.ScaledSheet = void 0;var _ScaledSheet = _interopRequireDefault(require("./lib/ScaledSheet"));
+var _scalingUtils = require("./lib/scaling-utils");
+
+
+Object.keys(_scalingUtils).forEach(function (key) {if (key === "default" || key === "__esModule") return;if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;if (key in exports && exports[key] === _scalingUtils[key]) return;Object.defineProperty(exports, key, { enumerable: true, get: function get() {return _scalingUtils[key];} });});function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}var ScaledSheet = (0, _ScaledSheet.default)(_scalingUtils.scale, _scalingUtils.verticalScale, _scalingUtils.moderateScale, _scalingUtils.moderateVerticalScale);exports.ScaledSheet = ScaledSheet;

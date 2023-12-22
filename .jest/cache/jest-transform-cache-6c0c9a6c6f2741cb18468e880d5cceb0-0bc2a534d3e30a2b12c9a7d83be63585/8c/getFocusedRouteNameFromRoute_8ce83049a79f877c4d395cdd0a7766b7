@@ -1,0 +1,22 @@
+535dc43c5df7d73de5710b01cc811550
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = getFocusedRouteNameFromRoute;
+var _useRouteCache = require("./useRouteCache");
+function getFocusedRouteNameFromRoute(route) {var _route$_useRouteCache, _state$index;
+
+  var state = (_route$_useRouteCache = route[_useRouteCache.CHILD_STATE]) != null ? _route$_useRouteCache : route.state;
+  var params = route.params;
+  var routeName = state ?
+
+  state.routes[(_state$index =
+
+
+  state.index) != null ? _state$index : typeof state.type === 'string' && state.type !== 'stack' ? 0 : state.routes.length - 1].name :
+
+  typeof (params === null || params === void 0 ? void 0 : params.screen) === 'string' ? params.screen : undefined;
+  return routeName;
+}

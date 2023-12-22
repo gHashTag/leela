@@ -1,0 +1,164 @@
+8cc1c3e7d4bf55f123614b2f23e2c2c8
+Object.defineProperty(exports, "__esModule", { value: true });exports.ReactNativeErrorHandlers = void 0;var _tslib = require("tslib");
+var _browser = require("@sentry/browser");
+var _core = require("@sentry/core");
+var _types = require("@sentry/types");
+var _utils = require("@sentry/utils");function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}var
+
+ReactNativeErrorHandlers = function () {
+
+  function ReactNativeErrorHandlers(options) {_classCallCheck(this, ReactNativeErrorHandlers);
+
+
+
+    this.name = ReactNativeErrorHandlers.id;
+    this._options = Object.assign({ onerror: true, onunhandledrejection: true, patchGlobalPromise: true }, options);
+  }_createClass(ReactNativeErrorHandlers, [{ key: "setupOnce", value:
+
+
+
+    function setupOnce() {
+      this._handleUnhandledRejections();
+      this._handleOnError();
+    } }, { key: "_handleUnhandledRejections", value:
+
+
+
+    function _handleUnhandledRejections() {
+      if (this._options.onunhandledrejection) {
+        if (this._options.patchGlobalPromise) {
+          this._polyfillPromise();
+        }
+        this._attachUnhandledRejectionHandler();
+        this._checkPromiseAndWarn();
+      }
+    } }, { key: "_polyfillPromise", value:
+
+
+
+
+
+
+
+
+
+    function _polyfillPromise() {
+
+      var _require = require('react-native/Libraries/Utilities/PolyfillFunctions'),polyfillGlobal = _require.polyfillGlobal;
+
+      var Promise = require('promise/setimmediate/es6-extensions');
+
+      require('promise/setimmediate/done');
+      require('promise/setimmediate/finally');
+      polyfillGlobal('Promise', function () {return Promise;});
+
+    } }, { key: "_attachUnhandledRejectionHandler", value:
+
+
+
+    function _attachUnhandledRejectionHandler() {
+      var tracking = require('promise/setimmediate/rejection-tracking');
+      var promiseRejectionTrackingOptions = {
+        onUnhandled: function onUnhandled(id) {var rejection = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+          console.warn("Possible Unhandled Promise Rejection (id: " + id + "):\n" + rejection);
+        },
+        onHandled: function onHandled(id) {
+
+          console.warn("Promise Rejection Handled (id: " + id + ")\n" +
+          'This means you can ignore any previous messages of the form ' + ("\"Possible Unhandled Promise Rejection (id: " +
+          id + "):\""));
+        }
+      };
+      tracking.enable({
+        allRejections: true,
+        onUnhandled: function onUnhandled(id, error) {
+          if (__DEV__) {
+            promiseRejectionTrackingOptions.onUnhandled(id, error);
+          }
+          (0, _core.getCurrentHub)().captureException(error, {
+            data: { id: id },
+            originalException: error
+          });
+        },
+        onHandled: function onHandled(id) {
+          promiseRejectionTrackingOptions.onHandled(id);
+        }
+      });
+    } }, { key: "_checkPromiseAndWarn", value:
+
+
+
+    function _checkPromiseAndWarn() {
+      try {
+
+        var _Promise = require('promise/setimmediate/es6-extensions');
+        var _global = (0, _utils.getGlobalObject)();
+        if (_Promise !== _global.Promise) {
+          _utils.logger.warn('Unhandled promise rejections will not be caught by Sentry. Read about how to fix this on our troubleshooting page.');
+        } else
+        {
+          _utils.logger.log('Unhandled promise rejections will be caught by Sentry.');
+        }
+      }
+      catch (e) {
+
+        _utils.logger.warn('Unhandled promise rejections will not be caught by Sentry. Read about how to fix this on our troubleshooting page.');
+      }
+    } }, { key: "_handleOnError", value:
+
+
+
+    function _handleOnError() {var _this = this;
+      if (this._options.onerror) {
+        var handlingFatal = false;
+        var defaultHandler = ErrorUtils.getGlobalHandler && ErrorUtils.getGlobalHandler();
+
+        ErrorUtils.setGlobalHandler(function (error, isFatal) {return (0, _tslib.__awaiter)(_this, void 0, void 0, function* () {
+
+            var shouldHandleFatal = isFatal && !__DEV__;
+            if (shouldHandleFatal) {
+              if (handlingFatal) {
+                _utils.logger.log('Encountered multiple fatals in a row. The latest:', error);
+                return;
+              }
+              handlingFatal = true;
+            }
+            var currentHub = (0, _core.getCurrentHub)();
+            var client = currentHub.getClient();
+            if (!client) {
+              _utils.logger.error('Sentry client is missing, the error event might be lost.', error);
+
+              defaultHandler(error, isFatal);
+              return;
+            }
+            var options = client.getOptions();
+            var event = yield (0, _browser.eventFromException)(error, {
+              originalException: error
+            }, options.attachStacktrace);
+            if (isFatal) {
+              event.level = _types.Severity.Fatal;
+              (0, _utils.addExceptionMechanism)(event, {
+                handled: false,
+                type: 'onerror'
+              });
+            }
+            currentHub.captureEvent(event);
+            if (!__DEV__) {
+              void client.flush(options.shutdownTimeout || 2000).then(function () {
+                defaultHandler(error, isFatal);
+              });
+            } else
+            {
+
+
+              defaultHandler(error, isFatal);
+            }
+          });});
+      }
+    } }]);return ReactNativeErrorHandlers;}();exports.ReactNativeErrorHandlers = ReactNativeErrorHandlers;
+
+
+
+
+ReactNativeErrorHandlers.id = 'ReactNativeErrorHandlers';

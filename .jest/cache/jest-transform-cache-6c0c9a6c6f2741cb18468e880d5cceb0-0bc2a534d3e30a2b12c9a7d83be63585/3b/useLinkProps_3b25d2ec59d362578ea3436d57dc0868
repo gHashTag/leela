@@ -1,0 +1,98 @@
+6ebf2ad56a1b6680d5fca4c6b91f3db5
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = useLinkProps;
+var _core = require("@react-navigation/core");
+var React = _interopRequireWildcard(require("react"));
+var _reactNative = require("react-native");
+var _LinkingContext = _interopRequireDefault(require("./LinkingContext"));
+var _useLinkTo = _interopRequireDefault(require("./useLinkTo"));
+function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+function _getRequireWildcardCache(nodeInterop) {if (typeof WeakMap !== "function") return null;var cacheBabelInterop = new WeakMap();var cacheNodeInterop = new WeakMap();return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) {return nodeInterop ? cacheNodeInterop : cacheBabelInterop;})(nodeInterop);}
+function _interopRequireWildcard(obj, nodeInterop) {if (!nodeInterop && obj && obj.__esModule) {return obj;}if (obj === null || typeof obj !== "object" && typeof obj !== "function") {return { default: obj };}var cache = _getRequireWildcardCache(nodeInterop);if (cache && cache.has(obj)) {return cache.get(obj);}var newObj = {};var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;for (var key in obj) {if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;if (desc && (desc.get || desc.set)) {Object.defineProperty(newObj, key, desc);} else {newObj[key] = obj[key];}}}newObj.default = obj;if (cache) {cache.set(obj, newObj);}return newObj;}
+var getStateFromParams = function getStateFromParams(params) {
+  if (params !== null && params !== void 0 && params.state) {
+    return params.state;
+  }
+  if (params !== null && params !== void 0 && params.screen) {
+    return {
+      routes: [{
+        name: params.screen,
+        params: params.params,
+
+        state: params.screen ? getStateFromParams(params.params) : undefined
+      }]
+    };
+  }
+  return undefined;
+};
+
+
+
+
+
+
+
+function useLinkProps(_ref) {var _ref2;
+  var
+    to =
+
+    _ref.to,action = _ref.action;
+  var root = React.useContext(_core.NavigationContainerRefContext);
+  var navigation = React.useContext(_core.NavigationHelpersContext);
+  var _React$useContext =
+
+    React.useContext(_LinkingContext.default),options = _React$useContext.options;
+  var linkTo = (0, _useLinkTo.default)();
+  var onPress = function onPress(e) {
+    var _e$currentTarget;
+    var shouldHandle = false;
+    if (_reactNative.Platform.OS !== 'web' || !e) {
+      shouldHandle = e ? !e.defaultPrevented : true;
+    } else if (!e.defaultPrevented &&
+
+
+    !(e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) && (
+
+
+    e.button == null || e.button === 0) &&
+
+
+    [undefined, null, '', 'self'].includes((_e$currentTarget = e.currentTarget) === null || _e$currentTarget === void 0 ? void 0 : _e$currentTarget.target))
+    {
+      e.preventDefault();
+      shouldHandle = true;
+    }
+    if (shouldHandle) {
+      if (action) {
+        if (navigation) {
+          navigation.dispatch(action);
+        } else if (root) {
+          root.dispatch(action);
+        } else {
+          throw new Error("Couldn't find a navigation object. Is your component inside NavigationContainer?");
+        }
+      } else {
+        linkTo(to);
+      }
+    }
+  };
+  var getPathFromStateHelper = (_ref2 = options === null || options === void 0 ? void 0 : options.getPathFromState) != null ? _ref2 : _core.getPathFromState;
+  var href = typeof to === 'string' ? to : getPathFromStateHelper({
+    routes: [{
+      name: to.screen,
+
+      params: to.params,
+
+      state: getStateFromParams(to.params)
+    }]
+  }, options === null || options === void 0 ? void 0 : options.config);
+  return {
+    href: href,
+    accessibilityRole: 'link',
+    onPress: onPress
+  };
+}

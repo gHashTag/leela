@@ -1,0 +1,20 @@
+be8e6d83c5740c4a25eff19bff96a61c
+Object.defineProperty(exports, "__esModule", { value: true });exports.firebase = exports.FirebaseDatabaseTypes = void 0;
+
+var firebase = {
+  database: jest.fn(function () {return {
+      ref: jest.fn(function () {return {
+          once: jest.fn(function () {return (
+              Promise.resolve({
+                val: jest.fn(function () {return {
+
+                  };})
+              }));}
+          )
+        };})
+    };})
+};exports.firebase = firebase;
+
+var FirebaseDatabaseTypes = {
+
+};exports.FirebaseDatabaseTypes = FirebaseDatabaseTypes;

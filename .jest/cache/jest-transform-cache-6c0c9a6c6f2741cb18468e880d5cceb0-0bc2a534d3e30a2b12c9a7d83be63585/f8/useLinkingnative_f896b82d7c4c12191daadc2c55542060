@@ -1,0 +1,157 @@
+41a4d95a7a47741a582cc7095fd8d43e
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = useLinking;
+var _core = require("@react-navigation/core");
+var React = _interopRequireWildcard(require("react"));
+var _reactNative = require("react-native");
+var _extractPathFromURL = _interopRequireDefault(require("./extractPathFromURL"));
+function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+function _getRequireWildcardCache(nodeInterop) {if (typeof WeakMap !== "function") return null;var cacheBabelInterop = new WeakMap();var cacheNodeInterop = new WeakMap();return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) {return nodeInterop ? cacheNodeInterop : cacheBabelInterop;})(nodeInterop);}
+function _interopRequireWildcard(obj, nodeInterop) {if (!nodeInterop && obj && obj.__esModule) {return obj;}if (obj === null || typeof obj !== "object" && typeof obj !== "function") {return { default: obj };}var cache = _getRequireWildcardCache(nodeInterop);if (cache && cache.has(obj)) {return cache.get(obj);}var newObj = {};var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;for (var key in obj) {if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;if (desc && (desc.get || desc.set)) {Object.defineProperty(newObj, key, desc);} else {newObj[key] = obj[key];}}}newObj.default = obj;if (cache) {cache.set(obj, newObj);}return newObj;}
+var linkingHandlers = [];
+function useLinking(ref, _ref) {
+  var
+    independent =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    _ref.independent,_ref$enabled = _ref.enabled,enabled = _ref$enabled === void 0 ? true : _ref$enabled,prefixes = _ref.prefixes,filter = _ref.filter,config = _ref.config,_ref$getInitialURL = _ref.getInitialURL,getInitialURL = _ref$getInitialURL === void 0 ? function () {return Promise.race([_reactNative.Linking.getInitialURL(), new Promise(function (resolve) {return setTimeout(resolve, 150);})]);} : _ref$getInitialURL,_ref$subscribe = _ref.subscribe,subscribe = _ref$subscribe === void 0 ? function (listener) {var _Linking$removeEventL;var callback = function callback(_ref2) {var url = _ref2.url;return listener(url);};var subscription = _reactNative.Linking.addEventListener('url', callback);var removeEventListener = (_Linking$removeEventL = _reactNative.Linking.removeEventListener) === null || _Linking$removeEventL === void 0 ? void 0 : _Linking$removeEventL.bind(_reactNative.Linking);return function () {if (subscription !== null && subscription !== void 0 && subscription.remove) {subscription.remove();} else {removeEventListener === null || removeEventListener === void 0 ? void 0 : removeEventListener('url', callback);}};} : _ref$subscribe,_ref$getStateFromPath = _ref.getStateFromPath,getStateFromPath = _ref$getStateFromPath === void 0 ? _core.getStateFromPath : _ref$getStateFromPath,_ref$getActionFromSta = _ref.getActionFromState,getActionFromState = _ref$getActionFromSta === void 0 ? _core.getActionFromState : _ref$getActionFromSta;
+  React.useEffect(function () {
+    if (process.env.NODE_ENV === 'production') {
+      return undefined;
+    }
+    if (independent) {
+      return undefined;
+    }
+    if (enabled !== false && linkingHandlers.length) {
+      console.error(['Looks like you have configured linking in multiple places. This is likely an error since deep links should only be handled in one place to avoid conflicts. Make sure that:', "- You don't have multiple NavigationContainers in the app each with 'linking' enabled", '- Only a single instance of the root component is rendered', _reactNative.Platform.OS === 'android' ? "- You have set 'android:launchMode=singleTask' in the '<activity />' section of the 'AndroidManifest.xml' file to avoid launching multiple instances" : ''].join('\n').trim());
+    }
+    var handler = Symbol();
+    if (enabled !== false) {
+      linkingHandlers.push(handler);
+    }
+    return function () {
+      var index = linkingHandlers.indexOf(handler);
+      if (index > -1) {
+        linkingHandlers.splice(index, 1);
+      }
+    };
+  }, [enabled, independent]);
+
+
+
+
+  var enabledRef = React.useRef(enabled);
+  var prefixesRef = React.useRef(prefixes);
+  var filterRef = React.useRef(filter);
+  var configRef = React.useRef(config);
+  var getInitialURLRef = React.useRef(getInitialURL);
+  var getStateFromPathRef = React.useRef(getStateFromPath);
+  var getActionFromStateRef = React.useRef(getActionFromState);
+  React.useEffect(function () {
+    enabledRef.current = enabled;
+    prefixesRef.current = prefixes;
+    filterRef.current = filter;
+    configRef.current = config;
+    getInitialURLRef.current = getInitialURL;
+    getStateFromPathRef.current = getStateFromPath;
+    getActionFromStateRef.current = getActionFromState;
+  });
+  var getStateFromURL = React.useCallback(function (url) {
+    if (!url || filterRef.current && !filterRef.current(url)) {
+      return undefined;
+    }
+    var path = (0, _extractPathFromURL.default)(prefixesRef.current, url);
+    return path !== undefined ? getStateFromPathRef.current(path, configRef.current) : undefined;
+  }, []);
+  var getInitialState = React.useCallback(function () {
+    var state;
+    if (enabledRef.current) {
+      var url = getInitialURLRef.current();
+      if (url != null && typeof url !== 'string') {
+        return url.then(function (url) {
+          var state = getStateFromURL(url);
+          return state;
+        });
+      }
+      state = getStateFromURL(url);
+    }
+    var thenable = {
+      then: function then(onfulfilled) {
+        return Promise.resolve(onfulfilled ? onfulfilled(state) : state);
+      },
+      catch: function _catch() {
+        return thenable;
+      }
+    };
+    return thenable;
+  }, [getStateFromURL]);
+  React.useEffect(function () {
+    var listener = function listener(url) {
+      if (!enabled) {
+        return;
+      }
+      var navigation = ref.current;
+      var state = navigation ? getStateFromURL(url) : undefined;
+      if (navigation && state) {
+
+
+        var rootState = navigation.getRootState();
+        if (state.routes.some(function (r) {return !(rootState !== null && rootState !== void 0 && rootState.routeNames.includes(r.name));})) {
+          console.warn("The navigation state parsed from the URL contains routes not present in the root navigator. This usually means that the linking configuration doesn't match the navigation structure. See https://reactnavigation.org/docs/configuring-links for more details on how to specify a linking configuration.");
+          return;
+        }
+        var action = getActionFromStateRef.current(state, configRef.current);
+        if (action !== undefined) {
+          try {
+            navigation.dispatch(action);
+          } catch (e) {
+
+
+            console.warn("An error occurred when trying to handle the link '" + url + "': " + (typeof e === 'object' && e != null && 'message' in e ?
+
+            e.message : e));
+          }
+        } else {
+          navigation.resetRoot(state);
+        }
+      }
+    };
+    return subscribe(listener);
+  }, [enabled, getStateFromURL, ref, subscribe]);
+  return {
+    getInitialState: getInitialState
+  };
+}

@@ -1,0 +1,5 @@
+213855f04534512d66c4193c8e70e61f
+module.exports = {
+      testUri:
+        "../../../src/components/Avatar/pickaface.png"
+    };

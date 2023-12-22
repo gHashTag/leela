@@ -1,0 +1,10 @@
+4d45574889a3cc6d5a18442eb7be806a
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default =
+
+{
+  openPicker: jest.fn().mockResolvedValue({
+    path: '../assets/icons/1024.png',
+    width: 1920,
+    height: 1080
+  })
+};exports.default = _default;

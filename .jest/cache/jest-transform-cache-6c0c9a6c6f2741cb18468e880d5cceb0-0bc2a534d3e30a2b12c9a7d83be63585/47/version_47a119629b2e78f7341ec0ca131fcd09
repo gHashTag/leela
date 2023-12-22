@@ -1,0 +1,3 @@
+36271e6765bcc6aadebc3ac91c9121e0
+Object.defineProperty(exports, "__esModule", { value: true });exports.SDK_VERSION = exports.SDK_NAME = void 0;var SDK_NAME = 'sentry.javascript.react-native';exports.SDK_NAME = SDK_NAME;
+var SDK_VERSION = '3.4.3';exports.SDK_VERSION = SDK_VERSION;

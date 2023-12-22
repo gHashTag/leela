@@ -10,36 +10,6 @@ import { secondary } from '../../constants'
 import { Pressable } from '../Pressable'
 import { Image } from 'react-native'
 
-const styles = StyleSheet.create({
-  container: {
-    alignSelf: 'center',
-    borderRadius: s(130),
-    overflow: 'hidden'
-  },
-  xLarge: {
-    marginLeft: 1,
-    width: s(120),
-    height: s(120),
-    borderRadius: s(130)
-  },
-  large: {
-    marginLeft: 1,
-    width: s(75),
-    height: s(75),
-    borderRadius: s(75)
-  },
-  medium: {
-    width: s(50),
-    height: s(50),
-    borderRadius: s(50)
-  },
-  small: {
-    width: s(36),
-    height: s(36),
-    borderRadius: s(36)
-  }
-})
-
 type sizeType = 'xLarge' | 'large' | 'medium' | 'small'
 
 interface AvatarT {
@@ -52,7 +22,7 @@ interface AvatarT {
 export const Avatar = memo<AvatarT>(
   ({ loading, uri, localImageSource, size = 'large', viewStyle }) => {
     return (
-      <View style={[styles.container, viewStyle]}>
+      <View style={[styles.container, viewStyle]} testID="avatar">
         {loading ? (
           <Spinner size={styles[size].height} type="Pulse" color={secondary} />
         ) : !uri ? (
@@ -82,3 +52,33 @@ export const PressableAvatar = ({ onPress, ...props }: PressableAvatarT) => {
     </Pressable>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignSelf: 'center',
+    borderRadius: s(130),
+    overflow: 'hidden'
+  },
+  xLarge: {
+    marginLeft: 1,
+    width: s(120),
+    height: s(120),
+    borderRadius: s(130)
+  },
+  large: {
+    marginLeft: 1,
+    width: s(75),
+    height: s(75),
+    borderRadius: s(75)
+  },
+  medium: {
+    width: s(50),
+    height: s(50),
+    borderRadius: s(50)
+  },
+  small: {
+    width: s(36),
+    height: s(36),
+    borderRadius: s(36)
+  }
+})

@@ -1,0 +1,86 @@
+508338c178bedb50e0be3a1321bdf3dc
+
+
+
+
+
+
+
+
+
+
+'use strict';
+
+
+
+var androidScaleSuffix = {
+  '0.75': 'ldpi',
+  '1': 'mdpi',
+  '1.5': 'hdpi',
+  '2': 'xhdpi',
+  '3': 'xxhdpi',
+  '4': 'xxxhdpi'
+};
+
+
+
+
+
+function getAndroidAssetSuffix(scale) {
+  if (scale.toString() in androidScaleSuffix) {
+    return androidScaleSuffix[scale.toString()];
+  }
+
+  throw new Error('no such scale ' + scale.toString());
+}
+
+
+var drawableFileTypes = new Set([
+'gif',
+'jpeg',
+'jpg',
+'png',
+'svg',
+'webp',
+'xml']
+);
+
+function getAndroidResourceFolderName(
+asset,
+scale)
+{
+  if (!drawableFileTypes.has(asset.type)) {
+    return 'raw';
+  }
+  var suffix = getAndroidAssetSuffix(scale);
+  if (!suffix) {
+    throw new Error(
+      "Don't know which android drawable suffix to use for scale: " +
+      scale +
+      '\nAsset: ' +
+      JSON.stringify(asset, null, '\t') +
+      '\nPossible scales are:' +
+      JSON.stringify(androidScaleSuffix, null, '\t')
+    );
+  }
+  return 'drawable-' + suffix;
+}
+
+function getAndroidResourceIdentifier(asset) {
+  return (getBasePath(asset) + '/' + asset.name).
+  toLowerCase().
+  replace(/\//g, '_').
+  replace(/([^a-z0-9_])/g, '').
+  replace(/^assets_/, '');
+}
+
+function getBasePath(asset) {
+  var basePath = asset.httpServerLocation;
+  return basePath.startsWith('/') ? basePath.substr(1) : basePath;
+}
+
+module.exports = {
+  getAndroidResourceFolderName: getAndroidResourceFolderName,
+  getAndroidResourceIdentifier: getAndroidResourceIdentifier,
+  getBasePath: getBasePath
+};

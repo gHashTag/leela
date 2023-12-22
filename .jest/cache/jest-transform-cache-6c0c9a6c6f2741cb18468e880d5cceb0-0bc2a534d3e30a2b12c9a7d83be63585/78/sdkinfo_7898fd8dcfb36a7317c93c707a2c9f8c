@@ -1,0 +1,49 @@
+8f33bccc9ea07f484bb41d4757b6852e
+Object.defineProperty(exports, "__esModule", { value: true });exports.SdkInfo = void 0;var _tslib = require("tslib");
+var _utils = require("@sentry/utils");
+var _version = require("../version");
+var _wrapper = require("../wrapper");function _toConsumableArray(arr) {return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();}function _nonIterableSpread() {throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _iterableToArray(iter) {if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);}function _arrayWithoutHoles(arr) {if (Array.isArray(arr)) return _arrayLikeToArray(arr);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];return arr2;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}var
+
+SdkInfo = function () {
+  function SdkInfo() {_classCallCheck(this, SdkInfo);
+
+
+
+    this.name = SdkInfo.id;
+    this._nativeSdkInfo = null;
+  }_createClass(SdkInfo, [{ key: "setupOnce", value:
+
+
+
+    function setupOnce(addGlobalEventProcessor) {var _this = this;
+      addGlobalEventProcessor(function (event) {return (0, _tslib.__awaiter)(_this, void 0, void 0, function* () {
+          var _a;
+
+
+          if (_wrapper.NATIVE.platform === 'ios' && this._nativeSdkInfo === null) {
+            try {
+              this._nativeSdkInfo = yield _wrapper.NATIVE.fetchNativeSdkInfo();
+            }
+            catch (e) {
+
+              _utils.logger.warn('[SdkInfo] Native SDK Info retrieval failed...something could be wrong with your Sentry installation:');
+              _utils.logger.warn(e);
+            }
+          }
+          event.platform = event.platform || 'javascript';
+          event.sdk = Object.assign(Object.assign({}, (_a = event.sdk) !== null && _a !== void 0 ? _a : {}), { name: _version.SDK_NAME, packages: [].concat(_toConsumableArray(
+              event.sdk && event.sdk.packages || []), _toConsumableArray(
+              this._nativeSdkInfo && [this._nativeSdkInfo] || []), [
+            {
+              name: 'npm:@sentry/react-native',
+              version: _version.SDK_VERSION
+            }]),
+            version: _version.SDK_VERSION });
+          return event;
+        });});
+    } }]);return SdkInfo;}();exports.SdkInfo = SdkInfo;
+
+
+
+
+SdkInfo.id = 'SdkInfo';

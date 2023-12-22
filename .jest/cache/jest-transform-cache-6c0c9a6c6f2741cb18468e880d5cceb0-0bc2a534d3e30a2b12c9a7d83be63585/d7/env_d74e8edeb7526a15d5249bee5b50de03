@@ -1,0 +1,5 @@
+f8940675ff0375e94cedb89f8cda4409
+module.exports = {
+  LEELA_ID: 'mock-leela-id',
+  OPEN_AI_KEY: 'mock-open-ai-key'
+};

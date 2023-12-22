@@ -1,0 +1,127 @@
+c05b9d943b416e002281736a6eb2fe24
+Object.defineProperty(exports, "__esModule", { value: true });exports.INVALID_PATH_REGEX = exports.INVALID_KEY_REGEX = void 0;exports.isValidKey = isValidKey;exports.isValidPath = isValidPath;exports.pathChild = pathChild;exports.pathIsEmpty = pathIsEmpty;exports.pathLastComponent = pathLastComponent;exports.pathParent = pathParent;exports.pathPieces = pathPieces;exports.pathToUrlEncodedString = pathToUrlEncodedString;exports.toFilePath = toFilePath;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function pathParent(path) {
+  if (path.length === 0) {
+    return null;
+  }
+
+  var index = path.lastIndexOf('/');
+  if (index <= 0) {
+    return null;
+  }
+
+  return path.slice(0, index);
+}
+
+
+
+
+function pathChild(path, childPath) {
+  var canonicalChildPath = pathPieces(childPath).join('/');
+
+  if (path.length === 0) {
+    return canonicalChildPath;
+  }
+
+  return path + "/" + canonicalChildPath;
+}
+
+
+
+
+function pathLastComponent(path) {
+  var index = path.lastIndexOf('/', path.length - 2);
+  if (index === -1) {
+    return path;
+  }
+
+  return path.slice(index + 1);
+}
+
+
+
+
+
+
+function pathPieces(path) {
+  return path.split('/').filter(function ($) {return $.length > 0;});
+}
+
+
+
+
+
+
+function pathIsEmpty(path) {
+  return !pathPieces(path).length;
+}
+
+
+
+
+
+
+function pathToUrlEncodedString(path) {
+  var pieces = pathPieces(path);
+  var pathString = '';
+  for (var i = 0; i < pieces.length; i++) {
+    pathString += "/" + encodeURIComponent(String(pieces[i]));
+  }
+  return pathString || '/';
+}
+
+
+var INVALID_PATH_REGEX = /[[\].#$\u0000-\u001F\u007F]/;exports.INVALID_PATH_REGEX = INVALID_PATH_REGEX;
+
+
+
+
+
+
+function isValidPath(path) {
+  return typeof path === 'string' && path.length !== 0 && !INVALID_PATH_REGEX.test(path);
+}
+
+
+var INVALID_KEY_REGEX = /[\[\].#$\/\u0000-\u001F\u007F]/;exports.INVALID_KEY_REGEX = INVALID_KEY_REGEX;
+
+
+
+
+
+
+function isValidKey(key) {
+  return typeof key === 'string' && key.length !== 0 && !INVALID_KEY_REGEX.test(path);
+}
+
+
+
+
+
+
+function toFilePath(path) {
+  var _filePath = path.replace('file://', '');
+  if (_filePath.includes('%')) {
+    _filePath = decodeURIComponent(_filePath);
+  }
+  return _filePath;
+}

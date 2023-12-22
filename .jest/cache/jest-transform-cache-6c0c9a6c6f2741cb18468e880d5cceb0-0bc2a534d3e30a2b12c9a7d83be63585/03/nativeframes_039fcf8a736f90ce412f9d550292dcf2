@@ -1,0 +1,178 @@
+c7ee3abeb4ccb40713996a82d9156664
+Object.defineProperty(exports, "__esModule", { value: true });exports.NativeFramesInstrumentation = void 0;var _tslib = require("tslib");
+var _utils = require("@sentry/utils");
+var _wrapper = require("../wrapper");
+var _utils2 = require("./utils");function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}
+
+
+
+
+var MARGIN_OF_ERROR_SECONDS = 0.05;var
+
+
+
+NativeFramesInstrumentation = function () {
+  function NativeFramesInstrumentation(addGlobalEventProcessor, doesExist) {var _this = this;_classCallCheck(this, NativeFramesInstrumentation);
+
+    this._finishFrames = new Map();
+
+    this._framesListeners = new Map();
+    _utils.logger.log('[ReactNativeTracing] Native frames instrumentation initialized.');
+    addGlobalEventProcessor(function (event) {return _this._processEvent(event, doesExist);});
+  }_createClass(NativeFramesInstrumentation, [{ key: "onTransactionStart", value:
+
+
+
+
+    function onTransactionStart(transaction) {var _this2 = this;
+      void _wrapper.NATIVE.fetchNativeFrames().then(function (framesMetrics) {
+        if (framesMetrics) {
+          transaction.setData('__startFrames', framesMetrics);
+        }
+      });
+      (0, _utils2.instrumentChildSpanFinish)(transaction, function (_, endTimestamp) {
+        if (!endTimestamp) {
+          _this2._onSpanFinish();
+        }
+      });
+    } }, { key: "onTransactionFinish", value:
+
+
+
+    function onTransactionFinish(transaction) {
+      void this._fetchFramesForTransaction(transaction);
+    } }, { key: "_onSpanFinish", value:
+
+
+
+
+    function _onSpanFinish() {var _this3 = this;
+      var timestamp = (0, _utils.timestampInSeconds)();
+      void _wrapper.NATIVE.fetchNativeFrames().then(function (nativeFrames) {
+        if (nativeFrames) {
+          _this3._lastSpanFinishFrames = {
+            timestamp: timestamp,
+            nativeFrames: nativeFrames
+          };
+        }
+      });
+    } }, { key: "_getFramesMeasurements", value:
+
+
+
+    function _getFramesMeasurements(traceId, finalEndTimestamp, startFrames) {
+      return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {var _this4 = this;
+        if (this._finishFrames.has(traceId)) {
+          return this._prepareMeasurements(traceId, finalEndTimestamp, startFrames);
+        }
+        return new Promise(function (resolve) {
+          var timeout = setTimeout(function () {
+            _this4._framesListeners.delete(traceId);
+            resolve(null);
+          }, 2000);
+          _this4._framesListeners.set(traceId, function () {
+            resolve(_this4._prepareMeasurements(traceId, finalEndTimestamp, startFrames));
+            clearTimeout(timeout);
+            _this4._framesListeners.delete(traceId);
+          });
+        });
+      });
+    } }, { key: "_prepareMeasurements", value:
+
+
+
+    function _prepareMeasurements(traceId, finalEndTimestamp,
+    startFrames) {
+      var finalFinishFrames;
+      var finish = this._finishFrames.get(traceId);
+      if (finish &&
+      finish.nativeFrames &&
+
+      Math.abs(finish.timestamp - finalEndTimestamp) < MARGIN_OF_ERROR_SECONDS) {
+        finalFinishFrames = finish.nativeFrames;
+      } else
+      if (this._lastSpanFinishFrames &&
+      Math.abs(this._lastSpanFinishFrames.timestamp - finalEndTimestamp) <
+      MARGIN_OF_ERROR_SECONDS) {
+
+
+        finalFinishFrames = this._lastSpanFinishFrames.nativeFrames;
+      } else
+      {
+        return null;
+      }
+      var measurements = {
+        frames_total: {
+          value: finalFinishFrames.totalFrames - startFrames.totalFrames
+        },
+        frames_frozen: {
+          value: finalFinishFrames.frozenFrames - startFrames.frozenFrames
+        },
+        frames_slow: {
+          value: finalFinishFrames.slowFrames - startFrames.slowFrames
+        }
+      };
+      return measurements;
+    } }, { key: "_fetchFramesForTransaction", value:
+
+
+
+    function _fetchFramesForTransaction(transaction) {
+      var _a;
+      return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {var _this5 = this;
+        var startFrames = transaction.data.__startFrames;
+
+        var timestamp = (0, _utils.timestampInSeconds)();
+        var finishFrames = null;
+        if (startFrames) {
+          finishFrames = yield _wrapper.NATIVE.fetchNativeFrames();
+        }
+        this._finishFrames.set(transaction.traceId, {
+          nativeFrames: finishFrames,
+          timestamp: timestamp
+        });
+        (_a = this._framesListeners.get(transaction.traceId)) === null || _a === void 0 ? void 0 : _a();
+        setTimeout(function () {return _this5._cancelFinishFrames(transaction);}, 2000);
+      });
+    } }, { key: "_cancelFinishFrames", value:
+
+
+
+    function _cancelFinishFrames(transaction) {
+      if (this._finishFrames.has(transaction.traceId)) {
+        this._finishFrames.delete(transaction.traceId);
+        _utils.logger.log("[NativeFrames] Native frames timed out for " + transaction.op + " transaction " + transaction.name + ". Not adding native frames measurements.");
+      }
+    } }, { key: "_processEvent", value:
+
+
+
+
+    function _processEvent(event, doesExist) {
+      var _a, _b;
+      return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+        if (!doesExist()) {
+          return event;
+        }
+        if (event.type === 'transaction' &&
+        event.transaction &&
+        event.contexts &&
+        event.contexts.trace) {
+          var traceContext = event.contexts.trace;
+          var traceId = traceContext.trace_id;
+          if (traceId && ((_a = traceContext.data) === null || _a === void 0 ? void 0 : _a.__startFrames) && event.timestamp) {
+            var measurements = yield this._getFramesMeasurements(traceId, event.timestamp, traceContext.data.__startFrames);
+            if (!measurements) {
+              _utils.logger.log("[NativeFrames] Could not fetch native frames for " + traceContext.op + " transaction " + event.transaction + ". Not adding native frames measurements.");
+            } else
+            {
+              _utils.logger.log("[Measurements] Adding measurements to " + traceContext.op + " transaction " + event.transaction + ": " + JSON.stringify(measurements, undefined, 2));
+              event.measurements = Object.assign(Object.assign({}, (_b = event.measurements) !== null && _b !== void 0 ? _b : {}), measurements);
+              this._finishFrames.delete(traceId);
+            }
+            delete traceContext.data.__startFrames;
+          }
+        }
+        return event;
+      });
+    } }]);return NativeFramesInstrumentation;}();exports.NativeFramesInstrumentation = NativeFramesInstrumentation;

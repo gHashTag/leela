@@ -1,0 +1,17 @@
+0136d7987ab35b1ca579309b7e942ade
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = findFocusedRoute;
+function findFocusedRoute(state) {var _ref;
+  var _current2, _current3;
+  var current = state;
+  while (((_current = current) === null || _current === void 0 ? void 0 : _current.routes[(_current$index = current.index) != null ? _current$index : 0].state) != null) {var _current$index, _current$index2;
+    var _current;
+    current = current.routes[(_current$index2 = current.index) != null ? _current$index2 : 0].state;
+  }
+  var route = (_current2 = current) === null || _current2 === void 0 ? void 0 : _current2.routes[(_ref = (_current3 = current) === null || _current3 === void 0 ? void 0 : _current3.index) != null ? _ref : 0];
+  return route;
+}

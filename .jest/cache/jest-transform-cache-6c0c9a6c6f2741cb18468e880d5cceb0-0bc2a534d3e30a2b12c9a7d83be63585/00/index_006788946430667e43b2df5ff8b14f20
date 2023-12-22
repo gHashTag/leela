@@ -1,0 +1,103 @@
+620fbabd64ca41c8e18e7a3a6a9ca94a
+Object.defineProperty(exports, "__esModule", { value: true });var _exportNames = { getDataUrlParts: true, once: true, isError: true, hasOwnProperty: true, stripTrailingSlash: true, isIOS: true, isAndroid: true, tryJSONParse: true, tryJSONStringify: true, Base64: true, ReferenceBase: true };Object.defineProperty(exports, "Base64", { enumerable: true, get: function get() {return _Base.default;} });Object.defineProperty(exports, "ReferenceBase", { enumerable: true, get: function get() {return _ReferenceBase.default;} });exports.getDataUrlParts = getDataUrlParts;exports.hasOwnProperty = hasOwnProperty;exports.isAndroid = void 0;exports.isError = isError;exports.isIOS = void 0;exports.once = once;exports.stripTrailingSlash = stripTrailingSlash;exports.tryJSONParse = tryJSONParse;exports.tryJSONStringify = tryJSONStringify;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var _reactNative = require("react-native");
+var _Base = _interopRequireDefault(require("./Base64"));
+var _validate = require("./validate");
+
+
+
+
+Object.keys(_validate).forEach(function (key) {if (key === "default" || key === "__esModule") return;if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;if (key in exports && exports[key] === _validate[key]) return;Object.defineProperty(exports, key, { enumerable: true, get: function get() {return _validate[key];} });});var _id = require("./id");Object.keys(_id).forEach(function (key) {if (key === "default" || key === "__esModule") return;if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;if (key in exports && exports[key] === _id[key]) return;Object.defineProperty(exports, key, { enumerable: true, get: function get() {return _id[key];} });});var _path = require("./path");Object.keys(_path).forEach(function (key) {if (key === "default" || key === "__esModule") return;if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;if (key in exports && exports[key] === _path[key]) return;Object.defineProperty(exports, key, { enumerable: true, get: function get() {return _path[key];} });});var _promise = require("./promise");Object.keys(_promise).forEach(function (key) {if (key === "default" || key === "__esModule") return;if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;if (key in exports && exports[key] === _promise[key]) return;Object.defineProperty(exports, key, { enumerable: true, get: function get() {return _promise[key];} });});
+
+
+var _ReferenceBase = _interopRequireDefault(require("./ReferenceBase"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];return arr2;}function _iterableToArrayLimit(arr, i) {var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];if (null != _i) {var _s,_e,_x,_r,_arr = [],_n = !0,_d = !1;try {if (_x = (_i = _i.call(arr)).next, 0 === i) {if (Object(_i) !== _i) return;_n = !1;} else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0);} catch (err) {_d = !0, _e = err;} finally {try {if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;} finally {if (_d) throw _e;}}return _arr;}}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}
+
+function getDataUrlParts(dataUrlString) {
+  var isBase64 = dataUrlString.includes(';base64');
+  var _dataUrlString$split = dataUrlString.split(','),_dataUrlString$split2 = _slicedToArray(_dataUrlString$split, 2),mediaType = _dataUrlString$split2[0],base64String = _dataUrlString$split2[1];
+  if (!mediaType || !base64String) {
+    return { base64String: undefined, mediaType: undefined };
+  }
+  mediaType = mediaType.replace('data:', '').replace(';base64', '');
+  if (base64String && base64String.includes('%')) {
+    base64String = decodeURIComponent(base64String);
+  }
+  if (!isBase64) {
+    base64String = _Base.default.btoa(base64String);
+  }
+  return { base64String: base64String, mediaType: mediaType };
+}
+
+function once(fn, context) {
+  var onceResult;
+  var ranOnce = false;
+
+  return function onceInner() {
+    if (!ranOnce) {
+      ranOnce = true;for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
+      onceResult = fn.apply(context || this, args);
+    }
+
+    return onceResult;
+  };
+}
+
+function isError(value) {
+  if (Object.prototype.toString.call(value) === '[object Error]') {
+    return true;
+  }
+
+  return value instanceof Error;
+}
+
+function hasOwnProperty(target, property) {
+  return Object.hasOwnProperty.call(target, property);
+}
+
+
+
+
+
+
+
+function stripTrailingSlash(string) {
+  if (!(0, _validate.isString)(string)) {
+    return string;
+  }
+  return string.endsWith('/') ? string.slice(0, -1) : string;
+}
+
+var isIOS = _reactNative.Platform.OS === 'ios';exports.isIOS = isIOS;
+
+var isAndroid = _reactNative.Platform.OS === 'android';exports.isAndroid = isAndroid;
+
+function tryJSONParse(string) {
+  try {
+    return string && JSON.parse(string);
+  } catch (jsonError) {
+    return string;
+  }
+}
+
+function tryJSONStringify(data) {
+  try {
+    return JSON.stringify(data);
+  } catch (jsonError) {
+    return null;
+  }
+}

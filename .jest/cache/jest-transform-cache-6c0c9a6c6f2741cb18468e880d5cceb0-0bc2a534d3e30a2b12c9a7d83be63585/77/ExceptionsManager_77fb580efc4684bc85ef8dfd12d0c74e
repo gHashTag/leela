@@ -1,0 +1,243 @@
+ed1cf84cc044a435582ae6db9ebd4fc9
+
+
+
+
+
+
+
+
+
+
+'use strict';function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _inherits(subClass, superClass) {if (typeof superClass !== "function" && superClass !== null) {throw new TypeError("Super expression must either be null or a function");}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } });Object.defineProperty(subClass, "prototype", { writable: false });if (superClass) _setPrototypeOf(subClass, superClass);}function _createSuper(Derived) {var hasNativeReflectConstruct = _isNativeReflectConstruct();return function _createSuperInternal() {var Super = _getPrototypeOf(Derived),result;if (hasNativeReflectConstruct) {var NewTarget = _getPrototypeOf(this).constructor;result = Reflect.construct(Super, arguments, NewTarget);} else {result = Super.apply(this, arguments);}return _possibleConstructorReturn(this, result);};}function _possibleConstructorReturn(self, call) {if (call && (typeof call === "object" || typeof call === "function")) {return call;} else if (call !== void 0) {throw new TypeError("Derived constructors may only return object or undefined");}return _assertThisInitialized(self);}function _assertThisInitialized(self) {if (self === void 0) {throw new ReferenceError("this hasn't been initialised - super() hasn't been called");}return self;}function _wrapNativeSuper(Class) {var _cache = typeof Map === "function" ? new Map() : undefined;_wrapNativeSuper = function _wrapNativeSuper(Class) {if (Class === null || !_isNativeFunction(Class)) return Class;if (typeof Class !== "function") {throw new TypeError("Super expression must either be null or a function");}if (typeof _cache !== "undefined") {if (_cache.has(Class)) return _cache.get(Class);_cache.set(Class, Wrapper);}function Wrapper() {return _construct(Class, arguments, _getPrototypeOf(this).constructor);}Wrapper.prototype = Object.create(Class.prototype, { constructor: { value: Wrapper, enumerable: false, writable: true, configurable: true } });return _setPrototypeOf(Wrapper, Class);};return _wrapNativeSuper(Class);}function _construct(Parent, args, Class) {if (_isNativeReflectConstruct()) {_construct = Reflect.construct.bind();} else {_construct = function _construct(Parent, args, Class) {var a = [null];a.push.apply(a, args);var Constructor = Function.bind.apply(Parent, a);var instance = new Constructor();if (Class) _setPrototypeOf(instance, Class.prototype);return instance;};}return _construct.apply(null, arguments);}function _isNativeReflectConstruct() {if (typeof Reflect === "undefined" || !Reflect.construct) return false;if (Reflect.construct.sham) return false;if (typeof Proxy === "function") return true;try {Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));return true;} catch (e) {return false;}}function _isNativeFunction(fn) {return Function.toString.call(fn).indexOf("[native code]") !== -1;}function _setPrototypeOf(o, p) {_setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {o.__proto__ = p;return o;};return _setPrototypeOf(o, p);}function _getPrototypeOf(o) {_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {return o.__proto__ || Object.getPrototypeOf(o);};return _getPrototypeOf(o);}var
+
+
+
+
+SyntheticError = function (_Error) {_inherits(SyntheticError, _Error);var _super = _createSuper(SyntheticError);function SyntheticError() {var _this;_classCallCheck(this, SyntheticError);for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}_this = _super.call.apply(_super, [this].concat(args));_this.
+    name = '';return _this;}return _createClass(SyntheticError);}(_wrapNativeSuper(Error));
+
+
+
+
+var userExceptionDecorator;
+var inUserExceptionDecorator = false;
+
+
+
+
+
+
+function unstable_setExceptionDecorator(
+exceptionDecorator)
+{
+  userExceptionDecorator = exceptionDecorator;
+}
+
+function preprocessException(data) {
+  if (userExceptionDecorator && !inUserExceptionDecorator) {
+    inUserExceptionDecorator = true;
+    try {
+      return userExceptionDecorator(data);
+    } catch (_unused) {
+
+    } finally {
+      inUserExceptionDecorator = false;
+    }
+  }
+  return data;
+}
+
+
+
+
+var exceptionID = 0;
+function reportException(
+e,
+isFatal,
+reportToConsole)
+{
+  var parseErrorStack = require("./Devtools/parseErrorStack");
+  var stack = parseErrorStack(e == null ? void 0 : e.stack);
+  var currentExceptionID = ++exceptionID;
+  var originalMessage = e.message || '';
+  var message = originalMessage;
+  if (e.componentStack != null) {
+    message += "\n\nThis error is located at:" + e.componentStack;
+  }
+  var namePrefix = e.name == null || e.name === '' ? '' : e.name + ": ";
+
+  if (!message.startsWith(namePrefix)) {
+    message = namePrefix + message;
+  }
+
+  message =
+  e.jsEngine == null ? message : message + ", js engine: " + e.jsEngine;
+
+  var data = preprocessException({
+    message: message,
+    originalMessage: message === originalMessage ? null : originalMessage,
+    name: e.name == null || e.name === '' ? null : e.name,
+    componentStack:
+    typeof e.componentStack === 'string' ? e.componentStack : null,
+    stack: stack,
+    id: currentExceptionID,
+    isFatal: isFatal,
+    extraData: {
+      jsEngine: e.jsEngine,
+      rawStack: e.stack
+    }
+  });
+
+  if (reportToConsole) {
+
+
+
+    console.error(data.message);
+  }
+
+  if (__DEV__) {
+    var LogBox = require("../LogBox/LogBox");
+    LogBox.addException(Object.assign({},
+    data, {
+      isComponentError: !!e.isComponentError })
+    );
+  } else if (isFatal || e.type !== 'warn') {
+    var NativeExceptionsManager =
+    require("./NativeExceptionsManager").default;
+    if (NativeExceptionsManager) {
+      NativeExceptionsManager.reportException(data);
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+var inExceptionHandler = false;
+
+
+
+
+function handleException(e, isFatal) {
+  var error;
+  if (e instanceof Error) {
+    error = e;
+  } else {
+
+
+
+
+    error = new SyntheticError(e);
+  }
+  try {
+    inExceptionHandler = true;
+
+
+    reportException(error, isFatal, true);
+  } finally {
+    inExceptionHandler = false;
+  }
+}
+
+
+
+function reactConsoleErrorHandler() {var _console;for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}
+
+  (_console = console)._errorOriginal.apply(_console, args);
+  if (!console.reportErrorsAsExceptions) {
+    return;
+  }
+  if (inExceptionHandler) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    return;
+  }
+
+  var error;
+
+  var firstArg = args[0];
+  if (firstArg != null && firstArg.stack) {
+
+    error = firstArg;
+  } else {
+    var stringifySafe = require("../Utilities/stringifySafe").default;
+    if (typeof firstArg === 'string' && firstArg.startsWith('Warning: ')) {
+
+
+
+      return;
+    }
+    var message = args.
+    map(function (arg) {return typeof arg === 'string' ? arg : stringifySafe(arg);}).
+    join(' ');
+
+    error = new SyntheticError(message);
+    error.name = 'console.error';
+  }
+
+  reportException(
+
+
+    error,
+    false,
+    false
+  );
+}
+
+
+
+
+
+function installConsoleErrorReporter() {
+
+  if (console._errorOriginal) {
+    return;
+  }
+
+  console._errorOriginal = console.error.bind(console);
+  console.error = reactConsoleErrorHandler;
+  if (console.reportErrorsAsExceptions === undefined) {
+
+
+    console.reportErrorsAsExceptions = true;
+  }
+}
+
+module.exports = {
+  handleException: handleException,
+  installConsoleErrorReporter: installConsoleErrorReporter,
+  SyntheticError: SyntheticError,
+  unstable_setExceptionDecorator: unstable_setExceptionDecorator
+};

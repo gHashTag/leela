@@ -1,0 +1,164 @@
+e8f78914f1970aee3501125cb5b5d3ab
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _exportNames = {
+  addEventListener: true,
+  removeEventListener: true,
+  findBestAvailableLanguage: true,
+  getCalendar: true,
+  getCountry: true,
+  getCurrencies: true,
+  getLocales: true,
+  getNumberFormatSettings: true,
+  getTemperatureUnit: true,
+  getTimeZone: true,
+  uses24HourClock: true,
+  usesAutoDateAndTime: true,
+  usesAutoTimeZone: true,
+  usesMetricSystem: true
+};
+exports.addEventListener = addEventListener;
+exports.default = void 0;
+exports.findBestAvailableLanguage = findBestAvailableLanguage;
+Object.defineProperty(exports, "getCalendar", {
+  enumerable: true,
+  get: function get() {
+    return _module.getCalendar;
+  }
+});
+Object.defineProperty(exports, "getCountry", {
+  enumerable: true,
+  get: function get() {
+    return _module.getCountry;
+  }
+});
+Object.defineProperty(exports, "getCurrencies", {
+  enumerable: true,
+  get: function get() {
+    return _module.getCurrencies;
+  }
+});
+Object.defineProperty(exports, "getLocales", {
+  enumerable: true,
+  get: function get() {
+    return _module.getLocales;
+  }
+});
+Object.defineProperty(exports, "getNumberFormatSettings", {
+  enumerable: true,
+  get: function get() {
+    return _module.getNumberFormatSettings;
+  }
+});
+Object.defineProperty(exports, "getTemperatureUnit", {
+  enumerable: true,
+  get: function get() {
+    return _module.getTemperatureUnit;
+  }
+});
+Object.defineProperty(exports, "getTimeZone", {
+  enumerable: true,
+  get: function get() {
+    return _module.getTimeZone;
+  }
+});
+exports.removeEventListener = removeEventListener;
+Object.defineProperty(exports, "uses24HourClock", {
+  enumerable: true,
+  get: function get() {
+    return _module.uses24HourClock;
+  }
+});
+Object.defineProperty(exports, "usesAutoDateAndTime", {
+  enumerable: true,
+  get: function get() {
+    return _module.usesAutoDateAndTime;
+  }
+});
+Object.defineProperty(exports, "usesAutoTimeZone", {
+  enumerable: true,
+  get: function get() {
+    return _module.usesAutoTimeZone;
+  }
+});
+Object.defineProperty(exports, "usesMetricSystem", {
+  enumerable: true,
+  get: function get() {
+    return _module.usesMetricSystem;
+  }
+});
+var _module = require("./module");
+var _types = require("./types");
+Object.keys(_types).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _types[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _types[key];
+    }
+  });
+});
+function logUnknownEvent(type) {
+  console.error("`" + type + "` is not a valid react-native-localize event");
+}
+function addEventListener(type, handler) {
+  if (type !== "change") {
+    logUnknownEvent(type);
+  } else if (!_module.handlers.has(handler)) {
+    _module.handlers.add(handler);
+  }
+}
+function removeEventListener(type, handler) {
+  if (type !== "change") {
+    logUnknownEvent(type);
+  } else if (_module.handlers.has(handler)) {
+    _module.handlers.delete(handler);
+  }
+}
+function findBestAvailableLanguage(languageTags) {
+  var locales = (0, _module.getLocales)();
+  var loweredLanguageTags = languageTags.map(function (tag) {return tag.toLowerCase();});
+  for (var i = 0; i < locales.length; i++) {
+    var currentLocale = locales[i];
+    var
+      languageTag =
+
+
+
+
+      currentLocale.languageTag,languageCode = currentLocale.languageCode,scriptCode = currentLocale.scriptCode,countryCode = currentLocale.countryCode,isRTL = currentLocale.isRTL;
+    var combinaisons = [languageTag, !!scriptCode ? languageCode + "-" + scriptCode : null, languageCode + "-" + countryCode, languageCode].filter(function (value) {return !!value;});
+    for (var j = 0; j < combinaisons.length; j++) {
+      var combinaison = combinaisons[j].toLowerCase();
+      var tagIndex = loweredLanguageTags.indexOf(combinaison);
+      if (tagIndex !== -1) {
+        return {
+          languageTag: languageTags[tagIndex],
+          isRTL: isRTL
+        };
+      }
+    }
+  }
+}
+var _default = {
+  getCalendar: _module.getCalendar,
+  getCountry: _module.getCountry,
+  getCurrencies: _module.getCurrencies,
+  getLocales: _module.getLocales,
+  getNumberFormatSettings: _module.getNumberFormatSettings,
+  getTemperatureUnit: _module.getTemperatureUnit,
+  getTimeZone: _module.getTimeZone,
+  uses24HourClock: _module.uses24HourClock,
+  usesAutoDateAndTime: _module.usesAutoDateAndTime,
+  usesAutoTimeZone: _module.usesAutoTimeZone,
+  usesMetricSystem: _module.usesMetricSystem,
+  findBestAvailableLanguage: findBestAvailableLanguage,
+  addEventListener: addEventListener,
+  removeEventListener: removeEventListener
+};
+exports.default = _default;

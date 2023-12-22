@@ -1,0 +1,545 @@
+f0f31b6c52c677eda990a3a5cda35be4
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = exports.SDK_VERSION = void 0;Object.defineProperty(exports, "deleteToken", { enumerable: true, get: function get() {return _index.deleteToken;} });Object.defineProperty(exports, "experimentalSetDeliveryMetricsExportedToBigQueryEnabled", { enumerable: true, get: function get() {return _index.experimentalSetDeliveryMetricsExportedToBigQueryEnabled;} });exports.firebase = void 0;Object.defineProperty(exports, "getAPNSToken", { enumerable: true, get: function get() {return _index.getAPNSToken;} });Object.defineProperty(exports, "getDidOpenSettingsForNotification", { enumerable: true, get: function get() {return _index.getDidOpenSettingsForNotification;} });Object.defineProperty(exports, "getInitialNotification", { enumerable: true, get: function get() {return _index.getInitialNotification;} });Object.defineProperty(exports, "getIsHeadless", { enumerable: true, get: function get() {return _index.getIsHeadless;} });Object.defineProperty(exports, "getMessaging", { enumerable: true, get: function get() {return _index.getMessaging;} });Object.defineProperty(exports, "getToken", { enumerable: true, get: function get() {return _index.getToken;} });Object.defineProperty(exports, "hasPermission", { enumerable: true, get: function get() {return _index.hasPermission;} });Object.defineProperty(exports, "isAutoInitEnabled", { enumerable: true, get: function get() {return _index.isAutoInitEnabled;} });Object.defineProperty(exports, "isDeliveryMetricsExportToBigQueryEnabled", { enumerable: true, get: function get() {return _index.isDeliveryMetricsExportToBigQueryEnabled;} });Object.defineProperty(exports, "isDeviceRegisteredForRemoteMessages", { enumerable: true, get: function get() {return _index.isDeviceRegisteredForRemoteMessages;} });Object.defineProperty(exports, "isSupported", { enumerable: true, get: function get() {return _index.isSupported;} });Object.defineProperty(exports, "onDeletedMessages", { enumerable: true, get: function get() {return _index.onDeletedMessages;} });Object.defineProperty(exports, "onMessage", { enumerable: true, get: function get() {return _index.onMessage;} });Object.defineProperty(exports, "onMessageSent", { enumerable: true, get: function get() {return _index.onMessageSent;} });Object.defineProperty(exports, "onNotificationOpenedApp", { enumerable: true, get: function get() {return _index.onNotificationOpenedApp;} });Object.defineProperty(exports, "onSendError", { enumerable: true, get: function get() {return _index.onSendError;} });Object.defineProperty(exports, "onTokenRefresh", { enumerable: true, get: function get() {return _index.onTokenRefresh;} });Object.defineProperty(exports, "registerDeviceForRemoteMessages", { enumerable: true, get: function get() {return _index.registerDeviceForRemoteMessages;} });Object.defineProperty(exports, "requestPermission", { enumerable: true, get: function get() {return _index.requestPermission;} });Object.defineProperty(exports, "sendMessage", { enumerable: true, get: function get() {return _index.sendMessage;} });Object.defineProperty(exports, "setAPNSToken", { enumerable: true, get: function get() {return _index.setAPNSToken;} });Object.defineProperty(exports, "setAutoInitEnabled", { enumerable: true, get: function get() {return _index.setAutoInitEnabled;} });Object.defineProperty(exports, "setBackgroundMessageHandler", { enumerable: true, get: function get() {return _index.setBackgroundMessageHandler;} });Object.defineProperty(exports, "setOpenSettingsForNotificationsHandler", { enumerable: true, get: function get() {return _index.setOpenSettingsForNotificationsHandler;} });Object.defineProperty(exports, "subscribeToTopic", { enumerable: true, get: function get() {return _index.subscribeToTopic;} });Object.defineProperty(exports, "unregisterDeviceForRemoteMessages", { enumerable: true, get: function get() {return _index.unregisterDeviceForRemoteMessages;} });Object.defineProperty(exports, "unsubscribeFromTopic", { enumerable: true, get: function get() {return _index.unsubscribeFromTopic;} });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var _common = require("@react-native-firebase/app/lib/common");
+
+
+
+
+
+
+
+
+
+var _internal = require("@react-native-firebase/app/lib/internal");
+
+
+
+
+var _reactNative = require("react-native");
+var _remoteMessageOptions = _interopRequireDefault(require("./remoteMessageOptions"));
+var _version = _interopRequireDefault(require("./version"));
+
+var _index = require("../modular/index");function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _toConsumableArray(arr) {return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();}function _nonIterableSpread() {throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _iterableToArray(iter) {if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);}function _arrayWithoutHoles(arr) {if (Array.isArray(arr)) return _arrayLikeToArray(arr);}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];return arr2;}function _iterableToArrayLimit(arr, i) {var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];if (null != _i) {var _s,_e,_x,_r,_arr = [],_n = !0,_d = !1;try {if (_x = (_i = _i.call(arr)).next, 0 === i) {if (Object(_i) !== _i) return;_n = !1;} else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0);} catch (err) {_d = !0, _e = err;} finally {try {if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;} finally {if (_d) throw _e;}}return _arr;}}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}function _inherits(subClass, superClass) {if (typeof superClass !== "function" && superClass !== null) {throw new TypeError("Super expression must either be null or a function");}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } });Object.defineProperty(subClass, "prototype", { writable: false });if (superClass) _setPrototypeOf(subClass, superClass);}function _setPrototypeOf(o, p) {_setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {o.__proto__ = p;return o;};return _setPrototypeOf(o, p);}function _createSuper(Derived) {var hasNativeReflectConstruct = _isNativeReflectConstruct();return function _createSuperInternal() {var Super = _getPrototypeOf(Derived),result;if (hasNativeReflectConstruct) {var NewTarget = _getPrototypeOf(this).constructor;result = Reflect.construct(Super, arguments, NewTarget);} else {result = Super.apply(this, arguments);}return _possibleConstructorReturn(this, result);};}function _possibleConstructorReturn(self, call) {if (call && (typeof call === "object" || typeof call === "function")) {return call;} else if (call !== void 0) {throw new TypeError("Derived constructors may only return object or undefined");}return _assertThisInitialized(self);}function _assertThisInitialized(self) {if (self === void 0) {throw new ReferenceError("this hasn't been initialised - super() hasn't been called");}return self;}function _isNativeReflectConstruct() {if (typeof Reflect === "undefined" || !Reflect.construct) return false;if (Reflect.construct.sham) return false;if (typeof Proxy === "function") return true;try {Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));return true;} catch (e) {return false;}}function _getPrototypeOf(o) {_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {return o.__proto__ || Object.getPrototypeOf(o);};return _getPrototypeOf(o);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var statics = {
+  AuthorizationStatus: {
+    NOT_DETERMINED: -1,
+    DENIED: 0,
+    AUTHORIZED: 1,
+    PROVISIONAL: 2,
+    EPHEMERAL: 3
+  },
+  NotificationAndroidPriority: {
+    PRIORITY_MIN: -2,
+    PRIORITY_LOW: -1,
+    PRIORITY_DEFAULT: 0,
+    PRIORITY_HIGH: 1,
+    PRIORITY_MAX: 2
+  },
+  NotificationAndroidVisibility: {
+    VISIBILITY_SECRET: -1,
+    VISIBILITY_PRIVATE: 0,
+    VISIBILITY_PUBLIC: 1
+  }
+};
+
+var namespace = 'messaging';
+
+var nativeModuleName = 'RNFBMessagingModule';
+
+var backgroundMessageHandler;
+var openSettingsForNotificationHandler;var
+
+FirebaseMessagingModule = function (_FirebaseModule) {_inherits(FirebaseMessagingModule, _FirebaseModule);var _super = _createSuper(FirebaseMessagingModule);
+  function FirebaseMessagingModule() {var _this;_classCallCheck(this, FirebaseMessagingModule);for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
+    _this = _super.call.apply(_super, [this].concat(args));
+    _this._isAutoInitEnabled =
+    _this.native.isAutoInitEnabled != null ? _this.native.isAutoInitEnabled : true;
+    _this._isDeliveryMetricsExportToBigQueryEnabled =
+    _this.native.isDeliveryMetricsExportToBigQueryEnabled != null ?
+    _this.native.isDeliveryMetricsExportToBigQueryEnabled :
+    false;
+    _this._isRegisteredForRemoteNotifications =
+    _this.native.isRegisteredForRemoteNotifications != null ?
+    _this.native.isRegisteredForRemoteNotifications :
+    true;
+
+    _reactNative.AppRegistry.registerHeadlessTask('ReactNativeFirebaseMessagingHeadlessTask', function () {
+      if (!backgroundMessageHandler) {
+
+        console.warn(
+          'No background message handler has been set. Set a handler via the "setBackgroundMessageHandler" method.'
+        );
+        return function () {return Promise.resolve();};
+      }
+      return function (remoteMessage) {return backgroundMessageHandler(remoteMessage);};
+    });
+
+    if (_common.isIOS) {
+      _this.emitter.addListener('messaging_message_received_background', function (remoteMessage) {
+        if (!backgroundMessageHandler) {
+
+          console.warn(
+            'No background message handler has been set. Set a handler via the "setBackgroundMessageHandler" method.'
+          );
+          return Promise.resolve();
+        }
+
+        return backgroundMessageHandler(remoteMessage);
+      });
+
+      _this.emitter.addListener('messaging_settings_for_notification_opened', function (remoteMessage) {
+        if (!openSettingsForNotificationHandler) {
+
+          console.warn(
+            'No handler for notification settings link has been set. Set a handler via the "setOpenSettingsForNotificationsHandler" method'
+          );
+
+          return Promise.resolve();
+        }
+
+        return openSettingsForNotificationHandler(remoteMessage);
+      });
+    }return _this;
+  }_createClass(FirebaseMessagingModule, [{ key: "isAutoInitEnabled", get:
+
+    function get() {
+      return this._isAutoInitEnabled;
+    } }, { key: "isDeviceRegisteredForRemoteMessages", get:
+
+
+
+
+    function get() {
+      if (_common.isAndroid) {
+        return true;
+      }
+
+      return this._isRegisteredForRemoteNotifications;
+    } }, { key: "isDeliveryMetricsExportToBigQueryEnabled", get:
+
+    function get() {
+      return this._isDeliveryMetricsExportToBigQueryEnabled;
+    } }, { key: "setAutoInitEnabled", value:
+
+    function setAutoInitEnabled(enabled) {
+      if (!(0, _common.isBoolean)(enabled)) {
+        throw new Error(
+          "firebase.messaging().setAutoInitEnabled(*) 'enabled' expected a boolean value."
+        );
+      }
+
+      this._isAutoInitEnabled = enabled;
+      return this.native.setAutoInitEnabled(enabled);
+    } }, { key: "getInitialNotification", value:
+
+    function getInitialNotification() {
+      return this.native.getInitialNotification().then(function (value) {
+        if (value) {
+          return value;
+        }
+        return null;
+      });
+    } }, { key: "getDidOpenSettingsForNotification", value:
+
+    function getDidOpenSettingsForNotification() {
+      if (!_common.isIOS) return Promise.resolve(false);
+      return this.native.getDidOpenSettingsForNotification().then(function (value) {return value;});
+    } }, { key: "getIsHeadless", value:
+
+    function getIsHeadless() {
+      return this.native.getIsHeadless();
+    } }, { key: "getToken", value:
+
+    function getToken() {var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},appName = _ref.appName,senderId = _ref.senderId;
+      if (!(0, _common.isUndefined)(appName) && !(0, _common.isString)(appName)) {
+        throw new Error("firebase.messaging().getToken(*) 'appName' expected a string.");
+      }
+
+      if (!(0, _common.isUndefined)(senderId) && !(0, _common.isString)(senderId)) {
+        throw new Error("firebase.messaging().getToken(*) 'senderId' expected a string.");
+      }
+
+      return this.native.getToken(
+        appName || this.app.name,
+        senderId || this.app.options.messagingSenderId
+      );
+    } }, { key: "deleteToken", value:
+
+    function deleteToken() {var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},appName = _ref2.appName,senderId = _ref2.senderId;
+      if (!(0, _common.isUndefined)(appName) && !(0, _common.isString)(appName)) {
+        throw new Error("firebase.messaging().deleteToken(*) 'appName' expected a string.");
+      }
+
+      if (!(0, _common.isUndefined)(senderId) && !(0, _common.isString)(senderId)) {
+        throw new Error("firebase.messaging().deleteToken(*) 'senderId' expected a string.");
+      }
+
+      return this.native.deleteToken(
+        appName || this.app.name,
+        senderId || this.app.options.messagingSenderId
+      );
+    } }, { key: "onMessage", value:
+
+    function onMessage(listener) {
+      if (!(0, _common.isFunction)(listener)) {
+        throw new Error("firebase.messaging().onMessage(*) 'listener' expected a function.");
+      }
+
+      var subscription = this.emitter.addListener('messaging_message_received', listener);
+      return function () {return subscription.remove();};
+    } }, { key: "onNotificationOpenedApp", value:
+
+    function onNotificationOpenedApp(listener) {
+      if (!(0, _common.isFunction)(listener)) {
+        throw new Error(
+          "firebase.messaging().onNotificationOpenedApp(*) 'listener' expected a function."
+        );
+      }
+
+      var subscription = this.emitter.addListener('messaging_notification_opened', listener);
+      return function () {return subscription.remove();};
+    } }, { key: "onTokenRefresh", value:
+
+    function onTokenRefresh(listener) {
+      if (!(0, _common.isFunction)(listener)) {
+        throw new Error("firebase.messaging().onTokenRefresh(*) 'listener' expected a function.");
+      }
+
+      var subscription = this.emitter.addListener('messaging_token_refresh', function (event) {
+        var token = event.token;
+        listener(token);
+      });
+      return function () {return subscription.remove();};
+    } }, { key: "requestPermission", value:
+
+
+
+
+    function requestPermission(permissions) {
+      if (_common.isAndroid) {
+        return Promise.resolve(1);
+      }
+
+      var defaultPermissions = {
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: true,
+        provisional: false,
+        sound: true,
+        criticalAlert: false,
+        providesAppNotificationSettings: false
+      };
+
+      if (!permissions) {
+        return this.native.requestPermission(defaultPermissions);
+      }
+
+      if (!(0, _common.isObject)(permissions)) {
+        throw new Error('firebase.messaging().requestPermission(*) expected an object value.');
+      }
+
+      Object.entries(permissions).forEach(function (_ref3) {var _ref4 = _slicedToArray(_ref3, 2),key = _ref4[0],value = _ref4[1];
+        if (!(0, _common.hasOwnProperty)(defaultPermissions, key)) {
+          throw new Error("firebase.messaging().requestPermission(*) unexpected key \"" +
+          key + "\" provided to permissions object."
+          );
+        }
+
+        if (!(0, _common.isBoolean)(value)) {
+          throw new Error("firebase.messaging().requestPermission(*) the permission \"" +
+          key + "\" expected a boolean value."
+          );
+        }
+
+        defaultPermissions[key] = value;
+      });
+
+      return this.native.requestPermission(defaultPermissions);
+    } }, { key: "registerDeviceForRemoteMessages", value:
+
+    function registerDeviceForRemoteMessages() {
+      if (_common.isAndroid) {
+        return Promise.resolve();
+      }
+
+      var autoRegister = this.firebaseJson['messaging_ios_auto_register_for_remote_messages'];
+      if (autoRegister === undefined || autoRegister === true) {
+
+        console.warn("Usage of \"messaging().registerDeviceForRemoteMessages()\" is not required. You only need to register if auto-registration is disabled in your 'firebase.json' configuration file via the 'messaging_ios_auto_register_for_remote_messages' property."
+
+        );
+      }
+
+      this._isRegisteredForRemoteNotifications = true;
+      return this.native.registerForRemoteNotifications();
+    } }, { key: "unregisterDeviceForRemoteMessages", value:
+
+
+
+    function unregisterDeviceForRemoteMessages() {
+      if (_common.isAndroid) {
+        return Promise.resolve();
+      }
+      this._isRegisteredForRemoteNotifications = false;
+      return this.native.unregisterForRemoteNotifications();
+    } }, { key: "getAPNSToken", value:
+
+
+
+
+    function getAPNSToken() {
+      if (_common.isAndroid) {
+        return Promise.resolve(null);
+      }
+      return this.native.getAPNSToken();
+    } }, { key: "setAPNSToken", value:
+
+
+
+
+    function setAPNSToken(token, type) {
+      if ((0, _common.isUndefined)(token) || !(0, _common.isString)(token)) {
+        throw new Error("firebase.messaging().setAPNSToken(*) 'token' expected a string value.");
+      }
+
+      if (!(0, _common.isUndefined)(type) && (!(0, _common.isString)(type) || !['prod', 'sandbox', 'unknown'].includes(type))) {
+        throw new Error(
+          "firebase.messaging().setAPNSToken(*) 'type' expected one of 'prod', 'sandbox', or 'unknown'."
+        );
+      }
+
+      if (_common.isAndroid) {
+        return Promise.resolve(null);
+      }
+
+      return this.native.setAPNSToken(token, type);
+    } }, { key: "hasPermission", value:
+
+    function hasPermission() {
+      return this.native.hasPermission();
+    } }, { key: "onDeletedMessages", value:
+
+
+    function onDeletedMessages(listener) {
+      if (!(0, _common.isFunction)(listener)) {
+        throw new Error("firebase.messaging().onDeletedMessages(*) 'listener' expected a function.");
+      }
+
+      var subscription = this.emitter.addListener('messaging_message_deleted', listener);
+      return function () {return subscription.remove();};
+    } }, { key: "onMessageSent", value:
+
+
+    function onMessageSent(listener) {
+      if (!(0, _common.isFunction)(listener)) {
+        throw new Error("firebase.messaging().onMessageSent(*) 'listener' expected a function.");
+      }
+
+      var subscription = this.emitter.addListener('messaging_message_sent', listener);
+      return function () {
+        subscription.remove();
+      };
+    } }, { key: "onSendError", value:
+
+
+    function onSendError(listener) {
+      if (!(0, _common.isFunction)(listener)) {
+        throw new Error("firebase.messaging().onSendError(*) 'listener' expected a function.");
+      }
+
+      var subscription = this.emitter.addListener('messaging_message_send_error', listener);
+      return function () {return subscription.remove();};
+    } }, { key: "setBackgroundMessageHandler", value:
+
+
+
+
+
+
+
+    function setBackgroundMessageHandler(handler) {
+      if (!(0, _common.isFunction)(handler)) {
+        throw new Error(
+          "firebase.messaging().setBackgroundMessageHandler(*) 'handler' expected a function."
+        );
+      }
+
+      backgroundMessageHandler = handler;
+      if (_common.isIOS) {
+        this.native.signalBackgroundMessageHandlerSet();
+      }
+    } }, { key: "setOpenSettingsForNotificationsHandler", value:
+
+    function setOpenSettingsForNotificationsHandler(handler) {
+      if (!_common.isIOS) {
+        return;
+      }
+
+      if (!(0, _common.isFunction)(handler)) {
+        throw new Error(
+          "firebase.messaging().setOpenSettingsForNotificationsHandler(*) 'handler' expected a function."
+        );
+      }
+
+      openSettingsForNotificationHandler = handler;
+    } }, { key: "sendMessage", value:
+
+    function sendMessage(remoteMessage) {
+      if (_common.isIOS) {
+        throw new Error("firebase.messaging().sendMessage() is only supported on Android devices.");
+      }
+      var options;
+      try {
+        options = (0, _remoteMessageOptions.default)(this.app.options.messagingSenderId, remoteMessage);
+      } catch (e) {
+        throw new Error("firebase.messaging().sendMessage(*) " + e.message + ".");
+      }
+
+      return this.native.sendMessage(options);
+    } }, { key: "subscribeToTopic", value:
+
+    function subscribeToTopic(topic) {
+      if (!(0, _common.isString)(topic)) {
+        throw new Error("firebase.messaging().subscribeToTopic(*) 'topic' expected a string value.");
+      }
+
+      if (topic.indexOf('/') > -1) {
+        throw new Error('firebase.messaging().subscribeToTopic(*) \'topic\' must not include "/".');
+      }
+
+      return this.native.subscribeToTopic(topic);
+    } }, { key: "unsubscribeFromTopic", value:
+
+    function unsubscribeFromTopic(topic) {
+      if (!(0, _common.isString)(topic)) {
+        throw new Error(
+          "firebase.messaging().unsubscribeFromTopic(*) 'topic' expected a string value."
+        );
+      }
+
+      if (topic.indexOf('/') > -1) {
+        throw new Error(
+          'firebase.messaging().unsubscribeFromTopic(*) \'topic\' must not include "/".'
+        );
+      }
+
+      return this.native.unsubscribeFromTopic(topic);
+    } }, { key: "useServiceWorker", value:
+
+
+
+
+
+    function useServiceWorker() {
+
+      console.warn(
+        'firebase.messaging().useServiceWorker() is not supported on react-native-firebase.'
+      );
+    } }, { key: "usePublicVapidKey", value:
+
+    function usePublicVapidKey() {
+
+      console.warn(
+        'firebase.messaging().usePublicVapidKey() is not supported on react-native-firebase.'
+      );
+    } }, { key: "setDeliveryMetricsExportToBigQuery", value:
+
+    function setDeliveryMetricsExportToBigQuery(enabled) {
+      if (!(0, _common.isBoolean)(enabled)) {
+        throw new Error(
+          "firebase.messaging().setDeliveryMetricsExportToBigQuery(*) 'enabled' expected a boolean value."
+        );
+      }
+
+      this._isDeliveryMetricsExportToBigQueryEnabled = enabled;
+      return this.native.setDeliveryMetricsExportToBigQuery(enabled);
+    } }, { key: "isSupported", value: function () {var _isSupported = _asyncToGenerator(
+
+        function* () {
+          if (_reactNative.Platform.isAndroid) {
+            playServicesAvailability = firebase.utils().playServicesAvailability;
+            return playServicesAvailability.isAvailable;
+          }
+
+          return true;
+        });function isSupported() {return _isSupported.apply(this, arguments);}return isSupported;}() }]);return FirebaseMessagingModule;}(_internal.FirebaseModule);
+
+
+
+var SDK_VERSION = _version.default;exports.SDK_VERSION = SDK_VERSION;var _default =
+
+
+
+(0, _internal.createModuleNamespace)({
+  statics: statics,
+  version: _version.default,
+  namespace: namespace,
+  nativeModuleName: nativeModuleName,
+  nativeEvents: [
+  'messaging_token_refresh',
+  'messaging_message_sent',
+  'messaging_message_deleted',
+  'messaging_message_received',
+  'messaging_message_send_error',
+  'messaging_notification_opened'].concat(_toConsumableArray(
+    _common.isIOS ?
+    ['messaging_message_received_background', 'messaging_settings_for_notification_opened'] :
+    [])),
+
+  hasMultiAppSupport: false,
+  hasCustomUrlOrRegionSupport: false,
+  ModuleClass: FirebaseMessagingModule
+});exports.default = _default;
+
+
+
+
+var firebase = (0, _internal.getFirebaseRoot)();exports.firebase = firebase;

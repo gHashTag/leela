@@ -1,0 +1,72 @@
+5ec1112a2416cac783ac058774e16b99
+
+
+
+
+
+
+
+
+
+
+'use strict';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function setAndForwardRef(_ref)
+
+
+{var getForwardedRef = _ref.getForwardedRef,setLocalRef = _ref.setLocalRef;
+  return function forwardRef(ref) {
+    var forwardedRef = getForwardedRef();
+
+    setLocalRef(ref);
+
+
+    if (typeof forwardedRef === 'function') {
+
+      forwardedRef(ref);
+    } else if (typeof forwardedRef === 'object' && forwardedRef != null) {
+
+      forwardedRef.current = ref;
+    }
+  };
+}
+
+module.exports = setAndForwardRef;

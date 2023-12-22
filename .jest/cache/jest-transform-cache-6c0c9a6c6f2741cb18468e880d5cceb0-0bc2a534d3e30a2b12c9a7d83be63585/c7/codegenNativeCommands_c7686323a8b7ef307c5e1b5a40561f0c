@@ -1,0 +1,39 @@
+e96866043c7677044b9cb2a22a6c64ee
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;
+
+
+
+
+
+
+
+
+
+var dispatchCommand;
+if (global.RN$Bridgeless) {
+
+
+  dispatchCommand =
+  require("../../Libraries/Renderer/shims/ReactFabric").dispatchCommand;
+} else {
+  dispatchCommand =
+  require("../../Libraries/Renderer/shims/ReactNative").dispatchCommand;
+}
+
+
+
+
+
+function codegenNativeCommands(options) {
+  var commandObj = {};
+
+  options.supportedCommands.forEach(function (command) {
+    commandObj[command] = function (ref) {for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {args[_key - 1] = arguments[_key];}
+      dispatchCommand(ref, command, args);
+    };
+  });
+
+  return commandObj;
+}var _default =
+
+codegenNativeCommands;exports.default = _default;

@@ -10,7 +10,7 @@ interface AppContainerT {
   onPress?: () => void
   onPressRight?: () => void
   iconRight?: string | null
-  children?: React.ReactNode
+  children: React.ReactNode
   message?: string
   title?: string
   displayStatus?: boolean

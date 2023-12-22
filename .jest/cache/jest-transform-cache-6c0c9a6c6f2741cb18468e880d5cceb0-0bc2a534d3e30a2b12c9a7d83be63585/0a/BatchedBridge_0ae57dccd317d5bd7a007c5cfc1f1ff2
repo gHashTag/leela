@@ -1,0 +1,29 @@
+835d8790cd4dd3f5dc6114a1627dc0af
+
+
+
+
+
+
+
+
+
+
+'use strict';
+
+var MessageQueue = require("./MessageQueue");
+
+var BatchedBridge = new MessageQueue();
+
+
+
+
+
+
+
+Object.defineProperty(global, '__fbBatchedBridge', {
+  configurable: true,
+  value: BatchedBridge
+});
+
+module.exports = BatchedBridge;

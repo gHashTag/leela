@@ -4,6 +4,9 @@ module.exports = {
   env: {
     'jest/globals': true
   },
+  globals: {
+    __filename: 'readonly'
+  },
   rules: {
     semi: ['error', 'never'],
     'react-native/no-unused-styles': 2,

@@ -48,7 +48,8 @@ export const OfflinePlayers = {
 
 makePersistable(OfflinePlayers.store, {
   name: 'OfflinePlayers',
-  properties: ['plans', 'start', 'histories', 'finish']
+  properties: ['plans', 'start', 'histories', 'finish'],
+  storage: storageAdapter
 })
 
 interface OfflinePlayersI {

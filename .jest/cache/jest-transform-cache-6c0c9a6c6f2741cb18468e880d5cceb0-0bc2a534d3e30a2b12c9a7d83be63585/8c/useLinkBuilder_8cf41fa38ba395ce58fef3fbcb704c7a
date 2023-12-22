@@ -1,0 +1,63 @@
+6474fa73fdfbfe475375f35983f38eda
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = useLinkBuilder;
+var _core = require("@react-navigation/core");
+var React = _interopRequireWildcard(require("react"));
+var _LinkingContext = _interopRequireDefault(require("./LinkingContext"));
+function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+function _getRequireWildcardCache(nodeInterop) {if (typeof WeakMap !== "function") return null;var cacheBabelInterop = new WeakMap();var cacheNodeInterop = new WeakMap();return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) {return nodeInterop ? cacheNodeInterop : cacheBabelInterop;})(nodeInterop);}
+function _interopRequireWildcard(obj, nodeInterop) {if (!nodeInterop && obj && obj.__esModule) {return obj;}if (obj === null || typeof obj !== "object" && typeof obj !== "function") {return { default: obj };}var cache = _getRequireWildcardCache(nodeInterop);if (cache && cache.has(obj)) {return cache.get(obj);}var newObj = {};var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;for (var key in obj) {if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;if (desc && (desc.get || desc.set)) {Object.defineProperty(newObj, key, desc);} else {newObj[key] = obj[key];}}}newObj.default = obj;if (cache) {cache.set(obj, newObj);}return newObj;}
+var getRootStateForNavigate = function getRootStateForNavigate(navigation, state) {
+  var parent = navigation.getParent();
+  if (parent) {
+    var parentState = parent.getState();
+    return getRootStateForNavigate(parent, {
+      index: 0,
+      routes: [Object.assign({},
+      parentState.routes[parentState.index], {
+        state: state })]
+
+    });
+  }
+  return state;
+};
+
+
+
+
+
+function useLinkBuilder() {
+  var navigation = React.useContext(_core.NavigationHelpersContext);
+  var linking = React.useContext(_LinkingContext.default);
+  var buildLink = React.useCallback(function (name, params) {
+    var
+    options =
+    linking.options;
+    if ((options === null || options === void 0 ? void 0 : options.enabled) === false) {
+      return undefined;
+    }
+    var state = navigation ? getRootStateForNavigate(navigation, {
+      index: 0,
+      routes: [{
+        name: name,
+        params: params
+      }]
+    }) :
+
+
+    {
+      index: 0,
+      routes: [{
+        name: name,
+        params: params
+      }]
+    };
+    var path = options !== null && options !== void 0 && options.getPathFromState ? options.getPathFromState(state, options === null || options === void 0 ? void 0 : options.config) : (0, _core.getPathFromState)(state, options === null || options === void 0 ? void 0 : options.config);
+    return path;
+  }, [linking, navigation]);
+  return buildLink;
+}

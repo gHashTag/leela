@@ -1,0 +1,1381 @@
+ec8fdb263c2431699bda66f01a301f44
+
+
+
+
+
+
+
+
+
+
+var React = _interopRequireWildcard(require("react"));
+
+var _Platform = _interopRequireDefault(require("../../Utilities/Platform"));
+var _StyleSheet = _interopRequireDefault(require("../../StyleSheet/StyleSheet"));
+
+
+
+
+var _Text = _interopRequireDefault(require("../../Text/Text"));
+var _TextAncestor = _interopRequireDefault(require("../../Text/TextAncestor"));
+var _TextInputState = _interopRequireDefault(require("./TextInputState"));
+var _invariant = _interopRequireDefault(require("invariant"));
+var _nullthrows = _interopRequireDefault(require("nullthrows"));
+var _setAndForwardRef = _interopRequireDefault(require("../../Utilities/setAndForwardRef"));
+
+var _usePressability = _interopRequireDefault(require("../../Pressability/usePressability"));var _jsxRuntime = require("react/jsx-runtime");var _jsxFileName = "/Users/playra/leela/node_modules/react-native/Libraries/Components/TextInput/TextInput.js";var _excluded = ["onBlur", "onFocus"],_excluded2 = ["allowFontScaling", "rejectResponderTermination", "underlineColorAndroid"];function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _getRequireWildcardCache(nodeInterop) {if (typeof WeakMap !== "function") return null;var cacheBabelInterop = new WeakMap();var cacheNodeInterop = new WeakMap();return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) {return nodeInterop ? cacheNodeInterop : cacheBabelInterop;})(nodeInterop);}function _interopRequireWildcard(obj, nodeInterop) {if (!nodeInterop && obj && obj.__esModule) {return obj;}if (obj === null || typeof obj !== "object" && typeof obj !== "function") {return { default: obj };}var cache = _getRequireWildcardCache(nodeInterop);if (cache && cache.has(obj)) {return cache.get(obj);}var newObj = {};var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;for (var key in obj) {if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;if (desc && (desc.get || desc.set)) {Object.defineProperty(newObj, key, desc);} else {newObj[key] = obj[key];}}}newObj.default = obj;if (cache) {cache.set(obj, newObj);}return newObj;}function _objectWithoutProperties(source, excluded) {if (source == null) return {};var target = _objectWithoutPropertiesLoose(source, excluded);var key, i;if (Object.getOwnPropertySymbols) {var sourceSymbolKeys = Object.getOwnPropertySymbols(source);for (i = 0; i < sourceSymbolKeys.length; i++) {key = sourceSymbolKeys[i];if (excluded.indexOf(key) >= 0) continue;if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;target[key] = source[key];}}return target;}function _objectWithoutPropertiesLoose(source, excluded) {if (source == null) return {};var target = {};var sourceKeys = Object.keys(source);var key, i;for (i = 0; i < sourceKeys.length; i++) {key = sourceKeys[i];if (excluded.indexOf(key) >= 0) continue;target[key] = source[key];}return target;}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];return arr2;}function _iterableToArrayLimit(arr, i) {var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];if (null != _i) {var _s,_e,_x,_r,_arr = [],_n = !0,_d = !1;try {if (_x = (_i = _i.call(arr)).next, 0 === i) {if (Object(_i) !== _i) return;_n = !1;} else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0);} catch (err) {_d = !0, _e = err;} finally {try {if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;} finally {if (_d) throw _e;}}return _arr;}}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}
+
+
+
+
+
+
+
+
+
+var useLayoutEffect = React.useLayoutEffect,useRef = React.useRef,useState = React.useState;
+
+
+
+var AndroidTextInput;
+var AndroidTextInputCommands;
+var RCTSinglelineTextInputView;
+var RCTSinglelineTextInputNativeCommands;
+var RCTMultilineTextInputView;
+var RCTMultilineTextInputNativeCommands;
+
+if (_Platform.default.OS === 'android') {
+  AndroidTextInput = require("./AndroidTextInputNativeComponent").default;
+  AndroidTextInputCommands =
+  require("./AndroidTextInputNativeComponent").Commands;
+} else if (_Platform.default.OS === 'ios') {
+  RCTSinglelineTextInputView =
+  require("./RCTSingelineTextInputNativeComponent").default;
+  RCTSinglelineTextInputNativeCommands =
+  require("./RCTSingelineTextInputNativeComponent").Commands;
+  RCTMultilineTextInputView =
+  require("./RCTMultilineTextInputNativeComponent").default;
+  RCTMultilineTextInputNativeCommands =
+  require("./RCTMultilineTextInputNativeComponent").Commands;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var emptyFunctionThatReturnsTrue = function emptyFunctionThatReturnsTrue() {return true;};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function InternalTextInput(props) {var _props$selection$end, _props$blurOnSubmit;
+  var inputRef = useRef(null);
+
+
+
+
+
+
+
+
+
+
+
+  var selection =
+  props.selection == null ?
+  null :
+  {
+    start: props.selection.start,
+    end: (_props$selection$end = props.selection.end) != null ? _props$selection$end : props.selection.start
+  };
+
+  var _useState = useState(0),_useState2 = _slicedToArray(_useState, 2),mostRecentEventCount = _useState2[0],setMostRecentEventCount = _useState2[1];
+
+  var _useState3 = useState(props.value),_useState4 = _slicedToArray(_useState3, 2),lastNativeText = _useState4[0],setLastNativeText = _useState4[1];
+  var _useState5 = useState(
+
+
+      { selection: selection, mostRecentEventCount: mostRecentEventCount }),_useState6 = _slicedToArray(_useState5, 2),lastNativeSelectionState = _useState6[0],setLastNativeSelection = _useState6[1];
+
+  var lastNativeSelection = lastNativeSelectionState.selection;
+  var lastNativeSelectionEventCount =
+  lastNativeSelectionState.mostRecentEventCount;
+
+  if (lastNativeSelectionEventCount < mostRecentEventCount) {
+    selection = null;
+  }
+
+  var viewCommands;
+  if (AndroidTextInputCommands) {
+    viewCommands = AndroidTextInputCommands;
+  } else {
+    viewCommands =
+    props.multiline === true ?
+    RCTMultilineTextInputNativeCommands :
+    RCTSinglelineTextInputNativeCommands;
+  }
+
+  var text =
+  typeof props.value === 'string' ?
+  props.value :
+  typeof props.defaultValue === 'string' ?
+  props.defaultValue :
+  '';
+
+
+
+
+  useLayoutEffect(function () {
+    var nativeUpdate = {};
+
+    if (lastNativeText !== props.value && typeof props.value === 'string') {
+      nativeUpdate.text = props.value;
+      setLastNativeText(props.value);
+    }
+
+    if (
+    selection &&
+    lastNativeSelection && (
+    lastNativeSelection.start !== selection.start ||
+    lastNativeSelection.end !== selection.end))
+    {
+      nativeUpdate.selection = selection;
+      setLastNativeSelection({ selection: selection, mostRecentEventCount: mostRecentEventCount });
+    }
+
+    if (Object.keys(nativeUpdate).length === 0) {
+      return;
+    }
+
+    if (inputRef.current != null) {var _selection$start, _selection, _selection$end, _selection2;
+      viewCommands.setTextAndSelection(
+        inputRef.current,
+        mostRecentEventCount,
+        text, (_selection$start = (_selection =
+        selection) == null ? void 0 : _selection.start) != null ? _selection$start : -1, (_selection$end = (_selection2 =
+        selection) == null ? void 0 : _selection2.end) != null ? _selection$end : -1
+      );
+    }
+  }, [
+  mostRecentEventCount,
+  inputRef,
+  props.value,
+  props.defaultValue,
+  lastNativeText,
+  selection,
+  lastNativeSelection,
+  text,
+  viewCommands]
+  );
+
+  useLayoutEffect(function () {
+    var inputRefValue = inputRef.current;
+
+    if (inputRefValue != null) {
+      _TextInputState.default.registerInput(inputRefValue);
+
+      return function () {
+        _TextInputState.default.unregisterInput(inputRefValue);
+
+        if (_TextInputState.default.currentlyFocusedInput() === inputRefValue) {
+          (0, _nullthrows.default)(inputRefValue).blur();
+        }
+      };
+    }
+  }, [inputRef]);
+
+  function clear() {
+    if (inputRef.current != null) {
+      viewCommands.setTextAndSelection(
+        inputRef.current,
+        mostRecentEventCount,
+        '',
+        0,
+        0
+      );
+    }
+  }
+
+  function setSelection(start, end) {
+    if (inputRef.current != null) {
+      viewCommands.setTextAndSelection(
+        inputRef.current,
+        mostRecentEventCount,
+        null,
+        start,
+        end
+      );
+    }
+  }
+
+
+  function isFocused() {
+    return _TextInputState.default.currentlyFocusedInput() === inputRef.current;
+  }
+
+  function getNativeRef() {
+    return inputRef.current;
+  }
+
+  var _setNativeRef = (0, _setAndForwardRef.default)({
+    getForwardedRef: function getForwardedRef() {return props.forwardedRef;},
+    setLocalRef: function setLocalRef(ref) {
+      inputRef.current = ref;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      if (ref) {
+        ref.clear = clear;
+        ref.isFocused = isFocused;
+        ref.getNativeRef = getNativeRef;
+        ref.setSelection = setSelection;
+      }
+    }
+  });
+
+  var _onChange = function _onChange(event) {
+    var currentText = event.nativeEvent.text;
+    props.onChange && props.onChange(event);
+    props.onChangeText && props.onChangeText(currentText);
+
+    if (inputRef.current == null) {
+
+
+      return;
+    }
+
+    setLastNativeText(currentText);
+
+
+
+
+    setMostRecentEventCount(event.nativeEvent.eventCount);
+  };
+
+  var _onChangeSync = function _onChangeSync(event) {
+    var currentText = event.nativeEvent.text;
+    props.unstable_onChangeSync && props.unstable_onChangeSync(event);
+    props.unstable_onChangeTextSync &&
+    props.unstable_onChangeTextSync(currentText);
+
+    if (inputRef.current == null) {
+
+
+      return;
+    }
+
+    setLastNativeText(currentText);
+
+
+
+
+    setMostRecentEventCount(event.nativeEvent.eventCount);
+  };
+
+  var _onSelectionChange = function _onSelectionChange(event) {
+    props.onSelectionChange && props.onSelectionChange(event);
+
+    if (inputRef.current == null) {
+
+
+      return;
+    }
+
+    setLastNativeSelection({
+      selection: event.nativeEvent.selection,
+      mostRecentEventCount: mostRecentEventCount
+    });
+  };
+
+  var _onFocus = function _onFocus(event) {
+    _TextInputState.default.focusInput(inputRef.current);
+    if (props.onFocus) {
+      props.onFocus(event);
+    }
+  };
+
+  var _onBlur = function _onBlur(event) {
+    _TextInputState.default.blurInput(inputRef.current);
+    if (props.onBlur) {
+      props.onBlur(event);
+    }
+  };
+
+  var _onScroll = function _onScroll(event) {
+    props.onScroll && props.onScroll(event);
+  };
+
+  var textInput = null;
+
+
+
+  var blurOnSubmit = (_props$blurOnSubmit = props.blurOnSubmit) != null ? _props$blurOnSubmit : !props.multiline;
+
+  var accessible = props.accessible !== false;
+  var focusable = props.focusable !== false;
+
+  var config = React.useMemo(
+    function () {return {
+        onPress: function onPress(event) {
+          if (props.editable !== false) {
+            if (inputRef.current != null) {
+              inputRef.current.focus();
+            }
+          }
+        },
+        onPressIn: props.onPressIn,
+        onPressOut: props.onPressOut,
+        cancelable:
+        _Platform.default.OS === 'ios' ? !props.rejectResponderTermination : null
+      };},
+    [
+    props.editable,
+    props.onPressIn,
+    props.onPressOut,
+    props.rejectResponderTermination]
+
+  );
+
+
+
+  var caretHidden = props.caretHidden;
+  if (_Platform.default.isTesting) {
+    caretHidden = true;
+  }
+
+
+
+  var _ref = (0, _usePressability.default)(config) || {},onBlur = _ref.onBlur,onFocus = _ref.onFocus,eventHandlers = _objectWithoutProperties(_ref, _excluded);
+
+  if (_Platform.default.OS === 'ios') {
+    var RCTTextInputView =
+    props.multiline === true ?
+    RCTMultilineTextInputView :
+    RCTSinglelineTextInputView;
+
+    var style =
+    props.multiline === true ?
+    _StyleSheet.default.flatten([styles.multilineInput, props.style]) :
+    props.style;
+
+    var useOnChangeSync =
+    (props.unstable_onChangeSync || props.unstable_onChangeTextSync) &&
+    !(props.onChange || props.onChangeText);
+
+    textInput =
+    (0, _jsxRuntime.jsx)(RCTTextInputView, Object.assign({
+      ref: _setNativeRef },
+    props,
+    eventHandlers, {
+      accessible: accessible,
+      blurOnSubmit: blurOnSubmit,
+      caretHidden: caretHidden,
+      dataDetectorTypes: props.dataDetectorTypes,
+      focusable: focusable,
+      mostRecentEventCount: mostRecentEventCount,
+      onBlur: _onBlur,
+      onKeyPressSync: props.unstable_onKeyPressSync,
+      onChange: _onChange,
+      onChangeSync: useOnChangeSync === true ? _onChangeSync : null,
+      onContentSizeChange: props.onContentSizeChange,
+      onFocus: _onFocus,
+      onScroll: _onScroll,
+      onSelectionChange: _onSelectionChange,
+      onSelectionChangeShouldSetResponder: emptyFunctionThatReturnsTrue,
+      selection: selection,
+      style: style,
+      text: text })
+    );
+
+  } else if (_Platform.default.OS === 'android') {var _props$placeholder;
+    var _style = [props.style];
+    var autoCapitalize = props.autoCapitalize || 'sentences';
+    var placeholder = (_props$placeholder = props.placeholder) != null ? _props$placeholder : '';
+    var children = props.children;
+    var childCount = React.Children.count(children);
+    (0, _invariant.default)(
+      !(props.value != null && childCount),
+      'Cannot specify both value and children.'
+    );
+    if (childCount > 1) {
+      children = (0, _jsxRuntime.jsx)(_Text.default, { children: children });
+    }
+
+    textInput =
+
+
+
+
+
+
+
+
+    (0, _jsxRuntime.jsx)(AndroidTextInput, Object.assign({
+      ref: _setNativeRef },
+    props,
+    eventHandlers, {
+      accessible: accessible,
+      autoCapitalize: autoCapitalize,
+      blurOnSubmit: blurOnSubmit,
+      caretHidden: caretHidden,
+      children: children,
+      disableFullscreenUI: props.disableFullscreenUI,
+      focusable: focusable,
+      mostRecentEventCount: mostRecentEventCount,
+      onBlur: _onBlur,
+      onChange: _onChange,
+      onFocus: _onFocus,
+
+
+
+
+
+
+      onScroll: _onScroll,
+      onSelectionChange: _onSelectionChange,
+      placeholder: placeholder,
+      selection: selection,
+      style: _style,
+      text: text,
+      textBreakStrategy: props.textBreakStrategy })
+    );
+
+  }
+  return (
+    (0, _jsxRuntime.jsx)(_TextAncestor.default.Provider, { value: true, children: textInput }));
+
+}
+
+var ExportedForwardRef =
+
+
+React.forwardRef(function TextInput(_ref2,
+
+
+
+
+
+
+forwardedRef)
+
+
+{var _ref2$allowFontScalin = _ref2.allowFontScaling,allowFontScaling = _ref2$allowFontScalin === void 0 ? true : _ref2$allowFontScalin,_ref2$rejectResponder = _ref2.rejectResponderTermination,rejectResponderTermination = _ref2$rejectResponder === void 0 ? true : _ref2$rejectResponder,_ref2$underlineColorA = _ref2.underlineColorAndroid,underlineColorAndroid = _ref2$underlineColorA === void 0 ? 'transparent' : _ref2$underlineColorA,restProps = _objectWithoutProperties(_ref2, _excluded2);
+  return (
+    (0, _jsxRuntime.jsx)(InternalTextInput, Object.assign({
+      allowFontScaling: allowFontScaling,
+      rejectResponderTermination: rejectResponderTermination,
+      underlineColorAndroid: underlineColorAndroid },
+    restProps, {
+      forwardedRef: forwardedRef })
+    ));
+
+});
+
+
+ExportedForwardRef.State = {
+  currentlyFocusedInput: _TextInputState.default.currentlyFocusedInput,
+
+  currentlyFocusedField: _TextInputState.default.currentlyFocusedField,
+  focusTextInput: _TextInputState.default.focusTextInput,
+  blurTextInput: _TextInputState.default.blurTextInput
+};
+
+
+
+
+
+
+
+
+
+
+var styles = _StyleSheet.default.create({
+  multilineInput: {
+
+
+
+    paddingTop: 5
+  }
+});
+
+
+module.exports = ExportedForwardRef;

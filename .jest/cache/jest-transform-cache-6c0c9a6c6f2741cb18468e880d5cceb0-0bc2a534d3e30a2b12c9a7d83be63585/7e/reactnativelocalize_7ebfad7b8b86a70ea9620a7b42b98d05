@@ -1,0 +1,28 @@
+99d28c38432abc9e482d8e8e928f4e65
+Object.defineProperty(exports, "__esModule", { value: true });exports.usesMetricSystem = exports.uses24HourClock = exports.removeEventListener = exports.getTimeZone = exports.getTemperatureUnit = exports.getNumberFormatSettings = exports.getLocales = exports.getCurrencies = exports.getCountry = exports.getCalendar = exports.findBestAvailableLanguage = exports.addEventListener = void 0;var getLocales = function getLocales() {return [
+
+  { countryCode: 'US', languageTag: 'en-US', languageCode: 'en', isRTL: false },
+  { countryCode: 'FR', languageTag: 'fr-FR', languageCode: 'fr', isRTL: false }];};exports.getLocales = getLocales;
+
+
+
+var findBestAvailableLanguage = function findBestAvailableLanguage() {return {
+    languageTag: 'en-US',
+    isRTL: false
+  };};exports.findBestAvailableLanguage = findBestAvailableLanguage;
+
+var getNumberFormatSettings = function getNumberFormatSettings() {return {
+    decimalSeparator: '.',
+    groupingSeparator: ','
+  };};exports.getNumberFormatSettings = getNumberFormatSettings;
+
+var getCalendar = function getCalendar() {return 'gregorian';};exports.getCalendar = getCalendar;
+var getCountry = function getCountry() {return 'US';};exports.getCountry = getCountry;
+var getCurrencies = function getCurrencies() {return ['USD', 'EUR'];};exports.getCurrencies = getCurrencies;
+var getTemperatureUnit = function getTemperatureUnit() {return 'celsius';};exports.getTemperatureUnit = getTemperatureUnit;
+var getTimeZone = function getTimeZone() {return 'Europe/Paris';};exports.getTimeZone = getTimeZone;
+var uses24HourClock = function uses24HourClock() {return true;};exports.uses24HourClock = uses24HourClock;
+var usesMetricSystem = function usesMetricSystem() {return true;};exports.usesMetricSystem = usesMetricSystem;
+
+var addEventListener = jest.fn();exports.addEventListener = addEventListener;
+var removeEventListener = jest.fn();exports.removeEventListener = removeEventListener;
