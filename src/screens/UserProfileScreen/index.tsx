@@ -48,7 +48,7 @@ export const UserProfileScreen = observer(
       plan: 0,
       fullName: ''
     })
-    console.log('editable', editable)
+
     const [load, setLoad] = useState(true)
     const { t } = useTranslation()
 

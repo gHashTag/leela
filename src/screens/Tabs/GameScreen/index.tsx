@@ -29,7 +29,7 @@ import {
   actionsDice
 } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types/types'
-// import { useRevenueCat } from '../../../providers/RevenueCatProvider'
+import { useRevenueCat } from '../../../providers/RevenueCatProvider'
 
 type navigation = NativeStackNavigationProp<
   RootTabParamList & RootStackParamList,
@@ -41,7 +41,7 @@ type GameScreenT = {
 }
 
 const GameScreen = observer(({ navigation }: GameScreenT) => {
-  // const { user } = useRevenueCat()
+  const { user } = useRevenueCat()
   useLeftTimeForStep()
 
   const limit = 15

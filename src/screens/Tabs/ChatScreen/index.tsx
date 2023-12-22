@@ -8,6 +8,7 @@ import { s } from 'react-native-size-matters'
 import { ButtonWithIcon, Header, Space } from '../../../components'
 import { brightTurquoise, onLeaveFeedback, trueBlue } from '../../../constants'
 import { DiceStore, actionsDice } from '../../../store'
+import { useRevenueCat } from '../../../providers/RevenueCatProvider'
 
 const LEELA_AI = require('../../../../assets/defaultImage/leelaAI.jpg')
 
@@ -19,6 +20,7 @@ interface IContextSummary {
 const LOADING_MESSAGE_ID = 'loading-message-id'
 
 const ChatScreen: React.FC = () => {
+  const { user } = useRevenueCat()
   const [messages, setMessages] = useState<IMessage[]>([])
   const [contextSummary, setContextSummary] = useState<IContextSummary>({
     user: [],
@@ -98,15 +100,16 @@ const ChatScreen: React.FC = () => {
         }
       ])
     )
+    const modelGPT = user.pro ? 'gpt-4-1106-preview' : 'gpt-4-1106-preview'
 
     // Запрос к OpenAI API
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-3.5-turbo',
+        model: modelGPT,
         messages: apiMessages,
-        max_tokens: 1000,
-        temperature: 0.2
+        max_tokens: 800,
+        temperature: 0.1
       },
       {
         headers: {

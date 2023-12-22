@@ -237,11 +237,11 @@ export const getMarkdownStyle = (
         default:
           return <></>
       }
-    },
-    image: (node) => {
-      const { src } = node.attributes
-      return <Img widthCoefficient={IMGwPercent} key={node.key} uri={src} />
     }
+    // image: (node) => {
+    //   const { src } = node.attributes
+    //   return <Img widthCoefficient={IMGwPercent} key={node.key} uri={src} />
+    // }
   }
   return {
     style,

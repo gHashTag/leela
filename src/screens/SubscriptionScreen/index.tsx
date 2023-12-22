@@ -135,14 +135,14 @@ const SubscriptionScreen: React.FC = () => {
           onPress={handlePurchase}
         />
         <Space height={10} />
-        <Text
+        {/* <Text
           h="h4"
           textStyle={styles.bought}
           title={t('free')}
           onPress={onFree}
         />
 
-        <Text h="h4" title={t('or')} onPress={onAlreadyBought} />
+        <Text h="h4" title={t('or')} onPress={onAlreadyBought} /> */}
         <Text
           h="h4"
           textStyle={styles.bought}

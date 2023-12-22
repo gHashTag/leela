@@ -70,6 +70,7 @@ const Gem = observer(({ plan, index }: GemT) => {
       uri =
         'https://bafkreiftrmfmimlvo26xaxfvt2ypnjjaavq5mgnkjljs6mczfekii4cmtq.ipfs.nftstorage.link/'
     }
+
     return online ? { uri } : ICONS[id - 1]
   }
 

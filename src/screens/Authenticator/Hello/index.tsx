@@ -2,8 +2,8 @@ import { useTheme } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import React, { ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
-import { s, vs } from 'react-native-size-matters'
+import { StyleSheet, Button as Btn } from 'react-native'
+import { vs } from 'react-native-size-matters'
 import { useKeychain } from '../../../hooks'
 
 import {
@@ -37,7 +37,7 @@ type HelloT = {
 }
 
 const styles = StyleSheet.create({
-  h6: { alignSelf: 'center' },
+  // h6: { alignSelf: 'center' },
   textStyle: { color: gray, fontSize: 19 }
 })
 
@@ -91,15 +91,16 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
             onPress={() => navigation.navigate('SIGN_UP')}
           />
           <Space height={10} />
-          <Text h={'h5'} title={t('or')} textStyle={styles.h6} />
-          <Space height={10} />
-          <Button
-            title={t('offline')}
-            onPress={() => navigation.navigate('SELECT_PLAYERS_SCREEN')}
-          />
-          <Space height={vs(20)} />
 
           <Space height={150} />
+          {/* <Text h={'h5'} title={t('or')} textStyle={styles.h6} />
+          <Space height={10} /> */}
+          <Btn
+            title={t('offline')}
+            onPress={() => navigation.navigate('SELECT_PLAYERS_SCREEN')}
+            color="transparent"
+          />
+          <Space height={vs(20)} />
         </CenterView>
       )}
     </AppContainer>

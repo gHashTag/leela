@@ -4,8 +4,6 @@ import { Platform, View } from 'react-native'
 import Emoji from 'react-native-emoji'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScaledSheet, ms, mvs, s, vs } from 'react-native-size-matters'
-import { useRevenueCat } from '../../providers/RevenueCatProvider'
-import { RU_STORE } from '@env'
 import { HeaderMessage, Text } from '../'
 import { navigate } from '../../constants'
 import { Pressable } from '../Pressable'
@@ -40,13 +38,12 @@ const Header = memo<HeaderT>(
     iconLeftOpacity = 1,
     children,
     textAlign,
-    displayStatus,
-    hidestar
+    displayStatus
   }) => {
     const {
       colors: { background }
     } = useTheme()
-    const { user } = useRevenueCat()
+
     const { top } = useSafeAreaInsets()
     const alignItems = children ? 'flex-start' : 'center'
     const marginTop = children ? s(2) : 0
@@ -64,7 +61,7 @@ const Header = memo<HeaderT>(
             <Emoji name={iconLeft} style={leftIconStyle} />
           </Pressable>
         )}
-        {isBlockGame && !user.pro && !hidestar && online && (
+        {isBlockGame && online && (
           <Pressable style={{ opacity: iconLeftOpacity }} onPress={onPressSub}>
             <Emoji name="star" style={leftIconStyle} />
           </Pressable>
@@ -86,7 +83,7 @@ const Header = memo<HeaderT>(
             </View>
           )}
         </View>
-        {isBlockGame && !user.pro && !hidestar && online && (
+        {isBlockGame && online && (
           <Pressable
             style={[styles.pressStyle, { opacity: iconLeftOpacity }]}
             onPress={onPressSub}

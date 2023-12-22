@@ -75,7 +75,13 @@ export const PostStore = {
     }
   },
 
-  createPost: async ({ text, plan, systemMessage, planText }: FormPostT) => {
+  createPost: async ({
+    text,
+    plan,
+    systemMessage,
+    planText,
+    pro
+  }: FormPostT) => {
     const userUid = auth().currentUser?.uid
     const email = auth().currentUser?.email
     if (userUid && email) {
@@ -93,7 +99,8 @@ export const PostStore = {
         language: lang,
         flagEmoji,
         planText,
-        ownerId: userUid
+        ownerId: userUid,
+        pro
       }
       try {
         await firestore().collection('Posts').doc(id).set(post)
@@ -102,10 +109,12 @@ export const PostStore = {
           const createdPostData = docSnapshot.data()
           const textMessage: string =
             createdPostData === undefined ? null : createdPostData.text
+
           await generateComment({
             message: textMessage,
             systemMessage,
-            planText
+            planText,
+            pro
           })
           return createdPostData
         } else {

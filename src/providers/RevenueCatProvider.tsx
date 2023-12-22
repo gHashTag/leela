@@ -96,17 +96,15 @@ export const RevenueCatProvider = ({ children }: any) => {
     if (online) {
       const curProf: UserT | undefined = await getProfile()
       const status = curProf?.status
-      const countPosts = await PostStore.countPosts()
+      const countPosts = (await PostStore?.countPosts()) || 1
 
       const isAdmin = status === 'Admin' || status === 'Free'
 
       const hasProPlan =
         customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
 
-      if (isAdmin || hasProPlan) {
+      if (hasProPlan || isAdmin || countPosts < 5) {
         newUser.pro = true
-        actionSubscribeStore.unBlock()
-      } else if ((countPosts ?? 0) < 5) {
         actionSubscribeStore.unBlock()
       } else if (countPosts === 10) {
         onLeaveFeedback((success) => actionsDice.setRate(success))

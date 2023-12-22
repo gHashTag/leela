@@ -22,6 +22,7 @@ import {
 } from '../../constants'
 import { startStepTimer } from '../../screens/helper'
 import { PostStore } from '../../store'
+import { useRevenueCat } from '../../providers/RevenueCatProvider'
 
 interface CreatePostT {
   plan: number
@@ -30,7 +31,7 @@ interface CreatePostT {
 export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
   const [loading, setLoading] = useState(false)
   const { t } = useTranslation()
-
+  const { user } = useRevenueCat()
   const systemMessage = t('system')
 
   const schema = useMemo(
@@ -58,20 +59,23 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
         text: data.text,
         plan: plan,
         systemMessage,
-        planText: t(`plan_${plan}.content`)
+        planText: t(`plan_${plan}.content`),
+        pro: user.pro
       })
       const curItem: PostT = {
         ...(PostStore.store.posts.find((a) => a.id === postId?.id) || {}),
         systemMessage,
         ownerId: userUid || '',
         id: postId?.id || '',
-        planText: t(`plan_${plan}.content`)
+        planText: t(`plan_${plan}.content`),
+        pro: user.pro
       }
       handleCommentAi({
         curItem,
         systemMessage,
         message: data.text,
-        planText: t(`plan_${plan}.content`)
+        planText: t(`plan_${plan}.content`),
+        pro: user.pro
       })
       navigate('TAB_BOTTOM_1')
       setLoading(false)

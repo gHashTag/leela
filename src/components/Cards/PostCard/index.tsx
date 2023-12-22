@@ -25,6 +25,7 @@ import { PostT } from '../../../types/types'
 
 import { usePostActions } from './usePostActions'
 import { usePostTranslation } from './usePostTranslation'
+import { useRevenueCat } from '../../../providers/RevenueCatProvider'
 
 interface postCardI {
   postId: string
@@ -43,7 +44,7 @@ export const PostCard: React.FC<postCardI> = memo(
       translatedText,
       isHideTranslate
     } = props
-
+    const { user } = useRevenueCat()
     const [isLoading, setIsLoading] = useState(false)
     const item: PostT | undefined =
       PostStore.store.posts.find((a) => a.id === postId) ||
@@ -72,7 +73,8 @@ export const PostCard: React.FC<postCardI> = memo(
         curItem,
         systemMessage,
         message: text as string,
-        planText: planText
+        planText: planText,
+        pro: user.pro
       })
 
       setIsLoading(false)
