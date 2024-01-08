@@ -89,13 +89,12 @@ export const RevenueCatProvider = ({ children }: any) => {
 
   // Update user state based on previous purchases
   const updateCustomerInformation = async (customerInfo: CustomerInfoT) => {
-    // if (!RU_STORE) {
-
     let newUser: UserState = { pro: false }
     const online = DiceStore.online
     if (online) {
       const curProf: UserT | undefined = await getProfile()
       const status = curProf?.status
+
       const countPosts = (await PostStore?.countPosts()) || 1
 
       const isAdmin = status === 'Admin' || status === 'Free'
@@ -112,24 +111,8 @@ export const RevenueCatProvider = ({ children }: any) => {
         actionSubscribeStore.blockGame()
       }
     }
-    // else {
-    //   const hasProPlan =
-    //     customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
-    //   const count = OfflinePlayers.store.player1MoveCount
-    //   console.warn('count', count)
-    //   if (hasProPlan) {
-    //     newUser.pro = true
-    //     actionSubscribeStore.unBlock()
-    //   } else if (count > 10) {
-    //     actionSubscribeStore.blockGame()
-    //   } else {
-    //     actionSubscribeStore.unBlock()
-    //   }
-    // }
 
     setUser(newUser)
-
-    // }
   }
 
   // Purchase a package
