@@ -1,0 +1,14 @@
+40dda9645efa5c0fe751ab6e1a36460e
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = Group;
+
+
+
+function Group(_) {
+
+  return null;
+}

@@ -1,0 +1,215 @@
+f9bac1cd9cd8f42afb3786b3e13d5589
+Object.defineProperty(exports, "__esModule", { value: true });exports.ReactNavigationV4Instrumentation = exports.INITIAL_TRANSACTION_CONTEXT_V4 = void 0;var _utils = require("@sentry/utils");
+var _routingInstrumentation = require("./routingInstrumentation");function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}function _get() {if (typeof Reflect !== "undefined" && Reflect.get) {_get = Reflect.get.bind();} else {_get = function _get(target, property, receiver) {var base = _superPropBase(target, property);if (!base) return;var desc = Object.getOwnPropertyDescriptor(base, property);if (desc.get) {return desc.get.call(arguments.length < 3 ? target : receiver);}return desc.value;};}return _get.apply(this, arguments);}function _superPropBase(object, property) {while (!Object.prototype.hasOwnProperty.call(object, property)) {object = _getPrototypeOf(object);if (object === null) break;}return object;}function _inherits(subClass, superClass) {if (typeof superClass !== "function" && superClass !== null) {throw new TypeError("Super expression must either be null or a function");}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } });Object.defineProperty(subClass, "prototype", { writable: false });if (superClass) _setPrototypeOf(subClass, superClass);}function _setPrototypeOf(o, p) {_setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {o.__proto__ = p;return o;};return _setPrototypeOf(o, p);}function _createSuper(Derived) {var hasNativeReflectConstruct = _isNativeReflectConstruct();return function _createSuperInternal() {var Super = _getPrototypeOf(Derived),result;if (hasNativeReflectConstruct) {var NewTarget = _getPrototypeOf(this).constructor;result = Reflect.construct(Super, arguments, NewTarget);} else {result = Super.apply(this, arguments);}return _possibleConstructorReturn(this, result);};}function _possibleConstructorReturn(self, call) {if (call && (typeof call === "object" || typeof call === "function")) {return call;} else if (call !== void 0) {throw new TypeError("Derived constructors may only return object or undefined");}return _assertThisInitialized(self);}function _assertThisInitialized(self) {if (self === void 0) {throw new ReferenceError("this hasn't been initialised - super() hasn't been called");}return self;}function _isNativeReflectConstruct() {if (typeof Reflect === "undefined" || !Reflect.construct) return false;if (Reflect.construct.sham) return false;if (typeof Proxy === "function") return true;try {Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));return true;} catch (e) {return false;}}function _getPrototypeOf(o) {_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {return o.__proto__ || Object.getPrototypeOf(o);};return _getPrototypeOf(o);}
+var defaultOptions = {
+  routeChangeTimeoutMs: 1000
+};var
+
+
+
+
+ReactNavigationV4Instrumentation = function (_InternalRoutingInstr) {_inherits(ReactNavigationV4Instrumentation, _InternalRoutingInstr);var _super = _createSuper(ReactNavigationV4Instrumentation);
+  function ReactNavigationV4Instrumentation() {var _this;var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};_classCallCheck(this, ReactNavigationV4Instrumentation);
+    _this = _super.call(this);
+    _this._appContainer = null;
+    _this._maxRecentRouteLen = 200;
+    _this._recentRouteKeys = [];
+    _this._initialStateHandled = false;
+
+    _this._pushRecentRouteKey = function (key) {
+      _this._recentRouteKeys.push(key);
+      if (_this._recentRouteKeys.length > _this._maxRecentRouteLen) {
+        _this._recentRouteKeys = _this._recentRouteKeys.slice(_this._recentRouteKeys.length - _this._maxRecentRouteLen);
+      }
+    };
+
+    _this._onBeforeNavigateNotSampled = function (transactionName) {
+      _utils.logger.log("[ReactNavigationV4Instrumentation] Will not send transaction \"" + transactionName + "\" due to beforeNavigate.");
+    };
+    _this._options = Object.assign(Object.assign({}, defaultOptions), options);return _this;
+  }_createClass(ReactNavigationV4Instrumentation, [{ key: "registerRoutingInstrumentation", value:
+
+
+
+    function registerRoutingInstrumentation(listener, beforeNavigate, onConfirmRoute) {
+      _get(_getPrototypeOf(ReactNavigationV4Instrumentation.prototype), "registerRoutingInstrumentation", this).call(this, listener, beforeNavigate, onConfirmRoute);
+
+      if (!this._initialStateHandled) {
+        this._latestTransaction = this.onRouteWillChange(INITIAL_TRANSACTION_CONTEXT_V4);
+        if (this._appContainer) {
+          this._updateLatestTransaction();
+          this._initialStateHandled = true;
+        } else
+        {
+          this._stateChangeTimeout = setTimeout(this._discardLatestTransaction.bind(this), this._options.routeChangeTimeoutMs);
+        }
+      }
+    } }, { key: "registerAppContainer", value:
+
+
+
+
+
+    function registerAppContainer(appContainerRef) {
+      var _global = (0, _utils.getGlobalObject)();
+
+
+
+
+
+      if (!_global.__sentry_rn_v4_registered) {
+        if ('current' in appContainerRef) {
+
+          this._appContainer = appContainerRef.current;
+        } else
+        {
+          this._appContainer = appContainerRef;
+        }
+        if (this._appContainer) {
+          this._patchRouter();
+          if (!this._initialStateHandled) {
+            if (this._latestTransaction) {
+              this._updateLatestTransaction();
+            } else
+            {
+              _utils.logger.log('[ReactNavigationV4Instrumentation] App container registered, but integration has not been setup yet.');
+            }
+            this._initialStateHandled = true;
+          }
+          _global.__sentry_rn_v4_registered = true;
+        } else
+        {
+          _utils.logger.warn('[ReactNavigationV4Instrumentation] Received invalid app container ref!');
+        }
+      }
+    } }, { key: "_updateLatestTransaction", value:
+
+
+
+    function _updateLatestTransaction() {
+
+      if (this._appContainer && this._latestTransaction) {
+        var state = this._appContainer._navigation.state;
+        if (typeof this._stateChangeTimeout !== 'undefined') {
+          clearTimeout(this._stateChangeTimeout);
+          this._stateChangeTimeout = undefined;
+        }
+        this._onStateChange(state, true);
+      }
+    } }, { key: "_patchRouter", value:
+
+
+
+
+    function _patchRouter() {var _this2 = this;
+      if (this._appContainer) {
+        var originalGetStateForAction = this._appContainer._navigation.router.
+        getStateForAction;
+        this._appContainer._navigation.router.getStateForAction = function (action, state) {
+          var newState = originalGetStateForAction(action, state);
+          _this2._onStateChange(newState);
+          return newState;
+        };
+      }
+    } }, { key: "_onStateChange", value:
+
+
+
+    function _onStateChange(state) {var updateLatestTransaction = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      var _a, _b;
+
+
+      if (!state || state === undefined) {
+        _utils.logger.warn('[ReactNavigationV4Instrumentation] onStateChange called without a valid state.');
+        return;
+      }
+      var currentRoute = this._getCurrentRouteFromState(state);
+
+      if (!this._prevRoute || currentRoute.key !== this._prevRoute.key) {
+        var originalContext = this._getTransactionContext(currentRoute, this._prevRoute);
+        var mergedContext = originalContext;
+        if (updateLatestTransaction && this._latestTransaction) {
+          mergedContext = Object.assign(Object.assign({}, this._latestTransaction.toContext()), originalContext);
+        }
+        var finalContext = (_a = this._beforeNavigate) === null || _a === void 0 ? void 0 : _a.call(this, mergedContext);
+
+        if (!finalContext) {
+          _utils.logger.error("[ReactNavigationV4Instrumentation] beforeNavigate returned " + finalContext + ", return context.sampled = false to not send transaction.");
+          finalContext = Object.assign(Object.assign({}, mergedContext), { sampled: false });
+        }
+        if (finalContext.sampled === false) {
+          this._onBeforeNavigateNotSampled(finalContext.name);
+        }
+        if (updateLatestTransaction && this._latestTransaction) {
+
+          this._latestTransaction.updateWithContext(finalContext);
+        } else
+        {
+          this._latestTransaction = this.onRouteWillChange(finalContext);
+        }
+        (_b = this._onConfirmRoute) === null || _b === void 0 ? void 0 : _b.call(this, finalContext);
+        this._pushRecentRouteKey(currentRoute.key);
+        this._prevRoute = currentRoute;
+      }
+    } }, { key: "_getTransactionContext", value:
+
+
+
+    function _getTransactionContext(route, previousRoute) {
+      var _a, _b;
+      var data = {
+        route: {
+          name: route.routeName,
+          key: route.key,
+          params: (_a = route.params) !== null && _a !== void 0 ? _a : {},
+          hasBeenSeen: this._recentRouteKeys.includes(route.key)
+        },
+        previousRoute: previousRoute ?
+        {
+          name: previousRoute.routeName,
+          key: previousRoute.key,
+          params: (_b = previousRoute.params) !== null && _b !== void 0 ? _b : {}
+        } :
+        null
+      };
+      return {
+        name: route.routeName,
+        op: 'navigation',
+        tags: {
+          'routing.instrumentation': ReactNavigationV4Instrumentation.instrumentationName,
+          'routing.route.name': route.routeName
+        },
+        data: data
+      };
+    } }, { key: "_getCurrentRouteFromState", value:
+
+
+
+    function _getCurrentRouteFromState(state) {
+      var parentRoute = state.routes[state.index];
+      if ('index' in parentRoute &&
+      'routes' in parentRoute &&
+      typeof parentRoute.index === 'number' &&
+      Array.isArray(parentRoute.routes)) {
+        return this._getCurrentRouteFromState(parentRoute);
+      }
+      return parentRoute;
+    } }, { key: "_discardLatestTransaction", value:
+
+    function _discardLatestTransaction() {
+      if (this._latestTransaction) {
+        this._latestTransaction.sampled = false;
+        this._latestTransaction.finish();
+        this._latestTransaction = undefined;
+      }
+    } }]);return ReactNavigationV4Instrumentation;}(_routingInstrumentation.InternalRoutingInstrumentation);exports.ReactNavigationV4Instrumentation = ReactNavigationV4Instrumentation;
+
+ReactNavigationV4Instrumentation.instrumentationName = 'react-navigation-v4';
+var INITIAL_TRANSACTION_CONTEXT_V4 = {
+  name: 'App Launch',
+  op: 'navigation',
+  tags: {
+    'routing.instrumentation': ReactNavigationV4Instrumentation.instrumentationName
+  },
+  data: {}
+};exports.INITIAL_TRANSACTION_CONTEXT_V4 = INITIAL_TRANSACTION_CONTEXT_V4;

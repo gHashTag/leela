@@ -1,0 +1,245 @@
+10b53b481684975543451ea31fe11758
+
+
+
+
+
+
+
+
+
+
+var React = _interopRequireWildcard(require("react"));
+var _StyleSheet = _interopRequireDefault(require("../StyleSheet/StyleSheet"));
+
+var _ImageInjection = _interopRequireDefault(require("./ImageInjection"));
+var _ImageAnalyticsTagContext = _interopRequireDefault(require("./ImageAnalyticsTagContext"));
+var _flattenStyle = _interopRequireDefault(require("../StyleSheet/flattenStyle"));
+var _resolveAssetSource = _interopRequireDefault(require("./resolveAssetSource"));
+
+
+
+
+var _NativeImageLoaderIOS = _interopRequireDefault(require("./NativeImageLoaderIOS"));
+
+var _ImageViewNativeComponent = _interopRequireDefault(require("./ImageViewNativeComponent"));var _jsxRuntime = require("react/jsx-runtime");var _this = this,_jsxFileName = "/Users/playra/leela/node_modules/react-native/Libraries/Image/Image.ios.js";function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _getRequireWildcardCache(nodeInterop) {if (typeof WeakMap !== "function") return null;var cacheBabelInterop = new WeakMap();var cacheNodeInterop = new WeakMap();return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) {return nodeInterop ? cacheNodeInterop : cacheBabelInterop;})(nodeInterop);}function _interopRequireWildcard(obj, nodeInterop) {if (!nodeInterop && obj && obj.__esModule) {return obj;}if (obj === null || typeof obj !== "object" && typeof obj !== "function") {return { default: obj };}var cache = _getRequireWildcardCache(nodeInterop);if (cache && cache.has(obj)) {return cache.get(obj);}var newObj = {};var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;for (var key in obj) {if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;if (desc && (desc.get || desc.set)) {Object.defineProperty(newObj, key, desc);} else {newObj[key] = obj[key];}}}newObj.default = obj;if (cache) {cache.set(obj, newObj);}return newObj;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];return arr2;}function _iterableToArrayLimit(arr, i) {var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];if (null != _i) {var _s,_e,_x,_r,_arr = [],_n = !0,_d = !1;try {if (_x = (_i = _i.call(arr)).next, 0 === i) {if (Object(_i) !== _i) return;_n = !1;} else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0);} catch (err) {_d = !0, _e = err;} finally {try {if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;} finally {if (_d) throw _e;}}return _arr;}}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}
+
+
+function getSize(
+uri,
+success,
+failure)
+{
+  _NativeImageLoaderIOS.default.getSize(uri).
+  then(function (_ref) {var _ref2 = _slicedToArray(_ref, 2),width = _ref2[0],height = _ref2[1];return success(width, height);}).
+  catch(
+    failure ||
+    function () {
+      console.warn('Failed to get size for image ' + uri);
+    }
+  );
+}
+
+function getSizeWithHeaders(
+uri,
+headers,
+success,
+failure)
+{
+  return _NativeImageLoaderIOS.default.getSizeWithHeaders(uri, headers).
+  then(function (sizes) {
+    success(sizes.width, sizes.height);
+  }).
+  catch(
+    failure ||
+    function () {
+      console.warn('Failed to get size for image: ' + uri);
+    }
+  );
+}
+
+function prefetchWithMetadata(
+url,
+queryRootName,
+rootTag)
+{
+  if (_NativeImageLoaderIOS.default.prefetchImageWithMetadata) {
+
+    return _NativeImageLoaderIOS.default.prefetchImageWithMetadata(
+      url,
+      queryRootName,
+
+
+      rootTag ? rootTag : 0
+    );
+  } else {
+    return _NativeImageLoaderIOS.default.prefetchImage(url);
+  }
+}
+
+function prefetch(url) {
+  return _NativeImageLoaderIOS.default.prefetchImage(url);
+}function
+
+queryCache(_x2) {return _queryCache.apply(this, arguments);}function _queryCache() {_queryCache = _asyncToGenerator(function* (
+  urls)
+  {
+    return yield _NativeImageLoaderIOS.default.queryCache(urls);
+  });return _queryCache.apply(this, arguments);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var BaseImage = function BaseImage(props, forwardedRef) {
+  var source = (0, _resolveAssetSource.default)(props.source) || {
+    uri: undefined,
+    width: undefined,
+    height: undefined
+  };
+
+  var sources;
+  var style;
+  if (Array.isArray(source)) {
+    style = (0, _flattenStyle.default)([styles.base, props.style]) || {};
+    sources = source;
+  } else {
+    var _width = source.width,_height = source.height,uri = source.uri;
+    style = (0, _flattenStyle.default)([{ width: _width, height: _height }, styles.base, props.style]) || {};
+    sources = [source];
+
+    if (uri === '') {
+      console.warn('source.uri should not be an empty string');
+    }
+  }
+
+  var resizeMode = props.resizeMode || style.resizeMode || 'cover';
+  var tintColor = style.tintColor;
+
+  if (props.src != null) {
+    console.warn(
+      'The <Image> component requires a `source` property rather than `src`.'
+    );
+  }
+
+  if (props.children != null) {
+    throw new Error(
+      'The <Image> component cannot contain children. If you want to render content on top of the image, consider using the <ImageBackground> component or absolute positioning.'
+    );
+  }
+
+  return (
+    (0, _jsxRuntime.jsx)(_ImageAnalyticsTagContext.default.Consumer, { children:
+      function children(analyticTag) {
+        return (
+          (0, _jsxRuntime.jsx)(_ImageViewNativeComponent.default, Object.assign({},
+          props, {
+            ref: forwardedRef,
+            style: style,
+            resizeMode: resizeMode,
+            tintColor: tintColor,
+            source: sources,
+            internal_analyticTag: analyticTag })
+          ));
+
+      } }
+    ));
+
+};
+
+var ImageForwardRef = React.forwardRef(
+
+
+  BaseImage);
+
+var Image = ImageForwardRef;
+if (_ImageInjection.default.unstable_createImageComponent != null) {
+  Image = _ImageInjection.default.unstable_createImageComponent(Image);
+}
+
+Image.displayName = 'Image';
+
+
+
+
+
+
+
+
+
+Image.getSize = getSize;
+
+
+
+
+
+
+
+
+
+
+Image.getSizeWithHeaders = getSizeWithHeaders;
+
+
+
+
+
+
+
+
+
+
+Image.prefetch = prefetch;
+
+
+
+
+
+
+
+
+
+
+Image.prefetchWithMetadata = prefetchWithMetadata;
+
+
+
+
+
+
+
+
+
+Image.queryCache = queryCache;
+
+
+
+
+
+
+
+
+
+Image.resolveAssetSource = _resolveAssetSource.default;
+
+var styles = _StyleSheet.default.create({
+  base: {
+    overflow: 'hidden'
+  }
+});
+
+module.exports = Image;

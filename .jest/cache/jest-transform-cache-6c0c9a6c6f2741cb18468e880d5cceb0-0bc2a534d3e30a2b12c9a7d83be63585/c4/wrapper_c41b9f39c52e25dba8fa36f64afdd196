@@ -1,0 +1,397 @@
+c0c70442e6024679cb8c9371c13c49ab
+Object.defineProperty(exports, "__esModule", { value: true });exports.NATIVE = void 0;var _tslib = require("tslib");
+
+var _types = require("@sentry/types");
+var _utils = require("@sentry/utils");
+var _reactNative = require("react-native");
+var RNSentry = _reactNative.NativeModules.RNSentry;
+
+
+
+var NATIVE = {
+
+
+
+
+  sendEvent: function sendEvent(_event) {
+    var _a, _b, _c, _d, _e;
+    return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+      if (!this.enableNative) {
+        return {
+          reason: 'Event was skipped as native SDK is not enabled.',
+          status: 'skipped'
+        };
+      }
+      if (!this._isModuleLoaded(RNSentry)) {
+        throw this._NativeClientError;
+      }
+      var event = this._processLevels(_event);
+
+      delete event.sdkProcessingMetadata;
+      var header = {
+        event_id: event.event_id,
+        sdk: event.sdk
+      };
+      var envelopeWasSent = false;
+      if (NATIVE.platform === 'android') {
+
+        var headerString = JSON.stringify(header);
+
+
+
+
+
+
+
+
+        if (((_d = (_c = (_b = (_a = event.exception) === null || _a === void 0 ? void 0 : _a.values) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.mechanism) === null || _d === void 0 ? void 0 : _d.handled) != false && event.breadcrumbs) {
+          event.breadcrumbs = [];
+        }
+        var payload = Object.assign(Object.assign({}, event), { message: {
+            message: event.message
+          } });
+        var payloadString = JSON.stringify(payload);
+        var length = payloadString.length;
+        try {
+          length = yield RNSentry.getStringBytesLength(payloadString);
+        }
+        catch (_f) {
+
+        }
+        var item = {
+          content_type: 'application/json',
+          length: length,
+          type: (_e = payload.type) !== null && _e !== void 0 ? _e : 'event'
+        };
+        var itemString = JSON.stringify(item);
+        var envelopeString = headerString + "\n" + itemString + "\n" + payloadString;
+        envelopeWasSent = yield RNSentry.captureEnvelope(envelopeString);
+      } else
+      {
+
+        var _payload = Object.assign(Object.assign({}, event), { message: {
+            message: event.message
+          } });
+
+        var serializedPayload = JSON.parse(JSON.stringify(_payload));
+
+
+        envelopeWasSent = yield RNSentry.captureEnvelope({
+          header: header,
+          payload: serializedPayload
+        });
+      }
+      if (envelopeWasSent) {
+        return {
+          status: 'success'
+        };
+      }
+      return {
+        status: 'failed'
+      };
+    });
+  },
+
+
+
+
+  initNativeSdk: function initNativeSdk(originalOptions) {
+    return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+      var options = Object.assign({ enableNative: true, autoInitializeNativeSdk: true }, originalOptions);
+      if (!options.enableNative) {
+        if (options.enableNativeNagger) {
+          _utils.logger.warn('Note: Native Sentry SDK is disabled.');
+        }
+        this.enableNative = false;
+        return false;
+      }
+      if (!options.autoInitializeNativeSdk) {
+        if (options.enableNativeNagger) {
+          _utils.logger.warn('Note: Native Sentry SDK was not initialized automatically, you will need to initialize it manually. If you wish to disable the native SDK and get rid of this warning, pass enableNative: false');
+        }
+        return false;
+      }
+      if (!options.dsn) {
+        _utils.logger.warn('Warning: No DSN was provided. The Sentry SDK will be disabled. Native SDK will also not be initalized.');
+        return false;
+      }
+      if (!this._isModuleLoaded(RNSentry)) {
+        throw this._NativeClientError;
+      }
+
+
+      var beforeSend = options.beforeSend,beforeBreadcrumb = options.beforeBreadcrumb,integrations = options.integrations,defaultIntegrations = options.defaultIntegrations,transport = options.transport,filteredOptions = (0, _tslib.__rest)(options, ["beforeSend", "beforeBreadcrumb", "integrations", "defaultIntegrations", "transport"]);
+
+      var nativeIsReady = yield RNSentry.initNativeSdk(filteredOptions);
+      this.nativeIsReady = nativeIsReady;
+      return nativeIsReady;
+    });
+  },
+
+
+
+  fetchNativeRelease: function fetchNativeRelease() {
+    return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+      if (!this.enableNative) {
+        throw this._DisabledNativeError;
+      }
+      if (!this._isModuleLoaded(RNSentry)) {
+        throw this._NativeClientError;
+      }
+      return RNSentry.fetchNativeRelease();
+    });
+  },
+
+
+
+
+  fetchNativeSdkInfo: function fetchNativeSdkInfo() {
+    return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+      if (!this.enableNative) {
+        throw this._DisabledNativeError;
+      }
+      if (!this._isModuleLoaded(RNSentry)) {
+        throw this._NativeClientError;
+      }
+      if (this.platform !== 'ios') {
+        return null;
+      }
+      return RNSentry.fetchNativeSdkInfo();
+    });
+  },
+
+
+
+  fetchNativeDeviceContexts: function fetchNativeDeviceContexts() {
+    return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+      if (!this.enableNative) {
+        throw this._DisabledNativeError;
+      }
+      if (!this._isModuleLoaded(RNSentry)) {
+        throw this._NativeClientError;
+      }
+      if (this.platform !== 'ios') {
+
+        return {};
+      }
+      return RNSentry.fetchNativeDeviceContexts();
+    });
+  },
+  fetchNativeAppStart: function fetchNativeAppStart() {
+    return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+      if (!this.enableNative) {
+        throw this._DisabledNativeError;
+      }
+      if (!this._isModuleLoaded(RNSentry)) {
+        throw this._NativeClientError;
+      }
+      return RNSentry.fetchNativeAppStart();
+    });
+  },
+  fetchNativeFrames: function fetchNativeFrames() {
+    return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+      if (!this.enableNative) {
+        throw this._DisabledNativeError;
+      }
+      if (!this._isModuleLoaded(RNSentry)) {
+        throw this._NativeClientError;
+      }
+      return RNSentry.fetchNativeFrames();
+    });
+  },
+
+
+
+
+  nativeCrash: function nativeCrash() {
+    if (!this.enableNative) {
+      return;
+    }
+    if (!this._isModuleLoaded(RNSentry)) {
+      throw this._NativeClientError;
+    }
+    RNSentry.crash();
+  },
+
+
+
+
+  setUser: function setUser(user) {
+    if (!this.enableNative) {
+      return;
+    }
+    if (!this._isModuleLoaded(RNSentry)) {
+      throw this._NativeClientError;
+    }
+
+    var defaultUserKeys = null;
+    var otherUserKeys = null;
+    if (user) {
+      var id = user.id,ip_address = user.ip_address,email = user.email,username = user.username,otherKeys = (0, _tslib.__rest)(user, ["id", "ip_address", "email", "username"]);
+      defaultUserKeys = this._serializeObject({
+        email: email,
+        id: id,
+        ip_address: ip_address,
+        username: username
+      });
+      otherUserKeys = this._serializeObject(otherKeys);
+    }
+    RNSentry.setUser(defaultUserKeys, otherUserKeys);
+  },
+
+
+
+
+
+  setTag: function setTag(key, value) {
+    if (!this.enableNative) {
+      return;
+    }
+    if (!this._isModuleLoaded(RNSentry)) {
+      throw this._NativeClientError;
+    }
+    var stringifiedValue = typeof value === 'string' ? value : JSON.stringify(value);
+    RNSentry.setTag(key, stringifiedValue);
+  },
+
+
+
+
+
+
+  setExtra: function setExtra(key, extra) {
+    if (!this.enableNative) {
+      return;
+    }
+    if (!this._isModuleLoaded(RNSentry)) {
+      throw this._NativeClientError;
+    }
+
+    var stringifiedExtra = typeof extra === 'string' ? extra : JSON.stringify(extra);
+    RNSentry.setExtra(key, stringifiedExtra);
+  },
+
+
+
+
+  addBreadcrumb: function addBreadcrumb(breadcrumb) {
+    if (!this.enableNative) {
+      return;
+    }
+    if (!this._isModuleLoaded(RNSentry)) {
+      throw this._NativeClientError;
+    }
+    RNSentry.addBreadcrumb(Object.assign(Object.assign({}, breadcrumb), {
+
+      level: breadcrumb.level ?
+      this._processLevel(breadcrumb.level) :
+      undefined, data: breadcrumb.data ?
+      this._serializeObject(breadcrumb.data) :
+      undefined }));
+  },
+
+
+
+  clearBreadcrumbs: function clearBreadcrumbs() {
+    if (!this.enableNative) {
+      return;
+    }
+    if (!this._isModuleLoaded(RNSentry)) {
+      throw this._NativeClientError;
+    }
+    RNSentry.clearBreadcrumbs();
+  },
+
+
+
+
+
+  setContext: function setContext(key, context) {
+    if (!this.enableNative) {
+      return;
+    }
+    if (!this._isModuleLoaded(RNSentry)) {
+      throw this._NativeClientError;
+    }
+    RNSentry.setContext(key, context !== null ? this._serializeObject(context) : null);
+  },
+
+
+
+  closeNativeSdk: function closeNativeSdk() {
+    return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {var _this = this;
+      if (!this.enableNative) {
+        return;
+      }
+      if (!this._isModuleLoaded(RNSentry)) {
+        return;
+      }
+      return RNSentry.closeNativeSdk().then(function () {
+        _this.enableNative = false;
+      });
+    });
+  },
+  disableNativeFramesTracking: function disableNativeFramesTracking() {
+    if (!this.enableNative) {
+      return;
+    }
+    if (!this._isModuleLoaded(RNSentry)) {
+      return;
+    }
+    RNSentry.disableNativeFramesTracking();
+  },
+  isNativeTransportAvailable: function isNativeTransportAvailable() {
+    return this.enableNative && this._isModuleLoaded(RNSentry);
+  },
+
+
+
+
+
+  _serializeObject: function _serializeObject(data) {
+    var serialized = {};
+    Object.keys(data).forEach(function (dataKey) {
+      var value = data[dataKey];
+      serialized[dataKey] =
+      typeof value === 'string' ? value : JSON.stringify(value);
+    });
+    return serialized;
+  },
+
+
+
+
+
+  _processLevels: function _processLevels(event) {var _this2 = this;
+    var _a;
+    var processed = Object.assign(Object.assign({}, event), { level: event.level ? this._processLevel(event.level) : undefined, breadcrumbs: (_a = event.breadcrumbs) === null || _a === void 0 ? void 0 : _a.map(function (breadcrumb) {return Object.assign(Object.assign({}, breadcrumb), { level: breadcrumb.level ?
+          _this2._processLevel(breadcrumb.level) :
+          undefined });}) });
+    return processed;
+  },
+
+
+
+
+
+  _processLevel: function _processLevel(level) {
+    if (level === _types.Severity.Critical) {
+      return _types.Severity.Fatal;
+    }
+    if (level === _types.Severity.Log) {
+      return _types.Severity.Debug;
+    }
+    return level;
+  },
+
+
+
+  _isModuleLoaded: function _isModuleLoaded(module) {
+    return !!module;
+  },
+  _DisabledNativeError: new _utils.SentryError('Native is disabled'),
+  _NativeClientError: new _utils.SentryError("Native Client is not available, can't start on native."),
+  enableNative: true,
+  nativeIsReady: false,
+  platform: _reactNative.Platform.OS
+};exports.NATIVE = NATIVE;

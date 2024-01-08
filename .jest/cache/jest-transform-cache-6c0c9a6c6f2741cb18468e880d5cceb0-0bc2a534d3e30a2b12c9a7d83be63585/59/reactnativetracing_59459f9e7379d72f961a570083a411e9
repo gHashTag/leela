@@ -1,0 +1,224 @@
+19e4c16d590c44ded61f21fed247e88d
+Object.defineProperty(exports, "__esModule", { value: true });exports.ReactNativeTracing = void 0;var _tslib = require("tslib");
+var _tracing = require("@sentry/tracing");
+var _utils = require("@sentry/utils");
+var _wrapper = require("../wrapper");
+var _nativeframes = require("./nativeframes");
+var _stalltracking = require("./stalltracking");
+var _utils2 = require("./utils");function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}
+var defaultReactNativeTracingOptions = Object.assign(Object.assign({}, _tracing.defaultRequestInstrumentationOptions), { idleTimeout: 1000, maxTransactionDuration: 600, ignoreEmptyBackNavigationTransactions: true, beforeNavigate: function beforeNavigate(context) {return context;}, enableAppStartTracking: true, enableNativeFramesTracking: true, enableStallTracking: true });var
+
+
+
+ReactNativeTracing = function () {
+  function ReactNativeTracing() {var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};_classCallCheck(this, ReactNativeTracing);
+
+
+
+    this.name = ReactNativeTracing.id;
+    this.useAppStartWithProfiler = false;
+    this.options = Object.assign(Object.assign({}, defaultReactNativeTracingOptions), options);
+  }_createClass(ReactNativeTracing, [{ key: "setupOnce", value:
+
+
+
+    function setupOnce(
+
+    addGlobalEventProcessor, getCurrentHub) {
+
+      var _this$options =
+
+        this.options,traceFetch = _this$options.traceFetch,traceXHR = _this$options.traceXHR,tracingOrigins = _this$options.tracingOrigins,shouldCreateSpanForRequest = _this$options.shouldCreateSpanForRequest,routingInstrumentation = _this$options.routingInstrumentation,enableAppStartTracking = _this$options.enableAppStartTracking,enableNativeFramesTracking = _this$options.enableNativeFramesTracking,enableStallTracking = _this$options.enableStallTracking;
+      this._getCurrentHub = getCurrentHub;
+      if (enableAppStartTracking) {
+        void this._instrumentAppStart();
+      }
+      if (enableNativeFramesTracking) {
+        this.nativeFramesInstrumentation = new _nativeframes.NativeFramesInstrumentation(addGlobalEventProcessor, function () {
+          var self = getCurrentHub().getIntegration(ReactNativeTracing);
+          if (self) {
+            return !!self.nativeFramesInstrumentation;
+          }
+          return false;
+        });
+      } else
+      {
+        _wrapper.NATIVE.disableNativeFramesTracking();
+      }
+      if (enableStallTracking) {
+        this.stallTrackingInstrumentation = new _stalltracking.StallTrackingInstrumentation();
+      }
+      if (routingInstrumentation) {
+        routingInstrumentation.registerRoutingInstrumentation(this._onRouteWillChange.bind(this), this.options.beforeNavigate, this._onConfirmRoute.bind(this));
+      } else
+      {
+        _utils.logger.log('[ReactNativeTracing] Not instrumenting route changes as routingInstrumentation has not been set.');
+      }
+      (0, _tracing.registerRequestInstrumentation)({
+        traceFetch: traceFetch,
+        traceXHR: traceXHR,
+        tracingOrigins: tracingOrigins,
+        shouldCreateSpanForRequest: shouldCreateSpanForRequest
+      });
+    } }, { key: "onTransactionStart", value:
+
+
+
+    function onTransactionStart(transaction) {
+      var _a, _b;
+      if ((0, _utils2.isNearToNow)(transaction.startTimestamp)) {
+
+        (_a = this.nativeFramesInstrumentation) === null || _a === void 0 ? void 0 : _a.onTransactionStart(transaction);
+        (_b = this.stallTrackingInstrumentation) === null || _b === void 0 ? void 0 : _b.onTransactionStart(transaction);
+      }
+    } }, { key: "onTransactionFinish", value:
+
+
+
+    function onTransactionFinish(transaction, endTimestamp) {
+      var _a, _b;
+      (_a = this.nativeFramesInstrumentation) === null || _a === void 0 ? void 0 : _a.onTransactionFinish(transaction);
+      (_b = this.stallTrackingInstrumentation) === null || _b === void 0 ? void 0 : _b.onTransactionFinish(transaction, endTimestamp);
+    } }, { key: "onAppStartFinish", value:
+
+
+
+    function onAppStartFinish(endTimestamp) {
+      this._appStartFinishTimestamp = endTimestamp;
+    } }, { key: "_instrumentAppStart", value:
+
+
+
+
+    function _instrumentAppStart() {
+      return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+        if (!this.options.enableAppStartTracking || !_wrapper.NATIVE.enableNative) {
+          return;
+        }
+        var appStart = yield _wrapper.NATIVE.fetchNativeAppStart();
+        if (!appStart || appStart.didFetchAppStart) {
+          return;
+        }
+        if (!this.useAppStartWithProfiler) {
+          this._appStartFinishTimestamp = (0, _utils2.getTimeOriginMilliseconds)() / 1000;
+        }
+        if (this.options.routingInstrumentation) {
+          this._awaitingAppStartData = appStart;
+        } else
+        {
+          var appStartTimeSeconds = appStart.appStartTime / 1000;
+          var idleTransaction = this._createRouteTransaction({
+            name: 'App Start',
+            op: 'ui.load',
+            startTimestamp: appStartTimeSeconds
+          });
+          if (idleTransaction) {
+            this._addAppStartData(idleTransaction, appStart);
+          }
+        }
+      });
+    } }, { key: "_addAppStartData", value:
+
+
+
+    function _addAppStartData(transaction, appStart) {
+      if (!this._appStartFinishTimestamp) {
+        _utils.logger.warn('App start was never finished.');
+        return;
+      }
+      var appStartTimeSeconds = appStart.appStartTime / 1000;
+      transaction.startChild({
+        description: appStart.isColdStart ? 'Cold App Start' : 'Warm App Start',
+        op: appStart.isColdStart ? 'app.start.cold' : 'app.start.warm',
+        startTimestamp: appStartTimeSeconds,
+        endTimestamp: this._appStartFinishTimestamp
+      });
+      var appStartDurationMilliseconds = this._appStartFinishTimestamp * 1000 - appStart.appStartTime;
+      transaction.setMeasurements(appStart.isColdStart ?
+      {
+        app_start_cold: {
+          value: appStartDurationMilliseconds
+        }
+      } :
+      {
+        app_start_warm: {
+          value: appStartDurationMilliseconds
+        }
+      });
+    } }, { key: "_onRouteWillChange", value:
+
+    function _onRouteWillChange(context) {
+      return this._createRouteTransaction(context);
+    } }, { key: "_onConfirmRoute", value:
+
+
+
+    function _onConfirmRoute(context) {
+      var _a;
+      (_a = this._getCurrentHub) === null || _a === void 0 ? void 0 : _a.call(this).configureScope(function (scope) {
+        var _a;
+        if (context.data) {
+          var contextData = context.data;
+          scope.addBreadcrumb({
+            category: 'navigation',
+            type: 'navigation',
+
+            message: "Navigation to " + context.name,
+            data: {
+              from: (_a = contextData.previousRoute) === null || _a === void 0 ? void 0 : _a.name,
+              to: contextData.route.name
+            }
+          });
+        }
+        scope.setTag('routing.route.name', context.name);
+      });
+    } }, { key: "_createRouteTransaction", value:
+
+    function _createRouteTransaction(context) {var _this = this;
+      if (!this._getCurrentHub) {
+        _utils.logger.warn("[ReactNativeTracing] Did not create " + context.op + " transaction because _getCurrentHub is invalid.");
+        return undefined;
+      }
+
+      var _this$options2 = this.options,idleTimeout = _this$options2.idleTimeout,maxTransactionDuration = _this$options2.maxTransactionDuration;
+      var expandedContext = Object.assign(Object.assign({}, context), { trimEnd: true });
+      var hub = this._getCurrentHub();
+      var idleTransaction = (0, _tracing.startIdleTransaction)(hub, expandedContext, idleTimeout, true);
+      this.onTransactionStart(idleTransaction);
+      _utils.logger.log("[ReactNativeTracing] Starting " + context.op + " transaction \"" + context.name + "\" on scope");
+      idleTransaction.registerBeforeFinishCallback(function (transaction, endTimestamp) {
+        _this.onTransactionFinish(transaction, endTimestamp);
+      });
+      idleTransaction.registerBeforeFinishCallback(function (transaction) {
+        if (_this.options.enableAppStartTracking && _this._awaitingAppStartData) {
+          transaction.startTimestamp =
+          _this._awaitingAppStartData.appStartTime / 1000;
+          transaction.op = 'ui.load';
+          _this._addAppStartData(transaction, _this._awaitingAppStartData);
+          _this._awaitingAppStartData = undefined;
+        }
+      });
+      idleTransaction.registerBeforeFinishCallback(function (transaction, endTimestamp) {
+        (0, _utils2.adjustTransactionDuration)(maxTransactionDuration, transaction, endTimestamp);
+      });
+      if (this.options.ignoreEmptyBackNavigationTransactions) {
+        idleTransaction.registerBeforeFinishCallback(function (transaction) {
+          var _a, _b;
+          if (
+
+          ((_b = (_a = transaction.data) === null || _a === void 0 ? void 0 : _a.route) === null || _b === void 0 ? void 0 : _b.hasBeenSeen) && (
+          !transaction.spanRecorder ||
+          transaction.spanRecorder.spans.filter(function (span) {return span.spanId !== transaction.spanId;}).length === 0)) {
+            _utils.logger.log('[ReactNativeTracing] Not sampling transaction as route has been seen before. Pass ignoreEmptyBackNavigationTransactions = false to disable this feature.');
+
+            transaction.sampled = false;
+          }
+        });
+      }
+      return idleTransaction;
+    } }]);return ReactNativeTracing;}();exports.ReactNativeTracing = ReactNativeTracing;
+
+
+
+
+ReactNativeTracing.id = 'ReactNativeTracing';

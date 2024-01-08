@@ -1,0 +1,63 @@
+cb908916943fa9b470888b738e88dbe3
+Object.defineProperty(exports, "__esModule", { value: true });exports.promiseDefer = promiseDefer;exports.promiseWithOptionalCallback = promiseWithOptionalCallback;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var _validate = require("./validate");
+
+
+
+
+function promiseDefer() {
+  var deferred = {
+    resolve: null,
+    reject: null
+  };
+
+  deferred.promise = new Promise(function (resolve, reject) {
+    deferred.resolve = resolve;
+    deferred.reject = reject;
+  });
+
+  return deferred;
+}
+
+
+
+
+
+function promiseWithOptionalCallback(promise, callback) {
+  if (!(0, _validate.isFunction)(callback)) {
+    return promise;
+  }
+
+  return promise.
+  then(function (result) {
+    if (callback && callback.length === 1) {
+      callback(null);
+    } else if (callback) {
+      callback(null, result);
+    }
+
+    return result;
+  }).
+  catch(function (error) {
+    if (callback) {
+      callback(error);
+    }
+    return Promise.reject(error);
+  });
+}

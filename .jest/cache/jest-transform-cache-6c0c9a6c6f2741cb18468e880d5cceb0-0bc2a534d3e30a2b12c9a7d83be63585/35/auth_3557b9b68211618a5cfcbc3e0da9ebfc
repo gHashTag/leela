@@ -1,0 +1,4 @@
+7450f379799fe9ee74400668f2de0d44
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  signInWithEmailAndPassword: jest.fn(function () {return Promise.resolve();})
+};exports.default = _default;

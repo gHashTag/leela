@@ -1,0 +1,25 @@
+f907be4a364244fc95ed87ba774f3762
+
+
+
+
+
+
+
+
+
+
+'use strict';
+
+var React = require('react');
+
+
+
+
+var TextAncestorContext = React.createContext(
+  false
+);
+if (__DEV__) {
+  TextAncestorContext.displayName = 'TextAncestorContext';
+}
+module.exports = TextAncestorContext;

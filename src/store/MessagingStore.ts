@@ -5,6 +5,7 @@ import { makeAutoObservable } from 'mobx'
 import { makePersistable } from 'mobx-persist-store'
 
 import { captureException } from '../constants'
+import { storageAdapter } from './storageAdapter'
 
 export const MessagingStore = makeAutoObservable({
   path: ''
@@ -12,7 +13,8 @@ export const MessagingStore = makeAutoObservable({
 
 makePersistable(MessagingStore, {
   name: 'MessagingStore',
-  properties: ['path']
+  properties: ['path'],
+  storage: storageAdapter
 })
 
 const fetchBusinesses = () => {

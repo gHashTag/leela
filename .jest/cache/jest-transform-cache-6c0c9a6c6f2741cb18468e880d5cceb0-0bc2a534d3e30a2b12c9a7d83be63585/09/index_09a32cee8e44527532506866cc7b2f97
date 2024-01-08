@@ -1,0 +1,223 @@
+5b12b9f841978b264cf2d773c53de934
+Object.defineProperty(exports, "__esModule", { value: true });exports.firebase = exports.default = exports.SDK_VERSION = void 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var _common = require("@react-native-firebase/app/lib/common");
+var _internal = require("@react-native-firebase/app/lib/internal");
+
+
+
+
+var _DatabaseReference = _interopRequireDefault(require("./DatabaseReference"));
+var _DatabaseStatics = _interopRequireDefault(require("./DatabaseStatics"));
+var _DatabaseTransaction = _interopRequireDefault(require("./DatabaseTransaction"));
+var _version = _interopRequireDefault(require("./version"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}function _inherits(subClass, superClass) {if (typeof superClass !== "function" && superClass !== null) {throw new TypeError("Super expression must either be null or a function");}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } });Object.defineProperty(subClass, "prototype", { writable: false });if (superClass) _setPrototypeOf(subClass, superClass);}function _setPrototypeOf(o, p) {_setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {o.__proto__ = p;return o;};return _setPrototypeOf(o, p);}function _createSuper(Derived) {var hasNativeReflectConstruct = _isNativeReflectConstruct();return function _createSuperInternal() {var Super = _getPrototypeOf(Derived),result;if (hasNativeReflectConstruct) {var NewTarget = _getPrototypeOf(this).constructor;result = Reflect.construct(Super, arguments, NewTarget);} else {result = Super.apply(this, arguments);}return _possibleConstructorReturn(this, result);};}function _possibleConstructorReturn(self, call) {if (call && (typeof call === "object" || typeof call === "function")) {return call;} else if (call !== void 0) {throw new TypeError("Derived constructors may only return object or undefined");}return _assertThisInitialized(self);}function _assertThisInitialized(self) {if (self === void 0) {throw new ReferenceError("this hasn't been initialised - super() hasn't been called");}return self;}function _isNativeReflectConstruct() {if (typeof Reflect === "undefined" || !Reflect.construct) return false;if (Reflect.construct.sham) return false;if (typeof Proxy === "function") return true;try {Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));return true;} catch (e) {return false;}}function _getPrototypeOf(o) {_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {return o.__proto__ || Object.getPrototypeOf(o);};return _getPrototypeOf(o);}
+
+var namespace = 'database';
+
+var nativeModuleName = [
+'RNFBDatabaseModule',
+'RNFBDatabaseReferenceModule',
+'RNFBDatabaseQueryModule',
+'RNFBDatabaseOnDisconnectModule',
+'RNFBDatabaseTransactionModule'];var
+
+
+FirebaseDatabaseModule = function (_FirebaseModule) {_inherits(FirebaseDatabaseModule, _FirebaseModule);var _super = _createSuper(FirebaseDatabaseModule);
+  function FirebaseDatabaseModule(app, config, databaseUrl) {var _this;_classCallCheck(this, FirebaseDatabaseModule);
+    _this = _super.call(this, app, config, databaseUrl);
+    _this._serverTimeOffset = 0;
+    _this._customUrlOrRegion = databaseUrl || _this.app.options.databaseURL;
+    _this._transaction = new _DatabaseTransaction.default(_assertThisInitialized(_this));
+    setTimeout(function () {
+      _this._syncServerTimeOffset();
+    }, 100);return _this;
+  }_createClass(FirebaseDatabaseModule, [{ key: "_syncServerTimeOffset", value:
+
+
+
+
+
+    function _syncServerTimeOffset() {var _this2 = this;
+      this.ref('.info/serverTimeOffset').on('value', function (snapshot) {
+        _this2._serverTimeOffset = snapshot.val();
+      });
+    } }, { key: "getServerTime", value:
+
+
+
+
+
+
+    function getServerTime() {
+      return new Date(Date.now() + this._serverTimeOffset);
+    } }, { key: "ref", value:
+
+
+
+
+
+
+    function ref() {var path = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '/';
+      if (!(0, _common.isString)(path)) {
+        throw new Error("firebase.app().database().ref(*) 'path' must be a string value.");
+      }
+
+      if (/[#$\[\]'?]/g.test(path)) {
+        throw new Error("Paths must be non-empty strings and can't contain #, $, [, ], ' or ? | path: " +
+        path
+        );
+      }
+
+      return new _DatabaseReference.default(this, path);
+    } }, { key: "refFromURL", value:
+
+
+
+
+
+
+
+
+    function refFromURL(url) {
+      if (!(0, _common.isString)(url) || !url.startsWith('https://')) {
+        throw new Error(
+          "firebase.app().database().refFromURL(*) 'url' must be a valid database URL."
+        );
+      }
+
+      if (!url.includes(this._customUrlOrRegion)) {
+        throw new Error("firebase.app().database().refFromURL(*) 'url' must be the same domain as the current instance (" +
+        this._customUrlOrRegion + "). To use a different database domain, create a new Firebase instance."
+        );
+      }
+
+      var path = url.replace(this._customUrlOrRegion, '');
+      if (path.includes('?')) {
+        path = path.slice(0, path.indexOf('?'));
+      }
+
+      return new _DatabaseReference.default(this, path || '/');
+    } }, { key: "goOnline", value:
+
+
+
+
+    function goOnline() {
+      return this.native.goOnline();
+    } }, { key: "goOffline", value:
+
+
+
+
+    function goOffline() {
+      return this.native.goOffline();
+    } }, { key: "setPersistenceEnabled", value:
+
+
+
+
+
+    function setPersistenceEnabled(enabled) {
+      if (!(0, _common.isBoolean)(enabled)) {
+        throw new Error(
+          "firebase.app().database().setPersistenceEnabled(*) 'enabled' must be a boolean value."
+        );
+      }
+
+      return this.native.setPersistenceEnabled(enabled);
+    } }, { key: "setLoggingEnabled", value:
+
+
+
+
+
+    function setLoggingEnabled(enabled) {
+      if (!(0, _common.isBoolean)(enabled)) {
+        throw new Error(
+          "firebase.app().database().setLoggingEnabled(*) 'enabled' must be a boolean value."
+        );
+      }
+
+      return this.native.setLoggingEnabled(enabled);
+    } }, { key: "setPersistenceCacheSizeBytes", value:
+
+
+
+
+
+    function setPersistenceCacheSizeBytes(bytes) {
+      if (!(0, _common.isNumber)(bytes)) {
+        throw new Error(
+          "firebase.app().database().setPersistenceCacheSizeBytes(*) 'bytes' must be a number value."
+        );
+      }
+
+      if (bytes < 1048576) {
+        throw new Error(
+          "firebase.app().database().setPersistenceCacheSizeBytes(*) 'bytes' must be greater than 1048576 bytes (1MB)."
+        );
+      }
+
+      if (bytes > 104857600) {
+        throw new Error(
+          "firebase.app().database().setPersistenceCacheSizeBytes(*) 'bytes' must be less than 104857600 bytes (100MB)."
+        );
+      }
+
+      return this.native.setPersistenceCacheSizeBytes(bytes);
+    } }, { key: "useEmulator", value:
+
+    function useEmulator(host, port) {
+      if (!host || !(0, _common.isString)(host) || !port || !(0, _common.isNumber)(port)) {
+        throw new Error('firebase.database().useEmulator() takes a non-empty host and port');
+      }
+      var _host = host;
+      if (_common.isAndroid && _host) {
+        if (_host === 'localhost' || _host === '127.0.0.1') {
+          _host = '10.0.2.2';
+
+          console.log(
+            'Mapping database host to "10.0.2.2" for android emulators. Use real IP on real devices.'
+          );
+        }
+      }
+      this.native.useEmulator(_host, port);
+      return [_host, port];
+    } }]);return FirebaseDatabaseModule;}(_internal.FirebaseModule);
+
+
+
+var SDK_VERSION = _version.default;exports.SDK_VERSION = SDK_VERSION;var _default =
+
+
+
+(0, _internal.createModuleNamespace)({
+  statics: _DatabaseStatics.default,
+  version: _version.default,
+  namespace: namespace,
+  nativeModuleName: nativeModuleName,
+  nativeEvents: ['database_transaction_event', 'database_sync_event'],
+  hasMultiAppSupport: true,
+  hasCustomUrlOrRegionSupport: true,
+  ModuleClass: FirebaseDatabaseModule
+});exports.default = _default;
+
+
+
+
+var firebase = (0, _internal.getFirebaseRoot)();exports.firebase = firebase;

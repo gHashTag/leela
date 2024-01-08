@@ -1,0 +1,74 @@
+fc8598dcd475ec7bb71176d7b03f6f99
+Object.defineProperty(exports, "__esModule", { value: true });exports.NativeVirtualText = exports.NativeText = void 0;
+
+
+
+
+
+
+
+
+
+var _ReactNativeViewAttributes = _interopRequireDefault(require("../Components/View/ReactNativeViewAttributes"));
+var _UIManager = _interopRequireDefault(require("../ReactNative/UIManager"));
+
+var _createReactNativeComponentClass = _interopRequireDefault(require("../Renderer/shims/createReactNativeComponentClass"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var NativeText =
+(0, _createReactNativeComponentClass.default)('RCTText', function () {return {
+    validAttributes: Object.assign({},
+    _ReactNativeViewAttributes.default.UIView, {
+      isHighlighted: true,
+      isPressable: true,
+      numberOfLines: true,
+      ellipsizeMode: true,
+      allowFontScaling: true,
+      maxFontSizeMultiplier: true,
+      disabled: true,
+      selectable: true,
+      selectionColor: true,
+      adjustsFontSizeToFit: true,
+      minimumFontScale: true,
+      textBreakStrategy: true,
+      onTextLayout: true,
+      onInlineViewLayout: true,
+      dataDetectorType: true,
+      android_hyphenationFrequency: true }),
+
+    directEventTypes: {
+      topTextLayout: {
+        registrationName: 'onTextLayout'
+      },
+      topInlineViewLayout: {
+        registrationName: 'onInlineViewLayout'
+      }
+    },
+    uiViewClassName: 'RCTText'
+  };});exports.NativeText = NativeText;
+
+var NativeVirtualText =
+!global.RN$Bridgeless && !_UIManager.default.hasViewManagerConfig('RCTVirtualText') ?
+NativeText :
+(0, _createReactNativeComponentClass.default)('RCTVirtualText', function () {return {
+    validAttributes: Object.assign({},
+    _ReactNativeViewAttributes.default.UIView, {
+      isHighlighted: true,
+      isPressable: true,
+      maxFontSizeMultiplier: true }),
+
+    uiViewClassName: 'RCTVirtualText'
+  };});exports.NativeVirtualText = NativeVirtualText;

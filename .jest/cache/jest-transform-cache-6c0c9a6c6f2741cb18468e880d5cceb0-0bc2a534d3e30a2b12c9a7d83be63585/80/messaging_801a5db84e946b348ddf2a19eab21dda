@@ -1,0 +1,8 @@
+01c57f8ce2a17cdb91c4a0c6554f2f24
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default =
+
+{
+  onMessage: jest.fn(),
+  onNotificationOpenedApp: jest.fn(),
+  getInitialNotification: jest.fn()
+};exports.default = _default;

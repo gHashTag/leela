@@ -1,0 +1,234 @@
+f20724ed14c7f8e5c0d144a7a98799e5
+Object.defineProperty(exports, "__esModule", { value: true });exports.getAppModule = getAppModule;exports.getNativeModule = getNativeModule;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var _reactNative = require("react-native");
+var _constants = require("../constants");
+var _NativeFirebaseError = _interopRequireDefault(require("../NativeFirebaseError"));
+var _RNFBNativeEventEmitter = _interopRequireDefault(require("../RNFBNativeEventEmitter"));
+var _SharedEventEmitter = _interopRequireDefault(require("../SharedEventEmitter"));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _toConsumableArray(arr) {return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();}function _nonIterableSpread() {throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _iterableToArray(iter) {if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);}function _arrayWithoutHoles(arr) {if (Array.isArray(arr)) return _arrayLikeToArray(arr);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];return arr2;}
+
+var NATIVE_MODULE_REGISTRY = {};
+var NATIVE_MODULE_EVENT_SUBSCRIPTIONS = {};
+
+function nativeModuleKey(module) {
+  return (module._customUrlOrRegion || '') + ":" + module.app.name + ":" + module._config.namespace;
+}
+
+
+
+
+
+
+
+
+
+
+function nativeModuleMethodWrapped(namespace, method, argToPrepend) {
+  return function () {for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
+    var possiblePromise = method.apply(void 0, [].concat(_toConsumableArray(argToPrepend), args));
+
+    if (possiblePromise && possiblePromise.then) {
+      var jsStack = new Error().stack;
+      return possiblePromise.catch(function (nativeError) {return (
+          Promise.reject(new _NativeFirebaseError.default(nativeError, jsStack, namespace)));}
+      );
+    }
+
+    return possiblePromise;
+  };
+}
+
+
+
+
+
+
+
+
+function nativeModuleWrapped(namespace, NativeModule, argToPrepend) {
+  var native = {};
+  if (!NativeModule) {
+    return NativeModule;
+  }
+
+  var properties = Object.keys(NativeModule);
+
+  for (var i = 0, len = properties.length; i < len; i++) {
+    var property = properties[i];
+    if (typeof NativeModule[property] === 'function') {
+      native[property] = nativeModuleMethodWrapped(namespace, NativeModule[property], argToPrepend);
+    } else {
+      native[property] = NativeModule[property];
+    }
+  }
+
+  return native;
+}
+
+
+
+
+
+
+
+function initialiseNativeModule(module) {
+  var config = module._config;
+  var key = nativeModuleKey(module);
+  var
+    namespace =
+
+
+
+
+
+    config.namespace,nativeEvents = config.nativeEvents,nativeModuleName = config.nativeModuleName,hasMultiAppSupport = config.hasMultiAppSupport,hasCustomUrlOrRegionSupport = config.hasCustomUrlOrRegionSupport,disablePrependCustomUrlOrRegion = config.disablePrependCustomUrlOrRegion;
+  var multiModuleRoot = {};
+  var multiModule = Array.isArray(nativeModuleName);
+  var nativeModuleNames = multiModule ? nativeModuleName : [nativeModuleName];
+
+  for (var i = 0; i < nativeModuleNames.length; i++) {
+    var nativeModule = _reactNative.NativeModules[nativeModuleNames[i]];
+
+
+
+    if (!multiModule && !nativeModule) {
+      throw new Error(getMissingModuleHelpText(namespace));
+    }
+
+    if (multiModule) {
+      multiModuleRoot[nativeModuleNames[i]] = !!nativeModule;
+    }
+
+    var argToPrepend = [];
+
+    if (hasMultiAppSupport) {
+      argToPrepend.push(module.app.name);
+    }
+
+    if (hasCustomUrlOrRegionSupport && !disablePrependCustomUrlOrRegion) {
+      argToPrepend.push(module._customUrlOrRegion);
+    }
+
+    Object.assign(multiModuleRoot, nativeModuleWrapped(namespace, nativeModule, argToPrepend));
+  }
+
+  if (nativeEvents && nativeEvents.length) {
+    for (var _i = 0, len = nativeEvents.length; _i < len; _i++) {
+      subscribeToNativeModuleEvent(nativeEvents[_i]);
+    }
+  }
+
+  Object.freeze(multiModuleRoot);
+
+  NATIVE_MODULE_REGISTRY[key] = multiModuleRoot;
+
+  return NATIVE_MODULE_REGISTRY[key];
+}
+
+
+
+
+
+
+
+
+
+
+function subscribeToNativeModuleEvent(eventName) {
+  if (!NATIVE_MODULE_EVENT_SUBSCRIPTIONS[eventName]) {
+    _RNFBNativeEventEmitter.default.addListener(eventName, function (event) {
+      if (event.appName) {
+
+        _SharedEventEmitter.default.emit(event.appName + "-" + eventName, event);
+      } else {
+
+        _SharedEventEmitter.default.emit(eventName, event);
+      }
+    });
+
+    NATIVE_MODULE_EVENT_SUBSCRIPTIONS[eventName] = true;
+  }
+}
+
+
+
+
+
+
+
+function getMissingModuleHelpText(namespace) {
+  var snippet = "firebase." + namespace + "()";
+  var nativeModule = namespace.charAt(0).toUpperCase() + namespace.slice(1);
+
+  if (_reactNative.Platform.OS === 'ios') {
+    return (
+      "You attempted to use a firebase module that's not installed natively on your iOS project by calling " + snippet + "." +
+      '\r\n\r\nEnsure you have either linked the module or added it to your projects Podfile.' +
+      '\r\n\r\nSee http://invertase.link/ios for full setup instructions.');
+
+  }
+
+  var rnFirebasePackage = "'io.invertase.firebase." + namespace + ".ReactNativeFirebase" + nativeModule + "Package'";
+  var newInstance = "'new ReactNativeFirebase" + nativeModule + "Package()'";
+
+  return (
+    "You attempted to use a firebase module that's not installed on your Android project by calling " + snippet + "." + ("\r\n\r\nEnsure you have:\r\n\r\n1) imported the " +
+    rnFirebasePackage + " module in your 'MainApplication.java' file.\r\n\r\n2) Added the ") + (
+    newInstance + " line inside of the RN 'getPackages()' method list.") +
+    '\r\n\r\nSee http://invertase.link/android for full setup instructions.');
+
+}
+
+
+
+
+
+
+
+
+function getNativeModule(module) {
+  var key = nativeModuleKey(module);
+
+  if (NATIVE_MODULE_REGISTRY[key]) {
+    return NATIVE_MODULE_REGISTRY[key];
+  }
+
+  return initialiseNativeModule(module);
+}
+
+
+
+
+
+
+function getAppModule() {
+  if (NATIVE_MODULE_REGISTRY[_constants.APP_NATIVE_MODULE]) {
+    return NATIVE_MODULE_REGISTRY[_constants.APP_NATIVE_MODULE];
+  }
+
+  var namespace = 'app';
+  var nativeModule = _reactNative.NativeModules[_constants.APP_NATIVE_MODULE];
+
+  if (!nativeModule) {
+    throw new Error(getMissingModuleHelpText(namespace));
+  }
+
+  NATIVE_MODULE_REGISTRY[_constants.APP_NATIVE_MODULE] = nativeModuleWrapped(namespace, nativeModule, []);
+
+  return NATIVE_MODULE_REGISTRY[_constants.APP_NATIVE_MODULE];
+}

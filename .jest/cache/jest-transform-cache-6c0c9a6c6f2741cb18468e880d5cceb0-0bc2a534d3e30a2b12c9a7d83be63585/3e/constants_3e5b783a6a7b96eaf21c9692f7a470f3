@@ -1,0 +1,43 @@
+ca5e266850f7da27f4035015e3260ce1
+Object.defineProperty(exports, "__esModule", { value: true });exports.KNOWN_NAMESPACES = exports.DEFAULT_APP_NAME = exports.APP_NATIVE_MODULE = void 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var APP_NATIVE_MODULE = 'RNFBAppModule';exports.APP_NATIVE_MODULE = APP_NATIVE_MODULE;
+
+var DEFAULT_APP_NAME = '[DEFAULT]';exports.DEFAULT_APP_NAME = DEFAULT_APP_NAME;
+
+var KNOWN_NAMESPACES = [
+'appCheck',
+'appDistribution',
+'auth',
+'analytics',
+'remoteConfig',
+'crashlytics',
+'database',
+'inAppMessaging',
+'installations',
+'firestore',
+'functions',
+'indexing',
+'storage',
+'dynamicLinks',
+'messaging',
+'naturalLanguage',
+'ml',
+'notifications',
+'perf',
+'utils'];exports.KNOWN_NAMESPACES = KNOWN_NAMESPACES;

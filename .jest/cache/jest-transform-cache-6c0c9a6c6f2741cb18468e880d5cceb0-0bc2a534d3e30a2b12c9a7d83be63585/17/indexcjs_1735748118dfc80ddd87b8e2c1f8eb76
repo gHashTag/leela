@@ -1,0 +1,145 @@
+29038e27b3dead045120688f1f99494a
+'use strict';var _excluded = ["source", "defaultSource", "tintColor", "onLoadStart", "onProgress", "onLoad", "onError", "onLoadEnd", "style", "fallback", "children", "resizeMode", "forwardedRef"];function _objectWithoutProperties(source, excluded) {if (source == null) return {};var target = _objectWithoutPropertiesLoose(source, excluded);var key, i;if (Object.getOwnPropertySymbols) {var sourceSymbolKeys = Object.getOwnPropertySymbols(source);for (i = 0; i < sourceSymbolKeys.length; i++) {key = sourceSymbolKeys[i];if (excluded.indexOf(key) >= 0) continue;if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;target[key] = source[key];}}return target;}function _objectWithoutPropertiesLoose(source, excluded) {if (source == null) return {};var target = {};var sourceKeys = Object.keys(source);var key, i;for (i = 0; i < sourceKeys.length; i++) {key = sourceKeys[i];if (excluded.indexOf(key) >= 0) continue;target[key] = source[key];}return target;}
+
+var _extends = require('@babel/runtime/helpers/extends');
+var React = require('react');
+var reactNative = require('react-native');
+
+function _interopDefaultLegacy(e) {return e && typeof e === 'object' && 'default' in e ? e : { 'default': e };}
+
+var _extends__default = _interopDefaultLegacy(_extends);
+var React__default = _interopDefaultLegacy(React);
+
+var resizeMode = {
+  contain: 'contain',
+  cover: 'cover',
+  stretch: 'stretch',
+  center: 'center'
+};
+var priority = {
+  low: 'low',
+  normal: 'normal',
+  high: 'high'
+};
+var cacheControl = {
+
+  immutable: 'immutable',
+
+  web: 'web',
+
+  cacheOnly: 'cacheOnly'
+};
+
+var resolveDefaultSource = function resolveDefaultSource(defaultSource) {
+  if (!defaultSource) {
+    return null;
+  }
+
+  if (reactNative.Platform.OS === 'android') {
+
+    var resolved = reactNative.Image.resolveAssetSource(defaultSource);
+
+    if (resolved) {
+      return resolved.uri;
+    }
+
+    return null;
+  }
+
+
+
+  return defaultSource;
+};
+
+function FastImageBase(_ref)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{var source = _ref.source,defaultSource = _ref.defaultSource,tintColor = _ref.tintColor,onLoadStart = _ref.onLoadStart,onProgress = _ref.onProgress,onLoad = _ref.onLoad,onError = _ref.onError,onLoadEnd = _ref.onLoadEnd,style = _ref.style,fallback = _ref.fallback,children = _ref.children,_ref$resizeMode = _ref.resizeMode,resizeMode = _ref$resizeMode === void 0 ? 'cover' : _ref$resizeMode,forwardedRef = _ref.forwardedRef,props = _objectWithoutProperties(_ref, _excluded);
+  if (fallback) {
+    var cleanedSource = Object.assign({}, source);
+
+    delete cleanedSource.cache;
+    var _resolvedSource = reactNative.Image.resolveAssetSource(cleanedSource);
+    return React__default['default'].createElement(reactNative.View, {
+      style: [styles.imageContainer, style],
+      ref: forwardedRef
+    }, React__default['default'].createElement(reactNative.Image, _extends__default['default']({}, props, {
+      style: [reactNative.StyleSheet.absoluteFill, {
+        tintColor: tintColor
+      }],
+      source: _resolvedSource,
+      defaultSource: defaultSource,
+      onLoadStart: onLoadStart,
+      onProgress: onProgress,
+      onLoad: onLoad,
+      onError: onError,
+      onLoadEnd: onLoadEnd,
+      resizeMode: resizeMode
+    })), children);
+  }
+
+  var resolvedSource = reactNative.Image.resolveAssetSource(source);
+  var resolvedDefaultSource = resolveDefaultSource(defaultSource);
+  return React__default['default'].createElement(reactNative.View, {
+    style: [styles.imageContainer, style],
+    ref: forwardedRef
+  }, React__default['default'].createElement(FastImageView, _extends__default['default']({}, props, {
+    tintColor: tintColor,
+    style: reactNative.StyleSheet.absoluteFill,
+    source: resolvedSource,
+    defaultSource: resolvedDefaultSource,
+    onFastImageLoadStart: onLoadStart,
+    onFastImageProgress: onProgress,
+    onFastImageLoad: onLoad,
+    onFastImageError: onError,
+    onFastImageLoadEnd: onLoadEnd,
+    resizeMode: resizeMode
+  })), children);
+}
+
+var FastImageMemo = React.memo(FastImageBase);
+var FastImageComponent = React.forwardRef(function (props, ref) {return React__default['default'].createElement(FastImageMemo, _extends__default['default']({
+    forwardedRef: ref
+  }, props));});
+FastImageComponent.displayName = 'FastImage';
+var FastImage = FastImageComponent;
+FastImage.resizeMode = resizeMode;
+FastImage.cacheControl = cacheControl;
+FastImage.priority = priority;
+
+FastImage.preload = function (sources) {return reactNative.NativeModules.FastImageView.preload(sources);};
+
+FastImage.clearMemoryCache = function () {return reactNative.NativeModules.FastImageView.clearMemoryCache();};
+
+FastImage.clearDiskCache = function () {return reactNative.NativeModules.FastImageView.clearDiskCache();};
+
+var styles = reactNative.StyleSheet.create({
+  imageContainer: {
+    overflow: 'hidden'
+  }
+});
+
+var FastImageView = reactNative.requireNativeComponent('FastImageView', FastImage, {
+  nativeOnly: {
+    onFastImageLoadStart: true,
+    onFastImageProgress: true,
+    onFastImageLoad: true,
+    onFastImageError: true,
+    onFastImageLoadEnd: true
+  }
+});
+
+module.exports = FastImage;

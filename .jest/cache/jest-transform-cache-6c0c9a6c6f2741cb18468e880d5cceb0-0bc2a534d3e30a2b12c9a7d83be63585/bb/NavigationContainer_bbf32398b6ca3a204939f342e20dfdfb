@@ -1,0 +1,111 @@
+0d09f9ce13e1fdd1e89367a62d4526cd
+"use strict";var _excluded = ["theme", "linking", "fallback", "documentTitle", "onReady"];function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];return arr2;}function _iterableToArrayLimit(arr, i) {var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];if (null != _i) {var _s,_e,_x,_r,_arr = [],_n = !0,_d = !1;try {if (_x = (_i = _i.call(arr)).next, 0 === i) {if (Object(_i) !== _i) return;_n = !1;} else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0);} catch (err) {_d = !0, _e = err;} finally {try {if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;} finally {if (_d) throw _e;}}return _arr;}}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function _objectWithoutProperties(source, excluded) {if (source == null) return {};var target = _objectWithoutPropertiesLoose(source, excluded);var key, i;if (Object.getOwnPropertySymbols) {var sourceSymbolKeys = Object.getOwnPropertySymbols(source);for (i = 0; i < sourceSymbolKeys.length; i++) {key = sourceSymbolKeys[i];if (excluded.indexOf(key) >= 0) continue;if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;target[key] = source[key];}}return target;}function _objectWithoutPropertiesLoose(source, excluded) {if (source == null) return {};var target = {};var sourceKeys = Object.keys(source);var key, i;for (i = 0; i < sourceKeys.length; i++) {key = sourceKeys[i];if (excluded.indexOf(key) >= 0) continue;target[key] = source[key];}return target;}
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _core = require("@react-navigation/core");
+var React = _interopRequireWildcard(require("react"));
+var _LinkingContext = _interopRequireDefault(require("./LinkingContext"));
+var _DefaultTheme = _interopRequireDefault(require("./theming/DefaultTheme"));
+var _ThemeProvider = _interopRequireDefault(require("./theming/ThemeProvider"));
+var _useBackButton = _interopRequireDefault(require("./useBackButton"));
+var _useDocumentTitle = _interopRequireDefault(require("./useDocumentTitle"));
+var _useLinking = _interopRequireDefault(require("./useLinking"));
+var _useThenable = _interopRequireDefault(require("./useThenable"));
+function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+function _getRequireWildcardCache(nodeInterop) {if (typeof WeakMap !== "function") return null;var cacheBabelInterop = new WeakMap();var cacheNodeInterop = new WeakMap();return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) {return nodeInterop ? cacheNodeInterop : cacheBabelInterop;})(nodeInterop);}
+function _interopRequireWildcard(obj, nodeInterop) {if (!nodeInterop && obj && obj.__esModule) {return obj;}if (obj === null || typeof obj !== "object" && typeof obj !== "function") {return { default: obj };}var cache = _getRequireWildcardCache(nodeInterop);if (cache && cache.has(obj)) {return cache.get(obj);}var newObj = {};var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;for (var key in obj) {if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;if (desc && (desc.get || desc.set)) {Object.defineProperty(newObj, key, desc);} else {newObj[key] = obj[key];}}}newObj.default = obj;if (cache) {cache.set(obj, newObj);}return newObj;}
+function _extends() {_extends = Object.assign ? Object.assign.bind() : function (target) {for (var i = 1; i < arguments.length; i++) {var source = arguments[i];for (var key in source) {if (Object.prototype.hasOwnProperty.call(source, key)) {target[key] = source[key];}}}return target;};return _extends.apply(this, arguments);}
+global.REACT_NAVIGATION_DEVTOOLS = new WeakMap();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function NavigationContainerInner(_ref, ref) {
+  var _ref$theme =
+
+
+
+
+
+
+    _ref.theme,theme = _ref$theme === void 0 ? _DefaultTheme.default : _ref$theme,linking = _ref.linking,_ref$fallback = _ref.fallback,fallback = _ref$fallback === void 0 ? null : _ref$fallback,documentTitle = _ref.documentTitle,onReady = _ref.onReady,rest = _objectWithoutProperties(_ref, _excluded);
+  var isLinkingEnabled = linking ? linking.enabled !== false : false;
+  if (linking !== null && linking !== void 0 && linking.config) {
+    (0, _core.validatePathConfig)(linking.config);
+  }
+  var refContainer = React.useRef(null);
+  (0, _useBackButton.default)(refContainer);
+  (0, _useDocumentTitle.default)(refContainer, documentTitle);
+  var _ref2 =
+
+    (0, _useLinking.default)(refContainer, Object.assign({
+      independent: rest.independent,
+      enabled: isLinkingEnabled,
+      prefixes: [] },
+    linking)
+    ),getInitialState = _ref2.getInitialState;
+
+
+
+  React.useEffect(function () {
+    if (refContainer.current) {
+      REACT_NAVIGATION_DEVTOOLS.set(refContainer.current, {
+        get linking() {var _ref3, _ref4, _ref5, _ref6;
+          return Object.assign({},
+          linking, {
+            enabled: isLinkingEnabled,
+            prefixes: (_ref3 = linking === null || linking === void 0 ? void 0 : linking.prefixes) != null ? _ref3 : [],
+            getStateFromPath: (_ref4 = linking === null || linking === void 0 ? void 0 : linking.getStateFromPath) != null ? _ref4 : _core.getStateFromPath,
+            getPathFromState: (_ref5 = linking === null || linking === void 0 ? void 0 : linking.getPathFromState) != null ? _ref5 : _core.getPathFromState,
+            getActionFromState: (_ref6 = linking === null || linking === void 0 ? void 0 : linking.getActionFromState) != null ? _ref6 : _core.getActionFromState });
+
+        }
+      });
+    }
+  });
+  var _ref7 = (0, _useThenable.default)(getInitialState),_ref8 = _slicedToArray(_ref7, 2),isResolved = _ref8[0],initialState = _ref8[1];
+  React.useImperativeHandle(ref, function () {return refContainer.current;});
+  var linkingContext = React.useMemo(function () {return {
+      options: linking
+    };}, [linking]);
+  var isReady = rest.initialState != null || !isLinkingEnabled || isResolved;
+  var onReadyRef = React.useRef(onReady);
+  React.useEffect(function () {
+    onReadyRef.current = onReady;
+  });
+  React.useEffect(function () {
+    if (isReady) {
+      var _onReadyRef$current;
+      (_onReadyRef$current = onReadyRef.current) === null || _onReadyRef$current === void 0 ? void 0 : _onReadyRef$current.call(onReadyRef);
+    }
+  }, [isReady]);
+  if (!isReady) {
+
+
+    return fallback;
+  }
+  return React.createElement(_LinkingContext.default.Provider, {
+    value: linkingContext
+  }, React.createElement(_ThemeProvider.default, {
+    value: theme
+  }, React.createElement(_core.BaseNavigationContainer, _extends({}, rest, {
+    initialState: rest.initialState == null ? initialState : rest.initialState,
+    ref: refContainer
+  }))));
+}
+var NavigationContainer = React.forwardRef(NavigationContainerInner);
+var _default = NavigationContainer;
+exports.default = _default;

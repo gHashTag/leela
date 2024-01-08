@@ -1,0 +1,29 @@
+102469c17d5a15c88ce7b44bc5cac4ce
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _reactNative = require("react-native");
+
+var _shouldFallbackToLegacyNativeModule = require("./shouldFallbackToLegacyNativeModule");
+
+
+var RCTAsyncStorage = _reactNative.NativeModules['PlatformLocalStorage'] ||
+_reactNative.NativeModules['RNC_AsyncSQLiteDBStorage'] || _reactNative.NativeModules['RNCAsyncStorage'];
+
+if (!RCTAsyncStorage && (0, _shouldFallbackToLegacyNativeModule.shouldFallbackToLegacyNativeModule)()) {
+
+
+
+  if (_reactNative.TurboModuleRegistry) {
+    RCTAsyncStorage = _reactNative.TurboModuleRegistry.get('AsyncSQLiteDBStorage') || _reactNative.TurboModuleRegistry.get('AsyncLocalStorage');
+  } else {
+    RCTAsyncStorage = _reactNative.NativeModules['AsyncSQLiteDBStorage'] || _reactNative.NativeModules['AsyncLocalStorage'];
+  }
+}
+
+var _default = RCTAsyncStorage;
+exports.default = _default;

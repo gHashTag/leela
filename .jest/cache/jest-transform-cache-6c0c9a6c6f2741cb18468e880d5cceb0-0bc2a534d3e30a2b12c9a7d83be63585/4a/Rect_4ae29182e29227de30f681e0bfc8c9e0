@@ -1,0 +1,27 @@
+067f9f124dfeda039756e70ec9d3e7af
+Object.defineProperty(exports, "__esModule", { value: true });exports.createSquare = createSquare;exports.normalizeRect = normalizeRect;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function createSquare(size) {
+  return { bottom: size, left: size, right: size, top: size };
+}
+
+function normalizeRect(rectOrSize) {
+  return typeof rectOrSize === 'number' ? createSquare(rectOrSize) : rectOrSize;
+}

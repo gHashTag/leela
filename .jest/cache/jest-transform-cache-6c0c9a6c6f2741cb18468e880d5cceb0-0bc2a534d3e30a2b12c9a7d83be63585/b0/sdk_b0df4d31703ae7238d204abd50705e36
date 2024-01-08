@@ -1,0 +1,165 @@
+7ac36a53a8a3de1701dc863e0a7d3724
+Object.defineProperty(exports, "__esModule", { value: true });exports.close = close;exports.flush = flush;exports.init = init;exports.nativeCrash = nativeCrash;exports.setDist = setDist;exports.setRelease = setRelease;exports.wrap = wrap;var _tslib = require("tslib");
+var _core = require("@sentry/core");
+var _hub = require("@sentry/hub");
+var _integrations = require("@sentry/integrations");
+var _react = require("@sentry/react");
+var _utils = require("@sentry/utils");
+var React = _interopRequireWildcard(require("react"));
+var _client = require("./client");
+var _integrations2 = require("./integrations");
+var _scope = require("./scope");
+var _touchevents = require("./touchevents");
+var _tracing = require("./tracing");var _jsxRuntime = require("react/jsx-runtime");var _jsxFileName = "/Users/playra/leela/node_modules/@sentry/react-native/dist/js/sdk.js";function _getRequireWildcardCache(nodeInterop) {if (typeof WeakMap !== "function") return null;var cacheBabelInterop = new WeakMap();var cacheNodeInterop = new WeakMap();return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) {return nodeInterop ? cacheNodeInterop : cacheBabelInterop;})(nodeInterop);}function _interopRequireWildcard(obj, nodeInterop) {if (!nodeInterop && obj && obj.__esModule) {return obj;}if (obj === null || typeof obj !== "object" && typeof obj !== "function") {return { default: obj };}var cache = _getRequireWildcardCache(nodeInterop);if (cache && cache.has(obj)) {return cache.get(obj);}var newObj = {};var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;for (var key in obj) {if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;if (desc && (desc.get || desc.set)) {Object.defineProperty(newObj, key, desc);} else {newObj[key] = obj[key];}}}newObj.default = obj;if (cache) {cache.set(obj, newObj);}return newObj;}function _toConsumableArray(arr) {return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();}function _nonIterableSpread() {throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _iterableToArray(iter) {if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);}function _arrayWithoutHoles(arr) {if (Array.isArray(arr)) return _arrayLikeToArray(arr);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];return arr2;}
+var IGNORED_DEFAULT_INTEGRATIONS = [
+'GlobalHandlers',
+'TryCatch'];
+
+var DEFAULT_OPTIONS = {
+  enableNative: true,
+  enableNativeCrashHandling: true,
+  enableNativeNagger: true,
+  autoInitializeNativeSdk: true,
+  enableAutoPerformanceTracking: true,
+  enableOutOfMemoryTracking: true,
+  patchGlobalPromise: true
+};
+
+
+
+function init(passedOptions) {
+  var reactNativeHub = new _hub.Hub(undefined, new _scope.ReactNativeScope());
+  (0, _hub.makeMain)(reactNativeHub);
+  var options = Object.assign(Object.assign({}, DEFAULT_OPTIONS), passedOptions);
+
+  var tracingEnabled = typeof options.tracesSampler !== 'undefined' ||
+  typeof options.tracesSampleRate !== 'undefined';
+  if (options.defaultIntegrations === undefined) {
+    options.defaultIntegrations = [
+    new _integrations2.ReactNativeErrorHandlers({
+      patchGlobalPromise: options.patchGlobalPromise
+    }),
+    new _integrations2.Release()].concat(_toConsumableArray(
+      _react.defaultIntegrations.filter(function (i) {return !IGNORED_DEFAULT_INTEGRATIONS.includes(i.name);})), [
+    new _integrations2.EventOrigin(),
+    new _integrations2.SdkInfo()]);
+
+    if (__DEV__) {
+      options.defaultIntegrations.push(new _integrations2.DebugSymbolicator());
+    }
+    options.defaultIntegrations.push(new _integrations.RewriteFrames({
+      iteratee: function iteratee(frame) {
+        if (frame.filename) {
+          frame.filename = frame.filename.
+          replace(/^file:\/\//, '').
+          replace(/^address at /, '').
+          replace(/^.*\/[^.]+(\.app|CodePush|.*(?=\/))/, '');
+          if (frame.filename !== '[native code]' &&
+          frame.filename !== 'native') {
+            var appPrefix = 'app://';
+
+            frame.filename =
+            frame.filename.indexOf('/') === 0 ? "" +
+            appPrefix + frame.filename :
+            appPrefix + "/" + frame.filename;
+          }
+        }
+        return frame;
+      }
+    }));
+    if (options.enableNative) {
+      options.defaultIntegrations.push(new _integrations2.DeviceContext());
+    }
+    if (tracingEnabled) {
+      if (options.enableAutoPerformanceTracking) {
+        options.defaultIntegrations.push(new _tracing.ReactNativeTracing());
+      }
+    }
+  }
+  (0, _core.initAndBind)(_client.ReactNativeClient, options);
+
+  if ((0, _utils.getGlobalObject)().HermesInternal) {
+    (0, _react.getCurrentHub)().setTag('hermes', 'true');
+  }
+}
+
+
+
+function wrap(RootComponent, options) {var _this = this;
+  var _a, _b;
+  var tracingIntegration = (0, _react.getCurrentHub)().getIntegration(_tracing.ReactNativeTracing);
+  if (tracingIntegration) {
+    tracingIntegration.useAppStartWithProfiler = true;
+  }
+  var profilerProps = Object.assign(Object.assign({}, (_a = options === null || options === void 0 ? void 0 : options.profilerProps) !== null && _a !== void 0 ? _a : {}), { name: (_b = RootComponent.displayName) !== null && _b !== void 0 ? _b : 'Root' });
+  var RootApp = function RootApp(appProps) {
+    var _a;
+    return (0, _jsxRuntime.jsx)(_touchevents.TouchEventBoundary, Object.assign({}, (_a = options === null || options === void 0 ? void 0 : options.touchEventBoundaryProps) !== null && _a !== void 0 ? _a : {}, { children:
+      (0, _jsxRuntime.jsx)(_tracing.ReactNativeProfiler, Object.assign({}, profilerProps, { children:
+        (0, _jsxRuntime.jsx)(RootComponent, Object.assign({}, appProps)) })
+      ) })
+    );
+  };
+  return RootApp;
+}
+
+
+
+
+
+function setRelease(release) {
+  (0, _core.setExtra)('__sentry_release', release);
+}
+
+
+
+
+
+function setDist(dist) {
+  (0, _core.setExtra)('__sentry_dist', dist);
+}
+
+
+
+
+function nativeCrash() {
+  var client = (0, _react.getCurrentHub)().getClient();
+  if (client) {
+    client.nativeCrash();
+  }
+}
+
+
+
+
+function flush() {
+  return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+    try {
+      var client = (0, _react.getCurrentHub)().getClient();
+      if (client) {
+        var result = yield client.flush();
+        return result;
+      }
+
+    }
+    catch (_) {}
+    _utils.logger.error('Failed to flush the event queue.');
+    return false;
+  });
+}
+
+
+
+function close() {
+  return (0, _tslib.__awaiter)(this, void 0, void 0, function* () {
+    try {
+      var client = (0, _react.getCurrentHub)().getClient();
+      if (client) {
+        yield client.close();
+      }
+    }
+    catch (e) {
+      _utils.logger.error('Failed to close the SDK');
+    }
+  });
+}

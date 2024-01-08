@@ -1,0 +1,75 @@
+62a1945b96f78345a5e49c93758256e4
+Object.defineProperty(exports, "__esModule", { value: true });exports.generateDatabaseId = generateDatabaseId;exports.generateFirestoreId = generateFirestoreId;var PUSH_CHARS = '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
+
+var AUTO_ID_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+
+var lastPushTime = 0;
+
+
+
+
+
+var lastRandChars = [];
+
+
+
+
+
+
+function generateDatabaseId() {var serverTimeOffset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+  var timeStampChars = new Array(8);
+  var now = new Date().getTime() + serverTimeOffset;
+  var duplicateTime = now === lastPushTime;
+
+  lastPushTime = now;
+
+  for (var i = 7; i >= 0; i -= 1) {
+    timeStampChars[i] = PUSH_CHARS.charAt(now % 64);
+    now = Math.floor(now / 64);
+  }
+
+  if (now !== 0) {
+    throw new Error('We should have converted the entire timestamp.');
+  }
+
+  var id = timeStampChars.join('');
+
+  if (!duplicateTime) {
+    for (var _i = 0; _i < 12; _i += 1) {
+      lastRandChars[_i] = Math.floor(Math.random() * 64);
+    }
+  } else {
+
+
+    var _i2;
+    for (_i2 = 11; _i2 >= 0 && lastRandChars[_i2] === 63; _i2 -= 1) {
+      lastRandChars[_i2] = 0;
+    }
+
+    lastRandChars[_i2] += 1;
+  }
+
+  for (var _i3 = 0; _i3 < 12; _i3++) {
+    id += PUSH_CHARS.charAt(lastRandChars[_i3]);
+  }
+
+  if (id.length !== 20) {
+    throw new Error('Length should be 20.');
+  }
+
+  return id;
+}
+
+
+
+
+
+function generateFirestoreId() {
+  var autoId = '';
+
+  for (var i = 0; i < 20; i++) {
+    autoId += AUTO_ID_CHARS.charAt(Math.floor(Math.random() * AUTO_ID_CHARS.length));
+  }
+  return autoId;
+}

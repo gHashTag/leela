@@ -1,0 +1,85 @@
+2fb125e0a47941de7577717e4c8dd552
+var _react = _interopRequireDefault(require("react"));
+var _reactNative = _interopRequireDefault(require("react-native"));
+var _propTypes = _interopRequireDefault(require("prop-types"));var _jsxRuntime = require("react/jsx-runtime");var _jsxFileName = "/Users/playra/leela/node_modules/react-native-spinkit/index.js";function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}function _inherits(subClass, superClass) {if (typeof superClass !== "function" && superClass !== null) {throw new TypeError("Super expression must either be null or a function");}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } });Object.defineProperty(subClass, "prototype", { writable: false });if (superClass) _setPrototypeOf(subClass, superClass);}function _setPrototypeOf(o, p) {_setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {o.__proto__ = p;return o;};return _setPrototypeOf(o, p);}function _createSuper(Derived) {var hasNativeReflectConstruct = _isNativeReflectConstruct();return function _createSuperInternal() {var Super = _getPrototypeOf(Derived),result;if (hasNativeReflectConstruct) {var NewTarget = _getPrototypeOf(this).constructor;result = Reflect.construct(Super, arguments, NewTarget);} else {result = Super.apply(this, arguments);}return _possibleConstructorReturn(this, result);};}function _possibleConstructorReturn(self, call) {if (call && (typeof call === "object" || typeof call === "function")) {return call;} else if (call !== void 0) {throw new TypeError("Derived constructors may only return object or undefined");}return _assertThisInitialized(self);}function _assertThisInitialized(self) {if (self === void 0) {throw new ReferenceError("this hasn't been initialised - super() hasn't been called");}return self;}function _isNativeReflectConstruct() {if (typeof Reflect === "undefined" || !Reflect.construct) return false;if (Reflect.construct.sham) return false;if (typeof Proxy === "function") return true;try {Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));return true;} catch (e) {return false;}}function _getPrototypeOf(o) {_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {return o.__proto__ || Object.getPrototypeOf(o);};return _getPrototypeOf(o);}
+
+var
+  NativeModules =
+
+
+
+  _reactNative.default.NativeModules,processColor = _reactNative.default.processColor,requireNativeComponent = _reactNative.default.requireNativeComponent,View = _reactNative.default.View;
+
+var RNSpinkit = null;var
+
+Spinkit = function (_React$Component) {_inherits(Spinkit, _React$Component);var _super = _createSuper(Spinkit);function Spinkit() {_classCallCheck(this, Spinkit);return _super.apply(this, arguments);}_createClass(Spinkit, [{ key: "render", value:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    function render() {
+      if (!this.props.isVisible) return (0, _jsxRuntime.jsx)(View, {});
+
+      var size = { height: this.props.size, width: this.props.size };
+
+
+
+
+
+
+      var colorNumber = processColor(this.props.color);
+
+      return (
+        (0, _jsxRuntime.jsx)(RNSpinkit, {
+          type: String(this.props.type),
+          size: parseInt(this.props.size),
+          color: colorNumber,
+          style: [size, this.props.style] }));
+
+    } }]);return Spinkit;}(_react.default.Component);Spinkit.propTypes = { type: _propTypes.default.string, color: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.number]), size: _propTypes.default.number, isVisible: _propTypes.default.bool, testID: _propTypes.default.string, accessibilityComponentType: _propTypes.default.string, accessibilityLabel: _propTypes.default.string, accessibilityLiveRegion: _propTypes.default.string, renderToHardwareTextureAndroid: _propTypes.default.bool, importantForAccessibility: _propTypes.default.string, onLayout: _propTypes.default.func, style: _propTypes.default.object };Spinkit.defaultProps = { size: 37, color: "#000000", isVisible: true };
+
+
+
+
+
+NativeModules.RNSpinkit;
+
+
+RNSpinkit = requireNativeComponent(
+  'RNSpinkit',
+  Spinkit,
+  {
+    nativeOnly: {
+      'nativeID': true
+    }
+  }
+);
+
+
+module.exports = Spinkit;

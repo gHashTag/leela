@@ -1,0 +1,15 @@
+29ed1e37d021f2b83f3a8832b9f1aa40
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default =
+
+function _default() {
+  return {
+    ref: jest.fn(function () {return {
+        putFile: jest.fn(function () {return (
+            Promise.resolve({
+              state: 'success',
+              downloadURL: 'https://example.com/image.jpg'
+            }));}
+        )
+      };})
+  };
+};exports.default = _default;

@@ -1,0 +1,452 @@
+3338b538ba08f038aa55114041750f43
+Object.defineProperty(exports, "__esModule", { value: true });exports.firebase = exports.default = exports.SDK_VERSION = void 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var _common = require("@react-native-firebase/app/lib/common");
+
+
+
+
+
+
+var _internal = require("@react-native-firebase/app/lib/internal");
+
+
+
+
+var _ConfirmationResult = _interopRequireDefault(require("./ConfirmationResult"));
+var _PhoneAuthListener = _interopRequireDefault(require("./PhoneAuthListener"));
+var _EmailAuthProvider = _interopRequireDefault(require("./providers/EmailAuthProvider"));
+var _FacebookAuthProvider = _interopRequireDefault(require("./providers/FacebookAuthProvider"));
+var _GithubAuthProvider = _interopRequireDefault(require("./providers/GithubAuthProvider"));
+var _GoogleAuthProvider = _interopRequireDefault(require("./providers/GoogleAuthProvider"));
+var _OAuthProvider = _interopRequireDefault(require("./providers/OAuthProvider"));
+var _OIDCAuthProvider = _interopRequireDefault(require("./providers/OIDCAuthProvider"));
+var _PhoneAuthProvider = _interopRequireDefault(require("./providers/PhoneAuthProvider"));
+var _PhoneMultiFactorGenerator = _interopRequireDefault(require("./PhoneMultiFactorGenerator"));
+var _TwitterAuthProvider = _interopRequireDefault(require("./providers/TwitterAuthProvider"));
+var _AppleAuthProvider = _interopRequireDefault(require("./providers/AppleAuthProvider"));
+var _Settings = _interopRequireDefault(require("./Settings"));
+var _User = _interopRequireDefault(require("./User"));
+var _version = _interopRequireDefault(require("./version"));
+var _getMultiFactorResolver2 = require("./getMultiFactorResolver");
+var _multiFactor = require("./multiFactor");function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}function _inherits(subClass, superClass) {if (typeof superClass !== "function" && superClass !== null) {throw new TypeError("Super expression must either be null or a function");}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } });Object.defineProperty(subClass, "prototype", { writable: false });if (superClass) _setPrototypeOf(subClass, superClass);}function _setPrototypeOf(o, p) {_setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {o.__proto__ = p;return o;};return _setPrototypeOf(o, p);}function _createSuper(Derived) {var hasNativeReflectConstruct = _isNativeReflectConstruct();return function _createSuperInternal() {var Super = _getPrototypeOf(Derived),result;if (hasNativeReflectConstruct) {var NewTarget = _getPrototypeOf(this).constructor;result = Reflect.construct(Super, arguments, NewTarget);} else {result = Super.apply(this, arguments);}return _possibleConstructorReturn(this, result);};}function _possibleConstructorReturn(self, call) {if (call && (typeof call === "object" || typeof call === "function")) {return call;} else if (call !== void 0) {throw new TypeError("Derived constructors may only return object or undefined");}return _assertThisInitialized(self);}function _assertThisInitialized(self) {if (self === void 0) {throw new ReferenceError("this hasn't been initialised - super() hasn't been called");}return self;}function _isNativeReflectConstruct() {if (typeof Reflect === "undefined" || !Reflect.construct) return false;if (Reflect.construct.sham) return false;if (typeof Proxy === "function") return true;try {Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));return true;} catch (e) {return false;}}function _getPrototypeOf(o) {_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {return o.__proto__ || Object.getPrototypeOf(o);};return _getPrototypeOf(o);}
+
+var statics = {
+  AppleAuthProvider: _AppleAuthProvider.default,
+  EmailAuthProvider: _EmailAuthProvider.default,
+  PhoneAuthProvider: _PhoneAuthProvider.default,
+  GoogleAuthProvider: _GoogleAuthProvider.default,
+  GithubAuthProvider: _GithubAuthProvider.default,
+  TwitterAuthProvider: _TwitterAuthProvider.default,
+  FacebookAuthProvider: _FacebookAuthProvider.default,
+  PhoneMultiFactorGenerator: _PhoneMultiFactorGenerator.default,
+  OAuthProvider: _OAuthProvider.default,
+  OIDCAuthProvider: _OIDCAuthProvider.default,
+  PhoneAuthState: {
+    CODE_SENT: 'sent',
+    AUTO_VERIFY_TIMEOUT: 'timeout',
+    AUTO_VERIFIED: 'verified',
+    ERROR: 'error'
+  },
+  getMultiFactorResolver: _getMultiFactorResolver2.getMultiFactorResolver,
+  multiFactor: _multiFactor.multiFactor
+};
+
+var namespace = 'auth';
+
+var nativeModuleName = 'RNFBAuthModule';var
+
+FirebaseAuthModule = function (_FirebaseModule) {_inherits(FirebaseAuthModule, _FirebaseModule);var _super = _createSuper(FirebaseAuthModule);
+  function FirebaseAuthModule() {var _this;_classCallCheck(this, FirebaseAuthModule);for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
+    _this = _super.call.apply(_super, [this].concat(args));
+    _this._user = null;
+    _this._settings = null;
+    _this._authResult = false;
+    _this._languageCode = _this.native.APP_LANGUAGE[_this.app._name];
+    _this._tenantId = null;
+
+    if (!_this.languageCode) {
+      _this._languageCode = _this.native.APP_LANGUAGE['[DEFAULT]'];
+    }
+
+    if (_this.native.APP_USER[_this.app._name]) {
+      _this._setUser(_this.native.APP_USER[_this.app._name]);
+    }
+
+    _this.emitter.addListener(_this.eventNameForApp('auth_state_changed'), function (event) {
+      _this._setUser(event.user);
+      _this.emitter.emit(_this.eventNameForApp('onAuthStateChanged'), _this._user);
+    });
+
+    _this.emitter.addListener(_this.eventNameForApp('phone_auth_state_changed'), function (event) {
+      var eventKey = "phone:auth:" + event.requestKey + ":" + event.type;
+      _this.emitter.emit(eventKey, event.state);
+    });
+
+    _this.emitter.addListener(_this.eventNameForApp('auth_id_token_changed'), function (auth) {
+      _this._setUser(auth.user);
+      _this.emitter.emit(_this.eventNameForApp('onIdTokenChanged'), _this._user);
+    });
+
+    _this.native.addAuthStateListener();
+    _this.native.addIdTokenListener();return _this;
+  }_createClass(FirebaseAuthModule, [{ key: "languageCode", get:
+
+    function get() {
+      return this._languageCode;
+    } }, { key: "tenantId", get:
+
+    function get() {
+      return this._tenantId;
+    } }, { key: "settings", get:
+
+    function get() {
+      if (!this._settings) {
+        this._settings = new _Settings.default(this);
+      }
+      return this._settings;
+    } }, { key: "currentUser", get:
+
+    function get() {
+      return this._user;
+    } }, { key: "_setUser", value:
+
+    function _setUser(user) {
+      this._user = user ? new _User.default(this, user) : null;
+      this._authResult = true;
+      this.emitter.emit(this.eventNameForApp('onUserChanged'), this._user);
+      return this._user;
+    } }, { key: "_setUserCredential", value:
+
+    function _setUserCredential(userCredential) {
+      var user = new _User.default(this, userCredential.user);
+      this._user = user;
+      this._authResult = true;
+      this.emitter.emit(this.eventNameForApp('onUserChanged'), this._user);
+      return {
+        additionalUserInfo: userCredential.additionalUserInfo,
+        user: user
+      };
+    } }, { key: "setLanguageCode", value: function () {var _setLanguageCode = _asyncToGenerator(
+
+        function* (code) {
+          if (!(0, _common.isString)(code) && !(0, _common.isNull)(code)) {
+            throw new Error(
+              "firebase.auth().setLanguageCode(*) expected 'languageCode' to be a string or null value"
+            );
+          }
+
+          yield this.native.setLanguageCode(code);
+
+          if (code === null) {
+            this._languageCode = this.native.APP_LANGUAGE[this.app._name];
+
+            if (!this.languageCode) {
+              this._languageCode = this.native.APP_LANGUAGE['[DEFAULT]'];
+            }
+          } else {
+            this._languageCode = code;
+          }
+        });function setLanguageCode(_x) {return _setLanguageCode.apply(this, arguments);}return setLanguageCode;}() }, { key: "setTenantId", value: function () {var _setTenantId = _asyncToGenerator(
+
+        function* (tenantId) {
+          if (!(0, _common.isString)(tenantId)) {
+            throw new Error("firebase.auth().setTenantId(*) expected 'tenantId' to be a string");
+          }
+          this._tenantId = tenantId;
+          yield this.native.setTenantId(tenantId);
+        });function setTenantId(_x2) {return _setTenantId.apply(this, arguments);}return setTenantId;}() }, { key: "_parseListener", value:
+
+    function _parseListener(listenerOrObserver) {
+      return typeof listenerOrObserver === 'object' ?
+      listenerOrObserver.next.bind(listenerOrObserver) :
+      listenerOrObserver;
+    } }, { key: "onAuthStateChanged", value:
+
+    function onAuthStateChanged(listenerOrObserver) {var _this2 = this;
+      var listener = this._parseListener(listenerOrObserver);
+      var subscription = this.emitter.addListener(
+        this.eventNameForApp('onAuthStateChanged'),
+        listener
+      );
+
+      if (this._authResult) {
+        Promise.resolve().then(function () {
+          listener(_this2._user || null);
+        });
+      }
+      return function () {return subscription.remove();};
+    } }, { key: "onIdTokenChanged", value:
+
+    function onIdTokenChanged(listenerOrObserver) {var _this3 = this;
+      var listener = this._parseListener(listenerOrObserver);
+      var subscription = this.emitter.addListener(
+        this.eventNameForApp('onIdTokenChanged'),
+        listener
+      );
+
+      if (this._authResult) {
+        Promise.resolve().then(function () {
+          listener(_this3._user || null);
+        });
+      }
+      return function () {return subscription.remove();};
+    } }, { key: "onUserChanged", value:
+
+    function onUserChanged(listenerOrObserver) {var _this4 = this;
+      var listener = this._parseListener(listenerOrObserver);
+      var subscription = this.emitter.addListener(this.eventNameForApp('onUserChanged'), listener);
+      if (this._authResult) {
+        Promise.resolve().then(function () {
+          listener(_this4._user || null);
+        });
+      }
+
+      return function () {
+        subscription.remove();
+      };
+    } }, { key: "signOut", value:
+
+    function signOut() {var _this5 = this;
+      return this.native.signOut().then(function () {
+        _this5._setUser();
+      });
+    } }, { key: "signInAnonymously", value:
+
+    function signInAnonymously() {var _this6 = this;
+      return this.native.
+      signInAnonymously().
+      then(function (userCredential) {return _this6._setUserCredential(userCredential);});
+    } }, { key: "signInWithPhoneNumber", value:
+
+    function signInWithPhoneNumber(phoneNumber, forceResend) {var _this7 = this;
+      if (_common.isAndroid) {
+        return this.native.
+        signInWithPhoneNumber(phoneNumber, forceResend || false).
+        then(function (result) {return new _ConfirmationResult.default(_this7, result.verificationId);});
+      }
+
+      return this.native.
+      signInWithPhoneNumber(phoneNumber).
+      then(function (result) {return new _ConfirmationResult.default(_this7, result.verificationId);});
+    } }, { key: "verifyPhoneNumber", value:
+
+    function verifyPhoneNumber(phoneNumber, autoVerifyTimeoutOrForceResend, forceResend) {
+      var _forceResend = forceResend;
+      var _autoVerifyTimeout = 60;
+
+      if ((0, _common.isBoolean)(autoVerifyTimeoutOrForceResend)) {
+        _forceResend = autoVerifyTimeoutOrForceResend;
+      } else {
+        _autoVerifyTimeout = autoVerifyTimeoutOrForceResend;
+      }
+
+      return new _PhoneAuthListener.default(this, phoneNumber, _autoVerifyTimeout, _forceResend);
+    } }, { key: "verifyPhoneNumberWithMultiFactorInfo", value:
+
+    function verifyPhoneNumberWithMultiFactorInfo(multiFactorHint, session) {
+      return this.native.verifyPhoneNumberWithMultiFactorInfo(multiFactorHint.uid, session);
+    } }, { key: "verifyPhoneNumberForMultiFactor", value:
+
+    function verifyPhoneNumberForMultiFactor(phoneInfoOptions) {
+      var phoneNumber = phoneInfoOptions.phoneNumber,session = phoneInfoOptions.session;
+      return this.native.verifyPhoneNumberForMultiFactor(phoneNumber, session);
+    } }, { key: "resolveMultiFactorSignIn", value:
+
+    function resolveMultiFactorSignIn(session, verificationId, verificationCode) {var _this8 = this;
+      return this.native.
+      resolveMultiFactorSignIn(session, verificationId, verificationCode).
+      then(function (userCredential) {
+        return _this8._setUserCredential(userCredential);
+      });
+    } }, { key: "createUserWithEmailAndPassword", value:
+
+    function createUserWithEmailAndPassword(email, password) {var _this9 = this;
+      return this.native.
+      createUserWithEmailAndPassword(email, password).
+      then(function (userCredential) {return _this9._setUserCredential(userCredential);});
+    } }, { key: "signInWithEmailAndPassword", value:
+
+    function signInWithEmailAndPassword(email, password) {var _this10 = this;
+      return this.native.
+      signInWithEmailAndPassword(email, password).
+      then(function (userCredential) {return _this10._setUserCredential(userCredential);});
+    } }, { key: "signInWithCustomToken", value:
+
+    function signInWithCustomToken(customToken) {var _this11 = this;
+      return this.native.
+      signInWithCustomToken(customToken).
+      then(function (userCredential) {return _this11._setUserCredential(userCredential);});
+    } }, { key: "signInWithCredential", value:
+
+    function signInWithCredential(credential) {var _this12 = this;
+      return this.native.
+      signInWithCredential(credential.providerId, credential.token, credential.secret).
+      then(function (userCredential) {return _this12._setUserCredential(userCredential);});
+    } }, { key: "sendPasswordResetEmail", value:
+
+    function sendPasswordResetEmail(email) {var actionCodeSettings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+      return this.native.sendPasswordResetEmail(email, actionCodeSettings);
+    } }, { key: "sendSignInLinkToEmail", value:
+
+    function sendSignInLinkToEmail(email) {var actionCodeSettings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      return this.native.sendSignInLinkToEmail(email, actionCodeSettings);
+    } }, { key: "isSignInWithEmailLink", value:
+
+    function isSignInWithEmailLink(emailLink) {
+      return (
+        typeof emailLink === 'string' && (
+        emailLink.includes('mode=signIn') || emailLink.includes('mode%3DsignIn')) && (
+        emailLink.includes('oobCode=') || emailLink.includes('oobCode%3D')));
+
+    } }, { key: "signInWithEmailLink", value:
+
+    function signInWithEmailLink(email, emailLink) {var _this13 = this;
+      return this.native.
+      signInWithEmailLink(email, emailLink).
+      then(function (userCredential) {return _this13._setUserCredential(userCredential);});
+    } }, { key: "confirmPasswordReset", value:
+
+    function confirmPasswordReset(code, newPassword) {
+      return this.native.confirmPasswordReset(code, newPassword);
+    } }, { key: "applyActionCode", value:
+
+    function applyActionCode(code) {var _this14 = this;
+      return this.native.applyActionCode(code).then(function (user) {
+        _this14._setUser(user);
+      });
+    } }, { key: "checkActionCode", value:
+
+    function checkActionCode(code) {
+      return this.native.checkActionCode(code);
+    } }, { key: "fetchSignInMethodsForEmail", value:
+
+    function fetchSignInMethodsForEmail(email) {
+      return this.native.fetchSignInMethodsForEmail(email);
+    } }, { key: "verifyPasswordResetCode", value:
+
+    function verifyPasswordResetCode(code) {
+      return this.native.verifyPasswordResetCode(code);
+    } }, { key: "useUserAccessGroup", value:
+
+    function useUserAccessGroup(userAccessGroup) {
+      if (_common.isAndroid) {
+        return Promise.resolve();
+      }
+      return this.native.useUserAccessGroup(userAccessGroup);
+    } }, { key: "getRedirectResult", value:
+
+    function getRedirectResult() {
+      throw new Error(
+        'firebase.auth().getRedirectResult() is unsupported by the native Firebase SDKs.'
+      );
+    } }, { key: "setPersistence", value:
+
+    function setPersistence() {
+      throw new Error('firebase.auth().setPersistence() is unsupported by the native Firebase SDKs.');
+    } }, { key: "signInWithPopup", value:
+
+    function signInWithPopup() {
+      throw new Error(
+        'firebase.auth().signInWithPopup() is unsupported by the native Firebase SDKs.'
+      );
+    } }, { key: "signInWithRedirect", value:
+
+    function signInWithRedirect() {
+      throw new Error(
+        'firebase.auth().signInWithRedirect() is unsupported by the native Firebase SDKs.'
+      );
+    } }, { key: "useDeviceLanguage", value:
+
+
+    function useDeviceLanguage() {
+      throw new Error(
+        'firebase.auth().useDeviceLanguage() is unsupported by the native Firebase SDKs.'
+      );
+    } }, { key: "useEmulator", value:
+
+    function useEmulator(url) {
+      if (!url || !(0, _common.isString)(url) || !(0, _common.isValidUrl)(url)) {
+        throw new Error('firebase.auth().useEmulator() takes a non-empty string URL');
+      }
+
+      var _url = url;
+      var androidBypassEmulatorUrlRemap =
+      typeof this.firebaseJson.android_bypass_emulator_url_remap === 'boolean' &&
+      this.firebaseJson.android_bypass_emulator_url_remap;
+      if (!androidBypassEmulatorUrlRemap && _common.isAndroid && _url) {
+        if (_url.startsWith('http://localhost')) {
+          _url = _url.replace('http://localhost', 'http://10.0.2.2');
+
+          console.log(
+            'Mapping auth host "localhost" to "10.0.2.2" for android emulators. Use real IP on real devices. You can bypass this behaviour with "android_bypass_emulator_url_remap" flag.'
+          );
+        }
+        if (_url.startsWith('http://127.0.0.1')) {
+          _url = _url.replace('http://127.0.0.1', 'http://10.0.2.2');
+
+          console.log(
+            'Mapping auth host "127.0.0.1" to "10.0.2.2" for android emulators. Use real IP on real devices. You can bypass this behaviour with "android_bypass_emulator_url_remap" flag.'
+          );
+        }
+      }
+
+
+      var hostPortRegex = /^http:\/\/([\w\d-.]+):(\d+)$/;
+      var urlMatches = _url.match(hostPortRegex);
+      if (!urlMatches) {
+        throw new Error('firebase.auth().useEmulator() unable to parse host and port from URL');
+      }
+      var host = urlMatches[1];
+      var port = parseInt(urlMatches[2], 10);
+      this.native.useEmulator(host, port);
+      return [host, port];
+    } }, { key: "getMultiFactorResolver", value:
+
+    function getMultiFactorResolver(error) {
+      return (0, _getMultiFactorResolver2.getMultiFactorResolver)(this, error);
+    } }, { key: "multiFactor", value:
+
+    function multiFactor(user) {
+      if (user.userId !== this.currentUser.userId) {
+        throw new Error('firebase.auth().multiFactor() only operates on currentUser');
+      }
+      return new _multiFactor.MultiFactorUser(this, user);
+    } }]);return FirebaseAuthModule;}(_internal.FirebaseModule);
+
+
+
+var SDK_VERSION = _version.default;exports.SDK_VERSION = SDK_VERSION;var _default =
+
+
+
+(0, _internal.createModuleNamespace)({
+  statics: statics,
+  version: _version.default,
+  namespace: namespace,
+  nativeModuleName: nativeModuleName,
+  nativeEvents: ['auth_state_changed', 'auth_id_token_changed', 'phone_auth_state_changed'],
+  hasMultiAppSupport: true,
+  hasCustomUrlOrRegionSupport: false,
+  ModuleClass: FirebaseAuthModule
+});exports.default = _default;
+
+
+
+
+var firebase = (0, _internal.getFirebaseRoot)();exports.firebase = firebase;

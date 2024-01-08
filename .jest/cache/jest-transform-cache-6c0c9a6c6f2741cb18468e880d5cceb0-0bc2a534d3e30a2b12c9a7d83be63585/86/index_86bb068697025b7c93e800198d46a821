@@ -1,0 +1,228 @@
+2436dfc75fa0a74ce5d817451f6ea4d1
+Object.defineProperty(exports, "__esModule", { value: true });exports.STATICS = exports.SDK_VERSION = void 0;Object.defineProperty(exports, "child", { enumerable: true, get: function get() {return _index.child;} });Object.defineProperty(exports, "connectStorageEmulator", { enumerable: true, get: function get() {return _index.connectStorageEmulator;} });exports.default = void 0;Object.defineProperty(exports, "deleteObject", { enumerable: true, get: function get() {return _index.deleteObject;} });exports.firebase = void 0;Object.defineProperty(exports, "getBlob", { enumerable: true, get: function get() {return _index.getBlob;} });Object.defineProperty(exports, "getBytes", { enumerable: true, get: function get() {return _index.getBytes;} });Object.defineProperty(exports, "getDownloadURL", { enumerable: true, get: function get() {return _index.getDownloadURL;} });Object.defineProperty(exports, "getMetadata", { enumerable: true, get: function get() {return _index.getMetadata;} });Object.defineProperty(exports, "getStorage", { enumerable: true, get: function get() {return _index.getStorage;} });Object.defineProperty(exports, "getStream", { enumerable: true, get: function get() {return _index.getStream;} });Object.defineProperty(exports, "list", { enumerable: true, get: function get() {return _index.list;} });Object.defineProperty(exports, "listAll", { enumerable: true, get: function get() {return _index.listAll;} });Object.defineProperty(exports, "putFile", { enumerable: true, get: function get() {return _index.putFile;} });Object.defineProperty(exports, "ref", { enumerable: true, get: function get() {return _index.ref;} });Object.defineProperty(exports, "refFromURL", { enumerable: true, get: function get() {return _index.refFromURL;} });Object.defineProperty(exports, "setMaxDownloadRetryTime", { enumerable: true, get: function get() {return _index.setMaxDownloadRetryTime;} });Object.defineProperty(exports, "setMaxOperationRetryTime", { enumerable: true, get: function get() {return _index.setMaxOperationRetryTime;} });Object.defineProperty(exports, "setMaxUploadRetryTime", { enumerable: true, get: function get() {return _index.setMaxUploadRetryTime;} });Object.defineProperty(exports, "toString", { enumerable: true, get: function get() {return _index.toString;} });Object.defineProperty(exports, "updateMetadata", { enumerable: true, get: function get() {return _index.updateMetadata;} });Object.defineProperty(exports, "uploadBytesResumable", { enumerable: true, get: function get() {return _index.uploadBytesResumable;} });Object.defineProperty(exports, "uploadString", { enumerable: true, get: function get() {return _index.uploadString;} });Object.defineProperty(exports, "writeToFile", { enumerable: true, get: function get() {return _index.writeToFile;} });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var _common = require("@react-native-firebase/app/lib/common");
+var _internal = require("@react-native-firebase/app/lib/internal");
+
+
+
+
+var _StorageReference = _interopRequireDefault(require("./StorageReference"));
+var _StorageStatics = _interopRequireDefault(require("./StorageStatics"));
+var _utils = require("./utils");
+var _version = _interopRequireDefault(require("./version"));
+
+var _index = require("../modular/index");function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);Object.defineProperty(Constructor, "prototype", { writable: false });return Constructor;}function _toPropertyKey(arg) {var key = _toPrimitive(arg, "string");return typeof key === "symbol" ? key : String(key);}function _toPrimitive(input, hint) {if (typeof input !== "object" || input === null) return input;var prim = input[Symbol.toPrimitive];if (prim !== undefined) {var res = prim.call(input, hint || "default");if (typeof res !== "object") return res;throw new TypeError("@@toPrimitive must return a primitive value.");}return (hint === "string" ? String : Number)(input);}function _inherits(subClass, superClass) {if (typeof superClass !== "function" && superClass !== null) {throw new TypeError("Super expression must either be null or a function");}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } });Object.defineProperty(subClass, "prototype", { writable: false });if (superClass) _setPrototypeOf(subClass, superClass);}function _setPrototypeOf(o, p) {_setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {o.__proto__ = p;return o;};return _setPrototypeOf(o, p);}function _createSuper(Derived) {var hasNativeReflectConstruct = _isNativeReflectConstruct();return function _createSuperInternal() {var Super = _getPrototypeOf(Derived),result;if (hasNativeReflectConstruct) {var NewTarget = _getPrototypeOf(this).constructor;result = Reflect.construct(Super, arguments, NewTarget);} else {result = Super.apply(this, arguments);}return _possibleConstructorReturn(this, result);};}function _possibleConstructorReturn(self, call) {if (call && (typeof call === "object" || typeof call === "function")) {return call;} else if (call !== void 0) {throw new TypeError("Derived constructors may only return object or undefined");}return _assertThisInitialized(self);}function _assertThisInitialized(self) {if (self === void 0) {throw new ReferenceError("this hasn't been initialised - super() hasn't been called");}return self;}function _isNativeReflectConstruct() {if (typeof Reflect === "undefined" || !Reflect.construct) return false;if (Reflect.construct.sham) return false;if (typeof Proxy === "function") return true;try {Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));return true;} catch (e) {return false;}}function _getPrototypeOf(o) {_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {return o.__proto__ || Object.getPrototypeOf(o);};return _getPrototypeOf(o);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var namespace = 'storage';
+var nativeEvents = ['storage_event'];
+var nativeModuleName = 'RNFBStorageModule';var
+
+FirebaseStorageModule = function (_FirebaseModule) {_inherits(FirebaseStorageModule, _FirebaseModule);var _super = _createSuper(FirebaseStorageModule);
+  function FirebaseStorageModule(app, config, bucketUrl) {var _this;_classCallCheck(this, FirebaseStorageModule);
+    _this = _super.call(this, app, config, bucketUrl);
+    if (bucketUrl === undefined) {
+      _this._customUrlOrRegion = "gs://" + app.options.storageBucket;
+    } else if (!(0, _common.isString)(bucketUrl) || !bucketUrl.startsWith('gs://')) {
+      throw new Error(
+        "firebase.app().storage(*) bucket url must be a string and begin with 'gs://'"
+      );
+    }
+
+    _this.emitter.addListener(
+      _this.eventNameForApp(nativeEvents[0]),
+      _utils.handleStorageEvent.bind(null, _assertThisInitialized(_this))
+    );
+
+
+    _this.emulatorHost = undefined;
+    _this.emulatorPort = 0;
+    _this._maxUploadRetryTime = _this.native.maxUploadRetryTime || 0;
+    _this._maxDownloadRetryTime = _this.native.maxDownloadRetryTime || 0;
+    _this._maxOperationRetryTime = _this.native.maxOperationRetryTime || 0;return _this;
+  }_createClass(FirebaseStorageModule, [{ key: "maxUploadRetryTime", get:
+
+
+
+
+    function get() {
+      return this._maxUploadRetryTime;
+    } }, { key: "maxDownloadRetryTime", get:
+
+
+
+
+    function get() {
+      return this._maxDownloadRetryTime;
+    } }, { key: "maxOperationRetryTime", get:
+
+
+
+
+    function get() {
+      return this._maxOperationRetryTime;
+    } }, { key: "ref", value:
+
+
+
+
+    function ref() {var path = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '/';
+      if (!(0, _common.isString)(path)) {
+        throw new Error("firebase.storage().ref(*) 'path' must be a string value.");
+      }
+
+      return new _StorageReference.default(this, path);
+    } }, { key: "refFromURL", value:
+
+
+
+
+    function refFromURL(url) {
+      if (!(0, _common.isString)(url) || !url.startsWith('gs://') && !url.startsWith('http')) {
+        throw new Error(
+          "firebase.storage().refFromURL(*) 'url' must be a string value and begin with 'gs://' or 'https://'."
+        );
+      }
+
+      var path;
+      var bucket;
+
+      if (url.startsWith('http')) {
+        var parts = (0, _utils.getHttpUrlParts)(url);
+        if (!parts) {
+          throw new Error(
+            "firebase.storage().refFromURL(*) unable to parse 'url', ensure it's a valid storage url'."
+          );
+        }
+        bucket = parts.bucket;path = parts.path;
+      } else {var _getGsUrlParts =
+        (0, _utils.getGsUrlParts)(url);bucket = _getGsUrlParts.bucket;path = _getGsUrlParts.path;
+      }
+
+      var storageInstance = this.app.storage(bucket);
+      return new _StorageReference.default(storageInstance, path);
+    } }, { key: "setMaxOperationRetryTime", value:
+
+
+
+
+    function setMaxOperationRetryTime(time) {
+      if (!(0, _common.isNumber)(time)) {
+        throw new Error(
+          "firebase.storage().setMaxOperationRetryTime(*) 'time' must be a number value."
+        );
+      }
+
+      this._maxOperationRetryTime = time;
+      return this.native.setMaxOperationRetryTime(time);
+    } }, { key: "setMaxUploadRetryTime", value:
+
+
+
+
+    function setMaxUploadRetryTime(time) {
+      if (!(0, _common.isNumber)(time)) {
+        throw new Error("firebase.storage().setMaxUploadRetryTime(*) 'time' must be a number value.");
+      }
+
+      this._maxUploadRetryTime = time;
+      return this.native.setMaxUploadRetryTime(time);
+    } }, { key: "setMaxDownloadRetryTime", value:
+
+
+
+
+    function setMaxDownloadRetryTime(time) {
+      if (!(0, _common.isNumber)(time)) {
+        throw new Error(
+          "firebase.storage().setMaxDownloadRetryTime(*) 'time' must be a number value."
+        );
+      }
+
+      this._maxDownloadRetryTime = time;
+      return this.native.setMaxDownloadRetryTime(time);
+    } }, { key: "useEmulator", value:
+
+    function useEmulator(host, port) {
+      if (!host || !(0, _common.isString)(host) || !port || !(0, _common.isNumber)(port)) {
+        throw new Error('firebase.storage().useEmulator() takes a non-empty host and port');
+      }
+      var _host = host;
+      if (_common.isAndroid && _host) {
+        if (_host === 'localhost' || _host === '127.0.0.1') {
+          _host = '10.0.2.2';
+
+          console.log(
+            'Mapping storage host to "10.0.2.2" for android emulators. Use real IP on real devices.'
+          );
+        }
+      }
+      this.emulatorHost = host;
+      this.emulatorPort = port;
+      this.native.useEmulator(_host, port);
+      return [_host, port];
+    } }]);return FirebaseStorageModule;}(_internal.FirebaseModule);
+
+
+
+var SDK_VERSION = _version.default;exports.SDK_VERSION = SDK_VERSION;
+
+
+var STATICS = _StorageStatics.default;exports.STATICS = STATICS;var _default =
+
+
+
+(0, _internal.createModuleNamespace)({
+  statics: _StorageStatics.default,
+  version: _version.default,
+  namespace: namespace,
+  nativeEvents: nativeEvents,
+  nativeModuleName: nativeModuleName,
+  hasMultiAppSupport: true,
+  hasCustomUrlOrRegionSupport: true,
+  disablePrependCustomUrlOrRegion: true,
+  ModuleClass: FirebaseStorageModule
+});exports.default = _default;
+
+
+
+
+var firebase = (0, _internal.getFirebaseRoot)();exports.firebase = firebase;
