@@ -10,10 +10,10 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "reset": "yarn start --reset-cache",
     "clean": "watchman watch-del-all && rm -f yarn.lock && cd android && ./gradlew clean && cd .. && yarn && yarn start --reset-cache",
-    "build": "cd android && ./gradlew bundleRelease",
-    "postinstall": "npx patch-package && cd ios && arch -arm64 pod install && cd .."
+    "build": "cd android && ./gradlew bundleRelease"
   },
   "dependencies": {
+    "@babel/plugin-proposal-optional-chaining": "^7.21.0",
     "@faker-js/faker": "^8.0.2",
     "@hookform/resolvers": "^2.8.8",
     "@notifee/react-native": "^7.0.4",
