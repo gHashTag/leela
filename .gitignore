@@ -17,3 +17,7 @@ coverage/
 *.log
 .vscode/
 .idea/
+
+# The bot's SQLite database, written at runtime.
+.leela.db
+.leela.db-*

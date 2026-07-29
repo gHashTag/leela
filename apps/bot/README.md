@@ -20,8 +20,18 @@ Then:
 cd apps/bot && bun run src/index.ts
 ```
 
-Get a token from [@BotFather](https://t.me/BotFather). Nothing else is needed —
-rooms are held in memory.
+Get a token from [@BotFather](https://t.me/BotFather).
+
+Games are held in memory unless `LEELA_DB` points at a file:
+
+```
+BOT_TOKEN=123456:AA...
+LEELA_DB=.leela.db
+OPENROUTER_API_KEY=sk-or-...   # optional: the companion that answers reports
+```
+
+The process says on startup which of the two it is doing, rather than losing
+games quietly.
 
 One token, one running bot. If a webhook is set on that token, polling will not
 receive anything until it is cleared:
@@ -103,10 +113,30 @@ Two things the round trip protects that are easy to lose:
 - **The language.** Before `sessions.language` existed, a restarted table
   dropped everyone into English. Migration `0002` adds it.
 
+## Storage
+
+`SqliteRoomQueries` implements `RoomQueries` on SQLite, which is built into
+both runtimes — no dependency, no server. One file holds the games and the
+reports.
+
+Node ships `node:sqlite`; Bun ships `bun:sqlite` and has no `node:sqlite` at
+all. The bot runs under Bun and the tests under Node, so both are tried at
+startup. Their prepared-statement APIs agree on everything used here.
+
+The module is loaded through `createRequire` rather than imported: Vite's list
+of Node builtins predates `node:sqlite`, so a static import makes the test
+bundler try to resolve it as a file and fail to load the suite.
+
+A save writes the session and replaces its seats in one transaction. Both or
+neither — a room half-written after a roll is a game with the wrong turn
+holder, which still looks like a game.
+
+Moving to Postgres is a change of driver: the columns already mirror `sessions`
+and `session_players` in `@leela/db`.
+
 ## What is missing
 
-- A `RoomQueries` implementation against a real driver. The interface and the
-  store are done and tested against a fake; wiring a database is a deployment
-  decision, so `index.ts` still runs in memory and says so on startup.
 - The room language comes from the host's Telegram locale and cannot be changed
   afterwards.
+- Reports are kept but never read back to the player. `reportsFor` exists;
+  nothing calls it yet.

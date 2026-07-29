@@ -10,7 +10,9 @@
 
 import { Guide, openRouter } from '@leela/ai';
 import { createBot } from './bot';
-import { MemoryReportSink, MemoryRoomStore } from './store';
+import { DatabaseRoomStore } from './persistence';
+import { MemoryReportSink, MemoryRoomStore, type ReportSink, type RoomStore } from './store';
+import { SqliteRoomQueries, sqliteReportSink } from './sqlite';
 import { supervise } from './supervisor';
 
 const token = process.env.BOT_TOKEN;
@@ -23,8 +25,27 @@ if (!token) {
   process.exit(1);
 }
 
-const store = new MemoryRoomStore();
-const reports = new MemoryReportSink();
+/**
+ * Where games live.
+ *
+ * With LEELA_DB set they survive a restart; without it they do not, and the
+ * process says which it is rather than losing them quietly.
+ */
+const databasePath = process.env.LEELA_DB;
+
+let store: RoomStore;
+let reports: ReportSink;
+let durable = false;
+
+if (databasePath) {
+  const queries = new SqliteRoomQueries({ path: databasePath });
+  store = new DatabaseRoomStore(queries);
+  reports = sqliteReportSink(queries);
+  durable = true;
+} else {
+  store = new MemoryRoomStore();
+  reports = new MemoryReportSink();
+}
 
 /**
  * The companion is optional on purpose. Without a key the gate still works and
@@ -49,7 +70,12 @@ const bot = createBot({ token, store, reports, guide });
 // durable one — it needs a `RoomQueries` implementation and a database, so
 // wiring it is a deployment decision rather than a default. Say plainly what
 // this process does rather than losing games quietly.
-console.log('Leela bot starting. Rooms and reports are held in memory and will not survive a restart.');
+console.log(
+  durable
+    ? `Leela bot starting. Games and reports are kept in ${databasePath}.`
+    : 'Leela bot starting. Games and reports are held in memory and will not survive a restart.\n' +
+        'Set LEELA_DB to a file path to keep them.',
+);
 console.log(
   guide
     ? 'A companion is configured and will respond to reports.'

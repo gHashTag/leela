@@ -214,10 +214,19 @@ Reports are now kept. Commands stay pure by returning an `Effect` describing the
 write instead of performing it, and the transport applies effects after the room
 is saved, so a failed write cannot leave the board ahead of the writing.
 
-Still missing: a `RoomQueries` implementation against a real driver. The
-interface and the store are done and tested against a fake, but choosing and
-wiring a database is a deployment decision, so the bot still starts in memory
-and says so.
+`SqliteRoomQueries` closed that gap: SQLite is built into both runtimes, so a
+durable bot needs no dependency and no server. Set `LEELA_DB` to a file path and
+games survive a restart; leave it unset and they do not, and the process says
+which on startup.
+
+Two things the runtimes disagree about, both handled: Bun has no `node:sqlite`
+at all, only `bun:sqlite`, so both are tried; and Vite's list of Node builtins
+predates `node:sqlite`, so it is loaded through `createRequire` or the test
+suite fails to load entirely.
+
+A test caught a real ordering defect on the way: reports were sorted by
+`created_at` alone, so two written in the same millisecond came back in
+whatever order SQLite chose. `id` now breaks the tie.
 
 **4c. `packages/ai` — done.** The service it replaces asked the model to
 *invent* a description of the plan a player had landed on, while the traditional
