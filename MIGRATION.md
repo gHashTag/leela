@@ -242,10 +242,22 @@ other implementation 54 is an arrow to 68, and 68 is where the game is won.
 On-chain and in the apps a winner is on Cosmic Consciousness; in these two they
 are on the plan of spiritual devotion, holding a win.
 
-The scanner reports what it could not read rather than staying silent about it
-— five files mention the board in a shape it does not parse, four of them
-decorative SVG components and one a test. A scanner that quietly skips what it
-cannot read is worse than none, because it reads as coverage.
+The scanner reports what it could not read rather than staying silent about it.
+That list started at five files and is now empty: the four decorative SVG
+components turned out to hold correct boards in a fifth shape, and the Expo
+test a sixth.
+
+**Eighteen copies, twelve correct, nothing unread.** The six that disagree are
+the four Inngest files and the two web3 hooks, as before — the extra copies
+found since were all correct, which is itself the point: a scanner is only
+worth having if its silence means something.
+
+`extractBoards` and `declaresBoard` now live in `@leela/engine`, tested rather
+than trusted, because a scanner that knows five of six shapes under-reports
+exactly the way the code it audits does. Writing those tests found two defects
+in the scanner itself: quoted keys (`"12": 8`) were not read, and
+`:leftwards_arrow_with_hook:` — an emoji name — was taken for an arrow
+collection and reported a profile screen as an unreadable board.
 
 ### The boards mostly agree. The rules do not.
 

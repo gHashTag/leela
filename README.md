@@ -52,7 +52,7 @@ network.
 
 It also exports `auditBoard`, `compareToReference` and `detectRules`, so any
 implementation carrying its own copy can be held to this one. That is not
-hypothetical: of the thirteen copies across the 25 repositories **six have the
+hypothetical: of the eighteen copies across the 25 repositories **six have the
 wrong board**, and the rules divide into **five different games** — see
 [MIGRATION.md](MIGRATION.md).
 
@@ -143,7 +143,7 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 134 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/engine` | 159 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 109 | 22 languages, quality guards |
 | `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 50 | the companion — prompts built from the plan text |
@@ -153,7 +153,7 @@ cd packages/engine && bun test
 | `@leela/miniapp` | 24 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-629 tests, run on every push by [CI](.github/workflows/ci.yml).
+654 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 ## Migrating a live database
 

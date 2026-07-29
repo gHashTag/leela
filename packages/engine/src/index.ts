@@ -43,6 +43,9 @@ export {
 } from './audit';
 export type { BoardFinding, BoardProblem, DetectedRules, Jumps } from './audit';
 
+export { declaresBoard, extractBoards } from './extract';
+export type { ExtractedBoard } from './extract';
+
 export {
   CLASSIC,
   DEFAULT_RULESET,
