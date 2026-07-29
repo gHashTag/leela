@@ -52,7 +52,12 @@ network.
 
 It also exports `auditBoard` and `compareToReference`, so any implementation
 that carries its own copy of the board can be held to this one. That is not
-hypothetical — see [MIGRATION.md](MIGRATION.md).
+hypothetical: of the thirteen copies across the 25 repositories, **six disagree**
+— see [MIGRATION.md](MIGRATION.md).
+
+```bash
+node scripts/audit-copies.mjs --src ../leela-src
+```
 
 ## Rule variants
 

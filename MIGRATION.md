@@ -200,6 +200,53 @@ to React Native, and the two surfaces that exist are a chat and a page of plain
 HTML with no components in common. It is worth building when `apps/mobile` is,
 and not before.
 
+## Sixth pass: all thirteen copies, checked
+
+The fifth pass found one wrong board by accident. This one looked
+systematically: `scripts/audit-copies.mjs` walks the source repositories,
+extracts every board it can read, and runs `auditBoard` and
+`compareToReference` over each.
+
+**Thirteen copies of the board across the 25 repositories. Seven agree.**
+
+| Copy | Verdict |
+|---|---|
+| `leela/src/store/helper.ts` | agrees |
+| `leela-game/src/store/helper.ts` | agrees |
+| `NeuroLeelaExpo/services/GameService.ts` | agrees |
+| `NeuroLeelaAgent/services/GameService.ts` | agrees |
+| `NeuroLeelaAgent/components/chat/ChatBot.tsx` | agrees |
+| `smart-contract-leela/contracts/LeelaGame.sol` | agrees |
+| `leela-ai-web3/contracts/LeelaGame.sol` | agrees |
+| `NeuroLeelaAgent/inngest/functions/processDiceRoll.ts` | **wrong game** |
+| `NeuroLeelaAgent/inngest/server-config/game-logic.ts` | **wrong game** |
+| `NeuroLeelaExpo/inngest/functions/processDiceRoll.ts` | **wrong game** |
+| `NeuroLeelaExpo/inngest/server-config/game-logic.ts` | **wrong game** |
+| `LeelaAiWeb3/.../handlePlayerMovement.ts` | **wins on the wrong square** |
+| `leelaWeb3/mobile/.../handlePlayerMovement.ts` | **wins on the wrong square** |
+
+The Snakes-and-Ladders board was not one file: it is **four**, duplicated
+across both Expo repositories, in `inngest/functions` and again in
+`inngest/server-config`.
+
+**A second, quieter defect** in the two web3 hooks:
+
+```ts
+} else if (newPlan === 54 || newPlan === WIN_PLAN) {
+  // ...
+  return { ...updatedPlayer, plan: newPlan, previousPlan: newPlan, ... }
+```
+
+A player landing on 54 is declared finished **while standing on 54**. In every
+other implementation 54 is an arrow to 68, and 68 is where the game is won.
+On-chain and in the apps a winner is on Cosmic Consciousness; in these two they
+are on the plan of spiritual devotion, holding a win.
+
+The scanner reports what it could not read rather than staying silent about it
+— five files mention the board in a shape it does not parse, four of them
+decorative SVG components and one a test. A scanner that quietly skips what it
+cannot read is worse than none, because it reads as coverage.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
