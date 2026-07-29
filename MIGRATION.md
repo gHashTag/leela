@@ -164,6 +164,42 @@ Worth noting where this mattered: the published `Leela Chakra Ai` sits at
 are not the whole story, but they are the kind of thing that shows on every
 screen a non-English player sees.
 
+## Fifth pass: the copy that was a different game
+
+The rules were copied five times across the 25 repositories. Four of the copies
+agree — the published app, the Expo rewrite, the deployed contract and the
+engine. The fifth does not.
+
+`NeuroLeelaAgent/inngest/functions/processDiceRoll.ts` declares its own
+`TOTAL_PLANS`, `WIN_LOKA`, `handleConsecutiveSixes` and `getDirectionAndPosition`,
+and its board is **a 100-square Snakes and Ladders set**:
+
+```
+snakes: 16→6, 47→26, 49→11, 56→53, 62→19, 64→60, 87→24, 93→73, 95→75, 98→78
+arrows: 4→14, 9→31, 17→7, 20→38, 28→84, 40→59, 51→67, 54→34, 62→19, 63→81, 64→60, 71→91
+```
+
+Squares 87, 93, 95, 98, 84 and 91 do not exist on a 72-square board. Arrows 17
+and 54 run *downwards* — in Leela 17 climbs to 69 and 54 is one of the two ways
+to win. Squares 62 and 64 are listed as both a snake and an arrow. Not one of
+the twenty real jumps survives.
+
+Nothing caught it because nothing checked. `auditBoard` and
+`compareToReference` in `@leela/engine` are that check, exported so any
+implementation carrying its own board can be held to this one — the contract
+now is, and the Inngest board is kept in the tests as the worked example of
+what they catch.
+
+**`services/inngest` is therefore not ported.** Its only original content was
+this board, and what remains — event fan-out — is what the bot already does
+directly. Porting it would mean rewriting it against the engine, at which point
+there is nothing left of the original.
+
+**`packages/ui` is not built either.** The design system it would hold belongs
+to React Native, and the two surfaces that exist are a chat and a page of plain
+HTML with no components in common. It is worth building when `apps/mobile` is,
+and not before.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

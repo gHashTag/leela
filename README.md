@@ -15,7 +15,7 @@ packages/
   content/    72 plans and the rules chapters, in 22 languages.
   db/         persisted shape of a game, and the row <-> state mapping.
   ai/         the companion, resting on the canonical text.         ok
-  ui/         shared design system.                                 (to port)
+  ui/         not built — see MIGRATION.md
   contracts/  LeelaGame.sol, checked against the engine.            ok
 apps/
   mobile/     Expo Router: iOS, Android and web from one codebase.  (to port)
@@ -24,7 +24,7 @@ apps/
   bot/        Telegram, on grammY. Group play in a chat.            ok
   miniapp/    Telegram mini app: the board, the die, the texts.      ok
 services/
-  inngest/    event-driven move and report handlers.                (to port)
+  inngest/    not built — its copy of the rules was a different game
 scripts/
   build-content.mjs   regenerates packages/content/data from the source repos.
 ```
@@ -47,8 +47,12 @@ const { state, event } = applyRoll(initialState(), 6);
 
 No database, no clock, no randomness inside. Give it a state and a die value,
 get back the next state. That makes the same rules usable from the app, the
-bot, an Inngest function and a smart contract, and it makes them testable
-without a network.
+bot, the mini app and a smart contract, and it makes them testable without a
+network.
+
+It also exports `auditBoard` and `compareToReference`, so any implementation
+that carries its own copy of the board can be held to this one. That is not
+hypothetical — see [MIGRATION.md](MIGRATION.md).
 
 ## Rule variants
 
@@ -133,17 +137,17 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 104 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/engine` | 123 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 109 | 22 languages, quality guards |
 | `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 50 | the companion — prompts built from the plan text |
-| `@leela/contracts` | 17 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
+| `@leela/contracts` | 20 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
 | `@leela/bot` | 137 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 89 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
 | `@leela/miniapp` | 11 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-583 tests, run on every push by [CI](.github/workflows/ci.yml).
+605 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 ## Migrating a live database
 

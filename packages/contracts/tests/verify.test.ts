@@ -2,7 +2,16 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { ARROWS, ONCHAIN, SNAKES, TOTAL_PLANS, WIN_LOKA } from '@leela/engine';
+import {
+  ARROWS,
+  ONCHAIN,
+  SNAKES,
+  TOTAL_PLANS,
+  WIN_LOKA,
+  auditBoard,
+  compareToReference,
+  describeProblems,
+} from '@leela/engine';
 import {
   compareBoards,
   compareConstants,
@@ -141,5 +150,30 @@ describe('where the contract diverges on the sixes', () => {
     );
     expect(sixesBlock).toMatch(/positionBeforeThreeSixes\s*=\s*player\.plan\s*;/);
     expect(sixesBlock).not.toMatch(/consecutiveSixes\s*==\s*0\s*\?/);
+  });
+});
+
+describe('the contract passes the same audit as any other copy', () => {
+  // `auditBoard` exists because a fifth copy of the rules turned out to be a
+  // different game. The contract is the fourth; it is held to the same check
+  // rather than to a bespoke one.
+
+  const snakes: Record<number, number> = {};
+  const arrows: Record<number, number> = {};
+  for (const [from, to] of board.jumps) {
+    (to < from ? snakes : arrows)[from] = to;
+  }
+
+  it('is a well formed board on its own terms', () => {
+    expect(describeProblems(auditBoard(snakes, arrows))).toBe('no problems found');
+  });
+
+  it('is the same board as the engine, jump for jump', () => {
+    expect(compareToReference(snakes, arrows)).toEqual([]);
+  });
+
+  it('splits into ten snakes and ten arrows, like the reference', () => {
+    expect(Object.keys(snakes)).toHaveLength(10);
+    expect(Object.keys(arrows)).toHaveLength(10);
   });
 });

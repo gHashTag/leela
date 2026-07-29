@@ -34,6 +34,9 @@ export { allPlans, applyRoll, hasWon, initialState, replay } from './game';
 
 export { noRepeatRoller, rollDie, rollMany, seededRoller } from './dice';
 
+export { auditBoard, compareToReference, describeProblems } from './audit';
+export type { BoardFinding, BoardProblem, Jumps } from './audit';
+
 export {
   CLASSIC,
   DEFAULT_RULESET,
