@@ -20,17 +20,17 @@ jobs:
 
       - name: Typecheck
         run: |
-          for pkg in engine content db; do
+          for pkg in packages/engine packages/content packages/db apps/bot; do
             echo "::group::typecheck $pkg"
-            (cd "packages/$pkg" && bunx tsc --noEmit)
+            (cd "$pkg" && bunx tsc --noEmit)
             echo "::endgroup::"
           done
 
       - name: Test
         run: |
-          for pkg in engine content db; do
+          for pkg in packages/engine packages/content packages/db apps/bot; do
             echo "::group::test $pkg"
-            (cd "packages/$pkg" && bunx vitest run --reporter=verbose)
+            (cd "$pkg" && bunx vitest run)
             echo "::endgroup::"
           done
 

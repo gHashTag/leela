@@ -21,7 +21,7 @@ apps/
   mobile/     Expo Router: iOS, Android and web from one codebase.  (to port)
   site/       Next.js landing page.                                 (to port)
   docs/       Docusaurus: the book of rules.                        (to port)
-  bot/        Telegram, on grammY.                                  (to port)
+  bot/        Telegram, on grammY. Group play in a chat.          done
 services/
   inngest/    event-driven move and report handlers.                (to port)
 scripts/
@@ -132,11 +132,12 @@ cd packages/engine && bun test
 | Package | Tests | State |
 |---|---|---|
 | `@leela/engine` | 99 | rules, four variants, sessions, turn gating, seeded dice |
-| `@leela/content` | 105 | 22 languages complete |
+| `@leela/content` | 109 | 22 languages, quality guards |
 | `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
+| `@leela/bot` | 41 | group play in Telegram — [readme](apps/bot/README.md) |
 | everything else | — | not yet ported |
 
-270 tests, run on every push by [CI](.github/workflows/ci.yml).
+315 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 ## Migrating a live database
 

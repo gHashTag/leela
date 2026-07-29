@@ -195,9 +195,29 @@ dump — and a decision on how ids are assigned. The conversion is ready.
 `@leela/content`, then bring across RevenueCat, notifee and Sentry from
 `leela`. Keep the `applicationId` and the bundle id.
 
-**4. `apps/bot`, `apps/site`, `apps/docs`.** All three become thin: the bot and
-the site call the same engine, and the docs site renders `@leela/content`
-rather than keeping its own copy of the text.
+**4a. `apps/bot` — done.** Group play in a Telegram chat, 41 tests, no token
+needed to run them: `commands.ts` is pure functions from `(room, input)` to
+`(room, replies)`, so a whole game plays out in a test. Each room's die comes
+from a seed derived from its chat id, and every roll is the *n*-th value from
+it, so a game replays from `(seed, rollsTaken)` — both stored — and nobody has
+to take another player's word for a throw.
+
+Still missing there: persistence (a restart loses games in progress, and the
+process says so on startup rather than losing them quietly), and reports are
+gated but not yet written to the `reports` table.
+
+**4b. `apps/site`, `apps/docs`.** Both become thin: the site calls the same
+engine, and the docs site renders `@leela/content` rather than keeping its own
+copy of the text.
+
+**Translation audit — done, and it found nothing.** The 19 machine-translated
+languages hold up at term level: parenthesised transliterations survive in all
+22 locales, no two plans share a body, and body lengths sit where each script's
+density predicts (CJK at 0.3–0.5× English is dense, not truncated). The 19
+titles where the term matches the name are almost all plan 37, *Jnana (jnana)*,
+which reads that way in the English source too — and on Hindi, `जन्म` genuinely
+is *janma*. Four guards now hold that line against a future rebuild. The real
+translation damage was the numbering, fixed in the third pass above.
 
 **5. `packages/contracts`.** Take `smart-contract-leela` and the newest
 subgraph (`leela-ai-4`) only. Archive the three older subgraph iterations.

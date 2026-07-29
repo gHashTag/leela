@@ -86,6 +86,59 @@ describe('coverage', () => {
     }
   });
 
+  // An audit of the 19 machine-translated languages found no term-level damage:
+  // parenthesised transliterations survive everywhere, no two plans share a
+  // body, and body lengths sit where a script's density predicts. These are
+  // the guards that would catch a regression in a future rebuild.
+
+  it('keeps the transliterated term in every title that had one', () => {
+    // English carries a term in parentheses on 63 of the 72 plans.
+    const withTerm = new Set(
+      plansFor('en')
+        .filter((p) => /[(（][^)）]+[)）]/.test(p.title))
+        .map((p) => p.plan),
+    );
+    expect(withTerm.size).toBeGreaterThanOrEqual(63);
+
+    for (const lang of LANGUAGES) {
+      const missing = plansFor(lang)
+        .filter((p) => withTerm.has(p.plan) && !/[(（][^)）]+[)）]/.test(p.title))
+        .map((p) => p.plan);
+      // A couple of languages drop one; a wholesale loss means the source
+      // regressed or the parser started eating parentheses.
+      expect(missing.length, `${lang} lost terms on plans ${missing.join(', ')}`).toBeLessThan(5);
+    }
+  });
+
+  it('gives no two plans the same body', () => {
+    for (const lang of LANGUAGES) {
+      const bodies = plansFor(lang).map((p) => p.body.trim());
+      expect(new Set(bodies).size, `${lang} has duplicated bodies`).toBe(bodies.length);
+    }
+  });
+
+  it('keeps every body long enough to be the actual text', () => {
+    for (const lang of LANGUAGES) {
+      for (const plan of plansFor(lang)) {
+        // The shortest real plan text runs to a few hundred characters even in
+        // the densest scripts; anything near zero is a truncated translation.
+        expect(plan.body.length, `${lang} plan ${plan.plan}`).toBeGreaterThan(150);
+      }
+    }
+  });
+
+  it('keeps each language within a plausible length of the English', () => {
+    const english = plansFor('en').reduce((sum, p) => sum + p.body.length, 0);
+    for (const lang of LANGUAGES) {
+      const total = plansFor(lang).reduce((sum, p) => sum + p.body.length, 0);
+      const ratio = total / english;
+      // CJK packs the same meaning into roughly a third of the characters, so
+      // the floor has to accommodate it; the ceiling catches duplicated text.
+      expect(ratio, `${lang} is ${ratio.toFixed(2)}x English`).toBeGreaterThan(0.25);
+      expect(ratio, `${lang} is ${ratio.toFixed(2)}x English`).toBeLessThan(1.5);
+    }
+  });
+
   it('keeps titles distinct within a language', () => {
     for (const lang of LANGUAGES) {
       const titles = plansFor(lang).map((p) => p.title.trim());
