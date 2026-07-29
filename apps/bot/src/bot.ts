@@ -8,6 +8,7 @@
 
 import { Bot, InlineKeyboard, type Context } from 'grammy';
 import { planFor } from '@leela/content';
+import type { Guide } from '@leela/ai';
 import * as commands from './commands';
 import type { Button, Effect, Reply, Room } from './commands';
 import { escapeHtml, renderBoardMessage, renderPlan } from './render';
@@ -28,6 +29,11 @@ export interface BotOptions {
   now?: () => number;
   /** Where the update log goes. Injected so tests can read it. */
   log?: (message: string) => void;
+  /**
+   * The companion that responds to a report. Optional: without it the gate
+   * still works and the report is still kept, there is simply no reply.
+   */
+  guide?: Guide;
 }
 
 /** Who sent this update, as the commands layer wants them. */
@@ -48,6 +54,7 @@ export function createBot({
   reports = discardReports,
   now = Date.now,
   log = console.log,
+  guide,
 }: BotOptions) {
   const bot = new Bot(token);
 
@@ -108,6 +115,29 @@ export function createBot({
   }
 
   /**
+   * Let the companion respond to a report.
+   *
+   * Separate from `applyEffects` because storing is required and answering is
+   * not: the report is kept whether or not a model is configured or reachable.
+   */
+  async function respondToReports(
+    ctx: Context,
+    room: Room,
+    effects: Effect[] | undefined,
+  ): Promise<void> {
+    if (!guide) return;
+
+    for (const effect of effects ?? []) {
+      if (effect.kind !== 'report') continue;
+      const reflection = await guide.reflect(effect.text, {
+        language: room.language,
+        plan: effect.plan,
+      });
+      await ctx.reply(escapeHtml(reflection.text), { parse_mode: 'HTML' });
+    }
+  }
+
+  /**
    * Run a command that needs an open room, telling the user plainly when
    * there isn't one rather than failing silently.
    */
@@ -129,6 +159,7 @@ export function createBot({
     if (result.room) await store.save(result.room);
     await applyEffects(result.effects);
     await deliver(ctx, result.replies);
+    await respondToReports(ctx, result.room ?? room, result.effects);
   }
 
   bot.command('start', async (ctx) => {
@@ -329,6 +360,7 @@ export function createBot({
       if (result.room) await store.save(result.room);
       await applyEffects(result.effects);
       await deliver(ctx, result.replies);
+      await respondToReports(ctx, result.room ?? room, result.effects);
       return;
     }
 

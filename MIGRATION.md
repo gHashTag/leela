@@ -219,6 +219,31 @@ interface and the store are done and tested against a fake, but choosing and
 wiring a database is a deployment decision, so the bot still starts in memory
 and says so.
 
+**4c. `packages/ai` — done.** The service it replaces asked the model to
+*invent* a description of the plan a player had landed on, while the traditional
+text for that plan sat unused in the repository in 22 languages. It also carried
+spiritual commentary for 5 of the 72 plans, hardcoded in Russian — and most of
+those 5 were unreachable, because move-type messages were checked first
+(`GameMessageService.generateMessage`).
+
+So the rule here is that the model never supplies the teaching. `systemPrompt`
+puts the canonical text into the prompt and says plainly that it is the source
+and the model is not. 28 tests hold that line, including one that asserts the
+prompt never *asks* for the text to be produced — matched on the shape of the
+request, since matching the word "invent" would catch this prompt's own
+instruction not to.
+
+`LanguageModel` is one method, so no provider SDK enters the dependency tree and
+every test runs with no network and no key. `openRouter` refuses to be
+configured without a key rather than throwing on a player's first message, which
+is where the old service failed. Anything unreliable — the network, the model, a
+timeout — falls back to a usable sentence that still names the plan: a game must
+not stop working because a companion is unavailable.
+
+Wired into the bot at the report gate, and optional there: without
+`OPENROUTER_API_KEY` the gate still works and reports are still kept, there is
+simply no reply.
+
 **4b. `apps/site`, `apps/docs`.** Both become thin: the site calls the same
 engine, and the docs site renders `@leela/content` rather than keeping its own
 copy of the text.

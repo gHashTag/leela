@@ -1,0 +1,220 @@
+import { describe, expect, it } from 'vitest';
+import { LANGUAGES, planFor } from '@leela/content';
+import { TOTAL_PLANS, WIN_LOKA } from '@leela/engine';
+import {
+  MAX_HISTORY,
+  MAX_PLAN_CHARS,
+  PromptError,
+  questionPrompt,
+  reportPrompt,
+  systemPrompt,
+  trimToParagraph,
+} from '../src';
+
+const base = { plan: 1, language: 'en' as const };
+
+describe('the prompt rests on the canonical text', () => {
+  // This is the defect the package exists to fix: the service it replaces
+  // asked the model to invent a description of the plan, with the traditional
+  // text sitting unused in the repository.
+
+  it('puts the plan text into the prompt rather than asking for one', () => {
+    const prompt = systemPrompt({ plan: 1, language: 'en' });
+    const canonical = planFor('en', 1);
+
+    expect(prompt).toContain(canonical.title);
+    expect(prompt).toContain(canonical.body.slice(0, 120));
+  });
+
+  it('never asks the model to produce the plan text itself', () => {
+    // The shape of the old defect: an instruction to generate the teaching.
+    // Matching the bare word "invent" would also catch this prompt's own
+    // instruction *not* to, so match the request, not the vocabulary.
+    const asksForContent =
+      /\b(write|create|generate|compose|produce|make up)\b[^.]{0,40}\b(description|text|teaching|meaning) of\b/i;
+
+    for (let plan = 1; plan <= TOTAL_PLANS; plan++) {
+      expect(systemPrompt({ plan, language: 'en' }), `plan ${plan}`).not.toMatch(asksForContent);
+    }
+  });
+
+  it('forbids inventing what the text does not say', () => {
+    expect(systemPrompt(base)).toMatch(/rather than\s+inventing/i);
+  });
+
+  it('tells the model the text is the source and it is not', () => {
+    const prompt = systemPrompt(base);
+    expect(prompt).toMatch(/It is the source; you are not/i);
+    expect(prompt).toMatch(/do not contradict it/i);
+  });
+
+  it('carries the right text for every plan', () => {
+    for (let plan = 1; plan <= TOTAL_PLANS; plan++) {
+      const prompt = systemPrompt({ plan, language: 'en' });
+      expect(prompt, `plan ${plan}`).toContain(planFor('en', plan).title);
+      expect(prompt).toContain(`plan ${plan}:`);
+    }
+  });
+
+  it('carries the text in the player’s own language', () => {
+    for (const language of LANGUAGES) {
+      const prompt = systemPrompt({ plan: 1, language });
+      expect(prompt, language).toContain(planFor(language, 1).title);
+    }
+  });
+
+  it('names the answer language explicitly rather than implying it', () => {
+    expect(systemPrompt({ plan: 1, language: 'ru' })).toContain('Answer in Russian.');
+    expect(systemPrompt({ plan: 1, language: 'ja' })).toContain('Answer in Japanese.');
+  });
+
+  it('falls back to English for a locale the dataset does not carry', () => {
+    // `language` is typed, but a value can still arrive from a database row.
+    const prompt = systemPrompt({ plan: 1, language: 'kl' as never });
+    expect(prompt).toContain('Answer in English.');
+  });
+});
+
+describe('the prompt describes the move', () => {
+  it('says how the player arrived, when it knows', () => {
+    expect(systemPrompt({ ...base, direction: 'snake 🐍' })).toMatch(/brought down/i);
+    expect(systemPrompt({ ...base, direction: 'arrow 🏹' })).toMatch(/carried up/i);
+    expect(systemPrompt({ ...base, direction: 'step 🚶🏼' })).toMatch(/one square at a time/i);
+  });
+
+  it('says where they came from, when that is somewhere else', () => {
+    expect(systemPrompt({ ...base, plan: 23, previousPlan: 10 })).toContain('came from plan 10');
+    expect(systemPrompt({ ...base, plan: 10, previousPlan: 10 })).not.toContain('came from');
+  });
+
+  it('marks the win square as an ending and a beginning', () => {
+    expect(systemPrompt({ plan: WIN_LOKA, language: 'en' })).toMatch(/end of a game/i);
+  });
+});
+
+describe('the prompt sets limits', () => {
+  it('asks for brevity, because a companion is not an essayist', () => {
+    expect(systemPrompt(base)).toMatch(/brief/i);
+  });
+
+  it('forbids fortune-telling and verdicts on a life', () => {
+    const prompt = systemPrompt(base);
+    expect(prompt).toMatch(/do not predict the/i);
+    expect(prompt).toMatch(/what their life means/i);
+  });
+
+  it('says plainly that it is not a therapist', () => {
+    // The published app carries the same disclaimer; a companion that implies
+    // otherwise is the failure mode worth guarding against.
+    expect(systemPrompt(base)).toMatch(/not a\s+therapist/i);
+    expect(systemPrompt(base)).toMatch(/someone qualified/i);
+  });
+});
+
+describe('trimToParagraph', () => {
+  it('leaves a short text alone', () => {
+    expect(trimToParagraph('short', 100)).toBe('short');
+  });
+
+  it('cuts on a paragraph break rather than mid-sentence', () => {
+    const text = `${'a'.repeat(60)}\n\n${'b'.repeat(60)}`;
+    expect(trimToParagraph(text, 80)).toBe('a'.repeat(60));
+  });
+
+  it('falls back to a sentence end when there is no usable break', () => {
+    const text = `${'word '.repeat(15)}. ${'more '.repeat(20)}`;
+    const out = trimToParagraph(text, 80);
+    expect(out.length).toBeLessThanOrEqual(80);
+    expect(out.endsWith('.')).toBe(true);
+  });
+
+  it('never returns more than it was asked for, for any plan', () => {
+    for (let plan = 1; plan <= TOTAL_PLANS; plan++) {
+      for (const language of LANGUAGES) {
+        const trimmed = trimToParagraph(planFor(language, plan).body);
+        expect(trimmed.length, `${language} plan ${plan}`).toBeLessThanOrEqual(MAX_PLAN_CHARS);
+      }
+    }
+  });
+
+  it('keeps a useful amount of text rather than cutting to nothing', () => {
+    for (let plan = 1; plan <= TOTAL_PLANS; plan++) {
+      const body = planFor('en', plan).body;
+      const trimmed = trimToParagraph(body);
+      const kept = trimmed.length / Math.min(body.length, MAX_PLAN_CHARS);
+      expect(kept, `plan ${plan}`).toBeGreaterThan(0.4);
+    }
+  });
+});
+
+describe('reportPrompt', () => {
+  it('is a system prompt then the report', () => {
+    const messages = reportPrompt(base, 'what came up for me');
+    expect(messages).toHaveLength(2);
+    expect(messages[0].role).toBe('system');
+    expect(messages[1]).toEqual({ role: 'user', content: 'what came up for me' });
+  });
+
+  it('trims the report, and refuses an empty one', () => {
+    expect(reportPrompt(base, '  spaced  ')[1].content).toBe('spaced');
+    for (const empty of ['', '   ', '\n\t']) {
+      expect(() => reportPrompt(base, empty)).toThrow(PromptError);
+    }
+  });
+
+  it('refuses a plan off the board', () => {
+    for (const plan of [0, 73, -1, 1.5]) {
+      expect(() => reportPrompt({ ...base, plan }, 'x'), `plan ${plan}`).toThrow(PromptError);
+    }
+  });
+
+  it('carries recent history, oldest first', () => {
+    const history = [
+      { role: 'user' as const, content: 'first' },
+      { role: 'assistant' as const, content: 'answer' },
+    ];
+    const messages = reportPrompt(base, 'now', history);
+    expect(messages.map((m) => m.content)).toEqual([
+      messages[0].content,
+      'first',
+      'answer',
+      'now',
+    ]);
+  });
+
+  it('keeps only the most recent turns, so old talk cannot crowd out the text', () => {
+    const history = Array.from({ length: 30 }, (_, i) => ({
+      role: 'user' as const,
+      content: `turn ${i}`,
+    }));
+    const messages = reportPrompt(base, 'now', history);
+    expect(messages).toHaveLength(MAX_HISTORY + 2);
+    expect(messages[1].content).toBe('turn 24');
+  });
+
+  it('drops any system message from history — there is exactly one', () => {
+    const history = [
+      { role: 'system' as const, content: 'an old system prompt' },
+      { role: 'user' as const, content: 'hello' },
+    ];
+    const messages = reportPrompt(base, 'now', history);
+    expect(messages.filter((m) => m.role === 'system')).toHaveLength(1);
+    expect(messages.map((m) => m.content)).not.toContain('an old system prompt');
+  });
+});
+
+describe('questionPrompt', () => {
+  it('is shaped like a report prompt', () => {
+    const messages = questionPrompt(base, 'what does maya mean here?');
+    expect(messages[0].role).toBe('system');
+    expect(messages.at(-1)?.content).toBe('what does maya mean here?');
+  });
+
+  it('refuses an empty question', () => {
+    expect(() => questionPrompt(base, '  ')).toThrow(PromptError);
+  });
+
+  it('tells the model to admit what the text does not answer', () => {
+    expect(questionPrompt(base, 'q')[0].content).toMatch(/say so plainly/i);
+  });
+});

@@ -1,24 +1,23 @@
 {
-  "name": "@leela/bot",
+  "name": "@leela/ai",
   "version": "1.0.0",
-  "private": true,
-  "description": "Leela in Telegram: a group game in a chat.",
+  "description": "The Leela companion: prompts built from the canonical text, and a model behind an interface.",
   "type": "module",
   "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src"],
   "scripts": {
-    "dev": "bun run src/index.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@leela/content": "workspace:*",
-    "@leela/engine": "workspace:*",
-    "grammy": "^1.30.0",
-    "@leela/db": "workspace:*",
-    "@leela/ai": "workspace:*"
+    "@leela/engine": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^22.10.1",
     "typescript": "^5.6.3",
     "vitest": "^2.1.8"
   },

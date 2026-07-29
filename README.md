@@ -14,7 +14,7 @@ packages/
   engine/     the rules, as pure functions. No I/O, no framework, no platform.
   content/    72 plans and the rules chapters, in 22 languages.
   db/         persisted shape of a game, and the row <-> state mapping.
-  ai/         the Leela voice: prompts and model routing.          (to port)
+  ai/         the companion, resting on the canonical text.         ok
   ui/         shared design system.                                 (to port)
   contracts/  LeelaGame.sol and the subgraph.                       (to port)
 apps/
@@ -135,11 +135,12 @@ cd packages/engine && bun test
 | `@leela/engine` | 104 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 109 | 22 languages, quality guards |
 | `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
+| `@leela/ai` | 50 | the companion — prompts built from the plan text |
 | `@leela/bot` | 106 | group play in Telegram, board, buttons — [readme](apps/bot/README.md) |
 | `@leela/miniapp` | 11 | the board as a mini app — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-396 tests, run on every push by [CI](.github/workflows/ci.yml).
+446 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 ## Migrating a live database
 
