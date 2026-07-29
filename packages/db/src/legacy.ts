@@ -160,29 +160,84 @@ function normaliseLanguage(lang: string | undefined): string {
   return /^[a-z]{2}$/.test(primary) ? primary : 'en';
 }
 
+export interface MigrationReport {
+  /** Rows to insert. */
+  migrated: NewPlayer[];
+  /** Accounts already in the database, left alone. */
+  skipped: string[];
+  /** Accounts that could not be converted, with the reason. */
+  failures: Array<{ owner: string; reason: string }>;
+}
+
+export interface MigrateOptions {
+  /** How to name a migrated player in the new database. */
+  idFor: (user: LegacyUser) => string;
+  /**
+   * Firebase uids already present in `players.legacy_id`.
+   *
+   * Without this the batch is not re-runnable: a second pass returns rows that
+   * already exist, and `players_legacy_id_key` rejects them — taking the whole
+   * transaction down with them, including the accounts that had not been
+   * migrated yet. A live migration is never one attempt.
+   */
+  alreadyMigrated?: Iterable<string>;
+}
+
 /**
  * Convert a batch, keeping failures rather than aborting.
  *
- * A migration that stops on the first bad row leaves the database half full
- * and tells you nothing about the rest. Report every failure at once instead.
+ * A migration that stops on the first bad row leaves the database half full and
+ * tells you nothing about the rest. Report everything at once, in three
+ * categories, so a second run is a no-op for whoever came across in the first.
  */
 export function migrateBatch(
   users: ReadonlyArray<LegacyUser>,
-  idFor: (user: LegacyUser) => string,
-): { migrated: NewPlayer[]; failures: Array<{ owner: string; reason: string }> } {
+  options: MigrateOptions | ((user: LegacyUser) => string),
+): MigrationReport {
+  // The old signature took the id function directly; keep it working.
+  const { idFor, alreadyMigrated }: MigrateOptions =
+    typeof options === 'function' ? { idFor: options } : options;
+
+  const done = new Set(alreadyMigrated ?? []);
   const migrated: NewPlayer[] = [];
+  const skipped: string[] = [];
   const failures: Array<{ owner: string; reason: string }> = [];
 
+  // An export can list the same account twice; the unique index would reject
+  // the pair just as it rejects a re-run.
+  const seen = new Set<string>();
+
   for (const user of users) {
+    const owner = user?.owner ?? '(no owner)';
+
+    if (done.has(owner)) {
+      skipped.push(owner);
+      continue;
+    }
+
+    if (seen.has(owner)) {
+      failures.push({ owner, reason: 'appears more than once in this export' });
+      continue;
+    }
+
     try {
       migrated.push(playerFromLegacy(user, idFor(user)));
+      seen.add(owner);
     } catch (error) {
       failures.push({
-        owner: user?.owner ?? '(no owner)',
+        owner,
         reason: error instanceof Error ? error.message : String(error),
       });
     }
   }
 
-  return { migrated, failures };
+  return { migrated, skipped, failures };
+}
+
+/** A line an operator can read after a run. */
+export function describeMigration(report: MigrationReport): string {
+  const parts = [`${report.migrated.length} to migrate`];
+  if (report.skipped.length > 0) parts.push(`${report.skipped.length} already migrated`);
+  if (report.failures.length > 0) parts.push(`${report.failures.length} failed`);
+  return parts.join(', ');
 }

@@ -150,7 +150,7 @@ cd packages/engine && bun test
 |---|---|---|
 | `@leela/engine` | 164 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 109 | 22 languages, quality guards |
-| `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
+| `@leela/db` | 73 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 67 | the companion — prompts built from the plan text |
 | `@leela/contracts` | 20 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
 | `@leela/bot` | 183 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
@@ -158,7 +158,7 @@ cd packages/engine && bun test
 | `@leela/miniapp` | 46 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-757 tests, run on every push by [CI](.github/workflows/ci.yml).
+764 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 ## Migrating a live database
 
@@ -176,8 +176,20 @@ a bad row cannot block a live migration.
 Bringing players off the published app is `playerFromLegacy` in
 `packages/db/src/legacy.ts`: it reads the Firebase document shape, recovers
 `previous_plan` from the move history, keeps the account on `legacy-mobile`
-rules, and preserves the Firebase uid in `legacy_id`. `migrateBatch` converts
-everything it can and reports every failure at once rather than aborting on the
-first bad row.
+rules, and preserves the Firebase uid in `legacy_id`.
+
+`migrateBatch` is **re-runnable**. Pass the uids already in `players.legacy_id`
+and they are skipped rather than returned again:
+
+```ts
+const report = migrateBatch(users, { idFor, alreadyMigrated: existingUids });
+console.log(describeMigration(report)); // "2 to migrate, 1 already migrated, 1 failed"
+```
+
+It reports in three categories, and a skip is not a failure — an operator
+reading "3 failed" would go looking for a problem that is not there. A live
+migration is never one attempt, and without this a second pass returns rows
+that already exist, which `players_legacy_id_key` rejects, taking down the
+transaction and the accounts that had not come across yet.
 
 See [MIGRATION.md](MIGRATION.md) for what remains and in what order.

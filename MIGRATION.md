@@ -467,6 +467,30 @@ field is added:
 grep -rn "<field>" --include="*.ts" packages/*/src apps/*/src | grep -v "readonly <field>"
 ```
 
+## Fifteenth pass: the audit found a migration that could not be re-run
+
+The grep from the previous pass was applied to every interface, not only
+`RuleSet`. One field came back with a single mention: `legacy_id` — written by
+`playerFromLegacy`, guarded by a unique index, and read by nothing.
+
+That absence had a consequence. `migrateBatch` had no way to know who had
+already come across, so a second pass returned rows that already existed. The
+unique index would reject them and take the whole transaction with them —
+including the accounts that had *not* been migrated yet. A live migration is
+never one attempt, and this one could only ever be attempted once.
+
+It takes `alreadyMigrated` now and reports in three categories, with a skip
+distinguished from a failure: an operator reading "3 failed" would go looking
+for a problem that is not there. It also catches an account listed twice within
+one export, which the index would reject for the same reason.
+
+The old call signature still works, because the fix should not be a reason to
+touch call sites that were correct.
+
+Worth noting what the audit actually bought: not the unread field itself, which
+was harmless, but the thing its absence implied. A field nobody reads is often a
+question nobody asked.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

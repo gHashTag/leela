@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { LEGACY_MOBILE, WIN_LOKA, applyRoll, canRoll } from '@leela/engine';
 import {
   LegacyMigrationError,
+  describeMigration,
   migrateBatch,
   playerFromLegacy,
   stateFromLegacy,
@@ -191,6 +192,84 @@ describe('migrateBatch', () => {
   });
 
   it('handles an empty export', () => {
-    expect(migrateBatch([], (u) => u.owner)).toEqual({ migrated: [], failures: [] });
+    expect(migrateBatch([], (u) => u.owner)).toEqual({
+      migrated: [],
+      skipped: [],
+      failures: [],
+    });
+  });
+});
+
+describe('a migration that can be run twice', () => {
+  // A live migration is never one attempt. Without knowing who has already
+  // come across, a second pass returns rows that exist, and the unique index
+  // on legacy_id rejects them — taking the whole transaction down, including
+  // the accounts that had not been migrated yet.
+
+  const users = [
+    legacy({ owner: 'uid-1', plan: 10 }),
+    legacy({ owner: 'uid-2', plan: 20 }),
+    legacy({ owner: 'uid-3', plan: 30 }),
+  ];
+
+  it('skips accounts that are already in the database', () => {
+    const report = migrateBatch(users, {
+      idFor: (u) => `new-${u.owner}`,
+      alreadyMigrated: ['uid-1', 'uid-3'],
+    });
+
+    expect(report.migrated.map((p) => p.legacyId)).toEqual(['uid-2']);
+    expect(report.skipped).toEqual(['uid-1', 'uid-3']);
+    expect(report.failures).toEqual([]);
+  });
+
+  it('is a no-op on a second run', () => {
+    const first = migrateBatch(users, { idFor: (u) => u.owner });
+    const second = migrateBatch(users, {
+      idFor: (u) => u.owner,
+      alreadyMigrated: first.migrated.map((p) => p.legacyId as string),
+    });
+
+    expect(second.migrated).toEqual([]);
+    expect(second.skipped).toHaveLength(users.length);
+  });
+
+  it('does not count a skip as a failure', () => {
+    // An operator reading "3 failed" would go looking for a problem there is
+    // not one of.
+    const report = migrateBatch(users, {
+      idFor: (u) => u.owner,
+      alreadyMigrated: users.map((u) => u.owner),
+    });
+    expect(report.failures).toEqual([]);
+    expect(describeMigration(report)).toContain('already migrated');
+  });
+
+  it('catches an account listed twice in one export', () => {
+    const duplicated = [...users, legacy({ owner: 'uid-2', plan: 40 })];
+    const report = migrateBatch(duplicated, { idFor: (u) => u.owner });
+
+    expect(report.migrated).toHaveLength(3);
+    expect(report.failures).toEqual([
+      { owner: 'uid-2', reason: 'appears more than once in this export' },
+    ]);
+  });
+
+  it('still accepts the plain id function it was first written with', () => {
+    const report = migrateBatch(users, (u) => `new-${u.owner}`);
+    expect(report.migrated).toHaveLength(3);
+    expect(report.skipped).toEqual([]);
+  });
+
+  it('reads as a sentence an operator can act on', () => {
+    const report = migrateBatch([...users, legacy({ owner: 'bad', plan: 99 })], {
+      idFor: (u) => u.owner,
+      alreadyMigrated: ['uid-1'],
+    });
+    expect(describeMigration(report)).toBe('2 to migrate, 1 already migrated, 1 failed');
+  });
+
+  it('says nothing about categories that are empty', () => {
+    expect(describeMigration(migrateBatch(users, (u) => u.owner))).toBe('3 to migrate');
   });
 });

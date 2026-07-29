@@ -30,3 +30,17 @@ export {
   sessionUpdate,
   stateFromPlayer,
 } from './mapping';
+
+export {
+  LegacyMigrationError,
+  describeMigration,
+  migrateBatch,
+  playerFromLegacy,
+  stateFromLegacy,
+} from './legacy';
+export type {
+  LegacyHistoryEntry,
+  LegacyUser,
+  MigrateOptions,
+  MigrationReport,
+} from './legacy';
