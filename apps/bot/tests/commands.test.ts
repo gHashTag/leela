@@ -524,3 +524,54 @@ describe('the end of a game is not a dead end', () => {
     throw new Error('the game never finished');
   });
 });
+
+describe('nothing personal is marked for the whole table', () => {
+  // The transport now honours `broadcast`, which only helps if the command
+  // layer marks the right things. Asserted on the shape: a reply carrying a
+  // player's own words, or a whole plan's text, is theirs.
+
+  const secret = 'a private thing I wrote about myself';
+
+  it('keeps a report out of the broadcast', () => {
+    const room = getOnBoard(table(2, SEED), 'u1');
+    for (const reply of report(room, 'u1', secret).replies) {
+      if (reply.text.includes(secret)) {
+        expect(reply.broadcast, 'a report was marked for the whole table').toBe(false);
+      }
+    }
+  });
+
+  it('keeps a path private, every message of it', () => {
+    const entries = Array.from({ length: 30 }, (_, i) => ({
+      plan: (i % 72) + 1,
+      text: `${secret} ${i} `.padEnd(400, 'x'),
+      createdAt: new Date(NOW + i * 1000),
+    }));
+
+    const { replies } = path(table(2), 'u1', entries);
+    expect(replies.length).toBeGreaterThan(1);
+    for (const reply of replies) expect(reply.broadcast).toBe(false);
+  });
+
+  it('keeps a whole plan text private, because it is a wall of text', () => {
+    for (const reply of plan(table(2), 'u1', 1).replies) {
+      expect(reply.broadcast).toBe(false);
+    }
+  });
+
+  it('keeps the report gate private, since it names where a player stands', () => {
+    const room = getOnBoard(table(2, SEED), 'u1');
+    const holder = room.session.players[room.session.turnIndex];
+    const { replies } = roll(room, holder.id, NOW);
+    for (const reply of replies) {
+      if (reply.text.includes('/report')) expect(reply.broadcast).toBe(false);
+    }
+  });
+
+  it('still broadcasts what the table needs to see', () => {
+    // A move, and who is next, are the group's business.
+    const room = table(2, SEED);
+    const { replies } = roll(room, 'u1', NOW);
+    expect(replies.some((reply) => reply.broadcast)).toBe(true);
+  });
+});

@@ -11,6 +11,12 @@ import { planFor, resolveLanguage } from '@leela/content';
 import type { Guide } from '@leela/ai';
 import * as commands from './commands';
 import type { Button, Effect, Reply, Room } from './commands';
+import {
+  DirectChannels,
+  destinationFor,
+  isBlockedByUser,
+  nudgeToPrivate,
+} from './delivery';
 import { escapeHtml, renderBoardMessage, renderPlan } from './render';
 import {
   MemoryRoomStore,
@@ -58,6 +64,10 @@ export function createBot({
 }: BotOptions) {
   const bot = new Bot(token);
 
+  // Who the bot has managed to message directly. Telegram refuses anyone who
+  // has not started a chat, and there is no way to ask in advance.
+  const channels = new DirectChannels();
+
   // Without this there is no way to tell "nothing arrived" from "it arrived
   // and the answer failed" — which is exactly the question asked the first
   // time the bot appeared not to work.
@@ -86,14 +96,53 @@ export function createBot({
    * clutters the chat and leaves stale keyboards above.
    */
   async function deliver(ctx: Context, replies: Reply[]): Promise<void> {
+    const who = sender(ctx);
+    const chatType = ctx.chat?.type ?? 'private';
+
     for (const [index, reply] of replies.entries()) {
       const last = index === replies.length - 1;
-      await ctx.reply(reply.html ? reply.text : escapeHtml(reply.text), {
-        parse_mode: 'HTML',
+      const text = reply.html ? reply.text : escapeHtml(reply.text);
+      const options = {
+        parse_mode: 'HTML' as const,
         reply_markup: last ? keyboard(reply.buttons) : undefined,
         link_preview_options: { is_disabled: true },
-      });
+      };
+
+      const destination = who
+        ? destinationFor(reply, {
+            chatType,
+            userId: who.id,
+            canWriteDirectly: channels.canWrite(who.id),
+          })
+        : ({ kind: 'chat' } as const);
+
+      if (destination.kind === 'chat') {
+        await ctx.reply(text, options);
+        continue;
+      }
+
+      if (destination.kind === 'chat-fallback') {
+        // Say that it is private, without saying what it was.
+        await ctx.reply(nudgeToPrivate(commandOf(ctx)), { parse_mode: 'HTML' });
+        continue;
+      }
+
+      try {
+        await ctx.api.sendMessage(destination.userId, text, options);
+        channels.allow(destination.userId);
+      } catch (error) {
+        if (!isBlockedByUser(error)) throw error;
+        channels.refuse(destination.userId);
+        await ctx.reply(nudgeToPrivate(commandOf(ctx)), { parse_mode: 'HTML' });
+      }
     }
+  }
+
+  /** The command that produced this update, for a message that names it. */
+  function commandOf(ctx: Context): string {
+    const text = ctx.message?.text ?? '';
+    const match = text.match(/^\/([a-z]+)/i);
+    return match ? `/${match[1]}` : 'the command';
   }
 
   /**
@@ -144,7 +193,11 @@ export function createBot({
         plan: effect.plan,
         journey,
       });
-      await ctx.reply(escapeHtml(reflection.text), { parse_mode: 'HTML' });
+
+      // Through `deliver`, not `ctx.reply`: a reflection on someone's own
+      // report is as private as the report gate that asked for it. Going
+      // straight to the chat would read it out to the whole table.
+      await deliver(ctx, [{ text: reflection.text, broadcast: false }]);
     }
   }
 

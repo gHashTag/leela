@@ -135,6 +135,24 @@ holder, which still looks like a game.
 Moving to Postgres is a change of driver: the columns already mirror `sessions`
 and `session_players` in `@leela/db`.
 
+## Who each reply is for
+
+`Reply.broadcast` had been set on every reply since the command layer was
+written, and the transport ignored it — everything went to the chat the command
+came from. In a private chat that is harmless. In a group it meant a player's
+`/path`, their own reflections on themselves, was read out to everyone at the
+table, along with the gate telling them to write one and the companion's answer
+to it.
+
+Private replies now go to the player directly. Telegram refuses a message to
+anyone who has not started a chat with the bot, and there is no way to ask in
+advance — so the bot assumes it can, remembers a refusal, and forgets the
+refusal once a message gets through, in case they started one later.
+
+When there is nowhere private to send it, the group gets a nudge that **carries
+none of the content**: naming the command and asking the player to open a chat.
+Exposing the text would defeat the point of it being private.
+
 ## Forgetting finished tables
 
 Nothing deleted a finished game, so every table ever opened stayed in the

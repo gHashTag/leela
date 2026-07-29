@@ -413,6 +413,34 @@ over." and stopped. A player was left with no hint that another table is one
 command away, or that the path they had just walked was still readable. Both the
 winning message and the refusal now point somewhere.
 
+## Thirteenth pass: a flag the transport never read
+
+`Reply.broadcast` was set on every reply from the moment the command layer
+existed — nineteen of them marked private — and `deliver` never looked at it.
+Everything went to the chat the command came from.
+
+In a private chat that is harmless, which is why it survived every test: the
+bot has only ever been played one-to-one. In a group it means a player's
+`/path` — their own reflections on themselves — is read out to everyone at the
+table, along with the gate telling them to write one, and the companion's answer
+to it. The companion's reply was worse still: it bypassed `deliver` entirely and
+went straight to `ctx.reply`.
+
+Private replies now go to the player. Telegram refuses a message to anyone who
+has not started a chat with the bot and gives no way to ask in advance, so
+`DirectChannels` assumes it can write, remembers a refusal, and forgets that
+refusal once a message succeeds — a player who opens a chat later must not stay
+locked out.
+
+When there is nowhere private to send it, the group gets a nudge naming the
+command and **carrying none of the content**. `destinationFor` returns
+`chat-fallback` rather than silently choosing to expose it, so the caller is
+told which situation it is in.
+
+Worth naming the shape of this one: a flag that is set correctly everywhere and
+read nowhere. It cost nothing to add, looked complete in review, and would have
+been discovered by the first group that played.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
