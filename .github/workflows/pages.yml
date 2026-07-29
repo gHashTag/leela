@@ -1,0 +1,66 @@
+name: Deploy mini app
+
+# The mini app is static files, so GitHub Pages is enough to host it — and
+# Telegram needs a public HTTPS URL before it will open a Web App at all.
+#
+# Deploys from `unified`, which is where the work lives; `main` still holds the
+# published mobile app's history and is deliberately untouched.
+
+on:
+  push:
+    branches: [unified]
+    paths:
+      - 'apps/miniapp/**'
+      - 'packages/engine/**'
+      - 'packages/content/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time. Queued rather than cancelled: a half-finished
+# deploy would leave the app broken for whoever is playing.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      # A broken build must not reach players, and the tests are quick.
+      - name: Test what is being shipped
+        run: |
+          for pkg in packages/engine packages/content apps/miniapp; do
+            (cd "$pkg" && bunx vitest run)
+          done
+
+      - name: Build
+        run: bun run --cwd apps/miniapp build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/miniapp/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
