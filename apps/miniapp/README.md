@@ -13,16 +13,27 @@ Opens on `http://localhost:5173`. It runs in a plain browser too — the
 Telegram-specific parts (theme colours, haptics) degrade to sensible defaults,
 which is what makes it developable without a phone.
 
+## Where it is published
+
+**https://t27.ai/leela/**
+
+Deployed by [`.github/workflows/pages.yml`](../../.github/workflows/pages.yml)
+on every push to `unified` that touches the app, the engine or the content. The
+tests for what is being shipped run before the build, because a broken deploy
+reaches whoever is mid-game.
+
+Two things had to be arranged once, and are worth knowing if it ever moves:
+
+- Pages is set to `build_type: workflow`, and **HTTPS is enforced** — Telegram
+  will not open a Web App over plain HTTP.
+- The `github-pages` environment only admits the default branch by default, so
+  `unified` had to be added to its deployment branch policy. Until it was, the
+  build passed and the deploy was rejected with no obvious reason.
+
 ## Attaching it to the bot
 
-Static files, no server. Build and host anywhere:
-
-```bash
-bun run build     # → apps/miniapp/dist
-```
-
-Then in [@BotFather](https://t.me/BotFather): `/mybots` → the bot → **Bot
-Settings** → **Menu Button** → set the URL.
+In [@BotFather](https://t.me/BotFather): `/mybots` → the bot → **Bot
+Settings** → **Menu Button** → set the URL to `https://t27.ai/leela/`.
 
 That button is set in BotFather and **cannot be changed through the API** —
 `setChatMenuButton` returns `ok: true` and leaves the value alone. Worth

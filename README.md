@@ -137,7 +137,7 @@ cd packages/engine && bun test
 | `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 50 | the companion — prompts built from the plan text |
 | `@leela/bot` | 106 | group play in Telegram, board, buttons — [readme](apps/bot/README.md) |
-| `@leela/miniapp` | 11 | the board as a mini app — [readme](apps/miniapp/README.md) |
+| `@leela/miniapp` | 11 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
 446 tests, run on every push by [CI](.github/workflows/ci.yml).
