@@ -11,6 +11,7 @@ on:
     branches: [unified]
     paths:
       - 'apps/miniapp/**'
+      - 'apps/docs/**'
       - 'packages/engine/**'
       - 'packages/content/**'
       - '.github/workflows/pages.yml'
@@ -42,12 +43,17 @@ jobs:
       # A broken build must not reach players, and the tests are quick.
       - name: Test what is being shipped
         run: |
-          for pkg in packages/engine packages/content apps/miniapp; do
+          for pkg in packages/engine packages/content apps/miniapp apps/docs; do
             (cd "$pkg" && bunx vitest run)
           done
 
       - name: Build
-        run: bun run --cwd apps/miniapp build
+        run: |
+          bun run --cwd apps/miniapp build
+          # The book is served from a subdirectory of the game, so it is built
+          # into the same artifact rather than deployed separately — one repo
+          # gets one Pages site.
+          bun run --cwd apps/docs build ../miniapp/dist/docs
 
       - uses: actions/configure-pages@v5
 

@@ -25,6 +25,19 @@
         "vitest": "^2.1.8",
       },
     },
+    "apps/docs": {
+      "name": "@leela/docs",
+      "version": "1.0.0",
+      "dependencies": {
+        "@leela/content": "workspace:*",
+        "@leela/engine": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/node": "^22.10.1",
+        "typescript": "^5.6.3",
+        "vitest": "^2.1.8",
+      },
+    },
     "apps/miniapp": {
       "name": "@leela/miniapp",
       "version": "1.0.0",
@@ -170,6 +183,8 @@
     "@leela/content": ["@leela/content@workspace:packages/content"],
 
     "@leela/db": ["@leela/db@workspace:packages/db"],
+
+    "@leela/docs": ["@leela/docs@workspace:apps/docs"],
 
     "@leela/engine": ["@leela/engine@workspace:packages/engine"],
 

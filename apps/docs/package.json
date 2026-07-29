@@ -1,0 +1,22 @@
+{
+  "name": "@leela/docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The book: 72 plans and the rules, in 22 languages, generated from @leela/content.",
+  "type": "module",
+  "scripts": {
+    "build": "bun run src/build.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@leela/content": "workspace:*",
+    "@leela/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  },
+  "license": "MIT"
+}

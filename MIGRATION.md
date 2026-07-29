@@ -244,9 +244,30 @@ Wired into the bot at the report gate, and optional there: without
 `OPENROUTER_API_KEY` the gate still works and reports are still kept, there is
 simply no reply.
 
-**4b. `apps/site`, `apps/docs`.** Both become thin: the site calls the same
-engine, and the docs site renders `@leela/content` rather than keeping its own
-copy of the text.
+**4b. `apps/docs` — done.** The book, generated from `@leela/content`: 1785
+pages, 72 plans and the rules chapters in each of 22 languages, served from
+`t27.ai/leela/docs/` in the same Pages artifact as the game.
+
+Deliberately not Docusaurus. The archived `leela-ai-site` was one, and it kept
+its own copy of the 72 plans per language — the duplication that let 744 titles
+rot across 15 languages until someone looked. Here the book cannot drift from
+the game because there is nothing to drift from.
+
+**Rescued in the process:** `docs/policy.md` and `docs/eula.md`, in English and
+Russian, which existed nowhere else in the monorepo. A missing privacy policy is
+a store rejection and a blocker for listing a Telegram mini app; these were
+sitting in an archived repository. Languages without a translation are served
+the English rather than an empty page.
+
+Two defects the tests caught rather than a reader: the root page marked English
+as "current" and so offered no link to it, and every plan printed its
+description above a body that began with the same words — the Russian source
+puts the first paragraph in the frontmatter.
+
+`apps/site` is not built. The landing page in `leela-chakra-nextjs` is a Next.js
+app whose only real content is a board and a dice roll, both of which the mini
+app now does better; what remains of a landing page is the docs root. Skipped
+deliberately rather than ported.
 
 **Translation audit — done, and it found nothing.** The 19 machine-translated
 languages hold up at term level: parenthesised transliterations survive in all
