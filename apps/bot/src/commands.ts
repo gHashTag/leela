@@ -18,6 +18,7 @@ import {
   currentPlayer,
   formatWait,
   isSessionOver,
+  rollerFor,
   ruleSetById,
   seededRoller,
   standings,
@@ -273,7 +274,11 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
   }
 
   // Advance the die to this room's next value.
-  const die = seededRoller(room.seed);
+  //
+  // Through `rollerFor`, so the variant's own die is used: `legacy-mobile` and
+  // `online` re-roll a repeated value, and reading the flag at each call site
+  // is how it came to be read at none of them.
+  const die = rollerFor(room.session.rules, seededRoller(room.seed));
   for (let i = 0; i < room.rollsTaken; i++) die();
   const value = die();
 

@@ -17,6 +17,7 @@ import {
   applyRoll,
   initialState,
   rollDie,
+  rollerFor,
   type GameState,
   type MoveEvent,
 } from '@leela/engine';
@@ -178,6 +179,12 @@ function openPlan(plan: number): void {
 
 // --- playing ----------------------------------------------------------------------
 
+/**
+ * The die this app plays with — the variant's own, not always a fair one.
+ * Created once so a re-rolling variant can remember its previous value.
+ */
+const die = rollerFor(CLASSIC, rollDie);
+
 let rolling = false;
 
 async function roll(): Promise<void> {
@@ -190,8 +197,7 @@ async function roll(): Promise<void> {
   // A beat between the press and the result — the throw should be felt.
   await new Promise((resolve) => setTimeout(resolve, 450));
 
-  const value = rollDie();
-  const { state: next, event } = applyRoll(state, value, CLASSIC);
+  const { state: next, event } = applyRoll(state, die(), CLASSIC);
   state = next;
   save(state);
 

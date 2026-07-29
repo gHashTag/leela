@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_ROLL, noRepeatRoller, rollDie, rollMany, seededRoller } from '../src';
+import {
+  CLASSIC,
+  LEGACY_MOBILE,
+  MAX_ROLL,
+  NEUROLEELA,
+  ONCHAIN,
+  ONLINE,
+  RULESETS,
+  noRepeatRoller,
+  rollDie,
+  rollMany,
+  rollerFor,
+  seededRoller,
+} from '../src';
 
 describe('rollDie', () => {
   it('only ever returns a face of the die', () => {
@@ -85,6 +98,57 @@ describe('noRepeatRoller', () => {
     const repeats = (values: number[]) =>
       values.filter((v, i) => i > 0 && v === values[i - 1]).length;
 
+    expect(repeats(guarded)).toBeLessThan(repeats(fair) / 2);
+  });
+});
+
+describe('the die a variant is played with', () => {
+  // `rerollOnRepeat` was declared on every variant, documented, and read by
+  // nothing — so `legacy-mobile` and `online` claimed to reproduce the
+  // published app and rolled a fair die instead.
+
+  it('re-rolls a repeat for the variants that ask for it', () => {
+    const scripted = [6, 6, 2];
+    let i = 0;
+    const roller = rollerFor(LEGACY_MOBILE, () => scripted[i++]);
+
+    expect(roller()).toBe(6);
+    expect(roller()).toBe(2); // the second 6 repeated and was re-rolled
+  });
+
+  it('leaves the die alone for the variants that do not', () => {
+    for (const rules of [CLASSIC, NEUROLEELA, ONCHAIN]) {
+      const scripted = [6, 6, 2];
+      let i = 0;
+      const roller = rollerFor(rules, () => scripted[i++]);
+      expect(roller(), rules.id).toBe(6);
+      expect(roller(), rules.id).toBe(6); // repeat kept
+    }
+  });
+
+  it('covers every variant, so none is played with the wrong die by omission', () => {
+    for (const rules of Object.values(RULESETS)) {
+      const roller = rollerFor(rules, seededRoller(1));
+      for (let i = 0; i < 200; i++) {
+        const value = roller();
+        expect(value, rules.id).toBeGreaterThanOrEqual(1);
+        expect(value).toBeLessThanOrEqual(MAX_ROLL);
+      }
+    }
+  });
+
+  it('stays deterministic when the source is', () => {
+    const first = rollMany(rollerFor(ONLINE, seededRoller(7)), 40);
+    const second = rollMany(rollerFor(ONLINE, seededRoller(7)), 40);
+    expect(first).toEqual(second);
+  });
+
+  it('makes a repeat rarer for the guarded variants than the fair ones', () => {
+    const repeats = (values: number[]) =>
+      values.filter((v, i) => i > 0 && v === values[i - 1]).length;
+
+    const fair = rollMany(rollerFor(CLASSIC, seededRoller(5)), 20_000);
+    const guarded = rollMany(rollerFor(LEGACY_MOBILE, seededRoller(5)), 20_000);
     expect(repeats(guarded)).toBeLessThan(repeats(fair) / 2);
   });
 });

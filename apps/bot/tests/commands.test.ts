@@ -575,3 +575,47 @@ describe('nothing personal is marked for the whole table', () => {
     expect(replies.some((reply) => reply.broadcast)).toBe(true);
   });
 });
+
+describe('a table plays with its own variant’s die', () => {
+  // Reading `rerollOnRepeat` at each call site is how it came to be read at
+  // none of them. The check is that the variant reaches the die at all.
+
+  /** Collect the die values a room actually produced, by watching the messages. */
+  function rolledValues(ruleset: 'classic' | 'legacy-mobile', turns = 60): number[] {
+    let room = openRoom('c', { id: 'u1', name: 'A' }, 4242, { ruleset }).room as Room;
+    room = start(room, 'u1').room as Room;
+
+    const values: number[] = [];
+    for (let i = 0; i < turns; i++) {
+      const holder = room.session.players[room.session.turnIndex];
+      const result = roll(room, holder.id, NOW);
+      room = result.room as Room;
+
+      const match = result.replies[0]?.text.match(/throws (\d)/);
+      if (match) values.push(Number(match[1]));
+      if (result.replies.some((r) => r.text.includes('/report'))) {
+        room = report(room, holder.id, 'noted').room as Room;
+      }
+    }
+    return values;
+  }
+
+  it('gives a different sequence under a variant with a different die', () => {
+    // Same seed, same board, different die: the sequences must diverge, or the
+    // variant is not being honoured.
+    expect(rolledValues('classic')).not.toEqual(rolledValues('legacy-mobile'));
+  });
+
+  it('is still deterministic for a given variant and seed', () => {
+    expect(rolledValues('legacy-mobile')).toEqual(rolledValues('legacy-mobile'));
+  });
+
+  it('produces fewer immediate repeats under the re-rolling variant', () => {
+    const repeats = (values: number[]) =>
+      values.filter((v, i) => i > 0 && v === values[i - 1]).length;
+
+    expect(repeats(rolledValues('legacy-mobile', 200))).toBeLessThanOrEqual(
+      repeats(rolledValues('classic', 200)),
+    );
+  });
+});

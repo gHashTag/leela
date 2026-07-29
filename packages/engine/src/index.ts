@@ -32,7 +32,7 @@ export type { PositionOutcome, SixesOutcome } from './rules';
 
 export { allPlans, applyRoll, hasWon, initialState, replay } from './game';
 
-export { noRepeatRoller, rollDie, rollMany, seededRoller } from './dice';
+export { noRepeatRoller, rollDie, rollMany, rollerFor, seededRoller } from './dice';
 
 export {
   auditBoard,

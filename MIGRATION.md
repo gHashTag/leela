@@ -441,6 +441,32 @@ Worth naming the shape of this one: a flag that is set correctly everywhere and
 read nowhere. It cost nothing to add, looked complete in review, and would have
 been discovered by the first group that played.
 
+## Fourteenth pass: the same shape, found on purpose
+
+The previous pass found a flag that was set everywhere and read nowhere. Rather
+than wait for the next one to surface, every field of `RuleSet` was checked the
+same way — written, then searched for outside its own declaration.
+
+`rerollOnRepeat` had eight mentions and **zero readers**. It is declared on all
+five variants, documented in two places, asserted in `detectRules`, and no code
+had ever consulted it: the bot rolled `seededRoller` and the mini app rolled
+`rollDie`, both fair. So `legacy-mobile` and `online` claimed to reproduce the
+published app — which re-rolls a repeated value — and did not. That claim is the
+entire reason those variants exist.
+
+`rollerFor(rules, base)` is where the flag is read now, once, rather than at
+each call site — reading it per call site is how it came to be read at none of
+them. Both apps go through it.
+
+The other four fields — `extraTurnOnSix`, `threeSixesReset`,
+`requireReportBeforeRoll`, `turnCooldownMs` — were already honoured. All five
+have readers now, and the audit is a one-line command worth repeating whenever a
+field is added:
+
+```bash
+grep -rn "<field>" --include="*.ts" packages/*/src apps/*/src | grep -v "readonly <field>"
+```
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

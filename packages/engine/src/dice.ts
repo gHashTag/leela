@@ -56,3 +56,22 @@ export function noRepeatRoller(source: DiceRoller = rollDie): DiceRoller {
 export function rollMany(roller: DiceRoller, count: number): number[] {
   return Array.from({ length: count }, () => roller());
 }
+
+/**
+ * The die a variant is played with.
+ *
+ * `RuleSet.rerollOnRepeat` was declared on every variant, documented, and read
+ * by nothing: the bot and the mini app both rolled a fair die regardless. So
+ * `legacy-mobile` and `online` claimed to reproduce the published app and did
+ * not — and the whole point of keeping those variants is that adopting the
+ * engine changes nothing for a player already in a game.
+ *
+ * Wrap the source here rather than at each call site, so a variant cannot be
+ * played with the wrong die by omission.
+ *
+ * @param base  Where the values come from. Pass `seededRoller(seed)` for a
+ *              reproducible game, `rollDie` for a fresh one.
+ */
+export function rollerFor(rules: { rerollOnRepeat: boolean }, base: DiceRoller): DiceRoller {
+  return rules.rerollOnRepeat ? noRepeatRoller(base) : base;
+}

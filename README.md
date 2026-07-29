@@ -102,6 +102,11 @@ from its seed alone and lets a server and a client agree on a roll without
 trusting each other. `noRepeatRoller()` reproduces the published app's habit of
 re-rolling a repeated value; it is there for fidelity, not for new work.
 
+`rollerFor(rules, base)` picks the die a variant is played with. Use it rather
+than choosing a roller by hand: `rerollOnRepeat` spent five passes declared on
+every variant and read by nothing, so `legacy-mobile` and `online` claimed to
+reproduce the published app and rolled a fair die instead.
+
 ## Content
 
 22 languages, 72 plans each, all with full text, merged from four sources:
@@ -143,17 +148,17 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 159 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/engine` | 164 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 109 | 22 languages, quality guards |
 | `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 67 | the companion — prompts built from the plan text |
 | `@leela/contracts` | 20 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
-| `@leela/bot` | 180 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
+| `@leela/bot` | 183 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 102 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
 | `@leela/miniapp` | 46 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-749 tests, run on every push by [CI](.github/workflows/ci.yml).
+757 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 ## Migrating a live database
 
