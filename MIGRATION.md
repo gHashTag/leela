@@ -140,6 +140,30 @@ group play or facilitator tooling, which is how the game is actually played.
 history; and `session_players.direction` was added after a round-trip test
 caught the column silently dropping how a player reached their square.
 
+## Third pass: the content was quietly broken
+
+The first build reported 22 languages × 72 plans with full text, and 101 tests
+agreed. Both were wrong in a way the tests were built not to see: the check for
+leftover numbering only knew the words `plan` and `план`.
+
+- **744 titles across 15 languages** kept their numbering, because every
+  language writes "plan" in its own script — योजना 1. जन्म, 计划 1. 出生,
+  플랜 1. 탄생, Kế hoạch 1., திட்டம் 1.
+- **25 plans in 5 languages** lost their title entirely and fell back to the
+  bare number, because Japanese and Chinese sources write `#計画1.誕生` with no
+  space after the hash — and one file uses the fullwidth number sign `＃`
+  (U+FF03) that a CJK keyboard produces.
+
+Both are fixed in the generator, and the tests now assert on the *shape* of the
+defect rather than on a list of words: no plan number followed by a separator
+in any script, no title that is only digits, no markdown heading left at the
+start of a body.
+
+Worth noting where this mattered: the published `Leela Chakra Ai` sits at
+2.8/5 with 19K downloads. Titles reading "योजना 1. जन्म" on 15 of 22 locales
+are not the whole story, but they are the kind of thing that shows on every
+screen a non-English player sees.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
@@ -150,11 +174,22 @@ install and every RevenueCat subscription. Put it in a password manager
 alongside the keystore password and the `applicationId`. This has deliberately
 not been automated: the key should not be copied around by a script.
 
-**2. Migrations.** `packages/db` has the schema but no migration files. The
-live data is in Firebase (`leela`) and Supabase (`NeuroLeela`), and a player
-moving across needs `plan`, `previous_plan`, the sixes counters, their reports
-and their `ruleset` set to `legacy-mobile`. Getting this wrong loses players'
-positions on the board and their report history.
+**2. Migrations — done.** `packages/db/migrations` holds two files: `0000`
+creates the schema from nothing, `0001` adopts a database the Expo app already
+created. Both are re-runnable, neither drops anything, and 24 tests check that
+the SQL and `schema.ts` describe the same columns — the pair that would
+otherwise drift apart on the first change.
+
+Importing from the published app is `playerFromLegacy`, covered by 22 tests.
+The gaps in the legacy shape are handled explicitly rather than guessed at:
+`previous_plan` was never stored and is recovered from the move history (or set
+equal to the current plan, which reads as "has not moved"); the sixes counters
+are zero because that app has no three-sixes rule to have tracked; and
+`needs_report` carries across so migration does not hand an unreported player a
+free roll.
+
+What is still needed here is the export itself — a Firebase dump and a Supabase
+dump — and a decision on how ids are assigned. The conversion is ready.
 
 **3. `apps/mobile`.** Port `NeuroLeelaAgent`, switch it to `@leela/engine` and
 `@leela/content`, then bring across RevenueCat, notifee and Sentry from

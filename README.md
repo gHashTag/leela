@@ -132,10 +132,29 @@ cd packages/engine && bun test
 | Package | Tests | State |
 |---|---|---|
 | `@leela/engine` | 99 | rules, four variants, sessions, turn gating, seeded dice |
-| `@leela/content` | 101 | 22 languages complete |
-| `@leela/db` | 20 | schema and mapping done; migrations pending |
+| `@leela/content` | 105 | 22 languages complete |
+| `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
 | everything else | — | not yet ported |
 
-220 tests, run on every push by [CI](.github/workflows/ci.yml).
+270 tests, run on every push by [CI](.github/workflows/ci.yml).
+
+## Migrating a live database
+
+```bash
+psql "$DATABASE_URL" -f packages/db/migrations/0000_initial.sql   # fresh
+psql "$DATABASE_URL" -f packages/db/migrations/0001_adopt_existing_installs.sql  # existing
+```
+
+Both files are safe to re-run. `0001` adopts a database the Expo app already
+created: it only adds columns, defaults existing players to `neuroleela` — the
+rules they were already playing — and adds the board constraint `NOT VALID` so
+a bad row cannot block a live migration.
+
+Bringing players off the published app is `playerFromLegacy` in
+`packages/db/src/legacy.ts`: it reads the Firebase document shape, recovers
+`previous_plan` from the move history, keeps the account on `legacy-mobile`
+rules, and preserves the Firebase uid in `legacy_id`. `migrateBatch` converts
+everything it can and reports every failure at once rather than aborting on the
+first bad row.
 
 See [MIGRATION.md](MIGRATION.md) for what remains and in what order.

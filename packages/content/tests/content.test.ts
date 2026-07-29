@@ -42,11 +42,58 @@ describe('coverage', () => {
     }
   });
 
-  it('keeps no leading plan numbering in titles', () => {
+  // The first version of these checks only knew the words "plan" and "план",
+  // so 744 titles across 15 languages kept their numbering — योजना 1. जन्म,
+  // 计划 1. 出生, 플랜 1. 탄생 — and nothing failed. Assert on the shape of the
+  // defect instead of on a list of words.
+
+  it('leaves no plan number in any title', () => {
     for (const lang of LANGUAGES) {
       for (const plan of plansFor(lang)) {
-        expect(plan.title, `${lang} ${plan.plan}`).not.toMatch(/^(plan|план)\s*\d+[.:]/i);
+        // The number followed by a separator is numbering in any script.
+        expect(plan.title, `${lang} plan ${plan.plan}: "${plan.title}"`).not.toMatch(
+          new RegExp(`\\b${plan.plan}\\s*[.:)]`),
+        );
       }
+    }
+  });
+
+  it('never falls back to the bare plan number as a title', () => {
+    for (const lang of LANGUAGES) {
+      for (const plan of plansFor(lang)) {
+        // This is what a title looks like when the heading failed to parse.
+        expect(plan.title.trim(), `${lang} plan ${plan.plan}`).not.toMatch(/^\d+$/);
+      }
+    }
+  });
+
+  it('leaves no markdown heading inside a body', () => {
+    for (const lang of LANGUAGES) {
+      for (const plan of plansFor(lang)) {
+        // Includes the fullwidth number sign a CJK keyboard produces.
+        expect(plan.body.trimStart()[0], `${lang} plan ${plan.plan}`).not.toMatch(/[#＃]/);
+      }
+    }
+  });
+
+  it('gives every plan a title long enough to be a word', () => {
+    for (const lang of LANGUAGES) {
+      for (const plan of plansFor(lang)) {
+        // One character is a word in CJK, so the floor has to be low; the
+        // checks above are what catch a title that is really a stray number.
+        expect(plan.title.trim().length, `${lang} plan ${plan.plan}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('keeps titles distinct within a language', () => {
+    for (const lang of LANGUAGES) {
+      const titles = plansFor(lang).map((p) => p.title.trim());
+      const duplicated = titles.filter((t, i) => titles.indexOf(t) !== i);
+      // A handful of plans genuinely share a name across the board; a large
+      // overlap means the titles collapsed into something generic.
+      expect(new Set(duplicated).size, `${lang}: ${[...new Set(duplicated)].join(', ')}`)
+        .toBeLessThan(5);
     }
   });
 });

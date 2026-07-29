@@ -59,8 +59,11 @@ function parseMarkdown(raw) {
   let title = null;
   const kept = [];
   for (const line of body.split(/\r?\n/)) {
-    if (title === null && /^#\s+/.test(line)) {
-      title = line.replace(/^#\s+/, '').trim();
+    // Japanese and Chinese sources write `#計画1.誕生` with no space after the
+    // hash, so the space cannot be required — and one file uses the fullwidth
+    // number sign U+FF03 (`＃`) that a CJK keyboard produces.
+    if (title === null && /^[#＃]{1,6}\s*\S/.test(line)) {
+      title = line.replace(/^[#＃]{1,6}\s*/, '').trim();
       continue;
     }
     kept.push(line);
@@ -75,13 +78,34 @@ function parseMarkdown(raw) {
   return { title, description: fm.description ?? null, body: text };
 }
 
-/** Strip a leading "Plan 12." / "План 12." / "12." from a title. */
+/**
+ * Strip the leading plan number from a title.
+ *
+ * Every language writes the word for "plan" in its own script — योजना, 计划,
+ * 計画, 플랜, Kế hoạch, திட்டம் — so matching a list of words does not scale
+ * and silently left the number in place for 15 of the 22 languages. Instead:
+ * find the plan number near the start of the title and drop everything up to
+ * and including it, along with any separator that follows.
+ *
+ * Only the leading run is considered, and only when the number appears within
+ * the first few characters, so a title that legitimately contains its own
+ * number ("The 3 gunas") is left alone.
+ */
 function stripNumbering(title, plan) {
   if (!title) return null;
-  return title
-    .replace(new RegExp(`^(plan|план)\\s*${plan}\\s*[.:-]?\\s*`, 'i'), '')
-    .replace(new RegExp(`^${plan}\\s*[.:-]\\s*`), '')
-    .trim();
+
+  const index = title.indexOf(String(plan));
+  // The label before the number is a word or two at most; beyond that we are
+  // no longer looking at numbering.
+  if (index === -1 || index > 12) return title.trim();
+
+  // Refuse to cut when the digits are part of a longer number: "12" in "120".
+  const after = title.slice(index + String(plan).length);
+  if (/^\d/.test(after)) return title.trim();
+
+  const remainder = after.replace(/^[\s.:)\-–—、。]+/, '').trim();
+  // If cutting would leave nothing, the number was the whole title — keep it.
+  return remainder.length > 0 ? remainder : title.trim();
 }
 
 /**
