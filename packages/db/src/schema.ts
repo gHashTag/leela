@@ -94,7 +94,13 @@ export const sessions = pgTable('sessions', {
    * and lets a player verify a roll they did not witness.
    */
   dice_seed: integer('dice_seed'),
+  /**
+   * True while the table is still taking players. Flipped once the host
+   * starts, which is the same thing as "play has begun".
+   */
   is_open: boolean('is_open').notNull().default(true),
+  /** Language the table is played in, a primary subtag like `ru`. */
+  language: text('language').notNull().default('en'),
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
 });

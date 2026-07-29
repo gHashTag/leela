@@ -190,6 +190,29 @@ describe('the report gate in a chat', () => {
   it('turns away a report from someone not at the table', () => {
     expect(report(table(2), 'stranger', 'hello').replies[0].text).toMatch(/not at this table/i);
   });
+
+  it('asks for the report to be kept, against the plan it was written about', () => {
+    const room = getOnBoard(table(1, SEED), 'u1');
+    const where = room.session.players[0].state.loka;
+
+    const { effects } = report(room, 'u1', '  what this brings up  ');
+    expect(effects).toEqual([
+      { kind: 'report', userId: 'u1', plan: where, text: 'what this brings up' },
+    ]);
+  });
+
+  it('asks for nothing to be kept when the report was refused', () => {
+    const room = getOnBoard(table(1, SEED), 'u1');
+    expect(report(room, 'u1', '   ').effects).toBeUndefined();
+    expect(report(room, 'stranger', 'hello').effects).toBeUndefined();
+  });
+
+  it('produces no effects for the commands that only read', () => {
+    const room = table(2);
+    expect(board(room).effects).toBeUndefined();
+    expect(plan(room, 'u1', 5).effects).toBeUndefined();
+    expect(help().effects).toBeUndefined();
+  });
 });
 
 describe('reading a plan', () => {

@@ -8,12 +8,20 @@
 
 import { Bot, type Context } from 'grammy';
 import * as commands from './commands';
-import type { Reply, Room } from './commands';
-import { MemoryRoomStore, seedFor, type RoomStore } from './store';
+import type { Effect, Reply, Room } from './commands';
+import {
+  MemoryRoomStore,
+  discardReports,
+  seedFor,
+  type ReportSink,
+  type RoomStore,
+} from './store';
 
 export interface BotOptions {
   token: string;
   store?: RoomStore;
+  /** Where reports are kept. Defaults to dropping them. */
+  reports?: ReportSink;
   /** Injected so the report cooldown can be tested without waiting a day. */
   now?: () => number;
 }
@@ -30,13 +38,36 @@ function chatIdOf(ctx: Context): string | null {
   return ctx.chat ? String(ctx.chat.id) : null;
 }
 
-export function createBot({ token, store = new MemoryRoomStore(), now = Date.now }: BotOptions) {
+export function createBot({
+  token,
+  store = new MemoryRoomStore(),
+  reports = discardReports,
+  now = Date.now,
+}: BotOptions) {
   const bot = new Bot(token);
 
   /** Send every reply in order, so a move and its follow-up stay together. */
   async function deliver(ctx: Context, replies: Reply[]): Promise<void> {
     for (const reply of replies) {
       await ctx.reply(reply.text);
+    }
+  }
+
+  /**
+   * Apply a command's effects after its room has been saved.
+   *
+   * A report that fails to store must not stop the reply — the player has
+   * written it and the gate has opened; losing the text is worse handled by
+   * telling them nothing happened.
+   */
+  async function applyEffects(effects: Effect[] | undefined): Promise<void> {
+    for (const effect of effects ?? []) {
+      if (effect.kind !== 'report') continue;
+      try {
+        await reports.record({ userId: effect.userId, plan: effect.plan, text: effect.text });
+      } catch (error) {
+        console.error('[bot] failed to store a report', error);
+      }
     }
   }
 
@@ -60,6 +91,7 @@ export function createBot({ token, store = new MemoryRoomStore(), now = Date.now
 
     const result = run(room, who);
     if (result.room) await store.save(result.room);
+    await applyEffects(result.effects);
     await deliver(ctx, result.replies);
   }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { openRoom, type Room } from '../src/commands';
-import { MemoryRoomStore, seedFor } from '../src/store';
+import { MemoryReportSink, MemoryRoomStore, discardReports, seedFor } from '../src/store';
 
 describe('MemoryRoomStore', () => {
   it('returns null for a chat with no table', async () => {
@@ -40,6 +40,32 @@ describe('MemoryRoomStore', () => {
 
     expect((await store.get('chat-1'))?.seed).toBe(1);
     expect((await store.get('chat-2'))?.seed).toBe(2);
+  });
+});
+
+describe('report sinks', () => {
+  it('keeps what it is given, in the order it arrived', async () => {
+    const sink = new MemoryReportSink();
+    await sink.record({ userId: 'u1', plan: 5, text: 'first' });
+    await sink.record({ userId: 'u1', plan: 9, text: 'second' });
+
+    expect(sink.reports).toEqual([
+      { userId: 'u1', plan: 5, text: 'first' },
+      { userId: 'u1', plan: 9, text: 'second' },
+    ]);
+  });
+
+  it('keeps two reports on the same plan, because a player may return to it', async () => {
+    const sink = new MemoryReportSink();
+    await sink.record({ userId: 'u1', plan: 5, text: 'first time here' });
+    await sink.record({ userId: 'u1', plan: 5, text: 'and again' });
+    expect(sink.reports).toHaveLength(2);
+  });
+
+  it('discards without complaining, for running with no storage', async () => {
+    await expect(
+      discardReports.record({ userId: 'u1', plan: 1, text: 'gone' }),
+    ).resolves.toBeUndefined();
   });
 });
 

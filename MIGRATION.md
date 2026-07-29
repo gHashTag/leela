@@ -202,9 +202,22 @@ from a seed derived from its chat id, and every roll is the *n*-th value from
 it, so a game replays from `(seed, rollsTaken)` — both stored — and nobody has
 to take another player's word for a throw.
 
-Still missing there: persistence (a restart loses games in progress, and the
-process says so on startup rather than losing them quietly), and reports are
-gated but not yet written to the `reports` table.
+Persistence followed: `DatabaseRoomStore` splits a room into a `sessions` row
+and its `session_players` rows, with `roomToRows`/`roomFromRows` pure and tested
+to round-trip a game exactly. The failure mode here is silent — a game that
+reloads with the wrong turn holder still looks like a game — so the test's fake
+returns seats in reverse to prove turn order comes from the `seat` column and
+not from the query. Migration `0002` adds `sessions.language`, without which a
+restarted table dropped every player into English.
+
+Reports are now kept. Commands stay pure by returning an `Effect` describing the
+write instead of performing it, and the transport applies effects after the room
+is saved, so a failed write cannot leave the board ahead of the writing.
+
+Still missing: a `RoomQueries` implementation against a real driver. The
+interface and the store are done and tested against a fake, but choosing and
+wiring a database is a deployment decision, so the bot still starts in memory
+and says so.
 
 **4b. `apps/site`, `apps/docs`.** Both become thin: the site calls the same
 engine, and the docs site renders `@leela/content` rather than keeping its own

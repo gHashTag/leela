@@ -21,7 +21,7 @@ apps/
   mobile/     Expo Router: iOS, Android and web from one codebase.  (to port)
   site/       Next.js landing page.                                 (to port)
   docs/       Docusaurus: the book of rules.                        (to port)
-  bot/        Telegram, on grammY. Group play in a chat.          done
+  bot/        Telegram, on grammY. Group play in a chat.            ok
 services/
   inngest/    event-driven move and report handlers.                (to port)
 scripts/
@@ -134,19 +134,20 @@ cd packages/engine && bun test
 | `@leela/engine` | 99 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 109 | 22 languages, quality guards |
 | `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
-| `@leela/bot` | 41 | group play in Telegram — [readme](apps/bot/README.md) |
+| `@leela/bot` | 65 | group play in Telegram, persistable — [readme](apps/bot/README.md) |
 | everything else | — | not yet ported |
 
-315 tests, run on every push by [CI](.github/workflows/ci.yml).
+339 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 ## Migrating a live database
 
 ```bash
 psql "$DATABASE_URL" -f packages/db/migrations/0000_initial.sql   # fresh
 psql "$DATABASE_URL" -f packages/db/migrations/0001_adopt_existing_installs.sql  # existing
+psql "$DATABASE_URL" -f packages/db/migrations/0002_session_language.sql
 ```
 
-Both files are safe to re-run. `0001` adopts a database the Expo app already
+All three are safe to re-run. `0001` adopts a database the Expo app already
 created: it only adds columns, defaults existing players to `neuroleela` — the
 rules they were already playing — and adds the board constraint `NOT VALID` so
 a bad row cannot block a live migration.

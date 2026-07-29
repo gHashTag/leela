@@ -40,9 +40,14 @@ no bot token and no network.
 find yourself writing a condition about the board in there, it belongs in
 `commands.ts` or in `@leela/engine`.
 
-`store.ts` is where rooms live between messages. `MemoryRoomStore` is enough
-for one process; a Postgres implementation belongs in `@leela/db`, next to the
-`sessions` and `session_players` tables that already model this.
+`store.ts` is where rooms live between messages, and where reports go once
+written. `MemoryRoomStore` is enough for one process; `DatabaseRoomStore` in
+`persistence.ts` is the durable one, backed by the `sessions` and
+`session_players` tables that already model a table.
+
+Commands never write. A command that needs something recorded returns an
+`Effect` describing it, and the transport applies effects *after* the room has
+been saved — so a failed write can never leave the board ahead of the writing.
 
 ## The die
 
@@ -52,10 +57,25 @@ rollsTaken)` — both of which are stored — and no player has to take another'
 word for a throw. `seedFor` is a hash, not `Math.random()`, so two tables opened
 in the same millisecond still get different games.
 
+## Persistence
+
+`DatabaseRoomStore` takes a `RoomQueries` — four methods — and splits a room
+into a `sessions` row and its `session_players` rows. `roomToRows` and
+`roomFromRows` are pure, and tested to round-trip a game exactly, because the
+failure here is silent: a game that reloads with the wrong turn holder, or in
+the wrong language, still looks like a game.
+
+Two things the round trip protects that are easy to lose:
+
+- **Seat order.** Turn order comes from the `seat` column, never from the order
+  a query returned rows in. The test's fake deliberately reverses them.
+- **The language.** Before `sessions.language` existed, a restarted table
+  dropped everyone into English. Migration `0002` adds it.
+
 ## What is missing
 
-- Persistence. A restart loses every game in progress; the process says so on
-  startup rather than losing them quietly.
-- Reports are gated but not stored. They belong in the `reports` table.
+- A `RoomQueries` implementation against a real driver. The interface and the
+  store are done and tested against a fake; wiring a database is a deployment
+  decision, so `index.ts` still runs in memory and says so on startup.
 - The room language comes from the host's Telegram locale and cannot be changed
   afterwards.

@@ -13,7 +13,8 @@
   "dependencies": {
     "@leela/content": "workspace:*",
     "@leela/engine": "workspace:*",
-    "grammy": "^1.30.0"
+    "grammy": "^1.30.0",
+    "@leela/db": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

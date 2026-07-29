@@ -9,7 +9,7 @@
  */
 
 import { createBot } from './bot';
-import { MemoryRoomStore } from './store';
+import { MemoryReportSink, MemoryRoomStore } from './store';
 
 const token = process.env.BOT_TOKEN;
 
@@ -22,10 +22,14 @@ if (!token) {
 }
 
 const store = new MemoryRoomStore();
-const bot = createBot({ token, store });
+const reports = new MemoryReportSink();
+const bot = createBot({ token, store, reports });
 
-// Rooms live in memory, so say so plainly rather than losing games quietly.
-console.log('Leela bot starting. Rooms are held in memory and will not survive a restart.');
+// Rooms live in memory here. `DatabaseRoomStore` in persistence.ts is the
+// durable one — it needs a `RoomQueries` implementation and a database, so
+// wiring it is a deployment decision rather than a default. Say plainly what
+// this process does rather than losing games quietly.
+console.log('Leela bot starting. Rooms and reports are held in memory and will not survive a restart.');
 
 const stop = () => {
   console.log('\nStopping.');

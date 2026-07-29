@@ -54,9 +54,26 @@ export interface Reply {
   broadcast: boolean;
 }
 
+/**
+ * Something the world outside has to do.
+ *
+ * Commands stay pure by describing the write rather than performing it. The
+ * transport applies effects after the room is saved, so a failure to record a
+ * report cannot leave the board ahead of the writing.
+ */
+export type Effect = {
+  kind: 'report';
+  userId: string;
+  /** The plan the report is about — the one the player is standing on. */
+  plan: number;
+  text: string;
+};
+
 export interface CommandResult {
   room: Room | null;
   replies: Reply[];
+  /** Writes for the transport to apply. Absent when there are none. */
+  effects?: Effect[];
 }
 
 function say(text: string, broadcast = true): Reply {
@@ -288,6 +305,10 @@ export function report(room: Room, byPlayerId: string, text: string): CommandRes
   return {
     room: next,
     replies: [say(`${nameOf(next, byPlayerId)} has reported. You may throw.`, false)],
+    // The report is what the game is played for; keeping it is the point.
+    effects: [
+      { kind: 'report', userId: byPlayerId, plan: seated.state.loka, text: text.trim() },
+    ],
   };
 }
 

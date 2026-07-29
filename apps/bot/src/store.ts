@@ -15,6 +15,32 @@ export interface RoomStore {
 }
 
 /**
+ * Where a report goes once it is written.
+ *
+ * Separate from the room store because a report outlives the table it was
+ * written at: it belongs to the player's own history of the game.
+ */
+export interface ReportSink {
+  record(report: { userId: string; plan: number; text: string }): Promise<void>;
+}
+
+/** Reports in memory. Enough for a single process and for tests. */
+export class MemoryReportSink implements ReportSink {
+  readonly reports: Array<{ userId: string; plan: number; text: string }> = [];
+
+  async record(report: { userId: string; plan: number; text: string }): Promise<void> {
+    this.reports.push(report);
+  }
+}
+
+/** A sink that drops reports, for running the bot without storage. */
+export const discardReports: ReportSink = {
+  async record() {
+    // Nothing. The gate still works; the writing is simply not kept.
+  },
+};
+
+/**
  * Rooms in memory.
  *
  * Fine for a single process and for tests. A restart loses every game in
