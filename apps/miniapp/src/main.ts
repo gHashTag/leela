@@ -43,6 +43,12 @@ const telegram: TelegramWebApp | undefined = (window as unknown as { Telegram?: 
 telegram?.ready();
 telegram?.expand();
 
+// Telegram's own colour scheme is authoritative inside the app and can differ
+// from the system setting the media query sees.
+if (telegram?.colorScheme) {
+  document.documentElement.dataset.theme = telegram.colorScheme;
+}
+
 // --- state -------------------------------------------------------------------
 
 const STORAGE_KEY = 'leela.game.v1';

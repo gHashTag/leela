@@ -139,4 +139,5 @@ and `session_players` in `@leela/db`.
 
 - The room language comes from the host's Telegram locale and cannot be changed
   afterwards.
-- A path is text. On a long game it will want paging, or a link into the book.
+- Nothing yet reads a path back out of the database for a player who has
+  changed chats; a path is per-user, but only reachable from a table.

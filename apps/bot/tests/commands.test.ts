@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { MAX_SEATS } from '@leela/engine';
 import { planFor } from '@leela/content';
 import {
+  MAX_MESSAGE_CHARS,
   board,
   help,
+  paginate,
   path,
   join,
   openRoom,
@@ -377,5 +379,85 @@ describe('the path a player has walked', () => {
 
   it('is offered in the help, or nobody will find it', () => {
     expect(help().replies[0].text).toContain('/path');
+  });
+});
+
+describe('a path too long for one message', () => {
+  // Telegram refuses a message over 4096 characters outright, so the reply
+  // would fail to send and the player would see nothing at all. renderPlan
+  // already accounted for this; /path did not.
+
+  const longEntries = (count: number, size = 400) =>
+    Array.from({ length: count }, (_, i) => ({
+      plan: (i % 72) + 1,
+      text: `report ${i} `.padEnd(size, 'x'),
+      createdAt: new Date(NOW + i * 1000),
+    }));
+
+  it('splits into several messages rather than one that cannot be sent', () => {
+    const { replies } = path(table(2), 'u1', longEntries(30));
+    expect(replies.length).toBeGreaterThan(1);
+    for (const reply of replies) {
+      expect(reply.text.length).toBeLessThanOrEqual(MAX_MESSAGE_CHARS);
+    }
+  });
+
+  it('never splits a single report across two messages', () => {
+    const entries = longEntries(30);
+    const joined = path(table(2), 'u1', entries).replies.map((r) => r.text).join('\n\n');
+    for (const entry of entries) {
+      expect(joined, `report on plan ${entry.plan}`).toContain(entry.text);
+    }
+  });
+
+  it('keeps the order across messages', () => {
+    const entries = longEntries(20);
+    const joined = path(table(2), 'u1', entries).replies.map((r) => r.text).join('\n\n');
+    const positions = entries.map((e) => joined.indexOf(e.text));
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+
+  it('still sends one message when the path is short', () => {
+    const { replies } = path(table(2), 'u1', longEntries(2, 50));
+    expect(replies).toHaveLength(1);
+  });
+
+  it('answers privately on every message, not only the first', () => {
+    for (const reply of path(table(2), 'u1', longEntries(30)).replies) {
+      expect(reply.broadcast).toBe(false);
+    }
+  });
+});
+
+describe('paginate', () => {
+  it('packs blocks into as few messages as fit', () => {
+    expect(paginate(['a', 'b', 'c'], 100)).toEqual(['a\n\nb\n\nc']);
+  });
+
+  it('starts a new message rather than exceeding the limit', () => {
+    const pages = paginate(['x'.repeat(60), 'y'.repeat(60)], 100);
+    expect(pages).toHaveLength(2);
+    expect(pages.every((page) => page.length <= 100)).toBe(true);
+  });
+
+  it('truncates a single block that cannot fit anywhere', () => {
+    const [page] = paginate(['x'.repeat(500)], 100);
+    expect(page.length).toBeLessThanOrEqual(100);
+    expect(page.endsWith('…')).toBe(true);
+  });
+
+  it('loses nothing when everything fits', () => {
+    const blocks = ['one', 'two', 'three'];
+    expect(paginate(blocks, 1000).join('\n\n')).toBe(blocks.join('\n\n'));
+  });
+
+  it('returns nothing for nothing', () => {
+    expect(paginate([], 100)).toEqual([]);
+  });
+
+  it('never returns an empty message', () => {
+    for (const page of paginate(['a'.repeat(90), 'b'.repeat(90), 'c'], 100)) {
+      expect(page.length).toBeGreaterThan(0);
+    }
   });
 });

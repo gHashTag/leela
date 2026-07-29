@@ -15,12 +15,42 @@
   --button-text: var(--tg-theme-button-text-color, #ffffff);
   --surface: var(--tg-theme-secondary-bg-color, #f2f2f6);
 
-  --snake: #c2452d;
-  --arrow: #2f8f4e;
-  --win: #b08422;
+  /* Measured against the surface they sit on, not chosen by eye. The originals
+     were 3.0-4.5:1 — below the 4.5:1 that small text needs, in both themes at
+     once, which is what happens when one palette is used for both. */
+  --snake: #a3301c;
+  --arrow: #1f6b39;
+  --win: #7a5a12;
 
   --gap: 3px;
   --radius: 7px;
+}
+
+/*
+ * The same hues, lifted for a dark surface.
+ *
+ * Two triggers, because neither alone is enough: the media query covers a plain
+ * browser, and `data-theme` is set from Telegram's own `colorScheme`, which is
+ * authoritative inside the app and can differ from the system setting.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --snake: #f08a72;
+    --arrow: #5fc684;
+    --win: #e0b544;
+  }
+}
+
+[data-theme='dark'] {
+  --snake: #f08a72;
+  --arrow: #5fc684;
+  --win: #e0b544;
+}
+
+[data-theme='light'] {
+  --snake: #a3301c;
+  --arrow: #1f6b39;
+  --win: #7a5a12;
 }
 
 * {

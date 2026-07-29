@@ -91,6 +91,17 @@ reads as punctuation.
 `createCell` is split out of `main.ts` so this is tested rather than asserted
 in a README.
 
+## Colour
+
+The snake, arrow and win colours were picked by eye and measured 3.0–4.5:1
+against the surface they are drawn on — below the 4.5:1 small text needs, in
+both themes at once, which is what one palette for two backgrounds produces.
+
+There are two palettes now, and `contrast.ts` measures them. Dark is selected
+two ways because neither alone suffices: a media query for a plain browser, and
+`data-theme` set from Telegram's own `colorScheme`, which is authoritative
+inside the app and can differ from the system setting.
+
 ## The bundle
 
 `@leela/content` carries all 22 languages. Importing it whole produced a

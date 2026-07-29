@@ -417,20 +417,63 @@ export function path(
   }
 
   const ordered = [...entries].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-  const lines = ordered.map((entry) => {
+  const entriesText = ordered.map((entry) => {
     const title = planFor(room.language, entry.plan).title;
     return `${entry.plan}. ${title}\n${entry.text}`;
   });
 
+  const heading = `Your path — ${ordered.length} ${ordered.length === 1 ? 'plan' : 'plans'}.`;
+
   return {
     room,
-    replies: [
-      say(
-        `Your path — ${ordered.length} ${ordered.length === 1 ? 'plan' : 'plans'}.\n\n${lines.join('\n\n')}`,
-        false,
-      ),
-    ],
+    replies: paginate([heading, ...entriesText]).map((page) => say(page, false)),
   };
+}
+
+/**
+ * Telegram refuses a message over 4096 characters outright.
+ *
+ * A player twenty plans into a game writes more than that, and the reply would
+ * simply fail to send — the failure being a rejected API call, not a truncated
+ * message, so they would see nothing at all. `renderPlan` already accounted for
+ * this; `/path` did not.
+ */
+export const MAX_MESSAGE_CHARS = 3500;
+
+/** Marks an entry that is too long to send even on its own. */
+const TRUNCATED = '\n…';
+
+/**
+ * Pack blocks into as few messages as fit, without splitting a block.
+ *
+ * A report cut across two messages reads as two half-thoughts, which is worse
+ * than an extra message. A single block longer than the limit is truncated —
+ * there is nowhere else for it to go.
+ */
+export function paginate(blocks: string[], limit = MAX_MESSAGE_CHARS): string[] {
+  const separator = '\n\n';
+  const pages: string[] = [];
+  let current = '';
+
+  for (const block of blocks) {
+    const fits = block.length <= limit;
+    const piece = fits ? block : `${block.slice(0, limit - TRUNCATED.length)}${TRUNCATED}`;
+
+    if (current.length === 0) {
+      current = piece;
+      continue;
+    }
+
+    if (current.length + separator.length + piece.length <= limit) {
+      current += separator + piece;
+    } else {
+      pages.push(current);
+      current = piece;
+    }
+  }
+
+  if (current.length > 0) pages.push(current);
+  return pages;
 }
 
 /** `/board` — where everyone stands. */

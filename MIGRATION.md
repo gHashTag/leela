@@ -329,6 +329,29 @@ The book was checked the same way and came out clean — 104 links on the
 contents page, none without an accessible name, one `<h1>` per page, `<main>`
 throughout. Guards added so it stays that way.
 
+## Ninth pass: two defects a player would have met
+
+**A path that could not be sent.** Telegram refuses a message over 4096
+characters outright, so a player twenty plans into a game would have asked for
+`/path` and received nothing — a rejected API call, not a truncated message.
+`renderPlan` had accounted for this; `/path` had not. It paginates now, packing
+entries into as few messages as fit and never splitting a report across two: a
+report cut in half reads as two half-thoughts, which is worse than an extra
+message.
+
+**A palette that failed its own threshold.** The snake, arrow and win colours
+were picked by eye. Measured against the surface they are drawn on they came
+out at 4.50, 3.64 and 3.05 in the light theme and 3.46, 4.27 and 5.11 in the
+dark — not one clearing 4.5:1 in both, which is what a single palette for two
+backgrounds produces. The red that displays as 4.50 is a hair under it, which
+is its own lesson about eyeballing a number that has a threshold.
+
+Two palettes now, with `contrast.ts` measuring them, and a test that confirms
+the check would have failed on the colours that shipped — a check incapable of
+failing proves nothing. Dark is selected two ways, because neither alone is
+enough: a media query for a plain browser, and `data-theme` from Telegram's own
+`colorScheme`, which is authoritative in the app and can differ from the system.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
