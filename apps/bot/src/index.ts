@@ -10,6 +10,7 @@
 
 import { createBot } from './bot';
 import { MemoryReportSink, MemoryRoomStore } from './store';
+import { supervise } from './supervisor';
 
 const token = process.env.BOT_TOKEN;
 
@@ -31,13 +32,23 @@ const bot = createBot({ token, store, reports });
 // this process does rather than losing games quietly.
 console.log('Leela bot starting. Rooms and reports are held in memory and will not survive a restart.');
 
+let stopping = false;
 const stop = () => {
+  stopping = true;
   console.log('\nStopping.');
   void bot.stop();
 };
 process.once('SIGINT', stop);
 process.once('SIGTERM', stop);
 
-await bot.start({
-  onStart: (info) => console.log(`Listening as @${info.username}.`),
+// `bot.catch` handles a failing update; it does not handle a failing poll. A
+// dropped socket, or a second process calling getUpdates, throws out of the run
+// loop — so the loop is supervised rather than awaited directly.
+await supervise({
+  start: async () => {
+    if (stopping) return;
+    await bot.start({
+      onStart: (info) => console.log(`Listening as @${info.username}.`),
+    });
+  },
 });

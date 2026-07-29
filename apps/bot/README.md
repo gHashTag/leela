@@ -8,12 +8,43 @@ already there, the turn order is visible, and a report is just a message.
 
 ## Running it
 
+Put the token in `apps/bot/.env`, which is gitignored:
+
+```
+BOT_TOKEN=123456:AA...
+```
+
+Then:
+
 ```bash
-BOT_TOKEN=... bun run apps/bot/src/dev
+cd apps/bot && bun run src/index.ts
 ```
 
 Get a token from [@BotFather](https://t.me/BotFather). Nothing else is needed —
 rooms are held in memory.
+
+One token, one running bot. If a webhook is set on that token, polling will not
+receive anything until it is cleared:
+
+```bash
+curl "https://api.telegram.org/bot$BOT_TOKEN/deleteWebhook"
+```
+
+## Staying up
+
+`bot.catch` handles a failing update. It does not handle a failing *poll* — a
+dropped socket, or a second process calling `getUpdates`, throws out of the run
+loop and takes the process with it. That is not theoretical: it is how the first
+run of this bot died.
+
+`supervisor.ts` wraps the run loop. Network failures back off exponentially from
+1s to a minute. A 409 waits a flat 30 seconds and says plainly that another
+instance holds the token, because backing off from 30s would take minutes to
+recover once the other one stops. A 401 does not retry at all — a revoked token
+cannot be fixed by asking again.
+
+The policy is a pure function, so `tests/supervisor.test.ts` covers every branch
+without waiting a second.
 
 ## Commands
 

@@ -134,10 +134,10 @@ cd packages/engine && bun test
 | `@leela/engine` | 99 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 109 | 22 languages, quality guards |
 | `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
-| `@leela/bot` | 65 | group play in Telegram, persistable — [readme](apps/bot/README.md) |
+| `@leela/bot` | 80 | group play in Telegram, persistable, supervised — [readme](apps/bot/README.md) |
 | everything else | — | not yet ported |
 
-339 tests, run on every push by [CI](.github/workflows/ci.yml).
+354 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 ## Migrating a live database
 
