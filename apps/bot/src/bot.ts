@@ -6,9 +6,11 @@
  * `@leela/engine` — not here.
  */
 
-import { Bot, type Context } from 'grammy';
+import { Bot, InlineKeyboard, type Context } from 'grammy';
+import { planFor } from '@leela/content';
 import * as commands from './commands';
-import type { Effect, Reply, Room } from './commands';
+import type { Button, Effect, Reply, Room } from './commands';
+import { escapeHtml, renderBoardMessage, renderPlan } from './render';
 import {
   MemoryRoomStore,
   discardReports,
@@ -63,10 +65,27 @@ export function createBot({
     log(`[bot] -> handled in ${now() - started}ms`);
   });
 
-  /** Send every reply in order, so a move and its follow-up stay together. */
+  /** Buttons as a Telegram keyboard. One row, which fits on a phone. */
+  function keyboard(buttons: Button[] | undefined): InlineKeyboard | undefined {
+    if (!buttons?.length) return undefined;
+    const markup = new InlineKeyboard();
+    for (const button of buttons) markup.text(button.label, button.action);
+    return markup;
+  }
+
+  /**
+   * Send every reply in order, so a move and its follow-up stay together.
+   * Only the last one carries the buttons — repeating them under each message
+   * clutters the chat and leaves stale keyboards above.
+   */
   async function deliver(ctx: Context, replies: Reply[]): Promise<void> {
-    for (const reply of replies) {
-      await ctx.reply(reply.text);
+    for (const [index, reply] of replies.entries()) {
+      const last = index === replies.length - 1;
+      await ctx.reply(reply.html ? reply.text : escapeHtml(reply.text), {
+        parse_mode: 'HTML',
+        reply_markup: last ? keyboard(reply.buttons) : undefined,
+        link_preview_options: { is_disabled: true },
+      });
     }
   }
 
@@ -160,7 +179,27 @@ export function createBot({
 
   bot.command('roll', (ctx) => withRoom(ctx, (room, who) => commands.roll(room, who.id, now())));
 
-  bot.command('board', (ctx) => withRoom(ctx, (room) => commands.board(room)));
+  // The board and a plan are drawn here rather than in `commands.ts`, because
+  // drawing is a property of the surface: the mini app renders the same game
+  // as a grid, not as a monospace block.
+  bot.command('board', (ctx) =>
+    withRoom(ctx, (room) => ({
+      room,
+      replies: [
+        {
+          text: renderBoardMessage(room),
+          broadcast: true,
+          html: true,
+          buttons: room.started
+            ? [
+                { label: '🎲 Roll', action: 'roll' as const },
+                { label: '📖 My plan', action: 'plan' as const },
+              ]
+            : [{ label: '🪑 Join', action: 'join' as const }],
+        },
+      ],
+    })),
+  );
 
   bot.command('report', (ctx) =>
     withRoom(ctx, (room, who) => commands.report(room, who.id, ctx.match ?? '')),
@@ -170,9 +209,99 @@ export function createBot({
     withRoom(ctx, (room, who) => {
       const raw = (ctx.match ?? '').trim();
       const requested = raw.length > 0 ? Number(raw) : undefined;
-      return commands.plan(room, who.id, requested);
+      const seated = room.session.players.find((p) => p.id === who.id);
+      const number = requested ?? seated?.state.loka;
+
+      if (number === undefined || !Number.isInteger(number) || number < 1 || number > 72) {
+        return commands.plan(room, who.id, requested);
+      }
+
+      const found = planFor(room.language, number);
+      return {
+        room,
+        replies: [
+          {
+            text: renderPlan(number, found.title, found.body),
+            broadcast: false,
+            html: true,
+            buttons: room.started ? [{ label: '🎲 Roll', action: 'roll' as const }] : undefined,
+          },
+        ],
+      };
     }),
   );
+
+  /**
+   * A button press runs the same command the slash version does.
+   *
+   * `answerCallbackQuery` has to be called or Telegram leaves a spinner on the
+   * button for the user, so it happens first and unconditionally.
+   */
+  bot.on('callback_query:data', async (ctx) => {
+    await ctx.answerCallbackQuery();
+
+    const action = ctx.callbackQuery.data;
+    const who = sender(ctx);
+    const chatId = chatIdOf(ctx);
+    if (!who || !chatId) return;
+
+    if (action === 'help') {
+      await deliver(ctx, commands.help().replies);
+      return;
+    }
+
+    if (action === 'new') {
+      const result = commands.openRoom(chatId, who, seedFor(chatId, now()), {
+        language: ctx.from?.language_code,
+      });
+      if (result.room) await store.save(result.room);
+      await deliver(ctx, result.replies);
+      return;
+    }
+
+    const room = await store.get(chatId);
+    if (!room) {
+      await ctx.reply('No table here yet. /new opens one.');
+      return;
+    }
+
+    const result =
+      action === 'roll'
+        ? commands.roll(room, who.id, now())
+        : action === 'join'
+          ? commands.join(room, who)
+          : action === 'start'
+            ? commands.start(room, who.id)
+            : action === 'board'
+              ? { room, replies: [{ text: renderBoardMessage(room), broadcast: true, html: true }] }
+              : action === 'plan'
+                ? planReply(room, who.id)
+                : null;
+
+    if (!result) return;
+
+    if (result.room) await store.save(result.room);
+    await applyEffects(result.effects);
+    await deliver(ctx, result.replies);
+  });
+
+  /** A player's current plan, drawn. */
+  function planReply(room: Room, playerId: string): commands.CommandResult {
+    const seated = room.session.players.find((p) => p.id === playerId);
+    if (!seated) return commands.plan(room, playerId);
+
+    const found = planFor(room.language, seated.state.loka);
+    return {
+      room,
+      replies: [
+        {
+          text: renderPlan(seated.state.loka, found.title, found.body),
+          broadcast: false,
+          html: true,
+        },
+      ],
+    };
+  }
 
   // Anything that is not a command still deserves an answer. Silence is
   // indistinguishable from a broken bot, and that is how this one first looked.

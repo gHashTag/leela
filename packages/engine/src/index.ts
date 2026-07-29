@@ -8,6 +8,9 @@
 
 export {
   ARROWS,
+  BOARD_COLUMNS,
+  BOARD_ROWS,
+  BOARD_ROWS_COUNT,
   MAX_ROLL,
   SIXES_TO_RESET,
   SNAKES,
@@ -15,6 +18,7 @@ export {
   TOTAL_PLANS,
   WIN_LOKA,
   arrowAt,
+  boardPosition,
   isOnBoard,
   snakeAt,
 } from './board';

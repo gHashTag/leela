@@ -44,6 +44,18 @@ export interface Room {
   names: Record<string, string>;
 }
 
+/**
+ * A button under a message.
+ *
+ * Described as data, not as a Telegram keyboard, so the command layer stays
+ * transport-free and a button can be asserted in a test.
+ */
+export interface Button {
+  label: string;
+  /** The command this button stands for, without its slash. */
+  action: 'roll' | 'board' | 'plan' | 'join' | 'start' | 'help' | 'new';
+}
+
 export interface Reply {
   /** What to send. */
   text: string;
@@ -52,6 +64,16 @@ export interface Reply {
    * decide between a group message and a direct one.
    */
   broadcast: boolean;
+  /** Buttons to offer alongside. Absent when there are none. */
+  buttons?: Button[];
+  /**
+   * True when `text` is already HTML and must be sent as-is.
+   *
+   * Everything else is escaped by the transport. Without this distinction a
+   * help line reading `/report <text>` is parsed as a tag and the message
+   * fails to send — which is exactly what happened.
+   */
+  html?: boolean;
 }
 
 /**
@@ -76,9 +98,22 @@ export interface CommandResult {
   effects?: Effect[];
 }
 
-function say(text: string, broadcast = true): Reply {
-  return { text, broadcast };
+function say(text: string, broadcast = true, buttons?: Button[]): Reply {
+  return buttons?.length ? { text, broadcast, buttons } : { text, broadcast };
 }
+
+/** The buttons that make sense while a game is running. */
+const PLAYING: Button[] = [
+  { label: '🎲 Roll', action: 'roll' },
+  { label: '📖 My plan', action: 'plan' },
+  { label: '🗺 Board', action: 'board' },
+];
+
+/** The buttons that make sense while a table is filling up. */
+const WAITING: Button[] = [
+  { label: '🪑 Join', action: 'join' },
+  { label: '▶️ Start', action: 'start' },
+];
 
 /** Whoever is being addressed, by name where we have one. */
 function nameOf(room: Room, id: string): string {
@@ -119,6 +154,8 @@ export function openRoom(
         `A table is open. ${host.name} is seated.\n` +
           `Up to ${MAX_SEATS} may play — send /join.\n` +
           `When everyone is seated, ${host.name} sends /start.`,
+        true,
+        WAITING,
       ),
     ],
   };
@@ -151,7 +188,7 @@ export function join(room: Room, player: { id: string; name: string }): CommandR
 
   return {
     room: next,
-    replies: [say(`${player.name} takes a seat. ${seated.length} at the table.`)],
+    replies: [say(`${player.name} takes a seat. ${seated.length} at the table.`, true, WAITING)],
   };
 }
 
@@ -174,6 +211,8 @@ export function start(room: Room, byPlayerId: string): CommandResult {
       say(
         `The game begins. ${nameOf(next, first.id)} goes first.\n` +
           'A six puts you on the board — send /roll.',
+        true,
+        PLAYING,
       ),
     ],
   };
