@@ -24,6 +24,8 @@ export interface BotOptions {
   reports?: ReportSink;
   /** Injected so the report cooldown can be tested without waiting a day. */
   now?: () => number;
+  /** Where the update log goes. Injected so tests can read it. */
+  log?: (message: string) => void;
 }
 
 /** Who sent this update, as the commands layer wants them. */
@@ -43,8 +45,23 @@ export function createBot({
   store = new MemoryRoomStore(),
   reports = discardReports,
   now = Date.now,
+  log = console.log,
 }: BotOptions) {
   const bot = new Bot(token);
+
+  // Without this there is no way to tell "nothing arrived" from "it arrived
+  // and the answer failed" — which is exactly the question asked the first
+  // time the bot appeared not to work.
+  bot.use(async (ctx, next) => {
+    const text = ctx.message?.text ?? ctx.channelPost?.text;
+    const from = ctx.from ? `${ctx.from.id}${ctx.from.username ? ` @${ctx.from.username}` : ''}` : 'unknown';
+    const chat = ctx.chat ? `${ctx.chat.type}:${ctx.chat.id}` : 'no-chat';
+    log(`[bot] <- ${chat} ${from}: ${text ?? `(${Object.keys(ctx.update).filter((k) => k !== 'update_id').join(',')})`}`);
+
+    const started = now();
+    await next();
+    log(`[bot] -> handled in ${now() - started}ms`);
+  });
 
   /** Send every reply in order, so a move and its follow-up stay together. */
   async function deliver(ctx: Context, replies: Reply[]): Promise<void> {
@@ -156,6 +173,38 @@ export function createBot({
       return commands.plan(room, who.id, requested);
     }),
   );
+
+  // Anything that is not a command still deserves an answer. Silence is
+  // indistinguishable from a broken bot, and that is how this one first looked.
+  bot.on('message:text', async (ctx) => {
+    if (ctx.message.text.startsWith('/')) {
+      await ctx.reply('I do not know that one. /help lists what I answer to.');
+      return;
+    }
+
+    const chatId = chatIdOf(ctx);
+    const room = chatId ? await store.get(chatId) : null;
+
+    if (!room) {
+      await ctx.reply('No table here yet. /new opens one, /help explains the rest.');
+      return;
+    }
+
+    const who = sender(ctx);
+    const seated = who && room.session.players.find((p) => p.id === who.id);
+
+    // A player who owes a report is almost certainly writing it, so take plain
+    // text as the report rather than making them remember the command.
+    if (seated && !seated.reportSubmitted && who) {
+      const result = commands.report(room, who.id, ctx.message.text);
+      if (result.room) await store.save(result.room);
+      await applyEffects(result.effects);
+      await deliver(ctx, result.replies);
+      return;
+    }
+
+    await ctx.reply('/roll to throw, /board to see where everyone stands, /help for the rest.');
+  });
 
   // A failing update should not take the process down, and the room should not
   // be left half-written — commands are pure, so nothing was written yet.
