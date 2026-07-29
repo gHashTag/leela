@@ -369,6 +369,28 @@ that introduced it. Worth noting how it arose — `/path` was built as a command
 at a table because every other command is, and the shape of the neighbours
 decided the shape of the thing rather than what it was for.
 
+## Eleventh pass: a companion that could not see the path
+
+The guide received the current plan and the current report, and nothing else. A
+reflection on plan 40 was read as though it were the first thing the player had
+ever said — in a game that is a path, and where the point of keeping reports is
+that they accumulate.
+
+`PlanContext.journey` carries where the player has been and what they wrote
+there. It is **summarised, not quoted**: the most recent squares, one line each,
+inside a character budget. The plan's own text is what the answer must be
+faithful to, and forty reports at full length would push it out of a small
+context window, leaving the model nothing to rest on.
+
+A test found a real defect in that budgeting. Entries were filled oldest-first
+and the loop stopped when the budget ran out — so the squares dropped were the
+newest, exactly the ones a player has just written and is most likely to be
+carrying. It fills newest-first now and restores walking order for the prompt.
+
+The bot passes the path it already reads for `/path`, minus the report being
+answered. What cannot be checked here is whether the answers are better: that
+needs an `OPENROUTER_API_KEY`, and only the prompt is testable without one.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

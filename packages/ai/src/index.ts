@@ -9,14 +9,18 @@
 
 export {
   MAX_HISTORY,
+  MAX_JOURNEY_CHARS,
+  MAX_JOURNEY_ENTRIES,
+  MAX_JOURNEY_ENTRY_CHARS,
   MAX_PLAN_CHARS,
   PromptError,
   questionPrompt,
   reportPrompt,
+  summariseJourney,
   systemPrompt,
   trimToParagraph,
 } from './prompts';
-export type { Message, PlanContext } from './prompts';
+export type { JourneyEntry, Message, PlanContext } from './prompts';
 
 export {
   DEFAULT_BASE_URL,

@@ -152,3 +152,38 @@ describe('when the caller is wrong', () => {
     await expect(guide.reflect('report', { ...ask, plan: 99 })).rejects.toThrow(PromptError);
   });
 });
+
+describe('the guide sees the path', () => {
+  it('sends the journey along with the report', async () => {
+    const model = recordingModel();
+    const { guide } = guideWith(model);
+
+    await guide.reflect('now this', {
+      ...ask,
+      journey: [
+        { plan: 6, text: 'the beginning felt abrupt' },
+        { plan: 23, text: 'lighter here' },
+      ],
+    });
+
+    const prompt = model.calls[0].messages[0].content;
+    expect(prompt).toContain('the beginning felt abrupt');
+    expect(prompt).toContain('lighter here');
+  });
+
+  it('works without one, because a first report has no path yet', async () => {
+    const model = recordingModel();
+    const { guide } = guideWith(model);
+    await guide.reflect('my first', ask);
+
+    expect(model.calls[0].messages[0].content).not.toMatch(/Where they have been/);
+  });
+
+  it('passes the journey on a question too, not only a report', async () => {
+    const model = recordingModel();
+    const { guide } = guideWith(model);
+    await guide.answer('what is maya?', { ...ask, journey: [{ plan: 2, text: 'noted' }] });
+
+    expect(model.calls[0].messages[0].content).toContain('noted');
+  });
+});

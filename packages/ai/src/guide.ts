@@ -16,6 +16,7 @@ import type { Direction } from '@leela/engine';
 import type { CompletionOptions, LanguageModel } from './model';
 import { ModelError } from './model';
 import {
+  type JourneyEntry,
   type Message,
   type PlanContext,
   PromptError,
@@ -60,6 +61,11 @@ export interface AskOptions {
   previousPlan?: number;
   /** Earlier turns of this conversation, oldest first. */
   history?: ReadonlyArray<Message>;
+  /**
+   * Where the player has been and what they wrote there, oldest first.
+   * Summarised into the prompt rather than quoted whole.
+   */
+  journey?: ReadonlyArray<JourneyEntry>;
 }
 
 export class Guide {
@@ -133,5 +139,6 @@ function contextOf(options: AskOptions): PlanContext {
     language: options.language,
     direction: options.direction,
     previousPlan: options.previousPlan,
+    journey: options.journey,
   };
 }

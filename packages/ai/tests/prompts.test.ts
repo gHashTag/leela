@@ -3,10 +3,14 @@ import { LANGUAGES, planFor } from '@leela/content';
 import { TOTAL_PLANS, WIN_LOKA } from '@leela/engine';
 import {
   MAX_HISTORY,
+  MAX_JOURNEY_CHARS,
+  MAX_JOURNEY_ENTRIES,
+  MAX_JOURNEY_ENTRY_CHARS,
   MAX_PLAN_CHARS,
   PromptError,
   questionPrompt,
   reportPrompt,
+  summariseJourney,
   systemPrompt,
   trimToParagraph,
 } from '../src';
@@ -216,5 +220,113 @@ describe('questionPrompt', () => {
 
   it('tells the model to admit what the text does not answer', () => {
     expect(questionPrompt(base, 'q')[0].content).toMatch(/say so plainly/i);
+  });
+});
+
+describe('the path the report belongs to', () => {
+  // Without it a reflection on plan 40 is read as though it were the first
+  // thing the player had ever said. The game is a path.
+
+  const journey = [
+    { plan: 6, text: 'the beginning felt abrupt' },
+    { plan: 23, text: 'lighter here, and suspicious of it' },
+    { plan: 41, text: 'the same impatience as at 6' },
+  ];
+
+  it('reaches the prompt, with each square named', () => {
+    const prompt = systemPrompt({ plan: 50, language: 'en', journey });
+    for (const entry of journey) {
+      expect(prompt).toContain(entry.text);
+      expect(prompt).toContain(planFor('en', entry.plan).title);
+    }
+  });
+
+  it('is absent when there is no path, rather than an empty heading', () => {
+    const prompt = systemPrompt({ plan: 6, language: 'en', journey: [] });
+    expect(prompt).not.toMatch(/Where they have been/);
+  });
+
+  it('is absent when not given at all', () => {
+    expect(systemPrompt({ plan: 6, language: 'en' })).not.toMatch(/Where they have been/);
+  });
+
+  it('tells the model not to read it back to the player', () => {
+    const prompt = systemPrompt({ plan: 50, language: 'en', journey });
+    expect(prompt).toMatch(/not yours to repeat back/i);
+  });
+
+  it('names the squares in the player’s language', () => {
+    const prompt = systemPrompt({ plan: 50, language: 'ru', journey });
+    expect(prompt).toContain(planFor('ru', 6).title);
+  });
+});
+
+describe('the path never crowds out the plan text', () => {
+  // The plan is what the answer must be faithful to. A long path that pushed
+  // it out of the context window would leave the model nothing to rest on.
+
+  const long = Array.from({ length: 60 }, (_, i) => ({
+    plan: (i % 72) + 1,
+    text: `report ${i} `.padEnd(600, 'x'),
+  }));
+
+  it('keeps the summary within its budget however long the path', () => {
+    const summary = summariseJourney(long, 'en');
+    expect(summary.length).toBeLessThan(MAX_JOURNEY_CHARS + 200);
+  });
+
+  it('keeps at most a handful of squares', () => {
+    const lines = summariseJourney(long, 'en').split('\n').slice(1);
+    expect(lines.length).toBeLessThanOrEqual(MAX_JOURNEY_ENTRIES);
+  });
+
+  it('clips a single long report rather than dropping the rest', () => {
+    const summary = summariseJourney([{ plan: 6, text: 'x'.repeat(2000) }], 'en');
+    expect(summary.length).toBeLessThan(MAX_JOURNEY_ENTRY_CHARS + 100);
+    expect(summary).toContain('…');
+  });
+
+  it('keeps the plan text in the prompt even beside a long path', () => {
+    const prompt = systemPrompt({ plan: 50, language: 'en', journey: long });
+    const plan = planFor('en', 50);
+    expect(prompt).toContain(plan.body.slice(0, 100));
+  });
+
+  it('says how much of the path it is showing when it shows only part', () => {
+    expect(summariseJourney(long, 'en')).toMatch(/the last \d+ of 60 squares/);
+  });
+
+  it('shows the most recent squares, not the oldest', () => {
+    const summary = summariseJourney(long, 'en');
+    expect(summary).toContain('report 59');
+    expect(summary).not.toContain('report 0 ');
+  });
+
+  it('flattens whitespace, so a multi-line report stays one line', () => {
+    const summary = summariseJourney([{ plan: 6, text: 'one\n\ntwo\nthree' }], 'en');
+    expect(summary.split('\n')).toHaveLength(2); // heading plus one entry
+    expect(summary).toContain('one two three');
+  });
+});
+
+describe('when the path does not fit its budget', () => {
+  // Filling oldest-first meant the budget ran out before the newest squares,
+  // so the entries a player just wrote were the ones dropped.
+
+  const long = Array.from({ length: 20 }, (_, i) => ({
+    plan: (i % 72) + 1,
+    text: `entry ${i} `.padEnd(300, 'y'),
+  }));
+
+  it('drops the oldest entries, never the newest', () => {
+    const summary = summariseJourney(long, 'en');
+    expect(summary).toContain('entry 19');
+    expect(summary).not.toContain('entry 12 ');
+  });
+
+  it('still lists what it keeps in walking order', () => {
+    const summary = summariseJourney(long, 'en');
+    const shown = [...summary.matchAll(/entry (\d+)/g)].map((m) => Number(m[1]));
+    expect(shown).toEqual([...shown].sort((a, b) => a - b));
   });
 });

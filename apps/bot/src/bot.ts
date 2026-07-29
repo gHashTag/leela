@@ -129,9 +129,20 @@ export function createBot({
 
     for (const effect of effects ?? []) {
       if (effect.kind !== 'report') continue;
+
+      // The path the report belongs to. Without it a reflection on plan 40 is
+      // read as though it were the first thing the player had ever said.
+      const journey = reports.history
+        ? (await reports.history(effect.userId))
+            .filter((entry) => entry.plan !== effect.plan || entry.text !== effect.text)
+            .reverse()
+            .map((entry) => ({ plan: entry.plan, text: entry.text }))
+        : undefined;
+
       const reflection = await guide.reflect(effect.text, {
         language: room.language,
         plan: effect.plan,
+        journey,
       });
       await ctx.reply(escapeHtml(reflection.text), { parse_mode: 'HTML' });
     }

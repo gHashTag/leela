@@ -15,6 +15,12 @@ import { TOTAL_PLANS, WIN_LOKA, type Direction } from '@leela/engine';
 import { planFor, resolveLanguage, type Language } from '@leela/content';
 
 /** Where the player is, and how they got there. */
+/** One square a player has already stood on, and what they wrote there. */
+export interface JourneyEntry {
+  plan: number;
+  text: string;
+}
+
 export interface PlanContext {
   /** 1..72 */
   plan: number;
@@ -24,6 +30,14 @@ export interface PlanContext {
   direction?: Direction;
   /** The square they came from. */
   previousPlan?: number;
+  /**
+   * Where the player has been and what they wrote there, oldest first.
+   *
+   * Without this a reflection on plan 40 is read as though it were the first
+   * thing the player had ever said. The game is a path, and a companion that
+   * cannot see the path can only respond to a single square.
+   */
+  journey?: ReadonlyArray<JourneyEntry>;
 }
 
 export interface Message {
@@ -41,6 +55,58 @@ export class PromptError extends Error {}
  * never stops mid-sentence.
  */
 export const MAX_PLAN_CHARS = 2400;
+
+/**
+ * How much of the journey to include, and how much of each entry.
+ *
+ * The plan's own text is what the answer must rest on, so the journey is
+ * summarised rather than quoted: the most recent squares, one line each. Forty
+ * reports at full length would push the plan out of a small context window and
+ * leave the model with nothing to be faithful to.
+ */
+export const MAX_JOURNEY_ENTRIES = 8;
+export const MAX_JOURNEY_ENTRY_CHARS = 160;
+export const MAX_JOURNEY_CHARS = 1200;
+
+/** The path, compressed to fit beside the plan text rather than instead of it. */
+export function summariseJourney(
+  journey: ReadonlyArray<JourneyEntry>,
+  language: Language,
+): string {
+  if (journey.length === 0) return '';
+
+  // The most recent squares matter most; a player rereads what they just wrote.
+  // Filled newest-first so that hitting the character budget drops the oldest
+  // entries — filling oldest-first dropped the newest, which is backwards.
+  const recent = journey.slice(-MAX_JOURNEY_ENTRIES);
+  const lines: string[] = [];
+  let used = 0;
+
+  for (const entry of [...recent].reverse()) {
+    const title = planFor(language, entry.plan).title;
+    const text = entry.text.replace(/\s+/g, ' ').trim();
+    const clipped =
+      text.length > MAX_JOURNEY_ENTRY_CHARS
+        ? `${text.slice(0, MAX_JOURNEY_ENTRY_CHARS - 1)}…`
+        : text;
+
+    const line = `${entry.plan}. ${title} — ${clipped}`;
+    if (used + line.length > MAX_JOURNEY_CHARS) break;
+
+    lines.unshift(line); // back into walking order
+    used += line.length;
+  }
+
+  if (lines.length === 0) return '';
+
+  const omitted = journey.length - lines.length;
+  const preamble =
+    omitted > 0
+      ? `Where they have been (the last ${lines.length} of ${journey.length} squares):`
+      : 'Where they have been:';
+
+  return `${preamble}\n${lines.join('\n')}`;
+}
 
 export function trimToParagraph(text: string, limit = MAX_PLAN_CHARS): string {
   if (text.length <= limit) return text;
@@ -102,6 +168,17 @@ export function systemPrompt(context: PlanContext): string {
   }
   if (context.plan === WIN_LOKA) {
     lines.push('This is the end of a game, and the start of the next one.');
+  }
+
+  const journey = context.journey ? summariseJourney(context.journey, language) : '';
+  if (journey) {
+    lines.push(
+      '',
+      journey,
+      '',
+      'That is their own writing, not yours to repeat back. Use it to notice',
+      'what recurs, and only when it genuinely bears on where they are now.',
+    );
   }
 
   lines.push(

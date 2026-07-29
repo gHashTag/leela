@@ -139,5 +139,5 @@ and `session_players` in `@leela/db`.
 
 - The room language comes from the host's Telegram locale and cannot be changed
   afterwards.
-- The companion answers a report but never sees the path it belongs to; a
-  reflection on plan 40 is read without the thirty-nine before it.
+- The companion cannot be verified without an OpenRouter key: the prompt is
+  tested, the answer's quality is not.
