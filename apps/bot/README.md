@@ -66,7 +66,7 @@ without waiting a second.
 | `/roll` | throw the die |
 | `/report <text>` | reflect on the plan you stand on |
 | `/plan [n]` | read a plan, defaulting to yours |
-| `/path` | what you have written, and where |
+| `/path` | what you have written, and where — works with or without a table |
 | `/board` | where everyone stands |
 | `/end` | clear the table |
 
@@ -139,5 +139,5 @@ and `session_players` in `@leela/db`.
 
 - The room language comes from the host's Telegram locale and cannot be changed
   afterwards.
-- Nothing yet reads a path back out of the database for a player who has
-  changed chats; a path is per-user, but only reachable from a table.
+- The companion answers a report but never sees the path it belongs to; a
+  reflection on plan 40 is read without the thirty-nine before it.

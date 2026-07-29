@@ -352,6 +352,23 @@ failing proves nothing. Dark is selected two ways, because neither alone is
 enough: a media query for a plain browser, and `data-theme` from Telegram's own
 `colorScheme`, which is authoritative in the app and can differ from the system.
 
+## Tenth pass: a path that belonged to the table instead of the player
+
+`/path` required a room. Clearing a table with `/end`, or asking in a different
+chat, answered "No table here yet" — and everything the player had ever written
+became unreachable, though it was sitting in the database under their own id
+the whole time.
+
+Reports belong to the player. `pathFor(language, entries)` takes a language
+rather than a room, and the transport falls back to the asker's Telegram locale
+when there is no table to take one from. The seating check went with it: a
+player's own reports are theirs whether or not they are at this table.
+
+This was in the bot's README as a known gap, written there by the same pass
+that introduced it. Worth noting how it arose — `/path` was built as a command
+at a table because every other command is, and the shape of the neighbours
+decided the shape of the thing rather than what it was for.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

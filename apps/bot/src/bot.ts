@@ -7,7 +7,7 @@
  */
 
 import { Bot, InlineKeyboard, type Context } from 'grammy';
-import { planFor } from '@leela/content';
+import { planFor, resolveLanguage } from '@leela/content';
 import type { Guide } from '@leela/ai';
 import * as commands from './commands';
 import type { Button, Effect, Reply, Room } from './commands';
@@ -225,14 +225,15 @@ export function createBot({
     const who = sender(ctx);
     if (!chatId || !who) return;
 
-    const room = await store.get(chatId);
-    if (!room) {
-      await ctx.reply('No table here yet. Send /new to open one.');
-      return;
-    }
-
     const entries = reports.history ? await reports.history(who.id) : null;
-    await deliver(ctx, commands.path(room, who.id, entries).replies);
+
+    // No table required: a path belongs to the player, not to the chat they
+    // happen to be in. Clearing a table, or opening a different one, must not
+    // hide everything they have written.
+    const room = await store.get(chatId);
+    const language = room?.language ?? resolveLanguage(ctx.from?.language_code);
+
+    await deliver(ctx, commands.pathFor(language, entries));
   });
 
   bot.command('board', (ctx) =>

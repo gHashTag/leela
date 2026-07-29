@@ -7,6 +7,7 @@ import {
   help,
   paginate,
   path,
+  pathFor,
   join,
   openRoom,
   plan,
@@ -361,8 +362,22 @@ describe('the path a player has walked', () => {
     expect(replies[0].text).not.toMatch(/have not written/i);
   });
 
-  it('turns away someone not at the table', () => {
-    expect(path(table(2), 'stranger', entries).replies[0].text).toMatch(/not at this table/i);
+  it('shows a path to someone who is not at this table', () => {
+    // Reports belong to the player, not to the chat. Requiring a seat meant
+    // that clearing a table, or walking into another chat, hid everything they
+    // had ever written.
+    const { replies } = path(table(2), 'stranger', entries);
+    expect(replies[0].text).toContain('first words');
+    expect(replies[0].text).not.toMatch(/not at this table/i);
+  });
+
+  it('needs no table at all', () => {
+    const replies = pathFor('en', entries);
+    expect(replies[0].text).toContain('first words');
+  });
+
+  it('uses the language it is given when there is no room to take one from', () => {
+    expect(pathFor('ru', entries)[0].text).toContain(planFor('ru', 6).title);
   });
 
   it('answers privately — a path is the player’s own', () => {

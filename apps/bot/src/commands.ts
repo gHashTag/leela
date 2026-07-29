@@ -385,49 +385,49 @@ export interface PathEntry {
  * them: a player's own account of the squares they have stood on is the record
  * the game is played to produce.
  *
- * @param entries  Read by the transport, oldest first is not assumed — they are
- *                 sorted here so a store that returns them either way is fine.
- *                 Pass null when the store cannot read them back at all.
+ * Takes a language rather than a room, because a path belongs to the player
+ * and not to the table. Requiring a table meant that clearing one, or walking
+ * into a different chat, hid everything a player had ever written.
+ *
+ * @param entries  Order is not assumed — they are sorted here, so a store that
+ *                 returns newest-first is fine. Pass null when the store
+ *                 cannot read them back at all.
  */
-export function path(
-  room: Room,
-  byPlayerId: string,
+export function pathFor(
+  language: Language,
   entries: PathEntry[] | null,
-): CommandResult {
-  if (!room.session.players.some((p) => p.id === byPlayerId)) {
-    return { room, replies: [say('You are not at this table.', false)] };
-  }
-
+): Reply[] {
   if (entries === null) {
-    return {
-      room,
-      replies: [
-        say('This bot is not keeping reports, so there is no path to show.', false),
-      ],
-    };
+    return [say('This bot is not keeping reports, so there is no path to show.', false)];
   }
 
   if (entries.length === 0) {
-    return {
-      room,
-      replies: [
-        say('You have not written anything yet. /report on the plan you are standing on.', false),
-      ],
-    };
+    return [
+      say('You have not written anything yet. /report on the plan you are standing on.', false),
+    ];
   }
 
   const ordered = [...entries].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   const entriesText = ordered.map((entry) => {
-    const title = planFor(room.language, entry.plan).title;
+    const title = planFor(language, entry.plan).title;
     return `${entry.plan}. ${title}\n${entry.text}`;
   });
 
   const heading = `Your path — ${ordered.length} ${ordered.length === 1 ? 'plan' : 'plans'}.`;
 
-  return {
-    room,
-    replies: paginate([heading, ...entriesText]).map((page) => say(page, false)),
-  };
+  return paginate([heading, ...entriesText]).map((page) => say(page, false));
+}
+
+/** `/path` at a table, which is where the room's language comes from. */
+export function path(
+  room: Room,
+  byPlayerId: string,
+  entries: PathEntry[] | null,
+): CommandResult {
+  // No check that the player is seated: their reports are theirs whether or
+  // not they are at this table.
+  void byPlayerId;
+  return { room, replies: pathFor(room.language, entries) };
 }
 
 /**

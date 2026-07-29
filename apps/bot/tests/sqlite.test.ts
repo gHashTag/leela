@@ -240,3 +240,28 @@ describe('the schema', () => {
     expect(second).toBeDefined();
   });
 });
+
+describe('a path outlives the table it was written at', () => {
+  // Reports belong to the player. Clearing a table must not take them with it.
+
+  it('survives the room being deleted', async () => {
+    const queries = database('path-outlives');
+    const store = new DatabaseRoomStore(queries);
+    const room = playedRoom('chat-outlives');
+    await store.save(room);
+
+    queries.recordReport({ userId: 'u1', plan: 6, text: 'written at the table' });
+    await store.delete('chat-outlives');
+
+    expect(await store.get('chat-outlives')).toBeNull();
+    expect(queries.reportsFor('u1').map((r) => r.text)).toEqual(['written at the table']);
+  });
+
+  it('is the same path from any chat', async () => {
+    const queries = database('path-any-chat');
+    queries.recordReport({ userId: 'u1', plan: 6, text: 'from one chat' });
+
+    // Nothing about reading it back mentions a chat.
+    expect(queries.reportsFor('u1')).toHaveLength(1);
+  });
+});
