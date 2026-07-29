@@ -274,6 +274,23 @@ The detector reads one file at a time, so a rule split across files reads as
 absent: the published app's re-rolling die lives in `DiceStore.ts`, not in
 `helper.ts`, and shows as "—" for both. A prompt to look, not a verdict.
 
+## Seventh pass: a deployment that verifies itself
+
+`actions/deploy-pages` reports success when the upload succeeded. Nothing
+checked that the site then worked, which meant a broken asset path or a book
+whose pages missed the artifact would deploy green and stay that way until
+somebody happened to open it — as I had been doing, by hand, with `curl`.
+
+`apps/miniapp/src/smoke.ts` is five checks, chosen so each fails for a
+different reason: the app's HTML, the book's index, a page deep inside it, the
+stylesheet, and the privacy policy. Every one asserts something beyond a 200,
+because a 200 proves a file exists and not that it is the file we meant to
+ship — the Russian plan page must actually contain "Рождение", not merely
+respond.
+
+They are pure functions over a fetcher, so the same code runs against a fake
+site in tests and against the live one in CI, as a `verify` job after `deploy`.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

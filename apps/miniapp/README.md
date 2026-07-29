@@ -30,6 +30,25 @@ Two things had to be arranged once, and are worth knowing if it ever moves:
   `unified` had to be added to its deployment branch policy. Until it was, the
   build passed and the deploy was rejected with no obvious reason.
 
+## Checking a deployment
+
+`actions/deploy-pages` reports success when the upload succeeded, which is not
+the same as the game being playable. A build that emits a broken asset path, or
+a book whose pages never reached the artifact, deploys green.
+
+```bash
+bun run src/smoke-run.ts https://t27.ai/leela/
+```
+
+Five checks, each failing for a different reason: the app's HTML, the book's
+index, a page deep inside it, the stylesheet it needs, and the privacy policy —
+the one whose absence is a store rejection rather than a broken page. Every
+check asserts something beyond a 200, because a 200 proves a file exists, not
+that it is the file we meant to ship.
+
+CI runs this after every deploy. The checks are pure functions over a fetcher,
+so the same code is tested against a fake site with no network.
+
 ## Attaching it to the bot
 
 In [@BotFather](https://t.me/BotFather): `/mybots` → the bot → **Bot

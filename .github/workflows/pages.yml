@@ -67,6 +67,26 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # deploy-pages reports success when the upload succeeded, which is not the
+  # same as the game being playable. A build that emits a broken asset path, or
+  # a book whose pages did not reach the artifact, deploys green.
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - name: Check the live site
+        run: bun run --cwd apps/miniapp src/smoke-run.ts "${{ needs.deploy.outputs.page_url || 'https://t27.ai/leela/' }}"
