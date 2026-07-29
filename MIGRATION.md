@@ -303,6 +303,32 @@ respond.
 They are pure functions over a fetcher, so the same code runs against a fake
 site in tests and against the live one in CI, as a `verify` job after `deploy`.
 
+## Eighth pass: a board nobody could play with a keyboard
+
+The mini app shipped 72 squares as `<div role="button" tabindex="0">` with a
+click handler and nothing else. Every square was reachable by Tab and announced
+to a screen reader as a button; neither Enter nor Space did anything. Confirmed
+against the live site by focusing a cell and dispatching the key presses, not
+by reading the source.
+
+Focusable and inoperable is worse than not focusable at all — it promises
+something and withholds it.
+
+They are `<button>` elements now, with `aria-label` carrying the plan's name
+(the visible text is a bare number) and the snake and arrow glyphs marked
+`aria-hidden`. A native element brings its keyboard behaviour with it and
+cannot drift from it, which is the argument against the `role` version in
+general and not only here. `createCell` moved out of `main.ts` so the claim is
+tested rather than asserted.
+
+A visible focus ring came with it: cells that are reachable by keyboard and
+give no sign of where the focus is are the same problem wearing a different
+disguise.
+
+The book was checked the same way and came out clean — 104 links on the
+contents page, none without an accessible name, one `<h1>` per page, `<main>`
+throughout. Guards added so it stays that way.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

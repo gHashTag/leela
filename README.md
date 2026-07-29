@@ -149,11 +149,11 @@ cd packages/engine && bun test
 | `@leela/ai` | 50 | the companion — prompts built from the plan text |
 | `@leela/contracts` | 20 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
 | `@leela/bot` | 137 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
-| `@leela/docs` | 89 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
-| `@leela/miniapp` | 24 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
+| `@leela/docs` | 102 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
+| `@leela/miniapp` | 34 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-654 tests, run on every push by [CI](.github/workflows/ci.yml).
+677 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 ## Migrating a live database
 

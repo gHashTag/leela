@@ -23,6 +23,7 @@ import {
 import { resolveLanguage, type Language } from '@leela/content';
 import { loadPlans, plan as planFor } from './content';
 import { describeMove } from './describe';
+import { createCell } from './cell';
 
 /** Telegram's WebApp object, when we are running inside Telegram. */
 interface TelegramWebApp {
@@ -103,38 +104,18 @@ function buildBoard(): void {
 
   for (const row of BOARD_ROWS) {
     for (const plan of row) {
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      cell.dataset.plan = String(plan);
-      cell.textContent = String(plan);
-      cell.setAttribute('role', 'button');
-      cell.tabIndex = 0;
-
-      if (plan === WIN_LOKA) cell.classList.add('win');
-      else if (plan in SNAKES) {
-        cell.classList.add('snake');
-        cell.append(mark('↓'));
-      } else if (plan in ARROWS) {
-        cell.classList.add('arrow');
-        cell.append(mark('↑'));
-      }
-
-      cell.title = `${plan}. ${planFor(plan).title}`;
-      cell.addEventListener('click', () => openPlan(plan));
-
+      const cell = createCell({
+        plan,
+        label: `${plan}. ${planFor(plan).title}`,
+        onActivate: openPlan,
+        document,
+      });
       cells.set(plan, cell);
       fragment.append(cell);
     }
   }
 
   el.board.append(fragment);
-}
-
-function mark(glyph: string): HTMLElement {
-  const span = document.createElement('span');
-  span.className = 'mark';
-  span.textContent = glyph;
-  return span;
 }
 
 // --- drawing --------------------------------------------------------------------

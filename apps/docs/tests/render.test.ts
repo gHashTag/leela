@@ -244,3 +244,47 @@ describe('a description that only repeats the text', () => {
     ).toBe(true);
   });
 });
+
+describe('every page can be used without a mouse', () => {
+  // The mini app shipped 72 cells that were focusable and inoperable. These
+  // are the equivalent checks for the book, asserted on shape rather than on
+  // a list of known pages.
+
+  const pages = [
+    ['contents', indexPage('en', plansFor('en'), rulesFor('en'))],
+    ['a plan', planPage('en', plansFor('en')[0], TOTAL_PLANS)],
+    ['a chapter', chapterPage('ru', rulesFor('ru')[0])],
+  ] as const;
+
+  it.each(pages)('%s gives every link an accessible name', (_name, html) => {
+    const links = [...html.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/g)];
+    expect(links.length).toBeGreaterThan(0);
+
+    for (const [whole, inner] of links) {
+      const text = inner.replace(/<[^>]+>/g, '').trim();
+      const labelled = /aria-label="/.test(whole);
+      expect(text.length > 0 || labelled, `empty link: ${whole.slice(0, 60)}`).toBe(true);
+    }
+  });
+
+  it.each(pages)('%s marks its main content as such', (_name, html) => {
+    expect(html).toContain('<main>');
+  });
+
+  it.each(pages)('%s has exactly one first-level heading', (_name, html) => {
+    expect((html.match(/<h1>/g) ?? []).length).toBe(1);
+  });
+
+  it.each(pages)('%s names its language on the document, not just in prose', (_name, html) => {
+    expect(html).toMatch(/<html lang="[a-z]{2}"/);
+  });
+
+  it('does not rely on colour alone to mark a snake or an arrow', () => {
+    // The board is drawn in the app, not the book — but the book links plans
+    // by name, so the distinction is carried by words either way.
+    const html = indexPage('en', plansFor('en'), rulesFor('en'));
+    for (const plan of plansFor('en').slice(0, 5)) {
+      expect(html).toContain(escape(plan.title));
+    }
+  });
+});

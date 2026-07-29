@@ -73,6 +73,24 @@ purely so it can be tested. That is where a bug lived: a player still waiting
 to enter was told there was "not enough room", which describes a rule they are
 not under yet.
 
+## Keyboard and screen readers
+
+The board shipped as 72 `<div role="button" tabindex="0">` with a click
+handler. Every square was reachable by Tab and announced as a button, and
+neither Enter nor Space did anything — confirmed against the live site before
+it was fixed. Focusable and inoperable is worse than not focusable at all: it
+promises something and withholds it.
+
+They are `<button>` elements now. A native element brings its keyboard
+behaviour with it and cannot drift away from it, which is the whole argument
+against the `role` version. Each carries an `aria-label` with the plan's name,
+because the visible text is a bare number, and the snake and arrow glyphs are
+`aria-hidden` — the direction is already in the label, and an unlabelled glyph
+reads as punctuation.
+
+`createCell` is split out of `main.ts` so this is tested rather than asserted
+in a README.
+
 ## The bundle
 
 `@leela/content` carries all 22 languages. Importing it whole produced a
