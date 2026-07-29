@@ -22,6 +22,7 @@ apps/
   site/       Next.js landing page.                                 (to port)
   docs/       Docusaurus: the book of rules.                        (to port)
   bot/        Telegram, on grammY. Group play in a chat.            ok
+  miniapp/    Telegram mini app: the board, the die, the texts.      ok
 services/
   inngest/    event-driven move and report handlers.                (to port)
 scripts/
@@ -131,13 +132,14 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 99 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/engine` | 104 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 109 | 22 languages, quality guards |
 | `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
-| `@leela/bot` | 80 | group play in Telegram, persistable, supervised — [readme](apps/bot/README.md) |
+| `@leela/bot` | 106 | group play in Telegram, board, buttons — [readme](apps/bot/README.md) |
+| `@leela/miniapp` | 11 | the board as a mini app — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-354 tests, run on every push by [CI](.github/workflows/ci.yml).
+396 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 ## Migrating a live database
 

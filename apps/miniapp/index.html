@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Leela</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <main id="app">
+      <header class="head">
+        <div class="where">
+          <span class="plan-number" id="plan-number">—</span>
+          <span class="plan-title" id="plan-title">Waiting for a six</span>
+        </div>
+        <progress id="progress" max="68" value="0"></progress>
+      </header>
+
+      <section class="board" id="board" aria-label="The board, 72 plans"></section>
+
+      <section class="say" id="say" role="status" aria-live="polite">
+        A six puts you on the board.
+      </section>
+
+      <footer class="controls">
+        <button id="roll" class="primary">Roll</button>
+        <button id="read">Read this plan</button>
+      </footer>
+    </main>
+
+    <dialog id="reader" class="reader">
+      <article>
+        <h2 id="reader-title"></h2>
+        <div id="reader-body"></div>
+      </article>
+      <form method="dialog"><button class="primary">Close</button></form>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

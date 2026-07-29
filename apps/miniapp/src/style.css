@@ -1,0 +1,295 @@
+/*
+ * Leela, in a Telegram mini app.
+ *
+ * Every colour comes from Telegram's theme variables, so the app matches
+ * whatever theme the player is using rather than fighting it. The fallbacks
+ * are only for opening the page in a plain browser during development.
+ */
+
+:root {
+  --bg: var(--tg-theme-bg-color, #ffffff);
+  --text: var(--tg-theme-text-color, #1a1a1a);
+  --hint: var(--tg-theme-hint-color, #8b8b8b);
+  --link: var(--tg-theme-link-color, #2a7ab0);
+  --button: var(--tg-theme-button-color, #2a7ab0);
+  --button-text: var(--tg-theme-button-text-color, #ffffff);
+  --surface: var(--tg-theme-secondary-bg-color, #f2f2f6);
+
+  --snake: #c2452d;
+  --arrow: #2f8f4e;
+  --win: #b08422;
+
+  --gap: 3px;
+  --radius: 7px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+}
+
+/* --- where you are ------------------------------------------------------- */
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.where {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.plan-number {
+  font-size: 26px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--link);
+}
+
+.plan-title {
+  font-size: 15px;
+  color: var(--hint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+progress {
+  width: 100%;
+  height: 3px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--surface);
+  appearance: none;
+}
+
+progress::-webkit-progress-bar {
+  background: var(--surface);
+  border-radius: 2px;
+}
+
+progress::-webkit-progress-value {
+  background: var(--link);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* --- the board ----------------------------------------------------------- */
+
+/*
+ * Nine columns of squares. The rows size themselves from the cells rather than
+ * stretching to fill: a board of tall rectangles does not read as a board, and
+ * eight rows stretched over a phone screen is what that produces.
+ */
+.board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: var(--gap);
+  /* Sized by its cells, not by the screen: the leftover space belongs to the
+     text, which is what the player is actually here to read. */
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: clamp(9px, 2.6vw, 13px);
+  font-variant-numeric: tabular-nums;
+  color: var(--hint);
+  transition: background 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cell:active {
+  transform: scale(0.94);
+}
+
+.cell.snake {
+  color: var(--snake);
+  box-shadow: inset 0 -2px 0 var(--snake);
+}
+
+.cell.arrow {
+  color: var(--arrow);
+  box-shadow: inset 0 2px 0 var(--arrow);
+}
+
+.cell.win {
+  color: var(--win);
+  box-shadow: inset 0 0 0 2px var(--win);
+  font-weight: 650;
+}
+
+/* Where the player stands. The ring reads at a glance on any theme. */
+.cell.here {
+  background: var(--button);
+  color: var(--button-text);
+  font-weight: 700;
+  transform: scale(1.06);
+  z-index: 1;
+}
+
+/* The square just left, so a move is legible as a movement. */
+.cell.from {
+  box-shadow: inset 0 0 0 2px var(--link);
+}
+
+.cell .mark {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 9px;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+/* --- what just happened --------------------------------------------------- */
+
+.say {
+  display: flex;
+  align-items: center;
+  /* Sits just above the controls rather than stretching: a sentence centred in
+     half a screen of empty grey reads as a layout mistake. */
+  margin-top: auto;
+  min-height: 44px;
+  padding: 11px 13px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 14px;
+}
+
+.say.snake {
+  box-shadow: inset 3px 0 0 var(--snake);
+}
+.say.arrow {
+  box-shadow: inset 3px 0 0 var(--arrow);
+}
+.say.win {
+  box-shadow: inset 3px 0 0 var(--win);
+}
+
+/* --- controls -------------------------------------------------------------- */
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  flex: 1;
+  padding: 13px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button.primary {
+  background: var(--button);
+  color: var(--button-text);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* --- the plan text --------------------------------------------------------- */
+
+.reader {
+  width: min(680px, 92vw);
+  max-height: 82vh;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+.reader::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.reader article {
+  max-height: calc(82vh - 70px);
+  padding: 18px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reader h2 {
+  margin: 0 0 10px;
+  font-size: 19px;
+}
+
+.reader p {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.reader form {
+  padding: 10px 14px calc(14px + env(safe-area-inset-bottom));
+}
+
+/* A die that actually rolls, for the moment between press and result. */
+@keyframes tumble {
+  0% { transform: rotate(0) scale(1); }
+  50% { transform: rotate(180deg) scale(1.12); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.rolling {
+  animation: tumble 0.45s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
