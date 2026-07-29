@@ -1,0 +1,22 @@
+{
+  "name": "leela",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Leela — the game of self-knowledge. One engine, one dataset, many surfaces.",
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "test": "bun run --filter '*' test",
+    "typecheck": "bun run --filter '*' typecheck",
+    "content:build": "node scripts/build-content.mjs",
+    "verify": "bun run content:build && bun run test"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,141 @@
+{
+  "generatedFrom": "/Users/playra/leela-src",
+  "totalPlans": 72,
+  "languages": [
+    "ar",
+    "bn",
+    "de",
+    "en",
+    "es",
+    "fr",
+    "hi",
+    "ja",
+    "jv",
+    "ko",
+    "mr",
+    "ms",
+    "pa",
+    "pt",
+    "ru",
+    "ta",
+    "te",
+    "tr",
+    "uk",
+    "ur",
+    "vi",
+    "zh"
+  ],
+  "coverage": {
+    "ar": {
+      "plans": 72,
+      "rules": 7,
+      "withBody": 72
+    },
+    "bn": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "en": {
+      "plans": 72,
+      "rules": 7,
+      "withBody": 72
+    },
+    "fr": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "mr": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "ms": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "ru": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "te": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "tr": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "uk": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "de": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "es": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "hi": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "ja": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "jv": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "ko": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "pa": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "pt": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "ta": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "ur": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "vi": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    },
+    "zh": {
+      "plans": 72,
+      "rules": 6,
+      "withBody": 72
+    }
+  },
+  "warnings": []
+}
