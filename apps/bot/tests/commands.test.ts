@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_SEATS } from '@leela/engine';
+import { planFor } from '@leela/content';
 import {
   board,
   help,
+  path,
   join,
   openRoom,
   plan,
@@ -304,5 +306,76 @@ describe('help', () => {
     for (const command of ['/new', '/join', '/start', '/roll', '/report', '/plan', '/board']) {
       expect(text).toContain(command);
     }
+  });
+});
+
+describe('the path a player has walked', () => {
+  // The reports were being kept and never shown. This is what keeping them was
+  // for: a player's own account of the squares they have stood on.
+
+  const entries = [
+    { plan: 6, text: 'first words', createdAt: new Date(NOW) },
+    { plan: 23, text: 'later words', createdAt: new Date(NOW + 1000) },
+  ];
+
+  it('lists what was written, oldest first, because it is a path', () => {
+    const { replies } = path(table(2), 'u1', entries);
+    const text = replies[0].text;
+    expect(text.indexOf('first words')).toBeLessThan(text.indexOf('later words'));
+  });
+
+  it('does not trust the order it was handed', () => {
+    const { replies } = path(table(2), 'u1', [...entries].reverse());
+    const text = replies[0].text;
+    expect(text.indexOf('first words')).toBeLessThan(text.indexOf('later words'));
+  });
+
+  it('names each plan, so the words have a place', () => {
+    const text = path(table(2), 'u1', entries).replies[0].text;
+    expect(text).toContain(planFor('en', 6).title);
+    expect(text).toContain(planFor('en', 23).title);
+  });
+
+  it('names the plans in the room language', () => {
+    const room = openRoom('c', { id: 'u1', name: 'A' }, SEED, { language: 'ru' }).room as Room;
+    expect(path(room, 'u1', entries).replies[0].text).toContain(planFor('ru', 6).title);
+  });
+
+  it('counts the plans, in the singular when there is one', () => {
+    expect(path(table(2), 'u1', [entries[0]]).replies[0].text).toMatch(/1 plan\b/);
+    expect(path(table(2), 'u1', entries).replies[0].text).toMatch(/2 plans\b/);
+  });
+
+  it('says what to do when nothing has been written yet', () => {
+    const { replies } = path(table(2), 'u1', []);
+    expect(replies[0].text).toMatch(/\/report/);
+  });
+
+  it('says the reports are not kept, rather than showing an empty path', () => {
+    // An empty list from a store that keeps nothing would read as "you never
+    // wrote anything", which is a different and untrue statement.
+    const { replies } = path(table(2), 'u1', null);
+    expect(replies[0].text).toMatch(/not keeping reports/i);
+    expect(replies[0].text).not.toMatch(/have not written/i);
+  });
+
+  it('turns away someone not at the table', () => {
+    expect(path(table(2), 'stranger', entries).replies[0].text).toMatch(/not at this table/i);
+  });
+
+  it('answers privately — a path is the player’s own', () => {
+    expect(path(table(2), 'u1', entries).replies[0].broadcast).toBe(false);
+  });
+
+  it('changes nothing about the game', () => {
+    const room = table(2);
+    const before = JSON.stringify(room);
+    path(room, 'u1', entries);
+    expect(JSON.stringify(room)).toBe(before);
+    expect(path(room, 'u1', entries).effects).toBeUndefined();
+  });
+
+  it('is offered in the help, or nobody will find it', () => {
+    expect(help().replies[0].text).toContain('/path');
   });
 });

@@ -66,6 +66,7 @@ without waiting a second.
 | `/roll` | throw the die |
 | `/report <text>` | reflect on the plan you stand on |
 | `/plan [n]` | read a plan, defaulting to yours |
+| `/path` | what you have written, and where |
 | `/board` | where everyone stands |
 | `/end` | clear the table |
 
@@ -138,5 +139,4 @@ and `session_players` in `@leela/db`.
 
 - The room language comes from the host's Telegram locale and cannot be changed
   afterwards.
-- Reports are kept but never read back to the player. `reportsFor` exists;
-  nothing calls it yet.
+- A path is text. On a long game it will want paging, or a link into the book.

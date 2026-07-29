@@ -213,6 +213,28 @@ export function createBot({
   // The board and a plan are drawn here rather than in `commands.ts`, because
   // drawing is a property of the surface: the mini app renders the same game
   // as a grid, not as a monospace block.
+  /**
+   * `/path` — a player's own account of the squares they have stood on.
+   *
+   * The reports were being kept and never read back; this is what keeping them
+   * was for. A store that cannot read them says so rather than showing an
+   * empty list, which would read as "you never wrote anything".
+   */
+  bot.command('path', async (ctx) => {
+    const chatId = chatIdOf(ctx);
+    const who = sender(ctx);
+    if (!chatId || !who) return;
+
+    const room = await store.get(chatId);
+    if (!room) {
+      await ctx.reply('No table here yet. Send /new to open one.');
+      return;
+    }
+
+    const entries = reports.history ? await reports.history(who.id) : null;
+    await deliver(ctx, commands.path(room, who.id, entries).replies);
+  });
+
   bot.command('board', (ctx) =>
     withRoom(ctx, (room) => ({
       room,

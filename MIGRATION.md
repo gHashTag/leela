@@ -228,6 +228,18 @@ A test caught a real ordering defect on the way: reports were sorted by
 `created_at` alone, so two written in the same millisecond came back in
 whatever order SQLite chose. `id` now breaks the tie.
 
+**`/path` closed the last gap in that loop.** Reports were being written and
+never read back — the gate made a player reflect, the store kept it, and
+nothing ever returned it to them. A player's own account of the squares they
+have stood on is the record the game is played to produce, so it is now a
+command.
+
+The distinction that needed care: a store that keeps nothing must say so,
+rather than returning an empty list. "You have not written anything" and "this
+bot is not keeping reports" are different statements, and only one of them is
+true when `ReportSink.history` is absent. That absence is the signal — hence an
+optional method rather than one that returns `[]`.
+
 **4c. `packages/ai` — done.** The service it replaces asked the model to
 *invent* a description of the plan a player had landed on, while the traditional
 text for that plan sat unused in the repository in 22 languages. It also carried

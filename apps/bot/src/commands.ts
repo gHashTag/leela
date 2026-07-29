@@ -371,6 +371,68 @@ export function plan(room: Room, byPlayerId: string, requested?: number): Comman
   };
 }
 
+/** One thing a player wrote, on the plan they wrote it about. */
+export interface PathEntry {
+  plan: number;
+  text: string;
+  createdAt: Date;
+}
+
+/**
+ * `/path` — what a player has written, and where.
+ *
+ * The reports were being kept and never shown. This is the point of keeping
+ * them: a player's own account of the squares they have stood on is the record
+ * the game is played to produce.
+ *
+ * @param entries  Read by the transport, oldest first is not assumed — they are
+ *                 sorted here so a store that returns them either way is fine.
+ *                 Pass null when the store cannot read them back at all.
+ */
+export function path(
+  room: Room,
+  byPlayerId: string,
+  entries: PathEntry[] | null,
+): CommandResult {
+  if (!room.session.players.some((p) => p.id === byPlayerId)) {
+    return { room, replies: [say('You are not at this table.', false)] };
+  }
+
+  if (entries === null) {
+    return {
+      room,
+      replies: [
+        say('This bot is not keeping reports, so there is no path to show.', false),
+      ],
+    };
+  }
+
+  if (entries.length === 0) {
+    return {
+      room,
+      replies: [
+        say('You have not written anything yet. /report on the plan you are standing on.', false),
+      ],
+    };
+  }
+
+  const ordered = [...entries].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  const lines = ordered.map((entry) => {
+    const title = planFor(room.language, entry.plan).title;
+    return `${entry.plan}. ${title}\n${entry.text}`;
+  });
+
+  return {
+    room,
+    replies: [
+      say(
+        `Your path — ${ordered.length} ${ordered.length === 1 ? 'plan' : 'plans'}.\n\n${lines.join('\n\n')}`,
+        false,
+      ),
+    ],
+  };
+}
+
 /** `/board` — where everyone stands. */
 export function board(room: Room): CommandResult {
   return { room, replies: [say(describeStandings(room))] };
@@ -402,6 +464,7 @@ export function help(): CommandResult {
           '/roll — throw the die',
           '/report <text> — reflect on the plan you stand on',
           '/plan [n] — read a plan',
+          '/path — what you have written, and where',
           '/board — where everyone stands',
           '',
           'A six puts you on the board. Reaching 68 exactly wins.',

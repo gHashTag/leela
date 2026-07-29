@@ -49,10 +49,12 @@ describe('report sinks', () => {
     await sink.record({ userId: 'u1', plan: 5, text: 'first' });
     await sink.record({ userId: 'u1', plan: 9, text: 'second' });
 
-    expect(sink.reports).toEqual([
+    expect(sink.reports.map(({ userId, plan, text }) => ({ userId, plan, text }))).toEqual([
       { userId: 'u1', plan: 5, text: 'first' },
       { userId: 'u1', plan: 9, text: 'second' },
     ]);
+    // Each carries when it was written, which is what orders a path.
+    for (const report of sink.reports) expect(report.createdAt).toBeInstanceOf(Date);
   });
 
   it('keeps two reports on the same plan, because a player may return to it', async () => {
@@ -94,5 +96,41 @@ describe('seedFor', () => {
   it('spreads across the range rather than clustering', () => {
     const seeds = new Set(Array.from({ length: 500 }, (_, i) => seedFor(`chat-${i}`, 1)));
     expect(seeds.size).toBe(500);
+  });
+});
+
+describe('reading a path back', () => {
+  it('returns what a player wrote, newest first', async () => {
+    let clock = 1000;
+    const sink = new MemoryReportSink(() => (clock += 1000));
+
+    await sink.record({ userId: 'u1', plan: 5, text: 'first' });
+    await sink.record({ userId: 'u1', plan: 9, text: 'second' });
+
+    expect((await sink.history('u1')).map((r) => r.text)).toEqual(['second', 'first']);
+  });
+
+  it('returns only that player’s own writing', async () => {
+    const sink = new MemoryReportSink();
+    await sink.record({ userId: 'u1', plan: 5, text: 'mine' });
+    await sink.record({ userId: 'u2', plan: 5, text: 'theirs' });
+
+    expect((await sink.history('u1')).map((r) => r.text)).toEqual(['mine']);
+  });
+
+  it('returns nothing for someone who has written nothing', async () => {
+    expect(await new MemoryReportSink().history('nobody')).toEqual([]);
+  });
+
+  it('stamps each report with when it was written', async () => {
+    const sink = new MemoryReportSink(() => 1_700_000_000_000);
+    await sink.record({ userId: 'u1', plan: 5, text: 'x' });
+    expect((await sink.history('u1'))[0].createdAt).toEqual(new Date(1_700_000_000_000));
+  });
+
+  it('offers no history at all when reports are discarded', () => {
+    // The absence is the signal: a caller must be able to tell "kept nothing"
+    // from "wrote nothing", because they are different things to say.
+    expect(discardReports.history).toBeUndefined();
   });
 });
