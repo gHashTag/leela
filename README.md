@@ -16,7 +16,7 @@ packages/
   db/         persisted shape of a game, and the row <-> state mapping.
   ai/         the companion, resting on the canonical text.         ok
   ui/         shared design system.                                 (to port)
-  contracts/  LeelaGame.sol and the subgraph.                       (to port)
+  contracts/  LeelaGame.sol, checked against the engine.            ok
 apps/
   mobile/     Expo Router: iOS, Android and web from one codebase.  (to port)
   site/       Next.js landing page.                                 (to port)
@@ -60,6 +60,7 @@ implemented one half of the traditional rule:
 | `legacy-mobile` | yes | no | no | — | `com.leelagame` v6.5.1, Play versionCode 77 |
 | `neuroleela` | no | yes | no | — | NeuroLeela (Expo/Inngest) |
 | `online` | yes | no | yes | 24h | the published app's online mode |
+| `onchain` | no | yes | yes | — | `LeelaGame.sol`, deployed and unchangeable |
 | `classic` | yes | yes | yes | — | the traditional rule — no app shipped it whole |
 
 `neuroleela` is the default, so adopting the engine changes nothing for current
@@ -136,12 +137,13 @@ cd packages/engine && bun test
 | `@leela/content` | 109 | 22 languages, quality guards |
 | `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 50 | the companion — prompts built from the plan text |
+| `@leela/contracts` | 17 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
 | `@leela/bot` | 106 | group play in Telegram, board, buttons — [readme](apps/bot/README.md) |
 | `@leela/docs` | 89 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
 | `@leela/miniapp` | 11 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-535 tests, run on every push by [CI](.github/workflows/ci.yml).
+552 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 ## Migrating a live database
 

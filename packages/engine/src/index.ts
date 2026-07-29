@@ -39,6 +39,7 @@ export {
   DEFAULT_RULESET,
   LEGACY_MOBILE,
   NEUROLEELA,
+  ONCHAIN,
   ONLINE,
   RULESETS,
   ruleSetById,

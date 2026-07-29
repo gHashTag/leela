@@ -278,8 +278,29 @@ which reads that way in the English source too — and on Hindi, `जन्म` 
 is *janma*. Four guards now hold that line against a future rebuild. The real
 translation damage was the numbering, fixed in the third pass above.
 
-**5. `packages/contracts`.** Take `smart-contract-leela` and the newest
-subgraph (`leela-ai-4`) only. Archive the three older subgraph iterations.
+**5. `packages/contracts` — done.** `LeelaGame.sol`, deployed at
+`0x2741CE9C9fA1c9B78b20cab7F07998d77846b7Af`, is a fourth copy of the board:
+twenty `else if` branches. All twenty land on the same squares as the engine,
+and `WIN_PLAN`/`TOTAL_PLANS` match. `verify.ts` reads the Solidity and asserts
+it, so an edit to either side fails a test instead of quietly making an
+on-chain game a different game.
+
+**The contract is where the report gate came from.** `require(...,
+'You must create a report before rolling the dice.')` is the only enforcement
+of that rule anywhere in the 25 repositories — the published app gated online
+play, and the Expo rewrite kept a `needs_report` column it never checked. That
+it survives in deployed bytecode is the evidence the gate belongs to the game.
+
+**Two divergences, permanent because deployed.** The entering six is counted as
+the first of a run, so the reset comes a throw sooner; and
+`positionBeforeThreeSixes` is overwritten on every six rather than only the
+first, so a third six returns the player to where the third six began instead
+of the first. Neither is a flag on a `RuleSet`, so they are described by a fifth
+variant, `onchain`, rather than treated as bugs to fix.
+
+The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
+running it needs a deployed indexer — a deployment decision rather than a code
+one.
 
 **6. Archive the source repositories.** Twenty of the twenty-five have been
 superseded. Archiving on GitHub is reversible and keeps every commit, which

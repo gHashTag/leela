@@ -17,7 +17,7 @@
 
 export interface RuleSet {
   /** Identifier persisted alongside a game so old games stay reproducible. */
-  readonly id: 'classic' | 'neuroleela' | 'legacy-mobile' | 'online';
+  readonly id: 'classic' | 'neuroleela' | 'legacy-mobile' | 'online' | 'onchain';
   /** A six lets the player throw again instead of passing the turn. */
   readonly extraTurnOnSix: boolean;
   /** Three sixes in a row return the player to where the run began. */
@@ -88,11 +88,41 @@ export const ONLINE: RuleSet = Object.freeze({
   turnCooldownMs: 86_400_000,
 });
 
+/**
+ * What `LeelaGame.sol` actually does, at
+ * `0x2741CE9C9fA1c9B78b20cab7F07998d77846b7Af`.
+ *
+ * A deployed contract cannot be corrected, so its behaviour is described here
+ * rather than treated as a bug to fix. It is the only implementation that ever
+ * enforced the report gate — `require(..., 'You must create a report before
+ * rolling the dice.')` — which is the evidence that the gate belongs to the
+ * game and not to one app's product decisions.
+ *
+ * Two ways it differs from `classic`, both recorded in `contracts/README.md`:
+ *
+ *   - the six that enters the game is counted as the first of a run, so two
+ *     more sixes trigger the reset;
+ *   - `positionBeforeThreeSixes` is overwritten on *every* six, so a third six
+ *     returns the player to where the third six began rather than the first.
+ *
+ * Neither is expressible as a flag, so anything reading this variant should
+ * consult the contract for a move it needs to reproduce exactly.
+ */
+export const ONCHAIN: RuleSet = Object.freeze({
+  id: 'onchain',
+  extraTurnOnSix: false,
+  threeSixesReset: true,
+  rerollOnRepeat: false,
+  requireReportBeforeRoll: true,
+  turnCooldownMs: 0,
+});
+
 export const RULESETS = Object.freeze({
   classic: CLASSIC,
   neuroleela: NEUROLEELA,
   'legacy-mobile': LEGACY_MOBILE,
   online: ONLINE,
+  onchain: ONCHAIN,
 });
 
 /**

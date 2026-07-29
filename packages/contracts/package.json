@@ -1,0 +1,21 @@
+{
+  "name": "@leela/contracts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LeelaGame.sol, and a check that its board still matches the engine.",
+  "type": "module",
+  "main": "./src/verify.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@leela/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  },
+  "license": "MIT"
+}
