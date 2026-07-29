@@ -37,11 +37,22 @@ let store: RoomStore;
 let reports: ReportSink;
 let durable = false;
 
+/** How long a finished table is kept before it is forgotten. */
+const KEEP_FINISHED_MS = 7 * 24 * 60 * 60 * 1000;
+
 if (databasePath) {
   const queries = new SqliteRoomQueries({ path: databasePath });
   store = new DatabaseRoomStore(queries);
   reports = sqliteReportSink(queries);
   durable = true;
+
+  // Nothing deleted a finished game, so every table ever opened stayed. Done
+  // at startup rather than on a timer: a bot that is never restarted is not
+  // accumulating tables either.
+  const forgotten = queries.pruneFinished(KEEP_FINISHED_MS);
+  if (forgotten > 0) {
+    console.log(`Forgot ${forgotten} finished table(s) older than a week. Reports kept.`);
+  }
 } else {
   store = new MemoryRoomStore();
   reports = new MemoryReportSink();

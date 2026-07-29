@@ -476,3 +476,51 @@ describe('paginate', () => {
     }
   });
 });
+
+describe('the end of a game is not a dead end', () => {
+  // "This game is over" and nothing else leaves a player with no hint that
+  // another table is one command away.
+
+  /** Play a solo table to its finish. */
+  function finished(): Room {
+    let room = table(1, SEED);
+    for (let i = 0; i < 3000; i++) {
+      const holder = room.session.players[room.session.turnIndex];
+      const result = roll(room, holder.id, NOW);
+      room = result.room as Room;
+      if (result.replies.some((r) => r.text.includes('/report'))) {
+        room = report(room, holder.id, 'noted').room as Room;
+        continue;
+      }
+      if (result.replies.some((r) => r.text.includes('Cosmic Consciousness'))) return room;
+    }
+    throw new Error('the game never finished');
+  }
+
+  it('says what to do next when the game is over', () => {
+    const { replies } = roll(finished(), 'u1', NOW);
+    const text = replies.map((r) => r.text).join('\n');
+    expect(text).toContain('/new');
+    expect(text).toContain('/path');
+  });
+
+  it('offers the path at the moment of winning, not only afterwards', () => {
+    // The winning roll itself should point at what the game produced.
+    let room = table(1, SEED);
+    for (let i = 0; i < 3000; i++) {
+      const holder = room.session.players[room.session.turnIndex];
+      const result = roll(room, holder.id, NOW);
+      room = result.room as Room;
+
+      const text = result.replies.map((r) => r.text).join('\n');
+      if (text.includes('Cosmic Consciousness')) {
+        expect(text).toContain('/path');
+        return;
+      }
+      if (text.includes('/report')) {
+        room = report(room, holder.id, 'noted').room as Room;
+      }
+    }
+    throw new Error('the game never finished');
+  });
+});

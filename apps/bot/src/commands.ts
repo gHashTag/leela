@@ -233,7 +233,14 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
   }
 
   if (isSessionOver(room.session)) {
-    return { room, replies: [say('This game is over.', false)] };
+    // Saying only "this game is over" leaves a player at a dead end with no
+    // hint that another table is a command away.
+    return {
+      room,
+      replies: [
+        say('This game is over. /new opens another table, /path shows what you wrote.', false),
+      ],
+    };
   }
 
   const holder = currentPlayer(room.session);
@@ -289,6 +296,9 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
 
   if (isSessionOver(next.session)) {
     replies.push(say(describeStandings(next)));
+    replies.push(
+      say('That is the game. /path shows what you wrote along the way; /new opens another table.'),
+    );
   } else if (!move.keepsTurn) {
     replies.push(say(`${nameOf(next, currentPlayer(next.session).id)} is next.`));
   } else {

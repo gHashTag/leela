@@ -135,6 +135,20 @@ holder, which still looks like a game.
 Moving to Postgres is a change of driver: the columns already mirror `sessions`
 and `session_players` in `@leela/db`.
 
+## Forgetting finished tables
+
+Nothing deleted a finished game, so every table ever opened stayed in the
+database. `pruneFinished` runs at startup and forgets tables whose game ended
+more than a week ago — at startup rather than on a timer, because a bot that is
+never restarted is not accumulating tables either.
+
+The reports are deliberately untouched. A table is scaffolding; a report is the
+player's, and `/path` must still find it years later.
+
+A game counts as over when every seat has finished *after* being on the board.
+A seat that never entered has `previous_plan = 0` — waiting, not done — and
+treating those as finished would delete a game before it started.
+
 ## What is missing
 
 - The room language comes from the host's Telegram locale and cannot be changed

@@ -244,6 +244,41 @@ export class SqliteRoomQueries implements RoomQueries {
     }
   }
 
+  /**
+   * Forget tables whose game ended a while ago.
+   *
+   * Nothing deleted a finished game, so every table ever opened stayed in the
+   * database — thousands of dead rooms after a year of use. The reports are
+   * deliberately untouched: a table is scaffolding, a report is the player's.
+   *
+   * A game counts as over when every seat has finished *after* being on the
+   * board, which is the same condition the engine uses — a seat that never
+   * entered has `previous_plan = 0` and is waiting, not done.
+   *
+   * @returns how many tables were forgotten.
+   */
+  pruneFinished(olderThanMs: number): number {
+    const cutoff = this.now() - olderThanMs;
+
+    const stale = this.db
+      .prepare(
+        `SELECT s.id FROM sessions s
+          WHERE COALESCE(s.updated_at, 0) < ?
+            AND NOT EXISTS (
+              SELECT 1 FROM session_players p
+               WHERE p.session_id = s.id
+                 AND (p.is_finished = 0 OR p.previous_plan = 0)
+            )
+            AND EXISTS (SELECT 1 FROM session_players p WHERE p.session_id = s.id)`,
+      )
+      .all(cutoff) as Array<{ id: string }>;
+
+    const remove = this.db.prepare('DELETE FROM sessions WHERE id = ?');
+    for (const row of stale) remove.run(row.id);
+
+    return stale.length;
+  }
+
   async remove(chatId: string): Promise<void> {
     this.db.prepare('DELETE FROM sessions WHERE id = ?').run(chatId);
   }

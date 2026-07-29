@@ -265,3 +265,110 @@ describe('a path outlives the table it was written at', () => {
     expect(queries.reportsFor('u1')).toHaveLength(1);
   });
 });
+
+describe('forgetting tables whose game is over', () => {
+  // Nothing deleted a finished game, so every table ever opened stayed in the
+  // database. A table is scaffolding; a report is the player's.
+
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+
+  /** A room where every seat has finished after being on the board. */
+  function finishedRoom(chatId: string): Room {
+    const room = playedRoom(chatId);
+    return {
+      ...room,
+      session: {
+        ...room.session,
+        players: room.session.players.map((p) => ({
+          ...p,
+          state: { ...p.state, loka: 68, previous_loka: 65, is_finished: true },
+        })),
+      },
+    };
+  }
+
+  it('forgets a finished table once it is old enough', async () => {
+    const queries = new SqliteRoomQueries({ path: join(dir, 'prune-old.db'), now: () => NOW });
+    open.push(queries);
+    await new DatabaseRoomStore(queries).save(finishedRoom('chat-old'));
+
+    // Ask as though a fortnight had passed.
+    const later = new SqliteRoomQueries({
+      path: join(dir, 'prune-old.db'),
+      now: () => NOW + 2 * WEEK,
+    });
+    open.push(later);
+
+    expect(later.pruneFinished(WEEK)).toBe(1);
+    expect(await later.loadSession('chat-old')).toBeNull();
+  });
+
+  it('keeps a finished table that only just ended', async () => {
+    const queries = database('prune-recent');
+    await new DatabaseRoomStore(queries).save(finishedRoom('chat-recent'));
+
+    expect(queries.pruneFinished(WEEK)).toBe(0);
+    expect(await queries.loadSession('chat-recent')).not.toBeNull();
+  });
+
+  it('never touches a game still in progress, however old', async () => {
+    const queries = new SqliteRoomQueries({ path: join(dir, 'prune-live.db'), now: () => NOW });
+    open.push(queries);
+    await new DatabaseRoomStore(queries).save(playedRoom('chat-live'));
+
+    const later = new SqliteRoomQueries({
+      path: join(dir, 'prune-live.db'),
+      now: () => NOW + 100 * WEEK,
+    });
+    open.push(later);
+
+    expect(later.pruneFinished(WEEK)).toBe(0);
+    expect(await later.loadSession('chat-live')).not.toBeNull();
+  });
+
+  it('never touches a table where someone is still waiting to enter', async () => {
+    // A seat that never got on the board has previous_plan = 0: waiting, not
+    // done. Treating that as finished would delete a game before it started.
+    const queries = new SqliteRoomQueries({ path: join(dir, 'prune-wait.db'), now: () => NOW });
+    open.push(queries);
+
+    const room = finishedRoom('chat-wait');
+    const waiting: Room = {
+      ...room,
+      session: {
+        ...room.session,
+        players: room.session.players.map((p, i) =>
+          i === 0 ? { ...p, state: { ...p.state, previous_loka: 0 } } : p,
+        ),
+      },
+    };
+    await new DatabaseRoomStore(queries).save(waiting);
+
+    const later = new SqliteRoomQueries({
+      path: join(dir, 'prune-wait.db'),
+      now: () => NOW + 100 * WEEK,
+    });
+    open.push(later);
+    expect(later.pruneFinished(WEEK)).toBe(0);
+  });
+
+  it('keeps the reports, which belong to the player and not to the table', async () => {
+    const queries = new SqliteRoomQueries({ path: join(dir, 'prune-reports.db'), now: () => NOW });
+    open.push(queries);
+    await new DatabaseRoomStore(queries).save(finishedRoom('chat-reports'));
+    queries.recordReport({ userId: 'u1', plan: 6, text: 'kept regardless' });
+
+    const later = new SqliteRoomQueries({
+      path: join(dir, 'prune-reports.db'),
+      now: () => NOW + 2 * WEEK,
+    });
+    open.push(later);
+    later.pruneFinished(WEEK);
+
+    expect(later.reportsFor('u1').map((r) => r.text)).toEqual(['kept regardless']);
+  });
+
+  it('does nothing to an empty database', () => {
+    expect(database('prune-empty').pruneFinished(WEEK)).toBe(0);
+  });
+});

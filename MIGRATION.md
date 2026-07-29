@@ -391,6 +391,28 @@ The bot passes the path it already reads for `/path`, minus the report being
 answered. What cannot be checked here is whether the answers are better: that
 needs an `OPENROUTER_API_KEY`, and only the prompt is testable without one.
 
+## Twelfth pass: what happens after the game ends
+
+Two things nobody had looked at, because a finished game is the part you stop
+testing.
+
+**Nothing deleted a finished table.** `/end` was the only route out, and it is
+manual, so every table ever opened stayed in the database — thousands of dead
+rooms after a year. `pruneFinished` forgets tables whose game ended over a week
+ago, at startup rather than on a timer: a bot that is never restarted is not
+accumulating tables either. Reports are untouched — a table is scaffolding, a
+report is the player's, and `/path` must find it years later.
+
+The condition needed care. A game is over when every seat has finished *after*
+being on the board; a seat that never entered has `previous_plan = 0` and is
+waiting, not done. Treating those as finished would delete a game before it
+started, which is why there is a test for exactly that.
+
+**The end was a dead end.** `/roll` on a finished game answered "This game is
+over." and stopped. A player was left with no hint that another table is one
+command away, or that the path they had just walked was still readable. Both the
+winning message and the refusal now point somewhere.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
