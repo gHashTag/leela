@@ -3,8 +3,10 @@ import {
   ARROWS,
   SNAKES,
   auditBoard,
+  compareRules,
   compareToReference,
   describeProblems,
+  detectRules,
 } from '../src';
 
 /**
@@ -146,5 +148,75 @@ describe('compareToReference', () => {
     expect(compareToReference({}, {}).length).toBe(
       Object.keys(SNAKES).length + Object.keys(ARROWS).length,
     );
+  });
+});
+
+describe('detecting the rules an implementation carries', () => {
+  // The boards mostly agree; the rules do not. ChatBot.tsx has all twenty
+  // jumps right and no three-sixes rule at all, which makes it a seventh
+  // version of the game rather than a seventh copy of the board.
+
+  it('finds a three-sixes rule written as a counter', () => {
+    expect(detectRules('if (consecutiveSixes === 3) { reset() }').threeSixesReset).toBe(true);
+    expect(detectRules('player.positionBeforeThreeSixes = plan').threeSixesReset).toBe(true);
+  });
+
+  it('reports its absence rather than assuming it', () => {
+    const rules = detectRules('const snakes = { 12: 8 }; if (snakes[p]) p = snakes[p];');
+    expect(rules.threeSixesReset).toBe(false);
+  });
+
+  it('finds the entry-on-six rule in the shapes it is written in', () => {
+    expect(detectRules('if (!isStart && rollResult === 6) { plan = 6 }').entryOnSix).toBe(true);
+    expect(detectRules('} else if (stepCount === 6 && !isFinished) {').entryOnSix).toBe(true);
+  });
+
+  it('finds the refusal to overshoot', () => {
+    expect(detectRules('if (newPlan > TOTAL_PLANS) return').refusesOvershoot).toBe(true);
+    expect(detectRules('if (newLoka > 72) stay()').refusesOvershoot).toBe(true);
+  });
+
+  it('finds the report gate, wherever it is enforced', () => {
+    expect(detectRules("require(x, 'You must create a report before rolling the dice.')").reportGate)
+      .toBe(true);
+    expect(detectRules('if (!isReported) return').reportGate).toBe(true);
+  });
+
+  it('finds the unfair die the published app uses', () => {
+    expect(
+      detectRules('let get = getRandomNumber(); if (get === DiceStore.count) { get = getRandomNumber() }')
+        .rerollOnRepeat,
+    ).toBe(true);
+  });
+
+  it('finds nothing in a file that is not a game', () => {
+    const rules = detectRules('export const greet = (name: string) => `hello ${name}`;');
+    expect(Object.values(rules).every((value) => value === false)).toBe(true);
+  });
+});
+
+describe('comparing detected rules against a variant', () => {
+  it('says nothing when they match', () => {
+    const found = detectRules('if (consecutiveSixes === 3) {} if (newPlan > TOTAL_PLANS) {}');
+    expect(compareRules(found, { threeSixesReset: true, refusesOvershoot: true })).toEqual([]);
+  });
+
+  it('names a rule that is missing', () => {
+    const found = detectRules('const snakes = { 12: 8 }');
+    expect(compareRules(found, { threeSixesReset: true })).toEqual([
+      { rule: 'threeSixesReset', found: false, expected: true },
+    ]);
+  });
+
+  it('names a rule that is present and should not be', () => {
+    const found = detectRules('player.positionBeforeThreeSixes = plan');
+    expect(compareRules(found, { threeSixesReset: false })).toEqual([
+      { rule: 'threeSixesReset', found: true, expected: false },
+    ]);
+  });
+
+  it('checks only the rules it was asked about', () => {
+    const found = detectRules('if (consecutiveSixes === 3) {}');
+    expect(compareRules(found, { threeSixesReset: true })).toEqual([]);
   });
 });

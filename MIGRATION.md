@@ -247,6 +247,33 @@ The scanner reports what it could not read rather than staying silent about it
 decorative SVG components and one a test. A scanner that quietly skips what it
 cannot read is worse than none, because it reads as coverage.
 
+### The boards mostly agree. The rules do not.
+
+`detectRules` reads which rules an implementation carries, and across the
+thirteen copies there are **five different games**:
+
+| Copies | entry on 6 | 3 sixes | no overshoot | win on 68 | report gate |
+|---|---|---|---|---|---|
+| `leela`, `leela-game` | yes | — | yes | yes | — |
+| both web3 hooks | — | — | yes | yes | — |
+| `ChatBot.tsx` | yes | — | **—** | yes | yes |
+| both `GameService.ts`, all four Inngest files | yes | yes | yes | yes | — |
+| `LeelaGame.sol` (both) | yes | yes | yes | yes | yes |
+
+Two things worth naming:
+
+`ChatBot.tsx` has all twenty jumps right and **no refusal to overshoot**. A
+player near the end can roll past 72 and off the board. It is the only copy
+missing that check, and its board being correct is exactly what would stop
+anyone from looking.
+
+Only the contract enforces the report gate — already known, now confirmed
+mechanically rather than by reading.
+
+The detector reads one file at a time, so a rule split across files reads as
+absent: the published app's re-rolling die lives in `DiceStore.ts`, not in
+`helper.ts`, and shows as "—" for both. A prompt to look, not a verdict.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

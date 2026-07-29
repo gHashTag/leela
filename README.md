@@ -50,10 +50,11 @@ get back the next state. That makes the same rules usable from the app, the
 bot, the mini app and a smart contract, and it makes them testable without a
 network.
 
-It also exports `auditBoard` and `compareToReference`, so any implementation
-that carries its own copy of the board can be held to this one. That is not
-hypothetical: of the thirteen copies across the 25 repositories, **six disagree**
-— see [MIGRATION.md](MIGRATION.md).
+It also exports `auditBoard`, `compareToReference` and `detectRules`, so any
+implementation carrying its own copy can be held to this one. That is not
+hypothetical: of the thirteen copies across the 25 repositories **six have the
+wrong board**, and the rules divide into **five different games** — see
+[MIGRATION.md](MIGRATION.md).
 
 ```bash
 node scripts/audit-copies.mjs --src ../leela-src
@@ -142,7 +143,7 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 123 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/engine` | 134 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 109 | 22 languages, quality guards |
 | `@leela/db` | 66 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 50 | the companion — prompts built from the plan text |
@@ -152,7 +153,7 @@ cd packages/engine && bun test
 | `@leela/miniapp` | 11 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-605 tests, run on every push by [CI](.github/workflows/ci.yml).
+616 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 ## Migrating a live database
 

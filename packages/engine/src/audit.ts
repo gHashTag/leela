@@ -179,3 +179,86 @@ export function describeProblems(problems: BoardProblem[]): string {
   if (problems.length === 0) return 'no problems found';
   return problems.map((p) => `${p.finding}: ${p.detail}`).join('\n');
 }
+
+// --- rules, as opposed to the board -----------------------------------------
+
+/**
+ * Which rules an implementation appears to carry.
+ *
+ * The boards mostly agree; the *rules* do not. `ChatBot.tsx` has all twenty
+ * jumps right and no three-sixes rule at all, which makes it a seventh version
+ * of the game rather than a seventh copy of the board.
+ *
+ * Detected by reading source, so a false negative is possible — a rule written
+ * in some shape this does not recognise. Treated as a prompt to look, not as a
+ * verdict.
+ */
+export interface DetectedRules {
+  /** A six is required to enter the game. */
+  entryOnSix: boolean;
+  /** Three sixes in a row send the player back. */
+  threeSixesReset: boolean;
+  /** A roll that would overshoot the board is refused. */
+  refusesOvershoot: boolean;
+  /** Landing exactly on the win square ends the game. */
+  winsOnExactLanding: boolean;
+  /** A report is required before the next roll. */
+  reportGate: boolean;
+  /** The die is re-rolled when it repeats. */
+  rerollOnRepeat: boolean;
+}
+
+export function detectRules(source: string): DetectedRules {
+  const has = (...patterns: RegExp[]) => patterns.some((pattern) => pattern.test(source));
+
+  return {
+    entryOnSix: has(
+      /!\s*\w*[Ss]tart\w*\s*&&\s*\w+\s*===?\s*6/,
+      /\bstepCount\s*===?\s*6\b/,
+      /roll\s*===?\s*(MAX_ROLL|6)[\s\S]{0,200}START_LOKA/,
+      /isStart[\s\S]{0,80}===?\s*6/,
+    ),
+    threeSixesReset: has(
+      /consecutive\w*\s*===?\s*3/,
+      /consecutive\w*\s*\+=?\s*1[\s\S]{0,200}===?\s*3/,
+      /positionBeforeThreeSixes/,
+    ),
+    refusesOvershoot: has(
+      />\s*TOTAL_PLANS/,
+      /newPlan\s*>\s*72/,
+      /newLoka\s*>\s*(TOTAL_PLANS|72)/,
+      /plan\s*>\s*72/,
+    ),
+    winsOnExactLanding: has(
+      /===?\s*(WIN_LOKA|WIN_PLAN)\b/,
+      /===?\s*68\b/,
+      /plan:\s*68/,
+    ),
+    reportGate: has(
+      /must create a report/i,
+      /isReported/,
+      /needsReport[\s\S]{0,80}(require|if|return)/,
+      /reportSubmitted/,
+    ),
+    rerollOnRepeat: has(
+      /get\s*===?\s*\w*\.count[\s\S]{0,60}getRandomNumber/,
+      /if\s*\(\s*\w+\s*===?\s*previous\s*\)/,
+    ),
+  };
+}
+
+/** How two rule sets differ, named so a report can list them. */
+export function compareRules(
+  found: DetectedRules,
+  expected: Partial<DetectedRules>,
+): Array<{ rule: keyof DetectedRules; found: boolean; expected: boolean }> {
+  const differences: Array<{ rule: keyof DetectedRules; found: boolean; expected: boolean }> = [];
+
+  for (const [rule, want] of Object.entries(expected) as Array<
+    [keyof DetectedRules, boolean]
+  >) {
+    if (found[rule] !== want) differences.push({ rule, found: found[rule], expected: want });
+  }
+
+  return differences;
+}

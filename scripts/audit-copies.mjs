@@ -13,7 +13,12 @@
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { auditBoard, compareToReference, describeProblems } from '../packages/engine/src/index.ts';
+import {
+  auditBoard,
+  compareToReference,
+  describeProblems,
+  detectRules,
+} from '../packages/engine/src/index.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const srcFlag = process.argv.indexOf('--src');
@@ -152,6 +157,7 @@ for (const file of walk(SRC)) {
     jumps: total,
     problems: auditBoard(snakes, arrows),
     differences: compareToReference(snakes, arrows),
+    rules: detectRules(source),
   });
 }
 
@@ -193,6 +199,27 @@ for (const result of results) {
 console.log(
   `\n${results.length - wrong} of ${results.length} copies agree with @leela/engine.`,
 );
+
+// The boards mostly agree; the rules do not. Print them side by side, because
+// a copy with the right board and no three-sixes rule is a different game
+// wearing the same map.
+const RULE_LABELS = {
+  entryOnSix: 'entry on 6',
+  threeSixesReset: '3 sixes',
+  refusesOvershoot: 'no overshoot',
+  winsOnExactLanding: 'win on 68',
+  reportGate: 'report gate',
+  rerollOnRepeat: 'reroll',
+};
+
+console.log('\nRules each copy carries:\n');
+const keys = Object.keys(RULE_LABELS);
+console.log(`${''.padEnd(52)}${keys.map((k) => RULE_LABELS[k].padEnd(14)).join('')}`);
+for (const result of results) {
+  const name = result.file.length > 50 ? `…${result.file.slice(-49)}` : result.file;
+  const marks = keys.map((key) => (result.rules[key] ? 'yes' : '—').padEnd(14)).join('');
+  console.log(`${name.padEnd(52)}${marks}`);
+}
 
 if (unparsed.length > 0) {
   console.log(`\n${unparsed.length} file(s) look like a board but could not be read:`);
