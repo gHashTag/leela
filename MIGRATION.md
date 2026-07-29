@@ -110,6 +110,36 @@ two quirks kept deliberately and marked in the code:
 
 Both have tests that will fail loudly if someone changes them by accident.
 
+## Second pass: what the first extraction lost
+
+Reviewing the extraction against the production app turned up two rules that
+had been left behind, both of them central rather than incidental.
+
+**The report gate.** Leela is not a race. Landing on a plan is an invitation to
+sit with it, and the published app enforced that: a player could not roll again
+until they had filed a report, and online games put a full day between moves
+(`OnlinePlayer.store`: `isReported`, `canGo: Date.now() - lastStepTime >=
+86400000`). That rule lived beside the Firebase calls and vanished in the
+rewrite — the NeuroLeela schema kept a `needs_report` column that nothing ever
+checked. It is now `canRoll()` in `turn.ts`, with a fourth variant, `online`,
+carrying the day-long cooldown.
+
+**Group play.** The published app seated six players around one device
+(`SelectPlayersScreen`, `OfflinePlayers`, `changePlayer()`); the rewrite became
+single-player. `session.ts` restores it as pure functions: turn order, skipping
+players who have finished, the report gate per seat, standings.
+
+That gap is also the commercial one. Surveying the field — Uinside's
+secularised app, Leela Chakra Ai, leela.love, Lila Game, com.vtm.lila — every
+competitor is single-player. Several now lead with an AI guide, so conversational
+interpretation is table stakes rather than an edge. Nobody offers synchronous
+group play or facilitator tooling, which is how the game is actually played.
+
+**Two smaller gaps closed alongside.** The die is now reproducible
+(`seededRoller`), so a session can store a seed and replay or verify its whole
+history; and `session_players.direction` was added after a round-trip test
+caught the column silently dropping how a player reached their square.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

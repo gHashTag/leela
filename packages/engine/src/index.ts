@@ -26,17 +26,36 @@ export {
 } from './rules';
 export type { PositionOutcome, SixesOutcome } from './rules';
 
-export { allPlans, applyRoll, hasWon, initialState, replay, rollDie } from './game';
+export { allPlans, applyRoll, hasWon, initialState, replay } from './game';
+
+export { noRepeatRoller, rollDie, rollMany, seededRoller } from './dice';
 
 export {
   CLASSIC,
   DEFAULT_RULESET,
   LEGACY_MOBILE,
   NEUROLEELA,
+  ONLINE,
   RULESETS,
   ruleSetById,
 } from './rulesets';
 export type { RuleSet } from './rulesets';
+
+export { ONE_DAY_MS, canRoll, formatWait, owesReport } from './turn';
+export type { TurnBlockedReason, TurnContext, TurnVerdict } from './turn';
+
+export {
+  MAX_SEATS,
+  SessionError,
+  advance,
+  canCurrentPlayerRoll,
+  createSession,
+  currentPlayer,
+  isSessionOver,
+  standings,
+  submitReport,
+} from './session';
+export type { SeatedPlayer, Session, SessionMove } from './session';
 
 export type {
   DiceRoller,

@@ -10,7 +10,7 @@
 import { MAX_ROLL, START_LOKA, TOTAL_PLANS, WIN_LOKA } from './board';
 import { getDirectionAndPosition, handleConsecutiveSixes } from './rules';
 import { DEFAULT_RULESET, type RuleSet } from './rulesets';
-import type { DiceRoller, GameState, MoveResult } from './types';
+import type { GameState, MoveResult } from './types';
 
 /**
  * The state a player starts with: waiting on Cosmic Consciousness for the six
@@ -26,9 +26,6 @@ export function initialState(): GameState {
     is_finished: true,
   };
 }
-
-/** Throw a fair die. Pass your own roller to replay a game deterministically. */
-export const rollDie: DiceRoller = () => Math.floor(Math.random() * MAX_ROLL) + 1;
 
 /**
  * Apply one die value to one player's state.

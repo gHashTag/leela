@@ -5,8 +5,20 @@
  * what a column is, and the persistence layer never learns a rule.
  */
 
-import { type GameState, type MoveEvent, ruleSetById, type RuleSet } from '@leela/engine';
-import type { NewGameStepRow, Player } from './schema';
+import {
+  type GameState,
+  type MoveEvent,
+  type RuleSet,
+  type SeatedPlayer,
+  type Session,
+  ruleSetById,
+} from '@leela/engine';
+import type {
+  NewGameStepRow,
+  Player,
+  SessionPlayerRow,
+  SessionRow,
+} from './schema';
 
 /** Read a player row as the state the engine expects. */
 export function stateFromPlayer(player: Pick<
@@ -57,4 +69,68 @@ export function gameStepRow(userId: string, event: MoveEvent, rules: RuleSet): N
 /** The variant a player's game runs under, falling back to the default. */
 export function rulesForPlayer(player: Pick<Player, 'ruleset'>): RuleSet {
   return ruleSetById((player.ruleset ?? 'neuroleela') as RuleSet['id']);
+}
+
+// --- sessions ---------------------------------------------------------------
+
+/**
+ * Assemble a session from its row and its seats.
+ *
+ * Seats are ordered by `seat`, not by whatever order the query returned them
+ * in — turn order depends on it.
+ */
+export function sessionFromRows(
+  // `ruleset` is typed nullable rather than following the column, because rows
+  // written before the column existed read back as null.
+  session: Pick<SessionRow, 'id' | 'turn_index' | 'roll_count'> & { ruleset: string | null },
+  seats: ReadonlyArray<SessionPlayerRow>,
+): Session {
+  const ordered = [...seats].sort((a, b) => a.seat - b.seat);
+
+  return {
+    id: session.id,
+    turnIndex: session.turn_index,
+    rollCount: session.roll_count,
+    rules: ruleSetById((session.ruleset ?? 'classic') as RuleSet['id']),
+    players: ordered.map(
+      (seat): SeatedPlayer => ({
+        id: seat.user_id,
+        name: seat.name ?? undefined,
+        state: {
+          loka: seat.plan,
+          previous_loka: seat.previous_plan,
+          direction: (seat.direction ?? '') as GameState['direction'],
+          consecutive_sixes: seat.consecutive_sixes,
+          position_before_three_sixes: seat.position_before_three_sixes,
+          is_finished: seat.is_finished,
+        },
+        lastRollAt: seat.last_roll_at ? seat.last_roll_at.getTime() : null,
+        reportSubmitted: seat.report_submitted,
+      }),
+    ),
+  };
+}
+
+/** The session-row updates that persist a session's own fields. */
+export function sessionUpdate(session: Session) {
+  return {
+    turn_index: session.turnIndex,
+    roll_count: session.rollCount,
+    ruleset: session.rules.id,
+    updated_at: new Date(),
+  };
+}
+
+/** The seat-row updates for one player. */
+export function seatUpdate(player: SeatedPlayer) {
+  return {
+    plan: player.state.loka,
+    previous_plan: player.state.previous_loka,
+    direction: player.state.direction,
+    consecutive_sixes: player.state.consecutive_sixes,
+    position_before_three_sixes: player.state.position_before_three_sixes,
+    is_finished: player.state.is_finished,
+    last_roll_at: player.lastRollAt === null ? null : new Date(player.lastRollAt),
+    report_submitted: player.reportSubmitted,
+  };
 }

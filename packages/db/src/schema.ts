@@ -30,10 +30,13 @@ export const players = pgTable('players', {
 
   /**
    * Which rule variant this player's game runs under: 'classic',
-   * 'neuroleela' or 'legacy-mobile'. Defaults to what the newest app shipped,
-   * so migrating a row without setting it changes nothing.
+   * 'neuroleela', 'legacy-mobile' or 'online'. Defaults to what the newest app
+   * shipped, so migrating a row without setting it changes nothing.
    */
   ruleset: text('ruleset').notNull().default('neuroleela'),
+
+  /** When this player last rolled. Drives the cooldown between turns. */
+  lastRollAt: timestamp('last_roll_at'),
 
   /** Firebase uid of a migrated com.leelagame account, when there was one. */
   legacyId: text('legacy_id'),
@@ -69,6 +72,53 @@ export const gameSteps = pgTable('game_steps', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
+/**
+ * A group game: several players sharing one board.
+ *
+ * The published app seated up to six players on one device and had no way to
+ * play a group game across devices. Sessions are that missing piece, and the
+ * reason they are modelled here rather than inside the app.
+ */
+export const sessions = pgTable('sessions', {
+  id: text('id').primaryKey(),
+  /** Who opened the table; they facilitate it. */
+  host_id: text('host_id').notNull(),
+  /** Which variant everyone at this table plays. */
+  ruleset: text('ruleset').notNull().default('classic'),
+  /** Index into the seats, of whoever holds the turn. */
+  turn_index: integer('turn_index').notNull().default(0),
+  /** Rolls taken at this table, across all seats. */
+  roll_count: integer('roll_count').notNull().default(0),
+  /**
+   * Seed for the session's die. Storing it makes the whole game replayable
+   * and lets a player verify a roll they did not witness.
+   */
+  dice_seed: integer('dice_seed'),
+  is_open: boolean('is_open').notNull().default(true),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+/** One seat at a session. Mirrors `SeatedPlayer` in the engine. */
+export const sessionPlayers = pgTable('session_players', {
+  id: serial('id').primaryKey(),
+  session_id: text('session_id').notNull(),
+  user_id: text('user_id').notNull(),
+  /** Seat order, 0-based. Determines who follows whom. */
+  seat: integer('seat').notNull(),
+  name: text('name'),
+  plan: integer('plan').notNull().default(68),
+  previous_plan: integer('previous_plan').notNull().default(0),
+  /** How this player reached their current plan. Empty before their first roll. */
+  direction: text('direction').notNull().default(''),
+  consecutive_sixes: integer('consecutive_sixes').notNull().default(0),
+  position_before_three_sixes: integer('position_before_three_sixes').notNull().default(0),
+  is_finished: boolean('is_finished').notNull().default(true),
+  last_roll_at: timestamp('last_roll_at'),
+  /** False while this player owes a report on the plan they are standing on. */
+  report_submitted: boolean('report_submitted').notNull().default(true),
+});
+
 export const reports = pgTable('reports', {
   id: serial('id').primaryKey(),
   user_id: text('user_id').notNull(),
@@ -95,6 +145,10 @@ export const chatHistory = pgTable('chat_history', {
 
 export type Player = typeof players.$inferSelect;
 export type NewPlayer = typeof players.$inferInsert;
+export type SessionRow = typeof sessions.$inferSelect;
+export type NewSessionRow = typeof sessions.$inferInsert;
+export type SessionPlayerRow = typeof sessionPlayers.$inferSelect;
+export type NewSessionPlayerRow = typeof sessionPlayers.$inferInsert;
 export type GameStepRow = typeof gameSteps.$inferSelect;
 export type NewGameStepRow = typeof gameSteps.$inferInsert;
 export type Report = typeof reports.$inferSelect;

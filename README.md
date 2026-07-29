@@ -54,15 +54,41 @@ without a network.
 The two shipped generations disagree about what a six means, and each
 implemented one half of the traditional rule:
 
-| Variant | Extra throw on a six | Three sixes reset | Shipped in |
-|---|---|---|---|
-| `legacy-mobile` | yes | no | `com.leelagame` v6.5.1, Play versionCode 77 |
-| `neuroleela` | no | yes | NeuroLeela (Expo/Inngest) |
-| `classic` | yes | yes | the traditional rule — neither app shipped it |
+| Variant | Extra throw on a six | Three sixes reset | Report before rolling | Cooldown | Shipped in |
+|---|---|---|---|---|---|
+| `legacy-mobile` | yes | no | no | — | `com.leelagame` v6.5.1, Play versionCode 77 |
+| `neuroleela` | no | yes | no | — | NeuroLeela (Expo/Inngest) |
+| `online` | yes | no | yes | 24h | the published app's online mode |
+| `classic` | yes | yes | yes | — | the traditional rule — no app shipped it whole |
 
 `neuroleela` is the default, so adopting the engine changes nothing for current
 players. Each game records its variant in `players.ruleset`, so history stays
 reproducible when a surface migrates.
+
+## Sessions
+
+Leela is traditionally played in a facilitated group, and the published app
+seated six players around one device. The rewrite dropped that. No competing
+app offers group play across devices either, so the engine models it directly:
+
+```ts
+import { advance, createSession, submitReport } from '@leela/engine';
+
+let session = createSession('table-1', [{ id: 'a' }, { id: 'b' }], CLASSIC);
+session = advance(session, 6, Date.now()).session;  // a enters on plan 6
+session = submitReport(session, 'a');               // a reflects, then may roll
+```
+
+Turn order, the report gate, the cooldown between rolls and skipping players
+who have already finished all live in `session.ts` as pure functions.
+
+## The die
+
+`rollDie()` uses the platform RNG. `seededRoller(seed)` is deterministic — same
+seed, same sequence, every platform — which is what makes a game replayable
+from its seed alone and lets a server and a client agree on a roll without
+trusting each other. `noRepeatRoller()` reproduces the published app's habit of
+re-rolling a repeated value; it is there for fidelity, not for new work.
 
 ## Content
 
@@ -105,9 +131,11 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 52 | done — 100% branch coverage |
-| `@leela/content` | 101 | done — 22 languages complete |
-| `@leela/db` | 12 | schema and mapping done; migrations pending |
+| `@leela/engine` | 99 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/content` | 101 | 22 languages complete |
+| `@leela/db` | 20 | schema and mapping done; migrations pending |
 | everything else | — | not yet ported |
+
+220 tests, run on every push by [CI](.github/workflows/ci.yml).
 
 See [MIGRATION.md](MIGRATION.md) for what remains and in what order.
