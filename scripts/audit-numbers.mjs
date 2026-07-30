@@ -1,0 +1,131 @@
+#!/usr/bin/env node
+/**
+ * The board references in the traditional text, against every translation.
+ *
+ * The plans talk about the board — "(field 72)", "boxes 38, prana, 39, apana",
+ * "until he reaches field 68" — and plan 9 argues from arithmetic:
+ * `9x5=45=9; 9x6=54=9; …`. A cross-reference whose number is gone points
+ * nowhere, and an argument whose premises are gone is not an argument.
+ *
+ * The audit that came before this one checked terms: transliterations,
+ * duplicate bodies, script density. It found nothing, and it was looking one
+ * layer above the damage.
+ *
+ * What this found, in 42 plans across eight languages: Ukrainian, Malay and
+ * Arabic have lost board references in a dozen plans each, and German,
+ * Spanish, Hindi, Marathi and Chinese in one apiece. The loss is in the donor
+ * translations themselves — checked against `leela-src`, where Ukrainian plan
+ * 60 has no 68 either — not in this repository's generator.
+ *
+ * **It is recorded rather than repaired.** Repairing it means translating, and
+ * translating means calling a service this repository deliberately does not
+ * call. So the damage below is named on every run and the audit fails only on a
+ * loss nobody has seen before — which is what a rebuild from a different source
+ * would produce.
+ *
+ * Run:  node scripts/audit-numbers.mjs
+ */
+
+import { readFileSync, readdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { keyOf, lossesIn, unrecorded } from './lib/numbers.mjs';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const DATA = join(HERE, '..', 'packages', 'content', 'data');
+
+/**
+ * Board references already known to be missing, as `language/plan: numbers`.
+ *
+ * Every line is a sentence in a shipped translation that refers to a square and
+ * does not say which. They are here so that a rebuild cannot add a forty-third
+ * quietly, and so that anyone re-translating knows exactly what to look for.
+ */
+const RECORDED = [
+  'ar/6: 1,4',
+  'ar/8: 0,11,12',
+  'ar/9: 5,6,7,45,54,63,81,2520,72000',
+  'ar/30: 38,39,40',
+  'ar/38: 24',
+  'ar/44: 37',
+  'ar/46: 45',
+  'ar/51: 72',
+  'ar/55: 4,52',
+  'ar/60: 68',
+  'ar/61: 21',
+  'ar/62: 8',
+  'de/55: 4',
+  'es/62: 8',
+  'hi/62: 8',
+  'mr/5: 5',
+  'ms/6: 1,4',
+  'ms/8: 0,10,11,12',
+  'ms/9: 5,6,7,45,54,63,72,81,2520',
+  'ms/30: 38,39,40',
+  'ms/38: 24',
+  'ms/44: 37',
+  'ms/46: 45',
+  'ms/51: 72',
+  'ms/55: 4,52',
+  'ms/60: 68',
+  'ms/61: 21',
+  'ms/62: 8',
+  'uk/6: 1,4',
+  'uk/8: 0,11,12',
+  'uk/9: 5,6,7,45,54,63,72,81,2520',
+  'uk/23: 11',
+  'uk/30: 38,39,40',
+  'uk/38: 24',
+  'uk/44: 37',
+  'uk/46: 45',
+  'uk/51: 72',
+  'uk/55: 4,52',
+  'uk/60: 68',
+  'uk/61: 21',
+  'uk/62: 8',
+  'zh/62: 8',
+];
+
+const read = (language) => JSON.parse(readFileSync(join(DATA, `plans.${language}.json`), 'utf8'));
+
+const languages = readdirSync(DATA)
+  .filter((file) => /^plans\..+\.json$/.test(file))
+  .map((file) => file.slice('plans.'.length, -'.json'.length))
+  .sort();
+
+const russian = read('ru');
+const english = read('en');
+
+const found = [];
+for (const language of languages) {
+  // The two editions are what everything else is measured against, and a number
+  // is only expected of a translation when both of them carry it.
+  if (language === 'ru' || language === 'en') continue;
+  for (const loss of lossesIn(read(language), russian, english)) found.push(keyOf(language, loss));
+}
+
+const news = unrecorded(found, RECORDED);
+const healed = RECORDED.filter((line) => !found.includes(line));
+
+console.log(`\nChecked ${languages.length} languages for the board references both editions state.\n`);
+
+if (found.length > 0) {
+  console.log(`Already known to be missing, in ${found.length} plans:`);
+  for (const line of found) console.log(`  ${line}`);
+  console.log('');
+}
+
+if (healed.length > 0) {
+  console.log('Recorded as missing and now present — take these out of RECORDED:');
+  for (const line of healed) console.log(`  ${line}`);
+  console.log('');
+}
+
+if (news.length === 0) {
+  console.log('No board reference has gone missing that was not already recorded.');
+} else {
+  console.log('These are new:');
+  for (const line of news) console.log(`  ${line}`);
+  console.log('\nA cross-reference without its number points nowhere.');
+  process.exitCode = 1;
+}

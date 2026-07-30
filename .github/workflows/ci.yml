@@ -131,6 +131,11 @@ jobs:
       # number survives before it is quietly wrong.
       - run: node scripts/audit-claims.mjs
 
+      # The board references inside the traditional text. Reports the damage it
+      # already knows about and fails only on a loss nobody has recorded, which
+      # is what a rebuild from a different source would produce.
+      - run: node scripts/audit-numbers.mjs
+
       # Every script starts under the runtime it names, and every audit is
       # either run here or says in its own header why it cannot be. audit-copies
       # - the check that reads eighteen copies of the board - sat broken under

@@ -3165,6 +3165,47 @@ Two tests are the ones that matter. The first two entries of forty-two reach the
 prompt, which is the defect stated as a shape. And the plan's own text is still
 in there afterwards, which is the cost the shape is not allowed to have.
 
+## Eighty-ninth pass: the numbers inside the teaching
+
+The translation audit checked terms — parenthesised transliterations survive,
+no two plans share a body, body lengths sit where each script's density
+predicts. It found nothing, and it was looking one layer above the damage.
+
+The plans talk about the board. *"The player can get here only by passing
+through the field of correct knowledge (45)."* *"A snake leading from the
+tamoguna square (field 72)."* *"See also comments on boxes 38, prana, 39,
+apana, and 40, vyana."* *"Until he reaches field 68."* And plan 9 argues from
+arithmetic: `9x5=45=9; 9x6=54=9; …`.
+
+**Forty-two of those references are gone.** Ukrainian, Malay and Arabic have
+lost a dozen each; German, Spanish, Hindi, Marathi and Chinese one apiece. A
+cross-reference whose number is missing points nowhere, and an argument whose
+premises are deleted is not an argument — and the companion now puts this text
+in its prompt and is told *it is the source; you are not*.
+
+**Three false alarms had to be closed before any of it could be believed**, and
+they are most of what the tests assert:
+
+- **Numerals are not ASCII everywhere.** Arabic, Urdu, Hindi and Marathi write
+  their own digits. A `\d` scan calls every number in those languages missing —
+  a check failing loudest exactly where it understands least.
+- **Thousands group differently.** `72,000`, `72 000` and `72000` are one
+  number written three ways, and a naive comparison made *every* language,
+  English included, look damaged in plan 9.
+- **Not every language was translated from the same edition.** Ukrainian, Malay
+  and Arabic follow the *English* text and the rest follow the Russian. So a
+  number is only expected of a translation when **both** editions state it —
+  which is also why those three show the most loss: they came through a
+  different chain.
+
+The damage is in the donor translations themselves, not in this repository's
+generator: `leela-src`'s own Ukrainian plan 60 has no 68 in it either. So it is
+**recorded rather than repaired** — repairing means translating, and translating
+means calling a service this repository deliberately does not call. The audit
+names all 42 on every run and fails only on the forty-third, which is what a
+rebuild from a different source would produce. Checked by deleting a number from
+German plan 60: exit 1, `de/60: 68`.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
@@ -3313,6 +3354,11 @@ and "Get started by editing src/app/page.tsx", `useLeelaGame.ts` is forty-six
 lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
+
+**Translation audit, second layer — and this one found something.** See the
+eighty-ninth pass below: 42 plans across eight languages have lost the board
+references the text states. The first audit is still true at the layer it
+checked.
 
 **Translation audit — done, and it found nothing.** The 19 machine-translated
 languages hold up at term level: parenthesised transliterations survive in all
