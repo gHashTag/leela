@@ -50,7 +50,7 @@ describe('the file comes back', () => {
     expect(journal.entries.length).toBeGreaterThan(5);
 
     const back = parseDocument(JSON.stringify(toDocument(journal)));
-    expect(back).toEqual(journal.entries);
+    expect(back?.entries).toEqual(journal.entries);
   });
 
   it('says what wrote it and what shape it is', () => {

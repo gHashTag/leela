@@ -322,6 +322,58 @@ describe('the mini app as it is assembled', () => {
     expect(kept.entries, 'starting again is not a reason to burn what was written').toHaveLength(1);
   });
 
+  it('carries the question out with the answers, and takes one in only where there is none', async () => {
+    // The frame every report was written inside. A player who changed phone
+    // arrived with everything they had said and nothing they had asked.
+    const theirs = remembering({
+      'leela.intention.v1': 'to stop hurrying',
+      'leela.reports.v1': JSON.stringify({
+        reported: true,
+        entries: [{ plan: 41, text: 'What it asked of me.', at: 1 }],
+      }),
+      'leela.seats.v1': table([{ id: 'p1', state: onFortyOne, reportSubmitted: true }]),
+    });
+
+    await play(theirs);
+    const written = JSON.parse(
+      JSON.stringify(toDocument([{ plan: 41, text: 'What it asked of me.', at: 1 }], 'to stop hurrying')),
+    ) as { intention?: string };
+    expect(written.intention, 'the file this app would write').toBe('to stop hurrying');
+
+    // A new device: no question of its own, so the file's is taken.
+    const fresh = remembering({
+      'leela.seats.v1': table([{ id: 'p1', state: onFortyOne, reportSubmitted: true }]),
+    });
+    await play(fresh);
+    await answerTheIntention('');
+    const file = new File([JSON.stringify(written)], 'leela-path.json', {
+      type: 'application/json',
+    });
+    const input = el('path-import-input') as HTMLInputElement;
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    expect(fresh.getItem('leela.intention.v1')).toBe('to stop hurrying');
+
+    // And a device that already has one keeps it: what somebody is playing for
+    // is not a file's to set.
+    const asked = remembering({
+      'leela.intention.v1': 'to say it out loud',
+      'leela.seats.v1': table([{ id: 'p1', state: onFortyOne, reportSubmitted: true }]),
+    });
+    await play(asked);
+    const again = new File([JSON.stringify(written)], 'leela-path.json', {
+      type: 'application/json',
+    });
+    const second = el('path-import-input') as HTMLInputElement;
+    Object.defineProperty(second, 'files', { value: [again], configurable: true });
+    second.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    expect(asked.getItem('leela.intention.v1')).toBe('to say it out loud');
+  }, 20_000);
+
   it('loads a language whose plans are translated, and one that is not a language', async () => {
     // The dataset is fetched per language as its own chunk, which only the
     // assembled app does. Twenty of the twenty-two have plans and no message

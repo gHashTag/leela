@@ -50,9 +50,9 @@ export function toText(journal: Journal, titleOf: TitleOf): string {
     .join('\n\n---\n\n');
 }
 
-/** The path as something to bring back. */
-export function toDocument(journal: Journal) {
-  return toJournalDocument(journal.entries);
+/** The path as something to bring back, with the question it was written for. */
+export function toDocument(journal: Journal, intention?: string) {
+  return toJournalDocument(journal.entries, intention);
 }
 
 /**

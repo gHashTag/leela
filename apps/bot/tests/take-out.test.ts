@@ -90,7 +90,7 @@ describe('what the bot writes is what the mini app reads', () => {
     const back = parseDocument(serialise(fileFrom(kept).document));
 
     expect(back).not.toBeNull();
-    expect(back).toHaveLength(kept.length);
+    expect(back?.entries).toHaveLength(kept.length);
   });
 
   it('writes it oldest first, whatever order the store returned', () => {

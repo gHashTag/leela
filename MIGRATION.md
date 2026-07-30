@@ -3868,6 +3868,39 @@ The assembled layer has now produced three defects in four passes and one clean
 sweep. Both surfaces have a test of the thing as it is actually put together,
 which is where the last three defects lived.
 
+## Hundred-and-eleventh pass: the file carried the answers and not the question
+
+The plan I set myself last time was wrong, and it is worth saying so: `apps/docs`
+was named as the surface with no assembled test, and it has the best one in the
+repository — including *every internal link in every generated page resolves to
+a file that exists*. Checked before writing anything.
+
+So: a real gap in the product instead. **A path left the app as a year of
+writing with the frame it was written inside missing.** The reports are the
+answer accumulating; the intention is what they are answering. Somebody who
+changed phone arrived with everything they had said and nothing they had asked.
+
+`JournalDocument` carries it now. Three decisions, each of them a rule:
+
+- **A field, not a new `schemaVersion`.** A version exists so a reader refuses a
+  file whose *existing* fields may mean something else. This changes the meaning
+  of none, and a reader that has never heard of it loses nothing it had.
+- **Absent rather than empty.** A file carrying `""` says the player was asked
+  and answered nothing, which is not what happened.
+- **A question already given is never replaced.** The importing app takes the
+  file's intention only where it has none of its own — the same rule that keeps
+  `reported` out of an import, and for the same reason: what somebody is playing
+  for is not a file's to set.
+
+`parseDocument` returns the document rather than its entries, which is the
+change that made this possible at all: there was nowhere in the return value to
+put the question. The bot takes the entries and ignores the rest — a chat has no
+profile to keep an intention in, and it says so where the code says it.
+
+The oversized and the wrong-typed are dropped while the path survives: a file
+has been out of the app and possibly through an editor, and a broken question is
+not a reason to lose a year of answers.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

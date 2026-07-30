@@ -8,6 +8,7 @@ import {
   merge,
   newEntries,
   order,
+  MAX_INTENTION_CHARS,
   parseDocument,
   toDocument,
   type Report,
@@ -63,7 +64,9 @@ describe('what is a report', () => {
 describe('a file comes back as it went out', () => {
   it('round-trips a whole path', () => {
     const entries = path(120);
-    expect(parseDocument(JSON.stringify(toDocument(entries)))).toEqual(order(entries));
+    // The whole document now: the question travels with the answers, so there
+    // has to be somewhere in the return value to put it.
+    expect(parseDocument(JSON.stringify(toDocument(entries)))?.entries).toEqual(order(entries));
   });
 
   it('says what wrote it and what shape it is', () => {
@@ -156,5 +159,78 @@ describe('taking a file in loses nothing', () => {
     const before = JSON.stringify(mine);
     merge(mine, path(5, 100));
     expect(JSON.stringify(mine)).toBe(before);
+  });
+});
+
+describe('the question the answers were written for', () => {
+  /**
+   * A path left the app as a year of writing with the frame it was written
+   * inside missing. The reports are the answer accumulating; the intention is
+   * what they are answering. Somebody who changed phone arrived with everything
+   * they had said and nothing they had asked.
+   *
+   * It is added as a field rather than a new `schemaVersion` on purpose. A
+   * version exists so that a reader refuses a file whose *existing* fields may
+   * mean something else; this changes the meaning of none, and a reader that
+   * has never heard of it loses nothing it had.
+   */
+  const entries: Report[] = [{ plan: 41, text: 'What it asked of me.', at: 1_700_000_000_000 }];
+
+  it('travels with them', () => {
+    const back = parseDocument(JSON.stringify(toDocument(entries, 'to stop hurrying')));
+
+    expect(back?.intention).toBe('to stop hurrying');
+    expect(back?.entries).toEqual(entries);
+  });
+
+  it('is absent rather than empty when there is none', () => {
+    // A file carrying `""` says the player was asked and answered nothing,
+    // which is not what happened.
+    expect(toDocument(entries)).not.toHaveProperty('intention');
+    expect(toDocument(entries, '   ')).not.toHaveProperty('intention');
+    expect(parseDocument(JSON.stringify(toDocument(entries)))?.intention).toBeUndefined();
+  });
+
+  it('is read back from a file that has one and ignored where it has not', () => {
+    const withOne = JSON.stringify({ schemaVersion: 1, app: 'leela', entries, intention: 'to see' });
+    const without = JSON.stringify({ schemaVersion: 1, app: 'leela', entries });
+
+    expect(parseDocument(withOne)?.intention).toBe('to see');
+    expect(parseDocument(without)?.intention).toBeUndefined();
+  });
+
+  it('does not let a file through on the strength of one', () => {
+    // The entries are still the thing being vouched for. A document with a
+    // lovely intention and a broken report is a broken document.
+    const broken = JSON.stringify({
+      schemaVersion: 1,
+      app: 'leela',
+      entries: [{ plan: 99, text: 'off the board', at: 1 }],
+      intention: 'to see',
+    });
+
+    expect(parseDocument(broken)).toBeNull();
+  });
+
+  it('refuses one no player could have written', () => {
+    // A file has been out of the app and possibly through an editor, so the
+    // published app's own bound applies on the way in as well as out.
+    const huge = JSON.stringify({
+      schemaVersion: 1,
+      app: 'leela',
+      entries,
+      intention: 'x'.repeat(MAX_INTENTION_CHARS + 1),
+    });
+
+    expect(parseDocument(huge)).not.toBeNull();
+    expect(parseDocument(huge)?.intention, 'the path survives; the oversized question does not')
+      .toBeUndefined();
+  });
+
+  it('is not something a wrong type can smuggle in', () => {
+    for (const intention of [42, {}, [], null, true]) {
+      const text = JSON.stringify({ schemaVersion: 1, app: 'leela', entries, intention });
+      expect(parseDocument(text)?.intention, JSON.stringify(intention)).toBeUndefined();
+    }
   });
 });

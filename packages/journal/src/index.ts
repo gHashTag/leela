@@ -40,6 +40,22 @@ export interface JournalDocument {
   /** What wrote it, for a person opening the file in a year. */
   app: 'leela';
   entries: Report[];
+  /**
+   * What the player was playing for.
+   *
+   * The one piece of their own writing the file did not carry. A path left the
+   * app as a year of answers with the question missing — and the question is
+   * the frame every one of those answers was written inside: the reports are
+   * the answer accumulating, and an answer without its question is a stack of
+   * paragraphs about squares.
+   *
+   * Optional, and old files simply do not have it. Adding a field rather than
+   * bumping `schemaVersion` on purpose: a reader that has never heard of it
+   * ignores it and loses nothing it had, which is what a version is for
+   * refusing — a *newer* schema may mean something different by a field that
+   * already exists, and this changes the meaning of none.
+   */
+  intention?: string;
 }
 
 export function isReport(value: unknown): value is Report {
@@ -57,8 +73,20 @@ export function isReport(value: unknown): value is Report {
 }
 
 /** The path as something to carry: a document, ready to be serialised. */
-export function toDocument(entries: ReadonlyArray<Report>): JournalDocument {
-  return { schemaVersion: SCHEMA_VERSION, app: 'leela', entries: order(entries) };
+export function toDocument(
+  entries: ReadonlyArray<Report>,
+  intention?: string,
+): JournalDocument {
+  const asked = (intention ?? '').trim();
+  const document: JournalDocument = {
+    schemaVersion: SCHEMA_VERSION,
+    app: 'leela',
+    entries: order(entries),
+  };
+
+  // Absent rather than empty: a file that carries `""` says the player was
+  // asked and answered nothing, and that is not what happened.
+  return asked.length > 0 ? { ...document, intention: asked } : document;
 }
 
 /**
@@ -69,7 +97,7 @@ export function toDocument(entries: ReadonlyArray<Report>): JournalDocument {
  * written. A file is the least trustworthy thing either surface handles — it
  * has been out of the app, through a chat, and possibly through an editor.
  */
-export function parseDocument(text: string): Report[] | null {
+export function parseDocument(text: string): JournalDocument | null {
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -89,8 +117,27 @@ export function parseDocument(text: string): Report[] | null {
   if (!Array.isArray(document.entries)) return null;
   if (!document.entries.every(isReport)) return null;
 
-  return document.entries as Report[];
+  // The whole document rather than its entries. It used to hand back the list
+  // alone, which is why the question could not travel with the answers: there
+  // was nowhere in the return value to put it.
+  const asked = typeof document.intention === 'string' ? document.intention.trim() : '';
+
+  return {
+    schemaVersion: document.schemaVersion,
+    app: 'leela',
+    entries: document.entries as Report[],
+    ...(asked.length > 0 && asked.length <= MAX_INTENTION_CHARS ? { intention: asked } : {}),
+  };
 }
+
+/**
+ * How long an intention a file may carry.
+ *
+ * The published app's own bound — `yup.string().min(2).max(800)` in
+ * `ChangeIntention` — and the mini app's. A file has been out of the app and
+ * through an editor, so the bound is applied on the way in as well as out.
+ */
+export const MAX_INTENTION_CHARS = 800;
 
 /** Two reports are the same when the same words were written at the same moment. */
 export function keyOf(entry: Report): string {

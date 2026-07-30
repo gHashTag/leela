@@ -1055,7 +1055,10 @@ function exportPath(): void {
   // keepsake, and a download nobody asked for is worse than none.
   if (!mayExport(pathOf(journal))) return;
 
-  const document_ = toDocument(journal);
+  // The question with the answers. A path used to leave as a year of writing
+  // with the frame it was written inside missing, so a player who changed phone
+  // arrived with everything they had said and nothing they had asked.
+  const document_ = toDocument(journal, intention);
   const blob = new Blob([JSON.stringify(document_, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
 
@@ -1129,8 +1132,18 @@ async function importPath(file: File): Promise<void> {
   }
 
   const before = journal.entries.length;
-  journal = merge(journal, incoming);
+  journal = merge(journal, incoming.entries);
   saveJournalFor(localStorage, currentPlayer(session).id, journal);
+
+  // The question, only where this seat has none. An intention already given is
+  // this player's own and is never replaced by a file's — the same rule that
+  // keeps `reported` out of an import, and for the same reason: what somebody
+  // is playing for is not somebody else's to set.
+  const asked = incoming.intention ?? '';
+  if (intention === '' && asked !== '') {
+    const seat = currentPlayer(session).id;
+    if (saveIntention(localStorage, asked, seat)) intention = asked.trim();
+  }
 
   const added = journal.entries.length - before;
   el.reader.close();

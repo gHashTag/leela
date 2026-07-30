@@ -56,7 +56,10 @@ export function decide(
   const incoming = parseDocument(text);
   if (incoming === null) return { kind: 'unreadable' };
 
-  const added = newEntries(existing, incoming);
+  // The entries alone. A file may carry the question the player was playing
+  // for, and this bot has nowhere to keep one — a chat has no profile — so it
+  // takes what it can hold and says nothing about the rest.
+  const added = newEntries(existing, incoming.entries);
   return added.length === 0 ? { kind: 'nothing-new' } : { kind: 'took', added };
 }
 
