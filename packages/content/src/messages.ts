@@ -212,6 +212,7 @@ const EN = {
   'app.standing': 'You are on {plan}. {title}',
   // Reading a square you have stood on before. Leela's teaching is that you
   // come back, and what you said last time is the measure of what has changed.
+  'app.cameBack': 'Came back to you',
   'app.wroteHere': 'What you wrote here before',
   'app.wroteOnce': 'What you wrote here',
   'app.returns': {
@@ -451,6 +452,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.restarted': 'Новая игра. Бросьте шестёрку, чтобы войти в неё.',
   'app.opening': 'Шестёрка выводит вас на доску.',
   'app.standing': 'Вы на {plan}. {title}',
+  'app.cameBack': 'Вернулось к вам',
   'app.wroteHere': 'Что вы писали здесь раньше',
   'app.wroteOnce': 'Что вы здесь написали',
   'app.returns': {

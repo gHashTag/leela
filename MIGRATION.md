@@ -3029,6 +3029,36 @@ answer. The bot's asserts delegation: the reply names a square exactly when the
 shared function counted it. Checked by breaking each side in turn — the package
 break fails five of its own tests, the bot break fails three of the bot's.
 
+## Eighty-fifth pass: the returns, where a player already looks
+
+The bot got `/returns` last pass and the mini app had the answer scattered:
+marks in the list of all 72, and the writings inside a square you thought to
+open. Nowhere to see *what keeps coming back* as a thing in itself.
+
+It needed no new button. "My path" is where a player already goes to look at
+their own writing, and the path is everything in the order it happened — which
+is the wrong shape for the question and the right place for the answer. Each
+seat's section now opens with the squares that came back, as chips that open
+the square: the point of knowing 41 came back four times is reading the four,
+and the reader already puts them one under the other.
+
+**And the frame was one player's.** The intention was drawn once at the top of
+this view, under the words "You are playing for:", above everybody's writing —
+so at a shared table it belonged to whoever happened to hold the turn, and the
+other players read somebody else's question as their own. That is the same
+defect the intention key had two passes ago, surviving in the one view that
+shows every seat at once. It moved into the sections; the "Change it" button
+stays with the seat holding the turn, because that is the only seat
+`askIntention` can write to.
+
+`pathSections` exists so this can be asked rather than eyeballed: it takes the
+journals and returns what the view draws. The tests are about whose — every seat
+gets its own returns and nobody else's, no seat is handed a square only another
+seat returned to, no seat is handed another's question, and a seat that has
+written nothing gets an *empty* section rather than none (a missing section is a
+player missing from their own path view). Breaking `pathSections` to read seat
+one's journal for everybody fails three of them.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

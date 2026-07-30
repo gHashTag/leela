@@ -74,7 +74,10 @@ import {
   type Journal,
   hintFor,
   loadJournalFor,
+  pathSections,
   revisited,
+  type PathSection,
+  type Revisit,
   saveJournalFor,
   writingsOn,
 } from './reports';
@@ -454,6 +457,70 @@ function openPlan(plan: number): void {
   openReader('plan', `${plan}. ${found.title}`, [...writtenBefore(plan), ...paragraphs(found.body)]);
 }
 
+/**
+ * What one seat is playing for, and — for whoever holds the turn — the way to
+ * change it.
+ *
+ * The intention is the frame the reports are written inside: the game is being
+ * played to answer it, and the reports are the answer accumulating. The
+ * published app keeps it on the profile, which is where nobody rereads it.
+ *
+ * Only the seat holding the turn is offered the change, because that is the
+ * only seat `askIntention` can write to.
+ */
+function playingFor(section: PathSection): HTMLElement[] {
+  if (section.intention === '') return [];
+
+  const heading = document.createElement('h3');
+  heading.textContent = messageFor(language, 'app.intentionYours');
+  const said = document.createElement('p');
+  said.textContent = section.intention;
+
+  if (section.playerId !== currentPlayer(session).id) return [heading, said];
+
+  const change = document.createElement('button');
+  change.type = 'button';
+  change.className = 'quiet';
+  change.textContent = messageFor(language, 'app.intentionChange');
+  change.addEventListener('click', () => {
+    el.reader.close();
+    askIntention();
+  });
+
+  return [heading, said, change];
+}
+
+/**
+ * The squares that came back, as things to tap.
+ *
+ * A count rather than a dot, and a way in rather than a statement: the point of
+ * knowing 41 came back four times is reading the four, and `openPlan` already
+ * puts them one under the other.
+ */
+function cameBack(returns: ReadonlyArray<Revisit>): HTMLElement[] {
+  const heading = document.createElement('h3');
+  heading.className = 'mine';
+  heading.textContent = messageFor(language, 'app.cameBack');
+
+  const row = document.createElement('p');
+  row.className = 'came-back';
+
+  for (const visit of returns) {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip';
+    chip.textContent = `${visit.plan} · ${planFor(visit.plan).title} ×${visit.times}`;
+    chip.title = messageFor(language, 'app.returns', { count: visit.times });
+    chip.addEventListener('click', () => {
+      el.reader.close();
+      openPlan(visit.plan);
+    });
+    row.append(chip);
+  }
+
+  return [heading, row];
+}
+
 /** The player's own earlier writing about one square, oldest first. */
 function writtenBefore(plan: number): HTMLElement[] {
   const written = writingsOn(journal, plan);
@@ -708,43 +775,35 @@ function openPath(): void {
 
   const nodes: HTMLElement[] = [];
 
-  // The intention first, because it is the frame the rest of this is written
-  // inside: the game is being played to answer it, and the reports are the
-  // answer accumulating. The published app keeps it on the profile, which is
-  // where nobody rereads it.
-  if (intention !== '') {
-    const heading = document.createElement('h3');
-    heading.textContent = messageFor(language, 'app.intentionYours');
-    const said = document.createElement('p');
-    said.textContent = intention;
-
-    const change = document.createElement('button');
-    change.type = 'button';
-    change.className = 'quiet';
-    change.textContent = messageFor(language, 'app.intentionChange');
-    change.addEventListener('click', () => {
-      el.reader.close();
-      askIntention();
-    });
-
-    nodes.push(heading, said, change);
-  }
-
   // Every seat, not only whoever holds the turn. `OfflineProfileScreen` is a
   // sectioned list — "Player 1", "Player 2", … sliced to the number seated —
   // and a path that showed one of three would leave two people unable to read
   // what they had written on a device they share.
   const alone = session.players.length === 1;
 
-  for (const [seat, player] of session.players.entries()) {
-    const theirs = pathOf(loadJournalFor(localStorage, player.id));
+  const sections = pathSections(
+    session.players.map((player) => ({
+      id: player.id,
+      journal: loadJournalFor(localStorage, player.id),
+      intention: loadIntention(localStorage, player.id),
+    })),
+  );
+
+  for (const section of sections) {
+    const theirs = section.entries;
 
     if (!alone) {
       const who = document.createElement('h3');
       who.className = 'seat';
-      who.textContent = messageFor(language, 'app.seatTurn', { seat: seat + 1 });
+      who.textContent = messageFor(language, 'app.seatTurn', { seat: section.seat });
       nodes.push(who);
     }
+
+    // Each seat's own, inside their section. It used to be one block at the
+    // top under the word "you", above everybody's writing — so at a shared
+    // table the frame belonged to whoever happened to hold the turn, and the
+    // other players read somebody else's question as their own.
+    nodes.push(...playingFor(section));
 
     if (theirs.length === 0) {
       const empty = document.createElement('p');
@@ -752,6 +811,12 @@ function openPath(): void {
       nodes.push(empty);
       continue;
     }
+
+    // What came back, before the path itself. The path is everything in the
+    // order it happened, which is the wrong shape for the question the game is
+    // about — and this is the one place a player already comes to look at
+    // their own writing, so it needs no button of its own.
+    if (section.returns.length > 0) nodes.push(...cameBack(section.returns));
 
     for (const entry of theirs) {
       const heading = document.createElement('h3');

@@ -709,3 +709,22 @@ textarea {
   background: var(--accent, #b8860b);
   color: var(--on-accent, #fff);
 }
+
+/* The squares that came back, at the top of a player's own path. Tappable,
+   because the point of knowing 41 came back four times is reading the four. */
+.came-back {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+}
+
+.came-back .chip {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--accent, #b8860b);
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}

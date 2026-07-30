@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TOTAL_PLANS } from '@leela/engine';
 import { planEntries } from '../src/browse';
-import { path, record, revisited, writingsOn, type Journal } from '../src/reports';
+import { path, pathSections, record, revisited, writingsOn, type Journal } from '../src/reports';
 
 /**
  * Coming back to a square, which is what the game is about.
@@ -141,5 +141,96 @@ describe('the list of all 72', () => {
     expect(entries.map((entry) => entry.key)).toEqual(
       Array.from({ length: TOTAL_PLANS }, (_, index) => index + 1),
     );
+  });
+});
+
+describe('the path view, seat by seat', () => {
+  /**
+   * The thing that can go wrong here is not rendering: it is whose.
+   *
+   * Every journal in this app is per seat — the pass that fixed the intention
+   * and the draft found that out the hard way — and the defect this shape keeps
+   * producing is a screen that computes one player's summary and draws it under
+   * another player's name. `pathSections` takes the journals and returns the
+   * sections, so the question can be asked directly.
+   */
+  const SEATS = [
+    { id: 'p1', journal: written([6, 41, 41, 41]), intention: 'to stop hurrying' },
+    { id: 'p2', journal: written([12, 12, 9]), intention: 'to say it out loud' },
+    { id: 'p3', journal: written([3]) },
+    { id: 'p4', journal: written([]), intention: 'to begin' },
+  ];
+
+  it('gives every seat its own returns and nobody else’s', () => {
+    const sections = pathSections(SEATS);
+
+    expect(sections).toHaveLength(SEATS.length);
+    for (const [index, section] of sections.entries()) {
+      const own = SEATS[index] as (typeof SEATS)[number];
+
+      expect(section.playerId).toBe(own.id);
+      expect(section.seat).toBe(index + 1);
+      expect(section.returns).toEqual(revisited(own.journal));
+      expect(section.entries).toEqual(path(own.journal));
+      // The intention is the frame the reports are written inside, and it used
+      // to be drawn once at the top under the word "you" — so at a shared
+      // table every other player read the turn holder's question as theirs.
+      expect(section.intention).toBe(
+        (own as { intention?: string }).intention ?? '',
+      );
+    }
+  });
+
+  it('never shows a seat a square only another seat returned to', () => {
+    // The rule stated over the pairs rather than by naming p1 and p2: whatever
+    // came back to somebody else is not this player's to see.
+    const sections = pathSections(SEATS);
+
+    for (const [index, section] of sections.entries()) {
+      const mine = new Set(section.returns.map((visit) => visit.plan));
+
+      for (const [other, elsewhere] of sections.entries()) {
+        if (other === index) continue;
+        for (const visit of elsewhere.returns) {
+          const alsoMine = writingsOn(
+            (SEATS[index] as (typeof SEATS)[number]).journal,
+            visit.plan,
+          ).length;
+          if (alsoMine <= 1) expect(mine.has(visit.plan), `${index} vs ${other}`).toBe(false);
+        }
+      }
+    }
+  });
+
+  it('gives a seat that has written nothing an empty section rather than none', () => {
+    // A missing section is a player missing from their own path view; an empty
+    // one is a player who has not written yet. Only the second is true.
+    const sections = pathSections(SEATS);
+    const last = sections[sections.length - 1];
+
+    expect(last?.playerId).toBe('p4');
+    expect(last?.entries).toEqual([]);
+    expect(last?.returns).toEqual([]);
+  });
+
+  it('keeps seating order, which is how the view labels them', () => {
+    expect(pathSections(SEATS).map((section) => section.seat)).toEqual([1, 2, 3, 4]);
+  });
+
+  it('never hands one seat another seat’s question', () => {
+    // The rule over the pairs rather than by naming p1: an intention belongs to
+    // exactly one section, and a seat that has not answered has none — not
+    // somebody else's.
+    const sections = pathSections(SEATS);
+
+    for (const [index, section] of sections.entries()) {
+      for (const [other, elsewhere] of sections.entries()) {
+        if (other === index || elsewhere.intention === '') continue;
+        if (section.intention === '') continue;
+        expect(section.intention === elsewhere.intention, `${index} vs ${other}`).toBe(false);
+      }
+    }
+
+    expect(sections.find((section) => section.playerId === 'p3')?.intention).toBe('');
   });
 });

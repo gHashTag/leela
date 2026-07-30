@@ -254,3 +254,44 @@ export function writingsOn(journal: Journal, plan: number): Report[] {
 export function revisited(journal: Journal): Revisit[] {
   return revisitedEntries(journal.entries);
 }
+
+/** One seat's share of the path view. */
+export interface PathSection {
+  /** Seat number as a player counts them, from 1. */
+  seat: number;
+  playerId: string;
+  /**
+   * What this player is playing for.
+   *
+   * Carried per section for the reason the key is per seat: the view showed one
+   * intention at the top, under the word "you", and then everybody's writing
+   * below it. At a shared table that top line belonged to whoever happened to
+   * hold the turn.
+   */
+  intention: string;
+  /** The squares that came back to *this* player, most-returned first. */
+  returns: Revisit[];
+  /** Everything they wrote, oldest first. */
+  entries: Report[];
+}
+
+/**
+ * What the path view shows, seat by seat.
+ *
+ * Extracted from the view because the thing that can go wrong here is not
+ * rendering: it is whose. Every journal in this app is per seat, and the one
+ * defect this shape keeps producing is a screen that computes one player's
+ * summary and draws it under another player's name. A function that takes the
+ * journals and returns the sections can be asked that question directly.
+ */
+export function pathSections(
+  seats: ReadonlyArray<{ id: string; journal: Journal; intention?: string }>,
+): PathSection[] {
+  return seats.map((seat, index) => ({
+    seat: index + 1,
+    playerId: seat.id,
+    intention: seat.intention ?? '',
+    returns: revisited(seat.journal),
+    entries: path(seat.journal),
+  }));
+}
