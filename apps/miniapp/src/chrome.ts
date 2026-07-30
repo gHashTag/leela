@@ -21,7 +21,15 @@ export function applyChrome(document: Document, language: Language): void {
     if (element) element.textContent = messageFor(language, key);
   };
 
-  set('roll', 'app.roll');
+  // The die shows a face, not a word: its name is for a screen reader and for
+  // the tooltip, and printing it would put "Roll" across the pips.
+  const die = document.getElementById('roll');
+  if (die) {
+    const name = messageFor(language, 'app.roll');
+    die.setAttribute('aria-label', name);
+    die.setAttribute('title', name);
+  }
+
   set('read', 'app.read');
   set('say', 'app.opening');
   set('plan-title', 'app.waiting');

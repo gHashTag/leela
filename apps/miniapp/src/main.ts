@@ -21,6 +21,13 @@ import { applyChrome } from './chrome';
 import { describeMove } from './describe';
 import { createCell } from './cell';
 import { boardFor, paintBoard } from './paint';
+import { faceFor, spinDegrees, spinMs, type DieFaces } from './die';
+import die1 from './die-1.webp';
+import die2 from './die-2.webp';
+import die3 from './die-3.webp';
+import die4 from './die-4.webp';
+import die5 from './die-5.webp';
+import die6 from './die-6.webp';
 import boardLight from './board-light.webp';
 import boardDark from './board-dark.webp';
 import gemArt from './gem.webp';
@@ -148,25 +155,40 @@ function openPlan(plan: number): void {
  * The die this app plays with — the variant's own, not always a fair one.
  * Created once so a re-rolling variant can remember its previous value.
  */
-const die = rollerFor(CLASSIC, rollDie);
+const throwDie = rollerFor(CLASSIC, rollDie);
 
 let rolling = false;
+
+const FACES: DieFaces = [die1, die2, die3, die4, die5, die6];
+
+/** Show a face without spinning — on load, and after a throw has settled. */
+function showFace(value: number): void {
+  el.roll.style.backgroundImage = `url("${faceFor(value, FACES)}")`;
+}
 
 async function roll(): Promise<void> {
   if (rolling) return;
   rolling = true;
   el.roll.disabled = true;
-  el.roll.classList.add('rolling');
   telegram?.HapticFeedback?.impactOccurred('medium');
 
-  // A beat between the press and the result — the throw should be felt.
-  await new Promise((resolve) => setTimeout(resolve, 450));
+  // The value is thrown first and the spin is cut to fit it, which is what the
+  // published app does: a six turns six times and takes three times as long to
+  // settle as a two. The wait is part of the throw rather than a fixed beat.
+  const value = throwDie();
+  const duration = spinMs(value);
 
-  const { state: next, event } = applyRoll(state, die(), CLASSIC);
+  el.roll.style.setProperty('--spin', `${spinDegrees(value)}deg`);
+  el.roll.style.animation = `spin ${duration}ms linear`;
+  showFace(value);
+
+  await new Promise((resolve) => setTimeout(resolve, duration));
+
+  const { state: next, event } = applyRoll(state, value, CLASSIC);
   state = next;
   saveState(localStorage, state);
 
-  el.roll.classList.remove('rolling');
+  el.roll.style.animation = '';
   el.roll.disabled = false;
   rolling = false;
 
@@ -200,6 +222,8 @@ document.documentElement.style.setProperty('--gem', `url("${gemArt}")`);
 // snakes on black behind Leela herself.
 const scheme = telegram?.colorScheme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 void paintBoard(document, boardFor(scheme, { light: boardLight, dark: boardDark }));
+
+showFace(1);
 
 loadPlans(language)
   .then(() => {

@@ -136,6 +136,53 @@ progress::-webkit-progress-value {
  * eight rows stretched over a phone screen is what that produces.
  */
 /*
+ * The die, as the published app throws it: a pressable image that spins and
+ * settles on the face you threw. `Dice/assets/{1..6}.png`, 65pt in the
+ * original, above the board and centred.
+ *
+ * A real `<button>` rather than a pressable div, for the same reason the
+ * squares are: it is the control the whole game runs through, and a keyboard
+ * has to be able to reach it.
+ */
+.die {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  flex: 0 0 auto;
+  align-self: center;
+  width: 65px;
+  height: 65px;
+  margin: 12px auto;
+  background: transparent no-repeat center / contain;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.die:active {
+  transform: scale(0.94);
+}
+
+/* Dimmed while it cannot be thrown — `opacityCube`, 0.4 in the original. */
+.die:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(var(--spin, 360deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The value is already decided before the spin starts, so removing it
+     changes how the throw feels and nothing else. */
+  .die {
+    animation: none !important;
+  }
+}
+
+/*
  * The board players know, as the published app drew it.
  *
  * `leela/src/components/GameBoard/images/{light,dark}.png` — the snakes, the

@@ -23,7 +23,7 @@ function page(): void {
     <span class="plan-title" id="plan-title">Waiting for a six</span>
     <section class="board" id="board" aria-label="The board, 72 plans"></section>
     <section class="say" id="say">A six puts you on the board.</section>
-    <button id="roll">Roll</button>
+    <button id="roll" aria-label="Roll"></button>
     <button id="read">Read this plan</button>
     <dialog id="reader"><form method="dialog"><button>Close</button></form></dialog>
   `;
@@ -75,7 +75,17 @@ describe('the words the markup shipped with', () => {
     expect(text).not.toContain('Read this plan');
     expect(text).not.toContain('Waiting for a six');
     expect(text).not.toContain('Close');
-    expect(text).toContain(messageFor('ru', 'app.roll'));
+  });
+
+  it('names the die without writing on it', () => {
+    // The die shows a face. A word printed across the pips is what happens
+    // when a control's name and its appearance are assumed to be the same
+    // thing.
+    applyChrome(document, 'ru');
+    const die = document.getElementById('roll');
+    expect(die?.textContent).toBe('');
+    expect(die?.getAttribute('aria-label')).toBe(messageFor('ru', 'app.roll'));
+    expect(die?.getAttribute('title')).toBe(messageFor('ru', 'app.roll'));
   });
 
   it('names the board for a screen reader in the same language', () => {
@@ -87,7 +97,8 @@ describe('the words the markup shipped with', () => {
 
   it('leaves English alone', () => {
     applyChrome(document, 'en');
-    expect(document.getElementById('roll')?.textContent).toBe('Roll');
+    expect(document.getElementById('roll')?.getAttribute('aria-label')).toBe('Roll');
+    expect(document.getElementById('read')?.textContent).toBe('Read this plan');
     expect(document.documentElement.dir).toBe('ltr');
   });
 
@@ -95,8 +106,10 @@ describe('the words the markup shipped with', () => {
     // The dialog and the board are the two that are conditionally present in
     // tests and in a partially loaded page. A localiser that throws takes the
     // whole app with it before anything is drawn.
-    document.body.innerHTML = '<button id="roll">Roll</button>';
+    document.body.innerHTML = '<button id="roll"></button>';
     expect(() => applyChrome(document, 'ar')).not.toThrow();
-    expect(document.getElementById('roll')?.textContent).toBe(messageFor('ar', 'app.roll'));
+    expect(document.getElementById('roll')?.getAttribute('aria-label')).toBe(
+      messageFor('ar', 'app.roll'),
+    );
   });
 });

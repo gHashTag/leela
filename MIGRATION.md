@@ -1112,6 +1112,37 @@ and `right`; rather than widen the board exception a second time, the layer is
 
 145 kB of feathers replaced by 120 kB of board and 40 kB of its dark twin.
 
+## Thirty-fourth pass: the die
+
+The board came across last pass and the thing you throw at it did not.
+
+`components/Dice/index.tsx` is a pressable image: you tap the die itself, it
+spins, and it settles on the face you threw. The mini app had a button reading
+**Roll** — the player was told what they threw in a sentence and never saw it.
+Six faces, `Dice/assets/{1..6}.png`, 17 kB for all of them.
+
+**The spin is a function of the value, and that is the point.**
+`handleSpin` runs `(value / 2) * 500` milliseconds through one turn per unit,
+so a six turns six times and takes three times as long to settle as a two. The
+wait is part of the throw. Transferred as written, with the value decided
+before the spin so the animation can be cut to fit it rather than the other way
+round.
+
+`die.ts` keeps the two decisions out of the DOM: which face, and how long. The
+tests assert the property rather than the six numbers — a larger throw takes
+longer and turns further — plus the two things a live die must never do: show
+nothing, or spin for `NaN` milliseconds and leave the game waiting behind a
+disabled control.
+
+**One thing the simulator showed immediately.** `applyChrome` wrote the word
+"Roll" into the button, which now had a die in it — so the pips read through
+the letters. A control's name and its appearance are not the same thing: the
+name is an `aria-label` and a tooltip now, and a test asserts the die is named
+without being written on.
+
+Reduced motion turns the spin off. The value is decided before it starts, so
+that changes how the throw feels and nothing else.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
