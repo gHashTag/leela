@@ -3,6 +3,7 @@ import { TOTAL_PLANS, allPlans } from '@leela/engine';
 import {
   FALLBACK_LANGUAGE,
   LANGUAGES,
+  couldBe,
   isLanguage,
   planFor,
   plansFor,
@@ -210,7 +211,35 @@ describe('rules chapters', () => {
     expect(ruleChapter('en', 'no-such-chapter')).toBeNull();
   });
 
-  it('keeps the mechanics chapter that documents the board', () => {
-    expect(ruleChapter('en', 'mechanics')).not.toBeNull();
+  it('serves every chapter in the language it is filed under', () => {
+    // The English book had a seventh chapter written in Russian —
+    // `game-logic.md`, developer notes on the NeuroLeela rewrite, filed among
+    // six numbered English files in a donor repository and mapped straight
+    // through to the docs site. A test used to assert its presence, on the
+    // strength of its slug.
+    //
+    // The rule, not the chapter: whatever the book contains, a reader gets
+    // their own language.
+    for (const language of LANGUAGES) {
+      for (const chapter of rulesFor(language)) {
+        expect(couldBe(language, chapter.title ?? ''), `${language}/${chapter.slug} title`).toBe(true);
+        expect(
+          couldBe(language, chapter.body.slice(0, 2000)),
+          `${language}/${chapter.slug} body`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it('gives every language the same book, or the difference is deliberate', () => {
+    // Four different chapter sets shipped across 22 languages, and one of the
+    // differences was a Russian file. This does not demand uniformity — `ar`,
+    // `ms` and `uk` genuinely carry chapters from the published app that the
+    // others do not — it demands that English, the fallback every language
+    // reads when its own is missing, is not the odd one out.
+    const english = rulesFor('en').map((chapter) => chapter.slug);
+    const common = rulesFor('de').map((chapter) => chapter.slug);
+
+    expect(english).toEqual(common);
   });
 });

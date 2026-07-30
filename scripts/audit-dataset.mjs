@@ -20,7 +20,7 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { LANGUAGES } from '../packages/content/src/index.ts';
+import { LANGUAGES, couldBe, dominantScript, scriptOf } from '../packages/content/src/index.ts';
 import { TOTAL_PLANS } from '../packages/engine/src/index.ts';
 import { checkCoverage, coverageOf } from './lib/coverage.mjs';
 
@@ -62,12 +62,44 @@ for (const language of coverage.keys()) {
   }
 }
 
-console.log(`\nChecked ${coverage.size} languages against the ${LANGUAGES.length} declared.\n`);
+// The rules book, which nothing had ever looked at. English shipped a seventh
+// chapter written in Russian — `game-logic.md`, filed among six numbered
+// English files in a donor repository and mapped straight through. A reader
+// notices in a second; nothing else did, because nothing knew what a language
+// is supposed to look like.
+let rules = {};
+try {
+  rules = read(join(DATA, 'rules.json'));
+} catch {
+  problems.push('rules.json cannot be read');
+}
+
+for (const [language, chapters] of Object.entries(rules)) {
+  for (const chapter of chapters) {
+    for (const [part, text] of [
+      ['title', chapter.title ?? ''],
+      ['body', (chapter.body ?? '').slice(0, 2000)],
+    ]) {
+      if (couldBe(language, text)) continue;
+      problems.push(
+        `${language}/${chapter.slug}: the ${part} is written in ${dominantScript(text)}, and ${language} is ${scriptOf(language)}`,
+      );
+    }
+  }
+}
+
+console.log(
+  `\nChecked ${coverage.size} languages against the ${LANGUAGES.length} declared, and ${Object.values(rules).flat().length} rules chapters against their scripts.\n`,
+);
 
 if (problems.length === 0) {
-  console.log(`Every declared language has all ${TOTAL_PLANS} plans, in order, with text.`);
+  console.log(
+    `Every declared language has all ${TOTAL_PLANS} plans, in order, with text, and every rules chapter is written in the language it is filed under.`,
+  );
 } else {
   for (const problem of problems) console.log(`  ${problem}`);
-  console.log('\nA check that reads its subject out of the thing under test cannot fail on an absence.');
+  console.log(
+    '\nA check that reads its subject out of the thing under test cannot fail on an absence.',
+  );
   process.exitCode = 1;
 }

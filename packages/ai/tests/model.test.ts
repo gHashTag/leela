@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_DEEPSEEK_MODEL,
+  DEFAULT_MAX_TOKENS,
+  DEFAULT_TEMPERATURE,
   DEFAULT_MODEL,
   DEFAULT_OPENAI_MODEL,
   DEFAULT_ZAI_MODEL,
@@ -11,6 +13,7 @@ import {
   openAI,
   openRouter,
   recordingModel,
+  whole,
   zAI,
 } from '../src';
 
@@ -288,5 +291,109 @@ describe('the attribution headers belong to one provider only', () => {
       expect(headers['HTTP-Referer']).toBeUndefined();
       expect(headers['X-Title']).toBeUndefined();
     }
+  });
+});
+
+describe('how much the model is allowed to invent', () => {
+  /**
+   * This package's rule is that the model never supplies the teaching: the
+   * canonical text goes into the prompt and the model interprets it. It was
+   * asking for `temperature: 0.7` all the same — a library default meant for
+   * writing prose, and the highest of the three implementations that exist.
+   *
+   * Both shipped companions run cold. The published app posts `0.1` from
+   * `ChatScreen`; `LeelaAiWeb3`'s `generateComment` posts `0.5`. The stricter
+   * value belongs to the app this replaces.
+   *
+   * Asserted as a relation to the prompt's own promise, not as the number:
+   * whatever the default becomes, a companion forbidden to invent must not be
+   * asking for invention.
+   */
+  const capture = () => {
+    const seen: Record<string, unknown>[] = [];
+    const fetch = (async (_url: string, init: RequestInit) => {
+      seen.push(JSON.parse(String(init.body)));
+      return new Response(JSON.stringify(ok), { status: 200 });
+    }) as unknown as typeof globalThis.fetch;
+    return { seen, fetch };
+  };
+
+  it('asks every provider for the same cold sampling', async () => {
+    // One rule, not one provider: a companion that invents on DeepSeek and
+    // interprets on OpenAI is two companions.
+    for (const build of [openRouter, openAI, deepSeek, zAI]) {
+      const { seen, fetch } = capture();
+      await build({ apiKey: 'k', fetch }).complete(messages);
+      expect(seen[0]?.temperature, build.name).toBe(DEFAULT_TEMPERATURE);
+    }
+  });
+
+  it('is no warmer than the app it replaces', () => {
+    // The published app's ChatScreen posts 0.1. Ours may be colder; it may not
+    // be warmer, because the teaching is the source and the model is not.
+    expect(DEFAULT_TEMPERATURE).toBeLessThanOrEqual(0.1);
+  });
+
+  it('still lets a caller choose, since a different use may want otherwise', async () => {
+    const { seen, fetch } = capture();
+    await openRouter({ apiKey: 'k', fetch }).complete(messages, { temperature: 0.9 });
+    expect(seen[0]?.temperature).toBe(0.9);
+  });
+
+  it('leaves brevity to the prompt rather than to the ceiling', async () => {
+    // The published app allows 800 and LeelaAiWeb3 1000. A ceiling does not
+    // make an answer short; it makes it stop.
+    const { seen, fetch } = capture();
+    await openRouter({ apiKey: 'k', fetch }).complete(messages);
+    expect(seen[0]?.max_tokens).toBe(DEFAULT_MAX_TOKENS);
+    expect(DEFAULT_MAX_TOKENS).toBeGreaterThanOrEqual(800);
+  });
+});
+
+describe('a reply the ceiling cut off', () => {
+  /**
+   * `finish_reason` was never read, so an answer that stopped mid-word was
+   * handed to the player exactly like one that finished. The rule is that what
+   * reaches a player is a whole thought — the last sentence that ended, rather
+   * than the last token that fitted.
+   */
+  const cutOff = (content: string) => ({
+    choices: [{ message: { content }, finish_reason: 'length' }],
+  });
+
+  it('never ends mid-sentence, whatever the model was cut off in', async () => {
+    const endings = ['.', '!', '?', '。', '？', '…'];
+    const model = (body: unknown) => openRouter({ apiKey: 'k', fetch: fetchReturning(body) });
+
+    for (const mark of endings) {
+      const text = await model(cutOff(`A finished thought${mark} And then a half of`)).complete(
+        messages,
+      );
+      expect(text.endsWith(mark), mark).toBe(true);
+      expect(text, mark).not.toContain('a half of');
+    }
+  });
+
+  it('leaves a reply that finished exactly as it is', async () => {
+    // Trimming an answer the model completed would be inventing a defect to
+    // fix: only `length` means it was cut.
+    const complete = { choices: [{ message: { content: 'Whole. And more' }, finish_reason: 'stop' }] };
+    const text = await openRouter({ apiKey: 'k', fetch: fetchReturning(complete) }).complete(
+      messages,
+    );
+    expect(text).toBe('Whole. And more');
+  });
+
+  it('keeps half a sentence rather than nothing at all', () => {
+    // Nothing finished: a poor answer beats an empty one, and an empty one
+    // would be reported to the player as the model failing.
+    expect(whole('one long clause with no end in sight')).toBe(
+      'one long clause with no end in sight',
+    );
+    expect(whole('...')).toBe('...');
+  });
+
+  it('is the same text when it already ends properly', () => {
+    expect(whole('A thought that ended.')).toBe('A thought that ended.');
   });
 });

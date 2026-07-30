@@ -53,6 +53,50 @@ export interface OpenRouterOptions extends ProviderOptions {
   title?: string;
 }
 
+/**
+ * How much the model is allowed to invent.
+ *
+ * Both shipped companions run cold: the published app posts `temperature: 0.1`
+ * from `ChatScreen`, and `LeelaAiWeb3`'s `generateComment` posts `0.5`. This
+ * package's own rule is that the model never supplies the teaching — the
+ * canonical text is in the prompt and the model interprets it — and it was
+ * running at `0.7`, the highest of the three, because nobody had set it and
+ * that is a library default meant for writing prose.
+ *
+ * The stricter of the two published values, since the stricter one belongs to
+ * the app this replaces.
+ */
+export const DEFAULT_TEMPERATURE = 0.1;
+
+/**
+ * How long a reply may be.
+ *
+ * The published app allows 800 and `LeelaAiWeb3` 1000. Brevity is asked for in
+ * the prompt, where it can be judged; a ceiling does not make an answer short,
+ * it makes it stop.
+ */
+export const DEFAULT_MAX_TOKENS = 800;
+
+/**
+ * The most of a cut-off reply that is still a whole thought.
+ *
+ * Trimmed to the last sentence that finished. A player reading "the plan asks
+ * you to sit with what you have avoided, and the" has been handed a defect;
+ * one sentence fewer is the same answer, finished.
+ *
+ * If nothing finished, the text is returned as it stands: half a sentence is
+ * poor, and nothing at all is worse.
+ */
+export function whole(text: string): string {
+  const end = Math.max(
+    ...['.', '!', '?', '。', '！', '？', '…'].map((mark) => text.lastIndexOf(mark)),
+  );
+  if (end < 0) return text;
+
+  const trimmed = text.slice(0, end + 1).trim();
+  return trimmed.length > 0 ? trimmed : text;
+}
+
 export const DEFAULT_MODEL = 'anthropic/claude-3.5-haiku';
 export const DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
 
@@ -110,8 +154,8 @@ function chatCompletions(config: ChatCompletionsConfig): LanguageModel {
         body: JSON.stringify({
           model,
           messages,
-          [config.tokenLimitField]: options.maxTokens ?? 400,
-          temperature: options.temperature ?? 0.7,
+          [config.tokenLimitField]: options.maxTokens ?? DEFAULT_MAX_TOKENS,
+          temperature: options.temperature ?? DEFAULT_TEMPERATURE,
         }),
         signal: options.signal,
       });
@@ -125,14 +169,19 @@ function chatCompletions(config: ChatCompletionsConfig): LanguageModel {
       }
 
       const body = (await response.json()) as {
-        choices?: Array<{ message?: { content?: string } }>;
+        choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
       };
 
-      const text = body.choices?.[0]?.message?.content?.trim();
+      const choice = body.choices?.[0];
+      const text = choice?.message?.content?.trim();
       if (!text) {
         throw new ModelError('the model returned an empty reply');
       }
-      return text;
+
+      // A reply the ceiling cut off is not a whole reply, and it was being
+      // handed to the player as if it were: `finish_reason` was never read, so
+      // an answer that stopped mid-word looked exactly like one that finished.
+      return choice?.finish_reason === 'length' ? whole(text) : text;
     },
   };
 }

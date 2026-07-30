@@ -1845,6 +1845,70 @@ event that produced it — plus a check that the jump-home case actually occurs 
 those games, so the assertion is not passing for want of an example. Reverting
 the fix fails it, and fails the worked case beside it.
 
+## Fifty-third pass: the iOS app read again, for the AI and the book
+
+Asked to study the published app's logic, documentation, rules, reports and AI
+answer, and fix what diverges. The rules and reports were read two passes ago
+and produced five variant flags. This pass went at the two halves that had only
+been described: **the companion** and **the book**.
+
+### The companion was running warm
+
+`ChatScreen/index.tsx` posts to `api.openai.com` with `temperature: 0.1` and
+`max_tokens: 800`. `LeelaAiWeb3`'s `generateComment` posts `0.5` and `1000`.
+This package — whose whole stated rule is that *the model never supplies the
+teaching*, the canonical text being in the prompt — was asking for **0.7**, the
+highest of the three, because nobody had ever set it and that is the library's
+own default for writing prose. Nothing overrode it: `completion` defaults to
+`{}` in `guide.ts`, and neither the bot nor the mini app passes one.
+
+Now 0.1, the stricter of the two published values, since the stricter one
+belongs to the app this replaces. Held by two tests: one pins every provider to
+the same value — a companion that invents on DeepSeek and interprets on OpenAI
+is two companions — and one pins that value to the outside world (`<= 0.1`), so
+the pair cannot drift together into agreement about the wrong number.
+
+**And a reply cut off by the ceiling was handed over as a whole one.**
+`finish_reason` was never read, so an answer that stopped mid-word looked
+exactly like one that finished. It is trimmed back to the last sentence that
+ended, or kept as it stands if none did — half a sentence is poor, nothing at
+all is worse. The ceiling is 800 now, the app's own: brevity is asked for in the
+prompt, where it can be judged, and a ceiling does not make an answer short, it
+makes it stop.
+
+### The English book had a chapter in Russian
+
+Nothing had ever looked at the rules book. `NeuroLeelaAgent/docs/rules/` holds
+six numbered English chapters and one file that is not numbered:
+`game-logic.md`, titled «Логика игры НейроЛила» — developer notes on the
+NeuroLeela rewrite, in Russian. The generator's hand-written map carried
+`'game-logic': 'mechanics'`, so it was published as the seventh chapter of the
+**English** book and served on the docs site for as long as the book has
+existed. A test asserted its presence, on the strength of its slug.
+
+English is also the fallback every language reads when its own is missing, so
+that chapter was the one non-English text a reader of any language could be
+handed.
+
+The map no longer carries it, and `@leela/content` now knows what a language
+looks like: `scriptOf`, `dominantScript` and `couldBe`. The rule is deliberately
+coarse — it catches a text from the wrong *family*, which is the mistake that
+actually happens when files are filed by hand, and does not pretend to tell
+German from Turkish or Russian from Ukrainian. It weighs the text rather than
+stopping at the first letter it recognises, so a Russian chapter with an English
+word in it is still Russian, and it has no opinion about a heading like "72".
+
+`audit-dataset.mjs` runs it over all 134 chapters in CI. It reported exactly the
+two lines it should — the title and the body of that one chapter — and nothing
+else across 22 languages.
+
+**Left alone, deliberately:** four different chapter *sets* ship across the 22
+languages. `ar` carries `online` and `foreword` from the published app's own
+list; `ms` and `uk` carry those and lack `meaning`. Those are missing
+translations, and filling them by machine is what put 744 rotted titles in this
+dataset in the first place. The test asserts only that English — the fallback —
+matches the common set.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -46,3 +46,112 @@ const PDI = '⁩';
 export function asLeftToRight(text: string): string {
   return `${LRI}${text}${PDI}`;
 }
+
+/**
+ * The script a language is written in.
+ *
+ * Added because the English rules book shipped a chapter written in Russian.
+ * `NeuroLeelaAgent/docs/rules/game-logic.md` sits among six numbered English
+ * files, is titled «Логика игры НейроЛила», and the generator's hand-written
+ * map published it as the seventh chapter of the English book — served to
+ * English readers on the docs site for as long as the book has existed.
+ *
+ * A person reading their own language notices in a second. Nothing else did,
+ * because nothing knew what a language is supposed to look like.
+ */
+export type Script =
+  | 'latin'
+  | 'cyrillic'
+  | 'arabic'
+  | 'devanagari'
+  | 'bengali'
+  | 'tamil'
+  | 'telugu'
+  | 'gurmukhi'
+  | 'han'
+  | 'kana'
+  | 'hangul';
+
+const SCRIPTS: Record<string, Script> = {
+  ar: 'arabic',
+  bn: 'bengali',
+  de: 'latin',
+  en: 'latin',
+  es: 'latin',
+  fr: 'latin',
+  hi: 'devanagari',
+  ja: 'kana',
+  jv: 'latin',
+  ko: 'hangul',
+  mr: 'devanagari',
+  ms: 'latin',
+  pa: 'gurmukhi',
+  pt: 'latin',
+  ru: 'cyrillic',
+  ta: 'tamil',
+  te: 'telugu',
+  tr: 'latin',
+  uk: 'cyrillic',
+  ur: 'arabic',
+  vi: 'latin',
+  zh: 'han',
+};
+
+export function scriptOf(language: Language): Script {
+  return SCRIPTS[language] ?? 'latin';
+}
+
+const RANGES: Record<Script, RegExp> = {
+  latin: /[A-Za-zÀ-ɏ]/,
+  cyrillic: /[Ѐ-ӿ]/,
+  arabic: /[؀-ۿݐ-ݿ]/,
+  devanagari: /[ऀ-ॿ]/,
+  bengali: /[ঀ-৿]/,
+  tamil: /[஀-௿]/,
+  telugu: /[ఀ-౿]/,
+  gurmukhi: /[਀-੿]/,
+  han: /[一-鿿㐀-䶿]/,
+  kana: /[぀-ヿ一-鿿]/,
+  hangul: /[가-힯ᄀ-ᇿ]/,
+};
+
+/**
+ * Which of the scripts this repository knows a text is written in.
+ *
+ * By weight rather than by first hit: a Russian chapter with an English word
+ * in it is Russian, and a title of one Latin loanword in Japanese prose is
+ * Japanese. Returns null for text with no letters in any of them — a number, a
+ * date, an empty string.
+ */
+export function dominantScript(text: string): Script | null {
+  let best: Script | null = null;
+  let bestCount = 0;
+
+  for (const [script, range] of Object.entries(RANGES) as Array<[Script, RegExp]>) {
+    const pattern = new RegExp(range.source, 'gu');
+    const count = (text.match(pattern) ?? []).length;
+    if (count > bestCount) {
+      best = script;
+      bestCount = count;
+    }
+  }
+
+  return best;
+}
+
+/**
+ * Whether a text could be this language.
+ *
+ * Not "is": a script is shared — German and Turkish are both Latin, Russian and
+ * Ukrainian both Cyrillic — so this catches a text in the wrong *family*, which
+ * is the mistake that actually happens when files are filed by hand. Japanese
+ * is allowed to be written in Han alone, since kanji-only text is Japanese too.
+ */
+export function couldBe(language: Language, text: string): boolean {
+  const found = dominantScript(text);
+  if (found === null) return true;
+
+  const expected = scriptOf(language);
+  if (found === expected) return true;
+  return expected === 'kana' && found === 'han';
+}

@@ -291,7 +291,13 @@ function readRules() {
     '3-numerologygames': 'numerology',
     '4-chakras': 'chakras',
     '5-notes': 'notes',
-    'game-logic': 'mechanics',
+    // `game-logic.md` is deliberately not here. It sits in the same folder as
+    // the six numbered English chapters and is written in Russian — developer
+    // notes on the NeuroLeela rewrite, titled «Логика игры НейроЛила» — and
+    // this map published it as the seventh chapter of the *English* book, on
+    // the docs site, for as long as the book has existed. It is not a chapter
+    // of the rules and it is not English. `audit-dataset.mjs` now refuses any
+    // chapter written in a script its language does not use.
   };
   const enRoot = join(SRC, 'NeuroLeelaAgent/docs/rules');
   if (existsSync(enRoot)) {
