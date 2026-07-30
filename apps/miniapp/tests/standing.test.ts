@@ -151,9 +151,14 @@ describe('the die, once the game is complete', () => {
     }
   });
 
-  it('stays live while anybody at the table can still move', () => {
+  it('stays live for a table where the seat holding the turn can still move', () => {
     // A winner does not end a table: `nextSeat` skips them and the rest play
     // on. The die belongs to the seat holding the turn, not to the finished.
+    //
+    // This test used to seat the winner *at* the turn and expect a live die,
+    // which was the hole rather than the rule: `isSessionOver` is true only
+    // once everybody has finished, so it left the die open to somebody who had
+    // already reached Cosmic Consciousness.
     const table = createSession('test', [{ id: 'p1' }, { id: 'p2' }], CLASSIC);
     const won: GameState = {
       loka: WIN_LOKA,
@@ -166,6 +171,9 @@ describe('the die, once the game is complete', () => {
 
     const half: Session = {
       ...table,
+      // The turn is the second seat's, which is where `nextSeat` puts it the
+      // moment the first one finishes.
+      turnIndex: 1,
       players: table.players.map((player, index) =>
         index === 0 ? { ...player, state: won } : player,
       ),
@@ -173,6 +181,31 @@ describe('the die, once the game is complete', () => {
 
     expect(hasWon(half.players[0]?.state as GameState)).toBe(true);
     expect(canRoll(half)).toBe(true);
+  });
+
+  it('is shut on a finished seat even while the rest of the table plays on', () => {
+    // The rule is about the player, not the table. A seat that has reached
+    // Cosmic Consciousness is done whether or not anybody else is.
+    const table = createSession('test', [{ id: 'p1' }, { id: 'p2' }], CLASSIC);
+    const won: GameState = {
+      loka: WIN_LOKA,
+      previous_loka: 51,
+      direction: 'win 🕉',
+      consecutive_sixes: 0,
+      position_before_three_sixes: 0,
+      is_finished: true,
+    };
+
+    const holdingTheTurn: Session = {
+      ...table,
+      turnIndex: 0,
+      players: table.players.map((player, index) =>
+        index === 0 ? { ...player, state: won } : player,
+      ),
+    };
+
+    expect(isSessionOver(holdingTheTurn)).toBe(false);
+    expect(canRoll(holdingTheTurn)).toBe(false);
   });
 });
 

@@ -838,7 +838,13 @@ function saveReport(): void {
   keepTable();
   clearDraft(localStorage, currentPlayer(session).id);
   el.writer.close();
-  announce(messageFor(language, 'app.reportSaved'));
+
+  // What is true now the gate has opened. "You may throw" was said whatever the
+  // state was — including to a player who had just reached Cosmic
+  // Consciousness, with the die dimmed underneath it. The bot said the same
+  // sentence in the same situation and stopped two passes ago.
+  const next = mayThrow(session, intention, false, seatOwesReport(currentPlayer(session)));
+  announce(messageFor(language, next === 'yes' ? 'app.reportSaved' : 'app.reportSavedDone'));
 }
 
 /** Everything the player has written, oldest first. */

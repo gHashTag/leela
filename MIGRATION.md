@@ -3438,6 +3438,34 @@ checked over every size a table can be, in both directions, comparing each kept
 seat against exactly what it was. `seatsFor` is gone; it had no callers left,
 which is what `audit-unread` is for.
 
+## Ninety-seventh pass: the last report of a game
+
+Played the mini app to its end rather than through its middle, which is where
+the remaining acts were.
+
+**A player who has just reached Cosmic Consciousness writes their last report
+and is told "Written. You may throw." — over a dimmed die.** `CLASSIC` asks for
+that report: `reportOnWinningSquare`, because 68 is the square a whole game was
+played to reach. So the most meaningful moment in the game ended with the app
+describing a game the player is no longer in.
+
+It is the bot's `report.filed` defect, in the other surface, two passes later.
+The fix is the same in shape and cheaper here, because the decision was already
+extracted: the sentence is now chosen by the very question the die is drawn
+from. Whatever `mayThrow` says, the line says — they cannot disagree.
+
+**And `canRoll` asked about the table when it should have asked about the
+seat.** `isSessionOver` is true only once *everybody* has finished, so at a
+shared table the die stayed open to a player who had already finished. Not
+reachable in a game this app produces — `nextSeat` skips a finished seat, so the
+turn does not land on one — but the decision was wrong and a test of mine had
+written the hole down as the rule: it seated the winner *at* the turn and
+expected a live die. `CLASSIC.mayReenterAfterWinning` is untouched and remains
+what the eighty-second pass found it to be: unreachable in a seated game.
+
+Start over survives a double tap, keeps the journal, and hands back a new game —
+checked by tapping it twice.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

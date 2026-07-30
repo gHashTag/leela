@@ -15,8 +15,8 @@
 
 import {
   WIN_LOKA,
+  currentPlayer,
   hasWon,
-  isSessionOver,
   isWaitingToEnter,
   type GameState,
   type Session,
@@ -125,7 +125,16 @@ export function standing(state: GameState, owed: boolean, titleOf: TitleOf): Sta
  * live: `nextSeat` skips whoever has finished.
  */
 export function canRoll(session: Session): boolean {
-  return !isSessionOver(session);
+  // The seat holding the turn, not the table. `isSessionOver` is true only once
+  // *everybody* has finished, so at a shared table it would leave the die open
+  // to a player who had already reached Cosmic Consciousness.
+  //
+  // No reachable behaviour changes: `nextSeat` skips a finished player, so the
+  // turn does not land on one, and in a game of one the two conditions are the
+  // same question. `CLASSIC.mayReenterAfterWinning` remains what it was and
+  // remains unreachable in a seated game — see the eighty-second pass, which
+  // found it and deliberately left it alone.
+  return !hasWon(currentPlayer(session).state);
 }
 
 /**

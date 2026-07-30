@@ -166,3 +166,55 @@ describe('what a throw is refused for', () => {
     expect(mayThrow(session, 'to see', false, false)).toBe('yes');
   });
 });
+
+describe('what is said once the report is filed', () => {
+  /**
+   * "Written. You may throw." was said whatever the state was.
+   *
+   * The last report of a game is the one on Cosmic Consciousness — `CLASSIC`
+   * asks for it, `reportOnWinningSquare`, because it is the square a whole game
+   * was played to reach. So the most meaningful moment in the game ended with
+   * the app inviting the player to throw again, over a dimmed die. The bot said
+   * the same sentence in the same situation and stopped two passes ago.
+   *
+   * The sentence is chosen by the same question the die is drawn from, so the
+   * two cannot disagree: whatever `mayThrow` says, the line says.
+   */
+  const solo = createSession('device', [{ id: 'p1' }], CLASSIC);
+
+  const won = (session: Session): Session => ({
+    ...session,
+    players: session.players.map((player) => ({
+      ...player,
+      state: {
+        loka: 68,
+        previous_loka: 51,
+        direction: 'win 🕉' as const,
+        consecutive_sixes: 0,
+        position_before_three_sixes: 0,
+        is_finished: true,
+      },
+    })),
+  });
+
+  it('promises a throw exactly when there is one to make', () => {
+    // Both halves, over the two states a filed report can leave behind.
+    expect(mayThrow(solo, 'to see', false, false)).toBe('yes');
+    expect(mayThrow(won(solo), 'to see', false, false)).not.toBe('yes');
+  });
+
+  it('does not depend on anybody else still playing', () => {
+    // A game of three where one has finished: their last report is still the
+    // last report of *their* game, and the sentence has to say so.
+    const table = createSession('device', [{ id: 'p1' }, { id: 'p2' }], CLASSIC);
+    const finished: Session = {
+      ...table,
+      turnIndex: 0,
+      players: table.players.map((player, index) =>
+        index === 0 ? won(table).players[0] ?? player : player,
+      ),
+    };
+
+    expect(mayThrow(finished, 'to see', false, false)).toBe('game-over');
+  });
+});
