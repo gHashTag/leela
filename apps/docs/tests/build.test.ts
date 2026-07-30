@@ -117,7 +117,18 @@ describe('the built site', () => {
   });
 
   it('resolves every internal link to a file that exists', () => {
+    /**
+     * Every one of them. This used to skip `../../`, which is how every link
+     * in the language switcher is written — so the check that resolves links
+     * was passing by not looking at the 44,000 it was there for. And they were
+     * wrong: `languagePicker` takes a path, was never given one, and pointed
+     * every page at the language's contents, so a reader on plan 41 who
+     * switched to Russian landed on a list of 72 titles and had to find it
+     * again. Written the obvious way instead, they 404 in 211 places, because
+     * the books are not the same shape.
+     */
     const present = new Set(files);
+    let checked = 0;
 
     for (const file of files.filter((f) => f.endsWith('.html'))) {
       const html = readFileSync(join(out, file), 'utf8');
@@ -125,8 +136,9 @@ describe('the built site', () => {
 
       for (const match of html.matchAll(/href="([^"#:]+)"/g)) {
         const href = match[1];
-        // Links out of the site (to the game) are checked by the app that serves it.
-        if (href.startsWith('http') || href.includes('../../')) continue;
+        // Only links out of the site are somebody else's to check.
+        if (href.startsWith('http')) continue;
+        checked += 1;
 
         const resolved = join(dir === '.' ? '' : dir, href).replace(/^\.\//, '');
         const target = resolved.endsWith('/') ? `${resolved}index.html` : resolved;
@@ -135,6 +147,31 @@ describe('the built site', () => {
         );
       }
     }
+
+    // The count is the point: an exclusion that quietly dropped nine tenths of
+    // the links read exactly like a check that passed.
+    expect(checked).toBeGreaterThan(40_000);
+  });
+
+  it('offers the same page in every language that has it', () => {
+    // The switcher's whole reason for existing: a book has 22 languages
+    // because somebody wants to read *this* plan in theirs.
+    const html = readFileSync(join(out, 'en/plans/41.html'), 'utf8');
+
+    for (const language of ['ru', 'ar', 'zh']) {
+      expect(html, language).toContain(`href="../../${language}/plans/41.html"`);
+    }
+  });
+
+  it('offers the contents where that language has no such page', () => {
+    // The books are not the same shape: `ar`, `ms` and `uk` carry chapters the
+    // other nineteen lack, and lack `chakras`, which they have. A switcher
+    // that assumed otherwise is 211 dead links.
+    const html = readFileSync(join(out, 'en/rules/chakras.html'), 'utf8');
+
+    expect(html).toContain('href="../../ru/rules/chakras.html"');
+    expect(html).toContain('href="../../ms/"');
+    expect(html).not.toContain('href="../../ms/rules/chakras.html"');
   });
 
   it('writes real content, not empty shells', () => {

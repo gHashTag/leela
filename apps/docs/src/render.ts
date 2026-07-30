@@ -74,10 +74,12 @@ export interface PageOptions {
   body: string;
   /** Shown under the title. */
   subtitle?: string;
+  /** Where this page lives in another language. See `languagePicker`. */
+  pathFor?: (language: Language) => string;
 }
 
 /** One page, complete. */
-export function page({ title, language, root, body, subtitle }: PageOptions): string {
+export function page({ title, language, root, body, subtitle, pathFor }: PageOptions): string {
   return `<!doctype html>
 <html lang="${language}" dir="${directionOf(language)}">
 <head>
@@ -97,7 +99,7 @@ ${subtitle ? `<p class="subtitle">${escape(subtitle)}</p>` : ''}
 ${body}
 </main>
 <footer>
-${languagePicker(language, root)}
+${languagePicker(language, root, pathFor)}
 </footer>
 </body>
 </html>
@@ -115,16 +117,32 @@ export const PLAY_URL = 'https://t27.ai/leela/';
 /**
  * Every language, linking to the same place in each.
  *
+ * The `path` argument was written on the first day and never passed. Every
+ * page's picker therefore pointed at the language's contents, so a reader on
+ * plan 41 who switched to Russian landed on a list of 72 titles and had to find
+ * it again — in a book whose whole reason for having 22 languages is that
+ * somebody wants to read *this* plan in theirs.
+ *
  * @param current  The language being read, shown as text rather than a link.
  *                 Pass null on a page that is not in any language — the root,
  *                 where every entry has to be reachable.
+ * @param pathFor  Where this page lives in another language, relative to that
+ *                 language's directory. Return '' when that language does not
+ *                 have this page — `ar`, `ms` and `uk` carry rules chapters the
+ *                 others lack, and the others carry `chakras`, which they do
+ *                 not — and the reader lands on its contents instead of on a
+ *                 404. Defaults to the contents for every language.
  */
-export function languagePicker(current: Language | null, root: string, path = ''): string {
+export function languagePicker(
+  current: Language | null,
+  root: string,
+  pathFor: (language: Language) => string = () => '',
+): string {
   const links = LANGUAGES.map((language) => {
     const name = escape(LANGUAGE_NAMES[language]);
     return language === current
       ? `<span class="current" lang="${language}">${name}</span>`
-      : `<a lang="${language}" href="${root}${language}/${path}">${name}</a>`;
+      : `<a lang="${language}" href="${root}${language}/${pathFor(language)}">${name}</a>`;
   }).join('\n');
 
   return `<nav class="languages" aria-label="Language">${links}</nav>`;
@@ -180,6 +198,9 @@ export function planPage(language: Language, plan: Plan, total: number): string 
     title: `${plan.plan}. ${plan.title}`,
     language,
     root: '../../',
+    // Every language has all 72 plans — `audit-dataset` is what makes that
+    // safe to say — so the same plan is always there to switch to.
+    pathFor: () => `plans/${plan.plan}.html`,
     body: [
       descriptionIsRedundant(plan) ? '' : `<p class="subtitle">${escape(plan.description!)}</p>`,
       renderMarkdown(plan.body),
@@ -190,12 +211,26 @@ export function planPage(language: Language, plan: Plan, total: number): string 
   });
 }
 
-/** One rules chapter. */
-export function chapterPage(language: Language, chapter: RuleChapter): string {
+/**
+ * One rules chapter.
+ *
+ * @param hasChapter  Whether another language carries this chapter. The books
+ *                    are not the same shape: `ar`, `ms` and `uk` carry `online`
+ *                    and `foreword` from the published app's own list, and the
+ *                    other nineteen carry `chakras`, which those three do not.
+ *                    A switcher that assumed otherwise would send readers to a
+ *                    page that is not there.
+ */
+export function chapterPage(
+  language: Language,
+  chapter: RuleChapter,
+  hasChapter: (language: Language, slug: string) => boolean = () => false,
+): string {
   return page({
     title: chapter.title ?? chapter.slug,
     language,
     root: '../../',
+    pathFor: (other) => (hasChapter(other, chapter.slug) ? `rules/${chapter.slug}.html` : ''),
     body: `${renderMarkdown(chapter.body)}\n<nav class="pager"><span></span><a href="../">Contents</a><span></span></nav>`,
   });
 }
@@ -224,7 +259,7 @@ export function rootPage(): string {
 <main class="root">
 <h1>Leela</h1>
 <p class="subtitle">The game of self-knowledge — 72 plans, in ${LANGUAGES.length} languages</p>
-${languagePicker(null, '', '')}
+${languagePicker(null, '')}
 <p><a class="play" href="${PLAY_URL}">Play</a></p>
 </main>
 </body>

@@ -2047,6 +2047,41 @@ again" in one breath; a table of two still names the next player; and a turn
 that comes back without a six adds nothing. Reverting the fix fails the first
 two.
 
+## Fifty-seventh pass: the book lost your place
+
+Built the book and read it in a browser, which nobody had done — it had only
+ever been tested. It is well made: 1784 pages, a pager to the neighbouring
+plans, contents, a language switcher on every page. And the switcher pointed at
+the language's **contents**, not at the page you were on. A reader on plan 41
+who switched to Russian landed on a list of 72 titles and had to find it again,
+in a book whose whole reason for having 22 languages is that somebody wants to
+read *this* plan in theirs.
+
+`languagePicker` has taken a `path` argument since the day it was written, and
+its own doc comment says "Every language, linking to the same place in each".
+Nothing ever passed one.
+
+**The check that would have caught it was skipping exactly those links.**
+
+```js
+if (href.startsWith('http') || href.includes('../../')) continue;
+```
+
+Every switcher link is `../../xx/`. So `resolves every internal link to a file
+that exists` resolved about a tenth of them and passed. The exclusion is gone;
+the test now checks **47,678** links across the 1784 pages and asserts the count
+is over forty thousand, because an exclusion that quietly drops nine tenths of
+the work reads exactly like a check that passed.
+
+**And the obvious fix would have been wrong.** Written the naive way — always
+link to the same path — the book gains 211 dead links, because the books are
+not the same shape: `ar`, `ms` and `uk` carry `online` and `foreword` from the
+published app's own list and lack `chakras`, which the other nineteen have.
+That is the divergence recorded four passes ago and deliberately left alone.
+So the switcher asks: the same page where that language has one, its contents
+where it does not. Verified both ways — the naive version fails the crawl, and
+the guarded one leaves nothing broken.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

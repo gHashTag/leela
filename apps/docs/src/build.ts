@@ -77,6 +77,17 @@ export function build(outDir: string): BuildResult {
   write('index.html', rootPage());
   writeFileSync(join(outDir, 'style.css'), STYLE);
 
+  // Which languages carry which chapters, so a switcher can offer the same
+  // chapter where it exists and the contents where it does not.
+  const chapters = new Map<string, Set<string>>(
+    LANGUAGES.map((language) => [
+      language,
+      new Set(rulesFor(language).map((chapter) => chapter.slug)),
+    ]),
+  );
+  const hasChapter = (language: Language, slug: string) =>
+    chapters.get(language)?.has(slug) ?? false;
+
   for (const language of LANGUAGES) {
     const plans = plansFor(language);
     const rules = rulesFor(language);
@@ -88,7 +99,7 @@ export function build(outDir: string): BuildResult {
     }
 
     for (const chapter of rules) {
-      write(`${language}/rules/${chapter.slug}.html`, chapterPage(language, chapter));
+      write(`${language}/rules/${chapter.slug}.html`, chapterPage(language, chapter, hasChapter));
     }
 
     let translated = false;
