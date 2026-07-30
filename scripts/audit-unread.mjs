@@ -172,6 +172,12 @@ const PUBLIC_API = {
   allPlans: 'board helper for a renderer',
   rollMany: 'used by tests and by anyone seeding a replay',
   replay: 'replays a game from its rolls; used by tests and off-chain checks',
+  // The half of the migration that cannot run yet. `playerFromLegacy` converts
+  // one account and is called by tests; `migrateBatch` converts an export, and
+  // the export is a Firebase dump nobody has produced. Kept rather than
+  // deleted because deleting it would mean writing it again from the same
+  // reading, and the reading is what took the time.
+  migrateBatch: 'converts a Firebase export; waiting on the dump itself',
   // Entry points a host calls, not this code.
   createBot: 'the bot entry point, called by index.ts',
   supervise: 'wraps the bot run loop',

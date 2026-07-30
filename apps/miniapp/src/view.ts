@@ -13,7 +13,7 @@
  * place that has bitten.
  */
 
-import { WIN_LOKA, hasWon, type GameState } from '@leela/engine';
+import { WIN_LOKA, hasWon, type GameState, isWaitingToEnter} from '@leela/engine';
 import { messageFor, type Language } from '@leela/content';
 
 export interface Headline {
@@ -44,7 +44,7 @@ export function headline(state: GameState, language: Language, titleOf: TitleOf)
   const won = hasWon(state);
 
   // Out of play and not a winner: nobody has thrown a six yet.
-  if (state.is_finished && !won) {
+  if (isWaitingToEnter(state)) {
     return {
       number: '—',
       title: messageFor(language, 'app.waiting'),

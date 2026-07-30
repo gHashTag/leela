@@ -2462,6 +2462,48 @@ Honest about what the guard covers: an unknown locale never reaches it —
 five copies were covering the same unreachable case; the point is that there is
 now one of them.
 
+## Sixty-ninth pass: a table of three states with two
+
+Played a game at a table of three, which had never been played. The rolling and
+the turn order read cleanly. The standings did not:
+
+```
+Cy: 8 — owes a report
+Ann: 68
+Bo: 68
+```
+
+Ann and Bo have never thrown a six. They are listed as standing on **68** — the
+winning square — because that is where a waiting player sits in this shape, and
+`describeStandings` had two states where there are three: `hasWon` gave
+"finished" and everything else printed its raw square.
+
+`render.ts`, which is what the bot actually sends for `/board`, has all three.
+Two implementations of one table, and the older one was right. The sixth time
+the 68 ambiguity has cost something, so it is `isWaitingToEnter` in the engine
+now, called by all three places that were computing it by hand.
+
+### The audit that could not see it
+
+`audit-unread.mjs` should have noticed that nothing calls `commands.board`. It
+did not, and the reason is worth more than the export: **a name inside a string
+counted as a call.** `bot.command('board', …)` registers a Telegram command that
+happens to share a name with an export, and that was enough.
+
+Strings are stripped before matching now — and the first version of that stripped
+`${…}` inside template literals too, which made three real callers vanish:
+`faceFor(value, FACES)` lives inside `url("${…}")`, a string containing a call.
+Text and code look alike from outside; the difference is which exports get
+reported as dead. With it right, one export surfaced: `migrateBatch`, the half of
+the Firebase migration that cannot run until somebody produces a dump. Waived
+with that reason rather than deleted, because deleting it means writing it again
+from the same reading.
+
+`commands.board` is still invisible to the audit — `board` is a variable in the
+mini app, and matching is by name across the repository. Recorded rather than
+papered over: the check is a heuristic, and a heuristic that claims to be a
+proof is the thing this repository keeps finding.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

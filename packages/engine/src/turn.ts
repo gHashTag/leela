@@ -173,6 +173,23 @@ export function isReport(text: string, rules: RuleSet = DEFAULT_RULESET): boolea
  * fresh — and nothing else moves a player off the win square.
  */
 /**
+ * A player who has not entered the game.
+ *
+ * `is_finished` says two things in this shape — the 68 ambiguity, met six times
+ * now — and telling them apart takes `hasWon`. Three surfaces were doing it by
+ * hand (`render.ts` twice, the mini app's `view.ts` once) and a fourth,
+ * `describeStandings`, was not: it printed the raw square, so a player who had
+ * never thrown a six was listed as standing on **68**, the winning square.
+ *
+ * Kept next to `hasWon` rather than in each caller, because "waiting" and
+ * "finished" are the same question asked twice and the answer has to come from
+ * one place.
+ */
+export function isWaitingToEnter(state: GameState): boolean {
+  return state.is_finished && !hasWon(state);
+}
+
+/**
  * A throw refused because the player is not on the board yet.
  *
  * `isBlocked` covers two different refusals, and a surface that shows one

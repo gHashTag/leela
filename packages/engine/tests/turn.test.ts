@@ -12,6 +12,7 @@ import {
   hasWon,
   needsSixToEnter,
   initialState,
+  isWaitingToEnter,
   owesReport,
   seededRoller,
   type GameState,
@@ -373,5 +374,66 @@ describe('a throw refused because the player is not on the board', () => {
     const { event } = applyRoll(playing({ loka: 11 }), 4, CLASSIC);
     expect(event.isBlocked).toBe(false);
     expect(needsSixToEnter(event)).toBe(false);
+  });
+});
+
+describe('a player who has not entered the game', () => {
+  /**
+   * `is_finished` says two things in this shape — the 68 ambiguity, met six
+   * times now — and telling them apart takes `hasWon`. Three surfaces were
+   * doing it by hand and a fourth was not: `describeStandings` printed the raw
+   * square, so a player who had never thrown a six was listed as standing on
+   * **68**, the winning square, in the table the bot prints.
+   *
+   * The assertion is the relation over states a real game reaches, not a list
+   * of the two it was got wrong on.
+   */
+
+  it('is finished-but-not-won, on every state a game reaches', () => {
+    let waiting = 0;
+    let playing = 0;
+
+    for (let seed = 1; seed <= 30; seed += 1) {
+      let state = initialState();
+      const die = seededRoller(seed);
+
+      expect(isWaitingToEnter(state)).toBe(true);
+      waiting += 1;
+
+      for (let turn = 0; turn < 150; turn += 1) {
+        state = applyRoll(state, die(), CLASSIC).state;
+
+        expect(isWaitingToEnter(state)).toBe(state.is_finished && !hasWon(state));
+        if (isWaitingToEnter(state)) waiting += 1;
+        else playing += 1;
+
+        if (hasWon(state)) break;
+      }
+    }
+
+    // Both sides occur, or the relation above is passing for want of examples.
+    expect(waiting).toBeGreaterThan(0);
+    expect(playing).toBeGreaterThan(0);
+  });
+
+  it('is not a winner, who carries the same flag', () => {
+    const won = applyRoll(playing({ loka: 65 }), 3, CLASSIC).state;
+
+    expect(won.is_finished).toBe(true);
+    expect(hasWon(won)).toBe(true);
+    expect(isWaitingToEnter(won)).toBe(false);
+  });
+
+  it('is not somebody in play', () => {
+    expect(isWaitingToEnter(playing({ loka: 41 }))).toBe(false);
+  });
+
+  it('is a player migrated with no history, who has not moved', () => {
+    // `stateFromLegacy` sets previous equal to the plan when the export
+    // carried none, which reads as "has not moved" — deliberately, so they can
+    // still enter.
+    expect(isWaitingToEnter(playing({ loka: 68, previous_loka: 68, is_finished: true }))).toBe(
+      true,
+    );
   });
 });

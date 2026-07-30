@@ -7,7 +7,7 @@
  * what a board game interface is for.
  */
 
-import { ARROWS, BOARD_ROWS, SNAKES, WIN_LOKA, hasWon } from '@leela/engine';
+import { ARROWS, BOARD_ROWS, SNAKES, WIN_LOKA, hasWon, isWaitingToEnter} from '@leela/engine';
 import { asLeftToRight, type Language, messageFor } from '@leela/content';
 import type { Room } from './commands';
 
@@ -36,7 +36,7 @@ export function renderBoard(room: Room): string {
   room.session.players.forEach((player, seat) => {
     // A player waiting to enter is not on the board yet. `hasWon` is the
     // shared check; repeating the condition is how three copies of it drifted.
-    if (player.state.is_finished && !hasWon(player.state)) return;
+    if (isWaitingToEnter(player.state)) return;
     occupants.set(player.state.loka, tokenFor(seat));
   });
 
@@ -64,7 +64,7 @@ export function renderStandings(room: Room): string {
     .map((player, seat) => {
       const name = escapeHtml(player.name ?? room.names[player.id] ?? player.id);
       const done = hasWon(player.state);
-      const waiting = player.state.is_finished && !done;
+      const waiting = isWaitingToEnter(player.state);
 
       const where = done
         ? messageFor(room.language, 'standings.finished')

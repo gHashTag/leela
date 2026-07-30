@@ -782,3 +782,75 @@ describe('the rules book, in a chat', () => {
     expect(said).toMatch(/[А-Яа-я]/);
   });
 });
+
+describe('the table of standings', () => {
+  /**
+   * It had two states where there are three. `hasWon` gave "finished" and
+   * everything else printed its raw square — so a player who had never thrown
+   * a six was listed as standing on **68**, the winning square, because that
+   * is where a waiting player sits in this shape.
+   *
+   * `render.ts` knew and this did not, which is the sixth time the 68
+   * ambiguity has cost something. The predicate lives in the engine now.
+   */
+
+  it('never shows a player who has not entered as standing anywhere', () => {
+    let room = table(3, SEED);
+    // Nobody has thrown: every seat is waiting.
+    const said = board(room).replies[0].text;
+
+    expect(said).not.toMatch(/\b68\b/);
+    expect(said.split('\n').filter((line) => /waiting/i.test(line))).toHaveLength(3);
+  });
+
+  it('shows a square only for somebody standing on one', () => {
+    // The relation: a line carries a number exactly when that player is in
+    // play, over a game long enough for the three states to occur.
+    let room = table(2, SEED);
+
+    for (let turn = 0; turn < 60; turn += 1) {
+      const holder = room.session.players[room.session.turnIndex];
+      const result = roll(room, holder.id, NOW);
+      room = result.room as Room;
+      if (result.replies.some((reply) => reply.text.includes('/report'))) {
+        room = report(room, holder.id, 'noted').room as Room;
+      }
+
+      // Matched by name: these lines are sorted by standing, not by seat, and
+      // a name can hold a digit — the first two versions of this test read
+      // `P2` as a square and then read the wrong player's line.
+      const lines = new Map(
+        board(room)
+          .replies[0].text.split('\n')
+          .map((line) => {
+            const [name, ...rest] = line.split(': ');
+            return [name ?? '', rest.join(': ')];
+          }),
+      );
+
+      for (const player of room.session.players) {
+        const where = lines.get(player.name ?? room.names[player.id] ?? player.id) ?? '';
+        const inPlay = !player.state.is_finished;
+        expect(/^\d+/.test(where), `${player.id}: ${where}`).toBe(inPlay);
+      }
+    }
+  });
+
+  it('says a winner is finished rather than giving their square', () => {
+    const won = {
+      ...table(1, SEED),
+    } as Room;
+    const room: Room = {
+      ...won,
+      session: {
+        ...won.session,
+        players: won.session.players.map((player) => ({
+          ...player,
+          state: { ...player.state, loka: 68, previous_loka: 62, is_finished: true },
+        })),
+      },
+    };
+
+    expect(board(room).replies[0].text).not.toMatch(/68/);
+  });
+});

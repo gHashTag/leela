@@ -66,6 +66,7 @@ export {
   canRoll,
   formatWait,
   isReport,
+  isWaitingToEnter,
   needsSixToEnter,
   owesReport,
 } from './turn';

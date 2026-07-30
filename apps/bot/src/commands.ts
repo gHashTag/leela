@@ -30,6 +30,7 @@ import {
   type MoveEvent,
   type RuleSet,
   type Session,
+  isWaitingToEnter,
 } from '@leela/engine';
 import { bookFor, messageFor, planFor, resolveLanguage, type Language } from '@leela/content';
 
@@ -642,11 +643,16 @@ export function board(room: Room): CommandResult {
 
 function describeStandings(room: Room): string {
   const lines = standings(room.session).map((player) => {
-    // `hasWon`, not a fourth copy of its condition: this one had already lost
-    // the check that the player is standing on the win square.
+    // Three states, not two. This had `hasWon` and a raw square number, so a
+    // player who had never thrown a six was listed as standing on 68 — the
+    // winning square — because that is where a waiting player sits in this
+    // shape. `render.ts` knew; this did not; the difference is the sixth time
+    // that ambiguity has cost something.
     const where = hasWon(player.state)
       ? messageFor(room.language, 'standings.done')
-      : `${player.state.loka}`;
+      : isWaitingToEnter(player.state)
+        ? messageFor(room.language, 'standings.waiting')
+        : `${player.state.loka}`;
     const owed = player.reportSubmitted
       ? ''
       : ` — ${messageFor(room.language, 'standings.owes')}`;

@@ -137,6 +137,65 @@ export function declaredExports(source, file) {
  * An `export { name } from './x'` is plumbing, not a use: a barrel file that
  * lists everything would otherwise make every export look consumed.
  */
+/**
+ * A line with its string contents removed, and its code kept.
+ *
+ * Quote-aware rather than a regex: a line often carries several strings, and an
+ * apostrophe inside a double-quoted one is not a quote.
+ *
+ * `${…}` inside a template literal is **code** and stays. The first version of
+ * this dropped it, and three real callers vanished — `faceFor(value, FACES)`
+ * lives inside `url("${…}")`, which is a string containing a call. Stripping
+ * text and stripping code look the same from outside; the difference is which
+ * exports get reported as dead.
+ */
+export function withoutStrings(line) {
+  let out = '';
+  let quote = null;
+  let depth = 0;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+
+    if (quote) {
+      if (char === '\\') {
+        i += 1;
+        continue;
+      }
+      if (quote === '`' && char === '$' && line[i + 1] === '{') {
+        // Out of the string and into an expression.
+        depth += 1;
+        quote = null;
+        out += ' ';
+        i += 1;
+        continue;
+      }
+      if (char === quote) {
+        quote = null;
+        out += char;
+      }
+      continue;
+    }
+
+    if (depth > 0 && char === '}') {
+      depth -= 1;
+      quote = '`';
+      out += ' ';
+      continue;
+    }
+
+    if (char === "'" || char === '"' || char === '`') {
+      quote = char;
+      out += char;
+      continue;
+    }
+
+    out += char;
+  }
+
+  return out;
+}
+
 export function usesOf(name, sources) {
   let uses = 0;
 
@@ -153,10 +212,18 @@ export function usesOf(name, sources) {
       '',
     );
 
-    for (const line of withoutPlumbing.split('\n')) {
+    for (const raw of withoutPlumbing.split('\n')) {
+      if (!raw.includes(name)) continue;
+      if (comment.test(raw)) continue;
+      if (declaration.test(raw)) continue;
+
+      // A name inside a string is not a call. `bot.command('board', …)`
+      // registers a Telegram command that happens to share a name with an
+      // export, and counted as a use of it — so `commands.board`, which
+      // nothing in the bot calls, read as called. Every message key, every
+      // command name and every slug is a chance for the same accident.
+      const line = withoutStrings(raw);
       if (!line.includes(name)) continue;
-      if (comment.test(line)) continue;
-      if (declaration.test(line)) continue;
       if (new RegExp(boundary).test(line)) uses++;
     }
   }
