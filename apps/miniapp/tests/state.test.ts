@@ -9,7 +9,11 @@ import {
   type GameState,
 } from '@leela/engine';
 import {
+  DRAFT_KEY,
   RESTING_FACE,
+  clearDraft,
+  loadDraft,
+  saveDraft,
   STORAGE_KEY,
   isSavedGame,
   loadLastRoll,
@@ -244,6 +248,104 @@ describe('the throw the die is showing', () => {
     // every existing save: a player's whole path dropped to remember a die.
     const store = memory();
     saveLastRoll(store, 3);
+    expect(store.written()).not.toContain('loka');
+  });
+});
+
+describe('a report typed and not yet filed', () => {
+  /**
+   * The game will not let a player throw until they have written about the
+   * square they are on, and that writing lived in a `<textarea>` and nowhere
+   * else. A phone discards a backgrounded tab — not hypothetically: a *throw*
+   * was lost the same way two passes ago, and found by watching it happen — so
+   * a notification arriving mid-sentence took the sentence with it. The one
+   * thing this game asks a player to produce was the one thing it did not keep.
+   *
+   * The published app does not keep a draft either; this is not a port, it is a
+   * loss neither of them should have.
+   */
+
+  const holding = (raw: string | null): GameStorage => ({
+    getItem: () => raw,
+    setItem: () => {},
+  });
+
+  it('comes back as it was typed, whatever was typed', () => {
+    // Any text, not a remembered one: a report is prose, and prose contains
+    // quotes, newlines, emoji and the odd brace.
+    for (const text of [
+      'a sentence',
+      'two\n\nparagraphs, with "quotes" and a — dash',
+      '{"looks":"like json"}',
+      'ॐ 🕉 неведение',
+      'x'.repeat(4000),
+    ]) {
+      const store = memory();
+      saveDraft(store, 41, text);
+      expect(loadDraft(memory(store.written() ?? undefined), 41), text.slice(0, 20)).toBe(text);
+    }
+  });
+
+  it('belongs to the plan it was written about', () => {
+    // Offering a draft about the human plane to somebody standing on Delusion
+    // would be worse than offering nothing.
+    const store = memory();
+    saveDraft(store, 41, 'about the human plane');
+
+    expect(loadDraft(memory(store.written() ?? undefined), 6)).toBe('');
+  });
+
+  it('is nothing when nothing was typed', () => {
+    expect(loadDraft(memory(), 41)).toBe('');
+  });
+
+  it('is cleared by blank, so a stale plan cannot linger', () => {
+    const store = memory();
+    saveDraft(store, 41, 'something');
+    saveDraft(store, 41, '   ');
+
+    expect(loadDraft(memory(store.written() ?? undefined), 41)).toBe('');
+  });
+
+  it('is cleared outright when the report is filed', () => {
+    const store = memory();
+    saveDraft(store, 41, 'filed now');
+    clearDraft(store);
+
+    expect(loadDraft(memory(store.written() ?? undefined), 41)).toBe('');
+  });
+
+  it('is nothing for anything that is not a draft this app wrote', () => {
+    // The rule rather than a list: a half-written value, another shape, a
+    // string where an object belongs. None of it restores.
+    for (const raw of ['', 'not json', 'null', '[]', '{}', '{"plan":41}', '{"text":"no plan"}', '3']) {
+      expect(loadDraft(holding(raw), 41), JSON.stringify(raw)).toBe('');
+    }
+  });
+
+  it('never throws, whatever storage does', () => {
+    const hostile: GameStorage = {
+      getItem: () => {
+        throw new Error('denied');
+      },
+      setItem: () => {
+        throw new Error('denied');
+      },
+    };
+
+    expect(() => loadDraft(hostile, 41)).not.toThrow();
+    expect(loadDraft(hostile, 41)).toBe('');
+    expect(() => saveDraft(hostile, 41, 'words')).not.toThrow();
+    expect(() => clearDraft(hostile)).not.toThrow();
+  });
+
+  it('is kept apart from the game and the journal', () => {
+    // Inside the saved game it would make `isSavedGame` reject every existing
+    // save — a player's whole path dropped to remember half a sentence.
+    const store = memory();
+    saveDraft(store, 41, 'words');
+
+    expect(DRAFT_KEY).not.toBe(STORAGE_KEY);
     expect(store.written()).not.toContain('loka');
   });
 });

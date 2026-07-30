@@ -2238,6 +2238,35 @@ A player who has already won and is throwing to begin again is in the same
 position, on 68 needing a six, and is told the same thing. That is right, and it
 is now written down where the rule lives rather than inferred twice.
 
+## Sixty-second pass: the one thing the game asks for, and did not keep
+
+The game will not let a player throw until they have written about the square
+they are on. That writing lived in a `<textarea>` and nowhere else.
+
+A phone discards a backgrounded tab. That is not a hypothesis here: two passes
+ago a *throw* was lost to exactly that, found by watching it happen in a hidden
+browser pane. So a notification arriving mid-sentence took the sentence with it,
+and the one thing this game asks a player to produce was the one thing it did
+not keep. Checked rather than assumed — typed a hundred characters into the
+writer, reloaded, and the box came back empty.
+
+A draft is kept now, as it is typed, and cleared when the report is filed or the
+game is started again. Per plan, because a draft belongs to the square it is
+about: offering one written about the human plane to somebody standing on
+Delusion would be worse than offering nothing. Its own storage key, like the
+die's — inside the saved game it would make `isSavedGame` reject every existing
+save, which is a player's whole path dropped to remember half a sentence.
+
+**The published app does not keep a draft either**, which was checked before
+this was written: `CreatePost` holds the text in `useState` and nothing more. So
+this is not a port. It is a loss neither of them should have.
+
+Eight tests on the rule rather than on a sentence: whatever was typed comes back
+— prose has quotes, newlines, emoji and the odd brace — a draft about one plan
+is not offered under another, blank clears it, anything that is not a draft this
+app wrote restores as nothing, and storage that throws still lets somebody
+write. They simply have to finish in one sitting.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

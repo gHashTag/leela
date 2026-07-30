@@ -150,3 +150,62 @@ export function saveState(storage: GameStorage | undefined, state: GameState): v
     // A private window with storage disabled still plays; it just forgets.
   }
 }
+
+/**
+ * Where an unfinished report waits.
+ *
+ * Its own key, like the die's: the saved game refuses anything it does not
+ * recognise, and a draft has no business making a player's path unreadable.
+ */
+export const DRAFT_KEY = 'leela.draft.v1';
+
+/**
+ * What has been typed and not yet filed, for the plan it is about.
+ *
+ * The game will not let a player throw until they have written about the
+ * square they are on, and the writing was held in a `<textarea>` and nowhere
+ * else. A phone discards a backgrounded tab — which is not hypothetical here:
+ * a *throw* was lost the same way two passes ago, and found by watching it
+ * happen — so a notification arriving mid-sentence took the sentence with it.
+ * The one thing the game asks a player to produce was the one thing it did not
+ * keep.
+ *
+ * Kept per plan. A draft belongs to the square it is about, and offering one
+ * written about plan 41 to somebody standing on 6 would be worse than offering
+ * nothing.
+ */
+export function loadDraft(storage: GameStorage | undefined, plan: number): string {
+  try {
+    const raw = storage?.getItem(DRAFT_KEY);
+    if (!raw) return '';
+
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null) return '';
+
+    const draft = parsed as { plan?: unknown; text?: unknown };
+    if (draft.plan !== plan || typeof draft.text !== 'string') return '';
+
+    return draft.text;
+  } catch {
+    return '';
+  }
+}
+
+/** Keep what has been typed. Blank clears it: there is nothing to come back to. */
+export function saveDraft(storage: GameStorage | undefined, plan: number, text: string): void {
+  try {
+    if (text.trim().length === 0) {
+      storage?.setItem(DRAFT_KEY, '');
+      return;
+    }
+    storage?.setItem(DRAFT_KEY, JSON.stringify({ plan, text }));
+  } catch {
+    // A window that cannot store still plays, and still lets somebody write —
+    // they simply have to finish in one sitting.
+  }
+}
+
+/** Forget the draft. Filed, or the game started again. */
+export function clearDraft(storage: GameStorage | undefined): void {
+  saveDraft(storage, 0, '');
+}

@@ -42,7 +42,15 @@ import die6 from './die-6.webp';
 import boardLight from './board-light.webp';
 import boardDark from './board-dark.webp';
 import gemArt from './gem.webp';
-import { loadLastRoll, loadState, saveLastRoll, saveState } from './state';
+import {
+  clearDraft,
+  loadDraft,
+  loadLastRoll,
+  loadState,
+  saveDraft,
+  saveLastRoll,
+  saveState,
+} from './state';
 import { fileName, merge, parseDocument, toDocument, toText } from './journal-file';
 import {
   arrived,
@@ -253,6 +261,7 @@ function startOver(): void {
   // starting again is not a reason to burn it.
   journal = { ...journal, reported: true };
   saveJournal(localStorage, journal);
+  clearDraft(localStorage);
   showFace(loadLastRoll(localStorage));
   el.say.textContent = messageFor(language, 'app.restarted');
   draw();
@@ -380,7 +389,10 @@ async function roll(): Promise<void> {
 /** Ask for a report on the plan the player is standing on. */
 function openWriter(): void {
   el.writerTitle.textContent = `${state.loka}. ${planFor(state.loka).title}`;
-  el.writerText.value = '';
+  // Whatever was typed and not filed. A phone discards a backgrounded tab, and
+  // the one thing this game asks a player to produce was held in a textarea
+  // and nowhere else.
+  el.writerText.value = loadDraft(localStorage, state.loka);
   el.writer.showModal();
   el.writerText.focus();
 }
@@ -396,6 +408,7 @@ function saveReport(): void {
   }
 
   saveJournal(localStorage, journal);
+  clearDraft(localStorage);
   el.writer.close();
   draw();
   el.say.textContent = messageFor(language, 'app.reportSaved');
@@ -495,6 +508,9 @@ el.plans.addEventListener('click', openPlans);
 el.restart.addEventListener('click', startOver);
 el.report.addEventListener('click', openWriter);
 el.writerSave.addEventListener('click', saveReport);
+el.writerText.addEventListener('input', () => {
+  saveDraft(localStorage, state.loka, el.writerText.value);
+});
 el.path.addEventListener('click', openPath);
 el.pathExport.addEventListener('click', exportPath);
 el.pathImport.addEventListener('change', () => {
