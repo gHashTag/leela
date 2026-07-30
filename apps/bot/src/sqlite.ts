@@ -10,7 +10,8 @@
  */
 
 import { createRequire } from 'node:module';
-import type { SessionPlayerRow, SessionRow } from '@leela/db';
+import { gameStepRow } from '@leela/db';
+import type { NewGameStepRow, SessionPlayerRow, SessionRow } from '@leela/db';
 import type { RoomQueries, StoredSeat, StoredSession } from './persistence';
 
 /**
@@ -84,6 +85,23 @@ CREATE TABLE IF NOT EXISTS session_players (
 
 CREATE UNIQUE INDEX IF NOT EXISTS session_players_user
   ON session_players (session_id, user_id);
+
+CREATE TABLE IF NOT EXISTS game_steps (
+  id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id              TEXT NOT NULL,
+  roll                 INTEGER NOT NULL,
+  from_plan            INTEGER NOT NULL,
+  to_plan              INTEGER NOT NULL,
+  direction            TEXT NOT NULL,
+  jumped_from          INTEGER,
+  is_game_start        INTEGER NOT NULL DEFAULT 0,
+  is_game_finished     INTEGER NOT NULL DEFAULT 0,
+  is_three_sixes_reset INTEGER NOT NULL DEFAULT 0,
+  ruleset              TEXT NOT NULL,
+  created_at           INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS game_steps_user ON game_steps (user_id, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS reports (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -283,6 +301,54 @@ export class SqliteRoomQueries implements RoomQueries {
     this.db.prepare('DELETE FROM sessions WHERE id = ?').run(chatId);
   }
 
+  /**
+   * Keep a move.
+   *
+   * `gameStepRow` and the `game_steps` table both existed and nothing ever
+   * called or wrote to them: the schema promised a replayable history and no
+   * row was ever inserted. A player's path is recoverable from `(seed,
+   * rollsTaken)`, but only by someone who knows to look; a move log is the
+   * version a person can read.
+   */
+  recordStep(step: NewGameStepRow): void {
+    this.db
+      .prepare(
+        `INSERT INTO game_steps
+           (user_id, roll, from_plan, to_plan, direction, jumped_from,
+            is_game_start, is_game_finished, is_three_sixes_reset, ruleset, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        step.user_id,
+        step.roll,
+        step.from_plan,
+        step.to_plan,
+        step.direction,
+        step.jumped_from ?? null,
+        step.is_game_start ? 1 : 0,
+        step.is_game_finished ? 1 : 0,
+        step.is_three_sixes_reset ? 1 : 0,
+        step.ruleset,
+        this.now(),
+      );
+  }
+
+  /** Every move a player has made, newest first. */
+  stepsFor(userId: string): Array<{ roll: number; from: number; to: number; direction: string }> {
+    const rows = this.db
+      .prepare(
+        'SELECT roll, from_plan, to_plan, direction FROM game_steps WHERE user_id = ? ORDER BY created_at DESC, id DESC',
+      )
+      .all(userId) as Array<Record<string, unknown>>;
+
+    return rows.map((row) => ({
+      roll: row.roll as number,
+      from: row.from_plan as number,
+      to: row.to_plan as number,
+      direction: row.direction as string,
+    }));
+  }
+
   /** Keep a report. The same database, so one file holds a whole deployment. */
   recordReport(report: { userId: string; plan: number; text: string }): void {
     this.db
@@ -310,6 +376,19 @@ export class SqliteRoomQueries implements RoomQueries {
   close(): void {
     this.db.close();
   }
+}
+
+/** A `StepSink` backed by the same database as the rooms. */
+export function sqliteStepSink(queries: SqliteRoomQueries) {
+  return {
+    async record(step: {
+      userId: string;
+      event: import('@leela/engine').MoveEvent;
+      ruleset: import('@leela/engine').RuleSet;
+    }): Promise<void> {
+      queries.recordStep(gameStepRow(step.userId, step.event, step.ruleset));
+    },
+  };
 }
 
 /** A `ReportSink` backed by the same database as the rooms. */

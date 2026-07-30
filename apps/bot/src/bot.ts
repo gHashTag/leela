@@ -21,9 +21,11 @@ import { escapeHtml, renderBoardMessage, renderPlan } from './render';
 import {
   MemoryRoomStore,
   discardReports,
+  discardSteps,
   seedFor,
   type ReportSink,
   type RoomStore,
+  type StepSink,
 } from './store';
 
 export interface BotOptions {
@@ -31,6 +33,8 @@ export interface BotOptions {
   store?: RoomStore;
   /** Where reports are kept. Defaults to dropping them. */
   reports?: ReportSink;
+  /** Where moves are kept. Defaults to dropping them. */
+  steps?: StepSink;
   /** Injected so the report cooldown can be tested without waiting a day. */
   now?: () => number;
   /** Where the update log goes. Injected so tests can read it. */
@@ -58,6 +62,7 @@ export function createBot({
   token,
   store = new MemoryRoomStore(),
   reports = discardReports,
+  steps = discardSteps,
   now = Date.now,
   log = console.log,
   guide,
@@ -154,11 +159,20 @@ export function createBot({
    */
   async function applyEffects(effects: Effect[] | undefined): Promise<void> {
     for (const effect of effects ?? []) {
-      if (effect.kind !== 'report') continue;
       try {
-        await reports.record({ userId: effect.userId, plan: effect.plan, text: effect.text });
+        if (effect.kind === 'report') {
+          await reports.record({ userId: effect.userId, plan: effect.plan, text: effect.text });
+        } else if (effect.kind === 'move') {
+          await steps.record({
+            userId: effect.userId,
+            event: effect.event,
+            ruleset: effect.ruleset,
+          });
+        }
       } catch (error) {
-        console.error('[bot] failed to store a report', error);
+        // A history that fails to write must not stop the game: the move has
+        // already happened, and the board is the record that matters.
+        console.error(`[bot] failed to store a ${effect.kind}`, error);
       }
     }
   }

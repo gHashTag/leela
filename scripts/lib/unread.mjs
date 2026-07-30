@@ -101,3 +101,81 @@ export function unreadFields(declarations, sources, ignore = []) {
 
   return unread.sort((a, b) => a.name.localeCompare(b.name));
 }
+
+// --- exports ----------------------------------------------------------------
+
+/**
+ * Functions and constants a module exports.
+ *
+ * The same question as `declaredFields`, asked of the public surface: which of
+ * these has no caller. `hasWon` had none and was wrong — it called a player who
+ * had never rolled a winner, and three copies of that rule existed with the
+ * unused one broken.
+ */
+export function declaredExports(source, file) {
+  const exports = [];
+  const clean = stripTemplateLiterals(source);
+
+  for (const match of clean.matchAll(
+    /^export\s+(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/gm,
+  )) {
+    exports.push({ name: match[1], file, kind: 'function' });
+  }
+
+  for (const match of clean.matchAll(
+    /^export\s+(?:const|class)\s+([A-Za-z_$][\w$]*)/gm,
+  )) {
+    exports.push({ name: match[1], file, kind: 'value' });
+  }
+
+  return exports;
+}
+
+/**
+ * Mentions of a name that are not its declaration or its re-export.
+ *
+ * An `export { name } from './x'` is plumbing, not a use: a barrel file that
+ * lists everything would otherwise make every export look consumed.
+ */
+export function usesOf(name, sources) {
+  let uses = 0;
+
+  const boundary = `(?<![\\w$])${name}(?![\\w$])`;
+  const comment = /^\s*(\/\/|\*|\/\*)/;
+  const declaration = new RegExp(
+    `^export\\s+(?:async\\s+)?(?:function|const|class)\\s+${name}\\b`,
+  );
+
+  for (const source of sources) {
+    // Import and export lists are plumbing; drop them before counting.
+    const withoutPlumbing = source.replace(
+      /^\s*(?:import|export)\s*(?:type\s*)?\{[^}]*\}[^\n]*$/gm,
+      '',
+    );
+
+    for (const line of withoutPlumbing.split('\n')) {
+      if (!line.includes(name)) continue;
+      if (comment.test(line)) continue;
+      if (declaration.test(line)) continue;
+      if (new RegExp(boundary).test(line)) uses++;
+    }
+  }
+
+  return uses;
+}
+
+/** Exports with no caller anywhere in the searched sources. */
+export function uncalledExports(declarations, sources, ignore = []) {
+  const skip = new Set(ignore);
+  const seen = new Set();
+  const uncalled = [];
+
+  for (const item of declarations) {
+    if (skip.has(item.name) || seen.has(item.name)) continue;
+    seen.add(item.name);
+
+    if (usesOf(item.name, sources) === 0) uncalled.push(item);
+  }
+
+  return uncalled.sort((a, b) => a.name.localeCompare(b.name));
+}

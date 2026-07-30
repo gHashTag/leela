@@ -26,6 +26,22 @@ export interface StoredReport {
   createdAt: Date;
 }
 
+/** Where a move goes, so a game has a history a person can read. */
+export interface StepSink {
+  record(step: {
+    userId: string;
+    event: import('@leela/engine').MoveEvent;
+    ruleset: import('@leela/engine').RuleSet;
+  }): Promise<void>;
+}
+
+/** A sink that drops moves, for running without storage. */
+export const discardSteps: StepSink = {
+  async record() {
+    // Nothing. The game still plays; the history is simply not kept.
+  },
+};
+
 export interface ReportSink {
   record(report: { userId: string; plan: number; text: string }): Promise<void>;
   /**

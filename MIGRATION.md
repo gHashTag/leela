@@ -568,6 +568,33 @@ finding the code that no caller has ever disagreed with. `hasWon` had a test —
 asserting it was true after a win, which it was. Nothing asked what it said
 before one.
 
+## Nineteenth pass: the export audit, automated, and what it found
+
+`hasWon` was found by hand. The same question now runs in CI for exports as
+well as fields, with the same rule: report, do not fail. Re-exports and import
+lists are stripped before counting, or a barrel file would make everything look
+consumed.
+
+Two findings, one of each kind the audit can produce.
+
+**A promise the schema made and nothing kept.** `gameStepRow` had no caller and
+`game_steps` had no rows. The table, the mapper and the migration all existed;
+no move was ever recorded. A path is recoverable from `(seed, rollsTaken)`, but
+only by someone who knows to look — a move log is the version a person can read.
+The bot writes one now, through the same `Effect` mechanism as a report, and a
+failure to write it cannot stop the game: the move has already happened.
+
+**The second unused export that turned out to be the weaker of two copies.**
+`validatePosition` accepted `1.5`, and the string `'5'`, because a range check
+without an integer check is not a check that a square exists. `isOnBoard` had it
+right. Both are one function now, with a test asserting they agree on every
+input — the same shape as `hasWon` the pass before, and the same cause: nothing
+called it, so nothing disagreed with it.
+
+The two lists of justified exceptions — 34 write-only fields, 45 exports without
+local callers — each carry a reason. That is the point of them: a list without
+reasons is where things go to be forgotten, which is how these got here.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

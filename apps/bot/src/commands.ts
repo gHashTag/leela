@@ -23,6 +23,7 @@ import {
   seededRoller,
   standings,
   submitReport,
+  type MoveEvent,
   type RuleSet,
   type Session,
 } from '@leela/engine';
@@ -84,13 +85,26 @@ export interface Reply {
  * transport applies effects after the room is saved, so a failure to record a
  * report cannot leave the board ahead of the writing.
  */
-export type Effect = {
-  kind: 'report';
-  userId: string;
-  /** The plan the report is about — the one the player is standing on. */
-  plan: number;
-  text: string;
-};
+export type Effect =
+  | {
+      kind: 'report';
+      userId: string;
+      /** The plan the report is about — the one the player is standing on. */
+      plan: number;
+      text: string;
+    }
+  | {
+      /**
+       * A move, for the log.
+       *
+       * `game_steps` and `gameStepRow` both existed and nothing wrote a row:
+       * the schema promised a readable history and never kept one.
+       */
+      kind: 'move';
+      userId: string;
+      event: MoveEvent;
+      ruleset: RuleSet;
+    };
 
 export interface CommandResult {
   room: Room | null;
@@ -294,6 +308,9 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
 
   const next: Room = { ...room, session: move.session, rollsTaken: room.rollsTaken + 1 };
   const replies = [say(describeMove(next, move.playerId, value, move.event))];
+  const effects: Effect[] = [
+    { kind: 'move', userId: move.playerId, event: move.event, ruleset: room.session.rules },
+  ];
 
   if (move.event.isGameFinished && !move.event.isBlocked) {
     replies.push(say(`${nameOf(next, move.playerId)} reaches Cosmic Consciousness. 🕉`));
@@ -310,7 +327,7 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
     replies.push(say('A six — throw again.'));
   }
 
-  return { room: next, replies };
+  return { room: next, replies, effects };
 }
 
 /** A move, in words, with the plan the player landed on. */

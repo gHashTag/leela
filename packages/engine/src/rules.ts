@@ -14,6 +14,7 @@ import {
   START_LOKA,
   TOTAL_PLANS,
   WIN_LOKA,
+  isOnBoard,
 } from './board';
 import type { Direction } from './types';
 
@@ -128,7 +129,16 @@ export function getDirectionAndPosition(
   return { finalLoka: newLoka, direction: 'step 🚶🏼', isGameFinished: false };
 }
 
-/** True when `position` is a legal square. Kept for callers migrating off GameService. */
+/**
+ * True when `position` is a legal square. Kept for callers migrating off
+ * `GameService`, whose version this reproduced.
+ *
+ * Delegates to `isOnBoard` rather than repeating the comparison. The two had
+ * drifted: this one accepted `1.5` and the string `'5'`, because a range check
+ * without an integer check is not a check that a square exists. It survived
+ * because nothing called it — the second time an unused export turned out to be
+ * the weaker of two copies.
+ */
 export function validatePosition(position: number): boolean {
-  return position >= 1 && position <= TOTAL_PLANS;
+  return isOnBoard(position);
 }

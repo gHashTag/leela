@@ -148,18 +148,18 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 186 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/engine` | 188 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 109 | 22 languages, quality guards |
 | `@leela/db` | 80 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 67 | the companion — prompts built from the plan text |
 | `@leela/contracts` | 20 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
-| `@leela/bot` | 183 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
+| `@leela/bot` | 188 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 102 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
 | `@leela/miniapp` | 46 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-793 tests, run on every push by [CI](.github/workflows/ci.yml), which also
-reports fields that are written and never read:
+800 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+reports fields that are written and never read, and exports with no caller:
 
 ```bash
 node scripts/audit-unread.mjs

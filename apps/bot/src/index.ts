@@ -11,8 +11,14 @@
 import { Guide, openRouter } from '@leela/ai';
 import { createBot } from './bot';
 import { DatabaseRoomStore } from './persistence';
-import { MemoryReportSink, MemoryRoomStore, type ReportSink, type RoomStore } from './store';
-import { SqliteRoomQueries, sqliteReportSink } from './sqlite';
+import {
+  MemoryReportSink,
+  MemoryRoomStore,
+  type ReportSink,
+  type RoomStore,
+  type StepSink,
+} from './store';
+import { SqliteRoomQueries, sqliteReportSink, sqliteStepSink } from './sqlite';
 import { supervise } from './supervisor';
 
 const token = process.env.BOT_TOKEN;
@@ -35,6 +41,7 @@ const databasePath = process.env.LEELA_DB;
 
 let store: RoomStore;
 let reports: ReportSink;
+let steps: StepSink | undefined;
 let durable = false;
 
 /** How long a finished table is kept before it is forgotten. */
@@ -44,6 +51,7 @@ if (databasePath) {
   const queries = new SqliteRoomQueries({ path: databasePath });
   store = new DatabaseRoomStore(queries);
   reports = sqliteReportSink(queries);
+  steps = sqliteStepSink(queries);
   durable = true;
 
   // Nothing deleted a finished game, so every table ever opened stayed. Done
@@ -75,7 +83,7 @@ const guide = openRouterKey
     })
   : undefined;
 
-const bot = createBot({ token, store, reports, guide });
+const bot = createBot({ token, store, reports, steps, guide });
 
 // Rooms live in memory here. `DatabaseRoomStore` in persistence.ts is the
 // durable one — it needs a `RoomQueries` implementation and a database, so

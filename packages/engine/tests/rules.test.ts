@@ -7,6 +7,7 @@ import {
   WIN_LOKA,
   getDirectionAndPosition,
   handleConsecutiveSixes,
+  isOnBoard,
   validatePosition,
 } from '../src';
 
@@ -103,5 +104,23 @@ describe('validatePosition', () => {
     expect(validatePosition(TOTAL_PLANS)).toBe(true);
     expect(validatePosition(0)).toBe(false);
     expect(validatePosition(TOTAL_PLANS + 1)).toBe(false);
+  });
+
+  it('rejects a value that is in range but not a square', () => {
+    // A range check without an integer check is not a check that a square
+    // exists. This accepted 1.5 and the string '5' until it delegated.
+    for (const bad of [1.5, 71.5, '5', '1', NaN, Infinity, null, undefined, {}]) {
+      expect(validatePosition(bad as number), String(bad)).toBe(false);
+    }
+  });
+
+  it('agrees with isOnBoard on every input, because there is one check now', () => {
+    const inputs = [
+      ...Array.from({ length: TOTAL_PLANS + 4 }, (_, i) => i - 1),
+      1.5, 0.5, -1.5, NaN, Infinity, -Infinity,
+    ];
+    for (const input of inputs) {
+      expect(validatePosition(input), String(input)).toBe(isOnBoard(input));
+    }
   });
 });

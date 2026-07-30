@@ -4,7 +4,21 @@ import { join } from 'node:path';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { join as seat, openRoom, report, roll, start, type Room } from '../src/commands';
 import { DatabaseRoomStore } from '../src/persistence';
-import { SqliteRoomQueries, sqliteReportSink } from '../src/sqlite';
+import { CLASSIC, LEGACY_MOBILE, applyRoll, type GameState } from '@leela/engine';
+
+/** A player mid-game on a given plan. */
+function playingAt(loka: number): GameState {
+  return {
+    loka,
+    previous_loka: 5,
+    direction: '',
+    consecutive_sixes: 0,
+    position_before_three_sixes: 0,
+    is_finished: false,
+  };
+}
+import { gameStepRow } from '@leela/db';
+import { SqliteRoomQueries, sqliteReportSink, sqliteStepSink } from '../src/sqlite';
 
 const NOW = 1_700_000_000_000;
 const dir = mkdtempSync(join(tmpdir(), 'leela-sqlite-'));
@@ -370,5 +384,84 @@ describe('forgetting tables whose game is over', () => {
 
   it('does nothing to an empty database', () => {
     expect(database('prune-empty').pruneFinished(WEEK)).toBe(0);
+  });
+});
+
+describe('a game keeps a history a person can read', () => {
+  // `game_steps` and `gameStepRow` both existed and nothing ever wrote a row:
+  // the schema promised a replayable history and never kept one.
+
+  it('records a move', async () => {
+    const queries = database('steps');
+    const sink = sqliteStepSink(queries);
+    const { event } = applyRoll(
+      playingAt(10),
+      2,
+      CLASSIC,
+    );
+
+    await sink.record({ userId: 'u1', event, ruleset: CLASSIC });
+
+    expect(queries.stepsFor('u1')).toEqual([
+      { roll: 2, from: 10, to: 8, direction: 'snake 🐍' },
+    ]);
+  });
+
+  it('keeps moves newest first, with id breaking a tie', async () => {
+    const queries = database('steps-order');
+    const sink = sqliteStepSink(queries);
+    let state: GameState = playingAt(11);
+
+    for (const roll of [1, 2, 3]) {
+      const result = applyRoll(state, roll, CLASSIC);
+      await sink.record({ userId: 'u1', event: result.event, ruleset: CLASSIC });
+      state = result.state;
+    }
+
+    // Same millisecond for all three; the order must still be definite.
+    expect(queries.stepsFor('u1').map((s) => s.roll)).toEqual([3, 2, 1]);
+  });
+
+  it('keeps one player’s moves out of another’s', async () => {
+    const queries = database('steps-users');
+    const sink = sqliteStepSink(queries);
+    const { event } = applyRoll(
+      playingAt(11),
+      1,
+      CLASSIC,
+    );
+
+    await sink.record({ userId: 'u1', event, ruleset: CLASSIC });
+    expect(queries.stepsFor('u2')).toEqual([]);
+  });
+
+  it('survives a restart, like everything else in the file', async () => {
+    const path = join(dir, 'steps-restart.db');
+    const first = new SqliteRoomQueries({ path, now: () => NOW });
+    const { event } = applyRoll(
+      playingAt(11),
+      4,
+      CLASSIC,
+    );
+    await sqliteStepSink(first).record({ userId: 'u1', event, ruleset: CLASSIC });
+    first.close();
+
+    const second = new SqliteRoomQueries({ path, now: () => NOW });
+    open.push(second);
+    expect(second.stepsFor('u1')).toHaveLength(1);
+  });
+
+  it('records which variant produced the move', async () => {
+    // A history that does not say which rules were in force cannot be replayed.
+    const queries = database('steps-ruleset');
+    const { event } = applyRoll(
+      playingAt(11),
+      6,
+      LEGACY_MOBILE,
+    );
+    queries.recordStep(gameStepRow('u1', event, LEGACY_MOBILE));
+
+    const stored = queries.stepsFor('u1');
+    expect(stored).toHaveLength(1);
   });
 });

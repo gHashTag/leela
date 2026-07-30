@@ -23,7 +23,12 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { declaredFields, unreadFields } from './lib/unread.mjs';
+import {
+  declaredExports,
+  declaredFields,
+  uncalledExports,
+  unreadFields,
+} from './lib/unread.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -141,3 +146,112 @@ if (unread.length === 0) {
 }
 
 console.log(`\n${Object.keys(WRITE_ONLY).length} field(s) are write-only on purpose.`);
+
+// --- exports ----------------------------------------------------------------
+
+/**
+ * Exports with no caller inside this repository.
+ *
+ * The same question, asked of the public surface. It is a weaker signal than an
+ * unread field — a package may export for consumers that do not exist yet — but
+ * it is how `hasWon` was found, which had no caller and was wrong.
+ */
+const PUBLIC_API = {
+  // Small helpers a consumer would reach for; kept because the alternative is
+  // every caller writing `plan in SNAKES` and drifting from the tables.
+  snakeAt: 'board helper for consumers; the tables are the thing it guards',
+  arrowAt: 'board helper for consumers',
+  isOnBoard: 'board helper for consumers',
+  boardPosition: 'board helper for a renderer that is not the mini app',
+  allPlans: 'board helper for a renderer',
+  rollMany: 'used by tests and by anyone seeding a replay',
+  replay: 'replays a game from its rolls; used by tests and off-chain checks',
+  // Entry points a host calls, not this code.
+  createBot: 'the bot entry point, called by index.ts',
+  supervise: 'wraps the bot run loop',
+  build: 'the docs generator, run as a script',
+  // Audit surface, consumed by the scripts in this directory.
+  declaredFields: 'this script',
+  declaredExports: 'this script',
+  unreadFields: 'this script',
+  uncalledExports: 'this script',
+  readsOf: 'tested directly; used by unreadFields',
+  usesOf: 'tested directly; used by uncalledExports',
+  auditBoard: 'used by audit-copies.mjs',
+  compareToReference: 'used by audit-copies.mjs',
+  describeProblems: 'used by audit-copies.mjs',
+  detectRules: 'used by audit-copies.mjs',
+  extractBoards: 'used by audit-copies.mjs',
+  declaresBoard: 'used by audit-copies.mjs',
+  compareRules: 'offered beside detectRules for a consumer comparing variants',
+  // Deployment checks, run from smoke-run.ts.
+  runChecks: 'smoke-run.ts',
+  runCheck: 'tested directly; used by runChecks',
+  describeResults: 'smoke-run.ts',
+  allPassed: 'smoke-run.ts',
+  // Offered beside the pieces that are used, for a consumer assembling their own.
+  canPlayerRoll: 'the gate from a players row, for a client that is not the bot',
+  turnContextFromPlayer: 'used by canPlayerRoll; exported for the same consumer',
+  describeMigration: 'a line for an operator running the migration by hand',
+  compareBoards: 'contracts verifier surface, used by its tests',
+  compareConstants: 'contracts verifier surface, used by its tests',
+  describeDivergences: 'contracts verifier surface, used by its tests',
+  parseContract: 'contracts verifier surface, used by its tests',
+  fixedModel: 'a model that says one thing, for tests and for running with no key',
+  recordingModel: 'a model that records, for asserting on a prompt',
+  currentLanguage: 'which dataset the mini app loaded; for a language picker',
+  measurePalette: 'the contrast check, used by its tests',
+  contrast: 'used by measurePalette and tested directly',
+  luminance: 'used by contrast and tested directly',
+  channels: 'used by luminance and tested directly',
+  AA_TEXT: 'the WCAG threshold, asserted in tests',
+  AA_LARGE: 'the WCAG threshold for large text',
+  LIGHT: 'the light palette, measured in tests',
+  DARK: 'the dark palette, measured in tests',
+  BOARD_COLUMNS: 'board dimension, for a renderer',
+  BOARD_ROWS_COUNT: 'board dimension, for a renderer',
+  ONE_DAY_MS: "the online variant's cooldown, asserted in tests",
+  discardSteps: 'a sink that drops moves, for running without storage',
+  sqliteStepSink: 'wired in index.ts when LEELA_DB is set',
+  summariseJourney: 'used by systemPrompt and tested directly',
+  pathFor: 'used by the bot transport when there is no table',
+  paginate: 'used by pathFor and tested directly',
+  stripFrontmatter: 'used by the docs build and tested directly',
+  loadLegal: 'used by the docs build and tested directly',
+  legalPage: 'used by the docs build',
+  rootPage: 'used by the docs build',
+  chapterPage: 'used by the docs build',
+  indexPage: 'used by the docs build',
+  planPage: 'used by the docs build',
+  languagePicker: 'used by the page templates',
+  directionOf: 'used by the page templates and tested directly',
+  renderMarkdown: 'used by the page templates',
+  LANGUAGE_NAMES: 'used by languagePicker',
+  PLAY_URL: 'used by the page templates',
+  descriptionIsRedundant: 'used by planPage and tested directly',
+  escape: 'used throughout the page templates',
+  playerUpdateFromState: 'writes a players row; for a client that is not the bot',
+  ruleChapter: 'one rules chapter by slug, for a reader that wants one',
+  validatePosition: 'the old GameService name, delegating to isOnBoard',
+};
+
+const exportDeclarations = files.flatMap((file, index) =>
+  file.endsWith('.ts') ? declaredExports(sources[index], relative(ROOT, file)) : [],
+);
+
+const uncalled = uncalledExports(exportDeclarations, sources, Object.keys(PUBLIC_API));
+
+console.log(`\nChecked ${exportDeclarations.length} exports.\n`);
+
+if (uncalled.length === 0) {
+  console.log('Every export has at least one caller.');
+} else {
+  console.log(`${uncalled.length} export(s) have no caller here:\n`);
+  for (const item of uncalled) {
+    console.log(`  ${item.name}  (${item.kind}, ${item.file})`);
+  }
+  console.log(
+    '\nAn export with no caller is code no caller has disagreed with.\n' +
+      'Call it, remove it, or add it to PUBLIC_API with a reason.',
+  );
+}
