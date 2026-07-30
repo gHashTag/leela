@@ -3491,6 +3491,36 @@ unwritten**, the winning one included. That second test failed first because the
 harness stopped at `isSessionOver` — the account that ends a game is owed after
 the game is over, which is the shape of the thing rather than a defect in it.
 
+## Ninety-ninth pass: the last command nobody had played
+
+`/ask` was the one command left. It had two faults, and they are the two this
+project keeps finding.
+
+**It told the companion the player was on Cosmic Consciousness.** A player who
+has not thrown a six stands on no square, and the engine parks them on
+`WIN_LOKA` until one moves them — so every question asked before the first throw
+was answered from the text of the *last square of the board*. The eighth
+appearance of the 68 ambiguity and the third command caught by it. The whole
+point of `packages/ai` is that the answer rests on the right square's text, so
+`/ask` now says there is no square yet and points at `/rules`, which is
+something a player can actually read while they wait.
+
+**And a question could not see what a report could.** The report gate has passed
+the player's whole path since it was written; `/ask` passed none. Since the
+eighty-eighth pass that gap is wider than it looks — the prompt now puts what
+the player wrote *the last times they stood on this very square* ahead of
+everything else, and a question about that square was the one place it could not
+reach. It passes the path now, on the same condition: only when the companion is
+actually going to be called.
+
+One existing test had to be corrected: it opened a table and asked immediately,
+which is the state this pass makes illegal, so it now rolls onto the board
+first — the defect appearing in the fixture, for the third pass running.
+
+**Both surfaces have now been played end to end.** The bot through its pure
+commands, the mini app in a browser; every command and every act has been
+exercised at least once by something other than a unit test.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

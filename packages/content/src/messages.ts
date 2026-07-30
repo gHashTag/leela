@@ -131,6 +131,12 @@ const EN = {
   'writer.pathFull': 'Your path is full: saving this drops the oldest entry. Save a copy first.',
   'ask.what': 'Ask what? /ask followed by your question about the plan you stand on.',
   'ask.notSeated': 'Take a seat first — /join.',
+  // The companion answers from the text of the square you are standing on, and
+  // a player who has not entered is standing on none. Asked before the first
+  // six, the bot used to say they were on plan 68 — Cosmic Consciousness — so
+  // the answer rested on the wrong square entirely.
+  'ask.notOnBoard':
+    'You are not on the board yet, so there is no plan to ask about. A six puts you there; /rules opens the book meanwhile.',
   'ask.silent': 'The companion is not answering just now. Your question is not lost; ask again later.',
 
   // --- the path --------------------------------------------------------------
@@ -415,6 +421,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'writer.pathFull': 'Путь заполнен: это сохранение вытеснит самую старую запись. Сначала сохраните копию.',
   'ask.what': 'Спросить о чём? /ask и ваш вопрос о плане, на котором стоите.',
   'ask.notSeated': 'Сначала сядьте за стол — /join.',
+  'ask.notOnBoard':
+    'Вы ещё не на доске, и спрашивать пока не о чем. Шестёрка выведет вас туда; а пока /rules открывает книгу.',
   'ask.silent': 'Спутник сейчас не отвечает. Вопрос не потерян — спросите позже.',
 
   'path.absent': 'Этот бот не хранит отчёты, поэтому пути не показать.',

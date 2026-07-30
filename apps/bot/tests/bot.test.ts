@@ -125,10 +125,14 @@ const texts = (sent: Sent[]) =>
  * but not known here. Stopping on the gate's own words rather than on a guess
  * is what keeps this from silently testing nothing when the count is wrong.
  */
-async function rollUntilTheGate(bot: ReturnType<typeof createBot>, sent: Sent[]) {
+async function rollUntilTheGate(
+  bot: ReturnType<typeof createBot>,
+  sent: Sent[],
+  chat: typeof PRIVATE | typeof GROUP = PRIVATE,
+) {
   for (let attempt = 0; attempt < 60; attempt += 1) {
     const before = sent.length;
-    await bot.handleUpdate(message('/roll', PRIVATE));
+    await bot.handleUpdate(message('/roll', chat));
     const said = texts(sent.slice(before)).join(' ');
     if (said.includes('before you move on')) return;
   }
@@ -839,6 +843,12 @@ describe('asking in a group', () => {
     const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
 
     await bot.handleUpdate(message('/new', GROUP));
+    await bot.handleUpdate(message('/start', GROUP));
+    // On the board before asking. The companion answers from the text of the
+    // square the player stands on, and until a six there is no such square —
+    // which the bot now says rather than pretending they are on 68.
+    await rollUntilTheGate(bot, sent, GROUP);
+
     const before = sent.length;
     await bot.handleUpdate(message('/ask what does this plan ask of me?', PRIVATE));
 
@@ -860,5 +870,122 @@ describe('asking in a group', () => {
     expect(texts(sent.slice(before)).length).toBeGreaterThan(0);
 
     expect(texts(sent).length).toBeGreaterThan(0);
+  });
+});
+
+describe('asking before the first six', () => {
+  /**
+   * The companion answers from the text of the square the player stands on —
+   * *"It is the source; you are not"* — and a player who has not entered stands
+   * on none. The engine parks them on `WIN_LOKA` until a six moves them, so
+   * `/ask` used to hand the model **plan 68, Cosmic Consciousness**, and every
+   * answer before the first throw rested on the last square of the board.
+   *
+   * The eighth time the 68 ambiguity has turned up here, and the third command
+   * caught by it.
+   */
+
+  it('never tells the companion the player is on the winning square', () => {
+    // The shape rather than the sentence: whatever the bot says, it must not
+    // have asked the model about a square nobody is standing on.
+    const recorder = recordingModel('an answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot } = harness({ guide, reports: new MemoryReportSink() });
+
+    return (async () => {
+      await bot.handleUpdate(message('/new', PRIVATE));
+      await bot.handleUpdate(message('/start', PRIVATE));
+      await bot.handleUpdate(message('/ask what is this game?', PRIVATE));
+
+      expect(recorder.calls).toHaveLength(0);
+    })();
+  });
+
+  it('says why, and points at something a player can actually read', () => {
+    const recorder = recordingModel('an answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    return (async () => {
+      await bot.handleUpdate(message('/new', PRIVATE));
+      await bot.handleUpdate(message('/start', PRIVATE));
+
+      const before = sent.length;
+      await bot.handleUpdate(message('/ask what is this game?', PRIVATE));
+
+      const said = texts(sent.slice(before)).join(' ');
+      expect(said).toMatch(/not on the board/i);
+      expect(said).toContain('/rules');
+    })();
+  });
+
+  it('answers once the player is on a square, as it always did', () => {
+    const recorder = recordingModel('an answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    return (async () => {
+      await bot.handleUpdate(message('/new', PRIVATE));
+      await bot.handleUpdate(message('/start', PRIVATE));
+      await rollUntilTheGate(bot, sent);
+
+      const before = sent.length;
+      await bot.handleUpdate(message('/ask what does this ask of me?', PRIVATE));
+
+      expect(texts(sent.slice(before))).toContain('an answer');
+      expect(recorder.calls.length).toBeGreaterThan(0);
+    })();
+  });
+});
+
+describe('a question sees what a report sees', () => {
+  /**
+   * The same companion, two ways in, and only one of them could see the path.
+   *
+   * The report gate has passed the player's whole history since it was written;
+   * `/ask` passed none. Since the eighty-eighth pass that gap is wider than it
+   * looks: the prompt puts what the player wrote *the last times they stood on
+   * this very square* ahead of everything else, and a question about that square
+   * was the one place it could not reach.
+   */
+
+  it('carries what the player wrote before, when they ask about a square', () => {
+    const recorder = recordingModel('an answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const reports = new MemoryReportSink();
+    const { bot, sent } = harness({ guide, reports });
+
+    return (async () => {
+      await bot.handleUpdate(message('/new', PRIVATE));
+      await bot.handleUpdate(message('/start', PRIVATE));
+      await rollUntilTheGate(bot, sent);
+      await bot.handleUpdate(
+        message('/report the first account, long enough to count as one', PRIVATE),
+      );
+
+      await bot.handleUpdate(message('/ask what does this ask of me?', PRIVATE));
+
+      const prompt = String(recorder.calls.at(-1)?.messages?.[0]?.content ?? '');
+      expect(prompt).toContain('the first account');
+    })();
+  });
+
+  it('carries nothing when there is nothing written yet', () => {
+    // An empty path is not a path of one blank entry: the prompt should simply
+    // not claim they have been anywhere.
+    const recorder = recordingModel('an answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    return (async () => {
+      await bot.handleUpdate(message('/new', PRIVATE));
+      await bot.handleUpdate(message('/start', PRIVATE));
+      await rollUntilTheGate(bot, sent);
+      await bot.handleUpdate(message('/ask what does this ask of me?', PRIVATE));
+
+      const prompt = String(recorder.calls.at(-1)?.messages?.[0]?.content ?? '');
+      expect(prompt).not.toContain('Where they have been');
+      expect(prompt).not.toContain('stood here before');
+    })();
   });
 });

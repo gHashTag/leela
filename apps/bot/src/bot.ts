@@ -9,7 +9,7 @@
 import { Bot, InlineKeyboard, InputFile, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 import { type Language, bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
-import { isSessionOver } from '@leela/engine';
+import { isSessionOver, isWaitingToEnter } from '@leela/engine';
 import type { Guide } from '@leela/ai';
 import { Conversations } from './conversation';
 import * as commands from './commands';
@@ -549,12 +549,34 @@ export function createBot({
       return;
     }
 
+    // A player who has not entered stands on no square. The engine parks them
+    // on `WIN_LOKA` until a six moves them, so asking here used to tell the
+    // companion they were on Cosmic Consciousness — and the whole package
+    // exists to keep the answer resting on the right square's text.
+    if (isWaitingToEnter(seat.state)) {
+      await ctx.reply(messageFor(language, 'ask.notOnBoard'));
+      return;
+    }
+
+    // The path, as the report gate already passes it. Without it the companion
+    // answering a *question* was blind to everything the same companion sees
+    // when answering a report — including, since the eighty-eighth pass, what
+    // this player wrote the last times they stood on this very square.
+    const journey =
+      reports.history && guide.status().available
+        ? (await reports.history(who.id)).reverse().map((entry) => ({
+            plan: entry.plan,
+            text: entry.text,
+          }))
+        : undefined;
+
     const reflection = await guide.answer(question, {
       language,
       plan: seat.state.loka,
       direction: seat.state.direction || undefined,
       previousPlan: seat.state.previous_loka,
       history: conversations.of(who.id),
+      journey,
     });
 
     // Only a real answer is worth remembering: replaying the fallback sentence
