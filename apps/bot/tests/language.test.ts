@@ -264,3 +264,90 @@ describe('the board is a diagram, not a sentence', () => {
     expect(rows[7].split(' ')[0]).toBe('01');
   });
 });
+
+/**
+ * What the bot says about a throw that did not move anybody.
+ *
+ * From a live game, in a private chat, seven throws in a row:
+ *
+ *     Dmitrii бросает 2. Не хватает места — бросок не проходит.
+ *     Следующий ход — Dmitrii.
+ *
+ * Both sentences are wrong in their own way. The player was waiting to enter
+ * and is not short of room — they need a six, which is a different rule and
+ * the one they needed told. And at a table of one, "X is next" after every
+ * throw, addressed to X, is half of everything the bot says.
+ *
+ * `apps/miniapp` fixed the first of these when it was written, with a comment
+ * saying exactly what was wrong with it. The bot never got the fix. These
+ * assert over every throw from every square rather than over the case that was
+ * reported.
+ */
+describe('a throw that moves nobody', () => {
+  function soloTable(seed = 42) {
+    const opened = openRoom('чат', { id: 'а', name: 'Аня' }, seed, { language: 'ru' });
+    return { ...(opened.room as Room), started: true };
+  }
+
+  /** What the bot says for a given roll, by driving the room to produce it. */
+  function saidFor(room: Room, id: string, at = NOW) {
+    return roll(room, id, at)
+      .replies.map((r) => r.text)
+      .join('\n');
+  }
+
+  it('tells a player waiting to enter what would let them in', () => {
+    // The die is deterministic, so walk seeds until each of 1..5 has been
+    // thrown by someone still waiting. Every one of them must say six.
+    const seen = new Set<number>();
+    for (let seed = 1; seed <= 60 && seen.size < 5; seed += 1) {
+      const room = soloTable(seed);
+      const said = saidFor(room, 'а');
+      const value = Number(said.match(/бросает (\d)/)?.[1]);
+      if (!Number.isInteger(value) || value === 6) continue;
+      seen.add(value);
+      expect(said, `seed ${seed} threw ${value}`).toContain('шестёрки');
+      expect(said).not.toContain('Не хватает места');
+    }
+    expect(seen.size, 'every failing die value was exercised').toBe(5);
+  });
+
+  it('does not claim they came from the square nobody stands on', () => {
+    // A waiting player sits on 68 as an implementation detail. A sentence
+    // reading "68 → 6" describes a move from Cosmic Consciousness.
+    for (let seed = 1; seed <= 40; seed += 1) {
+      const said = saidFor(soloTable(seed), 'а');
+      expect(said, `seed ${seed}`).not.toContain('68 →');
+    }
+  });
+
+  it('names the plan when a six finally lets them in', () => {
+    for (let seed = 1; seed <= 60; seed += 1) {
+      const said = saidFor(soloTable(seed), 'а');
+      if (!said.includes('бросает шестёрку')) continue;
+      expect(said).toContain('входит в игру на 6');
+      expect(said).toContain('Заблуждение');
+      return;
+    }
+    throw new Error('no seed in 1..60 entered the game on the first throw');
+  });
+
+  it('does not tell the only player at the table that they are next', () => {
+    for (let seed = 1; seed <= 20; seed += 1) {
+      expect(saidFor(soloTable(seed), 'а'), `seed ${seed}`).not.toContain('Следующий ход');
+    }
+  });
+
+  it('still says who is next when it is somebody else', () => {
+    // The rule is "not when the turn comes straight back", not "never".
+    const opened = openRoom('чат', { id: 'а', name: 'Аня' }, 42, { language: 'ru' });
+    const two = join(opened.room as Room, { id: 'б', name: 'Боря' }).room as Room;
+    expect(saidFor({ ...two, started: true }, 'а')).toContain('Следующий ход — Боря');
+  });
+
+  it('says nothing Latin in any of it', () => {
+    for (let seed = 1; seed <= 20; seed += 1) {
+      expect(latinProseIn(saidFor(soloTable(seed), 'а')), `seed ${seed}`).toEqual([]);
+    }
+  });
+});

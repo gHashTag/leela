@@ -177,3 +177,46 @@ describe('what is wrong with a catalogue', () => {
     expect(problems(suspect.flattened)).toEqual(['flattened']);
   });
 });
+
+describe('both surfaces can say the same things', () => {
+  /**
+   * The bot told a player waiting to enter that there was "not enough room".
+   * The mini app had worked out that this is wrong and said so in a comment —
+   * a player waiting for a six is not short of room — and the bot never got
+   * the fix, because each surface wrote its own sentences and neither knew
+   * what the other could say.
+   *
+   * A move has a fixed set of outcomes. Both catalogues must have words for
+   * every one of them, whatever they choose to call it.
+   */
+  const OUTCOMES = [
+    { situation: 'entering the game', bot: 'move.enter', app: 'app.entered' },
+    { situation: 'a throw that is not a six, before entering', bot: 'move.needSix', app: 'app.needSix' },
+    { situation: 'a throw with no room left', bot: 'move.refused', app: 'app.noRoom' },
+    { situation: 'a third six', bot: 'move.threeSixes', app: 'app.threeSixes' },
+    { situation: 'a snake', bot: 'move.snake', app: 'app.snake' },
+    { situation: 'an arrow', bot: 'move.arrow', app: 'app.arrow' },
+    { situation: 'a plain step', bot: 'move.step', app: 'app.step' },
+  ] as const;
+
+  it.each(OUTCOMES)('has words for $situation on both', ({ bot, app }) => {
+    expect(KEYS).toContain(bot);
+    expect(KEYS).toContain(app);
+  });
+
+  it('leaves no move key out of the pairing', () => {
+    // So the list above cannot fall behind: every `move.*` key the bot can
+    // reach must appear in it, and the same for the mini app's move keys.
+    const paired = new Set<string>(OUTCOMES.flatMap((outcome) => [outcome.bot, outcome.app]));
+    const moveKeys = KEYS.filter((key) => key.startsWith('move.'));
+    expect(moveKeys.filter((key) => !paired.has(key))).toEqual([]);
+  });
+
+  it('says it in both languages on both surfaces', () => {
+    for (const { bot, app } of OUTCOMES) {
+      for (const key of [bot, app]) {
+        expect(messageFor('ru', key), key).not.toBe(messageFor('en', key));
+      }
+    }
+  });
+});

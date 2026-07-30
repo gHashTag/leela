@@ -811,6 +811,42 @@ evidence that anyone needs to do anything.
 test harness — driving it needs a fake Telegram API, which is its own piece of
 work. The `Guide` behaviour it rests on is covered; the wiring is not.
 
+## Twenty-sixth pass: what the bot said about a throw that moved nobody
+
+From a live game, in a private chat, seven throws in a row:
+
+> Dmitrii бросает 2. Не хватает места — бросок не проходит.
+> Следующий ход — Dmitrii.
+
+Both sentences are wrong, in different ways.
+
+**The first describes a rule the player is not under.** They are waiting to
+enter and are not short of room; they need a six. `apps/miniapp` worked this
+out when it was written and left a comment saying so — *"the first version told
+a player waiting to enter that there was 'not enough room' — describing a rule
+they were not under yet"* — and the bot never got the fix, because each surface
+wrote its own sentences and neither knew what the other could say. Entering is
+now its own sentence too: a six no longer reads as a step from 68, a square
+nobody has stood on.
+
+**The second is half of everything a solo table hears.** "X is next", to X,
+after every throw. It is now said only when the turn actually changes hands.
+
+**The pairing is what stops the next one.** `@leela/content` holds both
+catalogues, so a test asserts that every outcome a move can have — entering,
+needing a six, no room, a third six, a snake, an arrow, a step — has words on
+both surfaces, and that no `move.*` key is missing from that pairing. One
+surface can still phrase it better than the other; neither can be silent about
+something the other can say.
+
+The bot-side tests walk every die value from the waiting square rather than
+the one that was reported: all five failing values must name the six, none may
+claim a move from 68, and a solo table must never be told who is next.
+
+`join.already` now points at `/start` instead of stopping at "you are already
+seated" — the reply the host got for tapping the Join button under their own
+new table.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -12,6 +12,7 @@
 import {
   MAX_SEATS,
   SessionError,
+  WIN_LOKA,
   advance,
   canCurrentPlayerRoll,
   createSession,
@@ -342,7 +343,9 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
   if (isSessionOver(next.session)) {
     replies.push(say(describeStandings(next)));
     replies.push(say(messageFor(room.language, 'roll.ended')));
-  } else if (!move.keepsTurn) {
+  } else if (!move.keepsTurn && currentPlayer(next.session).id !== move.playerId) {
+    // Not when the turn comes straight back: a solo table said "X is next"
+    // after every throw, to X, which is half of everything the bot said.
     replies.push(
       say(
         messageFor(room.language, 'roll.next', {
@@ -362,15 +365,38 @@ function describeMove(
   room: Room,
   playerId: string,
   value: number,
-  event: { from: number; to: number; direction: string; isBlocked: boolean; isThreeSixesReset: boolean; jumpedFrom: number | null },
+  event: {
+    from: number;
+    to: number;
+    direction: string;
+    isGameStart: boolean;
+    isBlocked: boolean;
+    isThreeSixesReset: boolean;
+    jumpedFrom: number | null;
+  },
 ): string {
   const who = nameOf(room, playerId);
+
+  // A player waiting to enter is not short of room, and did not come from 68.
+  // The mini app worked this out and said so in a comment; the bot kept
+  // telling people about a rule they were not under yet.
+  if (event.isBlocked && event.from === WIN_LOKA && event.to === WIN_LOKA) {
+    return messageFor(room.language, 'move.needSix', { name: who, value });
+  }
 
   if (event.isBlocked && event.from === event.to) {
     return messageFor(room.language, 'move.refused', { name: who, value });
   }
 
   const plan = planFor(room.language, event.to);
+
+  if (event.isGameStart) {
+    return messageFor(room.language, 'move.enter', {
+      name: who,
+      to: event.to,
+      title: plan.title,
+    });
+  }
   const common = { name: who, value, to: event.to, title: plan.title };
 
   if (event.isThreeSixesReset) {

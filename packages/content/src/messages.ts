@@ -55,7 +55,7 @@ const EN = {
     'Up to {seats} may play — send /join.\n' +
     'When everyone is seated, {host} sends /start.',
   'join.started': 'This game has already begun.',
-  'join.already': 'You are already seated.',
+  'join.already': 'You are already seated. /start begins the game when everyone is.',
   'join.full': 'The table seats {seats}, and it is full.',
   'join.took': '{name} takes a seat. {count} at the table.',
   'start.already': 'Already playing.',
@@ -78,6 +78,12 @@ const EN = {
   'roll.again': 'A six — throw again.',
 
   // --- a move, in words ------------------------------------------------------
+  //
+  // Entering the game is its own pair of sentences. A player waiting on the
+  // win square is not short of room and has not moved from 68 — they are
+  // waiting for a six, which is a rule they need told rather than a refusal.
+  'move.enter': '{name} throws a six and enters the game on {to}.\n{to}. {title}',
+  'move.needSix': '{name} throws {value}. It takes a six to enter the game.',
   'move.refused': '{name} throws {value}. Not enough room — the throw is refused.',
   'move.threeSixes':
     '{name} throws {value}. A third six — the run burns, back to {to}.\n{to}. {title}',
@@ -193,7 +199,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
     'Играть могут до {seats} человек — отправьте /join.\n' +
     'Когда все сядут, {host} отправляет /start.',
   'join.started': 'Эта игра уже началась.',
-  'join.already': 'Вы уже за столом.',
+  'join.already': 'Вы уже за столом. /start начинает игру, когда все сядут.',
   'join.full': 'За столом {seats} мест, и они заняты.',
   'join.took': '{name} садится за стол. Игроков за столом: {count}.',
   'start.already': 'Игра уже идёт.',
@@ -214,6 +220,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'roll.next': 'Следующий ход — {name}.',
   'roll.again': 'Шестёрка — бросайте ещё раз.',
 
+  'move.enter': '{name} бросает шестёрку и входит в игру на {to}.\n{to}. {title}',
+  'move.needSix': '{name} бросает {value}. Войти в игру можно только с шестёрки.',
   'move.refused': '{name} бросает {value}. Не хватает места — бросок не проходит.',
   'move.threeSixes':
     '{name} бросает {value}. Третья шестёрка — серия сгорает, назад на {to}.\n{to}. {title}',
