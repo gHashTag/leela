@@ -1349,6 +1349,33 @@ The build step catches both install defects by construction.
 Colima was started to do this and stopped afterwards. A check that has never
 run is a check nobody has seen fail — and two of these had never run.
 
+## Forty-first pass: asking the chain
+
+`packages/contracts/README.md` said "Deployed at 0x2741CE…" as a plain fact and
+rested an argument on it — two divergences from the engine were called
+permanent *because deployed*. Nobody had ever asked a chain.
+
+Four were asked. Three answered that the address holds no code; the fourth did
+not answer. And `hardhat.config.ts` in `smart-contract-leela` has exactly one
+network entry — **Mumbai**, which Polygon shut down in April 2024.
+
+The contract is a historical artefact. That does not weaken the check against
+the engine: the Solidity is a fifth independent description of the board,
+written by people who had to get it right. It does weaken the *argument*, and
+the README now says so.
+
+**The test is about the shape of the overclaim, not about this address.**
+`scripts/lib/deployment.mjs` separates three findings — present, absent,
+unreachable — and the assertions are that silence never becomes absence,
+however many chains are silent, and that the three findings read as three
+different sentences so a reader cannot mistake one for another. A probe that
+reports a timeout as "no contract" is how a confident sentence gets written
+that is not true.
+
+**Not in CI**, deliberately: it needs public RPCs, and a gate that goes red
+because somebody's node was busy teaches people to ignore red. It is a tool for
+when the answer matters, and the answer it gave is written down with its date.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
@@ -1517,7 +1544,11 @@ of that rule anywhere in the 25 repositories — the published app gated online
 play, and the Expo rewrite kept a `needs_report` column it never checked. That
 it survives in deployed bytecode is the evidence the gate belongs to the game.
 
-**Two divergences, permanent because deployed.** The entering six is counted as
+**Two divergences, described rather than fixed.** *(The forty-first pass
+asked four chains: the address holds no code on any of them, and Mumbai — the
+only network this was ever configured for — was shut down in April 2024. So
+"permanent because deployed" was wrong; see `packages/contracts/README.md`.)*
+The entering six is counted as
 the first of a run, so the reset comes a throw sooner; and
 `positionBeforeThreeSixes` is overwritten on every six rather than only the
 first, so a third six returns the player to where the third six began instead

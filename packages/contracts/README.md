@@ -2,9 +2,37 @@
 
 `LeelaGame.sol`, and a check that its board still matches the engine.
 
-Deployed at `0x2741CE9C9fA1c9B78b20cab7F07998d77846b7Af`. A deployed contract
-cannot be corrected, so the work here is not to fix it — it is to know exactly
-where it agrees with every other surface and where it does not.
+## Where it is, which is nowhere reachable
+
+`smart-contract-leela/address.json` records
+`0x2741CE9C9fA1c9B78b20cab7F07998d77846b7Af`, and this README used to state that
+as a plain fact and rest an argument on it.
+
+Asked, on 2026-07-30 — `node scripts/audit-deployment.mjs`:
+
+```
+  polygon:      unreachable
+  polygon-amoy: absent
+  ethereum:     absent
+  bsc:          absent
+```
+
+The only network the project ever configured is **Mumbai** — `hardhat.config.ts`
+has exactly one network entry and it is that — and Polygon shut Mumbai down in
+April 2024. There is nothing left to ask, and the address holds no code on any
+chain that answered.
+
+So the contract is a **historical artefact**, not a live one. That changes one
+thing and not another:
+
+- It does **not** change the value of the check below. The Solidity is a fifth
+  independent description of the board, written by people who had to get it
+  right, and disagreement with the engine is still worth knowing about.
+- It **does** change the argument. The two divergences below are not permanent
+  *because deployed*; they are a record of what one implementation did. They
+  stay described by the `onchain` ruleset because a variant that once existed is
+  still a variant, and silently folding it into `classic` would be changing the
+  rules of a game somebody played.
 
 ## The board agrees
 
