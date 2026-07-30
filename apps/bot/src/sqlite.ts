@@ -401,6 +401,26 @@ export class SqliteRoomQueries implements RoomQueries {
     return forgotten;
   }
 
+  /**
+   * Which table this player sits at, most recently played first.
+   *
+   * A player can be seated at several — a group and a private game — and the
+   * one they mean when they ask a question is the one they last played.
+   */
+  async sessionOfPlayer(playerId: string): Promise<string | null> {
+    const row = this.db
+      .prepare(
+        `SELECT p.session_id AS id FROM session_players p
+           JOIN sessions s ON s.id = p.session_id
+          WHERE p.user_id = ?
+          ORDER BY COALESCE(s.updated_at, 0) DESC
+          LIMIT 1`,
+      )
+      .get(playerId) as { id?: string } | undefined;
+
+    return row?.id ?? null;
+  }
+
   async remove(chatId: string): Promise<void> {
     this.db.prepare('DELETE FROM sessions WHERE id = ?').run(chatId);
   }

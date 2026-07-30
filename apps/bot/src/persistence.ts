@@ -115,6 +115,13 @@ export interface RoomQueries {
   /** Insert or update the session row and replace its seats, in one transaction. */
   save(session: StoredSession, seats: StoredSeat[]): Promise<void>;
   remove(chatId: string): Promise<void>;
+  /**
+   * Which table this player sits at, most recently played first.
+   *
+   * Optional: a queries object that cannot answer says so by not having it,
+   * and `DatabaseRoomStore` reports no room rather than inventing one.
+   */
+  sessionOfPlayer?(playerId: string): Promise<string | null>;
 }
 
 /** A room store backed by the database. */
@@ -157,5 +164,11 @@ export class DatabaseRoomStore implements RoomStore {
 
   async delete(chatId: string): Promise<void> {
     await this.queries.remove(chatId);
+  }
+
+  /** The table this player sits at, wherever it is. */
+  async roomOf(playerId: string): Promise<Room | null> {
+    const chatId = await this.queries.sessionOfPlayer?.(playerId);
+    return chatId ? this.get(chatId) : null;
   }
 }

@@ -12,6 +12,20 @@ export interface RoomStore {
   get(chatId: string): Promise<Room | null>;
   save(room: Room): Promise<void>;
   delete(chatId: string): Promise<void>;
+  /**
+   * The table this player is seated at, wherever it is.
+   *
+   * A room is keyed by the chat it lives in, which is right for every command
+   * a player sends at the table. `/ask` is not one of those: the companion
+   * answers privately, so the natural place to ask is a private chat — and
+   * there is no table there. A player seated in a group was told "take a seat
+   * first" while holding one.
+   *
+   * Optional, like `ReportSink.history`: a store that cannot answer says so by
+   * not having the method, and the caller falls back to the chat it is in
+   * rather than pretending.
+   */
+  roomOf?(playerId: string): Promise<Room | null>;
 }
 
 /**
@@ -114,11 +128,28 @@ export class MemoryRoomStore implements RoomStore {
   }
 
   async save(room: Room): Promise<void> {
+    // Deleted first so the map's order is the order of last play, which is what
+    // `roomOf` reads to answer "which of your tables did you mean".
+    this.rooms.delete(room.chatId);
     this.rooms.set(room.chatId, room);
   }
 
   async delete(chatId: string): Promise<void> {
     this.rooms.delete(chatId);
+  }
+
+  /**
+   * The table this player sits at, most recently played first.
+   *
+   * `save` re-inserts, so the map's order is the order tables were last
+   * touched — the newest is what a player asking a question means.
+   */
+  async roomOf(playerId: string): Promise<Room | null> {
+    let found: Room | null = null;
+    for (const room of this.rooms.values()) {
+      if (room.session.players.some((player) => player.id === playerId)) found = room;
+    }
+    return found;
   }
 
   /** Rooms currently held. Exposed for tests and for a health endpoint. */

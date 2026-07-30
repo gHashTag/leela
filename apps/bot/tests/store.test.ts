@@ -134,3 +134,59 @@ describe('reading a path back', () => {
     expect(discardReports.history).toBeUndefined();
   });
 });
+
+describe('finding the table a player sits at', () => {
+  /**
+   * A room is keyed by the chat it lives in, which is right for every command
+   * sent at the table. `/ask` is not one of those: the companion answers
+   * privately, so the natural place to ask is a private chat — where there is
+   * no table. A player seated in a group was told "take a seat first" while
+   * holding a seat.
+   */
+
+  const seated = (chatId: string, ids: string[]): Room =>
+    ({
+      chatId,
+      language: 'en',
+      seed: 1,
+      rollsTaken: 0,
+      started: true,
+      names: {},
+      session: { players: ids.map((id) => ({ id, state: {}, reportSubmitted: true })) },
+    }) as unknown as Room;
+
+  it('finds it from anywhere, not only from the chat it lives in', async () => {
+    const store = new MemoryRoomStore();
+    await store.save(seated('-500', ['a', 'b']));
+
+    expect((await store.roomOf('a'))?.chatId).toBe('-500');
+  });
+
+  it('is nothing for a player who sits at no table', async () => {
+    const store = new MemoryRoomStore();
+    await store.save(seated('-500', ['a']));
+
+    expect(await store.roomOf('nobody')).toBeNull();
+  });
+
+  it('is the table they played most recently, when they sit at several', async () => {
+    // A player can have a group game and a private one. The one they mean when
+    // they ask a question is the one they last touched.
+    const store = new MemoryRoomStore();
+    await store.save(seated('-500', ['a']));
+    await store.save(seated('900', ['a']));
+    expect((await store.roomOf('a'))?.chatId).toBe('900');
+
+    // Playing at the older one again makes it the newer one.
+    await store.save(seated('-500', ['a']));
+    expect((await store.roomOf('a'))?.chatId).toBe('-500');
+  });
+
+  it('forgets it with the table', async () => {
+    const store = new MemoryRoomStore();
+    await store.save(seated('-500', ['a']));
+    await store.delete('-500');
+
+    expect(await store.roomOf('a')).toBeNull();
+  });
+});

@@ -2562,6 +2562,40 @@ never remembered: it is what a player sees when the companion is down, and
 replaying it as the companion's own words would teach the model that this is
 how it talks.
 
+## Seventy-second pass: asking from where a player would ask
+
+Two passes have now found something written and unreachable by hand, so the
+first move was to make the question mechanical: `audit-unread` reports fields
+written and never read — the dual, **read and never written**, is exactly the
+`direction` case and is not checked.
+
+**Prototyped, measured, and not shipped.** It marks 26 of 237 fields and most
+are wrong, for one reason: JavaScript's shorthand. `harness({ guide, reports })`
+writes `guide` without a colon, and telling that apart from a read needs a
+parser rather than a line-matcher. The second negative result of this kind, and
+the same conclusion: an audit that is mostly noise teaches people to skip it.
+
+Then `/ask` was taken into a group, which is where it was going to be used.
+
+It answers privately — a question about your own square is as private as the
+report gate that prompted it — and `deliver` handles that correctly, which two
+tests now hold it to. **But the natural place to ask is the private chat**, and
+there is no table there:
+
+> — /ask what does this plan ask of me?
+> — Take a seat first — /join.
+
+Said to somebody holding a seat, in a game they are in the middle of.
+
+A room is keyed by the chat it lives in, which is right for every command sent
+*at* the table. `/ask` is not one of those. `RoomStore.roomOf` finds the table a
+player sits at, wherever it is — optional, in the idiom `ReportSink.history`
+already set here: a store that cannot answer says so by not having the method,
+and the caller falls back to the chat it is in rather than pretending. SQLite
+answers it with `ORDER BY sessions.updated_at DESC`, because a player can sit at
+a group table and a private one, and the one they mean is the one they last
+played.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

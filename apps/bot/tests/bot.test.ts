@@ -805,3 +805,60 @@ describe('asking the companion', () => {
     }
   });
 });
+
+describe('asking in a group', () => {
+  /**
+   * A reflection on your own report is private, and so is an answer to your own
+   * question. `/ask` goes through `deliver`, which decides where a reply
+   * belongs — but a command added later inherits that only if it was written to
+   * go through it, and the way to find out is to ask in a group.
+   */
+
+  it('answers privately, not to the table', async () => {
+    const recorder = recordingModel('a private answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    await bot.handleUpdate(message('/new', GROUP));
+    await bot.handleUpdate(message('/ask what does this ask of me?', GROUP));
+
+    const toGroup = sent.filter(
+      (entry) => entry.method === 'sendMessage' && String(entry.payload.chat_id) === String(GROUP.id),
+    );
+    expect(toGroup.some((entry) => String(entry.payload.text).includes('a private answer'))).toBe(
+      false,
+    );
+  });
+
+  it('is answerable from a private chat while the table is in a group', async () => {
+    // The answer is private, so a private chat is where a thoughtful player
+    // asks — and there is no table there. This used to reply "take a seat
+    // first" to somebody holding a seat.
+    const recorder = recordingModel('an answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    await bot.handleUpdate(message('/new', GROUP));
+    const before = sent.length;
+    await bot.handleUpdate(message('/ask what does this plan ask of me?', PRIVATE));
+
+    expect(texts(sent.slice(before))).toContain('an answer');
+  });
+
+  it('says where the answer went, rather than going quiet', async () => {
+    // A player who asked in a chat and saw nothing would think the bot broke.
+    const recorder = recordingModel('a private answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent, blocking } = harness({ guide, reports: new MemoryReportSink() });
+    // Telegram refuses a bot that has never been started by this person.
+    blocking.add('100');
+
+    await bot.handleUpdate(message('/new', GROUP));
+    const before = sent.length;
+    await bot.handleUpdate(message('/ask what does this ask of me?', GROUP));
+
+    expect(texts(sent.slice(before)).length).toBeGreaterThan(0);
+
+    expect(texts(sent).length).toBeGreaterThan(0);
+  });
+});

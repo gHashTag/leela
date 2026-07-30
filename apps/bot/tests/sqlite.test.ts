@@ -676,3 +676,79 @@ describe('what counts as a table worth forgetting', () => {
     expect(await later.loadSession('chat-migrated')).not.toBeNull();
   });
 });
+
+describe('finding a table by the player at it', () => {
+  /**
+   * The durable half of the same question the memory store answers: which table
+   * does this player sit at, asked from a chat that holds no table. `/ask`
+   * needs it because the companion answers privately, so the natural place to
+   * ask is a private chat.
+   */
+
+  const seat = (sessionId: string, userId: string) => ({
+    session_id: sessionId,
+    user_id: userId,
+    seat: 0,
+    name: null,
+    plan: 41,
+    previous_plan: 37,
+    direction: '' as const,
+    consecutive_sixes: 0,
+    position_before_three_sixes: 0,
+    is_finished: false,
+    last_roll_at: null,
+    last_report_at: null,
+    report_submitted: true,
+  });
+
+  const session = (id: string) => ({
+    id,
+    host_id: 'u1',
+    ruleset: 'classic',
+    turn_index: 0,
+    roll_count: 0,
+    dice_seed: 1,
+    is_open: false,
+    language: 'en',
+  });
+
+  it('finds the table from the player alone', async () => {
+    const queries = database('seat-lookup');
+    await queries.save(session('-500'), [seat('-500', 'u1')]);
+
+    expect(await queries.sessionOfPlayer('u1')).toBe('-500');
+  });
+
+  it('is nothing for somebody seated nowhere', async () => {
+    const queries = database('seat-none');
+    await queries.save(session('-500'), [seat('-500', 'u1')]);
+
+    expect(await queries.sessionOfPlayer('u2')).toBeNull();
+  });
+
+  it('is the table they played most recently, of several', async () => {
+    // A group game and a private one. The one they mean is the last one they
+    // touched, which is what `updated_at` records.
+    const path = join(dir, 'seat-two.db');
+    let clock = 1_000;
+    const queries = new SqliteRoomQueries({ path, now: () => clock });
+    open.push(queries);
+
+    await queries.save(session('-500'), [seat('-500', 'u1')]);
+    clock = 2_000;
+    await queries.save(session('900'), [seat('900', 'u1')]);
+    expect(await queries.sessionOfPlayer('u1')).toBe('900');
+
+    clock = 3_000;
+    await queries.save(session('-500'), [seat('-500', 'u1')]);
+    expect(await queries.sessionOfPlayer('u1')).toBe('-500');
+  });
+
+  it('forgets it when the table is forgotten', async () => {
+    const queries = database('seat-gone');
+    await queries.save(session('-500'), [seat('-500', 'u1')]);
+    await queries.remove('-500');
+
+    expect(await queries.sessionOfPlayer('u1')).toBeNull();
+  });
+});

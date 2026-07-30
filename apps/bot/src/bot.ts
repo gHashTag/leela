@@ -477,7 +477,12 @@ export function createBot({
       return;
     }
 
-    const room = await store.get(String(ctx.chat?.id ?? ''));
+    // The table in this chat, or — since the answer is private and so is the
+    // natural place to ask — whichever table this player is actually seated
+    // at. Asked in a private chat while playing in a group, this used to say
+    // "take a seat first" to somebody holding one.
+    const room =
+      (await store.get(String(ctx.chat?.id ?? ''))) ?? (await store.roomOf?.(who.id)) ?? null;
     const seat = room?.session.players.find((player) => player.id === who.id);
 
     if (!seat) {
