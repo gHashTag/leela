@@ -288,3 +288,40 @@ describe('every page can be used without a mouse', () => {
     }
   });
 });
+
+describe('data the content does not currently produce', () => {
+  // `RuleChapter.title` is typed `string | null` and every chapter in all 22
+  // languages has one, so these branches never run against real data. They are
+  // exercised directly instead: the type permits the case, and a page showing
+  // nothing where a heading belongs would be worse than one showing a slug.
+
+  it('falls back to the slug when a chapter has no title', () => {
+    const untitled = { slug: 'numerology', title: null, body: 'text', source: 'test' };
+    const html = chapterPage('en', untitled);
+
+    expect(html).toContain('<h1>numerology</h1>');
+    expect(html).not.toContain('<h1></h1>');
+  });
+
+  it('lists an untitled chapter by its slug in the contents', () => {
+    const untitled = { slug: 'notes', title: null, body: 'text', source: 'test' };
+    const html = indexPage('en', plansFor('en'), [untitled]);
+
+    expect(html).toContain('>notes</a>');
+  });
+
+  it('leaves out the rules section entirely when there are no chapters', () => {
+    // A heading with an empty list under it reads as a missing page rather than
+    // as a language that has no rules translated.
+    const html = indexPage('en', plansFor('en'), []);
+
+    expect(html).not.toContain('The rules');
+    expect(html).toContain('The 72 plans');
+  });
+
+  it('still links the legal documents when there are no rules', () => {
+    // Those are required regardless of what has been translated.
+    const html = indexPage('en', plansFor('en'), []);
+    expect(html).toContain('legal/policy.html');
+  });
+});

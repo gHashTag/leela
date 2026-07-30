@@ -647,6 +647,34 @@ Coverage where it is low is honest about why: `apps/miniapp` sits at 49% of
 statements because `main.ts` is a DOM entry point, and the logic worth testing
 was moved out of it into `cell.ts`, `describe.ts`, `contrast.ts` and `smoke.ts`.
 
+## Twenty-second pass: checks that had never failed
+
+Branch coverage in `docs` and `contracts` turned up no wrong code. It turned up
+something else: **checks that had only ever been asked about the case that
+passes.**
+
+`compareConstants` compares the contract's `WIN_PLAN` and `TOTAL_PLANS` against
+the engine's. Every test asked it about the real contract, which agrees, so it
+had never once returned a divergence. A check that has never detected anything
+has not been shown to be able to — the same argument made three passes ago about
+the contrast palette, applied to something written before that argument existed.
+It now has four cases: a missing constant of each kind, and a wrong value of
+each. `verify.ts` is at 100% of branches.
+
+`describeDivergences` prints `nowhere` for a jump one side lacks. Only one side
+of that sentence had ever been printed.
+
+In `docs`, the uncovered branches were fallbacks the content does not currently
+need: a rules chapter with no title, and a language with no chapters at all.
+`RuleChapter.title` is typed `string | null` and all 22 languages have one for
+every chapter, so neither runs against real data. They are exercised directly —
+a page showing a slug where a heading belongs is worse than one showing nothing,
+and worse still is not knowing which it would do.
+
+That is the whole finding of this pass: three of the four places had correct code
+and untested guarantees, which is a different problem from a bug and not a
+smaller one.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

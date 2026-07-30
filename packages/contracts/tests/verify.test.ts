@@ -177,3 +177,63 @@ describe('the contract passes the same audit as any other copy', () => {
     expect(Object.keys(arrows)).toHaveLength(10);
   });
 });
+
+describe('the constant check can actually fail', () => {
+  // compareConstants was only ever asked about the real contract, which agrees.
+  // A check that has never returned a divergence has not been shown to detect
+  // one — the same argument as the board comparison, which does have that test.
+
+  it('notices a contract that declares no win square', () => {
+    const board = parseContract('uint8 constant TOTAL_PLANS = 72;');
+    const divergences = compareConstants(board);
+
+    expect(divergences).toHaveLength(1);
+    expect(divergences[0]).toMatchObject({ contract: null, engine: WIN_LOKA });
+    expect(divergences[0].reason).toContain('declares no WIN_PLAN');
+  });
+
+  it('notices a contract that declares no board size', () => {
+    const board = parseContract('uint8 constant WIN_PLAN = 68;');
+    expect(compareConstants(board)[0].reason).toContain('declares no TOTAL_PLANS');
+  });
+
+  it('notices a win square that is not 68', () => {
+    const board = parseContract('uint8 constant WIN_PLAN = 67;\nuint8 constant TOTAL_PLANS = 72;');
+    const divergences = compareConstants(board);
+
+    expect(divergences).toHaveLength(1);
+    expect(divergences[0]).toMatchObject({ engine: WIN_LOKA, contract: 67 });
+    expect(divergences[0].reason).toBe('WIN_PLAN differs');
+  });
+
+  it('notices a board that is not 72 squares', () => {
+    const board = parseContract('uint8 constant WIN_PLAN = 68;\nuint8 constant TOTAL_PLANS = 100;');
+    const divergences = compareConstants(board);
+
+    expect(divergences).toHaveLength(1);
+    expect(divergences[0]).toMatchObject({ engine: TOTAL_PLANS, contract: 100 });
+  });
+
+  it('reports both when both are wrong, rather than stopping at the first', () => {
+    const board = parseContract('uint8 constant WIN_PLAN = 50;\nuint8 constant TOTAL_PLANS = 100;');
+    expect(compareConstants(board)).toHaveLength(2);
+  });
+
+  it('says nothing about the contract that is actually deployed', () => {
+    // The point of the four cases above: this one means something now.
+    expect(compareConstants(board)).toEqual([]);
+  });
+});
+
+describe('the report reads for either kind of divergence', () => {
+  it('says "nowhere" for a jump the contract does not have', () => {
+    const text = describeDivergences(compareBoards(parseContract('uint8 constant WIN_PLAN = 68;')));
+    expect(text).toMatch(/contract → nowhere/);
+  });
+
+  it('says "nowhere" for a jump the engine does not have', () => {
+    // The other side of the same sentence, which had never been printed.
+    const text = describeDivergences(compareBoards(parseContract('if (newPlan == 5) { newPlan = 1; }')));
+    expect(text).toMatch(/5: engine → nowhere, contract → 1/);
+  });
+});
