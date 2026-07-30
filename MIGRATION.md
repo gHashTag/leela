@@ -491,6 +491,31 @@ Worth noting what the audit actually bought: not the unread field itself, which
 was harmless, but the thing its absence implied. A field nobody reads is often a
 question nobody asked.
 
+## Sixteenth pass: the defect this project was named after, reproduced here
+
+The audit turned up `needs_report`: written by `playerUpdateFromState`, written
+by `playerFromLegacy`, present in the schema and in both migrations — and read
+by nothing.
+
+That is precisely the defect found in NeuroLeela on the second pass, quoted in
+`rulesets.ts` as *"The schema carried `needs_report`, but nothing ever enforced
+it."* The comment was written here, in this repository, above a flag that this
+repository was also failing to enforce.
+
+The gate does work for a seated player, because a session carries
+`reportSubmitted` — which is why it survived every test. A lone row in `players`
+had the flag and no way to reach `canRoll` with it, and `players` is the table a
+mobile client or a server-side handler would use.
+
+`turnContextFromPlayer` and `canPlayerRoll` in `@leela/db` are where the column
+is read. The loop is closed in a test: what `playerUpdateFromState` writes,
+`canPlayerRoll` acts on.
+
+Three passes, three flags written and never read — `broadcast`,
+`rerollOnRepeat`, `needs_report`. The pattern is not carelessness about any one
+of them; it is that writing a field feels like finishing the work, and nothing
+in a type system disagrees.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

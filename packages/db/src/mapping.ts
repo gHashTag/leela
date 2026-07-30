@@ -11,6 +11,9 @@ import {
   type RuleSet,
   type SeatedPlayer,
   type Session,
+  type TurnContext,
+  type TurnVerdict,
+  canRoll,
   ruleSetById,
 } from '@leela/engine';
 import type {
@@ -69,6 +72,43 @@ export function gameStepRow(userId: string, event: MoveEvent, rules: RuleSet): N
 /** The variant a player's game runs under, falling back to the default. */
 export function rulesForPlayer(player: Pick<Player, 'ruleset'>): RuleSet {
   return ruleSetById((player.ruleset ?? 'neuroleela') as RuleSet['id']);
+}
+
+/**
+ * What the engine needs to decide whether a player may roll.
+ *
+ * `needs_report` was being written in three places and read in none — the exact
+ * defect this project found in NeuroLeela and wrote a comment about, then
+ * reproduced. The gate works for a seated player because a session carries
+ * `reportSubmitted`; a lone row in `players` had the flag and no way to reach
+ * `canRoll` with it.
+ *
+ * @param now  Epoch ms, passed in so this stays pure.
+ */
+export function turnContextFromPlayer(
+  player: Pick<Player, 'needsReport' | 'lastRollAt'>,
+  now: number,
+): TurnContext {
+  return {
+    // The column records the debt; the engine asks about the payment.
+    reportSubmitted: !(player.needsReport ?? false),
+    lastRollAt: player.lastRollAt ? player.lastRollAt.getTime() : null,
+    now,
+  };
+}
+
+/**
+ * Whether a player may roll, from their row alone.
+ *
+ * The whole point of keeping the flag: a caller with a `players` row and a
+ * clock can now ask, instead of having to assemble a session first.
+ */
+export function canPlayerRoll(
+  player: Pick<Player, 'needsReport' | 'lastRollAt' | 'ruleset'> &
+    Pick<Player, 'plan' | 'previous_plan' | 'consecutiveSixes' | 'positionBeforeThreeSixes' | 'isFinished'>,
+  now: number,
+): TurnVerdict {
+  return canRoll(stateFromPlayer(player), turnContextFromPlayer(player, now), rulesForPlayer(player));
 }
 
 // --- sessions ---------------------------------------------------------------

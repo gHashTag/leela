@@ -22,6 +22,7 @@ export type {
 } from './schema';
 
 export {
+  canPlayerRoll,
   gameStepRow,
   playerUpdateFromState,
   rulesForPlayer,
@@ -29,6 +30,7 @@ export {
   sessionFromRows,
   sessionUpdate,
   stateFromPlayer,
+  turnContextFromPlayer,
 } from './mapping';
 
 export {

@@ -59,7 +59,9 @@ export const NEUROLEELA: RuleSet = Object.freeze({
   extraTurnOnSix: false,
   threeSixesReset: true,
   rerollOnRepeat: false,
-  // The schema carried `needs_report`, but nothing ever enforced it.
+  // NeuroLeela's schema carried `needs_report` and nothing ever enforced it.
+  // This monorepo reproduced that for a while: see `canPlayerRoll` in
+  // `@leela/db`, which is where the flag is finally read.
   requireReportBeforeRoll: false,
   turnCooldownMs: 0,
 });

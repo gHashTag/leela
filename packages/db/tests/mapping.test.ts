@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { CLASSIC, LEGACY_MOBILE, NEUROLEELA, WIN_LOKA, applyRoll, initialState } from '@leela/engine';
-import { gameStepRow, playerUpdateFromState, rulesForPlayer, stateFromPlayer } from '../src';
+import {
+  canPlayerRoll,
+  gameStepRow,
+  playerUpdateFromState,
+  rulesForPlayer,
+  stateFromPlayer,
+  turnContextFromPlayer,
+} from '../src';
 
 /** A player row as Postgres would hand it back. */
 function row(overrides: Record<string, unknown> = {}) {
@@ -133,5 +140,69 @@ describe('rulesForPlayer', () => {
     // Under legacy rules a six grants another throw and never burns a run.
     const { event } = applyRoll(stateFromPlayer(legacy), 6, rules);
     expect(event.grantsExtraTurn).toBe(true);
+  });
+});
+
+describe('the gate reaches a lone player row', () => {
+  // `needs_report` was written in three places and read in none — the exact
+  // defect this project found in NeuroLeela, documented in a comment, and then
+  // reproduced. A session carries `reportSubmitted`; a row in `players` had the
+  // flag and no way to reach `canRoll` with it.
+
+  const NOW = 1_700_000_000_000;
+
+  it('blocks a player who owes a report, under a variant that gates', () => {
+    const owing = row({ ruleset: 'classic', needsReport: true, lastRollAt: null });
+    const verdict = canPlayerRoll(owing, NOW);
+
+    expect(verdict.allowed).toBe(false);
+    expect(verdict.reason).toBe('report-required');
+  });
+
+  it('lets them through once the debt is cleared', () => {
+    const paid = row({ ruleset: 'classic', needsReport: false, lastRollAt: null });
+    expect(canPlayerRoll(paid, NOW).allowed).toBe(true);
+  });
+
+  it('ignores the flag under a variant that never gated', () => {
+    const owing = row({ ruleset: 'neuroleela', needsReport: true, lastRollAt: null });
+    expect(canPlayerRoll(owing, NOW).allowed).toBe(true);
+  });
+
+  it('honours the cooldown from the row’s own clock', () => {
+    const justRolled = row({
+      ruleset: 'online',
+      needsReport: false,
+      lastRollAt: new Date(NOW),
+    });
+
+    expect(canPlayerRoll(justRolled, NOW + 1000).reason).toBe('cooldown');
+    expect(canPlayerRoll(justRolled, NOW + 24 * 60 * 60 * 1000).allowed).toBe(true);
+  });
+
+  it('reads a null flag as nothing owed, which is what the column default means', () => {
+    const fresh = row({ ruleset: 'classic', needsReport: null, lastRollAt: null });
+    expect(turnContextFromPlayer(fresh, NOW).reportSubmitted).toBe(true);
+  });
+
+  it('reads a null timestamp as never having rolled', () => {
+    expect(turnContextFromPlayer(row({ lastRollAt: null }), NOW).lastRollAt).toBeNull();
+  });
+
+  it('closes the loop with playerUpdateFromState, which writes the flag', () => {
+    // What the write records, the read must be able to act on.
+    const { state } = applyRoll(stateFromPlayer(row({ plan: 11 })), 4, CLASSIC);
+    const update = playerUpdateFromState(state);
+    expect(update.needsReport).toBe(true);
+
+    const stored = row({
+      ruleset: 'classic',
+      needsReport: update.needsReport,
+      lastRollAt: new Date(NOW),
+      plan: update.plan,
+      previous_plan: update.previous_plan,
+      isFinished: update.isFinished,
+    });
+    expect(canPlayerRoll(stored, NOW + 1000).reason).toBe('report-required');
   });
 });
