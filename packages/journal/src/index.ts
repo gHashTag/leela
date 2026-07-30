@@ -276,10 +276,20 @@ export function squareText(
  * what was said, and the caller stamps it with the moment it arrived — which is
  * the truth about it, and the only one available.
  *
- * The intention is never taken. It is the sender's frame, and reading it is not
- * adopting it — the same rule that keeps `reported` out of an imported file.
+ * The intention comes back too, and what to do with it is the caller's.
+ *
+ * It used to be dropped here, on the grounds that a sender's frame is not the
+ * reader's to adopt — true of a square a friend sent, and wrong at the one
+ * border it also guards: the mini app handing its *own* player's square to the
+ * bot. The question was theirs, and it was thrown away because the format could
+ * not tell the two routes apart.
+ *
+ * A format cannot. A route can, and the routes know which they are, so the
+ * policy went to them and the parser stopped deciding.
  */
-export function parseSquare(text: string): { plan: number; text: string } | null {
+export function parseSquare(
+  text: string,
+): { plan: number; text: string; intention?: string } | null {
   const lines = text.replace(/\r\n/g, '\n').split('\n');
   const first = lines.shift()?.trim() ?? '';
 
@@ -294,14 +304,18 @@ export function parseSquare(text: string): { plan: number; text: string } | null
   // with one, last, after the words.
   const body = [...lines];
   while (body.length > 0 && (body[body.length - 1] ?? '').trim().length === 0) body.pop();
-  if (/^[—–-]\s*\S/.test((body[body.length - 1] ?? '').trim())) {
+
+  let asked = '';
+  const last = (body[body.length - 1] ?? '').trim();
+  if (/^[—–-]\s*\S/.test(last)) {
+    asked = last.replace(/^[—–-]\s*/, '').trim().slice(0, MAX_INTENTION_CHARS);
     body.pop();
   }
 
   const said = body.join('\n').trim().slice(0, MAX_REPORT_CHARS);
   if (said.length === 0) return null;
 
-  return { plan, text: said };
+  return { plan, text: said, ...(asked.length > 0 ? { intention: asked } : {}) };
 }
 
 /**

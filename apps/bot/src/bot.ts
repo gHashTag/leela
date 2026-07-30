@@ -421,6 +421,10 @@ export function createBot({
     const outcome = decideSquare(ctx.match ?? '', existing?.map(asReport) ?? null, now());
 
     if (outcome.kind === 'took') {
+      // The square is kept and the sender's question is not. `/take` is how
+      // somebody hands you a square they landed on, and reading their frame is
+      // not adopting it — the route that *is* the player's own is the mini
+      // app's hand-over, and it decides differently.
       await keep(reports, who.id, outcome.added);
       await ctx.reply(
         messageFor(language, 'square.took', { plan: outcome.added[0]?.plan ?? 0 }),
@@ -482,6 +486,16 @@ export function createBot({
     }
 
     await keep(reports, who.id, outcome.added);
+
+    // The question, only where this player has none. This route is the one
+    // place a square is unambiguously the sender's own — Telegram hands it over
+    // from *their* mini app — so the frame is theirs and not a stranger's. A
+    // question already given is never replaced: what somebody is playing for is
+    // not a file's to set, nor an app's.
+    if (outcome.intention && reports.intention && reports.setIntention) {
+      const held = await reports.intention(who.id);
+      if (!held) await reports.setIntention(who.id, outcome.intention);
+    }
 
     const square = outcome.added[0];
     if (!square) return;
@@ -876,6 +890,14 @@ export function createBot({
 
     if (outcome.kind === 'took') {
       await keep(reports, who.id, outcome.added);
+
+      // A path brought back carries the question it was written for, and the
+      // same rule holds: only where there is none.
+      if (outcome.intention && reports.intention && reports.setIntention) {
+        const held = await reports.intention(who.id);
+        if (!held) await reports.setIntention(who.id, outcome.intention);
+      }
+
       await ctx.reply(messageFor(language, 'file.took', { count: outcome.added.length }));
       return;
     }

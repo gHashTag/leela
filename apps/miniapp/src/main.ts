@@ -1100,6 +1100,9 @@ function openPaste(): void {
 }
 
 function takeThePastedSquare(): void {
+  // The square and not the question. A pasted square is somebody else's — the
+  // dialog says so — and reading their frame is not adopting it. The parser
+  // hands the intention up now, and this is the route that declines it.
   const square = parseSquare(el.pasteText.value);
   if (square === null) {
     el.pasteHint.textContent = messageFor(language, 'app.pasteUnreadable');

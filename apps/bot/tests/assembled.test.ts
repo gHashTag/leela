@@ -266,3 +266,79 @@ describe('the question the bot had nowhere to keep', () => {
     expect(texts(sent).join(' ')).toMatch(/nowhere to hold/i);
   });
 });
+
+describe('which route may set a question', () => {
+  /**
+   * The mini app's hand-over is the one square the bot can be sure belongs to
+   * the person sending it: Telegram delivers it from *their* app. `/take` is
+   * the other kind — somebody pasting you a square they landed on — and reading
+   * their frame is not adopting it.
+   *
+   * Same rule as everywhere else it appears: only where there is none.
+   */
+  const shared = [
+    '41. The human plane (jana-loka)',
+    '',
+    'What it asked of me.',
+    '',
+    '— to stop hurrying',
+  ].join('\n');
+
+  function handedOver(data: string) {
+    updateId += 1;
+    return {
+      update_id: updateId,
+      message: {
+        message_id: updateId,
+        date: 0,
+        chat: { id: CHAT.id, type: CHAT.type, title: 'A table' },
+        from: { id: 100, is_bot: false, first_name: 'Ada' },
+        web_app_data: { data, button_text: '📝' },
+      },
+    } as never;
+  }
+
+  it('takes the question from the player’s own app', async () => {
+    const path = temporary();
+    const { bot, sent, storage } = assemble(path);
+
+    await bot.handleUpdate(handedOver(shared));
+
+    const before = sent.length;
+    await bot.handleUpdate(message('/intention'));
+    expect(texts(sent.slice(before)).join(' ')).toContain('to stop hurrying');
+
+    storage.stopPruning?.();
+  });
+
+  it('leaves a question already given alone', async () => {
+    const path = temporary();
+    const { bot, sent, storage } = assemble(path);
+
+    await bot.handleUpdate(message('/intention to say it out loud'));
+    await bot.handleUpdate(handedOver(shared));
+
+    const before = sent.length;
+    await bot.handleUpdate(message('/intention'));
+    const said = texts(sent.slice(before)).join(' ');
+
+    expect(said).toContain('to say it out loud');
+    expect(said).not.toContain('to stop hurrying');
+
+    storage.stopPruning?.();
+  });
+
+  it('never takes it from a square somebody pasted', async () => {
+    // `/take` keeps the square and declines the frame.
+    const path = temporary();
+    const { bot, sent, storage } = assemble(path);
+
+    await bot.handleUpdate(message(`/take ${shared}`));
+
+    const before = sent.length;
+    await bot.handleUpdate(message('/intention'));
+    expect(texts(sent.slice(before)).join(' ')).toMatch(/have not said/i);
+
+    storage.stopPruning?.();
+  });
+});

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { SqliteRoomQueries, sqliteReportSink } from '../src/sqlite';
 import { MemoryReportSink, discardReports, type ReportSink } from '../src/store';
 import { pathFor, returnsFor } from '../src/commands';
+import { parseSquare, squareText } from '@leela/journal';
+import { decideSquare } from '../src/take-in';
 
 /**
  * Whatever a sink keeps, it can give back.
@@ -130,5 +132,50 @@ describe('every sink the bot can be built with', () => {
     expect(said).toContain('February.');
     expect(said).toContain('June.');
     expect(said).not.toContain('Elsewhere.');
+  });
+});
+
+describe('whose question a route may adopt', () => {
+  /**
+   * The format cannot tell a friend's square from your own.
+   *
+   * `parseSquare` used to drop the intention on the grounds that a sender's
+   * frame is not the reader's to adopt. True of a square somebody pasted to
+   * you — and wrong at the one border it also guarded: the mini app handing its
+   * *own* player's square to the bot, where the question is theirs and was
+   * being thrown away because a format cannot know which route it came by.
+   *
+   * A route can. So the parser hands it up and the routes decide, and this is
+   * the rule they decide by: **a question already given is never replaced, and
+   * only a route that knows the writing is the player's own may offer one at
+   * all.**
+   */
+  const NOW_MS = 1_700_000_000_000;
+
+  it('reads the question back out of a shared square', () => {
+    const shared = squareText(41, 'The human plane', 'What it asked.', 'to stop hurrying');
+    expect(parseSquare(shared)?.intention).toBe('to stop hurrying');
+    expect(parseSquare(shared)?.text).toBe('What it asked.');
+  });
+
+  it('has none where the sender had none', () => {
+    expect(parseSquare(squareText(41, 'The human plane', 'What it asked.', ''))?.intention)
+      .toBeUndefined();
+  });
+
+  it('carries it up through the decision, for the route to accept or decline', () => {
+    const shared = squareText(41, 'The human plane', 'What it asked.', 'to stop hurrying');
+    const outcome = decideSquare(shared, [], NOW_MS);
+
+    expect(outcome.kind).toBe('took');
+    expect(outcome.kind === 'took' && outcome.intention).toBe('to stop hurrying');
+  });
+
+  it('does not mistake a dash inside the writing for the question', () => {
+    // The line that marks a question is the last one, and it begins with a
+    // dash. A dash mid-sentence is a sentence.
+    const shared = squareText(41, 'The human plane', 'It asked — plainly — for less.', '');
+    expect(parseSquare(shared)?.intention).toBeUndefined();
+    expect(parseSquare(shared)?.text).toContain('plainly');
   });
 });

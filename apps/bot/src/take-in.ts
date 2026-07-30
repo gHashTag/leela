@@ -30,7 +30,20 @@ export function asReport(stored: StoredReport): Report {
 export const MAX_FILE_BYTES = 1024 * 1024;
 
 export type Outcome =
-  | { kind: 'took'; added: Report[] }
+  | {
+      kind: 'took';
+      added: Report[];
+      /**
+       * The question the writing was an answer to, when whatever brought it
+       * carried one.
+       *
+       * Handed up rather than acted on here: whether it may be adopted depends
+       * on where it came from, and only the route knows that. A square a friend
+       * pasted carries their frame; the same square handed over by the player's
+       * own mini app carries theirs.
+       */
+      intention?: string;
+    }
   | { kind: 'nothing-new' }
   | { kind: 'unreadable' }
   | { kind: 'too-big'; bytes: number }
@@ -60,7 +73,9 @@ export function decide(
   // for, and this bot has nowhere to keep one — a chat has no profile — so it
   // takes what it can hold and says nothing about the rest.
   const added = newEntries(existing, incoming.entries);
-  return added.length === 0 ? { kind: 'nothing-new' } : { kind: 'took', added };
+  if (added.length === 0) return { kind: 'nothing-new' };
+
+  return { kind: 'took', added, ...(incoming.intention ? { intention: incoming.intention } : {}) };
 }
 
 /**
@@ -113,5 +128,9 @@ export function decideSquare(
   const after = takeSquare(existing, square, at);
   if (after.length === existing.length) return { kind: 'nothing-new' };
 
-  return { kind: 'took', added: [{ plan: square.plan, text: square.text.trim(), at }] };
+  return {
+    kind: 'took',
+    added: [{ plan: square.plan, text: square.text.trim(), at }],
+    ...(square.intention ? { intention: square.intention } : {}),
+  };
 }

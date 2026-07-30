@@ -257,7 +257,15 @@ describe('one square, handed back', () => {
   it('reads back what this app shares', () => {
     for (const plan of [1, 6, 41, 68, 72]) {
       const shared = shareTextFor(plan, `Title of ${plan}`, 'What it asked of me.', 'to see it through');
-      expect(parseSquare(shared), `plan ${plan}`).toEqual({ plan, text: 'What it asked of me.' });
+
+      // The question comes back too now, and what to do with it belongs to the
+      // route rather than to the format: this app's paste dialog declines it,
+      // because a pasted square is somebody else's.
+      expect(parseSquare(shared), `plan ${plan}`).toEqual({
+        plan,
+        text: 'What it asked of me.',
+        intention: 'to see it through',
+      });
     }
   });
 

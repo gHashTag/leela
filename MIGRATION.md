@@ -3935,6 +3935,32 @@ report. Saying otherwise would be the same lie the durable sink used to tell
 about reports, five passes ago. The sentence belongs to a bot built with no
 store at all, and the test says so now.
 
+## Hundred-and-thirteenth pass: a format cannot tell whose square it is
+
+`parseSquare` dropped the intention on the grounds that a sender's frame is not
+the reader's to adopt. True of a square somebody pasted you — and wrong at the
+one border it also guarded: **the mini app handing its own player's square to
+the bot.** That question is theirs, and it was being thrown away because a format
+cannot know which route it came by.
+
+A route can. So the parser hands it up and stopped deciding, and the routes
+decide instead:
+
+- **The mini app's hand-over** is the one square the bot can be sure of:
+  Telegram delivers it from *their* app. It may set a question.
+- **A path brought back as a file** is the same gesture — "bring mine back" — and
+  may set one too.
+- **`/take`**, which is somebody pasting you a square they landed on, keeps the
+  square and declines the frame. So does the mini app's paste dialog, which says
+  as much on the button.
+
+And the rule they all decide by, which is now stated in four places and holds in
+all of them: **a question already given is never replaced.** What somebody is
+playing for is not a file's to set, nor an app's, nor a stranger's.
+
+The parser also had to learn what a question looks like: the last line, beginning
+with a dash. A dash mid-sentence is a sentence, and there is a test that says so.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
