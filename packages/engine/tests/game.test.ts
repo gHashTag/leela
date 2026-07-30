@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_ROLL,
+  NEUROLEELA,
   START_LOKA,
   TOTAL_PLANS,
   WIN_LOKA,
   applyRoll,
   hasWon,
+  advance,
+  createSession,
   initialState,
+  isSessionOver,
   replay,
   type GameState,
 } from '../src';
@@ -232,5 +236,57 @@ describe('invariants over exhaustive play', () => {
       s = state;
     }
     expect(won, 'a 5000 roll game should reach 68 at least once').toBe(true);
+  });
+});
+
+describe('who counts as having won', () => {
+  // `hasWon(initialState())` returned true: a player who had not yet rolled
+  // once was a winner. It survived because nothing outside the tests called it
+  // — an export nobody uses is logic nobody checks. The same condition was
+  // written correctly inside session.ts, which is now the only copy.
+
+  it('is not a player waiting to enter the game', () => {
+    expect(hasWon(initialState())).toBe(false);
+  });
+
+  it('is not a player who failed to roll a six, however many times', () => {
+    let state = initialState();
+    for (const roll of [1, 2, 3, 4, 5, 1, 2]) state = applyRoll(state, roll).state;
+    expect(hasWon(state)).toBe(false);
+  });
+
+  it('is a player who landed on 68 exactly', () => {
+    const { state } = applyRoll(playing({ loka: 65 }), 3);
+    expect(state.loka).toBe(WIN_LOKA);
+    expect(hasWon(state)).toBe(true);
+  });
+
+  it('is a player carried to 68 by the arrow at 54', () => {
+    expect(hasWon(applyRoll(playing({ loka: 53 }), 1).state)).toBe(true);
+  });
+
+  it('is not a player who is simply on the board', () => {
+    for (let loka = 1; loka <= TOTAL_PLANS; loka++) {
+      if (loka === WIN_LOKA) continue;
+      expect(hasWon(playing({ loka })), `plan ${loka}`).toBe(false);
+    }
+  });
+
+  it('stops being true once they re-enter with a six', () => {
+    const won = applyRoll(playing({ loka: 65 }), 3).state;
+    expect(hasWon(won)).toBe(true);
+    expect(hasWon(applyRoll(won, 6).state)).toBe(false);
+  });
+
+  it('agrees with the session about who is done', () => {
+    // Two implementations of one rule is how they came to disagree.
+    let session = createSession('s', [{ id: 'a' }], NEUROLEELA);
+    expect(isSessionOver(session)).toBe(false);
+    expect(hasWon(session.players[0].state)).toBe(false);
+
+    session = advance(session, 6, 1).session; // enters
+    for (const roll of [4, 4, 4, 1]) session = advance(session, roll, 1).session;
+
+    expect(hasWon(session.players[0].state)).toBe(isSessionOver(session));
   });
 });

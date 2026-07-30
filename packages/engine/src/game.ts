@@ -178,9 +178,20 @@ export function replay(
   return results;
 }
 
-/** True when the state represents a player who has won and left the board. */
+/**
+ * True when this player has reached Cosmic Consciousness.
+ *
+ * `is_finished` alone is not enough: it is also true before the first six, when
+ * a player waits on WIN_LOKA to enter. `previous_loka` of 0 means they have
+ * never left the start, so they are waiting rather than done.
+ *
+ * That distinction was made correctly inside `session.ts` and wrongly here,
+ * where `hasWon(initialState())` returned true — a player who had not yet
+ * rolled once counted as a winner. It survived because nothing outside the
+ * tests called it: an export nobody uses is logic nobody checks.
+ */
 export function hasWon(state: GameState): boolean {
-  return state.loka === WIN_LOKA && state.is_finished;
+  return state.loka === WIN_LOKA && state.is_finished && state.previous_loka !== 0;
 }
 
 /** Squares on the board, 1..72, as a plain array. Handy for rendering. */

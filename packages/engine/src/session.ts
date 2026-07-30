@@ -11,8 +11,7 @@
  * somebody else's problem.
  */
 
-import { applyRoll } from './game';
-import { initialState } from './game';
+import { applyRoll, hasWon, initialState } from './game';
 import { DEFAULT_RULESET, type RuleSet } from './rulesets';
 import { canRoll, owesReport, type TurnContext, type TurnVerdict } from './turn';
 import type { GameState, MoveEvent } from './types';
@@ -105,11 +104,14 @@ function nextSeat(session: Session, from: number): number {
   return from;
 }
 
-/** A player who reached Cosmic Consciousness after being on the board. */
+/**
+ * A player who reached Cosmic Consciousness after being on the board.
+ *
+ * Delegates to `hasWon` rather than repeating the condition: the same check
+ * lived in three places, and the one in `game.ts` was wrong.
+ */
 function isPlayerDone(player: SeatedPlayer): boolean {
-  // `is_finished` is also true before the first six, so a player who has never
-  // moved is not done — `previous_loka` of 0 means they never left the start.
-  return player.state.is_finished && player.state.previous_loka !== 0;
+  return hasWon(player.state);
 }
 
 /** True once no seated player can still move. */

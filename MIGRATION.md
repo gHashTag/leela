@@ -549,6 +549,25 @@ Building it cost three defects of its own, all caught by its tests:
   backslash. The test that failed was the one asserting it would have caught all
   three original flags.
 
+## Eighteenth pass: an export nobody called was wrong
+
+The field audit is automated, so the same question was asked of exported
+functions: which are declared and never called. `hasWon` came back with none.
+
+It was wrong. `hasWon(initialState())` returned **true** — a player who had not
+yet rolled once counted as a winner, because `is_finished` is also set while
+waiting on 68 for the six that lets you in. The condition needs
+`previous_loka !== 0` as well, which `session.ts` had and said so in a comment;
+`game.ts` did not.
+
+Three copies of one rule, and the copy nobody used was the broken one. There is
+one now: `isPlayerDone` and the bot's `renderStandings` both call `hasWon`.
+
+What the audit is actually good for: not finding dead code to delete, but
+finding the code that no caller has ever disagreed with. `hasWon` had a test —
+asserting it was true after a win, which it was. Nothing asked what it said
+before one.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

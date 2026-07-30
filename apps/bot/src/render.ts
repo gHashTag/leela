@@ -7,7 +7,7 @@
  * what a board game interface is for.
  */
 
-import { ARROWS, BOARD_ROWS, SNAKES, WIN_LOKA } from '@leela/engine';
+import { ARROWS, BOARD_ROWS, SNAKES, WIN_LOKA, hasWon } from '@leela/engine';
 import type { Room } from './commands';
 
 /** Marks for players, in seating order. Distinct at a glance, and colourblind-safe. */
@@ -32,8 +32,9 @@ export function escapeHtml(text: string): string {
 export function renderBoard(room: Room): string {
   const occupants = new Map<number, string>();
   room.session.players.forEach((player, seat) => {
-    // A player waiting to enter is not on the board yet.
-    if (player.state.is_finished && player.state.previous_loka === 0) return;
+    // A player waiting to enter is not on the board yet. `hasWon` is the
+    // shared check; repeating the condition is how three copies of it drifted.
+    if (player.state.is_finished && !hasWon(player.state)) return;
     occupants.set(player.state.loka, tokenFor(seat));
   });
 
@@ -60,8 +61,8 @@ export function renderStandings(room: Room): string {
   return room.session.players
     .map((player, seat) => {
       const name = escapeHtml(player.name ?? room.names[player.id] ?? player.id);
-      const done = player.state.is_finished && player.state.previous_loka !== 0;
-      const waiting = player.state.is_finished && player.state.previous_loka === 0;
+      const done = hasWon(player.state);
+      const waiting = player.state.is_finished && !done;
 
       const where = done
         ? 'Cosmic Consciousness 🕉'
