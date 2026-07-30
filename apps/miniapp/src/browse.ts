@@ -14,7 +14,7 @@
  * The deciding is here and pure; the dialog is the DOM's.
  */
 
-import { FALLBACK_LANGUAGE, type Language, plansFor, rulesFor } from '@leela/content';
+import { bookFor, type Language, plansFor } from '@leela/content';
 import { TOTAL_PLANS } from '@leela/engine';
 
 /** A line in one of the lists. */
@@ -61,10 +61,7 @@ export function planEntries(language: Language, standingOn?: number): Entry[] {
  * chapters, and English is what every other surface falls back to.
  */
 export function ruleEntries(language: Language): Entry[] {
-  const chapters = rulesFor(language);
-  const source = chapters.length > 0 ? chapters : rulesFor(FALLBACK_LANGUAGE);
-
-  return source.map((chapter) => ({
+  return bookFor(language).map((chapter) => ({
     key: chapter.slug,
     title: chapter.title?.trim() || chapter.slug,
   }));
@@ -75,9 +72,7 @@ export function ruleText(
   language: Language,
   slug: string,
 ): { title: string; body: string } | null {
-  const chapters = rulesFor(language);
-  const source = chapters.length > 0 ? chapters : rulesFor(FALLBACK_LANGUAGE);
-  const chapter = source.find((entry) => entry.slug === slug);
+  const chapter = bookFor(language).find((entry) => entry.slug === slug);
   if (!chapter) return null;
 
   return { title: chapter.title?.trim() || slug, body: chapter.body ?? '' };

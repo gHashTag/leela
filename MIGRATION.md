@@ -2429,6 +2429,39 @@ nothing said about continuing.
 The help-surface test caught `/rules` before this was committed — registered and
 undocumented, which is the thing that check exists for.
 
+## Sixty-eighth pass: five copies of a rule, four of them a day old
+
+Started by checking whether any message names a command the bot does not
+register — the class the last pass's defect belonged to. Nothing: every command
+promised in the catalogue exists. A guard worth having and not a finding, so it
+was measured and left alone.
+
+The finding was next to it, and it was mine. *"The language's chapters, or
+English when it has none"* was written out **five times**: twice in the bot,
+twice in the mini app, and its absence once in the docs. Four of those five were
+written in a single afternoon, by one author — this one, last pass. That is how
+quickly a rule spreads once it lives nowhere, and it is the same shape as the
+report rule copied into the database and the finished-game condition copied into
+SQL.
+
+`bookFor` in `@leela/content` is the one home. The bot and the mini app call it.
+
+**The docs deliberately do not**, and that distinction is the reason this was
+worth doing rather than just tidying. `apps/docs` writes a page per language per
+chapter, and `audit-dataset.mjs` refuses a chapter written in a script its
+language does not use — a published `/de/rules/notes.html` holding English would
+be exactly that, and it is the defect that was found in the English book two
+weeks ago. A reader *shown* English has been helped; a reader handed a German
+URL serving English has been misled. Falling back and filing wrongly are not the
+same act, and now the code says so where somebody would otherwise "fix" the
+inconsistency.
+
+Honest about what the guard covers: an unknown locale never reaches it —
+`resolveLanguage` turns `zz` into English first — so what it protects is a
+*declared* language whose book is empty, which no rebuild has produced yet. All
+five copies were covering the same unreachable case; the point is that there is
+now one of them.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

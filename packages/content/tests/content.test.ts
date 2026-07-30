@@ -3,6 +3,7 @@ import { TOTAL_PLANS, allPlans } from '@leela/engine';
 import {
   FALLBACK_LANGUAGE,
   LANGUAGES,
+  bookFor,
   couldBe,
   isLanguage,
   planFor,
@@ -241,5 +242,62 @@ describe('rules chapters', () => {
     const common = rulesFor('de').map((chapter) => chapter.slug);
 
     expect(english).toEqual(common);
+  });
+});
+
+describe('the book a reader gets', () => {
+  /**
+   * "The language's chapters, or English when it has none" was written out five
+   * times: twice in the bot, twice in the mini app, and its absence once in the
+   * docs. Four of those were written in one afternoon by one author, which is
+   * how quickly a rule spreads once it lives nowhere.
+   *
+   * The distinction that made it worth one home rather than five: a reader
+   * *shown* English has been helped, and a published `/de/rules/notes.html`
+   * holding English has been misled. `audit-dataset.mjs` forbids the second,
+   * which is why `apps/docs` deliberately does not call this.
+   */
+
+  it('is never empty, for any language the package declares', () => {
+    for (const language of LANGUAGES) {
+      expect(bookFor(language).length, language).toBeGreaterThan(0);
+    }
+  });
+
+  it("is the language own chapters when it has them", () => {
+    for (const language of LANGUAGES) {
+      const own = rulesFor(language);
+      if (own.length === 0) continue;
+      expect(bookFor(language), language).toEqual(own);
+    }
+  });
+
+  it('is the English book, whole, for anything it cannot serve', () => {
+    // Not chapter by chapter: half in one language and half in another is
+    // worse than one a reader can at least read.
+    //
+    // An unknown locale never reaches the guard — `resolveLanguage` turns it
+    // into English first. What the guard is for is a *declared* language whose
+    // book is empty, which no rebuild has produced yet and which five
+    // hand-written copies of this line were each trying to cover.
+    expect(bookFor('zz')).toEqual(rulesFor(FALLBACK_LANGUAGE));
+    expect(bookFor('')).toEqual(rulesFor(FALLBACK_LANGUAGE));
+  });
+
+  it('serves something for every locale a person could type', () => {
+    // The property that matters at a call site: no caller has to think about
+    // an empty list, which is what all five copies were avoiding.
+    for (const locale of ['ru', 'RU', 'ru-RU', 'zz', '', 'en-GB', '  ']) {
+      expect(bookFor(locale).length, JSON.stringify(locale)).toBeGreaterThan(0);
+    }
+  });
+
+  it('is a book whose chapters all open', () => {
+    // A list where something is a dead end is worse than a shorter list.
+    for (const language of LANGUAGES) {
+      for (const chapter of bookFor(language)) {
+        expect(chapter.body.trim().length, `${language}/${chapter.slug}`).toBeGreaterThan(0);
+      }
+    }
   });
 });

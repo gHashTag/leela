@@ -8,7 +8,7 @@
 
 import { Bot, InlineKeyboard, InputFile, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
-import { type Language, messageFor, planFor, resolveLanguage, rulesFor } from '@leela/content';
+import { type Language, bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
 import { isSessionOver } from '@leela/engine';
 import type { Guide } from '@leela/ai';
 import * as commands from './commands';
@@ -414,7 +414,7 @@ export function createBot({
     const language = languageOf(ctx);
     const [first, second] = (ctx.match ?? '').trim().split(/\s+/).filter(Boolean);
     const requested = first === undefined ? undefined : Number(first);
-    const chapters = rulesFor(language).length > 0 ? rulesFor(language) : rulesFor('en');
+    const chapters = bookFor(language);
     const chapter = requested === undefined ? undefined : chapters[requested - 1];
 
     if (chapter && Number.isInteger(requested)) {

@@ -31,7 +31,7 @@ import {
   type RuleSet,
   type Session,
 } from '@leela/engine';
-import { messageFor, planFor, rulesFor, resolveLanguage, type Language } from '@leela/content';
+import { bookFor, messageFor, planFor, resolveLanguage, type Language } from '@leela/content';
 
 /** A table, plus the bits the bot needs that the engine does not care about. */
 export interface Room {
@@ -501,8 +501,7 @@ export function plan(room: Room, byPlayerId: string, requested?: number): Comman
  * worse than one a reader can at least read.
  */
 export function rules(language: Language = 'en', requested?: number): CommandResult {
-  const chapters = rulesFor(language);
-  const book = chapters.length > 0 ? chapters : rulesFor('en');
+  const book = bookFor(language);
 
   if (book.length === 0) {
     return { room: null, replies: [say(messageFor(language, 'rules.none'), false)] };

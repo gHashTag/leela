@@ -90,6 +90,11 @@ export function build(outDir: string): BuildResult {
 
   for (const language of LANGUAGES) {
     const plans = plansFor(language);
+    // `rulesFor`, not `bookFor`: a book is *shown* in English to a reader whose
+    // language has none, and that is help. Writing English into
+    // `/de/rules/notes.html` is a published page in the wrong language, which
+    // `audit-dataset.mjs` refuses and a reader has no way to see coming. The
+    // difference is between falling back and filing wrongly.
     const rules = rulesFor(language);
 
     write(`${language}/index.html`, indexPage(language, plans, rules));

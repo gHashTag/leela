@@ -113,6 +113,30 @@ export function rulesFor(locale: string): RuleChapter[] {
   return RULES[resolveLanguage(locale)] ?? RULES[FALLBACK_LANGUAGE] ?? [];
 }
 
+/**
+ * The book a reader gets, which is never empty.
+ *
+ * A language with no chapters is served English — as a *whole book*, not
+ * chapter by chapter: half in one language and half in another is worse than
+ * one a reader can at least read.
+ *
+ * This was written out five times: twice in the bot, twice in the mini app,
+ * and its absence once in the docs. Four of those five were written in a single
+ * afternoon, by one author, which is how quickly a rule spreads once it lives
+ * nowhere.
+ *
+ * **The docs deliberately do not use it.** `apps/docs` writes a page per
+ * language per chapter, and `audit-dataset.mjs` refuses a chapter written in a
+ * script its language does not use — a published `/de/rules/notes.html` holding
+ * English would be exactly that. A reader shown English on screen has been
+ * helped; a reader handed a German URL serving English has been misled. The
+ * difference is between falling back and filing wrongly.
+ */
+export function bookFor(locale: string): RuleChapter[] {
+  const chapters = rulesFor(locale);
+  return chapters.length > 0 ? chapters : rulesFor(FALLBACK_LANGUAGE);
+}
+
 /** One rules chapter by slug, or null. */
 export function ruleChapter(locale: string, slug: string): RuleChapter | null {
   return rulesFor(locale).find((c) => c.slug === slug) ?? null;
