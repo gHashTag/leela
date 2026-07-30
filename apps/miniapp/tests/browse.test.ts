@@ -82,6 +82,31 @@ describe('the rules book, which had no way in', () => {
     );
   });
 
+  it('marks a chapter borrowed from English, and only that one', () => {
+    // Three books came through a different donor and are missing the chapter
+    // on the chakras — Ukrainian and Malay the chapter on the meaning of the
+    // game as well. `bookFor` borrows those so no reader is left without the
+    // teaching; the list has to say which, because "written for you" and "the
+    // only copy there is" are not the same offer.
+    for (const language of LANGUAGES) {
+      const own = new Set(rulesFor(language).map((chapter) => chapter.slug));
+      if (own.size === 0) continue;
+
+      for (const entry of ruleEntries(language)) {
+        expect(entry.borrowed ?? false, `${language}/${entry.key}`).toBe(!own.has(String(entry.key)));
+      }
+    }
+  });
+
+  it('borrows something somewhere, or the marking is untested', () => {
+    // Guards the check above from passing for want of a case.
+    const borrowed = LANGUAGES.flatMap((language) =>
+      ruleEntries(language).filter((entry) => entry.borrowed),
+    );
+
+    expect(borrowed.length).toBeGreaterThan(0);
+  });
+
   it('has nothing to open for a chapter no book has', () => {
     expect(ruleText('en', 'no-such-chapter')).toBeNull();
   });

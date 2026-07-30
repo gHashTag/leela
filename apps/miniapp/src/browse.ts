@@ -35,6 +35,8 @@ export interface Entry {
    * a player something no single report can.
    */
   readonly returns?: number;
+  /** True for a rules chapter shown in English because this book lacks it. */
+  readonly borrowed?: boolean;
 }
 
 /**
@@ -80,6 +82,10 @@ export function ruleEntries(language: Language): Entry[] {
   return bookFor(language).map((chapter) => ({
     key: chapter.slug,
     title: chapter.title?.trim() || chapter.slug,
+    // Marked, not hidden. Three languages' books arrived without the chapter on
+    // the chakras, and a reader is owed the difference between "written for
+    // you" and "the only copy there is".
+    ...(chapter.borrowed ? { borrowed: true } : {}),
   }));
 }
 

@@ -728,3 +728,12 @@ textarea {
   font-size: 0.85rem;
   cursor: pointer;
 }
+
+/* A rules chapter shown in a language the reader did not ask for. Said quietly
+   and said anyway: "written for you" and "the only copy there is" are not the
+   same offer. */
+.quiet-mark {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}

@@ -27,6 +27,14 @@ export interface RuleChapter {
   title: string | null;
   body: string;
   source: string;
+  /**
+   * True when this chapter is not in the reader's language.
+   *
+   * Set by `bookFor` when a language's book is missing a chapter every other
+   * book has. Carried rather than hidden: a reader is owed the difference
+   * between "written for you" and "the only copy there is".
+   */
+  borrowed?: boolean;
 }
 
 /** Languages the dataset covers, as BCP-47 primary subtags. */
@@ -134,7 +142,28 @@ export function rulesFor(locale: string): RuleChapter[] {
  */
 export function bookFor(locale: string): RuleChapter[] {
   const chapters = rulesFor(locale);
-  return chapters.length > 0 ? chapters : rulesFor(FALLBACK_LANGUAGE);
+  if (chapters.length === 0) return rulesFor(FALLBACK_LANGUAGE);
+
+  // A chapter the reader's book does not have, borrowed from English and
+  // marked as borrowed.
+  //
+  // The whole-book rule above is about a language with *nothing*, and it is
+  // still right. This is a different situation and it was found rather than
+  // imagined: Ukrainian, Malay and Arabic carry `online` and `foreword` — a
+  // chat-moderation policy and a preface — and no chapter on the chakras,
+  // because those three came through a different donor with a different table
+  // of contents. Two of them have no `meaning` chapter either.
+  //
+  // So the choice was never "one language or two". It was "the chapter in
+  // English, or no chapter at all", and a reader cannot read what is not
+  // there. The order is the reader's own book first, then whatever it is
+  // missing, so nothing they *do* have is displaced.
+  const have = new Set(chapters.map((chapter) => chapter.slug));
+  const missing = rulesFor(FALLBACK_LANGUAGE)
+    .filter((chapter) => !have.has(chapter.slug))
+    .map((chapter) => ({ ...chapter, borrowed: true }));
+
+  return [...chapters, ...missing];
 }
 
 /** One rules chapter by slug, or null. */

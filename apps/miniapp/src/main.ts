@@ -352,6 +352,12 @@ function openList(title: string, entries: Entry[], open: (key: number | string) 
       button.type = 'button';
       button.textContent = entry.title;
       if (entry.here) button.classList.add('here');
+      if (entry.borrowed) {
+        const note = document.createElement('span');
+        note.className = 'quiet-mark';
+        note.textContent = messageFor(language, 'app.borrowed');
+        button.append(note);
+      }
       if (entry.returns) {
         // A count rather than a dot: "three" is the whole point, and a mark
         // that only says "some" makes a player open all 72 to find out which.

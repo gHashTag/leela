@@ -220,6 +220,7 @@ const EN = {
   'app.standing': 'You are on {plan}. {title}',
   // Reading a square you have stood on before. Leela's teaching is that you
   // come back, and what you said last time is the measure of what has changed.
+  'app.borrowed': 'in English — this chapter is missing from your book',
   'app.cameBack': 'Came back to you',
   // A square arriving as words. The path has had a file since the twelfth pass;
   // a square could be shared and never received.
@@ -478,6 +479,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.restarted': 'Новая игра. Бросьте шестёрку, чтобы войти в неё.',
   'app.opening': 'Шестёрка выводит вас на доску.',
   'app.standing': 'Вы на {plan}. {title}',
+  'app.borrowed': 'по-английски — этой главы нет в вашей книге',
   'app.cameBack': 'Вернулось к вам',
   'app.paste': 'Вставить клетку',
   'app.pasteAsk': 'Вставьте клетку, которую вам прислали',

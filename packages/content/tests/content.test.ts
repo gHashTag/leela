@@ -264,11 +264,53 @@ describe('the book a reader gets', () => {
     }
   });
 
-  it("is the language own chapters when it has them", () => {
+  it("keeps the language's own chapters, first and untouched", () => {
+    // This used to say the book *is* the language's own chapters, and that was
+    // right while the only failure was a language with nothing. It is not the
+    // only failure: Ukrainian, Malay and Arabic carry `online` and `foreword`
+    // — a chat-moderation policy and a preface — and no chapter on the
+    // chakras, because those three came through a different donor with a
+    // different table of contents.
+    //
+    // So what a reader has is never displaced, and what they are missing is
+    // added after it rather than left out.
     for (const language of LANGUAGES) {
       const own = rulesFor(language);
       if (own.length === 0) continue;
-      expect(bookFor(language), language).toEqual(own);
+
+      expect(bookFor(language).slice(0, own.length), language).toEqual(own);
+    }
+  });
+
+  it('borrows a chapter the reader’s book does not have, and says so', () => {
+    // The choice was never "one language or two". It was "the chapter in
+    // English or no chapter at all", and a reader cannot read what is not
+    // there. `borrowed` is how the difference between "written for you" and
+    // "the only copy there is" survives to the surface showing it.
+    for (const language of LANGUAGES) {
+      const own = new Set(rulesFor(language).map((chapter) => chapter.slug));
+      if (own.size === 0) continue;
+
+      for (const chapter of bookFor(language)) {
+        expect(chapter.borrowed ?? false, `${language}/${chapter.slug}`).toBe(
+          !own.has(chapter.slug),
+        );
+      }
+    }
+  });
+
+  it('leaves no language without a chapter the two editions agree on', () => {
+    // The rule, rather than the three languages that broke it: whatever both
+    // English and Russian teach, every reader can reach.
+    const shared = rulesFor('en')
+      .map((chapter) => chapter.slug)
+      .filter((slug) => rulesFor('ru').some((chapter) => chapter.slug === slug));
+
+    expect(shared.length).toBeGreaterThan(0);
+
+    for (const language of LANGUAGES) {
+      const covered = new Set(bookFor(language).map((chapter) => chapter.slug));
+      for (const slug of shared) expect(covered.has(slug), `${language}/${slug}`).toBe(true);
     }
   });
 

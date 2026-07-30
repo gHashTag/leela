@@ -3206,6 +3206,46 @@ names all 42 on every run and fails only on the forty-third, which is what a
 rebuild from a different source would produce. Checked by deleting a number from
 German plan 60: exit 1, `de/60: 68`.
 
+## Ninetieth pass: the rules book is not the same book
+
+The pass before this found that Ukrainian, Malay and Arabic were translated from
+the *English* edition while the rest came from the Russian. That explained the
+numbers. It also turned out to explain something larger, one directory over.
+
+The rules book has six chapters. `audit-dataset` checks that each is written in
+the script it is filed under — it caught an English book carrying a Russian
+seventh chapter. Nothing ever asked whether the book has the same *chapters*
+everywhere.
+
+**Ukrainian, Malay and Arabic have no chapter on the chakras.** Two of the three
+have no chapter on the meaning of the game either. What they carry instead is
+`online` — a chat-moderation policy, *"the following topics are strictly
+forbidden: racism, nazism, drugs"* — and `foreword`. A different donor, a
+different contents page, and nothing looking at it: a reader in those languages
+opened the rules and the chakras were simply not there, while every other book
+had them.
+
+`bookFor` already fell back to English, but only for a language with *nothing* —
+and it did so as a whole book on purpose, because half in one language and half
+in another is worse than one a reader can at least read. That reasoning was
+about a different failure. Here the choice was never "one language or two"; it
+was **the chapter in English or no chapter at all**, and nobody can read what is
+not there. So a missing chapter is borrowed, appended after the reader's own so
+nothing of theirs is displaced, and marked `borrowed` — carried all the way to
+the list, which says *"in English — this chapter is missing from your book"*.
+"Written for you" and "the only copy there is" are not the same offer.
+
+`apps/docs` still uses `rulesFor`, deliberately: a *shown* fallback has helped
+somebody, and a published `/uk/rules/chakras.html` holding English has misled
+them.
+
+The audit states the floor rather than the three languages that fell through it:
+English and Russian are the editions every other language came through one of,
+so a chapter **both** teach is a chapter every reader is owed. A chapter only
+one has is that edition's own choice and lacking it is not a loss — and extra
+chapters are not a fault, because `online` and `foreword` are real text somebody
+wrote. Checked by deleting `chakras` from the German book: exit 1, `de: chakras`.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
