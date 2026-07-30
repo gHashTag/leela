@@ -3580,6 +3580,36 @@ until literals were excluded, and `el.writerText.value.trim().length === 0` pass
 as a call — the exact shape the audit exists to catch — until reading the DOM
 stopped counting as deciding.
 
+## Hundred-and-second pass: the same shape, read backwards
+
+The pass before closed "an act guarded only by the drawing of a control" over
+the mini app. A keyboard is the bot's drawing, and the shape is there too —
+read the other way round.
+
+The bot's acts all refuse correctly; several passes were spent making sure of
+it. What they were not doing was **offering** correctly. `🎲 Roll` sat under a
+table that was waiting for a report, so the tap was taken and answered with a
+no. A button the game will refuse is a promise it does not keep.
+
+Worse, a throw carried **no keyboard at all**, so whatever was last drawn stayed
+on screen however far the game had moved on. The keyboard rides the last reply
+now — which is the one the transport attaches it to — and `buttonsFor` decides
+it: what this table would actually accept from the seat holding the turn. Where
+a throw is refused, what is left is `📖 My plan`, which is the thing the player
+has to read in order to say yes.
+
+A keyboard belongs to a message and everybody in the chat sees the same one, so
+it is drawn for the seat holding the turn — who is exactly who the message
+announcing that turn is about.
+
+**And the property test read as a pass at first.** It checked the keyboard at
+the top of the loop, with every report already filed, so the interesting half
+never occurred and the whole rule could be deleted without it going red. It
+checks after the throw and before the reports now — the moment a player is
+actually looking at it — and counts the owed cases to prove they happened. That
+is the third time in three passes that a test of mine had to be corrected before
+it was worth anything.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

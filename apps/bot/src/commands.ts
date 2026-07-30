@@ -147,6 +147,31 @@ export function waitingButtons(language: Language): Button[] {
   ];
 }
 
+/**
+ * The buttons this table would actually accept right now.
+ *
+ * A keyboard is the bot's drawing of a control, and the mini app spent three
+ * passes learning what a drawing is worth: a control offered where the act
+ * refuses is a promise the game does not keep. Offering `🎲 Roll` while a
+ * report is owed is the same sentence as a disabled button that still works,
+ * read backwards — the tap is taken and answered with a no.
+ *
+ * What is left in its place is what the player needs in order to say yes:
+ * the plan they are standing on, which is the thing they have to write about.
+ *
+ * A keyboard belongs to a message and everybody in the chat sees the same one,
+ * so it is drawn for the seat holding the turn — which is who the message
+ * announcing that turn is about.
+ */
+export function buttonsFor(room: Room): Button[] {
+  if (!room.started) return waitingButtons(room.language);
+
+  const holder = currentPlayer(room.session);
+  const owes = owesReport(holder.state, room.session.rules) && !holder.reportSubmitted;
+
+  return playingButtons(room.language).filter((button) => button.action !== 'roll' || !owes);
+}
+
 /** Whoever is being addressed, by name where we have one. */
 function nameOf(room: Room, id: string): string {
   return room.names[id] ?? id;
@@ -252,7 +277,7 @@ export function start(room: Room, byPlayerId: string): CommandResult {
       say(
         messageFor(room.language, 'start.begins', { name: nameOf(next, first.id) }),
         true,
-        playingButtons(room.language),
+        buttonsFor(next),
       ),
     ],
   };
@@ -369,6 +394,13 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
       ),
     );
   }
+
+  // The keyboard rides the last reply, which is what the transport attaches it
+  // to. Until now a throw carried none at all, so whatever was last drawn stayed
+  // on screen — including `🎲 Roll` while the game was waiting for an account of
+  // where the player had landed.
+  const last = replies[replies.length - 1];
+  if (last && !isSessionOver(next.session)) last.buttons = buttonsFor(next);
 
   return { room: next, replies, effects };
 }

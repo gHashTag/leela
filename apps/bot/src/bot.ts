@@ -466,7 +466,7 @@ export function createBot({
           broadcast: true,
           html: true,
           buttons: room.started
-            ? commands.playingButtons(room.language).filter((b) => b.action !== 'board')
+            ? commands.buttonsFor(room).filter((b) => b.action !== 'board')
             : [{ label: messageFor(room.language, 'button.join'), action: 'join' as const }],
         },
       ],
