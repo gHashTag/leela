@@ -204,6 +204,10 @@ const EN = {
   'app.reportSaved': 'Written. You may throw.',
   'app.reportEmpty': 'A report is something written. Nothing was.',
   'app.seatTurn': 'Player {seat}',
+  // Whose throw the sentence is about. At a table the header has already moved
+  // on to the next player by the time it is read, so "you threw four" reads as
+  // the wrong person's throw.
+  'app.seatSaid': 'Player {seat} — {said}',
   'app.players': 'Players',
   'app.playersAsk': 'How many are playing from this device?',
   'app.playersSet': 'Seated {count}. Player 1 throws first.',
@@ -406,6 +410,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.reportSaved': 'Записано. Можно бросать.',
   'app.reportEmpty': 'Отчёт — это то, что написано. Здесь не написано ничего.',
   'app.seatTurn': 'Игрок {seat}',
+  'app.seatSaid': 'Игрок {seat} — {said}',
   'app.players': 'Игроки',
   'app.playersAsk': 'Сколько человек играет с этого устройства?',
   'app.playersSet': 'Сели: {count}. Первым бросает игрок 1.',

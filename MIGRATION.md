@@ -2772,6 +2772,39 @@ sentence, leaving a player who came back mid-thought to find the button that
 says the same thing. It opens the writer now — after the intention, because a
 game cannot be reported on before it has a reason.
 
+## Seventy-eighth pass: the sentence that named the wrong player
+
+The screen map is finished for what an offline app can have. `WelcomeScreen` is
+a mode chooser whose **offline button is commented out** in the shipped app;
+`HELLO` is the sign-in flow; `PostScreen` and `ChatScreen` need a server and a
+key. There is nothing left there to port.
+
+So this pass played the new flow end to end on a device — intention, seats,
+throw, report, path — which is the method that has found something every time.
+It found this.
+
+At a table of two, throwing a four produced:
+
+```
+Player 2 · Throw a six to enter the game
+You threw 4. An arrow at 10 takes you to 23.
+```
+
+Both true, and together a lie. The header has moved on to whoever throws next by
+the time the sentence is read, so a second-person message reads as the *new*
+player's throw. It was exact for as long as one person played, which is every
+day this app existed until two passes ago.
+
+The thrower is named now — `Player 1 — You threw 4…` — and only when there is
+more than one seat: "Player 1 —" to somebody playing alone is a form filled in
+by a machine. Naming is the smaller change and the clearer one; the published
+app reaches for the same shape, keeping `playerTurn # N` as its own line rather
+than rewording every message.
+
+The seat that threw is remembered rather than read off the turn, because after a
+throw that passes the turn those are two different players — which is the whole
+defect in one sentence.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

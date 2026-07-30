@@ -8,7 +8,7 @@ import {
   initialState,
   type GameState,
 } from '@leela/engine';
-import { describeMove } from '../src/describe';
+import { describeMove, attribute} from '../src/describe';
 
 const titleOf = (plan: number) => `Plan ${plan}`;
 
@@ -158,5 +158,53 @@ describe('a player whose Telegram is Russian reads Russian', () => {
   it('still answers in English for a language with no catalogue', () => {
     const { event } = applyRoll(initialState(), 6, CLASSIC);
     expect(describeMove('ja', event, russianTitle)).toContain('A six');
+  });
+});
+
+describe('whose throw the sentence is about', () => {
+  /**
+   * The wording is second person — "You threw 4. An arrow at 10 takes you to
+   * 23." — which was exact while one person played. At a table it is read
+   * *after* the header has moved on to whoever throws next, so the sentence
+   * appears to describe the wrong player's throw. Found by seating two and
+   * reading the screen.
+   *
+   * The rule asserted is not the prefix: it is that a table names the thrower
+   * and a lone player is not addressed by number.
+   */
+
+  const said = 'You threw 4. An arrow at 10 takes you to 23.';
+
+  it('says nothing extra to somebody playing alone', () => {
+    // "Player 1 — you threw four" to one person is a form filled in by a
+    // machine.
+    expect(attribute('en', said, 0, 1)).toBe(said);
+  });
+
+  it('names the thrower once there is more than one seat', () => {
+    for (const seat of [0, 1, 5]) {
+      const named = attribute('en', said, seat, 6);
+      expect(named, `seat ${seat}`).toContain(String(seat + 1));
+      expect(named, `seat ${seat}`).not.toBe(said);
+    }
+  });
+
+  it('keeps the sentence it was given, whatever it was', () => {
+    // The prefix is an attribution, not a rewrite: every word of the move
+    // still has to reach the reader.
+    for (const sentence of [said, 'A six puts you on the board.', 'ॐ']) {
+      expect(attribute('en', sentence, 1, 3)).toContain(sentence);
+    }
+  });
+
+  it('names the seat that threw, which is not always the one up next', () => {
+    // The whole point: after a throw that passes the turn, the header says
+    // one player and the sentence belongs to another.
+    expect(attribute('en', said, 0, 2)).toContain('1');
+    expect(attribute('en', said, 1, 2)).toContain('2');
+  });
+
+  it('speaks the language of the table', () => {
+    expect(attribute('ru', 'Вы бросили 4.', 0, 2)).toMatch(/[А-Яа-я]/);
   });
 });

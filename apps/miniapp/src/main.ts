@@ -25,7 +25,7 @@ import {
 import { messageFor, resolveLanguage, type Language } from '@leela/content';
 import { loadPlans, plan as planFor } from './content';
 import { applyChrome } from './chrome';
-import { describeMove } from './describe';
+import { describeMove, attribute} from './describe';
 import { createCell } from './cell';
 import { boardFor, paintBoard } from './paint';
 import { browserSpinHost, faceFor, settle, spinDegrees, spinMs, type DieFaces } from './die';
@@ -209,7 +209,7 @@ function buildBoard(): void {
 
 // --- drawing --------------------------------------------------------------------
 
-function draw(event?: MoveEvent): void {
+function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
   const show = headline(state, language, (plan) => planFor(plan).title);
 
   for (const cell of cells.values()) {
@@ -263,7 +263,14 @@ function draw(event?: MoveEvent): void {
     el.say.textContent = messageFor(language, 'app.reportNeeded');
   }
   if (event) {
-    el.say.textContent = describeMove(language, event, (plan) => planFor(plan).title);
+    // Named when there is more than one seat: the header has already moved to
+    // whoever throws next, so an unattributed sentence reads as theirs.
+    el.say.textContent = attribute(
+      language,
+      describeMove(language, event, (plan) => planFor(plan).title),
+      threwSeat,
+      session.players.length,
+    );
     if (event.direction === 'snake 🐍') el.say.classList.add('snake');
     if (event.direction === 'arrow 🏹') el.say.classList.add('arrow');
     if (event.isGameFinished && !event.isBlocked) el.say.classList.add('win');
@@ -449,6 +456,9 @@ const throwDie = rollerFor(CLASSIC, rollDie);
 
 let rolling = false;
 
+/** Which seat made the throw the message is about. */
+let threwAt = 0;
+
 const FACES: DieFaces = [die1, die2, die3, die4, die5, die6];
 
 /** Where the spin gets its clock and its "is anyone looking" from. */
@@ -508,7 +518,9 @@ async function roll(): Promise<void> {
     }
 
     // Whoever holds the turn now — the thrower again on a six, the next seat
-    // otherwise.
+    // otherwise. The seat that threw is remembered for the sentence, which is
+    // about their throw and not about whoever is up next.
+    threwAt = session.players.findIndex((player) => player.id === moved.playerId);
     takeSeat();
   } finally {
     // Whatever happened above, the die comes back. It is the control the whole
@@ -519,7 +531,7 @@ async function roll(): Promise<void> {
     rolling = false;
   }
 
-  draw(event);
+  draw(event, threwAt);
 
   if (event.isGameFinished && !event.isBlocked) {
     telegram?.HapticFeedback?.notificationOccurred('success');
