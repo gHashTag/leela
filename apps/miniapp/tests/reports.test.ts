@@ -23,6 +23,9 @@ import {
   type Journal,
   hintFor,
   WARN_WITHIN_CHARS,
+  journalKeyFor,
+  loadJournalFor,
+  saveJournalFor,
 } from '../src/reports';
 import type { GameStorage } from '../src/state';
 
@@ -315,5 +318,66 @@ describe('what the writer says about its limits', () => {
   it('speaks the language of the player', () => {
     expect(hintFor(journalOf(0), MAX_REPORT_CHARS, 'ru')).toMatch(/[А-Яа-я]/);
     expect(hintFor(journalOf(MAX_REPORTS), 0, 'ru')).toMatch(/[А-Яа-я]/);
+  });
+});
+
+describe('a journal that belongs to one seat', () => {
+  /**
+   * `OfflineProfileScreen` in the published app is a sectioned list — "Player
+   * 1", "Player 2", … sliced to the number seated — because two people on one
+   * phone are two paths. This app kept one journal under one key, which was
+   * right while there was one player and wrong the moment a second sat down.
+   *
+   * The first seat keeps the original key: weeks of writing were done before
+   * there were seats, and moving it to a new name to add a feature would be a
+   * feature that costs somebody their path.
+   */
+
+  const memory = () => {
+    const held: Record<string, string> = {};
+    return {
+      storage: {
+        getItem: (key: string) => held[key] ?? null,
+        setItem: (key: string, value: string) => {
+          held[key] = value;
+        },
+      } as GameStorage,
+      keys: () => Object.keys(held),
+    };
+  };
+
+  it('leaves the first seat where the writing already was', () => {
+    expect(journalKeyFor('p1')).toBe(REPORTS_KEY);
+  });
+
+  it('gives every other seat a key of its own', () => {
+    const keys = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'].map(journalKeyFor);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it("keeps what one seat writes out of another seat path", () => {
+    // The rule: what a player wrote is theirs. A shared device is not a
+    // shared journal.
+    const { storage } = memory();
+    saveJournalFor(storage, 'p1', { reported: true, entries: [{ plan: 6, text: 'mine', at: 1 }] });
+    saveJournalFor(storage, 'p2', { reported: true, entries: [{ plan: 9, text: 'yours', at: 2 }] });
+
+    expect(loadJournalFor(storage, 'p1').entries.map((e) => e.text)).toEqual(['mine']);
+    expect(loadJournalFor(storage, 'p2').entries.map((e) => e.text)).toEqual(['yours']);
+  });
+
+  it('is empty for a seat that has not written, rather than borrowed', () => {
+    const { storage } = memory();
+    saveJournalFor(storage, 'p1', { reported: true, entries: [{ plan: 6, text: 'mine', at: 1 }] });
+
+    expect(loadJournalFor(storage, 'p3').entries).toEqual([]);
+  });
+
+  it('finds the writing that was there before there were seats', () => {
+    // A single-player journal is seat one's, without being moved.
+    const { storage } = memory();
+    storage.setItem(REPORTS_KEY, JSON.stringify({ reported: true, entries: [{ plan: 41, text: 'from before', at: 3 }] }));
+
+    expect(loadJournalFor(storage, 'p1').entries.map((e) => e.text)).toEqual(['from before']);
   });
 });

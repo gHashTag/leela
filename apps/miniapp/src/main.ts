@@ -608,18 +608,36 @@ function openPath(): void {
     nodes.push(heading, said, change);
   }
 
-  if (written.length === 0) {
-    const empty = document.createElement('p');
-    empty.textContent = messageFor(language, 'app.pathEmpty');
-    nodes.push(empty);
-  }
+  // Every seat, not only whoever holds the turn. `OfflineProfileScreen` is a
+  // sectioned list — "Player 1", "Player 2", … sliced to the number seated —
+  // and a path that showed one of three would leave two people unable to read
+  // what they had written on a device they share.
+  const alone = session.players.length === 1;
 
-  for (const entry of written) {
-    const heading = document.createElement('h3');
-    heading.textContent = `${entry.plan}. ${planFor(entry.plan).title}`;
-    const body = document.createElement('p');
-    body.textContent = entry.text;
-    nodes.push(heading, body);
+  for (const [seat, player] of session.players.entries()) {
+    const theirs = pathOf(loadJournalFor(localStorage, player.id));
+
+    if (!alone) {
+      const who = document.createElement('h3');
+      who.className = 'seat';
+      who.textContent = messageFor(language, 'app.seatTurn', { seat: seat + 1 });
+      nodes.push(who);
+    }
+
+    if (theirs.length === 0) {
+      const empty = document.createElement('p');
+      empty.textContent = messageFor(language, 'app.pathEmpty');
+      nodes.push(empty);
+      continue;
+    }
+
+    for (const entry of theirs) {
+      const heading = document.createElement('h3');
+      heading.textContent = `${entry.plan}. ${planFor(entry.plan).title}`;
+      const body = document.createElement('p');
+      body.textContent = entry.text;
+      nodes.push(heading, body);
+    }
   }
 
   const note = document.createElement('p');
@@ -731,7 +749,16 @@ loadPlans(language)
     buildBoard();
     draw();
     // The first thing the app asks, and the first thing this asks now.
-    if (intention === '') askIntention();
+    if (intention === '') {
+      askIntention();
+      return;
+    }
+
+    // And then, if a report is owed, the writing box — `if (!prof.isReported)
+    // OpenPlanReportModal(prof.plan)` on the app's own launch path. A player
+    // coming back to a game they left mid-thought was shown a dimmed die and a
+    // sentence, and had to find the button that says the same thing.
+    if (needsReport(state, journal)) openWriter();
   })
   .catch((error) => {
     el.say.textContent = messageFor(language, 'app.unloadable');

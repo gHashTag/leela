@@ -654,3 +654,14 @@ textarea {
   font-size: 0.62em;
   font-weight: 650;
 }
+
+/* Whose path this is, when there is more than one on the device. */
+.reader .seat {
+  margin-top: 22px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}

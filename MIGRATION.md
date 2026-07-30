@@ -2736,6 +2736,42 @@ further down wins, and a smaller size on an `input` added next month would zoom
 the page again with nothing to notice. It also asserts that fields still exist,
 so the check cannot pass by having no subject.
 
+## Seventy-seventh pass: the screens, read as a map
+
+Asked to study how the app moves between screens and add what is left.
+`Navigation.tsx` answers it in one file. Offline — which is what the mini app
+is — the tab bar holds three:
+
+| tab | screen | here |
+|---|---|---|
+| `TAB_BOTTOM_0` | `GameScreen` | the board |
+| `TAB_BOTTOM_2` | `OfflineProfileScreen` | **was missing** |
+| `TAB_BOTTOM_4` | `PosterScreen`, Russian only | a promo, not a function |
+
+The online-only tabs — `PostScreen`, `ChatScreen` — need a server and a key.
+
+**`OfflineProfileScreen` is a sectioned history**: `useHistoryData` builds
+"Player 1", "Player 2", … from `OfflinePlayers.store.histories[]`, sliced to the
+number seated. *My path* here showed only whoever held the turn, so at a table
+of three the other two could not read what they had written on a device they
+share — the same shape as the board that drew one gem of six, fixed two passes
+ago. It is sectioned by seat now, and journals are kept per player with the
+first seat on the original key.
+
+**And the launch path had one more instruction in it.** After the intention,
+`screens/helper.ts` reads:
+
+```ts
+if (!prof.isReported) {
+  OpenPlanReportModal(prof.plan)
+}
+```
+
+The app opens the writing box for you. This one dimmed the die and printed a
+sentence, leaving a player who came back mid-thought to find the button that
+says the same thing. It opens the writer now — after the intention, because a
+game cannot be reported on before it has a reason.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
