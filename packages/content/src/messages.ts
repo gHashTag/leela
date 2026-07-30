@@ -97,6 +97,13 @@ const EN = {
   'report.tooShort':
     'A report is a reflection, not a line to open the gate — {count} characters at least.',
   'report.filed': '{name} has reported. You may throw.',
+  // "You may throw" was said unconditionally, including to a player who had
+  // just reached Cosmic Consciousness — one line after the bot announced the
+  // game was over — and to a player reporting while somebody else held the
+  // turn. A sentence has to be true of the player it is about.
+  'report.filedDone': '{name} has reported. Their game is complete. 🕉',
+  'report.filedTurn': "{name} has reported. It is {holder}'s turn.",
+  'report.filedWait': '{name} has reported. Their next throw is in {wait}.',
 
   // --- reading a plan --------------------------------------------------------
   'plan.which': 'Which plan? Send /plan followed by a number, 1 to 72.',
@@ -374,6 +381,9 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'report.tooShort':
     'Отчёт — это размышление, а не строчка, чтобы открыть ворота: хотя бы {count} символов.',
   'report.filed': 'Отчёт от {name} принят. Можно бросать.',
+  'report.filedDone': 'Отчёт от {name} принят. Игра завершена. 🕉',
+  'report.filedTurn': 'Отчёт от {name} принят. Сейчас ход {holder}.',
+  'report.filedWait': 'Отчёт от {name} принят. Следующий бросок через {wait}.',
 
   'plan.which': 'Какой план? Отправьте /plan и число от 1 до 72.',
   'plan.range': 'Доска идёт от 1 до 72.',

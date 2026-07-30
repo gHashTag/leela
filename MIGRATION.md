@@ -3284,6 +3284,40 @@ keystroke, and if an unfiled one ever counted as an account a player would
 reopen the box and be shown their own half-sentence quoted back as something
 they had already said. What you are saying is not what you have said.
 
+## Ninety-second pass: playing the bot, which needed no token after all
+
+The last three passes said the bot could only be played with a `BOT_TOKEN` and
+a deployment. That was wrong, and it was written down in this repository's own
+notes four months ago: `commands.ts` is pure functions from `(room, input)` to
+`(room, replies)`, **so a whole game plays out in a test**. The surface nobody
+had played was reachable the entire time.
+
+Played to the end, three seats, four seeds. The bot handles the ending well —
+*"That is the game"*, *"This game is over"*, the board showing `finished 🕉`.
+And then, one line after announcing the game was over:
+
+> **Bo has reported. You may throw.**
+
+`report.filed` was a single sentence said whatever the state was. To a player
+who had just reached Cosmic Consciousness it is an invitation to keep playing a
+game that has ended. At a table of two it was wrong far more often than that,
+because a player reports when they *owe* a report, and by then the turn has
+usually moved on: **"you may throw" said to somebody who cannot**.
+
+`afterReport` decides it now, in the order a player experiences it — their own
+game ending outranks whose turn it is, and whose turn it is outranks a cooldown.
+The last one is the engine's answer, not this file's: `canCurrentPlayerRoll`
+knows that `online` makes a player wait a day, counted from the report, and a
+player told "you may throw" and then refused for a day would be the same defect
+wearing a different sentence.
+
+The test is the rule over a whole game rather than the two situations that were
+wrong: **"may throw" appears exactly when the engine would take the throw**,
+checked at every report of four games. Plus a guard against the assertions
+passing for want of a case — three of the four outcomes have to occur in
+ordinary play, and the fourth is constructed, because a cooldown cannot arise in
+a game played straight through.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

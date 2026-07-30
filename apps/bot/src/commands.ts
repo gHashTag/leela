@@ -427,6 +427,47 @@ function describeMove(
 }
 
 /** `/report <text>` — file the report the game is played for. */
+/**
+ * What is true of a player the moment their report is filed.
+ *
+ * The reply used to be one sentence — *"{name} has reported. You may throw."* —
+ * said whatever the state was. Found by playing a whole game through these
+ * functions: a player who had just reached Cosmic Consciousness was told they
+ * may throw, one line after the bot announced the game was over. At a table of
+ * two it was wrong far more often than that, because a player reports when they
+ * owe a report and the turn has usually moved on.
+ *
+ * Ordered the way the player experiences it: their own game ending outranks
+ * whose turn it is, and whose turn it is outranks a cooldown they are not yet
+ * waiting on. The engine answers the last one — `canCurrentPlayerRoll` knows
+ * about `turnCooldownMs`, which is a day under the published app's rules — so
+ * this decides nothing the rules already decide.
+ */
+export type AfterReport =
+  | { say: 'may-roll' }
+  | { say: 'finished' }
+  | { say: 'not-your-turn'; holder: string }
+  | { say: 'wait'; waitMs: number };
+
+export function afterReport(session: Session, playerId: string, now: number): AfterReport {
+  const player = session.players.find((seated) => seated.id === playerId);
+  if (!player) return { say: 'may-roll' };
+
+  if (hasWon(player.state)) return { say: 'finished' };
+
+  const holder = currentPlayer(session);
+  if (holder.id !== playerId) return { say: 'not-your-turn', holder: holder.id };
+
+  // A report has just been filed, so the gate cannot still be asking for one:
+  // the only refusal left is a cooldown, and that is the one with a wait to
+  // name. `waitMs > 0` rather than `!allowed` because a sentence saying "in ."
+  // would be worse than the one this replaced.
+  const verdict = canCurrentPlayerRoll(session, now);
+  if (!verdict.allowed && verdict.waitMs > 0) return { say: 'wait', waitMs: verdict.waitMs };
+
+  return { say: 'may-roll' };
+}
+
 export function report(
   room: Room,
   byPlayerId: string,
@@ -460,11 +501,27 @@ export function report(
   // the report is written, not when the die was thrown, and a variant that
   // says so needs the time recorded rather than inferred.
   const next: Room = { ...room, session: submitReport(room.session, byPlayerId, now) };
+  const after = afterReport(next.session, byPlayerId, now);
+  const name = nameOf(next, byPlayerId);
+
+  const filed =
+    after.say === 'finished'
+      ? messageFor(room.language, 'report.filedDone', { name })
+      : after.say === 'not-your-turn'
+        ? messageFor(room.language, 'report.filedTurn', {
+            name,
+            holder: nameOf(next, after.holder),
+          })
+        : after.say === 'wait'
+          ? messageFor(room.language, 'report.filedWait', {
+              name,
+              wait: formatWait(after.waitMs),
+            })
+          : messageFor(room.language, 'report.filed', { name });
+
   return {
     room: next,
-    replies: [
-      say(messageFor(room.language, 'report.filed', { name: nameOf(next, byPlayerId) }), false),
-    ],
+    replies: [say(filed, false)],
     // The report is what the game is played for; keeping it is the point.
     effects: [
       { kind: 'report', userId: byPlayerId, plan: seated.state.loka, text: text.trim() },
