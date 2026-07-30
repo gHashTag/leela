@@ -141,6 +141,11 @@ jobs:
       # this names them and fails on a fourth.
       - run: node scripts/audit-book.mjs
 
+      # Every control the mini app draws as available, against the decision
+      # behind it. Three defects in three passes came from an act that trusted
+      # a drawing; a drawing decided inline is one nothing else can call.
+      - run: node scripts/audit-drawings.mjs
+
       # Every script starts under the runtime it names, and every audit is
       # either run here or says in its own header why it cannot be. audit-copies
       # - the check that reads eighteen copies of the board - sat broken under

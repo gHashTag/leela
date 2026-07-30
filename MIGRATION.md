@@ -3549,6 +3549,37 @@ plan 68 — different from the waiting player's sentence, and still a lie — an
 the table went green on it. It now writes down what each answer has to *be*. A
 test that only compares two results passes when both are wrong.
 
+## Hundred-and-first pass: the second shape
+
+The pass before closed the 68 ambiguity as a class rather than waiting for its
+ninth sighting. This closes the other shape, which had produced three defects in
+three consecutive passes:
+
+- a double tap on Save filed two accounts of one square;
+- one tap on the players button threw away a month of play;
+- the die took a throw the drawing had already refused.
+
+Each time `draw` had disabled a control and the act behind it had asked nothing.
+A disabled button is a drawing, and a drawing refuses nothing — a double tap, a
+stale dialog, a keyboard, or a line written next year walks straight past it.
+
+The rule: **a control's availability is decided by a named function, and the act
+behind it asks the same one.** The name is what makes the second half possible.
+A condition written inline is a decision nothing else can call, which is exactly
+why the acts did not call it.
+
+Four drawings were still deciding in place. `mayStartOver`, `mayShare`,
+`mayExport` and `mayWrite` now hold those answers, and `startOver`, `shareSquare`
+and `exportPath` ask them. `el.report.disabled = owing === null` was a smell even
+though `owingSeat` was doing the work: the drawing and the act were two questions
+that happened to agree.
+
+`audit-drawings.mjs` is the rule as a check, and **two holes in it were found by
+testing the checker rather than trusting it.** `= true` passed as a bare name
+until literals were excluded, and `el.writerText.value.trim().length === 0` passed
+as a call — the exact shape the audit exists to catch — until reading the DOM
+stopped counting as deciding.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

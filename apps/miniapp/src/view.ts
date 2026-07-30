@@ -22,6 +22,7 @@ import {
   type Session,
 } from '@leela/engine';
 import { messageFor, type Language, type MessageKey } from '@leela/content';
+import { owingSeat } from './reports';
 
 export interface Headline {
   /** What goes where the plan number is. `—` while off the board. */
@@ -216,4 +217,43 @@ export function afterWriting(session: Session, writerId: string): AfterWriting {
   if (writer && hasWon(writer.state)) return 'finished';
 
   return currentPlayer(session).id === writerId ? 'may-throw' : 'not-your-turn';
+}
+
+/**
+ * Whether "Start over" is this seat's to press.
+ *
+ * The published app shows it only once a game has ended — `endGame` in
+ * `GameScreen` — and `hasWon` rather than `is_finished`, which a player who has
+ * not entered carries too.
+ *
+ * Named because the drawing was the only thing saying so. Three defects in this
+ * app came from an act that trusted a control's appearance: a double tap on
+ * Save filed two accounts of one square, a tap on the players button threw away
+ * a month of play, and the die took a throw the drawing had already refused. A
+ * disabled button is a drawing, and a drawing refuses nothing.
+ */
+export function mayStartOver(session: Session): boolean {
+  return hasWon(currentPlayer(session).state);
+}
+
+/**
+ * Whether anybody at this table owes an account the game is waiting for.
+ *
+ * The button was drawn from `owingSeat(...) === null` written out in place, and
+ * the act behind it asked `seatOwesReport` about a particular seat — two
+ * questions where there should be one. Naming it is what lets the drawing and
+ * the act be the same question rather than two that happen to agree.
+ */
+export function mayWrite(session: Session): boolean {
+  return owingSeat(session.players, session.turnIndex) !== null;
+}
+
+/** Whether there is anything written to hand to somebody else. */
+export function mayShare(draft: string): boolean {
+  return draft.trim().length > 0;
+}
+
+/** Whether there is a path to save. An empty file is not a keepsake. */
+export function mayExport(entries: ReadonlyArray<unknown>): boolean {
+  return entries.length > 0;
 }

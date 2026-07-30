@@ -91,7 +91,18 @@ import {
   saveJournalFor,
   writingsOn,
 } from './reports';
-import { afterWriting, canRoll, headline, lineFor, mayThrow, standing } from './view';
+import {
+  afterWriting,
+  canRoll,
+  headline,
+  lineFor,
+  mayExport,
+  mayShare,
+  mayStartOver,
+  mayThrow,
+  mayWrite,
+  standing,
+} from './view';
 
 /** Telegram's WebApp object, when we are running inside Telegram. */
 interface TelegramWebApp {
@@ -298,19 +309,16 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
   // one, so the die will not turn without one either.
   // The engine's gate, not the journal's. Two records of one fact disagreed
   // the moment a second player sat down.
-  // Whoever owes one, not whoever holds the turn: at a shared table the winner
-  // owes the last report of their game and never holds the turn again.
-  const owing = owingSeat(session.players, session.turnIndex);
   const owed = seatOwesReport(currentPlayer(session));
   // One question, asked here and again by whoever acts. The button saying no is
   // not the same as the act saying no, and the difference is a double tap away.
   el.roll.disabled = mayThrow(session, intention, rolling, owed) !== 'yes';
-  el.report.disabled = owing === null;
+  el.report.disabled = !mayWrite(session);
 
   // The published app shows "Start over" only once the game has ended —
   // `endGame` in GameScreen. `hasWon` rather than `is_finished`, which a player
   // who has not entered yet also carries: the 68 ambiguity, four times found.
-  el.restart.hidden = !hasWon(state);
+  el.restart.hidden = !mayStartOver(session);
   el.restart.textContent = messageFor(language, 'app.restart');
 
   el.say.className = 'say';
@@ -460,6 +468,11 @@ function openPlans(): void {
  * it. `/path` still shows it, and "Save a copy" still exports it.
  */
 function startOver(): void {
+  // The same question the button is drawn from. A hidden control cannot be
+  // pressed, but that is the drawing's promise rather than this function's, and
+  // three defects in this app came from an act that trusted a drawing.
+  if (!mayStartOver(session)) return;
+
   // This seat begins again. The others are in the middle of their own games,
   // and a shared device is not a reason to end somebody else's.
   const seated = currentPlayer(session);
@@ -807,7 +820,7 @@ function showWriterHint(): void {
   el.writerHint.textContent = hintFor(journal, el.writerText.value.length, language);
   // Nothing to share until something has been written. The button appears
   // rather than sitting disabled: a control that is never usable is furniture.
-  el.writerShare.hidden = el.writerText.value.trim().length === 0;
+  el.writerShare.hidden = !mayShare(el.writerText.value);
   el.writerShare.textContent = messageFor(language, 'app.share');
 }
 
@@ -824,6 +837,8 @@ function showWriterHint(): void {
  * clipboard where it does not, which is what the path export has always used.
  */
 async function shareSquare(): Promise<void> {
+  if (!mayShare(el.writerText.value)) return;
+
   const text = shareTextFor(state.loka, planFor(state.loka).title, el.writerText.value, intention);
 
   try {
@@ -955,7 +970,7 @@ function openPath(): void {
   openReader('path', el.readerTitle.textContent ?? '', nodes);
   // Nothing written is nothing to save; the file input stays, because bringing
   // a path back is exactly what an empty journal is for.
-  el.pathExport.hidden = written.length === 0;
+  el.pathExport.hidden = !mayExport(written);
 }
 
 /**
@@ -967,6 +982,10 @@ function openPath(): void {
  * its blobs holds a copy of everything the player has ever written.
  */
 function exportPath(): void {
+  // The same question the button is drawn from. An empty file is not a
+  // keepsake, and a download nobody asked for is worse than none.
+  if (!mayExport(pathOf(journal))) return;
+
   const document_ = toDocument(journal);
   const blob = new Blob([JSON.stringify(document_, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
