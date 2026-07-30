@@ -2959,6 +2959,43 @@ by calling `applyRoll` directly. Left alone deliberately: flipping it would be
 changing the rules silently, and the app's answer is "Start over", which is what
 the published app does too.
 
+## Eighty-third pass: the squares that keep coming back
+
+Leela's teaching is that you return. The same state arrives again — 41 in
+February and 41 again in September — and what you wrote the first time is the
+measure of what has changed. This app recorded every one of those returns:
+`record` appends, so a second report about a square never overwrote the first.
+And it could only ever show them as a *path* — everything, oldest first, one
+flat run of text — so two accounts of the same square could sit a year and forty
+entries apart with nothing to put them together.
+
+Every competitor sells exactly this. `com.gmapp.lillagame` leads its listing
+with recurring life patterns; the freshest iOS one is busy enlarging its note
+input area. None of them builds it, and the published app cannot: its
+`UserProfileScreen` renders `history.map` — one flat chronological list — and
+its `HistoryT` carries `{ plan, count, status, createDate }` and no report text
+at all. The material exists here and nowhere else.
+
+So reading a square now shows what this player has already said about it, oldest
+first, dated — **above** the traditional text rather than below it. That
+placement was decided by looking at a phone: plan 41's text is three long
+paragraphs, so anything under it is below the fold, and somebody opening a
+square they have stood on three times wants what they said last time, not to
+scroll past the teaching to find it. On a first visit there is nothing there and
+the plan text is still the first thing on screen.
+
+The list of all 72 carries the count, because that list is the only place a
+whole game is visible at once: three against 41 is the game saying something no
+single report can. A count rather than a dot — "some" would make a player open
+all 72 to find out which.
+
+The tests state the rule rather than the cases: everything written about a
+square is what reading that square shows, and nothing written about another —
+checked over the whole board, with a second test proving nothing is shown twice
+or lost between squares. Plus determinism: reversing the entries must not
+reorder the answer, because a list that shuffles between two identical journals
+is a list nobody can read twice.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

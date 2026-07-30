@@ -665,3 +665,47 @@ textarea {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+
+/* What the player wrote about this square before, under the traditional text.
+   Set apart from the plan's own words on purpose: the teaching and a player's
+   account of meeting it are two different voices, and a reader who cannot tell
+   them apart is reading neither. */
+.reader blockquote.mine {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0 0.5rem 0.75rem;
+  border-inline-start: 2px solid var(--accent, #b8860b);
+}
+
+.reader h3.mine {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  opacity: 0.75;
+}
+
+.reader blockquote.mine cite {
+  display: block;
+  font-size: 0.8rem;
+  font-style: normal;
+  opacity: 0.6;
+}
+
+.reader blockquote.mine p {
+  margin: 0.25rem 0 0;
+  white-space: pre-wrap;
+}
+
+/* The teaching, after a player's own account of meeting it. */
+.reader blockquote.mine + p {
+  margin-top: 1.25rem;
+}
+
+/* How many times this square has come back. Sits at the end of the title in
+   the list of all 72, which is the only place a whole game is visible at once. */
+.returns {
+  margin-inline-start: 0.5rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: var(--accent, #b8860b);
+  color: var(--on-accent, #fff);
+}

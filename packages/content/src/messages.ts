@@ -196,6 +196,14 @@ const EN = {
   // squares behind them was greeted with the instruction for somebody who has
   // never entered.
   'app.standing': 'You are on {plan}. {title}',
+  // Reading a square you have stood on before. Leela's teaching is that you
+  // come back, and what you said last time is the measure of what has changed.
+  'app.wroteHere': 'What you wrote here before',
+  'app.wroteOnce': 'What you wrote here',
+  'app.returns': {
+    one: 'stood here {count} time',
+    other: 'stood here {count} times',
+  },
   // And the end of it, which is a state and not a moment: the app announced
   // the win as it happened and then, on the next load, went back to telling
   // the winner how to enter.
@@ -413,6 +421,14 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.restarted': 'Новая игра. Бросьте шестёрку, чтобы войти в неё.',
   'app.opening': 'Шестёрка выводит вас на доску.',
   'app.standing': 'Вы на {plan}. {title}',
+  'app.wroteHere': 'Что вы писали здесь раньше',
+  'app.wroteOnce': 'Что вы здесь написали',
+  'app.returns': {
+    one: 'были здесь {count} раз',
+    few: 'были здесь {count} раза',
+    many: 'были здесь {count} раз',
+    other: 'были здесь {count} раза',
+  },
   'app.finished': 'Вы достигли Космического Сознания. Игра завершена. 🕉',
   'app.roll': 'Бросок',
   'app.read': 'Прочесть план',

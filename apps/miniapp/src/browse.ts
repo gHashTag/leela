@@ -28,6 +28,13 @@ export interface Entry {
    * the report is not yet written.
    */
   readonly here?: boolean;
+  /**
+   * How many times the player has written about this square, when more than
+   * once. The list is the only place a whole game is visible at once, so it is
+   * where returning shows up: three marks against plan 41 is the game telling
+   * a player something no single report can.
+   */
+  readonly returns?: number;
 }
 
 /**
@@ -38,16 +45,25 @@ export interface Entry {
  * noticing. The number is the title's fallback because the number is what the
  * board shows.
  */
-export function planEntries(language: Language, standingOn?: number): Entry[] {
+export function planEntries(
+  language: Language,
+  standingOn?: number,
+  returns: ReadonlyMap<number, number> = new Map(),
+): Entry[] {
   const known = new Map(plansFor(language).map((plan) => [plan.plan, plan.title]));
 
   return Array.from({ length: TOTAL_PLANS }, (_, index) => {
     const plan = index + 1;
     const title = known.get(plan)?.trim();
+    const seen = returns.get(plan) ?? 0;
     return {
       key: plan,
       title: title && title.length > 0 ? title : String(plan),
       here: plan === standingOn,
+      // Only a return is worth a mark. Every square a player has stood on has
+      // a report against it, so marking all of them would mark most of the
+      // board and say nothing.
+      ...(seen > 1 ? { returns: seen } : {}),
     };
   });
 }

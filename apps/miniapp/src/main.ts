@@ -74,7 +74,9 @@ import {
   type Journal,
   hintFor,
   loadJournalFor,
+  revisited,
   saveJournalFor,
+  writingsOn,
 } from './reports';
 import { canRoll, headline, standing } from './view';
 
@@ -299,6 +301,15 @@ function openList(title: string, entries: Entry[], open: (key: number | string) 
       button.type = 'button';
       button.textContent = entry.title;
       if (entry.here) button.classList.add('here');
+      if (entry.returns) {
+        // A count rather than a dot: "three" is the whole point, and a mark
+        // that only says "some" makes a player open all 72 to find out which.
+        const mark = document.createElement('span');
+        mark.className = 'returns';
+        mark.textContent = String(entry.returns);
+        mark.title = messageFor(language, 'app.returns', { count: entry.returns });
+        button.append(mark);
+      }
       button.addEventListener('click', () => {
         el.list.close();
         open(entry.key);
@@ -352,7 +363,12 @@ function askPlayers(): void {
 
 /** Every plan, so a player can read a square they have not landed on. */
 function openPlans(): void {
-  openList(messageFor(language, 'app.plans'), planEntries(language, state.loka), (plan) => {
+  // Marked with the returns, because the list is the only place a whole game is
+  // visible at once. Three marks against 41 is the game saying something no
+  // single report can.
+  const returns = new Map(revisited(journal).map((visit) => [visit.plan, visit.times]));
+
+  openList(messageFor(language, 'app.plans'), planEntries(language, state.loka, returns), (plan) => {
     openPlan(Number(plan));
   });
 }
@@ -418,9 +434,51 @@ function saveTheIntention(): void {
 }
 
 /** Show a plan's text. Paragraphs are built as nodes, never as innerHTML. */
+/**
+ * A square, and what this player has already said about it.
+ *
+ * The reports were readable only as a path — everything, in the order it
+ * happened — which is the wrong shape for a game whose whole teaching is that
+ * you come back. Standing on 41 for the third time, what you wrote the first
+ * two times is the measure of what has changed, and it was in the app the
+ * entire while with no way to reach it.
+ */
 function openPlan(plan: number): void {
   const found = planFor(plan);
-  openReader('plan', `${plan}. ${found.title}`, paragraphs(found.body));
+  // The player's own words first, when there are any. Seen on a phone: the
+  // traditional text of 41 is three long paragraphs, so anything under it is
+  // below the fold — and a player opening a square they have stood on three
+  // times wants what they said last time, not to scroll past the teaching to
+  // find it. On a first visit there is nothing here and the plan text is still
+  // the first thing on screen.
+  openReader('plan', `${plan}. ${found.title}`, [...writtenBefore(plan), ...paragraphs(found.body)]);
+}
+
+/** The player's own earlier writing about one square, oldest first. */
+function writtenBefore(plan: number): HTMLElement[] {
+  const written = writingsOn(journal, plan);
+  if (written.length === 0) return [];
+
+  const heading = document.createElement('h3');
+  heading.className = 'mine';
+  heading.textContent = messageFor(language, written.length > 1 ? 'app.wroteHere' : 'app.wroteOnce');
+
+  return [
+    heading,
+    ...written.map((entry) => {
+      const block = document.createElement('blockquote');
+      block.className = 'mine';
+
+      const when = document.createElement('cite');
+      when.textContent = new Date(entry.at).toLocaleDateString(language);
+
+      const said = document.createElement('p');
+      said.textContent = entry.text;
+
+      block.append(when, said);
+      return block;
+    }),
+  ];
 }
 
 /**
