@@ -346,9 +346,17 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
   if (isSessionOver(next.session)) {
     replies.push(say(describeStandings(next)));
     replies.push(say(messageFor(room.language, 'roll.ended')));
-  } else if (!move.keepsTurn && currentPlayer(next.session).id !== move.playerId) {
+  } else if (move.keepsTurn) {
+    // The extra turn, which is the engine's answer and not a guess from who
+    // holds the turn next. Read the other way round — "the same player throws
+    // next" — a solo table announced every throw as a six, including a one,
+    // in the same breath as saying it takes a six to enter.
+    replies.push(say(messageFor(room.language, 'roll.again')));
+  } else if (currentPlayer(next.session).id !== move.playerId) {
     // Not when the turn comes straight back: a solo table said "X is next"
-    // after every throw, to X, which is half of everything the bot said.
+    // after every throw, to X, which is half of everything the bot said. And
+    // nothing at all when it comes back without a six — a player alone at a
+    // table can see whose turn it is.
     replies.push(
       say(
         messageFor(room.language, 'roll.next', {
@@ -356,8 +364,6 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
         }),
       ),
     );
-  } else {
-    replies.push(say(messageFor(room.language, 'roll.again')));
   }
 
   return { room: next, replies, effects };

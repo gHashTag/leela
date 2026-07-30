@@ -2013,6 +2013,40 @@ report", the writer is titled *68. Cosmic Consciousness (Vaikuntha Loka)*, and
 writing it releases the die so a player can throw a six and begin again — which
 is what `classic` means by `mayReenterAfterWinning`.
 
+## Fifty-sixth pass: the bot announced every throw as a six
+
+Played a whole game through the bot's command layer rather than reading it —
+the same method that has now found four defects in the mini app — and the first
+line back was this:
+
+```
+Ann throws 1. It takes a six to enter the game. | A six — throw again.
+```
+
+Two sentences about one throw, disagreeing about what it was.
+
+`roll.again` was pushed whenever the next holder of the turn was the player who
+had just thrown. **At a table of one that is always true**, so a solo player —
+the commonest table the bot has — was told they had thrown a six after every
+single throw. It had been that way since the branch immediately above it was
+fixed for the same table shape: the comment there says a solo table used to say
+"X is next" after every throw, "which is half of everything the bot said", and
+the fix moved the noise one branch along instead of removing it.
+
+The extra turn is the engine's answer — `keepsTurn`, from `grantsExtraTurn` —
+and not something to infer from who holds the turn next. The chain now reads:
+an extra turn says so; a turn that moved to someone else names them; a turn
+that came back without a six says nothing, because a player alone at a table
+can see whose turn it is.
+
+**315 tests did not notice**, because none of them read what the bot says about
+a throw that is not interesting. The four new ones assert the relation rather
+than the sentence: over a solo game, "throw again" appears exactly when the
+engine granted the extra turn; the bot never says "it takes a six" and "throw
+again" in one breath; a table of two still names the next player; and a turn
+that comes back without a six adds nothing. Reverting the fix fails the first
+two.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

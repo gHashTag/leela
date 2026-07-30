@@ -619,3 +619,111 @@ describe('a table plays with its own variant’s die', () => {
     );
   });
 });
+
+describe('what the bot says about whose throw it is', () => {
+  /**
+   * A solo table announced every throw as a six.
+   *
+   * `roll.again` — "A six — throw again." — was pushed whenever the next
+   * holder of the turn was the player who had just thrown, which at a table of
+   * one is *always*. So a throw of one produced "Ann throws 1. It takes a six
+   * to enter the game." and "A six — throw again." in the same breath, and had
+   * done since the branch above it was fixed for the same table shape.
+   *
+   * 315 tests did not notice, because none of them read what the bot says
+   * about a throw that is not interesting.
+   *
+   * The rule: the extra turn is the engine's answer — `keepsTurn`, from
+   * `grantsExtraTurn` — and not a guess from who holds the turn next.
+   */
+
+  const AGAIN = 'throw again';
+
+  it('offers another throw exactly when the rules grant one', () => {
+    let room = table(1, SEED);
+
+    for (let turn = 0; turn < 300; turn += 1) {
+      const holder = room.session.players[room.session.turnIndex];
+      const before = holder.state.consecutive_sixes;
+      const result = roll(room, holder.id, NOW);
+      const said = result.replies.map((reply) => reply.text).join(' ');
+      const after = (result.room as Room).session.players[0].state;
+
+      // The engine grants the extra turn on a six under `classic`; the state
+      // it produced is the record of whether it did.
+      const granted = after.consecutive_sixes > before && !after.is_finished;
+      expect(said.includes(AGAIN), `turn ${turn}: ${said}`).toBe(granted);
+
+      room = result.room as Room;
+      if (result.replies.some((reply) => reply.text.includes('/report'))) {
+        room = report(room, holder.id, 'noted').room as Room;
+      }
+      if (said.includes('Cosmic Consciousness')) break;
+    }
+  });
+
+  it('never says it takes a six and offers another throw in one breath', () => {
+    // The shape of the defect as a reader met it: two sentences about the same
+    // throw, disagreeing about what it was.
+    let room = table(1, 4242);
+
+    for (let turn = 0; turn < 200; turn += 1) {
+      const holder = room.session.players[room.session.turnIndex];
+      const result = roll(room, holder.id, NOW);
+      const said = result.replies.map((reply) => reply.text).join(' ');
+
+      expect(said.includes('takes a six') && said.includes(AGAIN), said).toBe(false);
+
+      room = result.room as Room;
+      if (result.replies.some((reply) => reply.text.includes('/report'))) {
+        room = report(room, holder.id, 'noted').room as Room;
+      }
+      if (said.includes('Cosmic Consciousness')) break;
+    }
+  });
+
+  it('still names the next player at a table of more than one', () => {
+    // The branch this shares a chain with: a table of two has to say whose
+    // turn it is, or nobody knows.
+    let room = table(2, SEED);
+    const first = room.session.players[room.session.turnIndex];
+
+    for (let turn = 0; turn < 50; turn += 1) {
+      const holder = room.session.players[room.session.turnIndex];
+      const result = roll(room, holder.id, NOW);
+      const said = result.replies.map((reply) => reply.text).join(' ');
+      room = result.room as Room;
+
+      if (result.replies.some((reply) => reply.text.includes('/report'))) {
+        room = report(room, holder.id, 'noted').room as Room;
+      }
+      if (room.session.players[room.session.turnIndex].id !== holder.id) {
+        expect(said).toMatch(/next/i);
+        return;
+      }
+    }
+
+    throw new Error(`the turn never moved on from ${first.id}`);
+  });
+
+  it('says nothing extra when the turn comes back without a six', () => {
+    // A player alone at a table can see whose turn it is. The line that used
+    // to be here was wrong; the fix is not to replace it with a different one.
+    let room = table(1, 99);
+
+    for (let turn = 0; turn < 100; turn += 1) {
+      const holder = room.session.players[room.session.turnIndex];
+      const result = roll(room, holder.id, NOW);
+      const said = result.replies.map((reply) => reply.text).join(' ');
+      room = result.room as Room;
+
+      if (!said.includes(AGAIN) && !said.includes('/report') && !said.includes('over')) {
+        expect(said).not.toMatch(/next/i);
+        return;
+      }
+      if (result.replies.some((reply) => reply.text.includes('/report'))) {
+        room = report(room, holder.id, 'noted').room as Room;
+      }
+    }
+  });
+});
