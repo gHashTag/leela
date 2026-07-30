@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { Direction } from '@leela/engine';
 import { LANGUAGES, planFor } from '@leela/content';
 import { TOTAL_PLANS, WIN_LOKA } from '@leela/engine';
 import {
@@ -358,5 +359,59 @@ describe('when the budget is too small for even one entry', () => {
       if (summary === '') continue;
       expect(summary, `budget ${budget}`).toContain('entry 5');
     }
+  });
+});
+
+describe('how the player arrived', () => {
+  /**
+   * `Guide` has accepted a direction since it was written, and the bot never
+   * passed one — so these five sentences went into the prompt exactly never.
+   * Three of them did not agree with the "They" they follow: *"They was brought
+   * down here by a snake."* Nobody had read them, because there was nothing to
+   * read: code that never runs is code nobody has read.
+   */
+
+  const DIRECTIONS: Direction[] = ['step 🚶🏼', 'snake 🐍', 'arrow 🏹', 'stop 🛑', 'win 🕉'];
+
+  const arrivalLine = (direction: Direction) =>
+    systemPrompt({ language: 'en', plan: 8, direction })
+      .split('\n')
+      .find((line) => line.startsWith('They ')) ?? '';
+
+  it('says something about every direction the engine can produce', () => {
+    // A direction with no sentence is a silent gap: the model is simply not
+    // told, and nothing anywhere says so.
+    for (const direction of DIRECTIONS) {
+      expect(arrivalLine(direction), direction).not.toBe('');
+    }
+  });
+
+  it('agrees with the pronoun it follows, in every direction', () => {
+    // The rule rather than the three that were wrong: a singular verb after
+    // "They" is the mistake, whichever sentence makes it.
+    for (const direction of DIRECTIONS) {
+      expect(arrivalLine(direction), direction).not.toMatch(/^They (was|has|is|does|goes)\b/);
+    }
+  });
+
+  it('is a whole sentence, ending where a sentence ends', () => {
+    for (const direction of DIRECTIONS) {
+      expect(arrivalLine(direction).endsWith('.'), direction).toBe(true);
+    }
+  });
+
+  it('says nothing at all when the arrival is unknown', () => {
+    // The bot cannot always find the seat, and a companion that fell silent
+    // over a missing detail would be worse than one that says less.
+    const prompt = systemPrompt({ language: 'en', plan: 8 });
+    expect(prompt.split('\n').some((line) => line.startsWith('They '))).toBe(false);
+    expect(prompt).toContain('plan 8');
+  });
+
+  it('does not repeat the square as somewhere they came from', () => {
+    // Standing on 8 having come from 8 is a jump home, and "They came from
+    // plan 8" while on plan 8 reads as a mistake to anyone, model included.
+    const prompt = systemPrompt({ language: 'en', plan: 8, previousPlan: 8 });
+    expect(prompt).not.toContain('came from plan 8');
   });
 });

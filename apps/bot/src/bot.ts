@@ -247,9 +247,20 @@ export function createBot({
             .map((entry) => ({ plan: entry.plan, text: entry.text }))
         : undefined;
 
+      // How they arrived, which the prompt asks for and nothing was passing.
+      // `systemPrompt` has five sentences for it — brought down by a snake,
+      // carried up by an arrow, walked here one square at a time — and none of
+      // them had ever reached a model, because this call site gave the plan and
+      // not the move that produced it. A reflection on plan 8 read the same
+      // whether the player climbed to it or was bitten down to it, in a game
+      // whose whole subject is what an arrival means.
+      const seat = room.session.players.find((player) => player.id === effect.userId);
+
       const reflection = await guide.reflect(effect.text, {
         language: room.language,
         plan: effect.plan,
+        direction: seat?.state.direction || undefined,
+        previousPlan: seat?.state.previous_loka,
         journey,
       });
 

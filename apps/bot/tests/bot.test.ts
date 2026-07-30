@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { messageFor } from '@leela/content';
-import { Guide, ModelError, fixedModel, type LanguageModel } from '@leela/ai';
+import { Guide, ModelError, fixedModel, recordingModel, type LanguageModel } from '@leela/ai';
 import { createBot } from '../src/bot';
 import { MemoryReportSink, MemoryRoomStore, type ReportSink } from '../src/store';
 
@@ -635,5 +635,80 @@ describe('a path leaving and arriving as a file', () => {
     expect(texts(sent).length).toBeGreaterThan(before);
     // Nothing was added the second time: the store still holds two.
     expect((await reports.history?.('100'))?.length).toBe(2);
+  });
+});
+
+describe('what the companion is told about the arrival', () => {
+  /**
+   * `systemPrompt` has five sentences for how a player reached the square they
+   * are writing about — brought down by a snake, carried up by an arrow,
+   * walked here one square at a time — and none of them had ever reached a
+   * model. `Guide` accepts `direction` and `previousPlan`; the bot's only call
+   * site passed the plan and not the move that produced it.
+   *
+   * So a reflection on plan 8 read the same whether the player climbed to it or
+   * was bitten down to it, in a game whose whole subject is what an arrival
+   * means. Written, wired at one end, and dead.
+   *
+   * The assertion is the relation, not one sentence: whatever the state says
+   * about the arrival, the prompt says it too.
+   */
+
+  const arrivalOf = (messages: { role: string; content: string }[]) =>
+    messages.find((message) => message.role === 'system')?.content ?? '';
+
+  it('tells it how the player arrived, whatever the arrival was', async () => {
+    const recorder = recordingModel('a reflection');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+
+    // Play until several different arrivals have been reported on.
+    const seen = new Set<string>();
+    for (let turn = 0; turn < 60 && seen.size < 2; turn += 1) {
+      await bot.handleUpdate(message('/roll', PRIVATE));
+      if (!texts(sent).at(-1)?.includes('/report')) continue;
+
+      await bot.handleUpdate(message('/report a reflection long enough to count', PRIVATE));
+      const prompt = arrivalOf(recorder.calls.at(-1)?.messages ?? []);
+
+      // Some sentence about the arrival is always there. Which five sentences
+      // exist, and whether they agree with the pronoun, is `packages/ai`'s to
+      // assert — this end only has to have passed the direction along.
+      expect(prompt, `turn ${turn}`).toMatch(/^They .+\.$/m);
+      seen.add(prompt.match(/They [^.]+\./)?.[0] ?? '');
+    }
+
+    expect(seen.size).toBeGreaterThan(0);
+  });
+
+  it('tells it where they came from, when that is somewhere else', async () => {
+    const recorder = recordingModel('a reflection');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+    await rollUntilTheGate(bot, sent);
+    await bot.handleUpdate(message('/report a reflection long enough to count', PRIVATE));
+
+    const prompt = arrivalOf(recorder.calls.at(-1)?.messages ?? []);
+    expect(prompt).toMatch(/They came from plan \d+\./);
+  });
+
+  it('still answers when there is nothing to say about the arrival', async () => {
+    // The companion must not depend on it: a seat the bot cannot find is a
+    // reflection without an arrival, not a silence.
+    const guide = new Guide({ model: fixedModel('a reflection from the model'), log: () => undefined });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+    await rollUntilTheGate(bot, sent);
+    await bot.handleUpdate(message('/report a reflection long enough to count', PRIVATE));
+
+    expect(texts(sent)).toContain('a reflection from the model');
   });
 });

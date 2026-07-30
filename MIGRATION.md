@@ -2504,6 +2504,35 @@ mini app, and matching is by name across the repository. Recorded rather than
 papered over: the check is a heuristic, and a heuristic that claims to be a
 proof is the thing this repository keeps finding.
 
+## Seventieth pass: five sentences nobody had read
+
+Played the bot with the companion attached, which had never been played — only
+asserted. `Guide.reflect` takes `direction` and `previousPlan`, `systemPrompt`
+turns them into *"They were brought down here by a snake."* and *"They came from
+plan 12."*, and the bot's only call site passed the plan and not the move that
+produced it.
+
+So a reflection on plan 8 read the same whether the player had climbed to it or
+been bitten down to it — in a game whose entire subject is what an arrival
+means. The seat was one lookup away and nothing looked.
+
+**And the dead code was wrong.** With the direction finally reaching a prompt,
+three of the five sentences did not agree with the "They" they follow:
+
+> They **was** brought down here by a snake.
+
+Nobody had noticed because nobody had read them: there was nothing to read.
+Written, wired at one end, and never rendered. Code that never runs is code
+nobody has read — which is the same lesson as a check nobody runs, arriving from
+the other direction.
+
+The five agree now, and the test is the rule rather than the three that were
+wrong: no arrival sentence may begin with a singular verb after "They", each is
+a whole sentence, every direction the engine can produce has one, and a prompt
+with no arrival to report simply says less rather than falling silent. The bot's
+end asserts only that it passed the direction along — which of the five exists
+belongs to `packages/ai`.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -135,12 +135,21 @@ const LANGUAGE_NAMES: Record<string, string> = {
 };
 
 /** How each arrival is described to the model, in plain terms. */
+/**
+ * How the player reached the square they are writing about.
+ *
+ * Each of these follows the word "They", and three of the five did not agree
+ * with it: "They was brought down here by a snake." Nobody had noticed, because
+ * none of them had ever been rendered — `Guide` accepted a direction and the
+ * bot never passed one, so five sentences were written, wired at one end, and
+ * dead. Code that never runs is code nobody has read.
+ */
 const ARRIVAL: Record<Direction, string> = {
   'step 🚶🏼': 'walked here one square at a time',
-  'snake 🐍': 'was brought down here by a snake',
-  'arrow 🏹': 'was carried up here by an arrow',
-  'stop 🛑': 'could not move and remains here',
-  'win 🕉': 'has reached Cosmic Consciousness',
+  'snake 🐍': 'were brought down here by a snake',
+  'arrow 🏹': 'were carried up here by an arrow',
+  'stop 🛑': 'could not move and remain here',
+  'win 🕉': 'have reached Cosmic Consciousness',
 };
 
 /**
