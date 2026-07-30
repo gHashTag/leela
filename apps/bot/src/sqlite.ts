@@ -27,7 +27,7 @@ interface Statement {
   run(...params: unknown[]): unknown;
 }
 
-interface Database {
+export interface Database {
   exec(sql: string): void;
   prepare(sql: string): Statement;
   close(): void;
@@ -39,7 +39,7 @@ interface Database {
  * Their prepared-statement APIs agree on `get`, `all`, `run` and `exec`, which
  * is everything used here.
  */
-function openDatabase(path: string): Database {
+export function openDatabase(path: string): Database {
   const require = createRequire(import.meta.url);
 
   // The directory first. SQLite does not create one, and a bot pointed at
@@ -105,6 +105,7 @@ CREATE TABLE IF NOT EXISTS session_players (
   position_before_three_sixes INTEGER NOT NULL DEFAULT 0,
   is_finished                 INTEGER NOT NULL DEFAULT 1,
   last_roll_at                INTEGER,
+  last_report_at              INTEGER,
   report_submitted            INTEGER NOT NULL DEFAULT 1,
   PRIMARY KEY (session_id, seat),
   FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE
@@ -141,6 +142,51 @@ CREATE TABLE IF NOT EXISTS reports (
 CREATE INDEX IF NOT EXISTS reports_user ON reports (user_id, created_at DESC);
 `;
 
+/**
+ * Add columns an older database is missing.
+ *
+ * `CREATE TABLE IF NOT EXISTS` does nothing to a table that already exists, so
+ * the deployed bot — whose volume outlives every release — keeps whatever shape
+ * it was first created with. The failure is silent: a write to a column that is
+ * not there throws inside a transaction, and a chat is told there is no table.
+ *
+ * Derived from `SCHEMA` rather than kept as a list of past migrations, because
+ * a list of past migrations is a hand-kept list, and this repository has now
+ * been wrong about four of those. Whatever the schema declares, an old file
+ * gets. Only additive: SQLite can add a column with a constant default and
+ * nothing here drops, renames, or retypes one.
+ */
+export function addMissingColumns(db: Database, schema: string = SCHEMA): string[] {
+  const added: string[] = [];
+
+  for (const [, table, body] of schema.matchAll(
+    /CREATE TABLE IF NOT EXISTS (\w+) \(([\s\S]*?)\n\);/g,
+  )) {
+    const existing = new Set(
+      (db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>).map(
+        (column) => column.name,
+      ),
+    );
+    // A table that is not there at all is `CREATE TABLE`'s business, not this.
+    if (existing.size === 0) continue;
+
+    for (const line of body.split(",\n")) {
+      const declaration = line.trim();
+      const name = declaration.split(/\s+/)[0] ?? "";
+      // Constraint lines are not columns: PRIMARY KEY, FOREIGN KEY, UNIQUE.
+      if (!/^\w+$/.test(name) || /^(PRIMARY|FOREIGN|UNIQUE|CHECK|CONSTRAINT)$/i.test(name)) {
+        continue;
+      }
+      if (existing.has(name)) continue;
+
+      db.exec(`ALTER TABLE ${table} ADD COLUMN ${declaration}`);
+      added.push(`${table}.${name}`);
+    }
+  }
+
+  return added;
+}
+
 /** SQLite has no boolean; 1 and 0 have to be read back as one. */
 function asBoolean(value: unknown): boolean {
   return value === 1 || value === true;
@@ -171,6 +217,8 @@ export class SqliteRoomQueries implements RoomQueries {
     // A bot handles one update at a time but may be restarted mid-write.
     this.db.exec('PRAGMA journal_mode = WAL');
     this.db.exec(SCHEMA);
+    // A volume older than this release has the tables and not the columns.
+    addMissingColumns(this.db);
   }
 
   async loadSession(chatId: string): Promise<SessionRow | null> {
@@ -213,6 +261,7 @@ export class SqliteRoomQueries implements RoomQueries {
           position_before_three_sixes: row.position_before_three_sixes as number,
           is_finished: asBoolean(row.is_finished),
           last_roll_at: asDate(row.last_roll_at),
+          last_report_at: asDate(row.last_report_at),
           report_submitted: asBoolean(row.report_submitted),
         }) as SessionPlayerRow,
     );
@@ -261,8 +310,8 @@ export class SqliteRoomQueries implements RoomQueries {
         `INSERT INTO session_players
            (session_id, user_id, seat, name, plan, previous_plan, direction,
             consecutive_sixes, position_before_three_sixes, is_finished,
-            last_roll_at, report_submitted)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            last_roll_at, last_report_at, report_submitted)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       );
 
       for (const seat of seats) {
@@ -278,6 +327,7 @@ export class SqliteRoomQueries implements RoomQueries {
           seat.position_before_three_sixes,
           seat.is_finished ? 1 : 0,
           seat.last_roll_at ? seat.last_roll_at.getTime() : null,
+          seat.last_report_at ? seat.last_report_at.getTime() : null,
           seat.report_submitted ? 1 : 0,
         );
       }

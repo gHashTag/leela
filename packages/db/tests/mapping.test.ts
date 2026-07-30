@@ -170,14 +170,30 @@ describe('the gate reaches a lone player row', () => {
   });
 
   it('honours the cooldown from the row’s own clock', () => {
-    const justRolled = row({
+    // `online` measures the wait from the report, which is what the published
+    // app does — `startStepTimer` runs when a post is created. The legacy
+    // export's one timestamp is that moment, so it lands in both columns.
+    const justWrote = row({
       ruleset: 'online',
       needsReport: false,
       lastRollAt: new Date(NOW),
+      lastReportAt: new Date(NOW),
     });
 
-    expect(canPlayerRoll(justRolled, NOW + 1000).reason).toBe('cooldown');
-    expect(canPlayerRoll(justRolled, NOW + 24 * 60 * 60 * 1000).allowed).toBe(true);
+    expect(canPlayerRoll(justWrote, NOW + 1000).reason).toBe('cooldown');
+    expect(canPlayerRoll(justWrote, NOW + 24 * 60 * 60 * 1000).allowed).toBe(true);
+  });
+
+  it('does not hold a player who has never written', () => {
+    // Nothing to measure from, and the report gate is the thing that stops
+    // them until there is — a different sentence, and the true one.
+    const neverWrote = row({
+      ruleset: 'online',
+      needsReport: false,
+      lastRollAt: new Date(NOW),
+      lastReportAt: null,
+    });
+    expect(canPlayerRoll(neverWrote, NOW + 1000).allowed).toBe(true);
   });
 
   it('reads a null flag as nothing owed, which is what the column default means', () => {

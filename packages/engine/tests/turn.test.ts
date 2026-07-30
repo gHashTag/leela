@@ -11,6 +11,7 @@ import {
   initialState,
   owesReport,
   type GameState,
+  type RuleSet,
 } from '../src';
 
 function playing(overrides: Partial<GameState> = {}): GameState {
@@ -48,7 +49,7 @@ describe('canRoll — report gate', () => {
   it('blocks a player who owes a report', () => {
     const verdict = canRoll(
       playing(),
-      { reportSubmitted: false, lastRollAt: null, now: NOW },
+      { reportSubmitted: false, lastRollAt: null, lastReportAt: null, now: NOW },
       CLASSIC,
     );
     expect(verdict.allowed).toBe(false);
@@ -60,7 +61,7 @@ describe('canRoll — report gate', () => {
   it('lets a player through once the report is filed', () => {
     const verdict = canRoll(
       playing(),
-      { reportSubmitted: true, lastRollAt: null, now: NOW },
+      { reportSubmitted: true, lastRollAt: null, lastReportAt: null, now: NOW },
       CLASSIC,
     );
     expect(verdict.allowed).toBe(true);
@@ -70,7 +71,7 @@ describe('canRoll — report gate', () => {
     for (const rules of [NEUROLEELA, LEGACY_MOBILE]) {
       const verdict = canRoll(
         playing(),
-        { reportSubmitted: false, lastRollAt: null, now: NOW },
+        { reportSubmitted: false, lastRollAt: null, lastReportAt: null, now: NOW },
         rules,
       );
       expect(verdict.allowed, rules.id).toBe(true);
@@ -80,7 +81,7 @@ describe('canRoll — report gate', () => {
   it('never gates a player still waiting to enter the game', () => {
     const verdict = canRoll(
       initialState(),
-      { reportSubmitted: false, lastRollAt: NOW - 1000, now: NOW },
+      { reportSubmitted: false, lastRollAt: NOW - 1000, lastReportAt: null, now: NOW },
       ONLINE,
     );
     expect(verdict.allowed).toBe(true);
@@ -88,10 +89,13 @@ describe('canRoll — report gate', () => {
 });
 
 describe('canRoll — cooldown', () => {
-  it('holds a player for a day after their last roll', () => {
+  it('holds a player for a day after their report, under the published rules', () => {
+    // `startStepTimer` is called from `CreatePost` and nowhere else: the day
+    // begins when the player writes about where they landed, not when the die
+    // was thrown. This test asserted the throw until the app was read.
     const verdict = canRoll(
       playing(),
-      { reportSubmitted: true, lastRollAt: NOW, now: NOW + 1000 },
+      { reportSubmitted: true, lastRollAt: NOW - ONE_DAY_MS, lastReportAt: NOW, now: NOW + 1000 },
       ONLINE,
     );
     expect(verdict.allowed).toBe(false);
@@ -100,10 +104,32 @@ describe('canRoll — cooldown', () => {
     expect(verdict.waitMs).toBe(ONE_DAY_MS - 1000);
   });
 
+  it('holds them from the throw when that is what the variant says', () => {
+    const fromTheRoll: RuleSet = { ...ONLINE, cooldownFrom: 'roll' };
+    const verdict = canRoll(
+      playing(),
+      { reportSubmitted: true, lastRollAt: NOW, lastReportAt: null, now: NOW + 1000 },
+      fromTheRoll,
+    );
+    expect(verdict.reason).toBe('cooldown');
+    expect(verdict.nextAllowedAt).toBe(NOW + ONE_DAY_MS);
+  });
+
+  it('does not hold a player who has never written, under the published rules', () => {
+    // Nothing to measure from. The report gate is what stops them, and it is a
+    // different sentence: "write something" rather than "come back tomorrow".
+    const verdict = canRoll(
+      playing(),
+      { reportSubmitted: true, lastRollAt: NOW, lastReportAt: null, now: NOW + 1000 },
+      ONLINE,
+    );
+    expect(verdict.allowed).toBe(true);
+  });
+
   it('releases them exactly when the day is up', () => {
     const verdict = canRoll(
       playing(),
-      { reportSubmitted: true, lastRollAt: NOW, now: NOW + ONE_DAY_MS },
+      { reportSubmitted: true, lastRollAt: NOW, lastReportAt: null, now: NOW + ONE_DAY_MS },
       ONLINE,
     );
     expect(verdict.allowed).toBe(true);
@@ -113,7 +139,7 @@ describe('canRoll — cooldown', () => {
   it('does not hold a player who has never rolled', () => {
     const verdict = canRoll(
       playing(),
-      { reportSubmitted: true, lastRollAt: null, now: NOW },
+      { reportSubmitted: true, lastRollAt: null, lastReportAt: null, now: NOW },
       ONLINE,
     );
     expect(verdict.allowed).toBe(true);
@@ -123,7 +149,7 @@ describe('canRoll — cooldown', () => {
     // Both gates are closed; the player is told to write, not to wait.
     const verdict = canRoll(
       playing(),
-      { reportSubmitted: false, lastRollAt: NOW, now: NOW + 1000 },
+      { reportSubmitted: false, lastRollAt: NOW, lastReportAt: null, now: NOW + 1000 },
       ONLINE,
     );
     expect(verdict.reason).toBe('report-required');
@@ -133,7 +159,7 @@ describe('canRoll — cooldown', () => {
     for (const rules of [CLASSIC, NEUROLEELA, LEGACY_MOBILE]) {
       const verdict = canRoll(
         playing(),
-        { reportSubmitted: true, lastRollAt: NOW, now: NOW + 1 },
+        { reportSubmitted: true, lastRollAt: NOW, lastReportAt: null, now: NOW + 1 },
         rules,
       );
       expect(verdict.allowed, rules.id).toBe(true);

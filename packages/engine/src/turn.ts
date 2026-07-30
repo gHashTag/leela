@@ -25,6 +25,13 @@ export interface TurnContext {
   reportSubmitted: boolean;
   /** When the player last rolled, in epoch ms. Null before their first roll. */
   lastRollAt: number | null;
+  /**
+   * When they last filed a report, in epoch ms. Null if they never have.
+   *
+   * Read only when the variant measures the wait from the report, which is
+   * what the published app does.
+   */
+  lastReportAt: number | null;
   /** Now, in epoch ms. Passed in so this stays a pure function. */
   now: number;
 }
@@ -73,8 +80,13 @@ export function canRoll(state: GameState, context: TurnContext, rules: RuleSet):
     return { allowed: false, reason: 'report-required', nextAllowedAt: null, waitMs: 0 };
   }
 
-  if (rules.turnCooldownMs > 0 && context.lastRollAt !== null) {
-    const nextAllowedAt = context.lastRollAt + rules.turnCooldownMs;
+  // The published app starts the day when the report is written, not when the
+  // die is thrown: `startStepTimer` is called from `CreatePost` and nowhere
+  // else. A player who takes three days to write still waits a day afterwards.
+  const since = rules.cooldownFrom === 'report' ? context.lastReportAt : context.lastRollAt;
+
+  if (rules.turnCooldownMs > 0 && since !== null) {
+    const nextAllowedAt = since + rules.turnCooldownMs;
     if (context.now < nextAllowedAt) {
       return {
         allowed: false,
@@ -104,6 +116,22 @@ export function owesReport(state: GameState, rules: RuleSet = DEFAULT_RULESET): 
   if (!rules.reportAfterSix && arrivedOnSix(state)) return false;
 
   return true;
+}
+
+/**
+ * Whether what someone wrote counts as a report.
+ *
+ * The published app refuses fewer than a hundred characters —
+ * `yup.string().trim().min(100)` in `CreatePost` — because a line typed to open
+ * the gate is not a reflection. Traditional Leela sets no count, so `classic`
+ * asks only that something was written.
+ *
+ * Trimmed first: whitespace is not writing, and a gate opened by spaces is the
+ * rule with its point removed.
+ */
+export function isReport(text: string, rules: RuleSet = DEFAULT_RULESET): boolean {
+  const written = text.trim();
+  return written.length > 0 && written.length >= rules.minReportChars;
 }
 
 /**

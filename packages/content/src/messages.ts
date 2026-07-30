@@ -94,6 +94,8 @@ const EN = {
   // --- reports ---------------------------------------------------------------
   'report.notSeated': 'You are not at this table.',
   'report.empty': 'Send /report followed by what the plan brings up.',
+  'report.tooShort':
+    'A report is a reflection, not a line to open the gate — {count} characters at least.',
   'report.filed': '{name} has reported. You may throw.',
 
   // --- reading a plan --------------------------------------------------------
@@ -277,6 +279,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
 
   'report.notSeated': 'Вы не за этим столом.',
   'report.empty': 'Отправьте /report и то, что поднимает этот план.',
+  'report.tooShort':
+    'Отчёт — это размышление, а не строчка, чтобы открыть ворота: хотя бы {count} символов.',
   'report.filed': 'Отчёт от {name} принят. Можно бросать.',
 
   'plan.which': 'Какой план? Отправьте /plan и число от 1 до 72.',

@@ -28,21 +28,21 @@ export interface StoredSession {
   language: string;
 }
 
-/** A seat row, minus the surrogate key. */
-export interface StoredSeat {
+/**
+ * A seat row, minus the surrogate key.
+ *
+ * Derived from `seatUpdate` rather than restated. It was restated once, and a
+ * column added to the engine's seat was spread into this object at runtime,
+ * dropped from the type, and never written to SQLite — a game that reloaded
+ * having forgotten when its last report was written. Whatever the mapping
+ * produces is what a store has to store.
+ */
+export type StoredSeat = ReturnType<typeof seatUpdate> & {
   session_id: string;
   user_id: string;
   seat: number;
   name: string | null;
-  plan: number;
-  previous_plan: number;
-  direction: string;
-  consecutive_sixes: number;
-  position_before_three_sixes: number;
-  is_finished: boolean;
-  last_roll_at: Date | null;
-  report_submitted: boolean;
-}
+};
 
 /** Split a room into the rows that represent it. */
 export function roomToRows(room: Room): { session: StoredSession; seats: StoredSeat[] } {

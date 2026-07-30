@@ -385,7 +385,7 @@ export function createBot({
   );
 
   bot.command('report', (ctx) =>
-    withRoom(ctx, (room, who) => commands.report(room, who.id, ctx.match ?? '')),
+    withRoom(ctx, (room, who) => commands.report(room, who.id, ctx.match ?? '', now())),
   );
 
   bot.command('plan', (ctx) =>
@@ -600,7 +600,7 @@ export function createBot({
     // A player who owes a report is almost certainly writing it, so take plain
     // text as the report rather than making them remember the command.
     if (seated && !seated.reportSubmitted && who) {
-      const result = commands.report(room, who.id, ctx.message.text);
+      const result = commands.report(room, who.id, ctx.message.text, now());
       if (result.room) await store.save(result.room);
       await applyEffects(result.effects);
       await deliver(ctx, result.replies);

@@ -29,6 +29,15 @@ export interface SeatedPlayer {
   lastRollAt: number | null;
   /** Whether they have filed a report for the plan they are standing on. */
   reportSubmitted: boolean;
+  /**
+   * When they last filed one, epoch ms. Null if they never have.
+   *
+   * Kept because a variant may measure the wait between rolls from the report
+   * rather than from the throw — see `cooldownFrom`. Required rather than
+   * optional: `undefined` and `null` would be two ways to say "never", and a
+   * round trip through a database turns the first into the second.
+   */
+  lastReportAt: number | null;
 }
 
 export interface Session {
@@ -65,6 +74,7 @@ export function createSession(
       name: p.name,
       state: initialState(),
       lastRollAt: null,
+      lastReportAt: null,
       reportSubmitted: true,
     })),
     turnIndex: 0,
@@ -98,6 +108,7 @@ export function canCurrentPlayerRoll(session: Session, now: number): TurnVerdict
   const context: TurnContext = {
     reportSubmitted: player.reportSubmitted,
     lastRollAt: player.lastRollAt,
+    lastReportAt: player.lastReportAt,
     now,
   };
   return canRoll(player.state, context, session.rules);
@@ -208,12 +219,14 @@ export function advance(session: Session, roll: number, now: number): SessionMov
  * Record that a player filed their report, unblocking their next roll.
  * A no-op for a player who did not owe one.
  */
-export function submitReport(session: Session, playerId: string): Session {
+export function submitReport(session: Session, playerId: string, at?: number): Session {
   const index = session.players.findIndex((p) => p.id === playerId);
   if (index === -1) throw new SessionError(`no player ${playerId} in session ${session.id}`);
 
   const players = session.players.map((p, i) =>
-    i === index ? { ...p, reportSubmitted: true } : p,
+    i === index
+      ? { ...p, reportSubmitted: true, lastReportAt: at ?? p.lastReportAt }
+      : p,
   );
   return { ...session, players };
 }

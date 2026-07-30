@@ -66,6 +66,25 @@ export interface RuleSet {
    * its "Start over" button is for.
    */
   readonly mayReenterAfterWinning: boolean;
+  /**
+   * When the wait between rolls begins.
+   *
+   * `'roll'` measures from the throw. `'report'` measures from the moment the
+   * player wrote about where they landed — which is what the published app
+   * does: `startStepTimer` sets `lastStepTime` and is called from one place,
+   * `CreatePost`, when the report is posted. A player who takes three days to
+   * write still waits a day afterwards, and the day is for sitting with what
+   * they wrote rather than for the throw.
+   */
+  readonly cooldownFrom: 'roll' | 'report';
+  /**
+   * The shortest thing that counts as a report, in characters.
+   *
+   * The published app refuses fewer than a hundred: `yup.string().min(100)` in
+   * `CreatePost`. It is a product decision rather than a traditional rule, so
+   * `classic` asks only that something was written.
+   */
+  readonly minReportChars: number;
 }
 
 /**
@@ -83,6 +102,8 @@ export const CLASSIC: RuleSet = Object.freeze({
   reportAfterSix: true,
   refusedThrowStartsCooldown: true,
   mayReenterAfterWinning: true,
+  cooldownFrom: 'roll',
+  minReportChars: 0,
 });
 
 /** What NeuroLeela (Expo) shipped: reset on three sixes, no extra turn. */
@@ -99,6 +120,8 @@ export const NEUROLEELA: RuleSet = Object.freeze({
   reportAfterSix: true,
   refusedThrowStartsCooldown: true,
   mayReenterAfterWinning: true,
+  cooldownFrom: 'roll',
+  minReportChars: 0,
 });
 
 /** What the published mobile app shipped: extra turn, no reset, re-roll on repeat. */
@@ -114,6 +137,10 @@ export const LEGACY_MOBILE: RuleSet = Object.freeze({
   reportAfterSix: false,
   refusedThrowStartsCooldown: false,
   mayReenterAfterWinning: false,
+  // The day is measured from the report, and a hundred characters is what
+  // `CreatePost` accepts. Offline play has no cooldown to start.
+  cooldownFrom: 'report',
+  minReportChars: 100,
 });
 
 /**
@@ -132,6 +159,8 @@ export const ONLINE: RuleSet = Object.freeze({
   reportAfterSix: false,
   refusedThrowStartsCooldown: false,
   mayReenterAfterWinning: false,
+  cooldownFrom: 'report',
+  minReportChars: 100,
 });
 
 /**
@@ -164,6 +193,8 @@ export const ONCHAIN: RuleSet = Object.freeze({
   reportAfterSix: true,
   refusedThrowStartsCooldown: true,
   mayReenterAfterWinning: true,
+  cooldownFrom: 'roll',
+  minReportChars: 0,
 });
 
 export const RULESETS = Object.freeze({

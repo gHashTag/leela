@@ -203,16 +203,36 @@ describe('the language of a table, not of a player', () => {
 
 describe('a table that is not English does not lose the cooldown message', () => {
   it('says how long is left, in Russian', () => {
+    // Under `online` the day begins when the report is written, and a report is
+    // a hundred characters — both read out of the published app rather than
+    // assumed. A five-letter line is refused and starts nothing.
+    const written = 'Этот план поднимает во мне давнее, о чём я до сих пор не находил слов, и сегодня оно наконец назвалось.';
+    expect(written.length).toBeGreaterThanOrEqual(100);
+
     const opened = openRoom('чат', { id: 'а', name: 'Аня' }, 42, {
       language: 'ru',
       ruleset: ONLINE.id,
     });
     const entered = enter({ ...(opened.room as Room), started: true }, 'а');
-    const reported = report(entered.room, 'а', 'слова').room as Room;
-    const tooSoon = roll(reported, 'а', entered.at - 2 * 86_400_000 + 1000);
+    const wroteAt = entered.at;
+    const reported = report(entered.room, 'а', written, wroteAt).room as Room;
+
+    const tooSoon = roll(reported, 'а', wroteAt + 1000);
     // `formatWait` is the engine's, and its "3h 5m" is a duration rather than
     // prose — the only Latin the game speaks on purpose.
     expect(tooSoon.replies[0].text).toContain('Пока нет.');
+  });
+
+  it('refuses a line too short to be a report, in Russian', () => {
+    const opened = openRoom('чат', { id: 'а', name: 'Аня' }, 42, {
+      language: 'ru',
+      ruleset: ONLINE.id,
+    });
+    const entered = enter({ ...(opened.room as Room), started: true }, 'а');
+    const said = report(entered.room, 'а', 'слова', entered.at).replies[0].text;
+
+    expect(said).toContain('100');
+    expect(latinProseIn(said.replace(/\d+/g, ''))).toEqual([]);
   });
 
   it('still gates a classic table in Russian', () => {

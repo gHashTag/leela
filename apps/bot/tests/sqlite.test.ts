@@ -18,7 +18,7 @@ function playingAt(loka: number): GameState {
   };
 }
 import { gameStepRow } from '@leela/db';
-import { SqliteRoomQueries, sqliteReportSink, sqliteStepSink } from '../src/sqlite';
+import { SCHEMA, SqliteRoomQueries, addMissingColumns, openDatabase, sqliteReportSink, sqliteStepSink } from '../src/sqlite';
 
 const NOW = 1_700_000_000_000;
 const dir = mkdtempSync(join(tmpdir(), 'leela-sqlite-'));
@@ -185,11 +185,12 @@ describe('SqliteRoomQueries', () => {
       name: null,
       plan: 1,
       previous_plan: 0,
-      direction: '',
+      direction: '' as const,
       consecutive_sixes: 0,
       position_before_three_sixes: 0,
       is_finished: false,
       last_roll_at: null,
+      last_report_at: null,
       report_submitted: true,
     }));
 
@@ -463,5 +464,68 @@ describe('a game keeps a history a person can read', () => {
 
     const stored = queries.stepsFor('u1');
     expect(stored).toHaveLength(1);
+  });
+});
+
+describe('a database older than the code that opens it', () => {
+  /**
+   * The bot's volume outlives every release, and `CREATE TABLE IF NOT EXISTS`
+   * does nothing to a table that is already there. A column added to the schema
+   * therefore never reaches a deployed database, and the first write to it
+   * throws inside the transaction — the player is told there is no table.
+   *
+   * The assertion is about the shape of that defect rather than about
+   * `last_report_at`, which is only the column that found it: whatever the
+   * schema declares and the file lacks gets added.
+   */
+  it('gains whatever column the schema has grown', () => {
+    const db = openDatabase(':memory:');
+    db.exec('CREATE TABLE IF NOT EXISTS sessions (\n  id TEXT PRIMARY KEY\n);');
+
+    const added = addMissingColumns(
+      db,
+      'CREATE TABLE IF NOT EXISTS sessions (\n  id TEXT PRIMARY KEY,\n  invented TEXT\n);',
+    );
+
+    expect(added).toEqual(['sessions.invented']);
+    expect(() => db.prepare('SELECT invented FROM sessions').all()).not.toThrow();
+  });
+
+  it('adds nothing twice, so opening a current database is a no-op', () => {
+    const db = openDatabase(':memory:');
+    db.exec(SCHEMA);
+    expect(addMissingColumns(db)).toEqual([]);
+    expect(addMissingColumns(db)).toEqual([]);
+  });
+
+  it('leaves a table it has never seen to CREATE TABLE', () => {
+    // An empty database is not a database missing every column: creating the
+    // tables is the schema's job, and an ALTER on a table that is not there
+    // would throw where nothing is wrong.
+    expect(addMissingColumns(openDatabase(':memory:'))).toEqual([]);
+  });
+
+  it('is not fooled by a constraint line into adding a column called PRIMARY', () => {
+    const db = openDatabase(':memory:');
+    db.exec('CREATE TABLE IF NOT EXISTS sessions (\n  id TEXT NOT NULL\n);');
+
+    const added = addMissingColumns(
+      db,
+      'CREATE TABLE IF NOT EXISTS sessions (\n  id TEXT NOT NULL,\n  PRIMARY KEY (id),\n  FOREIGN KEY (id) REFERENCES other (id)\n);',
+    );
+
+    expect(added).toEqual([]);
+  });
+
+  it('keeps the rows that were already in it', () => {
+    // A migration that loses a game is worse than one that never runs.
+    const db = openDatabase(':memory:');
+    db.exec('CREATE TABLE IF NOT EXISTS sessions (\n  id TEXT PRIMARY KEY\n);');
+    db.prepare('INSERT INTO sessions (id) VALUES (?)').run('chat-old');
+
+    addMissingColumns(db, 'CREATE TABLE IF NOT EXISTS sessions (\n  id TEXT PRIMARY KEY,\n  invented TEXT\n);');
+
+    const rows = db.prepare('SELECT id, invented FROM sessions').all() as Array<Record<string, unknown>>;
+    expect(rows).toEqual([{ id: 'chat-old', invented: null }]);
   });
 });

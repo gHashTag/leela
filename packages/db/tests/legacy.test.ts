@@ -157,7 +157,7 @@ describe('a migrated player can keep playing', () => {
     const state = stateFromLegacy(legacy({ isReported: false }));
     const verdict = canRoll(
       state,
-      { reportSubmitted: false, lastRollAt: T0, now: T0 + 1 },
+      { reportSubmitted: false, lastRollAt: T0, lastReportAt: null, now: T0 + 1 },
       LEGACY_MOBILE,
     );
     expect(verdict.allowed).toBe(true);

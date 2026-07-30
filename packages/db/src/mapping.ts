@@ -90,13 +90,14 @@ export function rulesForPlayer(player: Pick<Player, 'ruleset'>): RuleSet {
  * @param now  Epoch ms, passed in so this stays pure.
  */
 export function turnContextFromPlayer(
-  player: Pick<Player, 'needsReport' | 'lastRollAt'>,
+  player: Pick<Player, 'needsReport' | 'lastRollAt' | 'lastReportAt'>,
   now: number,
 ): TurnContext {
   return {
     // The column records the debt; the engine asks about the payment.
     reportSubmitted: !(player.needsReport ?? false),
     lastRollAt: player.lastRollAt ? player.lastRollAt.getTime() : null,
+    lastReportAt: player.lastReportAt ? player.lastReportAt.getTime() : null,
     now,
   };
 }
@@ -108,7 +109,7 @@ export function turnContextFromPlayer(
  * clock can now ask, instead of having to assemble a session first.
  */
 export function canPlayerRoll(
-  player: Pick<Player, 'needsReport' | 'lastRollAt' | 'ruleset'> &
+  player: Pick<Player, 'needsReport' | 'lastRollAt' | 'lastReportAt' | 'ruleset'> &
     Pick<Player, 'plan' | 'previous_plan' | 'consecutiveSixes' | 'positionBeforeThreeSixes' | 'isFinished'>,
   now: number,
 ): TurnVerdict {
@@ -235,6 +236,7 @@ export function sessionFromRows(
           is_finished: seat.is_finished,
         },
         lastRollAt: seat.last_roll_at ? seat.last_roll_at.getTime() : null,
+        lastReportAt: seat.last_report_at ? seat.last_report_at.getTime() : null,
         reportSubmitted: seat.report_submitted,
       }),
     ),
@@ -262,5 +264,9 @@ export function seatUpdate(player: SeatedPlayer) {
     is_finished: player.state.is_finished,
     last_roll_at: player.lastRollAt === null ? null : new Date(player.lastRollAt),
     report_submitted: player.reportSubmitted,
+    last_report_at:
+      player.lastReportAt === null || player.lastReportAt === undefined
+        ? null
+        : new Date(player.lastReportAt),
   };
 }

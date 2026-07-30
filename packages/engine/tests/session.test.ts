@@ -187,15 +187,32 @@ describe('report gate in a session', () => {
 });
 
 describe('cooldown in a session', () => {
-  it('holds the player for a day between rolls', () => {
+  it('holds the player for a day after they write, not after they throw', () => {
+    // The day begins at `startStepTimer`, which the published app calls when
+    // the report is posted. Entering on a six owes no report there, so this
+    // walks one square further to reach a plan worth writing about.
     let s = createSession('o', [{ id: 'a' }], ONLINE);
-    s = submitReport(roll(s, 6, NOW).session, 'a'); // enter, reflect on plan 6
+    s = roll(s, 6, NOW).session; // enter; a six owes nothing and starts nothing
+    s = roll(s, 3, NOW + 60_000).session; // now a report is owed
 
-    const blocked = canCurrentPlayerRoll(s, NOW + 1000);
+    const written = NOW + 3 * ONE_DAY_MS; // they took their time
+    s = submitReport(s, 'a', written);
+
+    const blocked = canCurrentPlayerRoll(s, written + 1000);
     expect(blocked.reason).toBe('cooldown');
-    expect(blocked.nextAllowedAt).toBe(NOW + ONE_DAY_MS);
+    expect(blocked.nextAllowedAt).toBe(written + ONE_DAY_MS);
 
-    expect(canCurrentPlayerRoll(s, NOW + ONE_DAY_MS).allowed).toBe(true);
+    expect(canCurrentPlayerRoll(s, written + ONE_DAY_MS).allowed).toBe(true);
+  });
+
+  it('does not start the day at the throw, however long ago it was', () => {
+    let s = createSession('o', [{ id: 'a' }], ONLINE);
+    s = roll(s, 6, NOW).session;
+    s = roll(s, 3, NOW + 60_000).session;
+
+    // A day after the throw, with nothing written: the gate is the report,
+    // and it says so rather than telling them to come back tomorrow.
+    expect(canCurrentPlayerRoll(s, NOW + ONE_DAY_MS * 2).reason).toBe('report-required');
   });
 });
 

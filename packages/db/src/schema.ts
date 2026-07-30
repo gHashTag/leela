@@ -37,6 +37,14 @@ export const players = pgTable('players', {
 
   /** When this player last rolled. Drives the cooldown between turns. */
   lastRollAt: timestamp('last_roll_at'),
+  /**
+   * When they last wrote a report.
+   *
+   * The published app's `lastStepTime` is this moment and not the throw:
+   * `startStepTimer` is called from `CreatePost`. The variants that measure the
+   * wait from the report read this one.
+   */
+  lastReportAt: timestamp('last_report_at'),
 
   /** Firebase uid of a migrated com.leelagame account, when there was one. */
   legacyId: text('legacy_id'),
@@ -123,6 +131,8 @@ export const sessionPlayers = pgTable('session_players', {
   last_roll_at: timestamp('last_roll_at'),
   /** False while this player owes a report on the plan they are standing on. */
   report_submitted: boolean('report_submitted').notNull().default(true),
+  /** When they last filed one. Null if never — see `cooldownFrom`. */
+  last_report_at: timestamp('last_report_at'),
 });
 
 export const reports = pgTable('reports', {

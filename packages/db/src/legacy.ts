@@ -149,7 +149,12 @@ export function playerFromLegacy(user: LegacyUser, id: string): NewPlayer {
     language: normaliseLanguage(user.lang),
     // Keep them on the rules they installed.
     ruleset: 'legacy-mobile',
+    // The export carries one timestamp and it is the report's: the published
+    // app sets `lastStepTime` in `startStepTimer`, which it calls when a post
+    // is created. It was being read as the throw, which only looked right
+    // while the wait was measured from throws.
     lastRollAt: user.lastStepTime > 0 ? new Date(user.lastStepTime) : null,
+    lastReportAt: user.lastStepTime > 0 ? new Date(user.lastStepTime) : null,
   };
 }
 

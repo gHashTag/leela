@@ -1553,6 +1553,53 @@ player.
 `owesReport(state)` without saying which rules it plays. It plays `classic`, and
 now says so: a default is a poor place to learn which game you are in.
 
+## Forty-seventh pass: when the day starts, and what counts as a report
+
+The other half of the same reading. `store/helper.ts` decides the move; the two
+files that decide what a *report* is are `constants.ts` and
+`components/CreatePost/index.tsx`, and neither had been carried across. Both are
+variants again — `classic` is untouched, and a live player does not wake up in a
+different game.
+
+**The day starts when the report is written, not when the die was thrown.**
+`startStepTimer` is called from `CreatePost` and from nowhere else. The engine
+measured the wait from the roll, so a player who threw and reflected for six
+hours got a six-hour discount on the next throw, and a player who wrote at once
+paid full price. `cooldownFrom` is `'report'` for `legacy-mobile` and `online`.
+
+**A report is a hundred characters.** `yup.string().trim().min(100)` in the
+published form. The bot accepted anything non-empty, which is a different game
+from the one people played for years: the length is the mechanism, not a
+validation detail. `minReportChars` is 100 for the same two variants, and the
+bot now says how many are missing rather than silently taking the line.
+
+### What this made visible
+
+Recording the moment needs somewhere to keep it, and `lastReportAt` had to go
+through `SeatedPlayer`, `TurnContext`, both tables (`0003_last_report_at.sql`),
+and the bot's own SQLite store. Two defects fell out of that, and both are the
+shape this repository keeps finding rather than anything about reports:
+
+- **`StoredSeat` was a hand-written copy** of what `seatUpdate` returns. The new
+  field was spread in at runtime, dropped from the type, and never written — a
+  game that reloaded having forgotten when its last report was. It is now
+  `ReturnType<typeof seatUpdate> & {…}`, which caught a second hand-written copy
+  in the tests on the first compile.
+- **`CREATE TABLE IF NOT EXISTS` does nothing to a table that exists.** The
+  bot's volume outlives every release, so a column added to `SCHEMA` would never
+  have reached the deployed database, and the first write to it throws inside the
+  transaction — the chat is told there is no table. `addMissingColumns` derives
+  the additions from `SCHEMA` itself rather than keeping a list of past
+  migrations, because a list of past migrations is a hand-kept list and this
+  repository has now been wrong about four of those.
+
+**The AI was read and deliberately not changed.** The published app sends the
+plan's text as an `assistant` message with a translated persona at temperature
+0.1, so the model interprets a teaching it has been given rather than inventing
+one. `packages/ai` already forbids the model to invent the teaching, by a
+different mechanism and with 126 tests on it. Two designs, one rule; churning
+one into the other would be a change with no behaviour behind it.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

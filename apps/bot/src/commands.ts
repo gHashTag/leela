@@ -19,6 +19,7 @@ import {
   currentPlayer,
   formatWait,
   hasWon,
+  isReport,
   isSessionOver,
   rollerFor,
   ruleSetById,
@@ -414,20 +415,39 @@ function describeMove(
 }
 
 /** `/report <text>` — file the report the game is played for. */
-export function report(room: Room, byPlayerId: string, text: string): CommandResult {
+export function report(
+  room: Room,
+  byPlayerId: string,
+  text: string,
+  now: number = Date.now(),
+): CommandResult {
   const seated = room.session.players.find((p) => p.id === byPlayerId);
   if (!seated) {
     return { room, replies: [say(messageFor(room.language, 'report.notSeated'), false)] };
   }
 
-  if (text.trim().length === 0) {
+  // What counts as a report is the variant's, not this file's: the published
+  // app refuses fewer than a hundred characters, and `classic` asks only that
+  // something was written.
+  if (!isReport(text, room.session.rules)) {
+    const shortest = room.session.rules.minReportChars;
     return {
       room,
-      replies: [say(messageFor(room.language, 'report.empty'), false)],
+      replies: [
+        say(
+          shortest > 0
+            ? messageFor(room.language, 'report.tooShort', { count: shortest })
+            : messageFor(room.language, 'report.empty'),
+          false,
+        ),
+      ],
     };
   }
 
-  const next: Room = { ...room, session: submitReport(room.session, byPlayerId) };
+  // The moment matters: the published app starts the wait between rolls when
+  // the report is written, not when the die was thrown, and a variant that
+  // says so needs the time recorded rather than inferred.
+  const next: Room = { ...room, session: submitReport(room.session, byPlayerId, now) };
   return {
     room: next,
     replies: [
