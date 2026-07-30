@@ -49,6 +49,24 @@ receive anything until it is cleared:
 curl "https://api.telegram.org/bot$BOT_TOKEN/deleteWebhook"
 ```
 
+## Running it as a service
+
+`apps/bot/Dockerfile` builds the whole workspace, because the bot imports four
+sibling packages by `workspace:*` and `@leela/content` carries the 22 datasets
+it serves plans from. `railway.json` points a Railway deployment at it.
+
+Two things that are not in the repository and cannot be:
+
+- **`BOT_TOKEN`** is set on the service, by a person. It is never committed and
+  never copied by a script.
+- **A volume mounted at `/data`.** Without one the bot runs, says on startup
+  that games are held in memory, and forgets every table on the next deploy.
+  `LEELA_DB` points inside it.
+
+The branch matters. `main` in this repository is the old React Native app and
+shares no ancestor with `unified`; a service pointed at `main` builds something
+else entirely.
+
 ## Staying up
 
 `bot.catch` handles a failing update. It does not handle a failing *poll* — a
