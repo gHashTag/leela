@@ -3841,6 +3841,33 @@ Every function involved was tested and every one behaved. The app did not. That
 is the third defect in three passes that lived in the assembly rather than in
 any part.
 
+## Hundred-and-tenth pass: the rest of the assembled journeys, and nothing wrong
+
+The pass before opened the door: `main.ts` loads whole under `happy-dom`, and
+the first thing through it found the app unplayable in a private window. This
+pass walked the rest of the journeys the same way — **and found nothing.**
+
+Seating somebody else mid-game keeps the game (the ninety-sixth pass's fix,
+holding through the layer the tap actually goes through). A report filed on a
+square stood on before opens the box with what was written last time, files the
+new account, and turns up as `×2` in the list of all 72 and as a chip in the
+path. A file brings a path back. A won game shows the ending, shuts the die,
+offers "Start over", and starting again keeps every word. The plans arrive in
+Russian, in Arabic — right to left, with the board still left to right — and an
+unknown locale falls back to English.
+
+**That is a result, not an absence of one.** Five journeys I had only ever
+checked by hand are now held by something that runs on every push, and the
+finding is that they were right. Twenty of the twenty-two languages have
+translated plans and an English interface — deliberate, and `messageCoverage`
+reports it rather than implying otherwise — so what the language test asserts is
+the part that is not a choice: the texts arrive, the direction is right, and
+nothing throws.
+
+The assembled layer has now produced three defects in four passes and one clean
+sweep. Both surfaces have a test of the thing as it is actually put together,
+which is where the last three defects lived.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

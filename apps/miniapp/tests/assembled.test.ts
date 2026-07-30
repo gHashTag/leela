@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { toDocument } from '@leela/journal';
 
 /**
  * The mini app as it is actually assembled, played.
@@ -66,8 +67,9 @@ function remembering(seed: Record<string, string> = {}): Storage {
  * The `<script>` tags go: happy-dom will not run them, and the module is
  * imported here instead — which is the point, since that is what a bundle does.
  */
-async function play(storage: Storage): Promise<string[]> {
+async function play(storage: Storage, language = 'en'): Promise<string[]> {
   vi.resetModules();
+  Object.defineProperty(window.navigator, 'language', { value: language, configurable: true });
 
   const html = readFileSync('index.html', 'utf8');
   const body = html
@@ -89,6 +91,20 @@ async function play(storage: Storage): Promise<string[]> {
 
 const el = (id: string) =>
   document.getElementById(id) as HTMLElement & { disabled?: boolean; value?: string };
+
+const dialog = (id: string) => document.getElementById(id) as HTMLDialogElement;
+
+/** A seat in play, on the square this file keeps coming back to. */
+const onFortyOne = {
+  loka: 41,
+  previous_loka: 35,
+  direction: 'step 🚶🏼',
+  consecutive_sixes: 0,
+  position_before_three_sixes: 0,
+  is_finished: false,
+};
+
+const table = (players: unknown[], turnIndex = 0) => JSON.stringify({ turnIndex, players });
 
 const openDialogs = () =>
   [...document.querySelectorAll('dialog')]
@@ -175,4 +191,154 @@ describe('the mini app as it is assembled', () => {
     expect(el('plan-number').textContent).toBe('41');
     expect(el('roll').disabled).toBe(false);
   });
+
+  it('keeps a game in progress when somebody else sits down', async () => {
+    // The ninety-sixth pass fixed this in `resize`; here it is through the
+    // whole app, which is the layer the tap actually goes through.
+    const storage = remembering({
+      'leela.intention.v1': 'to see it through',
+      'leela.seats.v1': table([{ id: 'p1', state: onFortyOne, reportSubmitted: true }]),
+    });
+
+    await play(storage);
+    el('players').click();
+    await new Promise((resolve) => setTimeout(resolve, 40));
+
+    const options = [...document.querySelectorAll('#list-items button')] as HTMLElement[];
+    options[2]?.click();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    const seats = JSON.parse(storage.getItem('leela.seats.v1') ?? '{}') as {
+      players: { state: { loka: number } }[];
+    };
+
+    expect(seats.players.map((seat) => seat.state.loka)).toEqual([41, 68, 68]);
+  });
+
+  it('writes an account and shows it as a square that came back', async () => {
+    const storage = remembering({
+      'leela.intention.v1': 'to see what keeps coming back',
+      'leela.reports.v1': JSON.stringify({
+        reported: false,
+        entries: [{ plan: 41, text: 'February.', at: 1 }],
+      }),
+      'leela.seats.v1': table([{ id: 'p1', state: onFortyOne, reportSubmitted: false }]),
+    });
+
+    await play(storage);
+
+    // Owed on arrival, so the box opens by itself — with what was written here
+    // the last time above it.
+    expect(openDialogs()).toEqual(['writer']);
+    expect(
+      [...document.querySelectorAll('#writer-before blockquote p')].map((node) => node.textContent),
+    ).toEqual(['February.']);
+
+    (el('writer-text') as HTMLTextAreaElement).value = 'June, and it is quieter.';
+    el('writer-text').dispatchEvent(new Event('input', { bubbles: true }));
+    el('writer-save').click();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    el('plans').click();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    expect(
+      [...document.querySelectorAll('#list-items .returns')].map((node) => node.textContent),
+    ).toEqual(['2']);
+    dialog('list').close();
+
+    el('path').click();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    expect(
+      [...document.querySelectorAll('.came-back .chip')].map((node) => node.textContent),
+    ).toEqual(['41 · The human plane (jana-loka) ×2']);
+    dialog('reader').close();
+  }, 20_000);
+
+  it('takes a path back from a file', async () => {
+    const storage = remembering({
+      'leela.intention.v1': 'to see it through',
+      'leela.seats.v1': table([{ id: 'p1', state: onFortyOne, reportSubmitted: true }]),
+    });
+
+    await play(storage);
+
+    const document_ = toDocument([{ plan: 9, text: 'From another device.', at: 2 }]);
+    const file = new File([JSON.stringify(document_)], 'leela-path.json', {
+      type: 'application/json',
+    });
+
+    const input = el('path-import-input') as HTMLInputElement;
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    const kept = JSON.parse(storage.getItem('leela.reports.v1') ?? '{"entries":[]}') as {
+      entries: { text: string }[];
+    };
+
+    expect(kept.entries.map((entry) => entry.text)).toEqual(['From another device.']);
+  });
+
+  it('ends a game and begins another without burning the writing', async () => {
+    const storage = remembering({
+      'leela.intention.v1': 'to finish what I started',
+      'leela.reports.v1': JSON.stringify({
+        reported: true,
+        entries: [{ plan: 51, text: 'Just before the end.', at: 1 }],
+      }),
+      'leela.seats.v1': table([
+        {
+          id: 'p1',
+          state: {
+            loka: 68,
+            previous_loka: 51,
+            direction: 'win 🕉',
+            consecutive_sixes: 0,
+            position_before_three_sixes: 0,
+            is_finished: true,
+          },
+          reportSubmitted: true,
+        },
+      ]),
+    });
+
+    await play(storage);
+
+    expect(el('restart').hidden).toBe(false);
+    expect(el('roll').disabled, 'the game is over and the die says so').toBe(true);
+
+    el('restart').click();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    const seats = JSON.parse(storage.getItem('leela.seats.v1') ?? '{}') as {
+      players: { state: { loka: number } }[];
+    };
+    const kept = JSON.parse(storage.getItem('leela.reports.v1') ?? '{"entries":[]}') as {
+      entries: unknown[];
+    };
+
+    expect(el('roll').disabled).toBe(false);
+    expect(seats.players[0]?.state.loka).toBe(68);
+    expect(kept.entries, 'starting again is not a reason to burn what was written').toHaveLength(1);
+  });
+
+  it('loads a language whose plans are translated, and one that is not a language', async () => {
+    // The dataset is fetched per language as its own chunk, which only the
+    // assembled app does. Twenty of the twenty-two have plans and no message
+    // catalogue — that is deliberate and `messageCoverage` reports it — so what
+    // is asserted is the part that is not a choice: the texts arrive, the
+    // direction is right, and nothing throws.
+    const seats = table([{ id: 'p1', state: onFortyOne, reportSubmitted: true }]);
+
+    expect(await play(remembering({ 'leela.intention.v1': 'x', 'leela.seats.v1': seats }), 'ru')).toEqual([]);
+    expect(el('plan-title').textContent).toBe('Человеческий план (джана-лока)');
+    expect(document.documentElement.dir).toBe('ltr');
+
+    expect(await play(remembering({ 'leela.intention.v1': 'x', 'leela.seats.v1': seats }), 'ar')).toEqual([]);
+    expect(document.documentElement.dir, 'right to left, and the board is not').toBe('rtl');
+    expect(el('board').getAttribute('dir')).toBe('ltr');
+
+    expect(await play(remembering({ 'leela.intention.v1': 'x', 'leela.seats.v1': seats }), 'zz')).toEqual([]);
+    expect(el('plan-title').textContent).toBe('The human plane (jana-loka)');
+  }, 20_000);
 });
