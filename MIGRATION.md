@@ -2705,6 +2705,37 @@ the entering six does not touch. It reads the turn holder now, at a table of
 two — because at a table of one the turn always comes back, and that was the
 confusion the original defect was made of.
 
+## Seventy-sixth pass: what a phone does to a small field
+
+A screenshot arrived asking what this was: the intention dialog, cut off down
+the right-hand side, over a board drawn much too large.
+
+Two things, and the second is the one that matters.
+
+**The dialogs added in the last two passes were unstyled.** `#list` and
+`#intention` were marked up with `div.reader-body` and `div.reader-actions` —
+class names invented at the time and never written into the stylesheet. The
+dialogs that work use `<article>` and `<footer class="sheet-controls">`, which
+have had padding and a scroll boundary since the reader was built. Both now use
+the markup the stylesheet knows, rather than gaining a second set of rules that
+say the same thing.
+
+**And the page was zooming itself.** The board in that screenshot is magnified
+because iOS Safari zooms the whole page in when a field is focused whose text is
+under sixteen pixels — and `style.css` had **no `textarea` rule at all**, so both
+writers took the browser's default. The intention dialog focuses its box as it
+opens, so the app zoomed the moment it started; the report writer has done the
+same on every iPhone since the day it was written.
+
+It does not happen in a desktop browser. Weeks of looking at this app in one
+never showed it, and a simulator showed it in a second.
+
+The test is the rule rather than the number: every field a person types into
+asks for at least the threshold, and no later rule takes it back — a rule
+further down wins, and a smaller size on an `input` added next month would zoom
+the page again with nothing to notice. It also asserts that fields still exist,
+so the check cannot pass by having no subject.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

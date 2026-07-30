@@ -520,6 +520,30 @@ button:active:not(:disabled) {
   background: rgb(0 0 0 / 0.45);
 }
 
+/*
+ * Anything a person types into.
+ *
+ * Sixteen pixels because that is iOS Safari's threshold: focus a field whose
+ * text is smaller and the whole page zooms in to meet it. The stylesheet had
+ * no `textarea` rule at all, so both writers used the browser's default — and
+ * on an iPhone the report dialog has been magnifying the board and clipping
+ * itself off the right-hand edge since the day it was written. It does not
+ * happen in a desktop browser, which is why weeks of looking never showed it.
+ */
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--surface);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
 .reader article {
   max-height: calc(82vh - 70px);
   padding: 18px;
