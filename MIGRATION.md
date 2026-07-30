@@ -2533,6 +2533,35 @@ with no arrival to report simply says less rather than falling silent. The bot's
 end asserts only that it passed the direction along — which of the five exists
 belongs to `packages/ai`.
 
+## Seventy-first pass: the other half of the companion
+
+Last pass found two parameters the bot accepted and never passed. The same
+question asked one level up: **what else is written and unreachable?**
+
+`Guide.answer` — "answer a question about a plan" — had no caller anywhere, and
+neither did the `history` every prompt builder takes. So half the companion
+existed: a player could write a report and be answered, and could not ask
+anything. `MAX_HISTORY = 6` had never carried a message.
+
+The published app has that half. `ChatScreen` is a conversation with the
+companion, and it keeps the last five messages from each side. **It replays
+them wrongly:** two lists, all the questions and then all the answers, so the
+model sees five questions in a row followed by five answers with nothing saying
+which answered which. That is not a detail — the pairing is the only reason to
+send a history at all.
+
+`/ask <question>` is the missing end of the wire. The conversation is kept in
+memory and per player, as it is in the app, and **in the order it happened**.
+Six messages, which is what `recentHistory` keeps: sending more is paying for
+tokens dropped on arrival.
+
+Two decisions worth their lines. A question is stored only with the answer it
+produced, so the history can never contain an unanswered question — asserted
+over twelve exchanges rather than at one length. And the fallback sentence is
+never remembered: it is what a player sees when the companion is down, and
+replaying it as the companion's own words would teach the model that this is
+how it talks.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

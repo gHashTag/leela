@@ -11,6 +11,7 @@ import type { UserFromGetMe } from 'grammy/types';
 import { type Language, bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
 import { isSessionOver } from '@leela/engine';
 import type { Guide } from '@leela/ai';
+import { Conversations } from './conversation';
 import * as commands from './commands';
 import type { Button, Effect, Reply, Room } from './commands';
 import {
@@ -101,6 +102,9 @@ export function createBot({
   // Who the bot has managed to message directly. Telegram refuses anyone who
   // has not started a chat, and there is no way to ask in advance.
   const channels = new DirectChannels();
+
+  // What each player has asked the companion, in the order it was said.
+  const conversations = new Conversations();
 
   // Without this there is no way to tell "nothing arrived" from "it arrived
   // and the answer failed" — which is exactly the question asked the first
@@ -443,6 +447,57 @@ export function createBot({
     }
 
     await deliver(ctx, commands.rules(language, requested).replies);
+  });
+
+  /**
+   * Ask the companion about the square you stand on.
+   *
+   * `Guide.answer` and its `history` were written when the companion was, and
+   * nothing had ever called either: a player could be answered about a report
+   * and could not ask a question. The published app has this half — a chat
+   * screen with the last few messages replayed — so this is the missing end of
+   * a wire, not a new idea.
+   *
+   * The conversation is kept in memory and per player, as it is there.
+   */
+  bot.command('ask', async (ctx) => {
+    const who = sender(ctx);
+    if (!who) return;
+
+    const language = languageOf(ctx);
+    const question = (ctx.match ?? '').trim();
+
+    if (question.length === 0) {
+      await ctx.reply(messageFor(language, 'ask.what'));
+      return;
+    }
+
+    if (!guide) {
+      await ctx.reply(messageFor(language, 'ask.silent'));
+      return;
+    }
+
+    const room = await store.get(String(ctx.chat?.id ?? ''));
+    const seat = room?.session.players.find((player) => player.id === who.id);
+
+    if (!seat) {
+      await ctx.reply(messageFor(language, 'ask.notSeated'));
+      return;
+    }
+
+    const reflection = await guide.answer(question, {
+      language,
+      plan: seat.state.loka,
+      direction: seat.state.direction || undefined,
+      previousPlan: seat.state.previous_loka,
+      history: conversations.of(who.id),
+    });
+
+    // Only a real answer is worth remembering: replaying the fallback sentence
+    // would teach the model that this is how it talks.
+    if (reflection.fromModel) conversations.add(who.id, question, reflection.text);
+
+    await deliver(ctx, [{ text: reflection.text, broadcast: false }]);
   });
 
   bot.command('plan', (ctx) =>

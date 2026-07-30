@@ -712,3 +712,96 @@ describe('what the companion is told about the arrival', () => {
     expect(texts(sent)).toContain('a reflection from the model');
   });
 });
+
+describe('asking the companion', () => {
+  /**
+   * `Guide.answer` and its `history` were written when the companion was, and
+   * nothing had ever called either. A player could be answered about a report
+   * and could not ask a question — while the published app has exactly that: a
+   * chat screen with the last few messages replayed.
+   */
+
+  const promptOf = (calls: { messages: { role: string; content: string }[] }[]) =>
+    calls.at(-1)?.messages ?? [];
+
+  async function seated(guide?: Guide) {
+    const harnessed = harness({ guide, reports: new MemoryReportSink() });
+    await harnessed.bot.handleUpdate(message('/new', PRIVATE));
+    await harnessed.bot.handleUpdate(message('/start', PRIVATE));
+    await rollUntilTheGate(harnessed.bot, harnessed.sent);
+    return harnessed;
+  }
+
+  it('answers a question about the square the player stands on', async () => {
+    const recorder = recordingModel('an answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent } = await seated(guide);
+
+    await bot.handleUpdate(message('/ask what does this plan ask of me?', PRIVATE));
+
+    expect(texts(sent)).toContain('an answer');
+    const asked = promptOf(recorder.calls);
+    expect(asked.at(-1)).toEqual({ role: 'user', content: 'what does this plan ask of me?' });
+    expect(asked[0]?.content).toMatch(/The player is on plan \d+/);
+  });
+
+  it('carries the conversation, in the order it happened', async () => {
+    // The point of a history, and the thing the published app gets wrong: it
+    // sends all the questions and then all the answers.
+    const recorder = recordingModel('an answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot } = await seated(guide);
+
+    await bot.handleUpdate(message('/ask first', PRIVATE));
+    await bot.handleUpdate(message('/ask second', PRIVATE));
+
+    const asked = promptOf(recorder.calls);
+    const roles = asked.map((entry) => entry.role);
+
+    expect(roles).toEqual(['system', 'user', 'assistant', 'user']);
+    expect(asked[1]?.content).toBe('first');
+    expect(asked[3]?.content).toBe('second');
+  });
+
+  it('asks for a question when none was given', async () => {
+    const guide = new Guide({ model: fixedModel('an answer'), log: () => undefined });
+    const { bot, sent } = await seated(guide);
+
+    await bot.handleUpdate(message('/ask', PRIVATE));
+    expect(texts(sent).at(-1)).toMatch(/Ask what/i);
+  });
+
+  it('says so when there is no companion, rather than going quiet', async () => {
+    // The bot runs without a key on purpose; a command that answered nothing
+    // would read as broken.
+    const { bot, sent } = await seated();
+
+    await bot.handleUpdate(message('/ask anything', PRIVATE));
+    expect(texts(sent).at(-1)).toMatch(/not answering/i);
+  });
+
+  it('does not remember an answer the model did not give', async () => {
+    // The fallback sentence is what a player sees when the companion is down.
+    // Replaying it as the companion's own words would teach the model that
+    // this is how it talks.
+    const seen: Array<{ role: string; content: string }[]> = [];
+    const refusing: LanguageModel = {
+      id: 'refusing',
+      async complete(messages) {
+        seen.push(messages as Array<{ role: string; content: string }>);
+        throw new ModelError('no balance', 402);
+      },
+    };
+
+    const guide = new Guide({ model: refusing, log: () => undefined, silenceMs: 0 });
+    const { bot } = await seated(guide);
+
+    await bot.handleUpdate(message('/ask first', PRIVATE));
+    await bot.handleUpdate(message('/ask second', PRIVATE));
+
+    expect(seen.length).toBeGreaterThan(0);
+    for (const messages of seen) {
+      expect(messages.filter((entry) => entry.role === 'assistant')).toHaveLength(0);
+    }
+  });
+});

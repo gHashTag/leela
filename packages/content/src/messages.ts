@@ -109,6 +109,9 @@ const EN = {
   'rules.which': 'Which chapter? /rules followed by a number, 1 to {count}.',
   'rules.continues': '…continues. /rules {chapter} {next} for page {next} of {pages}.',
   'rules.none': 'The rules are not written down in this language yet.',
+  'ask.what': 'Ask what? /ask followed by your question about the plan you stand on.',
+  'ask.notSeated': 'Take a seat first — /join.',
+  'ask.silent': 'The companion is not answering just now. Your question is not lost; ask again later.',
 
   // --- the path --------------------------------------------------------------
   'path.absent': 'This bot is not keeping reports, so there is no path to show.',
@@ -232,6 +235,7 @@ const EN = {
     '/report <text> — reflect on the plan you stand on',
     '/plan [n] — read a plan',
     '/rules [n] — the rules of the game, in chapters',
+    '/ask <question> — ask the companion about where you stand',
     '/path — what you have written, and where',
     '/save — the same, as a file you can keep',
     '/board — where everyone stands',
@@ -304,6 +308,9 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'rules.which': 'Какая глава? /rules и число от 1 до {count}.',
   'rules.continues': '…продолжение. /rules {chapter} {next} — страница {next} из {pages}.',
   'rules.none': 'Правила на этом языке ещё не записаны.',
+  'ask.what': 'Спросить о чём? /ask и ваш вопрос о плане, на котором стоите.',
+  'ask.notSeated': 'Сначала сядьте за стол — /join.',
+  'ask.silent': 'Спутник сейчас не отвечает. Вопрос не потерян — спросите позже.',
 
   'path.absent': 'Этот бот не хранит отчёты, поэтому пути не показать.',
   'path.empty': 'Вы пока ничего не написали. /report на плане, где стоите.',
@@ -419,6 +426,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
     '/report <текст> — отчёт о плане, на котором стоите',
     '/plan [n] — прочесть план',
     '/rules [n] — правила игры, по главам',
+    '/ask <вопрос> — спросить спутника о том, где вы стоите',
     '/path — что вы написали и где',
     '/save — то же самое файлом, который можно забрать',
     '/board — где все стоят',
