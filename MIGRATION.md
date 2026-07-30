@@ -3810,6 +3810,37 @@ level from a test: overriding `localStorage` and reloading gives the page a
 fresh real one, so the override never reaches the module. Tried, and said here
 rather than left as a gap somebody else has to rediscover.
 
+## Hundred-and-ninth pass: the app could not be played in a private window
+
+The bot got a test of the assembled thing two passes ago. The mini app had
+nothing between its unit tests and my own hands in a browser — and a browser
+cannot be made to refuse `localStorage`, because overriding it and reloading
+gives the page a fresh real one. The pass before said so and left it as a gap.
+
+Under `happy-dom` it can. `main.ts` loads whole, against the real `index.html`,
+with whatever storage the test hands it. **The first run found the app
+unplayable in a private window.**
+
+The intention was accepted and written. The die stayed dead. Nothing could
+begin — and the code has claimed the opposite for as long as it has existed:
+*"A window that cannot store still plays; the question is simply asked again
+next time."*
+
+One line. `saveIntention` catches the refusal and returns true, exactly as
+promised, and then the caller **read the value back out of the store that had
+just refused it** — getting nothing, and leaving the die shut for want of an
+intention that had in fact been given. The filed report had the same shape one
+function along: `takeSeat` re-reads the seat's journal, so in a private window
+the account somebody had just written vanished from the app's own view of it.
+
+The rule is not about private windows: **what somebody has this moment written
+is not re-read from a place that may answer "nothing".** Storage is where things
+are put, not where it is discovered what just happened.
+
+Every function involved was tested and every one behaved. The app did not. That
+is the third defect in three passes that lived in the assembly rather than in
+any part.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

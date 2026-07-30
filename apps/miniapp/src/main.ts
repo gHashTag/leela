@@ -554,7 +554,13 @@ function saveTheIntention(): void {
     return;
   }
 
-  intention = loadIntention(localStorage, currentPlayer(session).id);
+  // What was just written, not what storage says was written. A private window
+  // takes `setItem` and refuses `getItem`, so reading it back returned nothing
+  // — the die never opened and the game could not begin at all, while
+  // `saveIntention`'s own comment promised that "a window that cannot store
+  // still plays". Found by playing the assembled app with a storage that
+  // refuses everything, which no test of one function could do.
+  intention = el.intentionText.value.trim();
   el.intention.close();
   announce(messageFor(language, 'app.intentionSaved'));
 }
@@ -940,6 +946,10 @@ function saveReport(): void {
   session = submitReport(session, writer.id, Date.now());
   keepTable();
   takeSeat();
+  // The account in hand, over whatever `takeSeat` just read back. Same reason
+  // as the intention: a store that refuses is a store that answers "nothing",
+  // and what somebody has this moment written is not nothing.
+  if (writer.id === currentPlayer(session).id) journal = after;
   clearDraft(localStorage, writer.id);
   el.writer.close();
 
