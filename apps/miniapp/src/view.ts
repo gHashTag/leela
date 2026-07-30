@@ -50,7 +50,13 @@ export function headline(state: GameState, language: Language, titleOf: TitleOf)
       title: messageFor(language, 'app.waiting'),
       progress: 0,
       canRead: false,
-      here: null,
+      // On 68, which is where a waiting player sits — this file said so in a
+      // comment four lines down and the board showed nothing. The published
+      // app starts every player there: `plans: [68, 68, …]` in `initStore`,
+      // and `Gem` draws wherever `data === plan`, so the stone is on the board
+      // from the first screen. A player looking for their piece before the
+      // first six found no piece.
+      here: WIN_LOKA,
       from: null,
       waiting: true,
     };

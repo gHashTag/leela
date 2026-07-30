@@ -2347,6 +2347,30 @@ passes for want of looking is the failure this repository keeps meeting.
 It needs the donor clones, so it says so in its header and stays out of CI —
 the same arrangement `audit-copies` has.
 
+## Sixty-fifth pass: where the stone waits
+
+Asked where the walking stone is. It was drawn — on whatever square the player
+stands on — and before the first six it was drawn nowhere, because the player
+stands nowhere.
+
+The published app disagrees, and says so in one line: `initStore` is
+`plans: [68, 68, 68, 68, 68, 68]`, and `Gem` renders wherever `data === plan`.
+So the stone is on the board from the first screen, waiting on **68** — the
+square the game ends on is the square it waits to begin on. A player opening the
+app sees their piece; a player opening this one saw an empty board and a
+sentence.
+
+`headline` already knew. Four lines below the branch that returned `here: null`
+is a comment reading *"Entering the game is recorded as a move from 68 — that is
+where a waiting player sits"*. The knowledge was in the file and not on the
+board.
+
+The stone waits on 68 now. The header still says `—` and the reader stays shut:
+the piece is there, and the plan is not theirs to read yet — which is the
+distinction the app makes too, since a waiting player has `isStart: false` and
+no plan screen. Three tests: where it waits, that waiting is not playing, and
+that it leaves for 6 the moment a six lands.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

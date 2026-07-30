@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CLASSIC,
   MAX_ROLL,
+  START_LOKA,
   TOTAL_PLANS,
   WIN_LOKA,
   applyRoll,
@@ -64,14 +65,35 @@ describe('a player who has won', () => {
 describe('a player who has not entered yet', () => {
   const fresh = initialState();
 
-  it('is off the board, with nothing to read', () => {
+  it('waits on 68, which is where the published app puts them', () => {
+    // `initStore` in the app is `plans: [68, 68, …]` and `Gem` draws wherever
+    // `data === plan`, so the stone is on the board from the first screen —
+    // waiting on the square the game ends on. This app drew nothing until the
+    // first six, so a player looking for their piece found no piece.
     const show = headline(fresh, 'en', titleOf);
-    expect(show.here).toBeNull();
+
+    expect(show.here).toBe(WIN_LOKA);
     expect(show.from).toBeNull();
+  });
+
+  it('is still not playing 68, whatever the board shows', () => {
+    // The stone is there; the plan is not theirs to read yet. The header says
+    // so, and the reader stays shut.
+    const show = headline(fresh, 'en', titleOf);
+
     expect(show.number).toBe('—');
     expect(show.progress).toBe(0);
     expect(show.canRead).toBe(false);
     expect(show.waiting).toBe(true);
+  });
+
+  it('leaves the square as soon as a six lands them on 6', () => {
+    // And the stone moves: the whole reason it was worth drawing.
+    const entered = applyRoll(fresh, 6, CLASSIC).state;
+    const show = headline(entered, 'en', titleOf);
+
+    expect(show.here).toBe(START_LOKA);
+    expect(show.waiting).toBe(false);
   });
 
   it('is told what would let them in, in their own language', () => {
