@@ -48,8 +48,8 @@ import boardDark from './board-dark.webp';
 import gemArt from './gem.webp';
 import {
   loadSeats,
+  resize,
   saveSeats,
-  seatsFor,
   seatsFrom,
   sessionFrom,
 } from './seats';
@@ -407,14 +407,19 @@ function askPlayers(): void {
   }));
 
   openList(messageFor(language, 'app.playersAsk'), entries, (count) => {
-    seats = seatsFor(Number(count));
+    // Nobody who stays loses their game. Choosing a number used to build a
+    // fresh table — every seat back to the waiting square, a month of play gone
+    // on one tap, with nothing asked and nothing said.
+    const changed = resize(seats, Number(count));
+    seats = changed.seats;
     session = sessionFrom(seats);
     saveSeats(localStorage, seats);
     takeSeat();
-    // Every seat, not the one in front: a new table is a new game, and a draft
-    // left under a seat nobody has sat in yet would surface as somebody else's
-    // half-sentence the first time they landed on that square.
-    for (const seat of seats.players) clearDraft(localStorage, seat.id);
+
+    // Only the seats just made. A draft under `p2` from a table before this one
+    // would otherwise surface as somebody else's half-sentence; a draft under a
+    // seat that stayed belongs to somebody still playing.
+    for (const id of changed.created) clearDraft(localStorage, id);
 
     announce(messageFor(language, 'app.playersSet', { count: seats.players.length }));
   });

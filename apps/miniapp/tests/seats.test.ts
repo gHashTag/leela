@@ -4,13 +4,21 @@ import {
   SEATS_KEY,
   isSavedSeats,
   loadSeats,
+  resize,
   saveSeats,
   seatId,
-  seatsFor,
   seatsFrom,
   sessionFrom,
+  type SavedSeat,
+  type SavedSeats,
 } from '../src/seats';
 import { STORAGE_KEY, type GameStorage } from '../src/state';
+
+/** A table of `count` seats and nothing else — what `resize` makes from none. */
+function fresh(count: number): SavedSeats {
+  return resize({ turnIndex: 0, players: [] }, count).seats;
+}
+
 
 /**
  * Several people playing from one device.
@@ -51,27 +59,27 @@ function keyed(entries: Record<string, string>) {
 
 describe('seating a table', () => {
   it('seats between one and six, as the app offers', () => {
-    expect(seatsFor(1).players).toHaveLength(1);
-    expect(seatsFor(MAX_SEATS).players).toHaveLength(MAX_SEATS);
+    expect(fresh(1).players).toHaveLength(1);
+    expect(fresh(MAX_SEATS).players).toHaveLength(MAX_SEATS);
   });
 
   it('holds any number to that range rather than refusing', () => {
     // A number from a tap is not a number from a person: clamp it.
-    expect(seatsFor(0).players).toHaveLength(1);
-    expect(seatsFor(-3).players).toHaveLength(1);
-    expect(seatsFor(99).players).toHaveLength(MAX_SEATS);
-    expect(seatsFor(2.7).players).toHaveLength(2);
+    expect(fresh(0).players).toHaveLength(1);
+    expect(fresh(-3).players).toHaveLength(1);
+    expect(fresh(99).players).toHaveLength(MAX_SEATS);
+    expect(fresh(2.7).players).toHaveLength(2);
   });
 
   it('starts everyone waiting for a six', () => {
-    for (const seat of seatsFor(4).players) {
+    for (const seat of fresh(4).players) {
       expect(seat.state).toEqual(initialState());
       expect(seat.reportSubmitted).toBe(true);
     }
   });
 
   it('gives every seat a distinct id, so a journal can belong to one', () => {
-    const ids = seatsFor(MAX_SEATS).players.map((seat) => seat.id);
+    const ids = fresh(MAX_SEATS).players.map((seat) => seat.id);
     expect(new Set(ids).size).toBe(MAX_SEATS);
     expect(ids[0]).toBe(seatId(0));
   });
@@ -105,7 +113,7 @@ describe('a table that was already being played', () => {
 
   it('is written and read back as the same table', () => {
     const store = memory();
-    const seats = seatsFor(3);
+    const seats = fresh(3);
     saveSeats(store, seats);
 
     expect(loadSeats(memory(store.written() ?? undefined))).toEqual(seats);
@@ -114,7 +122,7 @@ describe('a table that was already being played', () => {
   it('refuses a table no game could have produced', () => {
     // Same rule `isSavedGame` follows: a shape that passes a state the engine
     // cannot reach is a shape check that hands the engine a lie.
-    const good = seatsFor(2);
+    const good = fresh(2);
     expect(isSavedSeats(good)).toBe(true);
 
     for (const bad of [
@@ -139,18 +147,18 @@ describe('a table that was already being played', () => {
 
 describe('the table and the engine', () => {
   it('round-trips through a session without losing a seat', () => {
-    const seats = seatsFor(4);
+    const seats = fresh(4);
     expect(seatsFrom(sessionFrom(seats))).toEqual(seats);
   });
 
   it('gives the engine the turn it was on', () => {
-    const seats = { ...seatsFor(3), turnIndex: 2 };
+    const seats = { ...fresh(3), turnIndex: 2 };
     expect(currentPlayer(sessionFrom(seats)).id).toBe(seatId(2));
   });
 
   it('carries a played game back and forth', () => {
     // What a reload does: play, write it down, read it back, keep playing.
-    let session = sessionFrom(seatsFor(2));
+    let session = sessionFrom(fresh(2));
     session = advance(session, 6, 1_700_000_000_000).session;
 
     const written = seatsFrom(session);
@@ -165,11 +173,121 @@ describe('the table and the engine', () => {
   it('plays by the engine rules, not by a copy of them', () => {
     // The whole reason the rotation is not ported: `advance` already knows
     // that a six keeps the seat under `classic`.
-    const session = sessionFrom(seatsFor(3));
+    const session = sessionFrom(fresh(3));
     const entry = advance(session, 6, 1_700_000_000_000);
 
     expect(entry.keepsTurn).toBe(true);
     expect(currentPlayer(entry.session).id).toBe(seatId(0));
     expect(CLASSIC.extraTurnOnSix).toBe(true);
+  });
+});
+
+describe('changing how many are playing', () => {
+  /**
+   * Choosing a number used to build a fresh table.
+   *
+   * Every seat back to the waiting square, whatever was on the board thrown
+   * away — a game thirty days old, a player on plan 41, one tap on the players
+   * button, nothing asked and nothing said. Found by tapping it, which is the
+   * fourth defect in a row found that way and the third of one shape: an act
+   * whose only guard was the drawing of a control.
+   *
+   * Somebody joining is not a reason for everybody to start again. The rule is
+   * therefore not about counts at all: **no seat that stays loses its game.**
+   */
+  const playing = (loka: number): SavedSeat['state'] => ({
+    loka,
+    previous_loka: loka - 6,
+    direction: 'step 🚶🏼',
+    consecutive_sixes: 0,
+    position_before_three_sixes: 0,
+    is_finished: false,
+  });
+
+  const table = (...plans: number[]): SavedSeats => ({
+    turnIndex: 0,
+    players: plans.map((loka, index) => ({
+      id: seatId(index),
+      state: playing(loka),
+      reportSubmitted: index % 2 === 0,
+    })),
+  });
+
+  it('leaves every seat that stays exactly as it was', () => {
+    // Over every size a table can be, in both directions: whoever is still at
+    // the table is still where they were, still owing or not owing what they
+    // did. Nothing about them may change because somebody else arrived.
+    const before = table(41, 12, 3, 68, 9, 30);
+
+    for (let from = 1; from <= MAX_SEATS; from++) {
+      const start = { ...before, players: before.players.slice(0, from) };
+
+      for (let to = 1; to <= MAX_SEATS; to++) {
+        const { seats } = resize(start, to);
+
+        for (let index = 0; index < Math.min(from, to); index++) {
+          expect(seats.players[index], `${from} → ${to}, seat ${index + 1}`).toEqual(
+            start.players[index],
+          );
+        }
+      }
+    }
+  });
+
+  it('seats the new ones waiting to enter, as a player who has not begun is', () => {
+    const { seats, created } = resize(table(41), 3);
+
+    expect(created).toEqual(['p2', 'p3']);
+    for (const id of created) {
+      const made = seats.players.find((seat) => seat.id === id);
+      expect(made?.state, id).toEqual(initialState());
+      expect(made?.reportSubmitted, id).toBe(true);
+    }
+  });
+
+  it('says which seats it made, and none that it kept', () => {
+    // The caller clears what a seat of that name left behind last time. Naming
+    // a seat that stayed would wipe the draft of somebody still playing.
+    expect(resize(table(41, 12, 3), 1).created).toEqual([]);
+    expect(resize(table(41), 1).created).toEqual([]);
+    expect(resize(table(41), 6).created).toEqual(['p2', 'p3', 'p4', 'p5', 'p6']);
+  });
+
+  it('always leaves the turn pointing at somebody who is there', () => {
+    for (let from = 1; from <= MAX_SEATS; from++) {
+      for (let holder = 0; holder < from; holder++) {
+        const start = { turnIndex: holder, players: table(41, 12, 3, 68, 9, 30).players.slice(0, from) };
+
+        for (let to = 1; to <= MAX_SEATS; to++) {
+          const { seats } = resize(start, to);
+          expect(seats.turnIndex, `${from}@${holder} → ${to}`).toBeGreaterThanOrEqual(0);
+          expect(seats.turnIndex, `${from}@${holder} → ${to}`).toBeLessThan(seats.players.length);
+        }
+      }
+    }
+  });
+
+  it('keeps the turn where it was whenever that seat is still there', () => {
+    const start = { turnIndex: 1, players: table(41, 12, 3).players };
+    expect(resize(start, 3).seats.turnIndex).toBe(1);
+    expect(resize(start, 2).seats.turnIndex).toBe(1);
+    // The seat holding the turn has gone, so it goes back to the first.
+    expect(resize(start, 1).seats.turnIndex).toBe(0);
+  });
+
+  it('refuses to seat nobody, or more than the board allows', () => {
+    for (const asked of [0, -3, 7, 99, Number.NaN]) {
+      const { seats } = resize(table(41), asked);
+      expect(seats.players.length, String(asked)).toBeGreaterThanOrEqual(1);
+      expect(seats.players.length, String(asked)).toBeLessThanOrEqual(MAX_SEATS);
+    }
+  });
+
+  it('is a table the app can read back', () => {
+    // Whatever it builds has to survive the validator, or the next load throws
+    // the game away for a different reason.
+    for (let to = 1; to <= MAX_SEATS; to++) {
+      expect(isSavedSeats(resize(table(41, 12), to).seats), String(to)).toBe(true);
+    }
   });
 });

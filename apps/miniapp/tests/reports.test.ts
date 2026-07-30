@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { seatsFor, sessionFrom } from '../src/seats';
+import { resize, sessionFrom } from '../src/seats';
 import {
   CLASSIC,
   MAX_ROLL,
@@ -33,6 +33,12 @@ import {
   seatOwesReport,
 } from '../src/reports';
 import type { GameStorage } from '../src/state';
+
+/** A fresh table of `count` seats, which is `resize` from none. */
+function seatsOf(count: number) {
+  return resize({ turnIndex: 0, players: [] }, count).seats;
+}
+
 
 /**
  * The rule the game is played for.
@@ -405,7 +411,7 @@ describe('the gate, which was recorded twice', () => {
   const seatOf = (state: GameState, reportSubmitted: boolean) => ({ state, reportSubmitted });
 
   it('agrees with the engine on every state a game reaches', () => {
-    let session = sessionFrom(seatsFor(2));
+    let session = sessionFrom(seatsOf(2));
     const die = seededRoller(11);
 
     for (let turn = 0; turn < 120; turn += 1) {

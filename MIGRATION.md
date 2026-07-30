@@ -3407,6 +3407,37 @@ than once.** Restated once, after the first version failed: fumbling the *die*
 is not the same thing, because a second tap on a die that is still live is a
 second throw and always was — a six grants another.
 
+## Ninety-sixth pass: a month of play, one tap
+
+The pass before this named three acts in the mini app still guarded only by the
+drawing of a control. The first one tapped gave up the worst defect of the run.
+
+**Changing how many are playing threw the game away.** A game thirty days old, a
+player on plan 41 — one tap on the players button, pick a number, and every seat
+was back on the waiting square. Nothing asked, nothing said, no way back. The
+journal survived, because journals are keyed per seat, but the path through the
+board did not.
+
+`seatsFor` built a *fresh* table, and the count is a live control offered at any
+moment. The published app asks the same question once, before play, on a screen
+of its own.
+
+Somebody joining is not a reason for everybody to start again. `resize` keeps
+the seats that stay exactly as they are and makes only the ones that are new;
+shrinking is the player saying those seats are not playing, and their journals
+are still under their own keys if they sit down again. The turn stays with
+whoever held it, unless their seat has gone.
+
+It returns the seats it *made*, and the caller clears drafts for those alone — a
+draft under `p2` from a table before this one would surface as somebody else's
+half-sentence, and a draft under a seat that stayed belongs to somebody still
+playing.
+
+The test is the rule and not the counts: **no seat that stays loses its game** —
+checked over every size a table can be, in both directions, comparing each kept
+seat against exactly what it was. `seatsFor` is gone; it had no callers left,
+which is what `audit-unread` is for.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

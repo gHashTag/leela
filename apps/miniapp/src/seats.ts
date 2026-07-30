@@ -119,20 +119,6 @@ export function saveSeats(storage: GameStorage | undefined, seats: SavedSeats): 
   }
 }
 
-/** A table of `count` players, all waiting for a six. */
-export function seatsFor(count: number): SavedSeats {
-  const seats = Math.min(Math.max(Math.trunc(count) || 1, 1), MAX_SEATS);
-
-  return {
-    turnIndex: 0,
-    players: Array.from({ length: seats }, (_, index) => ({
-      id: seatId(index),
-      state: initialState(),
-      reportSubmitted: true,
-    })),
-  };
-}
-
 /** The engine's session for this table. */
 export function sessionFrom(seats: SavedSeats): Session {
   const session = createSession(
@@ -161,5 +147,49 @@ export function seatsFrom(session: Session): SavedSeats {
       state: player.state,
       reportSubmitted: player.reportSubmitted,
     })),
+  };
+}
+
+/**
+ * Change how many are playing, without ending the game of anyone who stays.
+ *
+ * Choosing a number used to build a fresh table: every seat back to the waiting
+ * square, whatever was on the board thrown away. A game thirty days old, a
+ * player on plan 41, and one tap on the players button with no question asked
+ * and nothing said about it — the count is a live control, offered at any
+ * moment, and the published app asks the same question once, before play, on a
+ * screen of its own.
+ *
+ * Somebody joining is not a reason for everybody to start again. So the seats
+ * that stay are kept exactly as they are, and only the ones being made are new.
+ * Shrinking is the player saying those seats are not playing; their journals
+ * live under their own keys and are still there if they sit down again.
+ *
+ * Returns the seats that were *created*, so the caller can clear what a seat of
+ * that name left behind last time — a draft under `p2` from a table before this
+ * one would otherwise surface as somebody else's half-sentence.
+ */
+export function resize(
+  seats: SavedSeats,
+  count: number,
+): { seats: SavedSeats; created: string[] } {
+  const wanted = Math.min(Math.max(Math.trunc(count) || 1, 1), MAX_SEATS);
+  const kept = seats.players.slice(0, wanted);
+  const created = Array.from({ length: wanted - kept.length }, (_, index) => ({
+    id: seatId(kept.length + index),
+    state: initialState(),
+    reportSubmitted: true,
+  }));
+
+  const players = [...kept, ...created];
+
+  return {
+    seats: {
+      // The turn has to point at somebody who is still at the table. Whoever
+      // held it keeps it; if their seat has gone, it goes back to the first.
+      turnIndex: seats.turnIndex < players.length ? seats.turnIndex : 0,
+      players,
+    },
+    created: created.map((seat) => seat.id),
   };
 }
