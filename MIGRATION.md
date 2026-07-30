@@ -1440,6 +1440,19 @@ The size is checked against what Telegram reports *before* the file is
 downloaded: there is no reason to fetch a hundred megabytes to find out it is
 not a path.
 
+### The image job earned itself back
+
+The push above failed `bot-image`: `@leela/journal` was a ninth workspace and
+the Dockerfile's hand-written list of manifests had eight lines.
+`error: Workspace dependency "@leela/journal" not found`.
+
+That is the job doing exactly what it was added for, one pass after it was
+added. It is also the third hand-kept list in this repository to go wrong, so
+`audit-configs.mjs` now checks it: every workspace that ships code has a `COPY`
+line, and every `COPY` line points at a workspace that exists. Both directions,
+because a package removed leaves a line that fails the build with a message
+about a missing *file* rather than a missing package.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

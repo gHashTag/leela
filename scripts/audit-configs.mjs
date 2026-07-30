@@ -17,6 +17,7 @@
 
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { checkManifests, copiedManifests } from './lib/claims.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const WORKSPACES = ['packages', 'apps'];
@@ -30,6 +31,7 @@ function readJsonc(path) {
 }
 
 const problems = [];
+const workspaces = new Set();
 let checked = 0;
 
 for (const group of WORKSPACES) {
@@ -54,6 +56,7 @@ for (const group of WORKSPACES) {
     checked += 1;
 
     const where = `${group}/${name}`;
+    workspaces.add(where);
     const strict = join(pkg, 'tsconfig.src.json');
 
     if (!existsSync(strict)) {
@@ -79,6 +82,17 @@ for (const group of WORKSPACES) {
       problems.push(`${where}: package.json cannot run the strict typecheck`);
     }
   }
+}
+
+// The bot's image installs the whole workspace, so its Dockerfile carries a
+// hand-written list of every manifest. A package added without a line there
+// fails the build with "Workspace dependency not found" — which the CI job
+// catches, but a minute later and a push too late.
+const dockerfile = join(ROOT, 'apps/bot/Dockerfile');
+if (existsSync(dockerfile)) {
+  problems.push(
+    ...checkManifests(copiedManifests(readFileSync(dockerfile, 'utf8')), workspaces),
+  );
 }
 
 console.log(`\nChecked ${checked} workspaces that ship code.\n`);

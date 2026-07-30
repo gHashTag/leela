@@ -70,3 +70,39 @@ export function checkTotal(claimed, total) {
   if (total !== sum) return [`the total says ${total}, the table adds up to ${sum}`];
   return [];
 }
+
+/**
+ * Which workspaces a Dockerfile copies a manifest for.
+ *
+ * The list is written by hand — Docker cannot glob a path and keep it — and a
+ * package added without a line here fails the image build with "Workspace
+ * dependency not found". That happened the first time a ninth package was
+ * added, and the CI job caught it, which is the good version of this story. The
+ * cheap version is checking the list.
+ */
+export const copiedManifests = (dockerfile) => {
+  const copied = new Set();
+  for (const [, path] of dockerfile.matchAll(/^COPY\s+((?:packages|apps)\/[\w-]+)\/package\.json/gm)) {
+    copied.add(path);
+  }
+  return copied;
+};
+
+/** Workspaces the image installs for, against the ones that exist. */
+export function checkManifests(copied, workspaces) {
+  const problems = [];
+
+  for (const workspace of workspaces) {
+    if (!copied.has(workspace)) {
+      problems.push(`${workspace} has a package.json the Dockerfile does not copy`);
+    }
+  }
+
+  for (const path of copied) {
+    if (!workspaces.has(path)) {
+      problems.push(`the Dockerfile copies ${path}/package.json, which does not exist`);
+    }
+  }
+
+  return problems;
+}

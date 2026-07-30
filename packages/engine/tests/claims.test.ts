@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-// @ts-expect-error — a plain module, shared with the script that uses it.
-import { checkCounts, checkTotal, claimedCounts, claimedTotal } from '../../../scripts/lib/claims.mjs';
+// A plain module, shared with the scripts that use it. One suppressed line
+// rather than a `.d.ts`, which would be a second description of it.
+// @ts-expect-error - untyped .mjs
+import { checkCounts, checkManifests, checkTotal, claimedCounts, claimedTotal, copiedManifests } from '../../../scripts/lib/claims.mjs';
 
 /**
  * The numbers this repository says about itself.
@@ -102,5 +104,52 @@ describe('the total is checked against the table, not against the suites', () =>
       ['@leela/b', 5],
     ]);
     expect(checkTotal(claimed, 20)).toHaveLength(1);
+  });
+});
+
+describe('the manifests a Dockerfile copies', () => {
+  /**
+   * Docker cannot glob a path and keep it, so the bot's image carries a
+   * hand-written line per workspace. A ninth package was added and the line was
+   * not, and the image build failed with "Workspace dependency not found" —
+   * caught by CI, a minute late and a push too far. A hand-kept list is the
+   * same thing as a hand-kept number.
+   */
+  const DOCKERFILE = `
+FROM oven/bun:1.3.12-slim
+COPY package.json bun.lock ./
+COPY packages/engine/package.json packages/engine/
+COPY packages/journal/package.json packages/journal/
+COPY apps/bot/package.json apps/bot/
+RUN bun install --frozen-lockfile --production
+COPY packages packages
+`;
+
+  it('reads every manifest line and nothing else', () => {
+    const copied = copiedManifests(DOCKERFILE);
+    expect([...copied].sort()).toEqual(['apps/bot', 'packages/engine', 'packages/journal']);
+    // `COPY packages packages` is not a manifest line.
+    expect(copied.has('packages')).toBe(false);
+  });
+
+  it('names a workspace the image would not install', () => {
+    const problems = checkManifests(
+      copiedManifests(DOCKERFILE),
+      new Set(['apps/bot', 'packages/engine', 'packages/journal', 'packages/new']),
+    );
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain('packages/new');
+  });
+
+  it('names a line for something that is not there', () => {
+    // The other direction: a package removed leaves a COPY that fails the
+    // build with a message about a missing file rather than a missing package.
+    const problems = checkManifests(copiedManifests(DOCKERFILE), new Set(['apps/bot']));
+    expect(problems.filter((problem: string) => problem.includes('does not exist'))).toHaveLength(2);
+  });
+
+  it('is quiet when the list is the truth', () => {
+    const workspaces = new Set(['apps/bot', 'packages/engine', 'packages/journal']);
+    expect(checkManifests(copiedManifests(DOCKERFILE), workspaces)).toEqual([]);
   });
 });
