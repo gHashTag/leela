@@ -188,6 +188,7 @@ const el = {
   path: document.getElementById('path') as HTMLButtonElement,
   writer: document.getElementById('writer') as HTMLDialogElement,
   writerTitle: document.getElementById('writer-title') as HTMLElement,
+  writerBefore: document.getElementById('writer-before') as HTMLElement,
   writerText: document.getElementById('writer-text') as HTMLTextAreaElement,
   writerSave: document.getElementById('writer-save') as HTMLButtonElement,
   writerHint: document.getElementById('writer-hint') as HTMLElement,
@@ -743,6 +744,11 @@ async function roll(): Promise<void> {
 /** Ask for a report on the plan the player is standing on. */
 function openWriter(): void {
   el.writerTitle.textContent = `${state.loka}. ${planFor(state.loka).title}`;
+  // What they wrote the last times they stood here. It was already in the app
+  // — in the reader, one dialog away — and the moment it matters is this one:
+  // the game is asking for another account of the same square, and the measure
+  // of what has changed is the last one.
+  el.writerBefore.replaceChildren(...writtenBefore(state.loka));
   // Whatever was typed and not filed. A phone discards a backgrounded tab, and
   // the one thing this game asks a player to produce was held in a textarea
   // and nowhere else.

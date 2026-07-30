@@ -82,6 +82,10 @@
     <dialog id="writer" class="reader">
       <article>
         <h2 id="writer-title"></h2>
+        <!-- What was written here the last times. The square's own returns lived
+             one dialog away, and the moment they matter is the moment the game
+             is asking for another one. -->
+        <div id="writer-before"></div>
         <!-- `maxlength` so the boundary is met while typing rather than discovered
              afterwards: `record` used to cut the text and say nothing. -->
         <textarea id="writer-text" rows="4" maxlength="4000" aria-describedby="writer-hint"></textarea>

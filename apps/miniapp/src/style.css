@@ -737,3 +737,28 @@ textarea {
   font-size: 0.75rem;
   opacity: 0.6;
 }
+
+/* The earlier accounts, above the box asking for the next one. Bounded, because
+   a player who has stood here six times should still be able to see the box. */
+#writer-before {
+  max-height: 32vh;
+  overflow-y: auto;
+}
+
+#writer-before blockquote.mine {
+  margin: 0 0 0.5rem;
+  padding: 0.4rem 0 0.4rem 0.6rem;
+  border-inline-start: 2px solid var(--accent, #b8860b);
+}
+
+#writer-before blockquote.mine cite {
+  display: block;
+  font-size: 0.75rem;
+  font-style: normal;
+  opacity: 0.6;
+}
+
+#writer-before blockquote.mine p {
+  margin: 0.2rem 0 0;
+  white-space: pre-wrap;
+}

@@ -3246,6 +3246,44 @@ one has is that edition's own choice and lacking it is not a loss — and extra
 chapters are not a fault, because `online` and `foreword` are real text somebody
 wrote. Checked by deleting `chakras` from the German book: exit 1, `de: chakras`.
 
+## Ninety-first pass: the third layer, and what to do at the moment of writing
+
+**The third layer of the translation audit is clean, and that is the finding.**
+Two passes checked plan bodies (board references) and the rules book's contents
+page. What was left was titles and descriptions, and they were checked properly
+rather than assumed:
+
+- **Titles are structurally sound in all 22 languages.** No leading `41.`
+  numbering left in, none over sixty characters, none ending in a full stop, no
+  two plans sharing a title inside a language.
+- **`description` exists in exactly two languages, `en` and `ru`, and is empty
+  in the other twenty.** Not damage: the twenty come from `translation.json`
+  files whose plan entries are `{title, content, url}` — checked in `leela-src`
+  — so there is no description to lose. Only `apps/docs` reads the field, and
+  only to print a subtitle it already suppresses when redundant.
+- **Titles that match the English exactly are mostly Sanskrit** — *Maya*,
+  *Prana Loka*, *Tamas*, *Sattvaguna* — which stay as they are in any language.
+  Javanese and Vietnamese also carry a few English words untranslated
+  (*Vanity*, *Insignificance*, *Purgatory*). **No audit was written for this**,
+  deliberately: nothing mechanical distinguishes an untranslated *Vanity* from
+  a French *Compassion* that is simply the same word, and a check that cannot
+  tell those apart is noise. The two audits already written were worth writing
+  because their false alarms could be closed.
+- The donor also carries a per-plan **audio URL**, and every language points at
+  the *English* recording except Russian, whose set has one wrong number. Not
+  wired up: it is a third-party dependency this repository would be adding
+  blind.
+
+**And what the pass actually built.** The returns were in the reader, the list
+of all 72, the path view and the bot — everywhere except the one moment they
+mean the most. A player who owes a report on 41 for the third time was handed an
+empty box. Now the box opens with what they wrote the last times, above it.
+
+The risk that invites is specific, so it is the test: a draft is saved on every
+keystroke, and if an unfiled one ever counted as an account a player would
+reopen the box and be shown their own half-sentence quoted back as something
+they had already said. What you are saying is not what you have said.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

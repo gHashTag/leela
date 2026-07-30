@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { TOTAL_PLANS } from '@leela/engine';
 import { planEntries } from '../src/browse';
-import { path, pathSections, record, revisited, writingsOn, type Journal } from '../src/reports';
+import {
+  loadJournalFor,
+  path,
+  pathSections,
+  record,
+  revisited,
+  saveJournalFor,
+  writingsOn,
+  type Journal,
+} from '../src/reports';
+import { saveDraft } from '../src/state';
 
 /**
  * Coming back to a square, which is what the game is about.
@@ -232,5 +242,54 @@ describe('the path view, seat by seat', () => {
     }
 
     expect(sections.find((section) => section.playerId === 'p3')?.intention).toBe('');
+  });
+});
+
+describe('what the box asking for the next account shows', () => {
+  /**
+   * The writer now opens with what was written here the last times, because
+   * that is the moment it matters: the game is asking for another account of
+   * the same square, and the measure of what has changed is the last one. It
+   * was already in the app — in the reader, one dialog away.
+   *
+   * The failure this invites is specific. A draft is saved on every keystroke,
+   * and if an unfiled one ever counted as an account, a player would reopen the
+   * box and be shown their own half-sentence quoted back at them as something
+   * they had already said. What you are saying is not what you have said.
+   */
+  function memory(): Storage {
+    const map = new Map<string, string>();
+    return {
+      getItem: (key: string) => map.get(key) ?? null,
+      setItem: (key: string, value: string) => void map.set(key, value),
+    } as unknown as Storage;
+  }
+
+  it('never counts the draft in progress as something already said', () => {
+    const store = memory();
+    saveJournalFor(store, 'p1', written([41, 41]));
+
+    const before = writingsOn(loadJournalFor(store, 'p1'), 41);
+    saveDraft(store, 'p1', 41, 'Halfway through a sentence about this square');
+
+    expect(writingsOn(loadJournalFor(store, 'p1'), 41)).toEqual(before);
+  });
+
+  it('shows the seat’s own accounts and not the seat beside them', () => {
+    // Two people on one phone can stand on the same square, and the box asks
+    // one of them for an account of it.
+    const store = memory();
+    saveJournalFor(store, 'p1', written([41, 41]));
+    saveJournalFor(store, 'p2', written([41]));
+
+    expect(writingsOn(loadJournalFor(store, 'p1'), 41)).toHaveLength(2);
+    expect(writingsOn(loadJournalFor(store, 'p2'), 41)).toHaveLength(1);
+  });
+
+  it('shows nothing at all the first time a square is met', () => {
+    const store = memory();
+    saveJournalFor(store, 'p1', written([6, 12]));
+
+    expect(writingsOn(loadJournalFor(store, 'p1'), 41)).toEqual([]);
   });
 });
