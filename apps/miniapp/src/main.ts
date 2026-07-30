@@ -76,7 +76,7 @@ import {
   loadJournalFor,
   saveJournalFor,
 } from './reports';
-import { headline } from './view';
+import { canRoll, headline, standing } from './view';
 
 /** Telegram's WebApp object, when we are running inside Telegram. */
 interface TelegramWebApp {
@@ -250,7 +250,7 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
   // The engine's gate, not the journal's. Two records of one fact disagreed
   // the moment a second player sat down.
   const owed = seatOwesReport(currentPlayer(session));
-  el.roll.disabled = owed || rolling || intention === '';
+  el.roll.disabled = owed || rolling || intention === '' || !canRoll(session);
   el.report.disabled = !owed;
 
   // The published app shows "Start over" only once the game has ended —
@@ -260,8 +260,12 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
   el.restart.textContent = messageFor(language, 'app.restart');
 
   el.say.className = 'say';
-  if (owed && !event) {
-    el.say.textContent = messageFor(language, 'app.reportNeeded');
+  if (!event) {
+    // Not only when a report is owed: the line was otherwise left holding
+    // whatever it last said, which on a fresh load is the opening instruction.
+    const line = standing(state, owed, (plan) => planFor(plan).title);
+    el.say.textContent = messageFor(language, line.key, line.params ?? {});
+    if (hasWon(state)) el.say.classList.add('win');
   }
   if (event) {
     // Named when there is more than one seat: the header has already moved to

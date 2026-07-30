@@ -191,6 +191,15 @@ const EN = {
   'app.restart': 'Start over',
   'app.restarted': 'A new game. Throw a six to enter it.',
   'app.opening': 'A six puts you on the board.',
+  // Coming back to a game already in progress. The opening line was written
+  // into the page once and never revised, so a player standing on 30 with six
+  // squares behind them was greeted with the instruction for somebody who has
+  // never entered.
+  'app.standing': 'You are on {plan}. {title}',
+  // And the end of it, which is a state and not a moment: the app announced
+  // the win as it happened and then, on the next load, went back to telling
+  // the winner how to enter.
+  'app.finished': 'You reached Cosmic Consciousness. The game is complete. 🕉',
   'app.roll': 'Roll',
   'app.read': 'Read this plan',
 
@@ -403,6 +412,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.restart': 'Начать заново',
   'app.restarted': 'Новая игра. Бросьте шестёрку, чтобы войти в неё.',
   'app.opening': 'Шестёрка выводит вас на доску.',
+  'app.standing': 'Вы на {plan}. {title}',
+  'app.finished': 'Вы достигли Космического Сознания. Игра завершена. 🕉',
   'app.roll': 'Бросок',
   'app.read': 'Прочесть план',
 

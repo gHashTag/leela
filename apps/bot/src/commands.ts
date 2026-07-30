@@ -384,6 +384,8 @@ function describeMove(
     isBlocked: boolean;
     isThreeSixesReset: boolean;
     jumpedFrom: number | null;
+    /** Thrown by somebody who had already finished. See `needsSixToEnter`. */
+    wasComplete: boolean;
   },
 ): string {
   const who = nameOf(room, playerId);

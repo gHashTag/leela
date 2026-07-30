@@ -2905,6 +2905,60 @@ written, it became wrong when seats arrived and nobody re-read the list of keys.
 So the list is a test, and a new `*_KEY` fails until it is declared the device's
 or a player's.
 
+## Eighty-second pass: the sentence that outlived its state
+
+Weak points, competitors, a plan, and the work. The competitor worth reading
+this time is *Leela Game of Self-knowledge* (Uinside, iOS): its recent notes are
+about the **note input area**, enlarged for comfort while playing. Everyone
+selling this game is selling the writing. Which made it worth opening this app
+the way a returning player does — and it greeted a player standing on square 30,
+six squares of history behind them, with *"a six puts you on the board."*
+
+`app.opening` was written into the page once, at build time, by `applyChrome`.
+`draw()` replaced it only when a move had just happened or a report was owed. So
+the opening instruction was what every returning player saw, forever.
+
+**At the other end it was worse.** A player who reached Cosmic Consciousness —
+the point of the whole game — reopened the app to the same sentence, with a live
+die under it. Throwing it printed *"It takes a six to enter the game."* The win
+was announced as an event and then forgotten: the app remembered where the
+player stood and not that they had arrived.
+
+Three separate faults, each found by playing rather than reading:
+
+**1. The line now describes the state.** `standing()` is a pure function of the
+state and the gate: the report first because it is the only one that blocks the
+die, then finished, then waiting to enter, then — new — the square the player is
+actually on, by number and title.
+
+**2. The die follows the engine.** `advance` refuses a session in which everyone
+has finished, and it refuses by *throwing*. So the live die on a completed game
+was not merely useless: the click raised a `SessionError` out of the roll
+handler, which is why nothing happened at all. `canRoll(session)` asks
+`isSessionOver` rather than inventing an answer, so a table where somebody else
+is still playing keeps its die.
+
+**3. `needsSixToEnter` could not do the one thing it exists for.** A player
+waiting to enter and a player who has won sit on the same square with the same
+flag, and their refused throws are the *same event*: blocked, 68 to 68. The
+helper written to tell refusals apart could not tell those two apart, and the
+engine's own test said so out loud — *"same position, same sentence: on 68,
+needing a six"* — the defect written down as intent. The event now carries
+`wasComplete`, because nothing else in it can carry the difference. Being a
+required field, the compiler found the bot's hand-narrowed copy of the event
+type immediately.
+
+The general invariant that had been reading as a pass is fixed too: it said a
+refusal is an entry refusal exactly when the thrower was `is_finished`, which a
+winner also is — and the loop broke at the win, so it never met one.
+
+**Not changed:** `CLASSIC.mayReenterAfterWinning` is `true`, and it is
+unreachable in any seated game — `advance` refuses the session and `nextSeat`
+skips the winner, so the six that would begin another round can only be thrown
+by calling `applyRoll` directly. Left alone deliberately: flipping it would be
+changing the rules silently, and the app's answer is "Start over", which is what
+the published app does too.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -13,8 +13,15 @@
  * place that has bitten.
  */
 
-import { WIN_LOKA, hasWon, type GameState, isWaitingToEnter} from '@leela/engine';
-import { messageFor, type Language } from '@leela/content';
+import {
+  WIN_LOKA,
+  hasWon,
+  isSessionOver,
+  isWaitingToEnter,
+  type GameState,
+  type Session,
+} from '@leela/engine';
+import { messageFor, type Language, type MessageKey } from '@leela/content';
 
 export interface Headline {
   /** What goes where the plan number is. `—` while off the board. */
@@ -41,8 +48,6 @@ function traceFrom(previous: number, current: number): number | null {
 }
 
 export function headline(state: GameState, language: Language, titleOf: TitleOf): Headline {
-  const won = hasWon(state);
-
   // Out of play and not a winner: nobody has thrown a six yet.
   if (isWaitingToEnter(state)) {
     return {
@@ -76,4 +81,49 @@ export function headline(state: GameState, language: Language, titleOf: TitleOf)
     from: traceFrom(state.previous_loka, state.loka),
     waiting: false,
   };
+}
+
+/**
+ * The line under the board when nothing has just happened.
+ *
+ * There was no such thing. `app.opening` — "a six puts you on the board" — was
+ * written into the page once, at build time, and only ever replaced by a move
+ * or by the report gate. So every player who closed the app and came back was
+ * greeted with the instruction for somebody who has never entered: standing on
+ * 30, six squares of history behind them, told how to begin.
+ *
+ * Worse at the other end. A player who reached Cosmic Consciousness — the whole
+ * point of the game — reopened it to *"a six puts you on the board"*, and the
+ * die was still live. The win was announced as an event and then forgotten,
+ * because the app remembered where the player was and not that they had
+ * arrived.
+ *
+ * So the rule: the line describes the state the player is in. Ordered by what
+ * the player has to do next, which is what a line under a board is for — the
+ * gate first, because it is the only one that blocks the die.
+ */
+export type Standing = { key: MessageKey; params?: Record<string, string | number> };
+
+export function standing(state: GameState, owed: boolean, titleOf: TitleOf): Standing {
+  if (owed) return { key: 'app.reportNeeded' };
+  if (hasWon(state)) return { key: 'app.finished' };
+  if (isWaitingToEnter(state)) return { key: 'app.opening' };
+
+  return { key: 'app.standing', params: { plan: state.loka, title: titleOf(state.loka) } };
+}
+
+/**
+ * Whether there is still a throw to make.
+ *
+ * The engine's own answer rather than one invented here: `advance` refuses a
+ * session in which every seat has finished, and it refuses by throwing. So the
+ * live die on a completed game was not merely useless — the click it invited
+ * raised a `SessionError` out of the roll handler, which is why nothing at all
+ * happened and the sentence underneath stayed as it was.
+ *
+ * A table where somebody else is still playing is not over, and their die stays
+ * live: `nextSeat` skips whoever has finished.
+ */
+export function canRoll(session: Session): boolean {
+  return !isSessionOver(session);
 }

@@ -210,8 +210,19 @@ export function needsSixToEnter(event: {
   isBlocked: boolean;
   from: number;
   to: number;
+  wasComplete: boolean;
 }): boolean {
-  return event.isBlocked && event.from === WIN_LOKA && event.to === WIN_LOKA;
+  return (
+    event.isBlocked &&
+    event.from === WIN_LOKA &&
+    event.to === WIN_LOKA &&
+    // And not thrown by somebody who has finished. Their refused throw is
+    // identical in every other respect — same square, same flag, same blocked
+    // event — and this function was written to tell refusals apart, so the one
+    // pair it could not tell apart was the pair that mattered: a player who
+    // has just completed the game does not need telling how to enter it.
+    !event.wasComplete
+  );
 }
 
 /**

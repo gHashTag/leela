@@ -51,7 +51,8 @@ export function applyRoll(
   // !isFinished` in `store/helper.ts`. The game is over, and starting another
   // is a deliberate act rather than a throw.
   if (state.loka === WIN_LOKA && state.is_finished) {
-    const mayEnter = roll === MAX_ROLL && (rules.mayReenterAfterWinning || !hasWon(state));
+    const complete = hasWon(state);
+    const mayEnter = roll === MAX_ROLL && (rules.mayReenterAfterWinning || !complete);
 
     if (mayEnter) {
       return {
@@ -72,6 +73,7 @@ export function applyRoll(
           isGameFinished: false,
           isThreeSixesReset: false,
           isBlocked: false,
+          wasComplete: complete,
           jumpedFrom: null,
           // A six is a six, entry included. The published app has no exception
           // for it — `upStepOffline` passes the turn in the `else` of
@@ -108,6 +110,7 @@ export function applyRoll(
         isGameFinished: true,
         isThreeSixesReset: false,
         isBlocked: true,
+        wasComplete: complete,
         jumpedFrom: null,
         grantsExtraTurn: false,
       },
@@ -161,6 +164,9 @@ export function applyRoll(
       isGameFinished: resolved.isGameFinished,
       isThreeSixesReset,
       isBlocked: resolved.direction === 'stop 🛑',
+      // Thrown from the board, so by somebody who had not finished: the only
+      // way to be complete is to be sitting on 68, which is the branch above.
+      wasComplete: false,
       jumpedFrom: jumped ? sixes.newPosition : null,
       // A six keeps the turn, unless it was the third of a run that just
       // burned, or the game has ended.

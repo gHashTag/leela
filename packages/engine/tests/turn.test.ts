@@ -334,7 +334,12 @@ describe('a throw refused because the player is not on the board', () => {
         const { state: next, event } = applyRoll(state, die(), CLASSIC);
         state = next;
 
-        expect(needsSixToEnter(event)).toBe(event.isBlocked && before.is_finished);
+        // `is_finished` alone is not the condition and never was: a winner
+        // carries it too. The loop below breaks at the win, so this line read
+        // as a pass for as long as the two were conflated.
+        expect(needsSixToEnter(event)).toBe(
+          event.isBlocked && before.is_finished && !hasWon(before),
+        );
         if (needsSixToEnter(event)) seen += 1;
 
         if (state.is_finished && hasWon(state)) break;
@@ -361,13 +366,50 @@ describe('a throw refused because the player is not on the board', () => {
     }
   });
 
-  it('is a player who has won and is throwing to begin again', () => {
-    // Same position, same sentence: on 68, needing a six.
+  it('is not a player who has won, whose refusal looks exactly the same', () => {
+    // This test used to assert the opposite — "same position, same sentence:
+    // on 68, needing a six" — and it was the defect written down as intent.
+    // The two states are indistinguishable in the event: both sit on 68 with
+    // `is_finished`, and both produce a blocked 68-to-68 throw. So the app told
+    // a player who had just reached Cosmic Consciousness that it takes a six to
+    // enter the game. The event carries `wasComplete` because nothing else in
+    // it can carry the difference.
     const won = applyRoll(playing({ loka: 65 }), 3, CLASSIC).state;
     expect(hasWon(won)).toBe(true);
 
     const { event } = applyRoll(won, 4, CLASSIC);
-    expect(needsSixToEnter(event)).toBe(true);
+    expect(event.isBlocked).toBe(true);
+    expect(event.wasComplete).toBe(true);
+    expect(needsSixToEnter(event)).toBe(false);
+  });
+
+  it('never fires for a completed player, over played games', () => {
+    // The rule rather than the one case: whatever the seed, a refusal thrown by
+    // somebody who has finished is not an entry refusal.
+    let seen = 0;
+
+    for (let seed = 1; seed <= 40; seed += 1) {
+      let state = initialState();
+      const die = seededRoller(seed);
+
+      for (let turn = 0; turn < 200; turn += 1) {
+        const { state: next, event } = applyRoll(state, die(), CLASSIC);
+        state = next;
+        if (!hasWon(state)) continue;
+
+        // Keep throwing after the win: this is the state the app leaves a
+        // finished player in, and the state it used to mis-describe.
+        for (const value of [1, 2, 3, 4, 5]) {
+          const after = applyRoll(state, value, CLASSIC).event;
+          expect(after.isBlocked, `seed ${seed}`).toBe(true);
+          expect(needsSixToEnter(after), `seed ${seed} threw ${value}`).toBe(false);
+          seen += 1;
+        }
+        break;
+      }
+    }
+
+    expect(seen).toBeGreaterThan(0);
   });
 
   it('is not a throw that moved somebody', () => {

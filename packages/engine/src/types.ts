@@ -64,6 +64,19 @@ export interface MoveEvent {
   /** True when the roll would have overshot the board and was refused. */
   isBlocked: boolean;
   /**
+   * True when the player who threw had already reached Cosmic Consciousness.
+   *
+   * A waiting player and a finished one both sit on `WIN_LOKA` with
+   * `is_finished` set, and a refused throw produces the *same* event for both:
+   * blocked, 68 to 68. So `needsSixToEnter` — the helper written to tell
+   * refusals apart — told a player who had just completed the game that it
+   * takes a six to enter it.
+   *
+   * The event could not carry the difference, so it does. `hasWon` needs the
+   * state's history and only `applyRoll` has it.
+   */
+  wasComplete: boolean;
+  /**
    * True when the player keeps the turn and throws again.
    * Always false under rulesets without `extraTurnOnSix`.
    */
