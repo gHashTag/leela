@@ -72,6 +72,33 @@ function enter(room: Room, id: string, from = NOW): { room: Room; at: number } {
   throw new Error('never entered');
 }
 
+/**
+ * Roll on until this player owes a report.
+ *
+ * Entering is not always an arrival that asks for one: under `online` and the
+ * published app's own rules a six writes its history and nothing else, so a
+ * player who has just entered owes nothing. The bot now refuses a report that
+ * is not owed — one account per arrival, or `/returns` counts a square as
+ * returned to that nobody left — so a test about what a *filed* report does has
+ * to reach a moment where one is genuinely owed.
+ */
+function untilOwed(room: Room, id: string, from: number): { room: Room; at: number } {
+  let current = room;
+  let at = from;
+
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    const seated = current.session.players.find((p) => p.id === id);
+    if (seated && !seated.reportSubmitted) return { room: current, at };
+
+    const holder = current.session.players[current.session.turnIndex];
+    const result = roll(current, holder.id, at);
+    current = (result.room as Room) ?? current;
+    at += 2 * 86_400_000;
+  }
+
+  throw new Error('never owed a report');
+}
+
 /** A Russian table with Cyrillic names, so a leftover name is not a false alarm. */
 function russianTable(): Room {
   const opened = openRoom('чат', { id: 'а', name: 'Аня' }, 42, { language: 'ru' });
@@ -214,8 +241,9 @@ describe('a table that is not English does not lose the cooldown message', () =>
       ruleset: ONLINE.id,
     });
     const entered = enter({ ...(opened.room as Room), started: true }, 'а');
-    const wroteAt = entered.at;
-    const reported = report(entered.room, 'а', written, wroteAt).room as Room;
+    const owed = untilOwed(entered.room, 'а', entered.at);
+    const wroteAt = owed.at;
+    const reported = report(owed.room, 'а', written, wroteAt).room as Room;
 
     const tooSoon = roll(reported, 'а', wroteAt + 1000);
     // `formatWait` is the engine's, and its "3h 5m" is a duration rather than
@@ -229,7 +257,8 @@ describe('a table that is not English does not lose the cooldown message', () =>
       ruleset: ONLINE.id,
     });
     const entered = enter({ ...(opened.room as Room), started: true }, 'а');
-    const said = report(entered.room, 'а', 'слова', entered.at).replies[0].text;
+    const owed = untilOwed(entered.room, 'а', entered.at);
+    const said = report(owed.room, 'а', 'слова', owed.at).replies[0].text;
 
     expect(said).toContain('100');
     expect(latinProseIn(said.replace(/\d+/g, ''))).toEqual([]);

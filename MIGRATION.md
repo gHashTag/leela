@@ -3347,6 +3347,36 @@ by somebody who has not entered** — checked over every report of four whole
 games, with everybody writing every turn whether or not they owe one, because a
 player sends what they send and the bot decides what to do with it.
 
+## Ninety-fourth pass: one account per arrival
+
+Kept playing the bot. `/save`, `/take`, the seeds, the sinks and the table
+lifecycle all hold up — a seventh player is refused, a game that has ended
+refuses the die and says why, a file round-trips through `/save` and `/take` and
+brings nothing new the second time. The hole was next to the one the last pass
+closed.
+
+**`/report` took a second account of the same visit, and a third, and any
+number, and filed every one.** `/returns` counts a square as returned to when
+more than one thing was written about it — so `/report` twice without moving was
+enough to make the game claim a return that never happened, in the one record it
+exists to produce and in the file a player exports to keep.
+
+The condition is the engine's, and the mini app has used it since seats arrived:
+`owesReport` knows about the winning square, about a six that keeps the turn,
+and about the snake at 12 that puts a player back where they started. The bot
+was the surface that never asked.
+
+**A repeat is not always wrong, and the test says exactly when it is not.**
+Standing on 71, a throw moves the player and a snake at the far end puts them
+back on 71 — they left, they were bitten, they returned, which the engine calls
+`arrivedByJump` and treats as a genuine second arrival. My first attempt at this
+test forbade consecutive repeats outright and failed on that case, which was the
+test being wrong and the code being right. It now asserts the real rule: a
+square written about twice running means the player left and came back.
+
+Three existing tests had to be fixed too, all of which filed a report at a
+moment when none was owed — which is the hole, appearing in the fixtures.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

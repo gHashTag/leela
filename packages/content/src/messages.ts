@@ -100,6 +100,10 @@ const EN = {
   // in the record the game exists to produce.
   'report.notOnBoard':
     'You are not on the board yet. A six puts you there, and then there is a plan to write about.',
+  // One account per arrival, which is what the published app files and what the
+  // deployed contract requires before each roll. A second one about the same
+  // visit would make the square look like one the player returned to.
+  'report.already': 'You have already written about {plan}. The next report belongs to the next square.',
   'report.tooShort':
     'A report is a reflection, not a line to open the gate — {count} characters at least.',
   'report.filed': '{name} has reported. You may throw.',
@@ -386,6 +390,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'report.empty': 'Отправьте /report и то, что поднимает этот план.',
   'report.notOnBoard':
     'Вы ещё не на доске. Шестёрка выводит вас туда — тогда и появится план, о котором писать.',
+  'report.already': 'Вы уже написали о плане {plan}. Следующий отчёт — о следующей клетке.',
   'report.tooShort':
     'Отчёт — это размышление, а не строчка, чтобы открыть ворота: хотя бы {count} символов.',
   'report.filed': 'Отчёт от {name} принят. Можно бросать.',

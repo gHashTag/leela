@@ -31,6 +31,7 @@ import {
   type RuleSet,
   type Session,
   isWaitingToEnter,
+  owesReport,
 } from '@leela/engine';
 import { revisited } from '@leela/journal';
 import { bookFor, messageFor, planFor, resolveLanguage, type Language } from '@leela/content';
@@ -491,6 +492,27 @@ export function report(
   // the board.
   if (isWaitingToEnter(seated.state)) {
     return { room, replies: [say(messageFor(room.language, 'report.notOnBoard'), false)] };
+  }
+
+  // One account per arrival.
+  //
+  // The bot took a second, a third, an unlimited number about the same visit,
+  // and each one was filed. `/returns` counts a square as returned to when more
+  // than one thing was written about it — so `/report` twice without moving was
+  // enough to make the game claim a return that never happened, in the one
+  // record it exists to produce.
+  //
+  // The condition is the engine's, not this file's: `owesReport` knows about
+  // the winning square, about a six that keeps the turn, and about the snake at
+  // 12 that puts a player back where they started. The mini app has gated on it
+  // since seats arrived; the bot never has.
+  if (!owesReport(seated.state, room.session.rules) || seated.reportSubmitted) {
+    return {
+      room,
+      replies: [
+        say(messageFor(room.language, 'report.already', { plan: seated.state.loka }), false),
+      ],
+    };
   }
 
   // What counts as a report is the variant's, not this file's: the published

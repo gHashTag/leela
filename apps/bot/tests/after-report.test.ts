@@ -193,8 +193,9 @@ describe('the decision itself', () => {
     const room = table(4242, ONLINE);
     const holder = currentPlayer(room.session);
 
-    // On the board, so the gate applies: a player waiting to enter is never
-    // gated, because there is no plan to reflect on yet.
+    // On the board and owing an account of it. Both halves matter: a player
+    // waiting to enter is never gated, and a report that is not owed is now
+    // refused before it can start anybody's day.
     const playing: Session = {
       ...room.session,
       players: room.session.players.map((seated) =>
@@ -202,6 +203,7 @@ describe('the decision itself', () => {
           ? {
               ...seated,
               state: { ...seated.state, loka: 41, previous_loka: 35, is_finished: false },
+              reportSubmitted: false,
             }
           : seated,
       ),

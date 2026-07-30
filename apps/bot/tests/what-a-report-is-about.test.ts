@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { CLASSIC, currentPlayer, isSessionOver, isWaitingToEnter } from '@leela/engine';
+import {
+  CLASSIC,
+  arrivedByJump,
+  currentPlayer,
+  isSessionOver,
+  isWaitingToEnter,
+  owesReport,
+} from '@leela/engine';
 import { join, openRoom, report, roll, start, type Room } from '../src/commands';
 
 /**
@@ -32,6 +39,8 @@ interface Filed {
   plan: number;
   standingOn: number;
   waiting: boolean;
+  owed: boolean;
+  jumped: boolean;
 }
 
 /** Every report a whole game files, with where its author actually stood. */
@@ -61,6 +70,8 @@ function reportsOf(seed: number): Filed[] {
           plan: effect.plan,
           standingOn: before.loka,
           waiting: isWaitingToEnter(before),
+          owed: owesReport(before, room.session.rules) && !seated.reportSubmitted,
+          jumped: arrivedByJump(before),
         });
       }
     }
@@ -137,5 +148,85 @@ describe('a player who is not on the board', () => {
 
     expect(after.room ?? room).toEqual(room);
     expect(room.session.rules).toBe(CLASSIC);
+  });
+});
+
+describe('one account per arrival', () => {
+  /**
+   * `/returns` counts a square as returned to when more than one thing was
+   * written about it. So `/report` twice without moving was enough to make the
+   * game claim a return that never happened — in the one record it exists to
+   * produce, and in the file a player exports to keep.
+   *
+   * The mini app has gated on `owesReport` since seats arrived. The bot never
+   * had: it took a second account of the same visit, a third, any number, and
+   * filed every one.
+   */
+  const SEEDS = [1, 4242, 77, 20260801];
+
+  it('is filed only when the engine says one is owed', () => {
+    // The condition is the engine's, not the bot's: `owesReport` knows about
+    // the winning square, about a six that keeps the turn, and about the snake
+    // at 12 that puts a player back where they started.
+    for (const seed of SEEDS) {
+      for (const entry of reportsOf(seed)) {
+        expect(entry.owed, `seed ${seed} / ${entry.userId} on ${entry.plan}`).toBe(true);
+      }
+    }
+  });
+
+  it('writes about one square twice running only when the player left and came back', () => {
+    // Two accounts of the same square in a row look like a second account of
+    // one visit, and are not always: standing on 71, a throw moves the player
+    // and the snake at the far end puts them back on 71. They left, they were
+    // bitten, they returned — the most eventful turn there is, and a genuine
+    // second arrival. `arrivedByJump` is how the engine tells those apart, and
+    // it is the only thing that may make a repeat legitimate.
+    let repeats = 0;
+
+    for (const seed of SEEDS) {
+      const filed = reportsOf(seed);
+
+      for (const author of new Set(filed.map((entry) => entry.userId))) {
+        const theirs = filed.filter((entry) => entry.userId === author);
+
+        for (let index = 1; index < theirs.length; index += 1) {
+          if (theirs[index]?.plan !== theirs[index - 1]?.plan) continue;
+          repeats += 1;
+          expect(
+            theirs[index]?.jumped,
+            `seed ${seed} / ${author} wrote about ${theirs[index]?.plan} twice without moving`,
+          ).toBe(true);
+        }
+      }
+    }
+
+    // And the case occurs, or the assertion is passing for want of one.
+    expect(repeats).toBeGreaterThan(0);
+  });
+
+  it('says so instead, naming the square already written about', () => {
+    let room = openRoom('chat-1', { id: 'u1', name: 'Ada' }, 4242).room as Room;
+    room = join(room, { id: 'u2', name: 'Bo' }).room as Room;
+    room = start(room, 'u1').room as Room;
+
+    // Roll until somebody owes a report, then file two.
+    for (let turn = 0; turn < 60; turn += 1) {
+      const owing = room.session.players.find((seated) => !seated.reportSubmitted);
+      if (owing) {
+        const first = report(room, owing.id, 'The first account.', NOW);
+        expect(first.effects ?? []).toHaveLength(1);
+
+        const second = report(first.room ?? room, owing.id, 'And another.', NOW + 1);
+        expect(second.effects ?? []).toEqual([]);
+        expect(second.replies[0]?.text).toContain(String(owing.state.loka));
+        return;
+      }
+
+      const thrown = roll(room, currentPlayer(room.session).id, NOW + turn * 1000);
+      if (thrown.room) room = thrown.room;
+    }
+
+    throw new Error('nobody ever owed a report');
   });
 });
