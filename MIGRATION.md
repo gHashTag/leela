@@ -1253,6 +1253,35 @@ This is also the only bridge to the network that needs no server: the file is
 something a player can carry into a chat, and the bot is where reports are
 shared.
 
+## Thirty-eighth pass: writing the rules down
+
+Thirty-seven passes of principles lived in this file and in the passes'
+reasoning, which is a poor place for them: to know why something is the way it
+is you had to read the whole history.
+
+[spec-kit](https://github.com/github/spec-kit) is installed —
+`/speckit.specify → plan → tasks → implement`, with specs in `specs/<nnn>-<slug>/`.
+Its scripts do not create branches, which suits a repository that pushes only to
+`unified`.
+
+**The constitution is the real work here.** Seven principles, and every one of
+them is a thing that cost something: one description of the rules (68 has meant
+two things six times now), a test asserts the shape of the defect, a check that
+has never failed has not been shown to work, trust nothing that has been outside
+the process, say what happened, the player's language and the player's board,
+and read the sources rather than inferring them.
+
+`CLAUDE.md` and `AGENTS.md` did not exist. They do now, and they say the two
+things that matter most: read `leela-src` before writing anything, and assert
+the shape rather than the case.
+
+**The first spec is the one that has been blocked all along.**
+`specs/001-shared-reports/` writes down what "reports and profiles and a
+network" actually requires — a shared identity and somewhere to put a report
+that is not one device — with the two open questions marked rather than
+answered, because both are a deployment decision. A refusal in a chat message is
+lost; a spec with `[NEEDS CLARIFICATION]` in it is a thing to come back to.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

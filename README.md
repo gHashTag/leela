@@ -154,6 +154,20 @@ Regenerate after changing a source repository:
 node scripts/build-content.mjs --src ../leela-src
 ```
 
+## How the work is done
+
+Spec-driven, through [spec-kit](https://github.com/github/spec-kit):
+
+```
+/speckit.specify → /speckit.plan → /speckit.tasks → /speckit.implement
+```
+
+Specs live in `specs/<nnn>-<slug>/`, on `unified` — this repository does not
+branch per feature. The principles the work is held to are in
+[`.specify/memory/constitution.md`](.specify/memory/constitution.md), and
+[`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) are the working
+instructions. `MIGRATION.md` is the record of how each principle was learned.
+
 ## Развитие
 
 ```bash
