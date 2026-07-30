@@ -167,6 +167,31 @@ export function isReport(text: string, rules: RuleSet = DEFAULT_RULESET): boolea
  * fresh — and nothing else moves a player off the win square.
  */
 /**
+ * A throw refused because the player is not on the board yet.
+ *
+ * `isBlocked` covers two different refusals, and a surface that shows one
+ * message for both tells a player waiting to enter that they are short of room
+ * on a board they have never stood on. The other refusal is an overshoot past
+ * 72, which only somebody in play can manage.
+ *
+ * Both surfaces worked this out separately and wrote the same three-part
+ * condition — `isBlocked && from === WIN_LOKA && to === WIN_LOKA` — and the bot
+ * spent a while with the wrong message before copying the mini app's fix. That
+ * is the fourth rule found written out by hand outside this package in as many
+ * passes, so it gets a name here before it drifts a second time.
+ *
+ * A player who has already won and is throwing to begin again is in the same
+ * position — on 68, needing a six — and is told the same thing, which is right.
+ */
+export function needsSixToEnter(event: {
+  isBlocked: boolean;
+  from: number;
+  to: number;
+}): boolean {
+  return event.isBlocked && event.from === WIN_LOKA && event.to === WIN_LOKA;
+}
+
+/**
  * A turn that moved the player and left them where they started.
  *
  * Only a jump can do this — a snake or an arrow after the step — so the

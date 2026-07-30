@@ -21,6 +21,7 @@ import {
   hasWon,
   isReport,
   isSessionOver,
+  needsSixToEnter,
   rollerFor,
   ruleSetById,
   seededRoller,
@@ -387,9 +388,10 @@ function describeMove(
   const who = nameOf(room, playerId);
 
   // A player waiting to enter is not short of room, and did not come from 68.
-  // The mini app worked this out and said so in a comment; the bot kept
-  // telling people about a rule they were not under yet.
-  if (event.isBlocked && event.from === WIN_LOKA && event.to === WIN_LOKA) {
+  // Both surfaces had written this condition out by hand, and the bot spent a
+  // while telling people about a rule they were not under yet before copying
+  // the mini app's fix. It is the engine's question now.
+  if (needsSixToEnter(event)) {
     return messageFor(room.language, 'move.needSix', { name: who, value });
   }
 

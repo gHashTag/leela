@@ -10,6 +10,7 @@ import {
   formatWait,
   arrivedByJump,
   hasWon,
+  needsSixToEnter,
   initialState,
   owesReport,
   seededRoller,
@@ -300,5 +301,77 @@ describe('the gate asks whether the player arrived, not whether the square chang
   it('says nothing is owed by a player who has not started', () => {
     // `is_finished` with `previous_loka: 0` is the waiting state, not a win.
     expect(owesReport(initialState(), CLASSIC)).toBe(false);
+  });
+});
+
+describe('a throw refused because the player is not on the board', () => {
+  /**
+   * `isBlocked` covers two different refusals: a throw that would overshoot 72,
+   * and a throw by somebody who has not entered the game. A surface that shows
+   * one message for both tells a player waiting to enter that they are short of
+   * room on a board they have never stood on.
+   *
+   * Both surfaces worked that out separately and wrote the same three-part
+   * condition, and the bot spent a while with the wrong message before copying
+   * the mini app's fix — the fourth rule found written out by hand outside the
+   * engine in as many passes.
+   *
+   * The assertion states the rule a different way from the implementation: over
+   * every throw a real game makes, a refusal is an entry refusal exactly when
+   * the thrower was off the board when they threw. If those two ever come
+   * apart, one of them is wrong.
+   */
+  it('is exactly a refusal by somebody off the board, over played games', () => {
+    let seen = 0;
+
+    for (let seed = 1; seed <= 40; seed += 1) {
+      let state = initialState();
+      const die = seededRoller(seed);
+
+      for (let turn = 0; turn < 200; turn += 1) {
+        const before = state;
+        const { state: next, event } = applyRoll(state, die(), CLASSIC);
+        state = next;
+
+        expect(needsSixToEnter(event)).toBe(event.isBlocked && before.is_finished);
+        if (needsSixToEnter(event)) seen += 1;
+
+        if (state.is_finished && hasWon(state)) break;
+      }
+    }
+
+    // And the case occurs, or the assertion above is passing for want of one.
+    expect(seen).toBeGreaterThan(0);
+  });
+
+  it('is not an overshoot, which is the other refusal', () => {
+    // 70 + 5 leaves the board. The player is in play and short of room, which
+    // is a different sentence.
+    const { event } = applyRoll(playing({ loka: 70, previous_loka: 64 }), 5, CLASSIC);
+
+    expect(event.isBlocked).toBe(true);
+    expect(needsSixToEnter(event)).toBe(false);
+  });
+
+  it('is a player who has not entered, throwing anything but a six', () => {
+    for (const value of [1, 2, 3, 4, 5]) {
+      const { event } = applyRoll(initialState(), value, CLASSIC);
+      expect(needsSixToEnter(event), `threw ${value}`).toBe(true);
+    }
+  });
+
+  it('is a player who has won and is throwing to begin again', () => {
+    // Same position, same sentence: on 68, needing a six.
+    const won = applyRoll(playing({ loka: 65 }), 3, CLASSIC).state;
+    expect(hasWon(won)).toBe(true);
+
+    const { event } = applyRoll(won, 4, CLASSIC);
+    expect(needsSixToEnter(event)).toBe(true);
+  });
+
+  it('is not a throw that moved somebody', () => {
+    const { event } = applyRoll(playing({ loka: 11 }), 4, CLASSIC);
+    expect(event.isBlocked).toBe(false);
+    expect(needsSixToEnter(event)).toBe(false);
   });
 });

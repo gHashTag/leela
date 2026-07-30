@@ -66,6 +66,7 @@ export {
   canRoll,
   formatWait,
   isReport,
+  needsSixToEnter,
   owesReport,
 } from './turn';
 export type { TurnBlockedReason, TurnContext, TurnVerdict } from './turn';

@@ -2200,6 +2200,44 @@ face, the database's report flag, and now this. Each was written as an
 optimisation of one line, and each drifted the moment the engine learned
 something.
 
+## Sixty-first pass: an audit not written, and the copy it found anyway
+
+Three passes running found a rule of the engine's written out by hand somewhere
+else, so the obvious move was an audit for it — something that flags a decision
+about the game made where the engine is not.
+
+**It was prototyped and deliberately not shipped.** Run over the repository it
+marks fifteen places, and twelve are legitimate: a mapping reading a column into
+state, a validator asserting the engine's own invariant, a stylesheet class for
+the winning square, a prompt mentioning the end of a game. An audit that is
+four-fifths noise teaches people to skip it, and this repository already knows
+what a check nobody reads is worth. The measurement is the finding: "reasoning
+about game state" is not, on its own, a defect.
+
+**The prototype earned its keep anyway.** Among the fifteen were two lines, one
+in each surface, that are the same sentence:
+
+```ts
+if (event.isBlocked && event.from === WIN_LOKA && event.to === WIN_LOKA) {
+```
+
+`isBlocked` covers two different refusals — a throw that would overshoot 72, and
+a throw by somebody who has not entered the game — and a surface that shows one
+message for both tells a player waiting to enter that they are short of room on
+a board they have never stood on. Both surfaces worked that out separately, and
+the bot's own comment records that it spent a while with the wrong message
+before copying the mini app's fix.
+
+It is `needsSixToEnter` in the engine now, and both call it. The test states the
+rule a different way from the implementation — over every throw a real game
+makes, a refusal is an entry refusal exactly when the thrower was off the board
+when they threw — so the two would have to be wrong together to pass. Weakening
+the predicate fails it.
+
+A player who has already won and is throwing to begin again is in the same
+position, on 68 needing a six, and is told the same thing. That is right, and it
+is now written down where the rule lives rather than inferred twice.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

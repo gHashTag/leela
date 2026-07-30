@@ -7,7 +7,7 @@
  * under yet.
  */
 
-import { WIN_LOKA, type MoveEvent } from '@leela/engine';
+import { needsSixToEnter, type MoveEvent } from '@leela/engine';
 import { type Language, messageFor } from '@leela/content';
 
 /** Look up a plan's title. Injected so this stays free of the content loader. */
@@ -23,8 +23,8 @@ export function describeMove(language: Language, event: MoveEvent, titleOf: Titl
   }
 
   // Still waiting on the win square: nothing was overshot, the six simply has
-  // not come yet.
-  if (event.isBlocked && event.from === WIN_LOKA && event.to === WIN_LOKA) {
+  // not come yet. The engine's question, since the bot asked it too.
+  if (needsSixToEnter(event)) {
     return say('app.needSix', { value: event.roll });
   }
 
