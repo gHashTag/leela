@@ -150,6 +150,24 @@ export function needsReport(state: GameState, journal: Journal): boolean {
   return owesReport(state, CLASSIC) && !journal.reported;
 }
 
+/**
+ * Whether this seat owes a report.
+ *
+ * The engine's answer, which is the only one now. The gate was recorded twice —
+ * here as `Journal.reported` and in the engine as `SeatedPlayer.reportSubmitted`
+ * — and while one player had one journal the two could not disagree. Seats made
+ * them able to: a second player owed a report the engine knew about, their
+ * journal did not exist yet, and a journal that does not exist reads as
+ * "nothing owed". The die was open and the writing button was disabled, so they
+ * could neither be stopped nor write.
+ *
+ * `Journal.reported` stays in the stored shape, because saves carry it, and is
+ * no longer asked about anything.
+ */
+export function seatOwesReport(player: { state: GameState; reportSubmitted: boolean }): boolean {
+  return owesReport(player.state, CLASSIC) && !player.reportSubmitted;
+}
+
 /** A new arrival: whatever was written about the last plan is not about this one. */
 export function arrived(journal: Journal): Journal {
   return { ...journal, reported: false };

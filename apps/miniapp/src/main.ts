@@ -67,7 +67,7 @@ import { fileName, merge, parseDocument, toDocument, toText } from './journal-fi
 import {
   arrived,
   loadJournal,
-  needsReport,
+  seatOwesReport,
   path as pathOf,
   record,
   saveJournal,
@@ -248,7 +248,9 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
   // is the rule the contract enforces and the published app carried. And
   // before any of it, the intention: the app will not show the board without
   // one, so the die will not turn without one either.
-  const owed = needsReport(state, journal);
+  // The engine's gate, not the journal's. Two records of one fact disagreed
+  // the moment a second player sat down.
+  const owed = seatOwesReport(currentPlayer(session));
   el.roll.disabled = owed || rolling || intention === '';
   el.report.disabled = !owed;
 
@@ -551,7 +553,7 @@ function openWriter(): void {
   // Whatever was typed and not filed. A phone discards a backgrounded tab, and
   // the one thing this game asks a player to produce was held in a textarea
   // and nowhere else.
-  el.writerText.value = loadDraft(localStorage, state.loka);
+  el.writerText.value = loadDraft(localStorage, currentPlayer(session).id, state.loka);
   showWriterHint();
   el.writer.showModal();
   el.writerText.focus();
@@ -726,7 +728,7 @@ el.report.addEventListener('click', openWriter);
 el.writerSave.addEventListener('click', saveReport);
 el.intentionSave.addEventListener('click', saveTheIntention);
 el.writerText.addEventListener('input', () => {
-  saveDraft(localStorage, state.loka, el.writerText.value);
+  saveDraft(localStorage, currentPlayer(session).id, state.loka, el.writerText.value);
   showWriterHint();
 });
 el.path.addEventListener('click', openPath);
@@ -770,7 +772,7 @@ loadPlans(language)
     // OpenPlanReportModal(prof.plan)` on the app's own launch path. A player
     // coming back to a game they left mid-thought was shown a dimmed die and a
     // sentence, and had to find the button that says the same thing.
-    if (needsReport(state, journal)) openWriter();
+    if (seatOwesReport(currentPlayer(session))) openWriter();
   })
   .catch((error) => {
     el.say.textContent = messageFor(language, 'app.unloadable');

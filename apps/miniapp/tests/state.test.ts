@@ -273,8 +273,8 @@ describe('a report typed and not yet filed', () => {
       'x'.repeat(4000),
     ]) {
       const store = memory();
-      saveDraft(store, 41, text);
-      expect(loadDraft(memory(store.written() ?? undefined), 41), text.slice(0, 20)).toBe(text);
+      saveDraft(store, 'p1', 41, text);
+      expect(loadDraft(memory(store.written() ?? undefined), 'p1', 41), text.slice(0, 20)).toBe(text);
     }
   });
 
@@ -282,36 +282,36 @@ describe('a report typed and not yet filed', () => {
     // Offering a draft about the human plane to somebody standing on Delusion
     // would be worse than offering nothing.
     const store = memory();
-    saveDraft(store, 41, 'about the human plane');
+    saveDraft(store, 'p1', 41, 'about the human plane');
 
-    expect(loadDraft(memory(store.written() ?? undefined), 6)).toBe('');
+    expect(loadDraft(memory(store.written() ?? undefined), 'p1', 6)).toBe('');
   });
 
   it('is nothing when nothing was typed', () => {
-    expect(loadDraft(memory(), 41)).toBe('');
+    expect(loadDraft(memory(), 'p1', 41)).toBe('');
   });
 
   it('is cleared by blank, so a stale plan cannot linger', () => {
     const store = memory();
-    saveDraft(store, 41, 'something');
-    saveDraft(store, 41, '   ');
+    saveDraft(store, 'p1', 41, 'something');
+    saveDraft(store, 'p1', 41, '   ');
 
-    expect(loadDraft(memory(store.written() ?? undefined), 41)).toBe('');
+    expect(loadDraft(memory(store.written() ?? undefined), 'p1', 41)).toBe('');
   });
 
   it('is cleared outright when the report is filed', () => {
     const store = memory();
-    saveDraft(store, 41, 'filed now');
+    saveDraft(store, 'p1', 41, 'filed now');
     clearDraft(store);
 
-    expect(loadDraft(memory(store.written() ?? undefined), 41)).toBe('');
+    expect(loadDraft(memory(store.written() ?? undefined), 'p1', 41)).toBe('');
   });
 
   it('is nothing for anything that is not a draft this app wrote', () => {
     // The rule rather than a list: a half-written value, another shape, a
     // string where an object belongs. None of it restores.
     for (const raw of ['', 'not json', 'null', '[]', '{}', '{"plan":41}', '{"text":"no plan"}', '3']) {
-      expect(loadDraft(holding(raw), 41), JSON.stringify(raw)).toBe('');
+      expect(loadDraft(holding(raw), 'p1', 41), JSON.stringify(raw)).toBe('');
     }
   });
 
@@ -325,9 +325,9 @@ describe('a report typed and not yet filed', () => {
       },
     };
 
-    expect(() => loadDraft(hostile, 41)).not.toThrow();
-    expect(loadDraft(hostile, 41)).toBe('');
-    expect(() => saveDraft(hostile, 41, 'words')).not.toThrow();
+    expect(() => loadDraft(hostile, 'p1', 41)).not.toThrow();
+    expect(loadDraft(hostile, 'p1', 41)).toBe('');
+    expect(() => saveDraft(hostile, 'p1', 41, 'words')).not.toThrow();
     expect(() => clearDraft(hostile)).not.toThrow();
   });
 
@@ -335,7 +335,7 @@ describe('a report typed and not yet filed', () => {
     // Inside the saved game it would make `isSavedGame` reject every existing
     // save — a player's whole path dropped to remember half a sentence.
     const store = memory();
-    saveDraft(store, 41, 'words');
+    saveDraft(store, 'p1', 41, 'words');
 
     expect(DRAFT_KEY).not.toBe(STORAGE_KEY);
     expect(store.written()).not.toContain('loka');
@@ -428,5 +428,53 @@ describe('what the player is playing for', () => {
   it('is nothing for a stored value that is not one', () => {
     expect(loadIntention(holding(''))).toBe('');
     expect(loadIntention(holding(null))).toBe('');
+  });
+});
+
+describe('a draft belongs to whoever is writing it', () => {
+  /**
+   * The draft was keyed by plan alone, which was exact while one person
+   * played. Two people sharing a device stand on the same square all the
+   * time — and one of them opening the writing box to find the other's
+   * unfinished sentence in it is the worst thing this app could do with
+   * writing.
+   */
+
+  it('is offered to the player who wrote it', () => {
+    const store = memory();
+    saveDraft(store, 'p1', 6, 'Player one, mid-sentence.');
+
+    expect(loadDraft(memory(store.written() ?? undefined), 'p1', 6)).toBe(
+      'Player one, mid-sentence.',
+    );
+  });
+
+  it('is not offered to anybody else, on the same square', () => {
+    // The square is the same; the writing is not.
+    const store = memory();
+    saveDraft(store, 'p1', 6, 'Player one, mid-sentence about something private.');
+
+    for (const other of ['p2', 'p3', 'p6']) {
+      expect(loadDraft(memory(store.written() ?? undefined), other, 6), other).toBe('');
+    }
+  });
+
+  it('belongs to a plan and a player at once', () => {
+    // Either one differing is enough to withhold it.
+    const store = memory();
+    saveDraft(store, 'p2', 41, 'about the human plane');
+    const written = memory(store.written() ?? undefined);
+
+    expect(loadDraft(written, 'p2', 41)).not.toBe('');
+    expect(loadDraft(written, 'p2', 6)).toBe('');
+    expect(loadDraft(written, 'p1', 41)).toBe('');
+  });
+
+  it('gives a draft from before there were seats to the first player', () => {
+    // Written when the app had one player and no seat ids. It is theirs.
+    const older = JSON.stringify({ plan: 6, text: 'from before there were seats' });
+
+    expect(loadDraft(memory(older), 'p1', 6)).toBe('from before there were seats');
+    expect(loadDraft(memory(older), 'p2', 6)).toBe('');
   });
 });

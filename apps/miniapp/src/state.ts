@@ -171,7 +171,11 @@ export const DRAFT_KEY = 'leela.draft.v1';
  * written about plan 41 to somebody standing on 6 would be worse than offering
  * nothing.
  */
-export function loadDraft(storage: GameStorage | undefined, plan: number): string {
+export function loadDraft(
+  storage: GameStorage | undefined,
+  playerId: string,
+  plan: number,
+): string {
   try {
     const raw = storage?.getItem(DRAFT_KEY);
     if (!raw) return '';
@@ -179,8 +183,15 @@ export function loadDraft(storage: GameStorage | undefined, plan: number): strin
     const parsed: unknown = JSON.parse(raw);
     if (typeof parsed !== 'object' || parsed === null) return '';
 
-    const draft = parsed as { plan?: unknown; text?: unknown };
+    const draft = parsed as { player?: unknown; plan?: unknown; text?: unknown };
     if (draft.plan !== plan || typeof draft.text !== 'string') return '';
+
+    // Whose it is. Two people sharing a device can stand on the same square,
+    // and one of them opening the box to find the other's unfinished sentence
+    // in it is the worst thing this app could do with writing. A draft saved
+    // before there were seats carries no player and belongs to the first one.
+    const whose = typeof draft.player === 'string' ? draft.player : 'p1';
+    if (whose !== playerId) return '';
 
     return draft.text;
   } catch {
@@ -189,13 +200,18 @@ export function loadDraft(storage: GameStorage | undefined, plan: number): strin
 }
 
 /** Keep what has been typed. Blank clears it: there is nothing to come back to. */
-export function saveDraft(storage: GameStorage | undefined, plan: number, text: string): void {
+export function saveDraft(
+  storage: GameStorage | undefined,
+  playerId: string,
+  plan: number,
+  text: string,
+): void {
   try {
     if (text.trim().length === 0) {
       storage?.setItem(DRAFT_KEY, '');
       return;
     }
-    storage?.setItem(DRAFT_KEY, JSON.stringify({ plan, text }));
+    storage?.setItem(DRAFT_KEY, JSON.stringify({ player: playerId, plan, text }));
   } catch {
     // A window that cannot store still plays, and still lets somebody write —
     // they simply have to finish in one sitting.
@@ -204,7 +220,7 @@ export function saveDraft(storage: GameStorage | undefined, plan: number, text: 
 
 /** Forget the draft. Filed, or the game started again. */
 export function clearDraft(storage: GameStorage | undefined): void {
-  saveDraft(storage, 0, '');
+  saveDraft(storage, '', 0, '');
 }
 
 /** Where the player's intention lives. */

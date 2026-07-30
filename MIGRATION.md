@@ -2805,6 +2805,40 @@ The seat that threw is remembered rather than read off the turn, because after a
 throw that passes the turn those are two different players — which is the whole
 defect in one sentence.
 
+## Seventy-ninth pass: what was still one player's
+
+Seats arrived four passes ago and the app was made to seat six. This pass asked
+the narrow follow-up: **what else in it still assumes one?** Two things, and the
+first is serious.
+
+**The report gate was recorded twice.** `Journal.reported` here and
+`SeatedPlayer.reportSubmitted` in the engine — one player with one journal
+cannot tell them apart, and seats could. A second player owed a report the
+engine knew about, their journal did not exist yet, and a journal that does not
+exist reads as *nothing owed*:
+
+```
+seat says:      reportSubmitted: false
+die:            open
+report button:  disabled
+```
+
+They could neither be stopped nor write. The engine owns the gate now;
+`Journal.reported` stays in the stored shape because saves carry it, and is
+asked about nothing. The test is the agreement over every state a played game
+reaches, rather than the shape it was caught in.
+
+**And a draft was offered to whoever opened the box.** It was keyed by plan
+alone, which was exact while one person played — but two people sharing a device
+stand on the same square all the time, and finding somebody else's unfinished
+sentence in your writing box is the worst thing this app could do with writing.
+A draft carries whose it is now, and one written before there were seats belongs
+to the first player.
+
+Both are the same shape as the board that drew one gem of six and the path that
+listed one player of three: state that was per-device because there was only
+ever one player to be per.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

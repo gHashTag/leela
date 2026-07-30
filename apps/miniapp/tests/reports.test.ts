@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { seatsFor, sessionFrom } from '../src/seats';
 import {
   CLASSIC,
   MAX_ROLL,
@@ -7,6 +8,9 @@ import {
   owesReport,
   seededRoller,
   type GameState,
+  advance,
+  submitReport,
+  isSessionOver,
 } from '@leela/engine';
 import {
   EMPTY,
@@ -26,6 +30,7 @@ import {
   journalKeyFor,
   loadJournalFor,
   saveJournalFor,
+  seatOwesReport,
 } from '../src/reports';
 import type { GameStorage } from '../src/state';
 
@@ -379,5 +384,66 @@ describe('a journal that belongs to one seat', () => {
     storage.setItem(REPORTS_KEY, JSON.stringify({ reported: true, entries: [{ plan: 41, text: 'from before', at: 3 }] }));
 
     expect(loadJournalFor(storage, 'p1').entries.map((e) => e.text)).toEqual(['from before']);
+  });
+});
+
+describe('the gate, which was recorded twice', () => {
+  /**
+   * "Does this player owe a report" lived in two places: `Journal.reported`
+   * here and `SeatedPlayer.reportSubmitted` in the engine. One player with one
+   * journal could not tell them apart; seats could.
+   *
+   * A second player owed a report the engine knew about, their journal did not
+   * exist yet, and a journal that does not exist reads as *nothing owed*. The
+   * die was open and the writing button was disabled — they could neither be
+   * stopped nor write.
+   *
+   * The engine owns it now. The rule asserted is that agreement, over every
+   * state a real game reaches, rather than the one shape it was caught in.
+   */
+
+  const seatOf = (state: GameState, reportSubmitted: boolean) => ({ state, reportSubmitted });
+
+  it('agrees with the engine on every state a game reaches', () => {
+    let session = sessionFrom(seatsFor(2));
+    const die = seededRoller(11);
+
+    for (let turn = 0; turn < 120; turn += 1) {
+      const moved = advance(session, die(), 1_700_000_000_000 + turn);
+      session = moved.session;
+
+      for (const player of session.players) {
+        expect(seatOwesReport(player), `${player.id} at turn ${turn}`).toBe(
+          owesReport(player.state, CLASSIC) && !player.reportSubmitted,
+        );
+      }
+
+      if (moved.owesReport) session = submitReport(session, moved.playerId, 1);
+      if (isSessionOver(session)) break;
+    }
+  });
+
+  it('says a seat owes one when the engine says it does', () => {
+    const arrived = applyRoll(initialState(), 6, CLASSIC).state;
+    expect(seatOwesReport(seatOf(arrived, false))).toBe(true);
+  });
+
+  it('says nothing is owed once it has been written', () => {
+    const arrived = applyRoll(initialState(), 6, CLASSIC).state;
+    expect(seatOwesReport(seatOf(arrived, true))).toBe(false);
+  });
+
+  it('does not ask a player who has not entered', () => {
+    expect(seatOwesReport(seatOf(initialState(), false))).toBe(false);
+  });
+
+  it('does not depend on a journal existing', () => {
+    // The defect exactly: a seat with no journal yet is a seat that still
+    // owes what the engine says it owes.
+    const arrived = applyRoll(initialState(), 6, CLASSIC).state;
+    const storage = { getItem: () => null, setItem: () => {} };
+
+    expect(loadJournalFor(storage, 'p2').entries).toEqual([]);
+    expect(seatOwesReport(seatOf(arrived, false))).toBe(true);
   });
 });
