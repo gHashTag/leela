@@ -9,7 +9,9 @@
  * later move to Postgres is a change of driver rather than of shape.
  */
 
+import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { dirname } from 'node:path';
 import { gameStepRow } from '@leela/db';
 import type { NewGameStepRow, SessionPlayerRow, SessionRow } from '@leela/db';
 import type { RoomQueries, StoredSeat, StoredSession } from './persistence';
@@ -40,6 +42,12 @@ interface Database {
 function openDatabase(path: string): Database {
   const require = createRequire(import.meta.url);
 
+  // The directory first. SQLite does not create one, and a bot pointed at
+  // `/data/leela.db` with no volume mounted died on startup with
+  // `SQLITE_CANTOPEN` — while its own README promised it would run and say it
+  // was holding games in memory. A store creates the place it lives in.
+  ensureDirectory(path);
+
   try {
     const { DatabaseSync } = require('node:sqlite') as {
       DatabaseSync: new (path: string) => Database;
@@ -50,6 +58,25 @@ function openDatabase(path: string): Database {
       Database: new (path: string) => Database;
     };
     return new BunDatabase(path);
+  }
+}
+
+/**
+ * Make the directory a database is asked to live in.
+ *
+ * Failure is left to the caller: this is a best effort at the common case — a
+ * path under a mount point that is not there — and a path that genuinely
+ * cannot be written is the caller's decision to make, loudly.
+ */
+function ensureDirectory(path: string): void {
+  const directory = dirname(path);
+  if (directory === '.' || directory === '') return;
+
+  try {
+    mkdirSync(directory, { recursive: true });
+  } catch {
+    // Opening will fail next and say so with the path in it, which is a
+    // better message than anything that could be written here.
   }
 }
 

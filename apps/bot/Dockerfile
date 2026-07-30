@@ -13,6 +13,11 @@ FROM oven/bun:1.3.12-slim
 WORKDIR /app
 
 # The manifests first, so an install is cached until a dependency changes.
+#
+# *Every* workspace member, not just the ones the bot imports: the lockfile
+# describes all of them, and `--frozen-lockfile` refuses an install whose
+# workspace set does not match it. Copying six of the eight failed with
+# "lockfile had changes, but lockfile is frozen".
 COPY package.json bun.lock ./
 COPY packages/engine/package.json packages/engine/
 COPY packages/content/package.json packages/content/
@@ -20,9 +25,15 @@ COPY packages/db/package.json packages/db/
 COPY packages/ai/package.json packages/ai/
 COPY packages/contracts/package.json packages/contracts/
 COPY apps/bot/package.json apps/bot/
+COPY apps/docs/package.json apps/docs/
+COPY apps/miniapp/package.json apps/miniapp/
 
 RUN bun install --frozen-lockfile --production
 
+# Sources over the top. Bun's isolated linker puts the workspace links inside
+# each package's own `node_modules`, so `.dockerignore` has to keep the host's
+# `node_modules` out of the build context — copying them over the installed
+# ones replaces links that were made for this image with links made for a Mac.
 COPY packages packages
 COPY apps/bot apps/bot
 

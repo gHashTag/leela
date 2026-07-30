@@ -19,15 +19,7 @@ import {
 } from '@leela/ai';
 import { LANGUAGES, messageCoverage, messageIssues, translatedLanguages } from '@leela/content';
 import { createBot } from './bot';
-import { DatabaseRoomStore } from './persistence';
-import {
-  MemoryReportSink,
-  MemoryRoomStore,
-  type ReportSink,
-  type RoomStore,
-  type StepSink,
-} from './store';
-import { SqliteRoomQueries, sqliteReportSink, sqliteStepSink } from './sqlite';
+import { openStorage } from './storage';
 import { supervise } from './supervisor';
 
 const token = process.env.BOT_TOKEN;
@@ -43,37 +35,12 @@ if (!token) {
 /**
  * Where games live.
  *
- * With LEELA_DB set they survive a restart; without it they do not, and the
- * process says which it is rather than losing them quietly.
+ * Three cases, not two: kept, held in memory on purpose, and held in memory
+ * because the path could not be opened. The third used to be a crash into a
+ * restart loop — a bot pointed at `/data/leela.db` with no volume mounted.
  */
 const databasePath = process.env.LEELA_DB;
-
-let store: RoomStore;
-let reports: ReportSink;
-let steps: StepSink | undefined;
-let durable = false;
-
-/** How long a finished table is kept before it is forgotten. */
-const KEEP_FINISHED_MS = 7 * 24 * 60 * 60 * 1000;
-
-if (databasePath) {
-  const queries = new SqliteRoomQueries({ path: databasePath });
-  store = new DatabaseRoomStore(queries);
-  reports = sqliteReportSink(queries);
-  steps = sqliteStepSink(queries);
-  durable = true;
-
-  // Nothing deleted a finished game, so every table ever opened stayed. Done
-  // at startup rather than on a timer: a bot that is never restarted is not
-  // accumulating tables either.
-  const forgotten = queries.pruneFinished(KEEP_FINISHED_MS);
-  if (forgotten > 0) {
-    console.log(`Forgot ${forgotten} finished table(s) older than a week. Reports kept.`);
-  }
-} else {
-  store = new MemoryRoomStore();
-  reports = new MemoryReportSink();
-}
+const storage = openStorage({ path: databasePath, log: console.error });
 
 /**
  * The companion is optional on purpose. Without a key the gate still works and
@@ -134,16 +101,24 @@ function configuredModel(): LanguageModel | undefined {
 const model = configuredModel();
 const guide = model ? new Guide({ model }) : undefined;
 
-const bot = createBot({ token, store, reports, steps, guide });
+const bot = createBot({
+  token,
+  store: storage.store,
+  reports: storage.reports,
+  steps: storage.steps,
+  guide,
+});
 
 // Rooms live in memory here. `DatabaseRoomStore` in persistence.ts is the
 // durable one — it needs a `RoomQueries` implementation and a database, so
 // wiring it is a deployment decision rather than a default. Say plainly what
 // this process does rather than losing games quietly.
 console.log(
-  durable
+  storage.durable
     ? `Leela bot starting. Games and reports are kept in ${databasePath}.`
-    : 'Leela bot starting. Games and reports are held in memory and will not survive a restart.\n' +
+    : storage.failure
+      ? `Leela bot starting. ${storage.failure} — games are held in memory and will not survive a restart.`
+      : 'Leela bot starting. Games and reports are held in memory and will not survive a restart.\n' +
         'Set LEELA_DB to a file path to keep them.',
 );
 console.log(

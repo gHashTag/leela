@@ -1282,6 +1282,40 @@ that is not one device — with the two open questions marked rather than
 answered, because both are a deployment decision. A refusal in a chat message is
 lost; a spec with `[NEEDS CLARIFICATION]` in it is a thing to come back to.
 
+## Thirty-ninth pass: the build description that had never been built
+
+A Dockerfile was committed last turn and no Docker daemon exists on this
+machine, so it had never run. Simulating it — copying exactly what `COPY`
+copies into a temporary directory, with an isolated Bun cache so nothing was
+warm — found three things, in rising order of seriousness.
+
+**One: the install fails.** `--frozen-lockfile` refuses an install whose
+workspace set does not match the lockfile, and six of the eight manifests were
+copied. `lockfile had changes, but lockfile is frozen`.
+
+**Two: the sources would clobber the install.** Bun 1.3's isolated linker puts
+the workspace links inside each package's own `node_modules`, and `COPY
+packages packages` over the top replaces links made for the image with links
+made for a Mac. There was no `.dockerignore`, so the host's `node_modules` were
+in the build context in the first place. There is one now.
+
+**Three, and this is the real one: the bot dies if the volume is not there.**
+`LEELA_DB=/data/leela.db` and `/data` exists only when a volume is mounted.
+SQLite does not create directories, so the process exited with
+`SQLITE_CANTOPEN` and was restarted into exiting again — while `apps/bot/README`
+promised it would run and say it was holding games in memory. The promise was
+false, and it was false in exactly the state the service is in right now.
+
+`openStorage` knows three cases where `index.ts` knew two: kept, held in memory
+on purpose, and held in memory *because the path could not be opened*. A store
+now makes the directory it lives in, and a store that still cannot be opened is
+named, once, with the path in the message — because the answer is almost always
+a mount point that is not there.
+
+The assertion is the shape: **`openStorage` has no failure mode that reaches
+the caller.** A bot that will not start is worse at keeping a game than one that
+forgets it.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
