@@ -149,10 +149,14 @@ progress::-webkit-progress-value {
   border: 0;
   padding: 0;
   flex: 0 0 auto;
+  /* Directly under the board and centred. The published app puts it above,
+     which on a phone this tall is out of reach of a thumb — and the die is the
+     control the whole game runs through. Under the board it is both next to
+     what it acts on and where a hand already is. */
   align-self: center;
-  width: 65px;
-  height: 65px;
-  margin: 12px auto;
+  width: 60px;
+  height: 60px;
+  margin: 14px auto 4px;
   background: transparent no-repeat center / contain;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -205,9 +209,9 @@ progress::-webkit-progress-value {
      is tall, so on a phone there is always some — and all of it collecting
      under the board reads as a page that failed to finish loading. */
   margin: auto;
-  /* The grid's own shape: nine boxes of 31 with 1 either side, eight of 31
-     with 2. The painting is fitted to it rather than the other way round. */
-  aspect-ratio: 297 / 280;
+  /* The painting's shape. It is the larger of the two — the grid sits inside
+     it — so it is what has to fit the screen. */
+  aspect-ratio: 714 / 639;
   border-radius: var(--radius);
 }
 
@@ -219,28 +223,28 @@ progress::-webkit-progress-value {
  * The image is set from `paint.ts` once it has loaded: a CSS background gives
  * no way to find out that it did not.
  */
-.board.painted::before {
-  content: '';
-  position: absolute;
-  /* Logical, so the direction audit stays as narrow as it is: the board is
-     pinned `dir="ltr"`, but a paint layer needs no help from that. */
-  inset-inline: 0;
-  /* Lifted off the grid, as `GameBoard` lifts it: the painting sits at the top
-     of the container and the circles begin a little below it. Without this the
-     Flower of Life lands under 68 instead of on it. */
-  top: -6.5%;
-  aspect-ratio: 714 / 639;
+.board.painted {
   background: var(--board-art) no-repeat center / 100% 100%;
-  pointer-events: none;
 }
 
 /*
- * The squares. The whole board is the grid — the painting is behind it, fitted
- * to the same width, exactly as `GameBoard` composes them.
+ * The squares, inside the painting.
+ *
+ * The offsets are `GameBoard`'s own layout rather than an adjustment until it
+ * looked right:
+ *
+ *   art    343 x 307   (curImageHeight, times the image's aspect)
+ *   grid   297 x 280   (9 boxes of 31+1+1, 8 of 31+2+2)
+ *   at      23 x  28   inside it, centred horizontally
+ *
+ * A grid stretched across the whole painting — the first attempt — puts every
+ * snake and every arrow about a square away from where it belongs.
  */
 .squares {
   position: absolute;
-  inset: 0;
+  top: 9.12%;
+  bottom: -0.33%;
+  inset-inline: 6.71%;
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   grid-template-rows: repeat(8, 1fr);

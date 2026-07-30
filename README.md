@@ -178,15 +178,22 @@ cd packages/engine && bun test
 | `@leela/contracts` | 28 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
 | `@leela/bot` | 268 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 112 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
-| `@leela/miniapp` | 97 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
+| `@leela/miniapp` | 103 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-1073 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+1079 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 reports fields that are written and never read, and exports with no caller:
 
 ```bash
 node scripts/audit-unread.mjs
 node scripts/audit-configs.mjs
+```
+
+The board art and the rules are two descriptions of the same thing. To compare
+them in one look — a ring where each jump starts, a dot where it lands:
+
+```bash
+bun scripts/board-overlay.mjs board-overlay.svg
 ```
 
 What ships is typechecked a second time with `noUncheckedIndexedAccess`, which

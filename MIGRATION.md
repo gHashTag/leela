@@ -1143,6 +1143,40 @@ without being written on.
 Reduced motion turns the spin off. The value is decided before it starts, so
 that changes how the throw feels and nothing else.
 
+## Thirty-fifth pass: the snakes did not land on their squares
+
+Reported by the person playing it, and true. The grid was laid across the whole
+painting, and the painting is *larger than the grid* — so every snake and every
+arrow was about a square from where it belongs. It was not obvious to look at,
+because the arrows cross, which is why it shipped.
+
+The numbers were guessed and are now derived. `GameBoard/index.tsx` composes
+the same two things, and at the design scale it says:
+
+```
+art    343 x 307      grid 297 x 280, at (23, 28) inside it
+```
+
+so the grid covers 86.6% of the painting's width and starts 9.1% down it. The
+first attempt used 100% and 0%.
+
+**Checked against the picture, not against the eye.** Cropping exactly the cell
+those numbers give for square 68 — x 323..391, y 58..131 of the 714×639
+original — contains the Flower of Life, centred, and nothing else. That is the
+one landmark in the art whose square is not in doubt.
+
+`scripts/board-overlay.mjs` draws the engine's tables over the image so the two
+can be compared at once: a ring where a jump starts, a dot where it lands. It
+is a tool for a person rather than a check for CI — twenty jumps crossing each
+other is a thing to look at, not to assert about.
+
+**What is asserted** is that the stylesheet still matches the derivation. The
+test recomputes the offsets from `GameBoard`'s layout and compares, so a nudge
+to make it "look better" fails rather than quietly moving every snake again.
+
+**The die is under the board now, centred** — the published app puts it above,
+which on a phone this tall is out of reach of a thumb.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
