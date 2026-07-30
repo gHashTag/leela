@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 // A plain module, shared with the scripts that use it. One suppressed line
 // rather than a `.d.ts`, which would be a second description of it.
 // @ts-expect-error - untyped .mjs
-import { checkCiPackages, checkCounts, checkManifests, checkTotal, claimedCounts, claimedTotal, copiedManifests, packagesCheckedByCi } from '../../../scripts/lib/claims.mjs';
+import { checkCiPackages, checkCounts, workspaceSources, checkManifests, checkTotal, claimedCounts, claimedTotal, copiedManifests, packagesCheckedByCi } from '../../../scripts/lib/claims.mjs';
 
 /**
  * The numbers this repository says about itself.
@@ -212,5 +212,84 @@ describe('the packages CI actually runs', () => {
 
   it('is quiet when the list is the repository', () => {
     expect(checkCiPackages(packagesCheckedByCi(WORKFLOW), new Set(['packages/engine', 'apps/bot']))).toEqual([]);
+  });
+});
+
+describe('where an audit looks for source', () => {
+  /**
+   * `audit-unread.mjs` walked a hand-written array of directories, and
+   * `packages/journal/src` was not in it — so the shared file format between
+   * the bot and the mini app had never been checked for a field nobody reads
+   * or an export nobody calls, while the audit said "Every export has at least
+   * one caller".
+   *
+   * The fourth hand-kept list here to be wrong, and the second to be wrong by
+   * *omission* — the kind that reads as a pass.
+   *
+   * Asserted against a made-up tree, because a test that read this repository
+   * would pass until the day somebody adds a tenth package, which is the day
+   * it needs to fail.
+   */
+  const treeOf = (paths: string[]) => ({
+    exists: (path: string) => paths.includes(path) || paths.some((p) => p.startsWith(`${path}/`)),
+    entries: (path: string) =>
+      [
+        ...new Set(
+          paths
+            .filter((p) => p.startsWith(`${path}/`))
+            .map((p) => p.slice(path.length + 1).split('/')[0]),
+        ),
+      ] as string[],
+  });
+
+  it('finds every workspace that ships TypeScript', () => {
+    const tree = treeOf([
+      'packages/engine/package.json',
+      'packages/engine/src/index.ts',
+      'packages/journal/package.json',
+      'packages/journal/src/index.ts',
+      'apps/bot/package.json',
+      'apps/bot/src/bot.ts',
+    ]);
+
+    expect(workspaceSources(tree)).toEqual([
+      'packages/engine/src',
+      'packages/journal/src',
+      'apps/bot/src',
+    ]);
+  });
+
+  it('skips a directory that is not a workspace', () => {
+    // A folder without a manifest is not a package; a check that walked it
+    // would report on somebody's scratch directory.
+    const tree = treeOf(['packages/notes/src/thoughts.ts']);
+    expect(workspaceSources(tree)).toEqual([]);
+  });
+
+  it('skips a workspace that ships nothing', () => {
+    // `apps/site` and `packages/ui` are untracked placeholders waiting for a
+    // port. They exist on one machine and not in CI, and an audit that
+    // disagreed with itself in the two places would be worse than none.
+    const tree = treeOf(['packages/ui/package.json', 'packages/ui/README.md']);
+    expect(workspaceSources(tree)).toEqual([]);
+  });
+
+  it('skips a src that holds no TypeScript', () => {
+    const tree = treeOf(['apps/site/package.json', 'apps/site/src/index.html']);
+    expect(workspaceSources(tree)).toEqual([]);
+  });
+
+  it('is in a stable order, so a report does not shuffle between runs', () => {
+    const tree = treeOf([
+      'packages/zeta/package.json',
+      'packages/zeta/src/a.ts',
+      'packages/alpha/package.json',
+      'packages/alpha/src/a.ts',
+    ]);
+    expect(workspaceSources(tree)).toEqual(['packages/alpha/src', 'packages/zeta/src']);
+  });
+
+  it('finds nothing where there is nothing, rather than throwing', () => {
+    expect(workspaceSources(treeOf([]))).toEqual([]);
   });
 });

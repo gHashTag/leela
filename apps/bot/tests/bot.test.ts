@@ -591,10 +591,49 @@ describe('a path leaving and arriving as a file', () => {
   });
 
   it('answers a document it cannot read, rather than going quiet', async () => {
-    // The fetch fails in the harness — there is no Telegram to serve the file —
-    // and a player who sent the wrong thing must still be told something.
-    const { bot, sent } = harness({ reports: new MemoryReportSink() });
+    // The reading is injected, so "the file cannot be fetched" is a decision
+    // this test makes. It used to be a real `fetch` failing against
+    // api.telegram.org: three seconds of DNS, the slowest thing in the package
+    // by two orders of magnitude, and an assertion about the network rather
+    // than about the bot.
+    const { bot, sent } = harness({
+      reports: new MemoryReportSink(),
+      readFile: async () => {
+        throw new Error('no Telegram here');
+      },
+    });
+
     await bot.handleUpdate(document(64));
     expect(texts(sent).length).toBeGreaterThan(0);
+  });
+
+  it('takes a path that arrives as a file', async () => {
+    // The path that had never run: the fetch always failed, so a file has
+    // never been *received* in a test. The bytes are the mini app's own,
+    // captured from its download and kept in tests/fixtures.
+    const file = readFileSync(resolve(process.cwd(), 'tests/fixtures/miniapp-export.json'), 'utf8');
+    const reports = new MemoryReportSink();
+    const { bot, sent } = harness({ reports, readFile: async () => file });
+
+    await bot.handleUpdate(document(file.length));
+
+    expect(texts(sent).join(' ')).toMatch(/2/);
+    expect((await reports.history?.('100'))?.map((entry) => entry.plan).sort((a, b) => a - b)).toEqual(
+      [6, 41],
+    );
+  });
+
+  it('says so when the same path arrives twice', async () => {
+    const file = readFileSync(resolve(process.cwd(), 'tests/fixtures/miniapp-export.json'), 'utf8');
+    const reports = new MemoryReportSink();
+    const { bot, sent } = harness({ reports, readFile: async () => file });
+
+    await bot.handleUpdate(document(file.length));
+    const before = texts(sent).length;
+    await bot.handleUpdate(document(file.length));
+
+    expect(texts(sent).length).toBeGreaterThan(before);
+    // Nothing was added the second time: the store still holds two.
+    expect((await reports.history?.('100'))?.length).toBe(2);
   });
 });

@@ -20,7 +20,7 @@
  * gets switched off rather than heeded.
  */
 
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -29,20 +29,26 @@ import {
   uncalledExports,
   unreadFields,
 } from './lib/unread.mjs';
+import { workspaceSources } from './lib/claims.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
+/**
+ * Where to look: every workspace that ships TypeScript, plus the scripts.
+ *
+ * This was a hand-written array, and `packages/journal/src` was not in it — so
+ * the shared file format between the bot and the mini app was never checked,
+ * while the audit reported that every export had a caller. Found now, so a
+ * tenth package cannot be missed the same way.
+ *
+ * The audit scripts are readers too: `detectRules`'s fields are consumed by
+ * `audit-copies.mjs`, and omitting them reported those fields as unread.
+ */
 const SEARCH = [
-  'packages/engine/src',
-  'packages/content/src',
-  'packages/db/src',
-  'packages/ai/src',
-  'packages/contracts/src',
-  'apps/bot/src',
-  'apps/miniapp/src',
-  'apps/docs/src',
-  // The audit scripts are readers too: `detectRules`'s fields are consumed by
-  // `audit-copies.mjs`, and omitting it reported them all as unread.
+  ...workspaceSources({
+    exists: (path) => existsSync(join(ROOT, path)),
+    entries: (path) => readdirSync(join(ROOT, path)),
+  }),
   'scripts',
 ];
 

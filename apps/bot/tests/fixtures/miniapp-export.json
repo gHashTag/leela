@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "app": "leela",
+  "entries": [
+    {
+      "plan": 6,
+      "text": "What delusion looked like on the first square.",
+      "at": 1785000000000
+    },
+    {
+      "plan": 41,
+      "text": "The human plane, and what it asked.",
+      "at": 1785000600000
+    }
+  ]
+}

@@ -148,3 +148,41 @@ export function checkCiPackages(loops, workspaces) {
 
   return problems;
 }
+
+/**
+ * Every workspace that ships TypeScript, found rather than listed.
+ *
+ * `audit-unread.mjs` walked a hand-written array of source directories, and
+ * `packages/journal/src` was not in it — so the shared file format between the
+ * bot and the mini app had never been checked for a field nobody reads or an
+ * export nobody calls, while the audit said "Every export has at least one
+ * caller". That is the fourth hand-kept list in this repository to be wrong,
+ * and the second to be wrong by *omission*, which is the kind that reads as a
+ * pass.
+ *
+ * Same rule as `audit-configs`: a workspace is a `package.json` with a `src`
+ * that holds TypeScript. `apps/site` and `packages/ui` are untracked
+ * placeholders — they exist on one machine and not in CI, and a check that
+ * disagreed with itself in the two places would be worse than none.
+ *
+ * @param read  `{ entries(dir), isDirectory(path), exists(path) }` — injected
+ *              so the rule can be asserted against a made-up tree.
+ */
+export function workspaceSources(read, groups = ['packages', 'apps']) {
+  const found = [];
+
+  for (const group of groups) {
+    if (!read.exists(group)) continue;
+
+    for (const name of read.entries(group).sort()) {
+      const pkg = `${group}/${name}`;
+      if (!read.exists(`${pkg}/package.json`)) continue;
+      if (!read.exists(`${pkg}/src`)) continue;
+      if (!read.entries(`${pkg}/src`).some((file) => file.endsWith('.ts'))) continue;
+
+      found.push(`${pkg}/src`);
+    }
+  }
+
+  return found;
+}

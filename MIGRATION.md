@@ -2082,6 +2082,54 @@ So the switcher asks: the same page where that language has one, its contents
 where it does not. Verified both ways — the naive version fails the crawl, and
 the guarded one leaves nothing broken.
 
+## Fifty-eighth pass: an audit that looked at eight of nine packages
+
+Last pass ended on a check that skipped nine tenths of its own subject. That is
+a shape, so this pass went looking for the rest of it — and the first place to
+look was the audits themselves.
+
+**`audit-unread.mjs` walked a hand-written array of directories**, and
+`packages/journal/src` was not in it. The shared file format between the bot and
+the mini app had never been checked for a field nobody reads or an export nobody
+calls, while the audit reported *"Every export has at least one caller"*. The
+fourth hand-kept list here to be wrong, and the second wrong by **omission**,
+which is the kind that reads as a pass. It is found now — `workspaceSources`,
+the same rule `audit-configs` uses — and coverage went from 62 files to 69, 465
+fields to 481, 256 exports to 267. All of it clean, which is the good version of
+this story and not a reason to have been guessing.
+
+### Then the bridge, tested for the first time
+
+With the journal under watch, the bot's side of it was worth exercising for
+real. Two things came out.
+
+**The receiving path had never run in a test.** `bot.ts` called the global
+`fetch` to download a document, so the only way to reach that code was to let a
+real request to `api.telegram.org` fail. One test did exactly that: it waited
+three seconds for DNS, was the slowest thing in the package by two orders of
+magnitude, and asserted that the network is absent rather than that the bot
+answers. It flaked once during this pass, which is how it was noticed. Reading a
+file is injected now, so the *successful* path can be driven — and the bytes it
+is driven with are the mini app's own, captured from its download at
+`URL.createObjectURL` and kept in `tests/fixtures/miniapp-export.json`. A
+fixture rather than a document the test built, because a round trip through
+`toDocument` on both sides is true by construction and proves nothing about the
+other surface.
+
+**And the first run of it found this:** `keep` recorded a plan and a text and
+nothing else, so the store stamped the moment of the *import*.
+
+- A player who brought in a year of writing got a journal where every entry
+  happened today — and exporting again wrote those wrong dates back into the
+  file, carrying the damage to the mini app.
+- The same file arrived as **new** every time, because what tells one report
+  from another includes when it was written. Sending a path twice duplicated it.
+  Three times, tripled it.
+
+`ReportSink.record` takes the moment now, in memory and in SQLite, defaulting to
+the clock for a report typed into a chat — which genuinely has no earlier
+moment. Four tests fail when the argument is dropped again.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

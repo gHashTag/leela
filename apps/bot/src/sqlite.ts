@@ -426,11 +426,17 @@ export class SqliteRoomQueries implements RoomQueries {
     }));
   }
 
-  /** Keep a report. The same database, so one file holds a whole deployment. */
-  recordReport(report: { userId: string; plan: number; text: string }): void {
+  /**
+   * Keep a report. The same database, so one file holds a whole deployment.
+   *
+   * `at` is when it was written, which a path arriving as a file carries and
+   * which is not now. Stamping the import instead falsified every imported
+   * date and made the same file arrive as new on every send.
+   */
+  recordReport(report: { userId: string; plan: number; text: string; at?: Date }): void {
     this.db
       .prepare('INSERT INTO reports (user_id, plan, text, created_at) VALUES (?, ?, ?, ?)')
-      .run(report.userId, report.plan, report.text, this.now());
+      .run(report.userId, report.plan, report.text, report.at?.getTime() ?? this.now());
   }
 
   /** Every report a player has written, newest first. */
@@ -471,7 +477,12 @@ export function sqliteStepSink(queries: SqliteRoomQueries) {
 /** A `ReportSink` backed by the same database as the rooms. */
 export function sqliteReportSink(queries: SqliteRoomQueries) {
   return {
-    async record(report: { userId: string; plan: number; text: string }): Promise<void> {
+    async record(report: {
+      userId: string;
+      plan: number;
+      text: string;
+      at?: Date;
+    }): Promise<void> {
       queries.recordReport(report);
     },
   };

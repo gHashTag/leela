@@ -73,6 +73,9 @@ export async function keep(
   added: ReadonlyArray<Report>,
 ): Promise<void> {
   for (const entry of added) {
-    await sink.record({ userId, plan: entry.plan, text: entry.text });
+    // With the moment it was written. Without it the store stamps the import,
+    // so a path taken in loses its dates — and arrives as new the next time it
+    // is sent, duplicating everything the player has written.
+    await sink.record({ userId, plan: entry.plan, text: entry.text, at: new Date(entry.at) });
   }
 }

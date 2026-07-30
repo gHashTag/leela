@@ -57,6 +57,18 @@ export interface BotOptions {
    * and being hoped over.
    */
   botInfo?: UserFromGetMe;
+  /**
+   * How a document's bytes are read.
+   *
+   * Injected because otherwise the only way to test this path is to let a real
+   * `fetch` fail against `api.telegram.org` — which is what the suite did. That
+   * test waited three seconds for DNS, was the slowest thing in the package by
+   * two orders of magnitude, and asserted that the network is absent rather
+   * than that the bot answers. Worse, it made the *successful* path
+   * untestable: a file has never been received in a test, because the fetch
+   * always failed.
+   */
+  readFile?: (url: string) => Promise<string>;
 }
 
 /** Who sent this update, as the commands layer wants them. */
@@ -80,6 +92,9 @@ export function createBot({
   log = console.log,
   guide,
   botInfo,
+  // The default is the network, which is what production wants and what a test
+  // must never be left to depend on.
+  readFile = async (url) => (await fetch(url)).text(),
 }: BotOptions) {
   const bot = new Bot(token, botInfo ? { botInfo } : undefined);
 
@@ -547,8 +562,7 @@ export function createBot({
     if (existing !== null) {
       try {
         const file = await ctx.getFile();
-        const url = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
-        text = await (await fetch(url)).text();
+        text = await readFile(`https://api.telegram.org/file/bot${token}/${file.file_path}`);
       } catch (error) {
         log(`[bot] could not read the file: ${String(error)}`);
         await ctx.reply(messageFor(language, 'file.unreadable'));

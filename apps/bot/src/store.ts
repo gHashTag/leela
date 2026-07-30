@@ -43,7 +43,21 @@ export const discardSteps: StepSink = {
 };
 
 export interface ReportSink {
-  record(report: { userId: string; plan: number; text: string }): Promise<void>;
+  /**
+   * Keep one report.
+   *
+   * `at` is when it was *written*, which is not always now: a path arriving as
+   * a file carries the moment each entry was made, sometimes a year ago. It
+   * was not passed, so every imported entry was stamped with the moment of the
+   * import — which falsified the whole history and, worse, made the same file
+   * arrive as new every time, duplicating a player's path on each send.
+   */
+  record(report: {
+    userId: string;
+    plan: number;
+    text: string;
+    at?: Date;
+  }): Promise<void>;
   /**
    * What a player has written, newest first.
    *
@@ -60,8 +74,14 @@ export class MemoryReportSink implements ReportSink {
 
   constructor(private readonly now: () => number = Date.now) {}
 
-  async record(report: { userId: string; plan: number; text: string }): Promise<void> {
-    this.reports.push({ ...report, createdAt: new Date(this.now()) });
+  async record(report: {
+    userId: string;
+    plan: number;
+    text: string;
+    at?: Date;
+  }): Promise<void> {
+    const { at, ...rest } = report;
+    this.reports.push({ ...rest, createdAt: at ?? new Date(this.now()) });
   }
 
   async history(userId: string): Promise<StoredReport[]> {
