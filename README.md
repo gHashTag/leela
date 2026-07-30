@@ -185,7 +185,7 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 202 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/engine` | 212 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 145 | 22 languages of plans, 2 of the game's own voice |
 | `@leela/db` | 95 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 126 | the companion — prompts built from the plan text |
@@ -195,15 +195,20 @@ cd packages/engine && bun test
 | `@leela/miniapp` | 141 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-1135 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+1145 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
 ```bash
 node scripts/audit-unread.mjs
 node scripts/audit-configs.mjs
+node scripts/audit-claims.mjs       # the table above, against the suites
 node scripts/audit-deployment.mjs   # asks four chains where the contract is
 ```
+
+The table is checked rather than trusted. It was kept by hand for forty passes,
+and a hand-kept number is one that will eventually be wrong — which is what the
+two passes before this one were both about.
 
 The board art and the rules are two descriptions of the same thing. To compare
 them in one look — a ring where each jump starts, a dot where it lands:

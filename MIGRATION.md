@@ -1376,6 +1376,36 @@ that is not true.
 because somebody's node was busy teaches people to ignore red. It is a tool for
 when the answer matters, and the answer it gave is written down with its date.
 
+## Forty-second pass: the numbers this repository says about itself
+
+Two passes in a row were about a confident sentence that had never been checked
+— a bot that "dies without a volume" and does not, a contract "permanent
+because deployed" on a network shut down in 2024. Both were written from
+inference. The obvious next question is what else here is asserted and unasked,
+and the answer with the shortest fuse is the table in `README.md`: eight
+per-package test counts and a total, **maintained by hand for forty passes**.
+
+`scripts/audit-claims.mjs` runs every suite and compares. It caught a stale
+number on its first real use — its own tests had just moved the engine from 202
+to 212 — which is the demonstration that matters more than the ten assertions
+below it.
+
+**The rules, not the numbers.** The tests assert what the check does, because
+the numbers change every pass and a test repeating them would be a second
+hand-kept copy of the thing under suspicion:
+
+- a count that differs is named with **both** values, so a reader knows which
+  to trust;
+- a package that runs tests and is **not in the table** is a problem — a table
+  correct about everything it lists can still leave something out, and that is
+  the one nobody notices;
+- a package in the table that ran nothing is a problem;
+- the total is checked against **the sum of the column**, not against the
+  suites. A total that agrees with reality but not with the table above it is
+  still two numbers in one document disagreeing, and a reader adds the column.
+
+In CI, beside the other audits.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

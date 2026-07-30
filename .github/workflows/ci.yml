@@ -126,6 +126,11 @@ jobs:
       # there is no judgement call in whether a config file exists.
       - run: node scripts/audit-configs.mjs
 
+      # The per-package counts in README.md, against the suites that produce
+      # them. Maintained by hand for forty passes, which is exactly how long a
+      # number survives before it is quietly wrong.
+      - run: node scripts/audit-claims.mjs
+
   content-is-reproducible:
     # The dataset under packages/content/data is generated. If a commit edits it
     # by hand the generator and the repository disagree, and the next rebuild
