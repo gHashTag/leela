@@ -32,6 +32,7 @@ import {
   type Session,
   isWaitingToEnter,
 } from '@leela/engine';
+import { revisited } from '@leela/journal';
 import { bookFor, messageFor, planFor, resolveLanguage, type Language } from '@leela/content';
 
 /** A table, plus the bits the bot needs that the engine does not care about. */
@@ -578,6 +579,70 @@ export function pathFor(
   const heading = messageFor(language, 'path.heading', { count: ordered.length });
 
   return paginate([heading, ...entriesText]).map((page) => say(page, false));
+}
+
+/**
+ * `/returns` — the squares that came back, and what was written each time.
+ *
+ * `/path` is everything, oldest first, and it answers "what have I written".
+ * It cannot answer the question the game is actually about: *what keeps coming
+ * back*. A player forty entries in has the material for that answer and no way
+ * to ask for it — the two accounts of plan 41 are a year apart in one long
+ * scroll.
+ *
+ * `revisited` is `@leela/journal`'s, not this file's. The mini app worked this
+ * out first, and a second surface working it out again is two surfaces
+ * describing one thing differently — which is the whole reason that package
+ * exists.
+ *
+ * Same three answers as `/path`, and for the same reasons: a store that keeps
+ * nothing says so rather than returning an empty list, because "you have not
+ * written anything" and "this bot is not keeping reports" are different
+ * statements.
+ */
+export function returnsFor(language: Language, entries: PathEntry[] | null): Reply[] {
+  if (entries === null) {
+    return [say(messageFor(language, 'path.absent'), false)];
+  }
+
+  const coming = revisited(entries);
+  if (coming.length === 0) {
+    return [say(messageFor(language, 'returns.none'), false)];
+  }
+
+  const blocks = coming.map((visit) => {
+    const heading = messageFor(language, 'returns.times', {
+      plan: visit.plan,
+      title: planFor(language, visit.plan).title,
+      count: visit.times,
+    });
+
+    // Oldest first inside a square, which is the only order in which a return
+    // says anything: the first account is what the later ones are measured
+    // against.
+    const written = entries
+      .filter((entry) => entry.plan === visit.plan)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .map((entry) => entry.text);
+
+    return [heading, ...written].join('\n');
+  });
+
+  const heading = messageFor(language, 'returns.heading', { count: coming.length });
+
+  return paginate([heading, ...blocks]).map((page) => say(page, false));
+}
+
+/** `/returns` at a table, which is where the room's language comes from. */
+export function returns(
+  room: Room,
+  byPlayerId: string,
+  entries: PathEntry[] | null,
+): CommandResult {
+  // A path belongs to the player and not to the table, and so does what came
+  // back to them.
+  void byPlayerId;
+  return { room, replies: returnsFor(room.language, entries) };
 }
 
 /** `/path` at a table, which is where the room's language comes from. */

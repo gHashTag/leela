@@ -124,6 +124,20 @@ const EN = {
     other: 'Your path — {count} plans.',
   },
 
+  // --- the squares that came back ---------------------------------------------
+  // A path is everything, oldest first, and says nothing about what recurred.
+  // Leela's teaching is the recurrence, and both surfaces held it unread.
+  'returns.none':
+    'No square has come back yet. When one does, /returns puts what you wrote side by side.',
+  'returns.heading': {
+    one: '{count} square has come back to you.',
+    other: '{count} squares have come back to you.',
+  },
+  'returns.times': {
+    one: '{plan}. {title} — {count} time',
+    other: '{plan}. {title} — {count} times',
+  },
+
   // --- the board -------------------------------------------------------------
   'board.legend': '🕉 68 · 🐍 snake · 🏹 arrow',
   'standings.finished': 'Cosmic Consciousness 🕉',
@@ -274,6 +288,7 @@ const EN = {
     '/rules [n] — the rules of the game, in chapters',
     '/ask <question> — ask the companion about where you stand',
     '/path — what you have written, and where',
+    '/returns — the squares that came back, and what you said each time',
     '/save — the same, as a file you can keep',
     '/board — where everyone stands',
     '/end — clear the table',
@@ -359,6 +374,21 @@ const RU: Partial<Record<MessageKey, Message>> = {
     few: 'Ваш путь — {count} плана.',
     many: 'Ваш путь — {count} планов.',
     other: 'Ваш путь — {count} плана.',
+  },
+
+  'returns.none':
+    'Пока ни одна клетка не вернулась. Когда вернётся, /returns покажет написанное рядом.',
+  'returns.heading': {
+    one: 'К вам вернулась {count} клетка.',
+    few: 'К вам вернулись {count} клетки.',
+    many: 'К вам вернулось {count} клеток.',
+    other: 'К вам вернулись {count} клетки.',
+  },
+  'returns.times': {
+    one: '{plan}. {title} — {count} раз',
+    few: '{plan}. {title} — {count} раза',
+    many: '{plan}. {title} — {count} раз',
+    other: '{plan}. {title} — {count} раза',
   },
 
   'board.legend': '🕉 68 · 🐍 змея · 🏹 стрела',
@@ -492,6 +522,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
     '/rules [n] — правила игры, по главам',
     '/ask <вопрос> — спросить спутника о том, где вы стоите',
     '/path — что вы написали и где',
+    '/returns — клетки, которые вернулись, и что вы говорили каждый раз',
     '/save — то же самое файлом, который можно забрать',
     '/board — где все стоят',
     '/end — убрать стол',

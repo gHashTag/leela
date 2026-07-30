@@ -2996,6 +2996,39 @@ or lost between squares. Plus determinism: reversing the entries must not
 reorder the answer, because a list that shuffles between two identical journals
 is a list nobody can read twice.
 
+## Eighty-fourth pass: the same answer on both surfaces
+
+The returns landed in the mini app last pass and stayed there. The bot has the
+same material — reports in SQLite, read back by `/path` — and the same gap:
+`/path` answers *what have I written*, oldest first, one flat run, and cannot
+answer the question the game is about. Two accounts of plan 41 sit a year apart
+in one long scroll.
+
+Writing that a second time in the bot would have been two implementations of one
+fact, which is the defect this repository keeps finding in its own donors — a
+rule copied outside the thing that owns it. So `revisited` and `writingsOn` moved
+into `@leela/journal`, the package that exists for exactly this: "two surfaces
+that describe a format separately describe it differently".
+
+`revisited` is stated over `{ plan }` alone, because the bot's rows carry
+`createdAt` where the file format carries `at`, and the answer must not depend on
+which of the two is asking. A test hands it both shapes and requires the same
+list.
+
+**`/returns`** is the bot's half: the squares that came back, most-returned
+first, each with everything written about it, oldest first — the first account
+being what the later ones are measured against. It keeps `/path`'s three
+answers distinct, because "this bot is not keeping reports", "you have not
+written anything" and "nothing has come back yet" are three different facts and
+one message for two of them is the bot lying about one.
+
+Two suites, two jobs. The package's states the rule — a square is returned to
+exactly when more than one thing was written about it, nothing is shown twice,
+nothing is lost between squares, and reversing the entries does not reorder the
+answer. The bot's asserts delegation: the reply names a square exactly when the
+shared function counted it. Checked by breaking each side in turn — the package
+break fails five of its own tests, the bot break fails three of the bot's.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -141,3 +141,52 @@ export function merge(
 export function fileName(stamp: string): string {
   return `leela-path-${stamp}.json`;
 }
+
+/**
+ * Coming back to a square, which is what the game is about.
+ *
+ * Leela's teaching is that the same states arrive again: 41 in February and 41
+ * again in September, and what was written the first time is the measure of
+ * what has changed. Both surfaces keep every one of those returns and neither
+ * could show two of them together — the mini app had a path and the bot has
+ * `/path`, and both are one flat run of text oldest-first.
+ *
+ * It lives here for the reason this package exists at all: the mini app worked
+ * it out first, and a second surface working it out again is two surfaces
+ * describing one thing differently. The bot's rows carry `createdAt` where the
+ * file format carries `at`, so what is shared is stated over the least either
+ * of them can supply.
+ */
+
+/** One square somebody keeps returning to. */
+export interface Revisit {
+  plan: number;
+  times: number;
+}
+
+/**
+ * The squares written about more than once, most-returned first.
+ *
+ * Ties keep board order rather than whatever order the entries arrived in: a
+ * list that reorders itself between two identical journals is a list nobody can
+ * read twice. Takes only `plan`, so a bot row and a file entry are both it.
+ */
+export function revisited(entries: ReadonlyArray<{ plan: number }>): Revisit[] {
+  const times = new Map<number, number>();
+  for (const entry of entries) times.set(entry.plan, (times.get(entry.plan) ?? 0) + 1);
+
+  return [...times.entries()]
+    .filter(([, count]) => count > 1)
+    .map(([plan, count]) => ({ plan, times: count }))
+    .sort((a, b) => b.times - a.times || a.plan - b.plan);
+}
+
+/**
+ * Everything written about one square, oldest first.
+ *
+ * The ordering is `order`'s, so a square read on one surface is the same square
+ * read on the other.
+ */
+export function writingsOn(entries: ReadonlyArray<Report>, plan: number): Report[] {
+  return order(entries).filter((entry) => entry.plan === plan);
+}

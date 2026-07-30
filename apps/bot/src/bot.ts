@@ -398,6 +398,26 @@ export function createBot({
     await deliver(ctx, commands.pathFor(language, entries));
   });
 
+  /**
+   * `/returns` — the squares that came back.
+   *
+   * `/path` answers "what have I written". This answers the question the game
+   * is about: what keeps arriving. Same store, same absence rule — a bot that
+   * keeps nothing says so rather than showing an empty list.
+   */
+  bot.command('returns', async (ctx) => {
+    const chatId = chatIdOf(ctx);
+    const who = sender(ctx);
+    if (!chatId || !who) return;
+
+    const entries = reports.history ? await reports.history(who.id) : null;
+
+    const room = await store.get(chatId);
+    const language = room?.language ?? resolveLanguage(ctx.from?.language_code);
+
+    await deliver(ctx, commands.returnsFor(language, entries));
+  });
+
   bot.command('board', (ctx) =>
     withRoom(ctx, (room) => ({
       room,

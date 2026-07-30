@@ -21,7 +21,14 @@
 
 import { CLASSIC, owesReport, type GameState } from '@leela/engine';
 import { messageFor, type Language } from '@leela/content';
+import {
+  revisited as revisitedEntries,
+  writingsOn as writingsOnEntries,
+  type Revisit,
+} from '@leela/journal';
 import type { GameStorage } from './state';
+
+export type { Revisit } from '@leela/journal';
 
 export const REPORTS_KEY = 'leela.reports.v1';
 
@@ -232,43 +239,18 @@ export function path(journal: Journal): Report[] {
 }
 
 /**
- * What this player has written about one square, oldest first.
+ * What this player has written about one square, oldest first, and the squares
+ * they keep returning to.
  *
- * The reports were readable only as a path — everything, in the order it
- * happened — and that is the wrong shape for the thing Leela is actually about.
- * The game's teaching is that you come back: the same square arrives again
- * months later, and what you said the first time is the measure of what has
- * changed. The app held every one of those returns and could not show a player
- * two of them side by side.
- *
- * Every competing app sells this as "recurring life patterns", and none of them
- * builds it. `UserProfileScreen` in the published app renders `history.map` —
- * one flat chronological list — and its `HistoryT` does not even carry the
- * report text. The material is here and nowhere else.
+ * The answers come from `@leela/journal`, which is where anything both surfaces
+ * need to agree about lives. The bot keeps its reports in SQLite and this app
+ * keeps them in `localStorage`; a player returning to plan 41 is the same fact
+ * in both, and two implementations of it would be two answers.
  */
 export function writingsOn(journal: Journal, plan: number): Report[] {
-  return path(journal).filter((entry) => entry.plan === plan);
+  return writingsOnEntries(journal.entries, plan);
 }
 
-/** One square a player keeps returning to. */
-export interface Revisit {
-  plan: number;
-  times: number;
-}
-
-/**
- * The squares written about more than once, most-returned first.
- *
- * Ties keep board order rather than whatever the entries happened to be in: a
- * list that reorders itself between two identical journals is a list nobody can
- * read twice.
- */
 export function revisited(journal: Journal): Revisit[] {
-  const times = new Map<number, number>();
-  for (const entry of journal.entries) times.set(entry.plan, (times.get(entry.plan) ?? 0) + 1);
-
-  return [...times.entries()]
-    .filter(([, count]) => count > 1)
-    .map(([plan, count]) => ({ plan, times: count }))
-    .sort((a, b) => b.times - a.times || a.plan - b.plan);
+  return revisitedEntries(journal.entries);
 }
