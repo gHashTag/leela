@@ -26,7 +26,7 @@ function playing(overrides: Partial<GameState> = {}): GameState {
 
 /** Describe whatever a roll produces from a given state. */
 function saidAfter(state: GameState, roll: number): string {
-  return describeMove(applyRoll(state, roll, CLASSIC).event, titleOf);
+  return describeMove('en', applyRoll(state, roll, CLASSIC).event, titleOf);
 }
 
 describe('entering the game', () => {
@@ -93,6 +93,7 @@ describe('every reachable move', () => {
     for (let loka = 1; loka <= TOTAL_PLANS; loka++) {
       for (let roll = 1; roll <= MAX_ROLL; roll++) {
         const text = describeMove(
+          'en',
           applyRoll(playing({ loka }), roll, CLASSIC).event,
           titleOf,
         );
@@ -107,7 +108,7 @@ describe('every reachable move', () => {
     for (let loka = 1; loka <= TOTAL_PLANS; loka++) {
       for (let roll = 1; roll <= MAX_ROLL; roll++) {
         const { event } = applyRoll(playing({ loka }), roll, CLASSIC);
-        const text = describeMove(event, titleOf);
+        const text = describeMove('en', event, titleOf);
         const numbers = [...text.matchAll(/\b(\d{1,3})\b/g)].map((m) => Number(m[1]));
         for (const number of numbers) {
           // The only numbers in a sentence are a die value or a square.
@@ -123,5 +124,39 @@ describe('every reachable move', () => {
       const state = { ...initialState(), loka: WIN_LOKA };
       expect(saidAfter(state, roll)).not.toContain('Not enough room');
     }
+  });
+});
+
+describe('a player whose Telegram is Russian reads Russian', () => {
+  // The mini app resolved the player's language and spent it entirely on the
+  // plan texts, exactly as the bot did: the board was Russian and every
+  // sentence about a move was English. The assertion is the shape — no Latin
+  // prose in any reachable move — rather than a list of the wrong sentences.
+  const russianTitle = (plan: number) => `План ${plan}`;
+
+  function latinProseIn(text: string): string[] {
+    return text.match(/[A-Za-z]+/g) ?? [];
+  }
+
+  it('says nothing Latin about any move from any square', () => {
+    for (let loka = 1; loka <= TOTAL_PLANS; loka++) {
+      for (let roll = 1; roll <= MAX_ROLL; roll++) {
+        const { event } = applyRoll(playing({ loka }), roll, CLASSIC);
+        const text = describeMove('ru', event, russianTitle);
+        expect(latinProseIn(text), `from ${loka} rolling ${roll}: ${text}`).toEqual([]);
+      }
+    }
+  });
+
+  it('says nothing Latin about entering, or failing to', () => {
+    for (let roll = 1; roll <= MAX_ROLL; roll++) {
+      const { event } = applyRoll(initialState(), roll, CLASSIC);
+      expect(latinProseIn(describeMove('ru', event, russianTitle))).toEqual([]);
+    }
+  });
+
+  it('still answers in English for a language with no catalogue', () => {
+    const { event } = applyRoll(initialState(), 6, CLASSIC);
+    expect(describeMove('ja', event, russianTitle)).toContain('A six');
   });
 });

@@ -9,6 +9,7 @@
  */
 
 import { Guide, openRouter } from '@leela/ai';
+import { LANGUAGES, messageCoverage, messageIssues, translatedLanguages } from '@leela/content';
 import { createBot } from './bot';
 import { DatabaseRoomStore } from './persistence';
 import {
@@ -100,6 +101,29 @@ console.log(
     ? 'A companion is configured and will respond to reports.'
     : 'No OPENROUTER_API_KEY: reports are kept, but nothing will respond to them.',
 );
+
+/**
+ * Say which languages the bot actually speaks.
+ *
+ * The plans are in 22 languages and the bot's own sentences are in two, with
+ * the rest falling back to English. That gap is a fact about the deployment,
+ * so an operator should read it on startup rather than hear it from a player.
+ */
+const spoken = translatedLanguages();
+console.log(
+  `Speaking ${spoken.join(', ')}; the other ${LANGUAGES.length - spoken.length} ` +
+    'languages get the plans in their own language and the rest in English.',
+);
+for (const { language, translated, total } of messageCoverage()) {
+  if (translated < total) {
+    console.log(`  ${language}: ${translated}/${total} sentences translated.`);
+  }
+}
+// A catalogue defect — a dropped placeholder, a missing plural form — is
+// invisible until a player hits the one sentence that has it. Say it here.
+for (const issue of messageIssues()) {
+  console.warn(`  catalogue: ${issue.language} "${issue.key}" ${issue.problem}`);
+}
 
 let stopping = false;
 const stop = () => {

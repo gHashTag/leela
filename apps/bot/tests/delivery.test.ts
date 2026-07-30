@@ -53,7 +53,7 @@ describe('when there is nowhere private to send it', () => {
   });
 
   it('offers a nudge that carries none of the content', () => {
-    const nudge = nudgeToPrivate('/path');
+    const nudge = nudgeToPrivate('en', '/path');
     expect(nudge).toContain('/path');
     expect(nudge).toContain('/start');
     // The reply's own text must not leak into the group.

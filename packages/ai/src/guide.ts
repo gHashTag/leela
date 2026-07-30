@@ -11,7 +11,7 @@
  * game, and the companion is a help with it.
  */
 
-import type { Language } from '@leela/content';
+import { type Language, messageFor } from '@leela/content';
 import type { Direction } from '@leela/engine';
 import type { CompletionOptions, LanguageModel } from './model';
 import { ModelError } from './model';
@@ -46,12 +46,15 @@ export interface Reflection {
   fromModel: boolean;
 }
 
-/** Shown when the companion cannot answer. Names the plan, so it still helps. */
+/**
+ * Shown when the companion cannot answer. Names the plan, so it still helps.
+ *
+ * In the player's language: this is the sentence they read at the moment the
+ * game is least able to explain itself, so English here would compound an
+ * outage with confusion.
+ */
 export function fallbackText(context: PlanContext): string {
-  return (
-    `Sit with plan ${context.plan} for now — the text is there to read, and ` +
-    'the reflection is yours either way. The companion is unavailable.'
-  );
+  return messageFor(context.language, 'companion.unavailable', { plan: context.plan });
 }
 
 export interface AskOptions {

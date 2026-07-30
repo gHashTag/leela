@@ -8,6 +8,7 @@
  */
 
 import { ARROWS, BOARD_ROWS, SNAKES, WIN_LOKA, hasWon } from '@leela/engine';
+import { type Language, messageFor } from '@leela/content';
 import type { Room } from './commands';
 
 /** Marks for players, in seating order. Distinct at a glance, and colourblind-safe. */
@@ -65,13 +66,15 @@ export function renderStandings(room: Room): string {
       const waiting = player.state.is_finished && !done;
 
       const where = done
-        ? 'Cosmic Consciousness 🕉'
+        ? messageFor(room.language, 'standings.finished')
         : waiting
-          ? 'waiting for a six'
-          : `plan ${player.state.loka}`;
+          ? messageFor(room.language, 'standings.waiting')
+          : messageFor(room.language, 'standings.plan', { plan: player.state.loka });
 
       const turn = seat === room.session.turnIndex && room.started ? ' ←' : '';
-      const owes = !player.reportSubmitted ? ' · owes a report' : '';
+      const owes = !player.reportSubmitted
+        ? ` · ${messageFor(room.language, 'standings.owes')}`
+        : '';
 
       return `${tokenFor(seat)} <b>${name}</b> — ${where}${owes}${turn}`;
     })
@@ -96,7 +99,7 @@ export function renderBoardMessage(room: Room): string {
     `<pre>${renderBoard(room)}</pre>`,
     renderStandings(room),
     '',
-    '<i>🕉 68 · 🐍 snake · 🏹 arrow</i>',
+    `<i>${escapeHtml(messageFor(room.language, 'board.legend'))}</i>`,
   ].join('\n');
 }
 
@@ -108,7 +111,12 @@ export function renderBoardMessage(room: Room): string {
  */
 export const MAX_MESSAGE_CHARS = 3500;
 
-export function renderPlan(plan: number, title: string, body: string): string {
+export function renderPlan(
+  language: Language,
+  plan: number,
+  title: string,
+  body: string,
+): string {
   const head = `<b>${plan}. ${escapeHtml(title)}</b>\n${renderProgress(plan)}\n\n`;
   const room = MAX_MESSAGE_CHARS - head.length;
   const text = escapeHtml(body);
@@ -118,5 +126,6 @@ export function renderPlan(plan: number, title: string, body: string): string {
   const cut = text.slice(0, room);
   const lastBreak = cut.lastIndexOf('\n\n');
   const trimmed = lastBreak > room * 0.5 ? cut.slice(0, lastBreak) : cut;
-  return `${head + trimmed.trim()}\n\n<i>…continues. /plan ${plan} again for the rest.</i>`;
+  const more = messageFor(language, 'plan.continues', { plan });
+  return `${head + trimmed.trim()}\n\n<i>${escapeHtml(more)}</i>`;
 }

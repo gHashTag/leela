@@ -170,6 +170,9 @@ const PUBLIC_API = {
   createBot: 'the bot entry point, called by index.ts',
   supervise: 'wraps the bot run loop',
   build: 'the docs generator, run as a script',
+  // The catalogue's own tooling: read by tests and by a translator working out
+  // what is left to do, not by the game.
+  englishCatalogue: 'the key list, for tests and for a translator',
   // Audit surface, consumed by the scripts in this directory.
   declaredFields: 'this script',
   declaredExports: 'this script',

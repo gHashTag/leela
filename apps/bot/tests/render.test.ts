@@ -160,27 +160,27 @@ describe('renderProgress', () => {
 
 describe('renderPlan', () => {
   it('leads with the number and the title', () => {
-    expect(renderPlan(1, 'Birth (janma)', 'text')).toMatch(/^<b>1\. Birth \(janma\)<\/b>/);
+    expect(renderPlan('en', 1, 'Birth (janma)', 'text')).toMatch(/^<b>1\. Birth \(janma\)<\/b>/);
   });
 
   it('escapes a title and a body that contain markup', () => {
-    const out = renderPlan(1, 'A <b>title</b>', 'body & <i>more</i>');
+    const out = renderPlan('en', 1, 'A <b>title</b>', 'body & <i>more</i>');
     expect(out).toContain('A &lt;b&gt;title&lt;/b&gt;');
     expect(out).toContain('body &amp; &lt;i&gt;more&lt;/i&gt;');
   });
 
   it('stays inside what Telegram will accept', () => {
-    const out = renderPlan(1, 'Title', 'x'.repeat(20_000));
+    const out = renderPlan('en', 1, 'Title', 'x'.repeat(20_000));
     expect(out.length).toBeLessThan(4096);
   });
 
   it('says the text continues rather than stopping mid-word', () => {
-    const out = renderPlan(1, 'Title', 'word '.repeat(2000));
+    const out = renderPlan('en', 1, 'Title', 'word '.repeat(2000));
     expect(out).toContain('continues');
   });
 
   it('leaves a short plan whole', () => {
-    const out = renderPlan(5, 'Short', 'a small body');
+    const out = renderPlan('en', 5, 'Short', 'a small body');
     expect(out).toContain('a small body');
     expect(out).not.toContain('continues');
   });

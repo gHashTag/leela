@@ -7,7 +7,7 @@
  */
 
 import { Bot, InlineKeyboard, type Context } from 'grammy';
-import { planFor, resolveLanguage } from '@leela/content';
+import { type Language, messageFor, planFor, resolveLanguage } from '@leela/content';
 import type { Guide } from '@leela/ai';
 import * as commands from './commands';
 import type { Button, Effect, Reply, Room } from './commands';
@@ -128,7 +128,7 @@ export function createBot({
 
       if (destination.kind === 'chat-fallback') {
         // Say that it is private, without saying what it was.
-        await ctx.reply(nudgeToPrivate(commandOf(ctx)), { parse_mode: 'HTML' });
+        await ctx.reply(nudgeToPrivate(languageOf(ctx), commandOf(ctx)), { parse_mode: 'HTML' });
         continue;
       }
 
@@ -138,9 +138,20 @@ export function createBot({
       } catch (error) {
         if (!isBlockedByUser(error)) throw error;
         channels.refuse(destination.userId);
-        await ctx.reply(nudgeToPrivate(commandOf(ctx)), { parse_mode: 'HTML' });
+        await ctx.reply(nudgeToPrivate(languageOf(ctx), commandOf(ctx)), { parse_mode: 'HTML' });
       }
     }
+  }
+
+  /**
+   * The language to answer this update in, before a room is known.
+   *
+   * Telegram reports the client's language on every update, so even the
+   * "there is no table here" replies can be in it. Once a room exists its own
+   * language wins: a table is played in one language, not one per player.
+   */
+  function languageOf(ctx: Context, room?: Room | null): Language {
+    return room?.language ?? resolveLanguage(ctx.from?.language_code);
   }
 
   /** The command that produced this update, for a message that names it. */
@@ -237,7 +248,7 @@ export function createBot({
 
     const room = await store.get(chatId);
     if (!room) {
-      await ctx.reply('No table here yet. Send /new to open one.');
+      await ctx.reply(messageFor(languageOf(ctx), 'chat.noTable'));
       return;
     }
 
@@ -257,7 +268,7 @@ export function createBot({
 
     const room = await store.get(chatId);
     if (!room) {
-      await deliver(ctx, commands.help().replies);
+      await deliver(ctx, commands.help(languageOf(ctx)).replies);
       return;
     }
 
@@ -266,7 +277,7 @@ export function createBot({
     await deliver(ctx, result.replies);
   });
 
-  bot.command('help', async (ctx) => deliver(ctx, commands.help().replies));
+  bot.command('help', async (ctx) => deliver(ctx, commands.help(languageOf(ctx)).replies));
 
   bot.command('new', async (ctx) => {
     const chatId = chatIdOf(ctx);
@@ -275,7 +286,7 @@ export function createBot({
 
     const existing = await store.get(chatId);
     if (existing && !existing.session.players.every((p) => p.state.is_finished)) {
-      await ctx.reply('A game is already running here. Finish it, or send /end.');
+      await ctx.reply(messageFor(languageOf(ctx, existing), 'chat.running'));
       return;
     }
 
@@ -289,7 +300,8 @@ export function createBot({
     const chatId = chatIdOf(ctx);
     if (!chatId) return;
     await store.delete(chatId);
-    await ctx.reply('The table is cleared.');
+    const cleared = await store.get(chatId);
+    await ctx.reply(messageFor(languageOf(ctx, cleared), 'chat.cleared'));
   });
 
   bot.command('join', (ctx) => withRoom(ctx, (room, who) => commands.join(room, who)));
@@ -331,11 +343,8 @@ export function createBot({
           broadcast: true,
           html: true,
           buttons: room.started
-            ? [
-                { label: '🎲 Roll', action: 'roll' as const },
-                { label: '📖 My plan', action: 'plan' as const },
-              ]
-            : [{ label: '🪑 Join', action: 'join' as const }],
+            ? commands.playingButtons(room.language).filter((b) => b.action !== 'board')
+            : [{ label: messageFor(room.language, 'button.join'), action: 'join' as const }],
         },
       ],
     })),
@@ -361,10 +370,12 @@ export function createBot({
         room,
         replies: [
           {
-            text: renderPlan(number, found.title, found.body),
+            text: renderPlan(room.language, number, found.title, found.body),
             broadcast: false,
             html: true,
-            buttons: room.started ? [{ label: '🎲 Roll', action: 'roll' as const }] : undefined,
+            buttons: room.started
+            ? [{ label: messageFor(room.language, 'button.roll'), action: 'roll' as const }]
+            : undefined,
           },
         ],
       };
@@ -386,7 +397,7 @@ export function createBot({
     if (!who || !chatId) return;
 
     if (action === 'help') {
-      await deliver(ctx, commands.help().replies);
+      await deliver(ctx, commands.help(languageOf(ctx)).replies);
       return;
     }
 
@@ -401,7 +412,7 @@ export function createBot({
 
     const room = await store.get(chatId);
     if (!room) {
-      await ctx.reply('No table here yet. /new opens one.');
+      await ctx.reply(messageFor(languageOf(ctx), 'chat.noTableShort'));
       return;
     }
 
@@ -435,7 +446,7 @@ export function createBot({
       room,
       replies: [
         {
-          text: renderPlan(seated.state.loka, found.title, found.body),
+          text: renderPlan(room.language, seated.state.loka, found.title, found.body),
           broadcast: false,
           html: true,
         },
@@ -447,7 +458,7 @@ export function createBot({
   // indistinguishable from a broken bot, and that is how this one first looked.
   bot.on('message:text', async (ctx) => {
     if (ctx.message.text.startsWith('/')) {
-      await ctx.reply('I do not know that one. /help lists what I answer to.');
+      await ctx.reply(messageFor(languageOf(ctx), 'chat.unknown'));
       return;
     }
 
@@ -455,7 +466,7 @@ export function createBot({
     const room = chatId ? await store.get(chatId) : null;
 
     if (!room) {
-      await ctx.reply('No table here yet. /new opens one, /help explains the rest.');
+      await ctx.reply(messageFor(languageOf(ctx), 'chat.noTableHelp'));
       return;
     }
 
@@ -473,7 +484,7 @@ export function createBot({
       return;
     }
 
-    await ctx.reply('/roll to throw, /board to see where everyone stands, /help for the rest.');
+    await ctx.reply(messageFor(languageOf(ctx, room), 'chat.hint'));
   });
 
   // A failing update should not take the process down, and the room should not

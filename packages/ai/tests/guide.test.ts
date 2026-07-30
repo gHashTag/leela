@@ -187,3 +187,27 @@ describe('the guide sees the path', () => {
     expect(model.calls[0].messages[0].content).toContain('noted');
   });
 });
+
+describe('the fallback speaks the language the player is playing in', () => {
+  // A companion outage is the moment the game explains itself least well, and
+  // it used to explain itself in English to everyone. The assertion is that
+  // the fallback follows the context's language, not that one sentence exists.
+  it('names the plan in Russian for a Russian player', () => {
+    const text = fallbackText({ plan: 41, language: 'ru' });
+    expect(text).toContain('41');
+    expect(text).toMatch(/[а-яё]/i);
+    expect(text).not.toMatch(/[A-Za-z]/);
+  });
+
+  it('falls back to English for a language with no catalogue', () => {
+    expect(fallbackText({ plan: 41, language: 'ja' })).toBe(
+      fallbackText({ plan: 41, language: 'en' }),
+    );
+  });
+
+  it('always names the plan, whatever the language', () => {
+    for (const language of ['en', 'ru', 'de', 'zh'] as const) {
+      expect(fallbackText({ plan: 7, language })).toContain('7');
+    }
+  });
+});

@@ -117,3 +117,20 @@ export function rulesFor(locale: string): RuleChapter[] {
 export function ruleChapter(locale: string, slug: string): RuleChapter | null {
   return rulesFor(locale).find((c) => c.slug === slug) ?? null;
 }
+
+// The sentences the game says about itself, as opposed to the text it teaches.
+// Kept in a second file because the catalogue is prose and this one is data.
+export {
+  englishCatalogue,
+  messageCoverage,
+  messageFor,
+  messageIssues,
+  placeholdersIn,
+  translatedLanguages,
+  type LanguageCoverage,
+  type Message,
+  type MessageIssue,
+  type MessageKey,
+  type MessageParams,
+  type PluralForms,
+} from './messages';

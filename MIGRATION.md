@@ -675,6 +675,59 @@ That is the whole finding of this pass: three of the four places had correct cod
 and untested guarantees, which is a different problem from a bug and not a
 smaller one.
 
+## Twenty-third pass: the game spoke English at a Russian table
+
+`room.language` reached exactly one function. `planFor`.
+
+A table opened by a Russian speaker served all 72 plans in Russian, and said
+everything else in English: whose turn it is, that you owe a report on the plan
+you are standing on, what the commands are, what the buttons do. The mini app
+did the same — it resolved the player's language, drew a Russian board, and
+described every move in English. So did the companion's fallback, which is the
+sentence a player reads at the moment the game can least explain itself.
+
+Nothing was broken in the sense of being wrong. The sentences were simply
+written where they were used, and a string literal in `commands.ts` has no
+language.
+
+**The catalogue.** `packages/content/src/messages.ts`, next to the plans,
+because both are things the game says. Three properties, in order of how much
+they matter:
+
+  - English is complete *by construction* — `MessageKey` is derived from the
+    English catalogue, so a key without English text is not a key.
+  - A missing translation falls back per key, not per language, so a
+    half-finished catalogue is useful the day it is started.
+  - Plurals belong to the language. Russian distinguishes one/few/many; a
+    catalogue offering `{one, other}` prints "5 плана". `Intl.PluralRules`
+    decides which form to ask for, and a test asserts that every language is
+    given every form it declares it needs — which is an assertion about the
+    shape, not a list of the languages translated so far.
+
+**Two languages, not twenty-two.** English and Russian are complete. The other
+twenty fall back. Machine-translating forty sentences into twenty languages
+would have taken an afternoon and would have been the same mistake as the 744
+machine-translated titles that rotted here unnoticed until the third pass went
+looking. The gap is instead *reported*: `messageCoverage` is printed by the bot
+on startup, so an operator reads it before a player does.
+
+**How it is held.** Not by a list of the sentences that were wrong. `apps/bot`
+plays a whole game at a Russian table — openings, refusals, the report gate,
+snakes, arrows, three sixes, the path, the help — and asserts that no Latin
+prose comes out of any of it. Commands, HTML tags and `{placeholders}` are
+stripped first, because those are syntax. A sentence added in English tomorrow
+fails that test rather than shipping. `apps/miniapp` does the same across every
+reachable move from every square.
+
+**Found on the way.** `describeStandings` carried a fourth copy of the win
+check — `is_finished && previous_loka !== 0` — which had already lost the
+condition that the player is standing on the win square. Behaviourally
+identical today, because the engine only sets `is_finished` on square 68. It
+now calls `hasWon`, which is the function that exists to stop exactly this.
+
+**Still English on purpose:** `formatWait`'s "3h 5m". It is a duration, not
+prose, and it belongs to the engine, which has no language.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

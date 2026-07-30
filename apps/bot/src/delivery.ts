@@ -10,6 +10,8 @@
  * The decision is a pure function so it can be tested; sending is not.
  */
 
+import { type Language, messageFor } from '@leela/content';
+
 export type Destination =
   /** Send to the chat the command came from. */
   | { kind: 'chat' }
@@ -57,11 +59,8 @@ export function destinationFor(
  * Deliberately does not include the content: the whole point of the reply being
  * private is that the group should not read it.
  */
-export function nudgeToPrivate(command: string): string {
-  return (
-    `That answer is yours alone, and I cannot message you directly yet. ` +
-    `Open a chat with me, send /start, then try ${command} again.`
-  );
+export function nudgeToPrivate(language: Language, command: string): string {
+  return messageFor(language, 'chat.private', { command });
 }
 
 /**

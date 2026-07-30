@@ -17,6 +17,7 @@ import {
   createSession,
   currentPlayer,
   formatWait,
+  hasWon,
   isSessionOver,
   rollerFor,
   ruleSetById,
@@ -27,7 +28,7 @@ import {
   type RuleSet,
   type Session,
 } from '@leela/engine';
-import { planFor, resolveLanguage, type Language } from '@leela/content';
+import { messageFor, planFor, resolveLanguage, type Language } from '@leela/content';
 
 /** A table, plus the bits the bot needs that the engine does not care about. */
 export interface Room {
@@ -117,18 +118,28 @@ function say(text: string, broadcast = true, buttons?: Button[]): Reply {
   return buttons?.length ? { text, broadcast, buttons } : { text, broadcast };
 }
 
-/** The buttons that make sense while a game is running. */
-const PLAYING: Button[] = [
-  { label: '🎲 Roll', action: 'roll' },
-  { label: '📖 My plan', action: 'plan' },
-  { label: '🗺 Board', action: 'board' },
-];
+/**
+ * The buttons that make sense while a game is running.
+ *
+ * A function of the language rather than a constant: a button is a sentence
+ * too, and a Russian table with an English `🎲 Roll` under it is the same
+ * defect as an English reply, only harder to notice.
+ */
+export function playingButtons(language: Language): Button[] {
+  return [
+    { label: messageFor(language, 'button.roll'), action: 'roll' },
+    { label: messageFor(language, 'button.plan'), action: 'plan' },
+    { label: messageFor(language, 'button.board'), action: 'board' },
+  ];
+}
 
 /** The buttons that make sense while a table is filling up. */
-const WAITING: Button[] = [
-  { label: '🪑 Join', action: 'join' },
-  { label: '▶️ Start', action: 'start' },
-];
+export function waitingButtons(language: Language): Button[] {
+  return [
+    { label: messageFor(language, 'button.join'), action: 'join' },
+    { label: messageFor(language, 'button.start'), action: 'start' },
+  ];
+}
 
 /** Whoever is being addressed, by name where we have one. */
 function nameOf(room: Room, id: string): string {
@@ -166,11 +177,9 @@ export function openRoom(
     room,
     replies: [
       say(
-        `A table is open. ${host.name} is seated.\n` +
-          `Up to ${MAX_SEATS} may play — send /join.\n` +
-          `When everyone is seated, ${host.name} sends /start.`,
+        messageFor(language, 'table.opened', { host: host.name, seats: MAX_SEATS }),
         true,
-        WAITING,
+        waitingButtons(language),
       ),
     ],
   };
@@ -179,15 +188,18 @@ export function openRoom(
 /** `/join` — take a seat, until the table is full or play has begun. */
 export function join(room: Room, player: { id: string; name: string }): CommandResult {
   if (room.started) {
-    return { room, replies: [say('This game has already begun.', false)] };
+    return { room, replies: [say(messageFor(room.language, 'join.started'), false)] };
   }
 
   if (room.session.players.some((p) => p.id === player.id)) {
-    return { room, replies: [say('You are already seated.', false)] };
+    return { room, replies: [say(messageFor(room.language, 'join.already'), false)] };
   }
 
   if (room.session.players.length >= MAX_SEATS) {
-    return { room, replies: [say(`The table seats ${MAX_SEATS}, and it is full.`, false)] };
+    return {
+      room,
+      replies: [say(messageFor(room.language, 'join.full', { seats: MAX_SEATS }), false)],
+    };
   }
 
   const seated = [
@@ -203,18 +215,24 @@ export function join(room: Room, player: { id: string; name: string }): CommandR
 
   return {
     room: next,
-    replies: [say(`${player.name} takes a seat. ${seated.length} at the table.`, true, WAITING)],
+    replies: [
+      say(
+        messageFor(room.language, 'join.took', { name: player.name, count: seated.length }),
+        true,
+        waitingButtons(room.language),
+      ),
+    ],
   };
 }
 
 /** `/start` — close the table and begin. Only the host may. */
 export function start(room: Room, byPlayerId: string): CommandResult {
   if (room.started) {
-    return { room, replies: [say('Already playing.', false)] };
+    return { room, replies: [say(messageFor(room.language, 'start.already'), false)] };
   }
 
   if (room.session.players[0].id !== byPlayerId) {
-    return { room, replies: [say('Only whoever opened the table may start it.', false)] };
+    return { room, replies: [say(messageFor(room.language, 'start.hostOnly'), false)] };
   }
 
   const next: Room = { ...room, started: true };
@@ -224,10 +242,9 @@ export function start(room: Room, byPlayerId: string): CommandResult {
     room: next,
     replies: [
       say(
-        `The game begins. ${nameOf(next, first.id)} goes first.\n` +
-          'A six puts you on the board — send /roll.',
+        messageFor(room.language, 'start.begins', { name: nameOf(next, first.id) }),
         true,
-        PLAYING,
+        playingButtons(room.language),
       ),
     ],
   };
@@ -244,7 +261,7 @@ export function start(room: Room, byPlayerId: string): CommandResult {
  */
 export function roll(room: Room, byPlayerId: string, now: number): CommandResult {
   if (!room.started) {
-    return { room, replies: [say('The table has not started yet — /start first.', false)] };
+    return { room, replies: [say(messageFor(room.language, 'roll.notStarted'), false)] };
   }
 
   if (isSessionOver(room.session)) {
@@ -252,9 +269,7 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
     // hint that another table is a command away.
     return {
       room,
-      replies: [
-        say('This game is over. /new opens another table, /path shows what you wrote.', false),
-      ],
+      replies: [say(messageFor(room.language, 'roll.over'), false)],
     };
   }
 
@@ -262,7 +277,9 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
   if (holder.id !== byPlayerId) {
     return {
       room,
-      replies: [say(`It is ${nameOf(room, holder.id)}'s turn.`, false)],
+      replies: [
+        say(messageFor(room.language, 'roll.notYourTurn', { name: nameOf(room, holder.id) }), false),
+      ],
     };
   }
 
@@ -274,8 +291,10 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
         room,
         replies: [
           say(
-            `You are standing on ${holder.state.loka}. ${plan.title}.\n` +
-              'Write what it brings up before you move on — send /report followed by your words.',
+            messageFor(room.language, 'roll.reportRequired', {
+              plan: holder.state.loka,
+              title: plan.title,
+            }),
             false,
           ),
         ],
@@ -283,7 +302,9 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
     }
     return {
       room,
-      replies: [say(`Not yet. Your next throw is in ${formatWait(verdict.waitMs)}.`, false)],
+      replies: [
+        say(messageFor(room.language, 'roll.cooldown', { wait: formatWait(verdict.waitMs) }), false),
+      ],
     };
   }
 
@@ -313,18 +334,24 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
   ];
 
   if (move.event.isGameFinished && !move.event.isBlocked) {
-    replies.push(say(`${nameOf(next, move.playerId)} reaches Cosmic Consciousness. 🕉`));
+    replies.push(
+      say(messageFor(room.language, 'roll.reached', { name: nameOf(next, move.playerId) })),
+    );
   }
 
   if (isSessionOver(next.session)) {
     replies.push(say(describeStandings(next)));
-    replies.push(
-      say('That is the game. /path shows what you wrote along the way; /new opens another table.'),
-    );
+    replies.push(say(messageFor(room.language, 'roll.ended')));
   } else if (!move.keepsTurn) {
-    replies.push(say(`${nameOf(next, currentPlayer(next.session).id)} is next.`));
+    replies.push(
+      say(
+        messageFor(room.language, 'roll.next', {
+          name: nameOf(next, currentPlayer(next.session).id),
+        }),
+      ),
+    );
   } else {
-    replies.push(say('A six — throw again.'));
+    replies.push(say(messageFor(room.language, 'roll.again')));
   }
 
   return { room: next, replies, effects };
@@ -340,42 +367,44 @@ function describeMove(
   const who = nameOf(room, playerId);
 
   if (event.isBlocked && event.from === event.to) {
-    return `${who} throws ${value}. Not enough room — the throw is refused.`;
+    return messageFor(room.language, 'move.refused', { name: who, value });
   }
 
   const plan = planFor(room.language, event.to);
-  const head = `${who} throws ${value}.`;
+  const common = { name: who, value, to: event.to, title: plan.title };
 
   if (event.isThreeSixesReset) {
-    return `${head} A third six — the run burns, back to ${event.to}.\n${event.to}. ${plan.title}`;
+    return messageFor(room.language, 'move.threeSixes', common);
   }
 
   if (event.jumpedFrom !== null) {
-    const kind = event.direction.startsWith('snake') ? 'A snake at' : 'An arrow at';
-    return `${head} ${kind} ${event.jumpedFrom} takes them to ${event.to}.\n${event.to}. ${plan.title}`;
+    const key = event.direction.startsWith('snake') ? 'move.snake' : 'move.arrow';
+    return messageFor(room.language, key, { ...common, from: event.jumpedFrom });
   }
 
-  return `${head} ${event.from} → ${event.to}.\n${event.to}. ${plan.title}`;
+  return messageFor(room.language, 'move.step', { ...common, from: event.from });
 }
 
 /** `/report <text>` — file the report the game is played for. */
 export function report(room: Room, byPlayerId: string, text: string): CommandResult {
   const seated = room.session.players.find((p) => p.id === byPlayerId);
   if (!seated) {
-    return { room, replies: [say('You are not at this table.', false)] };
+    return { room, replies: [say(messageFor(room.language, 'report.notSeated'), false)] };
   }
 
   if (text.trim().length === 0) {
     return {
       room,
-      replies: [say('Send /report followed by what the plan brings up.', false)],
+      replies: [say(messageFor(room.language, 'report.empty'), false)],
     };
   }
 
   const next: Room = { ...room, session: submitReport(room.session, byPlayerId) };
   return {
     room: next,
-    replies: [say(`${nameOf(next, byPlayerId)} has reported. You may throw.`, false)],
+    replies: [
+      say(messageFor(room.language, 'report.filed', { name: nameOf(next, byPlayerId) }), false),
+    ],
     // The report is what the game is played for; keeping it is the point.
     effects: [
       { kind: 'report', userId: byPlayerId, plan: seated.state.loka, text: text.trim() },
@@ -389,11 +418,11 @@ export function plan(room: Room, byPlayerId: string, requested?: number): Comman
   const number = requested ?? seated?.state.loka;
 
   if (number === undefined) {
-    return { room, replies: [say('Which plan? Send /plan followed by a number, 1 to 72.', false)] };
+    return { room, replies: [say(messageFor(room.language, 'plan.which'), false)] };
   }
 
   if (!Number.isInteger(number) || number < 1 || number > 72) {
-    return { room, replies: [say('The board runs from 1 to 72.', false)] };
+    return { room, replies: [say(messageFor(room.language, 'plan.range'), false)] };
   }
 
   const found = planFor(room.language, number);
@@ -430,13 +459,11 @@ export function pathFor(
   entries: PathEntry[] | null,
 ): Reply[] {
   if (entries === null) {
-    return [say('This bot is not keeping reports, so there is no path to show.', false)];
+    return [say(messageFor(language, 'path.absent'), false)];
   }
 
   if (entries.length === 0) {
-    return [
-      say('You have not written anything yet. /report on the plan you are standing on.', false),
-    ];
+    return [say(messageFor(language, 'path.empty'), false)];
   }
 
   const ordered = [...entries].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
@@ -445,7 +472,7 @@ export function pathFor(
     return `${entry.plan}. ${title}\n${entry.text}`;
   });
 
-  const heading = `Your path — ${ordered.length} ${ordered.length === 1 ? 'plan' : 'plans'}.`;
+  const heading = messageFor(language, 'path.heading', { count: ordered.length });
 
   return paginate([heading, ...entriesText]).map((page) => say(page, false));
 }
@@ -515,38 +542,27 @@ export function board(room: Room): CommandResult {
 
 function describeStandings(room: Room): string {
   const lines = standings(room.session).map((player) => {
-    const done = player.state.is_finished && player.state.previous_loka !== 0;
-    const where = done ? 'finished 🕉' : `${player.state.loka}`;
-    const owed = player.reportSubmitted ? '' : ' — owes a report';
+    // `hasWon`, not a fourth copy of its condition: this one had already lost
+    // the check that the player is standing on the win square.
+    const where = hasWon(player.state)
+      ? messageFor(room.language, 'standings.done')
+      : `${player.state.loka}`;
+    const owed = player.reportSubmitted
+      ? ''
+      : ` — ${messageFor(room.language, 'standings.owes')}`;
     return `${nameOf(room, player.id)}: ${where}${owed}`;
   });
 
   return lines.join('\n');
 }
 
-/** `/help` — the whole surface, in one message. */
-export function help(): CommandResult {
-  return {
-    room: null,
-    replies: [
-      say(
-        [
-          'Leela — the game of self-knowledge.',
-          '',
-          '/new — open a table',
-          '/join — take a seat',
-          '/start — begin (host only)',
-          '/roll — throw the die',
-          '/report <text> — reflect on the plan you stand on',
-          '/plan [n] — read a plan',
-          '/path — what you have written, and where',
-          '/board — where everyone stands',
-          '',
-          'A six puts you on the board. Reaching 68 exactly wins.',
-          'You cannot throw again until you have reported on where you are.',
-        ].join('\n'),
-        false,
-      ),
-    ],
-  };
+/**
+ * `/help` — the whole surface, in one message.
+ *
+ * Takes a language because help is the one message a player reads when they do
+ * not yet understand the game, which is the worst moment to be handed a
+ * language they do not read.
+ */
+export function help(language: Language = 'en'): CommandResult {
+  return { room: null, replies: [say(messageFor(language, 'help'), false)] };
 }

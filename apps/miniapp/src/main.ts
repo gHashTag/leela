@@ -21,7 +21,7 @@ import {
   type GameState,
   type MoveEvent,
 } from '@leela/engine';
-import { resolveLanguage, type Language } from '@leela/content';
+import { messageFor, resolveLanguage, type Language } from '@leela/content';
 import { loadPlans, plan as planFor } from './content';
 import { describeMove } from './describe';
 import { createCell } from './cell';
@@ -103,6 +103,26 @@ const el = {
   readerBody: document.getElementById('reader-body') as HTMLElement,
 };
 
+/**
+ * The parts of the page that are written in the HTML rather than drawn.
+ *
+ * The markup has to say something before the script runs, so it says it in
+ * English; this replaces it once the language is known. Without this step the
+ * board is Russian and its two buttons are not, which is the same defect as an
+ * English reply in a Russian chat — only in the corner of the eye.
+ */
+function localiseChrome(): void {
+  document.documentElement.lang = language;
+  el.roll.textContent = messageFor(language, 'app.roll');
+  el.read.textContent = messageFor(language, 'app.read');
+  el.board.setAttribute('aria-label', messageFor(language, 'app.boardLabel'));
+  el.say.textContent = messageFor(language, 'app.opening');
+  el.planTitle.textContent = messageFor(language, 'app.waiting');
+
+  const close = el.reader.querySelector('form button');
+  if (close) close.textContent = messageFor(language, 'app.close');
+}
+
 /** Every cell, by plan, so an update touches only what changed. */
 const cells = new Map<number, HTMLElement>();
 
@@ -145,13 +165,13 @@ function draw(event?: MoveEvent): void {
   const plan = planFor(state.loka);
   el.planNumber.textContent = waitingToEnter(state) ? '—' : String(state.loka);
   el.planTitle.textContent = waitingToEnter(state)
-    ? 'Throw a six to enter the game'
+    ? messageFor(language, 'app.waiting')
     : plan.title;
   el.progress.value = waitingToEnter(state) ? 0 : Math.min(state.loka, WIN_LOKA);
 
   el.say.className = 'say';
   if (event) {
-    el.say.textContent = describeMove(event, (plan) => planFor(plan).title);
+    el.say.textContent = describeMove(language, event, (plan) => planFor(plan).title);
     if (event.direction === 'snake 🐍') el.say.classList.add('snake');
     if (event.direction === 'arrow 🏹') el.say.classList.add('arrow');
     if (event.isGameFinished && !event.isBlocked) el.say.classList.add('win');
@@ -224,12 +244,14 @@ el.read.addEventListener('click', () => openPlan(state.loka));
 
 // Nothing can be drawn before the texts arrive: the board labels every square
 // with its title. Failing loudly beats an empty grid that looks like a bug.
+localiseChrome();
+
 loadPlans(language)
   .then(() => {
     buildBoard();
     draw();
   })
   .catch((error) => {
-    el.say.textContent = 'The plan texts could not be loaded. Reopening the app usually fixes it.';
+    el.say.textContent = messageFor(language, 'app.unloadable');
     console.error('[miniapp] failed to load content', error);
   });

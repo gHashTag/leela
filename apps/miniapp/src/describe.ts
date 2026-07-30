@@ -8,39 +8,42 @@
  */
 
 import { WIN_LOKA, type MoveEvent } from '@leela/engine';
+import { type Language, messageFor } from '@leela/content';
 
 /** Look up a plan's title. Injected so this stays free of the content loader. */
 export type TitleOf = (plan: number) => string;
 
-export function describeMove(event: MoveEvent, titleOf: TitleOf): string {
+export function describeMove(language: Language, event: MoveEvent, titleOf: TitleOf): string {
   const title = titleOf(event.to);
+  const say = (key: Parameters<typeof messageFor>[1], params: Record<string, string | number>) =>
+    messageFor(language, key, params);
 
   if (event.isGameStart) {
-    return `A six. You enter the game on ${event.to}. ${title}`;
+    return say('app.entered', { to: event.to, title });
   }
 
   // Still waiting on the win square: nothing was overshot, the six simply has
   // not come yet.
   if (event.isBlocked && event.from === WIN_LOKA && event.to === WIN_LOKA) {
-    return `You threw ${event.roll}. It takes a six to enter the game.`;
+    return say('app.needSix', { value: event.roll });
   }
 
   if (event.isBlocked && event.from === event.to) {
-    return `You threw ${event.roll}. Not enough room — you stay on ${event.to}.`;
+    return say('app.noRoom', { value: event.roll, to: event.to });
   }
 
   if (event.isThreeSixesReset) {
-    return `A third six. The run burns and you return to ${event.to}. ${title}`;
+    return say('app.threeSixes', { to: event.to, title });
   }
 
   if (event.direction === 'win 🕉') {
-    return 'You reach Cosmic Consciousness. 🕉';
+    return say('app.won', {});
   }
 
   if (event.jumpedFrom !== null) {
-    const kind = event.direction === 'snake 🐍' ? 'A snake at' : 'An arrow at';
-    return `You threw ${event.roll}. ${kind} ${event.jumpedFrom} takes you to ${event.to}. ${title}`;
+    const key = event.direction === 'snake 🐍' ? 'app.snake' : 'app.arrow';
+    return say(key, { value: event.roll, from: event.jumpedFrom, to: event.to, title });
   }
 
-  return `You threw ${event.roll}. ${event.from} → ${event.to}. ${title}`;
+  return say('app.step', { value: event.roll, from: event.from, to: event.to, title });
 }

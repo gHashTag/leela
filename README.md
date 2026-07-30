@@ -125,6 +125,26 @@ planFor('ru-RU', 1).title;  // "Рождение (джанма)"
 resolveLanguage('zh-Hans'); // "zh"
 ```
 
+The plans are one half of what the game says; the sentences around them are the
+other. Those live in the same package, because `room.language` used to reach
+`planFor` and nothing else — a Russian table read Russian plans and English
+instructions.
+
+```ts
+import { messageFor, messageCoverage } from '@leela/content';
+
+messageFor('ru', 'roll.next', { name: 'Аня' }); // "Следующий ход — Аня."
+messageFor('ru', 'path.heading', { count: 5 }); // "Ваш путь — 5 планов."
+messageFor('ja', 'roll.again');                 // English: no catalogue yet
+messageCoverage();                              // what each language covers
+```
+
+English and Russian are complete; the other twenty languages get the plans in
+their own language and the scaffolding in English. That is a gap the bot prints
+on startup rather than one you find out about from a player — and it is
+deliberately not filled by machine translation, which is what put 744 rotted
+titles in this repository in the first place.
+
 Regenerate after changing a source repository:
 
 ```bash
@@ -149,16 +169,16 @@ cd packages/engine && bun test
 | Package | Tests | State |
 |---|---|---|
 | `@leela/engine` | 194 | rules, four variants, sessions, turn gating, seeded dice |
-| `@leela/content` | 109 | 22 languages, quality guards |
+| `@leela/content` | 127 | 22 languages of plans, 2 of the game's own voice |
 | `@leela/db` | 86 | schema, mapping, SQL migrations, legacy import |
-| `@leela/ai` | 70 | the companion — prompts built from the plan text |
+| `@leela/ai` | 73 | the companion — prompts built from the plan text |
 | `@leela/contracts` | 28 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
-| `@leela/bot` | 188 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
+| `@leela/bot` | 198 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 106 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
-| `@leela/miniapp` | 46 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
+| `@leela/miniapp` | 49 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-827 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+861 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 reports fields that are written and never read, and exports with no caller:
 
 ```bash
