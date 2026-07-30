@@ -894,6 +894,44 @@ polling loop, which is how this bot runs. It does not cover `handleUpdate`, so
 a webhook deployment would have to catch for itself. Asserted as it is, so
 whoever changes it finds out from a test.
 
+## Twenty-eighth pass: the win was erased at the moment it happened
+
+Same move as the last pass, on the other surface. `main.ts` was the mini app's
+untested file — the state it saves, the state it trusts on the way back, and
+everything the screen shows. Two defects were in it, and one of them could only
+have been seen by playing a game to the end.
+
+**Reaching Cosmic Consciousness undid itself.** `draw()` asked
+`state.is_finished` to mean "waiting to enter". A player who has *won* is also
+finished, so at the moment of arriving on 68 the header reset to `—`, the
+progress bar dropped to zero, the token came off the board and the Read button
+went dead — while the sentence underneath said they had arrived. That is the
+**fourth** place where 68 meaning two things has cost something: `hasWon`,
+the leaderboard, `/new`, and now the one screen where it is the whole point of
+playing.
+
+The decision is `view.ts` now — `headline(state, language, titleOf)`, a pure
+function from a game to what the screen should say — so it can be asserted
+across every state a real game reaches rather than by playing to the end by
+hand. The invariant it holds is the one that broke: *waiting* is
+`is_finished && !hasWon`, and nothing else.
+
+**The saved game was trusted on one field.** The check read that `loka` was a
+square and handed the rest to the engine. `localStorage` is writable from the
+console, by an older version of this app, and by a write that was interrupted —
+and `consecutive_sixes: "2"` makes the three-sixes rule quietly stop working,
+because `"2" + 1` is `"21"` and never equals 3.
+
+`state.ts` replaces it with a rule rather than a list: **a saved game must be
+one the engine could have produced.** Every state from forty deterministic
+games is accepted; a state finished on plan 41, a run of three sixes that would
+have reset, a direction the engine never writes, and each field removed in turn
+are not. The consistency check is the one a field-by-field pass misses —
+`is_finished` is only ever set on the win square.
+
+Storage that throws on access — a private window with cookies blocked — is a
+game that plays and forgets, not an error.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

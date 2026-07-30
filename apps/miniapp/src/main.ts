@@ -8,17 +8,11 @@
  */
 
 import {
-  ARROWS,
   BOARD_ROWS,
   CLASSIC,
-  SNAKES,
-  TOTAL_PLANS,
-  WIN_LOKA,
   applyRoll,
-  initialState,
   rollDie,
   rollerFor,
-  type GameState,
   type MoveEvent,
 } from '@leela/engine';
 import { messageFor, resolveLanguage, type Language } from '@leela/content';
@@ -26,6 +20,8 @@ import { loadPlans, plan as planFor } from './content';
 import { applyChrome } from './chrome';
 import { describeMove } from './describe';
 import { createCell } from './cell';
+import { loadState, saveState } from './state';
+import { headline } from './view';
 
 /** Telegram's WebApp object, when we are running inside Telegram. */
 interface TelegramWebApp {
@@ -53,41 +49,11 @@ if (telegram?.colorScheme) {
 
 // --- state -------------------------------------------------------------------
 
-const STORAGE_KEY = 'leela.game.v1';
-
 const language: Language = resolveLanguage(
   telegram?.initDataUnsafe?.user?.language_code ?? navigator.language,
 );
 
-function load(): GameState {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return initialState();
-    const parsed = JSON.parse(raw) as GameState;
-    // Trust nothing from storage: a hand-edited or stale value must not put a
-    // player on a square that does not exist.
-    if (
-      !Number.isInteger(parsed.loka) ||
-      parsed.loka < 1 ||
-      parsed.loka > TOTAL_PLANS
-    ) {
-      return initialState();
-    }
-    return parsed;
-  } catch {
-    return initialState();
-  }
-}
-
-function save(state: GameState): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // A private window with storage disabled still plays; it just forgets.
-  }
-}
-
-let state = load();
+let state = loadState(localStorage);
 
 // --- elements ------------------------------------------------------------------
 
@@ -128,27 +94,17 @@ function buildBoard(): void {
 
 // --- drawing --------------------------------------------------------------------
 
-/** True while the player waits on the win square for a six to let them in. */
-function waitingToEnter(current: GameState): boolean {
-  return current.is_finished;
-}
-
 function draw(event?: MoveEvent): void {
+  const show = headline(state, language, (plan) => planFor(plan).title);
+
   for (const cell of cells.values()) cell.classList.remove('here', 'from');
+  if (show.here !== null) cells.get(show.here)?.classList.add('here');
+  if (show.from !== null) cells.get(show.from)?.classList.add('from');
 
-  if (!waitingToEnter(state)) {
-    cells.get(state.loka)?.classList.add('here');
-    if (state.previous_loka >= 1 && state.previous_loka !== state.loka) {
-      cells.get(state.previous_loka)?.classList.add('from');
-    }
-  }
-
-  const plan = planFor(state.loka);
-  el.planNumber.textContent = waitingToEnter(state) ? '—' : String(state.loka);
-  el.planTitle.textContent = waitingToEnter(state)
-    ? messageFor(language, 'app.waiting')
-    : plan.title;
-  el.progress.value = waitingToEnter(state) ? 0 : Math.min(state.loka, WIN_LOKA);
+  el.planNumber.textContent = show.number;
+  el.planTitle.textContent = show.title;
+  el.progress.value = show.progress;
+  el.read.disabled = !show.canRead;
 
   el.say.className = 'say';
   if (event) {
@@ -157,8 +113,6 @@ function draw(event?: MoveEvent): void {
     if (event.direction === 'arrow 🏹') el.say.classList.add('arrow');
     if (event.isGameFinished && !event.isBlocked) el.say.classList.add('win');
   }
-
-  el.read.disabled = waitingToEnter(state);
 }
 
 /** Show a plan's text. Paragraphs are built as nodes, never as innerHTML. */
@@ -200,7 +154,7 @@ async function roll(): Promise<void> {
 
   const { state: next, event } = applyRoll(state, die(), CLASSIC);
   state = next;
-  save(state);
+  saveState(localStorage, state);
 
   el.roll.classList.remove('rolling');
   el.roll.disabled = false;
