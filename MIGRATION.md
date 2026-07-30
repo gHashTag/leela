@@ -3961,6 +3961,33 @@ playing for is not a file's to set, nor an app's, nor a stranger's.
 The parser also had to learn what a question looks like: the last line, beginning
 with a dash. A dash mid-sentence is a sentence, and there is a test that says so.
 
+## Hundred-and-fourteenth pass: three questions, three different seats
+
+Last pass ended by naming a risk: the intention now lives in two places that do
+not know about each other, and two records of one fact have twice turned out to
+be a defect here. Looking at it properly found something worse and nearer.
+
+**Both controls inside the writing box took the square of whoever held the
+turn.** The box belongs to whoever *owes a report* — and at the end of a game
+those are different people, because winning hands the turn away and never gets
+it back. So sharing a winner's account of Cosmic Consciousness sent a friend
+**plan 30**, with the winner's words under it and the other player's question at
+the bottom: a square nobody stood on, signed by somebody who did not write it.
+
+Three values, three different seats, in one four-line function. The fix is
+asking the same seat all three times.
+
+**And the two stores turned out not to be one fact.** The mini app's intention
+is per *seat* — three people on one phone are three questions — and the bot's is
+per Telegram account, which is one human being. They are different scopes, and
+syncing them would have been the defect rather than the cure.
+
+What follows from that is a rule the hand-over now keeps: it carries the square
+always and the question **only when the device is one person**. A phone three
+people are playing on has no business telling the bot what any of them is
+playing for. The square is still theirs to send; the frame is not the device's
+to claim.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

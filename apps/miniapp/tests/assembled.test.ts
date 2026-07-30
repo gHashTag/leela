@@ -67,8 +67,27 @@ function remembering(seed: Record<string, string> = {}): Storage {
  * The `<script>` tags go: happy-dom will not run them, and the module is
  * imported here instead — which is the point, since that is what a bundle does.
  */
-async function play(storage: Storage, language = 'en'): Promise<string[]> {
+/** What the app handed to the bot, when a test gave it somewhere to hand it. */
+let handedOver: string[] = [];
+
+async function play(storage: Storage, language = 'en', inTelegram = false): Promise<string[]> {
   vi.resetModules();
+  handedOver = [];
+
+  if (inTelegram) {
+    (window as unknown as { Telegram?: unknown }).Telegram = {
+      WebApp: {
+        ready() {},
+        expand() {},
+        colorScheme: 'light',
+        initData: 'signed-by-telegram',
+        initDataUnsafe: {},
+        sendData: (data: string) => handedOver.push(data),
+      },
+    };
+  } else {
+    delete (window as unknown as { Telegram?: unknown }).Telegram;
+  }
   Object.defineProperty(window.navigator, 'language', { value: language, configurable: true });
 
   const html = readFileSync('index.html', 'utf8');
@@ -392,5 +411,92 @@ describe('the mini app as it is assembled', () => {
 
     expect(await play(remembering({ 'leela.intention.v1': 'x', 'leela.seats.v1': seats }), 'zz')).toEqual([]);
     expect(el('plan-title').textContent).toBe('The human plane (jana-loka)');
+  }, 20_000);
+
+  it('hands over the square the box is about, not the one whose turn it is', async () => {
+    /**
+     * Both controls inside the writing box — Share and Ask — took the square of
+     * whoever held the *turn*. The box belongs to whoever owes a report, and at
+     * the end of a game those are different people: winning hands the turn away
+     * and never gets it back.
+     *
+     * So a winner's account of Cosmic Consciousness went out as plan 30, with
+     * their words under it and the other player's question at the bottom: a
+     * square nobody stood on, signed by somebody who did not write it.
+     */
+    const storage = remembering({
+      'leela.intention.v1': 'the first seat question',
+      'leela.intention.v1.p2': 'the second seat question',
+      'leela.seats.v1': table(
+        [
+          {
+            id: 'p1',
+            state: {
+              loka: 68,
+              previous_loka: 51,
+              direction: 'win 🕉',
+              consecutive_sixes: 0,
+              position_before_three_sixes: 0,
+              is_finished: true,
+            },
+            reportSubmitted: false,
+          },
+          {
+            id: 'p2',
+            state: {
+              loka: 30,
+              previous_loka: 24,
+              direction: 'step 🚶🏼',
+              consecutive_sixes: 0,
+              position_before_three_sixes: 0,
+              is_finished: false,
+            },
+            reportSubmitted: true,
+          },
+        ],
+        1,
+      ),
+    });
+
+    await play(storage, 'en', true);
+
+    el('report').click();
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    expect(el('writer-title').textContent, 'the box is the winner’s').toContain('Player 1');
+
+    (el('writer-text') as HTMLTextAreaElement).value = 'The last square of my game.';
+    el('writer-text').dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    el('writer-ask').click();
+    await new Promise((resolve) => setTimeout(resolve, 40));
+
+    const sent = handedOver[0] ?? '';
+    expect(sent, 'the square the box is about').toContain('68.');
+    expect(sent, 'and not the one whose turn it is').not.toContain('30.');
+    expect(sent).toContain('The last square of my game.');
+
+    // And no question at all: a hand-over reaches the bot as the account
+    // holder's, and a phone three people play on has no business telling it
+    // what any of them is playing for.
+    expect(sent).not.toContain('question');
+  }, 20_000);
+
+  it('sends the question when the device is one person', async () => {
+    const storage = remembering({
+      'leela.intention.v1': 'to stop hurrying',
+      'leela.seats.v1': table([{ id: 'p1', state: onFortyOne, reportSubmitted: false }]),
+    });
+
+    await play(storage, 'en', true);
+
+    (el('writer-text') as HTMLTextAreaElement).value = 'What it asked of me.';
+    el('writer-text').dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    el('writer-ask').click();
+    await new Promise((resolve) => setTimeout(resolve, 40));
+
+    expect(handedOver[0] ?? '').toContain('to stop hurrying');
   }, 20_000);
 });

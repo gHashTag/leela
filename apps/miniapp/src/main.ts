@@ -669,8 +669,17 @@ function cameBack(returns: ReadonlyArray<Revisit>): HTMLElement[] {
 function askTheCompanion(): void {
   if (!mayAsk(el.writerText.value, insideTelegram())) return;
 
+  const writing = whatIsBeingWritten();
+
+  // The question only where this device is one person. A hand-over reaches the
+  // bot as *the account holder's*, and the account holder is one human being —
+  // so a phone that three people are playing on has no business telling the bot
+  // what any of them is playing for. The square is still theirs to send; the
+  // frame is not the device's to claim.
+  const asked = session.players.length === 1 ? writing.intention : '';
+
   telegram?.sendData?.(
-    shareTextFor(state.loka, planFor(state.loka).title, el.writerText.value, intention),
+    shareTextFor(writing.plan, planFor(writing.plan).title, el.writerText.value, asked),
   );
 }
 
@@ -901,10 +910,36 @@ function showWriterHint(): void {
  * phone has it — that is the sheet Telegram and Safari both put up — and the
  * clipboard where it does not, which is what the path export has always used.
  */
+/**
+ * The square the writing box is about, and the question behind it.
+ *
+ * Not the seat holding the turn. Both of these controls live inside the box,
+ * and the box belongs to whoever owes a report — which at the end of a game is
+ * *not* the player whose turn it is, because winning hands the turn away.
+ *
+ * So sharing a winner's account of Cosmic Consciousness sent a friend plan 30,
+ * with the winner's words under it and the other player's question at the
+ * bottom: a square nobody stood on, signed by somebody who did not write it.
+ * The whole of the fix is asking the same seat three times instead of three
+ * different ones.
+ */
+function whatIsBeingWritten(): { plan: number; intention: string } {
+  const writer = session.players.find((player) => player.id === writingFor);
+  if (!writer) return { plan: state.loka, intention };
+
+  return { plan: writer.state.loka, intention: loadIntention(localStorage, writer.id) };
+}
+
 async function shareSquare(): Promise<void> {
   if (!mayShare(el.writerText.value)) return;
 
-  const text = shareTextFor(state.loka, planFor(state.loka).title, el.writerText.value, intention);
+  const writing = whatIsBeingWritten();
+  const text = shareTextFor(
+    writing.plan,
+    planFor(writing.plan).title,
+    el.writerText.value,
+    writing.intention,
+  );
 
   try {
     if (navigator.share) {
