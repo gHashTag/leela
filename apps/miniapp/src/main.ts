@@ -11,6 +11,7 @@ import {
   BOARD_ROWS,
   CLASSIC,
   applyRoll,
+  owesReport,
   rollDie,
   rollerFor,
   type MoveEvent,
@@ -32,6 +33,15 @@ import boardLight from './board-light.webp';
 import boardDark from './board-dark.webp';
 import gemArt from './gem.webp';
 import { loadState, saveState } from './state';
+import {
+  arrived,
+  loadJournal,
+  needsReport,
+  path as pathOf,
+  record,
+  saveJournal,
+  type Journal,
+} from './reports';
 import { headline } from './view';
 
 /** Telegram's WebApp object, when we are running inside Telegram. */
@@ -66,6 +76,14 @@ const language: Language = resolveLanguage(
 
 let state = loadState(localStorage);
 
+/**
+ * What the player has written, and whether this plan has been written about.
+ *
+ * Its own key, so a game already saved is not discarded by the arrival of a
+ * field the validator has never heard of.
+ */
+let journal: Journal = loadJournal(localStorage);
+
 // --- elements ------------------------------------------------------------------
 
 const el = {
@@ -79,6 +97,12 @@ const el = {
   reader: document.getElementById('reader') as HTMLDialogElement,
   readerTitle: document.getElementById('reader-title') as HTMLElement,
   readerBody: document.getElementById('reader-body') as HTMLElement,
+  report: document.getElementById('report') as HTMLButtonElement,
+  path: document.getElementById('path') as HTMLButtonElement,
+  writer: document.getElementById('writer') as HTMLDialogElement,
+  writerTitle: document.getElementById('writer-title') as HTMLElement,
+  writerText: document.getElementById('writer-text') as HTMLTextAreaElement,
+  writerSave: document.getElementById('writer-save') as HTMLButtonElement,
 };
 
 /** Every cell, by plan, so an update touches only what changed. */
@@ -123,7 +147,16 @@ function draw(event?: MoveEvent): void {
   el.progress.value = show.progress;
   el.read.disabled = !show.canRead;
 
+  // The gate. A throw is refused until the plan has been written about, which
+  // is the rule the contract enforces and the published app carried.
+  const owed = needsReport(state, journal);
+  el.roll.disabled = owed || rolling;
+  el.report.disabled = !owed;
+
   el.say.className = 'say';
+  if (owed && !event) {
+    el.say.textContent = messageFor(language, 'app.reportNeeded');
+  }
   if (event) {
     el.say.textContent = describeMove(language, event, (plan) => planFor(plan).title);
     if (event.direction === 'snake 🐍') el.say.classList.add('snake');
@@ -188,6 +221,13 @@ async function roll(): Promise<void> {
   state = next;
   saveState(localStorage, state);
 
+  // A new arrival: whatever was written was about the plan they have left.
+  // Before the redraw, or the gate is drawn from the journal of the last plan.
+  if (owesReport(state)) {
+    journal = arrived(journal);
+    saveJournal(localStorage, journal);
+  }
+
   el.roll.style.animation = '';
   el.roll.disabled = false;
   rolling = false;
@@ -206,8 +246,67 @@ async function roll(): Promise<void> {
   }
 }
 
+/** Ask for a report on the plan the player is standing on. */
+function openWriter(): void {
+  el.writerTitle.textContent = `${state.loka}. ${planFor(state.loka).title}`;
+  el.writerText.value = '';
+  el.writer.showModal();
+  el.writerText.focus();
+}
+
+function saveReport(): void {
+  const before = journal.entries.length;
+  journal = record(journal, state.loka, el.writerText.value, Date.now());
+
+  if (journal.entries.length === before) {
+    // Nothing was written, so nothing is recorded and the gate stays shut.
+    el.say.textContent = messageFor(language, 'app.reportEmpty');
+    return;
+  }
+
+  saveJournal(localStorage, journal);
+  el.writer.close();
+  draw();
+  el.say.textContent = messageFor(language, 'app.reportSaved');
+}
+
+/** Everything the player has written, oldest first. */
+function openPath(): void {
+  const written = pathOf(journal);
+  el.readerTitle.textContent =
+    written.length === 0
+      ? messageFor(language, 'app.path')
+      : messageFor(language, 'app.pathCount', { count: written.length });
+
+  const nodes: HTMLElement[] = [];
+  if (written.length === 0) {
+    const empty = document.createElement('p');
+    empty.textContent = messageFor(language, 'app.pathEmpty');
+    nodes.push(empty);
+  }
+
+  for (const entry of written) {
+    const heading = document.createElement('h3');
+    heading.textContent = `${entry.plan}. ${planFor(entry.plan).title}`;
+    const body = document.createElement('p');
+    body.textContent = entry.text;
+    nodes.push(heading, body);
+  }
+
+  const note = document.createElement('p');
+  note.className = 'hint';
+  note.textContent = messageFor(language, 'app.pathLocal');
+  nodes.push(note);
+
+  el.readerBody.replaceChildren(...nodes);
+  el.reader.showModal();
+}
+
 el.roll.addEventListener('click', () => void roll());
 el.read.addEventListener('click', () => openPlan(state.loka));
+el.report.addEventListener('click', openWriter);
+el.writerSave.addEventListener('click', saveReport);
+el.path.addEventListener('click', openPath);
 
 // Nothing can be drawn before the texts arrive: the board labels every square
 // with its title. Failing loudly beats an empty grid that looks like a bug.

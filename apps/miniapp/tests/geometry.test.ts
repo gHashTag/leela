@@ -18,13 +18,17 @@ import { BOARD_COLUMNS, BOARD_ROWS_COUNT } from '@leela/engine';
  */
 
 /** `GameBoard`'s own layout, at the design scale where every `s(n)` is `n`. */
-const APP = {
+const APP: Record<string, number> = {
   /** `imageTopMargin`: `min(ms(27, 0.5), s(27))`. */
   topMargin: 27,
   /** `curImageHeight`: `min(maxImageHeight, imageHeight) + imageTopMargin`. */
   artHeight: Math.min(248 + 32, 248 + 32) + 27,
-  /** The image's own proportions, `Image.resolveAssetSource`. */
-  artAspect: 714 / 639,
+  /**
+   * The image's own proportions — read from the shipped file below rather than
+   * written down here. The first attempt wrote 714 x 639 from looking at a
+   * rendering of it; the file says 630, and the 1.4% stretched the whole board.
+   */
+  artAspect: 0,
   /** `curImageWidth`: `s(279) + s(18)`, and nine boxes of `31 + 1 + 1`. */
   gridWidth: 279 + 18,
   /** Eight boxes of `s(31)` with `marginVertical: s(2)`. */
@@ -32,6 +36,27 @@ const APP = {
   /** `bgImage.top`: `mvs(26, 1.6) - imageTopMargin`. */
   artTop: 26 - 27,
 };
+
+/**
+ * The painting's size, from the painting.
+ *
+ * A WebP with alpha carries its canvas size in the `VP8X` chunk: two 24-bit
+ * little-endian values, each one less than the dimension. Fifteen lines to
+ * read, against a number that was wrong for two passes because it was copied
+ * off a screenshot.
+ */
+function webpSize(file: string): { width: number; height: number } {
+  const bytes = readFileSync(resolve(process.cwd(), file));
+  expect(bytes.subarray(0, 4).toString('ascii')).toBe('RIFF');
+  expect(bytes.subarray(8, 12).toString('ascii')).toBe('WEBP');
+  expect(bytes.subarray(12, 16).toString('ascii')).toBe('VP8X');
+  const at = (offset: number) =>
+    (bytes[offset] ?? 0) | ((bytes[offset + 1] ?? 0) << 8) | ((bytes[offset + 2] ?? 0) << 16);
+  return { width: at(24) + 1, height: at(27) + 1 };
+}
+
+const ART = webpSize('src/board-light.webp');
+APP.artAspect = ART.width / ART.height;
 
 const artWidth = APP.artHeight * APP.artAspect;
 const gridLeft = (artWidth - APP.gridWidth) / 2;
@@ -65,7 +90,9 @@ describe('the grid over the painting', () => {
   it('is the painting that has to fit the screen, not the grid', () => {
     // The art is the larger of the two and the grid sits inside it. Sizing the
     // board to the grid pushed the painting off both edges of the phone.
-    expect(declaration('.board', 'aspect-ratio').replace(/\s/g, '')).toBe('714/639');
+    expect(declaration('.board', 'aspect-ratio').replace(/\s/g, '')).toBe(
+      `${ART.width}/${ART.height}`,
+    );
   });
 
   it('starts where GameBoard starts it', () => {
@@ -92,19 +119,19 @@ describe('the grid over the painting', () => {
   });
 
   it('puts the Flower of Life on the win square', () => {
-    // Measured from the art rather than asserted about the CSS: in
-    // `light.png`, cropping exactly the cell these numbers give for 68 —
-    // x 323..391, y 58..131 of 714x639 — contains the flower and nothing else.
+    // Measured from the art rather than asserted about the CSS: cropping
+    // exactly the cell these numbers give for 68 — 68x72 at (323, 57) —
+    // contains the Flower of Life, centred, and nothing else.
     // Recorded here as the arithmetic that produced that crop, so a change to
     // the numbers can be checked against the same picture.
-    const toArtPixels = 714 / artWidth;
+    const toArtPixels = ART.width / artWidth;
     const cell = { width: APP.gridWidth / 9, height: APP.gridHeight / 8 };
     const x = (gridLeft + 4 * cell.width) * toArtPixels;
     const y = (gridTop + 0 * cell.height) * toArtPixels;
 
     expect(Math.round(x)).toBe(323);
-    expect(Math.round(y)).toBe(58);
-    expect(Math.round(cell.width * toArtPixels)).toBe(69);
-    expect(Math.round(cell.height * toArtPixels)).toBe(73);
+    expect(Math.round(y)).toBe(57);
+    expect(Math.round(cell.width * toArtPixels)).toBe(68);
+    expect(Math.round(cell.height * toArtPixels)).toBe(72);
   });
 });

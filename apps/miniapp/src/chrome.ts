@@ -31,6 +31,13 @@ export function applyChrome(document: Document, language: Language): void {
   }
 
   set('read', 'app.read');
+  set('report', 'app.reportWrite');
+  set('path', 'app.path');
+  set('writer-save', 'app.reportSave');
+  set('writer-hint', 'app.pathLocal');
+
+  const writing = document.getElementById('writer-text');
+  if (writing) writing.setAttribute('placeholder', messageFor(language, 'app.reportPlaceholder'));
   set('say', 'app.opening');
   set('plan-title', 'app.waiting');
 

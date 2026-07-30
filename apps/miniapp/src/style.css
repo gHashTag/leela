@@ -135,6 +135,36 @@ progress::-webkit-progress-value {
  * stretching to fill: a board of tall rectangles does not read as a board, and
  * eight rows stretched over a phone screen is what that produces.
  */
+/* A note under a sheet: quieter than the text it belongs to. */
+.hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* The row under a sheet, so Save and Close sit together. */
+.sheet-controls {
+  display: flex;
+  gap: var(--gap);
+  align-items: center;
+  margin-top: 12px;
+}
+
+#writer-text {
+  width: 100%;
+  box-sizing: border-box;
+  /* Short enough that Save stays above the keyboard. A control you have to
+     dismiss the keyboard to reach is one people do not find. */
+  max-height: 28vh;
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--rule, #d9d9de);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  resize: vertical;
+}
+
 /*
  * The die, as the published app throws it: a pressable image that spins and
  * settles on the face you threw. `Dice/assets/{1..6}.png`, 65pt in the
@@ -209,9 +239,10 @@ progress::-webkit-progress-value {
      is tall, so on a phone there is always some — and all of it collecting
      under the board reads as a page that failed to finish loading. */
   margin: auto;
-  /* The painting's shape. It is the larger of the two — the grid sits inside
-     it — so it is what has to fit the screen. */
-  aspect-ratio: 714 / 639;
+  /* The painting's shape, read from the file rather than from a screenshot:
+     714 x 630. The first attempt said 639, which stretched the whole board by
+     1.4% and took the lower rows with it. */
+  aspect-ratio: 714 / 630;
   border-radius: var(--radius);
 }
 
@@ -244,7 +275,7 @@ progress::-webkit-progress-value {
   position: absolute;
   top: 9.12%;
   bottom: -0.33%;
-  inset-inline: 6.71%;
+  inset-inline: 7.32%;
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   grid-template-rows: repeat(8, 1fr);

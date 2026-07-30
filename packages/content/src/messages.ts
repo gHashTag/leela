@@ -156,6 +156,24 @@ const EN = {
   'app.opening': 'A six puts you on the board.',
   'app.roll': 'Roll',
   'app.read': 'Read this plan',
+
+  // The report gate. The rule the deployed contract enforces and the published
+  // app carried as `isReported`: write about the plan you are standing on
+  // before throwing again.
+  'app.reportNeeded': 'Write what this plan brings up before you throw again.',
+  'app.reportWrite': 'Write a report',
+  'app.reportPlaceholder': 'What does this plan bring up?',
+  'app.reportSave': 'Save',
+  'app.reportSaved': 'Written. You may throw.',
+  'app.reportEmpty': 'A report is something written. Nothing was.',
+  'app.path': 'My path',
+  'app.pathEmpty': 'You have not written anything yet.',
+  'app.pathCount': {
+    one: 'Your path — {count} plan.',
+    other: 'Your path — {count} plans.',
+  },
+  'app.pathLocal':
+    'These stay on this device. The bot keeps them for a table, and shares them there.',
   'app.close': 'Close',
 
   // --- the companion ---------------------------------------------------------
@@ -286,6 +304,23 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.opening': 'Шестёрка выводит вас на доску.',
   'app.roll': 'Бросок',
   'app.read': 'Прочесть план',
+
+  'app.reportNeeded': 'Напишите, что поднимает этот план, прежде чем бросать снова.',
+  'app.reportWrite': 'Написать отчёт',
+  'app.reportPlaceholder': 'Что поднимает этот план?',
+  'app.reportSave': 'Сохранить',
+  'app.reportSaved': 'Записано. Можно бросать.',
+  'app.reportEmpty': 'Отчёт — это то, что написано. Здесь не написано ничего.',
+  'app.path': 'Мой путь',
+  'app.pathEmpty': 'Вы пока ничего не написали.',
+  'app.pathCount': {
+    one: 'Ваш путь — {count} план.',
+    few: 'Ваш путь — {count} плана.',
+    many: 'Ваш путь — {count} планов.',
+    other: 'Ваш путь — {count} плана.',
+  },
+  'app.pathLocal':
+    'Они остаются на этом устройстве. Бот хранит их для стола и делится ими там.',
   'app.close': 'Закрыть',
 
   'companion.unavailable':

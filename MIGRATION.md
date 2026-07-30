@@ -1177,6 +1177,50 @@ to make it "look better" fails rather than quietly moving every snake again.
 **The die is under the board now, centred** — the published app puts it above,
 which on a phone this tall is out of reach of a thumb.
 
+## Thirty-sixth pass: the rule the game is played for
+
+Two things this pass, one of them my own mistake.
+
+**The painting's height was never read from the painting.** `714 × 639` came
+from looking at a rendering of it; the file says `630`. A 1.4% stretch, which
+took the lower rows with it. The test reads the `VP8X` chunk of the shipped
+WebP now — fifteen lines against a number that was wrong for two passes because
+it was copied off a screenshot.
+
+**The mini app had no report gate.** `require(..., 'You must create a report
+before rolling the dice.')` is in the deployed contract; the published app
+carried it as `isReported` on every player; the bot has had it since it was
+written. The mini app let anyone throw for ever without once saying what a plan
+brought up, which is the game with its point removed.
+
+So: a throw is refused until the plan has been written about, the die dims and
+says why, and `My path` gives back everything written, oldest first. The
+journal lives under its own storage key — adding a field to the saved game
+would have made every game in progress fail the validator that guards it.
+
+The tests assert the rule rather than the situations: over a played-out game
+the gate agrees with `owesReport` and the journal at *every* step, and it shuts
+at least five times, so passing means something. A report is *something
+written* — an empty one does not open it. And the journal is held to the same
+standard as the saved game: one this app could have written, or it is replaced.
+
+**A boolean, not a plan number.** Landing on a plan a second time owes a second
+report. That is why `isReported` was a boolean in the published app, and it is
+why it is one here.
+
+### What could not be brought across, and why
+
+Profiles, a feed, comments, likes, moderation — the published app's `Posts`
+collection in Firebase, with `ownerId`, `liked[]`, `accept` and the rest.
+**These need a server.** The mini app is static files on Pages with
+`localStorage`; there is nowhere to put another player's report and no one to
+moderate it. Skipped under the standing rule about work that needs a deployment
+decision rather than code.
+
+The multiplayer surface already exists and is the bot: a table in a group chat,
+reports kept in SQLite, `/path` reading them back. What is missing between the
+two is a shared identity, which is the same server question.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

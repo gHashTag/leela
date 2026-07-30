@@ -26,9 +26,23 @@
       </section>
 
       <footer class="controls">
+        <button id="report">Write a report</button>
         <button id="read">Read this plan</button>
+        <button id="path">My path</button>
       </footer>
     </main>
+
+    <dialog id="writer" class="reader">
+      <article>
+        <h2 id="writer-title"></h2>
+        <textarea id="writer-text" rows="4" aria-describedby="writer-title"></textarea>
+        <p class="hint" id="writer-hint"></p>
+      </article>
+      <footer class="sheet-controls">
+        <button id="writer-save" class="primary" type="button">Save</button>
+        <form method="dialog"><button type="submit">Close</button></form>
+      </footer>
+    </dialog>
 
     <dialog id="reader" class="reader">
       <article>
