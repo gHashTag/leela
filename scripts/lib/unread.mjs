@@ -196,7 +196,48 @@ export function withoutStrings(line) {
   return out;
 }
 
+/**
+ * Every name a re-export gives something else.
+ *
+ * `export { squareText as shareTextFor } from '@leela/journal'` is how the mini
+ * app takes the journal's word for the format. Export lists are dropped as
+ * plumbing before uses are counted — rightly, or a barrel file would make every
+ * export look consumed — and the rename went with them, so `squareText` was
+ * reported as having no caller while every one of its callers wrote
+ * `shareTextFor`.
+ *
+ * That line has been printed on every run of this audit for twenty passes. A
+ * check that always says one thing it cannot back up is a check people stop
+ * reading, and the reason to fix it is not the export: it is the report.
+ */
+export function aliasesOf(name, sources) {
+  const found = new Set();
+  const renamed = new RegExp(`(?<![\\w$])${name}\\s+as\\s+([A-Za-z_$][\\w$]*)`, 'g');
+
+  for (const source of sources) {
+    // Across lines, because a list of six names is written down the page and
+    // the rename sits in the middle of it. A per-line reader found nothing at
+    // all, which looked exactly like there being nothing to find.
+    for (const list of source.matchAll(/(?:import|export)\s*(?:type\s*)?\{([^}]*)\}/gs)) {
+      for (const match of (list[1] ?? '').matchAll(renamed)) found.add(match[1]);
+    }
+  }
+
+  return [...found];
+}
+
 export function usesOf(name, sources) {
+  // Counted under every name it goes by. Renaming something on the way out is
+  // not the same as nobody using it.
+  const names = [name, ...aliasesOf(name, sources)];
+  if (names.length > 1) {
+    return names.reduce((total, one) => total + directUsesOf(one, sources), 0);
+  }
+
+  return directUsesOf(name, sources);
+}
+
+function directUsesOf(name, sources) {
   let uses = 0;
 
   const boundary = `(?<![\\w$])${name}(?![\\w$])`;

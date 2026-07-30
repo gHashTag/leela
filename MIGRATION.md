@@ -3714,6 +3714,38 @@ Whether the launch came from a *keyboard* button — which is what `sendData`
 actually requires — is not visible from the page at all. That is setup rather
 than code, and it is written down in `apps/bot/README.md` instead of guessed at.
 
+## Hundred-and-sixth pass: the line the audit always printed
+
+`audit-unread` has ended every run for twenty passes with the same finding:
+`squareText`, in `@leela/journal`, has no caller. It is called on every share
+and every hand-over to the bot — under another name. The mini app takes the
+journal's word for the format with
+
+    export { squareText as shareTextFor } from '@leela/journal';
+
+and export lists are dropped as plumbing before uses are counted. Rightly: a
+barrel file that lists everything would otherwise make every export look
+consumed. The rename went with them.
+
+**The reason to fix it is not the export. It is the report.** A check that ends
+every run with one line it cannot back up is a check people stop reading — and I
+had stopped: the finding appears in a dozen of my own summaries as "pre-existing,
+leave it".
+
+`aliasesOf` now reads the rename, and uses are counted under every name a thing
+goes by. Two things had to be got right, and both are tests:
+
+- **Across lines.** Every list of more than two names in this repository is
+  written down the page, and the rename sits in the middle of it. A per-line
+  reader found nothing at all — a result indistinguishable from there being
+  nothing to find, which is how the first version passed its own test.
+- **Not a cast.** `x as Y` is TypeScript's rename *and* its cast. Reading one as
+  the other would invent callers, and a check that cannot say "nobody uses this"
+  has nothing left to say. So the rename is only read inside an import or export
+  list.
+
+Every audit now ends clean, which is the first time that has been true.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

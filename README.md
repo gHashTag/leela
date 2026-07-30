@@ -187,7 +187,7 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 324 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/engine` | 330 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 192 | 22 languages of plans, 2 of the game's own voice |
 | `@leela/journal` | 41 | the path as a file, and what came back — shared by the bot and the mini app |
 | `@leela/db` | 100 | schema, mapping, SQL migrations, legacy import |
@@ -198,7 +198,7 @@ cd packages/engine && bun test
 | `@leela/miniapp` | 315 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-1719 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+1725 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 

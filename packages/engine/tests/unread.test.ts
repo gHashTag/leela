@@ -3,7 +3,7 @@
 // thing it exists to prevent.
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error — a plain .mjs module with no types, deliberately.
-import { declaredFields, readsOf, unreadFields } from '../../../scripts/lib/unread.mjs';
+import { aliasesOf, declaredFields, readsOf, unreadFields, usesOf } from '../../../scripts/lib/unread.mjs';
 
 describe('finding declarations', () => {
   it('finds an interface field', () => {
@@ -111,5 +111,76 @@ describe('reporting the unread', () => {
     ).map((f: { name: string }) => f.name);
 
     expect(found).toEqual(['broadcast', 'needsReport', 'rerollOnRepeat']);
+  });
+});
+
+describe('a name something else was renamed to', () => {
+  /**
+   * `export { squareText as shareTextFor } from '@leela/journal'` is how the
+   * mini app takes the journal's word for the format. Export lists are dropped
+   * as plumbing before uses are counted — rightly, or a barrel file would make
+   * every export look consumed — and the rename went with them, so `squareText`
+   * was reported as having no caller while every one of its callers wrote
+   * `shareTextFor`.
+   *
+   * That line was printed on every run of the audit for twenty passes. The
+   * reason to fix it is not the export: **a check that always says one thing it
+   * cannot back up is a check people stop reading.**
+   */
+
+  it('is found, and counts as the same thing', () => {
+    const barrel = "export { squareText as shareTextFor } from '@leela/journal';";
+    const caller = 'const text = shareTextFor(41, title, written, intention);';
+
+    expect(aliasesOf('squareText', [barrel])).toEqual(['shareTextFor']);
+    expect(usesOf('squareText', [barrel, caller])).toBeGreaterThan(0);
+  });
+
+  it('is found when the list is written down the page', () => {
+    // Which is how every list of more than two names in this repository is
+    // written, and why the first version of this found nothing at all — a
+    // result indistinguishable from there being nothing to find.
+    const barrel = [
+      'export {',
+      '  fileName,',
+      '  parseDocument,',
+      '  squareText as shareTextFor,',
+      '  takeSquare,',
+      "} from '@leela/journal';",
+    ].join('\n');
+
+    expect(aliasesOf('squareText', [barrel])).toEqual(['shareTextFor']);
+  });
+
+  it('is nothing for a name nobody renamed', () => {
+    const barrel = "export { squareText } from '@leela/journal';";
+
+    expect(aliasesOf('squareText', [barrel])).toEqual([]);
+    expect(usesOf('squareText', [barrel])).toBe(0);
+  });
+
+  it('does not take a similar name for a rename of this one', () => {
+    const barrel = "export { squareTextFor as shareTextFor } from './x';";
+
+    expect(aliasesOf('squareText', [barrel])).toEqual([]);
+  });
+
+  it('is a rename in an import or export list, not a cast', () => {
+    // `x as Y` is TypeScript's cast as well as its rename. Reading one as the
+    // other would invent callers, which is worse than missing them: a check
+    // that cannot say "nobody uses this" is a check with nothing to say.
+    const cast = 'const model = something as squareText;';
+    const alsoCast = 'return squareText as unknown as Whatever;';
+
+    expect(aliasesOf('squareText', [cast, alsoCast])).toEqual([]);
+  });
+
+  it('still refuses a mention inside a string', () => {
+    // The rename must not become a way back in for the accident the audit
+    // already guards against: a command name that happens to match an export.
+    const barrel = "export { squareText as shareTextFor } from './x';";
+    const inAString = "bot.command('shareTextFor', () => undefined);";
+
+    expect(usesOf('squareText', [barrel, inAString])).toBe(0);
   });
 });
