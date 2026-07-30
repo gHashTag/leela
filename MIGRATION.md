@@ -847,6 +847,53 @@ claim a move from 68, and a solo table must never be told who is next.
 seated" — the reply the host got for tapping the Join button under their own
 new table.
 
+## Twenty-seventh pass: the file nobody could test, and what it was hiding
+
+`bot.ts` was the one file with no harness. The pass before last said so in
+writing, as a gap left open. Everything in it — who a reply is addressed to,
+whether a button appears, whether a callback is answered, whether plain text is
+taken as a report — existed only as code that had been read.
+
+grammY calls `getMe` before handling anything unless it is told who it is, so
+`botInfo` is now an option. From there `handleUpdate` drives the whole surface
+and `api.config.use` catches every call that would have left the process. No
+network, no token, 54 tests.
+
+**It found a defect on its first run.** `/new` silently threw away a table
+where nobody had entered yet. The guard read
+
+```ts
+existing.session.players.every((p) => p.state.is_finished)
+```
+
+as "the game is over" — and a player waiting to enter sits on 68 with
+`is_finished` set, so a table opened seconds ago counted as finished. Seats,
+language, seed, all replaced without a word. It is `isSessionOver` now, which
+is the engine's own answer and knows the difference.
+
+That is the **third** time 68 meaning two things has cost something: `hasWon`
+was the first, the leaderboard the second. Each time the fix was to ask the
+function that knows rather than to re-derive the condition.
+
+A table that is filling up now says so, rather than claiming a game is running
+that the host has not started.
+
+**Closed the gap it was named for:** the journey is no longer assembled for a
+silenced companion, and that is now asserted by counting reads of the report
+history rather than by reading the code.
+
+**What the harness asserts is the surface, not a list.** Every command answers
+something, on an empty chat and at a running table — *"silence is
+indistinguishable from a broken bot, and that is how this one first looked"* was
+a comment in the file and is now a test over all thirteen. Every callback
+action answers the query, including the ones that do nothing, because Telegram
+leaves a spinner otherwise.
+
+**One thing the harness documents rather than fixes:** `bot.catch` covers the
+polling loop, which is how this bot runs. It does not cover `handleUpdate`, so
+a webhook deployment would have to catch for itself. Asserted as it is, so
+whoever changes it finds out from a test.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

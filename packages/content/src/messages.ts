@@ -127,6 +127,7 @@ const EN = {
   // --- the transport speaking for itself -------------------------------------
   'chat.noTable': 'No table here yet. Send /new to open one.',
   'chat.running': 'A game is already running here. Finish it, or send /end.',
+  'chat.tableOpen': 'A table is already open here. /join to sit, /start to begin, /end to clear it.',
   'chat.cleared': 'The table is cleared.',
   'chat.noTableShort': 'No table here yet. /new opens one.',
   'chat.noTableHelp': 'No table here yet. /new opens one, /help explains the rest.',
@@ -261,6 +262,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
 
   'chat.noTable': 'Здесь ещё нет стола. Отправьте /new, чтобы открыть.',
   'chat.running': 'Здесь уже идёт игра. Закончите её или отправьте /end.',
+  'chat.tableOpen': 'Здесь уже открыт стол. /join — сесть, /start — начать, /end — убрать стол.',
   'chat.cleared': 'Стол убран.',
   'chat.noTableShort': 'Здесь ещё нет стола. /new открывает.',
   'chat.noTableHelp': 'Здесь ещё нет стола. /new открывает, /help объясняет остальное.',

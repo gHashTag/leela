@@ -7,7 +7,9 @@
  */
 
 import { Bot, InlineKeyboard, type Context } from 'grammy';
+import type { UserFromGetMe } from 'grammy/types';
 import { type Language, messageFor, planFor, resolveLanguage } from '@leela/content';
+import { isSessionOver } from '@leela/engine';
 import type { Guide } from '@leela/ai';
 import * as commands from './commands';
 import type { Button, Effect, Reply, Room } from './commands';
@@ -44,6 +46,15 @@ export interface BotOptions {
    * still works and the report is still kept, there is simply no reply.
    */
   guide?: Guide;
+  /**
+   * Who the bot is, when it should not ask.
+   *
+   * grammY calls `getMe` before handling anything unless it is told. Supplying
+   * it is what lets the transport be driven in a test — `handleUpdate` with no
+   * network at all — which is the difference between this file being asserted
+   * and being hoped over.
+   */
+  botInfo?: UserFromGetMe;
 }
 
 /** Who sent this update, as the commands layer wants them. */
@@ -66,8 +77,9 @@ export function createBot({
   now = Date.now,
   log = console.log,
   guide,
+  botInfo,
 }: BotOptions) {
-  const bot = new Bot(token);
+  const bot = new Bot(token, botInfo ? { botInfo } : undefined);
 
   // Who the bot has managed to message directly. Telegram refuses anyone who
   // has not started a chat, and there is no way to ask in advance.
@@ -298,8 +310,15 @@ export function createBot({
     if (!chatId || !who) return;
 
     const existing = await store.get(chatId);
-    if (existing && !existing.session.players.every((p) => p.state.is_finished)) {
-      await ctx.reply(messageFor(languageOf(ctx, existing), 'chat.running'));
+
+    // `players.every(is_finished)` looked like "the game is over" and was not:
+    // a player waiting to enter sits on 68 with `is_finished` set, so a table
+    // where nobody had thrown a six yet counted as finished and /new quietly
+    // threw it away, seats and all. `isSessionOver` is the engine's own answer
+    // and knows the difference — the third time that distinction has bitten.
+    if (existing && !isSessionOver(existing.session)) {
+      const key = existing.started ? 'chat.running' : 'chat.tableOpen';
+      await ctx.reply(messageFor(languageOf(ctx, existing), key));
       return;
     }
 
