@@ -2371,6 +2371,31 @@ distinction the app makes too, since a waiting player has `isStart: false` and
 no plan screen. Three tests: where it waits, that waiting is not playing, and
 that it leaves for 6 the moment a six lands.
 
+## Sixty-sixth pass: a cleanup that only ran when nobody needed it
+
+`pruneFinished` was written because "nothing deleted a finished game, so every
+table ever opened stayed in the database — thousands of dead rooms after a year
+of use". It is called once, at startup, under this justification:
+
+> Done at startup rather than on a timer: a bot that is never restarted is not
+> accumulating tables either.
+
+That sentence is false, and it is the kind this repository has been wrong about
+before — a confident line nobody measured. Tables come from **play**, not from
+restarts. Measured rather than argued: twelve games played and finished over
+twelve weeks in one process leave twelve tables. The deployment this was written
+for is one that stays up for months, and it is exactly the one that never looked.
+
+A running bot sweeps once a day now. The age filter is a week, so looking more
+often deletes nothing sooner — asserted, because a cleanup that runs more often
+and a cleanup that keeps less are different things and it would be easy to make
+the second by accident. The timer is injected, `unref`'d so it cannot hold the
+process open, absent entirely when games are held in memory — a process ending
+is the only cleanup those need — and stoppable, so a test leaves nothing behind.
+
+The same twelve-game scenario now ends with one table: the one that finished
+less than a week ago, which is what the filter says to keep.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

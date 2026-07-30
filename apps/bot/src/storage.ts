@@ -25,6 +25,15 @@ import {
 /** How long a finished table is kept before it is forgotten. */
 export const KEEP_FINISHED_MS = 7 * 24 * 60 * 60 * 1000;
 
+/**
+ * How often a running bot looks for tables to forget.
+ *
+ * Once a day. The age filter is a week, so nothing is deleted sooner for being
+ * checked more often — and a deployment that is up for months would otherwise
+ * never check at all.
+ */
+export const PRUNE_EVERY_MS = 24 * 60 * 60 * 1000;
+
 export interface Storage {
   store: RoomStore;
   reports: ReportSink;
@@ -38,6 +47,13 @@ export interface Storage {
    * failure, and reporting it as one trains people to ignore the line.
    */
   failure?: string;
+  /**
+   * Stop the periodic cleanup.
+   *
+   * Absent when there is nothing to stop — games in memory are forgotten by
+   * the process ending, which is the only cleanup they need.
+   */
+  stopPruning?: () => void;
 }
 
 export interface StorageOptions {
@@ -46,6 +62,8 @@ export interface StorageOptions {
   log?: (message: string) => void;
   /** Injected so a test does not need a real database. */
   openQueries?: (path: string) => SqliteRoomQueries;
+  /** Injected so a test does not wait a day. */
+  schedule?: (run: () => void, everyMs: number) => () => void;
 }
 
 /**
@@ -59,6 +77,12 @@ export function openStorage({
   path,
   log = console.error,
   openQueries = (at) => new SqliteRoomQueries({ path: at }),
+  schedule = (run, everyMs) => {
+    const timer = setInterval(run, everyMs);
+    // A cleanup is not a reason to keep the process alive.
+    timer.unref?.();
+    return () => clearInterval(timer);
+  },
 }: StorageOptions): Storage {
   if (!path) {
     return { store: new MemoryRoomStore(), reports: new MemoryReportSink(), durable: false };
@@ -67,19 +91,29 @@ export function openStorage({
   try {
     const queries = openQueries(path);
 
-    // Nothing deleted a finished game, so every table ever opened stayed. Done
-    // at startup rather than on a timer: a bot that is never restarted is not
-    // accumulating tables either.
-    const forgotten = queries.pruneFinished(KEEP_FINISHED_MS);
-    if (forgotten > 0) {
-      log(`Forgot ${forgotten} finished table(s) older than a week. Reports kept.`);
-    }
+    // Nothing deleted a finished game, so every table ever opened stayed.
+    //
+    // This ran at startup and nowhere else, under a comment saying that "a bot
+    // that is never restarted is not accumulating tables either" — which is
+    // false, and was measured: twelve games played and finished over twelve
+    // weeks in one process leave twelve tables, because tables come from play
+    // and not from restarts. A deployment that is up for months never looked.
+    const sweep = () => {
+      const forgotten = queries.pruneFinished(KEEP_FINISHED_MS);
+      if (forgotten > 0) {
+        log(`Forgot ${forgotten} finished table(s) older than a week. Reports kept.`);
+      }
+    };
+
+    sweep();
+    const stopPruning = schedule(sweep, PRUNE_EVERY_MS);
 
     return {
       store: new DatabaseRoomStore(queries, log),
       reports: sqliteReportSink(queries),
       steps: sqliteStepSink(queries),
       durable: true,
+      stopPruning,
     };
   } catch (error) {
     // The path is in the message because the answer is almost always a mount
