@@ -1909,6 +1909,51 @@ translations, and filling them by machine is what put 744 rotted titles in this
 dataset in the first place. The test asserts only that English — the fallback —
 matches the common set.
 
+## Fifty-fourth pass: the three things the game screen had and this one did not
+
+Asked to study the published app's game logic and add every function the mini
+app is missing, keeping the board as it is. So `Tabs/GameScreen/index.tsx` was
+read rather than remembered, and it is short. Top to bottom it is a `Header`,
+a `Dice`, and a `GameBoard` — and the header carries two buttons this app never
+had:
+
+```tsx
+<Header
+  iconLeft=":information_source:"  onPress={() => navigation.navigate('RULES_SCREEN')}
+  iconRight=":books:"              onPressRight={() => navigation.navigate('PLANS_SCREEN')}
+>
+  {endGame && <ButtonWithIcon title={t('actions.startOver')} onPress={OfflinePlayers.resetGame} />}
+</Header>
+```
+
+Three functions, all now here:
+
+**The rules book.** `RULES_SCREEN` is a list of chapter titles that open a text.
+`@leela/content` has carried that book in 22 languages since the third pass and
+the mini app had no way to open it — a book nobody can open is a book nobody
+has. It falls back as a whole book rather than chapter by chapter: half in one
+language and half in another is worse than one a reader can at least read.
+
+**All 72 plans.** `PLANS_SCREEN` is the same list over the board, so a player
+can read a square they have not landed on. All 72 whatever the dataset holds —
+a language missing a title still has a square, and the number is the fallback
+because the number is what the board shows. The square the player is standing
+on is marked, as the app marks it.
+
+**Start over.** Shown only when the game has ended, from `resetGame`. It keeps
+the journal on purpose: `AsyncStorage.clear()` in the original throws away
+everything, and what somebody wrote about the squares they stood on is theirs.
+Starting again releases the report gate and nothing else.
+
+Two details worth the words. The visibility test is `hasWon`, not
+`is_finished` — a player who has not entered carries `is_finished` too, which is
+the 68 ambiguity this repository has now tripped over five times. And the icons
+are 44px touch targets rather than 20px glyphs: they sit above a board, and a
+glyph is not something a thumb can aim at.
+
+The board and the die are untouched, as asked. The die stays under the board,
+where it was put for the thumb.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

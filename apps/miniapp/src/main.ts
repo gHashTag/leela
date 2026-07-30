@@ -11,6 +11,8 @@ import {
   BOARD_ROWS,
   CLASSIC,
   applyRoll,
+  hasWon,
+  initialState,
   owesReport,
   rollDie,
   rollerFor,
@@ -23,6 +25,7 @@ import { describeMove } from './describe';
 import { createCell } from './cell';
 import { boardFor, paintBoard } from './paint';
 import { browserSpinHost, faceFor, settle, spinDegrees, spinMs, type DieFaces } from './die';
+import { planEntries, ruleEntries, ruleText, type Entry } from './browse';
 import die1 from './die-1.webp';
 import die2 from './die-2.webp';
 import die3 from './die-3.webp';
@@ -106,6 +109,12 @@ const el = {
   writerSave: document.getElementById('writer-save') as HTMLButtonElement,
   pathExport: document.getElementById('path-export') as HTMLButtonElement,
   pathImport: document.getElementById('path-import-input') as HTMLInputElement,
+  rules: document.getElementById('rules') as HTMLButtonElement,
+  plans: document.getElementById('plans') as HTMLButtonElement,
+  restart: document.getElementById('restart') as HTMLButtonElement,
+  list: document.getElementById('list') as HTMLDialogElement,
+  listTitle: document.getElementById('list-title') as HTMLElement,
+  listItems: document.getElementById('list-items') as HTMLElement,
 };
 
 /** Every cell, by plan, so an update touches only what changed. */
@@ -156,6 +165,12 @@ function draw(event?: MoveEvent): void {
   el.roll.disabled = owed || rolling;
   el.report.disabled = !owed;
 
+  // The published app shows "Start over" only once the game has ended —
+  // `endGame` in GameScreen. `hasWon` rather than `is_finished`, which a player
+  // who has not entered yet also carries: the 68 ambiguity, four times found.
+  el.restart.hidden = !hasWon(state);
+  el.restart.textContent = messageFor(language, 'app.restart');
+
   el.say.className = 'say';
   if (owed && !event) {
     el.say.textContent = messageFor(language, 'app.reportNeeded');
@@ -168,21 +183,95 @@ function draw(event?: MoveEvent): void {
   }
 }
 
+/**
+ * A list of titles that open a text.
+ *
+ * The published app has two of these — `RULES_SCREEN` and `PLANS_SCREEN`, both
+ * a `FlatList` of `RenderPlanItem` — and they are the same thing on screen, so
+ * they are one dialog here.
+ */
+function openList(title: string, entries: Entry[], open: (key: number | string) => void): void {
+  el.listTitle.textContent = title;
+
+  el.listItems.replaceChildren(
+    ...entries.map((entry) => {
+      const item = document.createElement('li');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = entry.title;
+      if (entry.here) button.classList.add('here');
+      button.addEventListener('click', () => {
+        el.list.close();
+        open(entry.key);
+      });
+      item.append(button);
+      return item;
+    }),
+  );
+
+  el.list.showModal();
+}
+
+/** The rules book. Carried in 22 languages since the third pass, and until now
+ *  there was no way to open it. */
+function openRules(): void {
+  openList(messageFor(language, 'app.rules'), ruleEntries(language), (slug) => {
+    const chapter = ruleText(language, String(slug));
+    if (!chapter) return;
+    el.readerTitle.textContent = chapter.title;
+    el.readerBody.replaceChildren(...paragraphs(chapter.body));
+    el.pathExport.hidden = true;
+    el.reader.showModal();
+  });
+}
+
+/** Every plan, so a player can read a square they have not landed on. */
+function openPlans(): void {
+  openList(messageFor(language, 'app.plans'), planEntries(language, state.loka), (plan) => {
+    openPlan(Number(plan));
+  });
+}
+
+/**
+ * Start the game again.
+ *
+ * `OfflinePlayers.resetGame` clears storage and puts the player back at the
+ * beginning. The journal is left alone on purpose: what somebody wrote about
+ * the squares they stood on is theirs, and a new game is not a reason to burn
+ * it. `/path` still shows it, and "Save a copy" still exports it.
+ */
+function startOver(): void {
+  state = initialState();
+  saveState(localStorage, state);
+  // The gate is released: a new game owes nothing yet. The entries stay —
+  // what somebody wrote about the squares they stood on is theirs, and
+  // starting again is not a reason to burn it.
+  journal = { ...journal, reported: true };
+  saveJournal(localStorage, journal);
+  showFace(loadLastRoll(localStorage));
+  el.say.textContent = messageFor(language, 'app.restarted');
+  draw();
+}
+
 /** Show a plan's text. Paragraphs are built as nodes, never as innerHTML. */
 function openPlan(plan: number): void {
   const found = planFor(plan);
   el.readerTitle.textContent = `${plan}. ${found.title}`;
-  el.readerBody.replaceChildren(
-    ...found.body
-      .split(/\n{2,}/)
-      .filter((paragraph) => paragraph.trim().length > 0)
-      .map((paragraph) => {
-        const node = document.createElement('p');
-        node.textContent = paragraph.trim();
-        return node;
-      }),
-  );
+  el.readerBody.replaceChildren(...paragraphs(found.body));
+  el.pathExport.hidden = true;
   el.reader.showModal();
+}
+
+/** Text as nodes, never as innerHTML: the plans are data, not markup. */
+function paragraphs(text: string): HTMLElement[] {
+  return text
+    .split(/\n{2,}/)
+    .filter((paragraph) => paragraph.trim().length > 0)
+    .map((paragraph) => {
+      const node = document.createElement('p');
+      node.textContent = paragraph.trim();
+      return node;
+    });
 }
 
 // --- playing ----------------------------------------------------------------------
@@ -381,6 +470,9 @@ async function importPath(file: File): Promise<void> {
 
 el.roll.addEventListener('click', () => void roll());
 el.read.addEventListener('click', () => openPlan(state.loka));
+el.rules.addEventListener('click', openRules);
+el.plans.addEventListener('click', openPlans);
+el.restart.addEventListener('click', startOver);
 el.report.addEventListener('click', openWriter);
 el.writerSave.addEventListener('click', saveReport);
 el.path.addEventListener('click', openPath);

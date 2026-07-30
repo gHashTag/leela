@@ -171,6 +171,12 @@ const EN = {
   'app.step': 'You threw {value}. {from} → {to}. {title}',
   'app.unloadable': 'The plan texts could not be loaded. Reopening the app usually fixes it.',
   'app.boardLabel': 'The board, 72 plans',
+  // The published app's own two header buttons: `:information_source:` opens
+  // the rules book, `:books:` opens all 72 plans. See GameScreen's Header.
+  'app.rules': 'Rules of the game',
+  'app.plans': 'All 72 plans',
+  'app.restart': 'Start over',
+  'app.restarted': 'A new game. Throw a six to enter it.',
   'app.opening': 'A six puts you on the board.',
   'app.roll': 'Roll',
   'app.read': 'Read this plan',
@@ -350,6 +356,10 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.step': 'Выпало {value}. {from} → {to}. {title}',
   'app.unloadable': 'Тексты планов не загрузились. Обычно помогает открыть приложение заново.',
   'app.boardLabel': 'Доска, 72 плана',
+  'app.rules': 'Правила игры',
+  'app.plans': 'Все 72 плана',
+  'app.restart': 'Начать заново',
+  'app.restarted': 'Новая игра. Бросьте шестёрку, чтобы войти в неё.',
   'app.opening': 'Шестёрка выводит вас на доску.',
   'app.roll': 'Бросок',
   'app.read': 'Прочесть план',

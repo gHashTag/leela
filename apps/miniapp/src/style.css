@@ -81,9 +81,35 @@ body {
 /* --- where you are ------------------------------------------------------- */
 
 .head {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+/*
+ * The two the published app puts in its header — `:information_source:` for the
+ * rules book and `:books:` for all 72 plans (GameScreen's Header). Sized as
+ * touch targets rather than as text: they sit beside a title and above a board,
+ * and a 20px glyph is not something a thumb can aim at.
+ */
+.icon {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+  background: transparent;
+  color: var(--muted);
+}
+
+.icon:hover {
+  color: var(--text);
+}
+
+.head progress {
+  grid-column: 1 / -1;
 }
 
 .where {
@@ -525,4 +551,39 @@ button:active:not(:disabled) {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/*
+ * A list of titles that opens a text.
+ *
+ * One shape for both of the published app's lists — `RULES_SCREEN` and
+ * `PLANS_SCREEN` are the same `FlatList` of `RenderPlanItem` there, and the
+ * same thing to a reader here.
+ */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.list button {
+  width: 100%;
+  text-align: start;
+  background: transparent;
+  padding: 12px 10px;
+  border-radius: var(--radius);
+}
+
+.list button:hover {
+  background: var(--surface);
+}
+
+/* The square the player is standing on, marked as the app marks it. */
+.list button.here {
+  font-weight: 650;
+  color: var(--accent, inherit);
+  background: var(--surface);
 }

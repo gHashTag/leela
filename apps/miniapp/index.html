@@ -10,10 +10,14 @@
   <body>
     <main id="app">
       <header class="head">
+        <!-- The published app's own two: `:information_source:` opens the
+             rules book, `:books:` opens all 72 plans. See GameScreen's Header. -->
+        <button id="rules" class="icon" type="button" aria-label="Rules" title="Rules">&#8505;</button>
         <div class="where">
           <span class="plan-number" id="plan-number">—</span>
           <span class="plan-title" id="plan-title">Waiting for a six</span>
         </div>
+        <button id="plans" class="icon" type="button" aria-label="All plans" title="All plans">&#128218;</button>
         <progress id="progress" max="68" value="0"></progress>
       </header>
 
@@ -26,11 +30,24 @@
       </section>
 
       <footer class="controls">
+        <button id="restart" hidden>Start over</button>
         <button id="report">Write a report</button>
         <button id="read">Read this plan</button>
         <button id="path">My path</button>
       </footer>
     </main>
+
+    <!-- One dialog for both lists: the rules book's chapters and all 72
+         plans are the same thing on screen — titles that open a text. -->
+    <dialog id="list" class="reader">
+      <div class="reader-body">
+        <h2 id="list-title"></h2>
+        <ul id="list-items" class="list"></ul>
+      </div>
+      <div class="reader-actions">
+        <form method="dialog"><button class="primary" type="submit">Close</button></form>
+      </div>
+    </dialog>
 
     <dialog id="writer" class="reader">
       <article>
