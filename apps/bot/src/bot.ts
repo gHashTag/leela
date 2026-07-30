@@ -6,7 +6,7 @@
  * `@leela/engine` — not here.
  */
 
-import { Bot, InlineKeyboard, type Context } from 'grammy';
+import { Bot, InlineKeyboard, InputFile, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 import { type Language, messageFor, planFor, resolveLanguage } from '@leela/content';
 import { isSessionOver } from '@leela/engine';
@@ -21,6 +21,7 @@ import {
 } from './delivery';
 import { escapeHtml, renderBoardMessage, renderPlan } from './render';
 import { MAX_FILE_BYTES, asReport, decide, keep } from './take-in';
+import { offer, serialise } from './take-out';
 import {
   MemoryRoomStore,
   discardReports,
@@ -486,6 +487,36 @@ export function createBot({
       ],
     };
   }
+
+  /**
+   * `/save` — the path, as a file to keep.
+   *
+   * The other half of the bridge. The mini app has saved one since it learned
+   * to; a player who plays mostly in a chat could not get what they had written
+   * out at all, which made the bridge look finished when it went one way.
+   */
+  bot.command('save', async (ctx) => {
+    const who = sender(ctx);
+    if (!who) return;
+
+    const language = languageOf(ctx);
+    const existing = reports.history ? await reports.history(who.id) : null;
+    const offered = offer(existing, new Date(now()).toISOString().slice(0, 10));
+
+    if (offered.kind !== 'file') {
+      await ctx.reply(
+        messageFor(language, offered.kind === 'not-kept' ? 'file.notKept' : 'file.nothingToSave'),
+      );
+      return;
+    }
+
+    // As a document rather than as text: a path of forty plans is past what a
+    // message can carry, and a file is the thing another surface can read.
+    await ctx.replyWithDocument(
+      new InputFile(Buffer.from(serialise(offered.document), 'utf8'), offered.name),
+      { caption: messageFor(language, 'file.saved', { count: offered.count }) },
+    );
+  });
 
   /**
    * A path, sent as a file from the mini app.

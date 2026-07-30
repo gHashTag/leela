@@ -147,6 +147,11 @@ const EN = {
   'file.unreadable': 'That is not a path written by Leela. Save one from the mini app.',
   'file.tooBig': 'That file is too large to be a path.',
   'file.notKept': 'This bot is not keeping reports, so there is nowhere to put a path.',
+  'file.saved': {
+    one: 'Your path — {count} plan. Keep it somewhere that outlives this chat.',
+    other: 'Your path — {count} plans. Keep it somewhere that outlives this chat.',
+  },
+  'file.nothingToSave': 'You have not written anything to save yet.',
 
   // --- the mini app ----------------------------------------------------------
   //
@@ -212,6 +217,7 @@ const EN = {
     '/report <text> — reflect on the plan you stand on',
     '/plan [n] — read a plan',
     '/path — what you have written, and where',
+    '/save — the same, as a file you can keep',
     '/board — where everyone stands',
     '',
     'A six puts you on the board. Reaching 68 exactly wins.',
@@ -320,6 +326,13 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'file.unreadable': 'Это не путь, записанный Лилой. Сохраните его в мини-приложении.',
   'file.tooBig': 'Этот файл слишком велик, чтобы быть путём.',
   'file.notKept': 'Этот бот не хранит отчёты, поэтому путь положить некуда.',
+  'file.saved': {
+    one: 'Ваш путь — {count} план. Держите там, где переживёт этот чат.',
+    few: 'Ваш путь — {count} плана. Держите там, где переживёт этот чат.',
+    many: 'Ваш путь — {count} планов. Держите там, где переживёт этот чат.',
+    other: 'Ваш путь — {count} плана. Держите там, где переживёт этот чат.',
+  },
+  'file.nothingToSave': 'Вы пока ничего не написали, чтобы сохранять.',
 
   'app.waiting': 'Бросьте шестёрку, чтобы войти в игру',
   'app.entered': 'Шестёрка. Вы входите в игру на {to}. {title}',
@@ -379,6 +392,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
     '/report <текст> — отчёт о плане, на котором стоите',
     '/plan [n] — прочесть план',
     '/path — что вы написали и где',
+    '/save — то же самое файлом, который можно забрать',
     '/board — где все стоят',
     '',
     'Шестёрка выводит на доску. Побеждает точное попадание на 68.',

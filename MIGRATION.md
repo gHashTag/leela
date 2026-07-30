@@ -1453,6 +1453,35 @@ line, and every `COPY` line points at a workspace that exists. Both directions,
 because a package removed leaves a line that fails the build with a message
 about a missing *file* rather than a missing package.
 
+## Forty-fourth pass: the other half of the bridge
+
+Last pass the mini app could save a path and the bot could take one in, and
+that was called done. It was one-way: a player who plays mostly in a chat could
+not get what they had written **out** — not to another device, not into the
+mini app, not into a notes app. Half a bridge is worse than none, because it
+looks finished.
+
+`/save` sends the path as a document. `@leela/journal` is the format on both
+sides, so what the bot writes is what the mini app reads by construction — and
+the assertion that matters says exactly that: **a path taken out and sent
+straight back adds nothing.** If the two sides ever describe the format
+differently, that is what fails.
+
+Three answers, not two, as `/path` has had since it was written: a file, or
+"you have written nothing", or "this bot does not keep what you write". Only
+one of those is about the player.
+
+The file is written oldest first, because the store hands back newest first and
+a path is read in the order it was walked. It is indented, because a file sent
+into a chat gets opened. And it is named `leela-path-bot-<date>.json`, because a
+player with both files in one folder wants to know which is which.
+
+**Two things the audits took back out.** `entriesOf` was a convenience invented
+for a contorted line in a test — the line went, and `audit-unread` named the
+function the same minute. And the first version of those tests reached past a
+union with `{} as never`, which typechecks nowhere and says nothing; the
+narrowing belongs at the call site, where the transport does it too.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
