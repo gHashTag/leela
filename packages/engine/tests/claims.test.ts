@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 // A plain module, shared with the scripts that use it. One suppressed line
 // rather than a `.d.ts`, which would be a second description of it.
 // @ts-expect-error - untyped .mjs
-import { checkCounts, checkManifests, checkTotal, claimedCounts, claimedTotal, copiedManifests } from '../../../scripts/lib/claims.mjs';
+import { checkCiPackages, checkCounts, checkManifests, checkTotal, claimedCounts, claimedTotal, copiedManifests, packagesCheckedByCi } from '../../../scripts/lib/claims.mjs';
 
 /**
  * The numbers this repository says about itself.
@@ -151,5 +151,66 @@ COPY packages packages
   it('is quiet when the list is the truth', () => {
     const workspaces = new Set(['apps/bot', 'packages/engine', 'packages/journal']);
     expect(checkManifests(copiedManifests(DOCKERFILE), workspaces)).toEqual([]);
+  });
+});
+
+describe('the packages CI actually runs', () => {
+  /**
+   * The three jobs each iterate a `for pkg in …` list written by hand, because
+   * a shell loop cannot ask the repository what its workspaces are. A package
+   * missing from that line does not turn the build red — it is simply never
+   * run, and an absent check reads exactly like a passing one.
+   *
+   * This pass was pushed with a strict-typecheck error for the neighbouring
+   * reason: the command run locally and the command run by CI were different.
+   */
+  const WORKFLOW = `
+      for pkg in packages/engine apps/bot; do
+        (cd "$pkg" && bunx tsc --noEmit)
+      done
+      for pkg in packages/engine apps/bot; do
+        (cd "$pkg" && bunx vitest run)
+      done
+`;
+
+  it('reads every loop, not just the first', () => {
+    const loops = packagesCheckedByCi(WORKFLOW);
+    expect(loops).toHaveLength(2);
+    expect([...(loops[0] ?? [])].sort()).toEqual(['apps/bot', 'packages/engine']);
+  });
+
+  it('names a package that ships and is never run', () => {
+    const problems = checkCiPackages(
+      packagesCheckedByCi(WORKFLOW),
+      new Set(['packages/engine', 'apps/bot', 'packages/new']),
+    );
+    // Once per loop: added to the tests and not the typecheck is still a gap.
+    expect(problems).toHaveLength(2);
+    expect(problems[0]).toContain('packages/new');
+  });
+
+  it('catches a package added to one loop and not the other', () => {
+    const halfway = WORKFLOW.replace('for pkg in packages/engine apps/bot; do\n        (cd "$pkg" && bunx vitest run)', 'for pkg in packages/engine apps/bot packages/new; do\n        (cd "$pkg" && bunx vitest run)');
+    const problems = checkCiPackages(
+      packagesCheckedByCi(halfway),
+      new Set(['packages/engine', 'apps/bot', 'packages/new']),
+    );
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain('loop 1');
+  });
+
+  it('names a loop entry that ships nothing, which fails the job by cd', () => {
+    const problems = checkCiPackages(packagesCheckedByCi(WORKFLOW), new Set(['packages/engine']));
+    expect(problems.filter((problem: string) => problem.includes('does not ship code'))).toHaveLength(2);
+  });
+
+  it('says so when a workflow iterates nothing at all', () => {
+    // A refactor that replaces the loops with something else should be noticed
+    // rather than silently reported as "everything is covered".
+    expect(checkCiPackages(packagesCheckedByCi('jobs: {}'), new Set(['packages/engine']))).toHaveLength(1);
+  });
+
+  it('is quiet when the list is the repository', () => {
+    expect(checkCiPackages(packagesCheckedByCi(WORKFLOW), new Set(['packages/engine', 'apps/bot']))).toEqual([]);
   });
 });

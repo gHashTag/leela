@@ -13,7 +13,7 @@
     "typecheck": "bun run --filter '*' typecheck",
     "typecheck:strict": "bun run --filter '*' typecheck:strict",
     "content:build": "node scripts/build-content.mjs",
-    "verify": "bun run content:build && bun run test"
+    "verify": "bun run content:build && bun run typecheck && bun run typecheck:strict && bun run test"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

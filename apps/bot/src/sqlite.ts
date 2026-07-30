@@ -159,9 +159,9 @@ CREATE INDEX IF NOT EXISTS reports_user ON reports (user_id, created_at DESC);
 export function addMissingColumns(db: Database, schema: string = SCHEMA): string[] {
   const added: string[] = [];
 
-  for (const [, table, body] of schema.matchAll(
-    /CREATE TABLE IF NOT EXISTS (\w+) \(([\s\S]*?)\n\);/g,
-  )) {
+  for (const match of schema.matchAll(/CREATE TABLE IF NOT EXISTS (\w+) \(([\s\S]*?)\n\);/g)) {
+    const table = match[1] ?? '';
+    const body = match[2] ?? '';
     const existing = new Set(
       (db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>).map(
         (column) => column.name,

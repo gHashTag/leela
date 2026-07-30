@@ -1600,6 +1600,22 @@ one. `packages/ai` already forbids the model to invent the teaching, by a
 different mechanism and with 126 tests on it. Two designs, one rule; churning
 one into the other would be a change with no behaviour behind it.
 
+### The push that failed, and what it changed
+
+This pass went to CI red. The local check was `tsc --noEmit`; what ships is
+`tsc --noEmit -p tsconfig.src.json`, which turns on `noUncheckedIndexedAccess` —
+two different commands, one of them run by a person and the other by the build.
+The error was a destructured regex group, and fixing it took a line; the reason
+it was not caught locally is worth more than the line.
+
+- `bun run verify` now runs both typechecks as well as the tests, so the local
+  command and the CI command are the same command.
+- **CI's package list is checked against the repository.** Three shell loops
+  each name every workspace by hand, because a `for pkg in …` cannot ask what
+  the workspaces are. A tenth package added without touching those lines is not
+  a red build — it is an absent one, which reads exactly like a passing one.
+  `checkCiPackages` is in `audit-configs`, with six tests on the rule.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

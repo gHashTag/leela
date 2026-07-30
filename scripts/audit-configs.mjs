@@ -17,7 +17,7 @@
 
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { checkManifests, copiedManifests } from './lib/claims.mjs';
+import { checkCiPackages, checkManifests, copiedManifests, packagesCheckedByCi } from './lib/claims.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const WORKSPACES = ['packages', 'apps'];
@@ -92,6 +92,19 @@ const dockerfile = join(ROOT, 'apps/bot/Dockerfile');
 if (existsSync(dockerfile)) {
   problems.push(
     ...checkManifests(copiedManifests(readFileSync(dockerfile, 'utf8')), workspaces),
+  );
+}
+
+// CI iterates a hand-written list in a shell loop, three times over. A package
+// missing from it does not turn the build red — it is simply never run, which
+// is the failure nobody notices. This pass was pushed with a strict-typecheck
+// error precisely because the local check and the CI check were different
+// commands; a list that disagrees with the repository is the same problem one
+// step further along.
+const workflow = join(ROOT, '.github/workflows/ci.yml');
+if (existsSync(workflow)) {
+  problems.push(
+    ...checkCiPackages(packagesCheckedByCi(readFileSync(workflow, 'utf8')), workspaces),
   );
 }
 

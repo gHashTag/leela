@@ -106,3 +106,45 @@ export function checkManifests(copied, workspaces) {
 
   return problems;
 }
+
+/**
+ * Which workspaces the CI workflow names.
+ *
+ * The three jobs that matter — loose typecheck, strict typecheck, tests — each
+ * iterate a `for pkg in …` list written by hand, because a shell loop cannot
+ * ask the repository what its workspaces are. A tenth package added without
+ * touching that line is a package CI silently never runs: not a red build, an
+ * absent one, which is the failure nobody notices.
+ *
+ * Returns one set per loop, so a package added to two of the three is caught as
+ * readily as one added to none.
+ */
+export const packagesCheckedByCi = (workflow) => {
+  const loops = [];
+  for (const [, list] of workflow.matchAll(/for pkg in ([^;\n]+); do/g)) {
+    loops.push(new Set(list.trim().split(/\s+/)));
+  }
+  return loops;
+};
+
+/** Workspaces CI iterates, against the ones that exist. */
+export function checkCiPackages(loops, workspaces) {
+  const problems = [];
+
+  if (loops.length === 0) return ['the CI workflow iterates no packages at all'];
+
+  for (const [index, named] of loops.entries()) {
+    for (const workspace of workspaces) {
+      if (!named.has(workspace)) {
+        problems.push(`${workspace} exists and CI loop ${index + 1} does not run it`);
+      }
+    }
+    for (const name of named) {
+      if (!workspaces.has(name)) {
+        problems.push(`CI loop ${index + 1} runs ${name}, which does not ship code`);
+      }
+    }
+  }
+
+  return problems;
+}
