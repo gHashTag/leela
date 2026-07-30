@@ -98,6 +98,7 @@ import {
   lineFor,
   mayExport,
   mayShare,
+  mayAsk,
   mayStartOver,
   mayThrow,
   mayWrite,
@@ -110,14 +111,49 @@ interface TelegramWebApp {
   expand(): void;
   colorScheme: 'light' | 'dark';
   initDataUnsafe?: { user?: { language_code?: string } };
+  /**
+   * Telegram's signed launch payload, and the only honest sign we are inside
+   * Telegram at all.
+   *
+   * `telegram-web-app.js` is served from telegram.org and defines `WebApp` in
+   * *any* browser, `sendData` included — so feature-detecting the method draws
+   * a button in a plain tab where pressing it does nothing. Found by opening
+   * the app in one, which is the same lesson as the last three passes: a
+   * control that cannot work is worse than no control.
+   *
+   * Empty outside Telegram. Whether the launch came from a keyboard button —
+   * which is what `sendData` actually requires — is not visible from here at
+   * all; that is the operator's setup, and it is written down in the bot's
+   * README rather than guessed at.
+   */
+  initData?: string;
   HapticFeedback?: {
     impactOccurred(style: 'light' | 'medium' | 'heavy'): void;
     notificationOccurred(type: 'success' | 'warning' | 'error'): void;
   };
+  /**
+   * Hand something to the bot, and close.
+   *
+   * Present only when the app was opened from a *keyboard* button — not from a
+   * link, not from an inline one. So it is feature-detected rather than
+   * assumed, and the control that uses it is not drawn where it cannot work.
+   */
+  sendData?(data: string): void;
 }
 
 const telegram: TelegramWebApp | undefined = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } })
   .Telegram?.WebApp;
+
+/**
+ * Whether this is really running inside Telegram.
+ *
+ * Not `telegram !== undefined`: the script that defines it is served from
+ * telegram.org and runs in any browser. `initData` is signed and empty
+ * everywhere else.
+ */
+function insideTelegram(): boolean {
+  return (telegram?.initData ?? '').length > 0;
+}
 
 telegram?.ready();
 telegram?.expand();
@@ -215,6 +251,7 @@ const el = {
   writerSave: document.getElementById('writer-save') as HTMLButtonElement,
   writerHint: document.getElementById('writer-hint') as HTMLElement,
   writerShare: document.getElementById('writer-share') as HTMLButtonElement,
+  writerAsk: document.getElementById('writer-ask') as HTMLButtonElement,
   intention: document.getElementById('intention') as HTMLDialogElement,
   intentionTitle: document.getElementById('intention-title') as HTMLElement,
   intentionText: document.getElementById('intention-text') as HTMLTextAreaElement,
@@ -610,6 +647,27 @@ function cameBack(returns: ReadonlyArray<Revisit>): HTMLElement[] {
   return [heading, row];
 }
 
+/**
+ * Hand this square to the bot, which has the companion.
+ *
+ * The mini app has the plans, the returns, the arrival and the whole path —
+ * everything `packages/ai` is given except the model, and a model needs a key.
+ * A key in a browser bundle is a key given away, so the missing half of the
+ * product was never the reflection: it was the bridge.
+ *
+ * Telegram provides one. The square goes over in the format both surfaces
+ * already read and write, and the bot files it and answers. It closes the app,
+ * which is Telegram's doing and not ours — so it is a button somebody presses
+ * rather than something that happens to them.
+ */
+function askTheCompanion(): void {
+  if (!mayAsk(el.writerText.value, insideTelegram())) return;
+
+  telegram?.sendData?.(
+    shareTextFor(state.loka, planFor(state.loka).title, el.writerText.value, intention),
+  );
+}
+
 /** One player's earlier writing about one square, oldest first. */
 function writtenBefore(theirs: Journal, plan: number): HTMLElement[] {
   const written = writingsOn(theirs, plan);
@@ -821,6 +879,7 @@ function showWriterHint(): void {
   // Nothing to share until something has been written. The button appears
   // rather than sitting disabled: a control that is never usable is furniture.
   el.writerShare.hidden = !mayShare(el.writerText.value);
+  el.writerAsk.hidden = !mayAsk(el.writerText.value, insideTelegram());
   el.writerShare.textContent = messageFor(language, 'app.share');
 }
 
@@ -1081,6 +1140,7 @@ el.restart.addEventListener('click', startOver);
 el.report.addEventListener('click', openWriter);
 el.writerSave.addEventListener('click', saveReport);
 el.writerShare.addEventListener('click', () => void shareSquare());
+el.writerAsk.addEventListener('click', askTheCompanion);
 el.intentionSave.addEventListener('click', saveTheIntention);
 el.writerText.addEventListener('input', () => {
   saveDraft(localStorage, currentPlayer(session).id, state.loka, el.writerText.value);

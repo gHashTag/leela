@@ -194,6 +194,33 @@ A game counts as over when every seat has finished *after* being on the board.
 A seat that never entered has `previous_plan = 0` — waiting, not done — and
 treating those as finished would delete a game before it started.
 
+## The mini app's companion
+
+The mini app has the plans, the returns, the arrival and the whole path —
+everything `packages/ai` is given except the model. It is a static page, a model
+needs a key, and a key in a browser bundle is a key given away. So the half of
+the product that was missing was never the reflection: it was the bridge.
+
+Telegram provides one. A mini app **opened from a keyboard button** may call
+`sendData`, and the bot receives it as `message:web_app_data`. What arrives is
+the square format both surfaces already read and write, so the bot files it —
+exactly as `/take` does, one account per arrival — and then answers it, which is
+the part only this side can do.
+
+**This needs setting up once, and it is not something the code can do.** The
+launch has to come from a *reply keyboard* button:
+
+```
+{ text: '📝 Leela', web_app: { url: 'https://t27.ai/leela/' } }
+```
+
+Not an inline button and not a link. `sendData` exists in every browser —
+`telegram-web-app.js` is served from telegram.org and defines it everywhere — so
+it cannot be feature-detected. The mini app therefore offers "Ask the companion"
+only when `initData` is non-empty, which is the one honest sign of being inside
+Telegram at all; whether the launch was from a keyboard button is not visible
+from the page, and is this file's business rather than the code's.
+
 ## What is missing
 
 - The room language comes from the host's Telegram locale and cannot be changed

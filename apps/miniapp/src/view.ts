@@ -253,6 +253,19 @@ export function mayShare(draft: string): boolean {
   return draft.trim().length > 0;
 }
 
+/**
+ * Whether the companion can be asked about what is being written.
+ *
+ * Two halves, and the second is the one that has to be checked rather than
+ * hoped for: something written, and a bridge to send it over. `sendData` exists
+ * only when the mini app was opened from a keyboard button — not from a link,
+ * not from an inline one — so a button drawn without it is a control that
+ * cannot work, which is the defect this app spent three passes on.
+ */
+export function mayAsk(draft: string, bridged: boolean): boolean {
+  return bridged && mayShare(draft);
+}
+
 /** Whether there is a path to save. An empty file is not a keepsake. */
 export function mayExport(entries: ReadonlyArray<unknown>): boolean {
   return entries.length > 0;

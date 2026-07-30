@@ -289,6 +289,10 @@ const EN = {
   // the wrong person's throw.
   'app.seatSaid': 'Player {seat} — {said}',
   'app.share': 'Share',
+  // The mini app has everything the companion is given except the companion:
+  // it is a static page, and a model needs a key. Telegram's own bridge carries
+  // the square to the bot, which has one.
+  'app.ask': 'Ask the companion',
   'app.shareCopied': 'Copied. Paste it wherever you like.',
   'app.shareRefused': 'This browser will not share or copy. The text is in the box.',
   'app.players': 'Players',
@@ -547,6 +551,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.seatTurn': 'Игрок {seat}',
   'app.seatSaid': 'Игрок {seat} — {said}',
   'app.share': 'Поделиться',
+  'app.ask': 'Спросить спутника',
   'app.shareCopied': 'Скопировано. Вставьте куда угодно.',
   'app.shareRefused': 'Этот браузер не делится и не копирует. Текст остался в поле.',
   'app.players': 'Игроки',

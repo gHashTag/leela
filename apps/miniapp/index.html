@@ -94,6 +94,11 @@
       <footer class="sheet-controls">
         <button id="writer-save" class="primary" type="button">Save</button>
         <button id="writer-share" type="button" hidden>Share</button>
+        <!-- Only inside Telegram, and only when the app was opened from a
+             keyboard button: `sendData` exists nowhere else, and offering a
+             control that cannot work is the defect this app spent three passes
+             on. -->
+        <button id="writer-ask" type="button" hidden>Ask the companion</button>
         <form method="dialog"><button type="submit">Close</button></form>
       </footer>
     </dialog>

@@ -438,6 +438,75 @@ export function createBot({
   });
 
   /**
+   * A square handed over by the mini app, and the one thing it cannot do
+   * itself.
+   *
+   * The mini app has the plans, the returns, the whole path — everything the
+   * companion is given except the companion. It is a static page: a model needs
+   * a key, and a key in a browser bundle is a key given away. So the half of
+   * the product that was missing was not the reflection, it was the bridge.
+   *
+   * Telegram has one. A mini app opened from a keyboard button may `sendData`,
+   * and the bot receives it here. What arrives is the same square format the
+   * pass before last taught both surfaces to read and write, so this is
+   * `/take` plus the sentence only this side can produce.
+   *
+   * Filed first and answered second, in that order: a reflection is worth
+   * having and the account is worth keeping, and the one that must not be lost
+   * to a slow model is the account.
+   */
+  bot.on('message:web_app_data', async (ctx) => {
+    const who = sender(ctx);
+    if (!who) return;
+
+    const language = languageOf(ctx);
+    const sent = ctx.message.web_app_data.data;
+    const existing = reports.history ? await reports.history(who.id) : null;
+    const outcome = decideSquare(sent, existing?.map(asReport) ?? null, now());
+
+    if (outcome.kind !== 'took') {
+      await ctx.reply(
+        messageFor(
+          language,
+          outcome.kind === 'nothing-new'
+            ? 'square.had'
+            : outcome.kind === 'not-kept'
+              ? 'square.notKept'
+              : 'square.unreadable',
+        ),
+      );
+      return;
+    }
+
+    await keep(reports, who.id, outcome.added);
+
+    const square = outcome.added[0];
+    if (!square) return;
+
+    await ctx.reply(messageFor(language, 'square.took', { plan: square.plan }));
+    if (!guide) return;
+
+    // The path this square belongs to, minus the square itself — the same rule
+    // the report gate follows, so the companion is not handed the words it is
+    // about to answer as though they were already history.
+    const journey = reports.history
+      ? (await reports.history(who.id))
+          .filter((entry) => entry.plan !== square.plan || entry.text !== square.text)
+          .reverse()
+          .map((entry) => ({ plan: entry.plan, text: entry.text }))
+      : undefined;
+
+    const reflection = await guide.reflect(square.text, {
+      language,
+      plan: square.plan,
+      journey,
+    });
+
+    if (!reflection.fromModel) log('[bot] the companion was unreachable for a handed-over square');
+    await deliver(ctx, [{ text: reflection.text, broadcast: false }]);
+  });
+
+  /**
    * `/returns` — the squares that came back.
    *
    * `/path` answers "what have I written". This answers the question the game

@@ -37,6 +37,7 @@ export function applyChrome(document: Document, language: Language): void {
   set('path-export', 'app.pathExport');
   set('path-import', 'app.pathImport');
   set('path-paste', 'app.paste');
+  set('writer-ask', 'app.ask');
   set('writer-hint', 'app.pathLocal');
 
   const writing = document.getElementById('writer-text');

@@ -13,7 +13,7 @@ import {
   type Session,
 } from '@leela/engine';
 import { EMPTY, record, type Journal } from '../src/reports';
-import { canRoll, mayExport, mayShare, mayStartOver, mayThrow, mayWrite } from '../src/view';
+import { canRoll, mayAsk, mayExport, mayShare, mayStartOver, mayThrow, mayWrite } from '../src/view';
 
 /**
  * A disabled button is a drawing, and a drawing refuses nothing.
@@ -126,6 +126,17 @@ describe('what each named decision answers', () => {
     // than none at all.
     expect(mayExport(EMPTY.entries)).toBe(false);
     expect(mayExport(written.entries)).toBe(true);
+  });
+
+  it('offers the companion only where there is a bridge to it', () => {
+    // The mini app is a static page and a model needs a key, so the reflection
+    // comes from the bot. `sendData` exists only when Telegram opened this app
+    // from a keyboard button — and a control drawn without it is a control that
+    // cannot work, which is the whole subject of this file.
+    expect(mayAsk('something written', true)).toBe(true);
+    expect(mayAsk('something written', false)).toBe(false);
+    expect(mayAsk('', true)).toBe(false);
+    expect(mayAsk('   ', true)).toBe(false);
   });
 
   it('offers the die only where the throw would be taken', () => {

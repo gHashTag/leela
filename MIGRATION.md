@@ -3681,6 +3681,39 @@ Three bugs in three runs, all of them in the mutator rather than in the code it
 measures. That is worth saying plainly: a check nobody has broken on purpose is
 a check nobody has any reason to believe — including this one.
 
+## Hundred-and-fifth pass: the missing half was a bridge
+
+The mini app has the plans, the returns, the arrival and the whole path —
+everything `packages/ai` is given except the model. A player writes into it and
+nothing answers, and that has been at the top of "what to do next" for a dozen
+passes with the same excuse each time: it is a static page, a model needs a key,
+and a key in a browser bundle is a key given away.
+
+All true, and beside the point. **The missing half was never the reflection. It
+was the bridge.**
+
+Telegram has one. A mini app opened from a keyboard button may `sendData`, and
+the bot receives it as `message:web_app_data`. What crosses is the square format
+both surfaces already read and write, so the bot does `/take`'s work — one
+account per arrival, the same dedup, the same three refusals — and then answers
+it, which is the part only the side holding a key can do.
+
+Filed first, answered second, and that order is the point: a reflection is worth
+having and the account is worth *keeping*, and the one that must not be lost to
+a slow model is the account. Three tests hold it — with a model that throws, with
+no companion configured at all, and with a store that keeps nothing.
+
+**And the mini app's own button was a control that could not work.** Drawn from
+`sendData !== undefined`, which is true in every browser on earth:
+`telegram-web-app.js` is served from telegram.org and defines `WebApp` wherever
+it is loaded. Found by opening the app in a plain tab and looking — the same
+lesson as the three passes before, in the pass that had just written the rule
+down. It asks `initData` now, which is signed and empty outside Telegram.
+
+Whether the launch came from a *keyboard* button — which is what `sendData`
+actually requires — is not visible from the page at all. That is setup rather
+than code, and it is written down in `apps/bot/README.md` instead of guessed at.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

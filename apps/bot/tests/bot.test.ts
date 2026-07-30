@@ -5,6 +5,7 @@ import { messageFor } from '@leela/content';
 import { Guide, ModelError, fixedModel, recordingModel, type LanguageModel } from '@leela/ai';
 import { createBot } from '../src/bot';
 import { MemoryReportSink, MemoryRoomStore, type ReportSink } from '../src/store';
+import { squareText } from '@leela/journal';
 
 /**
  * The transport, driven without a network.
@@ -987,5 +988,114 @@ describe('a question sees what a report sees', () => {
       expect(prompt).not.toContain('Where they have been');
       expect(prompt).not.toContain('stood here before');
     })();
+  });
+});
+
+/** What a mini app hands over when it is opened from a keyboard button. */
+function handedOver(data: string, chat: { id: number; type: 'private' | 'group' }, from = 100) {
+  updateId += 1;
+  return {
+    update_id: updateId,
+    message: {
+      message_id: updateId,
+      date: 0,
+      chat: { id: chat.id, type: chat.type, title: 'A table' },
+      from: { id: from, is_bot: false, first_name: `P${from}` },
+      web_app_data: { data, button_text: '📝' },
+    },
+  } as never;
+}
+
+describe('a square handed over by the mini app', () => {
+  /**
+   * The mini app has the plans, the returns and the whole path — everything the
+   * companion is given except the companion. It is a static page: a model needs
+   * a key, and a key in a browser bundle is a key given away.
+   *
+   * So the half of the product that was missing was never the reflection. It
+   * was the bridge, and Telegram has one: a mini app opened from a keyboard
+   * button may `sendData`, and the bot receives it. What arrives is the square
+   * format both surfaces already read and write.
+   */
+  const square = squareText(41, 'The human plane', 'What it asked of me.', 'to stop hurrying');
+
+  it('keeps the account and answers it', async () => {
+    const recorder = recordingModel('a reflection');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const reports = new MemoryReportSink();
+    const { bot, sent } = harness({ guide, reports });
+
+    const before = sent.length;
+    await bot.handleUpdate(handedOver(square, PRIVATE));
+
+    const said = texts(sent.slice(before)).join(' ');
+    expect(said).toContain('41');
+    expect(said).toContain('a reflection');
+    expect(await reports.history('100')).toHaveLength(1);
+  });
+
+  it('keeps it even when the companion cannot be reached', async () => {
+    // The account is the thing that must not be lost to a model being slow or
+    // absent, so it is filed first and answered second.
+    const guide = new Guide({
+      model: {
+        id: 'absent',
+        async complete() {
+          throw new ModelError('no key');
+        },
+      } as LanguageModel,
+      log: () => undefined,
+    });
+    const reports = new MemoryReportSink();
+    const { bot, sent } = harness({ guide, reports });
+
+    const before = sent.length;
+    await bot.handleUpdate(handedOver(square, PRIVATE));
+
+    expect(await reports.history('100')).toHaveLength(1);
+    expect(texts(sent.slice(before)).length).toBeGreaterThan(0);
+  });
+
+  it('keeps it with no companion configured at all', async () => {
+    const reports = new MemoryReportSink();
+    const { bot } = harness({ reports });
+
+    await bot.handleUpdate(handedOver(square, PRIVATE));
+
+    expect(await reports.history('100')).toHaveLength(1);
+  });
+
+  it('takes the same square twice as one, as every other way in does', async () => {
+    // A shared square carries no time, so it is stamped on arrival — and two
+    // arrivals of one square would invent a return to a square nobody left.
+    const reports = new MemoryReportSink();
+    const { bot, sent } = harness({ reports });
+
+    await bot.handleUpdate(handedOver(square, PRIVATE));
+    const before = sent.length;
+    await bot.handleUpdate(handedOver(square, PRIVATE));
+
+    expect(await reports.history('100')).toHaveLength(1);
+    expect(texts(sent.slice(before)).join(' ')).toMatch(/already have/i);
+  });
+
+  it('refuses what is not a square rather than filing something wrong', async () => {
+    const reports = new MemoryReportSink();
+    const { bot, sent } = harness({ reports });
+
+    const before = sent.length;
+    await bot.handleUpdate(handedOver('hello', PRIVATE));
+
+    expect(await reports.history('100')).toHaveLength(0);
+    expect(texts(sent.slice(before)).join(' ')).toMatch(/does not read as a square/i);
+  });
+
+  it('says so when there is nowhere to keep it', async () => {
+    const { bot, sent } = harness({});
+
+    const before = sent.length;
+    await bot.handleUpdate(handedOver(square, PRIVATE));
+
+    expect(texts(sent.slice(before)).join(' ')).toMatch(/not keeping reports/i);
   });
 });
