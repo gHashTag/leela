@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { LANGUAGES, rulesFor, type Language } from '@leela/content';
 import { MAX_SEATS } from '@leela/engine';
 import { planFor } from '@leela/content';
 import {
@@ -15,6 +16,7 @@ import {
   roll,
   start,
   type Room,
+  rules,
 } from '../src/commands';
 
 const NOW = 1_700_000_000_000;
@@ -725,5 +727,58 @@ describe('what the bot says about whose throw it is', () => {
         room = report(room, holder.id, 'noted').room as Room;
       }
     }
+  });
+});
+
+describe('the rules book, in a chat', () => {
+  /**
+   * `@leela/content` has carried the book in 22 languages since the third pass.
+   * The docs site serves it, the mini app opens it, and the bot — which is
+   * where people actually play — had eleven commands and none of them was
+   * this one. A player in Telegram could not read how the game works.
+   */
+
+  it('lists the chapters, numbered so one can be asked for', () => {
+    const said = rules('en').replies[0].text;
+
+    for (const chapter of rulesFor('en')) {
+      expect(said, chapter.slug).toContain(chapter.title ?? chapter.slug);
+    }
+    expect(said).toMatch(/1\./);
+  });
+
+  it('opens every chapter it lists, in every language', () => {
+    // The rule for any list: nothing in it is a dead end.
+    for (const language of LANGUAGES) {
+      const listed = rulesFor(language).length > 0 ? rulesFor(language) : rulesFor('en');
+
+      for (let index = 1; index <= listed.length; index += 1) {
+        const said = rules(language, index).replies[0].text;
+        expect(said.length, `${language} chapter ${index}`).toBeGreaterThan(50);
+      }
+    }
+  });
+
+  it('answers a number that is not a chapter, rather than saying nothing', () => {
+    for (const asked of [0, -1, 99, 1.5]) {
+      const said = rules('en', asked).replies[0].text;
+      expect(said, String(asked)).toMatch(/chapter|Which/i);
+    }
+  });
+
+  it('falls back as a whole book, not chapter by chapter', () => {
+    // Half in one language and half in another is worse than one a reader can
+    // at least read — the same rule the mini app follows.
+    const unknown = 'zz' as Language;
+    const said = rules(unknown).replies[0].text;
+
+    for (const chapter of rulesFor('en')) {
+      expect(said).toContain(chapter.title ?? chapter.slug);
+    }
+  });
+
+  it('is in the language of the chat when that language has a book', () => {
+    const said = rules('ru').replies[0].text;
+    expect(said).toMatch(/[А-Яа-я]/);
   });
 });

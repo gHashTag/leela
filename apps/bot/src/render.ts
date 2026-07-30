@@ -109,28 +109,99 @@ export function renderBoardMessage(room: Room): string {
 }
 
 /**
- * A plan, formatted for a chat.
+ * A long text, formatted for a chat.
  *
- * Long plans are cut with a marker rather than silently truncated by Telegram
- * at 4096 characters, which would stop mid-word.
+ * Telegram truncates at 4096 characters, mid-word, so a text longer than that
+ * is cut here at a paragraph and marked. It was cut at the *same* paragraph
+ * every time: `renderPlan` took a body and returned its first page, and the
+ * marker read "…continues. /plan 2 again for the rest." Asking again returned
+ * the identical message. One plan text in eight is over the limit — 188 of the
+ * 1584 this repository ships — so the rest of them was unreachable in the bot,
+ * under an instruction saying how to reach it.
+ *
+ * So the pages are numbered and the marker says which one to ask for.
  */
 export const MAX_MESSAGE_CHARS = 3500;
+
+export interface Page {
+  text: string;
+  /** 1-based, and never past the end: asking for page 9 of 3 gives page 3. */
+  page: number;
+  pages: number;
+}
+
+/**
+ * Break a text into the pages a chat can carry.
+ *
+ * Paragraphs are kept whole where one fits, because a page that begins
+ * mid-sentence reads as a bug rather than as a page.
+ */
+export function paginate(text: string, room: number): string[] {
+  if (room <= 0) return [text];
+
+  const pages: string[] = [];
+  let rest = text;
+
+  while (rest.length > room) {
+    const cut = rest.slice(0, room);
+    const lastBreak = cut.lastIndexOf('\n\n');
+    const take = lastBreak > room * 0.5 ? lastBreak : room;
+    pages.push(rest.slice(0, take).trim());
+    rest = rest.slice(take).trim();
+  }
+
+  if (rest.length > 0 || pages.length === 0) pages.push(rest);
+  return pages;
+}
+
+/** One page of a long text, with its head and a marker when there is more. */
+export function renderPaged(
+  head: string,
+  body: string,
+  page: number,
+  more: (next: number, pages: number) => string,
+): Page {
+  const room = MAX_MESSAGE_CHARS - head.length;
+  const pages = paginate(escapeHtml(body), room);
+
+  const index = Math.min(Math.max(Math.trunc(page) || 1, 1), pages.length);
+  const text = pages[index - 1] ?? '';
+  const last = index >= pages.length;
+
+  return {
+    page: index,
+    pages: pages.length,
+    text: last
+      ? head + text
+      : `${head + text}\n\n<i>${escapeHtml(more(index + 1, pages.length))}</i>`,
+  };
+}
 
 export function renderPlan(
   language: Language,
   plan: number,
   title: string,
   body: string,
+  page = 1,
 ): string {
   const head = `<b>${plan}. ${escapeHtml(title)}</b>\n${renderProgress(plan)}\n\n`;
-  const room = MAX_MESSAGE_CHARS - head.length;
-  const text = escapeHtml(body);
 
-  if (text.length <= room) return head + text;
+  return renderPaged(head, body, page, (next, pages) =>
+    messageFor(language, 'plan.continues', { plan, next, pages }),
+  ).text;
+}
 
-  const cut = text.slice(0, room);
-  const lastBreak = cut.lastIndexOf('\n\n');
-  const trimmed = lastBreak > room * 0.5 ? cut.slice(0, lastBreak) : cut;
-  const more = messageFor(language, 'plan.continues', { plan });
-  return `${head + trimmed.trim()}\n\n<i>${escapeHtml(more)}</i>`;
+/** One chapter of the rules book, formatted the same way. */
+export function renderChapter(
+  language: Language,
+  index: number,
+  title: string,
+  body: string,
+  page = 1,
+): string {
+  const head = `<b>${index}. ${escapeHtml(title)}</b>\n\n`;
+
+  return renderPaged(head, body, page, (next, pages) =>
+    messageFor(language, 'rules.continues', { chapter: index, next, pages }),
+  ).text;
 }

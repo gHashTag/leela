@@ -101,7 +101,14 @@ const EN = {
   // --- reading a plan --------------------------------------------------------
   'plan.which': 'Which plan? Send /plan followed by a number, 1 to 72.',
   'plan.range': 'The board runs from 1 to 72.',
-  'plan.continues': '…continues. /plan {plan} again for the rest.',
+  // Numbered, because "again" returned the same page: one plan text in eight
+  // is over the limit a chat can carry, and the rest of it was unreachable
+  // under an instruction saying how to reach it.
+  'plan.continues': '…continues. /plan {plan} {next} for page {next} of {pages}.',
+  'rules.title': 'The rules of the game. /rules followed by a number opens one.',
+  'rules.which': 'Which chapter? /rules followed by a number, 1 to {count}.',
+  'rules.continues': '…continues. /rules {chapter} {next} for page {next} of {pages}.',
+  'rules.none': 'The rules are not written down in this language yet.',
 
   // --- the path --------------------------------------------------------------
   'path.absent': 'This bot is not keeping reports, so there is no path to show.',
@@ -224,6 +231,7 @@ const EN = {
     '/roll — throw the die',
     '/report <text> — reflect on the plan you stand on',
     '/plan [n] — read a plan',
+    '/rules [n] — the rules of the game, in chapters',
     '/path — what you have written, and where',
     '/save — the same, as a file you can keep',
     '/board — where everyone stands',
@@ -291,7 +299,11 @@ const RU: Partial<Record<MessageKey, Message>> = {
 
   'plan.which': 'Какой план? Отправьте /plan и число от 1 до 72.',
   'plan.range': 'Доска идёт от 1 до 72.',
-  'plan.continues': '…продолжение. /plan {plan} ещё раз, чтобы прочесть остальное.',
+  'plan.continues': '…продолжение. /plan {plan} {next} — страница {next} из {pages}.',
+  'rules.title': 'Правила игры. /rules и число открывает главу.',
+  'rules.which': 'Какая глава? /rules и число от 1 до {count}.',
+  'rules.continues': '…продолжение. /rules {chapter} {next} — страница {next} из {pages}.',
+  'rules.none': 'Правила на этом языке ещё не записаны.',
 
   'path.absent': 'Этот бот не хранит отчёты, поэтому пути не показать.',
   'path.empty': 'Вы пока ничего не написали. /report на плане, где стоите.',
@@ -406,6 +418,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
     '/roll — бросить кубик',
     '/report <текст> — отчёт о плане, на котором стоите',
     '/plan [n] — прочесть план',
+    '/rules [n] — правила игры, по главам',
     '/path — что вы написали и где',
     '/save — то же самое файлом, который можно забрать',
     '/board — где все стоят',

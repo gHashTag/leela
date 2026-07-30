@@ -31,7 +31,7 @@ import {
   type RuleSet,
   type Session,
 } from '@leela/engine';
-import { messageFor, planFor, resolveLanguage, type Language } from '@leela/content';
+import { messageFor, planFor, rulesFor, resolveLanguage, type Language } from '@leela/content';
 
 /** A table, plus the bits the bot needs that the engine does not care about. */
 export interface Room {
@@ -485,6 +485,51 @@ export function plan(room: Room, byPlayerId: string, requested?: number): Comman
   return {
     room,
     replies: [say(`${number}. ${found.title}\n\n${found.body}`, false)],
+  };
+}
+
+/**
+ * The rules book, in a chat.
+ *
+ * `@leela/content` has carried it in 22 languages since the third pass, the
+ * docs site serves it and the mini app opens it. The bot — which is where
+ * people actually play — had eleven commands and none of them was this one. A
+ * player in Telegram could not read how the game works.
+ *
+ * Falls back to English as a whole book rather than chapter by chapter, for the
+ * same reason the mini app does: half in one language and half in another is
+ * worse than one a reader can at least read.
+ */
+export function rules(language: Language = 'en', requested?: number): CommandResult {
+  const chapters = rulesFor(language);
+  const book = chapters.length > 0 ? chapters : rulesFor('en');
+
+  if (book.length === 0) {
+    return { room: null, replies: [say(messageFor(language, 'rules.none'), false)] };
+  }
+
+  if (requested === undefined) {
+    const list = book
+      .map((chapter, index) => `${index + 1}. ${chapter.title ?? chapter.slug}`)
+      .join('\n');
+
+    return {
+      room: null,
+      replies: [say(`${messageFor(language, 'rules.title')}\n\n${list}`, false)],
+    };
+  }
+
+  const chapter = book[requested - 1];
+  if (!Number.isInteger(requested) || !chapter) {
+    return {
+      room: null,
+      replies: [say(messageFor(language, 'rules.which', { count: book.length }), false)],
+    };
+  }
+
+  return {
+    room: null,
+    replies: [say(`${requested}. ${chapter.title ?? chapter.slug}\n\n${chapter.body}`, false)],
   };
 }
 

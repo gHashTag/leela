@@ -8,7 +8,7 @@
 
 import { Bot, InlineKeyboard, InputFile, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
-import { type Language, messageFor, planFor, resolveLanguage } from '@leela/content';
+import { type Language, messageFor, planFor, resolveLanguage, rulesFor } from '@leela/content';
 import { isSessionOver } from '@leela/engine';
 import type { Guide } from '@leela/ai';
 import * as commands from './commands';
@@ -19,7 +19,7 @@ import {
   isBlockedByUser,
   nudgeToPrivate,
 } from './delivery';
-import { escapeHtml, renderBoardMessage, renderPlan } from './render';
+import { escapeHtml, renderBoardMessage, renderChapter, renderPlan } from './render';
 import { MAX_FILE_BYTES, asReport, decide, keep } from './take-in';
 import { offer, serialise } from './take-out';
 import {
@@ -402,6 +402,37 @@ export function createBot({
   bot.command('report', (ctx) =>
     withRoom(ctx, (room, who) => commands.report(room, who.id, ctx.match ?? '', now())),
   );
+
+  /**
+   * The rules book, which nothing in this bot could open.
+   *
+   * `/rules` lists the chapters, `/rules 3` opens one, `/rules 3 2` its second
+   * page. The paging is the same as a plan's, and for the same reason: a chat
+   * cuts at 4096 characters.
+   */
+  bot.command('rules', async (ctx) => {
+    const language = languageOf(ctx);
+    const [first, second] = (ctx.match ?? '').trim().split(/\s+/).filter(Boolean);
+    const requested = first === undefined ? undefined : Number(first);
+    const chapters = rulesFor(language).length > 0 ? rulesFor(language) : rulesFor('en');
+    const chapter = requested === undefined ? undefined : chapters[requested - 1];
+
+    if (chapter && Number.isInteger(requested)) {
+      await ctx.reply(
+        renderChapter(
+          language,
+          requested as number,
+          chapter.title ?? chapter.slug,
+          chapter.body,
+          Number(second) || 1,
+        ),
+        { parse_mode: 'HTML' },
+      );
+      return;
+    }
+
+    await deliver(ctx, commands.rules(language, requested).replies);
+  });
 
   bot.command('plan', (ctx) =>
     withRoom(ctx, (room, who) => {

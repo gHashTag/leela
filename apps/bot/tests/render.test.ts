@@ -9,8 +9,7 @@ import {
   renderPlan,
   renderProgress,
   renderStandings,
-  tokenFor,
-} from '../src/render';
+  tokenFor, paginate, renderChapter} from '../src/render';
 
 const NOW = 1_700_000_000_000;
 const SEED = 4242;
@@ -221,5 +220,96 @@ describe('a token for any seat at all', () => {
       expect(typeof tokenFor(seat), String(seat)).toBe('string');
       expect(tokenFor(seat).length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('a text longer than a chat can carry', () => {
+  /**
+   * Telegram truncates at 4096 characters, mid-word, so a long plan was cut
+   * here at a paragraph and marked "…continues. /plan 2 again for the rest."
+   *
+   * Asking again returned the identical message. One plan text in eight is over
+   * the limit — 188 of the 1584 this repository ships, the longest 6090
+   * characters — so the rest of them was unreachable in the bot, under an
+   * instruction saying how to reach it.
+   *
+   * The rule asserted is not "plan 2 has two pages": it is that the pages
+   * cover the text, in order, without losing any of it.
+   */
+
+  const body = (paragraphs: number) =>
+    Array.from({ length: paragraphs }, (_, n) => `Paragraph ${n} ${'word '.repeat(60)}`).join(
+      '\n\n',
+    );
+
+  it('covers the whole text across its pages, losing nothing', () => {
+    const text = body(40);
+    const pages = paginate(text, 1000);
+
+    // Every word survives, in order. Joining is enough: the split points are
+    // whitespace.
+    expect(pages.join(' ').replace(/\s+/g, ' ').trim()).toBe(text.replace(/\s+/g, ' ').trim());
+  });
+
+  it('gives a different page for a different number', () => {
+    // The defect itself: asking again used to return the same message.
+    const long = body(40);
+    const first = renderPlan('en', 2, 'Maya', long, 1);
+    const second = renderPlan('en', 2, 'Maya', long, 2);
+
+    expect(first).not.toBe(second);
+  });
+
+  it('keeps every page inside the limit, head and marker included', () => {
+    for (const paragraphs of [1, 5, 20, 60]) {
+      const text = body(paragraphs);
+      const pages = paginate(text, 3000);
+
+      for (let page = 1; page <= pages.length; page += 1) {
+        const rendered = renderPlan('en', 41, 'The human plane', text, page);
+        expect(rendered.length, `${paragraphs} paragraphs, page ${page}`).toBeLessThanOrEqual(4096);
+      }
+    }
+  });
+
+  it('says which page to ask for next, and stops saying it at the end', () => {
+    const text = body(40);
+    const pages = paginate(text, 3000).length;
+    expect(pages).toBeGreaterThan(1);
+
+    expect(renderPlan('en', 2, 'Maya', text, 1)).toContain(`/plan 2 2`);
+    expect(renderPlan('en', 2, 'Maya', text, pages)).not.toContain('continues');
+  });
+
+  it('gives the last page to anyone who asks past the end', () => {
+    // A number out of range is a reader's typo, not a reason to say nothing.
+    const text = body(40);
+    const pages = paginate(text, 3000).length;
+
+    expect(renderPlan('en', 2, 'Maya', text, 99)).toBe(renderPlan('en', 2, 'Maya', text, pages));
+    expect(renderPlan('en', 2, 'Maya', text, 0)).toBe(renderPlan('en', 2, 'Maya', text, 1));
+  });
+
+  it('is one page when the text fits, with nothing about continuing', () => {
+    const short = 'A short plan.';
+    expect(paginate(short, 3000)).toEqual([short]);
+    expect(renderPlan('en', 1, 'Birth', short)).not.toContain('continues');
+  });
+
+  it('breaks at a paragraph where one is near enough', () => {
+    // A page that begins mid-sentence reads as a bug rather than as a page.
+    const pages = paginate(body(40), 1000);
+    for (const page of pages.slice(1)) {
+      expect(page.startsWith('Paragraph')).toBe(true);
+    }
+  });
+
+  it('carries a chapter the same way, since a chapter is longer than a plan', () => {
+    const text = body(40);
+    const first = renderChapter('en', 2, 'Introduction', text, 1);
+
+    expect(first).toContain('/rules 2 2');
+    expect(first.length).toBeLessThanOrEqual(4096);
+    expect(renderChapter('en', 2, 'Introduction', text, 2)).not.toBe(first);
   });
 });

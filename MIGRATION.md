@@ -2396,6 +2396,39 @@ is the only cleanup those need — and stoppable, so a test leaves nothing behin
 The same twelve-game scenario now ends with one table: the one that finished
 less than a week ago, which is what the filter says to keep.
 
+## Sixty-seventh pass: the book, and the page that was never there
+
+The mini app opens the rules book; the docs site serves it in 22 languages; the
+bot — which is where people actually play — had eleven commands and none of
+them was this one. A player in Telegram could not read how the game works.
+
+`/rules` lists the chapters, `/rules 3` opens one. It falls back as a whole book
+rather than chapter by chapter, for the reason the mini app does: half in one
+language and half in another is worse than one a reader can at least read.
+
+**And writing it found the other half.** A chat cuts at 4096 characters, so
+`renderPlan` trimmed a long plan at a paragraph and added a marker:
+
+> …continues. /plan 2 again for the rest.
+
+Asking again returned the identical message. `renderPlan` took a body and gave
+back its first page — there was no second one. **One plan text in eight is over
+the limit**: 188 of the 1584 this repository ships, the longest 6090
+characters. So the rest of them was unreachable in the bot, under an
+instruction saying how to reach it. For plan 2 in English that is 1,643
+characters nobody could get to.
+
+The pages are numbered now — `/plan 2 2`, `/rules 3 2` — and the marker says
+which one to ask for and how many there are. The tests assert what a paging
+scheme has to be rather than today's page counts: the pages **cover the whole
+text in order and lose none of it**, every rendered page fits inside the limit
+with its head and marker, a page begins at a paragraph, asking past the end
+gives the last page rather than nothing, and a text that fits is one page with
+nothing said about continuing.
+
+The help-surface test caught `/rules` before this was committed — registered and
+undocumented, which is the thing that check exists for.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
