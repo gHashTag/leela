@@ -2870,6 +2870,41 @@ The tests are about what a share may **contain**: one square, the player's own
 words, the intention last and only as a frame, and nothing else they have
 written. A person handing a friend a sentence has not handed them a year.
 
+## Eighty-first pass: whose question is it
+
+Found by playing a two-seat game rather than reading one. The published app
+keeps a profile per account — `Profiles/{uid}` — and `plan`, `history`,
+`isReported` and `intention` are all fields on it; `updateIntention` writes the
+last one there beside the rest. When this app grew seats, three of those four
+moved to the seat. **The intention stayed with the device.**
+
+So three people sharing a phone played for one question. Seats two and three
+were never asked what they were playing for — they inherited the first player's,
+silently, and the die opened for them on the strength of an answer somebody else
+gave. A square shared from seat three was signed with seat one's intention. In a
+game whose whole point is that the reports accumulate into an answer, that is
+the wrong question written under every one of them.
+
+The draft had the same fault from the other side. It named its owner *inside*
+the value and kept them all on one key, so the reader refused another player's
+words correctly and the shelf held one sentence: a second player starting to
+type destroyed the first player's unfinished one, and what the first player then
+saw was an empty box — indistinguishable from never having written.
+
+Both now key by seat, and the first seat keeps the original key, as the journal
+already did: weeks of play happened before there were seats and none of it is
+worth losing to a feature. Each seat is asked its own question the first time
+the turn reaches it, because a die shut behind an unasked question is a dead
+end.
+
+The test is the rule rather than the two that were wrong: whatever a player
+writes is that player's own — no other seat reads it, and no other seat destroys
+it by writing their own — asserted over every store and all six seats. Plus the
+guard against the next one: `leela.intention.v1` was not wrong when it was
+written, it became wrong when seats arrived and nobody re-read the list of keys.
+So the list is a test, and a new `*_KEY` fails until it is declared the device's
+or a player's.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

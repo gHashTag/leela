@@ -125,6 +125,7 @@ function takeSeat(): void {
   const seated = currentPlayer(session);
   state = seated.state;
   journal = loadJournalFor(localStorage, seated.id);
+  intention = loadIntention(localStorage, seated.id);
 }
 
 /** Keep the table, and the seat's writing with it. */
@@ -134,13 +135,10 @@ function keepTable(): void {
 }
 
 /**
- * What the player has written, and whether this plan has been written about.
- *
- * Its own key, so a game already saved is not discarded by the arrival of a
- * field the validator has never heard of.
+ * What the seated player is playing for. Asked before the board, as the app
+ * asks it — and asked of each seat, because it is theirs and not the device's.
  */
-/** What the player is playing for. Asked before the board, as the app asks it. */
-let intention: string = loadIntention(localStorage);
+let intention: string = loadIntention(localStorage, currentPlayer(session).id);
 
 // --- elements ------------------------------------------------------------------
 
@@ -338,7 +336,10 @@ function askPlayers(): void {
     session = sessionFrom(seats);
     saveSeats(localStorage, seats);
     takeSeat();
-    clearDraft(localStorage);
+    // Every seat, not the one in front: a new table is a new game, and a draft
+    // left under a seat nobody has sat in yet would surface as somebody else's
+    // half-sentence the first time they landed on that square.
+    for (const seat of seats.players) clearDraft(localStorage, seat.id);
 
     el.say.textContent = messageFor(language, 'app.playersSet', { count: seats.players.length });
     draw();
@@ -378,7 +379,7 @@ function startOver(): void {
   // starting again is not a reason to burn it.
   journal = { ...journal, reported: true };
   saveJournalFor(localStorage, seated.id, journal);
-  clearDraft(localStorage);
+  clearDraft(localStorage, seated.id);
   showFace(loadLastRoll(localStorage));
   el.say.textContent = messageFor(language, 'app.restarted');
   draw();
@@ -401,12 +402,12 @@ function askIntention(): void {
 }
 
 function saveTheIntention(): void {
-  if (!saveIntention(localStorage, el.intentionText.value)) {
+  if (!saveIntention(localStorage, el.intentionText.value, currentPlayer(session).id)) {
     el.intentionHint.textContent = messageFor(language, 'app.intentionShort');
     return;
   }
 
-  intention = loadIntention(localStorage);
+  intention = loadIntention(localStorage, currentPlayer(session).id);
   el.intention.close();
   el.say.textContent = messageFor(language, 'app.intentionSaved');
   draw();
@@ -542,6 +543,16 @@ async function roll(): Promise<void> {
     telegram?.HapticFeedback?.notificationOccurred('warning');
   }
 
+  // A seat that has never been asked what it is playing for. The die is shut
+  // until it answers — exactly as it is on a first launch — so the question has
+  // to arrive by itself rather than wait behind a control nobody can press.
+  // Only ever a hand-off: the seat that threw has already answered, so in a
+  // one-player game this is never reached and the reading below always is.
+  if (intention === '') {
+    askIntention();
+    return;
+  }
+
   // Landing somewhere new is an invitation to read it, which is the game.
   if (event.to !== event.from && !event.isBlocked) {
     window.setTimeout(() => openPlan(event.to), 500);
@@ -619,7 +630,7 @@ function saveReport(): void {
   // The seat has answered: the engine's gate is what `draw` reads.
   session = submitReport(session, currentPlayer(session).id, Date.now());
   keepTable();
-  clearDraft(localStorage);
+  clearDraft(localStorage, currentPlayer(session).id);
   el.writer.close();
   draw();
   el.say.textContent = messageFor(language, 'app.reportSaved');

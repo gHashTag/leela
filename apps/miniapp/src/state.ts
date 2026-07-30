@@ -157,6 +157,21 @@ export function saveLastRoll(storage: GameStorage | undefined, value: number): v
 export const DRAFT_KEY = 'leela.draft.v1';
 
 /**
+ * Where each player's unfinished sentence waits.
+ *
+ * One key held one draft and named its owner inside the value, so a second
+ * player starting to type overwrote the first one's, and the reader — which
+ * correctly refuses another player's words — then returned nothing to either of
+ * them. The check was right and the shelf was one.
+ *
+ * The first seat keeps the bare key, so a sentence left mid-thought before
+ * there were seats is still there afterwards.
+ */
+export function draftKeyFor(playerId: string): string {
+  return playerId === 'p1' ? DRAFT_KEY : `${DRAFT_KEY}.${playerId}`;
+}
+
+/**
  * What has been typed and not yet filed, for the plan it is about.
  *
  * The game will not let a player throw until they have written about the
@@ -177,7 +192,7 @@ export function loadDraft(
   plan: number,
 ): string {
   try {
-    const raw = storage?.getItem(DRAFT_KEY);
+    const raw = storage?.getItem(draftKeyFor(playerId));
     if (!raw) return '';
 
     const parsed: unknown = JSON.parse(raw);
@@ -208,23 +223,39 @@ export function saveDraft(
 ): void {
   try {
     if (text.trim().length === 0) {
-      storage?.setItem(DRAFT_KEY, '');
+      storage?.setItem(draftKeyFor(playerId), '');
       return;
     }
-    storage?.setItem(DRAFT_KEY, JSON.stringify({ player: playerId, plan, text }));
+    storage?.setItem(draftKeyFor(playerId), JSON.stringify({ player: playerId, plan, text }));
   } catch {
     // A window that cannot store still plays, and still lets somebody write —
     // they simply have to finish in one sitting.
   }
 }
 
-/** Forget the draft. Filed, or the game started again. */
-export function clearDraft(storage: GameStorage | undefined): void {
-  saveDraft(storage, '', 0, '');
+/** Forget one seat's draft. Filed, or the game started again. */
+export function clearDraft(storage: GameStorage | undefined, playerId = 'p1'): void {
+  saveDraft(storage, playerId, 0, '');
 }
 
-/** Where the player's intention lives. */
+/** Where the first seat's intention lives. */
 export const INTENTION_KEY = 'leela.intention.v1';
+
+/**
+ * Where each player's intention lives, once there is more than one player.
+ *
+ * The published app keeps it on the profile — `Profiles/{uid}.intention`,
+ * updated by `updateIntention`, beside `plan`, `history` and `isReported`.
+ * Every other field of that profile this app already keeps per seat. The
+ * intention was the one that stayed with the device.
+ *
+ * The first seat keeps the original key, for the same reason the journal does:
+ * the question was answered before there were seats, and moving it would make
+ * the app ask again for something already given.
+ */
+export function intentionKeyFor(playerId: string): string {
+  return playerId === 'p1' ? INTENTION_KEY : `${INTENTION_KEY}.${playerId}`;
+}
 
 /**
  * How short and how long an intention may be.
@@ -246,11 +277,14 @@ export const MAX_INTENTION_CHARS = 800;
  * had ever asked for one.
  *
  * In Leela the intention is not a profile field. It is the question the game is
- * being played to answer, and the reports are the answer accumulating.
+ * being played to answer, and the reports are the answer accumulating. Which is
+ * exactly why it cannot belong to the device: two people sharing one phone are
+ * playing for two different things, and signing one player's square with the
+ * other's question is the same mistake as handing them the other's journal.
  */
-export function loadIntention(storage: GameStorage | undefined): string {
+export function loadIntention(storage: GameStorage | undefined, playerId = 'p1'): string {
   try {
-    return storage?.getItem(INTENTION_KEY)?.trim() ?? '';
+    return storage?.getItem(intentionKeyFor(playerId))?.trim() ?? '';
   } catch {
     return '';
   }
@@ -263,11 +297,15 @@ export function isIntention(text: string): boolean {
 }
 
 /** Keep it, or refuse it and say nothing was kept. */
-export function saveIntention(storage: GameStorage | undefined, text: string): boolean {
+export function saveIntention(
+  storage: GameStorage | undefined,
+  text: string,
+  playerId = 'p1',
+): boolean {
   if (!isIntention(text)) return false;
 
   try {
-    storage?.setItem(INTENTION_KEY, text.trim());
+    storage?.setItem(intentionKeyFor(playerId), text.trim());
   } catch {
     // A window that cannot store still plays; the question is simply asked
     // again next time.
