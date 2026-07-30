@@ -3132,6 +3132,39 @@ rule is that an announcement outlives *any number* of redraws and nothing else,
 and a throw ends it. The test that matters is the fifty-redraw one: a rule that
 only held once would be the same bug one call later.
 
+## Eighty-eighth pass: the companion could not see the returns
+
+The four passes before this built the returns — `revisited` and `writingsOn` in
+`@leela/journal`, the square's earlier accounts in the reader, `/returns` in the
+bot. The companion, which is the one part of this system whose whole job is to
+notice what recurs, could not see them.
+
+Not because nobody passed them. The bot passes the player's entire history, and
+`summariseJourney` keeps the **eight most recent squares**. That is recency, and
+recency is structurally blind to the thing Leela is about. A player standing on
+41 for the fourth time wrote about it in February and in June; if forty squares
+have passed since, neither is inside the window. The companion met the most
+loaded square in their game as though it were new — while the app beside it laid
+all three accounts one under the other.
+
+So the rule is not "include more". It is: **whatever else is dropped, what the
+player wrote on this square is not.** `summariseReturns` chooses those first and
+separately, oldest first, because the first account is what the later ones are
+measured against. The recent squares then fill what is left of the same total
+budget, minus anything about this square — a square counted twice is budget
+spent saying one thing, at the expense of the plan's own text, which is what the
+answer has to rest on.
+
+The instruction that comes with it says what the section is for and what it is
+not: returning is the subject, what changed between the tellings is the thing
+worth noticing, do not read it back, and do not claim progress the player has
+not claimed. The package's founding rule is unchanged and retested here — the
+model never supplies the teaching.
+
+Two tests are the ones that matter. The first two entries of forty-two reach the
+prompt, which is the defect stated as a shape. And the plan's own text is still
+in there afterwards, which is the cost the shape is not allowed to have.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

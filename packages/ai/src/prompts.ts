@@ -68,6 +68,75 @@ export const MAX_JOURNEY_ENTRIES = 8;
 export const MAX_JOURNEY_ENTRY_CHARS = 160;
 export const MAX_JOURNEY_CHARS = 1200;
 
+/**
+ * How many earlier accounts of *this* square to carry, and what they may cost.
+ *
+ * The journey is the last eight squares, which is recency — and recency is
+ * blind to the one thing Leela is about. A player standing on 41 for the fourth
+ * time wrote about it in February and in June; if forty squares have passed
+ * since, neither is in the window, and the companion meets the most loaded
+ * square in the game as though it were new.
+ *
+ * So what was written *here* is chosen first and separately, and the recent
+ * squares fill what is left. Four of them, because a fifth is a paragraph and
+ * the plan's own text is still what the answer has to rest on.
+ */
+export const MAX_RETURN_ENTRIES = 4;
+export const MAX_RETURN_CHARS = 600;
+
+/** One line per entry, clipped, in the shape both summaries use. */
+function line(entry: JourneyEntry, language: Language): string {
+  const title = planFor(language, entry.plan).title;
+  const text = entry.text.replace(/\s+/g, ' ').trim();
+  const clipped =
+    text.length > MAX_JOURNEY_ENTRY_CHARS
+      ? `${text.slice(0, MAX_JOURNEY_ENTRY_CHARS - 1)}…`
+      : text;
+
+  return `${entry.plan}. ${title} — ${clipped}`;
+}
+
+/**
+ * What the player wrote the last times they stood on this same square.
+ *
+ * The most relevant thing in their whole journal, and the thing a window of the
+ * eight most recent squares is structurally unable to see. Oldest first, because
+ * the first account is what the later ones are measured against — which is the
+ * same order the app and the bot both read a returned square in.
+ */
+export function summariseReturns(
+  journey: ReadonlyArray<JourneyEntry>,
+  plan: number,
+  language: Language,
+  budget = MAX_RETURN_CHARS,
+): string {
+  const here = journey.filter((entry) => entry.plan === plan);
+  if (here.length === 0) return '';
+
+  // The most recent of them, kept in walking order: if only some fit, the ones
+  // that fit should be the ones nearest to now.
+  const lines: string[] = [];
+  let used = 0;
+
+  for (const entry of [...here].slice(-MAX_RETURN_ENTRIES).reverse()) {
+    const written = line(entry, language);
+    if (used + written.length > budget) break;
+
+    lines.unshift(written);
+    used += written.length;
+  }
+
+  if (lines.length === 0) return '';
+
+  const omitted = here.length - lines.length;
+  const preamble =
+    omitted > 0
+      ? `They have stood here before. The last ${lines.length} of ${here.length} times they wrote:`
+      : 'They have stood here before, and wrote:';
+
+  return `${preamble}\n${lines.join('\n')}`;
+}
+
 /** The path, compressed to fit beside the plan text rather than instead of it. */
 export function summariseJourney(
   journey: ReadonlyArray<JourneyEntry>,
@@ -84,18 +153,11 @@ export function summariseJourney(
   let used = 0;
 
   for (const entry of [...recent].reverse()) {
-    const title = planFor(language, entry.plan).title;
-    const text = entry.text.replace(/\s+/g, ' ').trim();
-    const clipped =
-      text.length > MAX_JOURNEY_ENTRY_CHARS
-        ? `${text.slice(0, MAX_JOURNEY_ENTRY_CHARS - 1)}…`
-        : text;
+    const written = line(entry, language);
+    if (used + written.length > budget) break;
 
-    const line = `${entry.plan}. ${title} — ${clipped}`;
-    if (used + line.length > budget) break;
-
-    lines.unshift(line); // back into walking order
-    used += line.length;
+    lines.unshift(written); // back into walking order
+    used += written.length;
   }
 
   // Unreachable at the default budget — the longest possible entry is about 175
@@ -184,11 +246,32 @@ export function systemPrompt(context: PlanContext): string {
     lines.push('This is the end of a game, and the start of the next one.');
   }
 
-  const journey = context.journey ? summariseJourney(context.journey, language) : '';
-  if (journey) {
+  // What was written here before, then the recent squares — and the second
+  // never repeats the first: a square counted twice is budget spent saying one
+  // thing, at the expense of the plan's own text.
+  const all = context.journey ?? [];
+  const returns = summariseReturns(all, context.plan, language);
+  const elsewhere = summariseJourney(
+    all.filter((entry) => entry.plan !== context.plan),
+    language,
+    Math.max(0, MAX_JOURNEY_CHARS - returns.length),
+  );
+
+  if (returns) {
     lines.push(
       '',
-      journey,
+      returns,
+      '',
+      'Returning is what this game is about: the same state arrives again, and',
+      'what changed between the tellings is the thing worth noticing. Do not',
+      'read it back to them, and do not claim progress they have not claimed.',
+    );
+  }
+
+  if (elsewhere) {
+    lines.push(
+      '',
+      elsewhere,
       '',
       'That is their own writing, not yours to repeat back. Use it to notice',
       'what recurs, and only when it genuinely bears on where they are now.',
