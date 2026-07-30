@@ -25,12 +25,20 @@ export type { JourneyEntry, Message, PlanContext } from './prompts';
 export {
   DEFAULT_BASE_URL,
   DEFAULT_MODEL,
+  DEFAULT_OPENAI_BASE_URL,
+  DEFAULT_OPENAI_MODEL,
   ModelError,
   fixedModel,
+  openAI,
   openRouter,
   recordingModel,
 } from './model';
-export type { CompletionOptions, LanguageModel, OpenRouterOptions } from './model';
+export type {
+  CompletionOptions,
+  LanguageModel,
+  OpenRouterOptions,
+  ProviderOptions,
+} from './model';
 
 export { DEFAULT_TIMEOUT_MS, Guide, fallbackText } from './guide';
 export type { AskOptions, GuideOptions, Reflection } from './guide';

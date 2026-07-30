@@ -27,8 +27,15 @@ Games are held in memory unless `LEELA_DB` points at a file:
 ```
 BOT_TOKEN=123456:AA...
 LEELA_DB=.leela.db
-OPENROUTER_API_KEY=sk-or-...   # optional: the companion that answers reports
+OPENAI_API_KEY=sk-...          # optional: the companion that answers reports
+OPENAI_MODEL=gpt-4o-mini       # optional: defaults to gpt-4o-mini
 ```
+
+The companion takes either provider. `OPENAI_API_KEY` is preferred when both
+are set; `OPENROUTER_API_KEY` (with `OPENROUTER_MODEL`) still works and fronts
+models OpenAI does not sell. Both speak the same wire format, so the choice is
+a host, not a code path — and the startup line names which one was picked up,
+so a key in the wrong variable is visible immediately.
 
 The process says on startup which of the two it is doing, rather than losing
 games quietly.

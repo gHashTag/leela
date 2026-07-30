@@ -389,7 +389,8 @@ carrying. It fills newest-first now and restores walking order for the prompt.
 
 The bot passes the path it already reads for `/path`, minus the report being
 answered. What cannot be checked here is whether the answers are better: that
-needs an `OPENROUTER_API_KEY`, and only the prompt is testable without one.
+needs an `OPENAI_API_KEY` or an `OPENROUTER_API_KEY`, and only the prompt is
+testable without one.
 
 ## Twelfth pass: what happens after the game ends
 
@@ -870,8 +871,23 @@ timeout — falls back to a usable sentence that still names the plan: a game mu
 not stop working because a companion is unavailable.
 
 Wired into the bot at the report gate, and optional there: without
-`OPENROUTER_API_KEY` the gate still works and reports are still kept, there is
-simply no reply.
+a key the gate still works and reports are still kept, there is simply no
+reply.
+
+**Either provider.** OpenRouter was ported first because the newest of the six
+generations used it; the *published* app called OpenAI directly, posting to
+`api.openai.com/v1/chat/completions` with `gpt-4-1106-preview`, and
+`LeelaAiWeb3` did the same with `gpt-4-0314` — both reading the key out of a
+client bundle. `openAI` is now a second provider over the same client, since
+OpenRouter deliberately reimplements OpenAI's endpoint and the two differ only
+in host, default model, two attribution headers, and the name of the reply
+ceiling. That last one matters: OpenAI has deprecated `max_tokens` and rejects
+it outright for reasoning models, so each provider sends the name its own API
+prefers rather than one guess for both.
+
+The tests are written against the contract and run twice, once per provider, so
+a third has a suite waiting for it and cannot arrive with a subtly different
+idea of what a `LanguageModel` is.
 
 **4b. `apps/docs` — done.** The book, generated from `@leela/content`: 1785
 pages, 72 plans and the rules chapters in each of 22 languages, served from

@@ -8,7 +8,7 @@
  *   BOT_TOKEN=... bun run src/index.ts
  */
 
-import { Guide, openRouter } from '@leela/ai';
+import { Guide, openAI, openRouter, type LanguageModel } from '@leela/ai';
 import { LANGUAGES, messageCoverage, messageIssues, translatedLanguages } from '@leela/content';
 import { createBot } from './bot';
 import { DatabaseRoomStore } from './persistence';
@@ -72,17 +72,36 @@ if (databasePath) {
  * reports are still kept — the reflection is the game, and the companion is a
  * help with it, not a requirement for it.
  */
-const openRouterKey = process.env.OPENROUTER_API_KEY;
-const guide = openRouterKey
-  ? new Guide({
-      model: openRouter({
-        apiKey: openRouterKey,
-        model: process.env.OPENROUTER_MODEL,
-        referer: 'https://github.com/gHashTag/leela',
-        title: 'Leela',
-      }),
-    })
-  : undefined;
+
+/**
+ * Which provider, when both keys are set.
+ *
+ * OpenAI first, because it is the more direct route and the one the published
+ * app used. OpenRouter is kept because the newest generation used it and
+ * because it fronts models OpenAI does not. Both speak the same wire format,
+ * so this is a choice of host, not of code.
+ */
+function configuredModel(): LanguageModel | undefined {
+  const openAIKey = process.env.OPENAI_API_KEY;
+  if (openAIKey) {
+    return openAI({ apiKey: openAIKey, model: process.env.OPENAI_MODEL });
+  }
+
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  if (openRouterKey) {
+    return openRouter({
+      apiKey: openRouterKey,
+      model: process.env.OPENROUTER_MODEL,
+      referer: 'https://github.com/gHashTag/leela',
+      title: 'Leela',
+    });
+  }
+
+  return undefined;
+}
+
+const model = configuredModel();
+const guide = model ? new Guide({ model }) : undefined;
 
 const bot = createBot({ token, store, reports, steps, guide });
 
@@ -97,9 +116,11 @@ console.log(
         'Set LEELA_DB to a file path to keep them.',
 );
 console.log(
-  guide
-    ? 'A companion is configured and will respond to reports.'
-    : 'No OPENROUTER_API_KEY: reports are kept, but nothing will respond to them.',
+  model
+    ? // The id names the provider and the model, so a log says which of the
+      // two keys was picked up rather than only that one was.
+      `A companion is configured (${model.id}) and will respond to reports.`
+    : 'No OPENAI_API_KEY or OPENROUTER_API_KEY: reports are kept, but nothing responds to them.',
 );
 
 /**

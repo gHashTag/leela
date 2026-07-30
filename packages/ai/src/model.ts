@@ -38,13 +38,16 @@ export class ModelError extends Error {
   }
 }
 
-export interface OpenRouterOptions {
+export interface ProviderOptions {
   apiKey: string;
   /** Defaults to a small, cheap model — this is a companion, not an oracle. */
   model?: string;
   baseUrl?: string;
   /** Injected so tests never touch the network. */
   fetch?: typeof globalThis.fetch;
+}
+
+export interface OpenRouterOptions extends ProviderOptions {
   /** Sent so OpenRouter can attribute the traffic. */
   referer?: string;
   title?: string;
@@ -53,28 +56,40 @@ export interface OpenRouterOptions {
 export const DEFAULT_MODEL = 'anthropic/claude-3.5-haiku';
 export const DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
 
+export const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini';
+export const DEFAULT_OPENAI_BASE_URL = 'https://api.openai.com/v1';
+
+interface ChatCompletionsConfig extends Required<Pick<ProviderOptions, 'apiKey' | 'model' | 'baseUrl' | 'fetch'>> {
+  /** `openai:gpt-4o-mini` — the provider is part of the identity. */
+  id: string;
+  /** What to call the reply ceiling. See the note in `chatCompletions`. */
+  tokenLimitField: 'max_tokens' | 'max_completion_tokens';
+  headers?: Record<string, string>;
+}
+
 /**
- * OpenRouter, over plain fetch.
+ * The chat-completions wire format, which both providers here speak.
  *
- * @throws ModelError on a missing key, a refused request, or a reply with no
- *         text in it — each with the status, so a caller can tell a bad key
- *         (401) from a rate limit (429) from an outage (5xx).
+ * OpenRouter deliberately reimplements OpenAI's endpoint, so this is one
+ * client and not two: same path, same body, same reply shape. What differs is
+ * the host, the default model, two attribution headers OpenRouter accepts, and
+ * the name of the reply ceiling.
+ *
+ * **The ceiling.** OpenAI has deprecated `max_tokens` and rejects it outright
+ * for reasoning models, which is what someone pointing `OPENAI_MODEL` at a
+ * newer model would hit — a 400 that reads like a bad key. OpenRouter
+ * normalises `max_tokens` across every model it fronts. So each provider sends
+ * the name its own API prefers rather than one guess for both.
+ *
+ * @throws ModelError on a refused request, or a reply with no text in it, with
+ *         the status attached so a caller can tell a bad key (401) from a rate
+ *         limit (429) from an outage (5xx).
  */
-export function openRouter({
-  apiKey,
-  model = DEFAULT_MODEL,
-  baseUrl = DEFAULT_BASE_URL,
-  fetch = globalThis.fetch,
-  referer,
-  title,
-}: OpenRouterOptions): LanguageModel {
-  if (!apiKey) {
-    // Fail here, at configuration time, rather than on the first message.
-    throw new ModelError('an OpenRouter API key is required');
-  }
+function chatCompletions(config: ChatCompletionsConfig): LanguageModel {
+  const { apiKey, model, baseUrl, fetch, headers = {} } = config;
 
   return {
-    id: `openrouter:${model}`,
+    id: config.id,
 
     async complete(messages, options = {}) {
       const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -82,13 +97,12 @@ export function openRouter({
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
-          ...(referer ? { 'HTTP-Referer': referer } : {}),
-          ...(title ? { 'X-Title': title } : {}),
+          ...headers,
         },
         body: JSON.stringify({
           model,
           messages,
-          max_tokens: options.maxTokens ?? 400,
+          [config.tokenLimitField]: options.maxTokens ?? 400,
           temperature: options.temperature ?? 0.7,
         }),
         signal: options.signal,
@@ -113,6 +127,71 @@ export function openRouter({
       return text;
     },
   };
+}
+
+/**
+ * OpenRouter, over plain fetch.
+ *
+ * This is what the newest of the six generations used
+ * (`NeuroLeelaAgent/services/openRouterService.ts`), which is why it was
+ * ported first. The published app called OpenAI directly — see `openAI`.
+ */
+export function openRouter({
+  apiKey,
+  model = DEFAULT_MODEL,
+  baseUrl = DEFAULT_BASE_URL,
+  fetch = globalThis.fetch,
+  referer,
+  title,
+}: OpenRouterOptions): LanguageModel {
+  if (!apiKey) {
+    // Fail here, at configuration time, rather than on the first message.
+    throw new ModelError('an OpenRouter API key is required');
+  }
+
+  return chatCompletions({
+    apiKey,
+    model,
+    baseUrl,
+    fetch,
+    id: `openrouter:${model}`,
+    tokenLimitField: 'max_tokens',
+    headers: {
+      ...(referer ? { 'HTTP-Referer': referer } : {}),
+      ...(title ? { 'X-Title': title } : {}),
+    },
+  });
+}
+
+/**
+ * OpenAI, over plain fetch.
+ *
+ * The provider the published app used — `leela/src/constants.ts` posted to
+ * `api.openai.com/v1/chat/completions` with `gpt-4-1106-preview`, and
+ * `LeelaAiWeb3` did the same with `gpt-4-0314`. Both keys were read out of
+ * the client bundle, which is a reason to keep this one server-side.
+ *
+ * No `HTTP-Referer` or `X-Title`: those are OpenRouter's attribution headers,
+ * and OpenAI has no use for them.
+ */
+export function openAI({
+  apiKey,
+  model = DEFAULT_OPENAI_MODEL,
+  baseUrl = DEFAULT_OPENAI_BASE_URL,
+  fetch = globalThis.fetch,
+}: ProviderOptions): LanguageModel {
+  if (!apiKey) {
+    throw new ModelError('an OpenAI API key is required');
+  }
+
+  return chatCompletions({
+    apiKey,
+    model,
+    baseUrl,
+    fetch,
+    id: `openai:${model}`,
+    tokenLimitField: 'max_completion_tokens',
+  });
 }
 
 /**
