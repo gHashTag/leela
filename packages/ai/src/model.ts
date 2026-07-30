@@ -59,6 +59,9 @@ export const DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
 export const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini';
 export const DEFAULT_OPENAI_BASE_URL = 'https://api.openai.com/v1';
 
+export const DEFAULT_DEEPSEEK_MODEL = 'deepseek-chat';
+export const DEFAULT_DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1';
+
 interface ChatCompletionsConfig extends Required<Pick<ProviderOptions, 'apiKey' | 'model' | 'baseUrl' | 'fetch'>> {
   /** `openai:gpt-4o-mini` — the provider is part of the identity. */
   id: string;
@@ -191,6 +194,35 @@ export function openAI({
     fetch,
     id: `openai:${model}`,
     tokenLimitField: 'max_completion_tokens',
+  });
+}
+
+/**
+ * DeepSeek, over plain fetch.
+ *
+ * A third host on the same client, which is the point of having written one:
+ * DeepSeek publishes an OpenAI-compatible endpoint, so adding it is a base URL
+ * and a default model. It keeps `max_tokens` — the deprecation that made
+ * `openAI` send `max_completion_tokens` is OpenAI's, not the format's, and
+ * assuming otherwise would break every model DeepSeek serves.
+ */
+export function deepSeek({
+  apiKey,
+  model = DEFAULT_DEEPSEEK_MODEL,
+  baseUrl = DEFAULT_DEEPSEEK_BASE_URL,
+  fetch = globalThis.fetch,
+}: ProviderOptions): LanguageModel {
+  if (!apiKey) {
+    throw new ModelError('a DeepSeek API key is required');
+  }
+
+  return chatCompletions({
+    apiKey,
+    model,
+    baseUrl,
+    fetch,
+    id: `deepseek:${model}`,
+    tokenLimitField: 'max_tokens',
   });
 }
 

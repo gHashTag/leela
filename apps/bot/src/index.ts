@@ -8,7 +8,7 @@
  *   BOT_TOKEN=... bun run src/index.ts
  */
 
-import { Guide, openAI, openRouter, type LanguageModel } from '@leela/ai';
+import { Guide, deepSeek, openAI, openRouter, type LanguageModel } from '@leela/ai';
 import { LANGUAGES, messageCoverage, messageIssues, translatedLanguages } from '@leela/content';
 import { createBot } from './bot';
 import { DatabaseRoomStore } from './persistence';
@@ -74,30 +74,41 @@ if (databasePath) {
  */
 
 /**
- * Which provider, when both keys are set.
+ * Which provider, when more than one key is set.
  *
- * OpenAI first, because it is the more direct route and the one the published
- * app used. OpenRouter is kept because the newest generation used it and
- * because it fronts models OpenAI does not. Both speak the same wire format,
- * so this is a choice of host, not of code.
+ * The first key present wins, in the order below, and the startup line names
+ * what was chosen — so a key in the wrong variable shows up on the first line
+ * rather than at the first report. All three speak the same wire format, so
+ * this is a choice of host, not of code.
  */
+const PROVIDERS: Array<{ key: string; model: () => LanguageModel }> = [
+  {
+    key: 'OPENAI_API_KEY',
+    model: () =>
+      openAI({ apiKey: process.env.OPENAI_API_KEY as string, model: process.env.OPENAI_MODEL }),
+  },
+  {
+    key: 'DEEPSEEK_API_KEY',
+    model: () =>
+      deepSeek({
+        apiKey: process.env.DEEPSEEK_API_KEY as string,
+        model: process.env.DEEPSEEK_MODEL,
+      }),
+  },
+  {
+    key: 'OPENROUTER_API_KEY',
+    model: () =>
+      openRouter({
+        apiKey: process.env.OPENROUTER_API_KEY as string,
+        model: process.env.OPENROUTER_MODEL,
+        referer: 'https://github.com/gHashTag/leela',
+        title: 'Leela',
+      }),
+  },
+];
+
 function configuredModel(): LanguageModel | undefined {
-  const openAIKey = process.env.OPENAI_API_KEY;
-  if (openAIKey) {
-    return openAI({ apiKey: openAIKey, model: process.env.OPENAI_MODEL });
-  }
-
-  const openRouterKey = process.env.OPENROUTER_API_KEY;
-  if (openRouterKey) {
-    return openRouter({
-      apiKey: openRouterKey,
-      model: process.env.OPENROUTER_MODEL,
-      referer: 'https://github.com/gHashTag/leela',
-      title: 'Leela',
-    });
-  }
-
-  return undefined;
+  return PROVIDERS.find((provider) => process.env[provider.key])?.model();
 }
 
 const model = configuredModel();
@@ -120,7 +131,8 @@ console.log(
     ? // The id names the provider and the model, so a log says which of the
       // two keys was picked up rather than only that one was.
       `A companion is configured (${model.id}) and will respond to reports.`
-    : 'No OPENAI_API_KEY or OPENROUTER_API_KEY: reports are kept, but nothing responds to them.',
+    : `No ${PROVIDERS.map((p) => p.key).join(', ')}: ` +
+      'reports are kept, but nothing responds to them.',
 );
 
 /**

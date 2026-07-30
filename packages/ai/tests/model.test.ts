@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DEFAULT_DEEPSEEK_MODEL,
   DEFAULT_MODEL,
   DEFAULT_OPENAI_MODEL,
   ModelError,
+  deepSeek,
   fixedModel,
   openAI,
   openRouter,
@@ -159,6 +161,15 @@ describe.each([
     defaultModel: DEFAULT_OPENAI_MODEL,
     ceiling: 'max_completion_tokens',
   },
+  {
+    name: 'deepSeek',
+    make: (fetch?: typeof globalThis.fetch, model?: string) =>
+      deepSeek({ apiKey: 'secret', fetch, model }),
+    host: 'api.deepseek.com',
+    prefix: 'deepseek:',
+    defaultModel: DEFAULT_DEEPSEEK_MODEL,
+    ceiling: 'max_tokens',
+  },
 ])('$name, as a provider', (provider) => {
   /** Capture one request without performing it. */
   function capturing() {
@@ -171,11 +182,11 @@ describe.each([
   }
 
   it('refuses to be configured without a key, rather than failing mid-conversation', () => {
-    const withoutKey = () =>
-      provider.name === 'openAI' ? openAI({ apiKey: '' }) : openRouter({ apiKey: '' });
+    const factories = { openAI, openRouter, deepSeek } as const;
+    const withoutKey = () => factories[provider.name as keyof typeof factories]({ apiKey: '' });
     expect(withoutKey).toThrow(ModelError);
     // Named, so an operator reading the log knows which key is missing.
-    expect(withoutKey).toThrow(provider.name === 'openAI' ? /OpenAI/ : /OpenRouter/);
+    expect(withoutKey).toThrow(new RegExp(provider.name, 'i'));
   });
 
   it('says which provider and model it is', () => {
@@ -255,11 +266,13 @@ describe('the attribution headers belong to one provider only', () => {
     expect(headers['X-Title']).toBe('Leela');
   });
 
-  it('sends neither to OpenAI, which has no use for them', async () => {
-    const { seen, fetch } = capturing();
-    await openAI({ apiKey: 'k', fetch }).complete(messages);
-    const headers = seen[0].headers as Record<string, string>;
-    expect(headers['HTTP-Referer']).toBeUndefined();
-    expect(headers['X-Title']).toBeUndefined();
+  it('sends neither to a provider that has no use for them', async () => {
+    for (const make of [openAI, deepSeek]) {
+      const { seen, fetch } = capturing();
+      await make({ apiKey: 'k', fetch }).complete(messages);
+      const headers = seen[0].headers as Record<string, string>;
+      expect(headers['HTTP-Referer']).toBeUndefined();
+      expect(headers['X-Title']).toBeUndefined();
+    }
   });
 });

@@ -885,9 +885,14 @@ ceiling. That last one matters: OpenAI has deprecated `max_tokens` and rejects
 it outright for reasoning models, so each provider sends the name its own API
 prefers rather than one guess for both.
 
-The tests are written against the contract and run twice, once per provider, so
-a third has a suite waiting for it and cannot arrive with a subtly different
-idea of what a `LanguageModel` is.
+The tests are written against the contract and run once per provider, so a new
+one has a suite waiting for it and cannot arrive with a subtly different idea
+of what a `LanguageModel` is. DeepSeek was the first to use that: a base URL
+and a default model, no new client. It keeps `max_tokens` — the deprecation
+that made `openAI` send `max_completion_tokens` is OpenAI's, not the format's.
+
+`OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, `OPENROUTER_API_KEY`: the first one set
+wins, in that order, and the startup line names the provider and model chosen.
 
 **4b. `apps/docs` — done.** The book, generated from `@leela/content`: 1785
 pages, 72 plans and the rules chapters in each of 22 languages, served from

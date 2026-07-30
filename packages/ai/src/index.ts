@@ -24,10 +24,13 @@ export type { JourneyEntry, Message, PlanContext } from './prompts';
 
 export {
   DEFAULT_BASE_URL,
+  DEFAULT_DEEPSEEK_BASE_URL,
+  DEFAULT_DEEPSEEK_MODEL,
   DEFAULT_MODEL,
   DEFAULT_OPENAI_BASE_URL,
   DEFAULT_OPENAI_MODEL,
   ModelError,
+  deepSeek,
   fixedModel,
   openAI,
   openRouter,
