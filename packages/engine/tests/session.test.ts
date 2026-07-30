@@ -229,3 +229,67 @@ describe('immutability', () => {
     expect(JSON.stringify(s)).toBe(before);
   });
 });
+
+describe('the leaderboard puts people where they actually are', () => {
+  // A player waiting to enter sits on 68, the highest square on the board, so
+  // sorting by position alone showed someone who had never rolled at the top —
+  // as though they were one square from winning. The same trap as `hasWon`: 68
+  // means two different things depending on how you got there.
+
+  /** A single-seat session walked to the win square. */
+  function winner(id: string) {
+    let s = createSession(`w-${id}`, [{ id }], NEUROLEELA);
+    s = roll(s, 6).session;
+    for (const value of [4, 4, 4, 1]) s = roll(s, value).session;
+    return s.players[0];
+  }
+
+  it('ranks a player on the board above one still waiting', () => {
+    let s = threeSeats();
+    s = roll(s, 6).session; // a enters, lands on 6
+    // b and c never entered; both sit on 68 waiting.
+    expect(standings(s).map((p) => p.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('never puts a waiting player above someone playing, wherever they stand', () => {
+    let s = threeSeats();
+    s = roll(s, 6).session; // a enters on 6 — the lowest square in play
+    const ranked = standings(s);
+    const playing = ranked.findIndex((p) => p.id === 'a');
+    const waiting = ranked.findIndex((p) => p.id === 'b');
+    expect(playing).toBeLessThan(waiting);
+  });
+
+  it('ranks a finisher above everyone', () => {
+    const done = winner('z');
+    const session: Session = {
+      ...threeSeats(),
+      players: [...threeSeats().players.slice(0, 2), { ...done, id: 'c' }],
+    };
+    expect(standings(session)[0].id).toBe('c');
+  });
+
+  it('orders players on the board by how far along they are', () => {
+    let s = threeSeats();
+    s = roll(s, 6).session; // a -> 6
+    s = roll(s, 6).session; // b -> 6
+    s = roll(s, 6).session; // c -> 6
+    s = roll(s, 4).session; // a: 6 + 4 = 10, arrow to 23
+    s = roll(s, 2).session; // b: 6 + 2 = 8
+
+    const ranked = standings(s).map((p) => p.id);
+    expect(ranked.indexOf('a')).toBeLessThan(ranked.indexOf('b'));
+    expect(ranked.indexOf('b')).toBeLessThan(ranked.indexOf('c'));
+  });
+
+  it('keeps seating order among players who are all still waiting', () => {
+    expect(standings(threeSeats()).map((p) => p.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('does not mutate the session', () => {
+    const s = threeSeats();
+    const order = s.players.map((p) => p.id);
+    standings(s);
+    expect(s.players.map((p) => p.id)).toEqual(order);
+  });
+});

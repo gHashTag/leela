@@ -195,12 +195,37 @@ export function submitReport(session: Session, playerId: string): Session {
   return { ...session, players };
 }
 
-/** Seats ordered by progress, for a leaderboard. Ties keep seating order. */
+/**
+ * Is this player still outside the game, waiting for a six?
+ *
+ * They sit on WIN_LOKA, which is the highest number on the board — so sorting
+ * by `loka` alone put a player who had never rolled at the top of the table, as
+ * though they were one square from winning. Same trap as `hasWon`: 68 means two
+ * different things depending on how you got there.
+ */
+function isWaitingToEnter(player: SeatedPlayer): boolean {
+  return player.state.is_finished && !hasWon(player.state);
+}
+
+/**
+ * Seats ordered by progress, for a leaderboard.
+ *
+ * Three groups, in order: those who have finished, those on the board by how
+ * far along they are, and those still waiting to enter. Ties keep seating
+ * order.
+ */
 export function standings(session: Session): SeatedPlayer[] {
+  const rank = (player: SeatedPlayer): number => {
+    if (isPlayerDone(player)) return 2;
+    return isWaitingToEnter(player) ? 0 : 1;
+  };
+
   return [...session.players].sort((a, b) => {
-    const aDone = isPlayerDone(a) ? 1 : 0;
-    const bDone = isPlayerDone(b) ? 1 : 0;
-    if (aDone !== bDone) return bDone - aDone;
+    const byGroup = rank(b) - rank(a);
+    if (byGroup !== 0) return byGroup;
+
+    // Within a group, further along comes first. For two players waiting to
+    // enter this is a no-op, which is why seating order survives.
     return b.state.loka - a.state.loka;
   });
 }

@@ -595,6 +595,29 @@ The two lists of justified exceptions — 34 write-only fields, 45 exports witho
 local callers — each carry a reason. That is the point of them: a list without
 reasons is where things go to be forgotten, which is how these got here.
 
+## Twentieth pass: not "never called" but "never executed"
+
+`hasWon` and `validatePosition` both had tests. The tests passed. Neither
+exercised the input that was wrong. So the next question is not which code has
+no caller but which **branch** never runs — and `session.ts` had branch coverage
+of 89.7%.
+
+The uncovered branch was in `standings`, and it was wrong. A player waiting to
+enter sits on WIN_LOKA, the highest square on the board, so sorting by position
+put someone who had never rolled **at the top of the table** — as though they
+were one square from winning. The same trap as `hasWon`: 68 means two different
+things depending on how you got there.
+
+Three groups now: finished, on the board by how far along, and waiting to enter.
+Branch coverage of `session.ts` went from 89.7% to 97.8%, and the engine's from
+98.0% to 99.5%.
+
+Also verified rather than assumed: the move log added last pass really does
+record. `CREATE TABLE IF NOT EXISTS` added `game_steps` to the live database on
+restart, and a game played through `roll` → `Effect` → `sqliteStepSink` leaves
+rows behind. Three passes ago that would have been a claim; the table existed
+then too, and nothing wrote to it.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
