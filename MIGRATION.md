@@ -2130,6 +2130,42 @@ nothing else, so the store stamped the moment of the *import*.
 the clock for a report typed into a chat — which genuinely has no earlier
 moment. Four tests fail when the argument is dropped again.
 
+## Fifty-ninth pass: the rule, copied into the database
+
+The pass before this one taught the engine two things about the report gate: a
+snake that carries a player back to the square they left is an arrival, and so
+is the winning square. Both were corrections to `owesReport`. This pass asked
+the obvious follow-up — *who else decides that?* — and found this in
+`packages/db/src/mapping.ts`:
+
+```ts
+// A player owes a report whenever they actually moved and are still playing.
+needsReport: state.loka !== state.previous_loka && !state.is_finished,
+```
+
+That is `owesReport` as it stood a week ago, written out by hand, and wrong
+three ways since. It misses the jump home, it dismisses the win, and it never
+asks the variant, so `reportAfterSix` had no effect on what the database
+believed. **A player persisted through this mapping got a free throw where the
+same game held in memory asked for a report** — two surfaces playing different
+games, which is the thing this repository exists to have fixed once.
+
+It calls the engine now. Computed at *write* time on purpose: `players` has no
+direction column, so a state read back out of a row cannot tell a jump home
+from a refused throw — the column is the memory of what the engine decided
+while it still knew. The test is no longer a list of cases but the relation, over
+every state four variants reach in a played game; four of the new tests fail
+when the hand-written condition is put back.
+
+### And the circle closed
+
+With the moment a report was written now kept — yesterday's fix — the bridge can
+be asserted end to end for the first time. `tests/fixtures/miniapp-export.json`
+goes into the bot through `decide` and `keep`, comes back out through `offer`
+and `serialise`, and parses **identical** to what went in. Before yesterday it
+could not have: the store stamped the import, so a file that went in came out
+dated today and arrived as new the next time it was sent.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -18,6 +18,7 @@ import {
   WIN_LOKA,
   canRoll,
   isRuleSetId,
+  owesReport,
   ruleSetById,
 } from '@leela/engine';
 import type {
@@ -42,16 +43,37 @@ export function stateFromPlayer(player: Pick<
   };
 }
 
-/** The column updates that persist a new state. */
-export function playerUpdateFromState(state: GameState, message?: string) {
+/**
+ * The column updates that persist a new state.
+ *
+ * `needsReport` is the engine's answer, not a second copy of the rule. It was
+ * written here by hand as `loka !== previous_loka && !is_finished`, which is
+ * `owesReport` as it stood a week ago and wrong three ways since:
+ *
+ * - a snake that carries a player back to the square they left is an arrival,
+ *   and that condition reads it as no move at all;
+ * - the winning square is an arrival too — the one the published app always
+ *   asks about — and `is_finished` dismissed it;
+ * - and it never asked the variant, so `reportAfterSix` had no effect on what
+ *   the database believed.
+ *
+ * A player persisted through this mapping therefore got a free throw where the
+ * same game held in memory would have asked for a report: two surfaces playing
+ * different games, which is the defect this whole repository exists to have
+ * fixed once.
+ *
+ * Computed at *write* time on purpose. `players` has no direction column, so a
+ * state read back out of a row cannot tell a jump home from a refused throw —
+ * the column is the memory of what the engine decided while it still knew.
+ */
+export function playerUpdateFromState(state: GameState, rules: RuleSet, message?: string) {
   return {
     plan: state.loka,
     previous_plan: state.previous_loka,
     consecutiveSixes: state.consecutive_sixes,
     positionBeforeThreeSixes: state.position_before_three_sixes,
     isFinished: state.is_finished,
-    // A player owes a report whenever they actually moved and are still playing.
-    needsReport: state.loka !== state.previous_loka && !state.is_finished,
+    needsReport: owesReport(state, rules),
     message: message ?? `Last move: ${state.direction}`,
     updated_at: new Date(),
   };

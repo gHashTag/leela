@@ -1,8 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parseDocument } from '@leela/journal';
-import { asReport, decide } from '../src/take-in';
+import { asReport, decide, keep } from '../src/take-in';
 import { fileNameFor, offer, serialise } from '../src/take-out';
-import type { StoredReport } from '../src/store';
+import { MemoryReportSink, type StoredReport } from '../src/store';
 
 /**
  * The other half of the bridge.
@@ -116,5 +118,53 @@ describe('what the bot writes is what the mini app reads', () => {
     // Indented on purpose: a file in a chat gets opened, and one long line is
     // not a path anyone can read.
     expect(serialise(fileFrom(history(3)).document)).toContain('\n  ');
+  });
+});
+
+describe('a path that goes through the bot and comes back', () => {
+  /**
+   * The whole bridge, with real bytes and through the store rather than around
+   * it. `tests/fixtures/miniapp-export.json` is what the mini app's own
+   * download produced, captured at `URL.createObjectURL` in a browser.
+   *
+   * Until the moment a report was written started being kept, this could not
+   * have passed: the store stamped the import, so a file that went in came out
+   * with today's dates on every entry — and arrived as new the next time it was
+   * sent.
+   */
+  const recorded = readFileSync(
+    resolve(process.cwd(), 'tests/fixtures/miniapp-export.json'),
+    'utf8',
+  );
+
+  it('comes out as the same path it went in as', async () => {
+    const sink = new MemoryReportSink(() => 1_900_000_000_000);
+
+    const taken = decide(recorded, recorded.length, []);
+    expect(taken.kind).toBe('took');
+    if (taken.kind !== 'took') return;
+    await keep(sink, 'a', taken.added);
+
+    const offered = offer((await sink.history?.('a')) ?? [], '2026-07-31');
+    expect(offered.kind).toBe('file');
+    if (offered.kind !== 'file') return;
+
+    expect(parseDocument(serialise(offered.document))).toEqual(parseDocument(recorded));
+  });
+
+  it('is recognised by the app that wrote it, after the round trip', async () => {
+    // The other direction of the same claim: what comes out of the bot is
+    // something the mini app would take in and find nothing new in.
+    const sink = new MemoryReportSink(() => 1_900_000_000_000);
+    const taken = decide(recorded, recorded.length, []);
+    if (taken.kind !== 'took') throw new Error(taken.kind);
+    await keep(sink, 'a', taken.added);
+
+    const kept = (await sink.history?.('a')) ?? [];
+    const offered = offer(kept, '2026-07-31');
+    if (offered.kind !== 'file') throw new Error(offered.kind);
+
+    const returned = serialise(offered.document);
+    expect(decide(returned, returned.length, kept.map(asReport)).kind).toBe('nothing-new');
   });
 });

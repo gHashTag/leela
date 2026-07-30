@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { CLASSIC, LEGACY_MOBILE, NEUROLEELA, WIN_LOKA, applyRoll, initialState } from '@leela/engine';
+import {
+  CLASSIC,
+  LEGACY_MOBILE,
+  NEUROLEELA,
+  WIN_LOKA,
+  applyRoll,
+  initialState,
+  owesReport,
+  ruleSetById,
+  seededRoller,
+} from '@leela/engine';
 import {
   canPlayerRoll,
   gameStepRow,
@@ -52,26 +62,77 @@ describe('stateFromPlayer', () => {
 });
 
 describe('playerUpdateFromState', () => {
+  /**
+   * `needsReport` was written here by hand — `loka !== previous_loka &&
+   * !is_finished` — which is `owesReport` as it stood a week ago, and wrong
+   * three ways since. A player persisted through this mapping got a free throw
+   * where the same game held in memory asked for a report: two surfaces
+   * playing different games, which is the thing this repository exists to have
+   * fixed once.
+   *
+   * So the assertion is no longer a list of cases. It is that the column
+   * agrees with the engine, over every state a real game reaches.
+   */
+  it('writes what the engine says, on every state a real game reaches', () => {
+    for (const id of ['classic', 'neuroleela', 'legacy-mobile', 'online'] as const) {
+      const rules = ruleSetById(id);
+      let state = stateFromPlayer(row({ plan: 1, previous_plan: 0 }));
+      const die = seededRoller(9);
+
+      for (let turn = 0; turn < 300; turn += 1) {
+        const applied = applyRoll(state, die(), rules);
+        state = applied.state;
+
+        expect(playerUpdateFromState(state, rules).needsReport, `${id} turn ${turn}`).toBe(
+          owesReport(state, rules),
+        );
+
+        if (state.is_finished && state.loka === WIN_LOKA) break;
+      }
+    }
+  });
+
   it('asks for a report when the player moved and is still playing', () => {
     const { state } = applyRoll(stateFromPlayer(row({ plan: 11 })), 4);
-    expect(playerUpdateFromState(state).needsReport).toBe(true);
+    expect(playerUpdateFromState(state, CLASSIC).needsReport).toBe(true);
   });
 
   it('asks for no report when the roll was refused', () => {
+    // The reason the old condition looked right: a throw that overshoots 72
+    // leaves the player where they were, and there is nothing to write about.
     const { state } = applyRoll(stateFromPlayer(row({ plan: 70 })), 5);
     expect(state.loka).toBe(state.previous_loka);
-    expect(playerUpdateFromState(state).needsReport).toBe(false);
+    expect(playerUpdateFromState(state, CLASSIC).needsReport).toBe(false);
   });
 
-  it('asks for no report once the game is won', () => {
+  it('asks for a report on the winning square, which the old condition dismissed', () => {
+    // `is_finished` covered two different things, and only one of them owes
+    // nothing. The published app asks the winner every time.
     const { state } = applyRoll(stateFromPlayer(row({ plan: 65 })), 3);
     expect(state.loka).toBe(WIN_LOKA);
-    expect(playerUpdateFromState(state).needsReport).toBe(false);
+    expect(playerUpdateFromState(state, CLASSIC).needsReport).toBe(true);
+  });
+
+  it('asks for a report when a snake carries the player back to where they stood', () => {
+    // 8 + 4 = 12, and the snake at 12 returns them to 8. The old condition read
+    // that as no move at all.
+    const { state } = applyRoll(stateFromPlayer(row({ plan: 8, previous_plan: 3 })), 4);
+    expect(state.loka).toBe(state.previous_loka);
+    expect(playerUpdateFromState(state, CLASSIC).needsReport).toBe(true);
+  });
+
+  it('asks the variant, which the old condition never did', () => {
+    // A six owes no report under `legacy-mobile` and owes one under `classic`.
+    const from = stateFromPlayer(row({ plan: 11 }));
+    const { state } = applyRoll(from, 6, LEGACY_MOBILE);
+
+    expect(playerUpdateFromState(state, LEGACY_MOBILE).needsReport).toBe(false);
+    expect(playerUpdateFromState(state, CLASSIC).needsReport).toBe(true);
   });
 
   it('carries a custom message through', () => {
     const { state } = applyRoll(stateFromPlayer(row()), 3);
-    expect(playerUpdateFromState(state, 'hello').message).toBe('hello');
+    expect(playerUpdateFromState(state, CLASSIC, 'hello').message).toBe('hello');
   });
 });
 
@@ -82,7 +143,7 @@ describe('round trip', () => {
     for (const roll of [6, 2, 4, 6, 6, 3]) {
       const state = stateFromPlayer(current);
       const { state: next } = applyRoll(state, roll, rulesForPlayer(current));
-      const update = playerUpdateFromState(next);
+      const update = playerUpdateFromState(next, rulesForPlayer(current));
 
       // What we would write back must read back as exactly the same state.
       current = row({
@@ -208,7 +269,7 @@ describe('the gate reaches a lone player row', () => {
   it('closes the loop with playerUpdateFromState, which writes the flag', () => {
     // What the write records, the read must be able to act on.
     const { state } = applyRoll(stateFromPlayer(row({ plan: 11 })), 4, CLASSIC);
-    const update = playerUpdateFromState(state);
+    const update = playerUpdateFromState(state, CLASSIC);
     expect(update.needsReport).toBe(true);
 
     const stored = row({
