@@ -80,6 +80,16 @@ export interface ReportSink {
    * the player never wrote anything.
    */
   history?(userId: string): Promise<StoredReport[]>;
+  /**
+   * What this player is playing for, and a way to set it.
+   *
+   * Optional together, and for the same reason `history` is: a sink that keeps
+   * nothing has no question to return, and the caller must say so rather than
+   * answer "you have not chosen one" — which would be a different and untrue
+   * statement.
+   */
+  intention?(userId: string): Promise<string | null>;
+  setIntention?(userId: string, text: string): Promise<void>;
 }
 
 /** Reports in memory. Enough for a single process and for tests. */
@@ -103,6 +113,16 @@ export class MemoryReportSink implements ReportSink {
       .filter((report) => report.userId === userId)
       .map(({ plan, text, createdAt }) => ({ plan, text, createdAt }))
       .reverse();
+  }
+
+  private readonly intentions = new Map<string, string>();
+
+  async intention(userId: string): Promise<string | null> {
+    return this.intentions.get(userId) ?? null;
+  }
+
+  async setIntention(userId: string, text: string): Promise<void> {
+    this.intentions.set(userId, text);
   }
 }
 

@@ -135,6 +135,15 @@ const EN = {
   // a player who has not entered is standing on none. Asked before the first
   // six, the bot used to say they were on plan 68 — Cosmic Consciousness — so
   // the answer rested on the wrong square entirely.
+  // The question the game is played to answer. The bot had nowhere to keep one,
+  // so the companion — which reads every report — had never been told what the
+  // reports were answering.
+  'intention.ask': 'What are you playing for? Send /intention followed by your answer.',
+  'intention.yours': 'You are playing to answer this:\n{text}\n\n/intention followed by something else changes it.',
+  'intention.none': 'You have not said what you are playing for. /intention followed by your answer.',
+  'intention.set': 'Held. Everything you write is an answer to it now.',
+  'intention.tooShort': 'A little more than that — two characters at least.',
+  'intention.notKept': 'This bot is not keeping anything, so there is nowhere to hold a question.',
   'ask.notOnBoard':
     'You are not on the board yet, so there is no plan to ask about. A six puts you there; /rules opens the book meanwhile.',
   'ask.silent': 'The companion is not answering just now. Your question is not lost; ask again later.',
@@ -336,6 +345,7 @@ const EN = {
     '/join — take a seat',
     '/start — begin (host only)',
     '/roll — throw the die',
+    '/intention <text> — what you are playing for, which the companion is told',
     '/report <text> — reflect on the plan you stand on',
     '/plan [n] — read a plan',
     '/rules [n] — the rules of the game, in chapters',
@@ -425,6 +435,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'writer.pathFull': 'Путь заполнен: это сохранение вытеснит самую старую запись. Сначала сохраните копию.',
   'ask.what': 'Спросить о чём? /ask и ваш вопрос о плане, на котором стоите.',
   'ask.notSeated': 'Сначала сядьте за стол — /join.',
+  'intention.ask': 'Ради чего вы играете? Отправьте /intention и ваш ответ.',
+  'intention.yours': 'Вы играете, чтобы ответить на это:\n{text}\n\n/intention с другим текстом меняет вопрос.',
+  'intention.none': 'Вы не сказали, ради чего играете. /intention и ваш ответ.',
+  'intention.set': 'Принято. Теперь всё, что вы пишете, — ответ на это.',
+  'intention.tooShort': 'Чуть больше — хотя бы два символа.',
+  'intention.notKept': 'Этот бот ничего не хранит, поэтому держать вопрос негде.',
   'ask.notOnBoard':
     'Вы ещё не на доске, и спрашивать пока не о чем. Шестёрка выведет вас туда; а пока /rules открывает книгу.',
   'ask.silent': 'Спутник сейчас не отвечает. Вопрос не потерян — спросите позже.',
@@ -597,6 +613,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
     '/join — сесть за стол',
     '/start — начать (только тот, кто открыл)',
     '/roll — бросить кубик',
+    '/intention <текст> — ради чего вы играете; спутник об этом знает',
     '/report <текст> — отчёт о плане, на котором стоите',
     '/plan [n] — прочесть план',
     '/rules [n] — правила игры, по главам',

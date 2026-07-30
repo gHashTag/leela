@@ -10,6 +10,7 @@ import { Bot, InlineKeyboard, InputFile, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 import { type Language, bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
 import { isSessionOver, isWaitingToEnter } from '@leela/engine';
+import { MAX_INTENTION_CHARS } from '@leela/ai';
 import type { Guide } from '@leela/ai';
 import { Conversations } from './conversation';
 import * as commands from './commands';
@@ -263,6 +264,8 @@ export function createBot({
       const reflection = await guide.reflect(effect.text, {
         language: room.language,
         plan: effect.plan,
+        // The question these answers are answering.
+        intention: (await reports.intention?.(effect.userId)) ?? undefined,
         direction: seat?.state.direction || undefined,
         previousPlan: seat?.state.previous_loka,
         journey,
@@ -499,6 +502,7 @@ export function createBot({
     const reflection = await guide.reflect(square.text, {
       language,
       plan: square.plan,
+      intention: (await reports.intention?.(who.id)) ?? undefined,
       journey,
     });
 
@@ -588,6 +592,51 @@ export function createBot({
    *
    * The conversation is kept in memory and per player, as it is there.
    */
+  /**
+   * `/intention` — what this player is playing for.
+   *
+   * The frame every report is written inside. This repository's own words: *the
+   * game is being played to answer it, and the reports are the answer
+   * accumulating* — and the bot had nowhere to keep one, so the companion, which
+   * reads every report, had never been told what the reports were answering.
+   *
+   * Kept by player rather than by table: a chat has no profile, but the question
+   * belongs to the person and follows them between tables, exactly as their
+   * reports do.
+   */
+  bot.command('intention', async (ctx) => {
+    const who = sender(ctx);
+    if (!who) return;
+
+    const language = languageOf(ctx);
+    const said = (ctx.match ?? '').trim();
+
+    if (!reports.intention || !reports.setIntention) {
+      await ctx.reply(messageFor(language, 'intention.notKept'));
+      return;
+    }
+
+    if (said.length === 0) {
+      const held = await reports.intention(who.id);
+      await ctx.reply(
+        held
+          ? messageFor(language, 'intention.yours', { text: held })
+          : messageFor(language, 'intention.none'),
+      );
+      return;
+    }
+
+    // The published app's own bound, and the mini app's: two characters is a
+    // guard against an empty field rather than a standard.
+    if (said.length < 2 || said.length > MAX_INTENTION_CHARS) {
+      await ctx.reply(messageFor(language, 'intention.tooShort'));
+      return;
+    }
+
+    await reports.setIntention(who.id, said);
+    await ctx.reply(messageFor(language, 'intention.set'));
+  });
+
   bot.command('ask', async (ctx) => {
     const who = sender(ctx);
     if (!who) return;
@@ -642,6 +691,7 @@ export function createBot({
     const reflection = await guide.answer(question, {
       language,
       plan: seat.state.loka,
+      intention: (await reports.intention?.(who.id)) ?? undefined,
       direction: seat.state.direction || undefined,
       previousPlan: seat.state.previous_loka,
       history: conversations.of(who.id),

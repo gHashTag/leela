@@ -95,6 +95,8 @@ export function fallbackText(context: PlanContext): string {
 export interface AskOptions {
   language: Language;
   plan: number;
+  /** What the player is playing for — the frame the reports answer. */
+  intention?: string;
   direction?: Direction;
   previousPlan?: number;
   /** Earlier turns of this conversation, oldest first. */
@@ -234,6 +236,7 @@ function contextOf(options: AskOptions): PlanContext {
     language: options.language,
     direction: options.direction,
     previousPlan: options.previousPlan,
+    intention: options.intention,
     journey: options.journey,
   };
 }

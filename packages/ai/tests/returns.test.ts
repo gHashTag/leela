@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { planFor } from '@leela/content';
 import {
+  MAX_INTENTION_CHARS,
   MAX_RETURN_ENTRIES,
   summariseReturns,
   systemPrompt,
@@ -132,5 +133,62 @@ describe('what the returns must not cost', () => {
 
     expect(prompt).toContain('It is the source; you are not.');
     expect(prompt).not.toMatch(/write (a|the) (description|commentary) (of|for) (the |this )?plan/i);
+  });
+});
+
+describe('what the player is playing for', () => {
+  /**
+   * The frame every report is written inside — this repository's own words:
+   * *the game is being played to answer it, and the reports are the answer
+   * accumulating.*
+   *
+   * The companion had never been told it. It read a year of answers without
+   * knowing the question, on both surfaces at once: the mini app keeps an
+   * intention and calls no model, the bot calls one and kept no intention. The
+   * word did not appear in `packages/ai` at all.
+   */
+  const asked = 'to stop hurrying, and to find out what I am hurrying past';
+
+  it('reaches the model', () => {
+    const prompt = systemPrompt({ plan: 41, language: 'en', intention: asked });
+    expect(prompt).toContain(asked);
+  });
+
+  it('is absent when there is none, rather than an empty frame', () => {
+    for (const nothing of [undefined, '', '   ']) {
+      const prompt = systemPrompt({ plan: 41, language: 'en', intention: nothing });
+      expect(prompt, JSON.stringify(nothing)).not.toMatch(/playing to answer/i);
+    }
+  });
+
+  it('is handed over as the player’s, not as something to grant or judge', () => {
+    // The voice this package exists to hold. A companion that decides somebody
+    // has answered their own question has taken the game off them.
+    const prompt = systemPrompt({ plan: 41, language: 'en', intention: asked });
+
+    expect(prompt).toMatch(/theirs and not yours/i);
+    expect(prompt).toMatch(/not to declare answered|not to\s*\n?declare answered/i);
+    expect(prompt).toMatch(/do not steer/i);
+  });
+
+  it('never crowds out the plan’s own text', () => {
+    // The same rule the returns follow: whatever else is in the prompt, the
+    // answer rests on the square's own words.
+    const prompt = systemPrompt({
+      plan: 41,
+      language: 'en',
+      intention: 'x'.repeat(5_000),
+      journey: longGame(),
+    });
+
+    expect(prompt).toContain(planFor('en', 41).body.slice(0, 120));
+    expect(prompt).toContain('It is the source; you are not.');
+  });
+
+  it('is clipped to what a player could have written', () => {
+    const prompt = systemPrompt({ plan: 41, language: 'en', intention: 'y'.repeat(5_000) });
+    const carried = /playing to answer this: (y+)/.exec(prompt)?.[1] ?? '';
+
+    expect(carried.length).toBe(MAX_INTENTION_CHARS);
   });
 });

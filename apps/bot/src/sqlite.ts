@@ -141,6 +141,18 @@ CREATE TABLE IF NOT EXISTS reports (
 );
 
 CREATE INDEX IF NOT EXISTS reports_user ON reports (user_id, created_at DESC);
+
+-- What each player is playing for.
+--
+-- One row per player rather than a column on anything: a table is a chat and a
+-- chat has no profile, but the question belongs to the person and follows them
+-- between tables — the same reason their reports are keyed by who wrote them
+-- and not by where.
+CREATE TABLE IF NOT EXISTS intentions (
+  user_id    TEXT PRIMARY KEY,
+  text       TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
 `;
 
 /**
@@ -486,6 +498,31 @@ export class SqliteRoomQueries implements RoomQueries {
       .run(report.userId, report.plan, report.text, report.at?.getTime() ?? this.now());
   }
 
+  /**
+   * What a player is playing for, or nothing.
+   *
+   * The companion had never been told it — the word did not appear anywhere in
+   * this app or in `packages/ai` — so it read a year of answers without knowing
+   * the question they were answering.
+   */
+  intentionOf(userId: string): string | null {
+    const row = this.db
+      .prepare('SELECT text FROM intentions WHERE user_id = ?')
+      .get(userId) as Record<string, unknown> | undefined;
+
+    return row ? (row.text as string) : null;
+  }
+
+  /** Set it, or replace it: changing your question is part of playing. */
+  setIntention(userId: string, text: string): void {
+    this.db
+      .prepare(
+        `INSERT INTO intentions (user_id, text, updated_at) VALUES (?, ?, ?)
+         ON CONFLICT(user_id) DO UPDATE SET text = excluded.text, updated_at = excluded.updated_at`,
+      )
+      .run(userId, text, this.now());
+  }
+
   /** Every report a player has written, newest first. */
   reportsFor(userId: string): Array<{ plan: number; text: string; createdAt: Date }> {
     const rows = this.db
@@ -554,6 +591,14 @@ export function sqliteReportSink(queries: SqliteRoomQueries) {
 
     async history(userId: string): Promise<Array<{ plan: number; text: string; createdAt: Date }>> {
       return queries.reportsFor(userId);
+    },
+
+    async intention(userId: string): Promise<string | null> {
+      return queries.intentionOf(userId);
+    },
+
+    async setIntention(userId: string, text: string): Promise<void> {
+      queries.setIntention(userId, text);
     },
   };
 }

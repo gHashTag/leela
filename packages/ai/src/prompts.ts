@@ -31,6 +31,20 @@ export interface PlanContext {
   /** The square they came from. */
   previousPlan?: number;
   /**
+   * What the player is playing for.
+   *
+   * The frame every report is written inside — this repository's own words:
+   * *the game is being played to answer it, and the reports are the answer
+   * accumulating.* The companion had never been told it. It read a year of
+   * answers without knowing the question, on both surfaces: the mini app keeps
+   * one and does not call a model, the bot calls one and kept no intention.
+   *
+   * Given whole rather than summarised. It is at most a paragraph — the
+   * published app's `yup.string().min(2).max(800)` — and it is the one piece of
+   * context that everything else is relative to.
+   */
+  intention?: string;
+  /**
    * Where the player has been and what they wrote there, oldest first.
    *
    * Without this a reflection on plan 40 is read as though it were the first
@@ -83,6 +97,16 @@ export const MAX_JOURNEY_CHARS = 1200;
  */
 export const MAX_RETURN_ENTRIES = 4;
 export const MAX_RETURN_CHARS = 600;
+
+/**
+ * The longest intention carried into a prompt.
+ *
+ * The published app's own bound, and the mini app's: `yup.string().min(2)
+ * .max(800)` in `ChangeIntention`. Clipped here as well, because a prompt is
+ * the one place a value that has been through a file and an editor meets a
+ * budget that everything else in the prompt has to share.
+ */
+export const MAX_INTENTION_CHARS = 800;
 
 /** One line per entry, clipped, in the shape both summaries use. */
 function line(entry: JourneyEntry, language: Language): string {
@@ -244,6 +268,19 @@ export function systemPrompt(context: PlanContext): string {
   }
   if (context.plan === WIN_LOKA) {
     lines.push('This is the end of a game, and the start of the next one.');
+  }
+
+  const asked = (context.intention ?? '').trim().slice(0, MAX_INTENTION_CHARS);
+  if (asked) {
+    lines.push(
+      '',
+      `They are playing to answer this: ${asked}`,
+      '',
+      'That is theirs and not yours — not to grant, not to judge, and not to',
+      'declare answered. A game of this is how somebody decides that for',
+      'themselves. Let it tell you what bears on where they are; do not steer',
+      'them towards it, and do not read it back to them.',
+    );
   }
 
   // What was written here before, then the recent squares — and the second

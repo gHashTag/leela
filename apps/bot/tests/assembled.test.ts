@@ -172,3 +172,97 @@ describe('the bot as it is actually assembled', () => {
     storage.stopPruning?.();
   });
 });
+
+describe('the question the bot had nowhere to keep', () => {
+  /**
+   * *The game is being played to answer it, and the reports are the answer
+   * accumulating* — this repository's own words, about the intention. And the
+   * companion, which reads every report, had never been told it. The word
+   * appeared nowhere in `packages/ai` or in this app.
+   *
+   * Kept by player rather than by table: a chat has no profile, but the question
+   * belongs to the person and follows them between tables, exactly as their
+   * reports do. Which is why this is tested here, through the assembled bot and
+   * across a restart, rather than against a store built by hand.
+   */
+
+  it('holds it, gives it back, and survives a restart', async () => {
+    const path = temporary();
+
+    let { bot, sent, storage } = assemble(path);
+
+    let before = sent.length;
+    await bot.handleUpdate(message('/intention'));
+    expect(texts(sent.slice(before)).join(' '), 'nothing held yet').toMatch(/have not said/i);
+
+    await bot.handleUpdate(message('/intention to stop hurrying, and see what I hurry past'));
+
+    storage.stopPruning?.();
+    ({ bot, sent, storage } = assemble(path));
+
+    before = sent.length;
+    await bot.handleUpdate(message('/intention'));
+    expect(texts(sent.slice(before)).join(' ')).toContain('to stop hurrying');
+
+    storage.stopPruning?.();
+  });
+
+  it('changes it when asked again, because changing it is part of playing', async () => {
+    const path = temporary();
+    const { bot, sent, storage } = assemble(path);
+
+    await bot.handleUpdate(message('/intention the first question'));
+    await bot.handleUpdate(message('/intention the second question'));
+
+    const before = sent.length;
+    await bot.handleUpdate(message('/intention'));
+    const said = texts(sent.slice(before)).join(' ');
+
+    expect(said).toContain('the second question');
+    expect(said).not.toContain('the first question');
+    storage.stopPruning?.();
+  });
+
+  it('refuses one nobody could have meant', async () => {
+    const path = temporary();
+    const { bot, sent, storage } = assemble(path);
+
+    const before = sent.length;
+    await bot.handleUpdate(message('/intention x'));
+
+    expect(texts(sent.slice(before)).join(' ')).toMatch(/two characters/i);
+    storage.stopPruning?.();
+  });
+
+  it('holds one in memory when the volume is missing, as it holds reports', async () => {
+    // A path that cannot be opened falls back to memory — and memory keeps a
+    // question exactly as long as it keeps a report, which is until the process
+    // ends. Saying "there is nowhere to hold it" here would be the same lie the
+    // durable sink used to tell about reports.
+    const { bot, sent, storage } = assemble('/nowhere-at-all/leela.db');
+    expect(storage.durable).toBe(false);
+
+    await bot.handleUpdate(message('/intention to see it through'));
+
+    const before = sent.length;
+    await bot.handleUpdate(message('/intention'));
+    expect(texts(sent.slice(before)).join(' ')).toContain('to see it through');
+
+    storage.stopPruning?.();
+  });
+
+  it('says there is nowhere only where there truly is nowhere', async () => {
+    // A bot built with no store at all discards everything, and the two
+    // sentences are different facts: "nothing is kept here" and "you have not
+    // chosen one". Only one of them is ever true.
+    const sent: Sent[] = [];
+    const bot = createBot({ token: '1:TEST', botInfo: BOT_INFO, log: () => undefined });
+    bot.api.config.use(async (_next, method, payload) => {
+      sent.push({ method, payload: payload as Record<string, unknown> });
+      return { ok: true, result: { message_id: 1 } } as never;
+    });
+
+    await bot.handleUpdate(message('/intention to see it through'));
+    expect(texts(sent).join(' ')).toMatch(/nowhere to hold/i);
+  });
+});

@@ -3901,6 +3901,40 @@ The oversized and the wrong-typed are dropped while the path survives: a file
 has been out of the app and possibly through an editor, and a broken question is
 not a reason to lose a year of answers.
 
+## Hundred-and-twelfth pass: the companion never knew what the game was for
+
+Three of the four things worth doing next need somebody awake, so: the one that
+did not. Grepping for it first turned up something better than the errand.
+
+**The word `intention` appeared nowhere in `packages/ai`, and nowhere in the
+bot.** The companion — the one thing that reads every report a player writes —
+had never been told what the player was playing for. It read a year of answers
+without the question, and this repository's own words are that *the game is
+being played to answer it, and the reports are the answer accumulating*.
+
+Both surfaces at once, for opposite reasons: the mini app keeps an intention and
+calls no model; the bot calls one and had nowhere to keep an intention.
+
+So the prompt carries it — whole rather than summarised, because it is at most a
+paragraph and it is the one piece of context everything else is relative to.
+With the care this package exists for: *theirs and not yours — not to grant, not
+to judge, and not to declare answered. A game of this is how somebody decides
+that for themselves.* A companion that decides a player has answered their own
+question has taken the game off them.
+
+And the bot learned to hold one. `/intention` with words sets it, without them
+shows it; an `intentions` table keyed by player rather than by table, because a
+chat has no profile but the question follows the person between tables exactly
+as their reports do. All three routes to the companion pass it: the report gate,
+`/ask`, and the square handed over by the mini app.
+
+**One of my own tests was wrong about the fallback.** It expected "there is
+nowhere to hold a question" from a bot whose volume is missing — but that bot
+falls back to memory, and memory holds a question exactly as long as it holds a
+report. Saying otherwise would be the same lie the durable sink used to tell
+about reports, five passes ago. The sentence belongs to a bot built with no
+store at all, and the test says so now.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
