@@ -107,7 +107,22 @@ export function canRoll(state: GameState, context: TurnContext, rules: RuleSet):
  * is the same condition the database stores as `players.needs_report`.
  */
 export function owesReport(state: GameState, rules: RuleSet = DEFAULT_RULESET): boolean {
-  if (state.loka === state.previous_loka || state.is_finished) return false;
+  if (state.is_finished) return false;
+
+  // The question is whether the player *arrived*, not whether the square
+  // changed. Those come apart in exactly one place on this board: standing on
+  // 8, a four takes you to 12, and the snake at 12 puts you back on 8. The
+  // player moved, was bitten, and ended where they began — the most eventful
+  // turn there is — and the gate opened as if nothing had happened.
+  //
+  // Both surviving sources of truth disagree with that. The published app's
+  // `entities` returns nothing only when the throw overshoots 72; a snake
+  // writes its history and navigates to the plan with `report: true`, with no
+  // comparison of squares anywhere. The deployed contract requires a fresh
+  // report before every roll once the player is in play, likewise without
+  // comparing. This is a defect rather than a variant: no shipped ruleset wants
+  // the other behaviour, so there is no flag to choose it with.
+  if (state.loka === state.previous_loka && !arrivedByJump(state)) return false;
 
   // The published app writes a six's history and nothing else: no report, no
   // day's wait. A run of sixes is one move, reported once, at the end of it —
@@ -142,6 +157,20 @@ export function isReport(text: string, rules: RuleSet = DEFAULT_RULESET): boolea
  * everything else; entering the game is the exception, since it is written
  * fresh — and nothing else moves a player off the win square.
  */
+/**
+ * A turn that moved the player and left them where they started.
+ *
+ * Only a jump can do this — a snake or an arrow after the step — so the
+ * direction is what tells an arrival apart from a throw that was refused. A
+ * refused throw leaves `'stop 🛑'` and is not an arrival: `entities` returns
+ * nothing when the throw would overshoot 72, and a player who could not move
+ * has nothing new to write about.
+ */
+export function arrivedByJump(state: GameState): boolean {
+  if (state.loka !== state.previous_loka) return false;
+  return state.direction === 'snake 🐍' || state.direction === 'arrow 🏹';
+}
+
 export function arrivedOnSix(state: GameState): boolean {
   if (state.consecutive_sixes > 0) return true;
   return state.previous_loka === WIN_LOKA && state.loka === START_LOKA;

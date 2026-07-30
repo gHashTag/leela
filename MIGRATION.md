@@ -1803,6 +1803,48 @@ Also corrected from the pass before: the die's face is saved **after** the board
 not before. Written first, it could outlive a throw that never landed — the
 inconsistency I had just made durable.
 
+## Fifty-second pass: a free throw hiding in one square
+
+Still playing rather than reading. Six turns in, the saved game read
+
+```json
+{"loka": 8, "previous_loka": 8, "direction": "snake 🐍", "is_finished": false}
+```
+
+— and the die was enabled. The player had thrown a four from 8, gone to 12, been
+bitten by the snake there and landed back on 8. The most eventful turn the game
+has, and the report gate opened as if nothing had happened.
+
+`owesReport` began `if (state.loka === state.previous_loka …) return false`. It
+was asking whether the **square changed** when the question is whether the
+player **arrived**, and those come apart in exactly one place on this board:
+standing on 8, throwing a four. Every arrow climbs, so no arrow can return a
+player to where they started; of the ten snakes only 12 → 8 lands on a square a
+single throw could have left.
+
+Both surviving sources of truth disagree with the old behaviour, and neither
+compares squares at all:
+
+- **The published app.** `entities` returns `undefined` only for `plan > 72`. A
+  snake returns `{ plan: 8, history: { status: 'snake' } }`, so `upFunc` writes
+  the history and navigates to `PLANS_DETAIL_SCREEN` with `report: true`.
+- **The deployed contract.** `if (player.isStart) require(reports[reportIdCounter].reporter == msg.sender, 'You must create a report before rolling the dice.')` — every roll in play needs a fresh report.
+
+**Treated as a defect rather than a variant, deliberately.** The repository's law
+is that a change in behaviour goes through a `RuleSet`, and that is right when
+the surfaces genuinely disagree — three flags were added that way two passes
+ago. Here they agree, and a flag that is true in all five variants is not an
+axis, it is a comment. The correction is written down instead, with both
+citations, and `arrivedByJump` is exported so the distinction has a name: a
+refused throw leaves `'stop 🛑'` and owes nothing, a jump home leaves
+`'snake 🐍'` and owes a report.
+
+The test that matters is not that one square. It plays sixty seeded games to
+completion and asserts that on **every** state reached, the gate agrees with the
+event that produced it — plus a check that the jump-home case actually occurs in
+those games, so the assertion is not passing for want of an example. Reverting
+the fix fails it, and fails the worked case beside it.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

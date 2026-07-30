@@ -59,7 +59,15 @@ export {
 } from './rulesets';
 export type { RuleSet } from './rulesets';
 
-export { ONE_DAY_MS, arrivedOnSix, canRoll, formatWait, isReport, owesReport } from './turn';
+export {
+  ONE_DAY_MS,
+  arrivedByJump,
+  arrivedOnSix,
+  canRoll,
+  formatWait,
+  isReport,
+  owesReport,
+} from './turn';
 export type { TurnBlockedReason, TurnContext, TurnVerdict } from './turn';
 
 export {
