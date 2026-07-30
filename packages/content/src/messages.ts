@@ -94,6 +94,12 @@ const EN = {
   // --- reports ---------------------------------------------------------------
   'report.notSeated': 'You are not at this table.',
   'report.empty': 'Send /report followed by what the plan brings up.',
+  // A player who has not entered stands on no square. The bot used to take the
+  // report anyway and file it against 68 — Cosmic Consciousness — so somebody
+  // who had never thrown a six ended up with an account of the winning square
+  // in the record the game exists to produce.
+  'report.notOnBoard':
+    'You are not on the board yet. A six puts you there, and then there is a plan to write about.',
   'report.tooShort':
     'A report is a reflection, not a line to open the gate — {count} characters at least.',
   'report.filed': '{name} has reported. You may throw.',
@@ -378,6 +384,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
 
   'report.notSeated': 'Вы не за этим столом.',
   'report.empty': 'Отправьте /report и то, что поднимает этот план.',
+  'report.notOnBoard':
+    'Вы ещё не на доске. Шестёрка выводит вас туда — тогда и появится план, о котором писать.',
   'report.tooShort':
     'Отчёт — это размышление, а не строчка, чтобы открыть ворота: хотя бы {count} символов.',
   'report.filed': 'Отчёт от {name} принят. Можно бросать.',

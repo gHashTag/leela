@@ -3318,6 +3318,35 @@ passing for want of a case — three of the four outcomes have to occur in
 ordinary play, and the fourth is constructed, because a cooldown cannot arise in
 a game played straight through.
 
+## Ninety-third pass: what a report is about
+
+The pass before this discovered the bot could be played in a test. This one kept
+playing it — the commands nobody had touched — and the first probe found
+something worse than a wrong sentence.
+
+Before `/start`, before anybody had thrown anything, `/report` was **accepted**.
+It answered *"Ada has reported. You may throw."* while `/roll`, at the same
+table in the same moment, correctly said *"the table has not started yet"*. And
+it filed the report against **plan 68 — Cosmic Consciousness** — because the
+engine parks a player who has not entered on `WIN_LOKA` until a six moves them.
+
+That is the 68 ambiguity, met for the seventh time in this repository, and this
+is the worst place it has turned up. A player who had never begun could put an
+account of the *winning square* into the record the game exists to produce. It
+would appear in their `/path`, it would be exported into their journal file,
+and `/returns` would count it as a square that came back to them.
+
+A report is an account of the square you are standing on, and a player waiting
+to enter is not standing on one. The engine says so already and nothing was
+asking: `owesReport` is false for them, because there is no plan to reflect on
+until they are on the board.
+
+The test states that rather than the two moments that were wrong: **every report
+the bot files is about the square its author was standing on, and none is filed
+by somebody who has not entered** — checked over every report of four whole
+games, with everybody writing every turn whether or not they owe one, because a
+player sends what they send and the bot decides what to do with it.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

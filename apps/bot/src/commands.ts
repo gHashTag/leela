@@ -479,6 +479,20 @@ export function report(
     return { room, replies: [say(messageFor(room.language, 'report.notSeated'), false)] };
   }
 
+  // A report is about the square you are standing on, and a player waiting to
+  // enter is not standing on one. The bot took the report anyway and filed it
+  // against `state.loka` — which for a waiting player is 68, the winning
+  // square. So somebody who had never thrown a six could put an account of
+  // Cosmic Consciousness into their own path, and `/returns` would later count
+  // it as a square that came back.
+  //
+  // The engine says so too and nothing was asking: `owesReport` is false for a
+  // waiting player, because there is no plan to reflect on until they are on
+  // the board.
+  if (isWaitingToEnter(seated.state)) {
+    return { room, replies: [say(messageFor(room.language, 'report.notOnBoard'), false)] };
+  }
+
   // What counts as a report is the variant's, not this file's: the published
   // app refuses fewer than a hundred characters, and `classic` asks only that
   // something was written.
