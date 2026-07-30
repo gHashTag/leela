@@ -6,8 +6,7 @@ import {
   merge,
   parseDocument,
   toDocument,
-  toText,
-} from '../src/journal-file';
+  toText, shareTextFor} from '../src/journal-file';
 import { EMPTY, MAX_REPORTS, arrived, record, type Journal } from '../src/reports';
 
 /**
@@ -174,5 +173,60 @@ describe('the path as something to read', () => {
     const text = toText(journal, titleOf);
     expect(text.split('---')).toHaveLength(2);
     expect(text.indexOf('first')).toBeLessThan(text.indexOf('second'));
+  });
+});
+
+describe('one square, handed to somebody else', () => {
+  /**
+   * The path leaves this app as a file — a year of it, for coming back to.
+   * What people actually pass on is a single square: *this is where I landed
+   * and this is what it asked*. `Lila Game`, the freshest of the competing
+   * apps (updated May 2026), leads its store listing with sharing results;
+   * this app could export everything and share nothing.
+   *
+   * The rule asserted is what a share is allowed to contain — one square, the
+   * player's own words, and the intention only as a frame — rather than the
+   * exact shape of today's sentence.
+   */
+
+  it('names the square and carries what was written about it', () => {
+    const text = shareTextFor(41, 'The human plane', 'It asked me to stay put.', '');
+
+    expect(text).toContain('41');
+    expect(text).toContain('The human plane');
+    expect(text).toContain('It asked me to stay put.');
+  });
+
+  it('is the square alone when nothing has been written yet', () => {
+    const text = shareTextFor(41, 'The human plane', '   ', '');
+
+    expect(text).toBe('41. The human plane');
+  });
+
+  it('adds the intention last, and only when there is one', () => {
+    // It is the frame, not the news.
+    const framed = shareTextFor(6, 'Delusion', 'What I keep avoiding.', 'To stop circling.');
+    const bare = shareTextFor(6, 'Delusion', 'What I keep avoiding.', '  ');
+
+    expect(framed.trim().endsWith('To stop circling.')).toBe(true);
+    expect(bare).not.toContain('—');
+  });
+
+  it('carries nothing else the player has written', () => {
+    // A share is one square; a path is a file. Somebody handing a friend a
+    // sentence has not handed them a year.
+    const text = shareTextFor(41, 'The human plane', 'only this one', 'and this');
+
+    expect(text).not.toContain('written on another square');
+    expect(text.split('\n').filter(Boolean)).toHaveLength(3);
+  });
+
+  it('is text a person can read, not a format a program parses', () => {
+    // The file is the format. This is prose, and it must not turn into JSON
+    // the day somebody reaches for `toDocument` here.
+    const text = shareTextFor(41, 'The human plane', 'a sentence', '');
+
+    expect(text.startsWith('{')).toBe(false);
+    expect(text).not.toContain('schemaVersion');
   });
 });

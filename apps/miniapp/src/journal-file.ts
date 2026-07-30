@@ -61,3 +61,31 @@ export function merge(journal: Journal, incoming: ReadonlyArray<Report>): Journa
     entries: mergeEntries(journal.entries, incoming).slice(-MAX_REPORTS),
   };
 }
+
+/**
+ * One square, in words somebody can send to a friend.
+ *
+ * The path leaves this app as a file — the whole year of it, for coming back
+ * to. What people actually pass on is a single square: *this is where I landed
+ * and this is what it asked of me*. `Lila Game`, the freshest of the competing
+ * apps (updated May 2026), leads its listing with sharing results; this one
+ * could export everything and share nothing.
+ *
+ * The intention comes last and only if there is one, because it is the frame
+ * and not the news. Nothing else of the player's is included: a share is one
+ * square, and a path is a file.
+ */
+export function shareTextFor(
+  plan: number,
+  title: string,
+  written: string,
+  intention: string,
+): string {
+  const said = written.trim();
+  const lines = [`${plan}. ${title}`];
+
+  if (said.length > 0) lines.push('', said);
+  if (intention.trim().length > 0) lines.push('', `— ${intention.trim()}`);
+
+  return lines.join('\n');
+}

@@ -208,6 +208,9 @@ const EN = {
   // on to the next player by the time it is read, so "you threw four" reads as
   // the wrong person's throw.
   'app.seatSaid': 'Player {seat} — {said}',
+  'app.share': 'Share',
+  'app.shareCopied': 'Copied. Paste it wherever you like.',
+  'app.shareRefused': 'This browser will not share or copy. The text is in the box.',
   'app.players': 'Players',
   'app.playersAsk': 'How many are playing from this device?',
   'app.playersSet': 'Seated {count}. Player 1 throws first.',
@@ -411,6 +414,9 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.reportEmpty': 'Отчёт — это то, что написано. Здесь не написано ничего.',
   'app.seatTurn': 'Игрок {seat}',
   'app.seatSaid': 'Игрок {seat} — {said}',
+  'app.share': 'Поделиться',
+  'app.shareCopied': 'Скопировано. Вставьте куда угодно.',
+  'app.shareRefused': 'Этот браузер не делится и не копирует. Текст остался в поле.',
   'app.players': 'Игроки',
   'app.playersAsk': 'Сколько человек играет с этого устройства?',
   'app.playersSet': 'Сели: {count}. Первым бросает игрок 1.',

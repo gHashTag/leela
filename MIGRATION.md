@@ -2839,6 +2839,37 @@ Both are the same shape as the board that drew one gem of six and the path that
 listed one player of three: state that was per-device because there was only
 ever one player to be per.
 
+## Eightieth pass: what the competitors lead with
+
+Asked to look outward — weak points, competitors, a plan, and the work.
+
+**The field, as of today.** Four apps play this game. `com.vtm.lila` (Android,
+listing updated October 2025) is the plain board. *Leela Chakra Ai* (iOS) is
+this project's own earlier app — the AI guide, ~$4k on the MVP. *Leela: The Game
+of Knowledge* is the secular one: it strips the Sanskrit and the Hindu names and
+sells a mental practice. And `com.gmapp.lillagame` — **updated May 2026, the
+freshest of them** — pitches recurring life patterns, a recorded history of your
+journey, square descriptions, and **sharing results**.
+
+Three of those four things this repository already does better: the history is a
+file in a shared format, the descriptions are 72 plans in 22 languages, and the
+patterns are what the companion is for. The fourth it could not do at all.
+
+**A path left this app as a file — a year of it, for coming back to — and a
+single square could not leave it.** What people pass on is one square: *this is
+where I landed and this is what it asked of me*. That is the unit of the game as
+a conversation, and it had no button.
+
+`shareTextFor` builds it and the writer offers it once there is something to
+share: `navigator.share` where a phone has one — the sheet Telegram and Safari
+both put up — and the clipboard where it does not, which is what the path export
+has always used. The button appears rather than sitting disabled, because a
+control that is never usable is furniture.
+
+The tests are about what a share may **contain**: one square, the player's own
+words, the intention last and only as a frame, and nothing else they have
+written. A person handing a friend a sentence has not handed them a year.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -63,7 +63,7 @@ import {
   loadIntention,
   saveIntention,
 } from './state';
-import { fileName, merge, parseDocument, toDocument, toText } from './journal-file';
+import { fileName, merge, parseDocument, toDocument, toText, shareTextFor} from './journal-file';
 import {
   arrived,
   loadJournal,
@@ -162,6 +162,7 @@ const el = {
   writerText: document.getElementById('writer-text') as HTMLTextAreaElement,
   writerSave: document.getElementById('writer-save') as HTMLButtonElement,
   writerHint: document.getElementById('writer-hint') as HTMLElement,
+  writerShare: document.getElementById('writer-share') as HTMLButtonElement,
   intention: document.getElementById('intention') as HTMLDialogElement,
   intentionTitle: document.getElementById('intention-title') as HTMLElement,
   intentionText: document.getElementById('intention-text') as HTMLTextAreaElement,
@@ -568,6 +569,40 @@ function openWriter(): void {
  */
 function showWriterHint(): void {
   el.writerHint.textContent = hintFor(journal, el.writerText.value.length, language);
+  // Nothing to share until something has been written. The button appears
+  // rather than sitting disabled: a control that is never usable is furniture.
+  el.writerShare.hidden = el.writerText.value.trim().length === 0;
+  el.writerShare.textContent = messageFor(language, 'app.share');
+}
+
+/**
+ * Hand one square to somebody else.
+ *
+ * The path leaves this app as a file — a year of it, for coming back to. What
+ * people pass on is a single square, and this app could export everything and
+ * share nothing. `Lila Game`, the freshest of the competing apps, leads its
+ * store listing with sharing results.
+ *
+ * The player presses; nothing leaves on its own. `navigator.share` where a
+ * phone has it — that is the sheet Telegram and Safari both put up — and the
+ * clipboard where it does not, which is what the path export has always used.
+ */
+async function shareSquare(): Promise<void> {
+  const text = shareTextFor(state.loka, planFor(state.loka).title, el.writerText.value, intention);
+
+  try {
+    if (navigator.share) {
+      await navigator.share({ text });
+      return;
+    }
+
+    await navigator.clipboard.writeText(text);
+    el.say.textContent = messageFor(language, 'app.shareCopied');
+  } catch {
+    // A refusal is a person changing their mind as often as a browser saying
+    // no, and neither is worth an error: the words are still in the box.
+    el.writerHint.textContent = messageFor(language, 'app.shareRefused');
+  }
 }
 
 function saveReport(): void {
@@ -726,6 +761,7 @@ el.plans.addEventListener('click', openPlans);
 el.restart.addEventListener('click', startOver);
 el.report.addEventListener('click', openWriter);
 el.writerSave.addEventListener('click', saveReport);
+el.writerShare.addEventListener('click', () => void shareSquare());
 el.intentionSave.addEventListener('click', saveTheIntention);
 el.writerText.addEventListener('input', () => {
   saveDraft(localStorage, currentPlayer(session).id, state.loka, el.writerText.value);
