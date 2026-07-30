@@ -4,7 +4,15 @@ import { join } from 'node:path';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { join as seat, openRoom, report, roll, start, type Room } from '../src/commands';
 import { DatabaseRoomStore } from '../src/persistence';
-import { CLASSIC, LEGACY_MOBILE, applyRoll, type GameState } from '@leela/engine';
+import {
+  CLASSIC,
+  LEGACY_MOBILE,
+  TOTAL_PLANS,
+  WIN_LOKA,
+  applyRoll,
+  hasWon,
+  type GameState,
+} from '@leela/engine';
 
 /** A player mid-game on a given plan. */
 function playingAt(loka: number): GameState {
@@ -527,5 +535,144 @@ describe('a database older than the code that opens it', () => {
 
     const rows = db.prepare('SELECT id, invented FROM sessions').all() as Array<Record<string, unknown>>;
     expect(rows).toEqual([{ id: 'chat-old', invented: null }]);
+  });
+});
+
+describe('what counts as a table worth forgetting', () => {
+  /**
+   * `pruneFinished` deletes, so being wrong here loses somebody's game.
+   *
+   * It used to decide in SQL — `is_finished = 1 AND previous_plan != 0` — under
+   * a comment claiming that was "the same condition the engine uses". It was
+   * not: the engine also asks whether the player is standing on the winning
+   * square. Asked against every seat shape a row can hold, the two disagreed
+   * seven times out of eight, and every disagreement was a table deleted while
+   * the engine still considered it live.
+   *
+   * The reachable one is a migration. `stateFromLegacy` sets `previous_plan`
+   * equal to the plan when the export carried no history — the engine reads
+   * that as "has not moved", deliberately, so a migrated player can still
+   * enter; the clause read it as "done" and threw their table away.
+   *
+   * So the assertion is the relation, over the shapes rather than over a list
+   * of remembered cases: a table is deleted exactly when the engine says every
+   * seat has won.
+   */
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+  const seatShapes = () => {
+    const shapes: Array<{ plan: number; previous: number; finished: boolean }> = [];
+    for (const plan of [1, 41, WIN_LOKA, TOTAL_PLANS]) {
+      for (const previous of [0, 5, plan]) {
+        for (const finished of [true, false]) {
+          shapes.push({ plan, previous, finished });
+        }
+      }
+    }
+    return shapes;
+  };
+
+  it('deletes exactly the tables the engine calls over', async () => {
+    const shapes = seatShapes();
+    const path = join(dir, 'prune-shapes.db');
+    const queries = new SqliteRoomQueries({ path, now: () => NOW });
+    open.push(queries);
+
+    for (const [index, shape] of shapes.entries()) {
+      await queries.save(
+        {
+          id: `chat-${index}`,
+          host_id: 'u1',
+          ruleset: 'classic',
+          turn_index: 0,
+          roll_count: 0,
+          dice_seed: 0,
+          is_open: false,
+          language: 'en',
+        },
+        [
+          {
+            session_id: `chat-${index}`,
+            user_id: 'u1',
+            seat: 0,
+            name: null,
+            plan: shape.plan,
+            previous_plan: shape.previous,
+            direction: '' as const,
+            consecutive_sixes: 0,
+            position_before_three_sixes: 0,
+            is_finished: shape.finished,
+            last_roll_at: null,
+            last_report_at: null,
+            report_submitted: true,
+          },
+        ],
+      );
+    }
+
+    const later = new SqliteRoomQueries({ path, now: () => NOW + 2 * WEEK_MS });
+    open.push(later);
+    later.pruneFinished(WEEK_MS);
+
+    for (const [index, shape] of shapes.entries()) {
+      const engineSaysOver = hasWon({
+        loka: shape.plan,
+        previous_loka: shape.previous,
+        direction: '',
+        consecutive_sixes: 0,
+        position_before_three_sixes: 0,
+        is_finished: shape.finished,
+      });
+
+      const gone = (await later.loadSession(`chat-${index}`)) === null;
+      expect(gone, `plan ${shape.plan}, previous ${shape.previous}, finished ${shape.finished}`).toBe(
+        engineSaysOver,
+      );
+    }
+  });
+
+  it('keeps the table of a player migrated with no history', async () => {
+    // The case that made this real: `previous_plan` equal to the plan is what
+    // `stateFromLegacy` writes when the published app's export carried no
+    // moves. They have not finished; they have not started.
+    const path = join(dir, 'prune-migrated.db');
+    const queries = new SqliteRoomQueries({ path, now: () => NOW });
+    open.push(queries);
+
+    await queries.save(
+      {
+        id: 'chat-migrated',
+        host_id: 'u1',
+        ruleset: 'legacy-mobile',
+        turn_index: 0,
+        roll_count: 0,
+        dice_seed: 0,
+        is_open: false,
+        language: 'en',
+      },
+      [
+        {
+          session_id: 'chat-migrated',
+          user_id: 'u1',
+          seat: 0,
+          name: null,
+          plan: WIN_LOKA,
+          previous_plan: WIN_LOKA,
+          direction: '' as const,
+          consecutive_sixes: 0,
+          position_before_three_sixes: 0,
+          is_finished: true,
+          last_roll_at: null,
+          last_report_at: null,
+          report_submitted: true,
+        },
+      ],
+    );
+
+    const later = new SqliteRoomQueries({ path, now: () => NOW + 100 * WEEK_MS });
+    open.push(later);
+
+    expect(later.pruneFinished(WEEK_MS)).toBe(0);
+    expect(await later.loadSession('chat-migrated')).not.toBeNull();
   });
 });

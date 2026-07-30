@@ -13,6 +13,7 @@ import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname } from 'node:path';
 import { gameStepRow } from '@leela/db';
+import { hasWon } from '@leela/engine';
 import type { NewGameStepRow, SessionPlayerRow, SessionRow } from '@leela/db';
 import type { RoomQueries, StoredSeat, StoredSession } from './persistence';
 
@@ -346,9 +347,19 @@ export class SqliteRoomQueries implements RoomQueries {
    * database — thousands of dead rooms after a year of use. The reports are
    * deliberately untouched: a table is scaffolding, a report is the player's.
    *
-   * A game counts as over when every seat has finished *after* being on the
-   * board, which is the same condition the engine uses — a seat that never
-   * entered has `previous_plan = 0` and is waiting, not done.
+   * Whether a game is over is the engine's question, and it used to be answered
+   * in the WHERE clause: `is_finished = 1 AND previous_plan != 0`, with a
+   * comment claiming it was "the same condition the engine uses". It was not.
+   * The engine also asks whether the player is standing on the winning square,
+   * and asked against every seat shape a row can hold, the two disagreed seven
+   * times out of eight — each disagreement a `DELETE` of a table the engine
+   * still considered live. The reachable one is a migration: `stateFromLegacy`
+   * sets `previous_plan` equal to the plan when the export carried no history,
+   * which the engine reads as "has not moved" and the clause read as "done".
+   *
+   * So SQL narrows by age, which is SQL's question, and the engine answers its
+   * own. Pruning is periodic and the age filter bounds the set, so the cost of
+   * loading them is nothing next to deleting somebody's game.
    *
    * @returns how many tables were forgotten.
    */
@@ -359,19 +370,35 @@ export class SqliteRoomQueries implements RoomQueries {
       .prepare(
         `SELECT s.id FROM sessions s
           WHERE COALESCE(s.updated_at, 0) < ?
-            AND NOT EXISTS (
-              SELECT 1 FROM session_players p
-               WHERE p.session_id = s.id
-                 AND (p.is_finished = 0 OR p.previous_plan = 0)
-            )
             AND EXISTS (SELECT 1 FROM session_players p WHERE p.session_id = s.id)`,
       )
       .all(cutoff) as Array<{ id: string }>;
 
     const remove = this.db.prepare('DELETE FROM sessions WHERE id = ?');
-    for (const row of stale) remove.run(row.id);
+    let forgotten = 0;
 
-    return stale.length;
+    for (const row of stale) {
+      const seats = this.db
+        .prepare('SELECT * FROM session_players WHERE session_id = ? ORDER BY seat')
+        .all(row.id) as Array<Record<string, unknown>>;
+
+      const over = seats.length > 0 && seats.every((seat) =>
+        hasWon({
+          loka: seat.plan as number,
+          previous_loka: seat.previous_plan as number,
+          direction: '',
+          consecutive_sixes: seat.consecutive_sixes as number,
+          position_before_three_sixes: seat.position_before_three_sixes as number,
+          is_finished: asBoolean(seat.is_finished),
+        }),
+      );
+
+      if (!over) continue;
+      remove.run(row.id);
+      forgotten += 1;
+    }
+
+    return forgotten;
   }
 
   async remove(chatId: string): Promise<void> {

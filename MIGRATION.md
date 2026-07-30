@@ -2166,6 +2166,40 @@ and `serialise`, and parses **identical** to what went in. Before yesterday it
 could not have: the store stamped the import, so a file that went in came out
 dated today and arrived as new the next time it was sent.
 
+## Sixtieth pass: the same question, asked in SQL
+
+Last pass found the report rule copied by hand into the database mapping. The
+follow-up is the same question one level wider — *who else decides something the
+engine owns?* — and the answer was in a `WHERE` clause:
+
+```sql
+AND (p.is_finished = 0 OR p.previous_plan = 0)
+```
+
+`pruneFinished` deletes tables whose game ended a while ago, and it decided
+"ended" in SQL, under a comment saying that was "the same condition the engine
+uses". It was not. The engine also asks whether the player is standing on the
+**winning square**. Asked against every seat shape a row can hold — four plans ×
+three `previous_plan` values × finished or not — the two disagreed **seven times
+out of eight**, and every disagreement was a `DELETE` of a table the engine
+still considered live.
+
+The reachable one is a migration. `stateFromLegacy` sets `previous_plan` equal
+to the plan when the published app's export carried no moves, and the engine
+reads that as "has not moved" — deliberately, so a migrated player can still
+enter. The clause read it as "done" and threw the table away.
+
+SQL narrows by age now, which is SQL's question, and the engine answers its own.
+Pruning is periodic and the age filter bounds the set, so loading those rows
+costs nothing next to deleting somebody's game. The test asserts the relation
+over the shapes rather than a list of remembered cases, and both new tests fail
+when the clause is put back.
+
+That is three copies of engine rules found in three passes — the mini app's die
+face, the database's report flag, and now this. Each was written as an
+optimisation of one line, and each drifted the moment the engine learned
+something.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
