@@ -9,6 +9,7 @@ import {
   canRoll,
   formatWait,
   arrivedByJump,
+  hasWon,
   initialState,
   owesReport,
   seededRoller,
@@ -41,9 +42,32 @@ describe('owesReport', () => {
     expect(owesReport(state)).toBe(false);
   });
 
-  it('is not owed once the game is won', () => {
+  it('is owed for the winning square, which is the point of the whole game', () => {
+    // The published app makes exactly one exception to its own six rule:
+    // `if (stepCount !== 6 || plan === 68)` navigates to the plan with
+    // `report: true`. Cosmic Consciousness is the square a whole game was
+    // played to reach, and the gate used to skip it — `is_finished` short-
+    // circuited before any of the arrival checks ran.
     const { state } = applyRoll(playing({ loka: 65 }), 3);
-    expect(owesReport(state)).toBe(false);
+
+    expect(state.loka).toBe(68);
+    expect(state.is_finished).toBe(true);
+    expect(owesReport(state)).toBe(true);
+  });
+
+  it('is owed for a win reached on a six, even where a six owes nothing', () => {
+    // `legacy-mobile` asks for no report after a six — and the app asks for one
+    // here anyway. That `|| plan === 68` is the whole exception.
+    const { state } = applyRoll(playing({ loka: 62 }), 6, LEGACY_MOBILE);
+
+    expect(state.loka).toBe(68);
+    expect(owesReport(state, LEGACY_MOBILE)).toBe(true);
+  });
+
+  it('is not owed by a player who has not entered the game', () => {
+    // The other thing `is_finished` means in this shape. A fresh state carries
+    // it, and telling the two apart is what `hasWon` is for.
+    expect(owesReport(initialState())).toBe(false);
   });
 });
 
@@ -221,7 +245,9 @@ describe('the gate asks whether the player arrived, not whether the square chang
         state = next;
 
         // What the throw did, read off the event rather than off the squares.
-        const arrived = !event.isBlocked && !state.is_finished;
+        // A win is an arrival — the one the app always asks about — while a
+        // player who never entered is not.
+        const arrived = !event.isBlocked && (!state.is_finished || hasWon(state));
         if (owesReport(state, rules) !== arrived) disagreements += 1;
         if (arrived && state.loka === state.previous_loka) jumpsHome += 1;
 
@@ -271,7 +297,8 @@ describe('the gate asks whether the player arrived, not whether the square chang
     expect(arrivedByJump(playing({ loka: 8, previous_loka: 12, direction: 'snake 🐍' }))).toBe(false);
   });
 
-  it('says nothing is owed once the game is over', () => {
-    expect(owesReport(playing({ loka: 68, is_finished: true }), CLASSIC)).toBe(false);
+  it('says nothing is owed by a player who has not started', () => {
+    // `is_finished` with `previous_loka: 0` is the waiting state, not a win.
+    expect(owesReport(initialState(), CLASSIC)).toBe(false);
   });
 });

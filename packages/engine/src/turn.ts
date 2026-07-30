@@ -11,6 +11,7 @@
  */
 
 import { START_LOKA, WIN_LOKA } from './board';
+import { hasWon } from './game';
 import { DEFAULT_RULESET, type RuleSet } from './rulesets';
 import type { GameState } from './types';
 
@@ -107,7 +108,14 @@ export function canRoll(state: GameState, context: TurnContext, rules: RuleSet):
  * is the same condition the database stores as `players.needs_report`.
  */
 export function owesReport(state: GameState, rules: RuleSet = DEFAULT_RULESET): boolean {
-  if (state.is_finished) return false;
+  // `is_finished` says two different things in this shape, and only one of them
+  // is "nothing to report". A player who has not entered the game carries it —
+  // the 68 ambiguity — and owes nothing. A player who has just *won* carries it
+  // too, and the winning square is the one arrival the published app always
+  // asks about: `if (stepCount !== 6 || plan === 68)` navigates to the plan
+  // with `report: true`, six or no six. Cosmic Consciousness is the square a
+  // whole game was played to reach, and the gate was skipping it.
+  if (state.is_finished && !hasWon(state)) return false;
 
   // The question is whether the player *arrived*, not whether the square
   // changed. Those come apart in exactly one place on this board: standing on
@@ -128,7 +136,8 @@ export function owesReport(state: GameState, rules: RuleSet = DEFAULT_RULESET): 
   // day's wait. A run of sixes is one move, reported once, at the end of it —
   // which is what the extra turn is *for*. See `createHistory`, which gates on
   // `values.count !== 6`.
-  if (!rules.reportAfterSix && arrivedOnSix(state)) return false;
+  // ...except on 68, which is the exception the app makes to its own rule.
+  if (!rules.reportAfterSix && arrivedOnSix(state) && state.loka !== WIN_LOKA) return false;
 
   return true;
 }

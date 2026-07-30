@@ -1973,6 +1973,46 @@ inherit.
 in a simulator, invisible to the code that set it. `[hidden] { display: none
 !important }` now means what it says.
 
+## Fifty-fifth pass: the one square the gate skipped
+
+Kept playing on the device, and walked a game to its end — the least-exercised
+path in the app, and the one "Start over" had just made reachable. The winning
+screen is right in every particular: the message, the gem on 68, the progress
+full, the restart offered. And the report gate was silent.
+
+`owesReport` began `if (state.is_finished) return false`. That is two different
+statements wearing one flag. A player who has **not entered** carries
+`is_finished` — the 68 ambiguity, now met for the sixth time — and owes nothing.
+A player who has just **won** carries it too, and the published app asks that
+player for a report every time:
+
+```js
+if (stepCount !== 6 || plan === 68) {
+  navigate('PLANS_DETAIL_SCREEN', { plan, report: true })
+}
+```
+
+`|| plan === 68` is the app's one exception to its own six rule: a six normally
+owes nothing, and the winning square owes something anyway. Cosmic
+Consciousness is the square a whole game is played to reach, and it was the
+single arrival nobody was ever asked to write about.
+
+`hasWon` tells the two meanings apart — it already had to, for exactly this
+reason, since a player migrated from the published app with no history carries
+`previous_loka` equal to their plan. So the gate now reads: nothing owed by a
+player who has not started; everything else is an arrival; a six owes nothing
+where the variant says so, **except on 68**.
+
+Same reasoning as the pass before: not a variant. Both sources agree, and a flag
+true everywhere is a comment. Three tests encoded the old behaviour, including
+the property test written two passes ago — its definition of "arrived" excluded
+the win, which is precisely the blind spot.
+
+Verified on the device: reaching 68 now disables the die and offers "Write a
+report", the writer is titled *68. Cosmic Consciousness (Vaikuntha Loka)*, and
+writing it releases the die so a player can throw a six and begin again — which
+is what `classic` means by `mayReenterAfterWinning`.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
