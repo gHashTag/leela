@@ -22,7 +22,7 @@ import { applyChrome } from './chrome';
 import { describeMove } from './describe';
 import { createCell } from './cell';
 import { boardFor, paintBoard } from './paint';
-import { faceFor, spinDegrees, spinMs, type DieFaces } from './die';
+import { browserSpinHost, faceFor, settle, spinDegrees, spinMs, type DieFaces } from './die';
 import die1 from './die-1.webp';
 import die2 from './die-2.webp';
 import die3 from './die-3.webp';
@@ -197,6 +197,9 @@ let rolling = false;
 
 const FACES: DieFaces = [die1, die2, die3, die4, die5, die6];
 
+/** Where the spin gets its clock and its "is anyone looking" from. */
+const spinHost = browserSpinHost({ setTimeout, clearTimeout, document });
+
 /** Show a face without spinning — on load, and after a throw has settled. */
 function showFace(value: number): void {
   el.roll.style.backgroundImage = `url("${faceFor(value, FACES)}")`;
@@ -217,26 +220,38 @@ async function roll(): Promise<void> {
   el.roll.style.setProperty('--spin', `${spinDegrees(value)}deg`);
   el.roll.style.animation = `spin ${duration}ms linear`;
   showFace(value);
-  // Saved with the throw rather than after the spin: a player who closes the
-  // app mid-animation threw that value all the same.
-  saveLastRoll(localStorage, value);
 
-  await new Promise((resolve) => setTimeout(resolve, duration));
+  let event;
+  try {
+    // The spin is decoration and the throw is the game. A browser freezes the
+    // timers of a page nobody is looking at, so waiting the animation out left
+    // a mini app that was switched away from mid-spin with a disabled die, an
+    // unapplied throw and a board that never moved — dead until reloaded.
+    await settle(duration, spinHost);
 
-  const { state: next, event } = applyRoll(state, value, CLASSIC);
-  state = next;
-  saveState(localStorage, state);
+    const applied = applyRoll(state, value, CLASSIC);
+    state = applied.state;
+    event = applied.event;
+    saveState(localStorage, state);
+    // After the board, not before: a face is a record of a throw the game
+    // took, and one saved ahead of the state can outlive a throw that never
+    // happened.
+    saveLastRoll(localStorage, value);
 
-  // A new arrival: whatever was written was about the plan they have left.
-  // Before the redraw, or the gate is drawn from the journal of the last plan.
-  if (owesReport(state, CLASSIC)) {
-    journal = arrived(journal);
-    saveJournal(localStorage, journal);
+    // A new arrival: whatever was written was about the plan they have left.
+    // Before the redraw, or the gate is drawn from the journal of the last plan.
+    if (owesReport(state, CLASSIC)) {
+      journal = arrived(journal);
+      saveJournal(localStorage, journal);
+    }
+  } finally {
+    // Whatever happened above, the die comes back. It is the control the whole
+    // game runs through, and a dimmed one with no explanation is the app
+    // ending the game without saying so.
+    el.roll.style.animation = '';
+    el.roll.disabled = false;
+    rolling = false;
   }
-
-  el.roll.style.animation = '';
-  el.roll.disabled = false;
-  rolling = false;
 
   draw(event);
 

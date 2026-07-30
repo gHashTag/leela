@@ -1772,6 +1772,37 @@ The die's dimming was checked at the same time and was already right: `opacity:
 0.4` while a report is owed, which is `opacityCube` in the original. The faint
 single dot in the screenshot was face one at forty per cent.
 
+## Fifty-first pass: a throw that never landed
+
+Kept playing the mini app rather than reading it, and the game died in my hands:
+the die dimmed, the board stopped moving, and nothing on screen said why. The
+saved state was a throw behind, and the die's inline style read
+`animation: 1250ms linear running spin` — a spin that had never finished.
+
+`roll()` applied the throw after `await new Promise(r => setTimeout(r, duration))`.
+A browser throttles and then freezes the timers of a page nobody is looking at,
+so a mini app switched away from mid-spin — a notification, a lock screen, a
+glance at another chat, which on a phone is every few seconds — came back with
+the die disabled, the throw never applied and the board never moved. Dead until
+reloaded. It was found in a hidden browser pane, which is the same thing
+happening to a robot instead of a person.
+
+Two things, one rule: **a spin is decoration and the throw is the game.**
+
+- `settle(duration, host)` ends the wait when the spin can no longer be seen —
+  at once if the page is already hidden, and on the visibility change if it is
+  hidden partway. Seven tests against a fake clock and a fake curtain: it
+  settles once whichever comes first, leaves no timer and no listener behind
+  either way, and a visibility event that leaves the page *visible* does not cut
+  the spin short.
+- The body of `roll()` is in a `try`/`finally`, so the die comes back whatever
+  happened. It is the control the whole game runs through, and a dimmed one with
+  no explanation is the app ending the game without saying so.
+
+Also corrected from the pass before: the die's face is saved **after** the board,
+not before. Written first, it could outlive a throw that never landed — the
+inconsistency I had just made durable.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
