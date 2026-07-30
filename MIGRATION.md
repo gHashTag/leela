@@ -962,6 +962,36 @@ key against two paths, and a Coding Plan key sent to the pay-as-you-go host
 comes back as error 1113, which reads as an expired key. `ZAI_PLAN=coding`
 picks the other path.
 
+## Thirtieth pass: what the board is without the painting
+
+The painting carries the numbers, so putting it in meant hiding the squares'
+own text — `color: transparent`. Right while the image is there. A blank white
+rectangle with 72 invisible buttons when it is not, and a 147 kB image on a
+phone on a train is not a certainty. That is a defect introduced by the pass
+before this one, on the same day.
+
+The plain board is the default now and the painting is an upgrade: `paint.ts`
+loads the image and only then sets the background and the `painted` class the
+stylesheet keys off. The background is set from there rather than from the
+stylesheet, so the load that decides the class is the load the board displays —
+a CSS `background-image` gives no way to find out that it failed.
+
+Checked the way it should be: the built app served from a server that answers
+404 for the art, opened on an iPhone simulator. The board is the numbered grid
+it was until this week, snakes and arrows and all, and the game plays.
+
+**Two of the tests are about the stylesheet, not the module.** A class is only
+worth setting if the CSS reads it, so they assert that `color: transparent` is
+scoped to `.board.painted` and that the stylesheet contains no `url(...)` at
+all. Without those the module could be perfect and the board still blank.
+
+**The direction audit could not see `inset`.** Written two passes ago against
+`text-align`, the margins, the paddings and the four offsets by name — and the
+mini app then used the shorthand, whose four-value form is exactly those four
+offsets. It is caught now, with the board's own rules excepted for the reason
+the board is pinned `dir="ltr"`: it is a diagram, and mirroring it moves plan 1
+to the other corner.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

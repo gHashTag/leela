@@ -15,9 +15,16 @@ import { STYLE } from '../src/style';
  * direction in a stylesheet is a claim that the reader's script is Latin.
  */
 
-/** Properties whose physical form ignores `dir`. */
+/**
+ * Properties whose physical form ignores `dir`.
+ *
+ * `inset` is here because it was not, and the mini app used it the week after
+ * this audit was written. Its four-value form is top/right/bottom/left — as
+ * physical as the four properties it stands for, and invisible to a check that
+ * only looked for their names.
+ */
 const PHYSICAL =
-  /(?:^|[;{\s])(text-align\s*:\s*(?:left|right)|(?:margin|padding|border)-(?:left|right)\b|(?:^|\s)(?:left|right)\s*:)/;
+  /(?:^|[;{\s])(text-align\s*:\s*(?:left|right)|(?:margin|padding|border)-(?:left|right)\b|inset\s*:|(?:^|\s)(?:left|right)\s*:)/;
 
 /** Every rule in a stylesheet, as `selector { body }`. */
 function rulesOf(css: string): { selector: string; body: string }[] {
@@ -53,6 +60,7 @@ describe('the stylesheet does not assume which way the page reads', () => {
       '.a { border-left: 1px solid; }',
       '.a { position: absolute; left: 0; }',
       '.a { text-align: left; }',
+      '.a { inset: 1% 2% 3% 4%; }',
     ]) {
       expect(rulesOf(property).filter((r) => PHYSICAL.test(r.body)), property).toHaveLength(1);
     }
@@ -65,6 +73,7 @@ describe('the stylesheet does not assume which way the page reads', () => {
       '.a { margin-inline-start: 1px; }',
       '.a { padding-inline-end: 1px; }',
       '.a { inset-inline-start: 0; }',
+      '.a { inset-block: 0; }',
       '.a { text-align: center; }',
     ]) {
       expect(rulesOf(good).filter((r) => PHYSICAL.test(r.body)), good).toHaveLength(0);
@@ -85,11 +94,12 @@ describe('the mini app is held to the same rule', () => {
   /**
    * One exception, with a reason.
    *
-   * `.cell .mark` is the small snake or arrow glyph in the corner of a square.
    * The board is pinned `dir="ltr"` — it is a diagram, and mirroring it moves
    * plan 1 to the other corner — so inside it, physical *is* logical.
+   * `.squares` is the grid of hit targets inset over the painting, and
+   * `.cell .mark` the snake or arrow glyph in a square's corner.
    */
-  const INSIDE_THE_BOARD = /(^|\s|,)\.cell\b/;
+  const INSIDE_THE_BOARD = /(^|\s|,)\.(cell|squares)\b/;
 
   it('uses no physical direction outside the board', () => {
     const offenders = rulesOf(css)

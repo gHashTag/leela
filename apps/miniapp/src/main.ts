@@ -20,6 +20,8 @@ import { loadPlans, plan as planFor } from './content';
 import { applyChrome } from './chrome';
 import { describeMove } from './describe';
 import { createCell } from './cell';
+import { paintBoard } from './paint';
+import boardArt from './gameboard.webp';
 import { loadState, saveState } from './state';
 import { headline } from './view';
 
@@ -186,6 +188,9 @@ el.read.addEventListener('click', () => openPlan(state.loka));
 // Nothing can be drawn before the texts arrive: the board labels every square
 // with its title. Failing loudly beats an empty grid that looks like a bug.
 applyChrome(document, language);
+
+// The painting is an upgrade on the numbered grid, not a precondition for it.
+void paintBoard(document, boardArt);
 
 loadPlans(language)
   .then(() => {

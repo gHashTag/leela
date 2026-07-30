@@ -156,10 +156,17 @@ progress::-webkit-progress-value {
      under the board reads as a page that failed to finish loading. */
   margin: auto;
   aspect-ratio: 1428 / 1260;
-  /* Painted on white. Kept white in the dark theme too — a board is an object
-     with its own colours, not a surface that follows the interface. */
-  background: #fff url('./gameboard.webp') no-repeat center / 100% 100%;
   border-radius: var(--radius);
+}
+
+/*
+ * With the painting: white behind it in the dark theme too, because a board is
+ * an object with its own colours rather than a surface that follows the
+ * interface. The image itself is set from `paint.ts`, once it has loaded — a
+ * CSS background gives no way to find out that it did not.
+ */
+.board.painted {
+  background: #fff no-repeat center / 100% 100%;
 }
 
 /*
@@ -190,10 +197,11 @@ progress::-webkit-progress-value {
   justify-content: center;
   position: relative;
   border-radius: 4px;
-  background: transparent;
-  /* The number is painted into the board. The text stays for the accessible
-     name and for anyone who turns the image off. */
-  color: transparent;
+  /* Without the painting this is the board: a grid of numbered squares, which
+     is what it was until the painting arrived and is still what a phone on a
+     train gets. */
+  background: var(--surface);
+  color: var(--hint);
   font-size: clamp(9px, 2.6vw, 13px);
   font-variant-numeric: tabular-nums;
   transition: background 0.2s ease, box-shadow 0.2s ease;
@@ -230,6 +238,13 @@ button:focus-visible {
 }
 
 /* Where the player stands. The ring reads at a glance on any theme. */
+/* Over the painting the squares are only hit targets: the numbers are in the
+   paint, and printing them again would double every one of them. */
+.board.painted .cell {
+  background: transparent;
+  color: transparent;
+}
+
 /* The player, as a ring rather than a fill: the number underneath is painted
    into the board and covering it would hide where they are standing. */
 .cell.here {
