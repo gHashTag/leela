@@ -190,3 +190,96 @@ export function revisited(entries: ReadonlyArray<{ plan: number }>): Revisit[] {
 export function writingsOn(entries: ReadonlyArray<Report>, plan: number): Report[] {
   return order(entries).filter((entry) => entry.plan === plan);
 }
+
+/**
+ * One square, in words somebody can send to a friend.
+ *
+ * A path leaves this app as a file — a whole year of it, for coming back to.
+ * What people actually pass on is a single square: *this is where I landed and
+ * this is what it asked of me*.
+ *
+ * The intention comes last and only if there is one, because it is the frame
+ * and not the news. Nothing else of the player's is included: a share is one
+ * square, and a path is a file.
+ *
+ * It lives here, beside `toDocument`, because it is the other thing this app
+ * writes that something has to read back — and a format written on one surface
+ * and parsed on another is exactly what this package exists to prevent.
+ */
+export function squareText(
+  plan: number,
+  title: string,
+  written: string,
+  intention: string,
+): string {
+  const said = written.trim();
+  const lines = [`${plan}. ${title}`];
+
+  if (said.length > 0) lines.push('', said);
+  if (intention.trim().length > 0) lines.push('', `— ${intention.trim()}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * A square taken back out of the words it was shared as.
+ *
+ * There is no time in it, and none is invented here: a share is written for a
+ * person and a date would be furniture in it. What comes back is the square and
+ * what was said, and the caller stamps it with the moment it arrived — which is
+ * the truth about it, and the only one available.
+ *
+ * The intention is never taken. It is the sender's frame, and reading it is not
+ * adopting it — the same rule that keeps `reported` out of an imported file.
+ */
+export function parseSquare(text: string): { plan: number; text: string } | null {
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  const first = lines.shift()?.trim() ?? '';
+
+  const heading = /^(\d{1,2})\.\s*\S/.exec(first);
+  if (!heading) return null;
+
+  const plan = Number(heading[1]);
+  if (!Number.isInteger(plan) || plan < 1 || plan > TOTAL_PLANS) return null;
+
+  // Everything under the heading, minus the closing intention line. The dash is
+  // how `squareText` writes it and the only thing marking it: a line beginning
+  // with one, last, after the words.
+  const body = [...lines];
+  while (body.length > 0 && (body[body.length - 1] ?? '').trim().length === 0) body.pop();
+  if (/^[—–-]\s*\S/.test((body[body.length - 1] ?? '').trim())) {
+    body.pop();
+  }
+
+  const said = body.join('\n').trim().slice(0, MAX_REPORT_CHARS);
+  if (said.length === 0) return null;
+
+  return { plan, text: said };
+}
+
+/**
+ * Take one square in, without doubling a path.
+ *
+ * A file carries the moment each report was written, so `newEntries` can tell
+ * one import from a second of the same file. A shared square carries no time at
+ * all — it is stamped on arrival — so the same square pasted twice would be two
+ * entries an hour apart, and the squares that "came back" would include one
+ * nobody returned to. The record the game exists to produce would be saying
+ * something that did not happen.
+ *
+ * So the sameness here is the square and the words, which is what a person
+ * pasting twice means by "the same one".
+ */
+export function takeSquare(
+  existing: ReadonlyArray<Report>,
+  square: { plan: number; text: string },
+  at: number,
+): Report[] {
+  const said = square.text.trim();
+  if (said.length === 0) return [...existing];
+
+  const already = existing.some((entry) => entry.plan === square.plan && entry.text === said);
+  if (already) return [...existing];
+
+  return order([...existing, { plan: square.plan, text: said, at }]).slice(-MAX_REPORTS);
+}

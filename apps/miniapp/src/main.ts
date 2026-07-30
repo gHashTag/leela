@@ -63,7 +63,16 @@ import {
   loadIntention,
   saveIntention,
 } from './state';
-import { fileName, merge, parseDocument, toDocument, toText, shareTextFor} from './journal-file';
+import {
+  fileName,
+  merge,
+  parseDocument,
+  parseSquare,
+  shareTextFor,
+  takeSquare,
+  toDocument,
+  toText,
+} from './journal-file';
 import {
   arrived,
   loadJournal,
@@ -125,6 +134,23 @@ let session = sessionFrom(seats);
 let state = currentPlayer(session).state;
 let journal = loadJournalFor(localStorage, currentPlayer(session).id);
 
+/**
+ * What the app has just been told to say, until something happens.
+ *
+ * The line under the board answers "where do I stand", and sometimes has to
+ * answer "I have just done what you asked" instead. Keeping the second in a
+ * variable rather than writing it straight to the element is what makes the
+ * order of `announce` and `draw` stop mattering — the reason four confirmations
+ * went missing at once when the standing line arrived.
+ */
+let announcement: string | null = null;
+
+/** Say something, and keep saying it until the next throw. */
+function announce(text: string): void {
+  announcement = text;
+  draw();
+}
+
 /** Read the current seat back out of the session, after any move. */
 function takeSeat(): void {
   const seated = currentPlayer(session);
@@ -172,6 +198,12 @@ const el = {
   intentionHint: document.getElementById('intention-hint') as HTMLElement,
   intentionSave: document.getElementById('intention-save') as HTMLButtonElement,
   pathExport: document.getElementById('path-export') as HTMLButtonElement,
+  pathPaste: document.getElementById('path-paste') as HTMLButtonElement,
+  paste: document.getElementById('paste') as HTMLDialogElement,
+  pasteTitle: document.getElementById('paste-title') as HTMLElement,
+  pasteText: document.getElementById('paste-text') as HTMLTextAreaElement,
+  pasteHint: document.getElementById('paste-hint') as HTMLElement,
+  pasteTake: document.getElementById('paste-take') as HTMLButtonElement,
   pathImport: document.getElementById('path-import-input') as HTMLInputElement,
   pathImportLabel: document.getElementById('path-import-label') as HTMLElement,
   rules: document.getElementById('rules') as HTMLButtonElement,
@@ -266,13 +298,24 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
 
   el.say.className = 'say';
   if (!event) {
-    // Not only when a report is owed: the line was otherwise left holding
-    // whatever it last said, which on a fresh load is the opening instruction.
-    const line = standing(state, owed, (plan) => planFor(plan).title);
-    el.say.textContent = messageFor(language, line.key, line.params ?? {});
-    if (hasWon(state)) el.say.classList.add('win');
+    // Two sources, in order: what the app has just been told to say, and
+    // otherwise where the player stands. Before there was a standing line this
+    // was one source and an accident — every announcement survived because
+    // nothing overwrote it — and the pass that made the line describe the state
+    // silently ate four confirmations that happened to be set before a redraw.
+    // An announcement outlives its redraw and nothing else, which is the whole
+    // rule.
+    if (announcement !== null) {
+      el.say.textContent = announcement;
+    } else {
+      const line = standing(state, owed, (plan) => planFor(plan).title);
+      el.say.textContent = messageFor(language, line.key, line.params ?? {});
+      if (hasWon(state)) el.say.classList.add('win');
+    }
   }
   if (event) {
+    // A throw is the next thing happening, so whatever was announced is over.
+    announcement = null;
     // Named when there is more than one seat: the header has already moved to
     // whoever throws next, so an unattributed sentence reads as theirs.
     el.say.textContent = attribute(
@@ -359,8 +402,7 @@ function askPlayers(): void {
     // half-sentence the first time they landed on that square.
     for (const seat of seats.players) clearDraft(localStorage, seat.id);
 
-    el.say.textContent = messageFor(language, 'app.playersSet', { count: seats.players.length });
-    draw();
+    announce(messageFor(language, 'app.playersSet', { count: seats.players.length }));
   });
 }
 
@@ -404,8 +446,7 @@ function startOver(): void {
   saveJournalFor(localStorage, seated.id, journal);
   clearDraft(localStorage, seated.id);
   showFace(loadLastRoll(localStorage));
-  el.say.textContent = messageFor(language, 'app.restarted');
-  draw();
+  announce(messageFor(language, 'app.restarted'));
 }
 
 /**
@@ -432,8 +473,7 @@ function saveTheIntention(): void {
 
   intention = loadIntention(localStorage, currentPlayer(session).id);
   el.intention.close();
-  el.say.textContent = messageFor(language, 'app.intentionSaved');
-  draw();
+  announce(messageFor(language, 'app.intentionSaved'));
 }
 
 /** Show a plan's text. Paragraphs are built as nodes, never as innerHTML. */
@@ -563,6 +603,7 @@ function openReader(kind: ReaderKind, title: string, body: HTMLElement[]): void 
   const tools = showsPathTools(kind);
   el.pathExport.hidden = !tools;
   el.pathImportLabel.hidden = !tools;
+  el.pathPaste.hidden = !tools;
 
   el.reader.showModal();
 }
@@ -737,7 +778,7 @@ async function shareSquare(): Promise<void> {
     }
 
     await navigator.clipboard.writeText(text);
-    el.say.textContent = messageFor(language, 'app.shareCopied');
+    announce(messageFor(language, 'app.shareCopied'));
   } catch {
     // A refusal is a person changing their mind as often as a browser saying
     // no, and neither is worth an error: the words are still in the box.
@@ -751,7 +792,7 @@ function saveReport(): void {
 
   if (journal.entries.length === before) {
     // Nothing was written, so nothing is recorded and the gate stays shut.
-    el.say.textContent = messageFor(language, 'app.reportEmpty');
+    announce(messageFor(language, 'app.reportEmpty'));
     return;
   }
 
@@ -761,8 +802,7 @@ function saveReport(): void {
   keepTable();
   clearDraft(localStorage, currentPlayer(session).id);
   el.writer.close();
-  draw();
-  el.say.textContent = messageFor(language, 'app.reportSaved');
+  announce(messageFor(language, 'app.reportSaved'));
 }
 
 /** Everything the player has written, oldest first. */
@@ -865,7 +905,50 @@ function exportPath(): void {
     // the part that matters.
   });
 
-  el.say.textContent = messageFor(language, 'app.pathExported');
+  announce(messageFor(language, 'app.pathExported'));
+}
+
+/**
+ * Take in one square, sent as words.
+ *
+ * The path leaves as a file and comes back as a file. A square left as words —
+ * the thing people actually pass on — and there was nothing to hear it with:
+ * the app could write a sentence it could not read.
+ *
+ * Dated on arrival, and the reply says so. A shared square carries no time,
+ * inventing one would put it at a place in the path where nothing happened, and
+ * arriving today is the one true thing about it.
+ */
+function openPaste(): void {
+  el.pasteTitle.textContent = messageFor(language, 'app.pasteAsk');
+  el.pasteHint.textContent = messageFor(language, 'app.pasteHint');
+  el.pasteText.value = '';
+  el.pasteTake.textContent = messageFor(language, 'app.pasteTake');
+  el.paste.showModal();
+  el.pasteText.focus();
+}
+
+function takeThePastedSquare(): void {
+  const square = parseSquare(el.pasteText.value);
+  if (square === null) {
+    el.pasteHint.textContent = messageFor(language, 'app.pasteUnreadable');
+    return;
+  }
+
+  const before = journal.entries.length;
+  // `reported` is the current journal's and is never taken from what arrives.
+  // A square written on some other device is not a reason to open this
+  // player's gate — the rule an imported file has always followed.
+  journal = { ...journal, entries: takeSquare(journal.entries, square, Date.now()) };
+  saveJournalFor(localStorage, currentPlayer(session).id, journal);
+
+  el.paste.close();
+  el.reader.close();
+  announce(
+    journal.entries.length === before
+      ? messageFor(language, 'app.pasteHad')
+      : messageFor(language, 'app.pasteTook', { plan: square.plan }),
+  );
 }
 
 /** Read one back, adding whatever is new and losing nothing. */
@@ -873,7 +956,7 @@ async function importPath(file: File): Promise<void> {
   const incoming = parseDocument(await file.text());
 
   if (incoming === null) {
-    el.say.textContent = messageFor(language, 'app.pathUnreadable');
+    announce(messageFor(language, 'app.pathUnreadable'));
     return;
   }
 
@@ -882,13 +965,12 @@ async function importPath(file: File): Promise<void> {
   saveJournalFor(localStorage, currentPlayer(session).id, journal);
 
   const added = journal.entries.length - before;
-  el.say.textContent =
+  el.reader.close();
+  announce(
     added === 0
       ? messageFor(language, 'app.pathImportedNothing')
-      : messageFor(language, 'app.pathImported', { count: added });
-
-  el.reader.close();
-  draw();
+      : messageFor(language, 'app.pathImported', { count: added }),
+  );
 }
 
 el.roll.addEventListener('click', () => void roll());
@@ -907,6 +989,8 @@ el.writerText.addEventListener('input', () => {
 });
 el.path.addEventListener('click', openPath);
 el.pathExport.addEventListener('click', exportPath);
+el.pathPaste.addEventListener('click', openPaste);
+el.pasteTake.addEventListener('click', takeThePastedSquare);
 el.pathImport.addEventListener('change', () => {
   const [file] = el.pathImport.files ?? [];
   if (file) void importPath(file);

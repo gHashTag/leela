@@ -5,8 +5,12 @@ import {
   fileName,
   merge,
   parseDocument,
+  parseSquare,
+  shareTextFor,
+  takeSquare,
   toDocument,
-  toText, shareTextFor} from '../src/journal-file';
+  toText,
+} from '../src/journal-file';
 import { EMPTY, MAX_REPORTS, arrived, record, type Journal } from '../src/reports';
 
 /**
@@ -228,5 +232,52 @@ describe('one square, handed to somebody else', () => {
 
     expect(text.startsWith('{')).toBe(false);
     expect(text).not.toContain('schemaVersion');
+  });
+});
+
+describe('one square, handed back', () => {
+  /**
+   * The app could write a sentence it could not hear.
+   *
+   * A path leaves as a file and comes back as a file — `toDocument` and
+   * `parseDocument`, both `@leela/journal`'s. A square left as words and there
+   * was nothing to read one with, so the half of sharing that makes it a
+   * conversation was missing: somebody sends you where they landed and what it
+   * asked of them, and the app has no idea what you are holding.
+   *
+   * The format is the package's now, beside the file's, which is what made the
+   * reader possible at all: a format written on one surface and parsed on
+   * another is what that package exists to prevent.
+   */
+  const journal: Journal = {
+    reported: true,
+    entries: [{ plan: 6, text: 'Mine, from before.', at: 1_700_000_000_000 }],
+  };
+
+  it('reads back what this app shares', () => {
+    for (const plan of [1, 6, 41, 68, 72]) {
+      const shared = shareTextFor(plan, `Title of ${plan}`, 'What it asked of me.', 'to see it through');
+      expect(parseSquare(shared), `plan ${plan}`).toEqual({ plan, text: 'What it asked of me.' });
+    }
+  });
+
+  it('never opens this player’s gate', () => {
+    // The rule an imported file has always followed: a report about some other
+    // plan, written on some other device, is not a reason to let this player
+    // throw. `reported` is the journal's own and is never taken from what
+    // arrives.
+    const owing: Journal = { ...journal, reported: false };
+    const after = {
+      ...owing,
+      entries: takeSquare(owing.entries, { plan: 41, text: 'Sent to me.' }, 1_700_000_100_000),
+    };
+
+    expect(after.reported).toBe(false);
+    expect(after.entries).toHaveLength(2);
+  });
+
+  it('loses nothing that was already written', () => {
+    const after = takeSquare(journal.entries, { plan: 41, text: 'Sent to me.' }, 1_700_000_100_000);
+    expect(after).toEqual(expect.arrayContaining(journal.entries));
   });
 });

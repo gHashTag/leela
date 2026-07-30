@@ -53,6 +53,21 @@
     <!-- Asked before the board, as the published app asks it: `if
          (!prof.intention) navigate('CHANGE_INTENTION_SCREEN', { blockGoBack:
          true })`. In Leela the intention is the question the game answers. -->
+    <!-- A square somebody sent, or one this app sent to a notes app. The path
+         leaves as a file and comes back as a file; a square leaves as words and
+         had no way back in at all. -->
+    <dialog id="paste" class="reader">
+      <article>
+        <h2 id="paste-title"></h2>
+        <textarea id="paste-text" rows="6" maxlength="4200" aria-describedby="paste-hint"></textarea>
+        <p class="hint" id="paste-hint"></p>
+      </article>
+      <footer class="sheet-controls">
+        <form method="dialog"><button type="submit">Close</button></form>
+        <button id="paste-take" class="primary" type="button">Take it in</button>
+      </footer>
+    </dialog>
+
     <dialog id="intention" class="reader">
       <article>
         <h2 id="intention-title"></h2>
@@ -87,6 +102,7 @@
       <footer class="sheet-controls">
         <form method="dialog"><button class="primary" type="submit">Close</button></form>
         <button id="path-export" type="button" hidden>Save a copy</button>
+        <button id="path-paste" type="button" hidden>Paste a square</button>
         <label class="file" id="path-import-label">
           <span id="path-import">Bring one back</span>
           <input id="path-import-input" type="file" accept="application/json,.json" />

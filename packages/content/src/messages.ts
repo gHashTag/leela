@@ -213,6 +213,17 @@ const EN = {
   // Reading a square you have stood on before. Leela's teaching is that you
   // come back, and what you said last time is the measure of what has changed.
   'app.cameBack': 'Came back to you',
+  // A square arriving as words. The path has had a file since the twelfth pass;
+  // a square could be shared and never received.
+  'app.paste': 'Paste a square',
+  'app.pasteAsk': 'Paste a square somebody sent you',
+  'app.pasteTake': 'Take it in',
+  'app.pasteHint': 'One square, as it was shared: the number, the title, and what was written.',
+  'app.pasteUnreadable': 'That does not read as a square. Paste the whole of it, heading and all.',
+  // Dated today on purpose, and said so: a shared square carries no time, and
+  // inventing one would put it in the wrong place in a path.
+  'app.pasteTook': 'Taken in on {plan}, dated today — a shared square carries no date.',
+  'app.pasteHad': 'You already have that one, word for word.',
   'app.wroteHere': 'What you wrote here before',
   'app.wroteOnce': 'What you wrote here',
   'app.returns': {
@@ -453,6 +464,13 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.opening': 'Шестёрка выводит вас на доску.',
   'app.standing': 'Вы на {plan}. {title}',
   'app.cameBack': 'Вернулось к вам',
+  'app.paste': 'Вставить клетку',
+  'app.pasteAsk': 'Вставьте клетку, которую вам прислали',
+  'app.pasteTake': 'Принять',
+  'app.pasteHint': 'Одна клетка, как её прислали: номер, название и что было написано.',
+  'app.pasteUnreadable': 'Это не читается как клетка. Вставьте её целиком, вместе с заголовком.',
+  'app.pasteTook': 'Принято на плане {plan}, датировано сегодняшним днём — у клетки нет своей даты.',
+  'app.pasteHad': 'Такая у вас уже есть, слово в слово.',
   'app.wroteHere': 'Что вы писали здесь раньше',
   'app.wroteOnce': 'Что вы здесь написали',
   'app.returns': {

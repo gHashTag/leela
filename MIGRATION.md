@@ -3059,6 +3059,48 @@ written nothing gets an *empty* section rather than none (a missing section is a
 player missing from their own path view). Breaking `pathSections` to read seat
 one's journal for everybody fails three of them.
 
+## Eighty-sixth pass: the app could write a sentence it could not hear
+
+A path leaves as a file and comes back as a file — `toDocument` and
+`parseDocument`, both `@leela/journal`'s. A **square** left as words, which is
+what people actually pass on, and there was nothing to read one with. So the
+half of sharing that makes it a conversation was missing: somebody sends you
+where they landed and what it asked of them, and the app has no idea what you
+are holding.
+
+`squareText` moved into the package beside the file's format, and `parseSquare`
+sits next to it. That is the point of the move: a format written on one surface
+and parsed on another is exactly what that package exists to prevent, and the
+bot will want to read these too.
+
+**Two things make a square different from a file, and both are in the tests.**
+
+A shared square carries **no time**, and none is invented in the parser — it is
+stamped when it arrives, which is the only true thing available, and the
+confirmation says so out loud. Which breaks the file's sameness rule:
+`newEntries` tells one import from a second of the same file by the moment each
+report was written, and two pastes of one square are an hour apart. Left alone,
+the same square pasted twice would be two entries — and the squares that "came
+back" would include one nobody returned to. The record the game exists to
+produce would be saying something that did not happen. So `takeSquare` compares
+the square and the words, which is what a person pasting twice means by "the
+same one".
+
+The sender's intention never comes with it. Reading somebody's frame is not
+adopting it — the same rule that keeps `reported` out of an imported file.
+
+**And a regression of my own, found by using the thing I had just built.** The
+confirmation never appeared. The eighty-second pass made the line under the
+board describe the player's state whenever nothing had just happened — and four
+existing confirmations were written straight to the element *before* a redraw,
+so the redraw ate them: seats set, game restarted, intention held, path
+imported. Before that pass nothing overwrote them and they survived by accident.
+
+Reordering four call sites would have left the fifth for somebody else. The line
+has two sources — what the app has just been told to say, and where the player
+stands — so the first is a variable now, an announcement outlives its redraw and
+nothing else, and a throw clears it because a throw is the next thing happening.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
