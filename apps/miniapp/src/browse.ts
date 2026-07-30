@@ -82,3 +82,22 @@ export function ruleText(
 
   return { title: chapter.title?.trim() || slug, body: chapter.body ?? '' };
 }
+
+/** What the one reader dialog is showing. */
+export type ReaderKind = 'plan' | 'chapter' | 'path';
+
+/**
+ * Whether the journal's own controls belong under what is being read.
+ *
+ * "Save a copy" and "Bring one back" export and import the player's journal.
+ * They live in the same dialog as the plan texts, and only the export was ever
+ * hidden — so reading a plan showed a "Bring one back" button under the
+ * traditional text of the square you were standing on, and the rules book
+ * inherited it the day the rules book existed.
+ *
+ * One owner for the pair, and the rule stated once: they belong to the journal
+ * and to nothing else.
+ */
+export function showsPathTools(kind: ReaderKind): boolean {
+  return kind === 'path';
+}

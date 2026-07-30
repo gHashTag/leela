@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LANGUAGES, rulesFor, type Language } from '@leela/content';
 import { TOTAL_PLANS } from '@leela/engine';
-import { planEntries, ruleEntries, ruleText } from '../src/browse';
+import { planEntries, ruleEntries, ruleText, showsPathTools, type ReaderKind } from '../src/browse';
 
 /**
  * The two lists the published app has and this one did not.
@@ -94,5 +94,31 @@ describe('the rules book, which had no way in', () => {
         expect(entry.title, `${language}/${entry.key}`).not.toBe(entry.key);
       }
     }
+  });
+});
+
+describe("the journal's own controls", () => {
+  /**
+   * "Save a copy" and "Bring one back" export and import the player's journal,
+   * and they live in the same dialog as the plan texts. Only the export was
+   * ever hidden — so reading a plan showed a "Bring one back" button under the
+   * traditional text of the square you were standing on, and the rules book
+   * inherited it the day the rules book existed.
+   *
+   * Found by tapping through the app in a simulator rather than by reading it,
+   * which is now three defects that way.
+   */
+  const KINDS: ReaderKind[] = ['plan', 'chapter', 'path'];
+
+  it('belong to the journal and to nothing else', () => {
+    // The rule, over every kind of thing the one reader can show — so a kind
+    // added later has to decide rather than inherit.
+    for (const kind of KINDS) {
+      expect(showsPathTools(kind), kind).toBe(kind === 'path');
+    }
+  });
+
+  it('are shown for the journal, which is what they are for', () => {
+    expect(showsPathTools('path')).toBe(true);
   });
 });

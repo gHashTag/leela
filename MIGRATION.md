@@ -1954,6 +1954,25 @@ glyph is not something a thumb can aim at.
 The board and the die are untouched, as asked. The die stays under the board,
 where it was put for the thumb.
 
+### Two more, found by tapping rather than reading
+
+The three functions above were verified in an iOS simulator, and the tapping
+found two things the tests had not.
+
+**"Bring one back" sat under every plan's text.** The journal's export and
+import live in the same dialog as the plan texts, and only the export was ever
+hidden — so reading a plan offered to import a journal, and the rules book
+inherited that the day it existed. `showsPathTools` gives the pair one owner and
+one rule: they belong to the journal and to nothing else, over every kind of
+thing the reader can show, so a kind added later has to decide rather than
+inherit.
+
+**And hiding it did not hide it.** `.file` sets `display: inline-flex`, and a
+`display` on an element beats the `hidden` attribute, which is only a UA
+`display: none`. The label was hidden in script and stayed on screen — visible
+in a simulator, invisible to the code that set it. `[hidden] { display: none
+!important }` now means what it says.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

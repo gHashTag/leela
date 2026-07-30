@@ -168,6 +168,14 @@ progress::-webkit-progress-value {
  * screen reader — a `display: none` input cannot be reached at all, which is
  * the accessibility mistake this app already made once with the squares.
  */
+/* `display` set on an element beats the `hidden` attribute, which is only a UA
+   `display: none`. The journal's import label was hidden in script and stayed
+   on screen under every plan's text — visible in a simulator, invisible to the
+   code that set it. Anything that can be hidden says so here. */
+[hidden] {
+  display: none !important;
+}
+
 .file {
   position: relative;
   display: inline-flex;

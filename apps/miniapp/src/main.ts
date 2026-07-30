@@ -25,7 +25,14 @@ import { describeMove } from './describe';
 import { createCell } from './cell';
 import { boardFor, paintBoard } from './paint';
 import { browserSpinHost, faceFor, settle, spinDegrees, spinMs, type DieFaces } from './die';
-import { planEntries, ruleEntries, ruleText, type Entry } from './browse';
+import {
+  planEntries,
+  ruleEntries,
+  ruleText,
+  showsPathTools,
+  type Entry,
+  type ReaderKind,
+} from './browse';
 import die1 from './die-1.webp';
 import die2 from './die-2.webp';
 import die3 from './die-3.webp';
@@ -109,6 +116,7 @@ const el = {
   writerSave: document.getElementById('writer-save') as HTMLButtonElement,
   pathExport: document.getElementById('path-export') as HTMLButtonElement,
   pathImport: document.getElementById('path-import-input') as HTMLInputElement,
+  pathImportLabel: document.getElementById('path-import-label') as HTMLElement,
   rules: document.getElementById('rules') as HTMLButtonElement,
   plans: document.getElementById('plans') as HTMLButtonElement,
   restart: document.getElementById('restart') as HTMLButtonElement,
@@ -218,10 +226,7 @@ function openRules(): void {
   openList(messageFor(language, 'app.rules'), ruleEntries(language), (slug) => {
     const chapter = ruleText(language, String(slug));
     if (!chapter) return;
-    el.readerTitle.textContent = chapter.title;
-    el.readerBody.replaceChildren(...paragraphs(chapter.body));
-    el.pathExport.hidden = true;
-    el.reader.showModal();
+    openReader('chapter', chapter.title, paragraphs(chapter.body));
   });
 }
 
@@ -256,9 +261,25 @@ function startOver(): void {
 /** Show a plan's text. Paragraphs are built as nodes, never as innerHTML. */
 function openPlan(plan: number): void {
   const found = planFor(plan);
-  el.readerTitle.textContent = `${plan}. ${found.title}`;
-  el.readerBody.replaceChildren(...paragraphs(found.body));
-  el.pathExport.hidden = true;
+  openReader('plan', `${plan}. ${found.title}`, paragraphs(found.body));
+}
+
+/**
+ * Show the reader.
+ *
+ * The journal's export and import live in this dialog too, and only the export
+ * was ever hidden — so a plan's text carried a "Bring one back" button under
+ * it, and the rules book inherited that the day it existed. One place decides,
+ * from what is being read.
+ */
+function openReader(kind: ReaderKind, title: string, body: HTMLElement[]): void {
+  el.readerTitle.textContent = title;
+  el.readerBody.replaceChildren(...body);
+
+  const tools = showsPathTools(kind);
+  el.pathExport.hidden = !tools;
+  el.pathImportLabel.hidden = !tools;
+
   el.reader.showModal();
 }
 
@@ -408,11 +429,10 @@ function openPath(): void {
   note.textContent = messageFor(language, 'app.pathLocal');
   nodes.push(note);
 
-  el.readerBody.replaceChildren(...nodes);
+  openReader('path', el.readerTitle.textContent ?? '', nodes);
   // Nothing written is nothing to save; the file input stays, because bringing
   // a path back is exactly what an empty journal is for.
   el.pathExport.hidden = written.length === 0;
-  el.reader.showModal();
 }
 
 /**
