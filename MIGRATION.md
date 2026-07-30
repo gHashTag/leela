@@ -2267,6 +2267,45 @@ is not offered under another, blank clears it, anything that is not a draft this
 app wrote restores as nothing, and storage that throws still lets somebody
 write. They simply have to finish in one sitting.
 
+## Sixty-third pass: a flag filled in by copying, and the reading behind it
+
+`onchain` was written by reading the deployed contract. Five flags were added to
+`RuleSet` after that, and `onchain` carried `classic`'s value for every one of
+them — which is what filling a field in by copying looks like. So the contract
+was opened again, and each of the five checked against the Solidity.
+
+Four were right by luck or by vacuity: no cooldown exists on chain, so
+`cooldownFrom` and `refusedThrowStartsCooldown` are unobservable;
+`createReport` has no length check anywhere in it, so `minReportChars: 0`;
+`if (!player.isStart && rollResult == 6)` is the entry branch and `isStart` is
+cleared on winning, so `mayReenterAfterWinning: true`.
+
+**The fifth was wrong, and it was wrong because of this repository.** Two passes
+ago the winning square was made to owe a report *everywhere*, and the argument
+given was that both sources agree — the published app's
+`if (stepCount !== 6 || plan === 68)` and "the deployed contract requires a
+fresh report before every roll in play". The second half is true and does not
+apply. `movePlayer` sets `isStart = false` the moment a player lands on 68,
+which removes the gate — and `createReport` opens with
+
+```solidity
+require(players[msg.sender].isStart, 'You must start the game before creating a report.');
+```
+
+so an on-chain winner **cannot file a report at all**. A variant demanding one
+would have locked them out of beginning again, which is the one thing the
+contract does still let them do.
+
+That is a genuine axis, so it is a flag: `reportOnWinningSquare`, true for the
+four variants where a person can answer and false for `onchain`. The engine
+asserts the relation over every shipped variant — what the gate says on 68 is
+exactly the flag — and `packages/contracts` asserts the Solidity that justifies
+it, against the source rather than against a memory of it. Setting the flag the
+other way fails a test in each package.
+
+The lesson is narrower than "read the sources": the reading *was* done, and the
+sentence taken from it was one step broader than what it said.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

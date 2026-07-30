@@ -117,6 +117,13 @@ export function owesReport(state: GameState, rules: RuleSet = DEFAULT_RULESET): 
   // whole game was played to reach, and the gate was skipping it.
   if (state.is_finished && !hasWon(state)) return false;
 
+  // The winning square, which is the one arrival the published app always asks
+  // about and the one the contract cannot ask about at all: landing on 68 sets
+  // `isStart = false` there, which both removes the gate and makes
+  // `createReport` revert. A variant that demanded one would lock an on-chain
+  // winner out of beginning again.
+  if (hasWon(state)) return rules.reportOnWinningSquare;
+
   // The question is whether the player *arrived*, not whether the square
   // changed. Those come apart in exactly one place on this board: standing on
   // 8, a four takes you to 12, and the snake at 12 puts you back on 8. The
@@ -136,8 +143,7 @@ export function owesReport(state: GameState, rules: RuleSet = DEFAULT_RULESET): 
   // day's wait. A run of sixes is one move, reported once, at the end of it —
   // which is what the extra turn is *for*. See `createHistory`, which gates on
   // `values.count !== 6`.
-  // ...except on 68, which is the exception the app makes to its own rule.
-  if (!rules.reportAfterSix && arrivedOnSix(state) && state.loka !== WIN_LOKA) return false;
+  if (!rules.reportAfterSix && arrivedOnSix(state)) return false;
 
   return true;
 }

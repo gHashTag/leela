@@ -3,6 +3,7 @@ import {
   CLASSIC,
   LEGACY_MOBILE,
   NEUROLEELA,
+  ONCHAIN,
   ONLINE,
   RULESETS,
   START_LOKA,
@@ -273,5 +274,76 @@ describe('a player who has won, in the app that shipped', () => {
       const after = applyRoll(initialState(), 6, rules);
       expect(after.state.loka, rules.id).toBe(START_LOKA);
     }
+  });
+});
+
+describe('the winning square, per variant', () => {
+  /**
+   * The last of the five flags added after `onchain` was written, and the one
+   * that had been filled in by copying `classic` rather than by reading the
+   * contract.
+   *
+   * The published app asks the winner every time — `if (stepCount !== 6 ||
+   * plan === 68)`. The deployed contract cannot: `movePlayer` sets
+   * `isStart = false` on 68, which removes the gate and makes `createReport`
+   * revert with "You must start the game before creating a report."
+   */
+
+  const won = (rules: RuleSet) => {
+    const state = applyRoll(
+      {
+        loka: 65,
+        previous_loka: 60,
+        direction: 'step 🚶🏼',
+        consecutive_sixes: 0,
+        position_before_three_sixes: 0,
+        is_finished: false,
+      },
+      3,
+      rules,
+    ).state;
+    expect(state.loka).toBe(WIN_LOKA);
+    return state;
+  };
+
+  it('is what each variant says it is, and nothing else decides', () => {
+    // The relation, over every shipped variant: what the gate answers on the
+    // winning square is exactly the flag.
+    for (const rules of Object.values(RULESETS)) {
+      expect(owesReport(won(rules), rules), rules.id).toBe(rules.reportOnWinningSquare);
+    }
+  });
+
+  it('asks the winner nowhere the report cannot be filed', () => {
+    // A variant that demanded one where none can be filed would lock a player
+    // out of beginning again — which is what `onchain` would have done.
+    expect(ONCHAIN.reportOnWinningSquare).toBe(false);
+    expect(owesReport(won(ONCHAIN), ONCHAIN)).toBe(false);
+  });
+
+  it('asks the winner everywhere a person can answer', () => {
+    for (const rules of [CLASSIC, NEUROLEELA, LEGACY_MOBILE, ONLINE]) {
+      expect(owesReport(won(rules), rules), rules.id).toBe(true);
+    }
+  });
+
+  it('does not let the six rule swallow the win where the win is asked for', () => {
+    // `legacy-mobile` asks for no report after a six and asks for one here
+    // anyway: that is the app's own exception, and it must survive the flag.
+    const state = applyRoll(
+      {
+        loka: 62,
+        previous_loka: 56,
+        direction: 'step 🚶🏼',
+        consecutive_sixes: 0,
+        position_before_three_sixes: 0,
+        is_finished: false,
+      },
+      6,
+      LEGACY_MOBILE,
+    ).state;
+
+    expect(state.loka).toBe(WIN_LOKA);
+    expect(owesReport(state, LEGACY_MOBILE)).toBe(true);
   });
 });

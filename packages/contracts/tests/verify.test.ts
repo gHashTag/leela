@@ -237,3 +237,61 @@ describe('the report reads for either kind of divergence', () => {
     expect(text).toMatch(/5: engine → nowhere, contract → 1/);
   });
 });
+
+describe('what the contract does to a player who has won', () => {
+  /**
+   * Read because a flag had been filled in by copying rather than by looking.
+   * `onchain` carried `classic`'s values for the five rules added after it was
+   * written, and one of them was wrong.
+   *
+   * Two passes ago the winning square was made to owe a report **everywhere**,
+   * on the strength of "the deployed contract requires a report before every
+   * roll in play". That is true, and it is not true of a player the contract
+   * has just taken out of play: `movePlayer` sets `isStart = false` on 68,
+   * which removes the gate *and* makes `createReport` revert. On chain the
+   * winner neither owes a report nor can file one, and a variant that demanded
+   * one would lock them out of beginning again.
+   *
+   * Asserted against the Solidity rather than against a memory of it.
+   */
+
+  const winBlock = CONTRACT.slice(
+    CONTRACT.indexOf('if (newPlan == WIN_PLAN)'),
+    CONTRACT.indexOf('emit DiceRolled(playerAddress, roll, newPlan);'),
+  );
+
+  it('takes them out of play the moment they land on 68', () => {
+    expect(winBlock).toMatch(/isFinished\s*=\s*true\s*;/);
+    expect(winBlock).toMatch(/isStart\s*=\s*false\s*;/);
+  });
+
+  it('gates the roll on being in play, so a winner is not asked', () => {
+    expect(CONTRACT).toMatch(/if\s*\(\s*player\.isStart\s*\)\s*\{\s*require\(/);
+  });
+
+  it('refuses a report from anyone not in play, which a winner is not', () => {
+    expect(CONTRACT).toMatch(/You must start the game before creating a report/);
+  });
+
+  it('is described by a ruleset that asks the winner for nothing', () => {
+    // The flag exists because the reading was got wrong once.
+    expect(ONCHAIN.reportOnWinningSquare).toBe(false);
+  });
+
+  it('lets them begin again with a six, which the ruleset also says', () => {
+    // `isStart = false` plus the entry branch: a six puts them back on 6.
+    expect(CONTRACT).toMatch(/if\s*\(\s*!player\.isStart\s*&&\s*rollResult\s*==\s*6\s*\)/);
+    expect(ONCHAIN.mayReenterAfterWinning).toBe(true);
+  });
+
+  it('asks for no minimum length, which the ruleset also says', () => {
+    // `createReport` takes any string, including an empty one — no `require`
+    // on `content` anywhere in it.
+    const report = CONTRACT.slice(
+      CONTRACT.indexOf('function createReport'),
+      CONTRACT.indexOf('playerReportCreated[msg.sender] = true;'),
+    );
+    expect(report).not.toMatch(/bytes\(content\)\.length/);
+    expect(ONCHAIN.minReportChars).toBe(0);
+  });
+});

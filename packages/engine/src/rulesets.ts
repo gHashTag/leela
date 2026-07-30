@@ -85,6 +85,27 @@ export interface RuleSet {
    * `classic` asks only that something was written.
    */
   readonly minReportChars: number;
+  /**
+   * Whether the winning square owes a report.
+   *
+   * The published app makes one exception to its own six rule —
+   * `if (stepCount !== 6 || plan === 68)` navigates to the plan with
+   * `report: true` — so Cosmic Consciousness is always written about there.
+   *
+   * The deployed contract cannot ask for one. Its gate is
+   * `if (player.isStart) require(reports[reportIdCounter].reporter == msg.sender)`,
+   * and `movePlayer` sets `isStart = false` the moment the player lands on 68 —
+   * which also makes `createReport` revert with "You must start the game before
+   * creating a report." On chain the winner neither owes a report nor can file
+   * one, and a variant that demanded one would lock them out of beginning
+   * again.
+   *
+   * This flag exists because that reading was got wrong once: the win was made
+   * to owe a report everywhere, on the strength of "the contract requires a
+   * report before every roll in play" — true, and not true of a player the
+   * contract has just taken out of play.
+   */
+  readonly reportOnWinningSquare: boolean;
 }
 
 /**
@@ -104,6 +125,7 @@ export const CLASSIC: RuleSet = Object.freeze({
   mayReenterAfterWinning: true,
   cooldownFrom: 'roll',
   minReportChars: 0,
+  reportOnWinningSquare: true,
 });
 
 /** What NeuroLeela (Expo) shipped: reset on three sixes, no extra turn. */
@@ -122,6 +144,7 @@ export const NEUROLEELA: RuleSet = Object.freeze({
   mayReenterAfterWinning: true,
   cooldownFrom: 'roll',
   minReportChars: 0,
+  reportOnWinningSquare: true,
 });
 
 /** What the published mobile app shipped: extra turn, no reset, re-roll on repeat. */
@@ -141,6 +164,7 @@ export const LEGACY_MOBILE: RuleSet = Object.freeze({
   // `CreatePost` accepts. Offline play has no cooldown to start.
   cooldownFrom: 'report',
   minReportChars: 100,
+  reportOnWinningSquare: true,
 });
 
 /**
@@ -161,6 +185,7 @@ export const ONLINE: RuleSet = Object.freeze({
   mayReenterAfterWinning: false,
   cooldownFrom: 'report',
   minReportChars: 100,
+  reportOnWinningSquare: true,
 });
 
 /**
@@ -195,6 +220,7 @@ export const ONCHAIN: RuleSet = Object.freeze({
   mayReenterAfterWinning: true,
   cooldownFrom: 'roll',
   minReportChars: 0,
+  reportOnWinningSquare: false,
 });
 
 export const RULESETS = Object.freeze({
