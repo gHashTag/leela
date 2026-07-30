@@ -3777,6 +3777,39 @@ that keeps reports must never answer `/path` with "not keeping reports", and one
 that keeps none must never answer with an empty list, because those are
 different facts and only one of them is ever true.
 
+## Hundred-and-eighth pass: a test of the thing as it is assembled
+
+The defect the pass before found could not have been found by a unit test. Every
+one of them holds a store it built itself; the two halves only meet where the
+bot is *assembled* — `openStorage` deciding what to build, `createBot` deciding
+what to ask. `audit-unread` could not see it either: `reportsFor` is a method on
+a class rather than an export.
+
+So this pass wrote the kind of test that was missing rather than more of the
+kind there were plenty of. `assembled.test.ts` builds the bot the way `index.ts`
+does, on a real database in a temporary directory, plays through it, throws the
+process away, builds it again on the same volume and carries on.
+
+It asserts both halves of the lie separately, because they are different lies: a
+bot that kept the report must not answer "this bot is not keeping reports", and
+must not answer with an empty list either. Removing `history` again fails two of
+the three tests — which is what the whole pass is for.
+
+Two more configurations, both of them things an operator meets:
+
+- **`/save` reads the same store through a different door**, so a store that
+  cannot be read has nothing to write. It offers a document now; it offered
+  nothing before.
+- **A path that cannot be opened** — a volume that is not mounted, the commonest
+  deployment mistake — falls back to memory, says so, and still plays. The
+  README has promised that for a long time and nothing checked it.
+
+The mini app's equivalent — a private window whose `localStorage` refuses
+everything — is covered at the unit level and cannot be reached at the assembled
+level from a test: overriding `localStorage` and reloading gives the page a
+fresh real one, so the override never reaches the module. Tried, and said here
+rather than left as a gap somebody else has to rediscover.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
