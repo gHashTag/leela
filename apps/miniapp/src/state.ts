@@ -74,6 +74,11 @@ export interface GameStorage {
 /**
  * Read the saved game, or start a new one.
  *
+ * Nothing writes this key any more: the app keeps a table of seats, and one
+ * seat is what a single-player game became. This stays because that table is
+ * built from whatever was already here — a game in progress from before there
+ * were seats is a game somebody is in the middle of.
+ *
  * Never throws. Storage can be disabled outright — a private window, a browser
  * with cookies blocked — and a game that cannot be saved should still be a game
  * that can be played.
@@ -142,14 +147,6 @@ export function saveLastRoll(storage: GameStorage | undefined, value: number): v
   }
 }
 
-/** Keep the game. A failure here is forgetfulness, not an error to show. */
-export function saveState(storage: GameStorage | undefined, state: GameState): void {
-  try {
-    storage?.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // A private window with storage disabled still plays; it just forgets.
-  }
-}
 
 /**
  * Where an unfinished report waits.

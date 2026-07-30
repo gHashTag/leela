@@ -2663,6 +2663,48 @@ it is a UI problem rather than a rules problem. The companion in the mini app
 needs a key in a static page, which the boundaries forbid; the bot has `/ask`
 instead. Posts, likes and comments need a server.
 
+## Seventy-fifth pass: six people and one phone
+
+The function named at the end of the last pass. `SelectPlayersScreen` offers one
+to six, `OfflinePlayers.store` keeps a plan and a history per seat, and this app
+had one player and one saved game.
+
+**The rotation was deliberately not ported.** `changePlayer` there is five
+hard-coded branches over an array of who is still playing —
+`newArr.indexOf(true) === 2 → DiceStore.players = DiceStore.multi - lengthArray + 3`
+— which is "the next seat still in play, wrapping" written longhand. The engine
+has had that as `nextSeat` since the bot needed it. So what is ported is the
+seating; `advance` does the rest.
+
+The old save becomes seat one, which is the point: this app has been played for
+weeks, and a table that started empty would have thrown those games away to add
+a feature. Journals are per player — two people on one phone are two paths, and
+merging them would make the record the game exists to produce meaningless — and
+the first seat keeps the original key for the same reason.
+
+### And the entering six was passing the turn
+
+Found in the first three-player game, and invisible before it, because a table
+of one never notices whose turn it is:
+
+```ts
+// Entering the game consumes the six; the turn passes either way.
+grantsExtraTurn: false,
+```
+
+The published app has no such exception. `upStepOffline` passes the turn in the
+**else** of `if (count === 6)`, and the player who threw one is told
+`oneMoreThrow`. Traditional Leela has no exception either. The flag
+`extraTurnOnSix` already said what should happen and that branch was not reading
+it — so this is a correction to code that disobeyed its own ruleset rather than
+a change of rules, which is why it is not a new flag.
+
+Two tests had encoded the old behaviour, and one of them was mine from three
+passes ago: it derived "an extra turn was granted" from the sixes counter, which
+the entering six does not touch. It reads the turn holder now, at a table of
+two — because at a table of one the turn always comes back, and that was the
+confusion the original defect was made of.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

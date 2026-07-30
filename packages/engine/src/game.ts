@@ -73,8 +73,17 @@ export function applyRoll(
           isThreeSixesReset: false,
           isBlocked: false,
           jumpedFrom: null,
-          // Entering the game consumes the six; the turn passes either way.
-          grantsExtraTurn: false,
+          // A six is a six, entry included. The published app has no exception
+          // for it — `upStepOffline` passes the turn in the `else` of
+          // `if (count === 6)`, and the player who threw one is told
+          // `oneMoreThrow` — and neither does traditional Leela. This branch
+          // said "entering the game consumes the six; the turn passes either
+          // way", which was invisible while every surface here was one player
+          // and wrong the moment a second sat down.
+          //
+          // The flag already said what should happen; this branch was not
+          // reading it.
+          grantsExtraTurn: rules.extraTurnOnSix,
         },
       };
     }

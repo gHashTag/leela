@@ -25,7 +25,6 @@ import {
   loadLastRoll,
   loadState,
   saveLastRoll,
-  saveState,
   type GameStorage,
 } from '../src/state';
 
@@ -77,11 +76,12 @@ describe('a saved game is one the engine could have produced', () => {
     }
   });
 
-  it('survives the round trip through storage for all of them', () => {
+  it('is read back unchanged for all of them', () => {
+    // Written straight into storage, because nothing writes this key any
+    // more: the app keeps a table of seats now, and this is the reader that
+    // turns a game from before there were seats into the first one.
     for (const state of statesFromRealGames(8, 60)) {
-      const storage = memory();
-      saveState(storage, state);
-      expect(loadState(storage)).toEqual(state);
+      expect(loadState(memory(JSON.stringify(state)))).toEqual(state);
     }
   });
 
@@ -158,26 +158,12 @@ describe('reading a saved game', () => {
       },
     };
     expect(loadState(hostile)).toEqual(initialState());
-    expect(() => saveState(hostile, initialState())).not.toThrow();
     expect(loadState(undefined)).toEqual(initialState());
-    expect(() => saveState(undefined, initialState())).not.toThrow();
   });
 
-  it('writes under a versioned key, so a shape change cannot read the old one', () => {
-    const storage = memory();
-    let key = '';
-    saveState(
-      {
-        getItem: () => null,
-        setItem: (k, v) => {
-          key = k;
-          storage.setItem(k, v);
-        },
-      },
-      initialState(),
-    );
-    expect(key).toBe(STORAGE_KEY);
-    expect(key).toMatch(/\.v\d+$/);
+  it('reads a versioned key, so a shape change cannot read the old one', () => {
+    // The seats file follows the same rule for the same reason.
+    expect(STORAGE_KEY).toMatch(/\.v\d+$/);
   });
 });
 

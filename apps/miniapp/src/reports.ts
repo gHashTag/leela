@@ -82,9 +82,36 @@ export function isJournal(value: unknown): value is Journal {
   );
 }
 
-export function loadJournal(storage: GameStorage | undefined): Journal {
+/**
+ * Where each player's writing lives, once there is more than one player.
+ *
+ * The published app keeps `histories[]` per seat offline, and it has to: two
+ * people playing from one phone are two paths, and merging them would make the
+ * record the game exists to produce meaningless.
+ *
+ * The first seat keeps the original key. Weeks of games were played before
+ * there were seats, and moving that writing to a new name to add a feature
+ * would be a feature that costs somebody their path.
+ */
+export function journalKeyFor(playerId: string): string {
+  return playerId === 'p1' ? REPORTS_KEY : `${REPORTS_KEY}.${playerId}`;
+}
+
+export function loadJournalFor(storage: GameStorage | undefined, playerId: string): Journal {
+  return loadJournal(storage, journalKeyFor(playerId));
+}
+
+export function saveJournalFor(
+  storage: GameStorage | undefined,
+  playerId: string,
+  journal: Journal,
+): void {
+  saveJournal(storage, journal, journalKeyFor(playerId));
+}
+
+export function loadJournal(storage: GameStorage | undefined, key = REPORTS_KEY): Journal {
   try {
-    const raw = storage?.getItem(REPORTS_KEY);
+    const raw = storage?.getItem(key);
     if (!raw) return EMPTY;
     const parsed: unknown = JSON.parse(raw);
     return isJournal(parsed) ? parsed : EMPTY;
@@ -93,9 +120,13 @@ export function loadJournal(storage: GameStorage | undefined): Journal {
   }
 }
 
-export function saveJournal(storage: GameStorage | undefined, journal: Journal): void {
+export function saveJournal(
+  storage: GameStorage | undefined,
+  journal: Journal,
+  key = REPORTS_KEY,
+): void {
   try {
-    storage?.setItem(REPORTS_KEY, JSON.stringify(journal));
+    storage?.setItem(key, JSON.stringify(journal));
   } catch {
     // Storage disabled: the game still plays, and still asks for a report. It
     // simply forgets them, which is the same bargain the board already makes.

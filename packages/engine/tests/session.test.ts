@@ -18,6 +18,8 @@ import {
   submitReport,
   type RuleSet,
   type Session,
+  seededRoller,
+  hasWon,
 } from '../src';
 
 const NOW = 1_700_000_000_000;
@@ -75,16 +77,18 @@ describe('turn order', () => {
 
   it('keeps the turn on a six when the variant grants another throw', () => {
     let s = threeSeats(LEGACY_MOBILE);
-    // The entry six consumes the turn even under legacy rules.
-    const entry = roll(s, 6);
-    expect(entry.keepsTurn).toBe(false);
-    s = entry.session;
-    expect(currentPlayer(s).id).toBe('b');
 
-    // b enters, then c, then a is back on the board and rolls another six.
-    s = roll(s, 6).session;
-    s = roll(s, 6).session;
+    // Entry included. This asserted the opposite — "the entry six consumes the
+    // turn even under legacy rules" — and the published app has no such
+    // exception: `upStepOffline` passes the turn in the `else` of
+    // `if (count === 6)`, and a player who threw one is told `oneMoreThrow`.
+    // It was invisible while every surface here was one player.
+    const entry = roll(s, 6);
+    expect(entry.keepsTurn).toBe(true);
+    s = entry.session;
     expect(currentPlayer(s).id).toBe('a');
+
+    // Still theirs after another six, and passed on anything else.
     const again = roll(s, 6);
     expect(again.keepsTurn).toBe(true);
     expect(currentPlayer(again.session).id).toBe('a');
@@ -405,5 +409,71 @@ describe('a six at a table, under the published rules', () => {
   it('owes one under the traditional rules', () => {
     const session = createSession('s', [{ id: 'a' }], CLASSIC);
     expect(advance(session, 6, NOW).owesReport).toBe(true);
+  });
+});
+
+describe('who throws next, over a played table', () => {
+  /**
+   * Found by seating three players in the mini app for the first time: the
+   * entering six passed the turn, and it should not.
+   *
+   * `upStepOffline` in the published app passes the turn in the `else` of
+   * `if (count === 6)` — any six keeps it, entry included, and the thrower is
+   * told `oneMoreThrow`. The branch here said "entering the game consumes the
+   * six" and ignored `extraTurnOnSix`, which was invisible for as long as every
+   * surface in this repository was one player.
+   *
+   * The rule, over a whole game rather than the two throws that were wrong: the
+   * turn stays exactly when the variant grants an extra one.
+   */
+
+  it('passes the turn exactly when no extra throw was granted', () => {
+    for (const rules of [CLASSIC, LEGACY_MOBILE, NEUROLEELA]) {
+      let session = createSession('t', [{ id: 'a' }, { id: 'b' }, { id: 'c' }], rules);
+      const die = seededRoller(7);
+
+      for (let turn = 0; turn < 200; turn += 1) {
+        const before = currentPlayer(session).id;
+        const moved = advance(session, die(), NOW);
+        session = moved.session;
+
+        const after = currentPlayer(session).id;
+        const othersPlaying = session.players.some(
+          (player) => player.id !== before && !hasWon(player.state),
+        );
+
+        // An extra throw keeps the seat. Without one the turn moves on —
+        // unless there is nobody left to move it to, when it comes back to the
+        // only player still in the game.
+        if (moved.keepsTurn) expect(after, `${rules.id} turn ${turn}`).toBe(before);
+        else if (othersPlaying) expect(after, `${rules.id} turn ${turn}`).not.toBe(before);
+
+        // The gate is what stops a player, not the seating: they hold the turn
+        // and cannot throw until they have written.
+        if (moved.owesReport) session = submitReport(session, moved.playerId, NOW);
+        if (isSessionOver(session)) break;
+      }
+    }
+  });
+
+  it('keeps it for the six that enters the game, where sixes are kept', () => {
+    for (const rules of [CLASSIC, LEGACY_MOBILE]) {
+      const session = createSession('t', [{ id: 'a' }, { id: 'b' }], rules);
+      const entry = advance(session, 6, NOW);
+
+      expect(entry.event.isGameStart, rules.id).toBe(true);
+      expect(entry.keepsTurn, rules.id).toBe(true);
+      expect(currentPlayer(entry.session).id, rules.id).toBe('a');
+    }
+  });
+
+  it('passes it for the six that enters, where sixes are not kept', () => {
+    // `neuroleela` grants no extra throw at all, and the entry is not an
+    // exception to that either.
+    const session = createSession('t', [{ id: 'a' }, { id: 'b' }], NEUROLEELA);
+    const entry = advance(session, 6, NOW);
+
+    expect(entry.keepsTurn).toBe(false);
+    expect(currentPlayer(entry.session).id).toBe('b');
   });
 });

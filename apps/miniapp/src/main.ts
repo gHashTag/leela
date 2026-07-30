@@ -17,6 +17,10 @@ import {
   rollDie,
   rollerFor,
   type MoveEvent,
+  advance,
+  currentPlayer,
+  submitReport,
+  MAX_SEATS,
 } from '@leela/engine';
 import { messageFor, resolveLanguage, type Language } from '@leela/content';
 import { loadPlans, plan as planFor } from './content';
@@ -43,13 +47,19 @@ import boardLight from './board-light.webp';
 import boardDark from './board-dark.webp';
 import gemArt from './gem.webp';
 import {
+  loadSeats,
+  saveSeats,
+  seatsFor,
+  seatsFrom,
+  sessionFrom,
+} from './seats';
+import {
   clearDraft,
   loadDraft,
   loadLastRoll,
   loadState,
   saveDraft,
   saveLastRoll,
-  saveState,
   loadIntention,
   saveIntention,
 } from './state';
@@ -63,6 +73,8 @@ import {
   saveJournal,
   type Journal,
   hintFor,
+  loadJournalFor,
+  saveJournalFor,
 } from './reports';
 import { headline } from './view';
 
@@ -96,7 +108,30 @@ const language: Language = resolveLanguage(
   telegram?.initDataUnsafe?.user?.language_code ?? navigator.language,
 );
 
-let state = loadState(localStorage);
+/**
+ * The table. One seat is the game this app has always been; six is what the
+ * published app offers, and `advance` moves the turn between them exactly as
+ * it does for the bot.
+ */
+let seats = loadSeats(localStorage);
+let session = sessionFrom(seats);
+
+/** The player whose turn it is, and the writing they have done. */
+let state = currentPlayer(session).state;
+let journal = loadJournalFor(localStorage, currentPlayer(session).id);
+
+/** Read the current seat back out of the session, after any move. */
+function takeSeat(): void {
+  const seated = currentPlayer(session);
+  state = seated.state;
+  journal = loadJournalFor(localStorage, seated.id);
+}
+
+/** Keep the table, and the seat's writing with it. */
+function keepTable(): void {
+  seats = seatsFrom(session);
+  saveSeats(localStorage, seats);
+}
 
 /**
  * What the player has written, and whether this plan has been written about.
@@ -104,8 +139,6 @@ let state = loadState(localStorage);
  * Its own key, so a game already saved is not discarded by the arrival of a
  * field the validator has never heard of.
  */
-let journal: Journal = loadJournal(localStorage);
-
 /** What the player is playing for. Asked before the board, as the app asks it. */
 let intention: string = loadIntention(localStorage);
 
@@ -139,6 +172,7 @@ const el = {
   pathImportLabel: document.getElementById('path-import-label') as HTMLElement,
   rules: document.getElementById('rules') as HTMLButtonElement,
   plans: document.getElementById('plans') as HTMLButtonElement,
+  players: document.getElementById('players') as HTMLButtonElement,
   restart: document.getElementById('restart') as HTMLButtonElement,
   list: document.getElementById('list') as HTMLDialogElement,
   listTitle: document.getElementById('list-title') as HTMLElement,
@@ -178,12 +212,35 @@ function buildBoard(): void {
 function draw(event?: MoveEvent): void {
   const show = headline(state, language, (plan) => planFor(plan).title);
 
-  for (const cell of cells.values()) cell.classList.remove('here', 'from');
+  for (const cell of cells.values()) {
+    cell.classList.remove('here', 'from', 'other');
+    cell.removeAttribute('data-seat');
+  }
+
+  // Everyone at the table, not only whoever holds the turn. The published app
+  // draws a gem per seat — `Gem` maps over `OfflinePlayers.store.plans` — and
+  // a board that showed one of six players would be a board nobody else could
+  // read.
+  for (const [seat, player] of session.players.entries()) {
+    if (player.id === currentPlayer(session).id) continue;
+
+    const where = headline(player.state, language, (plan) => planFor(plan).title).here;
+    if (where === null) continue;
+
+    const cell = cells.get(where);
+    if (!cell || cell.classList.contains('here')) continue;
+    cell.classList.add('other');
+    cell.dataset.seat = String(seat + 1);
+  }
+
   if (show.here !== null) cells.get(show.here)?.classList.add('here');
   if (show.from !== null) cells.get(show.from)?.classList.add('from');
 
   el.planNumber.textContent = show.number;
-  el.planTitle.textContent = show.title;
+  el.planTitle.textContent =
+    session.players.length > 1
+      ? `${messageFor(language, 'app.seatTurn', { seat: session.turnIndex + 1 })} · ${show.title}`
+      : show.title;
   el.progress.value = show.progress;
   el.read.disabled = !show.canRead;
 
@@ -252,6 +309,32 @@ function openRules(): void {
   });
 }
 
+/**
+ * How many are playing from this device.
+ *
+ * `SelectPlayersScreen` in the published app, which offers one to six and then
+ * starts the game. Seating a table discards the games in progress, so it says
+ * so by asking rather than by doing it from a stray tap.
+ */
+function askPlayers(): void {
+  const entries = Array.from({ length: MAX_SEATS }, (_, index) => ({
+    key: index + 1,
+    title: String(index + 1),
+    here: index + 1 === session.players.length,
+  }));
+
+  openList(messageFor(language, 'app.playersAsk'), entries, (count) => {
+    seats = seatsFor(Number(count));
+    session = sessionFrom(seats);
+    saveSeats(localStorage, seats);
+    takeSeat();
+    clearDraft(localStorage);
+
+    el.say.textContent = messageFor(language, 'app.playersSet', { count: seats.players.length });
+    draw();
+  });
+}
+
 /** Every plan, so a player can read a square they have not landed on. */
 function openPlans(): void {
   openList(messageFor(language, 'app.plans'), planEntries(language, state.loka), (plan) => {
@@ -268,13 +351,23 @@ function openPlans(): void {
  * it. `/path` still shows it, and "Save a copy" still exports it.
  */
 function startOver(): void {
-  state = initialState();
-  saveState(localStorage, state);
+  // This seat begins again. The others are in the middle of their own games,
+  // and a shared device is not a reason to end somebody else's.
+  const seated = currentPlayer(session);
+  session = {
+    ...session,
+    players: session.players.map((player) =>
+      player.id === seated.id ? { ...player, state: initialState() } : player,
+    ),
+  };
+  keepTable();
+  takeSeat();
+
   // The gate is released: a new game owes nothing yet. The entries stay —
   // what somebody wrote about the squares they stood on is theirs, and
   // starting again is not a reason to burn it.
   journal = { ...journal, reported: true };
-  saveJournal(localStorage, journal);
+  saveJournalFor(localStorage, seated.id, journal);
   clearDraft(localStorage);
   showFace(loadLastRoll(localStorage));
   el.say.textContent = messageFor(language, 'app.restarted');
@@ -390,10 +483,18 @@ async function roll(): Promise<void> {
     // unapplied throw and a board that never moved — dead until reloaded.
     await settle(duration, spinHost);
 
-    const applied = applyRoll(state, value, CLASSIC);
-    state = applied.state;
-    event = applied.event;
-    saveState(localStorage, state);
+    // Through the session, so the turn moves to the next seat still playing —
+    // `advance` and `nextSeat`, the same path the bot takes. The published app
+    // writes that rotation out longhand in five branches; the engine has had
+    // it right all along.
+    const moved = advance(session, value, Date.now());
+    session = moved.session;
+    event = moved.event;
+
+    // The seat that threw, which is not the seat that holds the turn now.
+    const thrower = session.players.find((player) => player.id === moved.playerId);
+    state = thrower?.state ?? state;
+    keepTable();
     // After the board, not before: a face is a record of a throw the game
     // took, and one saved ahead of the state can outlive a throw that never
     // happened.
@@ -401,10 +502,14 @@ async function roll(): Promise<void> {
 
     // A new arrival: whatever was written was about the plan they have left.
     // Before the redraw, or the gate is drawn from the journal of the last plan.
-    if (owesReport(state, CLASSIC)) {
-      journal = arrived(journal);
-      saveJournal(localStorage, journal);
+    if (moved.owesReport) {
+      const owing = arrived(loadJournalFor(localStorage, moved.playerId));
+      saveJournalFor(localStorage, moved.playerId, owing);
     }
+
+    // Whoever holds the turn now — the thrower again on a six, the next seat
+    // otherwise.
+    takeSeat();
   } finally {
     // Whatever happened above, the die comes back. It is the control the whole
     // game runs through, and a dimmed one with no explanation is the app
@@ -461,7 +566,10 @@ function saveReport(): void {
     return;
   }
 
-  saveJournal(localStorage, journal);
+  saveJournalFor(localStorage, currentPlayer(session).id, journal);
+  // The seat has answered: the engine's gate is what `draw` reads.
+  session = submitReport(session, currentPlayer(session).id, Date.now());
+  keepTable();
   clearDraft(localStorage);
   el.writer.close();
   draw();
@@ -566,7 +674,7 @@ async function importPath(file: File): Promise<void> {
 
   const before = journal.entries.length;
   journal = merge(journal, incoming);
-  saveJournal(localStorage, journal);
+  saveJournalFor(localStorage, currentPlayer(session).id, journal);
 
   const added = journal.entries.length - before;
   el.say.textContent =
@@ -581,6 +689,7 @@ async function importPath(file: File): Promise<void> {
 el.roll.addEventListener('click', () => void roll());
 el.read.addEventListener('click', () => openPlan(state.loka));
 el.rules.addEventListener('click', openRules);
+el.players.addEventListener('click', askPlayers);
 el.plans.addEventListener('click', openPlans);
 el.restart.addEventListener('click', startOver);
 el.report.addEventListener('click', openWriter);

@@ -642,24 +642,31 @@ describe('what the bot says about whose throw it is', () => {
   const AGAIN = 'throw again';
 
   it('offers another throw exactly when the rules grant one', () => {
-    let room = table(1, SEED);
+    // A table of two, because at a table of one the turn always comes back and
+    // "the same player throws next" is no evidence of anything — which is the
+    // confusion the defect itself was made of.
+    let room = table(2, SEED);
 
     for (let turn = 0; turn < 300; turn += 1) {
       const holder = room.session.players[room.session.turnIndex];
-      const before = holder.state.consecutive_sixes;
       const result = roll(room, holder.id, NOW);
       const said = result.replies.map((reply) => reply.text).join(' ');
-      const after = (result.room as Room).session.players[0].state;
+      const next = result.room as Room;
 
-      // The engine grants the extra turn on a six under `classic`; the state
-      // it produced is the record of whether it did.
-      const granted = after.consecutive_sixes > before && !after.is_finished;
-      expect(said.includes(AGAIN), `turn ${turn}: ${said}`).toBe(granted);
+      room = next;
 
-      room = result.room as Room;
+      // A refused throw is not a throw: the gate holds the seat and nothing
+      // was granted or passed.
       if (result.replies.some((reply) => reply.text.includes('/report'))) {
         room = report(room, holder.id, 'noted').room as Room;
+        continue;
       }
+
+      // Whether the seat was kept, read off the table rather than inferred
+      // from the sixes counter — which the entering six does not touch under
+      // `classic`, so counting it called an extra turn a passed one.
+      const granted = next.session.players[next.session.turnIndex]?.id === holder.id;
+      expect(said.includes(AGAIN), `turn ${turn}: ${said}`).toBe(granted);
       if (said.includes('Cosmic Consciousness')) break;
     }
   });

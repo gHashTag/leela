@@ -82,7 +82,7 @@ body {
 
 .head {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto auto 1fr auto;
   align-items: center;
   gap: 6px 10px;
 }
@@ -604,4 +604,29 @@ button:active:not(:disabled) {
   background: transparent;
   color: var(--link);
   font-weight: 500;
+}
+
+/*
+ * Another player at the table.
+ *
+ * The published app draws a gem per seat, all the same picture with a z-index
+ * apart. One gem is the player whose turn it is — the one this device is
+ * waiting on — and the others are a number in a ring: a board of six identical
+ * gems tells nobody which one is theirs.
+ */
+.board .cell.other {
+  color: transparent;
+}
+
+.board .cell.other::after {
+  content: attr(data-seat);
+  position: absolute;
+  inset: 12%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--link);
+  color: var(--text);
+  font-size: 0.62em;
+  font-weight: 650;
 }
