@@ -295,3 +295,28 @@ export function pathSections(
     entries: path(seat.journal),
   }));
 }
+
+/**
+ * The seat that owes a report, if any.
+ *
+ * The writer used to belong to whoever held the turn, which is the same seat
+ * almost always — and not at the one moment that matters most. A player who
+ * reaches Cosmic Consciousness owes an account of it (`reportOnWinningSquare`,
+ * because 68 is the square a whole game was played to reach) and the turn
+ * leaves them on the same throw. So the last report of a game, at a shared
+ * table, could not be written at all: the button belonged to somebody else and
+ * the winner never held the turn again.
+ *
+ * The turn holder comes first, because in every other moment they are the one
+ * being asked, and a table where two seats owe at once should ask the player
+ * whose turn it is.
+ */
+export function owingSeat<T extends { id: string; state: GameState; reportSubmitted: boolean }>(
+  players: ReadonlyArray<T>,
+  turnIndex: number,
+): T | null {
+  const holder = players[turnIndex];
+  if (holder && seatOwesReport(holder)) return holder;
+
+  return players.find((seat) => seatOwesReport(seat)) ?? null;
+}

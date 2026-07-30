@@ -83,6 +83,7 @@ import {
   type Journal,
   hintFor,
   loadJournalFor,
+  owingSeat,
   pathSections,
   revisited,
   type PathSection,
@@ -90,7 +91,7 @@ import {
   saveJournalFor,
   writingsOn,
 } from './reports';
-import { canRoll, headline, lineFor, mayThrow, standing } from './view';
+import { afterWriting, canRoll, headline, lineFor, mayThrow, standing } from './view';
 
 /** Telegram's WebApp object, when we are running inside Telegram. */
 interface TelegramWebApp {
@@ -133,6 +134,16 @@ let session = sessionFrom(seats);
 /** The player whose turn it is, and the writing they have done. */
 let state = currentPlayer(session).state;
 let journal = loadJournalFor(localStorage, currentPlayer(session).id);
+
+/**
+ * The seat the writing box is addressing.
+ *
+ * Usually the seat holding the turn, and not at the one moment that matters
+ * most: a player who reaches Cosmic Consciousness owes an account of it and the
+ * turn leaves them on the same throw. Held while the dialog is open, because
+ * the dialog is modal and nothing can move underneath it.
+ */
+let writingFor: string | null = null;
 
 /**
  * What the app has just been told to say, until something happens.
@@ -287,11 +298,14 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
   // one, so the die will not turn without one either.
   // The engine's gate, not the journal's. Two records of one fact disagreed
   // the moment a second player sat down.
+  // Whoever owes one, not whoever holds the turn: at a shared table the winner
+  // owes the last report of their game and never holds the turn again.
+  const owing = owingSeat(session.players, session.turnIndex);
   const owed = seatOwesReport(currentPlayer(session));
   // One question, asked here and again by whoever acts. The button saying no is
   // not the same as the act saying no, and the difference is a double tap away.
   el.roll.disabled = mayThrow(session, intention, rolling, owed) !== 'yes';
-  el.report.disabled = !owed;
+  el.report.disabled = owing === null;
 
   // The published app shows "Start over" only once the game has ended —
   // `endGame` in GameScreen. `hasWon` rather than `is_finished`, which a player
@@ -513,7 +527,10 @@ function openPlan(plan: number): void {
   // times wants what they said last time, not to scroll past the teaching to
   // find it. On a first visit there is nothing here and the plan text is still
   // the first thing on screen.
-  openReader('plan', `${plan}. ${found.title}`, [...writtenBefore(plan), ...paragraphs(found.body)]);
+  openReader('plan', `${plan}. ${found.title}`, [
+    ...writtenBefore(journal, plan),
+    ...paragraphs(found.body),
+  ]);
 }
 
 /**
@@ -580,9 +597,9 @@ function cameBack(returns: ReadonlyArray<Revisit>): HTMLElement[] {
   return [heading, row];
 }
 
-/** The player's own earlier writing about one square, oldest first. */
-function writtenBefore(plan: number): HTMLElement[] {
-  const written = writingsOn(journal, plan);
+/** One player's earlier writing about one square, oldest first. */
+function writtenBefore(theirs: Journal, plan: number): HTMLElement[] {
+  const written = writingsOn(theirs, plan);
   if (written.length === 0) return [];
 
   const heading = document.createElement('h3');
@@ -754,16 +771,26 @@ async function roll(): Promise<void> {
 
 /** Ask for a report on the plan the player is standing on. */
 function openWriter(): void {
-  el.writerTitle.textContent = `${state.loka}. ${planFor(state.loka).title}`;
+  const owing = owingSeat(session.players, session.turnIndex);
+  if (!owing) return;
+
+  writingFor = owing.id;
+  const plan = owing.state.loka;
+  const theirs = loadJournalFor(localStorage, owing.id);
+
+  el.writerTitle.textContent =
+    session.players.length > 1
+      ? `${messageFor(language, 'app.seatTurn', { seat: session.players.indexOf(owing) + 1 })} · ${plan}. ${planFor(plan).title}`
+      : `${plan}. ${planFor(plan).title}`;
   // What they wrote the last times they stood here. It was already in the app
   // — in the reader, one dialog away — and the moment it matters is this one:
   // the game is asking for another account of the same square, and the measure
   // of what has changed is the last one.
-  el.writerBefore.replaceChildren(...writtenBefore(state.loka));
+  el.writerBefore.replaceChildren(...writtenBefore(theirs, plan));
   // Whatever was typed and not filed. A phone discards a backgrounded tab, and
   // the one thing this game asks a player to produce was held in a textarea
   // and nowhere else.
-  el.writerText.value = loadDraft(localStorage, currentPlayer(session).id, state.loka);
+  el.writerText.value = loadDraft(localStorage, owing.id, plan);
   showWriterHint();
   el.writer.showModal();
   el.writerText.focus();
@@ -815,36 +842,47 @@ async function shareSquare(): Promise<void> {
 }
 
 function saveReport(): void {
-  // Owed, and not already answered. Two taps on Save used to file the same
-  // account twice — a slip on a phone, not an exploit — and two accounts of one
-  // visit make `revisited` claim a square the player never returned to.
-  if (!seatOwesReport(currentPlayer(session))) {
+  // The seat the box was opened for, and only while it still owes. Two taps on
+  // Save used to file the same account twice — a slip on a phone, not an
+  // exploit — and two accounts of one visit make `revisited` claim a square the
+  // player never returned to.
+  const writer = session.players.find((player) => player.id === writingFor);
+  if (!writer || !seatOwesReport(writer)) {
     el.writer.close();
     return;
   }
 
-  const before = journal.entries.length;
-  journal = record(journal, state.loka, el.writerText.value, Date.now());
+  const theirs = loadJournalFor(localStorage, writer.id);
+  const after = record(theirs, writer.state.loka, el.writerText.value, Date.now());
 
-  if (journal.entries.length === before) {
+  if (after.entries.length === theirs.entries.length) {
     // Nothing was written, so nothing is recorded and the gate stays shut.
     announce(messageFor(language, 'app.reportEmpty'));
     return;
   }
 
-  saveJournalFor(localStorage, currentPlayer(session).id, journal);
+  saveJournalFor(localStorage, writer.id, after);
   // The seat has answered: the engine's gate is what `draw` reads.
-  session = submitReport(session, currentPlayer(session).id, Date.now());
+  session = submitReport(session, writer.id, Date.now());
   keepTable();
-  clearDraft(localStorage, currentPlayer(session).id);
+  takeSeat();
+  clearDraft(localStorage, writer.id);
   el.writer.close();
 
-  // What is true now the gate has opened. "You may throw" was said whatever the
-  // state was — including to a player who had just reached Cosmic
+  // What is true of the player who wrote it. "You may throw" was said whatever
+  // the state was — including to a player who had just reached Cosmic
   // Consciousness, with the die dimmed underneath it. The bot said the same
   // sentence in the same situation and stopped two passes ago.
-  const next = mayThrow(session, intention, false, seatOwesReport(currentPlayer(session)));
-  announce(messageFor(language, next === 'yes' ? 'app.reportSaved' : 'app.reportSavedDone'));
+  const said = afterWriting(session, writer.id);
+  writingFor = null;
+
+  announce(
+    said === 'finished'
+      ? messageFor(language, 'app.reportSavedDone')
+      : said === 'not-your-turn'
+        ? messageFor(language, 'app.reportSavedTurn', { seat: session.turnIndex + 1 })
+        : messageFor(language, 'app.reportSaved'),
+  );
 }
 
 /** Everything the player has written, oldest first. */

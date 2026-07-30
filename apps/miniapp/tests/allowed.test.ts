@@ -7,10 +7,18 @@ import {
   isSessionOver,
   seededRoller,
   submitReport,
+  type SeatedPlayer,
   type Session,
 } from '@leela/engine';
-import { arrived, record, revisited, seatOwesReport, type Journal } from '../src/reports';
-import { mayThrow } from '../src/view';
+import {
+  arrived,
+  owingSeat,
+  record,
+  revisited,
+  seatOwesReport,
+  type Journal,
+} from '../src/reports';
+import { afterWriting, mayThrow } from '../src/view';
 
 /**
  * A disabled button is a drawing, and a drawing refuses nothing.
@@ -216,5 +224,173 @@ describe('what is said once the report is filed', () => {
     };
 
     expect(mayThrow(finished, 'to see', false, false)).toBe('game-over');
+  });
+});
+
+describe('who the writing box belongs to', () => {
+  /**
+   * The writer belonged to whoever held the turn, which is the same seat almost
+   * always — and not at the one moment that matters most.
+   *
+   * `CLASSIC` asks for a report on 68: `reportOnWinningSquare`, because it is
+   * the square a whole game was played to reach. The turn leaves the winner on
+   * the same throw that wins, and `nextSeat` never gives it back. So at a shared
+   * table the last report of a game could not be written at all — the button
+   * belonged to somebody else, and the winner was owed a question nobody would
+   * ask them.
+   *
+   * The rule: **the box belongs to whoever owes a report**, and the turn holder
+   * only comes first because in every other moment they are the one being
+   * asked.
+   */
+  const table = createSession('device', [{ id: 'p1' }, { id: 'p2' }], CLASSIC);
+
+  const won = {
+    loka: 68,
+    previous_loka: 51,
+    direction: 'win 🕉' as const,
+    consecutive_sixes: 0,
+    position_before_three_sixes: 0,
+    is_finished: true,
+  };
+
+  const playing = {
+    loka: 30,
+    previous_loka: 24,
+    direction: 'step 🚶🏼' as const,
+    consecutive_sixes: 0,
+    position_before_three_sixes: 0,
+    is_finished: false,
+  };
+
+  /** Exactly the state one throw after a win at a table of two. */
+  const afterAWin: Session = {
+    ...table,
+    turnIndex: 1,
+    players: [
+      { ...(table.players[0] as SeatedPlayer), state: won, reportSubmitted: false },
+      { ...(table.players[1] as SeatedPlayer), state: playing, reportSubmitted: true },
+    ],
+  };
+
+  it('is the winner, at the moment the turn has already left them', () => {
+    const owing = owingSeat(afterAWin.players, afterAWin.turnIndex);
+
+    expect(owing?.id).toBe('p1');
+    expect(currentPlayer(afterAWin).id).toBe('p2');
+  });
+
+  it('is the seat holding the turn whenever they owe one', () => {
+    // Two seats owing at once: the game asks the player whose turn it is.
+    const both: Session = {
+      ...afterAWin,
+      players: afterAWin.players.map((seat) => ({ ...seat, state: playing, reportSubmitted: false })),
+    };
+
+    expect(owingSeat(both.players, both.turnIndex)?.id).toBe('p2');
+  });
+
+  it('is nobody when nobody owes', () => {
+    expect(owingSeat(table.players, table.turnIndex)).toBeNull();
+  });
+
+  it('always names a seat that really owes, over whole played games', () => {
+    // The rule rather than the two states above, checked at every turn of a
+    // game played by three.
+    let session = createSession('device', [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }], CLASSIC);
+    const roll = seededRoller(4242);
+
+    for (let turn = 0; turn < 300 && !isSessionOver(session); turn++) {
+      const owing = owingSeat(session.players, session.turnIndex);
+
+      if (owing) {
+        expect(seatOwesReport(owing), `turn ${turn}`).toBe(true);
+        session = submitReport(session, owing.id, turn);
+        continue;
+      }
+
+      // Nobody owes, so nobody may be asked.
+      for (const seat of session.players) expect(seatOwesReport(seat), `turn ${turn}`).toBe(false);
+      session = advance(session, roll(), turn).session;
+    }
+  });
+
+  it('leaves no arrival unwritten, including the one that ends a game', () => {
+    // The defect as a shape: play a table of two to its end, writing through
+    // whoever owes, and every seat's account of every arrival exists — the
+    // winner's last one included, which the old writer could never reach.
+    let session = createSession('device', [{ id: 'p1' }, { id: 'p2' }], CLASSIC);
+    const roll = seededRoller(77);
+    const arrivals: string[] = [];
+    const written: string[] = [];
+
+    for (let turn = 0; turn < 400 && !isSessionOver(session); turn++) {
+      const owing = owingSeat(session.players, session.turnIndex);
+
+      if (owing) {
+        written.push(`${owing.id}@${owing.state.loka}`);
+        session = submitReport(session, owing.id, turn);
+        continue;
+      }
+
+      const moved = advance(session, roll(), turn);
+      session = moved.session;
+      if (moved.owesReport) {
+        const mover = session.players.find((seat) => seat.id === moved.playerId);
+        arrivals.push(`${moved.playerId}@${mover?.state.loka}`);
+      }
+    }
+
+    // The account that ends a game is owed after the game is over: the throw
+    // that wins is the throw that finishes the table, and the writing box stays
+    // open for it. A loop that stopped at `isSessionOver` would leave exactly
+    // one arrival unwritten — which is how this test first failed, and it was
+    // the harness giving up a turn early rather than the app losing anything.
+    for (let left = 0; left < session.players.length; left++) {
+      const owing = owingSeat(session.players, session.turnIndex);
+      if (!owing) break;
+
+      written.push(`${owing.id}@${owing.state.loka}`);
+      session = submitReport(session, owing.id, 999);
+    }
+
+    expect(written).toEqual(arrivals);
+    expect(written.some((entry) => entry.endsWith('@68'))).toBe(true);
+  });
+});
+
+describe('what is true of the player who wrote', () => {
+  const table = createSession('device', [{ id: 'p1' }, { id: 'p2' }], CLASSIC);
+
+  it('is that their game is complete, when it is', () => {
+    const finished: Session = {
+      ...table,
+      turnIndex: 1,
+      players: table.players.map((seat, index) =>
+        index === 0
+          ? {
+              ...seat,
+              state: {
+                loka: 68,
+                previous_loka: 51,
+                direction: 'win 🕉' as const,
+                consecutive_sixes: 0,
+                position_before_three_sixes: 0,
+                is_finished: true,
+              },
+            }
+          : seat,
+      ),
+    };
+
+    expect(afterWriting(finished, 'p1')).toBe('finished');
+  });
+
+  it('is whose turn it is, when the writer is not the one to throw', () => {
+    expect(afterWriting({ ...table, turnIndex: 1 }, 'p1')).toBe('not-your-turn');
+  });
+
+  it('is that they may throw, when they are', () => {
+    expect(afterWriting({ ...table, turnIndex: 0 }, 'p1')).toBe('may-throw');
   });
 });

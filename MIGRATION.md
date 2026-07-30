@@ -3466,6 +3466,31 @@ what the eighty-second pass found it to be: unreachable in a seated game.
 Start over survives a double tap, keeps the journal, and hands back a new game —
 checked by tapping it twice.
 
+## Ninety-eighth pass: the one report the game asked for and would not take
+
+Noticed while fixing the last pass and confirmed by playing it: at a shared
+table, **the report a winner owes cannot be written.**
+
+`CLASSIC` asks for it — `reportOnWinningSquare`, because 68 is the square a
+whole game was played to reach — and the throw that wins is the throw that hands
+the turn to somebody else. `nextSeat` never gives it back, and the writing box
+belonged to whoever held the turn. So the last account of a game sat owed
+forever, with the button greyed out and the winner's own game over: the one
+piece of writing this game explicitly asks for, and no way to give it.
+
+The box belongs to whoever owes a report now. The turn holder comes first,
+because in every other moment they are the one being asked, and a table where
+two seats owe at once should ask the player whose turn it is. The box says whose
+report it is when there is more than one seat, files into that seat's journal,
+reads that seat's earlier accounts of the square, and its confirmation describes
+*them* — complete, or throwing next, or waiting while somebody else throws.
+
+Two tests carry it. `owingSeat` always names a seat that really owes, at every
+turn of a played game; and a table of two played to its end leaves **no arrival
+unwritten**, the winning one included. That second test failed first because the
+harness stopped at `isSessionOver` — the account that ends a game is owed after
+the game is over, which is the shape of the thing rather than a defect in it.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -201,3 +201,19 @@ export function mayThrow(
 
   return 'yes';
 }
+
+/**
+ * What is true of the player who has just written, once the gate has opened.
+ *
+ * The mini app's version of the bot's `afterReport`, and needed for the same
+ * reason: a report is filed by whoever owes one, who is not always the seat
+ * holding the turn. "You may throw" is true of one of them at most.
+ */
+export type AfterWriting = 'finished' | 'not-your-turn' | 'may-throw';
+
+export function afterWriting(session: Session, writerId: string): AfterWriting {
+  const writer = session.players.find((player) => player.id === writerId);
+  if (writer && hasWon(writer.state)) return 'finished';
+
+  return currentPlayer(session).id === writerId ? 'may-throw' : 'not-your-turn';
+}

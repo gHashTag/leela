@@ -275,6 +275,7 @@ const EN = {
   // game is the one on Cosmic Consciousness, and being told to throw again
   // while the die is dimmed is the app describing a game the player is not in.
   'app.reportSavedDone': 'Written. The game is complete. 🕉',
+  'app.reportSavedTurn': 'Written. Player {seat} throws next.',
   'app.reportEmpty': 'A report is something written. Nothing was.',
   'app.seatTurn': 'Player {seat}',
   // Whose throw the sentence is about. At a table the header has already moved
@@ -533,6 +534,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.reportSave': 'Сохранить',
   'app.reportSaved': 'Записано. Можно бросать.',
   'app.reportSavedDone': 'Записано. Игра завершена. 🕉',
+  'app.reportSavedTurn': 'Записано. Ход игрока {seat}.',
   'app.reportEmpty': 'Отчёт — это то, что написано. Здесь не написано ничего.',
   'app.seatTurn': 'Игрок {seat}',
   'app.seatSaid': 'Игрок {seat} — {said}',
