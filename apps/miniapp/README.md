@@ -37,7 +37,7 @@ the same as the game being playable. A build that emits a broken asset path, or
 a book whose pages never reached the artifact, deploys green.
 
 ```bash
-bun run src/smoke-run.ts https://t27.ai/leela/
+bun run scripts/smoke-run.ts https://t27.ai/leela/
 ```
 
 Five checks, each failing for a different reason: the app's HTML, the book's

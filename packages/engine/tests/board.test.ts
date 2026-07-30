@@ -102,3 +102,20 @@ describe('board topology', () => {
     expect(TOTAL_PLANS).toBe(72);
   });
 });
+
+describe('an index that can miss', () => {
+  /**
+   * `noUncheckedIndexedAccess` is on for what ships, and these are the two
+   * places in the engine where the answer to "what if it misses" changed from
+   * a type assertion to a decision.
+   */
+  it('finds every plan, and refuses everything else', () => {
+    for (let plan = 1; plan <= TOTAL_PLANS; plan += 1) {
+      const { row, column } = boardPosition(plan);
+      expect(BOARD_ROWS[row]?.[column]).toBe(plan);
+    }
+    for (const off of [0, TOTAL_PLANS + 1, -1, 1.5, NaN]) {
+      expect(() => boardPosition(off), String(off)).toThrow(RangeError);
+    }
+  });
+});

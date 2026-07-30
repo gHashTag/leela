@@ -232,7 +232,9 @@ export function start(room: Room, byPlayerId: string): CommandResult {
     return { room, replies: [say(messageFor(room.language, 'start.already'), false)] };
   }
 
-  if (room.session.players[0].id !== byPlayerId) {
+  // Seat zero opened the table. A table with nobody in it is not one this
+  // player may start either, so the two answers are the same.
+  if (room.session.players[0]?.id !== byPlayerId) {
     return { room, replies: [say(messageFor(room.language, 'start.hostOnly'), false)] };
   }
 

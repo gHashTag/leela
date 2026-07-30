@@ -50,7 +50,7 @@ export function isLanguage(value: string): value is Language {
  */
 export function resolveLanguage(locale: string | undefined | null): Language {
   if (!locale) return FALLBACK_LANGUAGE;
-  const primary = locale.toLowerCase().split(/[-_]/)[0];
+  const [primary = ''] = locale.toLowerCase().split(/[-_]/);
   return isLanguage(primary) ? primary : FALLBACK_LANGUAGE;
 }
 

@@ -36,10 +36,13 @@ export function channels(hex: string): [number, number, number] {
 
 /** Relative luminance, per WCAG. */
 export function luminance(hex: string): number {
-  const [r, g, b] = channels(hex).map((channel) =>
-    channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4,
-  );
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  // Named rather than destructured out of a mapped array: three channels are
+  // three values, and an array says only that there are some.
+  const [red, green, blue] = channels(hex);
+  const linear = (channel: number) =>
+    channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+
+  return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue);
 }
 
 /** Contrast ratio between two colours, 1 to 21. Order does not matter. */

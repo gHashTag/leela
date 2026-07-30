@@ -13,7 +13,8 @@
   ],
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "typecheck:strict": "tsc --noEmit -p tsconfig.src.json"
   },
   "dependencies": {
     "@leela/engine": "workspace:*",

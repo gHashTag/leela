@@ -11,6 +11,7 @@
   "scripts": {
     "test": "bun run --filter '*' test",
     "typecheck": "bun run --filter '*' typecheck",
+    "typecheck:strict": "bun run --filter '*' typecheck:strict",
     "content:build": "node scripts/build-content.mjs",
     "verify": "bun run content:build && bun run test"
   },

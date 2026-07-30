@@ -30,8 +30,8 @@ export function parseContract(source: string): ContractBoard {
   const jumps = new Map<number, number>();
   const constants = new Map<string, number>();
 
-  for (const match of source.matchAll(/uint\d*\s+constant\s+(\w+)\s*=\s*(\d+)/g)) {
-    constants.set(match[1], Number(match[2]));
+  for (const [, name, value] of source.matchAll(/uint\d*\s+constant\s+(\w+)\s*=\s*(\d+)/g)) {
+    if (name !== undefined) constants.set(name, Number(value));
   }
 
   // `newPlan == 12` ... `newPlan = 8` — the assignment is the next one after

@@ -26,6 +26,20 @@ jobs:
             echo "::endgroup::"
           done
 
+      # The shipped code, with `noUncheckedIndexedAccess`. Two functions here
+      # were typed to return a value and returned undefined - `ruleSetById` for
+      # a variant no longer known, `currentPlayer` for a stale turn index - and
+      # each made a chat throw on every command, forever, three files from the
+      # row that was wrong. Tests are out of scope: `rows[0]` there is a value
+      # the test built two lines earlier.
+      - name: Typecheck what ships
+        run: |
+          for pkg in packages/engine packages/content packages/db packages/ai packages/contracts apps/bot apps/miniapp apps/docs; do
+            echo "::group::strict $pkg"
+            (cd "$pkg" && bunx tsc --noEmit -p tsconfig.src.json)
+            echo "::endgroup::"
+          done
+
       - name: Test
         run: |
           for pkg in packages/engine packages/content packages/db packages/ai packages/contracts apps/bot apps/miniapp apps/docs; do
@@ -47,6 +61,11 @@ jobs:
           bun-version: latest
       - run: bun install --frozen-lockfile
       - run: node scripts/audit-unread.mjs
+
+      # A flag turned on in eight packages is a flag that will be missing from
+      # the ninth. Enforced rather than reported: unlike a write-only field,
+      # there is no judgement call in whether a config file exists.
+      - run: node scripts/audit-configs.mjs
 
   content-is-reproducible:
     # The dataset under packages/content/data is generated. If a commit edits it

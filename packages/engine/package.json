@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "typecheck:strict": "tsc --noEmit -p tsconfig.src.json"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.8",

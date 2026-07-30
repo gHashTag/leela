@@ -79,8 +79,8 @@ export const BOARD_COLUMNS = 9;
 
 /** Where a plan sits on the board: row 0 is the top row, column 0 the left. */
 export function boardPosition(plan: number): { row: number; column: number } {
-  for (let row = 0; row < BOARD_ROWS.length; row++) {
-    const column = BOARD_ROWS[row].indexOf(plan);
+  for (const [row, squares] of BOARD_ROWS.entries()) {
+    const column = squares.indexOf(plan);
     if (column !== -1) return { row, column };
   }
   throw new RangeError(`plan ${plan} is not on the board`);

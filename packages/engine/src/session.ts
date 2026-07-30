@@ -113,7 +113,11 @@ function nextSeat(session: Session, from: number): number {
   const count = session.players.length;
   for (let step = 1; step <= count; step++) {
     const candidate = (from + step) % count;
-    if (!isPlayerDone(session.players[candidate])) return candidate;
+    const player = session.players[candidate];
+    // `count` is never zero for a session `createSession` built, but the
+    // modulo of zero is NaN and the seat it indexes is nobody — so the check
+    // is here rather than in a comment about what cannot happen.
+    if (player && !isPlayerDone(player)) return candidate;
   }
   return from;
 }

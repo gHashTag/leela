@@ -99,7 +99,7 @@ function latestEntry(user: LegacyUser): LegacyHistoryEntry | undefined {
 function previousPlanFrom(user: LegacyUser): number {
   if (!Array.isArray(user.history) || user.history.length < 2) return user.plan;
   const sorted = [...user.history].sort((a, b) => b.createDate - a.createDate);
-  return sorted[1].plan;
+  return sorted[1]?.plan ?? user.plan;
 }
 
 /** Map a legacy history status onto a direction. */
@@ -156,7 +156,7 @@ export function playerFromLegacy(user: LegacyUser, id: string): NewPlayer {
 /** Legacy rows store locales loosely; reduce to a primary subtag. */
 function normaliseLanguage(lang: string | undefined): string {
   if (!lang) return 'en';
-  const primary = lang.toLowerCase().split(/[-_]/)[0];
+  const [primary = ''] = lang.toLowerCase().split(/[-_]/);
   return /^[a-z]{2}$/.test(primary) ? primary : 'en';
 }
 

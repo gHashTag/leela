@@ -37,14 +37,15 @@ export function renderMarkdown(source: string): string {
 
       const heading = trimmed.match(/^(#{1,6})\s+(.*)$/);
       if (heading) {
-        const level = Math.min(heading[1].length + 1, 6);
-        return `<h${level}>${inline(heading[2])}</h${level}>`;
+        const [, hashes = '', text = ''] = heading;
+        const level = Math.min(hashes.length + 1, 6);
+        return `<h${level}>${inline(text)}</h${level}>`;
       }
 
       // A run of numbered or bulleted lines is a list.
       const lines = trimmed.split('\n');
       if (lines.every((line) => /^\s*(\d+[.)]|[-*])\s+/.test(line))) {
-        const ordered = /^\s*\d/.test(lines[0]);
+        const ordered = /^\s*\d/.test(lines[0] ?? '');
         const items = lines
           .map((line) => `<li>${inline(line.replace(/^\s*(\d+[.)]|[-*])\s+/, ''))}</li>`)
           .join('');

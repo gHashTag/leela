@@ -1,0 +1,20 @@
+{
+  // The shipped code, held to one rule the editor configuration does not:
+  // `noUncheckedIndexedAccess`. An index into an array or a record can miss,
+  // and without this the type says it cannot.
+  //
+  // Two functions in this repository were typed to return a value and returned
+  // `undefined`: `ruleSetById` for a variant no longer known, `currentPlayer`
+  // for a stale turn index. Each made a chat throw on every command, forever,
+  // three files from the row that was wrong. This is the flag that would have
+  // said so at the keyboard.
+  //
+  // Tests are deliberately out of scope. `rows[0]` in a test is a value the
+  // test constructed two lines earlier, and a guard there adds noise without
+  // adding truth.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true
+  },
+  "include": ["src"]
+}

@@ -1030,6 +1030,46 @@ that only rejects can be satisfied by rejecting everything; this is the half
 that says it is not. Building the rows by hand for that test lost `direction`
 and the assertion caught it — which is exactly the drift it exists for.
 
+## Thirty-second pass: the flag that would have said so
+
+Two functions were typed to return a value and returned `undefined`. Both were
+found by hand, one per pass. `noUncheckedIndexedAccess` is the compiler flag
+that describes what an index into an array or a record actually means, and it
+was switched off in every package — explicitly, `"noUncheckedIndexedAccess":
+false`.
+
+Turning it on across the monorepo: **308 errors, 27 of them in shipped code.**
+None of the 27 was a live bug — every one was provably safe and the type did
+not know it. That is the point: the flag is not for the bugs already found, it
+is for the next `ruleSetById`.
+
+Each of the 27 is fixed so the safety is visible rather than asserted. No `!`
+anywhere: a loop over `entries()` instead of an index, a destructured default
+instead of `split()[0]`, a named channel instead of one destructured out of a
+mapped array, an explicit `?? user.plan` where the fallback is meaningful. Three
+copied blocks in `extract.ts` became one function taking two patterns — they
+differed only in the inner regex, and a copy is where a fix goes missing.
+
+**Tests are out of scope, deliberately.** `rows[0]` in a test is a value the
+test built two lines earlier; a guard there adds noise rather than truth. So
+each package has a `tsconfig.src.json` and a `typecheck:strict` script, and CI
+runs both typechecks.
+
+**A flag turned on in eight files is a flag that will be missing from the
+ninth,** so `scripts/audit-configs.mjs` checks that every workspace shipping
+code has the strict config, that it says what it should, and that
+`package.json` can run it. On its first run it reported a ninth workspace —
+`packages/ui`, an empty untracked placeholder like `apps/mobile` and
+`apps/site`. That was the audit being wrong rather than the repository: a
+workspace is a `package.json`, not a directory, and a check reading the
+filesystem would otherwise say different things here and in CI.
+
+**One real thing fell out.** `apps/miniapp/src/smoke-run.ts` is a Node program
+— it reads `process.argv` — sitting in the source tree of a browser bundle, and
+it only typechecked because a test file imported `vitest`, whose types drag
+Node's globals in behind them. It lives in `scripts/` now, and `src` is
+typechecked without Node's globals so the next one cannot hide the same way.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

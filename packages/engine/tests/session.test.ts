@@ -293,3 +293,34 @@ describe('the leaderboard puts people where they actually are', () => {
     expect(s.players.map((p) => p.id)).toEqual(order);
   });
 });
+
+describe('a session with nobody at it', () => {
+  /**
+   * `createSession` refuses an empty table, so this shape only arrives from
+   * outside — a hand-built object, or rows read out of a database. It used to
+   * produce `(from + step) % 0`, which is NaN, and the seat NaN indexes is
+   * nobody. The turn holder was then `undefined` typed as a `SeatedPlayer`.
+   */
+  const empty: Session = {
+    id: 'nobody',
+    turnIndex: 0,
+    rollCount: 0,
+    rules: NEUROLEELA,
+    players: [],
+  };
+
+  it('says whose turn it is by throwing, not by handing back nothing', () => {
+    expect(() => currentPlayer(empty)).toThrow(SessionError);
+    expect(() => currentPlayer(empty)).toThrow(/turn 0 at a table of 0/);
+  });
+
+  it('says the same for a turn index past the last seat', () => {
+    const two = createSession('s', [{ id: 'a' }, { id: 'b' }]);
+    expect(() => currentPlayer({ ...two, turnIndex: 5 })).toThrow(/table of 2/);
+  });
+
+  it('does not loop or crash when the turn has to move', () => {
+    // `advance` reaches `nextSeat`, which divided by the number of players.
+    expect(() => advance(empty, 3, NOW)).toThrow();
+  });
+});

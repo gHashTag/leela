@@ -199,3 +199,27 @@ describe('renderBoardMessage', () => {
     expect(text).toContain('arrow');
   });
 });
+
+describe('a token for any seat at all', () => {
+  // `TOKENS[seat % TOKENS.length]` was typed `string` and is not: a seat that
+  // is not a whole number indexes nothing, and the board then drew `undefined`
+  // where a player should be.
+  it('gives a mark for every real seat', () => {
+    for (let seat = 0; seat < 6; seat += 1) {
+      expect(TOKENS).toContain(tokenFor(seat));
+    }
+  });
+
+  it('gives one for a seat number nobody should have', () => {
+    for (const seat of [-1, 6, 99, 1.5, -0.5]) {
+      expect(TOKENS, String(seat)).toContain(tokenFor(seat));
+    }
+  });
+
+  it('never returns nothing', () => {
+    for (const seat of [NaN, Infinity, -Infinity]) {
+      expect(typeof tokenFor(seat), String(seat)).toBe('string');
+      expect(tokenFor(seat).length).toBeGreaterThan(0);
+    }
+  });
+});

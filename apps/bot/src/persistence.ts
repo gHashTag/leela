@@ -52,7 +52,9 @@ export function roomToRows(room: Room): { session: StoredSession; seats: StoredS
     session: {
       id: room.chatId,
       // Seat zero opened the table; that is the whole definition of the host.
-      host_id: room.session.players[0].id,
+      // A room with no seats never comes from `createSession`, and an empty
+      // host id is a row a reader will refuse rather than a crash here.
+      host_id: room.session.players[0]?.id ?? '',
       ruleset: base.ruleset,
       turn_index: base.turn_index,
       // The engine's roll count and the bot's are the same number, so storing

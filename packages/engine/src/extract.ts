@@ -54,42 +54,41 @@ export function extractBoards(source: string): ExtractedBoard {
     Object.assign(kind === 'snake' ? snakes : arrows, jumps);
   };
 
-  // 1. Object literal, named.
-  const literal = /(snake|arrow)\w*\s*(?::[^=]*)?=\s*(?:Object\.freeze\()?\{([^}]*)\}/gi;
-  for (const match of source.matchAll(literal)) {
-    const jumps: Record<number, number> = {};
-    // Keys may be quoted — JSON, and any source that writes `"12": 8`.
-    for (const pair of match[2].matchAll(/["']?(\d+)["']?\s*:\s*(\d+)/g)) {
-      jumps[Number(pair[1])] = Number(pair[2]);
-    }
-    if (Object.keys(jumps).length > 0) {
-      add(match[1].toLowerCase() as 'snake' | 'arrow', jumps);
-    }
-  }
+  // A named declaration whose body lists jumps, however the pairs are written.
+  // Three shapes, one loop: the blocks were copies of each other differing
+  // only in the inner pattern, and a copy is where a fix goes missing.
+  const declared = (outer: RegExp, pair: RegExp) => {
+    for (const [, kind, body] of source.matchAll(outer)) {
+      if (kind === undefined || body === undefined) continue;
 
-  // 2. Array of pairs, named.
-  const paired = /(snake|arrow)\w*\s*(?::[^=]*)?=\s*\[([\s\S]*?)\]\s*;/gi;
-  for (const match of source.matchAll(paired)) {
-    const jumps: Record<number, number> = {};
-    for (const pair of match[2].matchAll(/\[\s*(\d+)\s*,\s*(\d+)\s*\]/g)) {
-      jumps[Number(pair[1])] = Number(pair[2]);
+      const jumps: Record<number, number> = {};
+      for (const [, from, to] of body.matchAll(pair)) {
+        if (from !== undefined && to !== undefined) jumps[Number(from)] = Number(to);
+      }
+
+      if (Object.keys(jumps).length > 0) {
+        add(kind.toLowerCase() as 'snake' | 'arrow', jumps);
+      }
     }
-    if (Object.keys(jumps).length > 0) {
-      add(match[1].toLowerCase() as 'snake' | 'arrow', jumps);
-    }
-  }
+  };
+
+  // 1. Object literal. Keys may be quoted — JSON, and `"12": 8`.
+  declared(
+    /(snake|arrow)\w*\s*(?::[^=]*)?=\s*(?:Object\.freeze\()?\{([^}]*)\}/gi,
+    /["']?(\d+)["']?\s*:\s*(\d+)/g,
+  );
+
+  // 2. Array of pairs.
+  declared(
+    /(snake|arrow)\w*\s*(?::[^=]*)?=\s*\[([\s\S]*?)\]\s*;/gi,
+    /\[\s*(\d+)\s*,\s*(\d+)\s*\]/g,
+  );
 
   // 3. Array of `{ from, to }` objects, as the Expo tests write it.
-  const objects = /(snake|arrow)\w*\s*(?::[^=]*)?=\s*\[([\s\S]*?)\]\s*;/gi;
-  for (const match of source.matchAll(objects)) {
-    const jumps: Record<number, number> = {};
-    for (const pair of match[2].matchAll(/\{\s*from:\s*(\d+)\s*,\s*to:\s*(\d+)\s*\}/g)) {
-      jumps[Number(pair[1])] = Number(pair[2]);
-    }
-    if (Object.keys(jumps).length > 0) {
-      add(match[1].toLowerCase() as 'snake' | 'arrow', jumps);
-    }
-  }
+  declared(
+    /(snake|arrow)\w*\s*(?::[^=]*)?=\s*\[([\s\S]*?)\]\s*;/gi,
+    /\{\s*from:\s*(\d+)\s*,\s*to:\s*(\d+)\s*\}/g,
+  );
 
   // 4. A switch whose cases assign `plan:`.
   const switched =

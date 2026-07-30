@@ -15,7 +15,8 @@ import type { Room } from './commands';
 export const TOKENS = ['🔵', '🔴', '🟢', '🟡', '🟣', '🟠'] as const;
 
 export function tokenFor(seat: number): string {
-  return TOKENS[seat % TOKENS.length];
+  // A seat that is not a whole number indexes nothing; every real one wraps.
+  return TOKENS[Math.abs(Math.trunc(seat)) % TOKENS.length] ?? TOKENS[0];
 }
 
 /** Escape the three characters Telegram's HTML parse mode cares about. */

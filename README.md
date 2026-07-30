@@ -171,21 +171,30 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 198 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/engine` | 202 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 145 | 22 languages of plans, 2 of the game's own voice |
 | `@leela/db` | 95 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 126 | the companion — prompts built from the plan text |
 | `@leela/contracts` | 28 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
-| `@leela/bot` | 265 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
+| `@leela/bot` | 268 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 112 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
 | `@leela/miniapp` | 87 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-1056 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+1063 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 reports fields that are written and never read, and exports with no caller:
 
 ```bash
 node scripts/audit-unread.mjs
+node scripts/audit-configs.mjs
+```
+
+What ships is typechecked a second time with `noUncheckedIndexedAccess`, which
+is what an index into an array or a record actually means. Tests are out of
+scope on purpose: `rows[0]` there is a value the test built two lines earlier.
+
+```bash
+bun run typecheck:strict
 ```
 
 ## Migrating a live database

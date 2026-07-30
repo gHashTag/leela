@@ -1,13 +1,18 @@
 /**
  * Run the deployment checks against a live site.
  *
- *   bun run src/smoke-run.ts https://t27.ai/leela/
+ *   bun run scripts/smoke-run.ts https://t27.ai/leela/
  *
  * Exits non-zero when anything is wrong, so CI fails a deployment that
  * uploaded successfully and serves something broken.
+ *
+ * Outside `src` because it is a Node program in a browser app: it reads
+ * `process.argv`, and it only typechecked at all because a test file happened
+ * to import `vitest`, whose types drag Node's globals in behind it. A build
+ * tool has no business being in the bundle's source tree either.
  */
 
-import { allPassed, describeResults, runChecks, type Fetcher } from './smoke';
+import { allPassed, describeResults, runChecks, type Fetcher } from '../src/smoke';
 
 const base = process.argv[2] ?? 'https://t27.ai/leela/';
 

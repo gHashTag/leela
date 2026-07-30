@@ -28,7 +28,7 @@ export interface BuildResult {
 /** Strip frontmatter from a rescued markdown file. */
 export function stripFrontmatter(source: string): string {
   const match = source.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n?([\s\S]*)$/);
-  return (match ? match[1] : source).trim();
+  return (match?.[1] ?? source).trim();
 }
 
 /**
@@ -47,8 +47,11 @@ export function loadLegal(dir: string): Map<string, Map<string, string>> {
     if (!match) continue;
 
     const [, name, language] = match;
-    if (!documents.has(name)) documents.set(name, new Map());
-    documents.get(name)!.set(language, stripFrontmatter(readFileSync(join(dir, file), 'utf8')));
+    if (name === undefined || language === undefined) continue;
+
+    const byLanguage = documents.get(name) ?? new Map<string, string>();
+    byLanguage.set(language, stripFrontmatter(readFileSync(join(dir, file), 'utf8')));
+    documents.set(name, byLanguage);
   }
 
   return documents;
