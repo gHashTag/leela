@@ -34,6 +34,20 @@ jobs:
             echo "::endgroup::"
           done
 
+  # Three fields in three passes were written everywhere and read nowhere -
+  # broadcast, rerollOnRepeat, needs_report - each looking complete in review.
+  # Reported rather than enforced: a field can be legitimately write-only, and a
+  # check that fails a build on a judgement call gets switched off.
+  unread-fields:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: node scripts/audit-unread.mjs
+
   content-is-reproducible:
     # The dataset under packages/content/data is generated. If a commit edits it
     # by hand the generator and the repository disagree, and the next rebuild

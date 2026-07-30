@@ -194,6 +194,14 @@ export function createBot({
         journey,
       });
 
+      // `fromModel` distinguishes an answer from the fallback sentence shown
+      // when the companion is unreachable. Logging it is how an operator learns
+      // the companion is down: the player sees a plausible message either way,
+      // so silence here would make an outage invisible.
+      if (!reflection.fromModel) {
+        log(`[bot] companion unavailable, sent the fallback for plan ${effect.plan}`);
+      }
+
       // Through `deliver`, not `ctx.reply`: a reflection on someone's own
       // report is as private as the report gate that asked for it. Going
       // straight to the chat would read it out to the whole table.

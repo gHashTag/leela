@@ -516,6 +516,39 @@ Three passes, three flags written and never read — `broadcast`,
 of them; it is that writing a field feels like finishing the work, and nothing
 in a type system disagrees.
 
+## Seventeenth pass: stop finding these by hand
+
+Three passes in a row found a field written everywhere and read nowhere. The
+fourth was not going to be found by remembering to look.
+
+`scripts/audit-unread.mjs` reports them. It is in CI, and it **does not fail the
+build**: a field can be legitimately write-only, and a check that blocks on a
+judgement call gets switched off rather than heeded. There are 34 such fields
+here, each with a written reason, so the list cannot quietly become where unread
+fields go to be forgotten.
+
+Tests are not searched, deliberately. `broadcast` was read in its own tests and
+nowhere else, which is precisely the state worth catching: a field the suite
+confirms and the program ignores.
+
+**It found one immediately.** `Reflection.fromModel` distinguishes a real answer
+from the sentence shown when the companion is unreachable — and nothing read it,
+so an outage looked exactly like a reply. The bot logs it now: the player sees a
+plausible message either way, so silence there made the failure invisible.
+
+Building it cost three defects of its own, all caught by its tests:
+
+- A stylesheet held in a `.ts` template literal is full of `gap: 3px` lines that
+  parse as field declarations. Reporting them taught nothing except to distrust
+  the report.
+- `temperature: options.temperature ?? 0.7` was counted as a pure write, because
+  the line looked like a declaration. Three separate rules for declarations,
+  columns and literals became one: remove every `name:`, and read whatever
+  survives.
+- The regex was escaped one level too deep, so `[\w$]` matched a literal
+  backslash. The test that failed was the one asserting it would have caught all
+  three original flags.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
