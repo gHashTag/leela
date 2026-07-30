@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@leela/content": "workspace:*",
-    "@leela/engine": "workspace:*"
+    "@leela/engine": "workspace:*",
+    "@leela/journal": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "22.20.1",

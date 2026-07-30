@@ -137,6 +137,17 @@ const EN = {
     'That answer is yours alone, and I cannot message you directly yet. ' +
     'Open a chat with me, send /start, then try {command} again.',
 
+  // A path arriving as a file from the mini app. One-way and manual, and the
+  // only bridge between the two surfaces that needs no server.
+  'file.took': {
+    one: 'Took in {count} plan from your file. /path shows the whole of it.',
+    other: 'Took in {count} plans from your file. /path shows the whole of it.',
+  },
+  'file.nothingNew': 'Nothing in that file is new to me.',
+  'file.unreadable': 'That is not a path written by Leela. Save one from the mini app.',
+  'file.tooBig': 'That file is too large to be a path.',
+  'file.notKept': 'This bot is not keeping reports, so there is nowhere to put a path.',
+
   // --- the mini app ----------------------------------------------------------
   //
   // Phrased in the second person and without a name: the mini app is one
@@ -298,6 +309,17 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'chat.private':
     'Этот ответ только ваш, а написать вам напрямую я пока не могу. ' +
     'Откройте со мной чат, отправьте /start и повторите {command}.',
+
+  'file.took': {
+    one: 'Принял {count} план из вашего файла. /path покажет весь путь.',
+    few: 'Принял {count} плана из вашего файла. /path покажет весь путь.',
+    many: 'Принял {count} планов из вашего файла. /path покажет весь путь.',
+    other: 'Принял {count} плана из вашего файла. /path покажет весь путь.',
+  },
+  'file.nothingNew': 'В этом файле нет ничего нового для меня.',
+  'file.unreadable': 'Это не путь, записанный Лилой. Сохраните его в мини-приложении.',
+  'file.tooBig': 'Этот файл слишком велик, чтобы быть путём.',
+  'file.notKept': 'Этот бот не хранит отчёты, поэтому путь положить некуда.',
 
   'app.waiting': 'Бросьте шестёрку, чтобы войти в игру',
   'app.entered': 'Шестёрка. Вы входите в игру на {to}. {title}',

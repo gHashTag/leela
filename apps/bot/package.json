@@ -16,7 +16,8 @@
     "@leela/engine": "workspace:*",
     "grammy": "^1.30.0",
     "@leela/db": "workspace:*",
-    "@leela/ai": "workspace:*"
+    "@leela/ai": "workspace:*",
+    "@leela/journal": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

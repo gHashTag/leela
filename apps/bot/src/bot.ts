@@ -20,6 +20,7 @@ import {
   nudgeToPrivate,
 } from './delivery';
 import { escapeHtml, renderBoardMessage, renderPlan } from './render';
+import { MAX_FILE_BYTES, asReport, decide, keep } from './take-in';
 import {
   MemoryRoomStore,
   discardReports,
@@ -485,6 +486,66 @@ export function createBot({
       ],
     };
   }
+
+  /**
+   * A path, sent as a file from the mini app.
+   *
+   * The two surfaces cannot see each other's reports without a server. A file
+   * needs no server: the mini app saves one, the player forwards it here, and
+   * whatever is new is kept. `@leela/journal` is the format, shared so the two
+   * cannot describe it differently.
+   */
+  bot.on('message:document', async (ctx) => {
+    const who = sender(ctx);
+    if (!who) return;
+
+    const language = languageOf(ctx);
+    const document = ctx.message.document;
+    const size = document.file_size ?? 0;
+
+    // Asked before the file is fetched: there is no reason to download a
+    // hundred megabytes to find out it is not a path.
+    if (size > MAX_FILE_BYTES) {
+      await ctx.reply(messageFor(language, 'file.tooBig'));
+      return;
+    }
+
+    const existing = reports.history ? await reports.history(who.id) : null;
+    let text = '';
+
+    if (existing !== null) {
+      try {
+        const file = await ctx.getFile();
+        const url = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
+        text = await (await fetch(url)).text();
+      } catch (error) {
+        log(`[bot] could not read the file: ${String(error)}`);
+        await ctx.reply(messageFor(language, 'file.unreadable'));
+        return;
+      }
+    }
+
+    const outcome = decide(text, size, existing?.map(asReport) ?? null);
+
+    if (outcome.kind === 'took') {
+      await keep(reports, who.id, outcome.added);
+      await ctx.reply(messageFor(language, 'file.took', { count: outcome.added.length }));
+      return;
+    }
+
+    await ctx.reply(
+      messageFor(
+        language,
+        outcome.kind === 'nothing-new'
+          ? 'file.nothingNew'
+          : outcome.kind === 'too-big'
+            ? 'file.tooBig'
+            : outcome.kind === 'not-kept'
+              ? 'file.notKept'
+              : 'file.unreadable',
+      ),
+    );
+  });
 
   // Anything that is not a command still deserves an answer. Silence is
   // indistinguishable from a broken bot, and that is how this one first looked.

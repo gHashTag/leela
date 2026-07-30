@@ -1406,6 +1406,40 @@ hand-kept copy of the thing under suspicion:
 
 In CI, beside the other audits.
 
+## Forty-third pass: a path can now be sent to the bot
+
+The mini app can save what a player has written. The bot could not read one
+back, so somebody who used both surfaces had half a path in each and a whole
+one in neither. Sharing them properly needs a server and a shared identity —
+`specs/001-shared-reports`, which is a deployment decision. **A file needs
+neither.**
+
+Send the JSON the mini app saves to the bot, and whatever is new is kept.
+One-way and manual, and the only bridge between the two surfaces that exists
+today.
+
+**The format is its own package,** `@leela/journal`, with no dependencies at
+all. It is imported by a browser bundle and by a Bun process, and two surfaces
+that describe a format separately describe it differently — which is the
+mistake this whole repository was assembled to undo. The mini app's
+`journal-file.ts` keeps only what is its own: turning a path into something to
+*read*.
+
+**What the tests hold.** Taking a file in is a union, so nothing already
+written is lost; the same file twice adds nothing the second time; a file that
+repeats itself adds each report once. A file is refused whole or taken whole —
+half a path is worse than none, because the player would not know which half.
+And `decide` is **total**: a file is a thing a stranger can send, so every
+input produces an outcome that can be said out loud and nothing throws.
+
+**Two reports that differ only in when are two reports.** A player who returns
+to a plan writes about it again, and the key includes the moment for that
+reason.
+
+The size is checked against what Telegram reports *before* the file is
+downloaded: there is no reason to fetch a hundred megabytes to find out it is
+not a path.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
