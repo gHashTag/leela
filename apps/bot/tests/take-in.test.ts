@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { toDocument, type Report } from '@leela/journal';
-import { MAX_FILE_BYTES, asReport, decide, keep } from '../src/take-in';
+import { squareText, toDocument, type Report } from '@leela/journal';
+import { MAX_FILE_BYTES, asReport, decide, decideSquare, keep } from '../src/take-in';
 import { MemoryReportSink, type StoredReport } from '../src/store';
 
 /**
@@ -240,5 +240,67 @@ describe('the moment a report was written', () => {
       const kept = await sink.history?.('a');
       expect(kept?.[0]?.createdAt.getTime()).toBe(1_900_000_000_000);
     });
+  });
+});
+
+describe('one square, sent as the words it was shared as', () => {
+  /**
+   * A file is a path; this is the thing people actually pass on.
+   *
+   * The difference is the whole of the care. A square carries no time, so it is
+   * stamped on arrival — which means the file's sameness rule cannot apply:
+   * `newEntries` tells one import from a second by the moment each report was
+   * written, and two `/take`s of one square are an hour apart. A doubled square
+   * is worse than untidy: it invents a return to a square nobody returned to,
+   * and the returns are what `/returns` reads.
+   */
+  const kept: Report[] = [{ plan: 6, text: 'Mine, from before.', at: 1_700_000_000_000 }];
+  const shared = squareText(41, 'The human plane', 'What it asked of me.', 'to stop hurrying');
+  const NOW = 1_700_000_100_000;
+
+  it('takes in anything the mini app can share', () => {
+    for (const plan of [1, 6, 41, 68, 72]) {
+      const outcome = decideSquare(squareText(plan, `Title ${plan}`, 'Said.', ''), kept, NOW);
+      expect(outcome.kind, `plan ${plan}`).toBe('took');
+      expect(outcome.kind === 'took' && outcome.added[0]?.plan, `plan ${plan}`).toBe(plan);
+    }
+  });
+
+  it('stamps it with the moment it arrived, because it carries none', () => {
+    const outcome = decideSquare(shared, kept, NOW);
+    expect(outcome.kind === 'took' && outcome.added[0]?.at).toBe(NOW);
+  });
+
+  it('adds nothing the second time, however long the wait', () => {
+    // The rule the file gets from its timestamps and this cannot.
+    const first = decideSquare(shared, kept, NOW);
+    expect(first.kind).toBe('took');
+
+    const after = first.kind === 'took' ? [...kept, ...first.added] : kept;
+    for (const later of [1, 1_000, 86_400_000, 400 * 86_400_000]) {
+      expect(decideSquare(shared, after, NOW + later).kind, String(later)).toBe('nothing-new');
+    }
+  });
+
+  it('takes a different account of the same square, which is the game', () => {
+    const first = decideSquare(shared, kept, NOW);
+    const after = first.kind === 'took' ? [...kept, ...first.added] : kept;
+    const again = squareText(41, 'The human plane', 'And this time, something else.', '');
+
+    expect(decideSquare(again, after, NOW + 1000).kind).toBe('took');
+  });
+
+  it('refuses what is not a square rather than filing something wrong', () => {
+    for (const text of ['', 'hello', '41.', '0. Not a square\n\nsaid', 'no number\n\nsaid']) {
+      expect(decideSquare(text, kept, NOW).kind, JSON.stringify(text)).toBe('unreadable');
+    }
+  });
+
+  it('says so when there is nowhere to put it', () => {
+    // A store that keeps nothing and a square it could not read are different
+    // facts, and the absence is checked first: there is no point reading a
+    // square nothing can hold.
+    expect(decideSquare(shared, null, NOW).kind).toBe('not-kept');
+    expect(decideSquare('nonsense', null, NOW).kind).toBe('not-kept');
   });
 });

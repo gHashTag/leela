@@ -90,7 +90,7 @@ import {
   saveJournalFor,
   writingsOn,
 } from './reports';
-import { canRoll, headline, standing } from './view';
+import { canRoll, headline, lineFor, standing } from './view';
 
 /** Telegram's WebApp object, when we are running inside Telegram. */
 interface TelegramWebApp {
@@ -297,6 +297,13 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
   el.restart.textContent = messageFor(language, 'app.restart');
 
   el.say.className = 'say';
+
+  // Which of the three the line is saying, and what becomes of the
+  // announcement — one rule, in `view`, rather than the order of two
+  // statements at every call site that has something to report.
+  const line = lineFor(announcement, event !== undefined);
+  announcement = line.announcement;
+
   if (!event) {
     // Two sources, in order: what the app has just been told to say, and
     // otherwise where the player stands. Before there was a standing line this
@@ -305,17 +312,15 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
     // silently ate four confirmations that happened to be set before a redraw.
     // An announcement outlives its redraw and nothing else, which is the whole
     // rule.
-    if (announcement !== null) {
-      el.say.textContent = announcement;
+    if (line.says === 'announcement') {
+      el.say.textContent = line.announcement;
     } else {
-      const line = standing(state, owed, (plan) => planFor(plan).title);
-      el.say.textContent = messageFor(language, line.key, line.params ?? {});
+      const where = standing(state, owed, (plan) => planFor(plan).title);
+      el.say.textContent = messageFor(language, where.key, where.params ?? {});
       if (hasWon(state)) el.say.classList.add('win');
     }
   }
   if (event) {
-    // A throw is the next thing happening, so whatever was announced is over.
-    announcement = null;
     // Named when there is more than one seat: the header has already moved to
     // whoever throws next, so an unattributed sentence reads as theirs.
     el.say.textContent = attribute(

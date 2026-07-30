@@ -127,3 +127,35 @@ export function standing(state: GameState, owed: boolean, titleOf: TitleOf): Sta
 export function canRoll(session: Session): boolean {
   return !isSessionOver(session);
 }
+
+/**
+ * Which of the three things the line under the board is saying, and what
+ * becomes of the announcement.
+ *
+ * There are three: a throw that just happened, something the app was told to
+ * say, and where the player stands. For most of this app's life there were two,
+ * and the second survived by accident — nothing overwrote it. Then the standing
+ * line arrived and the accident ended: four confirmations were written straight
+ * to the element just before a redraw, and the redraw ate all four at once.
+ * Seats set, game restarted, intention held, path imported — every one of them
+ * silently.
+ *
+ * That is a *class* of defect rather than four bugs, so the rule is stated here
+ * instead of in the order of two statements at four call sites: an announcement
+ * outlives any number of redraws and nothing else, and a throw ends it, because
+ * a throw is the next thing happening.
+ */
+export type Saying = 'move' | 'announcement' | 'standing';
+
+export interface Line {
+  says: Saying;
+  /** The announcement to keep, or null once it is over. */
+  announcement: string | null;
+}
+
+export function lineFor(announcement: string | null, moved: boolean): Line {
+  if (moved) return { says: 'move', announcement: null };
+  if (announcement !== null) return { says: 'announcement', announcement };
+
+  return { says: 'standing', announcement: null };
+}

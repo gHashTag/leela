@@ -193,12 +193,12 @@ cd packages/engine && bun test
 | `@leela/db` | 100 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 139 | the companion — prompts built from the plan text |
 | `@leela/contracts` | 43 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
-| `@leela/bot` | 394 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
+| `@leela/bot` | 402 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 114 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
-| `@leela/miniapp` | 262 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
+| `@leela/miniapp` | 267 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-1581 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+1594 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 

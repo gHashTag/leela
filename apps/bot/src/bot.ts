@@ -21,7 +21,7 @@ import {
   nudgeToPrivate,
 } from './delivery';
 import { escapeHtml, renderBoardMessage, renderChapter, renderPlan } from './render';
-import { MAX_FILE_BYTES, asReport, decide, keep } from './take-in';
+import { MAX_FILE_BYTES, asReport, decide, decideSquare, keep } from './take-in';
 import { offer, serialise } from './take-out';
 import {
   MemoryRoomStore,
@@ -396,6 +396,45 @@ export function createBot({
     const language = room?.language ?? resolveLanguage(ctx.from?.language_code);
 
     await deliver(ctx, commands.pathFor(language, entries));
+  });
+
+  /**
+   * `/take` — one square, sent as the words it was shared as.
+   *
+   * A file is a path; this is the thing people actually pass on. It is a
+   * command rather than any pasted message, because a message that happens to
+   * begin with a number is not somebody asking this bot to file it.
+   *
+   * Dated on arrival, and the reply says so: a shared square carries no time,
+   * and inventing one would put it at a place in the path where nothing
+   * happened.
+   */
+  bot.command('take', async (ctx) => {
+    const who = sender(ctx);
+    if (!who) return;
+
+    const language = languageOf(ctx);
+    const existing = reports.history ? await reports.history(who.id) : null;
+    const outcome = decideSquare(ctx.match ?? '', existing?.map(asReport) ?? null, now());
+
+    if (outcome.kind === 'took') {
+      await keep(reports, who.id, outcome.added);
+      await ctx.reply(
+        messageFor(language, 'square.took', { plan: outcome.added[0]?.plan ?? 0 }),
+      );
+      return;
+    }
+
+    await ctx.reply(
+      messageFor(
+        language,
+        outcome.kind === 'nothing-new'
+          ? 'square.had'
+          : outcome.kind === 'not-kept'
+            ? 'square.notKept'
+            : 'square.unreadable',
+      ),
+    );
   });
 
   /**

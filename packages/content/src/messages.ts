@@ -182,6 +182,14 @@ const EN = {
   },
   'file.nothingToSave': 'You have not written anything to save yet.',
 
+  // One square, sent as words rather than as a file. A file is a path; this is
+  // the thing people actually pass on.
+  'square.took': 'Taken in on {plan}, dated today — a shared square carries no date.',
+  'square.had': 'You already have that one, word for word.',
+  'square.unreadable':
+    'That does not read as a square. Send the whole of it after /take — heading and all.',
+  'square.notKept': 'This bot is not keeping reports, so there is nowhere to put a square.',
+
   // --- the mini app ----------------------------------------------------------
   //
   // Phrased in the second person and without a name: the mini app is one
@@ -301,6 +309,7 @@ const EN = {
     '/ask <question> — ask the companion about where you stand',
     '/path — what you have written, and where',
     '/returns — the squares that came back, and what you said each time',
+    '/take <square> — take in a square somebody sent you',
     '/save — the same, as a file you can keep',
     '/board — where everyone stands',
     '/end — clear the table',
@@ -446,6 +455,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
   },
   'file.nothingToSave': 'Вы пока ничего не написали, чтобы сохранять.',
 
+  'square.took': 'Принято на плане {plan}, датировано сегодняшним днём — у клетки нет своей даты.',
+  'square.had': 'Такая у вас уже есть, слово в слово.',
+  'square.unreadable':
+    'Это не читается как клетка. Пришлите её целиком после /take — вместе с заголовком.',
+  'square.notKept': 'Этот бот не хранит отчёты, поэтому класть клетку некуда.',
+
   'app.waiting': 'Бросьте шестёрку, чтобы войти в игру',
   'app.entered': 'Шестёрка. Вы входите в игру на {to}. {title}',
   'app.needSix': 'Выпало {value}. Войти в игру можно только с шестёрки.',
@@ -543,6 +558,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
     '/ask <вопрос> — спросить спутника о том, где вы стоите',
     '/path — что вы написали и где',
     '/returns — клетки, которые вернулись, и что вы говорили каждый раз',
+    '/take <клетка> — принять клетку, которую вам прислали',
     '/save — то же самое файлом, который можно забрать',
     '/board — где все стоят',
     '/end — убрать стол',

@@ -12,7 +12,7 @@
  * the bot's: deciding what to keep, and saying what happened.
  */
 
-import { newEntries, parseDocument, type Report } from '@leela/journal';
+import { newEntries, parseDocument, parseSquare, takeSquare, type Report } from '@leela/journal';
 import type { ReportSink, StoredReport } from './store';
 
 /**
@@ -78,4 +78,37 @@ export async function keep(
     // is sent, duplicating everything the player has written.
     await sink.record({ userId, plan: entry.plan, text: entry.text, at: new Date(entry.at) });
   }
+}
+
+/**
+ * Read one square, sent as the words it was shared as.
+ *
+ * A file is a path and this is a square: the thing people actually pass on,
+ * *this is where I landed and this is what it asked of me*. The mini app could
+ * write one and, until the pass before this, nothing could read one. Both
+ * surfaces read it the same way now, because the format is `@leela/journal`'s.
+ *
+ * The difference from a file is the whole of the care here. A square carries no
+ * time, so it is stamped on arrival — and that means the file's sameness rule
+ * cannot apply: `newEntries` tells one import from a second by the moment each
+ * report was written, and two pastes of one square are an hour apart. A doubled
+ * square is worse than untidy: it invents a return to a square nobody returned
+ * to, and the returns are what this bot's `/returns` is reading.
+ *
+ * @param at  The moment it arrived. Passed in so this stays pure.
+ */
+export function decideSquare(
+  text: string,
+  existing: ReadonlyArray<Report> | null,
+  at: number,
+): Outcome {
+  if (existing === null) return { kind: 'not-kept' };
+
+  const square = parseSquare(text);
+  if (square === null) return { kind: 'unreadable' };
+
+  const after = takeSquare(existing, square, at);
+  if (after.length === existing.length) return { kind: 'nothing-new' };
+
+  return { kind: 'took', added: [{ plan: square.plan, text: square.text.trim(), at }] };
 }

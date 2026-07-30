@@ -14,7 +14,7 @@ import {
   type RuleSet,
   type Session,
 } from '@leela/engine';
-import { canRoll, standing } from '../src/view';
+import { canRoll, lineFor, standing } from '../src/view';
 
 /**
  * The line under the board, and the state it claims to describe.
@@ -173,5 +173,68 @@ describe('the die, once the game is complete', () => {
 
     expect(hasWon(half.players[0]?.state as GameState)).toBe(true);
     expect(canRoll(half)).toBe(true);
+  });
+});
+
+describe('an announcement, and the redraw that used to eat it', () => {
+  /**
+   * Four confirmations went missing at once and nobody noticed for four passes.
+   *
+   * The line under the board has three sources: a throw that just happened,
+   * something the app was told to say, and where the player stands. For most of
+   * this app's life there were two, and the second survived by accident —
+   * nothing overwrote it. When the standing line arrived, every confirmation
+   * written straight to the element just before a redraw was eaten by that
+   * redraw: seats set, game restarted, intention held, path imported.
+   *
+   * So this is a class rather than four bugs, and the tests are about the class:
+   * an announcement outlives any number of redraws and nothing else, and a
+   * throw ends it.
+   */
+  const SAID = ['Seated 3.', 'A new game.', 'Held.', 'Took 4 plans.', ''];
+
+  it('survives a redraw, which is the whole reason it exists', () => {
+    for (const said of SAID) {
+      const line = lineFor(said, false);
+      expect(line.says, JSON.stringify(said)).toBe('announcement');
+      expect(line.announcement, JSON.stringify(said)).toBe(said);
+    }
+  });
+
+  it('survives any number of them', () => {
+    // The defect was not one redraw: `announce` then `draw` then `draw` is the
+    // ordinary life of this app, and a rule that only held once would be the
+    // same bug one call later.
+    let carried: string | null = 'Held.';
+
+    for (let redraw = 0; redraw < 50; redraw++) {
+      const line = lineFor(carried, false);
+      expect(line.says, `redraw ${redraw}`).toBe('announcement');
+      carried = line.announcement;
+    }
+
+    expect(carried).toBe('Held.');
+  });
+
+  it('ends on a throw, because a throw is the next thing happening', () => {
+    for (const said of [...SAID, null]) {
+      const line = lineFor(said, true);
+      expect(line.says, JSON.stringify(said)).toBe('move');
+      expect(line.announcement, JSON.stringify(said)).toBeNull();
+    }
+  });
+
+  it('leaves the standing line to speak when nothing was announced', () => {
+    expect(lineFor(null, false)).toEqual({ says: 'standing', announcement: null });
+  });
+
+  it('says exactly one thing, whatever it is handed', () => {
+    // Three sources and one line: a rule that could pick two would be a rule
+    // that picks whichever ran last, which is what this replaced.
+    for (const said of [...SAID, null]) {
+      for (const moved of [false, true]) {
+        expect(['move', 'announcement', 'standing']).toContain(lineFor(said, moved).says);
+      }
+    }
   });
 });

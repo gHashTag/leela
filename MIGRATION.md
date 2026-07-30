@@ -3101,6 +3101,37 @@ has two sources — what the app has just been told to say, and where the player
 stands — so the first is a variable now, an announcement outlives its redraw and
 nothing else, and a throw clears it because a throw is the next thing happening.
 
+## Eighty-seventh pass: `/take`, and the class the last pass exposed
+
+Two things, both continuations of what the last pass found by using it.
+
+**`/take` — the bot can hear a square too.** The format is `@leela/journal`'s
+since the pass before, which is what made this a small change rather than a
+second parser: `decideSquare` sits beside `decide`, answers in the same
+`Outcome` terms, and the difference is the whole of the care. A file carries the
+moment each report was written and this carries none, so it is stamped on
+arrival and the reply says so — and the file's sameness rule cannot apply.
+`newEntries` tells one import from a second by those timestamps, and two
+`/take`s of one square are an hour apart. A doubled square is worse than
+untidy: it invents a return to a square nobody returned to, and the returns are
+what `/returns` reads.
+
+A command rather than any pasted message. A message that happens to begin with a
+number is not somebody asking this bot to file it.
+
+**And the class, not the four bugs.** The last pass found that the eighty-second
+had silently eaten four confirmations — seats set, game restarted, intention
+held, path imported — because each was written straight to the element just
+before a redraw, and the redraw now had something of its own to say. That was
+fixed by an announcement variable, which was right and untested: the rule still
+lived in the order of statements inside `draw`.
+
+`lineFor` states it instead. Three sources for one line — a throw that just
+happened, something the app was told to say, where the player stands — and the
+rule is that an announcement outlives *any number* of redraws and nothing else,
+and a throw ends it. The test that matters is the fifty-redraw one: a rule that
+only held once would be the same bug one call later.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
