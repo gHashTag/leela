@@ -1482,6 +1482,33 @@ function the same minute. And the first version of those tests reached past a
 union with `{} as never`, which typechecks nowhere and says nothing; the
 narrowing belongs at the call site, where the transport does it too.
 
+## Forty-fifth pass: the help was not the whole surface
+
+`/help` calls itself "the whole surface, in one message" and named nine of the
+eleven commands the bot answers. **`/end` was not among them** — while another
+message tells the player to "send /end", so the bot referred to a command it
+never introduced.
+
+The harness's own list of commands was hand-written too, and was missing
+`/save` the day it was added. That is the fourth hand-kept list in this
+repository to go wrong, so it is derived now: the tests read the commands out
+of the help message, and out of `bot.ts`, and check **both directions**.
+
+- Every command the bot registers is named in the help, `/help` itself
+  excepted — a line telling a reader how to read the message they are reading
+  is noise, and the exception is written down rather than assumed.
+- Every command the help names is registered. A help that promises something
+  which does nothing is worse than one that leaves it out.
+- Both lists have to be non-empty, so a regex that matched nothing cannot pass
+  the first two.
+
+**And the two new handlers were driven for the first time.** `/save` and
+`message:document` went in with only their pure halves tested — which is how
+the last defect in `bot.ts` was found, and how a fourth would have been missed.
+Five transport tests: nothing written sends no file, a path sends exactly one,
+a store that keeps nothing says so, a file too large is refused *without being
+fetched*, and a file that cannot be read still gets an answer.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { messageFor } from '@leela/content';
 import { Guide, ModelError, fixedModel, type LanguageModel } from '@leela/ai';
 import { createBot } from '../src/bot';
 import { MemoryReportSink, MemoryRoomStore, type ReportSink } from '../src/store';
@@ -132,22 +135,63 @@ async function rollUntilTheGate(bot: ReturnType<typeof createBot>, sent: Sent[])
   throw new Error('never reached the report gate');
 }
 
+/**
+ * The commands the help message names.
+ *
+ * Derived rather than listed: the hand-written list this replaced was missing
+ * `/save` the day it was added, and the help was missing `/end` for longer than
+ * that. A list kept by hand beside the thing it describes is the fourth of
+ * those to go wrong in this repository.
+ */
+function documented(): string[] {
+  return [...messageFor('en', 'help').matchAll(/^\/([a-z]+)/gm)].map(([, name]) => `/${name}`);
+}
+
+/** The commands `bot.ts` actually registers, read from the file. */
+function registered(): string[] {
+  const source = readFileSync(resolve(process.cwd(), 'src/bot.ts'), 'utf8');
+  return [...source.matchAll(/bot\.command\('([a-z]+)'/g)].map(([, name]) => `/${name}`);
+}
+
+describe('the help message is the whole surface', () => {
+  /**
+   * `/help` is not in its own list, deliberately: a line telling a reader how
+   * to read the message they are reading is noise. Everything else that
+   * answers must be there — the bot tells people to "send /end" in another
+   * message while never mentioning it here.
+   */
+  const EXEMPT = ['/help'];
+
+  it('names every command the bot answers', () => {
+    const missing = registered()
+      .filter((command) => !EXEMPT.includes(command))
+      .filter((command) => !documented().includes(command));
+
+    expect(missing).toEqual([]);
+  });
+
+  it('names nothing the bot does not answer', () => {
+    // The other direction: a help that promises a command which does nothing
+    // is worse than one that leaves it out.
+    const phantom = documented().filter((command) => !registered().includes(command));
+    expect(phantom).toEqual([]);
+  });
+
+  it('finds commands at all, so an empty list cannot pass', () => {
+    expect(documented().length).toBeGreaterThan(5);
+    expect(registered().length).toBeGreaterThan(5);
+  });
+});
+
 describe('every command answers', () => {
   // "Silence is indistinguishable from a broken bot, and that is how this one
   // first looked" is a comment in bot.ts. It was not a test until now, and it
   // is asserted over the whole command surface rather than over one command.
   const COMMANDS = [
-    '/new',
-    '/join',
-    '/start',
-    '/roll',
-    '/board',
-    '/plan',
+    ...documented(),
     '/plan 41',
-    '/path',
     '/report something',
     '/help',
-    '/end',
     '/nonsense',
     'plain text with no slash',
   ];
@@ -484,5 +528,73 @@ describe('a failing update', () => {
     await expect(bot.handleUpdate(message('/new', PRIVATE))).rejects.toThrow(
       /the database went away/,
     );
+  });
+});
+
+describe('a path leaving and arriving as a file', () => {
+  /**
+   * Two new handlers went into the transport with only their pure halves
+   * tested. `/save` sends a document and `message:document` reads one, and
+   * neither had ever been driven — which is how the last defect in this file
+   * was found, and how a fourth would have been missed.
+   */
+  const document = (bytes: number, fileId = 'f1') => {
+    updateId += 1;
+    return {
+      update_id: updateId,
+      message: {
+        message_id: updateId,
+        date: 0,
+        chat: { id: PRIVATE.id, type: 'private' },
+        from: { id: 100, is_bot: false, first_name: 'P100' },
+        document: { file_id: fileId, file_unique_id: 'u1', file_size: bytes, file_name: 'p.json' },
+      },
+    } as never;
+  };
+
+  it('sends nothing but a sentence when nothing has been written', async () => {
+    const { bot, sent } = harness({ reports: new MemoryReportSink() });
+    await bot.handleUpdate(message('/save', PRIVATE));
+
+    expect(sent.some((s) => s.method === 'sendDocument')).toBe(false);
+    expect(texts(sent).join(' ')).toMatch(/written anything/i);
+  });
+
+  it('sends a document once there is a path', async () => {
+    const reports = new MemoryReportSink();
+    const { bot, sent } = harness({ reports });
+    await reports.record({ userId: '100', plan: 6, text: 'the first thing' });
+
+    await bot.handleUpdate(message('/save', PRIVATE));
+
+    const files = sent.filter((s) => s.method === 'sendDocument');
+    expect(files).toHaveLength(1);
+    expect(String(files[0]?.payload.caption)).toContain('1');
+  });
+
+  it('says there is nowhere to keep a path when the store keeps nothing', async () => {
+    // `discardReports` has no `history`, which is the shape of a bot running
+    // without storage.
+    const { bot, sent } = harness();
+    await bot.handleUpdate(message('/save', PRIVATE));
+    expect(sent.some((s) => s.method === 'sendDocument')).toBe(false);
+    expect(texts(sent).length).toBeGreaterThan(0);
+  });
+
+  it('refuses a file too large to be a path without fetching it', async () => {
+    const { bot, sent } = harness({ reports: new MemoryReportSink() });
+    await bot.handleUpdate(document(50 * 1024 * 1024));
+
+    // Nothing was downloaded: no getFile call was made.
+    expect(sent.some((s) => s.method === 'getFile')).toBe(false);
+    expect(texts(sent).length).toBeGreaterThan(0);
+  });
+
+  it('answers a document it cannot read, rather than going quiet', async () => {
+    // The fetch fails in the harness — there is no Telegram to serve the file —
+    // and a player who sent the wrong thing must still be told something.
+    const { bot, sent } = harness({ reports: new MemoryReportSink() });
+    await bot.handleUpdate(document(64));
+    expect(texts(sent).length).toBeGreaterThan(0);
   });
 });
