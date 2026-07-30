@@ -154,7 +154,10 @@ export function compareToReference(snakes: Jumps, arrows: Jumps): BoardProblem[]
   for (const [from, to] of expected) {
     const found = actual.get(from);
     if (found === undefined) {
-      problems.push({ finding: 'missing', from, to, detail: `no jump from ${from}` });
+      // Named with the jump it is missing, not just the square. `audit-copies`
+      // prints these straight into a report, and "no jump from 54" made a
+      // reader open the file to find out what belonged there.
+      problems.push({ finding: 'missing', from, to, detail: `no jump from ${from}, reference says ${from} → ${to}` });
     } else if (found !== to) {
       problems.push({
         finding: 'different-target',
@@ -218,10 +221,24 @@ export function detectRules(source: string): DetectedRules {
       /roll\s*===?\s*(MAX_ROLL|6)[\s\S]{0,200}START_LOKA/,
       /isStart[\s\S]{0,80}===?\s*6/,
     ),
+    // The rule is not "counts to three" and not "has a field called
+    // positionBeforeThreeSixes". It is that the third six sends the player back
+    // to where the run began, so the check and the move have to be in the same
+    // breath — which is why these match them together rather than separately.
+    //
+    // `LeelaAiWeb3` is why: it counts, prints a message, resets the counter and
+    // moves nobody. `positionBeforeThreeSixes` there is initialised to 0, sent
+    // to a GraphQL mutation, and never read. Matching the field's name alone
+    // reported that as the rule — and reported a type declaration and a
+    // mutation body as the rule as well.
+    //
+    // Where the player is sent back to differs by implementation: a dedicated
+    // saved square in most, `previousPlan` in `leela-ai-web3`'s contract. Both
+    // are the rule; a scanner that knew only the first would under-report
+    // exactly like the code it audits.
     threeSixesReset: has(
-      /consecutive\w*\s*===?\s*3/,
-      /consecutive\w*\s*\+=?\s*1[\s\S]{0,200}===?\s*3/,
-      /positionBeforeThreeSixes/,
+      /consecutive\w*\s*\+?=*=\s*3[\s\S]{0,300}[:=]\s*[\w.]*(position_?before|previous_?(plan|loka))/i,
+      /[:=]\s*[\w.]*(position_?before_?three_?sixes|previous_?(plan|loka))[\s\S]{0,300}consecutive\w*\s*\+?=*=\s*3/i,
     ),
     refusesOvershoot: has(
       />\s*TOTAL_PLANS/,

@@ -127,7 +127,7 @@ describe('compareToReference', () => {
     delete partial[12];
     const problems = compareToReference(partial, ARROWS);
     expect(problems).toEqual([
-      { finding: 'missing', from: 12, to: 8, detail: 'no jump from 12' },
+      { finding: 'missing', from: 12, to: 8, detail: 'no jump from 12, reference says 12 → 8' },
     ]);
   });
 
@@ -156,9 +156,45 @@ describe('detecting the rules an implementation carries', () => {
   // jumps right and no three-sixes rule at all, which makes it a seventh
   // version of the game rather than a seventh copy of the board.
 
-  it('finds a three-sixes rule written as a counter', () => {
-    expect(detectRules('if (consecutiveSixes === 3) { reset() }').threeSixesReset).toBe(true);
-    expect(detectRules('player.positionBeforeThreeSixes = plan').threeSixesReset).toBe(true);
+  it('finds a three-sixes rule in the shapes a player would feel', () => {
+    // The rule is that the third six sends the player back — so the check and
+    // the move have to be found together. Where they send them differs:
+    // a dedicated saved square in most implementations, `previousPlan` in
+    // `leela-ai-web3`'s contract. Both are the rule.
+    expect(
+      detectRules('if (consecutiveSixes === 3) { player.plan = player.positionBeforeThreeSixes; }')
+        .threeSixesReset,
+    ).toBe(true);
+    expect(
+      detectRules('if (player.consecutiveSixes == 3) { player.plan = player.previousPlan; }')
+        .threeSixesReset,
+    ).toBe(true);
+    expect(
+      detectRules('if (newConsecutive === 3) { return { newPosition: positionBeforeThreeSixes }; }')
+        .threeSixesReset,
+    ).toBe(true);
+  });
+
+  it('does not read counting to three as the rule', () => {
+    // `LeelaAiWeb3` counts, prints a message, resets the counter and moves
+    // nobody: `positionBeforeThreeSixes` is initialised to 0, sent to a
+    // GraphQL mutation, and never read. A counter is not a rule until
+    // something happens to the player.
+    expect(detectRules('if (consecutiveSixes === 3) { showMessage() }').threeSixesReset).toBe(
+      false,
+    );
+  });
+
+  it('does not read declaring or storing the field as the rule', () => {
+    // Three shapes that are not the rule, all of them present in repositories
+    // the audit reads: a type, a fixture, and a GraphQL mutation body.
+    for (const source of [
+      'interface Player { positionBeforeThreeSixes: number }',
+      'const player = { consecutiveSixes: 0, positionBeforeThreeSixes: 0 };',
+      'mutation { createPlayer { positionBeforeThreeSixes } }',
+    ]) {
+      expect(detectRules(source).threeSixesReset, source).toBe(false);
+    }
   });
 
   it('reports its absence rather than assuming it', () => {
@@ -197,7 +233,9 @@ describe('detecting the rules an implementation carries', () => {
 
 describe('comparing detected rules against a variant', () => {
   it('says nothing when they match', () => {
-    const found = detectRules('if (consecutiveSixes === 3) {} if (newPlan > TOTAL_PLANS) {}');
+    const found = detectRules(
+      'if (consecutiveSixes === 3) { plan = positionBeforeThreeSixes } if (newPlan > TOTAL_PLANS) {}',
+    );
     expect(compareRules(found, { threeSixesReset: true, refusesOvershoot: true })).toEqual([]);
   });
 
@@ -209,14 +247,18 @@ describe('comparing detected rules against a variant', () => {
   });
 
   it('names a rule that is present and should not be', () => {
-    const found = detectRules('player.positionBeforeThreeSixes = plan');
+    const found = detectRules(
+      'if (consecutiveSixes === 3) { player.plan = player.positionBeforeThreeSixes; }',
+    );
     expect(compareRules(found, { threeSixesReset: false })).toEqual([
       { rule: 'threeSixesReset', found: true, expected: false },
     ]);
   });
 
   it('checks only the rules it was asked about', () => {
-    const found = detectRules('if (consecutiveSixes === 3) {}');
+    const found = detectRules(
+      'if (consecutiveSixes === 3) { plan = positionBeforeThreeSixes }',
+    );
     expect(compareRules(found, { threeSixesReset: true })).toEqual([]);
   });
 });

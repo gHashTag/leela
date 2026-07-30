@@ -51,7 +51,9 @@ bot, the mini app and a smart contract, and it makes them testable without a
 network.
 
 It also exports `auditBoard`, `compareToReference` and `detectRules`, so any
-implementation carrying its own copy can be held to this one. That is not
+implementation carrying its own copy can be held to this one. `detectRules`
+looks for a rule being *played*, not mentioned: counting to three is not the
+three-sixes rule until the third six sends the player somewhere. That is not
 hypothetical: of the eighteen copies across the 25 repositories **six have the
 wrong board**, and the rules divide into **five different games** — see
 [MIGRATION.md](MIGRATION.md).
@@ -185,7 +187,7 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 265 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/engine` | 282 | rules, four variants, sessions, turn gating, seeded dice |
 | `@leela/content` | 156 | 22 languages of plans, 2 of the game's own voice |
 | `@leela/journal` | 23 | the path as a file, shared by the bot and the mini app |
 | `@leela/db` | 97 | schema, mapping, SQL migrations, legacy import |
@@ -196,7 +198,7 @@ cd packages/engine && bun test
 | `@leela/miniapp` | 141 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-1272 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+1289 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 

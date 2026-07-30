@@ -1680,6 +1680,69 @@ is stored relative to the repository now. The job called
 `content-is-reproducible` cannot actually check reproducibility — that needs the
 donor clones — and its comment now says so rather than implying otherwise.
 
+## Forty-ninth pass: reading what the repaired audit said
+
+Last pass fixed `audit-copies.mjs` and never read its output. Run in full, it
+reported eighteen copies, twelve agreeing — and two lines that turned out to be
+the interesting ones:
+
+```
+DIFF  LeelaAiWeb3/src/hooks/useLeelaGame/handlePlayerMovement.ts  (19 jumps)
+      1 differences from the engine
+```
+
+Which difference? The audit knew. `compareToReference` returns a finding per
+square, with the square, the target and the reference's target in it, and the
+script printed the array's **length**. Opening the file by hand gave the answer
+in ten seconds: the arrow from 54 to 68 is not there, because both web3 hooks
+treat 54 as a win and stop the player on it. A summary that hides what it
+summarised is this repository's oldest defect wearing another hat, and
+`1 differences` is the tell that nobody had read the output.
+
+Findings are named now, and `compareToReference` says what is missing rather
+than only where: `no jump from 54, reference says 54 → 68`.
+
+### The dash that meant two different things
+
+The rules table printed `—` for anything `detectRules` did not find in the file
+it was reading, and `detectRules` reads one file at a time. So the published
+app's row said it has no re-rolling die and no report gate — when the die is in
+`DiceStore.ts` and the gate is in `OnlinePlayer.store`, neither anywhere near a
+board. The caveat was written down, as a paragraph here that a reader of the
+*table* never sees. The table says `elsewhere` now: same knowledge, in the place
+where it changes a conclusion.
+
+That mark immediately said something new — `LeelaAiWeb3` carries a three-sixes
+rule somewhere, though its movement hook does not. Reading it: the rule is
+there and it is inert.
+
+```ts
+if (state.consecutiveSixes === 3) {
+  dispatch({ type: 'MESSAGE', message: i18next.t('treeSix', …) })
+  dispatch({ type: 'INCREMENT_CONSECUTIVE_SIXES', count: 0 })
+}
+```
+
+A message and a counter reset. Nobody moves. `positionBeforeThreeSixes` in that
+repository is initialised to 0, listed in a GraphQL mutation, and **never read**
+— and because the entering six is counted as the first, the branch fires on the
+fourth six anyway.
+
+**So `detectRules` was over-reporting.** It matched the field's *name*, which
+made a type declaration, a fixture and a mutation body all read as the rule.
+The rule is not a counter and not a field: it is that the third six sends the
+player back, so the check and the move now have to be found together. Where they
+send them differs by implementation — a dedicated saved square in most,
+`previousPlan` in `leela-ai-web3`'s contract — and a scanner that knew only the
+first would under-report exactly like the code it audits.
+
+The table changed in exactly two places, and each was verified by opening the
+file: both web3 hooks lose a rule they never played, and NeuroLeelaExpo's
+`GameService.test.ts` moves from `yes` to `elsewhere`, which is what a test
+asserting about a rule implemented next door should say. Four tests that
+asserted the old behaviour — including one that read *writing* the field as the
+rule — asserted the defect, and now assert the rule.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

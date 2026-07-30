@@ -31,6 +31,7 @@ import {
   detectRules,
   extractBoards,
 } from '../packages/engine/src/index.ts';
+import { agreesWithEngine, markFor, renderResult } from './lib/copies.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const srcFlag = process.argv.indexOf('--src');
@@ -110,16 +111,8 @@ console.log(`Found ${results.length} copies of the board under ${SRC}\n`);
 
 let wrong = 0;
 for (const result of results) {
-  const agrees = result.differences.length === 0 && result.problems.length === 0;
-  if (!agrees) wrong++;
-
-  console.log(`${agrees ? 'ok  ' : 'DIFF'}  ${result.file}  (${result.jumps} jumps)`);
-  if (!agrees) {
-    console.log(`      ${describeProblems(result.problems).split('\n').join('\n      ')}`);
-    if (result.differences.length > 0) {
-      console.log(`      ${result.differences.length} differences from the engine`);
-    }
-  }
+  if (!agreesWithEngine(result)) wrong++;
+  for (const line of renderResult(result, describeProblems)) console.log(line);
 }
 
 console.log(
@@ -138,12 +131,28 @@ const RULE_LABELS = {
   rerollOnRepeat: 'reroll',
 };
 
-console.log('\nRules each copy carries:\n');
+/**
+ * Rules found anywhere in each repository, not only in the file with the board.
+ *
+ * The table used to print a dash for a rule `detectRules` did not find in the
+ * copy it was reading, and a dash reads as "does not play that rule". The
+ * published app's re-rolling die is in `DiceStore.ts` and its report gate is in
+ * `OnlinePlayer.store` — neither anywhere near a board.
+ */
+const rulesPerFile = new Map();
+for (const file of walk(SRC)) {
+  const found = detectRules(readFileSync(file, 'utf8'));
+  if (Object.values(found).some(Boolean)) rulesPerFile.set(relative(SRC, file), found);
+}
+
+console.log('\nRules each copy carries (`elsewhere`: not here, but in this repository):\n');
 const keys = Object.keys(RULE_LABELS);
 console.log(`${''.padEnd(52)}${keys.map((k) => RULE_LABELS[k].padEnd(14)).join('')}`);
 for (const result of results) {
   const name = result.file.length > 50 ? `…${result.file.slice(-49)}` : result.file;
-  const marks = keys.map((key) => (result.rules[key] ? 'yes' : '—').padEnd(14)).join('');
+  const marks = keys
+    .map((key) => markFor(key, result.file, result.rules, rulesPerFile).padEnd(14))
+    .join('');
   console.log(`${name.padEnd(52)}${marks}`);
 }
 
