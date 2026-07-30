@@ -136,6 +136,32 @@ export const RULESETS = Object.freeze({
  */
 export const DEFAULT_RULESET: RuleSet = NEUROLEELA;
 
+/** Whether a string names a variant. For anything read from outside. */
+export function isRuleSetId(value: string): value is RuleSet['id'] {
+  return Object.prototype.hasOwnProperty.call(RULESETS, value);
+}
+
+/**
+ * The variant with this id.
+ *
+ * Throws rather than returning `undefined` typed as a `RuleSet`. The signature
+ * said this was total and it was not: a row in a database with `ruleset` set
+ * to something no longer known returned undefined, and the chat it belonged to
+ * then threw on `rules.reports` for every command anyone sent, forever. An
+ * error naming the id is a thing an operator can act on; a `TypeError` three
+ * calls away is not.
+ *
+ * Not silently falling back to `classic`: that would change the rules of a
+ * game in progress without telling anybody.
+ */
 export function ruleSetById(id: RuleSet['id']): RuleSet {
+  // Through the guard, not through truthiness: `RULESETS['toString']` is a
+  // function inherited from `Object.prototype`, and a function typed as a
+  // `RuleSet` is worse than the undefined this was written to catch.
+  if (!isRuleSetId(id)) {
+    throw new RangeError(
+      `no rule set named "${id}" — known variants are ${Object.keys(RULESETS).join(', ')}`,
+    );
+  }
   return RULESETS[id];
 }

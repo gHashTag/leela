@@ -22,6 +22,7 @@ export type {
 } from './schema';
 
 export {
+  StoredRowsError,
   canPlayerRoll,
   gameStepRow,
   playerUpdateFromState,

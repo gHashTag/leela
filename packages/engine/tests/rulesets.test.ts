@@ -3,11 +3,15 @@ import {
   CLASSIC,
   LEGACY_MOBILE,
   NEUROLEELA,
+  RULESETS,
   START_LOKA,
   WIN_LOKA,
   applyRoll,
   initialState,
+  isRuleSetId,
+  ruleSetById,
   type GameState,
+  type RuleSet,
 } from '../src';
 
 function playing(overrides: Partial<GameState> = {}): GameState {
@@ -109,5 +113,53 @@ describe('variant metadata', () => {
     expect(LEGACY_MOBILE.rerollOnRepeat).toBe(true);
     expect(CLASSIC.rerollOnRepeat).toBe(false);
     expect(NEUROLEELA.rerollOnRepeat).toBe(false);
+  });
+});
+
+describe('a variant that does not exist', () => {
+  /**
+   * `ruleSetById` promised a `RuleSet` and handed back `undefined`.
+   *
+   * A row in a database with `ruleset` set to something no longer known
+   * produced one, and the chat it belonged to then threw on `rules.reports`
+   * for every command anyone sent — forever, and three files away from the
+   * value that was wrong.
+   */
+  it('is an error naming what was asked for and what exists', () => {
+    expect(() => ruleSetById('neuroleela-v2' as RuleSet['id'])).toThrow(RangeError);
+    expect(() => ruleSetById('neuroleela-v2' as RuleSet['id'])).toThrow(/neuroleela-v2/);
+    // The message lists the variants, so the next step is obvious.
+    for (const id of Object.keys(RULESETS)) {
+      expect(() => ruleSetById('nope' as RuleSet['id'])).toThrow(new RegExp(id));
+    }
+  });
+
+  it('is never silently replaced by classic', () => {
+    // Falling back would change the rules of a game already in progress.
+    let fell: RuleSet | null = null;
+    try {
+      fell = ruleSetById('gone' as RuleSet['id']);
+    } catch {
+      fell = null;
+    }
+    expect(fell).toBeNull();
+  });
+
+  it('is what `isRuleSetId` is for, and it agrees with the table', () => {
+    // The assertion is that the two cannot drift: whatever is in RULESETS is
+    // exactly what the guard admits.
+    for (const id of Object.keys(RULESETS)) {
+      expect(isRuleSetId(id), id).toBe(true);
+      expect(ruleSetById(id as RuleSet['id']).id).toBe(id);
+    }
+    for (const not of ['', 'classic ', 'CLASSIC', 'toString', 'constructor', '__proto__']) {
+      expect(isRuleSetId(not), not).toBe(false);
+    }
+  });
+
+  it('does not admit something inherited from Object', () => {
+    // `RULESETS[id]` with `id = "toString"` returns a function, which typed as
+    // a RuleSet is worse than undefined.
+    expect(() => ruleSetById('toString' as RuleSet['id'])).toThrow(RangeError);
   });
 });

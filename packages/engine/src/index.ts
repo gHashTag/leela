@@ -54,6 +54,7 @@ export {
   ONCHAIN,
   ONLINE,
   RULESETS,
+  isRuleSetId,
   ruleSetById,
 } from './rulesets';
 export type { RuleSet } from './rulesets';

@@ -992,6 +992,44 @@ offsets. It is caught now, with the board's own rules excepted for the reason
 the board is pinned `dir="ltr"`: it is a diagram, and mirroring it moves plan 1
 to the other corner.
 
+## Thirty-first pass: two functions that lied about their type
+
+The mini app's loader now demands a state the engine could have produced. The
+bot reads its games out of SQLite through `sessionFromRows`, which cast each
+column into engine state and handed the result over. Same defect, on a surface
+read by everyone at the table rather than by one player.
+
+**What a single bad row did.** `ruleSetById` was typed to return a `RuleSet`
+and returned `undefined` for an id no longer known — so the chat that row
+belonged to threw on `rules.reports` for *every command anyone sent, forever*,
+three files away from the value that was wrong. A stale `turn_index` did the
+same through `currentPlayer`. The player saw silence, which is the failure this
+bot has already been through once.
+
+Both are total now: `ruleSetById` throws a `RangeError` naming the id and
+listing the variants, `currentPlayer` a `SessionError` naming the turn and the
+table size. Neither falls back to `classic` — that would change the rules of a
+game in progress without telling anybody.
+
+**A hole the test found while being written.** `RULESETS['toString']` is a
+function inherited from `Object.prototype`, so the truthiness check let it
+through and returned a function typed as a `RuleSet` — worse than the
+`undefined` the guard was written to catch. `ruleSetById` goes through
+`isRuleSetId`, which asks `hasOwnProperty`.
+
+**At the boundary,** `sessionFromRows` now checks every column it copies and
+throws `StoredRowsError` naming the seat, and `DatabaseRoomStore` reads that as
+"no table here" and writes down why. `/new` opens another; a throw on every
+update is not something a player can recover from. A database being down is
+still an error — swallowing that would turn an outage into "no table" for
+everyone at once.
+
+**The round trip is asserted both ways.** Twelve played-out tables, every
+state, written through the real `seatUpdate` and read back identical. A check
+that only rejects can be satisfied by rejecting everything; this is the half
+that says it is not. Building the rows by hand for that test lost `direction`
+and the assertion caught it — which is exactly the drift it exists for.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

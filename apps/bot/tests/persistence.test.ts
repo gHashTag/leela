@@ -226,3 +226,108 @@ describe('DatabaseRoomStore', () => {
     expect(typeof before).toBe('number');
   });
 });
+
+describe('a row the engine cannot be handed', () => {
+  /**
+   * One bad row used to break a chat permanently.
+   *
+   * `sessionFromRows` cast each column into engine state, so a `ruleset` no
+   * longer known became `undefined` typed as a `RuleSet` and every command
+   * sent to that chat then threw on `rules.reports`. The player saw silence,
+   * which is the failure this bot has already been through once.
+   *
+   * A table that cannot be read is treated as no table: `/new` opens another,
+   * and the reason is written down for whoever has to look.
+   */
+  function queriesReturning(session: unknown, seats: unknown[]): RoomQueries {
+    return {
+      loadSession: async () => session as never,
+      loadSeats: async () => seats as never,
+      save: async () => undefined,
+      remove: async () => undefined,
+    };
+  }
+
+  const goodSession = {
+    id: 'c1',
+    turn_index: 0,
+    roll_count: 0,
+    dice_seed: 3,
+    is_open: false,
+    ruleset: 'classic',
+    language: 'en',
+  };
+
+  const goodSeat = {
+    id: 1,
+    session_id: 'c1',
+    user_id: 'a',
+    seat: 0,
+    name: 'Ay',
+    plan: 68,
+    previous_plan: 0,
+    direction: '',
+    consecutive_sixes: 0,
+    position_before_three_sixes: 0,
+    is_finished: true,
+    last_roll_at: null,
+    report_submitted: true,
+  };
+
+  it('reads a good table', async () => {
+    const store = new DatabaseRoomStore(queriesReturning(goodSession, [goodSeat]), () => undefined);
+    expect(await store.get('c1')).not.toBeNull();
+  });
+
+  it('is no table rather than a throw, whatever is wrong with it', async () => {
+    // Not a list of corruptions: each of these is a different column, and the
+    // answer has to be the same for all of them, because a chat that throws on
+    // every update cannot be recovered by anyone using it.
+    const corruptions: Array<[string, unknown, unknown]> = [
+      ['an unknown variant', { ...goodSession, ruleset: 'neuroleela-v2' }, [goodSeat]],
+      ['a turn pointing at nobody', { ...goodSession, turn_index: 4 }, [goodSeat]],
+      ['a plan off the board', goodSession, [{ ...goodSeat, plan: 900 }]],
+      ['a run of three sixes', goodSession, [{ ...goodSeat, consecutive_sixes: 3 }]],
+      ['finished off the win square', goodSession, [{ ...goodSeat, plan: 41 }]],
+      ['a seat with no user', goodSession, [{ ...goodSeat, user_id: '' }]],
+      ['two players in one seat', goodSession, [goodSeat, { ...goodSeat, user_id: 'b' }]],
+    ];
+
+    for (const [what, session, seats] of corruptions) {
+      const store = new DatabaseRoomStore(queriesReturning(session, seats as unknown[]), () => undefined);
+      await expect(store.get('c1'), what).resolves.toBeNull();
+    }
+  });
+
+  it('says why, so the row can be found', async () => {
+    const said: string[] = [];
+    const store = new DatabaseRoomStore(
+      queriesReturning({ ...goodSession, ruleset: 'gone' }, [goodSeat]),
+      (message) => said.push(message),
+    );
+
+    await store.get('c1');
+
+    expect(said).toHaveLength(1);
+    expect(said[0]).toContain('c1');
+    expect(said[0]).toContain('gone');
+  });
+
+  it('still lets a failure that is not about the rows through', async () => {
+    // A database that is down is not a corrupt table, and swallowing it would
+    // turn an outage into "no table here" for everyone at once.
+    const store = new DatabaseRoomStore(
+      {
+        loadSession: async () => {
+          throw new Error('the database went away');
+        },
+        loadSeats: async () => [],
+        save: async () => undefined,
+        remove: async () => undefined,
+      },
+      () => undefined,
+    );
+
+    await expect(store.get('c1')).rejects.toThrow(/went away/);
+  });
+});

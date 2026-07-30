@@ -10,7 +10,7 @@
  * without a Postgres to hand.
  */
 
-import { sessionFromRows, sessionUpdate, seatUpdate } from '@leela/db';
+import { StoredRowsError, sessionFromRows, sessionUpdate, seatUpdate } from '@leela/db';
 import type { SessionPlayerRow, SessionRow } from '@leela/db';
 import { resolveLanguage } from '@leela/content';
 import type { Room } from './commands';
@@ -117,7 +117,15 @@ export interface RoomQueries {
 
 /** A room store backed by the database. */
 export class DatabaseRoomStore implements RoomStore {
-  constructor(private readonly queries: RoomQueries) {}
+  constructor(
+    private readonly queries: RoomQueries,
+    /**
+     * Where a corrupt row is reported. A room that cannot be read is a fact
+     * about the deployment, and the player is told there is no table — so
+     * without this line nobody ever finds out why their game vanished.
+     */
+    private readonly log: (message: string) => void = console.error,
+  ) {}
 
   async get(chatId: string): Promise<Room | null> {
     const session = await this.queries.loadSession(chatId);
@@ -128,7 +136,16 @@ export class DatabaseRoomStore implements RoomStore {
     // has at least the host. Treat it as absent instead of crashing a chat.
     if (seats.length === 0) return null;
 
-    return roomFromRows(session, seats);
+    try {
+      return roomFromRows(session, seats);
+    } catch (error) {
+      // A row the engine cannot be handed is not a reason to break every
+      // command sent to this chat from now on. "No table here" is recoverable
+      // — /new opens another — and a throw on every update is not.
+      if (!(error instanceof StoredRowsError)) throw error;
+      this.log(`[bot] chat ${chatId}: unreadable table, treating it as none — ${error.message}`);
+      return null;
+    }
   }
 
   async save(room: Room): Promise<void> {

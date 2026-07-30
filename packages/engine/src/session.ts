@@ -74,8 +74,22 @@ export function createSession(
 }
 
 /** Whoever holds the turn. */
+/**
+ * Whoever holds the turn.
+ *
+ * Throws on a turn index that points at nobody. The signature promised a
+ * `SeatedPlayer` and would hand back `undefined` for a session read out of a
+ * database with a stale `turn_index` — the caller then failed on `.id`, two
+ * files away from the row that was wrong.
+ */
 export function currentPlayer(session: Session): SeatedPlayer {
-  return session.players[session.turnIndex];
+  const player = session.players[session.turnIndex];
+  if (!player) {
+    throw new SessionError(
+      `turn ${session.turnIndex} at a table of ${session.players.length}`,
+    );
+  }
+  return player;
 }
 
 /** Whether the player holding the turn may roll, and why not when they may not. */

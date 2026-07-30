@@ -13,7 +13,11 @@ import {
   type Session,
   type TurnContext,
   type TurnVerdict,
+  MAX_SEATS,
+  TOTAL_PLANS,
+  WIN_LOKA,
   canRoll,
+  isRuleSetId,
   ruleSetById,
 } from '@leela/engine';
 import type {
@@ -119,6 +123,60 @@ export function canPlayerRoll(
  * Seats are ordered by `seat`, not by whatever order the query returned them
  * in — turn order depends on it.
  */
+/**
+ * A row that cannot be read as a game.
+ *
+ * Thrown rather than returned as `null` so a caller cannot forget it: the
+ * alternative was casting each column into engine state and finding out three
+ * files later, when `rules.reports` threw on undefined for every command sent
+ * to that chat.
+ */
+export class StoredRowsError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StoredRowsError';
+  }
+}
+
+/** A whole number in a range, which is what every column here should hold. */
+function whole(value: unknown, from: number, to: number): boolean {
+  return Number.isInteger(value) && (value as number) >= from && (value as number) <= to;
+}
+
+/**
+ * Check a seat before it becomes a player.
+ *
+ * The rule is the one the mini app's storage loader uses, for the same reason:
+ * a saved game must be one the engine could have produced. A database is as
+ * writable by hand as `localStorage`, and it is read by everyone at the table
+ * rather than by one player.
+ */
+function checkSeat(seat: SessionPlayerRow, at: number): void {
+  const complain = (what: string) => {
+    throw new StoredRowsError(`seat ${at} (${seat.user_id ?? 'no user'}): ${what}`);
+  };
+
+  if (typeof seat.user_id !== 'string' || seat.user_id.length === 0) complain('has no user id');
+  if (!whole(seat.seat, 0, MAX_SEATS - 1)) complain(`seat number ${seat.seat} is not a seat`);
+  if (!whole(seat.plan, 1, TOTAL_PLANS)) complain(`plan ${seat.plan} is off the board`);
+  if (!whole(seat.previous_plan, 0, TOTAL_PLANS)) {
+    complain(`previous plan ${seat.previous_plan} is off the board`);
+  }
+  if (!whole(seat.position_before_three_sixes, 0, TOTAL_PLANS)) {
+    complain(`fallback square ${seat.position_before_three_sixes} is off the board`);
+  }
+  if (!whole(seat.consecutive_sixes, 0, 2)) {
+    complain(`a run of ${seat.consecutive_sixes} sixes cannot have been stored`);
+  }
+  if (typeof seat.is_finished !== 'boolean') complain('is_finished is not a boolean');
+  if (typeof seat.report_submitted !== 'boolean') complain('report_submitted is not a boolean');
+  // Out of play means on the win square and nowhere else — the engine only
+  // ever sets the flag there. "Finished on plan 41" is not a game.
+  if (seat.is_finished && seat.plan !== WIN_LOKA) {
+    complain(`finished on plan ${seat.plan}, which is not the win square`);
+  }
+}
+
 export function sessionFromRows(
   // `ruleset` is typed nullable rather than following the column, because rows
   // written before the column existed read back as null.
@@ -127,11 +185,43 @@ export function sessionFromRows(
 ): Session {
   const ordered = [...seats].sort((a, b) => a.seat - b.seat);
 
+  if (ordered.length === 0) throw new StoredRowsError('a table with no seats');
+  if (ordered.length > MAX_SEATS) {
+    throw new StoredRowsError(`${ordered.length} seats at a table of ${MAX_SEATS}`);
+  }
+
+  const taken = new Set<number>();
+  ordered.forEach((seat, at) => {
+    checkSeat(seat, at);
+    if (taken.has(seat.seat)) {
+      throw new StoredRowsError(`two players in seat ${seat.seat}`);
+    }
+    taken.add(seat.seat);
+  });
+
+  // A stale turn index points at nobody, and `currentPlayer` then throws for
+  // every command the chat receives rather than for the row that is wrong.
+  if (!whole(session.turn_index, 0, ordered.length - 1)) {
+    throw new StoredRowsError(
+      `turn ${session.turn_index} at a table of ${ordered.length}`,
+    );
+  }
+  if (!whole(session.roll_count, 0, Number.MAX_SAFE_INTEGER)) {
+    throw new StoredRowsError(`${session.roll_count} rolls taken`);
+  }
+
+  // A variant that no longer exists is not a variant to guess at: falling back
+  // to `classic` would change the rules of a game already in progress.
+  const ruleset = session.ruleset ?? 'classic';
+  if (!isRuleSetId(ruleset)) {
+    throw new StoredRowsError(`no rule set named "${ruleset}"`);
+  }
+
   return {
     id: session.id,
     turnIndex: session.turn_index,
     rollCount: session.roll_count,
-    rules: ruleSetById((session.ruleset ?? 'classic') as RuleSet['id']),
+    rules: ruleSetById(ruleset),
     players: ordered.map(
       (seat): SeatedPlayer => ({
         id: seat.user_id,
