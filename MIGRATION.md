@@ -3521,6 +3521,34 @@ first — the defect appearing in the fixture, for the third pass running.
 commands, the mini app in a browser; every command and every act has been
 exercised at least once by something other than a unit test.
 
+## Hundredth pass: eight identical defects are one shape
+
+Square 68 means two things. A player who has not entered sits on it with
+`is_finished` set, and so does a player who has just won. The board cannot tell
+them apart; only the history can, which is what `hasWon` reads.
+
+It has been found **eight times, in eight places**, and fixed eight times one at
+a time: `hasWon` itself, `owesReport`, `needsSixToEnter`, the mini app's header,
+the line under its board, the bot's `/report`, the bot's `/ask`, and the mini
+app's die. Eight identical defects are one unclosed shape rather than eight
+mistakes, so this pass closes the shape instead of waiting for the ninth.
+
+Three tables, one rule. The engine's lists every function that takes a
+`GameState`, and **fails when a new one is added without deciding** — proved by
+adding a `looksFinished` and watching it go red. The mini app's and the bot's
+list the decisions a player actually meets. Where two answers are legitimately
+the same — `isSavedGame` must trust both, or a reload throws away either every
+new game or every finished one — the reason is written down and checked for
+being written down, because "these two get the same answer" is the sentence
+eight defects were hiding behind.
+
+**And the first version of the mini app's table was wrong in exactly the way it
+was written to catch.** It asserted only that the two answers *differ*. Deleting
+the winner's branch from `standing` leaves a winner told they are standing on
+plan 68 — different from the waiting player's sentence, and still a lie — and
+the table went green on it. It now writes down what each answer has to *be*. A
+test that only compares two results passes when both are wrong.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
