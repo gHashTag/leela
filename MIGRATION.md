@@ -3647,6 +3647,40 @@ the apps, not by its own package, so `also` names the suites that must run with
 it. An incomplete count of who is defending something reads exactly like a weak
 defence.
 
+## Hundred-and-fourth pass: the sweep over the rest, and the tool lying
+
+The sweep the pass before covered eighteen decisions — the ones I remembered as
+having hurt. Two thirds of the code had never been broken on purpose:
+`packages/db`, `packages/contracts`, `apps/docs`, and most of `packages/ai`.
+
+Now thirty-four decisions, forty-two mutations, all nine packages. **Every one
+is defended by something**, several of them heavily: `stateFromLegacy` by 30
+tests, `parseContract` by 18, `sessionFromRows` by 15.
+
+**Booleans are broken both ways now, and that is not a nicety.**
+`stripFrontmatter` and `descriptionIsRedundant` each looked like they had a
+single defender. Both are tested four ways — three of the four cases expect the
+value the mutation happened to pick, so only one could ever notice. One
+direction measures the tests' agreement with a guess rather than their coverage.
+
+**And the third bug in the tool was the worst kind: it lied in the direction it
+exists to prevent.** A parameter can be an inline object type written across
+several lines —
+
+    export function needsSixToEnter(event: {
+      isBlocked: boolean;
+
+— and that brace also has nothing after it on its line, so the injected `return`
+went *inside the type*. Nothing checks types at test time, so it was stripped
+and the function ran unchanged, and the report read **NOBODY NOTICED** for a
+decision five tests defend. A tool built to find false confidence had produced
+some. The parameter list is skipped by counting brackets now, before any brace
+is considered.
+
+Three bugs in three runs, all of them in the mutator rather than in the code it
+measures. That is worth saying plainly: a check nobody has broken on purpose is
+a check nobody has any reason to believe — including this one.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

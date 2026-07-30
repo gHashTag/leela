@@ -21,6 +21,12 @@
  * replaced by a constant — because a crude break that survives is a stronger
  * finding than a subtle one that does not.
  *
+ * A boolean is broken **both ways**, and that is not a nicety. `stripFrontmatter`
+ * and `descriptionIsRedundant` each looked like they had a single defender, and
+ * both turned out to be tested four ways: three of the four cases expect the
+ * value the mutation happened to pick, so only one could notice. One direction
+ * measures the tests' agreement with a guess rather than their coverage.
+ *
  * A decision in `packages/` is usually asked by the apps rather than by its own
  * package, so `also` names the suites that have to run with it. Without that the
  * count is not wrong so much as incomplete, and an incomplete count of who is
@@ -48,10 +54,10 @@ const ROOT = join(HERE, '..');
  * defect before.
  */
 const DECISIONS = [
-  { package: 'packages/engine', file: 'src/game.ts', name: 'hasWon', to: 'true' },
-  { package: 'packages/engine', file: 'src/turn.ts', name: 'owesReport', to: 'true' },
-  { package: 'packages/engine', file: 'src/turn.ts', name: 'isWaitingToEnter', to: 'false' },
-  { package: 'packages/engine', file: 'src/turn.ts', name: 'needsSixToEnter', to: 'true' },
+  { package: 'packages/engine', file: 'src/game.ts', name: 'hasWon', to: ['true', 'false'] },
+  { package: 'packages/engine', file: 'src/turn.ts', name: 'owesReport', to: ['true', 'false'] },
+  { package: 'packages/engine', file: 'src/turn.ts', name: 'isWaitingToEnter', to: ['false', 'true'] },
+  { package: 'packages/engine', file: 'src/turn.ts', name: 'needsSixToEnter', to: ['true', 'false'] },
   {
     package: 'packages/journal',
     file: 'src/index.ts',
@@ -74,16 +80,35 @@ const DECISIONS = [
     also: ['apps/miniapp', 'apps/bot'],
   },
   { package: 'apps/miniapp', file: 'src/view.ts', name: 'standing', to: "{ key: 'app.opening' }" },
-  { package: 'apps/miniapp', file: 'src/view.ts', name: 'canRoll', to: 'true' },
+  { package: 'apps/miniapp', file: 'src/view.ts', name: 'canRoll', to: ['true', 'false'] },
   { package: 'apps/miniapp', file: 'src/view.ts', name: 'mayThrow', to: "'yes'" },
   { package: 'apps/miniapp', file: 'src/view.ts', name: 'lineFor', to: "{ says: 'standing', announcement: null }" },
-  { package: 'apps/miniapp', file: 'src/view.ts', name: 'mayStartOver', to: 'true' },
-  { package: 'apps/miniapp', file: 'src/reports.ts', name: 'seatOwesReport', to: 'true' },
+  { package: 'apps/miniapp', file: 'src/view.ts', name: 'mayStartOver', to: ['true', 'false'] },
+  { package: 'apps/miniapp', file: 'src/reports.ts', name: 'seatOwesReport', to: ['true', 'false'] },
   { package: 'apps/miniapp', file: 'src/reports.ts', name: 'owingSeat', to: 'null' },
   { package: 'apps/miniapp', file: 'src/seats.ts', name: 'resize', to: '{ seats, created: [] }' },
   { package: 'apps/bot', file: 'src/commands.ts', name: 'afterReport', to: "{ say: 'may-roll' }" },
   { package: 'apps/bot', file: 'src/commands.ts', name: 'buttonsFor', to: 'playingButtons(room.language)' },
   { package: 'apps/bot', file: 'src/take-in.ts', name: 'decideSquare', to: "{ kind: 'unreadable' }" },
+  { package: 'apps/bot', file: 'src/take-in.ts', name: 'decide', to: "{ kind: 'unreadable' }" },
+
+  // The three quarters of the code the first sweep never looked at. A decision
+  // is a decision whether or not it has cost a defect yet.
+  { package: 'packages/db', file: 'src/legacy.ts', name: 'stateFromLegacy', to: 'initialState()' },
+  { package: 'packages/db', file: 'src/mapping.ts', name: 'canPlayerRoll', to: '{ allowed: true, reason: null, nextAllowedAt: null, waitMs: 0 }' },
+  { package: 'packages/db', file: 'src/mapping.ts', name: 'turnContextFromPlayer', to: '{ reportSubmitted: true, lastRollAt: null, lastReportAt: null, now }' },
+  { package: 'packages/db', file: 'src/mapping.ts', name: 'rulesForPlayer', to: 'DEFAULT_RULESET' },
+  { package: 'packages/db', file: 'src/mapping.ts', name: 'sessionFromRows', to: 'null' },
+  { package: 'packages/contracts', file: 'src/verify.ts', name: 'compareBoards', to: '[]' },
+  { package: 'packages/contracts', file: 'src/verify.ts', name: 'compareConstants', to: '[]' },
+  { package: 'packages/contracts', file: 'src/verify.ts', name: 'parseContract', to: '{ jumps: new Map(), constants: new Map() }' },
+  { package: 'packages/ai', file: 'src/prompts.ts', name: 'summariseReturns', to: "''" },
+  { package: 'packages/ai', file: 'src/prompts.ts', name: 'summariseJourney', to: "''" },
+  { package: 'packages/ai', file: 'src/prompts.ts', name: 'trimToParagraph', to: 'text' },
+  { package: 'packages/ai', file: 'src/guide.ts', name: 'fallbackText', to: "'…'" },
+  { package: 'apps/docs', file: 'src/render.ts', name: 'descriptionIsRedundant', to: ['true', 'false'] },
+  { package: 'apps/docs', file: 'src/build.ts', name: 'stripFrontmatter', to: 'text' },
+  { package: 'apps/docs', file: 'src/render.ts', name: 'escape', to: 'text' },
 ];
 
 /**
@@ -99,12 +124,33 @@ const DECISIONS = [
  * contain a brace — `): { plan: number } | null {` — so the first `{` after the
  * parameters is not the body. A body's brace is the one with nothing after it
  * on its line.
+ *
+ * The third was the worst, because it made this script *lie in the direction it
+ * exists to prevent*. A parameter may be an inline object type written across
+ * several lines:
+ *
+ *     export function needsSixToEnter(event: {
+ *       isBlocked: boolean;
+ *
+ * that opening brace also has nothing after it on its line, so the `return` went
+ * inside the type — where nothing checks types, so it was stripped and the
+ * function ran unchanged. The report read **"NOBODY NOTICED"** for a decision
+ * five tests defend. So the parameter list is skipped by counting brackets
+ * before any brace is considered at all.
  */
 function mutate(source, name, to) {
   const at = source.search(new RegExp(`export function ${name}\\b`));
   if (at < 0) return null;
 
-  for (let index = source.indexOf('(', at); index < source.length; index += 1) {
+  // Past the parameters first, whatever they contain.
+  let index = source.indexOf('(', at);
+  for (let depth = 0; index < source.length; index += 1) {
+    if (source[index] === '(') depth += 1;
+    if (source[index] === ')') depth -= 1;
+    if (depth === 0) break;
+  }
+
+  for (; index < source.length; index += 1) {
     if (source[index] !== '{') continue;
 
     const restOfLine = source.slice(index + 1, source.indexOf('\n', index));
@@ -125,7 +171,9 @@ let checked = 0;
 for (const decision of chosen) {
   const path = join(ROOT, decision.package, decision.file);
   const original = readFileSync(path, 'utf8');
-  const broken = mutate(original, decision.name, decision.to);
+
+  for (const to of Array.isArray(decision.to) ? decision.to : [decision.to]) {
+  const broken = mutate(original, decision.name, to);
 
   if (broken === null) {
     survived.push(`${decision.name} — not found in ${decision.file}`);
@@ -154,8 +202,9 @@ for (const decision of chosen) {
   }
 
   const mark = failed === 0 ? 'NOBODY NOTICED' : `${failed} failed`;
-  console.log(`  ${decision.package}/${decision.name} → ${decision.to}: ${mark}`);
-  if (failed === 0) survived.push(`${decision.package}/${decision.name}`);
+  console.log(`  ${decision.package}/${decision.name} → ${to}: ${mark}`);
+  if (failed === 0) survived.push(`${decision.package}/${decision.name} → ${to}`);
+  }
 }
 
 console.log(`\nBroke ${checked} decisions on purpose.\n`);
