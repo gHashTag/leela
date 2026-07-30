@@ -6,6 +6,9 @@
  * record called two divergences from the engine permanent *because deployed*.
  * That is a claim about the world, and it had never been checked.
  *
+ * Needs: the network. Public RPCs rate-limit, and a gate that goes red because
+ *        somebody's node was busy teaches people to ignore red.
+ *
  * Deliberately not in CI: it needs the network, public RPCs rate-limit, and a
  * gate that goes red because somebody's node was busy teaches people to ignore
  * red. It is a tool for answering the question when the answer matters — and

@@ -19,7 +19,7 @@ packages/
   contracts/  LeelaGame.sol, checked against the engine.            ok
 apps/
   mobile/     Expo Router: iOS, Android and web from one codebase.  (to port)
-  site/       Next.js landing page.                                 (to port)
+  site/       not built - the donor was an untouched create-next-app
   docs/       the book: 72 plans and the rules, 22 languages.       ok
   bot/        Telegram, on grammY. Group play in a chat.            ok
   miniapp/    Telegram mini app: the board, the die, the texts.      ok
@@ -57,7 +57,7 @@ wrong board**, and the rules divide into **five different games** — see
 [MIGRATION.md](MIGRATION.md).
 
 ```bash
-node scripts/audit-copies.mjs --src ../leela-src
+bun scripts/audit-copies.mjs --src ../leela-src
 ```
 
 ## Rule variants
@@ -185,8 +185,8 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 238 | rules, four variants, sessions, turn gating, seeded dice |
-| `@leela/content` | 145 | 22 languages of plans, 2 of the game's own voice |
+| `@leela/engine` | 265 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/content` | 156 | 22 languages of plans, 2 of the game's own voice |
 | `@leela/journal` | 23 | the path as a file, shared by the bot and the mini app |
 | `@leela/db` | 97 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 126 | the companion — prompts built from the plan text |
@@ -196,7 +196,7 @@ cd packages/engine && bun test
 | `@leela/miniapp` | 141 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | everything else | — | not yet ported |
 
-1234 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+1272 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
@@ -204,8 +204,17 @@ never read, and exports with no caller:
 node scripts/audit-unread.mjs
 node scripts/audit-configs.mjs
 node scripts/audit-claims.mjs       # the table above, against the suites
+node scripts/audit-scripts.mjs      # every script runs under the runtime it names
+bun  scripts/audit-dataset.mjs      # the data, against the languages declared
 node scripts/audit-deployment.mjs   # asks four chains where the contract is
 ```
+
+Two of them take a runtime other than `node`, and that is checked rather than
+remembered: `audit-copies.mjs` spent some time documented here as a `node`
+command that died in the module loader. A check nobody can run reads exactly
+like a check that passes, so `audit-scripts.mjs` holds each script's shebang,
+these commands and the CI jobs to each other — and every audit either runs in
+CI or says in its own header why it cannot.
 
 The table is checked rather than trusted. It was kept by hand for forty passes,
 and a hand-kept number is one that will eventually be wrong — which is what the
@@ -215,7 +224,7 @@ The board art and the rules are two descriptions of the same thing. To compare
 them in one look — a ring where each jump starts, a dot where it lands:
 
 ```bash
-bun scripts/board-overlay.mjs board-overlay.svg
+node scripts/board-overlay.mjs board-overlay.svg
 ```
 
 What ships is typechecked a second time with `noUncheckedIndexedAccess`, which

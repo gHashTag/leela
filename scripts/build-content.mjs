@@ -19,7 +19,8 @@
  */
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { checkRegression, coverageOf } from './lib/coverage.mjs';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -415,6 +416,39 @@ offer('ru', leelabook.plans);
 
 const rules = readRules();
 
+/**
+ * What is already there, before anything is overwritten.
+ *
+ * The generator keeps the best copy of each language it finds across the donor
+ * repositories, so a source directory that is incomplete — mis-typed,
+ * half-cloned, empty — produces a *smaller* dataset rather than an error. Run
+ * once against an empty directory, it emptied `rules.json` and the manifest,
+ * exited 0, and printed "Content built". Twenty-four tests went red for a
+ * reason none of them named.
+ *
+ * Losing ground is the signal. Gaining is the generator working.
+ */
+const before = existsSync(join(OUT, 'manifest.json'))
+  ? coverageOf(JSON.parse(readFileSync(join(OUT, 'manifest.json'), 'utf8')))
+  : new Map();
+
+const after = new Map(
+  Object.entries(byLang).map(([lang, plans]) => [
+    lang,
+    plans.filter((plan) => plan.plan >= 1 && plan.plan <= TOTAL_PLANS).length,
+  ]),
+);
+
+const losses = checkRegression(before, after);
+
+if (losses.length > 0 && !process.argv.includes('--force')) {
+  console.error(`\nRefusing to write: this build found less than the dataset already has.\n`);
+  for (const loss of losses.slice(0, 25)) console.error(`  ${loss}`);
+  console.error(`\nSource read: ${SRC}`);
+  console.error('If that is genuinely what you want, pass --force.');
+  process.exit(1);
+}
+
 mkdirSync(OUT, { recursive: true });
 
 const coverage = {};
@@ -440,7 +474,11 @@ for (const [lang, plans] of Object.entries(byLang)) {
 writeFileSync(join(OUT, 'rules.json'), `${JSON.stringify(rules, null, 2)}\n`);
 
 const manifest = {
-  generatedFrom: SRC,
+  // Relative to the repository, not as typed. The committed manifest carried
+  // one machine's home directory, and the same rebuild from `../leela-src` and
+  // from `/Users/…/leela-src` produced two different files — a dataset that
+  // claims to be reproducible and is not, on one line.
+  generatedFrom: relative(REPO, resolve(SRC)) || '.',
   totalPlans: TOTAL_PLANS,
   languages: Object.keys(coverage).sort(),
   coverage,

@@ -69,6 +69,14 @@ ${Object.entries(SNAKES).map(([from, to]) => jump(Number(from), to, '#0b6bcb')).
 `;
 
 const out = process.argv[2] ?? 'board-overlay.svg';
+
+// A flag is not a file name. Handed `--src ../leela-src` — the arguments every
+// other script here takes — this wrote a file called `--src` and said it had
+// drawn the board. Refusing is a line; explaining afterwards is a bug report.
+if (out.startsWith('-')) {
+  console.error(`Not a file name: ${out}. This script takes one argument, the SVG to write.`);
+  process.exit(1);
+}
 writeFileSync(out, svg);
 console.log(`Wrote ${out}: ${Object.keys(ARROWS).length} arrows, ${Object.keys(SNAKES).length} snakes.`);
 console.log('A ring is where a jump starts, a dot where it lands.');

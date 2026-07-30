@@ -1616,6 +1616,70 @@ it was not caught locally is worth more than the line.
   a red build — it is an absent one, which reads exactly like a passing one.
   `checkCiPackages` is in `audit-configs`, with six tests on the rule.
 
+## Forty-eighth pass: the checks that were not running
+
+Nothing left in the list below is code — what remains is secrets, an external
+dump, a keystore and an archive operation. So this pass went looking at the
+checks themselves, and found two that had stopped working without saying so.
+
+**`audit-copies.mjs` had not run under `node` for some time.** That is the check
+that walks the donor repositories and reads all eighteen copies of the board —
+the one that found a hundred-square Snakes and Ladders set pretending to be
+Leela. It imports the engine's TypeScript, the engine imports `./board` with no
+extension, and Node has no extension search. README told a reader to run it
+under `node`, and that command dies in the loader.
+
+(The command is not spelled out here on purpose. The new check reads the docs
+for invocations, and a broken one written down as an example is still a line a
+reader can copy — it caught this paragraph on the first run.)
+
+Nothing caught it because the script needs the donor clones, so it cannot be a
+CI job — and a check nobody can run reads exactly like a check that passes.
+
+`scripts/audit-scripts.mjs` closes that class. Every script declares its runtime
+in its shebang; the docs must name the same one; and the import graph is walked
+statically to prove Node could follow it. Static rather than a smoke test
+because running these has side effects — which is not a hypothetical, see below.
+Every `audit-*` script must also either run in CI or carry a `Needs:` line
+saying what stops it, so an exemption is a sentence with a reason rather than an
+absence that reads as an oversight.
+
+Two findings, in opposite directions: `audit-copies.mjs` documented as `node`
+and unable to run under it, and `board-overlay.mjs` documented as `bun` when it
+runs perfectly well under Node. A list of commands kept by hand goes stale both
+ways at once.
+
+### The accident, which was the more useful half
+
+While proving the scripts could not be smoke-tested safely, one was run with a
+source directory that did not exist. `build-content.mjs` found nothing, wrote an
+empty `rules.json` and an empty manifest, exited 0, and printed "Content built".
+Twenty-four tests in `@leela/content` went red for a reason none of them named.
+
+Restored from git in a second — and then treated as the finding it is, because
+two separate silences had to line up for it:
+
+- **The generator did not know what it was replacing.** It keeps the best copy
+  of each language it finds across the donor repositories, so an incomplete
+  source produces a *smaller* dataset rather than an error. It now reads the
+  committed manifest first and refuses to write a build that loses a language or
+  loses plans, naming each loss; `--force` is there for the day that is genuinely
+  wanted. Gaining is never refused — a guard that fires on good news is a guard
+  people pass `--force` to by habit.
+- **CI's dataset check could not fail on an absence.** It iterated *the languages
+  the manifest listed*, so an empty manifest was zero iterations and a green job.
+  It would have accepted the damage. `audit-dataset.mjs` holds the data to
+  `LANGUAGES` in `packages/content/src` instead — a promise declared in code —
+  and reads the plan files rather than trusting the summary the same generator
+  wrote.
+
+A third thing fell out: the manifest recorded `generatedFrom` exactly as typed,
+so the committed file carried one machine's home directory, and rebuilding from
+`../leela-src` and from `/Users/…/leela-src` produced two different datasets. It
+is stored relative to the repository now. The job called
+`content-is-reproducible` cannot actually check reproducibility — that needs the
+donor clones — and its comment now says so rather than implying otherwise.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
@@ -1757,10 +1821,13 @@ as "current" and so offered no link to it, and every plan printed its
 description above a body that began with the same words — the Russian source
 puts the first paragraph in the frontmatter.
 
-`apps/site` is not built. The landing page in `leela-chakra-nextjs` is a Next.js
-app whose only real content is a board and a dice roll, both of which the mini
-app now does better; what remains of a landing page is the docs root. Skipped
-deliberately rather than ported.
+`apps/site` is not built, and this pass opened the donor to check that
+judgement rather than repeat it. `leela-chakra-nextjs` is an unmodified
+`create-next-app`: `page.tsx` is the starter template down to the Vercel logo
+and "Get started by editing src/app/page.tsx", `useLeelaGame.ts` is forty-six
+lines of which every functional one is commented out, and both locale files —
+`public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
+in it to port. The docs root is the landing page.
 
 **Translation audit — done, and it found nothing.** The 19 machine-translated
 languages hold up at term level: parenthesised transliterations survive in all

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * Find every copy of the board across the source repositories, and check it.
  *
@@ -7,7 +7,17 @@
  * 100-square Snakes and Ladders set rather than Leela, and nothing caught it
  * because nothing looked. This looks.
  *
- * Run:  node scripts/audit-copies.mjs [--src ../leela-src]
+ * Runs under bun, not node. It imports the engine's TypeScript source, and the
+ * engine imports `./board` without an extension — which a bundler, bun and tsc
+ * all resolve and node does not. The shebang says so, and
+ * `scripts/audit-scripts.mjs` holds the docs to it: this script spent some time
+ * documented as `node scripts/audit-copies.mjs`, a command that dies in the
+ * loader, and nobody noticed because a check nobody can run reads exactly like
+ * a check that passes.
+ *
+ * Needs: the donor clones in ../leela-src, which CI does not check out.
+ *
+ * Run:  bun scripts/audit-copies.mjs [--src ../leela-src]
  */
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';

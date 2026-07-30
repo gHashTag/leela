@@ -131,10 +131,20 @@ jobs:
       # number survives before it is quietly wrong.
       - run: node scripts/audit-claims.mjs
 
+      # Every script starts under the runtime it names, and every audit is
+      # either run here or says in its own header why it cannot be. audit-copies
+      # - the check that reads eighteen copies of the board - sat broken under
+      # `node` for passes, and nothing noticed, because a check nobody can run
+      # reads exactly like a check that passes.
+      - run: node scripts/audit-scripts.mjs
+
   content-is-reproducible:
-    # The dataset under packages/content/data is generated. If a commit edits it
-    # by hand the generator and the repository disagree, and the next rebuild
-    # silently reverts the edit. This job makes that visible.
+    # The dataset under packages/content/data is generated, and this job checks
+    # it is whole — every language the package declares, every plan, in order,
+    # with text. It cannot check it is *reproducible*: rebuilding needs the
+    # donor clones, which are not here. The generator refuses to write a dataset
+    # smaller than the one already committed, which is the half of that promise
+    # that can be kept without them. The job name is older than the promise.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -143,35 +153,10 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Check the dataset is well formed
-        run: |
-          bun run --bun - <<'EOF'
-          const langs = JSON.parse(
-            await Bun.file('packages/content/data/manifest.json').text(),
-          ).languages;
-
-          let failures = 0;
-          for (const lang of langs) {
-            const plans = JSON.parse(
-              await Bun.file(`packages/content/data/plans.${lang}.json`).text(),
-            );
-            if (plans.length !== 72) {
-              console.error(`${lang}: ${plans.length} plans, expected 72`);
-              failures++;
-              continue;
-            }
-            for (let i = 0; i < 72; i++) {
-              const plan = plans[i];
-              if (plan.plan !== i + 1) {
-                console.error(`${lang}: plan ${i + 1} out of order`);
-                failures++;
-              }
-              if (!plan.title?.trim() || !plan.body?.trim()) {
-                console.error(`${lang}: plan ${plan.plan} is missing title or body`);
-                failures++;
-              }
-            }
-          }
-          console.log(`checked ${langs.length} languages`);
-          process.exit(failures > 0 ? 1 : 0);
-          EOF
+      # Held to `LANGUAGES` in packages/content/src, not to the manifest's own
+      # list. The check this replaces iterated the languages the manifest named,
+      # so an empty manifest was zero iterations and a green job — and a stray
+      # rebuild from a source directory that did not exist emptied it exactly
+      # that way.
+      - run: bun install --frozen-lockfile
+      - run: bun scripts/audit-dataset.mjs
