@@ -3746,6 +3746,37 @@ goes by. Two things had to be got right, and both are tests:
 
 Every audit now ends clean, which is the first time that has been true.
 
+## Hundred-and-seventh pass: the durable bot could not read its own writing
+
+Played a whole game through SQLite, reloading the room from the database before
+every act, as a restarted process would. The game itself is sound: the turn
+holder, every square and every gate survived all thirty-eight round trips. Then
+the path came back empty.
+
+**`sqliteReportSink` had `record` and no `history`.** So the *durable*
+configuration — the one the README tells an operator to run, with a volume
+mounted so that nothing is lost — wrote every report into the database and could
+not read one back. And `ReportSink.history` is optional on purpose: its absence
+means *this bot keeps nothing*, which the bot then said out loud. `/path` and
+`/returns` answered "this bot is not keeping reports", `/save` had nowhere to
+write a file, and every square handed over by the mini app two passes ago was
+refused because there was nothing to merge it into.
+
+A bot saying the opposite of the truth about itself, on the configuration that
+exists precisely so that nothing is lost.
+
+`reportsFor` was written, tested and called by nobody. `audit-unread` cannot see
+that: it is a method on a class rather than an export, and the check only looks
+at exports. Nor could any unit test — every one of them holds a sink it built
+itself, and the assembled bot is where the two halves meet.
+
+The tests state it over **every sink the bot can be built with**, so a fourth
+has to decide the same question: either you keep reports and can read them back,
+or you keep none and say so. Plus the sentence a player actually meets — a bot
+that keeps reports must never answer `/path` with "not keeping reports", and one
+that keeps none must never answer with an empty list, because those are
+different facts and only one of them is ever true.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

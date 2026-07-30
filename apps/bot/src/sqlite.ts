@@ -521,7 +521,26 @@ export function sqliteStepSink(queries: SqliteRoomQueries) {
   };
 }
 
-/** A `ReportSink` backed by the same database as the rooms. */
+/**
+ * A `ReportSink` backed by the same database as the rooms.
+ *
+ * `history` is the half that was missing, and its absence was not quiet: a
+ * `ReportSink` without it means *this bot keeps nothing*, and the bot said so
+ * to anybody who asked. So the durable configuration — the one the README tells
+ * an operator to run, the one with a volume mounted so that nothing is lost —
+ * wrote every report into SQLite and then answered `/path` with **"this bot is
+ * not keeping reports"**, `/returns` with the same, `/save` with nowhere to put
+ * a file, and refused every square handed over by the mini app because there
+ * was nothing to merge it into.
+ *
+ * `reportsFor` was written, tested, and called by nobody. `audit-unread` cannot
+ * see it: it is a method on a class, not an export, and the check only looks at
+ * exports.
+ *
+ * Found by playing a whole game through the database rather than by reading it
+ * — thirty-eight reports filed, and a path that said nothing had ever been
+ * written.
+ */
 export function sqliteReportSink(queries: SqliteRoomQueries) {
   return {
     async record(report: {
@@ -531,6 +550,10 @@ export function sqliteReportSink(queries: SqliteRoomQueries) {
       at?: Date;
     }): Promise<void> {
       queries.recordReport(report);
+    },
+
+    async history(userId: string): Promise<Array<{ plan: number; text: string; createdAt: Date }>> {
+      return queries.reportsFor(userId);
     },
   };
 }
