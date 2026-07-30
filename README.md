@@ -196,7 +196,8 @@ cd packages/engine && bun test
 | everything else | — | not yet ported |
 
 1126 tests, run on every push by [CI](.github/workflows/ci.yml), which also
-reports fields that are written and never read, and exports with no caller:
+builds the bot's image and starts it, and reports fields that are written and
+never read, and exports with no caller:
 
 ```bash
 node scripts/audit-unread.mjs

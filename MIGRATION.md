@@ -1299,12 +1299,16 @@ packages packages` over the top replaces links made for the image with links
 made for a Mac. There was no `.dockerignore`, so the host's `node_modules` were
 in the build context in the first place. There is one now.
 
-**Three, and this is the real one: the bot dies if the volume is not there.**
-`LEELA_DB=/data/leela.db` and `/data` exists only when a volume is mounted.
-SQLite does not create directories, so the process exited with
-`SQLITE_CANTOPEN` and was restarted into exiting again — while `apps/bot/README`
-promised it would run and say it was holding games in memory. The promise was
-false, and it was false in exactly the state the service is in right now.
+**Three: a store that cannot be opened kills the process.** Pointed at a path
+whose directory cannot be made, the bot exited with `SQLITE_CANTOPEN` before
+printing a word — while `apps/bot/README` promised it would run and say it was
+holding games in memory.
+
+*Corrected in the fortieth pass:* this entry first said the bot dies **when the
+volume is not mounted**, which is wrong. The `VOLUME /data` instruction creates
+that directory in the image, so the missing-volume case was never the crash. The
+crash is real for any path that cannot be made — the claim was too strong, and
+it was made from a local simulation rather than from a container.
 
 `openStorage` knows three cases where `index.ts` knew two: kept, held in memory
 on purpose, and held in memory *because the path could not be opened*. A store
@@ -1315,6 +1319,35 @@ a mount point that is not there.
 The assertion is the shape: **`openStorage` has no failure mode that reaches
 the caller.** A bot that will not start is worse at keeping a game than one that
 forgets it.
+
+## Fortieth pass: the image, built by something other than me
+
+Three defects were found in the Dockerfile by hand last pass, and nothing would
+have stopped the fourth. `docker build` runs in CI now, and the container is
+started twice — once plainly, once pointed at a path that cannot be made.
+
+**Every assertion was rehearsed before it was committed, and two were wrong.**
+
+The first draft required the container to still be running when a `timeout`
+stopped it, and read exit code 124 as the pass. It is 0: `timeout` signals the
+`docker run` client, which exits cleanly. That check would have failed a
+working bot on the first push.
+
+The second is a correction to what I wrote last pass. I claimed the bot dies
+when the volume is not mounted. Built and run, it does not — the `VOLUME /data`
+instruction creates that directory in the image, so the directory is always
+there. The crash I found was in a local simulation that had no such
+instruction. The claim was too strong and is corrected above; `ensureDirectory`
+is still right for any path whose directory does not exist, and is covered by
+`storage.test.ts` rather than by the container.
+
+**What the job does catch, proven by breaking it on purpose.** With the
+fallback removed from `openStorage`, the image pointed at `/proc/leela.db`
+exits 1 and prints nothing but a stack trace, so that assertion discriminates.
+The build step catches both install defects by construction.
+
+Colima was started to do this and stopped afterwards. A check that has never
+run is a check nobody has seen fail — and two of these had never run.
 
 ## Remaining, in order
 

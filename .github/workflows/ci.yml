@@ -52,6 +52,65 @@ jobs:
   # broadcast, rerollOnRepeat, needs_report - each looking complete in review.
   # Reported rather than enforced: a field can be legitimately write-only, and a
   # check that fails a build on a judgement call gets switched off.
+  # The bot ships as an image, and a Dockerfile that is never built is a
+  # description nobody has checked. Two defects were found in this one by hand
+  # and both fail the build step: a frozen install missing two workspace
+  # manifests, and host node_modules copied over the installed ones.
+  bot-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: docker build -t leela-bot -f apps/bot/Dockerfile .
+
+      # Building proves it compiles; running proves it runs. The token is
+      # deliberately a fake one: a 401 is the single failure the bot refuses to
+      # retry, so the container says everything it has to say and then exits 0.
+      # Anything else ending the run is the defect this job is looking for.
+      #
+      # `/data` exists in the image because of the `VOLUME` instruction, so
+      # this step does not test a missing directory — the step below does that,
+      # with a path that cannot be made.
+      - name: Start with no volume mounted
+        run: |
+          set -uo pipefail
+          docker run --rm -e BOT_TOKEN=1:TEST leela-bot > out.log 2>&1
+          code=$?
+          cat out.log
+
+          if [ "$code" -ne 0 ]; then
+            echo "::error::the bot died rather than starting (code $code)"
+            exit 1
+          fi
+          grep -q 'Leela bot starting' out.log \
+            || { echo '::error::the bot never started'; exit 1; }
+          grep -q 'kept in /data/leela.db' out.log \
+            || { echo '::error::games were not kept, with no volume mounted'; exit 1; }
+          grep -q 'token was rejected' out.log \
+            || { echo '::error::something other than the fake token ended the run'; exit 1; }
+
+      - name: Start with a path that cannot be opened
+        run: |
+          set -uo pipefail
+          docker run --rm -e BOT_TOKEN=1:TEST -e LEELA_DB=/proc/leela.db leela-bot > out.log 2>&1
+          code=$?
+          cat out.log
+
+          if [ "$code" -ne 0 ]; then
+            echo "::error::the bot died rather than falling back to memory (code $code)"
+            exit 1
+          fi
+          # Verified to discriminate: with the fallback removed, this image
+          # exits 1 and prints nothing but a stack trace.
+          #
+          # Named, with the path in it, because the answer is almost always a
+          # mount point that is not there.
+          grep -q 'could not open /proc/leela.db' out.log \
+            || { echo '::error::the failure was not named'; exit 1; }
+          grep -q 'held in memory' out.log \
+            || { echo '::error::it did not say games are held in memory'; exit 1; }
+
   unread-fields:
     runs-on: ubuntu-latest
     steps:
