@@ -1743,6 +1743,35 @@ asserting about a rule implemented next door should say. Four tests that
 asserted the old behaviour — including one that read *writing* the field as the
 rule — asserted the defect, and now assert the rule.
 
+## Fiftieth pass: the die that forgot
+
+Asked why nothing had changed in the simulator. Nothing had: the three passes
+before this one touched rules, audits and scripts, and not one file under
+`apps/miniapp` or `apps/docs`. That is correct and it is also the answer to a
+different question than the one being asked, so this pass went to the screen.
+
+The screenshot showed the gem on 11 and a circle on 5 — a six, plainly — and a
+die showing **one**. `main.ts` called `showFace(1)` on load, hard-coded, and the
+throw was never stored. Close the app after a six, come back, and the app
+contradicts itself about the only event in the game.
+
+The published app persists `DiceStore.count` and initialises it to **6** — both
+the throw a player needs to begin and the face the die rests on. So the last
+throw is kept now, under a key of its own: put inside the saved game it would
+make `isSavedGame` reject every existing save, which is a player's whole path
+dropped to remember a die. It is written with the throw rather than after the
+spin, because a player who closes the app mid-animation threw that value all the
+same.
+
+Six tests, on the rule rather than on the values: anything that is not a face
+this die has is not restored — a half-written string, a `0` from an older shape,
+a `7` from another game, a float, a negative — and storage that throws is a
+worse face rather than a broken app.
+
+The die's dimming was checked at the same time and was already right: `opacity:
+0.4` while a report is owed, which is `opacityCube` in the original. The faint
+single dot in the screenshot was face one at forty per cent.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

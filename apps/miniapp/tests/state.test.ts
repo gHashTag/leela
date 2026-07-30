@@ -8,7 +8,16 @@ import {
   seededRoller,
   type GameState,
 } from '@leela/engine';
-import { STORAGE_KEY, isSavedGame, loadState, saveState, type GameStorage } from '../src/state';
+import {
+  RESTING_FACE,
+  STORAGE_KEY,
+  isSavedGame,
+  loadLastRoll,
+  loadState,
+  saveLastRoll,
+  saveState,
+  type GameStorage,
+} from '../src/state';
 
 /**
  * What is allowed back out of storage.
@@ -159,5 +168,82 @@ describe('reading a saved game', () => {
     );
     expect(key).toBe(STORAGE_KEY);
     expect(key).toMatch(/\.v\d+$/);
+  });
+});
+
+describe('the throw the die is showing', () => {
+  /**
+   * The die was set to `1` on every load, by a hard-coded call. A player who
+   * threw a six to move from 5 to 11, closed the app and came back was shown a
+   * one over a board that had plainly moved by six — the app contradicting
+   * itself about the only event in the game.
+   *
+   * The published app persists `DiceStore.count` and starts it at 6, which is
+   * both the throw a player needs to begin and the reason the resting face is
+   * not 1.
+   *
+   * The rule asserted is not a list of the wrong values seen so far: anything
+   * that is not a face this die has is not restored, whatever shape it arrives
+   * in.
+   */
+
+  /** A storage that can be handed any string, including ones no code wrote. */
+  const holding = (raw: string | null): GameStorage => ({
+    getItem: () => raw,
+    setItem: () => {},
+  });
+
+  it('is the throw that was made', () => {
+    for (const value of [1, 2, 3, 4, 5, 6]) {
+      const store = memory();
+      saveLastRoll(store, value);
+      expect(loadLastRoll(store), `threw ${value}`).toBe(value);
+    }
+  });
+
+  it('survives a reload, which is the whole point', () => {
+    const store = memory();
+    saveLastRoll(store, 6);
+    // A second reader over the same storage is what a reopened app is.
+    expect(loadLastRoll(memory(store.written() ?? undefined))).toBe(6);
+  });
+
+  it('is the resting face when nothing has been thrown', () => {
+    expect(loadLastRoll(memory())).toBe(RESTING_FACE);
+    expect(RESTING_FACE).toBe(6);
+  });
+
+  it('is the resting face for anything that is not a face this die has', () => {
+    // A half-written string, a zero from an older shape, a seven from another
+    // game, a float, a negative, a number too large to be anything. One rule,
+    // not six cases: if it is not 1-6, it was not thrown here.
+    for (const raw of ['', '0', '7', '2.5', '-3', '1e9', 'six', '{}', 'null', ' ']) {
+      expect(loadLastRoll(holding(raw)), JSON.stringify(raw)).toBe(RESTING_FACE);
+    }
+  });
+
+  it('never throws, whatever storage does', () => {
+    // Same rule as the game itself: a window with storage disabled still
+    // plays, and a die that cannot be remembered is a worse face rather than a
+    // broken app.
+    const hostile: GameStorage = {
+      getItem: () => {
+        throw new Error('denied');
+      },
+      setItem: () => {
+        throw new Error('denied');
+      },
+    };
+    expect(() => loadLastRoll(hostile)).not.toThrow();
+    expect(loadLastRoll(hostile)).toBe(RESTING_FACE);
+    expect(() => saveLastRoll(hostile, 4)).not.toThrow();
+  });
+
+  it('is kept apart from the game, so an old save still loads', () => {
+    // Put inside the saved game, this value would make `isSavedGame` reject
+    // every existing save: a player's whole path dropped to remember a die.
+    const store = memory();
+    saveLastRoll(store, 3);
+    expect(store.written()).not.toContain('loka');
   });
 });

@@ -89,6 +89,59 @@ export function loadState(storage: GameStorage | undefined): GameState {
   }
 }
 
+/**
+ * Where the last throw lives.
+ *
+ * A key of its own rather than a field on the saved game: `isSavedGame` refuses
+ * anything it does not recognise, so a value added inside would make every
+ * existing save unreadable — a player's whole path dropped to remember a die.
+ * Two keys can drift apart; the drift here is that the die shows a face nobody
+ * threw, which is what it does now.
+ */
+export const DIE_KEY = 'leela.die.v1';
+
+/**
+ * The face to show when nothing has been thrown yet.
+ *
+ * Six, because that is `DiceStore.count`'s initial value in the published app,
+ * and because a six is what a player needs to begin: the die at rest shows the
+ * throw the game is waiting for.
+ */
+export const RESTING_FACE = 6;
+
+/**
+ * The last throw, as the die should show it.
+ *
+ * The mini app showed `1` on every load — hard-coded — so a player who threw a
+ * six to move from 5 to 11, closed the app and came back was shown a one over a
+ * board that had plainly moved by six. The die is a record of the throw, and a
+ * record that resets is worse than no record.
+ *
+ * Anything that is not a face this die has is not restored. That is the rule,
+ * rather than a list of the wrong values seen so far: a half-written string, a
+ * `0` from an older shape and a `7` from a different game are all the same
+ * answer.
+ */
+export function loadLastRoll(storage: GameStorage | undefined): number {
+  try {
+    const raw = storage?.getItem(DIE_KEY);
+    const value = Number(raw);
+    if (!raw || !Number.isInteger(value) || value < 1 || value > 6) return RESTING_FACE;
+    return value;
+  } catch {
+    return RESTING_FACE;
+  }
+}
+
+/** Keep the last throw. Forgetting it is a worse face, not a broken game. */
+export function saveLastRoll(storage: GameStorage | undefined, value: number): void {
+  try {
+    storage?.setItem(DIE_KEY, String(value));
+  } catch {
+    // Same as the game itself: a window that cannot store still plays.
+  }
+}
+
 /** Keep the game. A failure here is forgetfulness, not an error to show. */
 export function saveState(storage: GameStorage | undefined, state: GameState): void {
   try {

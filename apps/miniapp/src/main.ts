@@ -32,7 +32,7 @@ import die6 from './die-6.webp';
 import boardLight from './board-light.webp';
 import boardDark from './board-dark.webp';
 import gemArt from './gem.webp';
-import { loadState, saveState } from './state';
+import { loadLastRoll, loadState, saveLastRoll, saveState } from './state';
 import { fileName, merge, parseDocument, toDocument, toText } from './journal-file';
 import {
   arrived,
@@ -217,6 +217,9 @@ async function roll(): Promise<void> {
   el.roll.style.setProperty('--spin', `${spinDegrees(value)}deg`);
   el.roll.style.animation = `spin ${duration}ms linear`;
   showFace(value);
+  // Saved with the throw rather than after the spin: a player who closes the
+  // app mid-animation threw that value all the same.
+  saveLastRoll(localStorage, value);
 
   await new Promise((resolve) => setTimeout(resolve, duration));
 
@@ -388,7 +391,9 @@ document.documentElement.style.setProperty('--gem', `url("${gemArt}")`);
 const scheme = telegram?.colorScheme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 void paintBoard(document, boardFor(scheme, { light: boardLight, dark: boardDark }));
 
-showFace(1);
+// The throw the player last made, not a hard-coded one. A die that resets to
+// `1` over a board that moved by six is the app contradicting itself.
+showFace(loadLastRoll(localStorage));
 
 loadPlans(language)
   .then(() => {
