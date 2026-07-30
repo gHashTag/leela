@@ -136,15 +136,18 @@ progress::-webkit-progress-value {
  * eight rows stretched over a phone screen is what that produces.
  */
 /*
- * The board players know.
+ * The board players know, as the published app drew it.
  *
- * `leela/assets/about/images/gameboard.png` — the painted field from the
- * published app, snakes and arrows and all, carried across because a CSS grid
- * of grey squares is a diagram of the game rather than the game. The same
- * image sat in four of the source repositories, byte for byte.
+ * `leela/src/components/GameBoard/images/{light,dark}.png` — the snakes, the
+ * arrows and the Flower of Life on 68, and nothing else. The numbers are not
+ * in the painting: `GameBoard/index.tsx` lays a nine-by-eight grid of circles
+ * over it and writes each number itself, leaving 68 blank because the flower
+ * is already there.
  *
- * Its numbering is the engine's: 1 bottom left, 9 columns, 8 rows, every other
- * row reversed. The squares are laid over the paint rather than drawn.
+ * The first attempt used `assets/about/images/gameboard.png`, which is the
+ * illustration from the rules screen — same board, but with the numbers and a
+ * border of feathers and crystals baked in. It looked close and was the wrong
+ * file.
  */
 .board {
   position: relative;
@@ -155,30 +158,42 @@ progress::-webkit-progress-value {
      is tall, so on a phone there is always some — and all of it collecting
      under the board reads as a page that failed to finish loading. */
   margin: auto;
-  aspect-ratio: 1428 / 1260;
+  /* The grid's own shape: nine boxes of 31 with 1 either side, eight of 31
+     with 2. The painting is fitted to it rather than the other way round. */
+  aspect-ratio: 297 / 280;
   border-radius: var(--radius);
 }
 
 /*
- * With the painting: white behind it in the dark theme too, because a board is
- * an object with its own colours rather than a surface that follows the
- * interface. The image itself is set from `paint.ts`, once it has loaded — a
- * CSS background gives no way to find out that it did not.
+ * With the painting. Unlike the rules illustration, this art has a transparent
+ * background and comes in two, so it follows the interface instead of being
+ * pinned to white — which is what the published app does.
+ *
+ * The image is set from `paint.ts` once it has loaded: a CSS background gives
+ * no way to find out that it did not.
  */
-.board.painted {
-  background: #fff no-repeat center / 100% 100%;
+.board.painted::before {
+  content: '';
+  position: absolute;
+  /* Logical, so the direction audit stays as narrow as it is: the board is
+     pinned `dir="ltr"`, but a paint layer needs no help from that. */
+  inset-inline: 0;
+  /* Lifted off the grid, as `GameBoard` lifts it: the painting sits at the top
+     of the container and the circles begin a little below it. Without this the
+     Flower of Life lands under 68 instead of on it. */
+  top: -6.5%;
+  aspect-ratio: 714 / 639;
+  background: var(--board-art) no-repeat center / 100% 100%;
+  pointer-events: none;
 }
 
 /*
- * The squares, over the paint.
- *
- * Inset to the numbered area of the image rather than to its edges: the
- * painting has a margin, and a grid stretched across the whole file puts every
- * square a little to the left of the number it belongs to.
+ * The squares. The whole board is the grid — the painting is behind it, fitted
+ * to the same width, exactly as `GameBoard` composes them.
  */
 .squares {
   position: absolute;
-  inset: 10.95% 7.04% 0.16% 5.43%;
+  inset: 0;
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   grid-template-rows: repeat(8, 1fr);
@@ -197,9 +212,8 @@ progress::-webkit-progress-value {
   justify-content: center;
   position: relative;
   border-radius: 4px;
-  /* Without the painting this is the board: a grid of numbered squares, which
-     is what it was until the painting arrived and is still what a phone on a
-     train gets. */
+  /* Round, as the published app has them: `borderRadius: s(31) / 2`. */
+  border-radius: 50%;
   background: var(--surface);
   color: var(--hint);
   font-size: clamp(9px, 2.6vw, 13px);
@@ -214,18 +228,22 @@ progress::-webkit-progress-value {
   background: rgb(0 0 0 / 8%);
 }
 
-/* The snakes and arrows are painted into the board. The corner glyph says the
-   same thing for anyone reading it at arm's length on a phone; the bars that
-   used to underline a square would now be drawn across the painting. */
-.cell.snake .mark {
+/* No glyph over the painting: the snakes and the arrows are the painting, and
+   a second copy in the corner of a square is a caption on a photograph. On the
+   plain board they are all there is, so they stay there. */
+.board:not(.painted) .cell.snake .mark {
   color: var(--snake);
 }
 
-.cell.arrow .mark {
+.board:not(.painted) .cell.arrow .mark {
   color: var(--arrow);
 }
 
-.cell.win {
+.board.painted .mark {
+  display: none;
+}
+
+.board:not(.painted) .cell.win {
   box-shadow: inset 0 0 0 2px var(--win);
 }
 
@@ -238,25 +256,36 @@ button:focus-visible {
 }
 
 /* Where the player stands. The ring reads at a glance on any theme. */
-/* Over the painting the squares are only hit targets: the numbers are in the
-   paint, and printing them again would double every one of them. */
+/* Over the painting the squares carry the numbers, because the painting does
+   not. The plain board is the same grid with a surface behind each circle. */
 .board.painted .cell {
   background: transparent;
-  color: transparent;
 }
 
-/* The player, as a ring rather than a fill: the number underneath is painted
-   into the board and covering it would hide where they are standing. */
-.cell.here {
-  box-shadow: inset 0 0 0 3px var(--button);
-  background: rgb(42 107 160 / 18%);
+/* Scoped to `.board` so it outranks the rule above rather than tying with it:
+   the gem is the whole point of knowing where the player is. */
+.board .cell.here {
+  color: transparent;
+  background: var(--gem) no-repeat center / 88% 88%;
   z-index: 1;
 }
+
+/*
+ * The player is a gem, which is what the published app puts on the square —
+ * `Gem/images/one.png`. Placed above, where it can outrank the painted-board
+ * rule that clears every square's background.
+ */
 
 /* The square just left, so a move is legible as a movement. */
 .cell.from {
   box-shadow: inset 0 0 0 2px var(--link);
-  background: rgb(42 107 160 / 7%);
+}
+
+/* 68 is Cosmic Consciousness, and the Flower of Life is already painted there.
+   The published app writes a space in that box for the same reason. */
+.cell.win {
+  color: transparent;
+  box-shadow: none;
 }
 
 .cell .mark {

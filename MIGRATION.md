@@ -1070,6 +1070,48 @@ it only typechecked because a test file imported `vitest`, whose types drag
 Node's globals in behind them. It lives in `scripts/` now, and `src` is
 typechecked without Node's globals so the next one cannot hide the same way.
 
+## Thirty-third pass: the right file
+
+The board went in two passes ago and it was the wrong image.
+
+`assets/about/images/gameboard.png` is the illustration from the rules screen:
+the same field, with the numbers and a border of feathers and crystals baked
+in. The board the game is played on is
+`src/components/GameBoard/images/{light,dark}.png` — the snakes, the arrows and
+the Flower of Life on 68, and nothing else. It looked close, which is why it
+survived a pass.
+
+`GameBoard/index.tsx` is unambiguous about the rest, and it is transferred as
+written:
+
+- the numbers are **not** in the painting. The app lays a nine-by-eight grid of
+  circles over it and writes each number itself — and writes a space in box 68,
+  because the flower is already there;
+- the squares are circles: `borderRadius: s(31) / 2`;
+- the player is a **gem** on their square, `Gem/images/one.png`, not a ring
+  drawn around a number;
+- there are **two** boards. The snakes on white, and the same snakes on black
+  behind Leela herself, chosen by colour scheme.
+
+The corner arrows the first attempt drew on every snake and arrow square are
+gone: the snakes and the arrows *are* the painting, and a second copy in the
+corner of a square is a caption on a photograph. They stay on the plain board,
+where they are all there is — the fallback from the last pass still works, and
+still gets its 404 test.
+
+**Alignment is the published app's, not a guess.** `GameBoard` gives the
+painting the grid's width and lifts it above the circles; without that lift the
+Flower of Life lands under 68 rather than on it. Checked on a simulator, which
+is also where the gem turned out to be invisible: `.board.painted .cell` clears
+every square's background and outranked `.cell.here`, so the token lost to a
+rule about the squares underneath it.
+
+**The direction audit earned its keep again.** The new paint layer used `left`
+and `right`; rather than widen the board exception a second time, the layer is
+`inset-inline`.
+
+145 kB of feathers replaced by 120 kB of board and 40 kB of its dark twin.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

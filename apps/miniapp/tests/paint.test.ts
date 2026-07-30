@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { paintBoard, type ImageLoader } from '../src/paint';
+import { boardFor, paintBoard, type ImageLoader } from '../src/paint';
 
 /**
  * A board nobody can read is worse than a plain one.
@@ -33,7 +33,9 @@ beforeEach(() => {
 describe('when the painting arrives', () => {
   it('goes on the board', async () => {
     await paintBoard(document, '/art.webp', ARRIVES);
-    expect(board.style.backgroundImage).toContain('/art.webp');
+    // As a variable: the stylesheet draws the art in a layer of its own,
+    // lifted off the grid the way the published app lifts it.
+    expect(board.style.getPropertyValue('--board-art')).toContain('/art.webp');
   });
 
   it('says so, which is what the stylesheet keys off', async () => {
@@ -46,7 +48,7 @@ describe('when it does not', () => {
   it('leaves the board plain rather than blank', async () => {
     expect(await paintBoard(document, '/art.webp', NEVER)).toBe(false);
     expect(board.classList.contains('painted')).toBe(false);
-    expect(board.style.backgroundImage).toBe('');
+    expect(board.style.getPropertyValue('--board-art')).toBe('');
   });
 
   it('is the state the board starts in, so a slow load is not a blank board', () => {
@@ -77,20 +79,41 @@ describe('the stylesheet keeps its side of it', () => {
   // happy-dom that is an http URL and `readFileSync` will not take it.
   const style = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8');
 
-  it('hides the numbers only on a painted board', () => {
-    expect(style).toMatch(/\.board\.painted \.cell \{[^}]*color: transparent/);
-    // And the unqualified rule must not, or the default board is unreadable.
-    // Matched on the declaration rather than the substring: the same block
-    // sets `-webkit-tap-highlight-color: transparent`, which is a different
-    // property and a perfectly good one.
+  it('keeps the numbers on both boards, because the painting has none', () => {
+    // The published app writes every number itself over art that carries only
+    // the snakes and the arrows. The first attempt used the rules-screen
+    // illustration, which has the numbers baked in, and hid the app's own.
     const plain = style.match(/\n\.cell \{[^}]*\}/)?.[0] ?? '';
-    expect(plain).not.toMatch(/^\s*color: transparent/m);
     expect(plain).toMatch(/^\s*color: var\(--hint\)/m);
+    expect(style).not.toMatch(/\.board\.painted \.cell \{[^}]*color: transparent/);
+
+    // Two squares are deliberately blank: the one the player stands on, where
+    // the gem goes, and 68, where the Flower of Life is already painted.
+    expect(style).toMatch(/\.board \.cell\.here \{[^}]*color: transparent/);
+    expect(style).toMatch(/\.cell\.win \{[^}]*color: transparent/);
   });
 
   it('paints the background only when told', () => {
     // No `url(...)` in the stylesheet at all: the image is set from paint.ts,
     // so the load that decides the class is the load the board displays.
     expect(style).not.toMatch(/background[^;]*url\(/);
+  });
+});
+
+describe('which of the two boards', () => {
+  // The published app carries the snakes on white and the same snakes on black
+  // behind Leela herself, and picks by colour scheme. The assertion is that
+  // the choice follows the scheme, not that a particular file is named.
+  const art = { light: '/light.webp', dark: '/dark.webp' };
+
+  it('follows the scheme', () => {
+    expect(boardFor('light', art)).toBe(art.light);
+    expect(boardFor('dark', art)).toBe(art.dark);
+  });
+
+  it('never returns nothing, whatever it is handed', () => {
+    for (const scheme of ['light', 'dark'] as const) {
+      expect(boardFor(scheme, art).length).toBeGreaterThan(0);
+    }
   });
 });

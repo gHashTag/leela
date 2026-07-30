@@ -45,7 +45,24 @@ export async function paintBoard(
   const arrived = await load(url);
   if (!arrived) return false;
 
-  board.style.backgroundImage = `url("${url}")`;
+  // A variable rather than the background itself: the stylesheet draws the
+  // art in a layer of its own, offset from the grid the way the published app
+  // offsets it, and a background on the element cannot be positioned that way.
+  board.style.setProperty('--board-art', `url("${url}")`);
   board.classList.add('painted');
   return true;
+}
+
+/**
+ * Which board to paint.
+ *
+ * The published app carries two: the snakes on white, and the same snakes on
+ * black behind Leela herself. It picks by colour scheme, and so does this —
+ * Telegram's own scheme when there is one, the system's otherwise.
+ */
+export function boardFor(
+  scheme: 'light' | 'dark',
+  art: { light: string; dark: string },
+): string {
+  return scheme === 'dark' ? art.dark : art.light;
 }

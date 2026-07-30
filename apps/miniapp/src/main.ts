@@ -20,8 +20,10 @@ import { loadPlans, plan as planFor } from './content';
 import { applyChrome } from './chrome';
 import { describeMove } from './describe';
 import { createCell } from './cell';
-import { paintBoard } from './paint';
-import boardArt from './gameboard.webp';
+import { boardFor, paintBoard } from './paint';
+import boardLight from './board-light.webp';
+import boardDark from './board-dark.webp';
+import gemArt from './gem.webp';
 import { loadState, saveState } from './state';
 import { headline } from './view';
 
@@ -189,8 +191,15 @@ el.read.addEventListener('click', () => openPlan(state.loka));
 // with its title. Failing loudly beats an empty grid that looks like a bug.
 applyChrome(document, language);
 
+// The gem the player stands on, as a variable so the stylesheet can place it
+// without knowing the bundler's URL for it.
+document.documentElement.style.setProperty('--gem', `url("${gemArt}")`);
+
 // The painting is an upgrade on the numbered grid, not a precondition for it.
-void paintBoard(document, boardArt);
+// Two boards, as the published app has: the snakes on white, and the same
+// snakes on black behind Leela herself.
+const scheme = telegram?.colorScheme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+void paintBoard(document, boardFor(scheme, { light: boardLight, dark: boardDark }));
 
 loadPlans(language)
   .then(() => {
