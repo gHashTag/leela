@@ -2624,6 +2624,45 @@ there is room for both, **never** silence at a boundary where something is about
 to be lost, the nearer limit first — a full path is a standing fact and a full
 box is happening now — and the warning at the cap rather than one entry past it.
 
+## Seventy-fourth pass: the question the game answers
+
+Asked again for the app's functions, board untouched. Three went in earlier —
+the rules book, all 72 plans, "start over". The list was read again, and the
+one that matters most was still missing.
+
+**The intention.** `screens/helper.ts` will not let a player near the board
+without one:
+
+```ts
+} else if (!prof.intention) {
+  navigate('CHANGE_INTENTION_SCREEN', { blockGoBack: true, … })
+}
+```
+
+`ChangeIntention` validates `min(2).max(800)`, and the profile can change it
+later. **This repository's own schema has carried `players.intention` from the
+first migration**, and no surface had ever asked for one.
+
+It is not a profile field. In Leela the intention is the question the game is
+being played to answer, and the reports are the answer accumulating — which is
+why it is asked before the first throw and shown at the head of *My path*, above
+the writing it frames, rather than filed on a profile page where nobody rereads
+it. The app's own bounds, not invented ones; the die stays shut until it is
+answered, as the app blocks the board.
+
+Nine tests on the rule: held as written and trimmed so the bounds mean what they
+say, refused at both ends and for blank space dressed as an answer, **nothing
+kept when it is refused** — the dialog stays open on a `false`, so a refusal
+that quietly returned true would leave a player looking at their own unsaved
+words — and a window that cannot store still plays, it simply asks again.
+
+**Left for a later pass, with reasons:** playing several people from one device
+(`SelectPlayersScreen`, `DiceStore.multi`, `OfflinePlayers.store.plans[]`) is a
+real function and a large one — the engine already seats up to `MAX_SEATS`, so
+it is a UI problem rather than a rules problem. The companion in the mini app
+needs a key in a static page, which the boundaries forbid; the bot has `/ask`
+instead. Posts, likes and comments need a server.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -209,3 +209,55 @@ export function saveDraft(storage: GameStorage | undefined, plan: number, text: 
 export function clearDraft(storage: GameStorage | undefined): void {
   saveDraft(storage, 0, '');
 }
+
+/** Where the player's intention lives. */
+export const INTENTION_KEY = 'leela.intention.v1';
+
+/**
+ * How short and how long an intention may be.
+ *
+ * The published app's own numbers: `yup.string().min(2).max(800)` in
+ * `ChangeIntention`. Two characters is a bound against an empty field rather
+ * than a standard, and eight hundred is a paragraph.
+ */
+export const MIN_INTENTION_CHARS = 2;
+export const MAX_INTENTION_CHARS = 800;
+
+/**
+ * What the player is playing for.
+ *
+ * The published app asks before it lets anyone near the board —
+ * `if (!prof.intention) navigate('CHANGE_INTENTION_SCREEN', { blockGoBack: true })`
+ * — and keeps it on the profile, where it can be changed later. The column
+ * exists in this repository's own schema (`players.intention`) and no surface
+ * had ever asked for one.
+ *
+ * In Leela the intention is not a profile field. It is the question the game is
+ * being played to answer, and the reports are the answer accumulating.
+ */
+export function loadIntention(storage: GameStorage | undefined): string {
+  try {
+    return storage?.getItem(INTENTION_KEY)?.trim() ?? '';
+  } catch {
+    return '';
+  }
+}
+
+/** Whether this is something the game can hold. */
+export function isIntention(text: string): boolean {
+  const written = text.trim();
+  return written.length >= MIN_INTENTION_CHARS && written.length <= MAX_INTENTION_CHARS;
+}
+
+/** Keep it, or refuse it and say nothing was kept. */
+export function saveIntention(storage: GameStorage | undefined, text: string): boolean {
+  if (!isIntention(text)) return false;
+
+  try {
+    storage?.setItem(INTENTION_KEY, text.trim());
+  } catch {
+    // A window that cannot store still plays; the question is simply asked
+    // again next time.
+  }
+  return true;
+}

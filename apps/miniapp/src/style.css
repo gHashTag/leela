@@ -595,3 +595,13 @@ button:active:not(:disabled) {
   color: var(--accent, inherit);
   background: var(--surface);
 }
+
+/* A button that is a link in everything but semantics: it changes something,
+   so it is a button, and it sits in prose, so it does not shout. */
+.quiet {
+  width: auto;
+  padding: 6px 0;
+  background: transparent;
+  color: var(--link);
+  font-weight: 500;
+}

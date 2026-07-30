@@ -49,6 +49,20 @@
       </div>
     </dialog>
 
+    <!-- Asked before the board, as the published app asks it: `if
+         (!prof.intention) navigate('CHANGE_INTENTION_SCREEN', { blockGoBack:
+         true })`. In Leela the intention is the question the game answers. -->
+    <dialog id="intention" class="reader">
+      <div class="reader-body">
+        <h2 id="intention-title"></h2>
+        <textarea id="intention-text" rows="3" maxlength="800"></textarea>
+        <p class="hint" id="intention-hint"></p>
+      </div>
+      <div class="reader-actions">
+        <button id="intention-save" class="primary" type="button">Save</button>
+      </div>
+    </dialog>
+
     <dialog id="writer" class="reader">
       <article>
         <h2 id="writer-title"></h2>

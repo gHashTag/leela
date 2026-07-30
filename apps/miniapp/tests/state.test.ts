@@ -10,6 +10,12 @@ import {
 } from '@leela/engine';
 import {
   DRAFT_KEY,
+  INTENTION_KEY,
+  MAX_INTENTION_CHARS,
+  MIN_INTENTION_CHARS,
+  isIntention,
+  loadIntention,
+  saveIntention,
   RESTING_FACE,
   clearDraft,
   loadDraft,
@@ -347,5 +353,94 @@ describe('a report typed and not yet filed', () => {
 
     expect(DRAFT_KEY).not.toBe(STORAGE_KEY);
     expect(store.written()).not.toContain('loka');
+  });
+});
+
+describe('what the player is playing for', () => {
+  /**
+   * The published app asks before it lets anyone near the board —
+   * `if (!prof.intention) navigate('CHANGE_INTENTION_SCREEN', { blockGoBack: true })`
+   * — validates `min(2).max(800)`, and keeps it where it can be changed. The
+   * column exists in this repository's own schema (`players.intention`) and no
+   * surface had ever asked for one.
+   *
+   * In Leela the intention is not a profile field: it is the question the game
+   * is played to answer, and the reports are the answer accumulating.
+   */
+
+  const holding = (raw: string | null): GameStorage => ({
+    getItem: () => raw,
+    setItem: () => {},
+  });
+
+  it('is held as it was written', () => {
+    const store = memory();
+    saveIntention(store, 'To find out what I keep avoiding.');
+
+    expect(loadIntention(memory(store.written() ?? undefined))).toBe(
+      'To find out what I keep avoiding.',
+    );
+  });
+
+  it('is nothing before anyone has answered', () => {
+    expect(loadIntention(memory())).toBe('');
+  });
+
+  it('refuses what the app refuses, at both ends', () => {
+    // The app's own bounds, not invented ones.
+    expect(isIntention('x'.repeat(MIN_INTENTION_CHARS - 1))).toBe(false);
+    expect(isIntention('x'.repeat(MIN_INTENTION_CHARS))).toBe(true);
+    expect(isIntention('x'.repeat(MAX_INTENTION_CHARS))).toBe(true);
+    expect(isIntention('x'.repeat(MAX_INTENTION_CHARS + 1))).toBe(false);
+  });
+
+  it('is not blank space dressed as an answer', () => {
+    for (const blank of ['', ' ', '\n\n', '\t  ']) {
+      expect(isIntention(blank), JSON.stringify(blank)).toBe(false);
+    }
+  });
+
+  it('keeps nothing it refuses, and says it kept nothing', () => {
+    // The dialog stays open on a `false`, so a refusal that quietly returned
+    // true would leave a player looking at their own unsaved words.
+    const store = memory();
+    expect(saveIntention(store, ' ')).toBe(false);
+    expect(store.written()).toBeNull();
+  });
+
+  it('is trimmed, so the bounds mean what they say', () => {
+    const store = memory();
+    saveIntention(store, '   To see it through.   ');
+
+    expect(loadIntention(memory(store.written() ?? undefined))).toBe('To see it through.');
+  });
+
+  it('never throws, whatever storage does', () => {
+    const hostile: GameStorage = {
+      getItem: () => {
+        throw new Error('denied');
+      },
+      setItem: () => {
+        throw new Error('denied');
+      },
+    };
+
+    expect(() => loadIntention(hostile)).not.toThrow();
+    expect(loadIntention(hostile)).toBe('');
+    // A window that cannot store still plays; the question is asked again.
+    expect(saveIntention(hostile, 'To begin.')).toBe(true);
+  });
+
+  it('is kept apart from the game and the journal', () => {
+    const store = memory();
+    saveIntention(store, 'To begin.');
+
+    expect(INTENTION_KEY).not.toBe(STORAGE_KEY);
+    expect(store.written()).not.toContain('loka');
+  });
+
+  it('is nothing for a stored value that is not one', () => {
+    expect(loadIntention(holding(''))).toBe('');
+    expect(loadIntention(holding(null))).toBe('');
   });
 });

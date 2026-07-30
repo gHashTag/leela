@@ -50,6 +50,8 @@ import {
   saveDraft,
   saveLastRoll,
   saveState,
+  loadIntention,
+  saveIntention,
 } from './state';
 import { fileName, merge, parseDocument, toDocument, toText } from './journal-file';
 import {
@@ -104,6 +106,9 @@ let state = loadState(localStorage);
  */
 let journal: Journal = loadJournal(localStorage);
 
+/** What the player is playing for. Asked before the board, as the app asks it. */
+let intention: string = loadIntention(localStorage);
+
 // --- elements ------------------------------------------------------------------
 
 const el = {
@@ -124,6 +129,11 @@ const el = {
   writerText: document.getElementById('writer-text') as HTMLTextAreaElement,
   writerSave: document.getElementById('writer-save') as HTMLButtonElement,
   writerHint: document.getElementById('writer-hint') as HTMLElement,
+  intention: document.getElementById('intention') as HTMLDialogElement,
+  intentionTitle: document.getElementById('intention-title') as HTMLElement,
+  intentionText: document.getElementById('intention-text') as HTMLTextAreaElement,
+  intentionHint: document.getElementById('intention-hint') as HTMLElement,
+  intentionSave: document.getElementById('intention-save') as HTMLButtonElement,
   pathExport: document.getElementById('path-export') as HTMLButtonElement,
   pathImport: document.getElementById('path-import-input') as HTMLInputElement,
   pathImportLabel: document.getElementById('path-import-label') as HTMLElement,
@@ -178,9 +188,11 @@ function draw(event?: MoveEvent): void {
   el.read.disabled = !show.canRead;
 
   // The gate. A throw is refused until the plan has been written about, which
-  // is the rule the contract enforces and the published app carried.
+  // is the rule the contract enforces and the published app carried. And
+  // before any of it, the intention: the app will not show the board without
+  // one, so the die will not turn without one either.
   const owed = needsReport(state, journal);
-  el.roll.disabled = owed || rolling;
+  el.roll.disabled = owed || rolling || intention === '';
   el.report.disabled = !owed;
 
   // The published app shows "Start over" only once the game has ended —
@@ -266,6 +278,34 @@ function startOver(): void {
   clearDraft(localStorage);
   showFace(loadLastRoll(localStorage));
   el.say.textContent = messageFor(language, 'app.restarted');
+  draw();
+}
+
+/**
+ * Ask what the player is playing for.
+ *
+ * Before the board, as the published app asks it — `blockGoBack: true` there,
+ * and here the die stays shut until it is answered. In Leela the intention is
+ * not a profile field: it is the question the game is being played to answer,
+ * and the reports are the answer accumulating.
+ */
+function askIntention(): void {
+  el.intentionTitle.textContent = messageFor(language, 'app.intention');
+  el.intentionText.value = intention;
+  el.intentionHint.textContent = messageFor(language, 'app.intentionHint');
+  el.intention.showModal();
+  el.intentionText.focus();
+}
+
+function saveTheIntention(): void {
+  if (!saveIntention(localStorage, el.intentionText.value)) {
+    el.intentionHint.textContent = messageFor(language, 'app.intentionShort');
+    return;
+  }
+
+  intention = loadIntention(localStorage);
+  el.intention.close();
+  el.say.textContent = messageFor(language, 'app.intentionSaved');
   draw();
 }
 
@@ -437,6 +477,29 @@ function openPath(): void {
       : messageFor(language, 'app.pathCount', { count: written.length });
 
   const nodes: HTMLElement[] = [];
+
+  // The intention first, because it is the frame the rest of this is written
+  // inside: the game is being played to answer it, and the reports are the
+  // answer accumulating. The published app keeps it on the profile, which is
+  // where nobody rereads it.
+  if (intention !== '') {
+    const heading = document.createElement('h3');
+    heading.textContent = messageFor(language, 'app.intentionYours');
+    const said = document.createElement('p');
+    said.textContent = intention;
+
+    const change = document.createElement('button');
+    change.type = 'button';
+    change.className = 'quiet';
+    change.textContent = messageFor(language, 'app.intentionChange');
+    change.addEventListener('click', () => {
+      el.reader.close();
+      askIntention();
+    });
+
+    nodes.push(heading, said, change);
+  }
+
   if (written.length === 0) {
     const empty = document.createElement('p');
     empty.textContent = messageFor(language, 'app.pathEmpty');
@@ -522,6 +585,7 @@ el.plans.addEventListener('click', openPlans);
 el.restart.addEventListener('click', startOver);
 el.report.addEventListener('click', openWriter);
 el.writerSave.addEventListener('click', saveReport);
+el.intentionSave.addEventListener('click', saveTheIntention);
 el.writerText.addEventListener('input', () => {
   saveDraft(localStorage, state.loka, el.writerText.value);
   showWriterHint();
@@ -557,6 +621,8 @@ loadPlans(language)
   .then(() => {
     buildBoard();
     draw();
+    // The first thing the app asks, and the first thing this asks now.
+    if (intention === '') askIntention();
   })
   .catch((error) => {
     el.say.textContent = messageFor(language, 'app.unloadable');
