@@ -29,6 +29,11 @@ describe('the squares that came back', () => {
     const entries = reports(GAME);
     const counted = new Map(revisited(entries).map((visit) => [visit.plan, visit.times]));
 
+    // Named before it is compared. Every other check in this file is true of an
+    // empty answer, so without this one `revisited` could return nothing at all
+    // and only this test would notice — which a mutation sweep showed it did.
+    expect(counted.size).toBeGreaterThan(0);
+
     for (const plan of new Set(GAME)) {
       const times = entries.filter((entry) => entry.plan === plan).length;
       expect(counted.get(plan), `plan ${plan}`).toBe(times > 1 ? times : undefined);
@@ -56,6 +61,9 @@ describe('the squares that came back', () => {
   it('come most-returned first, and the same way every time', () => {
     const entries = reports(GAME);
     const once = revisited(entries);
+
+    // An empty list is sorted and stable, and says nothing about either.
+    expect(once.length).toBeGreaterThan(1);
 
     expect(once.map((visit) => visit.times)).toEqual(
       [...once.map((visit) => visit.times)].sort((a, b) => b - a),

@@ -225,6 +225,12 @@ describe('changing how many are playing', () => {
       for (let to = 1; to <= MAX_SEATS; to++) {
         const { seats } = resize(start, to);
 
+        // The size asked for, before anything about who is in it: every other
+        // check here is true of a table that was handed straight back, so
+        // without this one `resize` could do nothing at all and most of this
+        // file would still be green. A mutation sweep showed that it was.
+        expect(seats.players, `${from} → ${to}`).toHaveLength(to);
+
         for (let index = 0; index < Math.min(from, to); index++) {
           expect(seats.players[index], `${from} → ${to}, seat ${index + 1}`).toEqual(
             start.players[index],
@@ -260,6 +266,7 @@ describe('changing how many are playing', () => {
 
         for (let to = 1; to <= MAX_SEATS; to++) {
           const { seats } = resize(start, to);
+          expect(seats.players, `${from}@${holder} → ${to}`).toHaveLength(to);
           expect(seats.turnIndex, `${from}@${holder} → ${to}`).toBeGreaterThanOrEqual(0);
           expect(seats.turnIndex, `${from}@${holder} → ${to}`).toBeLessThan(seats.players.length);
         }
@@ -277,10 +284,14 @@ describe('changing how many are playing', () => {
 
   it('refuses to seat nobody, or more than the board allows', () => {
     for (const asked of [0, -3, 7, 99, Number.NaN]) {
-      const { seats } = resize(table(41), asked);
+      const { seats } = resize(table(41, 12, 3), asked);
       expect(seats.players.length, String(asked)).toBeGreaterThanOrEqual(1);
       expect(seats.players.length, String(asked)).toBeLessThanOrEqual(MAX_SEATS);
     }
+
+    // Clamped rather than ignored: seven is six, not three.
+    expect(resize(table(41, 12, 3), 7).seats.players).toHaveLength(MAX_SEATS);
+    expect(resize(table(41, 12, 3), 0).seats.players).toHaveLength(1);
   });
 
   it('is a table the app can read back', () => {

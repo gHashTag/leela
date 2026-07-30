@@ -3610,6 +3610,43 @@ actually looking at it — and counts the owed cases to prove they happened. Tha
 is the third time in three passes that a test of mine had to be corrected before
 it was worth anything.
 
+## Hundred-and-third pass: breaking things on purpose
+
+Three passes running, a test of mine had to be corrected before it was worth
+anything, and each time for the same reason: **the interesting case never
+occurred.** A property test that plays four games and checks the keyboard when
+nobody owes a report stays green with the whole rule deleted. A table that
+asserts two answers *differ* passes when both are wrong. A loop that stops at
+`isSessionOver` never reaches the account that ends a game.
+
+None of those were caught by reading them. They were caught by breaking the code
+on purpose and watching what went red — which is a thing a script can do.
+
+`audit-mutants.mjs` breaks each decision in turn, runs the suites that own it,
+and reports what nobody noticed. Eighteen decisions, the ones whose being wrong
+has cost this project a defect before. Not a gate: it is minutes per decision,
+so it says so in its own header and runs by hand.
+
+**Its first two findings were bugs in itself**, which is the failure it exists to
+catch, so they are written into it rather than quietly fixed. A generic
+signature does not start with `(`, so `owingSeat<T extends …>` was reported as
+missing from a file it is in. And a return type may contain a brace —
+`): { plan: number } | null {` — so the first `{` after the parameters is not
+the body; the body's is the one with nothing after it on its line.
+
+**Then the real finding: three decisions with exactly one defender.**
+`revisited` could return nothing at all and only one test of four noticed,
+because "sorted", "stable" and "nothing for a game that never repeated" are all
+true of an empty list. `resize` could hand its table straight back and fifteen
+of sixteen assertions still held, because "every seat that stays is unchanged"
+is trivially true when every seat stays. Both now name the interesting case
+before comparing anything: 1 defender became 8 and 16.
+
+And the counting itself was incomplete: a decision in `packages/` is asked by
+the apps, not by its own package, so `also` names the suites that must run with
+it. An incomplete count of who is defending something reads exactly like a weak
+defence.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
