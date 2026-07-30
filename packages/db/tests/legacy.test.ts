@@ -163,10 +163,28 @@ describe('a migrated player can keep playing', () => {
     expect(verdict.allowed).toBe(true);
   });
 
-  it('needs only a six to re-enter after having won', () => {
-    const state = stateFromLegacy(legacy({ finish: true, plan: 68 }));
+  it('stays finished after having won, because the app they came from does', () => {
+    // `stepCount === 6 && !isFinished` in `store/helper.ts`: the published app
+    // will not let a winner back in with a throw. Their "Start over" button is
+    // the deliberate act that begins another game. This test asserted the
+    // opposite until the app's own logic was read.
+    const state = stateFromLegacy(legacy({ finish: true, plan: 68, history: [
+      { plan: 68, count: 1, status: 'liberation', createDate: 2 },
+      { plan: 67, count: 3, status: 'cube', createDate: 1 },
+    ] }));
+
     expect(applyRoll(state, 3, LEGACY_MOBILE).state.loka).toBe(WIN_LOKA);
-    expect(applyRoll(state, 6, LEGACY_MOBILE).state.loka).toBe(6);
+    expect(applyRoll(state, 6, LEGACY_MOBILE).state.loka).toBe(WIN_LOKA);
+  });
+
+  it('can still enter when they never started, however their export looks', () => {
+    // A migrated player who never played has `previous_plan` equal to their
+    // plan, because the export carried no history. That reads as "has not
+    // moved" and must not read as "has won" — otherwise a six would never let
+    // them in and the migration would have stranded them.
+    const fresh = stateFromLegacy(legacy({ start: false, finish: false, plan: 68, history: [] }));
+    expect(fresh.previous_loka).toBe(fresh.loka);
+    expect(applyRoll(fresh, 6, LEGACY_MOBILE).state.loka).toBe(6);
   });
 });
 

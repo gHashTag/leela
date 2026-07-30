@@ -46,9 +46,14 @@ export function applyRoll(
 
   // --- Waiting to enter the game -------------------------------------------
   // A player on WIN_LOKA with is_finished set has either not started yet or
-  // has already won. Only a six lets them (re)enter.
+  // has already won. Only a six lets them (re)enter — and under the published
+  // app's rules, a player who has *won* may not: `stepCount === 6 &&
+  // !isFinished` in `store/helper.ts`. The game is over, and starting another
+  // is a deliberate act rather than a throw.
   if (state.loka === WIN_LOKA && state.is_finished) {
-    if (roll === MAX_ROLL) {
+    const mayEnter = roll === MAX_ROLL && (rules.mayReenterAfterWinning || !hasWon(state));
+
+    if (mayEnter) {
       return {
         state: {
           loka: START_LOKA,
@@ -191,7 +196,17 @@ export function replay(
  * tests called it: an export nobody uses is logic nobody checks.
  */
 export function hasWon(state: GameState): boolean {
-  return state.loka === WIN_LOKA && state.is_finished && state.previous_loka !== 0;
+  return (
+    state.loka === WIN_LOKA &&
+    state.is_finished &&
+    // A fresh player has `previous_loka: 0`. A migrated one has it equal to
+    // their plan — `stateFromLegacy` sets the two the same when the export
+    // carried no history, which reads as "has not moved yet" and must not read
+    // as "has won": a player brought across from the published app who never
+    // started would otherwise be barred from ever entering.
+    state.previous_loka !== 0 &&
+    state.previous_loka !== state.loka
+  );
 }
 
 /** Squares on the board, 1..72, as a plain array. Handy for rendering. */

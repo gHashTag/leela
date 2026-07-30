@@ -168,12 +168,17 @@ export function advance(session: Session, roll: number, now: number): SessionMov
   const player = currentPlayer(session);
   const { state, event } = applyRoll(player.state, roll, session.rules);
 
-  const nowOwesReport = session.rules.requireReportBeforeRoll && owesReport(state);
+  const nowOwesReport = session.rules.requireReportBeforeRoll && owesReport(state, session.rules);
+
+  // A throw that could not be made does not start the day's wait. The
+  // published app never reaches `createHistory` when the throw would overshoot
+  // the board, so a player who cannot move is not made to wait for it.
+  const counts = !event.isBlocked || session.rules.refusedThrowStartsCooldown;
 
   const moved: SeatedPlayer = {
     ...player,
     state,
-    lastRollAt: now,
+    lastRollAt: counts ? now : player.lastRollAt,
     // A player who moved owes a report before their next roll.
     reportSubmitted: !nowOwesReport,
   };

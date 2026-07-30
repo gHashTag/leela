@@ -19,7 +19,7 @@
  * The bot is where reports are shared, because the bot has a database.
  */
 
-import { owesReport, type GameState } from '@leela/engine';
+import { CLASSIC, owesReport, type GameState } from '@leela/engine';
 import type { GameStorage } from './state';
 
 export const REPORTS_KEY = 'leela.reports.v1';
@@ -112,7 +112,10 @@ export function saveJournal(storage: GameStorage | undefined, journal: Journal):
  * `!needsReport` was two names for one idea, and the second had no caller.
  */
 export function needsReport(state: GameState, journal: Journal): boolean {
-  return owesReport(state) && !journal.reported;
+  // `CLASSIC` named rather than defaulted: the mini app plays the traditional
+  // rules, where every arrival is an arrival — including a six. The published
+  // app's variants say otherwise, and a default is a poor place to learn that.
+  return owesReport(state, CLASSIC) && !journal.reported;
 }
 
 /** A new arrival: whatever was written about the last plan is not about this one. */

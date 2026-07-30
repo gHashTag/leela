@@ -1509,6 +1509,50 @@ Five transport tests: nothing written sends no file, a path sends exactly one,
 a store that keeps nothing says so, a file too large is refused *without being
 fetched*, and a file that cannot be read still gets an answer.
 
+## Forty-sixth pass: what the published app actually does
+
+Asked to read the shipped app's logic rather than remember it. `store/helper.ts`
+and `screens/helper.ts` are the two files that decide a move in
+`com.leelagame`, and three of their rules had never been carried across. All
+three are now **variants**, not corrections: the boundary here is that a change
+in behaviour goes through a `RuleSet`, and a live player must not be handed a
+different game overnight. `classic` is untouched.
+
+**A six owes no report and starts no day.** `createHistory` gates on
+`values.count !== 6`: a six writes its history and nothing else, so the player
+throws again with no reflection and no day's wait. That is what the extra turn
+is *for* — a run of sixes is one move, reported once, at the end of it. The
+engine asked for a report on every arrival, including the six that enters the
+game. Now `reportAfterSix` says which, and `arrivedOnSix` reads it out of the
+state, because the state is what the next throw has.
+
+**A throw that could not be made starts no day either.** `entities` returns
+nothing when the throw would overshoot 72, so `createHistory` never runs. A
+player who cannot move was being made to wait a day for the privilege.
+
+**A player who has won may not throw their way back in.** `stepCount === 6 &&
+!isFinished`. The game is over; starting another is what the app's "Start over"
+button is for.
+
+### The correction that correction needed
+
+The first version of the re-entry rule read "has won" as `previous_loka !== 0`,
+which is what `hasWon` had always said. A player migrated out of the published
+app who *never started* has `previous_plan` equal to their plan — the export
+carried no history, and `stateFromLegacy` sets the two the same on purpose,
+because that reads as "has not moved yet". Under the new rule they would have
+been barred from ever entering, by a migration that was supposed to bring them
+across.
+
+`hasWon` says `previous_loka !== state.loka` as well now, and an existing test
+in `packages/db` that asserted the old behaviour asserted the app's instead.
+That test is the reason this was caught in the same pass rather than by a
+player.
+
+**`DEFAULT_RULESET` is `neuroleela`**, and the mini app was calling
+`owesReport(state)` without saying which rules it plays. It plays `classic`, and
+now says so: a default is a poor place to learn which game you are in.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

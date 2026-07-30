@@ -226,7 +226,7 @@ async function roll(): Promise<void> {
 
   // A new arrival: whatever was written was about the plan they have left.
   // Before the redraw, or the gate is drawn from the journal of the last plan.
-  if (owesReport(state)) {
+  if (owesReport(state, CLASSIC)) {
     journal = arrived(journal);
     saveJournal(localStorage, journal);
   }

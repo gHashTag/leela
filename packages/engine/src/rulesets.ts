@@ -38,6 +38,34 @@ export interface RuleSet {
    * The published app used a day for online games and none offline.
    */
   readonly turnCooldownMs: number;
+  /**
+   * Whether arriving on a six owes a report and starts the cooldown.
+   *
+   * The published app's `createHistory` gates on `values.count !== 6`: a six
+   * writes its history and nothing else, so the player throws again with no
+   * reflection and no day's wait. Only a throw of one to five closes the gate.
+   *
+   * That is the whole point of the extra turn there — a run of sixes is one
+   * move, reported once, at the end of it. Traditional Leela treats every
+   * arrival alike, so `classic` says true.
+   */
+  readonly reportAfterSix: boolean;
+  /**
+   * Whether a throw that could not be made starts the cooldown.
+   *
+   * `entities` returns nothing when the throw would overshoot 72, so
+   * `createHistory` never runs and the day never begins. A player who cannot
+   * move is not made to wait for the privilege.
+   */
+  readonly refusedThrowStartsCooldown: boolean;
+  /**
+   * Whether a player who has won may enter again with a six.
+   *
+   * `stepCount === 6 && !isFinished` — the published app will not let them.
+   * The game is over and starting another is a deliberate act, which is what
+   * its "Start over" button is for.
+   */
+  readonly mayReenterAfterWinning: boolean;
 }
 
 /**
@@ -51,6 +79,10 @@ export const CLASSIC: RuleSet = Object.freeze({
   rerollOnRepeat: false,
   requireReportBeforeRoll: true,
   turnCooldownMs: 0,
+  // Every arrival is an arrival: a six is a square you are standing on.
+  reportAfterSix: true,
+  refusedThrowStartsCooldown: true,
+  mayReenterAfterWinning: true,
 });
 
 /** What NeuroLeela (Expo) shipped: reset on three sixes, no extra turn. */
@@ -64,6 +96,9 @@ export const NEUROLEELA: RuleSet = Object.freeze({
   // `@leela/db`, which is where the flag is finally read.
   requireReportBeforeRoll: false,
   turnCooldownMs: 0,
+  reportAfterSix: true,
+  refusedThrowStartsCooldown: true,
+  mayReenterAfterWinning: true,
 });
 
 /** What the published mobile app shipped: extra turn, no reset, re-roll on repeat. */
@@ -75,6 +110,10 @@ export const LEGACY_MOBILE: RuleSet = Object.freeze({
   // Offline play was ungated; the online mode gated on both — see ONLINE below.
   requireReportBeforeRoll: false,
   turnCooldownMs: 0,
+  // `store/helper.ts` and `screens/helper.ts`, read rather than remembered.
+  reportAfterSix: false,
+  refusedThrowStartsCooldown: false,
+  mayReenterAfterWinning: false,
 });
 
 /**
@@ -88,6 +127,11 @@ export const ONLINE: RuleSet = Object.freeze({
   rerollOnRepeat: true,
   requireReportBeforeRoll: true,
   turnCooldownMs: 86_400_000,
+  // A six writes its history and nothing else: no report, no day's wait. The
+  // day begins on the throw that ends the run.
+  reportAfterSix: false,
+  refusedThrowStartsCooldown: false,
+  mayReenterAfterWinning: false,
 });
 
 /**
@@ -117,6 +161,9 @@ export const ONCHAIN: RuleSet = Object.freeze({
   rerollOnRepeat: false,
   requireReportBeforeRoll: true,
   turnCooldownMs: 0,
+  reportAfterSix: true,
+  refusedThrowStartsCooldown: true,
+  mayReenterAfterWinning: true,
 });
 
 export const RULESETS = Object.freeze({

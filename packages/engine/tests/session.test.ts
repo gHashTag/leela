@@ -16,6 +16,7 @@ import {
   isSessionOver,
   standings,
   submitReport,
+  type RuleSet,
   type Session,
 } from '../src';
 
@@ -322,5 +323,70 @@ describe('a session with nobody at it', () => {
   it('does not loop or crash when the turn has to move', () => {
     // `advance` reaches `nextSeat`, which divided by the number of players.
     expect(() => advance(empty, 3, NOW)).toThrow();
+  });
+});
+
+describe('a throw that could not be made, in the app that shipped', () => {
+  /**
+   * `entities` returns nothing when the throw would overshoot 72, so
+   * `createHistory` never runs and the day never begins. A player who cannot
+   * move is not made to wait a day for the privilege.
+   */
+  function nearTheEnd(rules: RuleSet) {
+    const session = createSession('s', [{ id: 'a' }], rules);
+    const player = { ...session.players[0], state: {
+      loka: 70,
+      previous_loka: 69,
+      direction: 'step 🚶🏼' as const,
+      consecutive_sixes: 0,
+      position_before_three_sixes: 0,
+      is_finished: false,
+    }, reportSubmitted: true, lastRollAt: null };
+    return { ...session, players: [player] };
+  }
+
+  it('does not start the day under the published rules', () => {
+    const before = nearTheEnd(ONLINE);
+    const after = advance(before, 5, NOW);
+
+    expect(after.event.isBlocked).toBe(true);
+    expect(after.session.players[0].lastRollAt).toBeNull();
+    // And so the next throw is allowed straight away.
+    expect(canCurrentPlayerRoll(after.session, NOW + 1).allowed).toBe(true);
+  });
+
+  it('does start it under the traditional rules, which is what they said before', () => {
+    const cooling: RuleSet = { ...CLASSIC, turnCooldownMs: ONE_DAY_MS };
+    const after = advance(nearTheEnd(cooling), 5, NOW);
+
+    expect(after.event.isBlocked).toBe(true);
+    expect(after.session.players[0].lastRollAt).toBe(NOW);
+    expect(canCurrentPlayerRoll(after.session, NOW + 1).reason).toBe('cooldown');
+  });
+
+  it('starts it for a throw that did move somebody, under every variant', () => {
+    // The flag is about a refusal, not about throwing. A move always counts.
+    for (const rules of [ONLINE, CLASSIC]) {
+      const session = createSession('s', [{ id: 'a' }], rules);
+      const entered = advance(session, 6, NOW);
+      expect(entered.session.players[0].lastRollAt, rules.id).toBe(NOW);
+    }
+  });
+});
+
+describe('a six at a table, under the published rules', () => {
+  it('owes no report, so the player throws again with nothing to write', () => {
+    // Online play there gates on the report and on the day, and a six trips
+    // neither: the run is one move, reported once, when it ends.
+    const session = createSession('s', [{ id: 'a' }], ONLINE);
+    const entered = advance(session, 6, NOW);
+
+    expect(entered.owesReport).toBe(false);
+    expect(entered.session.players[0].reportSubmitted).toBe(true);
+  });
+
+  it('owes one under the traditional rules', () => {
+    const session = createSession('s', [{ id: 'a' }], CLASSIC);
+    expect(advance(session, 6, NOW).owesReport).toBe(true);
   });
 });

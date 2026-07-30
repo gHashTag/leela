@@ -10,8 +10,9 @@
  * lost when the game was rewritten. It belongs here, with the other rules.
  */
 
+import { START_LOKA, WIN_LOKA } from './board';
+import { DEFAULT_RULESET, type RuleSet } from './rulesets';
 import type { GameState } from './types';
-import type { RuleSet } from './rulesets';
 
 /** Milliseconds in a day — the cooldown the published app used online. */
 export const ONE_DAY_MS = 86_400_000;
@@ -93,8 +94,29 @@ export function canRoll(state: GameState, context: TurnContext, rules: RuleSet):
  * True once they have moved to a new plan and the game is still running. This
  * is the same condition the database stores as `players.needs_report`.
  */
-export function owesReport(state: GameState): boolean {
-  return state.loka !== state.previous_loka && !state.is_finished;
+export function owesReport(state: GameState, rules: RuleSet = DEFAULT_RULESET): boolean {
+  if (state.loka === state.previous_loka || state.is_finished) return false;
+
+  // The published app writes a six's history and nothing else: no report, no
+  // day's wait. A run of sixes is one move, reported once, at the end of it —
+  // which is what the extra turn is *for*. See `createHistory`, which gates on
+  // `values.count !== 6`.
+  if (!rules.reportAfterSix && arrivedOnSix(state)) return false;
+
+  return true;
+}
+
+/**
+ * Whether the throw that brought a player here was a six.
+ *
+ * Read from the state rather than remembered, because the state is what the
+ * next roll has. `consecutive_sixes` is incremented by every six and cleared by
+ * everything else; entering the game is the exception, since it is written
+ * fresh — and nothing else moves a player off the win square.
+ */
+export function arrivedOnSix(state: GameState): boolean {
+  if (state.consecutive_sixes > 0) return true;
+  return state.previous_loka === WIN_LOKA && state.loka === START_LOKA;
 }
 
 /**
