@@ -206,7 +206,12 @@ export function createBot({
 
       // The path the report belongs to. Without it a reflection on plan 40 is
       // read as though it were the first thing the player had ever said.
-      const journey = reports.history
+      //
+      // Not read at all while the companion is silenced: it is a full pass
+      // over everything the player has ever written, assembled for a call that
+      // is not going to be made.
+      const journey =
+        reports.history && guide.status().available
         ? (await reports.history(effect.userId))
             .filter((entry) => entry.plan !== effect.plan || entry.text !== effect.text)
             .reverse()
@@ -224,7 +229,15 @@ export function createBot({
       // the companion is down: the player sees a plausible message either way,
       // so silence here would make an outage invisible.
       if (!reflection.fromModel) {
-        log(`[bot] companion unavailable, sent the fallback for plan ${effect.plan}`);
+        // Two different situations wore the same log line: a model that
+        // hiccuped once, and a deployment whose key has never worked. The
+        // guide knows which; say so here rather than leaving an operator to
+        // read a balance page to find out.
+        const { reason } = guide.status();
+        log(
+          `[bot] companion unavailable${reason ? ` — ${reason}` : ''}, ` +
+            `sent the fallback for plan ${effect.plan}`,
+        );
       }
 
       // Through `deliver`, not `ctx.reply`: a reflection on someone's own

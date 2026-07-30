@@ -773,6 +773,44 @@ in, so the table cannot claim `ltr` for a language whose text is Arabic.
 this pass with no caller. `audit-unread.mjs` named them and the honest answer
 was to remove them, not to add a reason to `PUBLIC_API`.
 
+## Twenty-fifth pass: a failure that cannot fix itself was treated like weather
+
+The bot is running with a DeepSeek key whose account has no balance. Every
+report made a round trip, waited for it, got `402 Insufficient Balance`, and
+answered with the fallback — a sentence that had been decided before the call
+was made. The log line was the same one a single dropped connection produces,
+so nothing in it said this deployment had never worked. It was found by reading
+a balance page, which is not where a bot's problems should be discovered.
+
+`Guide` now separates the two. **401, 402, 403, 404** mean a person has to do
+something: the key is wrong, the balance is empty, the key may not use this
+model, there is no such model. None will be different on the next report, so
+the companion goes quiet for half an hour, says why once, and answers from the
+fallback without calling anything. **429 and 5xx** are the weather and are
+retried exactly as before.
+
+**400 is deliberately on the weather side.** One over-long prompt should not
+silence the companion for everyone for half an hour.
+
+**The silence expires.** A balance is topped up and a key is replaced without
+anyone restarting a bot, and a companion that needs a restart to notice is one
+more thing to remember at the worst moment. After the cool-down it tries once;
+a success clears the silence entirely.
+
+**Two consequences beyond the log.** A silenced companion no longer reads the
+player's whole report history out of SQLite to assemble a journey for a call
+that will not be made. And `guide.status()` gives the bot the reason to print
+beside the fallback, so "hiccup" and "never configured" stop looking alike.
+
+The tests are about the two classes rather than about 402: every status that
+needs a human must stop the calls, every status that does not must keep them,
+and a failure with no status at all — a dropped connection, an abort — is not
+evidence that anyone needs to do anything.
+
+**Not covered:** the journey being skipped. `bot.ts` is the one file with no
+test harness — driving it needs a fake Telegram API, which is its own piece of
+work. The `Guide` behaviour it rests on is covered; the wiring is not.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

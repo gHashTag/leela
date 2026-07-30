@@ -43,5 +43,5 @@ export type {
   ProviderOptions,
 } from './model';
 
-export { DEFAULT_TIMEOUT_MS, Guide, fallbackText } from './guide';
-export type { AskOptions, GuideOptions, Reflection } from './guide';
+export { DEFAULT_SILENCE_MS, DEFAULT_TIMEOUT_MS, Guide, fallbackText } from './guide';
+export type { AskOptions, GuideOptions, GuideStatus, Reflection } from './guide';

@@ -211,3 +211,178 @@ describe('the fallback speaks the language the player is playing in', () => {
     }
   });
 });
+
+/**
+ * A failure that cannot fix itself was treated like weather.
+ *
+ * The live bot held a DeepSeek key with an empty balance. Every report made a
+ * round trip, waited, got `402 Insufficient Balance`, and answered with the
+ * fallback — a sentence that had been decided before the call was made. The
+ * log line was identical to a one-off network blip, so nothing in it said the
+ * deployment had never worked.
+ *
+ * These are about the classes of failure, not about 402. A status that means
+ * "a human must act" must not be retried on the next report; one that means
+ * "try again" must be.
+ */
+describe('failures a retry cannot fix', () => {
+  /** A model that always fails with the given status, counting attempts. */
+  function refusing(status: number) {
+    let calls = 0;
+    return {
+      get calls() {
+        return calls;
+      },
+      model: {
+        id: `refusing:${status}`,
+        async complete() {
+          calls += 1;
+          throw new ModelError(`refused (${status})`, status);
+        },
+      } as LanguageModel,
+    };
+  }
+
+  /** A clock the test moves by hand. */
+  function clock(start = 1_000) {
+    let time = start;
+    return { now: () => time, advance: (ms: number) => (time += ms) };
+  }
+
+  const ask = { language: 'en', plan: 6 } as const;
+  const quiet = () => undefined;
+
+  const NEEDS_A_HUMAN = [401, 402, 403, 404];
+  const WEATHER = [408, 429, 500, 502, 503];
+
+  it.each(NEEDS_A_HUMAN)('stops calling after %i, which no retry will change', async (status) => {
+    const refuser = refusing(status);
+    const guide = new Guide({ model: refuser.model, log: quiet, now: clock().now });
+
+    for (let report = 0; report < 5; report += 1) {
+      const reflection = await guide.reflect('a report', ask);
+      expect(reflection.fromModel).toBe(false);
+      expect(reflection.text.length).toBeGreaterThan(0);
+    }
+
+    expect(refuser.calls).toBe(1);
+    expect(guide.status().available).toBe(false);
+    expect(guide.status().skipped).toBe(4);
+  });
+
+  it.each(WEATHER)('keeps calling after %i, which might be over by the next report', async (status) => {
+    const refuser = refusing(status);
+    const guide = new Guide({ model: refuser.model, log: quiet, now: clock().now });
+
+    for (let report = 0; report < 5; report += 1) await guide.reflect('a report', ask);
+
+    expect(refuser.calls).toBe(5);
+    expect(guide.status().available).toBe(true);
+    expect(guide.status().skipped).toBe(0);
+  });
+
+  it('says why, in terms someone can act on', async () => {
+    const said: string[] = [];
+    const guide = new Guide({
+      model: refusing(402).model,
+      log: (message) => said.push(message),
+      now: clock().now,
+    });
+
+    await guide.reflect('a report', ask);
+
+    expect(said.join(' ')).toContain('balance');
+    expect(guide.status().reason).toContain('balance');
+    expect(guide.status().reason).toContain('402');
+  });
+
+  it('says it once per cool-down, not once per report', async () => {
+    const said: string[] = [];
+    const guide = new Guide({
+      model: refusing(401).model,
+      log: (message) => said.push(message),
+      now: clock().now,
+    });
+
+    for (let report = 0; report < 6; report += 1) await guide.reflect('a report', ask);
+
+    expect(said).toHaveLength(1);
+  });
+
+  it('tries again once the cool-down passes, so a fix needs no restart', async () => {
+    const time = clock();
+    const refuser = refusing(402);
+    const guide = new Guide({
+      model: refuser.model,
+      log: quiet,
+      now: time.now,
+      silenceMs: 60_000,
+    });
+
+    await guide.reflect('a report', ask);
+    expect(refuser.calls).toBe(1);
+
+    await guide.reflect('a report', ask);
+    expect(refuser.calls).toBe(1);
+
+    time.advance(60_001);
+    expect(guide.status().available).toBe(true);
+    await guide.reflect('a report', ask);
+    expect(refuser.calls).toBe(2);
+  });
+
+  it('forgets the silence the moment a call works', async () => {
+    // Someone tops up the balance. The next attempt after the cool-down
+    // succeeds, and nothing should carry the old refusal forward.
+    const time = clock();
+    let calls = 0;
+    const model: LanguageModel = {
+      id: 'recovers',
+      async complete() {
+        calls += 1;
+        if (calls === 1) throw new ModelError('no balance', 402);
+        return 'a reflection';
+      },
+    };
+    const guide = new Guide({ model, log: quiet, now: time.now, silenceMs: 1000 });
+
+    await guide.reflect('a report', ask);
+    expect(guide.status().available).toBe(false);
+
+    time.advance(1001);
+    const healed = await guide.reflect('a report', ask);
+
+    expect(healed.fromModel).toBe(true);
+    expect(guide.status()).toMatchObject({ available: true, reason: undefined });
+  });
+
+  it('treats a failure with no status as weather', async () => {
+    // A network error, an abort, anything that is not an HTTP refusal. It is
+    // not evidence that a human has to do something.
+    let calls = 0;
+    const model: LanguageModel = {
+      id: 'offline',
+      async complete() {
+        calls += 1;
+        throw new Error('fetch failed');
+      },
+    };
+    const guide = new Guide({ model, log: quiet, now: clock().now });
+
+    await guide.reflect('a report', ask);
+    await guide.reflect('a report', ask);
+
+    expect(calls).toBe(2);
+    expect(guide.status().available).toBe(true);
+  });
+
+  it('still answers the player either way', async () => {
+    // The whole point of the fallback: silence is a worse failure than a
+    // plain sentence, and a silenced companion must not become silence.
+    const guide = new Guide({ model: refusing(402).model, log: quiet, now: clock().now });
+    const first = await guide.reflect('a report', ask);
+    const second = await guide.reflect('a report', ask);
+    expect(first.text).toBe(second.text);
+    expect(second.text).toContain('6');
+  });
+});

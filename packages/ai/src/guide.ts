@@ -35,9 +35,44 @@ export interface GuideOptions {
   timeoutMs?: number;
   /** Where failures are reported. */
   log?: (message: string, error: unknown) => void;
+  /**
+   * How long to stay silent after a failure a retry cannot fix.
+   *
+   * Not forever: a balance is topped up and a key is replaced without anyone
+   * restarting the bot, and a companion that needs a restart to notice is one
+   * more thing to remember at the worst moment.
+   */
+  silenceMs?: number;
+  /** Injected so the cool-down can be tested without waiting for it. */
+  now?: () => number;
 }
 
 export const DEFAULT_TIMEOUT_MS = 20_000;
+export const DEFAULT_SILENCE_MS = 30 * 60_000;
+
+/**
+ * Statuses that mean a human has to do something.
+ *
+ * 401 the key is wrong, 402 the balance is empty, 403 the key is not allowed
+ * here, 404 there is no such model. None of them will be different on the next
+ * report, and this bot answered a live 402 on every report while the player
+ * waited for the round trip to fail.
+ *
+ * 400 is deliberately not here. A request can be malformed for one prompt —
+ * too long, an odd character — and silencing the companion for half an hour
+ * over a single bad prompt is worse than trying the next one. 429 and 5xx are
+ * the weather.
+ */
+const NEEDS_A_HUMAN = new Set([401, 402, 403, 404]);
+
+/** What an operator would want to know about the companion. */
+export interface GuideStatus {
+  available: boolean;
+  /** Why not, in terms someone can act on. Absent when it is available. */
+  reason?: string;
+  /** Reports answered with the fallback without calling anything. */
+  skipped: number;
+}
 
 export interface Reflection {
   /** What to show the player. Always non-empty. */
@@ -76,17 +111,44 @@ export class Guide {
   private readonly completion: CompletionOptions;
   private readonly timeoutMs: number;
   private readonly log: (message: string, error: unknown) => void;
+  private readonly silenceMs: number;
+  private readonly now: () => number;
+
+  /** When the companion may try again. 0 means now. */
+  private silentUntil = 0;
+  private silentReason: string | undefined;
+  private skipped = 0;
 
   constructor({
     model,
     completion = {},
     timeoutMs = DEFAULT_TIMEOUT_MS,
     log = (message, error) => console.error(`[guide] ${message}`, error),
+    silenceMs = DEFAULT_SILENCE_MS,
+    now = Date.now,
   }: GuideOptions) {
     this.model = model;
     this.completion = completion;
     this.timeoutMs = timeoutMs;
     this.log = log;
+    this.silenceMs = silenceMs;
+    this.now = now;
+  }
+
+  /**
+   * Whether the companion is answering, and why not.
+   *
+   * The bot logs this beside the fallback, so "the companion hiccuped" and
+   * "this deployment has never had a working key" stop looking the same in a
+   * log — which is how a 402 went unnoticed until someone read the balance.
+   */
+  status(): GuideStatus {
+    const silent = this.silentUntil > this.now();
+    return {
+      available: !silent,
+      reason: silent ? this.silentReason : undefined,
+      skipped: this.skipped,
+    };
   }
 
   /** Respond to a player's report on the plan they are standing on. */
@@ -112,6 +174,13 @@ export class Guide {
   ): Promise<Reflection> {
     const messages = build(); // PromptError propagates: that is a caller bug.
 
+    // Already known to be unanswerable. Do not spend the player's time proving
+    // it again: the fallback was decided the moment the key was refused.
+    if (this.silentUntil > this.now()) {
+      this.skipped += 1;
+      return { text: fallbackText(contextOf(options)), fromModel: false };
+    }
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
 
@@ -120,20 +189,43 @@ export class Guide {
         ...this.completion,
         signal: controller.signal,
       });
+      // A call that worked ends any silence: whoever fixed it need not restart.
+      this.silentUntil = 0;
+      this.silentReason = undefined;
       return { text: text.trim(), fromModel: true };
     } catch (error) {
       if (error instanceof PromptError) throw error;
-      this.log(
-        error instanceof ModelError
-          ? `model failed${error.status ? ` (${error.status})` : ''}`
-          : 'model failed',
-        error,
-      );
+
+      const status = error instanceof ModelError ? error.status : undefined;
+
+      if (status !== undefined && NEEDS_A_HUMAN.has(status)) {
+        // Loud, and once per cool-down rather than once per report.
+        this.silentUntil = this.now() + this.silenceMs;
+        this.silentReason = reasonFor(status, this.silenceMs);
+        this.log(`companion silenced: ${this.silentReason}`, error);
+      } else {
+        this.log(`model failed${status ? ` (${status})` : ''}`, error);
+      }
+
       return { text: fallbackText(contextOf(options)), fromModel: false };
     } finally {
       clearTimeout(timer);
     }
   }
+}
+
+/** A refusal, in terms an operator can act on rather than a status code. */
+function reasonFor(status: number, silenceMs: number): string {
+  const what =
+    status === 401
+      ? 'the key was refused'
+      : status === 402
+        ? 'the account has no balance'
+        : status === 403
+          ? 'the key is not allowed to use this model'
+          : 'there is no such model';
+  const minutes = Math.round(silenceMs / 60_000);
+  return `${what} (${status}); trying again in ${minutes} minute${minutes === 1 ? '' : 's'}`;
 }
 
 function contextOf(options: AskOptions): PlanContext {
