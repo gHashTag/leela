@@ -124,6 +124,19 @@ describe('across every state a real game reaches', () => {
     }
   });
 
+  it('never traces a move out of the win square', () => {
+    // Entering the game is recorded as a move from 68, because that is where a
+    // waiting player sits. Drawing that trail tells the player they have just
+    // come down from Cosmic Consciousness. Nobody moves out of 68 in play.
+    const entered = applyRoll(initialState(), MAX_ROLL, CLASSIC).state;
+    expect(entered.previous_loka).toBe(WIN_LOKA);
+    expect(headline(entered, 'en', titleOf).from).toBeNull();
+
+    for (const state of all) {
+      expect(headline(state, 'en', titleOf).from, JSON.stringify(state)).not.toBe(WIN_LOKA);
+    }
+  });
+
   it('never traces a move from the square the player is standing on', () => {
     for (const state of all) {
       const show = headline(state, 'en', titleOf);

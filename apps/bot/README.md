@@ -31,9 +31,11 @@ OPENAI_API_KEY=sk-...          # optional: the companion that answers reports
 OPENAI_MODEL=gpt-4o-mini       # optional: defaults to gpt-4o-mini
 ```
 
-The companion takes any of three: `OPENAI_API_KEY`, `DEEPSEEK_API_KEY` or
-`OPENROUTER_API_KEY`, each with an optional `*_MODEL`. The first one set wins,
-in that order. All three publish the same chat-completions format, so the
+The companion takes any of four: `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`,
+`ZAI_API_KEY` or `OPENROUTER_API_KEY`, each with an optional `*_MODEL`. The
+first one set wins, in that order. Set `ZAI_PLAN=coding` for a Z.AI Coding Plan
+key — sent to the pay-as-you-go host it returns error 1113, which reads as an
+expired key. All three publish the same chat-completions format, so the
 choice is a host and not a code path — and the startup line names the provider
 and model it picked up, so a key in the wrong variable is visible immediately.
 

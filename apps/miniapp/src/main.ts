@@ -74,6 +74,11 @@ const el = {
 const cells = new Map<number, HTMLElement>();
 
 function buildBoard(): void {
+  // The squares sit in their own layer, inset to the painted board's numbered
+  // area. Appending them straight onto `#board` would stretch the grid across
+  // the image's margin and offset every square from its number.
+  const squares = document.createElement('div');
+  squares.className = 'squares';
   const fragment = document.createDocumentFragment();
 
   for (const row of BOARD_ROWS) {
@@ -89,7 +94,8 @@ function buildBoard(): void {
     }
   }
 
-  el.board.append(fragment);
+  squares.append(fragment);
+  el.board.append(squares);
 }
 
 // --- drawing --------------------------------------------------------------------

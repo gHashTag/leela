@@ -8,7 +8,15 @@
  *   BOT_TOKEN=... bun run src/index.ts
  */
 
-import { Guide, deepSeek, openAI, openRouter, type LanguageModel } from '@leela/ai';
+import {
+  Guide,
+  ZAI_CODING_BASE_URL,
+  deepSeek,
+  openAI,
+  openRouter,
+  zAI,
+  type LanguageModel,
+} from '@leela/ai';
 import { LANGUAGES, messageCoverage, messageIssues, translatedLanguages } from '@leela/content';
 import { createBot } from './bot';
 import { DatabaseRoomStore } from './persistence';
@@ -93,6 +101,18 @@ const PROVIDERS: Array<{ key: string; model: () => LanguageModel }> = [
       deepSeek({
         apiKey: process.env.DEEPSEEK_API_KEY as string,
         model: process.env.DEEPSEEK_MODEL,
+      }),
+  },
+  {
+    key: 'ZAI_API_KEY',
+    model: () =>
+      zAI({
+        apiKey: process.env.ZAI_API_KEY as string,
+        model: process.env.ZAI_MODEL,
+        // Z.AI sells two kinds of key against two paths. A Coding Plan key sent
+        // to the pay-as-you-go host comes back as error 1113, which reads as an
+        // expired key and sends whoever holds a good one off to buy another.
+        baseUrl: process.env.ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : undefined,
       }),
   },
   {

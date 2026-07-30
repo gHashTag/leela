@@ -27,6 +27,9 @@ export {
   DEFAULT_DEEPSEEK_BASE_URL,
   DEFAULT_DEEPSEEK_MODEL,
   DEFAULT_MODEL,
+  DEFAULT_ZAI_BASE_URL,
+  DEFAULT_ZAI_MODEL,
+  ZAI_CODING_BASE_URL,
   DEFAULT_OPENAI_BASE_URL,
   DEFAULT_OPENAI_MODEL,
   ModelError,
@@ -35,6 +38,7 @@ export {
   openAI,
   openRouter,
   recordingModel,
+  zAI,
 } from './model';
 export type {
   CompletionOptions,

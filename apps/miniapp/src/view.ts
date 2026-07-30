@@ -35,6 +35,11 @@ export interface Headline {
 /** Look up a plan's title. Injected so this stays free of the content loader. */
 export type TitleOf = (plan: number) => string;
 
+function traceFrom(previous: number, current: number): number | null {
+  if (previous < 1 || previous === current || previous === WIN_LOKA) return null;
+  return previous;
+}
+
 export function headline(state: GameState, language: Language, titleOf: TitleOf): Headline {
   const won = hasWon(state);
 
@@ -58,8 +63,11 @@ export function headline(state: GameState, language: Language, titleOf: TitleOf)
     progress: Math.min(state.loka, WIN_LOKA),
     canRead: true,
     here: state.loka,
-    from:
-      state.previous_loka >= 1 && state.previous_loka !== state.loka ? state.previous_loka : null,
+    // Never a trail from the win square. Entering the game is recorded as a
+    // move from 68 — that is where a waiting player sits — and drawing it says
+    // the player has just come down from Cosmic Consciousness. Nobody moves
+    // *from* 68 in play, so a trail starting there is always the wrong story.
+    from: traceFrom(state.previous_loka, state.loka),
     waiting: false,
   };
 }

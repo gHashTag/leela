@@ -932,6 +932,36 @@ are not. The consistency check is the one a field-by-field pass misses —
 Storage that throws on access — a private window with cookies blocked — is a
 game that plays and forgets, not an error.
 
+## Twenty-ninth pass: the board players know
+
+Asked where the design went, and the answer was that it had never been brought
+across. `leela/assets/about/images/gameboard.png` — the painted field from the
+published app, snakes and arrows and feathers — sat in four of the source
+repositories, byte for byte identical, while the mini app drew a grid of grey
+squares. A diagram of the game rather than the game.
+
+It is the board now: 147 kB of WebP instead of 750 kB of PNG, with the squares
+laid over the paint as transparent hit targets. The grid is inset to the
+image's *numbered area* rather than to its edges — the painting has a margin,
+and a grid stretched across the whole file puts every square a little to the
+left of the number it belongs to. Verified on an iPhone simulator rather than
+by arithmetic: a six, and the ring landed on the painted 6.
+
+The numbering matches without adjustment. Both come from the same board.
+
+**A fifth instance of 68 meaning two things, found by looking at the screen.**
+Entering the game is recorded as a move *from* 68, because that is where a
+waiting player sits — so the trail marker lit up Cosmic Consciousness and told
+a player who had just thrown their first six that they had come down from the
+top of the board. Nobody moves out of 68 in play, so a trail starting there is
+always the wrong story, and `headline` no longer draws one.
+
+**Z.AI is a fourth provider** on the same client — a base URL and a default
+model. The trap it carries is worth the comment it got: Z.AI sells two kinds of
+key against two paths, and a Coding Plan key sent to the pay-as-you-go host
+comes back as error 1113, which reads as an expired key. `ZAI_PLAN=coding`
+picks the other path.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

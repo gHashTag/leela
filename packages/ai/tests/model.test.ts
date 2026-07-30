@@ -3,12 +3,15 @@ import {
   DEFAULT_DEEPSEEK_MODEL,
   DEFAULT_MODEL,
   DEFAULT_OPENAI_MODEL,
+  DEFAULT_ZAI_MODEL,
   ModelError,
+  ZAI_CODING_BASE_URL,
   deepSeek,
   fixedModel,
   openAI,
   openRouter,
   recordingModel,
+  zAI,
 } from '../src';
 
 /** A fetch that answers with whatever it is given. */
@@ -170,6 +173,15 @@ describe.each([
     defaultModel: DEFAULT_DEEPSEEK_MODEL,
     ceiling: 'max_tokens',
   },
+  {
+    name: 'zAI',
+    make: (fetch?: typeof globalThis.fetch, model?: string) =>
+      zAI({ apiKey: 'secret', fetch, model }),
+    host: 'api.z.ai',
+    prefix: 'zai:',
+    defaultModel: DEFAULT_ZAI_MODEL,
+    ceiling: 'max_tokens',
+  },
 ])('$name, as a provider', (provider) => {
   /** Capture one request without performing it. */
   function capturing() {
@@ -182,11 +194,13 @@ describe.each([
   }
 
   it('refuses to be configured without a key, rather than failing mid-conversation', () => {
-    const factories = { openAI, openRouter, deepSeek } as const;
+    const factories = { openAI, openRouter, deepSeek, zAI } as const;
     const withoutKey = () => factories[provider.name as keyof typeof factories]({ apiKey: '' });
     expect(withoutKey).toThrow(ModelError);
-    // Named, so an operator reading the log knows which key is missing.
-    expect(withoutKey).toThrow(new RegExp(provider.name, 'i'));
+    // Named, so an operator reading the log knows which key is missing. The
+    // name is matched loosely because a provider may punctuate itself: Z.AI.
+    const loosely = new RegExp([...provider.name.toLowerCase()].join('\\.?'), 'i');
+    expect(withoutKey).toThrow(loosely);
   });
 
   it('says which provider and model it is', () => {
@@ -267,7 +281,7 @@ describe('the attribution headers belong to one provider only', () => {
   });
 
   it('sends neither to a provider that has no use for them', async () => {
-    for (const make of [openAI, deepSeek]) {
+    for (const make of [openAI, deepSeek, zAI]) {
       const { seen, fetch } = capturing();
       await make({ apiKey: 'k', fetch }).complete(messages);
       const headers = seen[0].headers as Record<string, string>;

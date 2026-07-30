@@ -62,6 +62,11 @@ export const DEFAULT_OPENAI_BASE_URL = 'https://api.openai.com/v1';
 export const DEFAULT_DEEPSEEK_MODEL = 'deepseek-chat';
 export const DEFAULT_DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1';
 
+export const DEFAULT_ZAI_MODEL = 'glm-4.6';
+/** Pay-as-you-go. Coding Plan keys need a different path — see `zAI`. */
+export const DEFAULT_ZAI_BASE_URL = 'https://api.z.ai/api/paas/v4';
+export const ZAI_CODING_BASE_URL = 'https://api.z.ai/api/coding/paas/v4';
+
 interface ChatCompletionsConfig extends Required<Pick<ProviderOptions, 'apiKey' | 'model' | 'baseUrl' | 'fetch'>> {
   /** `openai:gpt-4o-mini` — the provider is part of the identity. */
   id: string;
@@ -222,6 +227,35 @@ export function deepSeek({
     baseUrl,
     fetch,
     id: `deepseek:${model}`,
+    tokenLimitField: 'max_tokens',
+  });
+}
+
+/**
+ * Z.AI, over plain fetch. A fourth host on the same client.
+ *
+ * **The trap worth knowing about.** Z.AI sells two kinds of key against two
+ * different paths. A Coding Plan key sent to the pay-as-you-go host comes back
+ * as error 1113 — which reads as an expired or invalid key, and sends whoever
+ * is holding a perfectly good key off to buy another one. Pass
+ * `ZAI_CODING_BASE_URL` as `baseUrl` for a Coding Plan key.
+ */
+export function zAI({
+  apiKey,
+  model = DEFAULT_ZAI_MODEL,
+  baseUrl = DEFAULT_ZAI_BASE_URL,
+  fetch = globalThis.fetch,
+}: ProviderOptions): LanguageModel {
+  if (!apiKey) {
+    throw new ModelError('a Z.AI API key is required');
+  }
+
+  return chatCompletions({
+    apiKey,
+    model,
+    baseUrl,
+    fetch,
+    id: `zai:${model}`,
     tokenLimitField: 'max_tokens',
   });
 }
