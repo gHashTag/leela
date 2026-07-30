@@ -2306,6 +2306,47 @@ other way fails a test in each package.
 The lesson is narrower than "read the sources": the reading *was* done, and the
 sentence taken from it was one step broader than what it said.
 
+## Sixty-fourth pass: the citations, re-read
+
+Last pass found a flag on `onchain` filled in by copying, and the reason it went
+unnoticed for so long is worth more than the fix: `packages/contracts` holds
+that variant to the Solidity because the contract is *vendored here* and a test
+can read it. `legacy-mobile` and `online` reproduce the published mobile app,
+which is not vendored — so their rules were written by reading `leela-src`, and
+after that the reading was a memory. They were written the same way `onchain`
+was, and never checked again.
+
+Every rule those two claim now carries the line it came from, and
+`audit-variants.mjs` checks **both halves**: the flag still holds the value its
+evidence supports, and the evidence is still in the app. Twenty claims across
+eleven flags, each with its citation —
+
+| flag | where it comes from |
+|---|---|
+| `extraTurnOnSix` | `if (count === 6)` in `store/helper.ts` |
+| `threeSixesReset: false` | neither `consecutiveSixes` nor `positionBeforeThreeSixes` appears there at all |
+| `rerollOnRepeat` | `if (get === DiceStore.count)` |
+| `reportAfterSix: false` | `if (values.count !== 6)` gating `createHistory` |
+| `refusedThrowStartsCooldown: false` | `case plan > 72: return undefined` |
+| `mayReenterAfterWinning: false` | `stepCount === 6 && !isFinished` |
+| `cooldownFrom: 'report'` | `startStepTimer()` called from `CreatePost` and nowhere else |
+| `minReportChars: 100` | `.min(100, t('fewChars'))` |
+| `reportOnWinningSquare` | `stepCount !== 6 \|\| plan === 68` |
+| `requireReportBeforeRoll` (online) | `DiceStore.online && !OnlinePlayer.store.isReported` |
+| `turnCooldownMs` (online) | `86400000` in `useLeftTimeForStep` |
+
+An absence is a claim too, which is why `threeSixesReset: false` is checked with
+a pattern that must *not* be there.
+
+It passes today, and a check that has only ever passed is not yet a check — so
+it was broken deliberately in both directions: a flag flipped is named with both
+values, and a donor file rewritten is named with what it stopped showing. A file
+that cannot be read is reported rather than skipped, because an audit that
+passes for want of looking is the failure this repository keeps meeting.
+
+It needs the donor clones, so it says so in its header and stays out of CI —
+the same arrangement `audit-copies` has.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
