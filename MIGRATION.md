@@ -3377,6 +3377,36 @@ square written about twice running means the player left and came back.
 Three existing tests had to be fixed too, all of which filed a report at a
 moment when none was owed — which is the hole, appearing in the fixtures.
 
+## Ninety-fifth pass: a disabled button is a drawing
+
+The bot gave up four real defects in three passes because its decisions are pure
+functions anybody can call. The mini app's are tangled with the DOM, so I have
+been clicking through it by hand — and the previous pass's finding pointed
+straight at where to look.
+
+**In the mini app, a double tap on Save filed the same account twice.** Verified
+in a browser, not reasoned about: three taps, three identical entries about plan
+41. `revisited` then counted 41 as a square the player had returned to, when
+they had stood there once. A slip on a phone, not an exploit.
+
+The cause is the same shape the bot was caught in twice. `draw` disabled the die
+and disabled the report button; `roll` took the throw and `saveReport` filed the
+report; **only the drawing asked any questions.** A disabled button is a
+drawing, and a drawing refuses nothing.
+
+So the question moved out of the drawing. `mayThrow` answers it once — a spin
+already under way, then the intention the game is played to answer, then the
+account it has asked for, then the end of the game — and `draw` and `roll` both
+ask it. `saveReport` asks `seatOwesReport`, which is what the bot now asks and
+what the report button was already drawn from.
+
+The tests play whole games through the same pieces the app uses, with the player
+fumbling every tap on Save, and hold the rule the returns rest on: **the squares
+the journal says came back are exactly the squares the player arrived at more
+than once.** Restated once, after the first version failed: fumbling the *die*
+is not the same thing, because a second tap on a die that is still live is a
+second throw and always was — a six grants another.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

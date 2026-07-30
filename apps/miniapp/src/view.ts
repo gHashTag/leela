@@ -159,3 +159,36 @@ export function lineFor(announcement: string | null, moved: boolean): Line {
 
   return { says: 'standing', announcement: null };
 }
+
+/**
+ * Whether a throw may happen, and why not when it may not.
+ *
+ * The die was disabled by `draw` and the throw was taken by `roll`, and only
+ * the first of those two asked any questions. That is the shape the bot was
+ * caught in twice: a guard that lives in the surface is a guard that any other
+ * path walks straight past.
+ *
+ * In the mini app the other path is a *double tap*. Nothing exotic — a slip on
+ * a phone, two clicks before the dialog can close — and the second one used to
+ * file a second account of the same square. `revisited` then counted the square
+ * as one the player had returned to, in the one record the game exists to
+ * produce.
+ */
+export type ThrowRefusal = 'yes' | 'rolling' | 'no-intention' | 'owes-report' | 'game-over';
+
+export function mayThrow(
+  session: Session,
+  intention: string,
+  rolling: boolean,
+  owed: boolean,
+): ThrowRefusal {
+  // In the order the player meets them: a throw already under way, then the
+  // question the game is played to answer, then the account it asks for, then
+  // the end of the game itself.
+  if (rolling) return 'rolling';
+  if (intention === '') return 'no-intention';
+  if (owed) return 'owes-report';
+  if (!canRoll(session)) return 'game-over';
+
+  return 'yes';
+}

@@ -90,7 +90,7 @@ import {
   saveJournalFor,
   writingsOn,
 } from './reports';
-import { canRoll, headline, lineFor, standing } from './view';
+import { canRoll, headline, lineFor, mayThrow, standing } from './view';
 
 /** Telegram's WebApp object, when we are running inside Telegram. */
 interface TelegramWebApp {
@@ -288,7 +288,9 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
   // The engine's gate, not the journal's. Two records of one fact disagreed
   // the moment a second player sat down.
   const owed = seatOwesReport(currentPlayer(session));
-  el.roll.disabled = owed || rolling || intention === '' || !canRoll(session);
+  // One question, asked here and again by whoever acts. The button saying no is
+  // not the same as the act saying no, and the difference is a double tap away.
+  el.roll.disabled = mayThrow(session, intention, rolling, owed) !== 'yes';
   el.report.disabled = !owed;
 
   // The published app shows "Start over" only once the game has ended —
@@ -656,7 +658,11 @@ function showFace(value: number): void {
 }
 
 async function roll(): Promise<void> {
-  if (rolling) return;
+  // The same question the die's disabled state was drawn from. A disabled
+  // button is a drawing, and a drawing does not refuse anything.
+  if (mayThrow(session, intention, rolling, seatOwesReport(currentPlayer(session))) !== 'yes') {
+    return;
+  }
   rolling = true;
   el.roll.disabled = true;
   telegram?.HapticFeedback?.impactOccurred('medium');
@@ -804,6 +810,14 @@ async function shareSquare(): Promise<void> {
 }
 
 function saveReport(): void {
+  // Owed, and not already answered. Two taps on Save used to file the same
+  // account twice — a slip on a phone, not an exploit — and two accounts of one
+  // visit make `revisited` claim a square the player never returned to.
+  if (!seatOwesReport(currentPlayer(session))) {
+    el.writer.close();
+    return;
+  }
+
   const before = journal.entries.length;
   journal = record(journal, state.loka, el.writerText.value, Date.now());
 
