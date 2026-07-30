@@ -135,6 +135,36 @@ progress::-webkit-progress-value {
  * stretching to fill: a board of tall rectangles does not read as a board, and
  * eight rows stretched over a phone screen is what that produces.
  */
+/*
+ * A file input that reads as a button.
+ *
+ * The input itself is hidden from sight but not from the keyboard or from a
+ * screen reader — a `display: none` input cannot be reached at all, which is
+ * the accessibility mistake this app already made once with the squares.
+ */
+.file {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.file input {
+  position: absolute;
+  /* Logical, because the audit is right: a file input stretched over its label
+     has no business claiming which way the page reads. */
+  inset-inline: 0;
+  inset-block: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
 /* A note under a sheet: quieter than the text it belongs to. */
 .hint {
   margin: 10px 0 0;

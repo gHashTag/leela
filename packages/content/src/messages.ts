@@ -174,6 +174,15 @@ const EN = {
   },
   'app.pathLocal':
     'These stay on this device. The bot keeps them for a table, and shares them there.',
+  'app.pathExport': 'Save a copy',
+  'app.pathImport': 'Bring one back',
+  'app.pathExported': 'Saved, and a readable copy is on the clipboard.',
+  'app.pathImported': {
+    one: '{count} plan brought back.',
+    other: '{count} plans brought back.',
+  },
+  'app.pathImportedNothing': 'Nothing new in that file.',
+  'app.pathUnreadable': 'That file is not a path this app wrote.',
   'app.close': 'Close',
 
   // --- the companion ---------------------------------------------------------
@@ -321,6 +330,17 @@ const RU: Partial<Record<MessageKey, Message>> = {
   },
   'app.pathLocal':
     'Они остаются на этом устройстве. Бот хранит их для стола и делится ими там.',
+  'app.pathExport': 'Сохранить копию',
+  'app.pathImport': 'Вернуть из файла',
+  'app.pathExported': 'Сохранено, а читаемая копия — в буфере обмена.',
+  'app.pathImported': {
+    one: 'Возвращён {count} план.',
+    few: 'Возвращено {count} плана.',
+    many: 'Возвращено {count} планов.',
+    other: 'Возвращено {count} плана.',
+  },
+  'app.pathImportedNothing': 'В этом файле нет ничего нового.',
+  'app.pathUnreadable': 'Это не путь, записанный этим приложением.',
   'app.close': 'Закрыть',
 
   'companion.unavailable':

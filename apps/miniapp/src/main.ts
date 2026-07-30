@@ -33,6 +33,7 @@ import boardLight from './board-light.webp';
 import boardDark from './board-dark.webp';
 import gemArt from './gem.webp';
 import { loadState, saveState } from './state';
+import { fileName, merge, parseDocument, toDocument, toText } from './journal-file';
 import {
   arrived,
   loadJournal,
@@ -103,6 +104,8 @@ const el = {
   writerTitle: document.getElementById('writer-title') as HTMLElement,
   writerText: document.getElementById('writer-text') as HTMLTextAreaElement,
   writerSave: document.getElementById('writer-save') as HTMLButtonElement,
+  pathExport: document.getElementById('path-export') as HTMLButtonElement,
+  pathImport: document.getElementById('path-import-input') as HTMLInputElement,
 };
 
 /** Every cell, by plan, so an update touches only what changed. */
@@ -299,7 +302,63 @@ function openPath(): void {
   nodes.push(note);
 
   el.readerBody.replaceChildren(...nodes);
+  // Nothing written is nothing to save; the file input stays, because bringing
+  // a path back is exactly what an empty journal is for.
+  el.pathExport.hidden = written.length === 0;
   el.reader.showModal();
+}
+
+/**
+ * Write the path to a file.
+ *
+ * A download rather than the clipboard: a year of writing should leave the
+ * browser as something with a name, which can be kept, mailed, or handed to
+ * the bot later. `URL.revokeObjectURL` because a page that never lets go of
+ * its blobs holds a copy of everything the player has ever written.
+ */
+function exportPath(): void {
+  const document_ = toDocument(journal);
+  const blob = new Blob([JSON.stringify(document_, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName(new Date().toISOString().slice(0, 10));
+  link.click();
+  URL.revokeObjectURL(url);
+
+  // The file is for coming back; the clipboard is for reading, pasting into a
+  // message, or keeping in a notes app. One action, because a second button
+  // for the same path is a choice nobody wants to make.
+  void navigator.clipboard?.writeText(toText(journal, (plan) => planFor(plan).title)).catch(() => {
+    // A browser that refuses the clipboard still downloaded the file, which is
+    // the part that matters.
+  });
+
+  el.say.textContent = messageFor(language, 'app.pathExported');
+}
+
+/** Read one back, adding whatever is new and losing nothing. */
+async function importPath(file: File): Promise<void> {
+  const incoming = parseDocument(await file.text());
+
+  if (incoming === null) {
+    el.say.textContent = messageFor(language, 'app.pathUnreadable');
+    return;
+  }
+
+  const before = journal.entries.length;
+  journal = merge(journal, incoming);
+  saveJournal(localStorage, journal);
+
+  const added = journal.entries.length - before;
+  el.say.textContent =
+    added === 0
+      ? messageFor(language, 'app.pathImportedNothing')
+      : messageFor(language, 'app.pathImported', { count: added });
+
+  el.reader.close();
+  draw();
 }
 
 el.roll.addEventListener('click', () => void roll());
@@ -307,6 +366,13 @@ el.read.addEventListener('click', () => openPlan(state.loka));
 el.report.addEventListener('click', openWriter);
 el.writerSave.addEventListener('click', saveReport);
 el.path.addEventListener('click', openPath);
+el.pathExport.addEventListener('click', exportPath);
+el.pathImport.addEventListener('change', () => {
+  const [file] = el.pathImport.files ?? [];
+  if (file) void importPath(file);
+  // Cleared, so choosing the same file twice is two events rather than one.
+  el.pathImport.value = '';
+});
 
 // Nothing can be drawn before the texts arrive: the board labels every square
 // with its title. Failing loudly beats an empty grid that looks like a bug.

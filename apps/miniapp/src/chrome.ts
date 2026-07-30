@@ -34,6 +34,8 @@ export function applyChrome(document: Document, language: Language): void {
   set('report', 'app.reportWrite');
   set('path', 'app.path');
   set('writer-save', 'app.reportSave');
+  set('path-export', 'app.pathExport');
+  set('path-import', 'app.pathImport');
   set('writer-hint', 'app.pathLocal');
 
   const writing = document.getElementById('writer-text');

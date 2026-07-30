@@ -1221,6 +1221,38 @@ The multiplayer surface already exists and is the bot: a table in a group chat,
 reports kept in SQLite, `/path` reading them back. What is missing between the
 two is a shared identity, which is the same server question.
 
+## Thirty-seventh pass: a year of writing, in one browser
+
+The gate went in last pass and the reports it produces had nowhere to go.
+Clear the site data, change phone, and everything anyone had written was gone.
+The published app kept reports in Firebase and the bot keeps them in SQLite;
+the mini app has neither, so the answer is a file.
+
+**Save a copy** writes a JSON document with a `schemaVersion`, and puts a
+readable version — plan, title, what was written, in order — on the clipboard
+at the same time. One action, because a second button for the same path is a
+choice nobody wants to make. **Bring one back** reads a file in.
+
+**The assertions are about what a file must never do.** Bringing one back is a
+union, so nothing already written is lost; doing it twice changes nothing the
+second time, because people do import the same file twice and a path that
+doubles is a path nobody trusts; and it never opens the report gate — a report
+written on another device, about another plan, is not a reason to let this
+player throw.
+
+**A file is the least trustworthy thing in the app.** It has been out of the
+app, through a chat, and possibly through an editor. Ten shapes are refused
+rather than half-read, including a `schemaVersion` from a newer build: older is
+readable, newer may mean something different by the same field.
+
+**The direction audit caught the new CSS again** — a file input stretched over
+its label with `inset: 0`. Third time; each time the fix has been a logical
+property rather than a wider exception.
+
+This is also the only bridge to the network that needs no server: the file is
+something a player can carry into a chat, and the bot is where reports are
+shared.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
