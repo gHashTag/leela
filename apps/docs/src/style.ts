@@ -41,8 +41,10 @@ main {
   padding: 1.5rem 1.25rem 4rem;
 }
 
-/* Right-to-left languages need the text aligned, not just reordered. */
-[dir='rtl'] main { text-align: right; }
+/* Aligned to where the line starts, which is what "right" was reaching for.
+   A logical value needs no dir-scoped companion rule to be correct, and a
+   companion rule is a thing to forget when a second alignment is added. */
+main { text-align: start; }
 
 header.site {
   display: flex;
@@ -107,7 +109,9 @@ ol.plans a:hover, ul.chapters a:hover { background: var(--surface); }
   min-width: 2ch;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  /* Toward the title it labels, in either direction. A physical right put the
+     numbers against the far edge of an Arabic page, the gap in the middle. */
+  text-align: end;
 }
 
 /* --- reading ------------------------------------------------------------- */

@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { LANGUAGES, plansFor, rulesFor } from '@leela/content';
+import { LANGUAGES, LANGUAGE_NAMES, directionOf, plansFor, rulesFor } from '@leela/content';
 import { TOTAL_PLANS } from '@leela/engine';
 import {
-  LANGUAGE_NAMES,
   chapterPage,
-  directionOf,
   escape,
   indexPage,
   languagePicker,

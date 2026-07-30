@@ -9,7 +9,14 @@
  * titles rot unnoticed across 15 languages before anyone looked.
  */
 
-import { LANGUAGES, type Language, type Plan, type RuleChapter } from '@leela/content';
+import {
+  LANGUAGES,
+  LANGUAGE_NAMES,
+  directionOf,
+  type Language,
+  type Plan,
+  type RuleChapter,
+} from '@leela/content';
 
 /** Escape for HTML text and attribute values. */
 export function escape(text: string): string {
@@ -19,22 +26,6 @@ export function escape(text: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
-
-/** Languages that read right to left, so the page can say so. */
-const RTL = new Set(['ar', 'ur']);
-
-export function directionOf(language: Language): 'rtl' | 'ltr' {
-  return RTL.has(language) ? 'rtl' : 'ltr';
-}
-
-/** Endonyms — a language picker in English helps nobody choose their own. */
-export const LANGUAGE_NAMES: Record<Language, string> = {
-  ar: 'العربية', bn: 'বাংলা', de: 'Deutsch', en: 'English', es: 'Español',
-  fr: 'Français', hi: 'हिन्दी', ja: '日本語', jv: 'Basa Jawa', ko: '한국어',
-  mr: 'मराठी', ms: 'Bahasa Melayu', pa: 'ਪੰਜਾਬੀ', pt: 'Português', ru: 'Русский',
-  ta: 'தமிழ்', te: 'తెలుగు', tr: 'Türkçe', uk: 'Українська', ur: 'اردو',
-  vi: 'Tiếng Việt', zh: '中文',
-};
 
 /** Markdown, as far as the plan texts actually use it. */
 export function renderMarkdown(source: string): string {

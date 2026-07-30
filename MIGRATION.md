@@ -728,6 +728,50 @@ now calls `hasWon`, which is the function that exists to stop exactly this.
 **Still English on purpose:** `formatWait`'s "3h 5m". It is a duration, not
 prose, and it belongs to the engine, which has no language.
 
+## Twenty-fourth pass: two of the twenty-two languages read the other way
+
+`apps/docs` has set `dir` per language since it was written. The mini app —
+the surface most people actually play on — set `lang` and stopped there. An
+Arabic or Urdu player got Arabic prose in a left-to-right layout, because
+`directionOf` lived in `apps/docs`, which was the first place that had needed
+it. The same shape as the message catalogue one pass ago: knowledge kept next
+to its first caller rather than next to its subject, so the second surface goes
+without.
+
+`directionOf` and the endonyms are in `@leela/content` now, with `Language`.
+
+**The harder half is the opposite rule.** The board must *not* follow the
+reader. Under `dir="rtl"` the grid mirrors: plan 1 moves to the bottom right
+and every snake descends the other way — a different board drawn from the same
+data. So the mini app sets `dir` on the document and pins `dir="ltr"` on the
+board.
+
+**The same defect in the bot, where it is invisible.** The board is sent as a
+monospace block of two-digit numbers, and digits are *weak* in the Unicode
+bidirectional algorithm: inside a right-to-left paragraph, which is what an
+Arabic or Urdu Telegram client provides, a row reading `01 02 03` is displayed
+as `03 02 01`. Nothing in the string is wrong. The board is mirrored anyway,
+and no test that reads the string would ever notice. `asLeftToRight` wraps it
+in U+2066…U+2069 — unconditionally, because a board that mirrors for some
+readers and not others is two boards.
+
+**A stylesheet written in left and right is written for half the readers.**
+`ol.plans .n { text-align: right }` put the plan numbers against the far edge
+of an Arabic page with the gap in the middle: `dir` reorders the layout and a
+physical direction does not follow it. Logical values now, and the assertion is
+the rule rather than the two places that broke it — no physical direction in
+either stylesheet outside a rule that names one, with a single documented
+exception inside the board, which is pinned and therefore physical by design.
+A companion test checks the audit can fail, on each of the five properties.
+
+**Also checked against the content rather than the table:** the direction of a
+language is asserted by looking at the script its plans are actually written
+in, so the table cannot claim `ltr` for a language whose text is Arabic.
+
+**Deleted rather than waived:** `allLanguages` and `isRightToLeft`, written in
+this pass with no caller. `audit-unread.mjs` named them and the honest answer
+was to remove them, not to add a reason to `PUBLIC_API`.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

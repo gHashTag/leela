@@ -225,3 +225,42 @@ describe('a table that is not English does not lose the cooldown message', () =>
     expect(blocked.replies[0].text).toContain('Напишите');
   });
 });
+
+describe('the board is a diagram, not a sentence', () => {
+  /**
+   * Digits are weak in the Unicode bidirectional algorithm. Inside a
+   * right-to-left paragraph — which is what an Arabic or Urdu Telegram client
+   * gives a message — a row reading `01 02 03` is displayed as `03 02 01`.
+   * Nothing in the string is wrong; the board is mirrored anyway, plan 1 sits
+   * where plan 9 belongs, and every snake descends the other way.
+   */
+  const boardIn = (message: string) => message.slice(message.indexOf('<pre>') + 5, message.indexOf('</pre>'));
+
+  it('holds the grid left to right whoever is reading', () => {
+    const message = renderBoardMessage(russianTable());
+    const board = boardIn(message);
+    expect(board.codePointAt(0)).toBe(0x2066);
+    expect(board.codePointAt(board.length - 1)).toBe(0x2069);
+  });
+
+  it('is isolated in every language, not only the right-to-left ones', () => {
+    // A board that mirrors for some readers and not others is two boards. The
+    // isolate is unconditional so there is only one, and it does nothing
+    // visible in a left-to-right message.
+    for (const language of ['en', 'ru', 'ar', 'ur', 'ja'] as const) {
+      const opened = openRoom('чат', { id: 'а', name: 'Аня' }, 42, { language });
+      const board = boardIn(renderBoardMessage({ ...(opened.room as Room), started: true }));
+      expect(board.codePointAt(0), language).toBe(0x2066);
+    }
+  });
+
+  it('changes nothing a player sees', () => {
+    const room = russianTable();
+    const board = boardIn(renderBoardMessage(room)).replace(/[⁦⁩]/g, '');
+    // Eight rows of nine squares, in the order the board has always had them.
+    const rows = board.split('\n');
+    expect(rows).toHaveLength(8);
+    expect(rows[7].split(' ')).toHaveLength(9);
+    expect(rows[7].split(' ')[0]).toBe('01');
+  });
+});

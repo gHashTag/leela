@@ -118,6 +118,10 @@ export function ruleChapter(locale: string, slug: string): RuleChapter | null {
   return rulesFor(locale).find((c) => c.slug === slug) ?? null;
 }
 
+// What a language is, beyond its texts: which way it reads, what it calls
+// itself, and how to keep a diagram from being reordered by a reader's script.
+export { LANGUAGE_NAMES, asLeftToRight, directionOf } from './languages';
+
 // The sentences the game says about itself, as opposed to the text it teaches.
 // Kept in a second file because the catalogue is prose and this one is data.
 export {

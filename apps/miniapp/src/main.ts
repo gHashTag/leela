@@ -23,6 +23,7 @@ import {
 } from '@leela/engine';
 import { messageFor, resolveLanguage, type Language } from '@leela/content';
 import { loadPlans, plan as planFor } from './content';
+import { applyChrome } from './chrome';
 import { describeMove } from './describe';
 import { createCell } from './cell';
 
@@ -102,26 +103,6 @@ const el = {
   readerTitle: document.getElementById('reader-title') as HTMLElement,
   readerBody: document.getElementById('reader-body') as HTMLElement,
 };
-
-/**
- * The parts of the page that are written in the HTML rather than drawn.
- *
- * The markup has to say something before the script runs, so it says it in
- * English; this replaces it once the language is known. Without this step the
- * board is Russian and its two buttons are not, which is the same defect as an
- * English reply in a Russian chat — only in the corner of the eye.
- */
-function localiseChrome(): void {
-  document.documentElement.lang = language;
-  el.roll.textContent = messageFor(language, 'app.roll');
-  el.read.textContent = messageFor(language, 'app.read');
-  el.board.setAttribute('aria-label', messageFor(language, 'app.boardLabel'));
-  el.say.textContent = messageFor(language, 'app.opening');
-  el.planTitle.textContent = messageFor(language, 'app.waiting');
-
-  const close = el.reader.querySelector('form button');
-  if (close) close.textContent = messageFor(language, 'app.close');
-}
 
 /** Every cell, by plan, so an update touches only what changed. */
 const cells = new Map<number, HTMLElement>();
@@ -244,7 +225,7 @@ el.read.addEventListener('click', () => openPlan(state.loka));
 
 // Nothing can be drawn before the texts arrive: the board labels every square
 // with its title. Failing loudly beats an empty grid that looks like a bug.
-localiseChrome();
+applyChrome(document, language);
 
 loadPlans(language)
   .then(() => {

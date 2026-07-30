@@ -8,7 +8,7 @@
  */
 
 import { ARROWS, BOARD_ROWS, SNAKES, WIN_LOKA, hasWon } from '@leela/engine';
-import { type Language, messageFor } from '@leela/content';
+import { asLeftToRight, type Language, messageFor } from '@leela/content';
 import type { Room } from './commands';
 
 /** Marks for players, in seating order. Distinct at a glance, and colourblind-safe. */
@@ -96,7 +96,11 @@ export function renderProgress(plan: number, width = 12): string {
 /** The board plus who is where, ready to send. */
 export function renderBoardMessage(room: Room): string {
   return [
-    `<pre>${renderBoard(room)}</pre>`,
+    // Isolated left-to-right: the squares are digits, and digits are weak in
+    // the bidirectional algorithm, so an Arabic or Urdu client reorders a row
+    // reading `01 02 03` into `03 02 01`. The string is fine and the board is
+    // mirrored anyway. An isolate takes the grid out of the reader's paragraph.
+    `<pre>${asLeftToRight(renderBoard(room))}</pre>`,
     renderStandings(room),
     '',
     `<i>${escapeHtml(messageFor(room.language, 'board.legend'))}</i>`,
