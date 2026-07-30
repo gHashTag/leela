@@ -618,6 +618,35 @@ restart, and a game played through `roll` → `Effect` → `sqliteStepSink` leav
 rows behind. Three passes ago that would have been a claim; the table existed
 then too, and nothing wrote to it.
 
+## Twenty-first pass: branch coverage in the rest of the packages
+
+The engine's uncovered branch was a real defect, so the same measurement was
+taken everywhere. `@leela/db` was at 97.4%, and the two uncovered branches were
+the guards against a malformed record.
+
+They worked — nothing threw — but the report they produced was useless.
+A Firebase export can contain a hole where a document was deleted, and three
+such records gave three identical lines reading `(no owner)` with reasons like
+*"null is not an object (evaluating 'user.plan')"*. An operator running a dump of
+five thousand accounts and getting twelve of those has no way to find any of the
+twelve.
+
+Failures now carry the record's **index** in the export, and a hole is
+distinguished from a record with no uid: `(not a record)` against `(no owner)`,
+each with a reason written for a person rather than leaked from a property
+access. `legacy.ts` is at 100% of branches.
+
+**One uncovered branch turned out to be unreachable rather than wrong.**
+`summariseJourney` returned `''` when nothing fit the budget, and nothing ever
+could: the longest possible entry is about 175 characters against a budget of
+1200. Rather than delete a guard that is correct or leave a branch that cannot
+run, the budget became a parameter — so the guard is exercised at a smaller one,
+and stays true at the default.
+
+Coverage where it is low is honest about why: `apps/miniapp` sits at 49% of
+statements because `main.ts` is a DOM entry point, and the logic worth testing
+was moved out of it into `cell.ts`, `describe.ts`, `contrast.ts` and `smoke.ts`.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

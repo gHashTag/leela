@@ -330,3 +330,33 @@ describe('when the path does not fit its budget', () => {
     expect(shown).toEqual([...shown].sort((a, b) => a - b));
   });
 });
+
+describe('when the budget is too small for even one entry', () => {
+  // Unreachable at the default budget: the longest possible entry runs to about
+  // 175 characters against 1200. Reachable at a smaller one, and a heading with
+  // nothing under it would be worse than saying nothing at all.
+
+  it('says nothing rather than printing an empty heading', () => {
+    const summary = summariseJourney([{ plan: 6, text: 'something' }], 'en', 5);
+    expect(summary).toBe('');
+  });
+
+  it('still summarises what fits when the budget allows one entry', () => {
+    const journey = [
+      { plan: 6, text: 'first' },
+      { plan: 23, text: 'second' },
+    ];
+    const summary = summariseJourney(journey, 'en', 60);
+    expect(summary).toContain('second');
+    expect(summary).not.toContain('first');
+  });
+
+  it('keeps the newest when only some fit, at any budget', () => {
+    const journey = Array.from({ length: 6 }, (_, i) => ({ plan: i + 1, text: `entry ${i}` }));
+    for (const budget of [40, 80, 200, 1200]) {
+      const summary = summariseJourney(journey, 'en', budget);
+      if (summary === '') continue;
+      expect(summary, `budget ${budget}`).toContain('entry 5');
+    }
+  });
+});

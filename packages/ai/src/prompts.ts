@@ -72,6 +72,7 @@ export const MAX_JOURNEY_CHARS = 1200;
 export function summariseJourney(
   journey: ReadonlyArray<JourneyEntry>,
   language: Language,
+  budget = MAX_JOURNEY_CHARS,
 ): string {
   if (journey.length === 0) return '';
 
@@ -91,12 +92,16 @@ export function summariseJourney(
         : text;
 
     const line = `${entry.plan}. ${title} — ${clipped}`;
-    if (used + line.length > MAX_JOURNEY_CHARS) break;
+    if (used + line.length > budget) break;
 
     lines.unshift(line); // back into walking order
     used += line.length;
   }
 
+  // Unreachable at the default budget — the longest possible entry is about 175
+  // characters against 1200 — but not unreachable at a smaller one, and a
+  // heading with nothing under it would be worse than saying nothing. The
+  // `budget` parameter exists so this is tested rather than assumed.
   if (lines.length === 0) return '';
 
   const omitted = journey.length - lines.length;

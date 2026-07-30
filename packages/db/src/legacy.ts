@@ -160,13 +160,26 @@ function normaliseLanguage(lang: string | undefined): string {
   return /^[a-z]{2}$/.test(primary) ? primary : 'en';
 }
 
+export interface MigrationFailure {
+  /** The Firebase uid, or a note when the record has none. */
+  owner: string;
+  /**
+   * Where in the export this record was, counting from zero.
+   *
+   * Without it, a dump with twelve broken records reports twelve identical
+   * lines and an operator has no way to find any of them.
+   */
+  index: number;
+  reason: string;
+}
+
 export interface MigrationReport {
   /** Rows to insert. */
   migrated: NewPlayer[];
   /** Accounts already in the database, left alone. */
   skipped: string[];
-  /** Accounts that could not be converted, with the reason. */
-  failures: Array<{ owner: string; reason: string }>;
+  /** Records that could not be converted, with the reason and where they were. */
+  failures: MigrationFailure[];
 }
 
 export interface MigrateOptions {
@@ -201,14 +214,35 @@ export function migrateBatch(
   const done = new Set(alreadyMigrated ?? []);
   const migrated: NewPlayer[] = [];
   const skipped: string[] = [];
-  const failures: Array<{ owner: string; reason: string }> = [];
+  const failures: MigrationFailure[] = [];
 
   // An export can list the same account twice; the unique index would reject
   // the pair just as it rejects a re-run.
   const seen = new Set<string>();
 
-  for (const user of users) {
-    const owner = user?.owner ?? '(no owner)';
+  for (const [index, user] of users.entries()) {
+    // A dump can contain a hole where a document was deleted. Say so in terms
+    // an operator can act on, rather than letting a property access fail and
+    // reporting "null is not an object (evaluating 'user.plan')".
+    if (user === null || typeof user !== 'object') {
+      failures.push({
+        owner: '(not a record)',
+        index,
+        reason: `record ${index} is ${user === null ? 'null' : typeof user}, not an object`,
+      });
+      continue;
+    }
+
+    if (typeof user.owner !== 'string' || user.owner.length === 0) {
+      failures.push({
+        owner: '(no owner)',
+        index,
+        reason: `record ${index} has no owner, so it cannot be matched to an account`,
+      });
+      continue;
+    }
+
+    const owner = user.owner;
 
     if (done.has(owner)) {
       skipped.push(owner);
@@ -216,7 +250,11 @@ export function migrateBatch(
     }
 
     if (seen.has(owner)) {
-      failures.push({ owner, reason: 'appears more than once in this export' });
+      failures.push({
+        owner,
+        index,
+        reason: 'appears more than once in this export',
+      });
       continue;
     }
 
@@ -226,6 +264,7 @@ export function migrateBatch(
     } catch (error) {
       failures.push({
         owner,
+        index,
         reason: error instanceof Error ? error.message : String(error),
       });
     }

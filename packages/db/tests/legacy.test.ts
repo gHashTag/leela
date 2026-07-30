@@ -251,7 +251,7 @@ describe('a migration that can be run twice', () => {
 
     expect(report.migrated).toHaveLength(3);
     expect(report.failures).toEqual([
-      { owner: 'uid-2', reason: 'appears more than once in this export' },
+      { owner: 'uid-2', index: 3, reason: 'appears more than once in this export' },
     ]);
   });
 
@@ -271,5 +271,64 @@ describe('a migration that can be run twice', () => {
 
   it('says nothing about categories that are empty', () => {
     expect(describeMigration(migrateBatch(users, (u) => u.owner))).toBe('3 to migrate');
+  });
+});
+
+describe('a dump with holes in it', () => {
+  // A Firebase export can contain a deleted document, or a record with no uid.
+  // Reporting twelve identical "(no owner)" lines gives an operator no way to
+  // find any of the twelve.
+
+  const good = legacy({ owner: 'uid-1', plan: 10 });
+
+  it('says which record was wrong, by position', () => {
+    const report = migrateBatch([good, null, good, undefined] as never[], {
+      idFor: (u) => u?.owner ?? 'x',
+    });
+
+    expect(report.failures.map((f) => f.index)).toEqual([1, 2, 3]);
+  });
+
+  it('explains a hole in terms an operator can act on', () => {
+    const report = migrateBatch([null] as never[], { idFor: () => 'x' });
+
+    expect(report.failures[0].reason).toBe('record 0 is null, not an object');
+    // Not the internal error a property access would have produced.
+    expect(report.failures[0].reason).not.toMatch(/is not an object \(evaluating/);
+  });
+
+  it('distinguishes a hole from a record with no uid', () => {
+    const anonymous = { ...good, owner: '' } as never;
+    const report = migrateBatch([null, anonymous] as never[], { idFor: () => 'x' });
+
+    expect(report.failures[0].owner).toBe('(not a record)');
+    expect(report.failures[1].owner).toBe('(no owner)');
+    expect(report.failures[1].reason).toMatch(/cannot be matched to an account/);
+  });
+
+  it('migrates everything around the holes', () => {
+    const report = migrateBatch(
+      [good, null, legacy({ owner: 'uid-2', plan: 20 }), undefined] as never[],
+      { idFor: (u) => u.owner },
+    );
+
+    expect(report.migrated.map((p) => p.legacyId)).toEqual(['uid-1', 'uid-2']);
+    expect(report.failures).toHaveLength(2);
+  });
+
+  it('never throws, whatever is in the array', () => {
+    const rubbish = [null, undefined, 0, '', 'a string', [], true, NaN] as never[];
+    expect(() => migrateBatch(rubbish, { idFor: () => 'x' })).not.toThrow();
+    expect(migrateBatch(rubbish, { idFor: () => 'x' }).failures).toHaveLength(rubbish.length);
+  });
+
+  it('reports a non-Error thrown by idFor without losing it', () => {
+    const report = migrateBatch([good], {
+      idFor: () => {
+        // eslint-disable-next-line no-throw-literal
+        throw 'a bare string';
+      },
+    });
+    expect(report.failures[0].reason).toBe('a bare string');
   });
 });
