@@ -60,6 +60,7 @@ import {
   record,
   saveJournal,
   type Journal,
+  hintFor,
 } from './reports';
 import { headline } from './view';
 
@@ -122,6 +123,7 @@ const el = {
   writerTitle: document.getElementById('writer-title') as HTMLElement,
   writerText: document.getElementById('writer-text') as HTMLTextAreaElement,
   writerSave: document.getElementById('writer-save') as HTMLButtonElement,
+  writerHint: document.getElementById('writer-hint') as HTMLElement,
   pathExport: document.getElementById('path-export') as HTMLButtonElement,
   pathImport: document.getElementById('path-import-input') as HTMLInputElement,
   pathImportLabel: document.getElementById('path-import-label') as HTMLElement,
@@ -393,8 +395,20 @@ function openWriter(): void {
   // the one thing this game asks a player to produce was held in a textarea
   // and nowhere else.
   el.writerText.value = loadDraft(localStorage, state.loka);
+  showWriterHint();
   el.writer.showModal();
   el.writerText.focus();
+}
+
+/**
+ * What is left, and what saving will cost.
+ *
+ * Both limits were silent: a report longer than the cap was cut, and past 500
+ * entries the oldest was dropped, and the player was told neither. The dialog
+ * has carried an empty hint since it was written.
+ */
+function showWriterHint(): void {
+  el.writerHint.textContent = hintFor(journal, el.writerText.value.length, language);
 }
 
 function saveReport(): void {
@@ -510,6 +524,7 @@ el.report.addEventListener('click', openWriter);
 el.writerSave.addEventListener('click', saveReport);
 el.writerText.addEventListener('input', () => {
   saveDraft(localStorage, state.loka, el.writerText.value);
+  showWriterHint();
 });
 el.path.addEventListener('click', openPath);
 el.pathExport.addEventListener('click', exportPath);

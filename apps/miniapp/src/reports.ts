@@ -20,6 +20,7 @@
  */
 
 import { CLASSIC, owesReport, type GameState } from '@leela/engine';
+import { messageFor, type Language } from '@leela/content';
 import type { GameStorage } from './state';
 
 export const REPORTS_KEY = 'leela.reports.v1';
@@ -131,6 +132,39 @@ export function arrived(journal: Journal): Journal {
  * Returns the journal unchanged in that case, so the caller cannot accidentally
  * mark a plan reported by asking twice.
  */
+/**
+ * When the writer starts warning about room.
+ *
+ * Only near the end: a counter that is always on screen is furniture, and a
+ * player counting characters is not reflecting.
+ */
+export const WARN_WITHIN_CHARS = 200;
+
+/**
+ * What to say under the writing box, or nothing.
+ *
+ * Both limits here used to be silent. `record` cut a report at
+ * `MAX_REPORT_CHARS` and dropped the oldest entry past `MAX_REPORTS`, and the
+ * player was told neither — a thousand words could go without a word about it.
+ * The published app has no maximum at all; ours exists because `localStorage`
+ * is bounded, and a bound nobody is shown is indistinguishable from a bug.
+ *
+ * The dialog has carried an empty `#writer-hint` since it was written, which is
+ * where this goes.
+ */
+export function hintFor(journal: Journal, length: number, language: Language): string {
+  const left = MAX_REPORT_CHARS - length;
+
+  // The immediate concern first: running out of room in this box beats a
+  // standing fact about the path.
+  if (left <= 0) return messageFor(language, 'writer.full');
+  if (left <= WARN_WITHIN_CHARS) return messageFor(language, 'writer.left', { count: left });
+
+  if (journal.entries.length >= MAX_REPORTS) return messageFor(language, 'writer.pathFull');
+
+  return '';
+}
+
 export function record(journal: Journal, plan: number, text: string, at: number): Journal {
   const trimmed = text.trim().slice(0, MAX_REPORT_CHARS);
   if (trimmed.length === 0) return journal;

@@ -21,6 +21,8 @@ import {
   record,
   saveJournal,
   type Journal,
+  hintFor,
+  WARN_WITHIN_CHARS,
 } from '../src/reports';
 import type { GameStorage } from '../src/state';
 
@@ -241,5 +243,77 @@ describe('the path', () => {
     for (let i = 1; i < written.length; i += 1) {
       expect((written[i]?.at ?? 0) >= (written[i - 1]?.at ?? 0)).toBe(true);
     }
+  });
+});
+
+describe('what the writer says about its limits', () => {
+  /**
+   * Both limits were silent. `record` cuts a report at `MAX_REPORT_CHARS` and
+   * drops the oldest entry past `MAX_REPORTS`, and the player was told
+   * neither — a thousand words could go without a word about it. The published
+   * app has no maximum at all; ours exists because `localStorage` is bounded,
+   * and a bound nobody is shown is indistinguishable from a bug.
+   *
+   * The dialog had carried an empty `#writer-hint` since it was written.
+   *
+   * The rule asserted is when something is said, not the sentences: silence
+   * while there is room, the nearer limit first, and never silence at a
+   * boundary where something is about to be lost.
+   */
+
+  const journalOf = (count: number): Journal => ({
+    reported: false,
+    entries: Array.from({ length: count }, (_, n) => ({
+      plan: (n % 72) + 1,
+      text: `entry ${n}`,
+      at: 1_700_000_000_000 + n,
+    })),
+  });
+
+  it('says nothing while there is room for both', () => {
+    // A counter always on screen is furniture, and a player counting
+    // characters is not reflecting.
+    expect(hintFor(journalOf(0), 0, 'en')).toBe('');
+    expect(hintFor(journalOf(10), 500, 'en')).toBe('');
+  });
+
+  it('never stays silent where something is about to be lost', () => {
+    // The shape of the defect: at any point where saving would cut text or
+    // drop an entry, there is something on screen.
+    for (const length of [MAX_REPORT_CHARS - WARN_WITHIN_CHARS, MAX_REPORT_CHARS, 10_000]) {
+      expect(hintFor(journalOf(0), length, 'en'), `length ${length}`).not.toBe('');
+    }
+    expect(hintFor(journalOf(MAX_REPORTS), 0, 'en')).not.toBe('');
+    expect(hintFor(journalOf(MAX_REPORTS + 20), 0, 'en')).not.toBe('');
+  });
+
+  it('counts down the room that is left', () => {
+    const left = 40;
+    expect(hintFor(journalOf(0), MAX_REPORT_CHARS - left, 'en')).toContain(String(left));
+  });
+
+  it('says the box is full rather than counting to zero', () => {
+    const full = hintFor(journalOf(0), MAX_REPORT_CHARS, 'en');
+    expect(full).not.toMatch(/\b0\b/);
+    expect(hintFor(journalOf(0), MAX_REPORT_CHARS + 500, 'en')).toBe(full);
+  });
+
+  it('puts the nearer limit first', () => {
+    // A full path is a standing fact; running out of room in this box is
+    // happening now, and only one line is on screen.
+    const both = hintFor(journalOf(MAX_REPORTS), MAX_REPORT_CHARS, 'en');
+    expect(both).toBe(hintFor(journalOf(0), MAX_REPORT_CHARS, 'en'));
+  });
+
+  it('warns before the path starts dropping, not after', () => {
+    // At the cap the next save costs the oldest entry, so the warning belongs
+    // at the cap and not one entry past it.
+    expect(hintFor(journalOf(MAX_REPORTS - 1), 0, 'en')).toBe('');
+    expect(hintFor(journalOf(MAX_REPORTS), 0, 'en')).not.toBe('');
+  });
+
+  it('speaks the language of the player', () => {
+    expect(hintFor(journalOf(0), MAX_REPORT_CHARS, 'ru')).toMatch(/[А-Яа-я]/);
+    expect(hintFor(journalOf(MAX_REPORTS), 0, 'ru')).toMatch(/[А-Яа-я]/);
   });
 });

@@ -52,7 +52,9 @@
     <dialog id="writer" class="reader">
       <article>
         <h2 id="writer-title"></h2>
-        <textarea id="writer-text" rows="4" aria-describedby="writer-title"></textarea>
+        <!-- `maxlength` so the boundary is met while typing rather than discovered
+             afterwards: `record` used to cut the text and say nothing. -->
+        <textarea id="writer-text" rows="4" maxlength="4000" aria-describedby="writer-hint"></textarea>
         <p class="hint" id="writer-hint"></p>
       </article>
       <footer class="sheet-controls">

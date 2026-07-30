@@ -2596,6 +2596,34 @@ answers it with `ORDER BY sessions.updated_at DESC`, because a player can sit at
 a group table and a private one, and the one they mean is the one they last
 played.
 
+## Seventy-third pass: two limits nobody was told about
+
+`record` in the mini app has cut a report at 4,000 characters and dropped the
+oldest entry past 500 since it was written, and the player was told neither. A
+thousand words could go without a word about it — and now that a draft survives
+a reload, they could be typed across two sittings and cut on save.
+
+The published app has **no maximum at all**: `CreatePost` validates
+`min(100)` and nothing else, storing in Firebase. Ours exists because
+`localStorage` is bounded, which is a good reason for a limit and no reason at
+all for a silent one.
+
+`#writer-hint` has been in the dialog since it was written, empty. That is where
+this goes:
+
+- `maxlength` on the box, so the boundary is met while typing rather than
+  discovered afterwards — the way every text field a person has used behaves;
+- the room left, but only in the last two hundred characters: a counter always
+  on screen is furniture, and somebody counting characters is not reflecting;
+- at 500 entries, that saving costs the oldest one, and to save a copy first —
+  which the app can do, and which is the only thing that makes the cap
+  survivable.
+
+The tests assert when something is said rather than the sentences: silence while
+there is room for both, **never** silence at a boundary where something is about
+to be lost, the nearer limit first — a full path is a standing fact and a full
+box is happening now — and the warning at the cap rather than one entry past it.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
