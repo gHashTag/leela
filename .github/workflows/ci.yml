@@ -161,6 +161,12 @@ jobs:
       # behaviour the type allows and the code assumed away.
       - run: node scripts/audit-promises.mjs
 
+      # Every word a type declares, against the code that says it.
+      # `TurnBlockedReason` listed `finished` and returned it nowhere, so the
+      # check got written three times outside the engine and one of the three
+      # asked a different question.
+      - run: node scripts/audit-reachable.mjs
+
       # One bound, declared once. Four had been written down twice and one of
       # them three times, all agreeing on the day they were copied — which is
       # why nothing had gone wrong yet and exactly why it would.

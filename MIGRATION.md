@@ -4929,6 +4929,35 @@ the die would reopen for somebody who has arrived. The eighty-second pass found
 that flag and deliberately left it alone, and following the engine here would be
 changing the game rather than the drawing.
 
+## Hundred-and-fiftieth pass: every word a type declares
+
+The pass before found `finished` declared in `TurnBlockedReason` and returned
+from nowhere, which cost three surfaces a hand-written check and one of them got
+it wrong. `audit-reachable` is that question asked of every string union in the
+repository: **is each word one that something says?**
+
+Fourteen unions, and it took two wrong versions to make it able to fail.
+
+The first looked for a word in every package at once, and both attempts to
+break it passed. `'finished'` is said by the bot's `{ say: 'finished' }`, about
+something else entirely. `'path'` is a command, a message key and a filename. A
+word common enough to appear *somewhere* is a word this check can never see
+missing — which is exactly the blind spot `audit-unread` had two passes ago,
+where one live caller of a name covered a dead export of the same name next
+door. Scoped to the declaring package it catches both: a union's producer lives
+where the union does.
+
+The second version then reported `role` in `packages/ai`, and that one is
+correct rather than defective — which is the distinction the check is really
+about. `chatType` is Telegram's four values, received and compared against
+`private`. `role`'s `assistant` turns are the model's own words, handed back by
+whoever kept the conversation. **A package that never says a word it accepts is
+not a package failing to produce one**, and the two of them are listed with that
+reason. Everything else is something this repository claims to make.
+
+Checked by putting the last pass's defect back: it names `TurnBlockedReason`
+and the word.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
