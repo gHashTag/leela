@@ -4407,6 +4407,45 @@ every body against every closing line. It also never asserted the intention that
 came back, only the plan and the text, so the theft would have been invisible
 even with the right input.
 
+## Hundred-and-twenty-eighth pass: bounded on the way out only
+
+The same measure taken to the other format. `@leela/journal` declares three
+bounds — `MAX_REPORT_CHARS`, `MAX_REPORTS`, `MAX_INTENTION_CHARS` — and every
+one of them is applied where a path is **written**. Only two were applied where
+one is read.
+
+The comment on the intention's bound states the whole argument: *a file has been
+out of the app and through an editor, so the bound is applied on the way in as
+well as out.* The report text sits eight lines above it, bounded on the way out
+only. A hand-edited entry of any length passed `isReport`, went into the store,
+and came back in every rendering of that path from then on.
+
+Clamped rather than refused, which sits against this file's other rule — *all of
+a file or none of it, because half a path is worse than no path.* The two are
+about different things, and the difference is worth writing down: a plan of 900
+is not a square anybody stood on, so a file containing one is not a path; a
+report of five thousand characters is ordinary writing that is longer than the
+store will hold. Refusing the whole path over that throws away a year of
+somebody's writing to enforce a limit on one entry of it. The intention stays
+refused rather than shortened, for the reason it always was: a question cut in
+half is a different question.
+
+**A moment, not merely a number.** `isReport` asked `Number.isFinite(at)`, so
+`1.5` and `-1` were times something wrote. The list of what a file might contain
+instead had `NaN` and `'yesterday'` and stopped there — the same failure the
+pass before found in the square's property test, remembered cases where a shape
+was meant. The wrong values are generated now, for the plan and the moment
+together, since both are whole numbers in a range. A date in the *future* is
+still accepted, and that is a decision rather than an oversight: a pure format
+cannot know what now is, a player's clock is allowed to be wrong, and an entry
+that sorts oddly is a smaller harm than writing thrown away.
+
+**And one bound was two.** `apps/miniapp/src/reports.ts` declared its own
+`MAX_REPORT_CHARS` and `MAX_REPORTS`, with the same two numbers as the format —
+one copy for what the app writes, one for what a file may carry. They agree
+until one of them is changed, and then a report the writer accepts is one the
+file refuses, with nothing to say so. Re-exported from the format now.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

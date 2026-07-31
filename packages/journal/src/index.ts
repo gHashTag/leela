@@ -68,7 +68,17 @@ export function isReport(value: unknown): value is Report {
     (entry.plan as number) <= TOTAL_PLANS &&
     typeof entry.text === 'string' &&
     entry.text.length > 0 &&
-    Number.isFinite(entry.at)
+    // A moment, not merely a number. `Number.isFinite` let through `1.5` and
+    // `-1`, which are not times anything wrote, and a file is the least
+    // trustworthy thing either surface handles.
+    //
+    // A date in the future is still accepted, and that is deliberate rather
+    // than overlooked: this cannot know what "now" is without being told, a
+    // player's clock is genuinely allowed to be wrong, and an entry read as
+    // newer than it is sorts oddly, while an entry refused is writing thrown
+    // away. Ordering is the smaller harm.
+    Number.isInteger(entry.at) &&
+    (entry.at as number) >= 0
   );
 }
 
@@ -122,10 +132,29 @@ export function parseDocument(text: string): JournalDocument | null {
   // was nowhere in the return value to put it.
   const asked = typeof document.intention === 'string' ? document.intention.trim() : '';
 
+  // Bounded on the way in, as the intention below is and for the reason stated
+  // there: a file has been out of the app and through an editor. It used to be
+  // bounded only where the app *writes* one, so a hand-edited entry of any
+  // length went into the store and into every rendering of the path from then
+  // on.
+  //
+  // Clamped rather than refused, which sits against this file's other rule —
+  // all of a file or none of it, because half a path is worse than no path.
+  // The two are about different things. A plan of 900 is not a square anybody
+  // stood on, so a file containing one is not a path; a report of five thousand
+  // characters is ordinary writing that is longer than the store will hold.
+  // Refusing the whole path over that would throw away a year of somebody's
+  // writing to enforce a limit on one entry of it.
+  const entries = (document.entries as Report[]).map((entry) =>
+    entry.text.length > MAX_REPORT_CHARS
+      ? { ...entry, text: entry.text.slice(0, MAX_REPORT_CHARS) }
+      : entry,
+  );
+
   return {
     schemaVersion: document.schemaVersion,
     app: 'leela',
-    entries: document.entries as Report[],
+    entries,
     ...(asked.length > 0 && asked.length <= MAX_INTENTION_CHARS ? { intention: asked } : {}),
   };
 }

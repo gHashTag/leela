@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_REPORTS,
+  MAX_REPORT_CHARS,
   SCHEMA_VERSION,
   fileName,
   isReport,
@@ -40,6 +41,13 @@ describe('what is a report', () => {
   });
 
   it('is not any of the things a file might contain instead', () => {
+    // The plan and the moment are both numbers with the same kind of rule —
+    // whole, in range — so the wrong values for them are generated rather than
+    // remembered. The list they replace had `NaN` and `'yesterday'` for the
+    // moment and stopped there, and `1.5` and `-1` went through: neither is a
+    // time anything wrote, and a file has been through an editor.
+    const notNumbers = [NaN, Infinity, -Infinity, 1.5, '1', null, undefined, {}];
+
     const notReports: unknown[] = [
       null,
       42,
@@ -48,11 +56,10 @@ describe('what is a report', () => {
       { plan: 41, text: 'x' },
       { plan: 0, text: 'x', at: 1 },
       { plan: 73, text: 'x', at: 1 },
-      { plan: 41.5, text: 'x', at: 1 },
       { plan: 41, text: '', at: 1 },
-      { plan: 41, text: 'x', at: NaN },
-      { plan: 41, text: 'x', at: 'yesterday' },
-      { plan: '41', text: 'x', at: 1 },
+      ...notNumbers.map((plan) => ({ plan, text: 'x', at: 1 })),
+      ...notNumbers.map((at) => ({ plan: 41, text: 'x', at })),
+      { plan: 41, text: 'x', at: -1 },
     ];
 
     for (const value of notReports) {
@@ -232,5 +239,77 @@ describe('the question the answers were written for', () => {
       const text = JSON.stringify({ schemaVersion: 1, app: 'leela', entries, intention });
       expect(parseDocument(text)?.intention, JSON.stringify(intention)).toBeUndefined();
     }
+  });
+});
+
+describe('what a file may carry is what the app may write', () => {
+  /**
+   * Every bound this format declares is applied where a path is *written* —
+   * the writer stops a report at `MAX_REPORT_CHARS`, the merge drops past
+   * `MAX_REPORTS`, the intention is refused over `MAX_INTENTION_CHARS`. Only
+   * two of the three were applied where a path is *read*.
+   *
+   * A file is the one thing here that has been out of the app: through a chat,
+   * onto a disk, possibly through an editor. The comment on the intention's
+   * bound says exactly that and draws exactly that conclusion — and the report
+   * text beside it was bounded on the way out only, so an entry of any length
+   * at all went into the store and into every rendering of the path from then
+   * on.
+   *
+   * Stated against the constants rather than against their values: raising a
+   * bound must not leave this asserting the old number.
+   */
+  const overLong = (chars: number) => 'x'.repeat(chars);
+
+  it('shortens a report longer than the format allows, and keeps the rest', () => {
+    const file = JSON.stringify({
+      schemaVersion: SCHEMA_VERSION,
+      app: 'leela',
+      entries: [
+        { plan: 5, text: 'a short one', at: 1 },
+        { plan: 41, text: overLong(MAX_REPORT_CHARS + 1_000), at: 2 },
+        { plan: 12, text: 'another short one', at: 3 },
+      ],
+    });
+
+    const back = parseDocument(file);
+
+    expect(back?.entries).toHaveLength(3);
+    expect(back?.entries[1]?.text.length, 'inside the bound').toBe(MAX_REPORT_CHARS);
+    expect(back?.entries[0]?.text, 'and the others untouched').toBe('a short one');
+    expect(back?.entries[2]?.text).toBe('another short one');
+  });
+
+  it('leaves a report of exactly the bound alone', () => {
+    // The edge, which is the case a clamp gets wrong in the other direction.
+    const file = JSON.stringify({
+      schemaVersion: SCHEMA_VERSION,
+      app: 'leela',
+      entries: [{ plan: 5, text: overLong(MAX_REPORT_CHARS), at: 1 }],
+    });
+
+    expect(parseDocument(file)?.entries[0]?.text.length).toBe(MAX_REPORT_CHARS);
+  });
+
+  it('refuses an intention longer than the format allows', () => {
+    // Dropped rather than shortened, which is the older decision and stays: a
+    // question cut in half is a different question, and a report cut short is
+    // still most of what was said.
+    const file = JSON.stringify({
+      ...toDocument(path(1)),
+      intention: overLong(MAX_INTENTION_CHARS + 1),
+    });
+
+    expect(parseDocument(file)?.intention).toBeUndefined();
+  });
+
+  it('keeps a path down to the most it may hold, however long the file is', () => {
+    // The count, which is enforced where paths are joined rather than where one
+    // is read — so it is asserted there, at the place that does it.
+    const many = Array.from({ length: MAX_REPORTS + 50 }, (_, index) =>
+      report(((index % 72) + 1), `entry ${index}`, index + 1),
+    );
+
+    expect(merge([], many).length).toBe(MAX_REPORTS);
   });
 });

@@ -24,6 +24,8 @@ import { messageFor, type Language } from '@leela/content';
 import {
   revisited as revisitedEntries,
   writingsOn as writingsOnEntries,
+  MAX_REPORTS,
+  MAX_REPORT_CHARS,
   type Revisit,
 } from '@leela/journal';
 import type { GameStorage } from './state';
@@ -53,11 +55,19 @@ export interface Journal {
 
 export const EMPTY: Journal = { reported: true, entries: [] };
 
-/** The longest report kept. Enough for a page; a bound, because storage is one. */
-export const MAX_REPORT_CHARS = 4000;
-
-/** The most reports kept, oldest dropped first. */
-export const MAX_REPORTS = 500;
+/**
+ * The bounds, from the format rather than beside it.
+ *
+ * These were declared here as well, with the same two numbers — one copy for
+ * what the app writes and one for what a file may carry. Two copies of one
+ * bound is the shape this repository has met before: they agree until one of
+ * them is changed, and then a report the writer accepts is one the file refuses,
+ * or the other way about, and nothing says so.
+ *
+ * Re-exported rather than imported-and-hidden, because the writer's callers ask
+ * this module what the limits are and there is no reason to make them ask two.
+ */
+export { MAX_REPORTS, MAX_REPORT_CHARS };
 
 function isReport(value: unknown): value is Report {
   if (typeof value !== 'object' || value === null) return false;
