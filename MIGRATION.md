@@ -4099,6 +4099,37 @@ even through a store that loses half of it; and three reports written inside one
 millisecond, which is the tie that has now bitten twice — `/path` once, and
 `roomOf` the pass before.
 
+## Hundred-and-nineteenth pass: a browser that keeps some of it
+
+Every storage test until now handed the mini app one that worked or one that
+refused everything. A browser does neither. It fills up, it is cleared by a
+setting, a tab closes mid-write — and what is left is *some* of the six kinds of
+key it keeps.
+
+**The first partial state tried found the worst defect available.** A storage
+that takes the table and refuses the journal — which is what a full quota looks
+like, the table being small and the journal being the thing that grows —
+answered *"Written. You may throw."*, opened the gate, and lost the account. On
+the next load there was no record of it and no obligation to write it again.
+
+The record the game exists to produce, dropped under a sentence saying it had
+been kept.
+
+`saveJournal` used to swallow the refusal, which is the bargain the board makes:
+a window that cannot store still plays. The board can afford it — a lost
+position is a game somebody restarts. A lost report is not that.
+
+So the failure is reported, and the caller does the only two honest things at
+once: **the game goes on**, because the account is in hand for this session
+either way and a game stopped by a browser setting is a game lost to nothing;
+and the player is told, while their words are still on the screen, that this
+browser will not keep them and there is a copy to be saved from "My path".
+
+Two more partial states, both fine and now held: a journal whose table was lost
+still opens — a year of somebody's path is not thrown away because the position
+it was written at has gone — and a table written halfway is not a game, is not
+readable, and leaves the writing beside it untouched.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

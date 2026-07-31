@@ -992,7 +992,10 @@ function saveReport(): void {
     return;
   }
 
-  saveJournalFor(localStorage, writer.id, after);
+  // Whether the account actually landed. The game goes on either way — it is in
+  // hand for this session — but a player whose browser refuses to keep it is
+  // owed the truth while their words are still on the screen.
+  const kept = saveJournalFor(localStorage, writer.id, after);
   // The seat has answered: the engine's gate is what `draw` reads.
   session = submitReport(session, writer.id, Date.now());
   keepTable();
@@ -1012,11 +1015,13 @@ function saveReport(): void {
   writingFor = null;
 
   announce(
-    said === 'finished'
-      ? messageFor(language, 'app.reportSavedDone')
-      : said === 'not-your-turn'
-        ? messageFor(language, 'app.reportSavedTurn', { seat: session.turnIndex + 1 })
-        : messageFor(language, 'app.reportSaved'),
+    !kept
+      ? messageFor(language, 'app.reportUnkept')
+      : said === 'finished'
+        ? messageFor(language, 'app.reportSavedDone')
+        : said === 'not-your-turn'
+          ? messageFor(language, 'app.reportSavedTurn', { seat: session.turnIndex + 1 })
+          : messageFor(language, 'app.reportSaved'),
   );
 }
 

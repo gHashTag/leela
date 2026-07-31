@@ -290,6 +290,11 @@ const EN = {
   // game is the one on Cosmic Consciousness, and being told to throw again
   // while the die is dimmed is the app describing a game the player is not in.
   'app.reportSavedDone': 'Written. The game is complete. 🕉',
+  // The account was taken and could not be stored. Said rather than swallowed:
+  // it used to answer "Written. You may throw." and the writing was gone by the
+  // next load, with nothing to say it had ever existed.
+  'app.reportUnkept':
+    'Written, and this browser will not keep it — save a copy from “My path” before you close the tab.',
   'app.reportSavedTurn': 'Written. Player {seat} throws next.',
   'app.reportEmpty': 'A report is something written. Nothing was.',
   'app.seatTurn': 'Player {seat}',
@@ -566,6 +571,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.reportSave': 'Сохранить',
   'app.reportSaved': 'Записано. Можно бросать.',
   'app.reportSavedDone': 'Записано. Игра завершена. 🕉',
+  'app.reportUnkept':
+    'Записано, но этот браузер не сохранит — заберите копию в «Моём пути», прежде чем закрыть вкладку.',
   'app.reportSavedTurn': 'Записано. Ход игрока {seat}.',
   'app.reportEmpty': 'Отчёт — это то, что написано. Здесь не написано ничего.',
   'app.seatTurn': 'Игрок {seat}',

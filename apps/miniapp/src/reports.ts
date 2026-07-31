@@ -112,8 +112,8 @@ export function saveJournalFor(
   storage: GameStorage | undefined,
   playerId: string,
   journal: Journal,
-): void {
-  saveJournal(storage, journal, journalKeyFor(playerId));
+): boolean {
+  return saveJournal(storage, journal, journalKeyFor(playerId));
 }
 
 export function loadJournal(storage: GameStorage | undefined, key = REPORTS_KEY): Journal {
@@ -127,16 +127,29 @@ export function loadJournal(storage: GameStorage | undefined, key = REPORTS_KEY)
   }
 }
 
+/**
+ * Keep a journal, and say whether it was kept.
+ *
+ * It used to swallow the refusal and return nothing, which is the same bargain
+ * the board makes — a window that cannot store still plays. The board can
+ * afford it: a lost position is a game somebody restarts. **A lost report is the
+ * record the game exists to produce**, and it was being lost under a sentence
+ * saying it had been written.
+ *
+ * So the failure is reported. What the caller does with it is the caller's, and
+ * the answer is not to stop the game: the account is in hand for this session
+ * either way. It is to stop saying it was kept.
+ */
 export function saveJournal(
   storage: GameStorage | undefined,
   journal: Journal,
   key = REPORTS_KEY,
-): void {
+): boolean {
   try {
     storage?.setItem(key, JSON.stringify(journal));
+    return true;
   } catch {
-    // Storage disabled: the game still plays, and still asks for a report. It
-    // simply forgets them, which is the same bargain the board already makes.
+    return false;
   }
 }
 
