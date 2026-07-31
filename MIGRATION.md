@@ -4227,6 +4227,48 @@ Not through `announce` — `lineFor` discards an announcement when a move is bei
 described, rightly, because an announcement is about the turn. This is not about
 the turn. It is about the browser.
 
+## Hundred-and-twenty-third pass: the floor, and the rule as a check
+
+Four passes running found one defect each, and all four were the same defect: a
+model that never returned, a download that never returned, a room that would not
+save, an account that would not record. Every one is behaviour the *type*
+permits and the code assumed away. Every one was found by going looking.
+
+**The reads had never been looked at.** About thirty of them — `/path`,
+`/returns`, `/save`, the journey handed to the companion — each assuming a store
+that answers. A sink that throws on `history` took `/path` out of the middleware
+and left the player looking at nothing at all.
+
+Guarding thirty call sites would have guarded thirty of them. Instead there is
+now a floor: an outermost middleware under which **whatever fails, the player is
+told that something did.** The particular sentences stay where they are; they
+say more and are worth more. This is what is underneath when there is nothing
+particular to say. `bot.catch` is not this — it covers the polling runner, so a
+webhook deployment had no floor at all, and it cannot answer the player.
+
+The test is over the whole surface rather than the sites anyone thought of:
+every command `bot.ts` registers, against a store and a sink that refuse
+everything, still says something. `registered()` reads the source, so a command
+added tomorrow is covered the day it is added.
+
+**And the rule is a check now.** `audit-promises` reads the source for every
+dependency a caller may supply and asks whether any test hands it an
+implementation that throws — or, worse, one that never settles, the failure no
+`catch` can see. It found four untried points on its first run and two more once
+its own proximity rule was tightened; the loose version had called
+`LanguageModel.complete` covered on the strength of a hostile `readFile` three
+hundred lines away, which is how a tool comes to report that everything is fine.
+
+Of the six, four already behaved correctly by accident and are now written down
+— an SQLite driver that throws, a pruning schedule that refuses, a legacy `idFor`
+lookup that is down, all of which fall back or fail one row and carry on. One
+was real: **a supervisor whose own `sleep` rejected left the loop**, which ends
+the process, so the bot stayed down because the *backoff* went wrong. The one
+thing a supervisor may not do is give up for its own reasons. And one is
+exempted with a reason rather than a test: an exception inside a DOM click
+listener is the browser's to report, and the mini app already asserts no window
+errors on load.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

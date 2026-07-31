@@ -150,6 +150,11 @@ jobs:
       # passes came from one that had a seat of its own and did not ask for it.
       - run: node scripts/audit-whose.mjs
 
+      # Every dependency a caller supplies, against a test that breaks it on
+      # purpose. Four passes running found one defect each, all of them
+      # behaviour the type allows and the code assumed away.
+      - run: node scripts/audit-promises.mjs
+
       # Every script starts under the runtime it names, and every audit is
       # either run here or says in its own header why it cannot be. audit-copies
       # - the check that reads eighteen copies of the board - sat broken under

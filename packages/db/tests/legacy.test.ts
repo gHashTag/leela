@@ -350,3 +350,38 @@ describe('a dump with holes in it', () => {
     expect(report.failures[0].reason).toBe('a bare string');
   });
 });
+
+describe('an id that cannot be assigned', () => {
+  /**
+   * `idFor` is supplied by whoever runs the migration — a lookup against a
+   * table that may be down, a generator that may collide. A migration that
+   * stops on the first one it cannot name would leave an operator to find out
+   * how far it got by reading the database.
+   *
+   * It does not stop: the row becomes a failure with the reason attached, and
+   * everything else in the export still migrates. Written down because that
+   * rests on one `try` inside the loop, and a `try` around the loop would read
+   * almost the same and behave nothing like it.
+   */
+  it('fails that row and migrates the rest', () => {
+    const users = [
+      legacy({ owner: 'first', plan: 10 }),
+      legacy({ owner: 'second', plan: 20 }),
+      legacy({ owner: 'third', plan: 30 }),
+    ];
+
+    // The options form, which is the one that names what is being broken:
+    // `idFor` is a lookup somebody supplies, and a lookup can be down.
+    const report = migrateBatch(users, {
+      idFor: (user) => {
+        if (user.owner === 'second') throw new Error('the directory is down');
+        return `new-${user.owner}`;
+      },
+    });
+
+    expect(report.migrated.map((player) => player.legacyId)).toEqual(['first', 'third']);
+    expect(report.failures).toHaveLength(1);
+    expect(report.failures[0]?.reason).toMatch(/directory is down/);
+    expect(report.failures[0]?.owner, 'and which row it was').toBe('second');
+  });
+});

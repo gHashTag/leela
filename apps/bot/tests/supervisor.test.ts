@@ -196,3 +196,31 @@ describe('supervise', () => {
     expect(h.lines[0]).toContain('ETIMEDOUT');
   });
 });
+
+describe('a supervisor whose own wait fails', () => {
+  /**
+   * The backoff is injected, and the injected thing is a promise like any
+   * other. A rejected one used to leave the loop — which ends the process, so
+   * the bot stayed down because the *waiting* went wrong. A supervisor is the
+   * one thing in a deployment that may not give up for its own reasons.
+   */
+  it('carries on supervising', async () => {
+    const lines: string[] = [];
+    let starts = 0;
+
+    await supervise({
+      start: async () => {
+        starts += 1;
+        throw new Error('polling died');
+      },
+      sleep: async () => {
+        throw new Error('no timers here');
+      },
+      log: (line) => lines.push(line),
+      maxAttempts: 3,
+    });
+
+    expect(starts, 'it kept bringing the bot back').toBe(3);
+    expect(lines.join(' ')).toMatch(/the wait itself failed/);
+  });
+});

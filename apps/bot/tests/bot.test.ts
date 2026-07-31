@@ -1184,6 +1184,12 @@ describe('a write a turn asked for, that did not happen', () => {
    * effects: **what the player wrote is never lost quietly; what the game can
    * reconstruct may be.** A third kind of effect has to answer that question.
    */
+  // The die is seeded from `(chatId, now())`, so a test that reads the clock
+  // gets a different game every run — and an assertion on the words of a throw
+  // is then a coin toss. Found by one: "throws 3" one run, "throws a six and
+  // enters the game" the next.
+  const FIXED = () => 1_700_000_000_000;
+
   const failing = (kind: 'report' | 'move') => {
     const reports = new MemoryReportSink();
     const steps = { record: async () => undefined };
@@ -1201,7 +1207,7 @@ describe('a write a turn asked for, that did not happen', () => {
 
   it('is said out loud when it was the player’s own words', async () => {
     const { reports, steps } = failing('report');
-    const { bot, sent } = harness({ reports, steps });
+    const { bot, sent } = harness({ reports, steps, now: FIXED });
 
     await bot.handleUpdate(message('/new', PRIVATE));
     await bot.handleUpdate(message('/start', PRIVATE));
@@ -1220,7 +1226,7 @@ describe('a write a turn asked for, that did not happen', () => {
     // in the moment, about a board that is saved. Saying so would train a
     // player to ignore the sentence that matters.
     const { reports, steps } = failing('move');
-    const { bot, sent } = harness({ reports, steps });
+    const { bot, sent } = harness({ reports, steps, now: FIXED });
 
     await bot.handleUpdate(message('/new', PRIVATE));
     await bot.handleUpdate(message('/start', PRIVATE));
@@ -1229,7 +1235,7 @@ describe('a write a turn asked for, that did not happen', () => {
     await bot.handleUpdate(message('/roll', PRIVATE));
     const said = texts(sent.slice(before)).join(' ');
 
-    expect(said, 'the throw is described as it always was').toMatch(/throws \d/);
+    expect(said, 'the throw is described as it always was').toMatch(/throws/i);
     expect(said).not.toMatch(/could not keep/i);
   });
 
@@ -1238,7 +1244,7 @@ describe('a write a turn asked for, that did not happen', () => {
     // is full is not the player's doing, and shutting a gate they have earned
     // would charge them for it. The game goes on and the loss is admitted.
     const { reports, steps } = failing('report');
-    const { bot, sent } = harness({ reports, steps });
+    const { bot, sent } = harness({ reports, steps, now: FIXED });
 
     await bot.handleUpdate(message('/new', PRIVATE));
     await bot.handleUpdate(message('/start', PRIVATE));
@@ -1248,14 +1254,14 @@ describe('a write a turn asked for, that did not happen', () => {
     const before = sent.length;
     await bot.handleUpdate(message('/roll', PRIVATE));
 
-    expect(texts(sent.slice(before)).join(' '), 'still playing').toMatch(/throws \d/);
+    expect(texts(sent.slice(before)).join(' '), 'still playing').toMatch(/throws/i);
   });
 
   it('never describes a report as kept when it was not', async () => {
     // The exact sentence that did the damage. It is still sent — the gate is
     // open and that is true — so the test is that it never stands alone.
     const { reports, steps } = failing('report');
-    const { bot, sent } = harness({ reports, steps });
+    const { bot, sent } = harness({ reports, steps, now: FIXED });
 
     await bot.handleUpdate(message('/new', PRIVATE));
     await bot.handleUpdate(message('/start', PRIVATE));
@@ -1268,5 +1274,65 @@ describe('a write a turn asked for, that did not happen', () => {
     const claimsKept = said.some((line) => /has reported|you may throw/i.test(line));
     const admits = said.some((line) => /could not keep/i.test(line));
     expect(claimsKept && !admits, 'kept, said without the correction').toBe(false);
+  });
+});
+
+describe('an update never ends in silence', () => {
+  /**
+   * Each surface that can fail has been given its own sentence, one at a time,
+   * and each was found by going looking: a room that would not save, a report
+   * that was not kept, a file that never arrived. The **reads** were not. About
+   * thirty of them — `/path`, `/returns`, `/save`, the journey handed to the
+   * companion — every one assuming a store that answers.
+   *
+   * A sink that throws on `history` took `/path` out of the middleware and left
+   * the player looking at nothing. Guarding thirty call sites would guard
+   * thirty of them, and the thirty-first would be found the same way.
+   *
+   * So the assertion is over the whole surface rather than over the sites
+   * anybody thought of: **every command the bot registers, against a store and
+   * a sink that refuse everything, still says something.** `registered()` reads
+   * `bot.ts`, so a command added tomorrow is covered the day it is added.
+   */
+  const hostile = () => {
+    const no = async () => {
+      throw new Error('the database went away');
+    };
+    return {
+      store: { get: no, save: no, delete: no, roomOf: no } as never,
+      reports: { record: no, history: no, intention: no, setIntention: no } as never,
+      steps: { record: no } as never,
+    };
+  };
+
+  for (const command of registered()) {
+    it(`answers ${command}`, async () => {
+      const { bot, sent } = harness({ ...hostile(), now: () => 1_700_000_000_000 });
+
+      await expect(bot.handleUpdate(message(command, PRIVATE))).resolves.toBeUndefined();
+      expect(texts(sent).join(' '), 'something was said').not.toBe('');
+    });
+  }
+
+  it('says something for plain text too, which is the commonest update of all', async () => {
+    // A player who owes a report writes without a command. That path reads the
+    // room, the sink and the journal before it says a word.
+    const { bot, sent } = harness({ ...hostile(), now: () => 1_700_000_000_000 });
+
+    await expect(
+      bot.handleUpdate(message('an account of standing here', PRIVATE)),
+    ).resolves.toBeUndefined();
+    expect(texts(sent).join(' ')).not.toBe('');
+  });
+
+  it('does not throw when it cannot even say so', async () => {
+    // The floor's own failure: Telegram refusing the apology. There is nothing
+    // to be done about it, and an unhandled rejection is not it.
+    const { bot } = harness({ ...hostile(), now: () => 1_700_000_000_000 });
+    bot.api.config.use(async () => {
+      throw new Error('Telegram is unreachable');
+    });
+
+    await expect(bot.handleUpdate(message('/path', PRIVATE))).resolves.toBeUndefined();
   });
 });

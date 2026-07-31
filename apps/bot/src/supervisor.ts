@@ -112,7 +112,14 @@ export async function supervise({
       if (!decision.retry) return;
 
       log(`[bot] retrying in ${Math.round(decision.delayMs / 1000)}s`);
-      await sleep(decision.delayMs);
+      try {
+        await sleep(decision.delayMs);
+      } catch (waiting) {
+        // The one thing a supervisor may not do is give up because *it* failed.
+        // A rejected wait used to leave this loop, which ends the process — the
+        // bot staying down because the backoff, of all things, went wrong.
+        log(`[bot] the wait itself failed (${String(waiting)}); retrying now`);
+      }
     }
   }
 }

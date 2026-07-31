@@ -356,3 +356,48 @@ describe('forgetting finished tables while the bot is running', () => {
     expect(clocked.scheduled()).toBe(0);
   });
 });
+
+describe('a store that will not open', () => {
+  /**
+   * Both of these hold by accident, which is the reason to write them down.
+   *
+   * `openStorage` wraps the driver *and* the pruning schedule in one `try`, so
+   * a failure in either falls back to memory and the bot plays on saying so.
+   * Move `sweep()` a line out of that block and durability goes silently — the
+   * bot would keep announcing a database it does not have.
+   *
+   * A path that does not exist was already tested. A driver that throws on a
+   * path that does exist is a different failure: a locked file, a corrupt
+   * header, a build with no SQLite in it at all.
+   */
+  it('falls back to memory when the driver refuses', () => {
+    const lines: string[] = [];
+    const storage = openStorage({
+      path: '/tmp/leela-driver-refuses.db',
+      log: (line) => lines.push(line),
+      openQueries: () => {
+        throw new Error('no SQLite in this build');
+      },
+    });
+
+    expect(storage.durable, 'not claiming a database it has not got').toBe(false);
+    expect(storage.failure).toBeTruthy();
+    expect(lines.join(' '), 'and an operator is told which path').toMatch(/leela-driver-refuses/);
+  });
+
+  it('falls back to memory when the sweep cannot be scheduled', () => {
+    // A timer that refuses is not a reason to lose the games, but claiming a
+    // database while the pruning never runs would be worse: tables accumulate
+    // for months and nothing says so.
+    const storage = openStorage({
+      path: '/tmp/leela-schedule-refuses.db',
+      log: () => undefined,
+      schedule: () => {
+        throw new Error('no timers here');
+      },
+    });
+
+    expect(storage.durable).toBe(false);
+    expect(storage.failure).toBeTruthy();
+  });
+});

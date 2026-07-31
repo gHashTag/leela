@@ -219,6 +219,9 @@ const EN = {
   // they wrote it, and a full database is not their doing — but the account
   // itself was lost, and it used to be lost under "you may throw".
   'report.notKept': 'Your throw stands, but I could not keep what you wrote. Copy it somewhere before it scrolls away.',
+  // The floor. Said when nothing more precise is known — which is better than
+  // the silence it replaces, and honest about not knowing.
+  'chat.wentWrong': 'Something went wrong handling that. Try it again in a moment.',
   'file.tooBig': 'That file is too large to be a path.',
   'file.notKept': 'This bot is not keeping reports, so there is nowhere to put a path.',
   'file.saved': {
@@ -533,6 +536,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'file.unreadable': 'Это не путь, записанный Лилой. Сохраните его в мини-приложении.',
   'file.notFetched': 'Не удалось получить файл. Ничего не изменилось — отправьте ещё раз через мгновение.',
   'report.notKept': 'Бросок засчитан, но записанное сохранить не удалось. Скопируйте его, пока оно не ушло вверх.',
+  'chat.wentWrong': 'Что-то пошло не так при обработке. Попробуйте ещё раз через мгновение.',
   'file.tooBig': 'Этот файл слишком велик, чтобы быть путём.',
   'file.notKept': 'Этот бот не хранит отчёты, поэтому путь положить некуда.',
   'file.saved': {

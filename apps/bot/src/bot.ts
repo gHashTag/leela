@@ -113,6 +113,41 @@ export function createBot({
   // What each player has asked the companion, in the order it was said.
   const conversations = new Conversations();
 
+  /**
+   * The floor under everything below: an update never ends in silence.
+   *
+   * Each surface that can fail has been given its own sentence one at a time —
+   * a room that would not save, a report that was not kept, a file that never
+   * arrived — and each was found by going looking. The reads were not: about
+   * thirty of them, `/path` and `/returns` and `/save` and the journey the
+   * companion is given, every one of them assuming a store that answers. A sink
+   * that throws on `history` took `/path` out of the middleware and left the
+   * player looking at nothing.
+   *
+   * Guarding thirty call sites would guard thirty of them. This guards the
+   * shape: **whatever fails, the player is told that something did.** The
+   * particular sentences stay where they are — they say more, and they are
+   * worth more — and this is what is underneath when there is no particular
+   * sentence to say.
+   *
+   * `bot.catch` is not this. It covers the polling runner, so a webhook
+   * deployment has no floor at all, and it cannot answer the player.
+   */
+  bot.use(async (ctx, next) => {
+    try {
+      await next();
+    } catch (error) {
+      log(`[bot] unhandled: ${String(error)}`);
+      try {
+        await ctx.reply(messageFor(languageOf(ctx), 'chat.wentWrong'));
+      } catch (replying) {
+        // The failure was Telegram itself, or the chat is gone. Nothing to be
+        // done and nothing to be said, but an operator can still be told.
+        log(`[bot] could not even say so: ${String(replying)}`);
+      }
+    }
+  });
+
   // Without this there is no way to tell "nothing arrived" from "it arrived
   // and the answer failed" — which is exactly the question asked the first
   // time the bot appeared not to work.
@@ -201,13 +236,6 @@ export function createBot({
     return match ? `/${match[1]}` : 'the command';
   }
 
-  /**
-   * Apply a command's effects after its room has been saved.
-   *
-   * A report that fails to store must not stop the reply — the player has
-   * written it and the gate has opened; losing the text is worse handled by
-   * telling them nothing happened.
-   */
   /**
    * Perform the writes a turn asked for, and say when one did not happen.
    *
