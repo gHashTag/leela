@@ -197,3 +197,36 @@ describe('a game played through the app is the game the engine plays', () => {
     expect([...seen].sort(), 'a long enough game meets both').toEqual(['arrow 🏹', 'snake 🐍']);
   });
 });
+
+describe('one file knows what a phone is', () => {
+  /**
+   * `device.ts` is the only place that imports a native library. Everything
+   * else takes a `Keeper` or a `Store` and is content with a `Map`, which is
+   * what lets a path be tested without a simulator — and what keeps the file
+   * that cannot be tested small enough to read in one sitting.
+   *
+   * The shape rather than the name: any native import anywhere else drags the
+   * whole app onto a device to be checked at all, and the surfaces before this
+   * one each took a pass to get back out of that.
+   */
+  const NATIVE = /from '(react-native|@react-native|expo-|@expo)/;
+
+  it('and nothing else imports one', () => {
+    const offenders = filesUnder(SRC)
+      .filter((file) => file.endsWith('.ts'))
+      .filter((file) => NATIVE.test(readFileSync(file, 'utf8')))
+      .map((file) => relative(SRC, file));
+
+    expect(offenders).toEqual(['device.ts']);
+  });
+
+  it('and the screen is the only place that draws', () => {
+    // `App.tsx` may import react-native; it is the drawing. What it must not
+    // do is decide, which the rules above already assert.
+    const screens = filesUnder(SRC)
+      .filter((file) => file.endsWith('.tsx'))
+      .map((file) => relative(SRC, file));
+
+    expect(screens).toEqual(['App.tsx']);
+  });
+});

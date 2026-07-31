@@ -136,3 +136,86 @@ export function takeAccount(
 export function writingsOn(journal: Journal, plan: number): Report[] {
   return journal.entries.filter((entry) => entry.plan === plan);
 }
+
+/**
+ * Somewhere that survives the app closing.
+ *
+ * A phone's real store is asynchronous — `AsyncStorage` is what the published
+ * app used, and every alternative on a device is a promise too — so it is a
+ * second interface rather than a stricter version of `Store`. The synchronous
+ * one above is the session's own copy, which is what the screen draws from; a
+ * keeper is where that copy goes so it is still there tomorrow.
+ *
+ * Two methods, and `write` answers rather than throwing, for the reason every
+ * writer in this repository answers: a caller that cannot ask whether the words
+ * landed will say they did.
+ */
+export interface Keeper {
+  read(): Promise<string | null>;
+  write(value: string): Promise<boolean>;
+}
+
+/**
+ * How long a device may take to keep a path.
+ *
+ * `Keeper` is an injection point, and nothing in its type says it ever returns.
+ * A promise with no clock is the failure a `catch` cannot see — `@leela/ai`
+ * met it with a model that never answered, and `apps/bot` with a download that
+ * never arrived — and here it would be worse than either: the write happens
+ * while a player is looking at their own words, and a screen that waits forever
+ * for a disk is a screen that has eaten them.
+ */
+export const KEEP_TIMEOUT_MS = 5_000;
+
+/** Whatever it is, settled within `ms`. */
+async function within<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      work,
+      new Promise<T>((resolve) => {
+        timer = setTimeout(() => resolve(fallback), ms);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Read the path back at startup.
+ *
+ * Anything a keeper cannot give is an empty path rather than a crash: a device
+ * store has been on a disk between two runs of the app, and half a write is
+ * what a process killed mid-save leaves behind.
+ */
+export async function loadKept(
+  keeper: Keeper | undefined,
+  timeoutMs = KEEP_TIMEOUT_MS,
+): Promise<Journal> {
+  if (!keeper) return EMPTY;
+
+  try {
+    const raw = await within(keeper.read(), timeoutMs, null);
+    if (raw === null) return EMPTY;
+
+    return load({ getItem: () => raw, setItem: () => undefined });
+  } catch {
+    return EMPTY;
+  }
+}
+
+/** Keep the path, and say whether it was kept. */
+export async function keep(
+  keeper: Keeper | undefined,
+  journal: Journal,
+  timeoutMs = KEEP_TIMEOUT_MS,
+): Promise<boolean> {
+  if (!keeper) return false;
+
+  try {
+    return await within(keeper.write(JSON.stringify(journal)), timeoutMs, false);
+  } catch {
+    return false;
+  }
+}

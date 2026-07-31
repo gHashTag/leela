@@ -4965,12 +4965,46 @@ a stylesheet as the size of the board — a check that cries wolf on a layout is
 one somebody deletes rather than obeys, so it reads the game code with the
 styles taken out.
 
-**What the phone still lacks:** a store that survives the app closing. The
-account is held for the session and `save` is asked whether it landed, so the
-sentence under the writer is true rather than hopeful — but a device store is a
-native dependency this app does not yet carry, and until it does, closing the
-app loses the path. Still to bring across from `leela`: RevenueCat, notifee and
-Sentry.
+**The path survives the app closing now.** `AsyncStorage`, which is what the
+published app used — `OfflinePlayers.ts` keeps its six players there — so a
+phone that has run both is not holding two unrelated things in two unrelated
+ways. `device.ts` is the only file in this app that knows what a phone is, and a
+test says so: everything else takes a `Keeper` or a `Store` and is content with
+a `Map`, which is what lets a path be tested without a simulator.
+
+A `Keeper` is asynchronous, so it gets a deadline for the reason
+`packages/ai` and `apps/bot` did: nothing in its type says it ever returns, and
+a promise with no clock is the failure a `catch` cannot see. Here it would be
+worse than in either — the write happens while the player is looking at the
+words they just typed, and a screen still waiting on a disk is a screen that has
+eaten them.
+
+**Two identifiers, not one.** This file said *keep the `applicationId` and the
+bundle id* as though they were the same string, and the app was built with one
+of them on both platforms. They are: **`com.leelagame`** on Android
+(`android/app/build.gradle`) and **`xyz.ghashtag.dharma`** on iOS
+(`ios/leela.xcodeproj/project.pbxproj`), and the home screen calls it *Leela
+Chakra* (`CFBundleDisplayName`). An iOS build under the wrong identifier is a
+different application to the store, to the keychain, and to every player who has
+the published one installed. Asserted now rather than commented.
+
+Still to bring across from `leela`: RevenueCat, notifee and Sentry.
+
+**The published app cannot be rebuilt from its own source, and the reason is not
+Xcode.** It has **no JavaScript lockfile at all** — `Gemfile.lock` and
+`Podfile.lock` are there, `yarn.lock` and `package-lock.json` are not — so its
+dependencies are caret ranges resolved fresh at every install. Three years on
+they resolve to versions its own tooling cannot read:
+`react-native-gesture-handler` is declared `^2.9.0` and comes back as 2.32.0,
+whose Android manifest carries no `package=` attribute, and React Native 0.70's
+CLI reads Android manifests while autolinking for *iOS* — so `pod install` dies
+before a single file is compiled. `@react-native/eslint-config@0.70.4` is
+declared too and has never existed at that version, so neither `yarn` nor `npm`
+can even resolve the tree without dropping it first.
+
+Every one of those was found by trying, in a copy under `/tmp` so that nothing
+in `leela-src` was touched. `LeelaAiWeb3` has a `yarn.lock` and `NeuroLeelaExpo`
+has two; the one that shipped to a store has none.
 
 **What running it cost, recorded so nobody pays it twice.** Expo Go cannot be
 fetched here — its CDN answers 403 — so the app is built natively. CocoaPods

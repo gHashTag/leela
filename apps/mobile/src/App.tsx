@@ -8,7 +8,7 @@
  * board.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { BOARD_ROWS } from '@leela/engine';
@@ -23,21 +23,23 @@ import {
   throwDie,
   type Game,
 } from './game';
-import { EMPTY, takeAccount, type Journal, type Store } from './journal';
+import { EMPTY, keep, loadKept, takeAccount, type Journal, type Store } from './journal';
+import { deviceKeeper } from './device';
 
 /**
- * Where the writing goes on this device.
+ * The session's own copy of the path.
  *
- * A phone has no `localStorage`, and the store a device should use — one that
- * survives the app being closed — is a native dependency this app does not yet
- * carry. So it is held for the session and `save` is asked whether it landed,
- * which is what makes the sentence under the writer true rather than hopeful:
- * the day a real store arrives, nothing above it changes.
+ * Drawn from, and written to on every account. The device's store is behind it
+ * — `deviceKeeper` — and this is what makes the screen answer instantly while
+ * the disk answers when it can.
  */
 const forTheSession = (): Store => {
   const held = new Map<string, string>();
   return { getItem: (key) => held.get(key) ?? null, setItem: (key, value) => void held.set(key, value) };
 };
+
+/** The device's store, made once. */
+const keeper = deviceKeeper();
 
 /** A game's die is seeded once, and the seed is what a player carries away. */
 const startingSeed = () => Math.floor(Math.random() * 1_000_000);
@@ -48,6 +50,20 @@ export default function App() {
   const [journal, setJournal] = useState<Journal>(EMPTY);
   const [draft, setDraft] = useState('');
   const [said, setSaid] = useState<string | null>(null);
+
+  // The path from the last time the app was open. Read once, and never allowed
+  // to land on top of something written since: a player who starts writing
+  // before a slow disk answers must not have their words replaced by what was
+  // there yesterday.
+  useEffect(() => {
+    let stale = false;
+    void loadKept(keeper).then((kept) => {
+      if (!stale) setJournal((now) => (now === EMPTY ? kept : now));
+    });
+    return () => {
+      stale = true;
+    };
+  }, []);
   const language = resolveLanguage(undefined);
   const here = standingOn(game);
   const plan = planFor(language, here);
@@ -76,13 +92,19 @@ export default function App() {
     if (!taken.written) return;
 
     setJournal(taken.journal);
-    setSaid(
-      taken.kept
-        ? messageFor(language, 'app.reportSaved')
-        : messageFor(language, 'app.reportUnkept'),
-    );
     setDraft('');
     if (taken.gateOpens) setGame(fileReport(game));
+
+    // Said when the device has answered, not before. The session already has
+    // the words — the game goes on either way — and the sentence is about
+    // whether they will still be here tomorrow, which nobody knows yet.
+    void keep(keeper, taken.journal).then((landed) =>
+      setSaid(
+        landed && taken.kept
+          ? messageFor(language, 'app.reportSaved')
+          : messageFor(language, 'app.reportUnkept'),
+      ),
+    );
   };
 
   return (

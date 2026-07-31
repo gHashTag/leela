@@ -2,7 +2,7 @@
   "name": "@leela/mobile",
   "version": "1.0.0",
   "private": true,
-  "description": "Leela on a phone: the board, the die, and the texts \u2014 moved by the engine and by nothing else.",
+  "description": "Leela on a phone: the board, the die, and the texts — moved by the engine and by nothing else.",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
@@ -16,6 +16,7 @@
     "@leela/content": "workspace:*",
     "@leela/engine": "workspace:*",
     "@leela/journal": "workspace:*",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~54.0.0",
     "expo-status-bar": "~3.0.0",
     "react": "19.1.0",
