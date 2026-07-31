@@ -18,8 +18,15 @@
  * they hold *different* values that is worse than if they agree.
  */
 
-/** `export const NAME = value;` — the shape a bound is written in. */
-const DECLARATION = /^export const ([A-Z][A-Z0-9_]*)\s*(?::[^=]+)?=\s*(.+?);\s*$/gm;
+/**
+ * `const NAME = value;` — the shape a bound is written in, exported or not.
+ *
+ * Private ones count. `@leela/journal` held its own `TOTAL_PLANS`, unexported,
+ * beside the engine's — one board counted twice, and invisible to a check that
+ * only looked at what a module lets out. A copy nobody can import is still a
+ * copy that stops agreeing.
+ */
+const DECLARATION = /^(?:export )?const ([A-Z][A-Z0-9_]*)\s*(?::[^=]+)?=\s*(.+?);\s*$/gm;
 
 /** A name that is exported from somewhere else rather than declared again. */
 const REEXPORT = /^export \{[^}]*\b([A-Z][A-Z0-9_]*)\b[^}]*\}/gm;

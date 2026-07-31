@@ -4477,6 +4477,40 @@ constants that happen to both be 500 are not a duplicate, and two called
 audit says so, because that is worse. Re-exports are not copies and are not
 counted. Checked by planting a copy, twice: once agreeing, once not.
 
+## Hundred-and-thirtieth pass: the copy that cannot be removed
+
+Two ways of widening the last pass's question were tried, and one of them was
+worth keeping.
+
+**Same value, different names: no.** Six is the die's largest face, the seats at
+a table, the messages a conversation keeps, the roll that enters the game, the
+resting face, and the first square. Eight hundred is the longest intention and
+the default token ceiling. These are different ideas that happen to be the same
+number, and a check that reported them would be teaching people to ignore it.
+Names are the signal; values are not. Written down here so the next pass does
+not try it again.
+
+**Private declarations: yes, and it found one.** `@leela/journal` held its own
+`TOTAL_PLANS = 72` beside the engine's exported one — the board counted twice,
+and invisible to a check that only read what a module lets out.
+
+This copy cannot be removed. The format has no dependencies at all, on purpose,
+so that a browser bundle and a Bun process can both hold it and nothing it
+imports is imported into both. What it can be is **paid for honestly**: the
+package now takes a *dev* dependency on the engine and `board-size.test.ts` asks
+the engine what the board is and asks the format what it will accept. Tests may
+depend on the engine; the shipped package may not.
+
+Left alone, that copy is the same defect as the others waiting to happen. A
+board grown to eighty in the engine would leave the format refusing every square
+above seventy-two — reports thrown away as "not a plan" on squares a player had
+genuinely stood on.
+
+`audit-doubles` records it in a list that names, for each allowed copy, the test
+that holds it in step; and it still fails if such a pair stops agreeing, saying
+that the test which was to hold them has not. Checked by planting a private
+copy, and by making the tied pair disagree.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

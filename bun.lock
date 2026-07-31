@@ -123,6 +123,7 @@
       "name": "@leela/journal",
       "version": "1.0.0",
       "devDependencies": {
+        "@leela/engine": "workspace:*",
         "typescript": "^5.6.3",
         "vitest": "^2.1.8",
       },

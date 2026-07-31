@@ -24,7 +24,17 @@ export const MAX_REPORT_CHARS = 4000;
 /** The most reports kept, oldest dropped first. */
 export const MAX_REPORTS = 500;
 
-/** The largest board this format describes. Matches the engine's 72. */
+/**
+ * The largest board this format describes.
+ *
+ * A second count of one board, and it has to be: `@leela/engine` exports this
+ * number, and this package has no dependencies on purpose — a browser bundle
+ * and a Bun process both hold it, and anything it pulled in would be pulled
+ * into both. The copy is the price of that, and the price is paid honestly
+ * rather than quietly: `board-size.test.ts` asks the engine what the board is
+ * and asks this format what it will accept, so the two cannot drift without a
+ * test going red. Tests may depend on the engine; the shipped package may not.
+ */
 const TOTAL_PLANS = 72;
 
 /** One thing a player wrote, on the plan they wrote it about. */

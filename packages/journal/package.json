@@ -8,13 +8,16 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "typecheck:strict": "tsc --noEmit -p tsconfig.src.json"
   },
   "devDependencies": {
+    "@leela/engine": "workspace:*",
     "typescript": "^5.6.3",
     "vitest": "^2.1.8"
   },
