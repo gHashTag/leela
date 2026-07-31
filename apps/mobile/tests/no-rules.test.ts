@@ -36,6 +36,24 @@ import {
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SRC = resolve(HERE, '..', 'src');
 
+/**
+ * The code that decides things, with the code that draws them taken out.
+ *
+ * Comments go first — half of this repository is prose about what went wrong,
+ * and the numbers in it are quotations. Then the stylesheet, because a pixel is
+ * not a square: `minHeight: 72` on a text field tripped the board-size rule the
+ * hour it was written, and a check that cries wolf on a layout is a check
+ * somebody will delete rather than obey.
+ */
+function gameCodeIn(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .split('\n')
+    .map((line) => line.replace(/\/\/.*$/, ''))
+    .join('\n')
+    .replace(/StyleSheet\.create\(\{[\s\S]*?\n\}\);/g, ' ');
+}
+
 function filesUnder(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
     const path = join(directory, entry);
@@ -63,14 +81,7 @@ describe('the app carries no rule of its own', () => {
     it(`has no ${what}`, () => {
       const offenders = filesUnder(SRC)
         .filter((file) => file.endsWith('.ts') || file.endsWith('.tsx'))
-        .filter((file) => {
-          const code = readFileSync(file, 'utf8')
-            .replace(/\/\*[\s\S]*?\*\//g, ' ')
-            .split('\n')
-            .map((line) => line.replace(/\/\/.*$/, ''))
-            .join('\n');
-          return pattern.test(code);
-        })
+        .filter((file) => pattern.test(gameCodeIn(readFileSync(file, 'utf8'))))
         .map((file) => relative(SRC, file));
 
       expect(offenders).toEqual([]);

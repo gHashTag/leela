@@ -4940,7 +4940,37 @@ somebody writing one back in. And a game is played through the app's own
 functions and replayed through the engine square by square, because matching
 source text proves nothing about what happens on a throw.
 
-Still to bring across from `leela`: RevenueCat, notifee and Sentry.
+**The gate had been half-built, and the wrong half.** The app shipped with a
+button labelled *Write a report* that wrote nothing: it called `submitReport`,
+the gate opened, and no account was kept anywhere. The requirement was cleared
+and the thing it requires was removed — the ceremony without the reflection,
+under a label promising otherwise. The gate exists so that a player reflects
+before they move; a button that clears it without taking the reflection is the
+whole purpose read backwards.
+
+So the phone writes now, in `@leela/journal`'s format and to that package's
+bounds, and a path written here is one the bot or the mini app can read.
+
+**The decision came out of the component, and that is why it is tested.** No
+test of `journal.ts` could have seen the defect: a handler inside a screen is
+not a function anybody can ask. `takeAccount` is, and it gives three answers
+that are separate on purpose — *was anything written* decides whether the gate
+opens, *was it kept* decides what the player is told. Running the two together
+is how a refused write came to be reported as "Written." in the app next door.
+
+Two more of this repository's own lessons arrived within the hour of writing
+it. A second `isReport` was written here and let `plan: 900` through, until the
+format's own was used instead. And the no-rules test flagged `minHeight: 72` in
+a stylesheet as the size of the board — a check that cries wolf on a layout is
+one somebody deletes rather than obeys, so it reads the game code with the
+styles taken out.
+
+**What the phone still lacks:** a store that survives the app closing. The
+account is held for the session and `save` is asked whether it landed, so the
+sentence under the writer is true rather than hopeful — but a device store is a
+native dependency this app does not yet carry, and until it does, closing the
+app loses the path. Still to bring across from `leela`: RevenueCat, notifee and
+Sentry.
 
 **What running it cost, recorded so nobody pays it twice.** Expo Go cannot be
 fetched here — its CDN answers 403 — so the app is built natively. CocoaPods
