@@ -145,8 +145,15 @@ export function saveJournal(
   journal: Journal,
   key = REPORTS_KEY,
 ): boolean {
+  // No store is not a kept write. `storage?.setItem` on nothing is a no-op that
+  // used to return `true` — so a host that hands over no storage at all got the
+  // same answer as one that kept the writing, which is the refusal defect again
+  // through the door beside it. A refusal and an absence are different reasons
+  // and the same outcome: the words are not there next time.
+  if (!storage) return false;
+
   try {
-    storage?.setItem(key, JSON.stringify(journal));
+    storage.setItem(key, JSON.stringify(journal));
     return true;
   } catch {
     return false;

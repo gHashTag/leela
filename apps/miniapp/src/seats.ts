@@ -122,8 +122,11 @@ export function loadSeats(storage: GameStorage | undefined): SavedSeats {
  * not a thing to invent an answer about.
  */
 export function saveSeats(storage: GameStorage | undefined, seats: SavedSeats): boolean {
+  // Same rule as the journal beside it: nowhere to write is not a write.
+  if (!storage) return false;
+
   try {
-    storage?.setItem(SEATS_KEY, JSON.stringify(seats));
+    storage.setItem(SEATS_KEY, JSON.stringify(seats));
     return true;
   } catch {
     return false;

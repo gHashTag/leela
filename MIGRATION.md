@@ -4269,6 +4269,43 @@ exempted with a reason rather than a test: an exception inside a DOM click
 listener is the browser's to report, and the mini app already asserts no window
 errors on load.
 
+## Hundred-and-twenty-fourth pass: the second question
+
+`audit-promises` asked whether every injected dependency is handed a broken one
+somewhere. It did not ask what happens next — and a test that breaks a
+dependency and then asserts `not.toThrow()` proves the code survived, which was
+never the doubtful half. **Every defect of this family was caught somewhere and
+told nobody.**
+
+So the audit now asks both. A block that breaks a dependency has to assert
+something about the answer: a sentence a person reads, a line an operator reads,
+or a value handed back to the caller so it can decide.
+
+**Getting the question right took three attempts, and the two wrong ones are the
+point.** A window of four hundred characters called `LanguageModel.complete`
+covered because a hostile `readFile` sat three hundred lines away; tightened, it
+called `ReportSink.record` unanswered because the hostile sink is built in a
+helper at the top of a block and the assertion is two tests below. Both measure
+in bytes something organised in blocks — the unit is a `describe`, which is what
+a person writes around one subject. Then the assertion check itself, written as
+a regexp with a generous lookahead, ran past the end of one `expect` into the
+next line and said yes to everything: with every spoken assertion in two files
+deleted it still reported all clear. Reading brackets rather than counting
+characters fixed it, and the deletion experiment is what found it.
+
+**What the working version found.** `saveJournal`'s own unit test still asserted
+only that it does not throw — the assertion the pass-119 defect hid behind, left
+in place after that pass gave the function a boolean to return. Asserting the
+boolean instead turned up a second door into the same defect: **a store that
+refuses answers `false`, and no store at all answers `true`**, because
+`storage?.setItem` on nothing is a no-op that falls through to the happy return.
+Different reasons, identical outcome — the words are not there next time — and
+the app puts "Written." under one of them.
+
+Fixed in all three writers, and stated over the writers rather than about one of
+them: nine tests, three conditions each. The third writer had already got it
+wrong, so a fourth will be asked the same question.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { saveSeats } from '../src/seats';
 import { resize, sessionFrom } from '../src/seats';
 import {
   CLASSIC,
@@ -219,9 +220,13 @@ describe('what comes back out of storage', () => {
         throw new Error('storage is disabled');
       },
     };
+    // Not that it survives — it always survived, and behind that assertion the
+    // app answered "Written. You may throw." with the writing gone. What it
+    // reports back is the thing a caller can act on.
     expect(loadJournal(hostile)).toEqual(EMPTY);
-    expect(() => saveJournal(hostile, EMPTY)).not.toThrow();
-    expect(() => saveJournal(undefined, EMPTY)).not.toThrow();
+    const kept = saveJournal(hostile, EMPTY);
+    expect(kept, 'a refusal is reported rather than swallowed').toBe(false);
+    expect(saveJournal(undefined, EMPTY), 'and so is having nowhere to write').toBe(false);
   });
 });
 
@@ -452,4 +457,59 @@ describe('the gate, which was recorded twice', () => {
     expect(loadJournalFor(storage, 'p2').entries).toEqual([]);
     expect(seatOwesReport(seatOf(arrived, false))).toBe(true);
   });
+});
+
+describe('a write says it was kept only when something kept it', () => {
+  /**
+   * Every writer in the mini app answers a boolean, and the whole point of that
+   * boolean is a sentence the player reads: "Written" or "written, and this
+   * browser will not keep it". A wrong `true` puts the first sentence under a
+   * loss, which is the defect this app was found with.
+   *
+   * There are two ways to keep nothing and they were answered differently: a
+   * store that refuses said `false`, and *no store at all* said `true`, because
+   * `storage?.setItem` on nothing is a no-op that falls through to the happy
+   * return. Different reasons, identical outcome — the words are not there next
+   * time — so they get the same answer.
+   *
+   * Stated over the writers rather than about one of them: a fourth would have
+   * to answer the same question, and the third had already got it wrong.
+   */
+  const refuses: GameStorage = {
+    getItem: () => null,
+    setItem: () => {
+      throw new DOMException('quota', 'QuotaExceededError');
+    },
+  };
+
+  const keeps = (): GameStorage => {
+    const held = new Map<string, string>();
+    return {
+      getItem: (key) => held.get(key) ?? null,
+      setItem: (key, value) => void held.set(key, value),
+    };
+  };
+
+  const writers: Array<{ what: string; write: (storage: GameStorage | undefined) => boolean }> = [
+    { what: 'saveJournal', write: (storage) => saveJournal(storage, EMPTY) },
+    { what: 'saveJournalFor', write: (storage) => saveJournalFor(storage, 'p2', EMPTY) },
+    {
+      what: 'saveSeats',
+      write: (storage) => saveSeats(storage, { turnIndex: 0, players: [] }),
+    },
+  ];
+
+  for (const { what, write } of writers) {
+    it(`${what} says kept when it was`, () => {
+      expect(write(keeps())).toBe(true);
+    });
+
+    it(`${what} says not kept when the store refuses`, () => {
+      expect(write(refuses), 'a full quota').toBe(false);
+    });
+
+    it(`${what} says not kept when there is no store`, () => {
+      expect(write(undefined), 'nowhere to write is not a write').toBe(false);
+    });
+  }
 });

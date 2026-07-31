@@ -125,20 +125,132 @@ function dedupe(points) {
  * `store.save = async () => { throw`, `record: no`, `complete: () => new
  * Promise(() => {})` — the spellings vary, the proximity does not.
  */
-const NEARBY = 400;
+/**
+ * The unit is a `describe` block, not a count of characters.
+ *
+ * A window of four hundred characters was the first attempt and it was
+ * arbitrary in both directions: it called `LanguageModel.complete` covered
+ * because a hostile `readFile` sat three hundred lines away, and then, once
+ * tightened, it called `ReportSink.record` unanswered because the hostile sink
+ * is built in a helper at the top of the block and the assertion is two tests
+ * below it. Both are the same mistake — measuring in bytes something that is
+ * organised in blocks.
+ *
+ * A `describe` is what a person writes around one subject. If the breakage and
+ * the assertion are in it, they are about each other.
+ */
+export function blocksIn(source) {
+  const blocks = [];
 
-export function brokenSomewhere(point, tests, hostileShapes) {
-  const named = new RegExp(`\\b${point.property}\\b`, 'g');
+  for (const match of source.matchAll(/^describe(?:\.\w+)?\(/gm)) {
+    const opens = source.indexOf('{', match.index ?? 0);
+    if (opens < 0) continue;
 
-  return tests.some((test) => {
-    for (const shape of hostileShapes) {
-      for (const broken of test.source.matchAll(new RegExp(shape.source, 'g'))) {
-        const from = Math.max(0, (broken.index ?? 0) - NEARBY);
-        const window = test.source.slice(from, (broken.index ?? 0) + NEARBY);
-        named.lastIndex = 0;
-        if (named.test(window)) return true;
+    let depth = 0;
+    let index = opens;
+    for (; index < source.length; index += 1) {
+      if (source[index] === '{') depth += 1;
+      if (source[index] === '}') {
+        depth -= 1;
+        if (depth === 0) break;
       }
     }
-    return false;
-  });
+    blocks.push(source.slice(match.index ?? 0, index + 1));
+  }
+
+  return blocks.length > 0 ? blocks : [source];
+}
+
+export function brokenSomewhere(point, tests, hostileShapes) {
+  return windowsBreaking(point, tests, hostileShapes).length > 0;
+}
+
+/** The stretches of test source where this member is handed a broken one. */
+export function windowsBreaking(point, tests, hostileShapes) {
+  const named = new RegExp(`\\b${point.property}\\b`);
+  const found = [];
+
+  for (const test of tests) {
+    for (const block of blocksIn(test.source)) {
+      const hostile = hostileShapes.some((shape) => shape.test(block));
+      if (hostile && named.test(block)) found.push({ path: test.path, window: block });
+    }
+  }
+
+  return found;
+}
+
+/**
+ * Whether anything near the breakage says what the person on the other end is
+ * told.
+ *
+ * The second question, and the one every defect of this family failed. All four
+ * were caught somewhere — a `catch` logging to the console, a `try` around a
+ * write, a swallowed refusal with a comment explaining why — and in every case
+ * the person using the thing was told nothing. A test that breaks a dependency
+ * and then asserts only that nothing exploded reproduces exactly that: it
+ * proves the code survived, which was never in doubt.
+ *
+ * So an assertion has to be about what was **said**: the replies sent, the line
+ * on screen, the log an operator reads. `expect(storage.durable).toBe(false)`
+ * is a fact about the machine; `expect(said).toMatch(/could not keep/)` is the
+ * thing a person finds out.
+ */
+/**
+ * The vocabulary of an answer.
+ *
+ * `expect(() => save(hostile)).not.toThrow()` says a failure was caught. Every
+ * defect of this family was caught — that is what made them invisible. The
+ * question none of them answered is what the other end is *told*, and there are
+ * two ways to tell: a sentence a person reads, or a value handed back to the
+ * caller so that it can decide.
+ *
+ * `saveJournal` is both halves of that history in one function. It used to
+ * swallow a refusal and return nothing, its test asserted that it did not
+ * throw, and behind that assertion the mini app answered "Written. You may
+ * throw." while the writing was gone. It returns a boolean now. A test that
+ * still ignores it is the same test it was.
+ *
+ * The list is a vocabulary rather than a rule, and it grows when a real answer
+ * turns out not to be in it. That is a smaller risk than the alternative, which
+ * is a check that says yes to everything.
+ */
+const SPOKEN =
+  /\b(said|says|texts|sent|reply|replies|say|logged|lines|log|message|announce|textContent|failure|reason|kept|saved|stored|durable|migrated|failures)\b/i;
+
+/**
+ * The argument of every `expect(...)` in a stretch of source.
+ *
+ * Read by matching brackets rather than by counting characters. A regexp with a
+ * generous lookahead was the second wrong answer here: it ran past the end of
+ * one assertion into the next line, so a block whose every spoken assertion had
+ * been deleted still passed — the check said yes to everything, which reads
+ * exactly like a check that is satisfied.
+ */
+export function expectations(source) {
+  const found = [];
+
+  for (const match of source.matchAll(/\bexpect\(/g)) {
+    let depth = 0;
+    let index = (match.index ?? 0) + 'expect'.length;
+    const from = index + 1;
+
+    for (; index < source.length; index += 1) {
+      if (source[index] === '(') depth += 1;
+      if (source[index] === ')') {
+        depth -= 1;
+        if (depth === 0) break;
+      }
+    }
+
+    found.push(source.slice(from, index));
+  }
+
+  return found;
+}
+
+export function answeredIn(windows) {
+  return windows.some(({ window }) =>
+    expectations(window).some((argument) => SPOKEN.test(argument)),
+  );
 }

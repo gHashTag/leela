@@ -22,7 +22,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { injectionPoints, brokenSomewhere } from './lib/promises.mjs';
+import { injectionPoints, windowsBreaking, answeredIn } from './lib/promises.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..');
@@ -78,6 +78,7 @@ function filesUnder(directory) {
 }
 
 const unbroken = [];
+const unanswered = [];
 let checked = 0;
 let hostileFiles = 0;
 
@@ -95,7 +96,9 @@ for (const { src, tests } of PACKAGES) {
       if (DATA.has(point.property)) continue;
       if (NOT_OURS.has(`${point.owner}.${point.property}`)) continue;
       checked += 1;
-      if (!brokenSomewhere(point, testFiles, [THROWS, NEVER_SETTLES])) unbroken.push(point);
+      const windows = windowsBreaking(point, testFiles, [THROWS, NEVER_SETTLES]);
+      if (windows.length === 0) unbroken.push(point);
+      else if (!answeredIn(windows)) unanswered.push(point);
     }
   }
 }
@@ -104,15 +107,30 @@ console.log(
   `\nChecked ${checked} injected dependencies against ${hostileFiles} test files that break one.\n`,
 );
 
-if (unbroken.length === 0) {
-  console.log('Every dependency a caller supplies is handed a broken one somewhere.');
-} else {
+if (unbroken.length > 0) {
+  console.log('Never handed a broken one:\n');
   for (const point of unbroken) {
     console.log(`  ${point.owner}.${point.property}  (${point.file})`);
   }
   console.log(
     '\nNothing tries these with an implementation that throws or never returns, which is',
   );
-  console.log('what four consecutive passes found in the ones that were tried.');
+  console.log('what four consecutive passes found in the ones that were tried.\n');
   process.exitCode = 1;
+}
+
+if (unanswered.length > 0) {
+  console.log('Broken, with nothing asserted about what anyone is told:\n');
+  for (const point of unanswered) {
+    console.log(`  ${point.owner}.${point.property}  (${point.file})`);
+  }
+  console.log(
+    '\nEvery defect of this family was caught somewhere and told nobody. A test that',
+  );
+  console.log('proves the code survived proves the half that was never in doubt.\n');
+  process.exitCode = 1;
+}
+
+if (unbroken.length === 0 && unanswered.length === 0) {
+  console.log('Every dependency a caller supplies is handed a broken one, and somebody is told.');
 }

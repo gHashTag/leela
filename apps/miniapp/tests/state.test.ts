@@ -157,8 +157,19 @@ describe('reading a saved game', () => {
         throw new Error('storage is disabled');
       },
     };
+    // A reader that throws answers with a fresh game, which is the only honest
+    // answer: nothing was found, as against nothing being there.
+    //
+    // `saveIntention` is the one write here that reports nothing, and that is
+    // deliberate: its boolean means "this is a question worth keeping", not
+    // "it was kept", and the two are different answers to different questions.
+    // A refused intention is handled a layer up, by holding it for the session
+    // and asking again next launch, which `assembled` covers.
     expect(loadState(hostile)).toEqual(initialState());
     expect(loadState(undefined)).toEqual(initialState());
+    expect(saveIntention(hostile, 'to see this through'), 'valid, whatever the store did').toBe(
+      true,
+    );
   });
 
   it('reads a versioned key, so a shape change cannot read the old one', () => {
