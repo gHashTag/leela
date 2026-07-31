@@ -5025,6 +5025,51 @@ Every one of those was found by trying, in a copy under `/tmp` so that nothing
 in `leela-src` was touched. `LeelaAiWeb3` has a `yarn.lock` and `NeuroLeelaExpo`
 has two; the one that shipped to a store has none.
 
+**The store, and what is not in the repository.** `xyz.ghashtag.dharma` is live
+as *Leela Chakra Ai* **6.10**, updated 2024-08-12
+([listing](https://apps.apple.com/us/app/leela-chakra-ai/id1296604457)). The
+newest source anywhere is **6.8**: `MARKETING_VERSION` on `main`, whose last
+commit is 2024-01-29, and the other five branches are 2021–2022. `com.leelagame`
+returns nothing from the store, so that identifier is Android's alone. **The
+published build's source is not in the repository.**
+
+`main` and `unified` are branches of one repository — the published app and this
+monorepo are the same GitHub project.
+
+**How far the published app gets, and where it stops.** Nine blockers were
+cleared in the `/tmp` copy before a tenth was reached, and each was verified by
+doing it rather than reasoned about:
+
+1. `@react-native/eslint-config@0.70.4` has never existed — nothing installs
+   until it is dropped.
+2. No lockfile, so every native dependency resolves to a modern version.
+3. `react-native-gesture-handler ^2.9.0` → 2.32.0, whose Android manifest has no
+   `package=`; React Native 0.70's CLI reads Android manifests while autolinking
+   for **iOS** and dies.
+4. `react-native-pager-view`, `react-native-screens` and
+   `react-native-system-navigation-bar` fail the same way.
+5. `react-native-screens` ≥ 3.21 calls `install_modules_dependencies`, added in
+   React Native 0.71.
+6. `boost 1.76.0` fails its checksum: the URL in the podspec no longer serves
+   the artifact the hash was taken from. `archives.boost.io` still does, byte for
+   byte — the expected `f0397ba6…` — so the mirror is the fix and the original
+   host is the fault.
+7. Yoga's `operator"" _pt` is deprecated under the current clang, and the build
+   promotes warnings to errors.
+8. `@sentry/react-native ^3.4.2` uses `std::set_terminate`, which the current
+   libc++ no longer declares in that header.
+9. Pinned to 5.24.3 it fails differently: `std::vector<const T>`, which the
+   standard library now rejects outright. There is a `without-sentry` branch in
+   this repository, and this is why.
+10. With Sentry removed, `PurchasesHybridCommon` — RevenueCat — stops on an
+    ambiguous `SubscriptionPeriod`.
+
+Every one of the ten is the same root cause seen from a different angle: an
+application whose dependencies were never pinned cannot be rebuilt once the
+world moves. It is repairable — each step above has a fix — but it is an upgrade
+project, not a build, and it should be done on a branch with a lockfile
+committed at the end of it.
+
 **What running it cost, recorded so nobody pays it twice.** Expo Go cannot be
 fetched here — its CDN answers 403 — so the app is built natively. CocoaPods
 fails on this machine with `Encoding::CompatibilityError` unless `LANG` names a
