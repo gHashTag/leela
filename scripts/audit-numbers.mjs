@@ -11,9 +11,15 @@
  * duplicate bodies, script density. It found nothing, and it was looking one
  * layer above the damage.
  *
- * What this found, in 23 plans across three languages: Ukrainian, Malay and
- * Arabic have lost board references in eight plans each. The loss is in the
- * donor translations themselves, not in this repository's generator.
+ * What this found, after five false alarms were closed: **two**. Arabic plan 9
+ * has lost the 72,000 nadis and Ukrainian plan 23 has lost the square heaven
+ * points at. Both are in the donor translations themselves, not in this
+ * repository's generator, and both were read in the file they come from.
+ *
+ * It began at 42 across eight languages. Every number that came off the list
+ * came off because the check was asking the wrong question, not because
+ * anything was repaired — which is the whole reason to keep writing down what
+ * a check believes.
  *
  * It said 42 across eight for a long time, and six of those were never lost.
  * This counts *digits*, and German, Spanish, Hindi, Marathi and Chinese write
@@ -37,11 +43,24 @@
  * itself: a number *some* translator wrote as a word is a number to check the
  * others for. See `alsoWrittenOutSomewhere`.
  *
- * The 23 are an upper bound for the same reason as before. What has been read
- * is what is excused — but the reading is now prompted rather than waited for,
- * and each record says whether the plan still names the square it has stopped
- * numbering, which is the difference between a numeral to put back and a
- * sentence to write.
+ * It read 23 until this one, and twenty-one of those were **the third false
+ * alarm, closed against the wrong English**. *Not every language was translated
+ * from the same edition* was known and acted on — by comparing everything to
+ * the one English this dataset ships. Arabic, Malay and Ukrainian come from
+ * `leela/src/locales/<lang>`, whose sibling is `leela/src/locales/en`: an older,
+ * shorter edition the generator reads and throws away. It says *the snake of
+ * tamoguna* where the shipped English says *the tamoguna square (field 72)*.
+ * Twenty-one lines of recorded damage were translations faithfully carrying
+ * sentences that never had a number in them.
+ *
+ * That edition is now kept under `data/editions/`, and which one a language
+ * followed is read off its own plans — every plan carries the file it came
+ * from, so no list of language codes is kept by hand.
+ *
+ * The two are what is left. What has been read is what is excused — but the
+ * reading is now prompted rather than waited for, and each record says whether
+ * the plan still names the square it has stopped numbering, which is the
+ * difference between a numeral to put back and a sentence to write.
  *
  * **It is recorded rather than repaired.** Repairing it means translating, and
  * translating means calling a service this repository deliberately does not
@@ -57,6 +76,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   alsoWrittenOutSomewhere,
+  editionOf,
   identifyingTerms,
   keyOf,
   kindOf,
@@ -76,31 +96,14 @@ const DATA = join(HERE, '..', 'packages', 'content', 'data');
  */
 const RECORDED = [
   'ar/9: 72000',
-  'ar/30: 38,39,40',
-  'ar/38: 24',
-  'ar/44: 37',
-  'ar/46: 45',
-  'ar/51: 72',
-  'ar/55: 52',
-  'ar/61: 21',
-  'ms/30: 38,39,40',
-  'ms/38: 24',
-  'ms/44: 37',
-  'ms/46: 45',
-  'ms/51: 72',
-  'ms/55: 52',
-  'ms/61: 21',
   'uk/23: 11',
-  'uk/30: 38,39,40',
-  'uk/38: 24',
-  'uk/44: 37',
-  'uk/46: 45',
-  'uk/51: 72',
-  'uk/55: 52',
-  'uk/61: 21',
 ];
 
 const read = (language) => JSON.parse(readFileSync(join(DATA, `plans.${language}.json`), 'utf8'));
+
+/** An edition nothing ships, kept by the generator for exactly this question. */
+const readEdition = (name) =>
+  JSON.parse(readFileSync(join(DATA, 'editions', `${name}.json`), 'utf8'));
 
 /**
  * What kind of loss a record is, said per number rather than per plan.
@@ -150,6 +153,7 @@ const russian = read('ru');
 const english = read('en');
 
 const found = [];
+const uncovered = [];
 const evidence = new Map();
 for (const language of languages) {
   // The two editions are what everything else is measured against, and a number
@@ -162,7 +166,27 @@ for (const language of languages) {
   const terms = identifyingTerms(plans);
   const bodies = new Map(plans.map((plan) => [plan.plan, plan.body ?? '']));
 
-  for (const loss of lossesIn(plans, russian, english, language)) {
+  // And the edition it was translated from, for the same reason one level up.
+  // Three languages come from the published app's locales, whose English says
+  // *the snake of tamoguna* where the shipped English says *the tamoguna square
+  // (field 72)* — so twenty-one lines of recorded damage were a translation
+  // faithfully carrying a sentence that never had a number in it.
+  const edition = editionOf(plans);
+  const against = edition ? readEdition(edition) : english;
+
+  // An edition that does not cover a plan makes every number in it unexpected,
+  // so `lossesIn` skips it and this audit reports nothing about it — which
+  // reads exactly like a language with nothing wrong. That is the shape this
+  // repository has now been caught by three times, and an edition file is a
+  // generated one: a rebuild from a source directory that had moved would empty
+  // it and turn the whole check green.
+  for (const plan of plans) {
+    if (!against.some((one) => one.plan === plan.plan)) {
+      uncovered.push(`${language}/${plan.plan}: ${edition ?? 'en'} has no such plan`);
+    }
+  }
+
+  for (const loss of lossesIn(plans, russian, against, language)) {
     const line = keyOf(language, loss);
     found.push(line);
     evidence.set(line, describe(bodies.get(loss.plan) ?? '', loss.lost, terms));
@@ -189,9 +213,21 @@ if (healed.length > 0) {
   console.log('');
 }
 
-if (news.length === 0) {
+if (uncovered.length > 0) {
+  console.log('An edition does not cover plans the translation has:\n');
+  for (const line of uncovered.slice(0, 20)) console.log(`  ${line}`);
+  if (uncovered.length > 20) console.log(`  … and ${uncovered.length - 20} more`);
+  console.log(
+    '\nA plan the edition lacks is a plan nothing is expected of, so every number in\n' +
+      'it is excused — and a silent excuse reads exactly like a language with nothing\n' +
+      'wrong. The editions are generated; an emptied one turns this whole check green.',
+  );
+  process.exitCode = 1;
+}
+
+if (news.length === 0 && uncovered.length === 0) {
   console.log('No board reference has gone missing that was not already recorded.');
-} else {
+} else if (news.length > 0) {
   console.log('These are new:');
   for (const line of news) console.log(`  ${line}`);
   console.log('\nA cross-reference without its number points nowhere.');

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { plansFor } from '../src';
 import {
   alsoWrittenOutSomewhere,
+  editionOf,
   identifyingTerms,
   kindOf,
   lossesIn,
@@ -15,6 +17,10 @@ import {
   writtenOut,
   // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 } from '../../../scripts/lib/numbers.mjs';
+
+/** The editions nothing ships, which the audits read to tell a loss from a difference. */
+const readEdition = (name: string) =>
+  JSON.parse(readFileSync(new URL(`../data/editions/${name}.json`, import.meta.url), 'utf8'));
 
 /**
  * The board references inside the traditional text.
@@ -207,6 +213,79 @@ describe('a reference written as a word is not a missing one', () => {
     expect(alsoWrittenOutSomewhere(68), 'read in three languages now').toBe(true);
     expect(alsoWrittenOutSomewhere(4), 'the four aspects of mind').toBe(true);
     expect(alsoWrittenOutSomewhere(72), 'nobody has seen this one spelled out').toBe(false);
+  });
+});
+
+describe('a translation is judged against the edition it was made from', () => {
+  /**
+   * The third false alarm, closed against the wrong English for as long as this
+   * check has existed.
+   *
+   * *Not every language was translated from the same edition* — the audit knew
+   * that and compared everything to the one English this dataset ships. Arabic,
+   * Malay and Ukrainian come from `leela/src/locales/<lang>`, whose sibling is
+   * `leela/src/locales/en`: a **third** edition, older and shorter, which the
+   * generator reads and throws away. It says *the snake of tamoguna* where the
+   * shipped English says *the tamoguna square (field 72)*, and *see the lokas
+   * prana, apana and vyana* where the shipped one numbers all three.
+   *
+   * So twenty-one of twenty-three recorded losses were translations faithfully
+   * carrying a sentence that never had a number in it. The two that remain are
+   * real, and both were read: `leela-en` states *72,000 nerves in the body,
+   * called nadis* and the Arabic keeps `nadi` without the number; it states
+   * *(see square 11)* on plan 23 and the Ukrainian has no 11 anywhere.
+   *
+   * What is asserted is the shape: which edition a language followed is read
+   * off the plans themselves, because every plan carries the file it came from.
+   * A list of three language codes would have been a fourth thing to keep by
+   * hand.
+   */
+  it('reads the edition off the plans rather than off a list', () => {
+    expect(editionOf(plansFor('ar')), 'the published app’s locales').toBe('leela-en');
+    expect(editionOf(plansFor('ms'))).toBe('leela-en');
+    expect(editionOf(plansFor('uk'))).toBe('leela-en');
+
+    expect(editionOf(plansFor('de')), 'translate-leela follows the shipped text').toBe(null);
+    expect(editionOf(plansFor('ru'))).toBe(null);
+  });
+
+  it('says nothing when the edition never stated the number', () => {
+    // The whole finding, as a shape: a number the *shipped* English states and
+    // the translation's own edition does not is not a loss, however loudly the
+    // shipped one says it.
+    const shipped = 'a snake leading from the tamoguna square (field 72)';
+    const ownEdition = 'the snake of tamoguna, to bring them back to earth';
+    const translated = 'ular tamoguna, untuk membawa mereka kembali ke bumi';
+
+    expect(lostFrom(translated, 'змея тамогуны (поле 72)', shipped, 'ms')).toEqual(['72']);
+    expect(lostFrom(translated, 'змея тамогуны (поле 72)', ownEdition, 'ms')).toEqual([]);
+  });
+
+  it('still says so when the edition did state it', () => {
+    // The guard against the fix becoming a way of seeing nothing. `leela-en`
+    // states 72,000 nadis and the Arabic dropped the number: still a loss.
+    const ownEdition = 'There are 72,000 nerves in the body, called nadis.';
+
+    expect(lostFrom('يوجد في الجسم أعصاب تسمى نادي.', 'В теле 72 000 нервов, нади.', ownEdition, 'ar'))
+      .toEqual(['72000']);
+  });
+
+  it('has an edition that covers every plan the languages using it have', () => {
+    // A plan the edition lacks is a plan nothing is expected of, so every number
+    // in it is excused — and a silent excuse reads exactly like a language with
+    // nothing wrong. The editions are generated: a rebuild from a moved source
+    // directory would empty this file and turn the audit green.
+    const edition = readEdition('leela-en');
+
+    expect(edition.length).toBe(72);
+    for (const language of ['ar', 'ms', 'uk']) {
+      for (const plan of plansFor(language)) {
+        expect(
+          edition.some((one: { plan: number }) => one.plan === plan.plan),
+          `${language}/${plan.plan}`,
+        ).toBe(true);
+      }
+    }
   });
 });
 

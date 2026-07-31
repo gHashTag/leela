@@ -247,6 +247,25 @@ export function lostFrom(translated, russian, english, language = '') {
     .sort((a, b) => Number(a) - Number(b));
 }
 
+/**
+ * The edition a translation was made from, read off the plans themselves.
+ *
+ * Every plan carries the file it came from, so the question does not need a
+ * list: a language whose plans say `leela/src/locales/…` was translated
+ * alongside `leela/src/locales/en`, and one that says `translate-leela/…` was
+ * not. The audit's third false alarm was exactly this — *not every language was
+ * translated from the same edition* — and it was closed by comparing against
+ * the shipped English, which is a **third** edition that neither family
+ * followed for these three languages.
+ *
+ * Returns the name of an edition under `data/editions/`, or null when the
+ * shipped English is the right comparison.
+ */
+export function editionOf(plans) {
+  const sources = new Set(plans.map((plan) => (plan.source ?? '').split('/')[0]));
+  return sources.size === 1 && sources.has('leela') ? 'leela-en' : null;
+}
+
 /** One plan in one language, and the board references it dropped. */
 export function lossesIn(plans, russian, english, language = '') {
   const byPlan = (list) => new Map(list.map((plan) => [plan.plan, plan]));

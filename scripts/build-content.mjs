@@ -451,7 +451,32 @@ function offer(lang, plans) {
   if (plans.length >= (byLang[lang]?.length ?? 0)) byLang[lang] = plans;
 }
 
-for (const [lang, plans] of Object.entries(readAppLocales())) offer(lang, plans);
+const appLocales = readAppLocales();
+
+/**
+ * The English the published app's own locales were translated from.
+ *
+ * It is read, beaten by the hand-authored English markdown, and thrown away —
+ * and it is the edition three shipped languages actually follow. Arabic, Malay
+ * and Ukrainian come from `leela/src/locales/<lang>`, so their sibling is
+ * `leela/src/locales/en`, which is **not** the English this dataset ships.
+ *
+ * The two say different things. *A snake leading from the tamoguna square
+ * (field 72)* in the shipped English is *the snake of tamoguna* here, with no
+ * number in it at all — so a translation of this edition that carries no 72 has
+ * lost nothing, and `audit-numbers` recorded twenty-one such lines as damage
+ * for as long as it has existed. The audit already knew the shape (*not every
+ * language was translated from the same edition*, its third false alarm) and
+ * compared against the wrong English.
+ *
+ * Kept as text rather than as the numbers it states, so the reading of it stays
+ * in `lib/numbers.mjs` with every other reading. A derivation baked into a
+ * generated file is a derivation that goes stale the day the rule changes —
+ * which is the mistake `lib/corrections.mjs` exists to record.
+ */
+const EDITIONS = { 'leela-en': appLocales.en ?? [] };
+
+for (const [lang, plans] of Object.entries(appLocales)) offer(lang, plans);
 for (const [lang, plans] of Object.entries(readTranslateLeela())) offer(lang, plans);
 offer('en', english.plans);
 offer('ru', leelabook.plans);
@@ -522,6 +547,18 @@ for (const [lang, plans] of Object.entries(byLang)) {
 }
 
 writeFileSync(join(OUT, 'rules.json'), `${JSON.stringify(rules, null, 2)}\n`);
+
+// The editions nothing ships but the audits have to read, since the donor
+// repositories are not in CI and asking which edition a translation followed is
+// the only way to tell a lost number from a number that was never there.
+mkdirSync(join(OUT, 'editions'), { recursive: true });
+for (const [name, plans] of Object.entries(EDITIONS)) {
+  if (plans.length === 0) {
+    warnings.push(`edition ${name}: nothing read, so nothing written`);
+    continue;
+  }
+  writeFileSync(join(OUT, 'editions', `${name}.json`), `${JSON.stringify(plans, null, 2)}\n`);
+}
 
 const manifest = {
   // Relative to the repository, not as typed. The committed manifest carried
