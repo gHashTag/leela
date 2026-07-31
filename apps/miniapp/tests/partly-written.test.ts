@@ -275,3 +275,58 @@ describe('a browser that keeps none of the game', () => {
     expect(game.stored(), 'and the board moved').not.toContain('"loka":41');
   }, 20_000);
 });
+
+describe('a question the browser will not keep', () => {
+  /**
+   * The intention dialog is the one the game will not start without, and its
+   * writer was the odd one out: `saveIntention` returned `true` for "worth
+   * keeping" rather than "kept", so one word answered two questions and the
+   * caller could not tell which. Over a store that refuses, the player was told
+   * **"Two characters at least — say something you mean."** about a sentence
+   * that was long enough — a browser's failure reported as their mistake, in
+   * the one place they cannot go around.
+   *
+   * Two facts, two sentences now: whether the words are a question worth
+   * playing for, and whether this browser is keeping anything.
+   */
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  const answering = async (text: string, refuse: RegExp) => {
+    const storage = partial(refuse);
+    await play(storage);
+
+    (el('intention-text') as HTMLTextAreaElement).value = text;
+    el('intention-save').click();
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    return { hint: el('intention-hint').textContent ?? '', said: el('say').textContent ?? '' };
+  };
+
+  it('does not call a long enough question too short', async () => {
+    const { hint, said } = await answering('To see what I keep avoiding.', /^leela\.intention/);
+
+    expect(hint, 'nothing wrong with what they wrote').not.toMatch(/two characters/i);
+    expect(said, 'and the browser is what is wrong').toMatch(/will not keep/i);
+  }, 20_000);
+
+  it('still calls a short one short', async () => {
+    // The message has a cause of its own, and it has to keep it.
+    const { hint } = await answering('x', /^never$/);
+
+    expect(hint).toMatch(/two characters/i);
+  }, 20_000);
+
+  it('plays on with the question held for the session', async () => {
+    const storage = partial(/^leela\.intention/);
+    await play(storage);
+
+    (el('intention-text') as HTMLTextAreaElement).value = 'To see what I keep avoiding.';
+    el('intention-save').click();
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    expect((el('intention') as HTMLDialogElement).open, 'the dialog lets them through').toBe(false);
+    expect(el('roll').disabled, 'and the die turns').toBe(false);
+  }, 20_000);
+});

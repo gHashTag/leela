@@ -296,19 +296,32 @@ export function isIntention(text: string): boolean {
   return written.length >= MIN_INTENTION_CHARS && written.length <= MAX_INTENTION_CHARS;
 }
 
-/** Keep it, or refuse it and say nothing was kept. */
+/**
+ * Keep the question, and say whether it was kept.
+ *
+ * The odd one out until now. Every other writer in this app answers "was it
+ * kept"; this one answered "was it worth keeping", and returned `true` over a
+ * store that had just refused it. One word, two questions, and a caller cannot
+ * tell which it was asking — which is how a browser's refusal came to be
+ * reported to the player as *"a little longer, please"*: the wrong cause, in
+ * the one dialog the game will not start without.
+ *
+ * Validity is `isIntention`, which was exported all along. This is storage.
+ */
 export function saveIntention(
   storage: GameStorage | undefined,
   text: string,
   playerId = 'p1',
 ): boolean {
   if (!isIntention(text)) return false;
+  if (!storage) return false;
 
   try {
-    storage?.setItem(intentionKeyFor(playerId), text.trim());
+    storage.setItem(intentionKeyFor(playerId), text.trim());
+    return true;
   } catch {
-    // A window that cannot store still plays; the question is simply asked
-    // again next time.
+    // A window that cannot store still plays. It is the caller's business
+    // whether to say so, and it now can.
+    return false;
   }
-  return true;
 }

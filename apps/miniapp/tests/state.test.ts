@@ -159,17 +159,12 @@ describe('reading a saved game', () => {
     };
     // A reader that throws answers with a fresh game, which is the only honest
     // answer: nothing was found, as against nothing being there.
-    //
-    // `saveIntention` is the one write here that reports nothing, and that is
-    // deliberate: its boolean means "this is a question worth keeping", not
-    // "it was kept", and the two are different answers to different questions.
-    // A refused intention is handled a layer up, by holding it for the session
-    // and asking again next launch, which `assembled` covers.
     expect(loadState(hostile)).toEqual(initialState());
     expect(loadState(undefined)).toEqual(initialState());
-    expect(saveIntention(hostile, 'to see this through'), 'valid, whatever the store did').toBe(
-      true,
-    );
+    expect(
+      saveIntention(hostile, 'to see this through'),
+      'a refusal is reported, as it is by every other writer here',
+    ).toBe(false);
   });
 
   it('reads a versioned key, so a shape change cannot read the old one', () => {
@@ -423,9 +418,11 @@ describe('what the player is playing for', () => {
     };
 
     expect(() => loadIntention(hostile)).not.toThrow();
-    expect(loadIntention(hostile)).toBe('');
-    // A window that cannot store still plays; the question is asked again.
-    expect(saveIntention(hostile, 'To begin.')).toBe(true);
+    expect(loadIntention(hostile), 'nothing found, rather than a crash').toBe('');
+    // A window that cannot store still plays — and now says so rather than
+    // reporting the write it did not make. Whether the player hears about it is
+    // the app's decision, and it makes it: see the notice in `partly-written`.
+    expect(saveIntention(hostile, 'To begin.'), 'not kept, and not pretending').toBe(false);
   });
 
   it('is kept apart from the game and the journal', () => {

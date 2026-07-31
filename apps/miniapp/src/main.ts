@@ -61,6 +61,7 @@ import {
   saveDraft,
   saveLastRoll,
   loadIntention,
+  isIntention,
   saveIntention,
 } from './state';
 import {
@@ -572,9 +573,16 @@ function askIntention(): void {
 }
 
 function saveTheIntention(): void {
-  if (!saveIntention(localStorage, el.intentionText.value, currentPlayer(session).id)) {
+  // Asked of the text, not of the store. These used to be one question, so a
+  // browser that refused the write answered the player with "a little longer,
+  // please" — about a sentence that was long enough.
+  if (!isIntention(el.intentionText.value)) {
     el.intentionHint.textContent = messageFor(language, 'app.intentionShort');
     return;
+  }
+
+  if (!saveIntention(localStorage, el.intentionText.value, currentPlayer(session).id)) {
+    unkept = true;
   }
 
   // What was just written, not what storage says was written. A private window
@@ -1262,7 +1270,13 @@ async function importPath(file: File): Promise<void> {
   const asked = incoming.intention ?? '';
   if (intention === '' && asked !== '') {
     const seat = currentPlayer(session).id;
-    if (saveIntention(localStorage, asked, seat)) intention = asked.trim();
+    // Held whether or not it lands, as everything else in this app is: a
+    // browser that will not keep it is not a reason to drop the question the
+    // path was written under.
+    if (isIntention(asked)) {
+      intention = asked.trim();
+      if (!saveIntention(localStorage, asked, seat)) unkept = true;
+    }
   }
 
   const added = journal.entries.length - before;

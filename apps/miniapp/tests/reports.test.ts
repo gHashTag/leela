@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { saveSeats } from '../src/seats';
-import { resize, sessionFrom } from '../src/seats';
+import { resize, saveSeats, sessionFrom } from '../src/seats';
+import { saveIntention } from '../src/state';
 import {
   CLASSIC,
   MAX_ROLL,
@@ -497,6 +497,11 @@ describe('a write says it was kept only when something kept it', () => {
       what: 'saveSeats',
       write: (storage) => saveSeats(storage, { turnIndex: 0, players: [] }),
     },
+    // The fourth, which the pass before predicted would be asked the same
+    // question. It answered a different one: `true` meant "worth keeping", so a
+    // refused write reported success — and the dialog told the player their
+    // sentence was too short when it was not.
+    { what: 'saveIntention', write: (storage) => saveIntention(storage, 'To see this through.') },
   ];
 
   for (const { what, write } of writers) {

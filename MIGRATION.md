@@ -4306,6 +4306,34 @@ Fixed in all three writers, and stated over the writers rather than about one of
 them: nine tests, three conditions each. The third writer had already got it
 wrong, so a fourth will be asked the same question.
 
+## Hundred-and-twenty-fifth pass: one word, two questions
+
+Every message key was swept for the shape found two passes ago — a sentence
+serving more than one cause, so that for one of them it lies. Eighteen keys are
+sent from more than one place and all eighteen are one cause reached two ways: a
+button label drawn in two views, a square that arrives by paste or by file. No
+message is unused, either, which is the other half of that sweep: a sentence
+translated into nineteen languages and shown to nobody.
+
+The defect was one layer down. **`saveIntention` answered a different question
+from every other writer in the app.** Its boolean meant *"this is worth
+keeping"*, while `saveJournal`, `saveJournalFor` and `saveSeats` mean *"it was
+kept"* — one word, two questions, and a caller cannot tell which it asked.
+
+So over a store that refuses, the intention dialog answered **"Two characters at
+least — say something you mean."** about a sentence that was long enough. A
+browser's failure, reported to the player as their own mistake, in the one
+dialog the game will not start without and the one they cannot go around.
+
+Two facts, two sentences. Validity is `isIntention`, which was exported all
+along; the writer does storage, and a refusal now joins the notice this app
+already shows once — *this browser will not keep the game*. The imported
+question from a path file is held for the session too, rather than dropped
+because a browser would not write it.
+
+The pass before predicted a fourth writer would be asked the same question. It
+was, and it was the one that had it wrong.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
