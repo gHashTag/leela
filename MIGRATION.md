@@ -5432,6 +5432,46 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**The sum with no sign in it — the third layer, and the gap between two
+checks.** `audit-numbers` handed the multiplication tables to `audit-arithmetic`
+and wrote that it holds them *to a stricter rule than presence*. Presence was
+exactly what neither asked: one excuses a table term, the other examines the
+sums that are there. Arabic and Malay carry 15 equations where every other
+language carries 21, Ukrainian 17, and nothing had ever said so — the audit
+counted *plans* into a variable called `equations` and printed neither.
+
+The rows are not missing. Plan 8's run ends in a sentence rather than in the
+list — *when an 8 is multiplied by a 9 it becomes a 9 (8x9=72), and in the next
+cycle it returns to its original state, 8x10=80=8* — and the machine
+translation ate the multiplication sign there. Malay says `8 9 = 72` and
+`8 80 = 80 = 8`; Arabic `8 9 9 = 72` and `81 10 = 80 = 8`. Every reader in
+`lib/arithmetic.mjs` finds a sum **by** its sign, so a sum without one is not a
+sum to any of them and is not a missing sum either: it reads as prose with
+numbers in it, and the check was blind in the one place the damage was.
+
+The shape is a run of two or more numbers separated by nothing but space on the
+left of an `=` — a left side is one number or an expression, never two numbers
+side by side — and across 22 languages and 1,584 plans it matches four times,
+all four of them this.
+
+**A rule was tried and thrown away**, and it matters which one. Comparing the
+rows a translation carries against the rows both editions carry reports `ar/8`
+and `ms/8` as having *lost* `8x9` and `8x10`; they have not, and a check that
+names the wrong defect asks somebody to write what is already written. It also
+could not be trusted on plan 9, where uk/ms/ar carry `9x23` — a row **neither**
+edition has — because those three follow the published app's own English, a
+third edition whose table genuinely is shorter.
+
+One of the four is repaired: Malay's `8 9 = 72` has both operands and the
+product, and no other operation on 8 and 9 gives 72, so the sign is what
+arithmetic says it is. The three that remain each need a number restored or a
+digit removed — a reading of what the machine did rather than a calculation —
+and they are recorded with that reasoning rather than quietly fixed.
+
+`lib/arithmetic.mjs` had **no tests at all** while checking 466 sums in 22
+languages, and its header described four false alarms nothing held it to.
+Fifteen tests do now.
+
 **Translation audit, second layer — and this one found something.** See the
 eighty-ninth pass below: 23 plans across three languages have lost the board
 references the text states. It read 42 across eight until the hundred and
