@@ -5141,11 +5141,35 @@ doing it rather than reasoned about:
 10. With Sentry removed, `PurchasesHybridCommon` — RevenueCat — stops on an
     ambiguous `SubscriptionPeriod`.
 
-Every one of the ten is the same root cause seen from a different angle: an
+Four more followed, and then it ran.
+
+11. `BoringSSL-GRPC` passes `-GCC_WARN_INHIBIT_ALL_WARNINGS` in its per-file
+    compiler flags — a build setting written as a flag — which clang reads as
+    `-G` and refuses. 344 occurrences in the generated Pods project.
+12. `boost 1.76` uses `std::unary_function`, removed in C++17 and no longer
+    provided by libc++. `-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION`
+    brings it back.
+13. `gRPC-Core` trips `-Wmissing-template-arg-list-after-template-kw`, a
+    warning that did not exist when it was written.
+14. `react-native-image-crop-picker` calls `customAspectRatio`, removed from
+    `TOCropViewController` after 2.6; the caret had resolved it to 3.2.
+15. `GoogleService-Info.plist` is not in the repository, and correctly so. A
+    placeholder of the right *shape* — Firebase validates the key's length and
+    first letter before using it — gets past the check without being anybody's
+    credential.
+16. `react-native-gifted-chat` resolved to a version importing
+    `react-native-keyboard-controller`, which the app has never depended on.
+
+**It builds, installs and launches.** The dice splash comes up under
+`xyz.ghashtag.dharma` on an iPhone 16 Pro simulator, and stops there: the game
+is Firebase-backed, so without a real configuration it cannot get past sign-in.
+That is where an outsider should stop, and this stopped there.
+
+Every one of the sixteen is the same root cause seen from a different angle: an
 application whose dependencies were never pinned cannot be rebuilt once the
-world moves. It is repairable — each step above has a fix — but it is an upgrade
-project, not a build, and it should be done on a branch with a lockfile
-committed at the end of it.
+world moves. It is repairable — every step above has a fix, and they are all
+written down — but it is an upgrade project, not a build, and it should end with
+a lockfile committed.
 
 **What running it cost, recorded so nobody pays it twice.** Expo Go cannot be
 fetched here — its CDN answers 403 — so the app is built natively. CocoaPods
