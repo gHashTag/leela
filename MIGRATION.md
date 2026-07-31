@@ -4551,6 +4551,47 @@ Correcting a number in three shipped translations is a decision about content,
 and this audit's job is to make it impossible to miss rather than to make it
 quietly.
 
+## Hundred-and-thirty-second pass: six places it was not
+
+The arithmetic layer found something last pass, so this one went looking for the
+rest of it. Six probes, no defect, and the six are worth writing down — a place
+already checked is worth as much as a place repaired, and rather more than
+checking it again next month.
+
+- **Numbers a translation has and neither edition has**: ordinals. Japanese
+  writes *6th chakra* where English spells the word out. 127 plans reported, all
+  of them typography.
+- **Majority vote across the 22 languages** — a number sixteen languages carry
+  and one does not. Thirty-six findings, and every one of them already in the
+  forty-two `audit-numbers` records. A strict subset, so it adds nothing.
+- **Placeholders in translated messages** — `messageIssues` already checks them
+  in both directions, plus plural categories.
+- **Rules chapters**: none empty, none duplicated, and the three languages that
+  carry `online` and `foreword` are already handled by `bookFor`, whose comment
+  names them.
+- **`packages/contracts`**: already tied both ways, and its source is read at
+  module load, so a missing file fails loudly rather than leaving an empty parse
+  to agree with everything.
+- **Orphan pages in the built book**: none.
+
+Two guards came out of it, both of which find nothing today and would find
+something after a rebuild.
+
+**A total, then its factors.** `900 breaths (60 х 15)` is the other shape the
+arithmetic is written in — the answer before the factors — so the equation
+reader never saw it. Twenty languages carry it, all twenty right. The gap
+between the number and the bracket is bounded and may not cross a sentence,
+without which "9 planets … (60 x 15)" three sentences later reads as a claim
+nobody made.
+
+**Everywhere can be landed on.** The docs test that every link resolves; this is
+the same property from the other side, and 1,784 files is enough to lose one in.
+Written naively it reports twenty-two orphans and all are false — the root links
+to `en/`, not `en/index.html` — and a check that cries wolf twenty-two times on
+a sound site is one nobody keeps. Proved by planting a page nothing links to;
+proved *not* by removing the index's chapter links, which leaves the pages
+reachable through the language switcher, and that was the first mutation tried.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

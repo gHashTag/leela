@@ -47,6 +47,41 @@ export function digitalRoot(value) {
   return value === 0 ? 0 : 1 + ((value - 1) % 9);
 }
 
+/**
+ * `900 breaths (60 х 15)` — a total, then the factors it came from.
+ *
+ * The other shape the arithmetic is written in, and the factors come *after*
+ * the answer rather than before it, so the multiplication reader never saw it.
+ * Twenty of the twenty-two languages carry this one and all twenty are right;
+ * the check is here so that a rebuild cannot make one of them wrong quietly.
+ *
+ * The gap between the total and the bracket is bounded and may not cross a
+ * sentence: without that, "9 planets … (60 x 15)" three sentences later reads
+ * as a claim nobody made.
+ */
+const FACTORED = new RegExp(
+  `(\\d+)[^.;:()（）\\d]{0,40}[(（]\\s*(\\d+)\\s*${TIMES}\\s*(\\d+)\\s*[)）]`,
+  'g',
+);
+
+/** Every total a text explains by its factors. */
+export function factorisationsIn(text) {
+  const found = [];
+
+  for (const match of ungroup(text).matchAll(FACTORED)) {
+    const [whole, total, left, right] = match;
+    found.push({
+      said: whole.replace(/\s+/g, ' ').trim(),
+      left: Number(left),
+      right: Number(right),
+      product: Number(total),
+      reduced: null,
+    });
+  }
+
+  return found;
+}
+
 /** Every multiplication a text states, with what it claims about each. */
 export function equationsIn(text) {
   const found = [];
@@ -99,7 +134,8 @@ export function falseClaimsIn(plans) {
   const found = [];
 
   for (const plan of plans) {
-    for (const equation of equationsIn(plan.body ?? '')) {
+    const body = plan.body ?? '';
+    for (const equation of [...equationsIn(body), ...factorisationsIn(body)]) {
       const faults = faultsIn(equation);
       if (faults.length > 0) found.push({ plan: plan.plan, said: equation.said, faults });
     }

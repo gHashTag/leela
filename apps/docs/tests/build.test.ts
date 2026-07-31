@@ -1,6 +1,6 @@
 import { mkdtempSync, readFileSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 import { LANGUAGES } from '@leela/content';
@@ -114,6 +114,44 @@ describe('the built site', () => {
       const absolute = html.match(/(?:href|src)="\/[^"]*"/g) ?? [];
       expect(absolute, file).toEqual([]);
     }
+  });
+
+  it('leaves no page a reader cannot get to', () => {
+    /**
+     * The mirror of the test below, and a different property: that one says
+     * every link lands somewhere, this one says everywhere can be landed on.
+     * A page published and linked from nothing is the same defect seen from the
+     * other side — 1,784 files are written here, and a chapter that three
+     * languages carry and nineteen do not is exactly the kind of thing to fall
+     * out of an index built from one language's shape.
+     *
+     * Written naively it reports twenty-two orphans and they are all false: the
+     * root page links to `en/`, not to `en/index.html`, which is how a
+     * directory link is written and how every server resolves it. A check that
+     * cries wolf twenty-two times on a sound site is a check nobody keeps.
+     */
+    const linked = new Set<string>();
+
+    for (const file of files.filter((f) => f.endsWith('.html'))) {
+      const html = readFileSync(join(out, file), 'utf8');
+
+      for (const match of html.matchAll(/href="([^"#:]+)"/g)) {
+        let href = match[1];
+        if (href.startsWith('http')) continue;
+        if (href === '' || href.endsWith('/')) href += 'index.html';
+
+        const target = normalize(join(dirname(file), href));
+        linked.add(target);
+        // `../de` and `../de/index.html` are one place written two ways.
+        linked.add(join(target, 'index.html'));
+      }
+    }
+
+    const orphans = files.filter(
+      (file) => file.endsWith('.html') && file !== 'index.html' && !linked.has(file),
+    );
+
+    expect(orphans).toEqual([]);
   });
 
   it('resolves every internal link to a file that exists', () => {
