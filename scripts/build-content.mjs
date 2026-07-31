@@ -389,7 +389,42 @@ function readRules() {
     }
   }
 
-  return out;
+  return inEnglishOrder(out);
+}
+
+/**
+ * One order for every book, taken from the only evidence there is.
+ *
+ * Each of the three readers above walks an object literal, and a book came out
+ * in whatever sequence somebody typed those keys. Two of the literals happen to
+ * agree; the Russian one does not, so a reader of the Russian book met the
+ * chakras before the numerology and every other reader met them the other way
+ * round. Nothing decided that. A key order did.
+ *
+ * The English chapters are the one source that carries an order of its own:
+ * their filenames are numbered `0-chortdescription` … `5-notes`, and `3` is
+ * numerology and `4` is chakras. The Russian files are a flat folder of
+ * unnumbered names — plans and rules together — so there is nothing in them to
+ * read an order out of, and the order they had was not theirs.
+ *
+ * Chapters English does not have keep their own sequence, after the ones it
+ * does: `online` and `foreword` come from a different edition, and putting them
+ * in the middle of a book on the strength of a slug would be inventing an order
+ * rather than following one.
+ */
+function inEnglishOrder(books) {
+  const canonical = (books.en ?? []).map((chapter) => chapter.slug);
+  const ordered = {};
+
+  for (const [language, chapters] of Object.entries(books)) {
+    const known = chapters
+      .filter((chapter) => canonical.includes(chapter.slug))
+      .sort((a, b) => canonical.indexOf(a.slug) - canonical.indexOf(b.slug));
+    const rest = chapters.filter((chapter) => !canonical.includes(chapter.slug));
+    ordered[language] = [...known, ...rest];
+  }
+
+  return ordered;
 }
 
 // --- build -----------------------------------------------------------------

@@ -343,3 +343,47 @@ describe('the book a reader gets', () => {
     }
   });
 });
+
+describe('every book is read in the same order', () => {
+  /**
+   * Three readers in `build-content.mjs` walk three object literals, and a book
+   * came out in whatever sequence somebody typed those keys. Two of the
+   * literals happen to agree. The Russian one did not: a reader of the Russian
+   * book met the chakras before the numerology, and every other reader met them
+   * the other way round. Nothing decided that — a key order did.
+   *
+   * The English chapters are the one source carrying an order of their own:
+   * their filenames are numbered, `3` is numerology and `4` is chakras. The
+   * Russian sources are a flat folder of unnumbered names, plans and rules
+   * together, so there was nothing in them to read an order out of.
+   *
+   * Stated as a relation rather than against a list of six slugs: a seventh
+   * chapter, or a renamed one, should not have to be added here to keep this
+   * true. What must hold is that two readers of the same book, in different
+   * languages, meet the same things in the same sequence.
+   */
+  const english = rulesFor('en').map((chapter) => chapter.slug);
+
+  for (const language of LANGUAGES) {
+    it(`presents ${language} in the order English does`, () => {
+      const shared = rulesFor(language)
+        .map((chapter) => chapter.slug)
+        .filter((slug) => english.includes(slug));
+
+      const expected = english.filter((slug) => shared.includes(slug));
+      expect(shared).toEqual(expected);
+    });
+  }
+
+  it('leaves a chapter English does not have at the end, in its own order', () => {
+    // `online` and `foreword` come from a different edition. Placing them
+    // inside the book on the strength of a slug would be inventing an order
+    // rather than following one, and `bookFor` already appends what a reader's
+    // book is missing after what it has.
+    const theirs = rulesFor('uk').map((chapter) => chapter.slug);
+    const extra = theirs.filter((slug) => !english.includes(slug));
+
+    expect(extra, 'the case this was written from').toEqual(['online', 'foreword']);
+    expect(theirs.slice(-extra.length)).toEqual(extra);
+  });
+});

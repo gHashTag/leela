@@ -4592,6 +4592,34 @@ a sound site is one nobody keeps. Proved by planting a page nothing links to;
 proved *not* by removing the index's chapter links, which leaves the pages
 reachable through the language switcher, and that was the first mutation tried.
 
+## Hundred-and-thirty-third pass: an order nobody chose
+
+The Russian book put the chakras chapter before the numerology one. Every other
+language puts numerology first. Nothing decided that.
+
+`build-content.mjs` reads the rules from three different donors, and each reader
+walks an object literal — so a book comes out in whatever sequence somebody
+typed those keys. Two of the three literals happen to agree with each other. The
+Russian one, written a few lines above them, does not.
+
+**Which order is right is not a matter of taste, and the donor answers it.** The
+English chapters are numbered in their filenames — `0-chortdescription`,
+`1-introduction`, `2-meaningofthegame`, `3-numerologygames`, `4-chakras`,
+`5-notes` — so that edition says numerology is the third chapter and the chakras
+the fourth. The Russian sources are a flat folder of unnumbered names with the
+plans and the rules mixed together; there is nothing in them to read an order
+out of, and the order the Russian book had was not the Russian book's.
+
+So every book is ordered by the English one, in the generator and in the data —
+a reordering of six lines, no text touched. Chapters English does not have keep
+their own sequence, after the ones it does: `online` and `foreword` come from a
+different edition, and placing them inside a book on the strength of a slug
+would be inventing an order rather than following one.
+
+The test is a relation rather than a list of six slugs: **two readers of the
+same book, in different languages, meet the same things in the same sequence.**
+A seventh chapter would not have to be added to it to keep it true.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
