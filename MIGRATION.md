@@ -4073,6 +4073,32 @@ answer**, and the way to find out is to ask them both. Every test here runs
 against both, which is what made a defect visible that each store's own tests
 were happy with.
 
+## Hundred-and-eighteenth pass: the other pairs, asked the same questions
+
+The pass before found a defect that was only visible from a test asking two
+implementations the same thing: both stores documented `roomOf` as "the table
+you played last", and one of them did something else. Each store's own tests
+were happy.
+
+So the rest of the pairs were asked. A room saved forty turns in and read back —
+the turn holder, every seat, the names, the seed, the count, the language, the
+started flag. A table that shrinks. A table deleted, and the player's own table
+after it. A chat that never had one. A chat that had one and has another now.
+Three reports written in the same millisecond. A question set twice. A path
+asked for by a stranger.
+
+**Nothing disagreed.** That is the result, and it is worth having: three pairs,
+asked the same questions, agreeing — and the agreement is now enforced instead
+of incidental. A third implementation, a Postgres one or a Redis one, has a
+suite waiting for it and cannot arrive with a subtly different idea of what a
+room is.
+
+Two checks in it are the ones that would have caught the last two defects of
+this kind: a room read back *forty turns in*, because a fresh table round-trips
+even through a store that loses half of it; and three reports written inside one
+millisecond, which is the tie that has now bitten twice — `/path` once, and
+`roomOf` the pass before.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
