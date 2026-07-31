@@ -22,7 +22,9 @@ import {
   fileName,
   isIntention,
   isReport,
+  newEntries,
   order,
+  parseDocument,
   toDocument,
   type Report,
 } from '@leela/journal';
@@ -294,4 +296,54 @@ export function toShare(journal: Journal, intention: string) {
 /** What to call it, from the format rather than beside it. */
 export function shareName(stamp: string): string {
   return fileName(stamp);
+}
+
+/** What came of taking a path in. */
+export interface TakenIn {
+  journal: Journal;
+  /** How many accounts were added. Zero when the file held nothing new. */
+  added: number;
+  /** The question the file carried, when this player has none of their own. */
+  intention: string | null;
+  /** False when the text was not a path this format can read. */
+  readable: boolean;
+}
+
+/**
+ * Take a path in without losing anything.
+ *
+ * The phone could hand a path out and not take one back, so a player who began
+ * in the mini app or at a table could not carry it here — the format exists so
+ * that a path is one thing across three surfaces, and a one-way door makes it
+ * two.
+ *
+ * Three decisions, and none of them is new. They are the ones the mini app was
+ * taught by its own defects, and this asks the same questions of the same
+ * format rather than answering them again:
+ *
+ * - **Nothing is lost.** `newEntries` adds what is not already here, keyed by
+ *   the square and the moment, so the same file arriving twice adds nothing the
+ *   second time.
+ * - **A file does not open the gate.** Whether *this* player owes an account
+ *   for the square they are standing on is the engine's business and this
+ *   game's; a report written elsewhere, about another square, is not a reason
+ *   to let them throw.
+ * - **The question is taken only where there is none.** What somebody is
+ *   playing for is theirs, and a file's is not allowed to replace it.
+ */
+export function takeIn(journal: Journal, text: string, intention: string): TakenIn {
+  const incoming = parseDocument(text);
+  if (incoming === null) {
+    return { journal, added: 0, intention: null, readable: false };
+  }
+
+  const added = newEntries(journal.entries, incoming.entries);
+  const asked = (incoming.intention ?? '').trim();
+
+  return {
+    journal: { entries: order([...journal.entries, ...added]).slice(-MAX_REPORTS) },
+    added: added.length,
+    intention: intention.trim() === '' && asked !== '' ? asked : null,
+    readable: true,
+  };
 }

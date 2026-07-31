@@ -32,6 +32,7 @@ import {
   saveIntention,
   shareName,
   takeAccount,
+  takeIn,
   toShare,
   writingsOn,
   type Journal,
@@ -65,6 +66,7 @@ export default function App() {
   const [said, setSaid] = useState<string | null>(null);
   const [intention, setIntention] = useState('');
   const [asking, setAsking] = useState('');
+  const [pasted, setPasted] = useState('');
 
   // The path from the last time the app was open. Read once, and never allowed
   // to land on top of something written since: a player who starts writing
@@ -262,9 +264,49 @@ export default function App() {
               });
             }}
           >
-            <Text style={styles.buttonText}>{messageFor(language, 'app.share')}</Text>
+            <Text style={styles.buttonText}>{messageFor(language, 'app.pathExport')}</Text>
           </Pressable>
         ) : null}
+
+        {/*
+          Taking one back. A path that can only leave is two paths, not one:
+          somebody who began at a table or in the mini app could not carry it
+          here. The decisions are the format's — nothing lost, the gate not
+          opened, the question taken only where there is none.
+        */}
+        <TextInput
+          style={styles.field}
+          multiline
+          value={pasted}
+          onChangeText={setPasted}
+          placeholder={messageFor(language, 'app.pathImport')}
+        />
+        <Pressable
+          disabled={pasted.trim().length === 0}
+          style={[styles.button, pasted.trim().length === 0 && styles.shut]}
+          onPress={() => {
+            const taken = takeIn(journal, pasted, intention);
+            if (!taken.readable) {
+              setSaid(messageFor(language, 'app.pathUnreadable'));
+              return;
+            }
+
+            setJournal(taken.journal);
+            setPasted('');
+            if (taken.intention !== null) {
+              setIntention(taken.intention);
+              saveIntention(store, taken.intention);
+            }
+            setSaid(
+              taken.added === 0
+                ? messageFor(language, 'app.pathImportedNothing')
+                : messageFor(language, 'app.pathImported', { count: taken.added }),
+            );
+            void keep(keeper, taken.journal);
+          }}
+        >
+          <Text style={styles.buttonText}>{messageFor(language, 'app.pathImport')}</Text>
+        </Pressable>
 
         {isOver(game) ? (
           <Pressable style={styles.button} onPress={() => setGame(newGame(startingSeed()))}>

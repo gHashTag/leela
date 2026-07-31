@@ -5129,6 +5129,24 @@ The test is the round trip through the format's own reader rather than the shape
 of a JSON object — a test that checked the fields would pass while
 `parseDocument` refused the file.
 
+**And it takes one back.** A path that can only leave is two paths, not one:
+somebody who began at a table or in the mini app could not carry theirs here.
+
+Three decisions, none of them new. They are the ones the mini app was taught by
+its own defects, and this asks the same questions of the same format rather than
+answering them again — which is what a format with no dependencies is for.
+Nothing is lost: `newEntries` keys by the square and the moment, so a file
+arriving twice adds nothing the second time. **A file does not open the gate**:
+whether *this* player owes an account for the square they are standing on is the
+engine's business and this game's, and a report written elsewhere about another
+square is not a reason to let them throw. And the question is taken only where
+there is none, because what somebody is playing for is theirs.
+
+The sentences are the path's, not the square's. `app.paste` reads *Paste a
+square* and was the nearest key to hand; using it would have been the same
+defect this repository has now met four times — a sentence that names the wrong
+thing because it was the one already written.
+
 Still to bring across from `leela`: RevenueCat, notifee and Sentry.
 
 **The published app cannot be rebuilt from its own source, and the reason is not
