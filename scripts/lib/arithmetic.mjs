@@ -113,6 +113,62 @@ export function equationsIn(text) {
   return found;
 }
 
+/**
+ * `8 9 = 72` — an equation the translation dropped the operator out of.
+ *
+ * Everything above finds a sum **by its multiplication sign**, so a sum whose
+ * sign is gone is not a sum this file has ever seen. It is not checked, and it
+ * is not reported missing either: it reads as prose with some numbers in it.
+ * The check is blind in exactly the place the damage is.
+ *
+ * Plan 8's argument runs `8x1=8; … 8x8=64=1` and then finishes in a sentence —
+ * *when an 8 is multiplied by a 9 it becomes a 9 (8x9=72), and in the next
+ * cycle it returns to its original state, 8x10=80=8*. That sentence is where
+ * the run ends and the point lands, and the machine translation ate the sign in
+ * two languages: Malay says `8 9 = 72` and `8 80 = 8`, Arabic `8 9 9 = 72` and
+ * `81 10 = 80 = 8`.
+ *
+ * The shape is a run of two or more numbers separated by nothing but space, on
+ * the left of an `=`. That is not arithmetic in any notation — a left side is
+ * one number or an expression, never two numbers side by side — and across
+ * 22 languages and 1,584 plans it matches four times, all four of them this.
+ *
+ * **An earlier rule was tried and thrown away.** Comparing which rows of the
+ * table a translation carries against the rows both editions carry reports
+ * `ar/8` and `ms/8` as having *lost* `8x9` and `8x10`. They have not: the rows
+ * are there, in the sentence, with the sign missing. A check that names the
+ * wrong defect is worse than no check, because the repair it suggests is to
+ * write something that is already written. It also could not be trusted on plan
+ * 9, where Ukrainian, Malay and Arabic carry `9x23` — a row **neither** edition
+ * has — because those three follow the published app's own English, a third
+ * edition, and a shorter table there is that edition's and not damage.
+ */
+const OPERATORLESS = /\d+(?:\s+\d+)+\s*=/g;
+
+/** Every equation in one text whose operator is gone, as it is written. */
+export function operatorlessIn(text) {
+  const ascii = toAsciiDigits(text);
+
+  return [...ascii.matchAll(OPERATORLESS)].map((match) => {
+    // The tail is carried so the report shows a whole claim rather than the
+    // fragment up to the first `=`: `8 80 = 8` reads as damage, `8 80 =` reads
+    // as a truncation of the check's own making.
+    const rest = ascii.slice(match.index + match[0].length).match(/^\s*[\d\s+=]*\d/);
+    return `${match[0]}${rest ? rest[0] : ''}`.replace(/\s+/g, ' ').trim();
+  });
+}
+
+/** Every operator-less equation in one language's plans, as `plan: said`. */
+export function operatorlessClaimsIn(plans) {
+  const found = [];
+
+  for (const plan of plans) {
+    for (const said of operatorlessIn(plan.body ?? '')) found.push({ plan: plan.plan, said });
+  }
+
+  return found.sort((a, b) => a.plan - b.plan);
+}
+
 /** What is wrong with one equation, or nothing. */
 export function faultsIn(equation) {
   const faults = [];

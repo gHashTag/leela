@@ -33,6 +33,22 @@ export const CORRECTIONS = [
     from: '7,380',
     to: '2,520',
   },
+  {
+    where: 'the eighth plan states 8 × 9 with no sign in it; only multiplication makes 72',
+    // Plan 8's run ends in a sentence rather than in the list, and the machine
+    // translation ate the multiplication sign there. Both operands and the
+    // product survive, and no other operation on 8 and 9 gives 72 — 8+9 is 17,
+    // 8−9 is −1 — so the sign is what arithmetic says it is. The character is
+    // the Cyrillic `х` this file already writes every other row with.
+    //
+    // The three siblings of this one are recorded in `audit-arithmetic` rather
+    // than corrected: each needs a number restored or a digit removed, and
+    // which one is a reading of what the machine did rather than a calculation.
+    languages: ['ms'],
+    plan: 8,
+    from: '8 9 = 72',
+    to: '8х9 = 72',
+  },
 ];
 
 /**

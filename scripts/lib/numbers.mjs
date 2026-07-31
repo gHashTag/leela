@@ -70,10 +70,19 @@ export function toAsciiDigits(text) {
  * cross-reference to a square — so a translation that writes a shorter table
  * was reported as having lost the board, in five of the records it kept.
  *
- * Those tables are `audit-arithmetic`'s territory, and it holds them to a
- * stricter rule than presence: every product is checked, in every language. Two
- * checks, two questions. This one asks whether a sentence still points at the
- * square it points at.
+ * Those tables are `audit-arithmetic`'s territory, and it asks a different
+ * question of them: every product it can *read* is checked, in every language.
+ * Two checks, two questions. This one asks whether a sentence still points at
+ * the square it points at.
+ *
+ * **What the hand-off does not cover**, written down because this sentence used
+ * to overstate it. It said "a stricter rule than presence" — and presence was
+ * exactly what neither check asked. This one excuses a table term; that one
+ * only examines the sums that are there. `audit-arithmetic` has since closed
+ * half of the gap by finding sums whose *operator* a translation dropped, which
+ * is what the apparently missing rows in plan 8 turned out to be. A row
+ * genuinely absent is still nobody's, and its own header says why counting
+ * cannot settle it.
  */
 const ARITHMETIC = /\d+\s*[x×хX*✕]\s*\d+\s*=[\d\s+=,.]*/g;
 
@@ -215,8 +224,8 @@ export function lostFrom(translated, russian, english, language = '') {
   // references. Plans 8 and 9 argue from tables, and reading their rows as
   // cross-references made a translation with a shorter table look like one that
   // had lost the board: five of the thirty-six records were that and nothing
-  // else. The tables belong to `audit-arithmetic`, which holds them to a
-  // stricter rule than presence — every product checked, in every language.
+  // else. The tables belong to `audit-arithmetic`, which checks every product
+  // it can read — and not that a row is there at all. See above.
   //
   // The enumeration goes the same way and for the same reason: a numbered list
   // is a typographic choice, and a translation that drops the numbering has not

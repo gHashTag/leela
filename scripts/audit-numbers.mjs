@@ -24,8 +24,8 @@
  *
  * It read 36 until the pass after that, when the terms of the multiplication
  * tables in plans 8 and 9 stopped being counted as cross-references to squares.
- * They never were: those tables are `audit-arithmetic`'s, and it holds them to
- * a stricter rule than presence. Taking them out left `ar/9: 72000` standing on
+ * They never were: those tables are `audit-arithmetic`'s, which checks every
+ * product it can read. Taking them out left `ar/9: 72000` standing on
  * its own — a real reference, the nadis of the body, which had been buried in a
  * record of table rows.
  *
