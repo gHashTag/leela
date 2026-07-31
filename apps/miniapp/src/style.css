@@ -22,6 +22,21 @@
   --arrow: #1f6b39;
   --win: #7a5a12;
 
+  /* Named and never declared, for as long as they have been used. `--muted` is
+     the older name for `--hint` and resolved to nothing, so the two header
+     icons and the hints under the writing box rendered at full text weight;
+     `--accent`, `--on-accent` and `--rule` always fell through to their
+     hard-coded fallbacks, so the gold marks and the field borders ignored the
+     player's theme entirely. Declared here they follow it.
+
+     `--spin`, `--gem` and `--board-art` are deliberately absent: those are set
+     from script — `main.ts:830`, `main.ts:1375`, `paint.ts:51` — and declaring
+     them here would be a second answer to a question script already answers. */
+  --muted: var(--hint);
+  --accent: var(--win);
+  --on-accent: var(--button-text);
+  --rule: var(--tg-theme-section-separator-color, #d9d9de);
+
   --gap: 3px;
   --radius: 7px;
 }
@@ -82,7 +97,12 @@ body {
 
 .head {
   display: grid;
-  grid-template-columns: auto auto 1fr auto;
+  /* The `1fr` used to sit on the third track, which is `#players` — an `.icon`
+     hard-fixed to 44px — while `.where` took `auto`, meaning max-content. So
+     the title pushed the row wider than the screen and the last button went off
+     the edge: in Russian "📚 All plans" is unreachable entirely. The flexible
+     track belongs to the one thing that can give. */
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 6px 10px;
 }
@@ -117,6 +137,11 @@ body {
   align-items: baseline;
   gap: 8px;
   min-height: 28px;
+  /* A grid item's automatic minimum is its min-content, so `.where` overflows
+     its own track without this however flexible the track is. `.plan-title`
+     has carried `text-overflow: ellipsis` since it was written and never once
+     ellipsised. */
+  min-width: 0;
 }
 
 .plan-number {

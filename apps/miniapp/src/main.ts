@@ -105,6 +105,8 @@ import {
   mayThrow,
   mayWrite,
   standing,
+  fitsHandOver,
+  handOverExcess,
 } from './view';
 
 /** Telegram's WebApp object, when we are running inside Telegram. */
@@ -155,6 +157,19 @@ const telegram: TelegramWebApp | undefined = (window as unknown as { Telegram?: 
  */
 function insideTelegram(): boolean {
   return (telegram?.initData ?? '').length > 0;
+}
+
+/**
+ * A buzz, and only where a buzz is possible.
+ *
+ * `telegram-web-app.js` defines `HapticFeedback` in any browser and warns
+ * internally — *HapticFeedback is not supported in version 6.0* — so optional
+ * chaining never short-circuits and a plain browser logs a warning on every
+ * accepted throw. The file already documents this exact trap for `sendData`
+ * twenty lines up; haptics is the one place the lesson was not applied.
+ */
+function buzz(effect: () => void): void {
+  if (insideTelegram()) effect();
 }
 
 telegram?.ready();
@@ -723,10 +738,37 @@ function askTheCompanion(): void {
   // what any of them is playing for. The square is still theirs to send; the
   // frame is not the device's to claim.
   const asked = session.players.length === 1 ? writing.intention : '';
-
-  telegram?.sendData?.(
-    shareTextFor(writing.plan, planFor(writing.plan).title, el.writerText.value, asked),
+  const payload = shareTextFor(
+    writing.plan,
+    planFor(writing.plan).title,
+    el.writerText.value,
+    asked,
   );
+
+  // Built first, then measured. Telegram's cap is in bytes and every bound this
+  // app shows the player is in characters, so a Russian account crosses it at
+  // about half the length the writing box still says is fine — and crossing it
+  // did nothing at all: no error, no reply, not even the app closing, which is
+  // the only sign the hand-over worked.
+  if (!fitsHandOver(payload)) {
+    // Characters rather than bytes, because the player counts characters. The
+    // encoder's average over what they actually typed, so it is right for the
+    // alphabet in front of them rather than for Latin.
+    const bytes = new TextEncoder().encode(el.writerText.value).length;
+    const perCharacter = Math.max(1, bytes / Math.max(1, el.writerText.value.length));
+    el.writerHint.textContent = messageFor(language, 'app.askTooLong', {
+      over: Math.ceil(handOverExcess(payload) / perCharacter),
+    });
+    return;
+  }
+
+  // A throw of its own: `sendData` is the SDK's and it raises rather than
+  // returning false. The hint is the only place a player can be told.
+  try {
+    telegram?.sendData?.(payload);
+  } catch {
+    el.writerHint.textContent = messageFor(language, 'app.askTooLong', { over: 0 });
+  }
 }
 
 /** One player's earlier writing about one square, oldest first. */
@@ -819,7 +861,7 @@ async function roll(): Promise<void> {
   }
   rolling = true;
   el.roll.disabled = true;
-  telegram?.HapticFeedback?.impactOccurred('medium');
+  buzz(() => telegram?.HapticFeedback?.impactOccurred('medium'));
 
   // The value is thrown first and the spin is cut to fit it, which is what the
   // published app does: a six turns six times and takes three times as long to
@@ -880,9 +922,9 @@ async function roll(): Promise<void> {
   draw(event, threwAt);
 
   if (event.isGameFinished && !event.isBlocked) {
-    telegram?.HapticFeedback?.notificationOccurred('success');
+    buzz(() => telegram?.HapticFeedback?.notificationOccurred('success'));
   } else if (event.direction === 'snake 🐍') {
-    telegram?.HapticFeedback?.notificationOccurred('warning');
+    buzz(() => telegram?.HapticFeedback?.notificationOccurred('warning'));
   }
 
   // A seat that has never been asked what it is playing for. The die is shut
@@ -897,7 +939,13 @@ async function roll(): Promise<void> {
 
   // Landing somewhere new is an invitation to read it, which is the game.
   if (event.to !== event.from && !event.isBlocked) {
-    window.setTimeout(() => openPlan(event.to), 500);
+    // For the seat that threw. `openPlan` defaults to the turn holder, and by
+    // here the turn has already left the mover on any throw that was not a six
+    // — so the square they landed on opened with the *next* player's private
+    // accounts under "What you wrote here". Four lines above, the same
+    // distinction is already made for the sentence.
+    const reader = threwAt >= 0 ? session.players[threwAt]?.id : undefined;
+    window.setTimeout(() => openPlan(event.to, reader), 500);
   }
 }
 
@@ -935,10 +983,28 @@ function openWriter(): void {
  * entries the oldest was dropped, and the player was told neither. The dialog
  * has carried an empty hint since it was written.
  */
+/**
+ * The seat the writing box was opened for.
+ *
+ * Asked four times and written out four times, and the fourth was wrong: the
+ * keystroke handler saved the draft under `currentPlayer(session).id` while
+ * `openWriter` had loaded it under `owing.id`. At a table those are different
+ * players after any throw that passes the turn, so the writing seat's draft was
+ * never kept at all — the crash recovery this function exists for silently did
+ * not work for them — and the other seat's was destroyed on every keystroke.
+ *
+ * `whatIsBeingWritten` already ends "The whole of the fix is asking the same
+ * seat three times instead of three different ones". This is the same fix with
+ * nowhere left to ask differently.
+ */
+function writingSeat(): (typeof session.players)[number] | undefined {
+  return session.players.find((player) => player.id === writingFor);
+}
+
 function showWriterHint(): void {
   // The journal of the seat being written for. The hint counts what is left in
   // *their* path, and the box is not always the turn holder's.
-  const writer = session.players.find((player) => player.id === writingFor);
+  const writer = writingSeat();
   const theirs = writer ? loadJournalFor(localStorage, writer.id) : journal;
 
   el.writerHint.textContent = hintFor(theirs, el.writerText.value.length, language);
@@ -975,7 +1041,7 @@ function showWriterHint(): void {
  * different ones.
  */
 function whatIsBeingWritten(): { plan: number; intention: string } {
-  const writer = session.players.find((player) => player.id === writingFor);
+  const writer = writingSeat();
   if (!writer) return { plan: state.loka, intention };
 
   return { plan: writer.state.loka, intention: loadIntention(localStorage, writer.id) };
@@ -1012,7 +1078,7 @@ function saveReport(): void {
   // Save used to file the same account twice — a slip on a phone, not an
   // exploit — and two accounts of one visit make `revisited` claim a square the
   // player never returned to.
-  const writer = session.players.find((player) => player.id === writingFor);
+  const writer = writingSeat();
   if (!writer || !seatOwesReport(writer)) {
     el.writer.close();
     return;
@@ -1304,11 +1370,40 @@ el.writerSave.addEventListener('click', saveReport);
 el.writerShare.addEventListener('click', () => void shareSquare());
 el.writerAsk.addEventListener('click', askTheCompanion);
 el.intentionSave.addEventListener('click', saveTheIntention);
+
+/*
+ * The one dialog with no way out, kept that way.
+ *
+ * It is deliberately Close-less — the published app navigates to it with
+ * `blockGoBack: true` — but a `<dialog>` closes on Escape and on Android's back
+ * gesture whatever the markup says. Dismissed before the question is answered,
+ * the player was left with a dark die, no reason given, and no control that
+ * helps: `askIntention` is reachable only from a "Change it" button that is not
+ * drawn until there is an intention to change. The game was over until reload.
+ *
+ * Only while it is unanswered. A returning player opening it to change their
+ * question must still be able to close it and keep the old one.
+ */
+el.intention.addEventListener('cancel', (event) => {
+  if (intention === '') event.preventDefault();
+});
 el.writerText.addEventListener('input', () => {
   // The earliest write of a session, and so the first chance to notice that
   // this browser is keeping nothing — somebody typing in a private window gets
   // here before they have thrown anything.
-  if (!saveDraft(localStorage, currentPlayer(session).id, state.loka, el.writerText.value)) {
+  // The seat the box belongs to, not the seat holding the turn. `openWriter`
+  // loads the draft under the owing seat and this used to save it under the
+  // turn holder — so at a table the writing was kept nowhere and somebody
+  // else's draft was overwritten by every keystroke.
+  const writer = writingSeat();
+  if (
+    !saveDraft(
+      localStorage,
+      writer?.id ?? currentPlayer(session).id,
+      writer?.state.loka ?? state.loka,
+      el.writerText.value,
+    )
+  ) {
     // Redrawn here and nowhere else. Every other writer has a redraw behind it
     // — a throw, a confirmation, a seat change — and a keystroke has none, so
     // the notice would sit set and unsaid until the player did something the

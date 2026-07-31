@@ -290,6 +290,38 @@ export function mayAsk(draft: string, bridged: boolean): boolean {
 }
 
 /**
+ * What Telegram will carry in one hand-over, and it is measured in bytes.
+ *
+ * `sendData` throws `WebAppDataInvalid` above 4096 **bytes**, and every bound
+ * this app states to the player is in characters: the writing box says
+ * `maxlength="4000"` and `MAX_REPORT_CHARS` is 4000. In Latin those two numbers
+ * nearly agree. In Cyrillic a character costs two bytes and in Devanagari three,
+ * so a Russian account crosses the real limit at about 2038 characters —
+ * comfortably inside a box that is still telling the player they have room.
+ *
+ * And crossing it did nothing at all. No error, no reply, not even the app
+ * closing, which is the only sign a hand-over worked. The player pressed a
+ * button and the game did not react.
+ */
+export const HAND_OVER_BYTES = 4096;
+
+/** How many bytes over the limit a payload is, or zero when it fits. */
+export function handOverExcess(payload: string): number {
+  return Math.max(0, new TextEncoder().encode(payload).length - HAND_OVER_BYTES);
+}
+
+/**
+ * Whether a built payload can be handed over at all.
+ *
+ * Takes the payload rather than the draft, because the square carries its title
+ * and sometimes the player's question too — measuring only what was typed would
+ * be a bound on the wrong string.
+ */
+export function fitsHandOver(payload: string): boolean {
+  return handOverExcess(payload) === 0;
+}
+
+/**
  * Whether the one button in the footer may save a path.
  *
  * Only at a table of one. With several seats it cannot say whose path it is

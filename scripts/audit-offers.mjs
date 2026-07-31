@@ -38,7 +38,13 @@ const SURFACES = ['bot', 'miniapp', 'mobile'];
  */
 const OFFERS = [
   { what: 'the plan a player stands on', by: /\bplanFor\b/ },
-  { what: 'the rules book', by: /\bbookFor\b|\brulesFor\b|\bruleChapter\b/ },
+  // `bookFrom` alongside `bookFor` for the same reason the companion has two
+  // spellings below: a phone cannot call `bookFor`, which reads every language
+  // at once, so it fetches the two books it needs and hands them to the borrow
+  // rule instead. Different call, same offering — and a check that named only
+  // the server's spelling reported the mini app as having lost its rules book
+  // the day the bundle was fixed.
+  { what: 'the rules book', by: /\bbookFor\b|\bbookFrom\b|\brulesFor\b|\bruleChapter\b/ },
   { what: 'the question the game answers', by: /\bisIntention\b/ },
   { what: 'an account of the square', by: /\brecord\b|\bsubmitReport\b/ },
   { what: 'reading that account back', by: /\bwritingsOn\b|\bpathFor\b|\bhistory\b/ },
