@@ -349,3 +349,69 @@ export function uncalledExports(declarations, sources, ignore = []) {
 
   return uncalled.sort((a, b) => a.name.localeCompare(b.name));
 }
+
+/**
+ * Names declared in more than one place, which this check cannot tell apart.
+ *
+ * Uses are counted by name across every source, so one live caller anywhere
+ * covers every declaration of that name — and the second one can be dead
+ * without a word. `writingsOn` was: the mini app calls its own, the phone app
+ * had written one and no screen read it, and the audit said every export has a
+ * caller.
+ *
+ * Telling them apart properly means resolving imports, which is a different
+ * tool. Saying so is not: an ambiguity reported is a place to look, and this
+ * audit has always been a prompt to look rather than a gate.
+ */
+export function ambiguousExports(declarations, ignore = []) {
+  const skip = new Set(ignore);
+  const byName = new Map();
+
+  for (const item of declarations) {
+    if (skip.has(item.name)) continue;
+    byName.set(item.name, [...(byName.get(item.name) ?? []), item]);
+  }
+
+  return [...byName.entries()]
+    .filter(([, items]) => new Set(items.map((item) => item.file)).size > 1)
+    .map(([name, items]) => ({ name, files: [...new Set(items.map((item) => item.file))].sort() }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** The workspace a file belongs to: `apps/mobile/src/journal.ts` -> `apps/mobile`. */
+function packageOf(file) {
+  const parts = file.split('/');
+  return parts.slice(0, 2).join('/');
+}
+
+/**
+ * Declarations of an ambiguous name that nothing in their own package calls.
+ *
+ * The report above says where to look. This is the looking, done mechanically:
+ * when two packages export the same name, a caller in one of them proves
+ * nothing about the other, so each is asked whether **its own package** uses
+ * it.
+ *
+ * Applications only. A library exists to be used by somebody else —
+ * `@leela/journal` calls almost nothing it exports, and that is what a format
+ * is — while an application's own export is for that application, and one it
+ * does not call is one it does not use. `apps/mobile` wrote a path and had a
+ * `writingsOn` no screen read back; the mini app's `writingsOn` covered it.
+ */
+export function unusedInOwnPackage(declarations, files, sources, ignore = []) {
+  const skip = new Set(ignore);
+  const ambiguous = new Set(ambiguousExports(declarations, ignore).map((one) => one.name));
+  const found = [];
+
+  for (const item of declarations) {
+    if (skip.has(item.name) || !ambiguous.has(item.name)) continue;
+    if (!item.file.startsWith('apps/')) continue;
+
+    const own = packageOf(item.file);
+    const inside = sources.filter((_, index) => packageOf(files[index]) === own);
+
+    if (usesOf(item.name, inside) === 0) found.push(item);
+  }
+
+  return found.sort((a, b) => a.name.localeCompare(b.name));
+}

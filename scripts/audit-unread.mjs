@@ -24,11 +24,13 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  ambiguousExports,
   declaredExports,
   declaredFields,
   declaredMembers,
   uncalledExports,
   unreadFields,
+  unusedInOwnPackage,
 } from './lib/unread.mjs';
 import { workspaceSources } from './lib/claims.mjs';
 
@@ -306,6 +308,28 @@ console.log(
 console.log(
   `${Object.keys(PUBLIC_MEMBERS).length} class member(s) are uncalled on purpose.\n`,
 );
+
+const ambiguous = ambiguousExports(exportDeclarations, Object.keys(PUBLIC_API));
+
+const orphaned = unusedInOwnPackage(
+  exportDeclarations,
+  files.map((file) => relative(ROOT, file)),
+  sources,
+  Object.keys(PUBLIC_API),
+);
+
+console.log(`${ambiguous.length} name(s) are declared in more than one place.\n`);
+
+if (orphaned.length > 0) {
+  console.log(`${orphaned.length} of them are not used by the package that declares them:\n`);
+  for (const item of orphaned) {
+    console.log(`  ${item.name}  (${item.file})`);
+  }
+  console.log(
+    '\nUses are counted by name, so a live caller in one package covers a dead export in\n' +
+      'another. That is how the phone app came to write a path no screen read back.\n',
+  );
+}
 
 if (unusedMembers.length > 0) {
   console.log(`${unusedMembers.length} class member(s) have no caller here:\n`);

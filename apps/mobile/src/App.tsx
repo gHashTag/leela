@@ -23,7 +23,15 @@ import {
   throwDie,
   type Game,
 } from './game';
-import { EMPTY, keep, loadKept, takeAccount, type Journal, type Store } from './journal';
+import {
+  EMPTY,
+  keep,
+  loadKept,
+  takeAccount,
+  writingsOn,
+  type Journal,
+  type Store,
+} from './journal';
 import { deviceKeeper } from './device';
 
 /**
@@ -131,6 +139,28 @@ export default function App() {
         </View>
 
         <Text style={styles.plan}>{plan.body}</Text>
+
+        {/*
+          What they wrote here before.
+          
+          The app kept a path and showed none of it — the same shape the bot was
+          found in, where reports were written, stored, and never read back. A
+          record nobody can read is a record the game is not producing.
+          
+          On this square rather than the whole path, because the whole path is a
+          screen of its own and this is the moment it matters: a player standing
+          again on a square they have stood on is the thing `revisited` exists
+          to notice.
+        */}
+        {writingsOn(journal, here).length > 0 ? (
+          <View style={styles.written}>
+            {writingsOn(journal, here).map((entry) => (
+              <Text key={`${entry.plan}-${entry.at}`} style={styles.entry}>
+                {entry.text}
+              </Text>
+            ))}
+          </View>
+        ) : null}
       </ScrollView>
 
       {owesAnAccount(game) ? (
@@ -198,6 +228,13 @@ const styles = StyleSheet.create({
   cellText: { fontSize: 12, color: '#6b6255' },
   standingText: { fontSize: 12, color: '#fff', fontWeight: '700' },
   plan: { fontSize: 15, lineHeight: 22, color: '#2f2a24' },
+  written: {
+    gap: 8,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: '#efe9df',
+  },
+  entry: { fontSize: 15, lineHeight: 21, color: '#4a433a' },
   writer: { paddingHorizontal: 16, gap: 8 },
   field: {
     borderWidth: 1,

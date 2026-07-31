@@ -4988,6 +4988,25 @@ Chakra* (`CFBundleDisplayName`). An iOS build under the wrong identifier is a
 different application to the store, to the keychain, and to every player who has
 the published one installed. Asserted now rather than commented.
 
+**And it reads the path back.** The app wrote accounts and showed none of them
+— `writingsOn` was written, exported, and called by no screen — which is the
+shape the bot was found in, where reports went into SQLite correctly and nothing
+ever returned them to the player. A record nobody can read is a record the game
+is not producing. What a player wrote on a square is now under that square when
+they stand on it again, which is the moment it is worth reading.
+
+**The audit could not see it, and now can.** Uses are counted by name across
+every package, and the mini app has a `writingsOn` of its own — so one live
+caller there covered a dead export here and `audit-unread` reported that every
+export has a caller. Thirteen names are declared in more than one place; for
+those, each declaration is now asked whether **its own package** uses it.
+
+Applications only. A library exists to be used by somebody else —
+`@leela/journal` calls almost nothing it exports, and that is what a format is —
+while an application's own export is for that application. The first version of
+the check did not make that distinction and reported the format package as dead
+in three places, which is how a check earns its way into being switched off.
+
 Still to bring across from `leela`: RevenueCat, notifee and Sentry.
 
 **The published app cannot be rebuilt from its own source, and the reason is not
