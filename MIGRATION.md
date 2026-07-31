@@ -4511,6 +4511,46 @@ that holds it in step; and it still fails if such a pair stops agreeing, saying
 that the test which was to hold them has not. Checked by planting a private
 copy, and by making the tied pair disagree.
 
+## Hundred-and-thirty-first pass: the sums, in every language at once
+
+`packages/contracts` was checked first, since the pass before had tied the
+format's copy of the board to the engine's. It is already tied, and tied
+properly: `compareBoards` reads the Solidity in both directions — every jump the
+engine has, and every jump the contract has that the engine does not — and the
+source is read at module load, so a missing or renamed file fails loudly rather
+than leaving an empty parse to agree with everything. Nothing to fix.
+
+So: the translation audit, whose structural half needs nothing external and had
+been deferred for six passes.
+
+Two widenings of the existing check were tried. **Numbers a translation has that
+neither edition has** is mostly ordinals — Japanese writes *6th chakra* where
+English spells the word out — and reporting them would be a check nobody reads.
+**But the arithmetic is not a translation question at all.** Plan 9 argues that
+nine keeps its identity under multiplication and lists the products; plan 8
+argues the opposite and lists its own. Whether nine times two hundred and eighty
+is two thousand five hundred and twenty is the same question in Ukrainian as it
+is here.
+
+**Three languages state `9х280=7,380`.** It is 2520. Ukrainian, Malay and
+Arabic — the three translated from the English edition — and the English donor
+in `leela-src` carries the same false line, so it is inherited rather than
+introduced here. That was checked rather than assumed. The shipped English
+follows the Russian edition and says 2520.
+
+`audit-arithmetic` checks two claims per equation and no more, because every
+further one was the tool misreading rather than the text being wrong: the
+product, and the single digit a chain comes down to. The steps between are not
+checked — Ukrainian writes plan 8's as `8х2=16= 1 +6 =7`, spaces and all, and a
+first attempt at reading those steps reported six faults in three languages
+before the raw text was looked at. Checked in both directions by planting a
+false product and a false reduction.
+
+**Recorded rather than repaired**, as the forty-two missing references are.
+Correcting a number in three shipped translations is a decision about content,
+and this audit's job is to make it impossible to miss rather than to make it
+quietly.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -207,6 +207,7 @@ node scripts/audit-unread.mjs
 node scripts/audit-configs.mjs
 node scripts/audit-claims.mjs       # the table above, against the suites
 node scripts/audit-scripts.mjs      # every script runs under the runtime it names
+node scripts/audit-arithmetic.mjs   # the sums the text states, in all 22 languages
 node scripts/audit-doubles.mjs      # one bound, declared once
 node scripts/audit-promises.mjs     # every injected dependency, against a test that breaks it
                                     # and asserts what anyone is told

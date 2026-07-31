@@ -136,6 +136,12 @@ jobs:
       # is what a rebuild from a different source would produce.
       - run: node scripts/audit-numbers.mjs
 
+      # The sums the traditional text states, in every language at once. The
+      # one layer of the translation audit that needs no translator: whether
+      # nine times two hundred and eighty is 2520 is the same question in
+      # Ukrainian as it is here, and in three languages the text says it is not.
+      - run: node scripts/audit-arithmetic.mjs
+
       # The rules book's table of contents. Three books came through a
       # different donor and are missing chapters the two editions agree on;
       # this names them and fails on a fourth.
