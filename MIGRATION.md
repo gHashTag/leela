@@ -4992,7 +4992,26 @@ with nothing around it, so a player on a square they did not understand had
 nowhere to look. `bookFor` rather than `rulesFor`, so a language without
 chapters of its own is served English ones whole rather than half a book.
 
-Two gaps left, both the phone's: one square shared, and the companion.
+**One of them closed the same day it was written down.** A whole path is a file
+and an occasion; a square is a message — *this is where I am and this is what it
+asked of me* — and it is the door people actually use. The bot has had `/take`
+for it since it could read one; the phone could carry a path both ways and not a
+square either way.
+
+The two decisions that come with it are the bot's, asked of the same format
+rather than answered again. **The frame is not adopted**: a shared square
+carries the sender's question, and taking it would let a message set what
+somebody is playing for — the mini app's hand-over is the only route that may,
+because Telegram delivers it from the player's own app. **And it is stamped on
+arrival**, because a square carries no time and inventing one puts it where
+nothing happened, after which `revisited` reports a return that never was.
+
+The sentence names the square that arrived rather than the one the reader is
+standing on. Somebody on 6 can be sent 41, and `square.took` takes a `{plan}`;
+filling it with the reader's would have been the fifth time a sentence in this
+repository named the wrong thing because it was the value nearest to hand.
+
+One gap left, the phone's: the companion.
 
 ## Remaining, in order
 

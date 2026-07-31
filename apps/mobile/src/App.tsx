@@ -31,8 +31,10 @@ import {
   loadKept,
   saveIntention,
   shareName,
+  shareSquare,
   takeAccount,
   takeIn,
+  takeSquare,
   toShare,
   writingsOn,
   type Journal,
@@ -277,6 +279,25 @@ export default function App() {
           dependency comes with it, and what goes out is the format every other
           surface reads — question included.
         */}
+        {/* This square, as a message somebody can read. */}
+        {writingsOn(journal, here).length > 0 ? (
+          <Pressable
+            style={styles.button}
+            onPress={() => {
+              void Share.share({
+                message: shareSquare(
+                  here,
+                  plan.title,
+                  writingsOn(journal, here).at(-1)?.text ?? '',
+                  '',
+                ),
+              });
+            }}
+          >
+            <Text style={styles.buttonText}>{messageFor(language, 'app.share')}</Text>
+          </Pressable>
+        ) : null}
+
         {journal.entries.length > 0 ? (
           <Pressable
             style={styles.button}
@@ -309,6 +330,22 @@ export default function App() {
           disabled={pasted.trim().length === 0}
           style={[styles.button, pasted.trim().length === 0 && styles.shut]}
           onPress={() => {
+            // A square first, because that is what people paste. A path is a
+            // file and an occasion; a square is a message, and the two are told
+            // apart by the format rather than by asking the player which it is.
+            const square = takeSquare(journal, pasted, Date.now());
+            if (square.readable) {
+              setJournal(square.journal);
+              setPasted('');
+              setSaid(
+                square.added
+                  ? messageFor(language, 'square.took', { plan: square.plan ?? here })
+                  : messageFor(language, 'app.pathImportedNothing'),
+              );
+              void keep(keeper, square.journal);
+              return;
+            }
+
             const taken = takeIn(journal, pasted, intention);
             if (!taken.readable) {
               setSaid(messageFor(language, 'app.pathUnreadable'));

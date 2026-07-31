@@ -25,6 +25,9 @@ import {
   newEntries,
   order,
   parseDocument,
+  parseSquare,
+  squareText,
+  takeSquare as takeSquareInto,
   toDocument,
   type Report,
 } from '@leela/journal';
@@ -345,5 +348,59 @@ export function takeIn(journal: Journal, text: string, intention: string): Taken
     added: added.length,
     intention: intention.trim() === '' && asked !== '' ? asked : null,
     readable: true,
+  };
+}
+
+/** One square, written the way a person reads it. */
+export function shareSquare(plan: number, title: string, text: string, intention: string): string {
+  return squareText(plan, title, text, intention);
+}
+
+/** What came of taking one square in. */
+export interface SquareTaken {
+  journal: Journal;
+  /** True when the words were a square this format can read. */
+  readable: boolean;
+  /** False when the same square and the same words are already here. */
+  added: boolean;
+  /**
+   * The square it was about — the sender's, not the reader's.
+   *
+   * Named because the sentence that follows names it, and the two are not the
+   * same square: somebody standing on 6 can be sent 41. Saying "taken in on 6"
+   * would be this surface reporting where the reader is instead of what
+   * arrived, which is the shape this repository has now met five times.
+   */
+  plan: number | null;
+}
+
+/**
+ * Take one square somebody sent.
+ *
+ * This is what people actually pass on. A whole path is a file and an
+ * occasion; a square is a message — *this is where I am and this is what it
+ * asked of me* — and the bot has had `/take` for it since the day it could
+ * read one.
+ *
+ * **The frame is not adopted.** A shared square carries the sender's question
+ * and this declines it, exactly as `/take` does: reading somebody's frame is
+ * not taking it on, and what a player is playing for is not a thing a message
+ * can set. The mini app's hand-over is the one route that may, because Telegram
+ * delivers it from the player's *own* app — and this is not that route.
+ *
+ * **And it is stamped on arrival.** A shared square carries no time; inventing
+ * one would put it at a place in the path where nothing happened, and `revisited`
+ * would then say a player returned to a square they had not.
+ */
+export function takeSquare(journal: Journal, text: string, at: number): SquareTaken {
+  const square = parseSquare(text);
+  if (square === null) return { journal, readable: false, added: false, plan: null };
+
+  const entries = takeSquareInto(journal.entries, square, at);
+  return {
+    journal: { entries },
+    readable: true,
+    added: entries.length > journal.entries.length,
+    plan: square.plan,
   };
 }

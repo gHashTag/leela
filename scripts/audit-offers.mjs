@@ -60,7 +60,7 @@ const OFFERS = [
  * The phone is the youngest surface and these are what it has not been given
  * yet. Written down so that the next one to appear is visible the day it does.
  */
-const RECORDED = ['mobile: one square, shared', 'mobile: the companion'];
+const RECORDED = ['mobile: the companion'];
 
 /**
  * The code, with the prose taken out.
