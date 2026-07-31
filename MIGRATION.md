@@ -4679,6 +4679,31 @@ a long game is the one they never drop.
 Forgetting a refusal costs one direct message that fails, after which it is
 learned again — which is what `allow` already does in the other direction.
 
+## Hundred-and-thirty-sixth pass: the sum, corrected
+
+Three shipped translations stated `9х280=7,380`, in the plan whose whole
+argument is that nine keeps its identity under multiplication. They say `2,520`
+now — Ukrainian, Malay and Arabic, one token each, in the grouping every one of
+those files already used, with nothing else in the sentence touched.
+
+This is the one repair in the translation damage that needed no translator. The
+forty-two missing board references still do: putting a number back into a
+sentence means writing the sentence. Here the sentence is right and the digits
+were wrong, and which digits are right is settled by arithmetic in every
+language at once. The English donor in `leela-src` carries the same false line,
+so the error was inherited rather than introduced, and correcting it here does
+not diverge from a translator's judgement — there was none to diverge from.
+
+**Two records emptied, and one of them said so itself.** `audit-numbers` has a
+branch for damage that is recorded and no longer there — *recorded as missing
+and now present — take these out of RECORDED* — and it printed the three lines
+to remove without being asked. `2520` had been listed as a number those three
+languages had lost, which was true: they had it wrong rather than absent, and a
+wrong number is a missing one to a check that looks for the right one.
+
+`audit-arithmetic`'s own list is now empty, and stays in the file. A list that
+empties is the point of keeping one.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

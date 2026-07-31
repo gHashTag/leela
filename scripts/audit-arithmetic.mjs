@@ -37,15 +37,18 @@ const DATA = join(HERE, '..', 'packages', 'content', 'data');
 /**
  * False sums already known, as `language/plan: what it says`.
  *
- * One claim, in the three languages translated from the English edition, in the
- * plan whose entire argument is that nine keeps its identity under
- * multiplication. Anyone re-translating these knows exactly what to correct.
+ * Empty, and it was not always. Ukrainian, Malay and Arabic each stated
+ * `9х280=7,380` — inherited from the English donor, which carries the same
+ * false line — in the plan whose entire argument is that nine keeps its
+ * identity under multiplication. They say `2,520` now, in the grouping each
+ * file already used, and nothing else in the sentence was touched: the correct
+ * digits are what arithmetic says they are, in every language at once, and no
+ * translator was needed to know them.
+ *
+ * A list that empties is the point of keeping one. It stays here for the next
+ * sum that turns out to be wrong.
  */
-const RECORDED = [
-  'ar/9: 9х280=7380=9',
-  'ms/9: 9х280=7380=9',
-  'uk/9: 9х280=7380=9',
-];
+const RECORDED = [];
 
 const languages = readdirSync(DATA)
   .filter((file) => file.startsWith('plans.') && file.endsWith('.json'))
