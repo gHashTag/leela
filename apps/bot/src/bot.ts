@@ -450,6 +450,15 @@ export function createBot({
   bot.command('end', async (ctx) => {
     const chatId = chatIdOf(ctx);
     if (!chatId) return;
+
+    // The conversation belongs to the game. `Conversations.clear` was written
+    // for this — *a new game is a new conversation* — and had no caller at all,
+    // so a player who ended a table and opened another was still being answered
+    // in the light of the one before it, and the map that held those exchanges
+    // never gave anything back.
+    const ending = await store.get(chatId);
+    for (const seat of ending?.session.players ?? []) conversations.clear(seat.id);
+
     await store.delete(chatId);
     const cleared = await store.get(chatId);
     await ctx.reply(messageFor(languageOf(ctx, cleared), 'chat.cleared'));

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
+import { MAX_REFUSED,
   DirectChannels,
   destinationFor,
   isBlockedByUser,
@@ -127,5 +127,35 @@ describe('isBlockedByUser', () => {
     for (const value of [null, undefined, 'a string', 42, {}]) {
       expect(isBlockedByUser(value), String(value)).toBe(false);
     }
+  });
+});
+
+describe('the refusals a long-running process remembers', () => {
+  /**
+   * The same unbounded set as the conversations, with a gentler failure:
+   * forgetting that somebody blocked the bot costs one direct message that
+   * fails, after which they are remembered again. That is what `allow` already
+   * does in the other direction, so an evicted entry is this class doing its
+   * job a little sooner rather than a defect.
+   *
+   * What it must not do is drop somebody who was refused *recently* while
+   * holding a stranger from a year ago.
+   */
+  it('remembers no more than it says it will', () => {
+    const channels = new DirectChannels();
+
+    for (let user = 0; user < MAX_REFUSED + 200; user += 1) channels.refuse(`u${user}`);
+
+    expect(channels.refusedCount).toBe(MAX_REFUSED);
+  });
+
+  it('forgets the oldest refusal rather than the newest', () => {
+    const channels = new DirectChannels();
+
+    channels.refuse('long-ago');
+    for (let user = 0; user < MAX_REFUSED; user += 1) channels.refuse(`u${user}`);
+
+    expect(channels.canWrite('long-ago'), 'forgotten, so worth one more try').toBe(true);
+    expect(channels.canWrite(`u${MAX_REFUSED - 1}`), 'still refused').toBe(false);
   });
 });

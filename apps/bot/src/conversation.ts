@@ -24,6 +24,22 @@ import type { Message } from '@leela/ai';
 /** How many messages to carry. Six is three exchanges, which is `MAX_HISTORY`. */
 export const KEEP_MESSAGES = 6;
 
+/**
+ * How many players' conversations to hold at once.
+ *
+ * Each one was bounded and the number of them was not, so a process that is
+ * never restarted holds one for every player who has ever asked anything — and
+ * this repository has already measured that argument and found it false once:
+ * *a bot that is never restarted is not accumulating tables either*, said about
+ * the finished games that had piled up for twelve weeks. Conversations pile up
+ * the same way, for the same reason, and nothing forgets them.
+ *
+ * Ten thousand is about twelve megabytes of six short messages each, and a
+ * player evicted from it loses what a restart would have taken anyway. The
+ * least recently spoken to goes first.
+ */
+export const MAX_CONVERSATIONS = 10_000;
+
 export class Conversations {
   private readonly byPlayer = new Map<string, Message[]>();
 
@@ -45,7 +61,22 @@ export class Conversations {
       { role: 'assistant' as const, content: answer },
     ];
 
+    // Deleted before it is set, so the map's own insertion order becomes an
+    // order of last speaking — which is what makes the eviction below the
+    // *least recently* spoken to rather than the first one ever seen.
+    this.byPlayer.delete(playerId);
     this.byPlayer.set(playerId, kept.slice(-KEEP_MESSAGES));
+
+    while (this.byPlayer.size > MAX_CONVERSATIONS) {
+      const oldest = this.byPlayer.keys().next();
+      if (oldest.done) break;
+      this.byPlayer.delete(oldest.value);
+    }
+  }
+
+  /** How many conversations are being held. */
+  get size(): number {
+    return this.byPlayer.size;
   }
 
   /** Forget a player's conversation. A new game is a new conversation. */

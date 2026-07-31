@@ -4648,6 +4648,37 @@ registered commands, and asserts over every character the repository ships that
 arises in the first place; without it, the order of the literal cannot decide
 anything. Put the old range back and it names the first offender out of 2,132.
 
+## Hundred-and-thirty-fifth pass: a sentence true of nothing
+
+The hunt for more order-decided-by-a-literal came up empty — the one remaining
+loop over an object literal now settles its ties by name, and every other one is
+counting or collecting where order cannot matter. A mechanical check for it
+would flag `count > best`, which is how an argmax is written everywhere and
+almost never a defect. Written down so the next pass does not build it.
+
+So: the bot's in-memory stores, which nothing had looked at.
+
+`Conversations.clear` carries the sentence *a new game is a new conversation*
+and **had no caller anywhere in the repository**. So a player who ended a table
+and opened another went on being answered in the light of the one before it. The
+sentence was true of nothing.
+
+`/end` clears it now, for the seats of the room being ended and no others — a
+conversation belongs to a player, and one player ending their game is not a
+reason to forget somebody else's.
+
+**And neither store ever gave anything back.** Each conversation is bounded at
+six messages; the number of conversations was not. Each refusal is a few bytes;
+the number of refusals was not. This repository has already measured that
+argument once and found it false — *a bot that is never restarted is not
+accumulating tables either*, written above twelve weeks of finished games that
+had piled up because nothing swept them. Both stores are bounded now, and both
+evict the least recently used rather than the first ever seen, so the player in
+a long game is the one they never drop.
+
+Forgetting a refusal costs one direct message that fails, after which it is
+learned again — which is what `allow` already does in the other direction.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

@@ -70,6 +70,17 @@ export function nudgeToPrivate(language: Language, command: string): string {
  * (403), and there is no way to ask in advance — the only way to know is to
  * try. So: assume it works, and remember the refusal.
  */
+/**
+ * How many refusals to remember.
+ *
+ * The same unbounded set as the conversations beside it, and with a gentler
+ * failure: forgetting that somebody blocked the bot costs one direct message
+ * that fails, after which they are remembered again. That is exactly what
+ * `allow` already does in the other direction, so an evicted entry is not a
+ * defect — it is this class doing what it does, a little sooner.
+ */
+export const MAX_REFUSED = 10_000;
+
 export class DirectChannels {
   private readonly refused = new Set<string>();
 
@@ -79,7 +90,14 @@ export class DirectChannels {
 
   /** Called after a 403, so the next reply does not try and fail again. */
   refuse(userId: string): void {
+    this.refused.delete(userId);
     this.refused.add(userId);
+
+    while (this.refused.size > MAX_REFUSED) {
+      const oldest = this.refused.values().next();
+      if (oldest.done) break;
+      this.refused.delete(oldest.value);
+    }
   }
 
   /** Called when a direct message succeeds, in case they have since started one. */

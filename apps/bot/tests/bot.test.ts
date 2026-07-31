@@ -1336,3 +1336,80 @@ describe('an update never ends in silence', () => {
     await expect(bot.handleUpdate(message('/path', PRIVATE))).resolves.toBeUndefined();
   });
 });
+
+describe('a new game is a new conversation', () => {
+  /**
+   * `Conversations.clear` says so in its own comment and had no caller
+   * anywhere, so the sentence was true of nothing. A player who ended a table
+   * and opened another went on being answered in the light of the one before
+   * it — and the map holding those exchanges never gave a single one back, in a
+   * process that is meant to run for months.
+   *
+   * Asserted where it shows: what the model is handed. The conversation is not
+   * kept anywhere a player can see, so the only honest place to look is the
+   * prompt.
+   */
+  const asked = (recorder: ReturnType<typeof recordingModel>) =>
+    (recorder.calls.at(-1)?.messages ?? []).filter((message) => message.role === 'user');
+
+  it('hands the model nothing from the game before', async () => {
+    const recorder = recordingModel('an answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const reports = new MemoryReportSink();
+    const { bot, sent } = harness({ guide, reports });
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+    await bot.handleUpdate(message('/intention to see what I keep avoiding', PRIVATE));
+    // A player waiting to enter stands on no square, and `/ask` says so rather
+    // than asking about one. The die has to land first.
+    await rollUntilTheGate(bot, sent);
+    await bot.handleUpdate(message('/ask what does this square want from me', PRIVATE));
+    await bot.handleUpdate(message('/ask and what am I meant to do with that', PRIVATE));
+
+    expect(asked(recorder).length, 'the second question carried the first').toBeGreaterThan(1);
+
+    await bot.handleUpdate(message('/end', PRIVATE));
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+    await rollUntilTheGate(bot, sent);
+    await bot.handleUpdate(message('/ask a question in a new game', PRIVATE));
+
+    const carried = asked(recorder).map((message) => message.content).join(' ');
+    expect(carried).toContain('a question in a new game');
+    // The questions, not the intention: what a player is playing for belongs to
+    // them and survives a table, which is why it is kept by player and not by
+    // room. The exchanges are the game's.
+    expect(carried, 'nothing asked at the last table').not.toMatch(/meant to do with that/);
+    expect(carried).not.toMatch(/what does this square want from me/);
+  });
+
+  it('leaves a player at another table alone', async () => {
+    // The room being ended knows who was sitting at it, and nobody else. A
+    // conversation is per player, and one player ending their game is not a
+    // reason to forget somebody else's.
+    const recorder = recordingModel('an answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    // Somebody else's table, played by somebody else. `rollUntilTheGate` throws
+    // from the default sender, who is not seated here.
+    await bot.handleUpdate(message('/new', GROUP, 200));
+    await bot.handleUpdate(message('/start', GROUP, 200));
+    for (let attempt = 0; attempt < 60; attempt += 1) {
+      const before = sent.length;
+      await bot.handleUpdate(message('/roll', GROUP, 200));
+      if (texts(sent.slice(before)).join(' ').includes('before you move on')) break;
+    }
+    await bot.handleUpdate(message('/ask something at the group table', GROUP, 200));
+
+    // A different player ends a different table.
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/end', PRIVATE));
+
+    await bot.handleUpdate(message('/ask and a second one here', GROUP, 200));
+
+    const carried = asked(recorder).map((message) => message.content).join(' ');
+    expect(carried).toContain('something at the group table');
+  });
+});

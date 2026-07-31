@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_HISTORY } from '@leela/ai';
-import { Conversations, KEEP_MESSAGES } from '../src/conversation';
+import { MAX_CONVERSATIONS, Conversations, KEEP_MESSAGES } from '../src/conversation';
 
 /**
  * What the companion has been asked, and what it said.
@@ -83,5 +83,61 @@ describe('the order a conversation is replayed in', () => {
     talk.clear('a');
 
     expect(talk.of('a')).toEqual([]);
+  });
+});
+
+describe('what a long-running process holds on to', () => {
+  /**
+   * Each conversation was bounded at six messages and the number of them was
+   * not, so a process that is never restarted keeps one for every player who
+   * has ever asked anything. This repository has already measured that argument
+   * and found it false once — *a bot that is never restarted is not
+   * accumulating tables either*, written above the finished games that had
+   * piled up for twelve weeks before anybody looked.
+   *
+   * And `clear` had no caller. Its own comment says *a new game is a new
+   * conversation*; nothing started one. So the map only ever grew, and a player
+   * who ended a table and opened another was still answered in the light of the
+   * last one.
+   *
+   * The assertions are about the shape rather than the number: whatever the cap
+   * is, going past it leaves the most recent conversations and drops the
+   * stalest, and nothing is lost that was spoken to since.
+   */
+  it('holds no more than it says it will', () => {
+    const conversations = new Conversations();
+
+    for (let player = 0; player < MAX_CONVERSATIONS + 500; player += 1) {
+      conversations.add(`p${player}`, 'what does this square ask', 'it asks this');
+    }
+
+    expect(conversations.size).toBe(MAX_CONVERSATIONS);
+  });
+
+  it('drops the stalest rather than the newest', () => {
+    const conversations = new Conversations();
+
+    conversations.add('first', 'asked long ago', 'answered long ago');
+    for (let player = 0; player < MAX_CONVERSATIONS; player += 1) {
+      conversations.add(`p${player}`, 'later', 'later');
+    }
+
+    expect(conversations.of('first'), 'the oldest went').toEqual([]);
+    expect(conversations.of(`p${MAX_CONVERSATIONS - 1}`).length, 'the newest stayed').toBe(2);
+  });
+
+  it('keeps a player who has spoken since, however early they arrived', () => {
+    // Eviction by *last spoken to*, not by first seen. A player in a long game
+    // is the one this must never drop.
+    const conversations = new Conversations();
+
+    conversations.add('early', 'first question', 'first answer');
+    for (let player = 0; player < MAX_CONVERSATIONS - 1; player += 1) {
+      conversations.add(`p${player}`, 'later', 'later');
+    }
+    conversations.add('early', 'still here', 'still answered');
+    conversations.add('newcomer', 'and one more', 'pushing it over');
+
+    expect(conversations.of('early').length, 'spoken to since, so kept').toBe(4);
   });
 });
