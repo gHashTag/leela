@@ -104,23 +104,39 @@ inside the app and can differ from the system setting.
 
 ## The bundle
 
-`@leela/content` carries all 22 languages. Importing it whole produced a
-**6.5 MB** bundle — 1.6 MB gzipped — to show one language on a phone.
+`@leela/content` carries all 22 languages and the rules book for all of them.
+Importing it whole means a phone downloads twenty-two to read one.
 
 `content.ts` loads exactly one dataset through `import.meta.glob`, so Vite emits
-one chunk per language and fetches only what is asked for:
+one chunk per language and fetches only what is asked for. The rules book is a
+chunk of its own, fetched when a reader opens it and not before.
 
-| | before | after |
+Measured from `bun run build`, raw and transferred (gzip):
+
+| | raw | gzip |
 |---|---|---|
-| first load | 6543 kB | **368 kB** (11 kB app + 3 kB CSS + one language) |
+| app | 94.5 kB | 41.0 kB |
+| CSS | 8.1 kB | 2.5 kB |
+| one language (en) | 206.6 kB | 64.9 kB |
+| **first load, English** | **309 kB** | **108 kB** |
+| rules book, on first open | 1515 kB | — |
+
+Russian is the largest at 361.8 kB raw, 84.9 kB gzipped.
+
+**This table is checked.** `tests/bundle.test.ts` builds the app and asserts the
+split is engaged — one chunk per language, no dynamic import defeated by a
+static one, no plan text in the entry. It exists because the numbers above were
+written down once before and then stopped being true: three value imports of
+`@leela/content` in `browse.ts` folded every language back into the entry, and
+the app shipped **8.1 MB** for a hundred and twelve commits under a README
+promising 368 kB. Nobody rechecks a number that is already written down.
 
 The language comes from the Telegram user's `language_code`, falling back to
 the browser's, then to English.
 
 ## What is missing
 
-- The mini app plays solo. Group play lives in the bot, and the two do not
-  share a game yet — joining them needs `initData` verified server-side, which
-  needs somewhere to run.
-- Reports are not written here. The gate that makes them matter is a rule of
-  the `classic` variant the bot uses; this app plays without the gate.
+- Group play across devices. Several players share *this* device — each with
+  their own journal, intention and draft — but a table spread across phones
+  needs `initData` verified server-side, which needs somewhere to run. Group
+  play in one chat lives in the bot, and the two do not share a game yet.

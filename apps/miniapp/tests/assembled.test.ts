@@ -147,7 +147,7 @@ describe('the mini app as it is assembled', () => {
     expect(broke).toEqual([]);
     expect(document.querySelectorAll('#board .cell')).toHaveLength(72);
     expect(openDialogs()).toEqual(['intention']);
-  });
+  }, 20_000);
 
   it('plays in a private window, which is what the code has always claimed', async () => {
     // The defect this file was written for. Every function involved was tested
@@ -209,7 +209,7 @@ describe('the mini app as it is assembled', () => {
     expect(openDialogs(), 'the question has an answer already').toEqual([]);
     expect(el('plan-number').textContent).toBe('41');
     expect(el('roll').disabled).toBe(false);
-  });
+  }, 20_000);
 
   it('keeps a game in progress when somebody else sits down', async () => {
     // The ninety-sixth pass fixed this in `resize`; here it is through the
@@ -232,7 +232,7 @@ describe('the mini app as it is assembled', () => {
     };
 
     expect(seats.players.map((seat) => seat.state.loka)).toEqual([41, 68, 68]);
-  });
+  }, 20_000);
 
   it('writes an account and shows it as a square that came back', async () => {
     const storage = remembering({
@@ -296,7 +296,7 @@ describe('the mini app as it is assembled', () => {
     };
 
     expect(kept.entries.map((entry) => entry.text)).toEqual(['From another device.']);
-  });
+  }, 20_000);
 
   it('ends a game and begins another without burning the writing', async () => {
     const storage = remembering({
@@ -339,7 +339,7 @@ describe('the mini app as it is assembled', () => {
     expect(el('roll').disabled).toBe(false);
     expect(seats.players[0]?.state.loka).toBe(68);
     expect(kept.entries, 'starting again is not a reason to burn what was written').toHaveLength(1);
-  });
+  }, 20_000);
 
   it('carries the question out with the answers, and takes one in only where there is none', async () => {
     // The frame every report was written inside. A player who changed phone

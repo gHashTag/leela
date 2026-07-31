@@ -10,7 +10,14 @@
  * one source of truth for which languages exist.
  */
 
-import { FALLBACK_LANGUAGE, resolveLanguage, type Language, type Plan } from '@leela/content';
+import {
+  bookFrom,
+  FALLBACK_LANGUAGE,
+  resolveLanguage,
+  type Language,
+  type Plan,
+  type RuleChapter,
+} from '@leela/content';
 
 /**
  * Every dataset, as a lazy import. Vite turns this into one chunk per file and
@@ -60,7 +67,54 @@ export function plan(number: number): Plan {
   return found;
 }
 
+/**
+ * The plans that are loaded, for the surfaces that want the whole list.
+ *
+ * @throws Error when called before `loadPlans`, for the reason `plan` does.
+ */
+export function plans(): Plan[] {
+  if (!loaded) throw new Error('loadPlans must finish before the plans can be read');
+  return loaded.plans;
+}
+
 /** The language currently loaded, or null before the first load. */
 export function currentLanguage(): Language | null {
   return loaded?.language ?? null;
+}
+
+/**
+ * The rules book, fetched only when a reader opens it.
+ *
+ * Its own chunk, and not part of the first load. `rules.json` is 1.5 MB of
+ * every language's chapters and a player who never taps the book never needs a
+ * byte of it — while the board, which everybody needs, waited behind all of it.
+ *
+ * One file rather than one per language, because that is what the generator
+ * writes; splitting it further is a change to `build-content.mjs` and belongs
+ * with the audit that would keep the two halves honest.
+ *
+ * The borrow rule stays in `@leela/content`. This fetches the two books and
+ * `bookFrom` decides — the alternative is the mini app knowing what to do about
+ * a language missing the chapter on the chakras, which would be the sixth copy
+ * of a rule that took five to consolidate.
+ */
+const books = import.meta.glob<{ default: Record<string, RuleChapter[]> }>(
+  '../../../packages/content/data/rules.json',
+);
+
+let book: { language: Language; chapters: RuleChapter[] } | null = null;
+
+export async function loadBook(locale: string): Promise<RuleChapter[]> {
+  const language = resolveLanguage(locale);
+  if (book?.language === language) return book.chapters;
+
+  const importer = books['../../../packages/content/data/rules.json'];
+  if (!importer) throw new Error('no rules book found');
+
+  const all = (await importer()).default;
+  book = {
+    language,
+    chapters: bookFrom(all[language] ?? [], all[FALLBACK_LANGUAGE] ?? []),
+  };
+  return book.chapters;
 }

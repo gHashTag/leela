@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TOTAL_PLANS } from '@leela/engine';
+import { plansFor } from '@leela/content';
 import { planEntries } from '../src/browse';
 import {
   loadJournalFor,
@@ -131,7 +132,7 @@ describe('the list of all 72', () => {
     const journal = written(GAME);
     const returns = new Map(revisited(journal).map((visit) => [visit.plan, visit.times]));
 
-    for (const entry of planEntries('en', undefined, returns)) {
+    for (const entry of planEntries(plansFor('en'), undefined, returns)) {
       const times = writingsOn(journal, entry.key as number).length;
       expect(entry.returns, `plan ${entry.key}`).toBe(times > 1 ? times : undefined);
     }
@@ -140,12 +141,12 @@ describe('the list of all 72', () => {
   it('marks nothing when no journal is passed at all', () => {
     // The reader and the rules book open this list too, and a mark there would
     // be counting a game nobody asked about.
-    expect(planEntries('en', 41).some((entry) => entry.returns !== undefined)).toBe(false);
+    expect(planEntries(plansFor('en'), 41).some((entry) => entry.returns !== undefined)).toBe(false);
   });
 
   it('still lists all 72 in order, marked or not', () => {
     const returns = new Map([[41, 3]]);
-    const entries = planEntries('en', 41, returns);
+    const entries = planEntries(plansFor('en'), 41, returns);
 
     expect(entries).toHaveLength(TOTAL_PLANS);
     expect(entries.map((entry) => entry.key)).toEqual(

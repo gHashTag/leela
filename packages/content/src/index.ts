@@ -141,8 +141,26 @@ export function rulesFor(locale: string): RuleChapter[] {
  * difference is between falling back and filing wrongly.
  */
 export function bookFor(locale: string): RuleChapter[] {
-  const chapters = rulesFor(locale);
-  if (chapters.length === 0) return rulesFor(FALLBACK_LANGUAGE);
+  return bookFrom(rulesFor(locale), rulesFor(FALLBACK_LANGUAGE));
+}
+
+/**
+ * The borrow rule, over two books rather than over the whole dataset.
+ *
+ * `bookFor` reads `RULES`, which is every language at once — right for a server
+ * and wrong for a phone, where fetching the book means fetching one language's
+ * chapters and English's. A surface that has loaded exactly those two still has
+ * to make the same decision about them, and a decision made twice is a decision
+ * that will differ: this is the one place it is written.
+ *
+ * Takes no locale on purpose. Which chapters belong to whom is the caller's
+ * business; what to do when one book is short is this function's.
+ */
+export function bookFrom(
+  chapters: readonly RuleChapter[],
+  english: readonly RuleChapter[],
+): RuleChapter[] {
+  if (chapters.length === 0) return [...english];
 
   // A chapter the reader's book does not have, borrowed from English and
   // marked as borrowed.
@@ -159,7 +177,7 @@ export function bookFor(locale: string): RuleChapter[] {
   // there. The order is the reader's own book first, then whatever it is
   // missing, so nothing they *do* have is displaced.
   const have = new Set(chapters.map((chapter) => chapter.slug));
-  const missing = rulesFor(FALLBACK_LANGUAGE)
+  const missing = english
     .filter((chapter) => !have.has(chapter.slug))
     .map((chapter) => ({ ...chapter, borrowed: true }));
 

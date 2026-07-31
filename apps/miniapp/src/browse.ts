@@ -12,9 +12,21 @@
  * is a book nobody has.
  *
  * The deciding is here and pure; the dialog is the DOM's.
+ *
+ * **Pure means it is given its texts, not that it fetches them.** These three
+ * functions used to call `plansFor` and `bookFor`, which read the whole of
+ * `@leela/content` — every language at once. That is right for a server and
+ * ruinous for a phone: `content.ts` next door exists to fetch one language as
+ * its own chunk, and three imports in this file defeated it entirely, because a
+ * module that is statically reachable cannot be split out however many dynamic
+ * imports point at it. The shipped bundle was 8.1 MB where this app's README
+ * promised 368 kB.
+ *
+ * So they take arrays. Which language those arrays hold is the caller's
+ * business; what to make of them is this file's.
  */
 
-import { bookFor, type Language, plansFor } from '@leela/content';
+import type { Plan, RuleChapter } from '@leela/content';
 import { TOTAL_PLANS } from '@leela/engine';
 
 /** A line in one of the lists. */
@@ -48,11 +60,11 @@ export interface Entry {
  * board shows.
  */
 export function planEntries(
-  language: Language,
+  plans: readonly Plan[],
   standingOn?: number,
   returns: ReadonlyMap<number, number> = new Map(),
 ): Entry[] {
-  const known = new Map(plansFor(language).map((plan) => [plan.plan, plan.title]));
+  const known = new Map(plans.map((plan) => [plan.plan, plan.title]));
 
   return Array.from({ length: TOTAL_PLANS }, (_, index) => {
     const plan = index + 1;
@@ -78,8 +90,8 @@ export function planEntries(
  * reader can at least read. `rulesFor` returns nothing for a language with no
  * chapters, and English is what every other surface falls back to.
  */
-export function ruleEntries(language: Language): Entry[] {
-  return bookFor(language).map((chapter) => ({
+export function ruleEntries(chapters: readonly RuleChapter[]): Entry[] {
+  return chapters.map((chapter) => ({
     key: chapter.slug,
     title: chapter.title?.trim() || chapter.slug,
     // Marked, not hidden. Three languages' books arrived without the chapter on
@@ -91,10 +103,10 @@ export function ruleEntries(language: Language): Entry[] {
 
 /** What a chapter opens to, or null when the book has no such chapter. */
 export function ruleText(
-  language: Language,
+  chapters: readonly RuleChapter[],
   slug: string,
 ): { title: string; body: string } | null {
-  const chapter = bookFor(language).find((entry) => entry.slug === slug);
+  const chapter = chapters.find((entry) => entry.slug === slug);
   if (!chapter) return null;
 
   return { title: chapter.title?.trim() || slug, body: chapter.body ?? '' };

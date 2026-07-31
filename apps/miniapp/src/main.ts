@@ -23,7 +23,7 @@ import {
   MAX_SEATS,
 } from '@leela/engine';
 import { messageFor, resolveLanguage, type Language } from '@leela/content';
-import { loadPlans, plan as planFor } from './content';
+import { loadBook, loadPlans, plan as planFor, plans as loadedPlans } from './content';
 import { applyChrome } from './chrome';
 import { describeMove, attribute} from './describe';
 import { createCell } from './cell';
@@ -468,10 +468,15 @@ function openList(title: string, entries: Entry[], open: (key: number | string) 
 /** The rules book. Carried in 22 languages since the third pass, and until now
  *  there was no way to open it. */
 function openRules(): void {
-  openList(messageFor(language, 'app.rules'), ruleEntries(language), (slug) => {
-    const chapter = ruleText(language, String(slug));
-    if (!chapter) return;
-    openReader('chapter', chapter.title, paragraphs(chapter.body));
+  // Awaited, because the book is its own chunk now and the first tap may be the
+  // fetch. Nothing is opened until it lands: a list that appears empty and
+  // fills in a moment later reads as a book with no chapters.
+  void loadBook(language).then((chapters) => {
+    openList(messageFor(language, 'app.rules'), ruleEntries(chapters), (slug) => {
+      const chapter = ruleText(chapters, String(slug));
+      if (!chapter) return;
+      openReader('chapter', chapter.title, paragraphs(chapter.body));
+    });
   });
 }
 
@@ -515,7 +520,7 @@ function openPlans(): void {
   // single report can.
   const returns = new Map(revisited(journal).map((visit) => [visit.plan, visit.times]));
 
-  openList(messageFor(language, 'app.plans'), planEntries(language, state.loka, returns), (plan) => {
+  openList(messageFor(language, 'app.plans'), planEntries(loadedPlans(), state.loka, returns), (plan) => {
     openPlan(Number(plan));
   });
 }

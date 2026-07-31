@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LANGUAGES, rulesFor, type Language } from '@leela/content';
+import { bookFor, LANGUAGES, plansFor, rulesFor, type Language } from '@leela/content';
 import { TOTAL_PLANS } from '@leela/engine';
 import { planEntries, ruleEntries, ruleText, showsPathTools, type ReaderKind } from '../src/browse';
 
@@ -16,11 +16,20 @@ import { planEntries, ruleEntries, ruleText, showsPathTools, type ReaderKind } f
  * pass — had no way in at all. A book nobody can open is a book nobody has.
  */
 
+/**
+ * The lists are given their texts now rather than fetching them: three imports
+ * of `@leela/content` in `browse.ts` retained all 22 languages and defeated the
+ * per-language chunking `content.ts` exists for, shipping 8.1 MB where the
+ * README promised 368 kB. So the tests hand over the same arrays the app does.
+ */
+const plansOf = (language: string) => plansFor(language);
+const bookOf = (language: string) => bookFor(language);
+
 describe('every plan, so a square can be read before it is landed on', () => {
   it('lists all of them, in order, with no holes', () => {
     // The shape: a list with a gap in it is a list a player scrolls past
     // without noticing anything is missing.
-    const entries = planEntries('en');
+    const entries = planEntries(plansOf('en'));
 
     expect(entries).toHaveLength(TOTAL_PLANS);
     expect(entries.map((entry) => entry.key)).toEqual(
@@ -32,29 +41,29 @@ describe('every plan, so a square can be read before it is landed on', () => {
     // A language missing a title still has a square. The number is the
     // fallback because the number is what the board shows.
     for (const language of LANGUAGES) {
-      for (const entry of planEntries(language)) {
+      for (const entry of planEntries(plansOf(language))) {
         expect(entry.title.trim().length, `${language}/${entry.key}`).toBeGreaterThan(0);
       }
     }
   });
 
   it('marks the square the player is standing on, and only that one', () => {
-    const entries = planEntries('en', 41);
+    const entries = planEntries(plansOf('en'), 41);
     expect(entries.filter((entry) => entry.here).map((entry) => entry.key)).toEqual([41]);
   });
 
   it('marks nothing when the player has not entered the game', () => {
     // Standing nowhere is a real state — everyone starts in it — and a list
     // that marked a square then would be pointing at a square nobody is on.
-    expect(planEntries('en').some((entry) => entry.here)).toBe(false);
-    expect(planEntries('en', 0).some((entry) => entry.here)).toBe(false);
+    expect(planEntries(plansOf('en')).some((entry) => entry.here)).toBe(false);
+    expect(planEntries(plansOf('en'), 0).some((entry) => entry.here)).toBe(false);
   });
 });
 
 describe('the rules book, which had no way in', () => {
   it('lists the chapters the language actually has', () => {
     for (const language of LANGUAGES) {
-      const entries = ruleEntries(language);
+      const entries = ruleEntries(bookOf(language));
       expect(entries.length, language).toBeGreaterThan(0);
       for (const entry of entries) {
         expect(entry.title.trim().length, `${language}/${entry.key}`).toBeGreaterThan(0);
@@ -65,8 +74,8 @@ describe('the rules book, which had no way in', () => {
   it('opens every chapter it lists', () => {
     // The rule that matters for a list: nothing in it is a dead end.
     for (const language of LANGUAGES) {
-      for (const entry of ruleEntries(language)) {
-        const chapter = ruleText(language, String(entry.key));
+      for (const entry of ruleEntries(bookOf(language))) {
+        const chapter = ruleText(bookOf(language), String(entry.key));
         expect(chapter, `${language}/${entry.key}`).not.toBeNull();
         expect(chapter?.body.trim().length, `${language}/${entry.key}`).toBeGreaterThan(0);
       }
@@ -77,7 +86,7 @@ describe('the rules book, which had no way in', () => {
     // A book half in one language and half in another is worse than a book in
     // a language the reader can at least read.
     const unknown = 'zz' as Language;
-    expect(ruleEntries(unknown).map((entry) => entry.key)).toEqual(
+    expect(ruleEntries(bookOf(unknown)).map((entry) => entry.key)).toEqual(
       rulesFor('en').map((chapter) => chapter.slug),
     );
   });
@@ -92,7 +101,7 @@ describe('the rules book, which had no way in', () => {
       const own = new Set(rulesFor(language).map((chapter) => chapter.slug));
       if (own.size === 0) continue;
 
-      for (const entry of ruleEntries(language)) {
+      for (const entry of ruleEntries(bookOf(language))) {
         expect(entry.borrowed ?? false, `${language}/${entry.key}`).toBe(!own.has(String(entry.key)));
       }
     }
@@ -101,21 +110,21 @@ describe('the rules book, which had no way in', () => {
   it('borrows something somewhere, or the marking is untested', () => {
     // Guards the check above from passing for want of a case.
     const borrowed = LANGUAGES.flatMap((language) =>
-      ruleEntries(language).filter((entry) => entry.borrowed),
+      ruleEntries(bookOf(language)).filter((entry) => entry.borrowed),
     );
 
     expect(borrowed.length).toBeGreaterThan(0);
   });
 
   it('has nothing to open for a chapter no book has', () => {
-    expect(ruleText('en', 'no-such-chapter')).toBeNull();
+    expect(ruleText(bookOf('en'), 'no-such-chapter')).toBeNull();
   });
 
   it('never hands a reader a chapter titled with its own slug', () => {
     // The slug is the last-resort title, and if it ever shows up on screen the
     // data is wrong rather than the list.
     for (const language of LANGUAGES) {
-      for (const entry of ruleEntries(language)) {
+      for (const entry of ruleEntries(bookOf(language))) {
         expect(entry.title, `${language}/${entry.key}`).not.toBe(entry.key);
       }
     }
