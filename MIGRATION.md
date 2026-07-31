@@ -4958,6 +4958,42 @@ reason. Everything else is something this repository claims to make.
 Checked by putting the last pass's defect back: it names `TurnBlockedReason`
 and the word.
 
+## Hundred-and-fifty-third pass: what the game offers, on every surface
+
+Four passes running found the phone missing something its neighbours had, and
+every one was found by reading: it wrote accounts and showed none of them, it
+let a player at the die without asking what they were playing for, it could hand
+a path out and not take one back. Four different defects, one shape — **a
+surface quietly offering less than the game does** — and this repository's whole
+premise is that the surfaces differ in drawing, not in what the game asks or
+gives.
+
+`audit-offers` is nine things the game offers against three surfaces, and the
+evidence is a call into a shared package rather than a phrase or a filename:
+what a surface *does* is which of the game's own functions it reaches for. A
+name of its own proves nothing — three surfaces wrote three `mayThrow`s.
+
+**It reported two things that were not true, and both are worth keeping.** The
+first version read comments, and said the phone offers a companion on the
+strength of a sentence in `journal.ts` naming `@leela/ai`; a check fooled by
+prose says a surface has what it has not. The second said the *mini app* has no
+companion — and it does, by handing the square to the bot through Telegram's
+`sendData`, because a browser bundle has no business holding an API key. Looking
+only for the import was a check describing how a thing is built rather than
+whether it is offered.
+
+Recorded rather than enforced, like the missing board references: a gap is a
+decision about what to build next, not a fault to block a build on. What is not
+allowed is a new one.
+
+**And the book is no longer one of them.** Every other surface has the rules —
+the bot's `/rules`, the mini app's chapters — and the phone had a plan's text
+with nothing around it, so a player on a square they did not understand had
+nowhere to look. `bookFor` rather than `rulesFor`, so a language without
+chapters of its own is served English ones whole rather than half a book.
+
+Two gaps left, both the phone's: one square shared, and the companion.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

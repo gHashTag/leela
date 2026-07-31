@@ -211,6 +211,7 @@ node scripts/audit-scripts.mjs      # every script runs under the runtime it nam
 node scripts/audit-arithmetic.mjs   # the sums the text states, in all 22 languages
 node scripts/audit-doubles.mjs      # one bound, declared once
 node scripts/audit-reachable.mjs    # every word a type declares, against the code that says it
+node scripts/audit-offers.mjs       # what the game offers, on every surface that is the game
 node scripts/audit-promises.mjs     # every injected dependency, against a test that breaks it
                                     # and asserts what anyone is told
 bun  scripts/audit-dataset.mjs      # the data, against the languages declared

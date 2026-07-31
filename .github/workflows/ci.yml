@@ -161,6 +161,11 @@ jobs:
       # behaviour the type allows and the code assumed away.
       - run: node scripts/audit-promises.mjs
 
+      # What the game offers, on each surface that is the game. Four passes
+      # running found the phone missing something its neighbours had, each by
+      # reading rather than by anything failing.
+      - run: node scripts/audit-offers.mjs
+
       # Every word a type declares, against the code that says it.
       # `TurnBlockedReason` listed `finished` and returned it nowhere, so the
       # check got written three times outside the engine and one of the three

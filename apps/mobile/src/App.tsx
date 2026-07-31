@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { BOARD_ROWS } from '@leela/engine';
-import { messageFor, planFor, resolveLanguage } from '@leela/content';
+import { bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
 import {
   fileReport,
   isOver,
@@ -67,6 +67,7 @@ export default function App() {
   const [intention, setIntention] = useState('');
   const [asking, setAsking] = useState('');
   const [pasted, setPasted] = useState('');
+  const [reading, setReading] = useState(false);
 
   // The path from the last time the app was open. Read once, and never allowed
   // to land on top of something written since: a player who starts writing
@@ -156,6 +157,29 @@ export default function App() {
         </View>
 
         <Text style={styles.plan}>{plan.body}</Text>
+
+        {/*
+          The book, which every other surface has and this one did not. A player
+          on a square they do not understand had nowhere to look: the bot has
+          `/rules`, the mini app has the chapters, and the phone had a plan's
+          text and nothing around it.
+
+          `bookFor` rather than `rulesFor`: a language with no chapters of its
+          own is served the English ones, and a chapter its book is missing is
+          borrowed and marked — the reader gets a whole book either way.
+        */}
+        <Pressable style={styles.button} onPress={() => setReading((open) => !open)}>
+          <Text style={styles.buttonText}>{messageFor(language, 'app.rules')}</Text>
+        </Pressable>
+
+        {reading
+          ? bookFor(language).map((chapter) => (
+              <View key={chapter.slug} style={styles.written}>
+                <Text style={styles.title}>{chapter.title}</Text>
+                <Text style={styles.plan}>{chapter.body}</Text>
+              </View>
+            ))
+          : null}
 
         {/*
           What they wrote here before.
