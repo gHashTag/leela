@@ -4860,6 +4860,38 @@ was missing one, and the ceiling is derived from the constants rather than
 written down — so raising one of them moves it, and a seventh part added
 tomorrow has to fit inside it.
 
+## Hundred-and-forty-second pass: a character is not a character
+
+The ceiling put on the prompt last pass is in characters, and every constant it
+is built from is justified against English — *the longest plan runs past 6000
+characters*, *forty reports at full length would push the plan out of a small
+context window*. Measured across all twenty-two languages, with the player
+writing in their own script:
+
+| | characters | bytes |
+|---|---|---|
+| English, Malay, Javanese | ~17,200 | ~17,300 |
+| Russian, Ukrainian, Arabic, Urdu | ~17,200 | ~31,000 |
+| Bengali, Marathi, Tamil, Telugu | ~17,100 | ~43,000 |
+| Japanese | 16,933 | **47,615** |
+
+The same ceiling buys a third as much context in Japanese as it looks like it
+does. A window counts tokens, and tokens track bytes far more closely than they
+track characters.
+
+**Nothing is clipped differently for it, and that is a decision rather than an
+omission.** A denser script carries more of the plan in the same characters —
+this repository measured that two dozen passes ago, when CJK bodies at 0.3–0.5×
+the English length turned out to be dense rather than truncated. And the clip
+does not even reach those languages: Japanese and Chinese plans are *shorter*
+than `MAX_PLAN_CHARS` to begin with, so the bound whose reasoning is most
+English-shaped is the one that never fires on the scripts it would matter to.
+
+What is asserted is that the cost cannot grow quietly: a second ceiling, in
+bytes, at three per character. No script here needs a fourth, and Japanese
+reaches 2.8 — so a language whose writing needs more, or a character bound
+raised without anyone weighing what it costs in Bengali, fails the test.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

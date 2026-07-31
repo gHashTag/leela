@@ -481,6 +481,57 @@ describe('a prompt this package builds is a prompt this package bounds', () => {
     }
   });
 
+  it('is bounded in bytes as well, which is what a context window counts', () => {
+    /**
+     * A character is not a character. The same prompt, with the player writing
+     * in their own script, is about seventeen thousand characters in every one
+     * of the twenty-two languages — and 17,262 bytes in English against 47,615
+     * in Japanese. Tamil, Telugu, Bengali and Marathi sit near 2.5; Russian,
+     * Ukrainian, Arabic and Urdu near 1.8; the Latin languages at 1.0.
+     *
+     * Every constant in `prompts.ts` is justified against English — *the
+     * longest plan runs past 6000 characters* — so the ceiling the pass before
+     * put on this file is an English ceiling, and it buys a third as much
+     * context in Japanese as it looks like it does.
+     *
+     * Nothing is clipped differently for it. A denser script carries more of
+     * the plan in the same characters, which is the other half of the trade,
+     * and the clip does not even reach the Japanese and Chinese texts: their
+     * plans are shorter than `MAX_PLAN_CHARS` to begin with. What is asserted
+     * is that the cost cannot grow silently — a script needing four bytes a
+     * character, or a bound raised without anyone weighing it, fails here.
+     */
+    const BYTES_PER_CHARACTER = 3;
+    const weigh = (messages: Array<{ content: string }>) =>
+      messages.reduce((total, message) => total + new TextEncoder().encode(message.content).length, 0);
+
+    for (const language of LANGUAGES) {
+      // Written in the language's own script, since that is what a player of it
+      // writes — measuring with ASCII padding hides the whole effect.
+      const own = planFor(language, 40).body.repeat(20);
+      const said = (length: number) => own.slice(0, length);
+
+      const messages = reportPrompt(
+        {
+          ...worstCase(),
+          language,
+          intention: said(MAX_INTENTION_CHARS),
+          journey: Array.from({ length: MAX_JOURNEY_ENTRIES * 2 }, (_, index) => ({
+            plan: (index % TOTAL_PLANS) + 1,
+            text: said(400),
+          })),
+        },
+        said(MAX_REPORT_CHARS),
+        Array.from({ length: MAX_HISTORY }, (_, index) => ({
+          role: (index % 2 ? 'assistant' : 'user') as 'assistant' | 'user',
+          content: said(MAX_HISTORY_CHARS),
+        })),
+      );
+
+      expect(weigh(messages), language).toBeLessThanOrEqual(CEILING * BYTES_PER_CHARACTER);
+    }
+  });
+
   it('clips a long exchange rather than dropping it', () => {
     // The other half: a bound that discarded the message would lose the thread
     // the history exists to keep.
