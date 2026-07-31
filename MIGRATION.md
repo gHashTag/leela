@@ -4620,6 +4620,34 @@ The test is a relation rather than a list of six slugs: **two readers of the
 same book, in different languages, meet the same things in the same sequence.**
 A seventh chapter would not have to be added to it to keep it true.
 
+## Hundred-and-thirty-fourth pass: the same shape, one line lower
+
+The pass before found a book ordered by the sequence somebody typed object keys
+in. So this one went looking for the rest of that shape, and found it in the
+function that decides what script a text is written in.
+
+`kana`'s range contained the whole CJK ideograph block as well as the kana. So
+every Japanese character counted twice — once as `kana`, once as `han` — and
+**Chinese text, which has no kana at all, scored exactly the same for both.**
+`dominantScript` takes the highest count with a strict `>`, so the tie went to
+whichever was written first in the literal, which is `han`.
+
+The answer is right. Nothing about it was decided. Swap those two lines and
+every Chinese chapter becomes Japanese — including to `audit-dataset`, which
+refuses a chapter written in a script its language does not use, so the 72
+Chinese plans would start failing the build with nothing about them changed.
+
+Two things, then. `kana` means kana, because Chinese never uses it and that is
+what tells the two apart. And a tie, if one can still arise, is settled by the
+script's name rather than by its line number — an answer that depends on where a
+key was typed is an answer nobody chose, and this is the second time.
+
+The test reads the ranges out of the source, the way `apps/bot` reads its own
+registered commands, and asserts over every character the repository ships that
+**no character is counted for two scripts**. Double counting is how an exact tie
+arises in the first place; without it, the order of the literal cannot decide
+anything. Put the old range back and it names the first offender out of 2,132.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

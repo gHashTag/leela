@@ -111,7 +111,12 @@ const RANGES: Record<Script, RegExp> = {
   telugu: /[ఀ-౿]/,
   gurmukhi: /[਀-੿]/,
   han: /[一-鿿㐀-䶿]/,
-  kana: /[぀-ヿ一-鿿]/,
+  // Kana only. It used to include the whole ideograph block as well, which made
+  // every Japanese count also a Chinese count — and then Chinese text tied with
+  // itself and was resolved by `han` being typed above `kana` in this literal.
+  // Chinese never uses kana, so kana is the thing that tells them apart, and it
+  // tells them apart on its own.
+  kana: /[぀-ゟ゠-ヿｦ-ﾟ]/,
   hangul: /[가-힯ᄀ-ᇿ]/,
 };
 
@@ -122,6 +127,18 @@ const RANGES: Record<Script, RegExp> = {
  * in it is Russian, and a title of one Latin loanword in Japanese prose is
  * Japanese. Returns null for text with no letters in any of them — a number, a
  * date, an empty string.
+ *
+ * **A tie is settled by name, not by position.** `count > best` means the
+ * script written highest in the literal above wins when two are level, and that
+ * was doing real work: `kana`'s range used to contain the ideograph block, so
+ * Chinese text scored equally as `han` and as `kana` and came back Chinese
+ * because `han` is typed one line earlier. Swap those two lines and every
+ * Chinese chapter becomes Japanese — including to `audit-dataset`, which
+ * refuses a chapter written in a script its language does not use.
+ *
+ * The ranges no longer overlap, so that particular tie cannot happen. The rule
+ * is here anyway: an answer that depends on the order somebody typed keys in is
+ * an answer nobody chose, and this repository has now met that twice.
  */
 export function dominantScript(text: string): Script | null {
   let best: Script | null = null;
@@ -130,7 +147,9 @@ export function dominantScript(text: string): Script | null {
   for (const [script, range] of Object.entries(RANGES) as Array<[Script, RegExp]>) {
     const pattern = new RegExp(range.source, 'gu');
     const count = (text.match(pattern) ?? []).length;
-    if (count > bestCount) {
+    if (count === 0) continue;
+
+    if (count > bestCount || (count === bestCount && best !== null && script < best)) {
       best = script;
       bestCount = count;
     }
