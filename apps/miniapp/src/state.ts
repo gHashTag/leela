@@ -138,12 +138,22 @@ export function loadLastRoll(storage: GameStorage | undefined): number {
   }
 }
 
-/** Keep the last throw. Forgetting it is a worse face, not a broken game. */
-export function saveLastRoll(storage: GameStorage | undefined, value: number): void {
+/**
+ * Keep the last throw, and say whether it was kept.
+ *
+ * Forgetting it is a worse face, not a broken game — which is why the caller
+ * does nothing in particular with the answer beyond what it already does for
+ * the board. But answering is not the caller's business to decide, and a writer
+ * that cannot be asked is one nobody can ask later either.
+ */
+export function saveLastRoll(storage: GameStorage | undefined, value: number): boolean {
+  if (!storage) return false;
+
   try {
-    storage?.setItem(DIE_KEY, String(value));
+    storage.setItem(DIE_KEY, String(value));
+    return true;
   } catch {
-    // Same as the game itself: a window that cannot store still plays.
+    return false;
   }
 }
 
@@ -214,28 +224,41 @@ export function loadDraft(
   }
 }
 
-/** Keep what has been typed. Blank clears it: there is nothing to come back to. */
+/**
+ * Keep what has been typed, and say whether it was kept. Blank clears it:
+ * there is nothing to come back to.
+ *
+ * The last of the app's writers to answer the question the others answer. Its
+ * excuse for silence was true as far as it went — *a window that cannot store
+ * still plays, and still lets somebody write; they simply have to finish in one
+ * sitting* — and that last clause is a thing a player would want to be told
+ * before they walk away from half an account, not after.
+ *
+ * It is also the earliest write in a session: somebody typing in a private
+ * window reaches this before any throw, so it is the first chance the app has
+ * to notice that nothing is being kept.
+ */
 export function saveDraft(
   storage: GameStorage | undefined,
   playerId: string,
   plan: number,
   text: string,
-): void {
+): boolean {
+  if (!storage) return false;
+
   try {
-    if (text.trim().length === 0) {
-      storage?.setItem(draftKeyFor(playerId), '');
-      return;
-    }
-    storage?.setItem(draftKeyFor(playerId), JSON.stringify({ player: playerId, plan, text }));
+    const held =
+      text.trim().length === 0 ? '' : JSON.stringify({ player: playerId, plan, text });
+    storage.setItem(draftKeyFor(playerId), held);
+    return true;
   } catch {
-    // A window that cannot store still plays, and still lets somebody write —
-    // they simply have to finish in one sitting.
+    return false;
   }
 }
 
 /** Forget one seat's draft. Filed, or the game started again. */
-export function clearDraft(storage: GameStorage | undefined, playerId = 'p1'): void {
-  saveDraft(storage, playerId, 0, '');
+export function clearDraft(storage: GameStorage | undefined, playerId = 'p1'): boolean {
+  return saveDraft(storage, playerId, 0, '');
 }
 
 /** Where the first seat's intention lives. */

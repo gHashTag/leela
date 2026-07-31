@@ -4334,6 +4334,33 @@ because a browser would not write it.
 The pass before predicted a fourth writer would be asked the same question. It
 was, and it was the one that had it wrong.
 
+## Hundred-and-twenty-sixth pass: the last two writers
+
+Four of the mini app's seven writers answered "was it kept". Two answered
+nothing at all, each with a reason attached — and each reason was an argument
+for the **caller** saying nothing, made inside the writer, where no caller could
+hear it.
+
+`saveLastRoll`: *forgetting it is a worse face, not a broken game.* True, and
+still not the writer's decision to make.
+
+`saveDraft`: *a window that cannot store still plays, and still lets somebody
+write — they simply have to finish in one sitting.* That last clause is a thing
+to tell a player **before** they walk away from half an account, not a note to
+leave in the source.
+
+And a draft is the earliest write of a session. Somebody typing in a private
+window reaches it before they have thrown anything, so it is the first moment
+the app can know that nothing is being kept — and it was the one write that
+could not say so. It is redrawn there and nowhere else: every other writer has a
+redraw behind it, and a keystroke has none, so the notice would have sat set and
+unsaid until the player did something the app already answers.
+
+**The table is derived now.** Seven writers × three conditions, and the list of
+writers is read out of the source rather than kept beside it: an eighth fails on
+the day it is added, which is the day the question is worth asking. Checked by
+adding an eighth.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

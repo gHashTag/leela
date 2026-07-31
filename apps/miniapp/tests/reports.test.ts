@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { resize, saveSeats, sessionFrom } from '../src/seats';
-import { saveIntention } from '../src/state';
+import { clearDraft, saveDraft, saveIntention, saveLastRoll } from '../src/state';
 import {
   CLASSIC,
   MAX_ROLL,
@@ -502,7 +504,33 @@ describe('a write says it was kept only when something kept it', () => {
     // refused write reported success — and the dialog told the player their
     // sentence was too short when it was not.
     { what: 'saveIntention', write: (storage) => saveIntention(storage, 'To see this through.') },
+    // The last two. Their silence had a reason attached — a lost draft or a
+    // stale die face is a smaller loss than a lost account — but the reason was
+    // an argument for the *caller* saying nothing, and it was being made by the
+    // writer, where nobody could hear it. `saveDraft` is also the earliest
+    // write of a session: somebody typing in a private window reaches it before
+    // they have thrown anything.
+    { what: 'saveDraft', write: (storage) => saveDraft(storage, 'p1', 41, 'half an account') },
+    { what: 'clearDraft', write: (storage) => clearDraft(storage, 'p1') },
+    { what: 'saveLastRoll', write: (storage) => saveLastRoll(storage, 4) },
   ];
+
+  it('covers every writer there is, rather than the ones somebody remembered', () => {
+    // The list above is kept by hand, and a list kept by hand beside the thing
+    // it describes is the fourth of those to go wrong in this repository. So it
+    // is checked against the source: an eighth writer fails here on the day it
+    // is added, which is the day the question is worth asking.
+    const declared = ['state.ts', 'reports.ts', 'seats.ts'].flatMap((file) =>
+      [
+        ...readFileSync(resolve(process.cwd(), 'src', file), 'utf8').matchAll(
+          /^export function ((?:save|clear)\w*)\(/gm,
+        ),
+      ].map(([, name]) => name),
+    );
+
+    const covered = writers.map(({ what }) => what);
+    expect(declared.filter((name) => !covered.includes(name))).toEqual([]);
+  });
 
   for (const { what, write } of writers) {
     it(`${what} says kept when it was`, () => {

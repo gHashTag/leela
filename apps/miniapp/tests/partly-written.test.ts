@@ -330,3 +330,57 @@ describe('a question the browser will not keep', () => {
     expect(el('roll').disabled, 'and the die turns').toBe(false);
   }, 20_000);
 });
+
+describe('half an account, in a browser keeping nothing', () => {
+  /**
+   * The draft is the earliest write of a session — before a throw, before an
+   * account is filed — so it is the first moment the app can know that this
+   * browser is keeping nothing. It used to be the one write that could not say
+   * so: `saveDraft` returned nothing, under a comment observing that a player
+   * "simply has to finish in one sitting". That is exactly the thing to tell
+   * somebody *before* they walk away from half a page, and it was being said
+   * only in the source.
+   *
+   * Only the draft key is refused here. A quota refuses everything and the
+   * notice would fire from the first write of any kind, which would prove
+   * nothing about this one.
+   */
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('says so while the half is still on the screen', async () => {
+    const storage = partial(/^leela\.draft/, {
+      'leela.intention.v1': 'to see it through',
+      'leela.seats.v1': seated(false),
+    });
+    await play(storage);
+
+    el('report').click();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    (el('writer-text') as HTMLTextAreaElement).value = 'What I have got so far';
+    el('writer-text').dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    expect(el('say').textContent, 'before anything else has been written').toMatch(
+      /will not keep/i,
+    );
+  }, 20_000);
+
+  it('says nothing when the draft is being kept', async () => {
+    const storage = partial(/^never$/, {
+      'leela.intention.v1': 'to see it through',
+      'leela.seats.v1': seated(false),
+    });
+    await play(storage);
+
+    el('report').click();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    (el('writer-text') as HTMLTextAreaElement).value = 'What I have got so far';
+    el('writer-text').dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    expect(el('say').textContent).not.toMatch(/will not keep/i);
+    expect(storage.kept()['leela.draft.v1'], 'and it really is kept').toContain('got so far');
+  }, 20_000);
+});

@@ -849,7 +849,7 @@ async function roll(): Promise<void> {
     // After the board, not before: a face is a record of a throw the game
     // took, and one saved ahead of the state can outlive a throw that never
     // happened.
-    saveLastRoll(localStorage, value);
+    if (!saveLastRoll(localStorage, value)) unkept = true;
 
     // A new arrival: whatever was written was about the plan they have left.
     // Before the redraw, or the gate is drawn from the journal of the last plan.
@@ -1300,7 +1300,18 @@ el.writerShare.addEventListener('click', () => void shareSquare());
 el.writerAsk.addEventListener('click', askTheCompanion);
 el.intentionSave.addEventListener('click', saveTheIntention);
 el.writerText.addEventListener('input', () => {
-  saveDraft(localStorage, currentPlayer(session).id, state.loka, el.writerText.value);
+  // The earliest write of a session, and so the first chance to notice that
+  // this browser is keeping nothing — somebody typing in a private window gets
+  // here before they have thrown anything.
+  if (!saveDraft(localStorage, currentPlayer(session).id, state.loka, el.writerText.value)) {
+    // Redrawn here and nowhere else. Every other writer has a redraw behind it
+    // — a throw, a confirmation, a seat change — and a keystroke has none, so
+    // the notice would sit set and unsaid until the player did something the
+    // app already answers. Once: `saidUnkept` closes it after the first pass.
+    const before = saidUnkept;
+    unkept = true;
+    if (!before) draw();
+  }
   showWriterHint();
 });
 el.path.addEventListener('click', openPath);
