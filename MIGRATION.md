@@ -4130,6 +4130,31 @@ still opens — a year of somebody's path is not thrown away because the positio
 it was written at has gone — and a table written halfway is not a game, is not
 readable, and leaves the writing beside it untouched.
 
+## Hundred-and-twentieth pass: the same failure, on the other surface
+
+The mini app's storage refusal is a full quota. The bot's is a database locked
+by the write before it, or a volume that has gone.
+
+**When the store refused, the player was told nothing at all** and the exception
+left the middleware — which for a webhook deployment is an unhandled rejection,
+and for the player is silence. This repository has already named that failure:
+*silence is indistinguishable from a broken bot, and that is how this one first
+looked.*
+
+There was a test asserting the throw propagated, deliberately, so that an
+operator would not learn about it from a silence. The player learned from one
+instead. Both, now: the player is told the turn was not kept, and the operator's
+log carries the error that caused it.
+
+**And nothing that was not kept is described.** The die is deterministic from
+`(seed, rollsTaken)`, both of which live in the room that was not saved — so the
+same command sent again makes the *same* throw. Describing one that did not
+survive would be the bot telling a player about a game it does not have, and
+"send it again in a moment" is true rather than hopeful.
+
+The order was already right — keep first, then the effects, then the replies —
+so the fix is one function and six call sites that stop instead of carrying on.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

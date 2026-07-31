@@ -524,15 +524,47 @@ describe('a failing update', () => {
     expect(texts(sent).length).toBeGreaterThan(0);
   });
 
-  it('surfaces the failure rather than swallowing it', async () => {
-    // `bot.catch` covers the polling loop, which is how this bot runs. It does
-    // not cover `handleUpdate` — a webhook deployment would have to catch for
-    // itself, and finding that out from a silent failure would be worse than
-    // this assertion being here.
-    const { bot } = harness({ store: brokenStore() });
-    await expect(bot.handleUpdate(message('/new', PRIVATE))).rejects.toThrow(
-      /the database went away/,
-    );
+  it('tells the player, and the operator, rather than going quiet', async () => {
+    // This used to let the exception out of the middleware, on the grounds that
+    // a webhook deployment should not find out from a silence. The player found
+    // out from one instead: nothing was said to them at all, and silence is
+    // indistinguishable from a broken bot — which is how this one first looked.
+    //
+    // Both, then. The player is told the turn was not kept; the operator's log
+    // carries the error that caused it.
+    const logged: string[] = [];
+    const { bot, sent } = harness({
+      store: brokenStore(),
+      log: (line: string) => logged.push(line),
+    });
+
+    await expect(bot.handleUpdate(message('/new', PRIVATE))).resolves.toBeUndefined();
+
+    expect(texts(sent).join(' ')).toMatch(/could not keep/i);
+    expect(logged.join(' ')).toMatch(/the database went away/);
+  });
+
+  it('describes nothing that was not kept', async () => {
+    // The die is deterministic from the seed and the count of rolls, both of
+    // which live in the room that was not saved — so the same command sent
+    // again makes the same throw. Describing one that did not survive would be
+    // the bot telling a player about a game it does not have.
+    const store = new MemoryRoomStore();
+    const { bot, sent } = harness({ store, reports: new MemoryReportSink() });
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+
+    store.save = async () => {
+      throw new Error('the database went away');
+    };
+
+    const before = sent.length;
+    await bot.handleUpdate(message('/roll', PRIVATE));
+
+    const said = texts(sent.slice(before)).join(' ');
+    expect(said).toMatch(/could not keep/i);
+    expect(said, 'no throw is described').not.toMatch(/throws \d/);
   });
 });
 

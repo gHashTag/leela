@@ -186,6 +186,11 @@ const EN = {
   'button.start': '▶️ Start',
 
   // --- the transport speaking for itself -------------------------------------
+  // A turn that could not be kept is a turn that did not happen. Said out loud,
+  // because the alternative was silence — and silence is indistinguishable from
+  // a broken bot, which is how this one first looked.
+  'chat.notKept': 'I could not keep that. Nothing has moved — send it again in a moment.',
+
   'chat.noTable': 'No table here yet. Send /new to open one.',
   'chat.running': 'A game is already running here. Finish it, or send /end.',
   'chat.tableOpen': 'A table is already open here. /join to sit, /start to begin, /end to clear it.',
@@ -490,6 +495,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'button.board': '🗺 Доска',
   'button.join': '🪑 Сесть',
   'button.start': '▶️ Начать',
+
+  'chat.notKept': 'Не удалось сохранить. Ничего не сдвинулось — отправьте ещё раз через мгновение.',
 
   'chat.noTable': 'Здесь ещё нет стола. Отправьте /new, чтобы открыть.',
   'chat.running': 'Здесь уже идёт игра. Закончите её или отправьте /end.',

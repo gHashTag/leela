@@ -298,6 +298,30 @@ export function createBot({
    * Run a command that needs an open room, telling the user plainly when
    * there isn't one rather than failing silently.
    */
+  /**
+   * Keep a room, and say whether it was kept.
+   *
+   * A store can refuse: a database locked by the write before it, a volume
+   * full, a disk that has gone. When it did, the exception left the middleware
+   * and the player was told **nothing at all** — and silence is
+   * indistinguishable from a broken bot, which is how this one first looked.
+   *
+   * Worse than the silence would have been the alternative: describing a throw
+   * that was not kept. The die is deterministic from `(seed, rollsTaken)`, both
+   * of which live in the room that was not saved — so the same command sent
+   * again makes the *same* throw. Nothing is lost by saying so and stopping.
+   */
+  async function keepTheGame(room: Room, ctx: Context): Promise<boolean> {
+    try {
+      await store.save(room);
+      return true;
+    } catch (error) {
+      log(`[bot] could not keep the game: ${String(error)}`);
+      await ctx.reply(messageFor(languageOf(ctx), 'chat.notKept'));
+      return false;
+    }
+  }
+
   async function withRoom(
     ctx: Context,
     run: (room: Room, who: { id: string; name: string }) => commands.CommandResult,
@@ -313,7 +337,11 @@ export function createBot({
     }
 
     const result = run(room, who);
-    if (result.room) await store.save(result.room);
+
+    // Kept first, and nothing said if it was not. The effects belong to a turn
+    // that happened, and so do the replies describing it.
+    if (result.room && !(await keepTheGame(result.room, ctx))) return;
+
     await applyEffects(result.effects);
     await deliver(ctx, result.replies);
     await respondToReports(ctx, result.room ?? room, result.effects);
@@ -333,7 +361,7 @@ export function createBot({
     }
 
     const result = commands.start(room, who.id);
-    if (result.room) await store.save(result.room);
+    if (result.room && !(await keepTheGame(result.room, ctx))) return;
     await deliver(ctx, result.replies);
   });
 
@@ -359,7 +387,7 @@ export function createBot({
 
     const language = ctx.from?.language_code;
     const result = commands.openRoom(chatId, who, seedFor(chatId, now()), { language });
-    if (result.room) await store.save(result.room);
+    if (result.room && !(await keepTheGame(result.room, ctx))) return;
     await deliver(ctx, result.replies);
   });
 
@@ -770,7 +798,7 @@ export function createBot({
       const result = commands.openRoom(chatId, who, seedFor(chatId, now()), {
         language: ctx.from?.language_code,
       });
-      if (result.room) await store.save(result.room);
+      if (result.room && !(await keepTheGame(result.room, ctx))) return;
       await deliver(ctx, result.replies);
       return;
     }
@@ -796,7 +824,7 @@ export function createBot({
 
     if (!result) return;
 
-    if (result.room) await store.save(result.room);
+    if (result.room && !(await keepTheGame(result.room, ctx))) return;
     await applyEffects(result.effects);
     await deliver(ctx, result.replies);
   });
@@ -939,7 +967,7 @@ export function createBot({
     // text as the report rather than making them remember the command.
     if (seated && !seated.reportSubmitted && who) {
       const result = commands.report(room, who.id, ctx.message.text, now());
-      if (result.room) await store.save(result.room);
+      if (result.room && !(await keepTheGame(result.room, ctx))) return;
       await applyEffects(result.effects);
       await deliver(ctx, result.replies);
       await respondToReports(ctx, result.room ?? room, result.effects);
