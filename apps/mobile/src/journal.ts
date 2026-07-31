@@ -16,7 +16,16 @@
  * `MAX_REPORTS` — because a bound declared twice is a bound that will disagree.
  */
 
-import { MAX_REPORTS, MAX_REPORT_CHARS, isReport, order, type Report } from '@leela/journal';
+import {
+  MAX_REPORTS,
+  MAX_REPORT_CHARS,
+  isIntention,
+  isReport,
+  order,
+  type Report,
+} from '@leela/journal';
+
+export { isIntention };
 
 /**
  * Somewhere to keep it.
@@ -215,6 +224,47 @@ export async function keep(
 
   try {
     return await within(keeper.write(JSON.stringify(journal)), timeoutMs, false);
+  } catch {
+    return false;
+  }
+}
+
+export const INTENTION_KEY = 'leela.intention.v1';
+
+/**
+ * What the player is playing for.
+ *
+ * Not a profile field. It is the question the game is being played to answer,
+ * and every account is written inside it — which is why a path exported without
+ * it left the app as a year of answers with the question missing, and why the
+ * companion is handed it before anything else.
+ *
+ * Kept apart from the path so that neither can make the other unreadable: the
+ * mini app learned that when a half-written game file took the writing down
+ * with it.
+ */
+export function loadIntention(store: Store | undefined): string {
+  try {
+    return store?.getItem(INTENTION_KEY)?.trim() ?? '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Keep it, and say whether it was kept.
+ *
+ * Storage, and only storage. Whether the words are a question worth holding is
+ * `isIntention`, which the format answers for every surface — the mini app's
+ * writer conflated the two for four passes, so a browser that refused the write
+ * told the player their sentence was too short.
+ */
+export function saveIntention(store: Store | undefined, text: string): boolean {
+  if (!store) return false;
+
+  try {
+    store.setItem(INTENTION_KEY, text.trim());
+    return true;
   } catch {
     return false;
   }

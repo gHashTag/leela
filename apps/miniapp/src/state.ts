@@ -287,7 +287,7 @@ export function intentionKeyFor(playerId: string): string {
  * `ChangeIntention`. Two characters is a bound against an empty field rather
  * than a standard, and eight hundred is a paragraph.
  */
-export const MIN_INTENTION_CHARS = 2;
+
 
 /**
  * The upper bound, from the format rather than beside it.
@@ -302,7 +302,7 @@ export const MIN_INTENTION_CHARS = 2;
  * `@leela/journal` has no dependencies at all, on purpose, so that a browser
  * bundle and a Bun process can both hold it.
  */
-import { MAX_INTENTION_CHARS } from '@leela/journal';
+import { MAX_INTENTION_CHARS, MIN_INTENTION_CHARS, isIntention } from '@leela/journal';
 export { MAX_INTENTION_CHARS };
 
 /**
@@ -329,10 +329,13 @@ export function loadIntention(storage: GameStorage | undefined, playerId = 'p1')
 }
 
 /** Whether this is something the game can hold. */
-export function isIntention(text: string): boolean {
-  const written = text.trim();
-  return written.length >= MIN_INTENTION_CHARS && written.length <= MAX_INTENTION_CHARS;
-}
+/**
+ * Whether this is a question the game can hold — the format's answer.
+ *
+ * Re-exported rather than imported-and-hidden: this module's callers ask it
+ * what an intention is, and there is no reason to make them ask two.
+ */
+export { isIntention, MIN_INTENTION_CHARS };
 
 /**
  * Keep the question, and say whether it was kept.

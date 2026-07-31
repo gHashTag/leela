@@ -5007,6 +5007,26 @@ while an application's own export is for that application. The first version of
 the check did not make that distinction and reported the format package as dead
 in three places, which is how a check earns its way into being switched off.
 
+**One question, one answer.** *Is this a question the game can hold* had three
+of them: the mini app's `isIntention`, the bot's
+`said.length < 2 || said.length > MAX_INTENTION_CHARS` written inline with the
+two as a literal, and the phone about to write a fourth. Each carried a comment
+saying it was the published app's bound — `yup.string().min(2).max(800)` in
+`ChangeIntention` — and each was a separate place for that to stop being true.
+
+It lives in `@leela/journal` now, with `MIN_INTENTION_CHARS` beside the maximum
+that moved there five passes ago. That package is the one all three can reach:
+no dependencies at all, on purpose, so a browser bundle, a Bun process and a
+phone can each hold it. The mini app re-exports it, because its callers ask it
+what an intention is and there is no reason to make them ask two.
+
+The phone keeps one now — its own key, apart from the path, so that neither can
+make the other unreadable. And the two questions stay apart: whether the words
+are a question, and whether the device kept them. The mini app answered both
+with one boolean for four passes, so a browser that refused the write told the
+player their sentence was too short, in the one dialog the game will not start
+without.
+
 Still to bring across from `leela`: RevenueCat, notifee and Sentry.
 
 **The published app cannot be rebuilt from its own source, and the reason is not

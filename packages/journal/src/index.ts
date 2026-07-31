@@ -178,6 +178,34 @@ export function parseDocument(text: string): JournalDocument | null {
  */
 export const MAX_INTENTION_CHARS = 800;
 
+/**
+ * The shortest question the game will hold.
+ *
+ * The published app's other bound — `yup.string().min(2)` in `ChangeIntention`.
+ * Two characters is a guard against an empty field rather than a standard: what
+ * somebody is playing for is theirs to phrase, and a length is a poor judge of
+ * whether they meant it.
+ */
+export const MIN_INTENTION_CHARS = 2;
+
+/**
+ * Whether this is a question the game can hold.
+ *
+ * One question, one answer. It was three: the mini app's `isIntention`, the
+ * bot's `said.length < 2 || said.length > MAX_INTENTION_CHARS` written inline
+ * with the two as a literal, and a fourth about to be written for the phone.
+ * Each carried a comment saying it was the published app's bound, and each was
+ * a separate place for that to stop being true.
+ *
+ * Here because this package is the one all three can reach: it has no
+ * dependencies at all, on purpose, so that a browser bundle, a Bun process and
+ * a phone can each hold it.
+ */
+export function isIntention(text: string): boolean {
+  const written = text.trim();
+  return written.length >= MIN_INTENTION_CHARS && written.length <= MAX_INTENTION_CHARS;
+}
+
 /** Two reports are the same when the same words were written at the same moment. */
 export function keyOf(entry: Report): string {
   return `${entry.at} ${entry.plan} ${entry.text}`;

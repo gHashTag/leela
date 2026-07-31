@@ -10,7 +10,7 @@ import { Bot, InlineKeyboard, InputFile, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 import { type Language, bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
 import { isSessionOver, isWaitingToEnter } from '@leela/engine';
-import { MAX_INTENTION_CHARS } from '@leela/ai';
+import { isIntention } from '@leela/journal';
 import type { Guide } from '@leela/ai';
 import { Conversations } from './conversation';
 import * as commands from './commands';
@@ -733,9 +733,11 @@ export function createBot({
       return;
     }
 
-    // The published app's own bound, and the mini app's: two characters is a
-    // guard against an empty field rather than a standard.
-    if (said.length < 2 || said.length > MAX_INTENTION_CHARS) {
+    // The format's answer, not a third copy of it. This was
+    // `said.length < 2 || said.length > MAX_INTENTION_CHARS`, written inline
+    // with the two as a literal, under a comment saying it was the mini app's
+    // bound — which is exactly how one question comes to have three answers.
+    if (!isIntention(said)) {
       await ctx.reply(messageFor(language, 'intention.tooShort'));
       return;
     }
