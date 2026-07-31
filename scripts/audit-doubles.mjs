@@ -1,0 +1,90 @@
+#!/usr/bin/env node
+/**
+ * One bound, declared once.
+ *
+ * Four bounds in this repository had been written down twice, and one of them
+ * three times. They agreed, every one of them, on the day they were copied —
+ * which is exactly why nothing had gone wrong yet and exactly why it would.
+ * A number that means "the most a report may be" cannot be two numbers, and
+ * when it becomes two the app accepts something the file refuses and neither
+ * of them says a word about it.
+ *
+ * The copies are not carelessness. Each was made by somebody who needed the
+ * number in a module that could not easily reach the one that had it, and one
+ * of them was written directly beneath a comment noting that the other existed.
+ * So this is a check rather than a rule to remember.
+ *
+ * Run:  node scripts/audit-doubles.mjs
+ */
+
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { declarationsIn, doubled } from './lib/doubles.mjs';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(HERE, '..');
+
+const SOURCES = [
+  'packages/engine/src',
+  'packages/content/src',
+  'packages/journal/src',
+  'packages/db/src',
+  'packages/ai/src',
+  'packages/contracts/src',
+  'apps/bot/src',
+  'apps/miniapp/src',
+  'apps/docs/src',
+];
+
+/**
+ * Names that are one idea per module rather than one idea shared.
+ *
+ * `STORAGE_KEY` and its relatives are a module saying where *it* keeps things;
+ * two modules with a `STORAGE_KEY` are not two answers to one question, they
+ * are two questions. The test is whether a caller could sensibly ask "which of
+ * these is the real one" — for a key, they could not.
+ */
+const PER_MODULE = new Set(['STORAGE_KEY', 'SCHEMA_VERSION']);
+
+function filesUnder(directory) {
+  const found = [];
+  let entries;
+  try {
+    entries = readdirSync(directory);
+  } catch {
+    return found;
+  }
+
+  for (const entry of entries) {
+    const path = join(directory, entry);
+    if (statSync(path).isDirectory()) found.push(...filesUnder(path));
+    else if (entry.endsWith('.ts')) found.push(path);
+  }
+
+  return found;
+}
+
+const declarations = SOURCES.flatMap((source) =>
+  filesUnder(join(ROOT, source)).flatMap((path) =>
+    declarationsIn(readFileSync(path, 'utf8'), relative(ROOT, path)),
+  ),
+);
+
+const copies = doubled(declarations).filter(({ name }) => !PER_MODULE.has(name));
+
+console.log(`\nChecked ${declarations.length} declared constants across ${SOURCES.length} sources.\n`);
+
+if (copies.length === 0) {
+  console.log('Every bound is declared once, so there is nothing for a change to leave behind.');
+} else {
+  for (const { name, where, disagreeing } of copies) {
+    console.log(`  ${name}${disagreeing ? '  — and they do not even agree' : ''}`);
+    for (const one of where) console.log(`      ${one.value}   ${one.file}`);
+  }
+  console.log(
+    '\nCopies agree on the day they are made. Nothing goes wrong until one of them is',
+  );
+  console.log('changed, and then two modules mean different things by one name.');
+  process.exitCode = 1;
+}

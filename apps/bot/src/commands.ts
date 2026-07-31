@@ -34,6 +34,7 @@ import {
   owesReport,
 } from '@leela/engine';
 import { revisited } from '@leela/journal';
+import { MAX_MESSAGE_CHARS } from './render';
 import { bookFor, messageFor, planFor, resolveLanguage, type Language } from '@leela/content';
 
 /** A table, plus the bits the bot needs that the engine does not care about. */
@@ -789,8 +790,13 @@ export function path(
  * simply fail to send — the failure being a rejected API call, not a truncated
  * message, so they would see nothing at all. `renderPlan` already accounted for
  * this; `/path` did not.
+ *
+ * That last sentence was written beside a *second* declaration of the same
+ * number, which is how this repository's duplicated bounds have always started:
+ * somebody notices the other one exists and copies it rather than importing it.
+ * One of them, from the module about rendering for a chat.
  */
-export const MAX_MESSAGE_CHARS = 3500;
+export { MAX_MESSAGE_CHARS } from './render';
 
 /** Marks an entry that is too long to send even on its own. */
 const TRUNCATED = '\n…';

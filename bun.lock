@@ -64,6 +64,7 @@
       "dependencies": {
         "@leela/content": "workspace:*",
         "@leela/engine": "workspace:*",
+        "@leela/journal": "workspace:*",
       },
       "devDependencies": {
         "@vitest/coverage-v8": "^2.1.8",

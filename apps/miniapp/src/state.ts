@@ -288,7 +288,22 @@ export function intentionKeyFor(playerId: string): string {
  * than a standard, and eight hundred is a paragraph.
  */
 export const MIN_INTENTION_CHARS = 2;
-export const MAX_INTENTION_CHARS = 800;
+
+/**
+ * The upper bound, from the format rather than beside it.
+ *
+ * Three copies of eight hundred: here, in `@leela/journal`, and in
+ * `@leela/ai`. They validate, they bound a file on the way in, and they clip a
+ * prompt — three different jobs and one number, which agreed until somebody
+ * changed one of them. Then the app accepts a question the file drops, and
+ * nothing anywhere says so.
+ *
+ * The format owns it because the format is the one that cannot be given it:
+ * `@leela/journal` has no dependencies at all, on purpose, so that a browser
+ * bundle and a Bun process can both hold it.
+ */
+import { MAX_INTENTION_CHARS } from '@leela/journal';
+export { MAX_INTENTION_CHARS };
 
 /**
  * What the player is playing for.

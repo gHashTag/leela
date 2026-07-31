@@ -155,6 +155,11 @@ jobs:
       # behaviour the type allows and the code assumed away.
       - run: node scripts/audit-promises.mjs
 
+      # One bound, declared once. Four had been written down twice and one of
+      # them three times, all agreeing on the day they were copied — which is
+      # why nothing had gone wrong yet and exactly why it would.
+      - run: node scripts/audit-doubles.mjs
+
       # Every script starts under the runtime it names, and every audit is
       # either run here or says in its own header why it cannot be. audit-copies
       # - the check that reads eighteen copies of the board - sat broken under

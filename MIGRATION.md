@@ -4446,6 +4446,37 @@ one copy for what the app writes, one for what a file may carry. They agree
 until one of them is changed, and then a report the writer accepts is one the
 file refuses, with nothing to say so. Re-exported from the format now.
 
+## Hundred-and-twenty-ninth pass: one bound, declared once
+
+The pass before found `MAX_REPORT_CHARS` and `MAX_REPORTS` declared in the
+format and again in the mini app, and fixed those two by hand. This is the same
+question asked mechanically, which found two more:
+
+`MAX_INTENTION_CHARS = 800`, **three times** — `@leela/journal` bounding a file
+on the way in, `apps/miniapp` validating what a player types, `@leela/ai`
+clipping what goes into a prompt. Three jobs, one number, three copies of it.
+
+`MAX_MESSAGE_CHARS = 3500`, twice inside the bot — and the second declaration
+sits under a comment observing that the first one exists: *`renderPlan` already
+accounted for this; `/path` did not.* That is how every one of these starts.
+Somebody needs the number, finds it written down in a module they cannot easily
+reach, and writes it down again.
+
+They all agreed, which is the whole problem. Nothing goes wrong until one of
+them is changed, and then the app accepts a question the file drops and neither
+says a word.
+
+`@leela/journal` owns the intention's bound because it is the one that cannot be
+given it: the format has no dependencies at all, deliberately, so that a browser
+bundle and a Bun process can both hold it. `@leela/ai` gained a dependency on
+it — a package with no dependencies of its own, so nothing came with it.
+
+**`audit-doubles` keeps it that way**, on names rather than values: two
+constants that happen to both be 500 are not a duplicate, and two called
+`MAX_REPORTS` are one idea whether or not they agree — if they *disagree* the
+audit says so, because that is worse. Re-exports are not copies and are not
+counted. Checked by planting a copy, twice: once agreeing, once not.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

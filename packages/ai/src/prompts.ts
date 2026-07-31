@@ -101,12 +101,17 @@ export const MAX_RETURN_CHARS = 600;
 /**
  * The longest intention carried into a prompt.
  *
- * The published app's own bound, and the mini app's: `yup.string().min(2)
- * .max(800)` in `ChangeIntention`. Clipped here as well, because a prompt is
- * the one place a value that has been through a file and an editor meets a
- * budget that everything else in the prompt has to share.
+ * The published app's own bound: `yup.string().min(2).max(800)` in
+ * `ChangeIntention`. Clipped here as well, because a prompt is the one place a
+ * value that has been through a file and an editor meets a budget that
+ * everything else in the prompt has to share.
+ *
+ * From the format rather than beside it. This was the third copy of eight
+ * hundred — a validator, a file reader and a prompt, three jobs and one number,
+ * agreeing until somebody changed one of them.
  */
-export const MAX_INTENTION_CHARS = 800;
+import { MAX_INTENTION_CHARS } from '@leela/journal';
+export { MAX_INTENTION_CHARS };
 
 /** One line per entry, clipped, in the shape both summaries use. */
 function line(entry: JourneyEntry, language: Language): string {

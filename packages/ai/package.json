@@ -8,7 +8,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
@@ -16,7 +18,8 @@
   },
   "dependencies": {
     "@leela/content": "workspace:*",
-    "@leela/engine": "workspace:*"
+    "@leela/engine": "workspace:*",
+    "@leela/journal": "workspace:*"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.8",
