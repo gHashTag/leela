@@ -4046,6 +4046,33 @@ Proved by adding a fourteenth reader, which fails it.
 That is the third shape closed this way, after the 68 ambiguity and the drawings
 that decided nothing.
 
+## Hundred-and-seventeenth pass: the same measure, on the other surface
+
+The mini app's "whose" question is which seat. The bot's is **which of your
+tables** — a room is keyed by the chat it lives in, which is right for every
+command sent at the table, and `/ask` is not one of those: the companion answers
+privately, so the natural place to ask is a private chat, where there is no
+table. `roomOf` answers it, and the answer is *the table you played last*.
+
+Both stores said so in their own comments. **Only one of them did it.**
+
+The in-memory store re-inserts on save, so its order is the order of play. The
+database ordered by `updated_at`, and `Date.now()` has one millisecond to spend
+on several saves — so two tables touched inside the same millisecond left the
+answer to SQLite, which chose, and chose the other one. A player asking a
+question in a private chat could be answered about the wrong game.
+
+The same tie this repository met in `/path`: two reports written in one
+millisecond came back in whatever order the database felt like, and `id` was
+added to break it. There is no second column to break this one, so the clock
+stops repeating itself instead — every save is stamped at least one past the
+last, which makes "most recent" an order rather than a hope.
+
+The rule is not about milliseconds: **two stores of one question give one
+answer**, and the way to find out is to ask them both. Every test here runs
+against both, which is what made a defect visible that each store's own tests
+were happy with.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

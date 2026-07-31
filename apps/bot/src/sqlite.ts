@@ -218,11 +218,27 @@ export interface SqliteOptions {
 
 export class SqliteRoomQueries implements RoomQueries {
   private readonly db: Database;
-  private readonly now: () => number;
+  private readonly clock: () => number;
+
+  /**
+   * The last moment stamped, so no two saves share one.
+   *
+   * "Which of your tables did you mean" is answered by the most recently played
+   * one, and `Date.now()` has a millisecond to spend on several saves. Two
+   * tables touched inside the same millisecond left the ordering to SQLite,
+   * which chose — and chose differently from the in-memory store, whose answer
+   * is the order things were saved in.
+   *
+   * The same tie this repository has met before, in `/path`: two reports
+   * written in one millisecond came back in whatever order the database felt
+   * like, and `id` was added to break it. There is no second column to break
+   * this one, so the clock stops repeating itself instead.
+   */
+  private stamped = 0;
 
   constructor({ path, now = Date.now }: SqliteOptions) {
     this.db = openDatabase(path);
-    this.now = now;
+    this.clock = now;
 
     // Without this the FOREIGN KEY above is decorative and deleting a session
     // leaves its seats behind.
@@ -312,7 +328,7 @@ export class SqliteRoomQueries implements RoomQueries {
           session.dice_seed,
           session.is_open ? 1 : 0,
           session.language,
-          this.now(),
+          this.touched(),
         );
 
       // Replaced rather than updated: a player can leave, and a stale seat
@@ -419,6 +435,16 @@ export class SqliteRoomQueries implements RoomQueries {
    * A player can be seated at several — a group and a private game — and the
    * one they mean when they ask a question is the one they last played.
    */
+  /** The clock, never twice the same, so "most recent" is always an order. */
+  private touched(): number {
+    this.stamped = Math.max(this.clock(), this.stamped + 1);
+    return this.stamped;
+  }
+
+  private now(): number {
+    return this.clock();
+  }
+
   async sessionOfPlayer(playerId: string): Promise<string | null> {
     const row = this.db
       .prepare(
