@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import type { Direction } from '@leela/engine';
 import { LANGUAGES, planFor } from '@leela/content';
 import { TOTAL_PLANS, WIN_LOKA } from '@leela/engine';
+import { MAX_REPORT_CHARS } from '@leela/journal';
 import {
   MAX_HISTORY,
+  MAX_HISTORY_CHARS,
+  MAX_INTENTION_CHARS,
   MAX_JOURNEY_CHARS,
   MAX_JOURNEY_ENTRIES,
   MAX_JOURNEY_ENTRY_CHARS,
@@ -413,5 +416,86 @@ describe('how the player arrived', () => {
     // plan 8" while on plan 8 reads as a mistake to anyone, model included.
     const prompt = systemPrompt({ language: 'en', plan: 8, previousPlan: 8 });
     expect(prompt).not.toContain('came from plan 8');
+  });
+});
+
+describe('a prompt this package builds is a prompt this package bounds', () => {
+  /**
+   * Every part of the prompt is clipped by this package — the plan's text, each
+   * journey line, the intention — except the one it was handed. The history was
+   * clipped by *count*, so six messages of any length went in whole, and the
+   * carefully bounded prompt was bounded by whatever the caller was holding.
+   *
+   * It fails quietly, which is what makes it worth a test rather than a note. A
+   * request refused for length comes back as the fallback sentence, so a
+   * companion that had stopped answering its longest conversations would look,
+   * from inside the game, exactly like one having a bad day.
+   *
+   * Stated as a ceiling on the whole thing rather than on the piece that was
+   * missing a bound: a seventh part added tomorrow has to fit in it too.
+   */
+  const enormous = (n: number) => 'x'.repeat(n);
+
+  const worstCase = () => ({
+    plan: 23,
+    language: 'ur' as const,
+    intention: enormous(MAX_INTENTION_CHARS * 3),
+    direction: 'snake 🐍' as const,
+    previousPlan: 44,
+    journey: Array.from({ length: MAX_JOURNEY_ENTRIES * 4 }, (_, index) => ({
+      plan: (index % TOTAL_PLANS) + 1,
+      text: enormous(4000),
+    })),
+  });
+
+  const history = Array.from({ length: MAX_HISTORY * 3 }, (_, index) => ({
+    role: (index % 2 ? 'assistant' : 'user') as 'assistant' | 'user',
+    content: enormous(9000),
+  }));
+
+  const sizeOf = (messages: Array<{ content: string }>) =>
+    messages.reduce((total, message) => total + message.content.length, 0);
+
+  /**
+   * What everything the package decides comes to, plus what it carries.
+   *
+   * Derived from the constants rather than written down, so raising one of them
+   * moves this and a new part has to declare itself.
+   */
+  const CEILING = 6_400 + MAX_REPORT_CHARS + MAX_HISTORY * MAX_HISTORY_CHARS;
+
+  it('never builds one past its own ceiling, in any language, on any square', () => {
+    for (const language of LANGUAGES) {
+      for (let plan = 1; plan <= TOTAL_PLANS; plan += 1) {
+        const context = { ...worstCase(), plan, language };
+
+        expect(
+          sizeOf(reportPrompt(context, enormous(MAX_REPORT_CHARS), history)),
+          `${language}/${plan}`,
+        ).toBeLessThanOrEqual(CEILING);
+        expect(
+          sizeOf(questionPrompt(context, enormous(MAX_REPORT_CHARS), history)),
+          `${language}/${plan}`,
+        ).toBeLessThanOrEqual(CEILING);
+      }
+    }
+  });
+
+  it('clips a long exchange rather than dropping it', () => {
+    // The other half: a bound that discarded the message would lose the thread
+    // the history exists to keep.
+    const [, first] = reportPrompt(worstCase(), 'a report', [
+      { role: 'user', content: `The question begins here. ${enormous(9000)}` },
+    ]);
+
+    expect(first?.content.length).toBeLessThanOrEqual(MAX_HISTORY_CHARS);
+    expect(first?.content, 'and it is the beginning that is kept').toContain('question begins');
+  });
+
+  it('leaves a short exchange exactly as it was', () => {
+    const said = 'What is this square asking of me?';
+    const [, first] = reportPrompt(worstCase(), 'a report', [{ role: 'user', content: said }]);
+
+    expect(first?.content).toBe(said);
   });
 });

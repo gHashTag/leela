@@ -4829,6 +4829,37 @@ none, because the two thirds it is silent about read as clean.
 So what is written down is what was read. The same rule as the word forms two
 passes ago, and for the same reason.
 
+## Hundred-and-forty-first pass: the one part it was handed
+
+`packages/ai` clips every piece it puts in a prompt. The plan's text at 2,400
+characters, on a paragraph boundary so it never stops mid-sentence. Each journey
+line at 160. The intention at 800. Each of those bounds has a paragraph above it
+explaining what would be crowded out of a small context window without it.
+
+The conversation history was clipped by **count**. Six messages, of any length
+at all.
+
+Measured rather than assumed: the system prompt cannot pass 6,080 characters,
+and the report the player just wrote adds at most 4,000 — so everything this
+package decides comes to about ten thousand. Six unclipped exchanges took the
+same prompt to **34,080**, more than three times its own considered size, and
+every character of that came from outside.
+
+It fails in the quiet way. A request refused for length comes back through
+`Guide` as the fallback sentence, so a companion that had stopped answering its
+longest conversations would look, from inside the game, exactly like one having
+a bad day — and the players it stopped answering are the ones who had been
+playing longest.
+
+An exchange is clipped now, not dropped: cutting it loose would lose the thread
+the history exists to keep, and the beginning of a question is the part that
+says what was asked.
+
+The test is a ceiling on the whole prompt rather than a bound on the piece that
+was missing one, and the ceiling is derived from the constants rather than
+written down — so raising one of them moves it, and a seventh part added
+tomorrow has to fit inside it.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

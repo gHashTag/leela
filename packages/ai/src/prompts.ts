@@ -397,8 +397,37 @@ export function questionPrompt(
 /** How many earlier messages to carry. Six is three exchanges. */
 export const MAX_HISTORY = 6;
 
+/**
+ * How much of one earlier message to carry.
+ *
+ * Everything else this package puts in a prompt is clipped by it: the plan's
+ * text at `MAX_PLAN_CHARS`, a journey line at `MAX_JOURNEY_ENTRY_CHARS`, the
+ * intention at `MAX_INTENTION_CHARS`. The history was clipped by *count* alone,
+ * so six messages of any length at all went in whole — and the prompt this
+ * package so carefully bounds was bounded by whatever the caller happened to be
+ * holding.
+ *
+ * Measured before it was chosen: the system prompt cannot pass 6,080
+ * characters and the report adds 4,000, so everything this package decides
+ * comes to about ten thousand. Six exchanges at twelve hundred is another seven
+ * — a prompt of the same order as its own parts, rather than three times them.
+ *
+ * The consequence of leaving it was the quiet kind. A refused request comes
+ * back as a fallback sentence, so a companion that stopped answering the
+ * longest conversations would look, from inside the game, exactly like a
+ * companion having a bad day.
+ */
+export const MAX_HISTORY_CHARS = 1200;
+
 function recentHistory(history: ReadonlyArray<Message>): Message[] {
   // Drop any system messages from history: there is exactly one system prompt,
   // and it is built fresh from the plan the player is on now.
-  return history.filter((m) => m.role !== 'system').slice(-MAX_HISTORY);
+  return history
+    .filter((m) => m.role !== 'system')
+    .slice(-MAX_HISTORY)
+    .map((m) =>
+      m.content.length > MAX_HISTORY_CHARS
+        ? { ...m, content: trimToParagraph(m.content, MAX_HISTORY_CHARS) }
+        : m,
+    );
 }
