@@ -111,7 +111,7 @@ const ASKED: Array<{
     what: 'mayThrow — and why not',
     ask: (state) => mayThrow(seated(state), 'to see it through', false, false),
     waiting: 'yes',
-    won: 'game-over',
+    won: 'finished',
   },
   {
     what: 'seatOwesReport — whether the game is asking for an account',

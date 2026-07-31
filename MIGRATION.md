@@ -4892,6 +4892,43 @@ bytes, at three per character. No script here needs a fourth, and Japanese
 reaches 2.8 — so a language whose writing needs more, or a character bound
 raised without anyone weighing what it costs in Bengali, fails the test.
 
+## Hundred-and-forty-ninth pass: a reason the engine never gave
+
+Three passes running found one surface asking something the others did not, so
+this one went after the shape rather than the instance — and found it in the
+engine.
+
+`TurnBlockedReason` declares `finished`, and `canRoll` returns it **nowhere**:
+the only mention of that word in `turn.ts` was the type itself. So every surface
+wrote the check by hand. The bot: `if (hasWon(player.state)) return { say:
+'finished' }`. The mini app: its own `canRoll`, per seat. The phone: `isOver`,
+which asked `isSessionOver` — *every* player — and at a shared table would have
+left the die open to somebody who had already arrived.
+
+A vocabulary with an unreachable word in it is worse than a shorter one. It
+reads as though the question is answered here, and three answers get written
+somewhere else.
+
+`canRoll` returns `finished` now, for a player who has won under rules that do
+not let them start again. `hasWon` rather than `is_finished`, because the flag
+says two things and only one of them is this one — a player waiting to enter
+carries it too, and for them the answer is still yes.
+
+**And two surfaces stopped re-deciding.** The mini app and the phone each had a
+`mayThrow` that named `report-required` and `finished` as `owes-report` and
+`game-over` and worked them out again, while the bot asked
+`canCurrentPlayerRoll`. Both ask the engine now and keep only what it cannot
+know: whether a spin is under way, and whether a question has been answered —
+the engine has never heard of either.
+
+**One refusal stays where it was, and is not silent about it.**
+`CLASSIC.mayReenterAfterWinning` is true, so the engine lets a winner start
+again; the mini app refuses. At a table that difference is unreachable —
+`nextSeat` skips a finished player — but in a game of one the turn stays put and
+the die would reopen for somebody who has arrived. The eighty-second pass found
+that flag and deliberately left it alone, and following the engine here would be
+changing the game rather than the drawing.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

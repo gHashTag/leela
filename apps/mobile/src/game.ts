@@ -20,12 +20,14 @@
 import {
   CLASSIC,
   advance,
+  canCurrentPlayerRoll,
   createSession,
   currentPlayer,
   isSessionOver,
   owesReport,
   seededRoller,
   submitReport,
+  type TurnBlockedReason,
   type MoveEvent,
   type RuleSet,
   type Session,
@@ -83,22 +85,31 @@ export function standingOn(game: Game): number {
  * drawing and a drawing refuses nothing — the lesson the mini app learned from
  * a double tap that filed two accounts of one square.
  */
-export type ThrowRefusal = 'yes' | 'no-intention' | 'owes-report' | 'game-over';
+export type ThrowRefusal = 'yes' | 'no-intention' | TurnBlockedReason;
 
-export function mayThrow(game: Game, intention: string): ThrowRefusal {
+export function mayThrow(game: Game, intention: string, now = Date.now()): ThrowRefusal {
+  // The question first: it is the surface's to ask, because the engine has no
+  // idea one exists — the bot keeps it per player, the mini app per seat, and
+  // this app in its own key.
   if (intention.trim() === '') return 'no-intention';
-  if (owesAnAccount(game)) return 'owes-report';
-  if (isOver(game)) return 'game-over';
 
-  return 'yes';
+  // And then the engine's own answer, rather than a second one written here.
+  // The mini app and this app each had a `mayThrow` that re-decided
+  // `report-required` and `finished` under new names, while the bot asked
+  // `canCurrentPlayerRoll` — three surfaces, one question, and only one of them
+  // asking it. That is how this app came to have no intention gate at all: a
+  // decision written out by hand is a decision each surface writes differently.
+  const verdict = canCurrentPlayerRoll(game.session, now);
+  return verdict.allowed ? 'yes' : (verdict.reason ?? 'yes');
 }
 
 /**
  * Whether the game is finished.
  *
- * The engine's answer, not `loka === WIN_LOKA`: a player waiting to enter sits
- * on the winning square too — the ambiguity this repository has met eight times
- * — and only the history tells them apart.
+ * `isSessionOver` is every seat, which is the right question for a table and
+ * the wrong one for a throw: it was in `mayThrow` until the engine learned to
+ * say `finished` itself, and at a shared table it would have left the die open
+ * to somebody who had already arrived.
  */
 export function isOver(game: Game): boolean {
   return isSessionOver(game.session);

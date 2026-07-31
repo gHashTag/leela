@@ -74,6 +74,23 @@ const ALLOWED: TurnVerdict = Object.freeze({
  * plan to reflect on until they are on the board.
  */
 export function canRoll(state: GameState, context: TurnContext, rules: RuleSet): TurnVerdict {
+  // A player who has *won*, under rules that do not let them start again.
+  //
+  // `finished` was declared as a reason and returned from nowhere: this
+  // function's only mention of it was the type. So every surface wrote the
+  // check itself — the bot's `if (hasWon(player.state)) return { say:
+  // 'finished' }`, the mini app's own `canRoll`, the phone's `isOver` — and the
+  // phone's asked a different question, `isSessionOver`, which is true only
+  // once *everybody* has finished and would have left the die open to a winner
+  // at a shared table.
+  //
+  // `hasWon` rather than `is_finished`, because the flag says two things and
+  // only one of them is this one: a player waiting to enter carries it too, and
+  // for them the answer below is right.
+  if (hasWon(state) && !rules.mayReenterAfterWinning) {
+    return { allowed: false, reason: 'finished', nextAllowedAt: null, waitMs: 0 };
+  }
+
   // Not yet in the game: nothing to report on, nothing to wait for.
   if (state.is_finished) return ALLOWED;
 

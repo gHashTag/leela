@@ -14,12 +14,14 @@
  */
 
 import {
+  canCurrentPlayerRoll,
   WIN_LOKA,
   currentPlayer,
   hasWon,
   isWaitingToEnter,
   type GameState,
   type Session,
+  type TurnBlockedReason,
 } from '@leela/engine';
 import { messageFor, type Language, type MessageKey } from '@leela/content';
 import { owingSeat } from './reports';
@@ -184,23 +186,44 @@ export function lineFor(announcement: string | null, moved: boolean): Line {
  * as one the player had returned to, in the one record the game exists to
  * produce.
  */
-export type ThrowRefusal = 'yes' | 'rolling' | 'no-intention' | 'owes-report' | 'game-over';
+export type ThrowRefusal = 'yes' | 'rolling' | 'no-intention' | TurnBlockedReason;
 
 export function mayThrow(
   session: Session,
   intention: string,
   rolling: boolean,
   owed: boolean,
+  now = Date.now(),
 ): ThrowRefusal {
   // In the order the player meets them: a throw already under way, then the
-  // question the game is played to answer, then the account it asks for, then
-  // the end of the game itself.
+  // question the game is played to answer, then whatever the engine says.
+  //
+  // The first two are this surface's own — a spin is an animation and the
+  // engine has never heard of one, and the question is kept per seat here, per
+  // player in the bot, and in its own key on the phone. The rest was written
+  // out by hand and re-decided `report-required` and `finished` under the names
+  // `owes-report` and `game-over`, while the bot asked `canCurrentPlayerRoll`.
+  // Three surfaces, one question, and only one of them asking it — which is how
+  // the phone came to have no intention gate at all.
   if (rolling) return 'rolling';
   if (intention === '') return 'no-intention';
-  if (owed) return 'owes-report';
-  if (!canRoll(session)) return 'game-over';
 
-  return 'yes';
+  // `owed` still comes in, because this surface asks it of the *journal* as
+  // well as the seat and the two are separate records. When it says yes there
+  // is nothing to ask the engine about.
+  if (owed) return 'report-required';
+
+  // This surface's own, and kept deliberately. `CLASSIC.mayReenterAfterWinning`
+  // is true, so the engine lets a winner start again — and at a table that is
+  // unreachable, because `nextSeat` skips a finished player, but in a game of
+  // one the turn stays where it is and the die would reopen for somebody who
+  // has arrived. The eighty-second pass found that flag, called it unreachable
+  // in a seated game, and left it alone; changing it here would be changing the
+  // game rather than the drawing.
+  if (!canRoll(session)) return 'finished';
+
+  const verdict = canCurrentPlayerRoll(session, now);
+  return verdict.allowed ? 'yes' : (verdict.reason ?? 'yes');
 }
 
 /**

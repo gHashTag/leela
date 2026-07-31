@@ -148,7 +148,7 @@ describe('what a throw is refused for', () => {
   });
 
   it('is an account the game has asked for and not been given', () => {
-    expect(mayThrow(session, 'to see', false, true)).toBe('owes-report');
+    expect(mayThrow(session, 'to see', false, true)).toBe('report-required');
   });
 
   it('is a game that has ended', () => {
@@ -167,7 +167,7 @@ describe('what a throw is refused for', () => {
       })),
     };
 
-    expect(mayThrow(won, 'to see', false, false)).toBe('game-over');
+    expect(mayThrow(won, 'to see', false, false)).toBe('finished');
   });
 
   it('is nothing, when there is nothing in the way', () => {
@@ -223,7 +223,7 @@ describe('what is said once the report is filed', () => {
       ),
     };
 
-    expect(mayThrow(finished, 'to see', false, false)).toBe('game-over');
+    expect(mayThrow(finished, 'to see', false, false)).toBe('finished');
   });
 });
 

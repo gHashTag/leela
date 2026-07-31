@@ -151,7 +151,7 @@ describe('a game played through the app is the game the engine plays', () => {
         continue;
       }
 
-      expect(mayThrow(game, ASKING), 'the die is shut').toBe('owes-report');
+      expect(mayThrow(game, ASKING), 'the die is shut').toBe('report-required');
       const where = standingOn(game);
       expect(throwDie(game, ASKING).game, 'and shut to the act as well').toBe(game);
       expect(standingOn(game)).toBe(where);

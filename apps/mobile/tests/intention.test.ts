@@ -138,7 +138,7 @@ describe('the die will not turn without a question', () => {
       game = throwDie(game, ASKING).game;
     }
 
-    expect(mayThrow(game, ASKING), 'owing an account, with a question').toBe('owes-report');
+    expect(mayThrow(game, ASKING), 'owing an account, with a question').toBe('report-required');
     expect(mayThrow(game, ''), 'owing an account, without one').toBe('no-intention');
   });
 

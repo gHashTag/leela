@@ -1,22 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import {
   CLASSIC,
+  GameState,
   LEGACY_MOBILE,
   NEUROLEELA,
+  ONCHAIN,
   ONE_DAY_MS,
   ONLINE,
+  RuleSet,
+  WIN_LOKA,
   applyRoll,
+  arrivedByJump,
   canRoll,
   formatWait,
-  arrivedByJump,
   hasWon,
-  needsSixToEnter,
   initialState,
   isWaitingToEnter,
+  needsSixToEnter,
   owesReport,
   seededRoller,
-  type GameState,
-  type RuleSet,
 } from '../src';
 
 function playing(overrides: Partial<GameState> = {}): GameState {
@@ -477,5 +479,84 @@ describe('a player who has not entered the game', () => {
     expect(isWaitingToEnter(playing({ loka: 68, previous_loka: 68, is_finished: true }))).toBe(
       true,
     );
+  });
+});
+
+describe('a reason the verdict never gave', () => {
+  /**
+   * `finished` was declared in `TurnBlockedReason` and returned from nowhere:
+   * the only mention of it in this file was the type itself. So every surface
+   * wrote the check by hand — the bot's `if (hasWon(player.state)) return
+   * { say: 'finished' }`, the mini app's own `canRoll`, the phone's `isOver` —
+   * and the phone's asked a different question, `isSessionOver`, which is true
+   * only once *everybody* has finished and would have left the die open to a
+   * winner at a shared table.
+   *
+   * A vocabulary with an unreachable word in it is worse than a shorter one. It
+   * reads as though the question has been answered here, and three answers get
+   * written somewhere else.
+   */
+  const won = (): GameState => ({
+    ...initialState(),
+    loka: WIN_LOKA,
+    previous_loka: 62,
+    is_finished: true,
+    consecutive_sixes: 0,
+    position_before_three_sixes: 0,
+  });
+
+  const context = { reportSubmitted: true, lastRollAt: null, lastReportAt: null, now: 0 };
+
+  it('refuses a player who has won, and says why', () => {
+    // `LEGACY_MOBILE` and `ONLINE` are the two that do not let a winner start
+    // again; `CLASSIC`, `NEUROLEELA` and `ONCHAIN` do.
+    const verdict = canRoll(won(), context, LEGACY_MOBILE);
+
+    expect(verdict.allowed).toBe(false);
+    expect(verdict.reason).toBe('finished');
+  });
+
+  it('allows one who is merely waiting to enter, which carries the same flag', () => {
+    // The 68 ambiguity, and the reason this asks `hasWon` rather than
+    // `is_finished`: a player who has not entered stands on the winning square
+    // with `is_finished` set, and must roll to get off it.
+    const verdict = canRoll(initialState(), context, LEGACY_MOBILE);
+
+    expect(verdict.allowed, 'they have to throw a six to begin').toBe(true);
+  });
+
+  it('allows a winner under rules that let them start again', () => {
+    // `mayReenterAfterWinning` is what the published app does, and the check
+    // must not quietly overrule a variant.
+    const verdict = canRoll(won(), context, CLASSIC);
+
+    expect(verdict.allowed).toBe(CLASSIC.mayReenterAfterWinning);
+  });
+
+  it('gives every reason it declares', () => {
+    // The shape, not the case: a word in the vocabulary that nothing can
+    // produce is a promise the surfaces end up keeping themselves.
+    const reasons = new Set<string>();
+
+    reasons.add(canRoll(won(), context, LEGACY_MOBILE).reason ?? '');
+    reasons.add(
+      canRoll({ ...initialState(), loka: 6, is_finished: false }, { ...context, reportSubmitted: false }, CLASSIC)
+        .reason ?? '',
+    );
+    // `ONLINE` is the one with a cooldown — a day between throws, counted from
+    // the report rather than the roll, which is what the published app does.
+    reasons.add(
+      canRoll(
+        { ...initialState(), loka: 6, is_finished: false },
+        { ...context, lastReportAt: 0, now: 1 },
+        ONLINE,
+      ).reason ?? '',
+    );
+
+    expect([...reasons].filter(Boolean).sort()).toEqual([
+      'cooldown',
+      'finished',
+      'report-required',
+    ]);
   });
 });
