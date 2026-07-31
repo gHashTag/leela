@@ -62,6 +62,27 @@ export function toAsciiDigits(text) {
 }
 
 /**
+ * An arithmetic chain: `9x5=45=9`, `8x6=48, 8+4=12, 1+2=3`.
+ *
+ * Removed before anything here counts a number, because the numbers inside one
+ * are not board references and never were. Plans 8 and 9 argue from
+ * multiplication tables, and this check was reading every term of them as a
+ * cross-reference to a square — so a translation that writes a shorter table
+ * was reported as having lost the board, in five of the records it kept.
+ *
+ * Those tables are `audit-arithmetic`'s territory, and it holds them to a
+ * stricter rule than presence: every product is checked, in every language. Two
+ * checks, two questions. This one asks whether a sentence still points at the
+ * square it points at.
+ */
+const ARITHMETIC = /\d+\s*[x×хX*✕]\s*\d+\s*=[\d\s+=,.]*/g;
+
+/** The same text with its equations taken out, and everything else kept. */
+export function withoutArithmetic(text) {
+  return toAsciiDigits(text).replace(ARITHMETIC, ' ');
+}
+
+/**
  * The numbers a text states, with grouping removed.
  *
  * A separator only counts as grouping when exactly three digits follow it, so
@@ -70,7 +91,8 @@ export function toAsciiDigits(text) {
  * phone number or an artefact, and it is not this audit's business.
  */
 export function numbersIn(text) {
-  const grouped = toAsciiDigits(text).replace(/(?<=\d)[ ,.  ](?=\d\d\d\b)/g, '');
+  const grouped = toAsciiDigits(text)
+    .replace(/(?<=\d)[ ,.  ](?=\d\d\d\b)/g, '');
   return [...grouped.matchAll(/\d+/g)].map((match) => match[0]).filter((n) => n.length <= 11);
 }
 
@@ -121,9 +143,17 @@ export function writtenOut(language, number, text) {
  * them sorted, so two runs over the same data read the same.
  */
 export function lostFrom(translated, russian, english, language = '') {
-  const inRussian = new Set(numbersIn(russian));
-  const inEnglish = new Set(numbersIn(english));
-  const present = new Set(numbersIn(translated));
+  // Equations dropped, on both sides. `numbersIn` still reports their terms —
+  // somebody asking what numbers a text states wants them — but a *loss* is a
+  // different question, and the terms of a multiplication table are not board
+  // references. Plans 8 and 9 argue from tables, and reading their rows as
+  // cross-references made a translation with a shorter table look like one that
+  // had lost the board: five of the thirty-six records were that and nothing
+  // else. The tables belong to `audit-arithmetic`, which holds them to a
+  // stricter rule than presence — every product checked, in every language.
+  const inRussian = new Set(numbersIn(withoutArithmetic(russian)));
+  const inEnglish = new Set(numbersIn(withoutArithmetic(english)));
+  const present = new Set(numbersIn(withoutArithmetic(translated)));
 
   return [...inRussian]
     .filter(

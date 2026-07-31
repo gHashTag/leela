@@ -11,7 +11,7 @@
  * duplicate bodies, script density. It found nothing, and it was looking one
  * layer above the damage.
  *
- * What this found, in 36 plans across three languages: Ukrainian, Malay and
+ * What this found, in 31 plans across three languages: Ukrainian, Malay and
  * Arabic have lost board references in a dozen plans each. The loss is in the
  * donor translations themselves, not in this repository's generator.
  *
@@ -22,8 +22,15 @@
  * having dropped it. See `WRITTEN_OUT` in `lib/numbers.mjs`: every entry there
  * is a quotation from the file it came from, read before it was written down.
  *
- * The 36 are an upper bound for the same reason. What has been read is what is
- * excused.
+ * It read 36 until the pass after that, when the terms of the multiplication
+ * tables in plans 8 and 9 stopped being counted as cross-references to squares.
+ * They never were: those tables are `audit-arithmetic`'s, and it holds them to
+ * a stricter rule than presence. Taking them out left `ar/9: 72000` standing on
+ * its own — a real reference, the nadis of the body, which had been buried in a
+ * record of table rows.
+ *
+ * The 31 are an upper bound for the same reason as before. What has been read
+ * is what is excused.
  *
  * **It is recorded rather than repaired.** Repairing it means translating, and
  * translating means calling a service this repository deliberately does not
@@ -51,8 +58,7 @@ const DATA = join(HERE, '..', 'packages', 'content', 'data');
  */
 const RECORDED = [
   'ar/6: 1,4',
-  'ar/8: 0,11,12',
-  'ar/9: 5,6,7,45,54,63,81,72000',
+  'ar/9: 72000',
   'ar/30: 38,39,40',
   'ar/38: 24',
   'ar/44: 37',
@@ -63,8 +69,6 @@ const RECORDED = [
   'ar/61: 21',
   'ar/62: 8',
   'ms/6: 1,4',
-  'ms/8: 0,10,11,12',
-  'ms/9: 5,6,7,45,54,63,72,81',
   'ms/30: 38,39,40',
   'ms/38: 24',
   'ms/44: 37',
@@ -75,8 +79,6 @@ const RECORDED = [
   'ms/61: 21',
   'ms/62: 8',
   'uk/6: 1,4',
-  'uk/8: 0,11,12',
-  'uk/9: 5,6,7,45,54,63,72,81',
   'uk/23: 11',
   'uk/30: 38,39,40',
   'uk/38: 24',

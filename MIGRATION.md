@@ -4769,6 +4769,37 @@ The test asserts the shape rather than the six: a spelled-out reference counts
 as present, a reference that is genuinely absent still counts as lost, and a
 language nobody has read gets no benefit of the doubt.
 
+## Hundred-and-thirty-ninth pass: two audits, two questions
+
+Reading the rest of the records, as the pass before said it would. Five of them
+turned out not to be about board references at all.
+
+Plans 8 and 9 argue from arithmetic — *eight is a number that decreases when
+multiplied*, and nine is one that does not — and each lists its own
+multiplication table. This check was reading every term of those tables as a
+cross-reference to a square. So Ukrainian, Malay and Arabic, whose donor edition
+prints a **shorter table**, were recorded as having lost the board in two plans
+each: thirty-three numbers between them, not one of which is a square.
+
+Those tables belong to `audit-arithmetic`, which holds them to a stricter rule
+than presence — every product checked, in every language, which is how the false
+`9х280=7,380` was found and corrected two passes ago. Two checks, two questions.
+This one asks whether a sentence still points at the square it points at.
+
+**Narrowly, though.** `numbersIn` still reports the terms of a table, because
+somebody asking what numbers a text states wants them; it is the *loss* question
+that ignores them. The distinction is the whole of the change, and one of this
+file's own tests had encoded the opposite: its fixture for "the audit names the
+plan and the numbers" was `9x5=45`, so it tested the exclusion rather than the
+audit. It asks about a cross-reference now, which is what the audit is for.
+
+**And the exclusion uncovered a real one.** `ar/9: 72000` — the nadis of the
+body, a reference Arabic genuinely dropped — had been buried inside a record of
+table rows, invisible because the line it sat on was already known.
+
+Thirty-one records left, still an upper bound: what has been read is what is
+excused.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
@@ -4919,10 +4950,11 @@ lines of which every functional one is commented out, and both locale files —
 in it to port. The docs root is the landing page.
 
 **Translation audit, second layer — and this one found something.** See the
-eighty-ninth pass below: 36 plans across three languages have lost the board
+eighty-ninth pass below: 31 plans across three languages have lost the board
 references the text states. It read 42 across eight until the hundred and
-thirty-eighth pass, and six of those were never lost — the check counts digits,
-and five languages write the reference as a word. The first audit is still true
+thirty-eighth pass, and 36 until the one after: six of the forty-two were
+references written as words, and five more records were multiplication tables
+rather than references at all. The first audit is still true
 at the layer it checked.
 
 **Translation audit — done, and it found nothing.** The 19 machine-translated

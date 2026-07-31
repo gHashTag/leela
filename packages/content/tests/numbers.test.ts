@@ -5,6 +5,7 @@ import {
   numbersIn,
   toAsciiDigits,
   unrecorded,
+  withoutArithmetic,
   writtenOut,
   // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 } from '../../../scripts/lib/numbers.mjs';
@@ -103,13 +104,17 @@ describe('what counts as a loss', () => {
 });
 
 describe('the audit over a whole language', () => {
-  const russian = [plan(9, 'девять: 9x5=45'), plan(60, 'до поля 68'), plan(1, 'ничего')];
-  const english = [plan(9, 'nine: 9x5=45'), plan(60, 'until field 68'), plan(1, 'nothing')];
+  // The fixture was `9x5=45` until the pass that took equations out of this
+  // question — which turned it into a test of the exclusion rather than of the
+  // audit. A cross-reference says the same thing about the audit and is what
+  // the audit is for.
+  const russian = [plan(9, 'девять: см. поля 45 и 54'), plan(60, 'до поля 68'), plan(1, 'ничего')];
+  const english = [plan(9, 'nine: see fields 45 and 54'), plan(60, 'until field 68'), plan(1, 'nothing')];
 
   it('names the plan and the numbers, and says nothing about the rest', () => {
-    const damaged = [plan(9, 'nine: nine times five'), plan(60, 'until field 68'), plan(1, 'x')];
+    const damaged = [plan(9, 'nine: see the fields'), plan(60, 'until field 68'), plan(1, 'x')];
 
-    expect(lossesIn(damaged, russian, english)).toEqual([{ plan: 9, lost: ['5', '9', '45'] }]);
+    expect(lossesIn(damaged, russian, english)).toEqual([{ plan: 9, lost: ['45', '54'] }]);
   });
 
   it('is silent on a translation that kept everything', () => {
@@ -179,5 +184,55 @@ describe('a reference written as a word is not a missing one', () => {
     expect(writtenOut('uk', 68, 'шістдесят восьмий квадрат')).toBe(true);
     expect(writtenOut('ms', 68, 'шістдесят восьмий квадрат'), 'never read').toBe(false);
     expect(writtenOut('uk', 45, 'шістдесят восьмий квадрат'), 'a number never read').toBe(false);
+  });
+});
+
+describe('a board reference is not a term in a times table', () => {
+  /**
+   * Plans 8 and 9 argue from arithmetic — *eight is a number that decreases
+   * when multiplied*, and nine is one that does not — and each lists its own
+   * multiplication table. This check was reading every term of those tables as
+   * a cross-reference to a square, so a translation that writes a shorter table
+   * was reported as having lost the board. Five of the thirty-six records were
+   * that, and nothing else.
+   *
+   * Those tables belong to `audit-arithmetic`, which holds them to a stricter
+   * rule than presence: every product checked, in every language. Two checks,
+   * two questions. This one asks whether a sentence still points at the square
+   * it points at.
+   *
+   * What the exclusion must not do is hide a reference that happens to sit in
+   * the same plan as a table — which is how `72000` came out of the Arabic
+   * record it had been buried in.
+   */
+  const table = 'Nine keeps itself: 9x5=45=9; 9x6=54=9; 9x7=63=9.';
+
+  it('leaves the terms out of a loss, and in the reading', () => {
+    // `numbersIn` still reports them: somebody asking what numbers a text
+    // states wants the table. A *loss* is the other question.
+    expect(numbersIn(table)).not.toEqual([]);
+    expect(numbersIn(withoutArithmetic(table))).toEqual([]);
+  });
+
+  it('still reads the numbers around one', () => {
+    expect(numbersIn(withoutArithmetic(`There are 72000 nadis. ${table} And field 68.`))).toEqual([
+      '72000',
+      '68',
+    ]);
+  });
+
+  it('counts a shorter table as no loss at all', () => {
+    // The Ukrainian shape: fewer rows, every product correct. `lostFrom` used
+    // to call the missing rows lost board references.
+    const shorter = 'Дев’ять зберігає себе: 9х5=45=9.';
+
+    expect(lostFrom(shorter, table, table, 'uk')).toEqual([]);
+  });
+
+  it('still sees a reference lost from a plan that has a table in it', () => {
+    const withoutTheNadis = 'Дев’ять зберігає себе: 9х5=45=9.';
+    const source = `There are 72000 nadis. ${table}`;
+
+    expect(lostFrom(withoutTheNadis, source, source, 'uk')).toEqual(['72000']);
   });
 });
