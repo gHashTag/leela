@@ -26,6 +26,7 @@ import { fileURLToPath } from 'node:url';
 import {
   declaredExports,
   declaredFields,
+  declaredMembers,
   uncalledExports,
   unreadFields,
 } from './lib/unread.mjs';
@@ -254,9 +255,58 @@ const exportDeclarations = files.flatMap((file, index) =>
   file.endsWith('.ts') ? declaredExports(sources[index], relative(ROOT, file)) : [],
 );
 
-const uncalled = uncalledExports(exportDeclarations, sources, Object.keys(PUBLIC_API));
+/**
+ * Class members nobody outside the class calls, and why that is allowed.
+ *
+ * The same list as `PUBLIC_API` above and for the same reason, kept apart
+ * because a member is a different kind of claim: an export with no caller may
+ * be a library's surface, while a method with no caller is a class talking to
+ * an audience that is not there.
+ */
+const PUBLIC_MEMBERS = {
+  refusedCount:
+    'how many players the bot has learned it cannot message directly; read by ' +
+    'its own tests and there for an operator, not for the game',
 
-console.log(`\nChecked ${exportDeclarations.length} exports.\n`);
+  // Not a waiver. `game_steps` is written on every move by `sqliteStepSink`,
+  // and this is the only thing that can read it back — and nothing calls it, so
+  // a durable bot has been filling a table nobody has ever opened.
+  //
+  // That is the exact shape of the defect this audit was widened to find:
+  // `reportsFor` was written, stored and unreadable until `/path` was added,
+  // and reports are the record the game exists to produce. Moves are not, which
+  // is why this is recorded rather than answered here: either the bot grows a
+  // command that reads a game's throws back, or it stops writing them. Both are
+  // decisions about what the bot is for.
+  stepsFor: 'the reader half of a move history nothing reads yet — see MIGRATION.md',
+};
+
+const memberDeclarations = files.flatMap((file, index) =>
+  file.endsWith('.ts') ? declaredMembers(sources[index], relative(ROOT, file)) : [],
+);
+
+const uncalled = uncalledExports(exportDeclarations, sources, Object.keys(PUBLIC_API));
+const unusedMembers = uncalledExports(memberDeclarations, sources, Object.keys(PUBLIC_MEMBERS));
+
+console.log(
+  `\nChecked ${exportDeclarations.length} exports and ${memberDeclarations.length} class members.\n`,
+);
+
+console.log(
+  `${Object.keys(PUBLIC_MEMBERS).length} class member(s) are uncalled on purpose.\n`,
+);
+
+if (unusedMembers.length > 0) {
+  console.log(`${unusedMembers.length} class member(s) have no caller here:\n`);
+  for (const item of unusedMembers) {
+    console.log(`  ${item.owner}.${item.name}  (${item.kind}, ${item.file})`);
+  }
+  console.log(
+    '\nA class is exported and its members are not, so this is the half of the surface\n' +
+      '`export` cannot see. It is where `reportsFor` hid: a durable sink that kept every\n' +
+      'report and answered that it kept nothing.\n',
+  );
+}
 
 if (uncalled.length === 0) {
   console.log('Every export has at least one caller.');

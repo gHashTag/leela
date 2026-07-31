@@ -203,7 +203,7 @@ builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
 ```bash
-node scripts/audit-unread.mjs
+node scripts/audit-unread.mjs       # fields nobody reads, exports and class members nobody calls
 node scripts/audit-configs.mjs
 node scripts/audit-claims.mjs       # the table above, against the suites
 node scripts/audit-scripts.mjs      # every script runs under the runtime it names

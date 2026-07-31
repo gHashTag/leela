@@ -132,6 +132,57 @@ export function declaredExports(source, file) {
 }
 
 /**
+ * The public members of exported classes: methods and getters.
+ *
+ * The blind spot this closes was found twice, and the second time cost the
+ * worst defect of its pass. `sqliteReportSink` had `record` and no `history`,
+ * so a durable bot wrote every report into a database and told anybody who
+ * asked that it kept nothing — and `audit-unread` could not see it, because
+ * `reportsFor` is a method on a class rather than an export. Then
+ * `DirectChannels.refusedCount`, an observable nothing observes.
+ *
+ * A class is exported and its members are not, so every one of them is invisible
+ * to a check that reads `export`.
+ *
+ * Private members are skipped: `private x` and `#x` are the class saying it is
+ * talking to itself, which is the one case where nobody else calling is the
+ * point. Constructors are skipped for the same reason — `new X()` calls them.
+ */
+export function declaredMembers(source, file) {
+  const members = [];
+  const clean = stripTemplateLiterals(source);
+
+  for (const opening of clean.matchAll(/^export\s+(?:abstract\s+)?class\s+([A-Za-z_$][\w$]*)/gm)) {
+    const from = clean.indexOf('{', opening.index ?? 0);
+    if (from < 0) continue;
+
+    let depth = 0;
+    let index = from;
+    for (; index < clean.length; index += 1) {
+      if (clean[index] === '{') depth += 1;
+      if (clean[index] === '}') {
+        depth -= 1;
+        if (depth === 0) break;
+      }
+    }
+
+    const body = clean.slice(from + 1, index);
+
+    // One indent level in, which is where a member is written and where a
+    // statement inside a method body is not.
+    for (const member of body.matchAll(
+      /^  (?:(private|protected)\s+)?(?:readonly\s+)?(?:static\s+)?(?:async\s+)?(get\s+|set\s+)?([A-Za-z_$][\w$]*)\s*[(<]/gm,
+    )) {
+      const [, visibility, accessor, name] = member;
+      if (visibility || name === 'constructor' || name.startsWith('#')) continue;
+      members.push({ name, file, kind: accessor ? 'accessor' : 'method', owner: opening[1] });
+    }
+  }
+
+  return members;
+}
+
+/**
  * Mentions of a name that are not its declaration or its re-export.
  *
  * An `export { name } from './x'` is plumbing, not a use: a barrel file that
@@ -246,6 +297,16 @@ function directUsesOf(name, sources) {
     `^export\\s+(?:async\\s+)?(?:function|const|class)\\s+${name}\\b`,
   );
 
+  // A class member's own declaration, which reads exactly like a use of it and
+  // was counted as one — so `DirectChannels.refusedCount`, whose only mention
+  // anywhere is the line declaring it, came back as called once. A member is
+  // always reached through something (`channels.refusedCount`), so a bare name
+  // at one indent level, followed by a bracket, is the declaration and nothing
+  // else.
+  const member = new RegExp(
+    `^  (?:private |protected |readonly |static |async |get |set )*${name}\\s*[(<]`,
+  );
+
   for (const source of sources) {
     // Import and export lists are plumbing; drop them before counting.
     const withoutPlumbing = source.replace(
@@ -257,6 +318,7 @@ function directUsesOf(name, sources) {
       if (!raw.includes(name)) continue;
       if (comment.test(raw)) continue;
       if (declaration.test(raw)) continue;
+      if (member.test(raw)) continue;
 
       // A name inside a string is not a call. `bot.command('board', …)`
       // registers a Telegram command that happens to share a name with an

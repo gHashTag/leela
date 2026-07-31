@@ -4704,6 +4704,41 @@ wrong number is a missing one to a check that looks for the right one.
 `audit-arithmetic`'s own list is now empty, and stays in the file. A list that
 empties is the point of keeping one.
 
+## Hundred-and-thirty-seventh pass: the half `export` cannot see
+
+`audit-unread` asks whether every export has a caller. A class is exported and
+its members are not, so every method and getter in this repository was invisible
+to it — and that blind spot has cost two defects already. `reportsFor` hid in it:
+a durable sink that wrote every report into SQLite and answered anybody who
+asked that it kept nothing, for as long as the durable configuration existed.
+`refusedCount` sat in it, an observable nothing observes.
+
+It reads members now, and found two — one of them new.
+
+**`SqliteRoomQueries.stepsFor` has no caller.** `game_steps` is written on every
+move by `sqliteStepSink`, and this method is the only thing that can read it
+back. So a durable bot has been filling a table nobody has ever opened. That is
+`reportsFor` again, one table over, and it is recorded rather than answered:
+reports are the record the game exists to produce and had to be readable, while
+moves are not, so the choice is between a command that reads a game's throws
+back and not writing them at all. Both are decisions about what the bot is for.
+
+**Three things had to be fixed in the tool before it could be believed.**
+
+A member's own declaration reads exactly like a use of it, so `refusedCount` —
+whose only mention anywhere is the line declaring it — came back as called once.
+A member is always reached through something, so a bare name at one indent
+level, followed by a bracket, is a declaration and never a call.
+
+The other two were shapes already handled for exports and worth naming again:
+private members are skipped, because a class talking to itself is the one case
+where nobody else calling is the point; and constructors are skipped, because
+`new X()` calls them.
+
+The proof it works is last pass's defect: take the `/end` handler's call to
+`Conversations.clear` away again, and this audit names it — *a new game is a new
+conversation*, said by a method nothing called.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
