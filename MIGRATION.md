@@ -4919,9 +4919,36 @@ free roll.
 What is still needed here is the export itself — a Firebase dump and a Supabase
 dump — and a decision on how ids are assigned. The conversion is ready.
 
-**3. `apps/mobile`.** Port `NeuroLeelaAgent`, switch it to `@leela/engine` and
-`@leela/content`, then bring across RevenueCat, notifee and Sentry from
-`leela`. Keep the `applicationId` and the bundle id.
+**3. `apps/mobile` — the game is there; the shipped app's services are not.**
+An Expo app that builds, installs and runs on an iOS simulator: the board from
+`BOARD_ROWS`, the plan texts from `@leela/content`, the bundle id
+`com.leelagame` kept.
+
+**It carries no rule of its own, and that is the whole point of it.**
+`GameService.ts` in `NeuroLeelaExpo` is 471 lines, of which
+`getDirectionAndPosition` and `handleConsecutiveSixes` decide where a throw puts
+a player — the fifth copy of the board's rules in this family of repositories,
+after the published app, the Expo rewrite, the Solidity contract and the mini
+app. Every copy has been somewhere the game could quietly become a different
+game. So `src/game.ts` holds a seat, a die and the last event, and `advance`
+does the rest.
+
+Asserted two ways, because either alone is weak. The source is read for the
+*shapes* a movement rule takes — a jump written as a number pair, the winning
+square as a literal, arithmetic on a position — since a comment cannot stop
+somebody writing one back in. And a game is played through the app's own
+functions and replayed through the engine square by square, because matching
+source text proves nothing about what happens on a throw.
+
+Still to bring across from `leela`: RevenueCat, notifee and Sentry.
+
+**What running it cost, recorded so nobody pays it twice.** Expo Go cannot be
+fetched here — its CDN answers 403 — so the app is built natively. CocoaPods
+fails on this machine with `Encoding::CompatibilityError` unless `LANG` names a
+UTF-8 locale. And neither donor builds under Xcode 26.6: `NeuroLeelaExpo`
+(RN 0.76.9) dies in `Pods/fmt/format-inl.h`, and the published `leela`
+(RN 0.70.4, Firebase, `use_frameworks!`, `platform :ios, '12.4'`) has neither
+`node_modules` nor `Pods` and would need an upgrade before it could be tried.
 
 **4a. `apps/bot` — done.** Group play in a Telegram chat, 41 tests, no token
 needed to run them: `commands.ts` is pure functions from `(room, input)` to
