@@ -26,10 +26,23 @@
  * - **Thousands are grouped differently.** `72,000` and `72 000` and `72000`
  *   are one number written three ways, and comparing them naively made every
  *   language — including English — look damaged in plan 9.
- * - **Not every language was translated from the same edition.** Ukrainian,
- *   Malay and Arabic follow the *English* text, the rest follow the Russian,
- *   and the two editions phrase things differently. So a number is only
- *   expected of a translation when **both** editions carry it.
+ * - **Not every language was translated from the same edition.** So a number is
+ *   only expected of a translation when both the edition it came from and the
+ *   Russian original carry it.
+ *
+ *   Which edition that is was written down wrong here for a long time —
+ *   *Ukrainian, Malay and Arabic follow the English text, the rest follow the
+ *   Russian*. The second half is false. `translate-leela/index.js` reads
+ *   `./docs` and writes `./locales/<lang>`, and `docs` is **English**: the
+ *   nineteen machine translations are translations of an English edition, and
+ *   of a *different* English from the one this dataset ships. Both editions are
+ *   kept under `data/editions/` now, and `editionOf` reads which one a language
+ *   followed off the plans themselves.
+ *
+ *   Neither is LibreTranslate's, which is what `libre.js` in that repository
+ *   looks like it says. That file is fifteen lines, calls
+ *   `translate('Привет, мир!', 'ru', 'en')` as an example, and **nothing
+ *   imports it**. The translator is Google Cloud Translate, in `index.js`.
  */
 
 /** Every numeral system the 22 languages might write a board reference in. */
@@ -263,7 +276,10 @@ export function lostFrom(translated, russian, english, language = '') {
  */
 export function editionOf(plans) {
   const sources = new Set(plans.map((plan) => (plan.source ?? '').split('/')[0]));
-  return sources.size === 1 && sources.has('leela') ? 'leela-en' : null;
+  if (sources.size !== 1) return null;
+
+  const [family] = sources;
+  return { leela: 'leela-en', 'translate-leela': 'translate-leela-en' }[family] ?? null;
 }
 
 /** One plan in one language, and the board references it dropped. */

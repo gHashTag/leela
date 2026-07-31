@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { plansFor } from '../src';
+import { LANGUAGES, plansFor } from '../src';
 import {
   alsoWrittenOutSomewhere,
   editionOf,
@@ -90,10 +90,11 @@ describe('what counts as a loss', () => {
   });
 
   it('is not a difference between the two editions themselves', () => {
-    // Ukrainian, Malay and Arabic follow the English text and the rest follow
-    // the Russian, and the editions phrase things differently. A number only
-    // one of them carries is a phrasing choice, and flagging it would bury the
-    // real finding under noise.
+    // No language was translated from the same edition as its neighbour, and
+    // the editions phrase things differently. A number only one of them carries
+    // is a phrasing choice, and flagging it would bury the real finding under
+    // noise. Which edition each language came from is `editionOf`'s question,
+    // below — this one is about what follows once it is answered.
     // 45 is only in the Russian and 72 is in both: the first is a phrasing
     // choice, the second is a loss, and only the second is reported.
     expect(lostFrom('a translation of neither', 'поле 45 и 72', 'field 72')).toEqual(['72']);
@@ -245,8 +246,31 @@ describe('a translation is judged against the edition it was made from', () => {
     expect(editionOf(plansFor('ms'))).toBe('leela-en');
     expect(editionOf(plansFor('uk'))).toBe('leela-en');
 
-    expect(editionOf(plansFor('de')), 'translate-leela follows the shipped text').toBe(null);
+    // The nineteen machine translations came from `translate-leela/docs`, which
+    // is English and is *not* the English this dataset ships —
+    // `NeuroLeelaAgent/docs/plans/1-birth.md` is 2,240 bytes where
+    // `translate-leela/docs/1-birth.md` is 1,977, and they say different things.
+    // This was written down as *the rest follow the Russian* for a long time.
+    expect(editionOf(plansFor('de')), 'a translation of English, not of Russian').toBe(
+      'translate-leela-en',
+    );
+    expect(editionOf(plansFor('zh'))).toBe('translate-leela-en');
+
+    // The two originals are nobody's translation.
     expect(editionOf(plansFor('ru'))).toBe(null);
+    expect(editionOf(plansFor('en'))).toBe(null);
+  });
+
+  it('every shipped language names an edition or is an original', () => {
+    // The shape rather than the twenty-two: a language whose edition is unknown
+    // is judged against the shipped English by default, and a default that is
+    // wrong is what this pass and the one before it were both about.
+    for (const language of LANGUAGES) {
+      const edition = editionOf(plansFor(language));
+      const original = language === 'en' || language === 'ru';
+
+      expect(original ? edition === null : typeof edition === 'string', language).toBe(true);
+    }
   });
 
   it('says nothing when the edition never stated the number', () => {
@@ -275,14 +299,16 @@ describe('a translation is judged against the edition it was made from', () => {
     // in it is excused — and a silent excuse reads exactly like a language with
     // nothing wrong. The editions are generated: a rebuild from a moved source
     // directory would empty this file and turn the audit green.
-    const edition = readEdition('leela-en');
+    for (const language of LANGUAGES) {
+      const name = editionOf(plansFor(language));
+      if (name === null) continue;
 
-    expect(edition.length).toBe(72);
-    for (const language of ['ar', 'ms', 'uk']) {
+      const edition = readEdition(name);
+      expect(edition.length, name).toBe(72);
       for (const plan of plansFor(language)) {
         expect(
           edition.some((one: { plan: number }) => one.plan === plan.plan),
-          `${language}/${plan.plan}`,
+          `${language}/${plan.plan} against ${name}`,
         ).toBe(true);
       }
     }

@@ -183,6 +183,36 @@ function readEnglishPlans() {
   return { plans, warnings: [] };
 }
 
+/**
+ * The English the 19 machine translations were made from.
+ *
+ * `translate-leela/index.js` reads `./docs` and writes `./locales/<lang>`, so
+ * `docs` is the source and it is in English — and it is **not** the English
+ * this dataset ships. `NeuroLeelaAgent/docs/plans/1-birth.md` is 2,240 bytes
+ * where `translate-leela/docs/1-birth.md` is 1,977, and the two say different
+ * things. Nineteen languages were therefore being judged against an edition
+ * none of them came from, which is the same defect `leela-en` was captured to
+ * fix, one family over.
+ *
+ * It makes no difference to the board references — both comparisons report
+ * nothing for all seventeen shipped languages of this family, and that was
+ * measured rather than assumed. It is kept anyway, because *nothing found* and
+ * *nothing looked for* are the same sentence, and the next number to go missing
+ * should be seen by a check that is right rather than one that agrees by luck.
+ */
+function readTranslateSource() {
+  const root = join(SRC, 'translate-leela/docs');
+  if (!existsSync(root)) return [];
+
+  const plans = [];
+  for (const [n, slug] of SLUGS) {
+    const file = join(root, `${n}-${slug}.md`);
+    if (!existsSync(file)) continue;
+    plans.push(makePlan(n, parseMarkdown(readFileSync(file, 'utf8')), `translate-leela/docs/${n}-${slug}.md`));
+  }
+  return plans;
+}
+
 /** Source 3: translate-leela, `<n>-<slug>-<lang>.md` across 19 languages. */
 function readTranslateLeela() {
   const root = join(SRC, 'translate-leela/locales');
@@ -474,7 +504,7 @@ const appLocales = readAppLocales();
  * generated file is a derivation that goes stale the day the rule changes —
  * which is the mistake `lib/corrections.mjs` exists to record.
  */
-const EDITIONS = { 'leela-en': appLocales.en ?? [] };
+const EDITIONS = { 'leela-en': appLocales.en ?? [], 'translate-leela-en': readTranslateSource() };
 
 for (const [lang, plans] of Object.entries(appLocales)) offer(lang, plans);
 for (const [lang, plans] of Object.entries(readTranslateLeela())) offer(lang, plans);
