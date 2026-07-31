@@ -22,6 +22,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { LANGUAGES, couldBe, dominantScript, scriptOf } from '../packages/content/src/index.ts';
 import { TOTAL_PLANS } from '../packages/engine/src/index.ts';
+import { CORRECTIONS } from './lib/corrections.mjs';
 import { checkCoverage, coverageOf } from './lib/coverage.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -62,6 +63,45 @@ for (const language of coverage.keys()) {
   }
 }
 
+/**
+ * Every correction the generator states, in the data it generated.
+ *
+ * The one entry in `CORRECTIONS` was a hand edit to three generated files for a
+ * while, and the next rebuild put the false sum back — a repair living in an
+ * artifact, with a countdown on it. Moving it into the generator is the fix;
+ * this is what notices if the two ever come apart again.
+ *
+ * It cannot rebuild to compare — the donor repositories are not in CI, and
+ * checking a *generated* file against its generator is exactly what needs them.
+ * What it can do is hold the shipped data to the corrections that are written
+ * down: the corrected form present, the donor's form gone, in the languages the
+ * entry names and no others. A hand edit that reverts one fails this. A
+ * correction quietly deleted from the generator fails it too.
+ */
+for (const fix of CORRECTIONS) {
+  for (const language of coverage.keys()) {
+    let plan;
+    try {
+      plan = read(join(DATA, `plans.${language}.json`)).find((one) => one.plan === fix.plan);
+    } catch {
+      continue; // Already reported above.
+    }
+    if (!plan) continue;
+
+    const named = fix.languages.includes(language);
+    if (named && plan.body.includes(fix.from)) {
+      problems.push(
+        `${language}/${fix.plan}: still says \`${fix.from}\` — ${fix.where}`,
+      );
+    }
+    if (named && !plan.body.includes(fix.to)) {
+      problems.push(
+        `${language}/${fix.plan}: the correction is stated and the data does not carry it — ${fix.where}`,
+      );
+    }
+  }
+}
+
 // The rules book, which nothing had ever looked at. English shipped a seventh
 // chapter written in Russian — `game-logic.md`, filed among six numbered
 // English files in a donor repository and mapped straight through. A reader
@@ -89,7 +129,7 @@ for (const [language, chapters] of Object.entries(rules)) {
 }
 
 console.log(
-  `\nChecked ${coverage.size} languages against the ${LANGUAGES.length} declared, and ${Object.values(rules).flat().length} rules chapters against their scripts.\n`,
+  `\nChecked ${coverage.size} languages against the ${LANGUAGES.length} declared, ${Object.values(rules).flat().length} rules chapters against their scripts, and ${CORRECTIONS.length} stated correction(s) against the data.\n`,
 );
 
 if (problems.length === 0) {

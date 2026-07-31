@@ -5433,12 +5433,47 @@ lines of which every functional one is commented out, and both locale files —
 in it to port. The docs root is the landing page.
 
 **Translation audit, second layer — and this one found something.** See the
-eighty-ninth pass below: 31 plans across three languages have lost the board
+eighty-ninth pass below: 23 plans across three languages have lost the board
 references the text states. It read 42 across eight until the hundred and
-thirty-eighth pass, and 36 until the one after: six of the forty-two were
-references written as words, and five more records were multiplication tables
-rather than references at all. The first audit is still true
-at the layer it checked.
+thirty-eighth pass, 36 until the one after, and 31 until the hundred and
+fifty-fifth: six of the forty-two were references written as words, five more
+records were multiplication tables rather than references at all, three were a
+numbered list, and eight were the same sentences spelled out in words in
+languages nobody had read. The first audit is still true at the layer it
+checked.
+
+**Each record now says which kind of loss it is, and the audit prompts the
+reading rather than waiting for it.** Whether a plan still *names* the square it
+has stopped numbering is the difference between a numeral to put back and a
+sentence to write — and it can be asked of the translation itself, because every
+locale keeps the parenthesised transliteration in its own titles. So `(prana-loka)`
+on plan 38 is that edition saying which square `prana` is, in its own script, and
+nothing has to be trusted from the English. Five hand-read lines became a
+derivation over all of them; it agrees with four of the five and the fifth was
+wrong.
+
+The eight spelled-out records were found by the audit pointing at itself: a
+number *some* translator wrote as a word is a number to check the others for.
+`uk/68` had been excused eleven passes earlier, and the identical sentence sat
+in the recorded damage in Malay and Arabic the whole time, because reading is
+done one file at a time and nothing pointed from one to the next.
+
+**The one repair that needed no translator did not survive a rebuild.**
+`9х280=7,380` is false in the plan whose whole argument is that nine keeps its
+identity under multiplication, and it was corrected in
+`packages/content/data/plans.*.json` — which are *generated* files — and nowhere
+else. The next `node scripts/build-content.mjs` put the false sum back, and the
+only reason anybody saw it was that a rebuild happened to run in the same pass
+as `audit-arithmetic`. A repair that lives in an artifact is a repair with a
+countdown on it, and how long it has is a matter of who rebuilds and when.
+
+It lives in `scripts/lib/corrections.mjs` now, applied by the generator and
+checked by `audit-dataset` against the shipped data. A correction that stops
+matching fails the build rather than doing nothing quietly: the donor was fixed
+upstream, or the sentence moved, and those are indistinguishable from silence.
+The bar for adding one is that the source is *checkably* wrong — arithmetic, not
+judgement — so that correcting it overrules no translator. Everything else the
+audits find is recorded and left alone for exactly that reason.
 
 **Translation audit — done, and it found nothing.** The 19 machine-translated
 languages hold up at term level: parenthesised transliterations survive in all

@@ -126,13 +126,79 @@ const WRITTEN_OUT = {
   'hi/8': ['आठवें'],
   'zh/8': ['第八'],
   'mr/5': ['पाच'],
+  // One sentence, three translations, and only one of them had been read. The
+  // Ukrainian was found by eye eleven passes ago; these two were found by the
+  // audit pointing at them — see `alsoWrittenOutSomewhere`.
   'uk/68': ['шістдесят восьмий'],
+  'ms/68': ['enam puluh lapan'], // ms/60: `sehingga persegi enam puluh lapan dicapai`
+  'ar/68': ['الثامن والستين'], // ar/60: `حتى يتم الوصول إلى المربع الثامن والستين`
+  // The eighth plane, plan 62 — the sentence Spanish, Hindi and Chinese were
+  // already excused for. Three more translations write it the same way.
+  'ms/8': ['pesawat kelapan'],
+  'uk/8': ['восьмого плану'],
+  'ar/8': ['الطائرة الثامنة'],
+  // The four aspects of mind, plan 55 — German's `vier Hauptaspekte`, three
+  // scripts further out. Quoted with the noun they count, so that the excuse is
+  // this sentence rather than any four in the language.
+  'ms/4': ['empat aspek'],
+  'uk/4': ['чотири основні аспекти'],
+  'ar/4': ['أربعة جوانب'],
 };
 
 /** Whether this language writes this board reference out in words. */
 export function writtenOut(language, number, text) {
   const forms = WRITTEN_OUT[`${language}/${number}`] ?? [];
   return forms.some((form) => text.includes(form));
+}
+
+/**
+ * Numbers some language has been read to spell out, whatever language it was.
+ *
+ * A reference written in words is a fact about a *sentence*, and the sentence is
+ * usually the same one in every translation of a plan. `uk/68` was read and
+ * excused; the identical sentence in Malay and Arabic — `sehingga persegi enam
+ * puluh lapan dicapai`, `حتى يتم الوصول إلى المربع الثامن والستين` — sat in the
+ * recorded damage for eleven passes, because reading is done one file at a time
+ * and nothing pointed from one to the next.
+ *
+ * So the audit points. It cannot read Malay, but it can say *this number is one
+ * a translator somewhere wrote as a word, and you are looking at the same plan*
+ * — which is the whole of how those two were found.
+ */
+export function alsoWrittenOutSomewhere(number) {
+  return Object.keys(WRITTEN_OUT).some((key) => key.endsWith(`/${number}`));
+}
+
+/**
+ * An enumerated list: `1. kama, 2. krodha, 3. lobha, 4. moha`.
+ *
+ * The fifth false alarm, and the same mistake as the times tables one pass ago:
+ * a numeral that is not a board reference, counted as one. Plan 6 lists the four
+ * possessions and both editions number them, so `1` and `4` were expected of
+ * every translation — and Arabic, Malay and Ukrainian keep all four items and
+ * drop the numbering, which is a typographic choice and not a lost square.
+ *
+ * `2` and `3` were never reported, which is the tell: those two digits happen to
+ * occur elsewhere in each of those bodies, so a check that asks only whether a
+ * number appears *anywhere* let them pass. Three records, six numbers, and the
+ * two that escaped were the evidence that the question was wrong.
+ *
+ * A run from 1, at least three long, at the start of a line. Two numbered items
+ * are not distinguishable from a sentence that opens with a figure, and a list
+ * that starts at 5 is a continuation of something this plan does not contain.
+ */
+export function withoutEnumeration(text) {
+  const ascii = toAsciiDigits(text);
+  const ITEM = /(?:^|\n)[ \t]*(\d{1,2})[.)][ \t]+/g;
+
+  const numbered = new Set([...ascii.matchAll(ITEM)].map((item) => Number(item[1])));
+  let run = 0;
+  while (numbered.has(run + 1)) run += 1;
+  if (run < 3) return ascii;
+
+  return ascii.replace(ITEM, (whole, digits) =>
+    Number(digits) <= run ? whole.replace(digits, ' ') : whole,
+  );
 }
 
 /**
@@ -151,9 +217,16 @@ export function lostFrom(translated, russian, english, language = '') {
   // had lost the board: five of the thirty-six records were that and nothing
   // else. The tables belong to `audit-arithmetic`, which holds them to a
   // stricter rule than presence — every product checked, in every language.
-  const inRussian = new Set(numbersIn(withoutArithmetic(russian)));
-  const inEnglish = new Set(numbersIn(withoutArithmetic(english)));
-  const present = new Set(numbersIn(withoutArithmetic(translated)));
+  //
+  // The enumeration goes the same way and for the same reason: a numbered list
+  // is a typographic choice, and a translation that drops the numbering has not
+  // lost a square. Taken out of all three, as the tables are — an enumerator is
+  // no more a reference in the source than it is in the translation.
+  const said = (text) => new Set(numbersIn(withoutEnumeration(withoutArithmetic(text))));
+
+  const inRussian = said(russian);
+  const inEnglish = said(english);
+  const present = said(translated);
 
   return [...inRussian]
     .filter(
@@ -182,6 +255,87 @@ export function lossesIn(plans, russian, english, language = '') {
   }
 
   return losses.sort((a, b) => a.plan - b.plan);
+}
+
+/**
+ * The words that name one square and no other, in an edition's own titles.
+ *
+ * Every locale keeps the parenthesised transliteration — that is what the term
+ * audit established in all 22 of them — so `(prana-loka)` on plan 38 is that
+ * edition saying, in its own script, which square `prana` is. The mapping from a
+ * term to a number is therefore *inside* each translation, and does not have to
+ * be trusted from outside it.
+ *
+ * Unique on purpose. `loka` is in a dozen titles and identifies nothing;
+ * `prana` is in one. A token shared between two titles cannot tell them apart,
+ * so it is not evidence about either, and dropping it needs no vocabulary and no
+ * list — only counting.
+ */
+export function identifyingTerms(plans) {
+  const inTitle = new Map();
+  const across = new Map();
+
+  for (const plan of plans) {
+    const tokens = new Set();
+    for (const parenthesised of (plan.title ?? '').matchAll(/\(([^)]*)\)/g)) {
+      for (const token of parenthesised[1].toLowerCase().split(/[^\p{L}\p{N}]+/u)) {
+        if (token.length > 2) tokens.add(token);
+      }
+    }
+    inTitle.set(plan.plan, tokens);
+    for (const token of tokens) across.set(token, (across.get(token) ?? 0) + 1);
+  }
+
+  return new Map(
+    [...inTitle].map(([number, tokens]) => [
+      number,
+      new Set([...tokens].filter((token) => across.get(token) === 1)),
+    ]),
+  );
+}
+
+/**
+ * Which of a square's own names a plan still says, if any.
+ *
+ * Whole words: `prana` inside `pranayama` is a different word, and a check that
+ * counted it would report a sentence about breathing exercises as a surviving
+ * cross-reference to square 38.
+ */
+export function namesOf(body, number, terms) {
+  const own = terms.get(number);
+  if (!own || own.size === 0) return [];
+
+  const text = (body ?? '').toLowerCase();
+  return [...own].filter((term) => new RegExp(`(?<!\\p{L})${term}(?!\\p{L})`, 'u').test(text));
+}
+
+/**
+ * What kind of loss a record is: a numeral to put back, or a sentence to write.
+ *
+ * The difference is the whole of the repair, and it used to be five lines
+ * somebody had read. Read is better than guessed, but five of thirty-one is not
+ * a record — it is a sample, and the thirty-first pass to look at this will read
+ * a sixth sentence and write a sixth line.
+ *
+ * Derived instead, from evidence already in the file: does the plan still name
+ * the square it has stopped numbering? A classifier was tried once and rejected
+ * for answering a third of the time, and rightly — but it was asking whether the
+ * *term* looked Sanskrit. This asks the edition which square a term is, and the
+ * edition answers or it does not.
+ *
+ * Three outcomes, and the third is not a failure. A square whose title carries
+ * no name of its own — `Ignorance`, `Earth` — leaves nothing to look for, and
+ * saying nothing about it is the honest answer rather than a guess dressed as
+ * one.
+ */
+export function kindOf(body, number, terms) {
+  const own = terms.get(number);
+  if (!own || own.size === 0) return null;
+
+  const said = namesOf(body, number, terms);
+  return said.length > 0
+    ? { kind: 'numeral only', names: said }
+    : { kind: 'reference gone', names: [] };
 }
 
 /** A loss as one line, which is also how the recorded damage is written. */

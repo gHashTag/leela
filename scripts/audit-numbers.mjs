@@ -11,8 +11,8 @@
  * duplicate bodies, script density. It found nothing, and it was looking one
  * layer above the damage.
  *
- * What this found, in 31 plans across three languages: Ukrainian, Malay and
- * Arabic have lost board references in a dozen plans each. The loss is in the
+ * What this found, in 23 plans across three languages: Ukrainian, Malay and
+ * Arabic have lost board references in eight plans each. The loss is in the
  * donor translations themselves, not in this repository's generator.
  *
  * It said 42 across eight for a long time, and six of those were never lost.
@@ -29,8 +29,19 @@
  * its own — a real reference, the nadis of the body, which had been buried in a
  * record of table rows.
  *
- * The 31 are an upper bound for the same reason as before. What has been read
- * is what is excused.
+ * It read 31 until this one, and eleven of those numbers were never lost
+ * either. Three records were a numbered list — plan 6 enumerates the four
+ * possessions `1.` to `4.`, and dropping the numbering is a typographic choice.
+ * The other eight were the same sentence spelled out in words in a language
+ * nobody had read yet, and every one of them was found by the audit pointing at
+ * itself: a number *some* translator wrote as a word is a number to check the
+ * others for. See `alsoWrittenOutSomewhere`.
+ *
+ * The 23 are an upper bound for the same reason as before. What has been read
+ * is what is excused — but the reading is now prompted rather than waited for,
+ * and each record says whether the plan still names the square it has stopped
+ * numbering, which is the difference between a numeral to put back and a
+ * sentence to write.
  *
  * **It is recorded rather than repaired.** Repairing it means translating, and
  * translating means calling a service this repository deliberately does not
@@ -44,7 +55,14 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { keyOf, lossesIn, unrecorded } from './lib/numbers.mjs';
+import {
+  alsoWrittenOutSomewhere,
+  identifyingTerms,
+  keyOf,
+  kindOf,
+  lossesIn,
+  unrecorded,
+} from './lib/numbers.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA = join(HERE, '..', 'packages', 'content', 'data');
@@ -57,69 +75,71 @@ const DATA = join(HERE, '..', 'packages', 'content', 'data');
  * quietly, and so that anyone re-translating knows exactly what to look for.
  */
 const RECORDED = [
-  'ar/6: 1,4',
   'ar/9: 72000',
   'ar/30: 38,39,40',
   'ar/38: 24',
   'ar/44: 37',
   'ar/46: 45',
   'ar/51: 72',
-  'ar/55: 4,52',
-  'ar/60: 68',
+  'ar/55: 52',
   'ar/61: 21',
-  'ar/62: 8',
-  'ms/6: 1,4',
   'ms/30: 38,39,40',
   'ms/38: 24',
   'ms/44: 37',
   'ms/46: 45',
   'ms/51: 72',
-  'ms/55: 4,52',
-  'ms/60: 68',
+  'ms/55: 52',
   'ms/61: 21',
-  'ms/62: 8',
-  'uk/6: 1,4',
   'uk/23: 11',
   'uk/30: 38,39,40',
   'uk/38: 24',
   'uk/44: 37',
   'uk/46: 45',
   'uk/51: 72',
-  'uk/55: 4,52',
+  'uk/55: 52',
   'uk/61: 21',
-  'uk/62: 8',
 ];
 
 const read = (language) => JSON.parse(readFileSync(join(DATA, `plans.${language}.json`), 'utf8'));
 
 /**
- * What kind of loss each record is, where somebody has read it.
+ * What kind of loss a record is, said per number rather than per plan.
  *
  * Two very different things had been recorded under one word. Malay keeps the
- * sentence and drops the numeral: plan 60 still names `buddhi` and `ahamkara`,
- * plan 51 still names `tamoguna`, plan 30 still names `prana` and `apana` — the
- * passages are there, pointing at squares they no longer number. Ukrainian
- * drops the parenthetical whole: plan 44 has no `джняна` in it at all, plan 30
- * no `прана`, `апана` or `вьяна`.
+ * sentence and drops the numeral — plan 30 still names `prana` and `apana`,
+ * pointing at squares it no longer numbers. Ukrainian drops the parenthetical
+ * whole: plan 30 has no `прана`, `апана` or `вьяна` in it anywhere. One repair
+ * is a numeral put back where a sentence already points; the other is a
+ * sentence to write.
  *
- * The difference is the whole of the repair. One is a numeral put back where a
- * sentence already points; the other is a sentence to write.
+ * This used to be five lines somebody had read, and read is better than
+ * guessed. But five of thirty-one is a sample rather than a record, and it was
+ * wrong in one of the five: `ms/60` was written down as *the sentence is still
+ * there* when the sentence has the number in it, in words. Deriving it says
+ * something about every record, including the ones nobody will get to.
  *
- * Read, not inferred. A classifier was tried — the term a reference names is
- * usually Sanskrit, and a Sanskrit term is transliterated rather than
- * translated, so it survives into scripts that share nothing with the source —
- * and it decided thirteen of forty-three. Thirty were references that name
- * nothing lookupable: `24 hours a day`, a numbered list, `the 8th plane`. A
- * classifier that answers a third of the time is not one to write down, so what
- * is below is what was read, and everything else says nothing.
+ * A record covering three squares can be three different losses, and the plan
+ * this came from is exactly that: `uk/30` lost all three, `ms/30` and `ar/30`
+ * kept two of them and lost `vyana`. Recorded per plan, that is one line saying
+ * one thing about three squares.
  */
-const KINDS = {
-  'ms/30': 'numeral only — `prana` and `apana` are still there',
-  'ms/51': 'numeral only — `tamoguna` is still there',
-  'ms/60': 'numeral only — `buddhi` and `ahamkara` are still there',
-  'uk/30': 'reference gone — no `прана`, `апана` or `вьяна` anywhere in the plan',
-  'uk/44': 'reference gone — no `джняна` anywhere in the plan',
-};
+function describe(body, numbers, terms) {
+  const said = numbers
+    .map((number) => [number, kindOf(body, Number(number), terms)])
+    .filter(([, verdict]) => verdict !== null)
+    .map(([number, verdict]) =>
+      verdict.kind === 'numeral only'
+        ? `${number} is still named (${verdict.names.join(', ')})`
+        : `${number} is not named at all`,
+    );
+
+  const words = numbers.filter((number) => alsoWrittenOutSomewhere(Number(number)));
+  if (words.length > 0) {
+    said.push(`${words.join(',')} is written out in words somewhere — read this one too`);
+  }
+
+  return said;
+}
 
 const languages = readdirSync(DATA)
   .filter((file) => /^plans\..+\.json$/.test(file))
@@ -130,11 +150,23 @@ const russian = read('ru');
 const english = read('en');
 
 const found = [];
+const evidence = new Map();
 for (const language of languages) {
   // The two editions are what everything else is measured against, and a number
   // is only expected of a translation when both of them carry it.
   if (language === 'ru' || language === 'en') continue;
-  for (const loss of lossesIn(read(language), russian, english, language)) found.push(keyOf(language, loss));
+
+  const plans = read(language);
+  // The edition's own titles, so that what a term means is asked of the
+  // translation being judged rather than of the English one.
+  const terms = identifyingTerms(plans);
+  const bodies = new Map(plans.map((plan) => [plan.plan, plan.body ?? '']));
+
+  for (const loss of lossesIn(plans, russian, english, language)) {
+    const line = keyOf(language, loss);
+    found.push(line);
+    evidence.set(line, describe(bodies.get(loss.plan) ?? '', loss.lost, terms));
+  }
 }
 
 const news = unrecorded(found, RECORDED);
@@ -145,8 +177,8 @@ console.log(`\nChecked ${languages.length} languages for the board references bo
 if (found.length > 0) {
   console.log(`Already known to be missing, in ${found.length} plans:`);
   for (const line of found) {
-    const kind = KINDS[line.split(':')[0]];
-    console.log(`  ${line}${kind ? `   — ${kind}` : ''}`);
+    console.log(`  ${line}`);
+    for (const note of evidence.get(line) ?? []) console.log(`      ${note}`);
   }
   console.log('');
 }

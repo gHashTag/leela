@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { plansFor } from '../src';
 import {
+  alsoWrittenOutSomewhere,
+  identifyingTerms,
+  kindOf,
   lossesIn,
   lostFrom,
+  namesOf,
   numbersIn,
   toAsciiDigits,
   unrecorded,
   withoutArithmetic,
+  withoutEnumeration,
   writtenOut,
   // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 } from '../../../scripts/lib/numbers.mjs';
@@ -183,8 +188,134 @@ describe('a reference written as a word is not a missing one', () => {
     // Every entry is a quotation from the file it came from, not vocabulary.
     // A language that has never been read gets no benefit of the doubt.
     expect(writtenOut('uk', 68, 'шістдесят восьмий квадрат')).toBe(true);
-    expect(writtenOut('ms', 68, 'шістдесят восьмий квадрат'), 'never read').toBe(false);
+    expect(writtenOut('ta', 68, 'шістдесят восьмий квадрат'), 'never read').toBe(false);
     expect(writtenOut('uk', 45, 'шістдесят восьмий квадрат'), 'a number never read').toBe(false);
+  });
+
+  /**
+   * Reading is done one file at a time, and nothing pointed from one to the
+   * next. `uk/68` was excused eleven passes ago; the same sentence in Malay and
+   * Arabic — *until the sixty-eighth square is reached*, spelled out in both —
+   * stayed in the recorded damage the whole time, and so did *the eighth plane*
+   * in three languages and *four aspects* in three more.
+   *
+   * Eight records, and every one of them was found by this: a number one
+   * translator wrote as a word is a number to check the others for. The audit
+   * cannot read Malay. It can say where to look.
+   */
+  it('says which numbers somebody somewhere writes as a word', () => {
+    expect(alsoWrittenOutSomewhere(68), 'read in three languages now').toBe(true);
+    expect(alsoWrittenOutSomewhere(4), 'the four aspects of mind').toBe(true);
+    expect(alsoWrittenOutSomewhere(72), 'nobody has seen this one spelled out').toBe(false);
+  });
+});
+
+describe('a numbered list is not a set of squares', () => {
+  /**
+   * The fifth false alarm, and the same mistake as the times tables: a numeral
+   * that was never a board reference, counted as one. Plan 6 lists the four
+   * possessions and both editions number them `1.` to `4.`; Arabic, Malay and
+   * Ukrainian keep all four items and drop the numbering.
+   *
+   * The tell was in the record itself. It said `1,4` in all three languages and
+   * never `2,3` — because those two digits happen to occur elsewhere in each of
+   * those bodies, and the check asked only whether a number appeared *anywhere*.
+   * A record that reports two items of a list of four is not reporting a list.
+   */
+  const listed = (opening: string) =>
+    `${opening}\n\n1. kama,\n\n2. krodha,\n\n3. lobha,\n\n4. moha.\n\nAnd so on.`;
+
+  it('does not expect a translation to keep the numbering', () => {
+    const source = listed('There are four possessions.');
+    const translated = 'Empat: kama, krodha, lobha, moha. Dan seterusnya.';
+
+    expect(lostFrom(translated, source, source, 'ms')).toEqual([]);
+  });
+
+  it('still expects the squares the same plan points at', () => {
+    // The guard against the exclusion becoming a way of seeing nothing: a plan
+    // with a list in it is still a plan that can lose a cross-reference.
+    const source = `${listed('See field 45 first.')}`;
+
+    expect(lostFrom('Empat: kama, krodha, lobha, moha.', source, source, 'ms')).toEqual(['45']);
+  });
+
+  it('is a run from one, and long enough to be a list', () => {
+    // Two numbered items are not distinguishable from sentences that open with
+    // a figure, and a run starting at 5 continues something this plan does not
+    // contain. Both must keep their numbers.
+    expect(numbersIn(withoutEnumeration('\n1. one\n\n2. two\n'))).toEqual(['1', '2']);
+    expect(numbersIn(withoutEnumeration('\n5. five\n\n6. six\n\n7. seven\n'))).toEqual([
+      '5',
+      '6',
+      '7',
+    ]);
+    expect(numbersIn(withoutEnumeration('\n1. one\n\n2. two\n\n3. three\n'))).toEqual([]);
+  });
+
+  it('leaves a figure that merely ends a sentence alone', () => {
+    // `field 45.` is not item 45 of anything, and a rule keyed on the full stop
+    // rather than the line would eat it.
+    expect(numbersIn(withoutEnumeration('He reaches field 45. Then 46.'))).toEqual(['45', '46']);
+  });
+});
+
+describe('what kind of loss a record is, asked of the edition itself', () => {
+  /**
+   * Two very different things had been recorded under one word. One repair is a
+   * numeral put back where a sentence already points; the other is a sentence
+   * to write, and only the first can be done without a translator.
+   *
+   * It used to be five lines somebody had read — a sample, not a record, and
+   * wrong in one of the five. What replaces them asks the *translation* which
+   * square a term is, because every locale keeps the parenthesised
+   * transliteration in its own titles. So the mapping is inside the file being
+   * judged rather than trusted from the English one.
+   */
+  const edition = [
+    { plan: 38, title: 'Plane of life energy (prana-loka)', body: '' },
+    { plan: 39, title: 'Plane of elimination (apana-loka)', body: '' },
+    { plan: 44, title: 'Ignorance', body: '' },
+  ];
+
+  it('says a reference survives when the plan still names the square', () => {
+    const terms = identifyingTerms(edition);
+
+    expect(kindOf('see the lokas prana and apana', 38, terms)).toEqual({
+      kind: 'numeral only',
+      names: ['prana'],
+    });
+    expect(kindOf('the four faculties continue to work', 38, terms)).toEqual({
+      kind: 'reference gone',
+      names: [],
+    });
+  });
+
+  it('says nothing at all about a square with no name of its own', () => {
+    // `Ignorance`, `Earth`: nothing to look for, so silence rather than a guess
+    // dressed as an answer. A classifier that answers a third of the time was
+    // written once and thrown away; this one declines out loud.
+    expect(kindOf('anything', 44, identifyingTerms(edition))).toBe(null);
+  });
+
+  it('ignores a word that names more than one square', () => {
+    // `loka` is in a dozen titles and tells them apart from nothing. Dropping it
+    // takes no vocabulary and no list — only counting, which is what keeps this
+    // working in scripts nobody here reads.
+    const terms = identifyingTerms(edition);
+
+    expect(namesOf('this plan mentions a loka', 38, terms)).toEqual([]);
+    expect([...terms.get(38)]).toEqual(['prana']);
+  });
+
+  it('reads whole words', () => {
+    // `prana` inside `pranayama` is a different word, and counting it would
+    // report a sentence about breathing exercises as a surviving cross-reference
+    // to square 38.
+    const terms = identifyingTerms(edition);
+
+    expect(namesOf('the practice of pranayama', 38, terms)).toEqual([]);
+    expect(namesOf('the prana, which is vital force', 38, terms)).toEqual(['prana']);
   });
 });
 
@@ -240,42 +371,70 @@ describe('a board reference is not a term in a times table', () => {
 
 describe('the evidence behind a record is in the data', () => {
   /**
-   * Two very different losses had been recorded under one word. Malay keeps the
-   * sentence and drops the numeral — plan 60 still names `buddhi` and
-   * `ahamkara` while pointing at a square it no longer numbers. Ukrainian drops
-   * the parenthetical whole: plan 44 has no `джняна` in it anywhere.
+   * What the derivation says about the shipped translations, against what four
+   * passes of reading them by hand said.
    *
-   * One repair is a numeral put back where a sentence already points. The other
-   * is a sentence to write. The audit says which, for the records somebody has
-   * read, and every claim it makes is checkable here rather than on trust —
-   * which is the difference between a note and a record.
+   * This is the check on the check. A rule that classifies thirty-one records
+   * is worth nothing if it disagrees with the sentences somebody actually read,
+   * and it agrees with all four that were read correctly: Malay plan 30 keeps
+   * `prana` and `apana` and has lost `vyana`; plan 51 keeps `tamoguna`;
+   * Ukrainian plan 30 has lost all three and plan 44 has lost `jnana`.
+   *
+   * It disagrees with the fifth, and the fifth was wrong. `ms/60` was written
+   * down as *the sentence is still there, pointing at a square it no longer
+   * numbers* — but the sentence numbers it, in words: `sehingga persegi enam
+   * puluh lapan dicapai`. The reading had named `buddhi` and `ahamkara`, which
+   * are terms of plan 60 itself and not of square 68, so the note was true about
+   * the wrong squares.
    */
   const bodyOf = (language: string, plan: number) =>
     plansFor(language).find((entry) => entry.plan === plan)?.body ?? '';
+  const termsOf = (language: string) => identifyingTerms(plansFor(language));
 
-  it('Malay keeps what its records say it keeps', () => {
-    expect(bodyOf('ms', 30)).toMatch(/prana/i);
-    expect(bodyOf('ms', 30)).toMatch(/apana/i);
-    expect(bodyOf('ms', 51)).toMatch(/tamoguna/i);
-    expect(bodyOf('ms', 60)).toMatch(/buddhi/i);
-    expect(bodyOf('ms', 60)).toMatch(/ahamkara/i);
+  it('agrees with what Malay was read to keep', () => {
+    const terms = termsOf('ms');
+
+    expect(kindOf(bodyOf('ms', 30), 38, terms).kind).toBe('numeral only');
+    expect(kindOf(bodyOf('ms', 30), 39, terms).kind).toBe('numeral only');
+    expect(kindOf(bodyOf('ms', 30), 40, terms).kind, 'vyana was never claimed').toBe(
+      'reference gone',
+    );
+    expect(kindOf(bodyOf('ms', 51), 72, terms).kind).toBe('numeral only');
   });
 
-  it('Ukrainian has lost what its records say it has lost', () => {
-    expect(bodyOf('uk', 30)).not.toMatch(/прана|апана|вьяна/i);
-    expect(bodyOf('uk', 44)).not.toMatch(/джняна/i);
-  });
+  it('agrees with what Ukrainian was read to have lost', () => {
+    const terms = termsOf('uk');
 
-  it('and both still lack the numbers, which is why they are recorded at all', () => {
-    // The guard against a record outliving its reason: if a numeral comes back,
-    // `audit-numbers` says to take the line out, and this says so too.
-    for (const [language, plan] of [
-      ['ms', 60],
-      ['uk', 44],
-    ] as Array<[string, number]>) {
-      expect(numbersIn(bodyOf(language, plan)), `${language}/${plan}`).not.toContain(
-        plan === 60 ? '68' : '37',
+    for (const square of [38, 39, 40]) {
+      expect(kindOf(bodyOf('uk', 30), square, terms).kind, `square ${square}`).toBe(
+        'reference gone',
       );
     }
+    expect(kindOf(bodyOf('uk', 44), 37, terms).kind).toBe('reference gone');
+  });
+
+  it('reads each translation with its own titles, not the English ones', () => {
+    // Arabic keeps the same two references Malay does, and says so in Arabic:
+    // `برانا` and `أبانا` are what `(برانا لوكا)` on plan 38 makes findable. A
+    // check that looked terms up in English would call this a total loss.
+    expect(kindOf(bodyOf('ar', 30), 38, termsOf('ar'))).toEqual({
+      kind: 'numeral only',
+      names: ['برانا'],
+    });
+  });
+
+  it('and the numbers are still missing, which is why the lines are recorded', () => {
+    // The guard against a record outliving its reason: if a numeral comes back,
+    // `audit-numbers` says to take the line out, and this says so too.
+    expect(numbersIn(bodyOf('ms', 30))).not.toContain('38');
+    expect(numbersIn(bodyOf('uk', 44))).not.toContain('37');
+  });
+
+  it('no longer records the plan whose sentence spells the number out', () => {
+    // `ms/60` and `ar/60` said *until the sixty-eighth square is reached* the
+    // whole time, in words, exactly as the Ukrainian that was excused for it.
+    expect(writtenOut('ms', 68, bodyOf('ms', 60)), 'enam puluh lapan').toBe(true);
+    expect(writtenOut('ar', 68, bodyOf('ar', 60)), 'الثامن والستين').toBe(true);
+    expect(writtenOut('uk', 68, bodyOf('uk', 60)), 'шістдесят восьмий').toBe(true);
   });
 });

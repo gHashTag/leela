@@ -20,6 +20,7 @@
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { checkRegression, coverageOf } from './lib/coverage.mjs';
+import { corrected, unappliedIn } from './lib/corrections.mjs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -493,13 +494,21 @@ if (losses.length > 0 && !process.argv.includes('--force')) {
 mkdirSync(OUT, { recursive: true });
 
 const coverage = {};
+const applied = [];
 for (const [lang, plans] of Object.entries(byLang)) {
   const seen = new Map(plans.map((p) => [p.plan, p]));
   const complete = [];
   const gaps = [];
   for (let n = 1; n <= TOTAL_PLANS; n++) {
     const plan = seen.get(n);
-    if (plan) complete.push(plan);
+    // Corrected here, at the one point where the language is known, so that a
+    // stated repair does not depend on which of the four sources the text came
+    // from — the three languages this touches are read by two different readers.
+    if (plan) {
+      const fixed = corrected(plan.body, lang, n);
+      applied.push(...fixed.applied);
+      complete.push({ ...plan, body: fixed.body });
+    }
     else gaps.push(n);
   }
   if (gaps.length) warnings.push(`${lang}: ${gaps.length} plans missing (${gaps.slice(0, 8).join(', ')}${gaps.length > 8 ? '…' : ''})`);
@@ -539,4 +548,16 @@ for (const lang of langs) {
 if (warnings.length) {
   console.log(`\n${warnings.length} warning(s):`);
   for (const w of warnings.slice(0, 25)) console.log(`  - ${w}`);
+}
+
+// A stated correction that matched nothing is the build describing text that is
+// no longer there. Either the donor was fixed upstream and the entry should go,
+// or it moved and the correction is now pointing at nothing — and the second one
+// looks exactly like the first if the build stays quiet about it.
+const unapplied = unappliedIn(applied);
+if (unapplied.length > 0) {
+  console.log(`\n${unapplied.length} correction(s) matched nothing:`);
+  for (const where of unapplied) console.log(`  - ${where}`);
+  console.log('\nThe donor was fixed, or the text moved. Both need the entry looked at.');
+  process.exitCode = 1;
 }
