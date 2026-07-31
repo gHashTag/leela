@@ -499,4 +499,81 @@ describe('the mini app as it is assembled', () => {
 
     expect(handedOver[0] ?? '').toContain('to stop hurrying');
   }, 20_000);
+
+  it('opens one seat’s own accounts from one seat’s own chip', async () => {
+    /**
+     * The path view shows every seat at the table, each with the squares that
+     * came back to *them*. The chips opened the plan and showed whatever the
+     * seat holding the turn had written about it — so a player tapped their own
+     * return, under their own name, and read the other player's private
+     * writing.
+     *
+     * Worse than the last one of these, which mislabelled a share. This handed
+     * somebody else's journal to whoever was holding the phone.
+     */
+    const storage = remembering({
+      'leela.intention.v1': 'the first seat question',
+      'leela.intention.v1.p2': 'the second seat question',
+      'leela.reports.v1': JSON.stringify({
+        reported: true,
+        entries: [
+          { plan: 41, text: 'Player one, in February.', at: 1 },
+          { plan: 41, text: 'Player one, in June.', at: 2 },
+        ],
+      }),
+      'leela.reports.v1.p2': JSON.stringify({
+        reported: true,
+        entries: [
+          { plan: 41, text: 'Player two, in March.', at: 3 },
+          { plan: 41, text: 'Player two, in September.', at: 4 },
+        ],
+      }),
+      'leela.seats.v1': table([
+        { id: 'p1', state: onFortyOne, reportSubmitted: true },
+        {
+          id: 'p2',
+          state: {
+            loka: 30,
+            previous_loka: 24,
+            direction: 'step 🚶🏼',
+            consecutive_sixes: 0,
+            position_before_three_sixes: 0,
+            is_finished: false,
+          },
+          reportSubmitted: true,
+        },
+      ]),
+    });
+
+    await play(storage);
+
+    el('path').click();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    const chips = [...document.querySelectorAll('.came-back .chip')] as HTMLElement[];
+    expect(chips, 'both seats returned to 41').toHaveLength(2);
+
+    // The second chip is in the second seat's section.
+    chips[1]?.click();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    const quoted = [...document.querySelectorAll('#reader-body blockquote p')].map(
+      (node) => node.textContent,
+    );
+
+    expect(quoted).toEqual(['Player two, in March.', 'Player two, in September.']);
+    expect(quoted.join(' '), 'and not a word of the other player’s').not.toContain('Player one');
+    dialog('reader').close();
+
+    // And the first seat's chip is still the first seat's.
+    el('path').click();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    ([...document.querySelectorAll('.came-back .chip')] as HTMLElement[])[0]?.click();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    expect(
+      [...document.querySelectorAll('#reader-body blockquote p')].map((node) => node.textContent),
+    ).toEqual(['Player one, in February.', 'Player one, in June.']);
+    dialog('reader').close();
+  }, 20_000);
 });

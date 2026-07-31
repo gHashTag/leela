@@ -3988,6 +3988,33 @@ people are playing on has no business telling the bot what any of them is
 playing for. The square is still theirs to send; the frame is not the device's
 to claim.
 
+## Hundred-and-fifteenth pass: a chip under your name, somebody else's writing
+
+Two candidates were named last pass, both from reasoning about the shape rather
+than from a symptom. One of them turned out to be worse than the defect that
+named it.
+
+**The path view shows every seat at the table**, each with the squares that came
+back to *them*. The chips opened the plan and showed whatever the seat holding
+the turn had written about it. So a player tapped their own return, under their
+own name, in a section headed with their own number — and read the other
+player's private writing.
+
+The pass before mislabelled a share. This one handed somebody else's journal to
+whoever was holding the phone.
+
+The chips carry whose row they are in now, and `openPlan` takes the seat rather
+than assuming it: the turn holder almost always, because they are the one
+looking at the board, and not when a chip in another section opened it.
+
+The second candidate was real and small: the writer's hint counted what was left
+in the *turn holder's* path while the box was open for somebody else. Same fix,
+same reason.
+
+Both were harmless yesterday only by accident — the first because two seats
+rarely return to the same square, the second because five hundred entries is a
+long way off. An accident is not a rule, and neither of them was one.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

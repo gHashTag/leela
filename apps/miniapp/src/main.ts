@@ -575,7 +575,7 @@ function saveTheIntention(): void {
  * two times is the measure of what has changed, and it was in the app the
  * entire while with no way to reach it.
  */
-function openPlan(plan: number): void {
+function openPlan(plan: number, seatId = currentPlayer(session).id): void {
   const found = planFor(plan);
   // The player's own words first, when there are any. Seen on a phone: the
   // traditional text of 41 is three long paragraphs, so anything under it is
@@ -583,8 +583,16 @@ function openPlan(plan: number): void {
   // times wants what they said last time, not to scroll past the teaching to
   // find it. On a first visit there is nothing here and the plan text is still
   // the first thing on screen.
+  // Whose accounts, said out loud. The reader is the seat holding the turn
+  // almost always — they are the one looking at the board — and not when a
+  // chip in somebody else's section of the path view opened it. Tapping your
+  // own return under your own name and reading the other player's private
+  // writing is the worst thing this app could do with it.
+  const theirs =
+    seatId === currentPlayer(session).id ? journal : loadJournalFor(localStorage, seatId);
+
   openReader('plan', `${plan}. ${found.title}`, [
-    ...writtenBefore(journal, plan),
+    ...writtenBefore(theirs, plan),
     ...paragraphs(found.body),
   ]);
 }
@@ -629,7 +637,7 @@ function playingFor(section: PathSection): HTMLElement[] {
  * knowing 41 came back four times is reading the four, and `openPlan` already
  * puts them one under the other.
  */
-function cameBack(returns: ReadonlyArray<Revisit>): HTMLElement[] {
+function cameBack(returns: ReadonlyArray<Revisit>, seatId: string): HTMLElement[] {
   const heading = document.createElement('h3');
   heading.className = 'mine';
   heading.textContent = messageFor(language, 'app.cameBack');
@@ -645,7 +653,9 @@ function cameBack(returns: ReadonlyArray<Revisit>): HTMLElement[] {
     chip.title = messageFor(language, 'app.returns', { count: visit.times });
     chip.addEventListener('click', () => {
       el.reader.close();
-      openPlan(visit.plan);
+      // The seat this row belongs to, which is not always the one holding the
+      // turn: the path view shows every seat at the table.
+      openPlan(visit.plan, seatId);
     });
     row.append(chip);
   }
@@ -890,7 +900,12 @@ function openWriter(): void {
  * has carried an empty hint since it was written.
  */
 function showWriterHint(): void {
-  el.writerHint.textContent = hintFor(journal, el.writerText.value.length, language);
+  // The journal of the seat being written for. The hint counts what is left in
+  // *their* path, and the box is not always the turn holder's.
+  const writer = session.players.find((player) => player.id === writingFor);
+  const theirs = writer ? loadJournalFor(localStorage, writer.id) : journal;
+
+  el.writerHint.textContent = hintFor(theirs, el.writerText.value.length, language);
   // Nothing to share until something has been written. The button appears
   // rather than sitting disabled: a control that is never usable is furniture.
   el.writerShare.hidden = !mayShare(el.writerText.value);
@@ -1055,7 +1070,7 @@ function openPath(): void {
     // order it happened, which is the wrong shape for the question the game is
     // about — and this is the one place a player already comes to look at
     // their own writing, so it needs no button of its own.
-    if (section.returns.length > 0) nodes.push(...cameBack(section.returns));
+    if (section.returns.length > 0) nodes.push(...cameBack(section.returns, section.playerId));
 
     for (const entry of theirs) {
       const heading = document.createElement('h3');
