@@ -28,6 +28,10 @@ COPY packages/contracts/package.json packages/contracts/
 COPY apps/bot/package.json apps/bot/
 COPY apps/docs/package.json apps/docs/
 COPY apps/miniapp/package.json apps/miniapp/
+# The phone app is not built into this image and its manifest is copied all the
+# same: `bun install --frozen-lockfile` resolves the whole workspace, and a
+# member missing from it is a lockfile mismatch rather than a smaller image.
+COPY apps/mobile/package.json apps/mobile/
 
 RUN bun install --frozen-lockfile --production
 

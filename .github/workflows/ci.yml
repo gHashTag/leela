@@ -20,7 +20,7 @@ jobs:
 
       - name: Typecheck
         run: |
-          for pkg in packages/engine packages/content packages/journal packages/db packages/ai packages/contracts apps/bot apps/miniapp apps/docs; do
+          for pkg in packages/engine packages/content packages/journal packages/db packages/ai packages/contracts apps/bot apps/miniapp apps/docs apps/mobile; do
             echo "::group::typecheck $pkg"
             (cd "$pkg" && bunx tsc --noEmit)
             echo "::endgroup::"
@@ -34,7 +34,7 @@ jobs:
       # the test built two lines earlier.
       - name: Typecheck what ships
         run: |
-          for pkg in packages/engine packages/content packages/journal packages/db packages/ai packages/contracts apps/bot apps/miniapp apps/docs; do
+          for pkg in packages/engine packages/content packages/journal packages/db packages/ai packages/contracts apps/bot apps/miniapp apps/docs apps/mobile; do
             echo "::group::strict $pkg"
             (cd "$pkg" && bunx tsc --noEmit -p tsconfig.src.json)
             echo "::endgroup::"
@@ -42,7 +42,7 @@ jobs:
 
       - name: Test
         run: |
-          for pkg in packages/engine packages/content packages/journal packages/db packages/ai packages/contracts apps/bot apps/miniapp apps/docs; do
+          for pkg in packages/engine packages/content packages/journal packages/db packages/ai packages/contracts apps/bot apps/miniapp apps/docs apps/mobile; do
             echo "::group::test $pkg"
             (cd "$pkg" && bunx vitest run)
             echo "::endgroup::"

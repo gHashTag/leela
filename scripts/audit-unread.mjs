@@ -108,11 +108,22 @@ const WRITE_ONLY = {
   ratio: 'the measured contrast, for a test and a report rather than a rule',
 };
 
+/**
+ * Every file that could call something, `.tsx` included.
+ *
+ * It was `.ts` and `.mjs`, which was true of this repository until a React
+ * screen arrived in `apps/mobile`. On the day it did, the two functions that
+ * screen is built out of were reported as having no caller anywhere — the whole
+ * surface it exists to draw, invisible because of a file extension.
+ *
+ * A blind spot of exactly the kind this audit was widened for two passes ago,
+ * and found the same way: by something new walking into it.
+ */
 function* walk(dir) {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) yield* walk(full);
-    else if (entry.endsWith('.ts') || entry.endsWith('.mjs')) yield full;
+    else if (/\.(ts|tsx|mjs)$/.test(entry)) yield full;
   }
 }
 
@@ -132,7 +143,7 @@ const sources = files.map((file) => readFileSync(file, 'utf8'));
 // scripts are searched as readers, not scanned for declarations: their object
 // literals are configuration, not a contract anyone is expected to honour.
 const declarations = files.flatMap((file, index) =>
-  file.endsWith('.ts') ? declaredFields(sources[index], relative(ROOT, file)) : [],
+  /\.tsx?$/.test(file) ? declaredFields(sources[index], relative(ROOT, file)) : [],
 );
 
 const unread = unreadFields(declarations, sources, Object.keys(WRITE_ONLY));
@@ -252,7 +263,7 @@ const PUBLIC_API = {
 };
 
 const exportDeclarations = files.flatMap((file, index) =>
-  file.endsWith('.ts') ? declaredExports(sources[index], relative(ROOT, file)) : [],
+  /\.tsx?$/.test(file) ? declaredExports(sources[index], relative(ROOT, file)) : [],
 );
 
 /**
@@ -282,7 +293,7 @@ const PUBLIC_MEMBERS = {
 };
 
 const memberDeclarations = files.flatMap((file, index) =>
-  file.endsWith('.ts') ? declaredMembers(sources[index], relative(ROOT, file)) : [],
+  /\.tsx?$/.test(file) ? declaredMembers(sources[index], relative(ROOT, file)) : [],
 );
 
 const uncalled = uncalledExports(exportDeclarations, sources, Object.keys(PUBLIC_API));
