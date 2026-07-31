@@ -5259,10 +5259,27 @@ Four more followed, and then it ran.
 16. `react-native-gifted-chat` resolved to a version importing
     `react-native-keyboard-controller`, which the app has never depended on.
 
-**It builds, installs and launches.** The dice splash comes up under
-`xyz.ghashtag.dharma` on an iPhone 16 Pro simulator, and stops there: the game
-is Firebase-backed, so without a real configuration it cannot get past sign-in.
-That is where an outsider should stop, and this stopped there.
+**It builds, installs, launches and reaches its welcome screen** — the logo,
+the policy links, *Version: 6.8 (1)*, and Sign In / Sign Up — under
+`xyz.ghashtag.dharma` on an iPhone 16 Pro simulator. Signing in needs a real
+Firebase configuration, which is a secret and was not touched, so that is where
+this stops.
+
+It sat on the splash for a while first, and the reason was not Firebase. Two
+things, and one of them was this work's own:
+
+17. **Self-inflicted.** Sentry was removed with a regular expression that
+    replaced its call sites with a function returning `undefined` — including
+    `Sentry.wrap(AppWithProviders)`, so the app's *root component* became
+    `undefined` and `AppRegistry.runApplication` failed. A shim module that
+    keeps the shape of every export it stands in for fixed it, which is what
+    should have been written in the first place. A crude removal is a defect
+    with a different name.
+18. **The app's own.** `src/store/OfflinePlayers.ts` uses `storageAdapter` on
+    line 52 and never imports it. Under the Metro of 2024 the module graph
+    happened to carry it; under this one it is a `ReferenceError` that takes
+    down the whole store, and with it the app. One line, and it is a real defect
+    in the published source.
 
 Every one of the sixteen is the same root cause seen from a different angle: an
 application whose dependencies were never pinned cannot be rebuilt once the
