@@ -33,6 +33,15 @@ import {
  * text proves nothing about what actually happens on a throw.
  */
 
+/**
+ * A question, so the die will turn at all.
+ *
+ * The published app blocks the board without one and so does the mini app; this
+ * app now does too. Every game played in this file therefore has one, and the
+ * gate itself is asserted in `intention.test.ts` where it belongs.
+ */
+const ASKING = 'to see what I keep avoiding';
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SRC = resolve(HERE, '..', 'src');
 
@@ -116,7 +125,7 @@ describe('a game played through the app is the game the engine plays', () => {
     for (let turn = 0; turn < 60 && !isOver(game); turn += 1) {
       if (owesAnAccount(game)) game = fileReport(game);
 
-      const thrown = throwDie(game);
+      const thrown = throwDie(game, ASKING);
       if (thrown.roll === 0) continue; // refused, so nothing happened to replay
       game = thrown.game;
       rolls.push(thrown.roll);
@@ -138,17 +147,17 @@ describe('a game played through the app is the game the engine plays', () => {
 
     for (let turn = 0; turn < 40 && !isOver(game); turn += 1) {
       if (!owesAnAccount(game)) {
-        game = throwDie(game).game;
+        game = throwDie(game, ASKING).game;
         continue;
       }
 
-      expect(mayThrow(game), 'the die is shut').toBe(false);
+      expect(mayThrow(game, ASKING), 'the die is shut').toBe('owes-report');
       const where = standingOn(game);
-      expect(throwDie(game).game, 'and shut to the act as well').toBe(game);
+      expect(throwDie(game, ASKING).game, 'and shut to the act as well').toBe(game);
       expect(standingOn(game)).toBe(where);
 
       game = fileReport(game);
-      expect(mayThrow(game), 'and open once it is written').toBe(true);
+      expect(mayThrow(game, ASKING), 'and open once it is written').toBe('yes');
     }
   });
 
@@ -159,7 +168,7 @@ describe('a game played through the app is the game the engine plays', () => {
       let game = newGame(SEED);
       for (let turn = 0; turn < turns && !isOver(game); turn += 1) {
         if (owesAnAccount(game)) game = fileReport(game);
-        game = throwDie(game).game;
+        game = throwDie(game, ASKING).game;
       }
       return game;
     };
@@ -180,7 +189,7 @@ describe('a game played through the app is the game the engine plays', () => {
     for (let turn = 0; turn < 300; turn += 1) {
       if (isOver(game)) game = newGame(SEED + turn);
       if (owesAnAccount(game)) game = fileReport(game);
-      game = throwDie(game).game;
+      game = throwDie(game, ASKING).game;
 
       // Only the two the board declares. `stop 🛑` is a throw that would
       // overshoot the last square and `win 🕉` is arriving on it; neither is a

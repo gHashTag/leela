@@ -5027,6 +5027,26 @@ with one boolean for four passes, so a browser that refused the write told the
 player their sentence was too short, in the one dialog the game will not start
 without.
 
+**And the die will not turn without a question.** The published app will not let
+anybody near the board without one —
+`if (!prof.intention) navigate('CHANGE_INTENTION_SCREEN', { blockGoBack: true })`
+in `screens/helper.ts`, the back gesture blocked — and the mini app refuses a
+throw for the same reason. The phone let a player straight to the die, so the
+same game on the same board asked a different thing of them depending on what
+they were holding it in. That is the one difference between surfaces this
+repository does not allow: they differ in drawing, not in what the game asks.
+
+Not a `RuleSet` change. The intention gate lives in the surfaces — the mini
+app's `mayThrow`, the published app's navigation — and not in `@leela/engine`;
+this is the phone joining them rather than a new rule.
+
+A **reason** rather than a boolean, in the order a player meets them:
+`no-intention`, then `owes-report`, then `game-over`. A dimmed control with no
+explanation is the app ending somebody's game without saying so — and the
+question comes first because every account is written inside it, so asking for
+the writing before the question is asking somebody to answer a question nobody
+put.
+
 Still to bring across from `leela`: RevenueCat, notifee and Sentry.
 
 **The published app cannot be rebuilt from its own source, and the reason is not

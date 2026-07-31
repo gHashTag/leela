@@ -25,8 +25,11 @@ import {
 } from './game';
 import {
   EMPTY,
+  isIntention,
   keep,
+  loadIntention,
   loadKept,
+  saveIntention,
   takeAccount,
   writingsOn,
   type Journal,
@@ -58,11 +61,19 @@ export default function App() {
   const [journal, setJournal] = useState<Journal>(EMPTY);
   const [draft, setDraft] = useState('');
   const [said, setSaid] = useState<string | null>(null);
+  const [intention, setIntention] = useState('');
+  const [asking, setAsking] = useState('');
 
   // The path from the last time the app was open. Read once, and never allowed
   // to land on top of something written since: a player who starts writing
   // before a slow disk answers must not have their words replaced by what was
   // there yesterday.
+  // What they are playing for, from the last time. The published app will not
+  // show the board without one; neither will this.
+  useEffect(() => {
+    setIntention(loadIntention(store));
+  }, [store]);
+
   useEffect(() => {
     let stale = false;
     void loadKept(keeper).then((kept) => {
@@ -75,6 +86,8 @@ export default function App() {
   const language = resolveLanguage(undefined);
   const here = standingOn(game);
   const plan = planFor(language, here);
+
+  const refusal = mayThrow(game, intention);
 
   const line =
     said ??
@@ -163,6 +176,38 @@ export default function App() {
         ) : null}
       </ScrollView>
 
+      {/*
+        The question, before the board. `blockGoBack: true` in the published
+        app: there is no way past it, because every account is written inside
+        it and one written before it was asked answers nothing.
+      */}
+      {intention === '' ? (
+        <View style={styles.writer}>
+          <Text style={styles.line}>{messageFor(language, 'app.intention')}</Text>
+          <TextInput
+            style={styles.field}
+            multiline
+            value={asking}
+            onChangeText={setAsking}
+            placeholder={messageFor(language, 'app.intentionHint')}
+          />
+          <Pressable
+            disabled={!isIntention(asking)}
+            style={[styles.button, !isIntention(asking) && styles.shut]}
+            onPress={() => {
+              // Held for the session whatever the device says, and the device
+              // is asked separately — the two questions this app keeps apart.
+              setIntention(asking.trim());
+              if (!saveIntention(store, asking)) {
+                setSaid(messageFor(language, 'app.reportUnkept'));
+              }
+            }}
+          >
+            <Text style={styles.buttonText}>{messageFor(language, 'app.reportSave')}</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
       {owesAnAccount(game) ? (
         <View style={styles.writer}>
           <TextInput
@@ -189,11 +234,11 @@ export default function App() {
           // The same question the disabled state is drawn from, asked again by
           // the act: a dimmed control is a drawing, and a drawing refuses
           // nothing — a double tap walks straight past it.
-          disabled={!mayThrow(game)}
-          style={[styles.button, !mayThrow(game) && styles.shut]}
+          disabled={refusal !== 'yes'}
+          style={[styles.button, refusal !== 'yes' && styles.shut]}
           onPress={() => {
             setSaid(null);
-            setGame(throwDie(game).game);
+            setGame(throwDie(game, intention).game);
           }}
         >
           <Text style={styles.buttonText}>{messageFor(language, 'app.roll')}</Text>

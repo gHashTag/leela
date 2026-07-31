@@ -64,14 +64,33 @@ export function standingOn(game: Game): number {
 }
 
 /**
- * Whether the die may turn.
+ * Why the die may not turn, or `yes`.
+ *
+ * A reason rather than a boolean, and in the order a player meets them: the
+ * question the game is played to answer, then the account it asks for, then the
+ * end of the game. A dimmed control with no explanation is the app ending
+ * somebody's game without saying so.
+ *
+ * **The question comes first, and this surface did not ask it.** The published
+ * app will not let anyone near the board without one —
+ * `if (!prof.intention) navigate('CHANGE_INTENTION_SCREEN', { blockGoBack: true })`
+ * in `screens/helper.ts`, with the back gesture blocked — and the mini app's
+ * `mayThrow` refuses a throw for the same reason. The phone let a player
+ * straight to the die, so the same game on the same board asked a different
+ * thing of them depending on what they held it in.
  *
  * Asked here and asked again by `throwDie`, because a disabled button is a
  * drawing and a drawing refuses nothing — the lesson the mini app learned from
  * a double tap that filed two accounts of one square.
  */
-export function mayThrow(game: Game): boolean {
-  return !isOver(game) && !owesAnAccount(game);
+export type ThrowRefusal = 'yes' | 'no-intention' | 'owes-report' | 'game-over';
+
+export function mayThrow(game: Game, intention: string): ThrowRefusal {
+  if (intention.trim() === '') return 'no-intention';
+  if (owesAnAccount(game)) return 'owes-report';
+  if (isOver(game)) return 'game-over';
+
+  return 'yes';
 }
 
 /**
@@ -92,8 +111,8 @@ export function isOver(game: Game): boolean {
  * a player can carry away — and nobody has to take another player's word for a
  * throw. Where the throw lands is `advance`'s answer, never this file's.
  */
-export function throwDie(game: Game): { game: Game; roll: number } {
-  if (!mayThrow(game)) return { game, roll: 0 };
+export function throwDie(game: Game, intention: string): { game: Game; roll: number } {
+  if (mayThrow(game, intention) !== 'yes') return { game, roll: 0 };
 
   const roll = game.die();
   const moved = advance(game.session, roll, Date.now());
