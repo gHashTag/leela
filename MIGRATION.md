@@ -4191,6 +4191,42 @@ read sat there, written, unsent.
 which judges a file that never arrived, and sends a player to save a perfectly
 good one again for the same answer. A download that failed now says so.
 
+## Hundred-and-twenty-second pass: what may be lost quietly, and what may not
+
+Two kinds of effect went through one `catch` in the bot, with one sentence
+attached: *a history that fails to write must not stop the game — the move has
+already happened, and the board is the record that matters.*
+
+True of a move, which is bookkeeping about a board already saved in the room.
+Not true of a report, which **is** the record the game is played to produce —
+and the gate saying one was written lives in that same saved room. So a sink
+that threw left the player told **"Ada has reported. You may throw."**, the
+gate open, and their words gone with nothing anywhere saying so. Probed, not
+guessed: no exception, no notice, and the next throw went through.
+
+This is the mini app's full-quota defect, one surface over, still standing after
+the pass that hardened the room — that pass wrapped `store.save` and stopped
+there. The rule is therefore about the kind of loss rather than about these two
+effects: **what the player wrote is never lost quietly; what the game can
+reconstruct may be.** A third kind of effect has to answer that question.
+
+The throw stands. They did write it, a full database is not their doing, and
+shutting a gate they have earned would charge them for it — the same decision
+the mini app made. But they are told while their own words are still a scroll
+above, which is the one moment copying them somewhere costs nothing.
+
+**The same measure on the mini app's table.** `saveSeats` swallowed a refusal on
+the stated grounds that *forgetting it is a lost game, not an error to show*.
+Half right — a private window should still play. The wrong half was the silence:
+the app went on saying "a snake at 44 takes you to 9" while the stored board
+stayed at 41, so a player could build a month of play in a window keeping none
+of it and be told at no point. Said once now, beside the throw it is failing to
+keep, and not again: repeated under every throw it would become the wallpaper.
+
+Not through `announce` — `lineFor` discards an announcement when a move is being
+described, rightly, because an announcement is about the turn. This is not about
+the turn. It is about the browser.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

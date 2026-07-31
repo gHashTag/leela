@@ -208,7 +208,28 @@ export function createBot({
    * written it and the gate has opened; losing the text is worse handled by
    * telling them nothing happened.
    */
-  async function applyEffects(effects: Effect[] | undefined): Promise<void> {
+  /**
+   * Perform the writes a turn asked for, and say when one did not happen.
+   *
+   * One `catch` used to cover both kinds with one sentence — *a history that
+   * fails to write must not stop the game: the move has already happened, and
+   * the board is the record that matters.* True of a move. Not true of a
+   * report, and the difference cost the thing the game exists to produce.
+   *
+   * A move is bookkeeping about a board that is already saved in the room. A
+   * report **is** the record. And the gate that says one was written lives in
+   * that same saved room — so when `record` threw, the player was told "has
+   * reported, you may throw", the gate opened, and their words were gone with
+   * nothing anywhere saying so. The same defect the mini app had at a full
+   * quota, one surface over, still standing after the pass that fixed the room.
+   *
+   * The game still goes on. They did write it; a database that is full is not
+   * their doing, and making them write it again to reopen a gate they have
+   * already earned punishes the wrong person. But they are told while their own
+   * words are still on the screen a scroll above, which is the one moment
+   * copying them somewhere costs nothing.
+   */
+  async function applyEffects(effects: Effect[] | undefined, ctx: Context): Promise<void> {
     for (const effect of effects ?? []) {
       try {
         if (effect.kind === 'report') {
@@ -221,9 +242,10 @@ export function createBot({
           });
         }
       } catch (error) {
-        // A history that fails to write must not stop the game: the move has
-        // already happened, and the board is the record that matters.
         console.error(`[bot] failed to store a ${effect.kind}`, error);
+        if (effect.kind === 'report') {
+          await ctx.reply(messageFor(languageOf(ctx), 'report.notKept'));
+        }
       }
     }
   }
@@ -348,7 +370,7 @@ export function createBot({
     // that happened, and so do the replies describing it.
     if (result.room && !(await keepTheGame(result.room, ctx))) return;
 
-    await applyEffects(result.effects);
+    await applyEffects(result.effects, ctx);
     await deliver(ctx, result.replies);
     await respondToReports(ctx, result.room ?? room, result.effects);
   }
@@ -831,7 +853,7 @@ export function createBot({
     if (!result) return;
 
     if (result.room && !(await keepTheGame(result.room, ctx))) return;
-    await applyEffects(result.effects);
+    await applyEffects(result.effects, ctx);
     await deliver(ctx, result.replies);
   });
 
@@ -982,7 +1004,7 @@ export function createBot({
     if (seated && !seated.reportSubmitted && who) {
       const result = commands.report(room, who.id, ctx.message.text, now());
       if (result.room && !(await keepTheGame(result.room, ctx))) return;
-      await applyEffects(result.effects);
+      await applyEffects(result.effects, ctx);
       await deliver(ctx, result.replies);
       await respondToReports(ctx, result.room ?? room, result.effects);
       return;

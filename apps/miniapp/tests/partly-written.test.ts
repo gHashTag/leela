@@ -183,3 +183,95 @@ describe('a browser that keeps some of it', () => {
     expect(document.getElementById('reader-body')?.textContent).toContain('Older than the broken');
   }, 20_000);
 });
+
+describe('a browser that keeps none of the game', () => {
+  /**
+   * The other thing a full quota takes. The journal was hardened first, and the
+   * table beside it went on being swallowed on the stated grounds that
+   * *forgetting is a lost game, not an error to show*.
+   *
+   * Half right: a private window should still play. The other half was that the
+   * app kept describing a game it was not keeping — "a snake at 44 takes you to
+   * 9", with the stored board still reading 41 — so a player could build a month
+   * of play in a window holding none of it and be told at no point.
+   *
+   * Said once. A window that refuses one write refuses them all, and the notice
+   * repeated under every throw would bury the sentence about the throw.
+   */
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  const playing = (storage: Storage) => ({
+    said: () => el('say').textContent ?? '',
+    throwOnce: async () => {
+      // Long enough for the die to finish turning. The board only moves when it
+      // stops, and an assertion made while it spins is an assertion about a
+      // player who has not thrown yet — which is how this test first read.
+      el('roll').click();
+      for (let waited = 0; waited < 40; waited += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        if (/threw/i.test(el('say').textContent ?? '')) return;
+      }
+      throw new Error('the die never landed');
+    },
+    stored: () => storage.kept()['leela.seats.v1'] ?? null,
+  });
+
+  const refusingTheTable = () =>
+    partial(/^leela\.seats/, {
+      'leela.intention.v1': 'to see it through',
+      'leela.seats.v1': seated(true),
+    });
+
+  it('says the game is not being kept, beside the move it is not keeping', async () => {
+    const storage = refusingTheTable();
+    expect(await play(storage)).toEqual([]);
+    const game = playing(storage);
+
+    await game.throwOnce();
+
+    expect(game.said(), 'the throw is still described').toMatch(/threw/i);
+    expect(game.said(), 'and so is the fact that it is going nowhere').toMatch(/will not keep/i);
+    expect(game.stored(), 'which is true: the board is as it was').toContain('"loka":41');
+  }, 20_000);
+
+  it('says it once, and not again under the next thing said', async () => {
+    // A throw, then the account it asks for — two different lines, and a
+    // browser that refuses one write refuses both. The second one carries no
+    // notice: repeated, it would become the wallpaper a player reads past.
+    const storage = refusingTheTable();
+    await play(storage);
+    const game = playing(storage);
+
+    await game.throwOnce();
+    expect(game.said(), 'said the first time').toMatch(/will not keep/i);
+
+    el('report').click();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    (el('writer-text') as HTMLTextAreaElement).value = 'What that square asked of me.';
+    el('writer-text').dispatchEvent(new Event('input', { bubbles: true }));
+    el('writer-save').click();
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    expect(game.said(), 'the writing is confirmed').toMatch(/written/i);
+    expect(game.said(), 'and not re-announced').not.toMatch(/will not keep/i);
+  }, 20_000);
+
+  it('says nothing at all when the browser is keeping it', async () => {
+    // The case that must stay quiet, and the one a notice bolted to `announce`
+    // would break first.
+    const storage = partial(/^never$/, {
+      'leela.intention.v1': 'to see it through',
+      'leela.seats.v1': seated(true),
+    });
+    await play(storage);
+    const game = playing(storage);
+
+    await game.throwOnce();
+
+    expect(game.said()).toMatch(/threw/i);
+    expect(game.said()).not.toMatch(/will not keep/i);
+    expect(game.stored(), 'and the board moved').not.toContain('"loka":41');
+  }, 20_000);
+});

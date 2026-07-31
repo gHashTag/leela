@@ -110,12 +110,23 @@ export function loadSeats(storage: GameStorage | undefined): SavedSeats {
   };
 }
 
-/** Keep the table. Forgetting it is a lost game, not an error to show. */
-export function saveSeats(storage: GameStorage | undefined, seats: SavedSeats): void {
+/**
+ * Keep the table, and say whether it was kept.
+ *
+ * It used to swallow the refusal on the grounds that *forgetting is a lost
+ * game, not an error to show* — and a private window does still play, which is
+ * the right half of that. The wrong half was the silence: the app went on
+ * saying "a snake at 44 takes you to 9" while the stored board stayed at 41,
+ * and a player could build a month of play in a window that was keeping none
+ * of it. Whether to show it is the caller's decision now; that it happened is
+ * not a thing to invent an answer about.
+ */
+export function saveSeats(storage: GameStorage | undefined, seats: SavedSeats): boolean {
   try {
     storage?.setItem(SEATS_KEY, JSON.stringify(seats));
+    return true;
   } catch {
-    // A private window still plays; it just forgets.
+    return false;
   }
 }
 

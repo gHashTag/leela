@@ -205,6 +205,16 @@ let writingFor: string | null = null;
 let announcement: string | null = null;
 
 /** Say something, and keep saying it until the next throw. */
+/**
+ * Whether the browser is keeping the game, and whether it has been said.
+ *
+ * A window that refuses one write refuses every write, so this is said once and
+ * then not again: repeated under each throw it would bury the sentence a player
+ * is actually reading — the one about the snake they just hit.
+ */
+let unkept = false;
+let saidUnkept = false;
+
 function announce(text: string): void {
   announcement = text;
   draw();
@@ -221,7 +231,9 @@ function takeSeat(): void {
 /** Keep the table, and the seat's writing with it. */
 function keepTable(): void {
   seats = seatsFrom(session);
-  saveSeats(localStorage, seats);
+  // Noted rather than shown here: `keepTable` runs before the sentence
+  // describing the move exists, and the notice belongs beside that sentence.
+  if (!saveSeats(localStorage, seats)) unkept = true;
 }
 
 /**
@@ -395,6 +407,16 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
     if (event.direction === 'snake 🐍') el.say.classList.add('snake');
     if (event.direction === 'arrow 🏹') el.say.classList.add('arrow');
     if (event.isGameFinished && !event.isBlocked) el.say.classList.add('win');
+  }
+
+  // Beside whatever is being said, once, whichever of the three lines it is.
+  // Not through `announce`: `lineFor` discards an announcement when a move is
+  // being described — rightly, it is about the turn — and this is not about the
+  // turn. It is about the browser, and the throw it is failing to keep is
+  // exactly the sentence a player needs it next to.
+  if (unkept && !saidUnkept) {
+    saidUnkept = true;
+    el.say.textContent = `${el.say.textContent ?? ''} ${messageFor(language, 'app.gameUnkept')}`.trim();
   }
 }
 

@@ -1165,3 +1165,108 @@ describe('a square handed over by the mini app', () => {
     expect(texts(sent.slice(before)).join(' ')).toMatch(/not keeping reports/i);
   });
 });
+
+describe('a write a turn asked for, that did not happen', () => {
+  /**
+   * Two kinds of effect went through one `catch` with one sentence attached:
+   * *a history that fails to write must not stop the game — the move has
+   * already happened, and the board is the record that matters.*
+   *
+   * True of a move, which is bookkeeping about a board already saved in the
+   * room. Not true of a report, which **is** the record the game is played to
+   * produce — and the gate saying one was written lives in that same saved
+   * room. So a sink that threw left the player told "has reported, you may
+   * throw", the gate open, and their words gone with nothing anywhere saying
+   * so. The mini app had exactly this at a full quota; the pass that hardened
+   * the room did not reach past it.
+   *
+   * The rule is therefore about the kind of loss rather than about these two
+   * effects: **what the player wrote is never lost quietly; what the game can
+   * reconstruct may be.** A third kind of effect has to answer that question.
+   */
+  const failing = (kind: 'report' | 'move') => {
+    const reports = new MemoryReportSink();
+    const steps = { record: async () => undefined };
+    if (kind === 'report') {
+      reports.record = async () => {
+        throw new Error('the database went away');
+      };
+    } else {
+      steps.record = async () => {
+        throw new Error('the database went away');
+      };
+    }
+    return { reports, steps };
+  };
+
+  it('is said out loud when it was the player’s own words', async () => {
+    const { reports, steps } = failing('report');
+    const { bot, sent } = harness({ reports, steps });
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+    await rollUntilTheGate(bot, sent);
+
+    const before = sent.length;
+    await bot.handleUpdate(message('/report an account I would rather not lose', PRIVATE));
+    const said = texts(sent.slice(before)).join(' ');
+
+    expect(said, 'the loss is named').toMatch(/could not keep/i);
+    expect(await reports.history?.('100'), 'and it really was lost').toEqual([]);
+  });
+
+  it('is not said when the game can reconstruct it', async () => {
+    // A move that failed to file is a line missing from a history nobody reads
+    // in the moment, about a board that is saved. Saying so would train a
+    // player to ignore the sentence that matters.
+    const { reports, steps } = failing('move');
+    const { bot, sent } = harness({ reports, steps });
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+
+    const before = sent.length;
+    await bot.handleUpdate(message('/roll', PRIVATE));
+    const said = texts(sent.slice(before)).join(' ');
+
+    expect(said, 'the throw is described as it always was').toMatch(/throws \d/);
+    expect(said).not.toMatch(/could not keep/i);
+  });
+
+  it('leaves the throw standing, because they did write it', async () => {
+    // The other half, and the same decision the mini app made: a database that
+    // is full is not the player's doing, and shutting a gate they have earned
+    // would charge them for it. The game goes on and the loss is admitted.
+    const { reports, steps } = failing('report');
+    const { bot, sent } = harness({ reports, steps });
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+    await rollUntilTheGate(bot, sent);
+    await bot.handleUpdate(message('/report an account I would rather not lose', PRIVATE));
+
+    const before = sent.length;
+    await bot.handleUpdate(message('/roll', PRIVATE));
+
+    expect(texts(sent.slice(before)).join(' '), 'still playing').toMatch(/throws \d/);
+  });
+
+  it('never describes a report as kept when it was not', async () => {
+    // The exact sentence that did the damage. It is still sent — the gate is
+    // open and that is true — so the test is that it never stands alone.
+    const { reports, steps } = failing('report');
+    const { bot, sent } = harness({ reports, steps });
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+    await rollUntilTheGate(bot, sent);
+
+    const before = sent.length;
+    await bot.handleUpdate(message('/report an account I would rather not lose', PRIVATE));
+    const said = texts(sent.slice(before));
+
+    const claimsKept = said.some((line) => /has reported|you may throw/i.test(line));
+    const admits = said.some((line) => /could not keep/i.test(line));
+    expect(claimsKept && !admits, 'kept, said without the correction').toBe(false);
+  });
+});

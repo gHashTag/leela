@@ -215,6 +215,10 @@ const EN = {
   // download that failed blamed the player's file, which was fine, and sent
   // them to save it again for the same answer.
   'file.notFetched': 'I could not fetch that file. Nothing has changed — send it again in a moment.',
+  // Said while their own words are still a scroll above. The throw stands —
+  // they wrote it, and a full database is not their doing — but the account
+  // itself was lost, and it used to be lost under "you may throw".
+  'report.notKept': 'Your throw stands, but I could not keep what you wrote. Copy it somewhere before it scrolls away.',
   'file.tooBig': 'That file is too large to be a path.',
   'file.notKept': 'This bot is not keeping reports, so there is nowhere to put a path.',
   'file.saved': {
@@ -304,6 +308,11 @@ const EN = {
   // next load, with nothing to say it had ever existed.
   'app.reportUnkept':
     'Written, and this browser will not keep it — save a copy from “My path” before you close the tab.',
+  // The table itself could not be stored. Said once, not on every throw: the
+  // game plays on in a window that keeps nothing, and used to describe every
+  // snake and arrow as though the board would still be there tomorrow.
+  'app.gameUnkept':
+    'This browser will not keep the game — the board will be as it was when you come back.',
   'app.reportSavedTurn': 'Written. Player {seat} throws next.',
   'app.reportEmpty': 'A report is something written. Nothing was.',
   'app.seatTurn': 'Player {seat}',
@@ -523,6 +532,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'file.nothingNew': 'В этом файле нет ничего нового для меня.',
   'file.unreadable': 'Это не путь, записанный Лилой. Сохраните его в мини-приложении.',
   'file.notFetched': 'Не удалось получить файл. Ничего не изменилось — отправьте ещё раз через мгновение.',
+  'report.notKept': 'Бросок засчитан, но записанное сохранить не удалось. Скопируйте его, пока оно не ушло вверх.',
   'file.tooBig': 'Этот файл слишком велик, чтобы быть путём.',
   'file.notKept': 'Этот бот не хранит отчёты, поэтому путь положить некуда.',
   'file.saved': {
@@ -585,6 +595,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.reportSavedDone': 'Записано. Игра завершена. 🕉',
   'app.reportUnkept':
     'Записано, но этот браузер не сохранит — заберите копию в «Моём пути», прежде чем закрыть вкладку.',
+  'app.gameUnkept':
+    'Этот браузер не сохранит игру — доска будет такой, какой вы её оставили в прошлый раз.',
   'app.reportSavedTurn': 'Записано. Ход игрока {seat}.',
   'app.reportEmpty': 'Отчёт — это то, что написано. Здесь не написано ничего.',
   'app.seatTurn': 'Игрок {seat}',
