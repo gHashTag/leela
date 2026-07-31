@@ -5432,6 +5432,36 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**Judged against the wrong English (157th pass).** Twenty-one of the
+twenty-three recorded lost board references were never lost. The audit's third
+false alarm — *not every language was translated from the same edition* — was
+known, acted on, and closed against the wrong English: everything was compared
+to the one English this dataset ships. Arabic, Malay and Ukrainian come from
+`leela/src/locales/<lang>`, whose sibling is `leela/src/locales/en`, an older
+and shorter edition the generator reads, loses to the hand-authored markdown,
+and throws away. It says *the snake of tamoguna* where the shipped English says
+*the tamoguna square (field 72)*, and *see the lokas prana, apana and vyana*
+where the shipped one numbers all three.
+
+That edition is kept under `packages/content/data/editions/` now — the donor
+repositories are not in CI, and asking which edition a translation followed is
+the only way to tell a lost number from a number that was never there. As text
+rather than as the numbers it states, so the reading of it stays in
+`lib/numbers.mjs` with every other reading. Which edition a language followed is
+read off its own plans, since every plan carries the file it came from.
+
+**Two remain**, both read in the file they come from: `leela-en` states *There
+are 72,000 nerves in the body, called nadis* and the Arabic keeps `nadi` without
+the number; it states *(see square 11)* on plan 23 and the Ukrainian has no 11
+anywhere. The count went 42 → 36 → 31 → 23 → 2, and **not one of those numbers
+came off because anything was repaired** — each time the check had been asking
+the wrong question. That is the argument for writing down what a check believes.
+
+An empty edition would turn the whole thing green: `lossesIn` skips a plan the
+edition lacks, so every number in it is excused, and a silent excuse reads
+exactly like a language with nothing wrong. The audit fails when an edition does
+not cover a plan the translation has.
+
 **The sum with no sign in it — the third layer, and the gap between two
 checks.** `audit-numbers` handed the multiplication tables to `audit-arithmetic`
 and wrote that it holds them *to a stricter rule than presence*. Presence was
