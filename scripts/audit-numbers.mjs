@@ -92,6 +92,35 @@ const RECORDED = [
 
 const read = (language) => JSON.parse(readFileSync(join(DATA, `plans.${language}.json`), 'utf8'));
 
+/**
+ * What kind of loss each record is, where somebody has read it.
+ *
+ * Two very different things had been recorded under one word. Malay keeps the
+ * sentence and drops the numeral: plan 60 still names `buddhi` and `ahamkara`,
+ * plan 51 still names `tamoguna`, plan 30 still names `prana` and `apana` — the
+ * passages are there, pointing at squares they no longer number. Ukrainian
+ * drops the parenthetical whole: plan 44 has no `джняна` in it at all, plan 30
+ * no `прана`, `апана` or `вьяна`.
+ *
+ * The difference is the whole of the repair. One is a numeral put back where a
+ * sentence already points; the other is a sentence to write.
+ *
+ * Read, not inferred. A classifier was tried — the term a reference names is
+ * usually Sanskrit, and a Sanskrit term is transliterated rather than
+ * translated, so it survives into scripts that share nothing with the source —
+ * and it decided thirteen of forty-three. Thirty were references that name
+ * nothing lookupable: `24 hours a day`, a numbered list, `the 8th plane`. A
+ * classifier that answers a third of the time is not one to write down, so what
+ * is below is what was read, and everything else says nothing.
+ */
+const KINDS = {
+  'ms/30': 'numeral only — `prana` and `apana` are still there',
+  'ms/51': 'numeral only — `tamoguna` is still there',
+  'ms/60': 'numeral only — `buddhi` and `ahamkara` are still there',
+  'uk/30': 'reference gone — no `прана`, `апана` or `вьяна` anywhere in the plan',
+  'uk/44': 'reference gone — no `джняна` anywhere in the plan',
+};
+
 const languages = readdirSync(DATA)
   .filter((file) => /^plans\..+\.json$/.test(file))
   .map((file) => file.slice('plans.'.length, -'.json'.length))
@@ -115,7 +144,10 @@ console.log(`\nChecked ${languages.length} languages for the board references bo
 
 if (found.length > 0) {
   console.log(`Already known to be missing, in ${found.length} plans:`);
-  for (const line of found) console.log(`  ${line}`);
+  for (const line of found) {
+    const kind = KINDS[line.split(':')[0]];
+    console.log(`  ${line}${kind ? `   — ${kind}` : ''}`);
+  }
   console.log('');
 }
 

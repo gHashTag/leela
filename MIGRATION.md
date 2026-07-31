@@ -4800,6 +4800,35 @@ table rows, invisible because the line it sat on was already known.
 Thirty-one records left, still an upper bound: what has been read is what is
 excused.
 
+## Hundredth-and-fortieth pass: a numeral, or a sentence
+
+Reading further into the thirty-one, and the useful finding is that they are not
+one thing. **Malay keeps the sentence and drops the numeral. Ukrainian drops the
+parenthetical whole.**
+
+Plan 60 in Malay still names `buddhi` and `ahamkara`, plan 51 still names
+`tamoguna`, plan 30 still names `prana` and `apana` — passages pointing at
+squares they no longer number. Ukrainian plan 44 has no `джняна` in it anywhere,
+and plan 30 no `прана`, `апана` or `вьяна`: the cross-reference is not damaged,
+it is absent.
+
+That difference is the whole of the repair. One is a numeral put back where a
+sentence already points; the other is a sentence to write. The records say
+which, for the ones somebody has read, and each claim is checked against the
+data in `numbers.test.ts` rather than taken on trust — which is the difference
+between a note and a record.
+
+**A classifier was tried and is not being kept.** The term a reference names is
+usually Sanskrit, and Sanskrit is transliterated rather than translated, so it
+survives into scripts that share nothing with the source: `прана` is `прана` in
+Ukrainian and `prana` in Malay. It decided thirteen of forty-three. The other
+thirty name nothing that can be looked for — `24 hours a day`, a numbered list,
+`the 8th plane` — and a check that answers a third of the time is worse than
+none, because the two thirds it is silent about read as clean.
+
+So what is written down is what was read. The same rule as the word forms two
+passes ago, and for the same reason.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

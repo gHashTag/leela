@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { plansFor } from '../src';
 import {
   lossesIn,
   lostFrom,
@@ -234,5 +235,47 @@ describe('a board reference is not a term in a times table', () => {
     const source = `There are 72000 nadis. ${table}`;
 
     expect(lostFrom(withoutTheNadis, source, source, 'uk')).toEqual(['72000']);
+  });
+});
+
+describe('the evidence behind a record is in the data', () => {
+  /**
+   * Two very different losses had been recorded under one word. Malay keeps the
+   * sentence and drops the numeral — plan 60 still names `buddhi` and
+   * `ahamkara` while pointing at a square it no longer numbers. Ukrainian drops
+   * the parenthetical whole: plan 44 has no `джняна` in it anywhere.
+   *
+   * One repair is a numeral put back where a sentence already points. The other
+   * is a sentence to write. The audit says which, for the records somebody has
+   * read, and every claim it makes is checkable here rather than on trust —
+   * which is the difference between a note and a record.
+   */
+  const bodyOf = (language: string, plan: number) =>
+    plansFor(language).find((entry) => entry.plan === plan)?.body ?? '';
+
+  it('Malay keeps what its records say it keeps', () => {
+    expect(bodyOf('ms', 30)).toMatch(/prana/i);
+    expect(bodyOf('ms', 30)).toMatch(/apana/i);
+    expect(bodyOf('ms', 51)).toMatch(/tamoguna/i);
+    expect(bodyOf('ms', 60)).toMatch(/buddhi/i);
+    expect(bodyOf('ms', 60)).toMatch(/ahamkara/i);
+  });
+
+  it('Ukrainian has lost what its records say it has lost', () => {
+    expect(bodyOf('uk', 30)).not.toMatch(/прана|апана|вьяна/i);
+    expect(bodyOf('uk', 44)).not.toMatch(/джняна/i);
+  });
+
+  it('and both still lack the numbers, which is why they are recorded at all', () => {
+    // The guard against a record outliving its reason: if a numeral comes back,
+    // `audit-numbers` says to take the line out, and this says so too.
+    for (const [language, plan] of [
+      ['ms', 60],
+      ['uk', 44],
+    ] as Array<[string, number]>) {
+      expect(numbersIn(bodyOf(language, plan)), `${language}/${plan}`).not.toContain(
+        plan === 60 ? '68' : '37',
+      );
+    }
   });
 });
