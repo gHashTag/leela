@@ -260,13 +260,42 @@ export function squareText(
   intention: string,
 ): string {
   const said = written.trim();
+  const asked = intention.trim();
   const lines = [`${plan}. ${title}`];
 
   if (said.length > 0) lines.push('', said);
-  if (intention.trim().length > 0) lines.push('', `— ${intention.trim()}`);
+  if (asked.length > 0) {
+    lines.push('', `— ${asked}`);
+  } else if (endsLikeAnIntention(said)) {
+    // A bare dash, meaning "the question is not here".
+    //
+    // Without it these two are the same bytes: an account ending in a
+    // dash-led closing line, and a shorter account followed by a question.
+    // A reader cannot tell them apart, and it used to guess wrong — the last
+    // line of somebody's account was lifted out of it and installed as the
+    // question the whole game is played to answer.
+    //
+    // A reader that has never heard of this line leaves it in the body, since
+    // it wants a dash *and* something after it. That is a stray character in
+    // an account rather than a missing line and a question nobody asked, which
+    // is the trade this makes.
+    lines.push('', '—');
+  }
 
   return lines.join('\n');
 }
+
+/** Whether a body's own last line would be read as the closing question. */
+function endsLikeAnIntention(said: string): boolean {
+  const lines = said.split('\n');
+  const last = (lines[lines.length - 1] ?? '').trim();
+  const above = (lines[lines.length - 2] ?? '').trim();
+
+  return INTENTION_LINE.test(last) && lines.length >= 2 && above.length === 0;
+}
+
+/** A closing question: a dash, then words. */
+const INTENTION_LINE = /^[—–-]\s*\S/;
 
 /**
  * A square taken back out of the words it was shared as.
@@ -305,11 +334,24 @@ export function parseSquare(
   const body = [...lines];
   while (body.length > 0 && (body[body.length - 1] ?? '').trim().length === 0) body.pop();
 
+  // The blank line above is part of the mark, and so is having a body above
+  // that. `squareText` has always written both; without requiring them, a
+  // report whose own last line began with a dash had that line taken out of it
+  // and adopted as the player's question — and a report that *was* one dash
+  // line came back as nothing at all, so the whole account read as unreadable.
   let asked = '';
   const last = (body[body.length - 1] ?? '').trim();
-  if (/^[—–-]\s*\S/.test(last)) {
-    asked = last.replace(/^[—–-]\s*/, '').trim().slice(0, MAX_INTENTION_CHARS);
-    body.pop();
+  const above = (body[body.length - 2] ?? '').trim();
+  const something = body.slice(0, -2).some((line) => line.trim().length > 0);
+
+  if (body.length >= 2 && above.length === 0 && something) {
+    if (INTENTION_LINE.test(last)) {
+      asked = last.replace(/^[—–-]\s*/, '').trim().slice(0, MAX_INTENTION_CHARS);
+      body.pop();
+    } else if (/^[—–-]$/.test(last)) {
+      // The bare dash `squareText` writes to say the question is not here.
+      body.pop();
+    }
   }
 
   const said = body.join('\n').trim().slice(0, MAX_REPORT_CHARS);

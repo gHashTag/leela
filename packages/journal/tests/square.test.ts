@@ -28,11 +28,28 @@ import {
  */
 
 const TITLES = ['The human plane (jana-loka)', 'Delusion (moha)', 'Земной план', '純粋'];
+/**
+ * What somebody writes on a square.
+ *
+ * The list this replaces had a dash *inside* a sentence and a line that looks
+ * like a heading — the two shapes somebody thought of — and not the one that
+ * broke: an account **ending** on a dash-led line. That is ordinary writing. A
+ * closing thought, a quoted line, a signature. Shared from the mini app, the
+ * last line was lifted out of the account and installed as the player's
+ * intention — the question the whole game is played to answer, taken from
+ * words they wrote about a square. An account that was *only* such a line came
+ * back as `null`: shared, and answered with "that is not a square".
+ *
+ * So the endings are generated rather than remembered. Every combination of a
+ * body and a closing line, blank line or not, is a thing a person can type.
+ */
+const BODIES = ['One line.', 'Two lines,\nthe second longer.', 'A paragraph.  '];
+const ENDINGS = ['', '\n— a closing thought', '\n\n— a closing thought', '\n- a hyphen one'];
+
 const WRITINGS = [
-  'One line.',
-  'Two lines,\nthe second one longer than the first.',
+  ...BODIES.flatMap((body) => ENDINGS.map((ending) => `${body}${ending}`)),
+  '— nothing but a closing line',
   'A paragraph.\n\nAnd another, with a — dash inside it — mid-sentence.',
-  'Trailing space and a full stop.  ',
   '41. Looks like a heading but is not one.',
 ];
 const INTENTIONS = ['', 'to stop hurrying', 'to see it through — whatever that turns out to mean'];
@@ -50,6 +67,9 @@ describe('a square, written and read back', () => {
 
             expect(back?.plan, `${plan} / ${written}`).toBe(plan);
             expect(back?.text, `${plan} / ${written}`).toBe(written.trim());
+            // And the question is the sender's own, never a line of their
+            // account promoted into one.
+            expect(back?.intention ?? '', `${plan} / ${written}`).toBe(intention.trim());
           }
         }
       }

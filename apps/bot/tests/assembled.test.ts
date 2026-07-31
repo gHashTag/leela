@@ -328,6 +328,36 @@ describe('which route may set a question', () => {
     storage.stopPruning?.();
   });
 
+  it('does not mistake the end of an account for a question', async () => {
+    // A closing line is ordinary writing. Shared from the mini app, it used to
+    // be lifted out of the account and installed as the question the game is
+    // played to answer — and the player it happened to is the one who has no
+    // question yet, which is the only one this route sets.
+    const ownWords = [
+      '41. The human plane (jana-loka)',
+      '',
+      'I kept circling the same thing today.',
+      '— that I am afraid of being ordinary',
+    ].join('\n');
+
+    const path = temporary();
+    const { bot, sent, storage } = assemble(path);
+
+    await bot.handleUpdate(handedOver(ownWords));
+
+    let before = sent.length;
+    await bot.handleUpdate(message('/intention'));
+    expect(texts(sent.slice(before)).join(' '), 'nothing was adopted').toMatch(/have not said/i);
+
+    before = sent.length;
+    await bot.handleUpdate(message('/path'));
+    expect(texts(sent.slice(before)).join(' '), 'and the line is still theirs').toContain(
+      'afraid of being ordinary',
+    );
+
+    storage.stopPruning?.();
+  });
+
   it('never takes it from a square somebody pasted', async () => {
     // `/take` keeps the square and declines the frame.
     const path = temporary();

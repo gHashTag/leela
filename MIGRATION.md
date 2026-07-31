@@ -4361,6 +4361,52 @@ writers is read out of the source rather than kept beside it: an eighth fails on
 the day it is added, which is the day the question is worth asking. Checked by
 adding an eighth.
 
+## Hundred-and-twenty-seventh pass: the last line of somebody's account
+
+The bot's writers were checked first, since the mini app's had just been brought
+to one contract. They hold: `store.delete` and `reports.setIntention` are
+unguarded, both fall to the floor added two passes ago, and neither prints a
+confirmation over a write that failed. Nothing to fix, which is worth saying.
+
+The defect was in the format the two surfaces share. A square is written for a
+person to read:
+
+```
+41. The human plane (jana-loka)
+
+What it asked of me.
+
+— to stop hurrying
+```
+
+The last line is the sender's intention, and *a line beginning with a dash* was
+the whole of the mark. So an account that **ends** on a dash-led line — a
+closing thought, a quoted line, a signature; ordinary writing — had that line
+lifted out of it and installed as the reader's intention: the question the whole
+game is played to answer, taken from words somebody wrote about a square. An
+account that was *only* such a line came back as `null`, so a square shared in
+good faith was answered with "that is not a square".
+
+Reachable from the mini app's hand-over, which builds the square out of exactly
+what the player typed.
+
+**The mark is now the dash, the blank line above it, and a body above that** —
+all three of which `squareText` has always written, so every square ever shared
+still reads. That fixes what reading can fix. One case it cannot: an account of
+`A paragraph.` then a blank line then `— a closing thought` is the same bytes as
+`A paragraph.` with the question `a closing thought`. The writer disambiguates
+it now with a bare `—` meaning "the question is not here"; a reader that has
+never heard of that line leaves it in the body, which is a stray character
+rather than a missing line and a question nobody asked.
+
+**The property test had the shape and the wrong cases.** It ran the whole
+product of plans, titles, writings and intentions — and its five writings
+included a dash *inside* a sentence and a line that looks like a heading, the
+two somebody thought of, and not the one that broke. Endings are generated now,
+every body against every closing line. It also never asserted the intention that
+came back, only the plan and the text, so the theft would have been invisible
+even with the right input.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
