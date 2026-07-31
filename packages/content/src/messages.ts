@@ -211,6 +211,10 @@ const EN = {
   },
   'file.nothingNew': 'Nothing in that file is new to me.',
   'file.unreadable': 'That is not a path written by Leela. Save one from the mini app.',
+  // Not the same fact, and it used to be said with the same sentence: a
+  // download that failed blamed the player's file, which was fine, and sent
+  // them to save it again for the same answer.
+  'file.notFetched': 'I could not fetch that file. Nothing has changed — send it again in a moment.',
   'file.tooBig': 'That file is too large to be a path.',
   'file.notKept': 'This bot is not keeping reports, so there is nowhere to put a path.',
   'file.saved': {
@@ -518,6 +522,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   },
   'file.nothingNew': 'В этом файле нет ничего нового для меня.',
   'file.unreadable': 'Это не путь, записанный Лилой. Сохраните его в мини-приложении.',
+  'file.notFetched': 'Не удалось получить файл. Ничего не изменилось — отправьте ещё раз через мгновение.',
   'file.tooBig': 'Этот файл слишком велик, чтобы быть путём.',
   'file.notKept': 'Этот бот не хранит отчёты, поэтому путь положить некуда.',
   'file.saved': {

@@ -8,6 +8,7 @@ import {
   fixedModel,
   recordingModel,
   type LanguageModel,
+  type Reflection,
 } from '../src';
 
 const ask = { plan: 12, language: 'en' as const };
@@ -385,4 +386,104 @@ describe('failures a retry cannot fix', () => {
     expect(first.text).toBe(second.text);
     expect(second.text).toContain('6');
   });
+});
+
+describe('the deadline', () => {
+  /**
+   * A promise about how long a player waits is only worth what the slowest
+   * model keeps, and `LanguageModel` is an interface anyone may implement.
+   *
+   * The test that was here handed the guide a model which listened for the
+   * abort and rejected on it — so it proved the signal was passed, which was
+   * never the doubtful part. Every model that does *not* listen went untested,
+   * and one of them never returned at all: no answer, no fallback, no error,
+   * the player shown nothing forever.
+   *
+   * So the assertion is about the shape of the promise rather than about the
+   * models that happen to keep it: **whatever is behind the interface, an
+   * answer arrives.** Each of these is a plausible mistake in somebody's
+   * adapter, and one is not a mistake at all.
+   */
+  const slow = 10_000;
+  const models: Array<{ what: string; model: LanguageModel }> = [
+    { what: 'never returns', model: { id: 'a', complete: () => new Promise<string>(() => {}) } },
+    {
+      what: 'answers long after anyone is waiting',
+      model: {
+        id: 'b',
+        complete: () => new Promise<string>((resolve) => setTimeout(() => resolve('late'), slow)),
+      },
+    },
+    {
+      what: 'fails long after anyone is waiting',
+      model: {
+        id: 'c',
+        complete: () =>
+          new Promise<string>((_, reject) => setTimeout(() => reject(new Error('late')), slow)),
+      },
+    },
+    {
+      what: 'listens for the abort, as an adapter should',
+      model: {
+        id: 'd',
+        complete: (_messages, options) =>
+          new Promise<string>((_, reject) => {
+            options?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+          }),
+      },
+    },
+  ];
+
+  for (const { what, model } of models) {
+    it(`answers within it, given a model that ${what}`, async () => {
+      const logged: string[] = [];
+      const guide = new Guide({ model, timeoutMs: 20, log: (message) => logged.push(message) });
+
+      const answered = await Promise.race([
+        guide.answer('what does 41 ask of me', { language: 'en', plan: 41 }),
+        new Promise<'nothing at all'>((resolve) => setTimeout(() => resolve('nothing at all'), 800)),
+      ]);
+
+      expect(answered, 'a player is never left with nothing').not.toBe('nothing at all');
+      expect((answered as Reflection).fromModel).toBe(false);
+      expect((answered as Reflection).text).toContain('41');
+    }, 5_000);
+  }
+
+  it('says a deadline passed rather than that something failed', async () => {
+    // An operator reading "model failed" goes looking for a status code that
+    // was never issued. Nothing answered; that is the fact to log.
+    const logged: string[] = [];
+    const guide = new Guide({
+      model: { id: 'a', complete: () => new Promise<string>(() => {}) },
+      timeoutMs: 20,
+      log: (message) => logged.push(message),
+    });
+
+    await guide.answer('what does 41 ask of me', { language: 'en', plan: 41 });
+
+    expect(logged.join(' ')).toMatch(/timed out/i);
+  }, 5_000);
+
+  it('is not a reason to go quiet, because the next one may be answered', async () => {
+    // Unlike a refused key. A slow minute is weather, and half an hour of
+    // silence over one of them would cost the reports it was meant to protect.
+    let hang = true;
+    const guide = new Guide({
+      model: {
+        id: 'sometimes',
+        complete: () => (hang ? new Promise<string>(() => {}) : Promise.resolve('an answer')),
+      },
+      timeoutMs: 20,
+      log: () => undefined,
+    });
+
+    await guide.answer('what does 41 ask of me', { language: 'en', plan: 41 });
+    expect(guide.status().available, 'still trying').toBe(true);
+
+    hang = false;
+    const second = await guide.answer('and now', { language: 'en', plan: 41 });
+    expect(second.fromModel).toBe(true);
+    expect(guide.status().skipped, 'nothing was skipped unasked').toBe(0);
+  }, 5_000);
 });

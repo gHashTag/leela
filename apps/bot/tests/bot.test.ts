@@ -644,6 +644,40 @@ describe('a path leaving and arriving as a file', () => {
     expect(texts(sent).length).toBeGreaterThan(0);
   });
 
+  it('answers a document that never arrives, rather than waiting for it', async () => {
+    // The other way a download fails, and the only one the careful reply above
+    // does not cover: not a rejection but a silence. Node's `fetch` has no
+    // timeout of its own, so a phone that lost its signal mid-upload leaves the
+    // handler awaiting a promise that will not settle — and the sentence saying
+    // the file could not be read sits there, written, unsent.
+    const { bot, sent } = harness({
+      reports: new MemoryReportSink(),
+      readFile: () => new Promise<string>(() => {}),
+      fileTimeoutMs: 20,
+    });
+
+    await bot.handleUpdate(document(64));
+    expect(texts(sent).join(' ')).toMatch(/could not fetch/i);
+  }, 5_000);
+
+  it('does not blame the file for a download that failed', async () => {
+    // Found by writing the test above: both causes shared one sentence, and
+    // for one of them it was false. "That is not a path written by Leela" is
+    // about a file that arrived; a file that never arrived cannot be judged.
+    const { bot, sent } = harness({
+      reports: new MemoryReportSink(),
+      readFile: async () => {
+        throw new Error('no Telegram here');
+      },
+    });
+
+    await bot.handleUpdate(document(64));
+    const said = texts(sent).join(' ');
+
+    expect(said).toMatch(/could not fetch/i);
+    expect(said, 'nothing is known about a file that never arrived').not.toMatch(/not a path/i);
+  });
+
   it('takes a path that arrives as a file', async () => {
     // The path that had never run: the fetch always failed, so a file has
     // never been *received* in a test. The bytes are the mini app's own,

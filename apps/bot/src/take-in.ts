@@ -29,6 +29,42 @@ export function asReport(stored: StoredReport): Report {
 /** The largest file worth reading. A path is text; anything bigger is not one. */
 export const MAX_FILE_BYTES = 1024 * 1024;
 
+/**
+ * How long a path is allowed to take to arrive.
+ *
+ * Node's `fetch` has no timeout of its own, so a connection that stalls after
+ * the headers — a phone that lost its signal mid-upload, a CDN edge that
+ * stopped talking — never settles, and neither does the handler awaiting it.
+ * The reply that says the file could not be read is written and correct and
+ * would simply never be sent.
+ *
+ * A minute is generous for a megabyte, which is all this accepts.
+ */
+export const FILE_TIMEOUT_MS = 60_000;
+
+/**
+ * Whatever it is, settled within `ms`.
+ *
+ * `readFile` is an injection point — production hands it the network, tests
+ * hand it a string — and nothing in its type says it ever returns. A promise
+ * with no clock is the one failure a caught-and-reported error path cannot
+ * cover, because there is no error. `@leela/ai` keeps the same rule over
+ * `LanguageModel` for the same reason, and found it the same way.
+ */
+export async function within<T>(work: Promise<T>, ms: number, what: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      work,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${what} took longer than ${ms}ms`)), ms);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export type Outcome =
   | {
       kind: 'took';

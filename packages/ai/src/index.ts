@@ -40,6 +40,7 @@ export {
   DEFAULT_OPENAI_MODEL,
   whole,
   ModelError,
+  ModelTimeout,
   deepSeek,
   fixedModel,
   openAI,

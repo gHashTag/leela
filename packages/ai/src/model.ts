@@ -38,6 +38,21 @@ export class ModelError extends Error {
   }
 }
 
+/**
+ * The model did not answer in time.
+ *
+ * Separate from a refusal because an operator acts on it differently: a refusal
+ * carries a status they can look up, and a deadline that passed says only that
+ * something was slow — the model, the network, or an implementation that never
+ * intended to stop. It carries no status for the same reason; nothing answered.
+ */
+export class ModelTimeout extends ModelError {
+  constructor(readonly afterMs: number) {
+    super(`the model did not answer within ${Math.round(afterMs / 1000)}s`);
+    this.name = 'ModelTimeout';
+  }
+}
+
 export interface ProviderOptions {
   apiKey: string;
   /** Defaults to a small, cheap model — this is a companion, not an oracle. */

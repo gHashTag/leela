@@ -4155,6 +4155,42 @@ survive would be the bot telling a player about a game it does not have, and
 The order was already right — keep first, then the effects, then the replies —
 so the fix is one function and six call sites that stop instead of carrying on.
 
+## Hundred-and-twenty-first pass: a promise about time that nothing kept
+
+`Guide` exists so that a companion which cannot answer does not stop the game,
+and it takes a `timeoutMs` documented as *a player staring at a chat needs an
+answer or an apology, not a spinner*. It kept that promise by calling
+`controller.abort()` — which is a **request**. It stops a model that wired
+`options.signal` through, and does nothing whatever to one that did not.
+
+`LanguageModel` is deliberately the whole surface, "a function from messages to
+text", precisely so anyone can put an SDK behind it. An adapter that takes its
+abort signal in a different place, or ignores it, is easy and silent to write —
+and then the await never returns. Not a slow answer, not a fallback: **nothing,
+forever**, which is the one outcome the class exists to prevent. Proven with a
+model whose `complete` returns `new Promise(() => {})`.
+
+The deadline is now raced rather than asked for, so it holds for every model.
+The abort still fires, so a model that does listen stops working on an answer
+nobody will read. A timeout is logged as a timeout — "model failed" sends an
+operator looking for a status code that was never issued — and it does not
+silence the companion, because a slow minute is weather and half an hour of
+silence over one would cost the reports it protects.
+
+The test that was there proved the signal was passed, which was never the
+doubtful part. Four models now: one that never returns, one that answers too
+late, one that fails too late, and one that listens as an adapter should.
+
+**The same clock, downloading a path.** Node's `fetch` has no timeout of its
+own, so a phone that lost its signal mid-upload left `message:document` awaiting
+a promise that would not settle — and the sentence saying the file could not be
+read sat there, written, unsent.
+
+**And it was the wrong sentence.** Found while writing the test above: a failed
+*download* answered `file.unreadable` — "That is not a path written by Leela" —
+which judges a file that never arrived, and sends a player to save a perfectly
+good one again for the same answer. A download that failed now says so.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

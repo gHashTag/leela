@@ -14,7 +14,7 @@
 import { type Language, messageFor } from '@leela/content';
 import type { Direction } from '@leela/engine';
 import type { CompletionOptions, LanguageModel } from './model';
-import { ModelError } from './model';
+import { ModelError, ModelTimeout } from './model';
 import {
   type JourneyEntry,
   type Message,
@@ -31,6 +31,8 @@ export interface GuideOptions {
   /**
    * How long to wait before giving up, in milliseconds.
    * A player staring at a chat needs an answer or an apology, not a spinner.
+   *
+   * Enforced here rather than asked for. See `ask`.
    */
   timeoutMs?: number;
   /** Where failures are reported. */
@@ -183,14 +185,34 @@ export class Guide {
       return { text: fallbackText(contextOf(options)), fromModel: false };
     }
 
+    // The deadline is kept by this package, not asked of the model.
+    //
+    // It used to be a bare `controller.abort()`, which is a *request*: it stops
+    // a model that wired `options.signal` through and does nothing at all to one
+    // that did not. `LanguageModel` is deliberately the whole surface — "a
+    // function from messages to text", so that anyone can put an SDK behind it —
+    // and an SDK wrapper that takes its abort signal somewhere else, or ignores
+    // it, is an easy and silent thing to write.
+    //
+    // Then the await never returned. Not a slow answer and not a fallback: the
+    // player was shown nothing, forever, which is the one outcome this whole
+    // class exists to prevent. Racing the clock makes the promise true for
+    // *every* model. The abort still fires, so a model that does listen stops
+    // working on an answer nobody will read.
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        controller.abort();
+        reject(new ModelTimeout(this.timeoutMs));
+      }, this.timeoutMs);
+    });
 
     try {
-      const text = await this.model.complete(messages, {
-        ...this.completion,
-        signal: controller.signal,
-      });
+      const text = await Promise.race([
+        this.model.complete(messages, { ...this.completion, signal: controller.signal }),
+        deadline,
+      ]);
       // A call that worked ends any silence: whoever fixed it need not restart.
       this.silentUntil = 0;
       this.silentReason = undefined;
@@ -205,6 +227,8 @@ export class Guide {
         this.silentUntil = this.now() + this.silenceMs;
         this.silentReason = reasonFor(status, this.silenceMs);
         this.log(`companion silenced: ${this.silentReason}`, error);
+      } else if (error instanceof ModelTimeout) {
+        this.log(`model timed out after ${this.timeoutMs}ms`, error);
       } else {
         this.log(`model failed${status ? ` (${status})` : ''}`, error);
       }

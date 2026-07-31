@@ -22,7 +22,7 @@ import {
   nudgeToPrivate,
 } from './delivery';
 import { escapeHtml, renderBoardMessage, renderChapter, renderPlan } from './render';
-import { MAX_FILE_BYTES, asReport, decide, decideSquare, keep } from './take-in';
+import { FILE_TIMEOUT_MS, MAX_FILE_BYTES, asReport, decide, decideSquare, keep, within } from './take-in';
 import { offer, serialise } from './take-out';
 import {
   MemoryRoomStore,
@@ -71,6 +71,11 @@ export interface BotOptions {
    * always failed.
    */
   readFile?: (url: string) => Promise<string>;
+  /**
+   * How long that read may take. Injected for the same reason the read is:
+   * a minute is right in production and unbearable in a test.
+   */
+  fileTimeoutMs?: number;
 }
 
 /** Who sent this update, as the commands layer wants them. */
@@ -97,6 +102,7 @@ export function createBot({
   // The default is the network, which is what production wants and what a test
   // must never be left to depend on.
   readFile = async (url) => (await fetch(url)).text(),
+  fileTimeoutMs = FILE_TIMEOUT_MS,
 }: BotOptions) {
   const bot = new Bot(token, botInfo ? { botInfo } : undefined);
 
@@ -906,10 +912,18 @@ export function createBot({
     if (existing !== null) {
       try {
         const file = await ctx.getFile();
-        text = await readFile(`https://api.telegram.org/file/bot${token}/${file.file_path}`);
+        text = await within(
+          readFile(`https://api.telegram.org/file/bot${token}/${file.file_path}`),
+          fileTimeoutMs,
+          'reading the file',
+        );
       } catch (error) {
+        // Not `file.unreadable`. Nothing about the file is known yet — it was
+        // never fetched — and telling a player their path is not a path, when
+        // the truth is that a download stalled, sends them to save a perfectly
+        // good one again and read the same sentence.
         log(`[bot] could not read the file: ${String(error)}`);
-        await ctx.reply(messageFor(language, 'file.unreadable'));
+        await ctx.reply(messageFor(language, 'file.notFetched'));
         return;
       }
     }
