@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
-// @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
-import { lossesIn, lostFrom, numbersIn, toAsciiDigits, unrecorded } from '../../../scripts/lib/numbers.mjs';
+import {
+  lossesIn,
+  lostFrom,
+  numbersIn,
+  toAsciiDigits,
+  unrecorded,
+  writtenOut,
+  // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
+} from '../../../scripts/lib/numbers.mjs';
 
 /**
  * The board references inside the traditional text.
@@ -130,5 +137,47 @@ describe('what is already known', () => {
 
   it('does not treat a repaired line as new damage', () => {
     expect(unrecorded(['uk/60: 68'], ['uk/60: 68', 'ms/51: 72'])).toEqual([]);
+  });
+});
+
+describe('a reference written as a word is not a missing one', () => {
+  /**
+   * The fourth false alarm, and the only one that had been believed. This check
+   * counts digits, so a translation that spells a number out reads as damage —
+   * and six of the forty-two recorded losses were exactly that. The worst was
+   * Ukrainian plan 60, whose sentence carries the *winning square* in full:
+   * `шістдесят восьмий квадрат`. The audit called it gone.
+   *
+   * The shape, not the six: **the check must be about the reference, and a
+   * reference is not a numeral.** Whether a language writes it in digits is a
+   * fact about the language, and this repository has already learned that
+   * lesson three times — Arabic digits, grouped thousands, two source editions —
+   * each time by reporting damage that was not there.
+   */
+  const russian = 'Но пока он не достигнет поля 68, четыре аспекта продолжают работать.';
+  const english = 'But until he reaches field 68, the four aspects continue to work.';
+
+  it('counts a spelled-out reference as present', () => {
+    const ukrainian = 'Але поки не досягнуть шістдесят восьмий квадрат, чотири здібності працюють.';
+
+    expect(lostFrom(ukrainian, russian, english, 'uk')).toEqual([]);
+    expect(lostFrom(ukrainian, russian, english, ''), 'and only for the language it was read in')
+      .toEqual(['68']);
+  });
+
+  it('still counts a reference that is really gone', () => {
+    // The guard against the fix becoming a way of not seeing anything: a
+    // sentence with the number nowhere in it, in words or figures, is a loss.
+    const ukrainian = 'Але поки він не досягне мети, чотири здібності продовжують працювати.';
+
+    expect(lostFrom(ukrainian, russian, english, 'uk')).toEqual(['68']);
+  });
+
+  it('knows a word form only where somebody read it', () => {
+    // Every entry is a quotation from the file it came from, not vocabulary.
+    // A language that has never been read gets no benefit of the doubt.
+    expect(writtenOut('uk', 68, 'шістдесят восьмий квадрат')).toBe(true);
+    expect(writtenOut('ms', 68, 'шістдесят восьмий квадрат'), 'never read').toBe(false);
+    expect(writtenOut('uk', 45, 'шістдесят восьмий квадрат'), 'a number never read').toBe(false);
   });
 });

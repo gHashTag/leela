@@ -75,24 +75,68 @@ export function numbersIn(text) {
 }
 
 /**
+ * Board references written as words rather than digits.
+ *
+ * The fourth false alarm, and the one that had been believed. This audit counts
+ * *digits*, so a translation that spells a number out reads as damage — and
+ * every one of these was reported as a lost reference for as long as the check
+ * has existed:
+ *
+ * - German plan 55: `vier Hauptaspekte`, the four aspects of mind.
+ * - Spanish plan 62: `el octavo plano`, the eighth plane.
+ * - Hindi plan 62: `आठवें तल`, the same sentence.
+ * - Chinese plan 62: `第八位面`, the same sentence again.
+ * - Marathi plan 5: `पाचव्या क्रमांकावर`, the number five and its planet.
+ * - Ukrainian plan 60: `шістдесят восьмий квадрат` — the *winning square*,
+ *   spelled out in full, counted as missing because it has no digits in it.
+ *
+ * Every entry here was read in the file it comes from before it was written
+ * down. None is a translation and none is vocabulary anybody has to trust: each
+ * is a quotation, and the sentence it comes from is named beside it.
+ *
+ * The remaining records are an upper bound rather than a count. Checking the
+ * rest means reading twenty-two more sentences in Arabic, Malay and Ukrainian,
+ * and what is above is what has been read.
+ */
+const WRITTEN_OUT = {
+  'de/4': ['vier'],
+  'es/8': ['octavo'],
+  'hi/8': ['आठवें'],
+  'zh/8': ['第八'],
+  'mr/5': ['पाच'],
+  'uk/68': ['шістдесят восьмий'],
+};
+
+/** Whether this language writes this board reference out in words. */
+export function writtenOut(language, number, text) {
+  const forms = WRITTEN_OUT[`${language}/${number}`] ?? [];
+  return forms.some((form) => text.includes(form));
+}
+
+/**
  * What a translation of one plan has lost.
  *
  * Only numbers **both** editions carry: those are the ones no phrasing choice
  * explains away, so their absence is a loss rather than a difference. Returns
  * them sorted, so two runs over the same data read the same.
  */
-export function lostFrom(translated, russian, english) {
+export function lostFrom(translated, russian, english, language = '') {
   const inRussian = new Set(numbersIn(russian));
   const inEnglish = new Set(numbersIn(english));
   const present = new Set(numbersIn(translated));
 
   return [...inRussian]
-    .filter((number) => inEnglish.has(number) && !present.has(number))
+    .filter(
+      (number) =>
+        inEnglish.has(number) &&
+        !present.has(number) &&
+        !writtenOut(language, number, translated),
+    )
     .sort((a, b) => Number(a) - Number(b));
 }
 
 /** One plan in one language, and the board references it dropped. */
-export function lossesIn(plans, russian, english) {
+export function lossesIn(plans, russian, english, language = '') {
   const byPlan = (list) => new Map(list.map((plan) => [plan.plan, plan]));
   const ru = byPlan(russian);
   const en = byPlan(english);
@@ -103,7 +147,7 @@ export function lossesIn(plans, russian, english) {
     const other = en.get(plan.plan);
     if (!source || !other) continue;
 
-    const lost = lostFrom(plan.body ?? '', source.body ?? '', other.body ?? '');
+    const lost = lostFrom(plan.body ?? '', source.body ?? '', other.body ?? '', language);
     if (lost.length > 0) losses.push({ plan: plan.plan, lost });
   }
 

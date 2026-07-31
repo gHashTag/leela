@@ -4739,6 +4739,36 @@ The proof it works is last pass's defect: take the `/end` handler's call to
 `Conversations.clear` away again, and this audit names it — *a new game is a new
 conversation*, said by a method nothing called.
 
+## Hundred-and-thirty-eighth pass: a reference is not a numeral
+
+The audit that reports lost board references has said *42 plans across eight
+languages* for a long time, and this repository has repeated the figure in three
+places. **Six of those were never lost.**
+
+The check counts digits. German plan 55 says `vier Hauptaspekte`; Spanish and
+Hindi and Chinese plan 62 say `el octavo plano`, `आठवें तल`, `第八位面`; Marathi
+plan 5 says `पाचव्या क्रमांकावर`. The references are all there, written the way
+those languages write them.
+
+The worst of the six is Ukrainian plan 60. The sentence reads *«поки не
+досягнуть **шістдесят восьмий** квадрат»* — until they reach the sixty-eighth
+square, the square the whole game is played to arrive at, spelled out in full —
+and the audit reported it as dropped.
+
+`lib/numbers.mjs` already carried the note that *three false alarms had to be
+closed before any of this could be believed*: Arabic digits, grouped thousands,
+two source editions. This is the fourth, and the only one that got past. Every
+excused reference is now a quotation from the file it came from, read before it
+was written down — not vocabulary, and not a translation.
+
+**Thirty-six remain, and they are an upper bound.** Checking the rest means
+reading twenty-two more sentences in Arabic, Malay and Ukrainian. What has been
+read is what is excused.
+
+The test asserts the shape rather than the six: a spelled-out reference counts
+as present, a reference that is genuinely absent still counts as lost, and a
+language nobody has read gets no benefit of the doubt.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**
@@ -4889,9 +4919,11 @@ lines of which every functional one is commented out, and both locale files —
 in it to port. The docs root is the landing page.
 
 **Translation audit, second layer — and this one found something.** See the
-eighty-ninth pass below: 42 plans across eight languages have lost the board
-references the text states. The first audit is still true at the layer it
-checked.
+eighty-ninth pass below: 36 plans across three languages have lost the board
+references the text states. It read 42 across eight until the hundred and
+thirty-eighth pass, and six of those were never lost — the check counts digits,
+and five languages write the reference as a word. The first audit is still true
+at the layer it checked.
 
 **Translation audit — done, and it found nothing.** The 19 machine-translated
 languages hold up at term level: parenthesised transliterations survive in all

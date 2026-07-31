@@ -4,8 +4,8 @@
  *
  * The translation audit has two layers already. The first checked terms and
  * found nothing. The second checked whether a board reference survived and
- * found forty-two losses across eight languages — and could not repair one of
- * them, because repairing a translation means translating.
+ * found losses in three languages — and could not repair one of them, because
+ * repairing a translation means translating.
  *
  * This is the layer that needs no translator at all. Plan 9 argues from
  * arithmetic and plan 8 from the opposite arithmetic, and whether nine times

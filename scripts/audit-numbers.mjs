@@ -11,11 +11,19 @@
  * duplicate bodies, script density. It found nothing, and it was looking one
  * layer above the damage.
  *
- * What this found, in 42 plans across eight languages: Ukrainian, Malay and
- * Arabic have lost board references in a dozen plans each, and German,
- * Spanish, Hindi, Marathi and Chinese in one apiece. The loss is in the donor
- * translations themselves — checked against `leela-src`, where Ukrainian plan
- * 60 has no 68 either — not in this repository's generator.
+ * What this found, in 36 plans across three languages: Ukrainian, Malay and
+ * Arabic have lost board references in a dozen plans each. The loss is in the
+ * donor translations themselves, not in this repository's generator.
+ *
+ * It said 42 across eight for a long time, and six of those were never lost.
+ * This counts *digits*, and German, Spanish, Hindi, Marathi and Chinese write
+ * those references as words — as does Ukrainian plan 60, whose sentence carries
+ * the winning square in full, `шістдесят восьмий квадрат`, and was reported as
+ * having dropped it. See `WRITTEN_OUT` in `lib/numbers.mjs`: every entry there
+ * is a quotation from the file it came from, read before it was written down.
+ *
+ * The 36 are an upper bound for the same reason. What has been read is what is
+ * excused.
  *
  * **It is recorded rather than repaired.** Repairing it means translating, and
  * translating means calling a service this repository deliberately does not
@@ -54,10 +62,6 @@ const RECORDED = [
   'ar/60: 68',
   'ar/61: 21',
   'ar/62: 8',
-  'de/55: 4',
-  'es/62: 8',
-  'hi/62: 8',
-  'mr/5: 5',
   'ms/6: 1,4',
   'ms/8: 0,10,11,12',
   'ms/9: 5,6,7,45,54,63,72,81',
@@ -80,10 +84,8 @@ const RECORDED = [
   'uk/46: 45',
   'uk/51: 72',
   'uk/55: 4,52',
-  'uk/60: 68',
   'uk/61: 21',
   'uk/62: 8',
-  'zh/62: 8',
 ];
 
 const read = (language) => JSON.parse(readFileSync(join(DATA, `plans.${language}.json`), 'utf8'));
@@ -101,7 +103,7 @@ for (const language of languages) {
   // The two editions are what everything else is measured against, and a number
   // is only expected of a translation when both of them carry it.
   if (language === 'ru' || language === 'en') continue;
-  for (const loss of lossesIn(read(language), russian, english)) found.push(keyOf(language, loss));
+  for (const loss of lossesIn(read(language), russian, english, language)) found.push(keyOf(language, loss));
 }
 
 const news = unrecorded(found, RECORDED);
