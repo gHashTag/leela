@@ -5432,6 +5432,34 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**Nineteen translations of an English nobody compared them to (158th pass).**
+`lib/numbers.mjs` said *Ukrainian, Malay and Arabic follow the English text, the
+rest follow the Russian*, and the second half was false — it was also the
+justification for how nineteen languages are judged.
+`translate-leela/index.js` reads `./docs` and writes `./locales/<lang>`, and
+`docs` is **English**. So the machine translations are translations of an
+English edition, and of a *different* English from the one this dataset ships:
+`NeuroLeelaAgent/docs/plans/1-birth.md` is 2,240 bytes where
+`translate-leela/docs/1-birth.md` is 1,977, and the two say different things.
+The same defect as the pass before, one donor family over.
+
+It changes **nothing** about the board references, and that was measured rather
+than assumed: both comparisons report nothing for all seventeen shipped
+languages of that family. The edition is kept anyway, because *nothing found*
+and *nothing looked for* print the same sentence, and the next number to go
+missing should be seen by a check that is right rather than one that agrees by
+luck. `editionOf` now answers for every shipped language, and a test holds it
+to that — a language is either an original or names an edition, since the
+default when it names none is the shipped English.
+
+**And they are not LibreTranslate's**, though this repository never wrote that
+down. `libre.js` in that donor is fifteen lines, calls
+`translate('Привет, мир!', 'ru', 'en')` as an example, and **nothing imports
+it**. The translator is Google Cloud Translate, in `index.js`. The 19 languages
+are `bn de es fr hi ja jv ko mr pa pt ta te tr ur vi zh` plus `en` and `ru`,
+which are outputs too and are beaten in the merge by the hand-authored English
+and the Russian GitBook.
+
 **Judged against the wrong English (157th pass).** Twenty-one of the
 twenty-three recorded lost board references were never lost. The audit's third
 false alarm — *not every language was translated from the same edition* — was
