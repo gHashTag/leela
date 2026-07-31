@@ -146,6 +146,10 @@ jobs:
       # a drawing; a drawing decided inline is one nothing else can call.
       - run: node scripts/audit-drawings.mjs
 
+      # Which functions read the seat holding the turn. Three defects in three
+      # passes came from one that had a seat of its own and did not ask for it.
+      - run: node scripts/audit-whose.mjs
+
       # Every script starts under the runtime it names, and every audit is
       # either run here or says in its own header why it cannot be. audit-copies
       # - the check that reads eighteen copies of the board - sat broken under

@@ -4015,6 +4015,37 @@ Both were harmless yesterday only by accident — the first because two seats
 rarely return to the same square, the second because five hundred entries is a
 long way off. An accident is not a rule, and neither of them was one.
 
+## Hundred-and-sixteenth pass: whose, closed as a class
+
+Three passes running, one shape produced a defect. The mini app keeps three
+module-level values for the seat holding the turn — `state`, `journal`,
+`intention` — right for the board, the die and the line underneath, and wrong
+everywhere the app talks about somebody else.
+
+The last two of it were found by reasoning about the shape. This pass looked at
+every function that reads them, and found two more:
+
+- **"Save a copy" wrote whoever held the turn's path**, from a view showing every
+  seat. A player could scroll to their own section, tap it, and carry away a
+  file of somebody else's writing — worse than reading it on screen, because a
+  file is kept and passed on. Each section has its own save now, named, and the
+  footer's single button is the one-seat case: a button that cannot say whose is
+  a button that saves the wrong one silently.
+- **The heading counted one seat's path over everybody's entries** — "your path,
+  2 plans" above forty of somebody else's.
+
+And the paste box now says whose journal a square is going into, because the
+footer's controls live in a view that shows every seat.
+
+**Then the shape was closed rather than the instances.** `audit-whose.mjs` lists
+every function that reads the turn holder's values and requires each to be
+declared with a sentence saying why. Thirteen are, and the sentence is the point:
+writing it is the moment somebody notices the function has a seat of its own.
+Proved by adding a fourteenth reader, which fails it.
+
+That is the third shape closed this way, after the 68 ambiguity and the drawings
+that decided nothing.
+
 ## Remaining, in order
 
 **1. Secrets — do this first, it is the only irreversible risk.**

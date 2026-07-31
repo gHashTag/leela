@@ -266,6 +266,17 @@ export function mayAsk(draft: string, bridged: boolean): boolean {
   return bridged && mayShare(draft);
 }
 
+/**
+ * Whether the one button in the footer may save a path.
+ *
+ * Only at a table of one. With several seats it cannot say whose path it is
+ * about, and a button that does not say whose saves the wrong one silently — so
+ * each section grows its own instead.
+ */
+export function mayExportHere(entries: ReadonlyArray<unknown>, alone: boolean): boolean {
+  return alone && mayExport(entries);
+}
+
 /** Whether there is a path to save. An empty file is not a keepsake. */
 export function mayExport(entries: ReadonlyArray<unknown>): boolean {
   return entries.length > 0;

@@ -97,6 +97,7 @@ import {
   headline,
   lineFor,
   mayExport,
+  mayExportHere,
   mayShare,
   mayAsk,
   mayStartOver,
@@ -1021,9 +1022,15 @@ function saveReport(): void {
 
 /** Everything the player has written, oldest first. */
 function openPath(): void {
+  const alone = session.players.length === 1;
   const written = pathOf(journal);
-  el.readerTitle.textContent =
-    written.length === 0
+
+  // The heading counted the turn holder's path while the body showed everyone's
+  // — "your path, 2 plans" over forty of somebody else's. At a shared table it
+  // says what the view is instead of claiming a number for one seat.
+  el.readerTitle.textContent = !alone
+    ? messageFor(language, 'app.pathEveryone')
+    : written.length === 0
       ? messageFor(language, 'app.path')
       : messageFor(language, 'app.pathCount', { count: written.length });
 
@@ -1033,7 +1040,6 @@ function openPath(): void {
   // sectioned list — "Player 1", "Player 2", … sliced to the number seated —
   // and a path that showed one of three would leave two people unable to read
   // what they had written on a device they share.
-  const alone = session.players.length === 1;
 
   const sections = pathSections(
     session.players.map((player) => ({
@@ -1079,6 +1085,17 @@ function openPath(): void {
       body.textContent = entry.text;
       nodes.push(heading, body);
     }
+
+    // One save per seat, named. The footer's single button cannot say whose
+    // path it is about, and at a shared table that is the whole question.
+    if (!alone) {
+      const save = document.createElement('button');
+      save.type = 'button';
+      save.className = 'quiet';
+      save.textContent = messageFor(language, 'app.pathExportSeat', { seat: section.seat });
+      save.addEventListener('click', () => exportPath(section.playerId));
+      nodes.push(save);
+    }
   }
 
   const note = document.createElement('p');
@@ -1089,7 +1106,9 @@ function openPath(): void {
   openReader('path', el.readerTitle.textContent ?? '', nodes);
   // Nothing written is nothing to save; the file input stays, because bringing
   // a path back is exactly what an empty journal is for.
-  el.pathExport.hidden = !mayExport(written);
+  // The footer's button is the one-seat case: with several, each section has
+  // its own, because a button that does not say whose saves the wrong one.
+  el.pathExport.hidden = !mayExportHere(written, alone);
 }
 
 /**
@@ -1100,21 +1119,34 @@ function openPath(): void {
  * the bot later. `URL.revokeObjectURL` because a page that never lets go of
  * its blobs holds a copy of everything the player has ever written.
  */
-function exportPath(): void {
+function exportPath(seatId = currentPlayer(session).id): void {
+  // Whose path is being saved. The button lives in a view that shows every seat
+  // at the table, and it used to save whoever held the turn — so a player could
+  // scroll to their own section, tap Save a copy, and carry away a file of
+  // somebody else's writing.
+  const theirs =
+    seatId === currentPlayer(session).id ? journal : loadJournalFor(localStorage, seatId);
+  const asked =
+    seatId === currentPlayer(session).id ? intention : loadIntention(localStorage, seatId);
+
   // The same question the button is drawn from. An empty file is not a
   // keepsake, and a download nobody asked for is worse than none.
-  if (!mayExport(pathOf(journal))) return;
+  if (!mayExport(pathOf(theirs))) return;
 
   // The question with the answers. A path used to leave as a year of writing
   // with the frame it was written inside missing, so a player who changed phone
   // arrived with everything they had said and nothing they had asked.
-  const document_ = toDocument(journal, intention);
+  const document_ = toDocument(theirs, asked);
   const blob = new Blob([JSON.stringify(document_, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
 
   const link = document.createElement('a');
   link.href = url;
-  link.download = fileName(new Date().toISOString().slice(0, 10));
+  // The seat in the name when there is more than one, so two files from one
+  // phone are not the same file twice.
+  const stamp = new Date().toISOString().slice(0, 10);
+  link.download =
+    session.players.length > 1 ? fileName(`${seatId}-${stamp}`) : fileName(stamp);
   link.click();
   URL.revokeObjectURL(url);
 
@@ -1141,7 +1173,15 @@ function exportPath(): void {
  * arriving today is the one true thing about it.
  */
 function openPaste(): void {
-  el.pasteTitle.textContent = messageFor(language, 'app.pasteAsk');
+  // Whose journal it will go into, said out loud. The footer's controls are
+  // visible in a view that shows every seat, and a square filed into somebody's
+  // path without their name on the box is the same silence that made "Save a
+  // copy" write the wrong file.
+  const seat = session.players.indexOf(currentPlayer(session)) + 1;
+  el.pasteTitle.textContent =
+    session.players.length > 1
+      ? `${messageFor(language, 'app.seatTurn', { seat })} · ${messageFor(language, 'app.pasteAsk')}`
+      : messageFor(language, 'app.pasteAsk');
   el.pasteHint.textContent = messageFor(language, 'app.pasteHint');
   el.pasteText.value = '';
   el.pasteTake.textContent = messageFor(language, 'app.pasteTake');
@@ -1223,7 +1263,7 @@ el.writerText.addEventListener('input', () => {
   showWriterHint();
 });
 el.path.addEventListener('click', openPath);
-el.pathExport.addEventListener('click', exportPath);
+el.pathExport.addEventListener('click', () => exportPath());
 el.pathPaste.addEventListener('click', openPaste);
 el.pasteTake.addEventListener('click', takeThePastedSquare);
 el.pathImport.addEventListener('change', () => {

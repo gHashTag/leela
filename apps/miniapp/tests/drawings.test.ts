@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 import { drawings, inlineDrawings, namesItsDecision } from '../../../scripts/lib/drawings.mjs';
+// @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
+import { unnamedReaders } from '../../../scripts/lib/whose.mjs';
 import { readFileSync } from 'node:fs';
 import {
   CLASSIC,
@@ -142,5 +144,61 @@ describe('what each named decision answers', () => {
   it('offers the die only where the throw would be taken', () => {
     expect(mayThrow(seated(initialState()), 'to see', false, false)).toBe('yes');
     expect(canRoll(seated(WON))).toBe(false);
+  });
+});
+
+describe('whose values a function reads', () => {
+  /**
+   * `state`, `journal` and `intention` belong to the seat holding the turn.
+   * They are right for the board, the die and the line underneath — that
+   * surface *is* that seat's — and wrong everywhere the app talks about
+   * somebody else, which it does more often than it looks.
+   *
+   * Three passes running that produced a defect: a share carrying three seats'
+   * values at once, a chip opening another player's private accounts, and
+   * "Save a copy" writing a file of whoever held the turn for somebody else to
+   * carry away. Each was harmless the day before by accident.
+   *
+   * `audit-whose.mjs` runs the same check in CI; this one fails in the package
+   * the change was made in.
+   */
+  const ALLOWED = new Set([
+    'takeSeat', 'draw', 'roll', 'openPlans', 'askIntention', 'saveTheIntention',
+    'startOver', 'showWriterHint', 'saveReport', 'openPath', 'exportPath',
+    'takeThePastedSquare', 'importPath',
+  ]);
+
+  it('is said out loud, or the function has a seat of its own', () => {
+    expect(unnamedReaders(SOURCE, ALLOWED).map((fn: { name: string }) => fn.name)).toEqual([]);
+  });
+
+  it('finds the readers at all, or the check is about nothing', () => {
+    const readers = unnamedReaders(SOURCE, new Set());
+    expect(readers.length).toBeGreaterThan(5);
+  });
+
+  it('is not fooled by the word appearing in prose', () => {
+    // Half the lines in this repository are prose about what went wrong, and
+    // `journal` is in a great many of them.
+    const commented = 'function x() {\n  // the journal is not read here\n  return 1;\n}';
+    const blocked = 'function y() {\n  /* intention, state, journal */\n  return 1;\n}';
+
+    expect(unnamedReaders(commented, new Set())).toEqual([]);
+    expect(unnamedReaders(blocked, new Set())).toEqual([]);
+  });
+
+  it('is not fooled by a property or a longer name', () => {
+    const property = 'function x() {\n  return { journal: 1, state: 2 };\n}';
+    const longer = 'function y() {\n  return loadJournalFor(localStorage, id);\n}';
+    const member = 'function z() {\n  return section.intention;\n}';
+
+    expect(unnamedReaders(property, new Set())).toEqual([]);
+    expect(unnamedReaders(longer, new Set())).toEqual([]);
+    expect(unnamedReaders(member, new Set())).toEqual([]);
+  });
+
+  it('catches a bare read', () => {
+    const bare = 'function x() {\n  return pathOf(journal);\n}';
+    expect(unnamedReaders(bare, new Set()).map((fn: { name: string }) => fn.name)).toEqual(['x']);
   });
 });

@@ -322,6 +322,10 @@ const EN = {
   'app.pathLocal':
     'These stay on this device. The bot keeps them for a table, and shares them there.',
   'app.pathExport': 'Save a copy',
+  // Named when there is more than one seat. A file is one player's path, and a
+  // button that does not say whose saves the wrong one silently.
+  'app.pathExportSeat': 'Save Player {seat}’s copy',
+  'app.pathEveryone': 'The paths at this table',
   'app.pathImport': 'Bring one back',
   'app.pathExported': 'Saved, and a readable copy is on the clipboard.',
   'app.pathImported': {
@@ -590,6 +594,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.pathLocal':
     'Они остаются на этом устройстве. Бот хранит их для стола и делится ими там.',
   'app.pathExport': 'Сохранить копию',
+  'app.pathExportSeat': 'Сохранить копию игрока {seat}',
+  'app.pathEveryone': 'Пути за этим столом',
   'app.pathImport': 'Вернуть из файла',
   'app.pathExported': 'Сохранено, а читаемая копия — в буфере обмена.',
   'app.pathImported': {
