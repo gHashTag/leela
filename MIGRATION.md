@@ -5113,6 +5113,22 @@ question comes first because every account is written inside it, so asking for
 the writing before the question is asking somebody to answer a question nobody
 put.
 
+**And the path can leave the phone.** It could not: a player who had answered
+there could not bring what they had written to a table, and the record the game
+exists to produce lived exactly one reinstall. The bot reads this format from a
+file and the mini app writes one — that the format has no dependencies at all is
+the whole reason it can be all three.
+
+`Share` is React Native's own, so nothing native came with it, and **the
+question goes out with the answers**. A file without one is a year of answers
+with the question missing, which is what the mini app's export was until it was
+given the same argument; absent rather than empty when there is none, because
+`""` says the player was asked and answered nothing.
+
+The test is the round trip through the format's own reader rather than the shape
+of a JSON object — a test that checked the fields would pass while
+`parseDocument` refused the file.
+
 Still to bring across from `leela`: RevenueCat, notifee and Sentry.
 
 **The published app cannot be rebuilt from its own source, and the reason is not

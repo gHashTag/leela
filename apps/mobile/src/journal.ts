@@ -19,9 +19,11 @@
 import {
   MAX_REPORTS,
   MAX_REPORT_CHARS,
+  fileName,
   isIntention,
   isReport,
   order,
+  toDocument,
   type Report,
 } from '@leela/journal';
 
@@ -268,4 +270,28 @@ export function saveIntention(store: Store | undefined, text: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * The path as something to carry away.
+ *
+ * A path that cannot leave the device is a path locked in one. The bot reads
+ * this format from a file, the mini app writes one, and the phone wrote a path
+ * with no way out at all — so a player who had answered on their phone could
+ * not bring it to a table, and the record the game exists to produce lived
+ * exactly one reinstall.
+ *
+ * **The question goes with it.** `toDocument` takes an intention and this
+ * passes it: a file without one is a year of answers with the question missing,
+ * which is what the mini app's export was until it was given the same argument.
+ * Absent rather than empty when there is none, because `""` says the player was
+ * asked and answered nothing.
+ */
+export function toShare(journal: Journal, intention: string) {
+  return toDocument(journal.entries, intention);
+}
+
+/** What to call it, from the format rather than beside it. */
+export function shareName(stamp: string): string {
+  return fileName(stamp);
 }

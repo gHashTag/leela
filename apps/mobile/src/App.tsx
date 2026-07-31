@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { BOARD_ROWS } from '@leela/engine';
 import { messageFor, planFor, resolveLanguage } from '@leela/content';
@@ -30,7 +30,9 @@ import {
   loadIntention,
   loadKept,
   saveIntention,
+  shareName,
   takeAccount,
+  toShare,
   writingsOn,
   type Journal,
   type Store,
@@ -243,6 +245,26 @@ export default function App() {
         >
           <Text style={styles.buttonText}>{messageFor(language, 'app.roll')}</Text>
         </Pressable>
+
+        {/*
+          Carrying the path away. `Share` is React Native's own, so no native
+          dependency comes with it, and what goes out is the format every other
+          surface reads — question included.
+        */}
+        {journal.entries.length > 0 ? (
+          <Pressable
+            style={styles.button}
+            onPress={() => {
+              const stamp = new Date().toISOString().slice(0, 10);
+              void Share.share({
+                title: shareName(stamp),
+                message: JSON.stringify(toShare(journal, intention), null, 2),
+              });
+            }}
+          >
+            <Text style={styles.buttonText}>{messageFor(language, 'app.share')}</Text>
+          </Pressable>
+        ) : null}
 
         {isOver(game) ? (
           <Pressable style={styles.button} onPress={() => setGame(newGame(startingSeed()))}>
