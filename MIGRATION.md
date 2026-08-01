@@ -5432,6 +5432,29 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**A debug build is not the published application (165th pass).** Installing
+`apps/mobile` on a simulator replaced the published app twice in one day — two
+apps with one identifier are one app to iOS, the install simply succeeds, and on
+a phone it would have taken somebody's game with it. `app.json` still holds the
+identity that ships, deliberately: this app is meant to succeed the published
+one. What changed is that a *debug* build is no longer that application.
+
+`app.config.ts` appends `.dev` to both identifiers and `(dev)` to the name when
+`APP_VARIANT=development`, which every script that builds for a simulator sets —
+and a test holds them to setting it, because one that forgets installs over the
+published app silently. A release sets nothing and gets `app.json`, which is the
+safe way round. Proved by doing it: the simulator held two identifiers before
+and three after, with `xyz.ghashtag.dharma` still there.
+
+`--clean` renamed the project to `LeelaChakradev.xcodeproj`, which the Detox
+config survived because it finds the scheme by extension rather than by name.
+
+**Tried and reverted:** a second Metro port. `RCT_METRO_PORT` does not reach a
+Debug build's runtime lookup, so the app still asked 8081 and got another
+project's bundle — which arrives as *unable to resolve module ./index* and reads
+exactly like this app being broken. Two debug React Native apps still cannot be
+served at once.
+
 **Two things the table could read that were nobody's business (164th pass).**
 `/save` called `ctx.replyWithDocument`, which always answers the chat the
 command came from — so at a table of six a player's whole journal went out as a
