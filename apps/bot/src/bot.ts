@@ -442,6 +442,36 @@ export function createBot({
 
   bot.command('help', async (ctx) => deliver(ctx, commands.help(languageOf(ctx)).replies));
 
+  /**
+   * Let go of what belonged to a game that is over.
+   *
+   * `/end` already cleared the companion's memory, under the right sentence —
+   * *a new game is a new conversation* — and left the other half standing. What
+   * a player is playing for is kept by user id, so ending a table and opening
+   * another carried the question across: `/intention` answered *you are playing
+   * to answer this* with a sentence written for a game that no longer exists,
+   * the gate before the first throw stayed open, and the companion of the new
+   * game was told the old question. A new game is a new question too.
+   *
+   * **Unless they are still sitting somewhere.** The question is kept per
+   * player rather than per table, so a player at two tables who ends one must
+   * keep what they wrote for the other. `roomOf` is what answers that, and it
+   * is optional — a store that does not offer it gets the older behaviour,
+   * which is to let go, and that is stated here rather than discovered.
+   *
+   * @param except A chat whose table is being replaced, so a room still stored
+   *   under it does not count as somewhere they are still playing.
+   */
+  async function letGoOfTheGame(room: Room | null, except?: string): Promise<void> {
+    for (const seat of room?.session.players ?? []) {
+      const elsewhere = await store.roomOf?.(seat.id);
+      if (elsewhere && elsewhere.chatId !== except) continue;
+
+      conversations.clear(seat.id);
+      await reports.setIntention?.(seat.id, '');
+    }
+  }
+
   bot.command('new', async (ctx) => {
     const chatId = chatIdOf(ctx);
     const who = sender(ctx);
@@ -459,6 +489,11 @@ export function createBot({
       await ctx.reply(messageFor(languageOf(ctx, existing), key));
       return;
     }
+
+    // A table replaced because its game is over is a table let go of, exactly
+    // as one cleared by /end. This route did neither: a player who won and
+    // opened another game kept both the old question and the old conversation.
+    if (existing) await letGoOfTheGame(existing, chatId);
 
     const language = ctx.from?.language_code;
     const result = commands.openRoom(chatId, who, seedFor(chatId, now()), { language });
@@ -489,14 +524,11 @@ export function createBot({
       return;
     }
 
-    // The conversation belongs to the game. `Conversations.clear` was written
-    // for this — *a new game is a new conversation* — and had no caller at all,
-    // so a player who ended a table and opened another was still being answered
-    // in the light of the one before it, and the map that held those exchanges
-    // never gave anything back.
-    for (const seat of ending.session.players) conversations.clear(seat.id);
-
     await store.delete(chatId);
+
+    // After the room is gone, so a seat that still answers `roomOf` is one at
+    // another table rather than at this one.
+    await letGoOfTheGame(ending);
     const cleared = await store.get(chatId);
     await ctx.reply(messageFor(languageOf(ctx, cleared), 'chat.cleared'));
   });

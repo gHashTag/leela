@@ -5251,6 +5251,30 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A new game asked the question of the one before it (193rd pass).** Played a
+game, ended it, opened another, and read what the second one said about itself.
+`/intention` answered *You are playing to answer this:* with the sentence
+written for a game that no longer existed, and the gate before the first throw
+— the one this bot was given because a whole game could be played without ever
+being asked — stayed open on that answer.
+
+`/end` had already been taught half of this. It clears the companion's memory,
+under the right sentence: *a new game is a new conversation.* What a player is
+playing for is kept the same way, by user id, and was left standing. So the
+companion of the new game would have been told the old question, and the player
+was never asked for a new one.
+
+**And the same discard by the other route did neither.** `/new` replaces a table
+whose game is over without `/end` being sent at all — a player who won and
+opened another game kept both the question and the conversation. One helper now
+serves both, because a table let go of is a table let go of.
+
+**The question is per player, not per table**, which is what makes clearing it
+the wrong default. A player at two tables who ends one must keep what they wrote
+for the other, so this asks `roomOf` first and only lets go when there is no
+table left. `roomOf` is optional on a store; one that does not offer it gets the
+older behaviour, and that is written down rather than discovered.
+
 **Anybody could clear a table somebody else was playing (192nd pass).** Played a
 group game of two and read every line, including the ones sent to the player who
 is not the host. `/end` asked nothing: not who sent it, not whether there was a

@@ -564,6 +564,103 @@ describe('a table that is already running', () => {
     })();
   });
 
+  it('does not carry the question of the game before it', async () => {
+    /**
+     * `/end` cleared the companion's memory under the right sentence — *a new
+     * game is a new conversation* — and left the other half standing. What a
+     * player is playing for is kept by user id, so ending a table and opening
+     * another carried the question across: `/intention` answered *you are
+     * playing to answer this* with a sentence written for a game that no longer
+     * exists, the gate before the first throw stayed open, and the companion of
+     * the new game would have been told the old question.
+     *
+     * Found by playing one game, ending it, and reading what the second one
+     * said about itself.
+     */
+    const reports = new MemoryReportSink();
+    const { bot, sent } = harness({ reports });
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+    await bot.handleUpdate(message('/intention to see what I keep avoiding', PRIVATE));
+
+    await bot.handleUpdate(message('/end', PRIVATE));
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+
+    sent.length = 0;
+    await bot.handleUpdate(message('/intention', PRIVATE));
+    expect(texts(sent).join(' '), 'the old question').not.toContain('what I keep avoiding');
+
+    sent.length = 0;
+    await bot.handleUpdate(message('/roll', PRIVATE));
+    expect(texts(sent).join(' '), 'and the gate is asked again').toContain(
+      messageFor('en', 'intention.ask'),
+    );
+  });
+
+  it('does not carry it when the table is replaced rather than ended', async () => {
+    // The same discard by the other route: `/new` replaces a table whose game
+    // is over without `/end` being sent at all, and cleared neither the
+    // question nor the conversation.
+    const reports = new MemoryReportSink();
+    const store = new MemoryRoomStore();
+    const { bot, sent } = harness({ reports, store });
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+    await bot.handleUpdate(message('/intention to see what I keep avoiding', PRIVATE));
+
+    // A finished game, which is what lets /new replace the table.
+    const room = await store.get(String(PRIVATE.id));
+    if (room) {
+      await store.save({
+        ...room,
+        session: {
+          ...room.session,
+          // A won game, in the engine's own terms: `hasWon` asks for the
+          // winning square, the flag, and a previous square that is neither
+          // zero nor the same one.
+          players: room.session.players.map((player) => ({
+            ...player,
+            state: { ...player.state, loka: 68, previous_loka: 60, is_finished: true },
+          })),
+        },
+      });
+    }
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    sent.length = 0;
+    await bot.handleUpdate(message('/intention', PRIVATE));
+
+    expect(texts(sent).join(' ')).not.toContain('what I keep avoiding');
+  });
+
+  it('keeps the question of a table the player is still sitting at', async () => {
+    /**
+     * The question is kept per player, not per table, so letting go of it on
+     * every /end would reach into a game that is still being played. A player
+     * at two tables who ends one keeps what they wrote for the other — the
+     * opposite mistake, and the reason this asks `roomOf` rather than clearing
+     * on sight.
+     */
+    const reports = new MemoryReportSink();
+    const store = new MemoryRoomStore();
+    const { bot, sent } = harness({ reports, store });
+
+    await bot.handleUpdate(message('/new', GROUP, 100));
+    await bot.handleUpdate(message('/start', GROUP, 100));
+    await bot.handleUpdate(message('/intention to see what I keep avoiding', GROUP, 100));
+
+    // A second table, in a private chat, ended straight away.
+    await bot.handleUpdate(message('/new', PRIVATE, 100));
+    await bot.handleUpdate(message('/end', PRIVATE, 100));
+
+    sent.length = 0;
+    await bot.handleUpdate(message('/intention', GROUP, 100));
+    expect(texts(sent).join(' ')).toContain('what I keep avoiding');
+  });
+
   it('is gone after /end', async () => {
     const store = new MemoryRoomStore();
     const { bot } = harness({ store });
