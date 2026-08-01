@@ -186,6 +186,7 @@ export {
   directionOf,
   dominantScript,
   scriptOf,
+  writtenIn,
 } from './languages';
 export type { Script } from './languages';
 

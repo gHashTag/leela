@@ -5251,6 +5251,44 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**The script check had never looked at the game (190th pass).** `audit-dataset`
+has asked *is this text written in the language it is filed under* since the
+English rules book was found to have a Russian chapter in it. It asks it of the
+rules book: six chapters a language, a manual a player may never open. It has
+never asked it of the seventy-two plans — the text the game puts on the screen
+on every throw — and the sentence it printed on a green run, *every rules
+chapter is written in the language it is filed under*, is true and reads like
+the dataset.
+
+Pointed at the plans, it finds ten titles the machine handed back untouched. A
+Japanese player standing on plan 12 is told they are on **Envy (irasya)**, in a
+list where every neighbour is Japanese; Chinese, Korean, Bengali and Tamil
+players on plan 40 read `Vyana-loka` where the same language renders every
+neighbouring loka in its own script with the Sanskrit in parentheses. The donor
+did it — `translate-leela/locales/ja/12-envy-ja.md` opens `# Plan 12. Envy
+(irasya)` above a Japanese page — and `leelaWeb3`'s copy is byte-identical, so
+there is no better source in the family to take instead.
+
+**Recorded, not repaired**, under the bar `lib/corrections.mjs` already states:
+a correction must be checkably wrong — arithmetic, not judgement — because nine
+times two hundred and eighty is two thousand five hundred and twenty in every
+language at once, and what a title should say in Tamil is not. The audit fails
+on an eleventh finding, and equally on a record that has stopped matching
+anything, which is how a record turns into a claim that keeps passing.
+
+**And the first instrument was wrong, again caught by measuring before
+claiming.** `couldBe` asks which script a text is *mostly* in — the right
+question for a chapter and the wrong one for a title. Every title carries the
+Sanskrit in parentheses, and eleven Latin letters outweigh four Han characters,
+so weighing them reported 121 untranslated Chinese titles of which 111 are
+translated. Presence is the question a title asks, and `writtenIn` asks it.
+
+**What it cannot see is printed on a green run.** Nine of the twenty-two
+languages are written in the Latin script, and an English title left in German
+has every letter a German title has. The audit says which count it read and
+which it could not, because *nothing found* and *nothing looked for* print the
+same sentence — the confusion this dataset has already been read through once.
+
 **A descent from Cosmic Consciousness that never happened (189th pass).** Read
 the other prompt — the one every report produces — for a real game, printing one
 example of each arrival sentence. The first report of **every game** said:

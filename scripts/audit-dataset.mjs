@@ -20,9 +20,10 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { LANGUAGES, couldBe, dominantScript, scriptOf } from '../packages/content/src/index.ts';
+import { LANGUAGES, couldBe, dominantScript, scriptOf, writtenIn } from '../packages/content/src/index.ts';
 import { TOTAL_PLANS } from '../packages/engine/src/index.ts';
 import { CORRECTIONS } from './lib/corrections.mjs';
+import { BLIND_TO, RECORDED, against, nameOf, untranslatedIn } from './lib/untranslated.mjs';
 import { checkCoverage, coverageOf } from './lib/coverage.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -135,6 +136,43 @@ for (const language of coverage.keys()) {
   }
 }
 
+// The plans, in the script of the language they are filed under. The check
+// below this one has run over the rules book since the day the English edition
+// was found to have a Russian chapter in it — six chapters a language, a manual
+// a player may never open — and never over the seventy-two squares the game
+// puts on the screen on every throw. Ten titles were sitting in it.
+const findings = [];
+let unseeable = 0;
+
+for (const language of coverage.keys()) {
+  if (scriptOf(language) === BLIND_TO) {
+    // An English title left in German has every letter a German title has.
+    unseeable += 1;
+    continue;
+  }
+
+  let plans;
+  try {
+    plans = read(join(DATA, `plans.${language}.json`));
+  } catch {
+    continue; // Already reported above.
+  }
+
+  findings.push(...untranslatedIn(plans, language, writtenIn));
+}
+
+const { fresh, rotted } = against(findings);
+
+for (const finding of fresh) {
+  problems.push(`${nameOf(finding)} — untranslated, and not recorded in lib/untranslated.mjs`);
+}
+
+for (const line of rotted) {
+  problems.push(
+    `recorded as untranslated and no longer there: "${line}" — the donor was fixed, or the text moved`,
+  );
+}
+
 // The rules book, which nothing had ever looked at. English shipped a seventh
 // chapter written in Russian — `game-logic.md`, filed among six numbered
 // English files in a donor repository and mapped straight through. A reader
@@ -162,7 +200,16 @@ for (const [language, chapters] of Object.entries(rules)) {
 }
 
 console.log(
-  `\nChecked ${coverage.size} languages against the ${LANGUAGES.length} declared, ${Object.values(rules).flat().length} rules chapters against their scripts, and ${CORRECTIONS.length} stated correction(s) against the data.\n`,
+  `\nChecked ${coverage.size} languages against the ${LANGUAGES.length} declared, ${Object.values(rules).flat().length} rules chapters against their scripts, and ${CORRECTIONS.length} stated correction(s) against the data.`,
+);
+
+// Said on a green run as well as a red one. A check that cannot see eleven of
+// the twenty-two languages must not be read as having passed them, and the
+// count of what it recorded is the thing that makes an eleventh loud.
+console.log(
+  `Read the plans of ${coverage.size - unseeable} languages for text left in the language it was translated from; ` +
+    `${unseeable} are written in the Latin script and cannot be checked this way. ` +
+    `${RECORDED.length} part(s) are recorded as untranslated.\n`,
 );
 
 if (problems.length === 0) {

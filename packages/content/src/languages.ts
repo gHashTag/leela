@@ -184,6 +184,32 @@ export function dominantScript(text: string): Script | null {
 }
 
 /**
+ * Whether a text is written in this language's script *at all*.
+ *
+ * `couldBe` asks which script a text is **mostly** in, which is the right
+ * question for a chapter and the wrong one for a title. Every title in this
+ * dataset carries the Sanskrit term in parentheses — `佛法计划 (Dharma-loka)` —
+ * and eleven Latin letters outweigh four Han characters, so weighing them said
+ * *this Chinese title is written in Latin* about a title that is translated.
+ * A hundred and twenty-one of them, against ten that are actually untranslated.
+ *
+ * Presence is the question a title asks: a translated one has some of the
+ * language in it, and one the machine handed back unchanged has none. Japanese
+ * may be written in kanji alone, as in `couldBe`.
+ *
+ * It says nothing about the nine languages written in the Latin script — an
+ * English title left in German has every letter German titles have. That blind
+ * spot is stated wherever this is used, because a check that cannot see nine of
+ * the twenty-two must not be read as having passed them.
+ */
+export function writtenIn(language: Language, text: string): boolean {
+  const script = scriptOf(language);
+  const has = (of: Script) => new RegExp(RANGES[of].source, 'u').test(text);
+
+  return has(script) || (script === 'kana' && has('han'));
+}
+
+/**
  * Whether a text could be this language.
  *
  * Not "is": a script is shared — German and Turkish are both Latin, Russian and

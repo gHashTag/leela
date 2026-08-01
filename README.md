@@ -150,6 +150,19 @@ on startup rather than one you find out about from a player — and it is
 deliberately not filled by machine translation, which is what put 744 rotted
 titles in this repository in the first place.
 
+Ten of those plans still carry the title the machine handed back untouched: a
+Japanese player on plan 12 stands on *Envy (irasya)* among Japanese neighbours,
+and Chinese, Korean, Bengali and Tamil players on plan 40 read *Vyana-loka*. The
+donors did it — `translate-leela` and `leelaWeb3` hold byte-identical copies —
+so `audit-dataset` records them rather than repairing them, under the bar
+`scripts/lib/corrections.mjs` states: a correction has to be checkably wrong,
+and what a title should say in Tamil is a judgement. The audit fails on an
+eleventh, and equally on a record that has stopped describing anything.
+
+It reads thirteen languages that way and says so: the nine written in the Latin
+script cannot be checked like this at all, because an English title left in
+German has every letter a German title has.
+
 Regenerate after changing a source repository:
 
 ```bash
@@ -188,7 +201,7 @@ cd packages/engine && bun test
 | Package | Tests | State |
 |---|---|---|
 | `@leela/engine` | 334 | rules, four variants, sessions, turn gating, seeded dice |
-| `@leela/content` | 282 | 22 languages of plans, 2 of the game's own voice |
+| `@leela/content` | 307 | 22 languages of plans, 2 of the game's own voice |
 | `@leela/journal` | 54 | the path as a file, and what came back — shared by the bot and the mini app |
 | `@leela/db` | 101 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 178 | the companion — prompts built from the plan text |
@@ -199,7 +212,7 @@ cd packages/engine && bun test
 | `@leela/mobile` | 277 | the board on a phone (Expo), moved by the engine and by nothing else |
 | everything else | — | not yet ported |
 
-2400 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+2425 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
