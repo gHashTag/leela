@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank as code } from '../../../scripts/lib/source.mjs';
 import { FALLBACK_LANGUAGE, LANGUAGES, directionOf, resolveLanguage } from '@leela/content';
 
 /**
@@ -35,8 +37,6 @@ const DEVICE = readFileSync(join(SRC, 'device.ts'), 'utf8');
  * `no-rules.test.ts` next door strips the stylesheet for the same reason — a
  * check that cries wolf on prose is one somebody deletes rather than obeys.
  */
-const code = (source: string) =>
-  source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
 
 describe('the reader is asked, not assumed', () => {
   it('never hands the resolver a literal', () => {

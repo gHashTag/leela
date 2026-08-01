@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { messageFor } from '@leela/content';
 import { currentPlayer } from '@leela/engine';
 import { openRoom, roll, start, type Room } from '../src/commands';
@@ -26,7 +28,7 @@ import { openRoom, roll, start, type Room } from '../src/commands';
  * nothing says is either dead text or a capability nobody wired up.
  */
 
-const BOT = readFileSync(resolve(__dirname, '../src/bot.ts'), 'utf8');
+const BOT = blank(readFileSync(resolve(__dirname, '../src/bot.ts'), 'utf8'));
 const NOW = 1_700_000_000_000;
 const HOST = { id: 'p1', name: 'Anna' };
 

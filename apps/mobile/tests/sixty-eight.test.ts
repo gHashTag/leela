@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import {
   CLASSIC,
   advance,
@@ -134,7 +136,7 @@ describe('the rule, over the source', () => {
    * file, because a comment cannot stop the next person writing `here` into a
    * `<Text>`.
    */
-  const app = readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8');
+  const app = blank(readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8'));
 
   it('asks the reader’s question before showing a plan', () => {
     expect(app).toContain('squareToRead(game)');

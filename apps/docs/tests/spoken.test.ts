@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank as code } from '../../../scripts/lib/source.mjs';
 import { LANGUAGES, messageFor, plansFor, rulesFor } from '@leela/content';
 import { TOTAL_PLANS } from '@leela/engine';
 import { chapterPage, indexPage, legalPage, planPage } from '../src/render';
@@ -35,10 +37,6 @@ const SRC = join(HERE, '..', 'src');
  * reader counts as the defect still being there. The lesson is two passes old
  * and was not applied here until the check accused its own explanation.
  */
-const code = (source: string) =>
-  source
-    .replace(/\/\*[\s\S]*?\*\//g, (block) => block.replace(/[^\n]/g, ' '))
-    .replace(/(^|[^:])(\/\/.*)$/gm, (_whole, before, line) => before + line.replace(/./g, ' '));
 
 /**
  * The generator, without the one page that is in no language.

@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank as code } from '../../../scripts/lib/source.mjs';
 import { LANGUAGES, messageFor, type MessageKey } from '@leela/content';
 
 /**
@@ -45,10 +47,6 @@ const APP = readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8');
  * of them quotes `void keepIntention(…)` as the thing that was wrong, and a
  * check reading the file plainly counts that quotation as a fifth write.
  */
-const code = (source: string) =>
-  source
-    .replace(/\/\*[\s\S]*?\*\//g, (block) => block.replace(/[^\n]/g, ' '))
-    .replace(/(^|[^:])(\/\/.*)$/gm, (_whole, before, line) => before + line.replace(/./g, ' '));
 
 describe('what the player is told about keeping comes from the device', () => {
   /**

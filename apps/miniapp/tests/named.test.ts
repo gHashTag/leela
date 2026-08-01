@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { LANGUAGES, messageFor, type MessageKey } from '@leela/content';
 import { applyChrome } from '../src/chrome';
 
@@ -27,9 +29,9 @@ import { applyChrome } from '../src/chrome';
  */
 
 const HERE = resolve(__dirname, '..');
-const HTML = readFileSync(resolve(HERE, 'index.html'), 'utf8');
+const HTML = blank(readFileSync(resolve(HERE, 'index.html'), 'utf8'));
 const SOURCES = ['chrome.ts', 'main.ts', 'view.ts'].map((file) =>
-  readFileSync(resolve(HERE, 'src', file), 'utf8'),
+  blank(readFileSync(resolve(HERE, 'src', file), 'utf8')),
 );
 
 /** An id as `main.ts` holds it: `path-export` is `el.pathExport`. */

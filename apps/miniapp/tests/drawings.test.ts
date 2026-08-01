@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 import { drawings, inlineDrawings, namesItsDecision } from '../../../scripts/lib/drawings.mjs';
 // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
@@ -39,7 +41,7 @@ import { canRoll, mayAsk, mayExport, mayShare, mayStartOver, mayThrow, mayWrite 
  */
 
 const MECHANICAL = new Set(['roll.disabled']);
-const SOURCE = readFileSync('src/main.ts', 'utf8');
+const SOURCE = blank(readFileSync('src/main.ts', 'utf8'));
 
 describe('every control the app draws', () => {
   it('names the decision behind it', () => {

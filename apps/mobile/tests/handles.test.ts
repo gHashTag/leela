@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { TOTAL_PLANS } from '@leela/engine';
 import { HANDLE, squareHandle } from '../src/handles';
 
@@ -25,7 +27,7 @@ import { HANDLE, squareHandle } from '../src/handles';
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const APP = readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8');
+const APP = blank(readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8'));
 
 describe('every control carries a name', () => {
   it('has one for each interactive element on the screen', () => {

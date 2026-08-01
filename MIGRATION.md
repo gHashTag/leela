@@ -5251,6 +5251,47 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Nine checks were one comment away from asserting nothing (182nd pass).** A
+dozen tests here read source rather than behaviour — every control carries a
+name, a decision is asked and not written twice, no sentence is spelled into a
+generator — and they found most of the defects of the last twenty passes. They
+are also where the mistakes have been: **four in one night, all of one shape.** A
+pattern that reads the file as text without knowing what text is.
+
+`commands\.roll\(([^;]*?)\)` stopped at the `)` in `now()` and read a
+four-argument call as three. `[^)]*` did the same over `asking.trim()`. A check
+found its writes in a comment-stripped copy and read their reasons out of the
+original, at indices drifted apart by every comment between. And a sweep that
+blanked `*` instead of the whole comment reported fifteen hard-coded English
+sentences, every one a quotation inside a comment explaining a string that had
+been removed. Twice the mistake accused code that was right; twice it would have
+let a defect through.
+
+`scripts/lib/source.mjs` holds the two operations they all need — `blank`, which
+takes comments out **character for character** so an index into the result is an
+index into the file, and `callsTo`, which reads a call by counting brackets. The
+same reason `whose.mjs` and `drawings.mjs` are there: a rule the checks share is
+a rule to write down once. Sixteen test files use it now; four had hand-rolled a
+blanker and **ten had none at all**.
+
+**Proven rather than argued.** With the real `startOver(game, startingSeed())`
+replaced by a comment mentioning it, `starting-over.test.ts` **passes** without
+blanking and **fails** with it. Nine checks were one comment away from asserting
+about prose — and this repository writes more prose in its sources than most
+write code.
+
+The rule is about **asserting** over source, not reading it: `assembled` and
+`partly-written` load `index.html` into happy-dom and *play* the app through it,
+where blanking would alter the thing under test. Named in the check with the
+reason, rather than left to a pattern to miss.
+
+**And two sweeps found nothing, recorded so the next pass does not repeat them.**
+Hard-coded English a reader could see, across all five surfaces: fifteen hits,
+every one legitimate — operator startup lines in the bot's terminal, two font
+names, and the model prompt, which is English by design and says so. And no
+check currently passes on a comment: every literal they require appears in real
+code as well.
+
 **The book spoke no language but English (181st pass).** `apps/docs` generates
 1,784 pages in twenty-two languages and said **no catalogue key at all** — the
 only surface in this repository that spoke none. A Russian reader met Russian

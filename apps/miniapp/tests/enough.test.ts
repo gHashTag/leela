@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { CLASSIC, LEGACY_MOBILE, RULESETS, countsAsReport, type RuleSet } from '@leela/engine';
 import { EMPTY, record } from '../src/reports';
 
@@ -19,7 +21,7 @@ import { EMPTY, record } from '../src/reports';
  * already drifted or will.
  */
 
-const MAIN = readFileSync(resolve(__dirname, '../src/main.ts'), 'utf8');
+const MAIN = blank(readFileSync(resolve(__dirname, '../src/main.ts'), 'utf8'));
 
 describe('what counts is the variant\'s answer', () => {
   /**

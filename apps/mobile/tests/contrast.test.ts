@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -78,7 +80,7 @@ describe('the stylesheet uses the palette and nothing else', () => {
    * check is over the source because a hex typed straight into a style is
    * exactly what this file exists to stop, and no runtime assertion can see it.
    */
-  const app = readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8');
+  const app = blank(readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8'));
   const styles = app.slice(app.indexOf('const styles = StyleSheet.create('));
 
   it('declares no colour in the stylesheet that the palette does not name', () => {

@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { order, revisited, writingsOn as writingsOnEntries } from '@leela/journal';
 import { EMPTY, pathOf, record, takeIn, toShare, writingsOn, type Journal } from '../src/journal';
 import { HANDLE } from '../src/handles';
@@ -27,7 +29,7 @@ import { HANDLE } from '../src/handles';
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const APP = readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8');
+const APP = blank(readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8'));
 
 /** A path written over a game: some squares once, some more than once. */
 function walked(visits: ReadonlyArray<[plan: number, at: number]>): Journal {

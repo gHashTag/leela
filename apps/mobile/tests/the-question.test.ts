@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { MAX_INTENTION_CHARS, MIN_INTENTION_CHARS } from '@leela/journal';
 import { askingFor, isIntention, mayChangeIntention } from '../src/journal';
 import { HANDLE } from '../src/handles';
@@ -27,7 +29,7 @@ import { HANDLE } from '../src/handles';
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const APP = readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8');
+const APP = blank(readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8'));
 
 describe('when the box is open', () => {
   it('opens for a player who has not answered', () => {

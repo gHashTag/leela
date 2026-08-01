@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { directionOf, LANGUAGES } from '@leela/content';
 import { MAX_INTENTION_CHARS, MAX_REPORT_CHARS } from '@leela/journal';
 import { PALETTE } from '../src/palette';
@@ -21,7 +23,7 @@ import { AA_TEXT, contrast } from '../../miniapp/src/contrast';
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const APP = readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8');
+const APP = blank(readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8'));
 
 /** One `<TextInput …>` opening tag, by the handle it carries. */
 function field(handle: string): string {

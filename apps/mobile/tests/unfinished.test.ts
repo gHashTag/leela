@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { MAX_REPORT_CHARS } from '@leela/journal';
 import {
   DRAFT_KEY,
@@ -32,7 +34,7 @@ import {
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const APP = readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8');
+const APP = blank(readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8'));
 
 /** A device, as a `Map`. Every test here hands in its own. */
 function device(held = new Map<string, string>()) {

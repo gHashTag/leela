@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { FALLBACK_LANGUAGE, messageFor, translatedLanguages } from '@leela/content';
 import { BOT_COMMANDS, menuFor } from '../src/commands';
 
@@ -24,7 +26,7 @@ import { BOT_COMMANDS, menuFor } from '../src/commands';
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const BOT = readFileSync(join(HERE, '..', 'src', 'bot.ts'), 'utf8');
+const BOT = blank(readFileSync(join(HERE, '..', 'src', 'bot.ts'), 'utf8'));
 
 /** What the bot answers, read from the handlers rather than from a list. */
 const answered = [...BOT.matchAll(/bot\.command\('([a-z]+)'/g)].map(([, name]) => name);

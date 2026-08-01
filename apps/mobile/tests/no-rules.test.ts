@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -55,12 +57,10 @@ const SRC = resolve(HERE, '..', 'src');
  * somebody will delete rather than obey.
  */
 function gameCodeIn(source: string): string {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, ' ')
-    .split('\n')
-    .map((line) => line.replace(/\/\/.*$/, ''))
-    .join('\n')
-    .replace(/StyleSheet\.create\(\{[\s\S]*?\n\}\);/g, ' ');
+  // `blank` is the shared one, written down once after four hand-rolled copies
+  // and three of them wrong. This one also took out `//` inside a URL, which
+  // the shared one guards against.
+  return blank(source).replace(/StyleSheet\.create\(\{[\s\S]*?\n\}\);/g, ' ');
 }
 
 function filesUnder(directory: string): string[] {

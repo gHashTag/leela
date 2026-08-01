@@ -196,15 +196,16 @@ cd packages/engine && bun test
 | `@leela/bot` | 542 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 160 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
 | `@leela/miniapp` | 411 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
-| `@leela/mobile` | 261 | the board on a phone (Expo), moved by the engine and by nothing else |
+| `@leela/mobile` | 278 | the board on a phone (Expo), moved by the engine and by nothing else |
 | everything else | — | not yet ported |
 
-2361 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+2378 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
 ```bash
 node scripts/audit-unread.mjs       # fields nobody reads, exports and class members nobody calls
+# scripts/lib/source.mjs           # blank a comment, read a call: shared by every check that reads source
 node scripts/audit-configs.mjs
 node scripts/audit-claims.mjs       # the table above, against the suites
 node scripts/audit-scripts.mjs      # every script runs under the runtime it names

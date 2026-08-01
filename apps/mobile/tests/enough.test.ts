@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { CLASSIC, LEGACY_MOBILE, RULESETS, countsAsReport, type RuleSet } from '@leela/engine';
 import { EMPTY, record, takeAccount, type Store } from '../src/journal';
 
@@ -23,7 +25,7 @@ import { EMPTY, record, takeAccount, type Store } from '../src/journal';
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const APP = readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8');
+const APP = blank(readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8'));
 
 const nowhere = (): Store => ({ getItem: () => null, setItem: () => undefined });
 

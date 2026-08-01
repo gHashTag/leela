@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { STYLE } from '../src/style';
 
 /**
@@ -29,7 +31,9 @@ const PHYSICAL =
 /** Every rule in a stylesheet, as `selector { body }`. */
 function rulesOf(css: string): { selector: string; body: string }[] {
   // Comments first: `/* ... right ... */` is prose, not a property.
-  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  // The shared blanker: it keeps the offsets and guards a `//` inside a URL,
+  // and it is the one this repository writes down once rather than five times.
+  const withoutComments = blank(css);
   return [...withoutComments.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((match) => ({
     selector: match[1].trim().replace(/\s+/g, ' '),
     body: match[2].trim(),
@@ -89,7 +93,7 @@ describe('the stylesheet does not assume which way the page reads', () => {
 describe('the mini app is held to the same rule', () => {
   // Read from disk rather than imported: it is a real stylesheet, and a copy
   // in a test would be the thing under test lying about itself.
-  const css = readFileSync(new URL('../../miniapp/src/style.css', import.meta.url), 'utf8');
+  const css = blank(readFileSync(new URL('../../miniapp/src/style.css', import.meta.url), 'utf8'));
 
   /**
    * One exception, with a reason.
