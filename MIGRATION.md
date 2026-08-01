@@ -5251,6 +5251,38 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Two arrows pointing away from where they led (196th pass).** The pager under
+every plan is `← 11 · Contents · 13 →`. It is a flex row, so in an Arabic or
+Urdu page the browser already puts the previous link on the right and the next
+on the left — and both arrows carried on pointing the way they point in English,
+each one away from the page it leads to. A hundred and forty-four pages, two
+languages, every plan.
+
+The mirror image and nothing else: the glyph swaps, the order does not. `→ 11`
+in a right-to-left page puts the arrow at the outside edge of the link, pointing
+right, which is the shape an English reader sees pointing left. The same family
+as the legal pages filed under `lang="ar"` over English text, and as the board
+mirrored into nonsense before `asLeftToRight` — knowing a language reads the
+other way is not the same as laying it out that way.
+
+**And a chapter three books have not got, which nothing on the site mentioned.**
+Arabic, Malay and Ukrainian came through a different donor with a different
+table of contents: none of the three has the chapter on the chakras, two have no
+`meaning` chapter, and all three carry an `online` and a `foreword` nobody else
+does. Malay and Ukrainian still have six chapters — **the same count as every
+other language** — so nothing that counts sees anything, and `audit-dataset`
+prints *133 rules chapters against their scripts* without asking whether they are
+the same chapters.
+
+The bot and the mini app already borrow the English chapter and mark it;
+`bookFor` is where that decision is written, and its comment says so. The site
+deliberately does not *file* English under `/ar/` — a page in the wrong language
+is one `audit-dataset` refuses and a reader cannot see coming — and that
+decision stands. What was missing is the other half: the contents page now names
+the chapter, links it to `/en/`, and carries the sentence written for exactly
+this, *in English — this chapter is missing from your book*. The reader's own
+chapters keep their places; the borrowed one is appended.
+
 **A page that became the next page halfway down (195th pass).** Built the docs
 site and read the Arabic page for plan 12 end to end. It opens on envy — the
 first snake, the bite that takes a player back to the first chakra — and then,

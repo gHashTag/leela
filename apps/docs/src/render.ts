@@ -299,9 +299,47 @@ export function languagePicker(
 }
 
 /** The contents page for one language. */
-export function indexPage(language: Language, plans: Plan[], rules: RuleChapter[]): string {
+export function indexPage(
+  language: Language,
+  plans: Plan[],
+  rules: RuleChapter[],
+  /**
+   * The English book, so a chapter this one has not got can still be reached.
+   *
+   * Optional because every other caller is a test about one language. Left out,
+   * the contents page is what it always was.
+   */
+  english: RuleChapter[] = [],
+): string {
   const ruleLinks = rules
     .map((chapter) => `<li><a href="rules/${chapter.slug}.html">${escape(chapter.title ?? chapter.slug)}</a></li>`)
+    .join('\n');
+
+  /**
+   * Chapters the reader's own book does not have, named and linked to English.
+   *
+   * Three books arrived through a different donor with a different table of
+   * contents: Arabic, Malay and Ukrainian have no chapter on the chakras, and
+   * two of them have no `meaning` either. On this site those chapters simply
+   * were not there — a shorter list, with nothing to say a chapter was missing
+   * from it, in the one place a reader goes to see what the book contains.
+   *
+   * The build's decision not to *file* English under `/ar/` stands and is
+   * right: a page in the wrong language is one `audit-dataset` refuses and a
+   * reader cannot see coming. This is the other half of it — the link goes to
+   * `/en/`, where the English text already lives and is correctly filed, and
+   * carries the sentence written for exactly this: *in English — this chapter
+   * is missing from your book.* `bookFor` marks it the same way for the bot and
+   * the mini app; only the site was silent.
+   */
+  const have = new Set(rules.map((chapter) => chapter.slug));
+  const borrowedLinks = english
+    .filter((chapter) => !have.has(chapter.slug))
+    .map(
+      (chapter) =>
+        `<li><a href="../en/rules/${chapter.slug}.html">${escape(chapter.title ?? chapter.slug)}</a>` +
+        ` <span class="quiet">${escape(messageFor(language, 'app.borrowed'))}</span></li>`,
+    )
     .join('\n');
 
   const planLinks = plans
@@ -325,7 +363,9 @@ export function indexPage(language: Language, plans: Plan[], rules: RuleChapter[
     subtitle: messageFor(language, 'app.book', { count: plans.length }),
     body: [
       rules.length
-        ? `<h2>${escape(messageFor(language, 'app.rules'))}</h2>\n<ul class="chapters">\n${ruleLinks}\n</ul>`
+        ? `<h2>${escape(messageFor(language, 'app.rules'))}</h2>\n<ul class="chapters">\n${ruleLinks}${
+            borrowedLinks ? `\n${borrowedLinks}` : ''
+          }\n</ul>`
         : '',
       `<h2>${escape(messageFor(language, 'app.plans'))}</h2>\n<ol class="plans">\n${planLinks}\n</ol>`,
       `<h2>${escape(messageFor(language, 'app.legal'))}</h2>\n<ul class="chapters">\n<li><a href="legal/policy.html">${escape(messageFor(language, 'app.policy'))}</a></li>\n<li><a href="legal/eula.html">${escape(messageFor(language, 'app.terms'))}</a></li>\n</ul>`,
@@ -351,10 +391,40 @@ export function descriptionIsRedundant(plan: Plan): boolean {
   return opening === description;
 }
 
+/**
+ * Which way an arrow points, in a book that is read both ways.
+ *
+ * `←` for *back* is a fact about left-to-right reading, not about books. The
+ * pager is a flex row, so in an Arabic or Urdu page the browser already puts
+ * the previous link on the right and the next on the left — and the two arrows
+ * carried on pointing the way they do in English, each one away from the page
+ * it leads to. A hundred and forty-four pages, two languages, every plan.
+ *
+ * The mirror image, and nothing else: the glyph swaps, the order does not.
+ * `→ 11` in a right-to-left page puts the arrow at the right edge of the link,
+ * pointing right — the same shape an English reader sees pointing left. The
+ * digits are a left-to-right run and the arrow is a neutral beside them, which
+ * takes the paragraph's direction, so it lands on the outside where it belongs.
+ *
+ * The same family as the legal pages filed under `lang="ar"` over English text,
+ * and as the board mirrored into nonsense before `asLeftToRight` was written:
+ * knowing a language reads the other way is not the same as laying it out that
+ * way.
+ */
+const BACK = { ltr: '←', rtl: '→' } as const;
+const ON = { ltr: '→', rtl: '←' } as const;
+
 /** One plan, with links to its neighbours so the book can be walked. */
 export function planPage(language: Language, plan: Plan, total: number): string {
-  const previous = plan.plan > 1 ? `<a rel="prev" href="${plan.plan - 1}.html">← ${plan.plan - 1}</a>` : '<span></span>';
-  const next = plan.plan < total ? `<a rel="next" href="${plan.plan + 1}.html">${plan.plan + 1} →</a>` : '<span></span>';
+  const reading = directionOf(language);
+  const previous =
+    plan.plan > 1
+      ? `<a rel="prev" href="${plan.plan - 1}.html">${BACK[reading]} ${plan.plan - 1}</a>`
+      : '<span></span>';
+  const next =
+    plan.plan < total
+      ? `<a rel="next" href="${plan.plan + 1}.html">${plan.plan + 1} ${ON[reading]}</a>`
+      : '<span></span>';
 
   return page({
     title: `${plan.plan}. ${plan.title}`,

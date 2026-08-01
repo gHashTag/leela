@@ -14,6 +14,7 @@ import {
   LANGUAGES,
   messageFor,
   plansFor,
+  FALLBACK_LANGUAGE,
   rulesFor,
   type Language,
   type MessageKey,
@@ -144,7 +145,11 @@ export function build(outDir: string): BuildResult {
     // difference is between falling back and filing wrongly.
     const rules = rulesFor(language);
 
-    write(`${language}/index.html`, indexPage(language, plans, rules));
+    // The English book goes in so the contents page can name a chapter this
+    // language has not got. It is linked to `/en/`, not written into this
+    // folder: filing English under `/ar/` is the thing the comment above
+    // refuses, and naming a missing chapter is not that.
+    write(`${language}/index.html`, indexPage(language, plans, rules, rulesFor(FALLBACK_LANGUAGE)));
 
     for (const plan of plans) {
       write(`${language}/plans/${plan.plan}.html`, planPage(language, plan, TOTAL_PLANS));

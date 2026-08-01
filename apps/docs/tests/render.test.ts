@@ -608,3 +608,133 @@ describe('summarising a page', () => {
     expect(summarise('Short enough.')).toBe('Short enough.');
   });
 });
+
+describe('an arrow points the way the reader walks', () => {
+  /**
+   * `←` for *back* is a fact about left-to-right reading, not about books. The
+   * pager is a flex row, so an Arabic or Urdu page already puts the previous
+   * link on the right and the next on the left — and both arrows carried on
+   * pointing the way they do in English, each one away from the page it leads
+   * to. A hundred and forty-four pages, two languages, every plan.
+   *
+   * Asserted over every language rather than over Arabic: the rule is that the
+   * glyph follows the direction, and a check naming the two right-to-left tags
+   * would pass a third being added and forgotten.
+   */
+  const backwards = { ltr: '←', rtl: '→' } as const;
+  const onwards = { ltr: '→', rtl: '←' } as const;
+
+  it.each(LANGUAGES.map((language) => [language] as const))('%s', (language) => {
+    const plans = plansFor(language);
+    const middle = plans.find((plan) => plan.plan === 40);
+    expect(middle, 'every language has all 72').toBeDefined();
+
+    const html = planPage(language, middle!, plans.length);
+    const reading = directionOf(language);
+
+    const prev = /<a rel="prev"[^>]*>([^<]*)<\/a>/.exec(html)?.[1] ?? '';
+    const next = /<a rel="next"[^>]*>([^<]*)<\/a>/.exec(html)?.[1] ?? '';
+
+    expect(prev, 'back').toContain(backwards[reading]);
+    expect(prev, 'and not the other one').not.toContain(onwards[reading]);
+    expect(next, 'on').toContain(onwards[reading]);
+    expect(next, 'and not the other one').not.toContain(backwards[reading]);
+  });
+
+  it('sends each arrow to the page it names, whichever way it points', () => {
+    // The glyph must not become the thing that decides where a link goes. This
+    // is the assertion that would fail if the swap had been done by swapping
+    // the two links instead of the two characters.
+    for (const language of ['en', 'ar'] as const) {
+      const plans = plansFor(language);
+      const html = planPage(language, plans[39]!, plans.length);
+
+      expect(html, language).toContain('<a rel="prev" href="39.html">');
+      expect(html, language).toContain('<a rel="next" href="41.html">');
+    }
+  });
+
+  it('gives the first plan no way back and the last no way on, both ways round', () => {
+    for (const language of ['en', 'ar'] as const) {
+      const plans = plansFor(language);
+      const first = planPage(language, plans[0]!, plans.length);
+      const last = planPage(language, plans[plans.length - 1]!, plans.length);
+
+      expect(first, language).not.toContain('rel="prev"');
+      expect(last, language).not.toContain('rel="next"');
+      // Still a pager, so the contents link keeps its place on the page.
+      expect(first).toContain('class="pager"');
+      expect(last).toContain('class="pager"');
+    }
+  });
+});
+
+describe('a chapter the reader\'s own book has not got', () => {
+  /**
+   * Three books came through a different donor with a different table of
+   * contents: Arabic, Malay and Ukrainian have no chapter on the chakras, and
+   * two of them have no `meaning` either. On this site those chapters were
+   * simply absent — a shorter list, in the one place a reader goes to see what
+   * the book contains, with nothing to say a chapter was missing from it.
+   *
+   * The bot and the mini app already borrow the English chapter and mark it;
+   * `bookFor` is where that decision is written. The site deliberately does not
+   * *file* English under `/ar/` — a page in the wrong language is one
+   * `audit-dataset` refuses — so it names the chapter and links to `/en/`.
+   */
+  const english = rulesFor('en');
+
+  it.each(LANGUAGES.map((language) => [language] as const))(
+    'every chapter of the book is reachable from %s',
+    (language) => {
+      const html = indexPage(language, plansFor(language), rulesFor(language), english);
+      const own = new Set(rulesFor(language).map((chapter) => chapter.slug));
+
+      for (const chapter of english) {
+        const href = own.has(chapter.slug)
+          ? `href="rules/${chapter.slug}.html"`
+          : `href="../en/rules/${chapter.slug}.html"`;
+        expect(html, `${language}/${chapter.slug}`).toContain(href);
+      }
+    },
+  );
+
+  it('marks the borrowed one and only the borrowed one', () => {
+    // Arabic has no chakras chapter and does have its own `notes`. The note is
+    // owed on the first and would be a lie on the second.
+    const html = indexPage('ar', plansFor('ar'), rulesFor('ar'), english);
+    const note = messageFor('ar', 'app.borrowed');
+
+    expect(html).toContain(`href="../en/rules/chakras.html"`);
+    expect((html.match(new RegExp(note.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) ?? []).length)
+      .toBe(english.filter((chapter) => !rulesFor('ar').some((own) => own.slug === chapter.slug)).length);
+  });
+
+  it('says nothing extra to a language whose book is whole', () => {
+    const html = indexPage('de', plansFor('de'), rulesFor('de'), english);
+
+    expect(html).not.toContain('../en/rules/');
+    expect(html).not.toContain(messageFor('de', 'app.borrowed'));
+  });
+
+  it('keeps the reader\'s own chapters first, and does not displace them', () => {
+    // A borrowed chapter appended, not merged in at the English position: the
+    // book a reader has is the book they are reading.
+    const html = indexPage('ar', plansFor('ar'), rulesFor('ar'), english);
+    const ownLast = html.lastIndexOf('href="rules/');
+    const borrowedFirst = html.indexOf('href="../en/rules/');
+
+    expect(ownLast).toBeGreaterThan(-1);
+    expect(borrowedFirst).toBeGreaterThan(ownLast);
+  });
+
+  it('still files no English text under another language', () => {
+    // The decision this is the other half of. The link leaves the folder; the
+    // English chapter is never written into it.
+    const html = indexPage('ar', plansFor('ar'), rulesFor('ar'), english);
+    const chakras = english.find((chapter) => chapter.slug === 'chakras');
+
+    expect(chakras?.body?.slice(0, 60) ?? '', 'the English text itself').not.toBe('');
+    expect(html).not.toContain(chakras!.body.slice(0, 60));
+  });
+});

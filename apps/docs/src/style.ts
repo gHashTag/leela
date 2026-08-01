@@ -114,6 +114,14 @@ ol.plans a:hover, ul.chapters a:hover { background: var(--surface); }
   text-align: end;
 }
 
+/* A chapter the reader's own book has not got, linked to the English one. The
+   note is quieter than the title it follows: it is a fact about the book, not
+   part of the chapter's name. */
+.quiet {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
 /* --- reading ------------------------------------------------------------- */
 
 main ol:not(.plans), main ul:not(.chapters) {
