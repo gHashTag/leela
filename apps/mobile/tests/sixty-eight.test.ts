@@ -11,9 +11,20 @@ import {
   isWaitingToEnter,
   owesReport,
   submitReport,
+  WIN_LOKA,
   type Session,
 } from '@leela/engine';
-import { newGame, owesAnAccount, squareToRead, standingOn, type Game } from '../src/game';
+import {
+  fileReport,
+  isOver,
+  mayThrow,
+  newGame,
+  owesAnAccount,
+  squareToRead,
+  standingOn,
+  throwDie,
+  type Game,
+} from '../src/game';
 
 /**
  * The two states that are both `is_finished`, and what this surface owes each.
@@ -147,5 +158,75 @@ describe('the rule, over the source', () => {
     for (const wrong of ['planFor(language, here)', 'writingsOn(journal, here)']) {
       expect(app, wrong).not.toContain(wrong);
     }
+  });
+});
+
+describe('the throw button on Cosmic Consciousness', () => {
+  /**
+   * The last act of a finished game was a crash.
+   *
+   * `mayThrow` asks the engine and the engine said `yes`: `canRoll` is asked
+   * about a *player*, and its winner branch is guarded by
+   * `mayReenterAfterWinning`, which `classic` sets true. With one seat, winning
+   * ends the session — so the button stayed lit, and pressing it called
+   * `advance`, which throws `SessionError` on a session nobody can move in.
+   * Inside an `onPress` that is an unhandled exception, on the one square the
+   * whole game is played to reach.
+   *
+   * Found by playing a game through this app's own functions until it ended and
+   * then asking both questions.
+   */
+  const played = () => {
+    let game = newGame(1_700_000_000_000);
+    const intention = 'to see what I keep avoiding';
+
+    for (let turn = 0; turn < 500 && !isOver(game); turn += 1) {
+      if (mayThrow(game, intention, 1_700_000_000_000) !== 'yes') {
+        if (!owesAnAccount(game)) break;
+        game = fileReport(game);
+        continue;
+      }
+      game = throwDie(game, intention).game;
+    }
+
+    return game;
+  };
+
+  it('is refused once the game is over', () => {
+    const game = played();
+
+    expect(isOver(game), 'the game was played to its end').toBe(true);
+    expect(standingOn(game)).toBe(WIN_LOKA);
+    expect(mayThrow(game, 'to see what I keep avoiding', 1_700_000_000_000)).toBe('finished');
+  });
+
+  it('does not throw when pressed anyway, because a drawing refuses nothing', () => {
+    // The second ask that `throwDie` has always done, now that the first one
+    // tells the truth. A dimmed button is a drawing; a double tap walks past it.
+    const game = played();
+
+    expect(() => throwDie(game, 'to see what I keep avoiding')).not.toThrow();
+    expect(throwDie(game, 'to see what I keep avoiding').roll).toBe(0);
+  });
+
+  it('still allows the throw that reaches it, so the game can be finished', () => {
+    // The other half: a check that refused a step earlier would make the
+    // winning square unreachable.
+    let game = newGame(1_700_000_000_000);
+    const intention = 'to see what I keep avoiding';
+    let throws = 0;
+
+    for (let turn = 0; turn < 500 && !isOver(game); turn += 1) {
+      if (mayThrow(game, intention, 1_700_000_000_000) !== 'yes') {
+        if (!owesAnAccount(game)) break;
+        game = fileReport(game);
+        continue;
+      }
+      game = throwDie(game, intention).game;
+      throws += 1;
+    }
+
+    expect(throws, 'throws taken before the end').toBeGreaterThan(5);
+    expect(isOver(game)).toBe(true);
   });
 });

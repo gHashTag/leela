@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CLASSIC,
   GameState,
+  RULESETS,
   LEGACY_MOBILE,
   NEUROLEELA,
   ONCHAIN,
@@ -9,6 +10,11 @@ import {
   ONLINE,
   RuleSet,
   WIN_LOKA,
+  advance,
+  submitReport,
+  canCurrentPlayerRoll,
+  createSession,
+  isSessionOver,
   applyRoll,
   arrivedByJump,
   canRoll,
@@ -558,5 +564,92 @@ describe('a reason the verdict never gave', () => {
       'finished',
       'report-required',
     ]);
+  });
+});
+
+describe('the check answers for the act it precedes', () => {
+  /**
+   * `advance` throws `SessionError` on a finished session, and
+   * `canCurrentPlayerRoll` said `allowed` for the same one. `canRoll` is asked
+   * about a *player*, and its winner branch is guarded by
+   * `mayReenterAfterWinning`, which `classic` sets true — so with one seat,
+   * where winning ends the session, the two disagreed.
+   *
+   * On the phone that was a lit throw button on Cosmic Consciousness and an
+   * exception inside the press handler: the last act of a finished game was a
+   * crash. Found by playing a game through that app's own functions until it
+   * ended, and then asking both questions.
+   */
+  const playToTheEnd = (rules: RuleSet) => {
+    let session = createSession('table', [{ id: 'one', name: 'One' }], rules);
+    // A clock the test moves, because two variants make a player wait a day
+    // between throws and a fixed `now` would end the game at the first one.
+    let clock = 1_700_000_000_000;
+    // A cycle of 1..6 in order never lands on 68 exactly; this is a die, not a
+    // pattern, and it is the same die on every run.
+    let seed = 12_345;
+    const die = () => {
+      seed = (seed * 1_103_515_245 + 12_345) % 2_147_483_648;
+      return (seed % 6) + 1;
+    };
+
+    for (let turn = 0; turn < 4000 && !isSessionOver(session); turn += 1) {
+      const verdict = canCurrentPlayerRoll(session, clock);
+
+      if (!verdict.allowed) {
+        if (verdict.reason === 'report-required') {
+          session = submitReport(session, 'one', clock);
+          continue;
+        }
+        if (verdict.reason === 'cooldown') {
+          clock = verdict.nextAllowedAt ?? clock + ONE_DAY_MS;
+          continue;
+        }
+        break;
+      }
+
+      session = advance(session, die(), clock).session;
+      clock += 1_000;
+    }
+
+    return session;
+  };
+
+  it.each(Object.values(RULESETS).map((rules) => [rules.id, rules] as const))(
+    '%s never says yes to a throw that would throw',
+    (_id, rules) => {
+      const session = playToTheEnd(rules);
+      expect(isSessionOver(session), 'the game reached its end').toBe(true);
+
+      const verdict = canCurrentPlayerRoll(session, 1_800_000_000_000);
+      expect(verdict.allowed).toBe(false);
+      expect(verdict.reason).toBe('finished');
+      expect(() => advance(session, 3, 1_800_000_000_000)).toThrow();
+    },
+  );
+
+  it('refuses whatever the variant says about beginning again', () => {
+    // The rule that made the two disagree. `mayReenterAfterWinning` is about a
+    // *player* and this is about a session nobody can move in, so a variant
+    // that allows it must still not be told yes here.
+    const permissive = Object.values(RULESETS).filter((rules) => rules.mayReenterAfterWinning);
+    expect(permissive.length, 'variants that allow it').toBeGreaterThan(0);
+
+    for (const rules of permissive) {
+      const session = playToTheEnd(rules);
+      expect(canCurrentPlayerRoll(session, 1_800_000_000_000).allowed, rules.id).toBe(false);
+    }
+  });
+
+  it('still lets a table run while anybody can move', () => {
+    // The other half: a session is not over because one seat has finished, and
+    // a check that refused there would end a game for everybody at the table.
+    const session = createSession('table', [
+      { id: 'one', name: 'One' },
+      { id: 'two', name: 'Two' },
+    ], CLASSIC);
+
+    expect(isSessionOver(session)).toBe(false);
+    expect(canCurrentPlayerRoll(session, 1_800_000_000_000).reason).not.toBe('finished');
   });
 });

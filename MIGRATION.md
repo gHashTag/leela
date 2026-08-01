@@ -5251,6 +5251,44 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**The last act of a finished game was a crash (198th pass).** Played a game
+through `apps/mobile`'s own functions until it ended, and then asked the two
+questions the screen asks. On Cosmic Consciousness `mayThrow` answered **yes**
+and `throwDie` threw `SessionError` — so the throw button stayed lit on the one
+square the whole game is played to reach, and pressing it raised an unhandled
+exception inside an `onPress`.
+
+The two came apart in the engine. `canRoll` is asked about a *player*, and its
+winner branch is guarded by `mayReenterAfterWinning`, which `classic` sets true.
+With one seat, winning ends the session — and `advance` refuses a session nobody
+can move in. So the check said one thing and the act did another about the same
+game.
+
+`canCurrentPlayerRoll` asks the session's own question first now. Whether a
+winner may begin again is still `canRoll`'s and still the ruleset's to answer;
+this is the prior one, and `advance` has always answered it the same way. Held
+by a test over **every** ruleset: play to the end, and the check must refuse
+what the act would refuse.
+
+**And the line under the board was a debug dump.** It read
+`${roll} · ${from} → ${to} · ${direction}` — the event's own fields with dots
+between them, and `arrow 🏹` in English under a Russian board. It is the only
+sentence that screen writes about the game, and a player reads it after every
+throw.
+
+The nine sentences it needed were already in the catalogue in both languages,
+written for exactly this, and the mini app had been saying them since it was
+written: *You threw 4. An arrow at 10 takes you to 23.* What was missing was a
+second caller. `describeMove` is in `@leela/content` now, beside the catalogue
+it is built from, so the two surfaces cannot drift into two wordings — the same
+reason `bookFrom` lives there.
+
+**Three of my own mistakes on the way, all caught by measuring.** A probe read
+`game.last` where the field is `game.event`; a hand-built "waiting to enter"
+state left out `is_finished` and the engine simply moved the piece off 68; and a
+test die that cycled 1..6 in order never lands on the winning square, so the
+game it played never ended.
+
 **The gate everyone quoted, and the condition nobody read (197th pass).** The
 contract is the one implementation that ever stated the report rule, and both
 `contracts/README.md` and `ONCHAIN`'s comment rest on it:

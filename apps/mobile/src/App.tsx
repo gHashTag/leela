@@ -22,7 +22,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { BOARD_ROWS, countsAsReport } from '@leela/engine';
-import { bookFor, messageFor, planFor, resolveLanguage,
+import { bookFor, describeMove, messageFor, planFor, resolveLanguage,
   directionOf,
 } from '@leela/content';
 import {
@@ -303,10 +303,22 @@ export default function App() {
 
   const refusal = mayThrow(game, intention);
 
+  /**
+   * What just happened, in a sentence.
+   *
+   * This was `${roll} · ${from} → ${to} · ${direction}` — the event's fields
+   * with dots between them, and `arrow 🏹` in English under a Russian board.
+   * The nine sentences it needed were already in the catalogue in both
+   * languages, and the mini app had been saying them since it was written:
+   * *You threw 4. An arrow at 10 takes you to 23.*
+   *
+   * `describeMove` is now in `@leela/content`, beside the catalogue it is built
+   * from, so the two surfaces cannot drift into two wordings.
+   */
   const line =
     said ??
     (game.event
-      ? `${game.event.roll} · ${game.event.from} → ${game.event.to} · ${game.event.direction}`
+      ? describeMove(language, game.event, (plan) => planFor(language, plan)?.title ?? String(plan))
       : messageFor(language, 'app.waiting'));
 
   /**

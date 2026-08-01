@@ -177,6 +177,11 @@ export function ruleChapter(locale: string, slug: string): RuleChapter | null {
   return rulesFor(locale).find((c) => c.slug === slug) ?? null;
 }
 
+// A move, in a sentence. Beside the catalogue it is built from, because two
+// surfaces need the same nine sentences and a tenth would be a tenth wording.
+export { describeMove } from './describe';
+export type { TitleOf } from './describe';
+
 // What a language is, beyond its texts: which way it reads, what it calls
 // itself, and how to keep a diagram from being reordered by a reader's script.
 export {

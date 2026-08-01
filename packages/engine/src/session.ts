@@ -104,6 +104,24 @@ export function currentPlayer(session: Session): SeatedPlayer {
 
 /** Whether the player holding the turn may roll, and why not when they may not. */
 export function canCurrentPlayerRoll(session: Session, now: number): TurnVerdict {
+  /**
+   * A session nobody can move in, asked before the seat is.
+   *
+   * `advance` throws `SessionError` on a finished session, and this said
+   * `allowed` for the same one: `canRoll` is asked about a *player*, and its
+   * winner branch is guarded by `mayReenterAfterWinning`, which `classic` sets
+   * true. So on the phone — one seat, so winning ends the session — the throw
+   * button stayed lit on Cosmic Consciousness and pressing it threw inside the
+   * handler. The last act of a finished game was a crash.
+   *
+   * The check has to answer for the act it precedes. Whether a winner may begin
+   * again is still `canRoll`'s question and still the ruleset's to answer; this
+   * is the prior one, and `advance` has always answered it the same way.
+   */
+  if (isSessionOver(session)) {
+    return { allowed: false, reason: 'finished', nextAllowedAt: null, waitMs: 0 };
+  }
+
   const player = currentPlayer(session);
   const context: TurnContext = {
     reportSubmitted: player.reportSubmitted,
