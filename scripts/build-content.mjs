@@ -21,6 +21,12 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { checkRegression, coverageOf } from './lib/coverage.mjs';
 import { corrected, unappliedIn } from './lib/corrections.mjs';
+import {
+  RECORDED as SPILLOVERS,
+  nameOf as spilloverName,
+  spilloversIn,
+  withoutSpillover,
+} from './lib/spillover.mjs';
 import { paragraphed } from './lib/paragraphs.mjs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -555,6 +561,7 @@ mkdirSync(OUT, { recursive: true });
 
 const coverage = {};
 const applied = [];
+const spilledOver = [];
 for (const [lang, plans] of Object.entries(byLang)) {
   const seen = new Map(plans.map((p) => [p.plan, p]));
   const complete = [];
@@ -572,6 +579,18 @@ for (const [lang, plans] of Object.entries(byLang)) {
     else gaps.push(n);
   }
   if (gaps.length) warnings.push(`${lang}: ${gaps.length} plans missing (${gaps.slice(0, 8).join(', ')}${gaps.length > 8 ? '…' : ''})`);
+
+  // A page that becomes the next page halfway down. The donor edition Arabic,
+  // Malay and Ukrainian are translated from runs plan 12 into plan 13, so a
+  // player standing on Envy read the whole of Nullity. Cut here, where the plan
+  // after it is known, and only where the run is that plan's own opening word
+  // for word — the words stay on the page they belong to.
+  for (const finding of spilloversIn(complete, lang)) {
+    spilledOver.push(spilloverName(finding));
+    const here = complete[finding.plan - 1];
+    const next = complete[finding.plan];
+    if (here && next) here.body = withoutSpillover(here.body, next.body);
+  }
 
   writeFileSync(join(OUT, `plans.${lang}.json`), `${JSON.stringify(complete, null, 2)}\n`);
   coverage[lang] = {
@@ -626,6 +645,21 @@ if (warnings.length) {
 // no longer there. Either the donor was fixed upstream and the entry should go,
 // or it moved and the correction is now pointing at nothing — and the second one
 // looks exactly like the first if the build stays quiet about it.
+// The same rule the corrections get: a repair that has silently stopped
+// matching is a repair that has been undone, and it must not go quiet.
+if (spilledOver.length > 0) {
+  console.log(`\nCut ${spilledOver.length} run(s) of one plan out of the one before it:`);
+  for (const line of spilledOver) console.log(`  - ${line}`);
+}
+
+const missedSpillovers = SPILLOVERS.filter((line) => !spilledOver.includes(line));
+if (missedSpillovers.length > 0) {
+  console.log(`\n${missedSpillovers.length} recorded spillover(s) matched nothing:`);
+  for (const line of missedSpillovers) console.log(`  - ${line}`);
+  console.log('\nThe donor was fixed, or the text moved. Both need the entry looked at.');
+  process.exitCode = 1;
+}
+
 const unapplied = unappliedIn(applied);
 if (unapplied.length > 0) {
   console.log(`\n${unapplied.length} correction(s) matched nothing:`);

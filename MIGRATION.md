@@ -5251,6 +5251,44 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A page that became the next page halfway down (195th pass).** Built the docs
+site and read the Arabic page for plan 12 end to end. It opens on envy — the
+first snake, the bite that takes a player back to the first chakra — and then,
+without a break, becomes **antariksha**, which is plan 13. A player standing on
+Envy was reading the whole of Nullity, and the same is true in Malay and
+Ukrainian.
+
+One donor is where all three come from.
+`leela/src/locales/en/translation.json` has `plan_12.content` at 3,070
+characters: 1,408 of envy, then 1,662 that are the opening of
+`plan_13.content`. Those three are the languages translated from that edition.
+
+**Two wrong instruments before the right one, both caught by measuring.** The
+first asked which plans are more than twice the length of their English — these
+are 1.5× and it reported nothing. The second asked whether a plan *ends with*
+the opening of the next: true of the English donor and false of every
+translation, because the two copies were translated independently, so they agree
+for a few hundred characters and then drift, and plan 12 holds a copy that stops
+in the middle of plan 13. The question the data actually answers is whether a
+plan **contains** the opening of the next one, and where.
+
+**Repaired, where the untranslated titles were recorded**, and the difference is
+the bar `lib/corrections.mjs` states: the donor must be checkably wrong, so that
+correcting it overrules no translator. The cut starts at a run of 548 to 725
+characters that is word for word, in that same language, the opening of plan 13.
+What follows the run opens with plan 13's own name — `البطلان`, `Pembatalan`,
+`Нікчема` — and shares runs of 251 to 321 characters with it. Every part of what
+is cut is plan 13's, and it stays on plan 13. Plan 12 now ends where the English
+donor's envy ends: *this envy is a negative reaction, which draws his energy
+back down to the first chakra.*
+
+Applied by the generator, so a rebuild reproduces it, and loud when it stops
+matching — the rule the corrections already had. The check runs over all
+twenty-two languages and all seventy-one neighbouring pairs, not over the three.
+
+**`apps/site` is an empty directory** and has been since it was created. There
+is nothing in it to audit; the site that exists is `apps/docs`.
+
 **Two answers the player could never be shown (194th pass).** Handed the
 companion a stub model and read what the transport was asked to send.
 
