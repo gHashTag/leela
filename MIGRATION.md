@@ -5432,6 +5432,33 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**The companion was told a player stands where somebody sent them (168th
+pass).** The mini app hands a square over through Telegram; the bot files it and
+asks the companion about it. The player is **not** on that square — they may be
+on plan 6, or waiting to enter at all — and `systemPrompt` said *The player is
+on plan N* for every path alike. The sixth time a sentence has named the wrong
+thing here because it was the one already written, and the first inside what a
+model is told.
+
+`PlanContext.arrival` carries it. A received square says it was handed over and
+that the player is not standing there, and stops describing an arrival that
+never happened: a snake brought nobody to a square they have never been on, and
+68 is an ending only for whoever reached it.
+
+Two things fell out, both worth more than the fix. **`contextOf` copies
+`AskOptions` field by field** — a restated list, and it bit immediately:
+`arrival` was declared on both types and left out of the copy, so the fix would
+have been dead code. The test now reads the options back out of the prompt the
+model is handed, because a field that reaches the context and is never rendered
+is the same silence one field on. And **removing `arrival: 'received'` left all
+532 of the bot's other tests green** — the fact travels in the transport, the
+same hole that let `/plan 2 2` live. There is a `handleUpdate` case now, driving
+the hand-over as Telegram delivers it, since `/take` in a chat files the same
+square and never calls the companion.
+
+`audit-reachable` caught the change within the hour: branching on
+`!== 'received'` left `standing` declared and never said.
+
 **Three fields that told the keyboard nothing about themselves (167th
 pass).** Every `TextInput` in the phone declared `multiline` and a placeholder
 and nothing else, so iOS guessed — the same way for a paragraph of reflection
