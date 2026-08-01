@@ -316,6 +316,39 @@ export function join(room: Room, player: { id: string; name: string }): CommandR
   };
 }
 
+/**
+ * Whether this player may clear the table.
+ *
+ * `/end` asked nothing. Not who sent it, not whether there was a table: it
+ * deleted the room and replied *The table is cleared* to anybody who typed the
+ * word. In a group that is everyone who can write in the chat — a lurker who
+ * never took a seat wipes six players' hour, the board, whose turn it was, and
+ * the companion's memory of every exchange, in one word.
+ *
+ * The same file already decided this question once, one command up: seat zero
+ * opened the table and only they may `/start` it, because starting closes the
+ * table on everybody else. `/new` decided it a second time — it refuses to
+ * throw away a session that is not over. Ending it was the door left open
+ * beside two locked ones.
+ *
+ * **A table with play in it belongs to the people sitting at it**, so any of
+ * them may end it and nobody else may. Before it starts and after it is over
+ * there is nothing to lose, and anybody may clear it — which is also what keeps
+ * a group from being stuck with a table nobody can open past: `/new` will not
+ * replace a running session, so if `/end` needed a seat in every case, a table
+ * whose players had all left would hold the chat for good.
+ *
+ * The residue is honest and small: a *running* table abandoned by everyone
+ * seated stays until one of them comes back. That is the trade for not letting
+ * a stranger end a game in progress.
+ */
+export function mayEnd(room: Room | null, byPlayerId: string): boolean {
+  if (!room) return false;
+  if (!room.started || isSessionOver(room.session)) return true;
+
+  return room.session.players.some((player) => player.id === byPlayerId);
+}
+
 /** `/start` — close the table and begin. Only the host may. */
 export function start(room: Room, byPlayerId: string): CommandResult {
   if (room.started) {

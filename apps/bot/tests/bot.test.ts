@@ -492,6 +492,78 @@ describe('a table that is already running', () => {
     expect(texts(sent).join(' ')).toContain('/end');
   });
 
+  it('is not cleared by somebody who is not sitting at it', async () => {
+    /**
+     * `/end` asked nothing: not who sent it, not whether there was a table. In
+     * a group that is everybody who can write in the chat, so a lurker who
+     * never took a seat could wipe six players' hour — the board, whose turn it
+     * was, and the companion's memory of every exchange — in one word.
+     *
+     * The same file had already decided this question twice: `/start` is
+     * host-only because starting closes the table on everybody else, and `/new`
+     * refuses to discard a session that is not over. Ending it was the door
+     * left open beside two locked ones.
+     */
+    const store = new MemoryRoomStore();
+    const { bot, sent } = harness({ store });
+
+    await bot.handleUpdate(message('/new', GROUP, 100));
+    await bot.handleUpdate(message('/join', GROUP, 200));
+    await bot.handleUpdate(message('/start', GROUP, 100));
+
+    sent.length = 0;
+    // 900 has never sent anything to this table.
+    await bot.handleUpdate(message('/end', GROUP, 900));
+
+    expect(await store.get(String(GROUP.id)), 'the table survives').not.toBeNull();
+    expect(texts(sent).join(' ')).toContain('Only somebody sitting at it may clear it');
+  });
+
+  it('is cleared by any of the people playing it, not only the host', async () => {
+    // The other half of the rule. A game belongs to the table, not to seat
+    // zero — requiring the host would leave five players unable to stop.
+    const store = new MemoryRoomStore();
+    const { bot } = harness({ store });
+
+    await bot.handleUpdate(message('/new', GROUP, 100));
+    await bot.handleUpdate(message('/join', GROUP, 200));
+    await bot.handleUpdate(message('/start', GROUP, 100));
+    await bot.handleUpdate(message('/end', GROUP, 200));
+
+    expect(await store.get(String(GROUP.id))).toBeNull();
+  });
+
+  it('is cleared by anybody while there is nothing at stake in it', async () => {
+    /**
+     * Before it starts and after it is over there is nothing to lose, and
+     * `/new` will not replace a session that is not over — so if `/end` needed
+     * a seat in every case, a table nobody had started would hold the chat for
+     * good. The rule is about play being under way, not about a table existing.
+     */
+    const store = new MemoryRoomStore();
+    const { bot } = harness({ store });
+
+    await bot.handleUpdate(message('/new', GROUP, 100));
+    await bot.handleUpdate(message('/end', GROUP, 900));
+
+    expect(await store.get(String(GROUP.id)), 'an unstarted table').toBeNull();
+  });
+
+  it('says there is no table rather than reporting that it cleared one', () => {
+    // An absence answered as if it were an act — the shape this repository
+    // keeps meeting. `/end` in a chat that never had a table replied *the table
+    // is cleared*, which is a sentence about something that did not happen.
+    const { bot, sent } = harness();
+
+    return (async () => {
+      await bot.handleUpdate(message('/end', PRIVATE));
+
+      const said = texts(sent).join(' ');
+      expect(said, 'no table').toContain('No table here yet');
+      expect(said).not.toContain('The table is cleared');
+    })();
+  });
+
   it('is gone after /end', async () => {
     const store = new MemoryRoomStore();
     const { bot } = harness({ store });

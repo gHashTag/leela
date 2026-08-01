@@ -225,6 +225,13 @@ const EN = {
   'chat.running': 'A game is already running here. Finish it, or send /end.',
   'chat.tableOpen': 'A table is already open here. /join to sit, /start to begin, /end to clear it.',
   'chat.cleared': 'The table is cleared.',
+  /**
+   * `/end` used to answer this to anybody who typed it, in a group as well as
+   * in a private chat, and to answer it whether or not there was a table. Two
+   * sentences replace one: a game in progress belongs to the people sitting at
+   * it, and clearing nothing is not clearing something.
+   */
+  'chat.endNotYours': 'This table is being played. Only somebody sitting at it may clear it.',
   'chat.noTableShort': 'No table here yet. /new opens one.',
   'chat.noTableHelp': 'No table here yet. /new opens one, /help explains the rest.',
   'chat.unknown': 'I do not know that one. /help lists what I answer to.',
@@ -643,6 +650,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'chat.running': 'Здесь уже идёт игра. Закончите её или отправьте /end.',
   'chat.tableOpen': 'Здесь уже открыт стол. /join — сесть, /start — начать, /end — убрать стол.',
   'chat.cleared': 'Стол убран.',
+  'chat.endNotYours': 'За этим столом идёт игра. Убрать его может только тот, кто за ним сидит.',
   'chat.noTableShort': 'Здесь ещё нет стола. /new открывает.',
   'chat.noTableHelp': 'Здесь ещё нет стола. /new открывает, /help объясняет остальное.',
   'chat.unknown': 'Я такого не знаю. /help перечисляет, на что я отвечаю.',

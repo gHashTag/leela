@@ -468,15 +468,33 @@ export function createBot({
 
   bot.command('end', async (ctx) => {
     const chatId = chatIdOf(ctx);
-    if (!chatId) return;
+    const who = sender(ctx);
+    if (!chatId || !who) return;
+
+    const ending = await store.get(chatId);
+
+    // Clearing nothing is not clearing something. The old reply said *the table
+    // is cleared* to a chat that had never had one, which is the shape this
+    // repository keeps meeting: an absence answered as if it were an act.
+    if (!ending) {
+      await ctx.reply(messageFor(languageOf(ctx), 'chat.noTable'));
+      return;
+    }
+
+    // A game in progress belongs to the people sitting at it. See `mayEnd`:
+    // this command asked nothing at all, while `/start` beside it is host-only
+    // and `/new` refuses to discard a running session.
+    if (!commands.mayEnd(ending, who.id)) {
+      await ctx.reply(messageFor(languageOf(ctx, ending), 'chat.endNotYours'));
+      return;
+    }
 
     // The conversation belongs to the game. `Conversations.clear` was written
     // for this — *a new game is a new conversation* — and had no caller at all,
     // so a player who ended a table and opened another was still being answered
     // in the light of the one before it, and the map that held those exchanges
     // never gave anything back.
-    const ending = await store.get(chatId);
-    for (const seat of ending?.session.players ?? []) conversations.clear(seat.id);
+    for (const seat of ending.session.players) conversations.clear(seat.id);
 
     await store.delete(chatId);
     const cleared = await store.get(chatId);

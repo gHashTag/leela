@@ -5251,6 +5251,36 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Anybody could clear a table somebody else was playing (192nd pass).** Played a
+group game of two and read every line, including the ones sent to the player who
+is not the host. `/end` asked nothing: not who sent it, not whether there was a
+table. It deleted the room and replied *The table is cleared* to whoever typed
+the word.
+
+In a group that is everybody who can write in the chat. A lurker who never took
+a seat wipes the board, whose turn it was, every player's position, and the
+companion's memory of every exchange — in one word, with no confirmation and
+nothing kept. The written accounts survive, because those are filed per player;
+the game does not.
+
+**The same file had already decided this twice.** `/start` is host-only, and
+says so — *only whoever opened the table may start it* — because starting closes
+the table on everybody else. `/new` refuses to discard a session that is not
+over. Ending it was the door left open beside two locked ones.
+
+A game in progress belongs to the people sitting at it, so any of them may end
+it and nobody else may. Not host-only: five players should not need seat zero's
+permission to stop. Before it starts and after it is over there is nothing to
+lose and anybody may clear it — which is also what keeps a group from being
+stuck, since `/new` will not replace a running session. The residue is stated
+rather than hidden: a *running* table everybody seated has abandoned stays until
+one of them comes back.
+
+**And clearing nothing was reported as clearing something.** `/end` in a chat
+that never had a table replied *the table is cleared* — a sentence about
+something that did not happen, the shape this repository keeps meeting. It says
+there is no table now.
+
 **A title is two parts, and the check read one string (191st pass).** Played a
 game as a Japanese player and read every line the bot sent. Plan 62 came back
 as **`62. Happiness (スカ)`** — the Sanskrit rendered into katakana beside an
