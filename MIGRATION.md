@@ -5432,6 +5432,36 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**The phone kept a year of writing and lost the board (162nd pass).**
+`apps/mobile` restored the journal and the intention at startup and made a
+*fresh* game with a random seed. Somebody who had climbed to plan 41 came back
+to the waiting square needing a six to begin, with their own accounts intact
+underneath, about squares they were no longer on. This repository has met that
+shape five times from the other side — a report written, stored and never read
+back; this is the first time it was the board.
+
+`game.ts` already promised otherwise: *the die is `(seed, rollsTaken)`, so a
+game replays exactly from two numbers a player can carry away.* Both were
+computed and thrown away. `src/game-store.ts` keeps them and the session beside
+them — whether an account is still owed is a fact about the player, not about
+the numbers that got them there. The half that is easy to get wrong is turning
+the die `rollsTaken` times on the way back: without it the next throw is the
+game's *first* throw again, so a player sees their opening roll on every
+relaunch. `deviceKeeper` takes a key now; it had `REPORTS_KEY` inside its two
+methods, and two things kept in one slot overwrite each other silently.
+
+**And `Podfile.lock` is now read as the lockfile, not just described as one.**
+`scripts/lib/podlock.mjs` + `scripts/audit-podlock.mjs` recover the versions a
+React Native app was actually built with. The pod name is not the package name
+and the mapping is not guessable — `@react-native-async-storage/async-storage`
+ships `RNCAsyncStorage` — so it is read from each package's own podspec filename
+rather than from a list. Run against the rebuilt app it caught a package pinned
+wrongly by hand: `react-native-spinkit` at 1.4.1 where the lock records 1.0.2.
+It says out loud when the lock has never heard of a podspec, and claims no pin
+for a package the lock never saw — a pure-JavaScript dependency has no
+recoverable version, and inventing one would be the check writing a lockfile of
+its own.
+
 **The published app rebuilt in three steps instead of eighteen (161st pass).**
 The `/tmp` copy did not survive a restart, and the app was gone from the
 simulator for a second reason: `apps/mobile` carries the same bundle
