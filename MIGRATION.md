@@ -5432,6 +5432,28 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**Two hundred and sixteen pages with nowhere to rest the eye (169th pass).**
+Every reader here splits a plan on blank lines — the book, the mini app's
+`paragraphs()`, the bot's pager. Three languages had no blank line anywhere, so
+all 72 plans in each rendered as one unbroken block: Arabic, Malay and
+Ukrainian.
+
+The translations are fine. `leela/src/locales/<lang>` separates paragraphs with
+a single newline and the markdown donors use a blank line; the generator passed
+both through, and only one is what anything splits on. Measured before it was
+believed, because getting it wrong shatters sentences: Malay plan 30 is four
+lines of 583, 356, 1165 and 188 characters — paragraphs, not the ~80-character
+lines a soft wrap makes.
+
+The rule reads the text, not the filename: a body with no blank line and at
+least one newline has its break there; a body that already has blank lines is
+left alone, including one that mixes the two. Keyed on the donor's name it would
+be a fact about a path, and the next source in this shape would ship the same
+way with nothing to notice. In the generator, never in `packages/content/data`.
+
+Nothing could have caught it: every check in `audit-dataset` asked whether a
+plan has *text*, and a wall of text is text. It asks about *paragraphs* now.
+
 **The companion was told a player stands where somebody sent them (168th
 pass).** The mini app hands a square over through Telegram; the bot files it and
 asks the companion about it. The player is **not** on that square — they may be
