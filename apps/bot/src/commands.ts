@@ -599,12 +599,41 @@ export function report(
 }
 
 /** `/plan [n]` — read a plan; defaults to the one the asker stands on. */
+/**
+ * The square a player is standing on, or null while they are standing nowhere.
+ *
+ * `state.loka` is **68** for somebody who has never thrown a six — the engine
+ * parks them there and `hasWon` is what tells the two apart. So `/plan` with no
+ * argument answered a brand-new player with the text of Cosmic Consciousness,
+ * the square the whole game is played to reach, and a progress bar showing them
+ * at the end of it.
+ *
+ * The eighth sighting of the 68 ambiguity, and the second on this surface: the
+ * bot's standings printed the raw square once too. Exported because the
+ * transport asks the same question — a decision written out twice is a decision
+ * that will differ, which is how `/plan` came to have this and `describeStandings`
+ * came to have it separately.
+ */
+export function standingSquare(room: Room, byPlayerId: string): number | null {
+  const seated = room.session.players.find((p) => p.id === byPlayerId);
+  if (!seated || isWaitingToEnter(seated.state)) return null;
+  return seated.state.loka;
+}
+
 export function plan(room: Room, byPlayerId: string, requested?: number): CommandResult {
   const seated = room.session.players.find((p) => p.id === byPlayerId);
-  const number = requested ?? seated?.state.loka;
+  const number = requested ?? standingSquare(room, byPlayerId) ?? undefined;
 
   if (number === undefined) {
-    return { room, replies: [say(messageFor(room.language, 'plan.which'), false)] };
+    // Two different absences, and they were one message. Somebody with no seat
+    // is asked which plan they mean; somebody seated and waiting to enter is
+    // told they are not on the board, which is the true and more useful thing.
+    return {
+      room,
+      replies: [
+        say(messageFor(room.language, seated ? 'ask.notOnBoard' : 'plan.which'), false),
+      ],
+    };
   }
 
   if (!Number.isInteger(number) || number < 1 || number > 72) {

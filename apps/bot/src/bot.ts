@@ -725,11 +725,23 @@ export function createBot({
 
     if (said.length === 0) {
       const held = await reports.intention(who.id);
-      await ctx.reply(
-        held
-          ? messageFor(language, 'intention.yours', { text: held })
-          : messageFor(language, 'intention.none'),
-      );
+      // Privately, because `/intention` with nothing after it is a request to
+      // be **told** something. What a player is playing for may have been set
+      // in a direct chat and read back at the table, and this said it out loud
+      // to six people — `broadcast: false` is the same rule `/path` and `/ask`
+      // have always gone through.
+      //
+      // The three replies below stay in the chat on purpose: two are about the
+      // bot rather than the player, and the third is about a sentence they have
+      // just typed where everyone could see it.
+      await deliver(ctx, [
+        {
+          text: held
+            ? messageFor(language, 'intention.yours', { text: held })
+            : messageFor(language, 'intention.none'),
+          broadcast: false,
+        },
+      ]);
       return;
     }
 
@@ -816,10 +828,16 @@ export function createBot({
 
   bot.command('plan', (ctx) =>
     withRoom(ctx, (room, who) => {
-      const raw = (ctx.match ?? '').trim();
-      const requested = raw.length > 0 ? Number(raw) : undefined;
-      const seated = room.session.players.find((p) => p.id === who.id);
-      const number = requested ?? seated?.state.loka;
+      // Two tokens, as `/rules` has always read them. `Number("2 2")` is NaN,
+      // so `/plan 2 2` fell through to *the board runs from 1 to 72* — an
+      // instruction the command had printed itself, four lines earlier, in
+      // `plan.continues`: *…continues. /plan {plan} {next} for page {next}*.
+      // A hundred and seventy-five plan texts across 22 languages had a second
+      // page nothing could reach.
+      const [first, second] = (ctx.match ?? '').trim().split(/\s+/).filter(Boolean);
+      const requested = first === undefined ? undefined : Number(first);
+      // The same question the pure command asks, and not a second answer to it.
+      const number = requested ?? commands.standingSquare(room, who.id) ?? undefined;
 
       if (number === undefined || !Number.isInteger(number) || number < 1 || number > 72) {
         return commands.plan(room, who.id, requested);
@@ -830,7 +848,7 @@ export function createBot({
         room,
         replies: [
           {
-            text: renderPlan(room.language, number, found.title, found.body),
+            text: renderPlan(room.language, number, found.title, found.body, Number(second) || 1),
             broadcast: false,
             html: true,
             buttons: room.started
@@ -938,10 +956,46 @@ export function createBot({
 
     // As a document rather than as text: a path of forty plans is past what a
     // message can carry, and a file is the thing another surface can read.
-    await ctx.replyWithDocument(
-      new InputFile(Buffer.from(serialise(offered.document), 'utf8'), offered.name),
-      { caption: messageFor(language, 'file.saved', { count: offered.count }) },
+    //
+    // **Through the same decision every private reply goes through.**
+    // `replyWithDocument` always answers the chat the command came from, so at
+    // a table of six this posted one player's whole journal — every account
+    // they had written, about every square they had stood on — for everybody to
+    // read and to keep. `/path` next door has routed privately since it was
+    // written; this was the same material with no such rule on it.
+    const destination = destinationFor(
+      { broadcast: false },
+      { chatType: ctx.chat?.type ?? 'private', userId: who.id, canWriteDirectly: channels.canWrite(who.id) },
     );
+
+    const file = new InputFile(Buffer.from(serialise(offered.document), 'utf8'), offered.name);
+    const caption = messageFor(language, 'file.saved', { count: offered.count });
+
+    // All three answers, as `deliver` handles them. A first attempt required
+    // `direct` and broke the ordinary case: in a private chat the destination
+    // *is* the chat, and refusing to send there sent a player who had asked in
+    // a direct message a note telling them to ask in a direct message.
+    if (destination.kind === 'chat') {
+      await ctx.replyWithDocument(file, { caption });
+      return;
+    }
+
+    if (destination.kind === 'chat-fallback') {
+      // Said in the group without saying what it was.
+      await ctx.reply(nudgeToPrivate(language, 'save'), { parse_mode: 'HTML' });
+      return;
+    }
+
+    try {
+      await ctx.api.sendDocument(destination.userId, file, { caption });
+      channels.allow(destination.userId);
+    } catch (error) {
+      // The same 403 memory `deliver` keeps. Without it a blocked player costs
+      // a failed API call on every `/save` they type.
+      if (!isBlockedByUser(error)) throw error;
+      channels.refuse(destination.userId);
+      await ctx.reply(nudgeToPrivate(language, 'save'), { parse_mode: 'HTML' });
+    }
   });
 
   /**

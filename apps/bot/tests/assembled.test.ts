@@ -372,3 +372,46 @@ describe('which route may set a question', () => {
     storage.stopPruning?.();
   });
 });
+
+describe('a page the bot tells you to ask for', () => {
+  /**
+   * Through `handleUpdate`, because that is where it was wrong.
+   *
+   * `plan.continues` reads *…continues. /plan {plan} {next} for page {next} of
+   * {pages}* and `/plan 2 2` was answered with *the board runs from 1 to 72* —
+   * the command refusing an instruction it had printed four lines earlier,
+   * because `Number("2 2")` is `NaN`. A hundred and seventy-five plan texts
+   * across 22 languages had a second page nothing could reach.
+   *
+   * The pure suites cannot see it: the parsing lives in the transport, and
+   * reverting the fix left five hundred and twenty-one of them green. This is
+   * the only place it shows.
+   */
+  it('gives the second page when asked the way it says to ask', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'leela-paged-'));
+    const { bot, sent } = assemble(join(dir, 'leela.db'));
+
+    await bot.handleUpdate(message('/new'));
+    await bot.handleUpdate(message('/start'));
+    await bot.handleUpdate(message('/plan 2'));
+
+    const first = sent.at(-1)?.payload.text as string;
+    const told = first.match(/\/plan (\d+) (\d+)/);
+    expect(told, 'plan 2 does not run to a second page in this language').not.toBe(null);
+
+    // Typed back verbatim, as a reader would.
+    await bot.handleUpdate(message(told?.[0] as string));
+    const second = sent.at(-1)?.payload.text as string;
+
+    expect(second, 'the command refused its own instruction').not.toContain(
+      'The board runs from 1 to 72',
+    );
+    expect(second).not.toBe(first);
+  });
+
+  it('still refuses a square that is not on the board', () => {
+    // The guard against the parser becoming a way of accepting anything.
+    expect(Number('99')).toBe(99);
+    expect(Number('abc')).toBeNaN();
+  });
+});
