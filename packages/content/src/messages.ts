@@ -25,7 +25,7 @@
  * rotted unnoticed. A visible gap is worth more than an invisible guess.
  */
 
-import { FALLBACK_LANGUAGE, type Language, resolveLanguage } from './index';
+import { FALLBACK_LANGUAGE, type Language, resolveLanguage } from './language';
 
 /** The plural forms a message can take. `other` is the only required one. */
 export interface PluralForms {
@@ -273,6 +273,13 @@ const EN = {
   // A square arriving as words. The path has had a file since the twelfth pass;
   // a square could be shared and never received.
   'app.paste': 'Paste a square',
+  // The phone's one field takes either — `takeSquare` first, `takeIn` after,
+  // because a square is a message and a path is a file, and the format tells
+  // them apart rather than asking the player which they have. Neither
+  // `app.paste` nor `app.pathImport` says that, and using the nearer of the two
+  // would be the fifth time in this repository that a sentence named the wrong
+  // thing because it was the one already written.
+  'app.pasteEither': 'Paste a square or a whole path',
   'app.pasteAsk': 'Paste a square somebody sent you',
   'app.pasteTake': 'Take it in',
   'app.pasteHint': 'One square, as it was shared: the number, the title, and what was written.',
@@ -579,6 +586,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.borrowed': 'по-английски — этой главы нет в вашей книге',
   'app.cameBack': 'Вернулось к вам',
   'app.paste': 'Вставить клетку',
+  'app.pasteEither': 'Вставьте клетку или весь путь',
   'app.pasteAsk': 'Вставьте клетку, которую вам прислали',
   'app.pasteTake': 'Принять',
   'app.pasteHint': 'Одна клетка, как её прислали: номер, название и что было написано.',

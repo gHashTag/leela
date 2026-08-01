@@ -37,30 +37,18 @@ export interface RuleChapter {
   borrowed?: boolean;
 }
 
-/** Languages the dataset covers, as BCP-47 primary subtags. */
-export const LANGUAGES = [
-  'ar', 'bn', 'de', 'en', 'es', 'fr', 'hi', 'ja', 'jv', 'ko', 'mr',
-  'ms', 'pa', 'pt', 'ru', 'ta', 'te', 'tr', 'uk', 'ur', 'vi', 'zh',
-] as const;
-
-export type Language = (typeof LANGUAGES)[number];
-
-/** The language to fall back to when a request cannot be served. */
-export const FALLBACK_LANGUAGE: Language = 'en';
-
-export function isLanguage(value: string): value is Language {
-  return (LANGUAGES as readonly string[]).includes(value);
-}
-
-/**
- * Resolve a locale like `ru-RU`, `zh-Hans` or `en_GB` onto a covered language,
- * falling back to English.
- */
-export function resolveLanguage(locale: string | undefined | null): Language {
-  if (!locale) return FALLBACK_LANGUAGE;
-  const [primary = ''] = locale.toLowerCase().split(/[-_]/);
-  return isLanguage(primary) ? primary : FALLBACK_LANGUAGE;
-}
+// What a language is, before any text exists — the list, the type, the fallback
+// and how to resolve a locale. In a leaf of its own because `messages.ts` needs
+// those four and this file re-exports `messages.ts`: the two required each
+// other, and Metro warned about it on every launch of the phone app.
+export {
+  FALLBACK_LANGUAGE,
+  isLanguage,
+  LANGUAGES,
+  resolveLanguage,
+  type Language,
+} from './language';
+import { FALLBACK_LANGUAGE, resolveLanguage, type Language } from './language';
 
 // The dataset is bundled as JSON so every runtime — Metro, Node, the browser —
 // can load it without a filesystem.

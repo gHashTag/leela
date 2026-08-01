@@ -324,7 +324,10 @@ export default function App() {
           multiline
           value={pasted}
           onChangeText={setPasted}
-          placeholder={messageFor(language, 'app.pathImport')}
+          // The field takes either; the button below does the bringing. Both
+          // read 'Bring one back' until now, so the phone showed one sentence
+          // twice and said nothing about what may be pasted.
+          placeholder={messageFor(language, 'app.pasteEither')}
         />
         <Pressable
           disabled={pasted.trim().length === 0}

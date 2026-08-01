@@ -8,7 +8,7 @@
  * or the second surface that needs it copies it — or, as here, goes without.
  */
 
-import type { Language } from './index';
+import type { Language } from './language';
 
 /** Languages here that read right to left. */
 const RTL: ReadonlySet<string> = new Set(['ar', 'ur']);
