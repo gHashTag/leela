@@ -5432,6 +5432,28 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**Two things the table could read that were nobody's business (164th pass).**
+`/save` called `ctx.replyWithDocument`, which always answers the chat the
+command came from — so at a table of six a player's whole journal went out as a
+file for everyone to keep, while `/path` next door had routed through
+`destinationFor` since it was written. And `/intention` with no argument, which
+is a request to be *told* something, read a privately-set intention out to the
+room. Both go through the one decision now; the three replies that are about the
+bot or about a sentence just typed in public stay in the chat deliberately.
+
+**`/plan 2 2` was refused by the command that printed it.** `plan.continues`
+says *…continues. /plan {plan} {next}* and `Number("2 2")` is `NaN`, so a reader
+who typed back exactly what they were told got *the board runs from 1 to 72*.
+175 plan texts across 22 languages had a second page nothing could reach.
+Reverting the fix left **521 unit tests green** — the parsing lives in the
+transport and nothing went through `handleUpdate`. The new case does, and it
+types the marker's own text back rather than hard-coding `2 2`.
+
+**And `/plan` with no argument answered a new player with square 68** — the
+eighth sighting of the ambiguity, second on this surface. `standingSquare` is
+exported because the transport was answering the same question separately, which
+is how `describeStandings` came to carry the defect on its own.
+
 **Detox walks the app, and found two things on its first honest run (163rd
 pass).** Fourteen flows, all passing on an iPhone 16 Pro simulator. The app had
 eleven controls and not one identifier, so `src/handles.ts` names them once and
