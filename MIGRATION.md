@@ -5432,6 +5432,31 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**Three fields that told the keyboard nothing about themselves (167th
+pass).** Every `TextInput` in the phone declared `multiline` and a placeholder
+and nothing else, so iOS guessed — the same way for a paragraph of reflection
+and for a pasted machine-readable square.
+
+The paste field is **not prose**: autocapitalisation changes the first letter of
+a pasted account and autocorrect rewrites the transliterated Sanskrit the format
+is mostly made of. Both writing fields had **no bound**, so a player could type
+past `MAX_REPORT_CHARS` and lose the tail on save with nothing said — the defect
+the mini app met and fixed, waiting here. Arabic and Urdu were **left-aligned**;
+`directionOf` has been in `@leela/content` since the docs needed it. And the
+placeholder was the platform's grey, a colour never measured, on two fields
+where it is the only instruction there is.
+
+Fixed outside this repository and not committed: the published app's *Possible
+Unhandled Promise Rejection* on its first screen. `RevenueCatProvider` calls
+`init()` bare, so a key absent from a `.env` that is correctly not in the
+repository surfaced as a red warning over the sign-in screen. Absent is not an
+error. That source is on `main`, so the fix lives only in the scratch build.
+
+Recorded rather than changed: English typed into the simulator arrives as
+Cyrillic because the **machine's** input source is RussianWin, letter for letter
+— `hello@example.com` becomes `руддщ»учфьздуюсщь`. Ctrl+Space switches; changing
+a system-wide preference unattended is not this loop's to make.
+
 **Sixteen commands and no way to find any of them (166th pass).** Telegram
 shows a menu behind the `/` button, built from `setMyCommands`, and this bot
 registered nothing — so a player had to already know `/help` existed in order to
