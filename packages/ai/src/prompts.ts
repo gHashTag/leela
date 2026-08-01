@@ -238,8 +238,27 @@ export function trimToParagraph(text: string, limit = MAX_PLAN_CHARS): string {
   return (lastStop > limit * 0.5 ? head.slice(0, lastStop + 1) : head).trim();
 }
 
-/** The name of the language to answer in, for the model. */
-const LANGUAGE_NAMES: Record<string, string> = {
+/**
+ * The name of the language to answer in, for the model.
+ *
+ * English names, and deliberately not `@leela/content`'s `LANGUAGE_NAMES`,
+ * which holds the endonyms — *Русский*, *日本語*, *العربية* — because those are
+ * for a reader choosing a language and this is an instruction to a model.
+ *
+ * **Typed `Record<Language, string>`, so a twenty-third language will not
+ * compile.** It was `Record<string, string>` with a `?? 'English'` behind it,
+ * which is a restated list of the twenty-two — the defect this repository has
+ * met more often than any other — with the one ending that reads as correct: a
+ * language added to `@leela/content` would have been handed the traditional
+ * text in its own script under the instruction *Answer in English*, and every
+ * test would have passed.
+ *
+ * The fallback is gone with it. `resolveLanguage` answers `Language` and
+ * nothing else, so by the time this is indexed the key is always one of the
+ * twenty-two; a `??` there could only ever have covered for this map being
+ * short.
+ */
+const LANGUAGE_NAMES: Record<Language, string> = {
   ar: 'Arabic', bn: 'Bengali', de: 'German', en: 'English', es: 'Spanish',
   fr: 'French', hi: 'Hindi', ja: 'Japanese', jv: 'Javanese', ko: 'Korean',
   mr: 'Marathi', ms: 'Malay', pa: 'Punjabi', pt: 'Portuguese', ru: 'Russian',
@@ -275,7 +294,7 @@ const ARRIVAL: Record<Direction, string> = {
 export function systemPrompt(context: PlanContext): string {
   const language = resolveLanguage(context.language);
   const plan = planFor(language, context.plan);
-  const languageName = LANGUAGE_NAMES[language] ?? 'English';
+  const languageName = LANGUAGE_NAMES[language];
   // Said rather than assumed. Branching on `!== 'received'` left `standing` a
   // word the vocabulary declared and nothing ever produced — which is exactly
   // what `audit-reachable` exists to catch, and it caught this within the hour.

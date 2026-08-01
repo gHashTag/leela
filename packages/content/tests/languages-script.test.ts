@@ -189,3 +189,73 @@ describe('no answer rests on the order the ranges were typed in', () => {
     }
   });
 });
+
+/**
+ * A map of the twenty-two, and what happens when it is short.
+ *
+ * `SCRIPTS` was `Record<string, Script>` behind a `?? 'latin'` — a restated
+ * list of the languages, with the worst ending this repository has a name for.
+ * A twenty-third language would have been declared latin, and `audit-dataset`
+ * — the check written *because* the English book once shipped a Russian
+ * chapter — would have exempted it in CI while still printing that every
+ * chapter is written in the language it is filed under.
+ *
+ * The same map was found the same day in `packages/ai`, deciding what language
+ * the companion answers in. Two restated lists of the twenty-two, both behind a
+ * fallback that reads as correct.
+ */
+describe('the script of a language is declared, never guessed', () => {
+  it('is declared for every language the game is published in', () => {
+    for (const language of LANGUAGES) {
+      expect(() => scriptOf(language), language).not.toThrow();
+      expect(typeof scriptOf(language), language).toBe('string');
+    }
+  });
+
+  it('says so rather than guessing latin, for a tag nobody declared', () => {
+    /**
+     * Loud rather than latin. The type makes this unreachable from TypeScript;
+     * the caller that is not TypeScript is `scripts/audit-dataset.mjs`, reading
+     * a generated manifest, and a language nobody has declared a script for is
+     * a thing to be told about rather than waved through the check.
+     */
+    expect(() => scriptOf('kl' as never)).toThrow(/no script declared/);
+  });
+
+  it('does not put every language in one script, or the check means nothing', () => {
+    // A map filled in by copying one line would satisfy everything above.
+    const scripts = new Set(LANGUAGES.map((language) => scriptOf(language)));
+
+    expect(scripts.size).toBeGreaterThan(5);
+    expect(scripts).toContain('latin');
+    expect(scripts).toContain('cyrillic');
+    expect(scripts).toContain('arabic');
+  });
+
+  it('agrees with what the text of each language actually looks like', () => {
+    /**
+     * The half a map cannot get wrong quietly: whatever script is declared, the
+     * text in that language has to be written in it. `audit-dataset` runs this
+     * over the rules chapters; asserted here over the plans, so a wrong entry
+     * fails in the package that declares it.
+     *
+     * Over the **body**, as the audit does, and not the title. `dominantScript`
+     * counts characters, and a title like the Chinese `出生 (janma)` is two Han
+     * characters against five Latin ones — so a transliteration in brackets
+     * outweighs the name it transliterates. That is a fact about short strings
+     * rather than about the map, and the audit reads two thousand characters
+     * for the same reason.
+     */
+    for (const language of LANGUAGES) {
+      const plan = plansFor(language)[0];
+      expect(couldBe(language, plan?.body ?? ''), `${language}: ${plan?.title}`).toBe(true);
+    }
+  });
+
+  it('is not to be asked about a handful of characters', () => {
+    // Stated because it was found by asking: the guard against somebody using
+    // `couldBe` on a title and reading the answer as a verdict on the file.
+    expect(couldBe('zh', '出生 (janma)'), 'a title with its transliteration').toBe(false);
+    expect(couldBe('zh', plansFor('zh')[0]?.body ?? ''), 'the same plan, whole').toBe(true);
+  });
+});

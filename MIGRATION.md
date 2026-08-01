@@ -5251,6 +5251,51 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Two restated lists of the twenty-two, both behind a fallback (180th pass).**
+`packages/ai` had never been opened by this loop. It holds `LANGUAGE_NAMES` —
+English names, for the instruction *Answer in Russian* — as a
+`Record<string, string>` behind `?? 'English'`. A twenty-third language added to
+`@leela/content` would have been handed the traditional text in its own script
+under an instruction to answer in **English**, and every test would have passed:
+the two the suite had were `ru` and `ja`, written out by hand.
+
+`packages/content` had the same map in the file that *defines* the languages:
+`SCRIPTS: Record<string, Script>` behind `?? 'latin'`, read by `scriptOf` →
+`couldBe` → `audit-dataset`, which is the check written **because** the English
+book once shipped a Russian chapter. Beside it, `RANGES` has been
+`Record<Script, RegExp>` since the day it was written. One map in the file was
+total and the other was not.
+
+Both are `Record<Language, …>` now, so the compiler names the missing language
+at the moment the omission is made, and both fallbacks are gone: `resolveLanguage`
+answers `Language` and nothing else, so a `??` there could only ever have
+covered for the map being short.
+
+**What the revert corrected in the telling.** Taking a language out of `SCRIPTS`
+under the old code makes `audit-dataset` **fail**, not pass — a Cyrillic chapter
+declared latin is exactly what it looks for. So the silent half is narrower than
+it first appeared: a new language written in a latin-family script would have
+been declared latin and been right by luck, and only a non-latin one was caught.
+`packages/ai` had no such backstop: there the fallback is wrong for every new
+language. The compiler now names both at the moment of the omission rather than
+leaving one to an audit that catches half of it.
+
+**And a test found something about `couldBe`.** Asserting it over plan *titles*
+failed on Chinese: `出生 (janma)` is two Han characters against five Latin ones,
+so a transliteration in brackets outweighs the name it transliterates.
+`dominantScript` counts characters, `audit-dataset` reads two thousand of them,
+and the answer is a fact about short strings rather than about the map. Written
+down as its own case, so nobody reads a verdict on a file out of a title.
+
+**Before that, two sweeps that found nothing**, recorded because a negative
+result is worth the same as a positive one for deciding where to look next.
+Every one of the 35 source-reading test files was scanned for a loop over a
+derived list with no guard that the list is non-empty — four candidates, all
+false: three assert the list is *empty*, which is the correct form, and the
+fourth (`ADD CONSTRAINT` in the migrations) has seven real matches. And
+`messageIssues`/`messageCoverage` were run over all twenty-two languages: no
+plural form missing, both complete catalogues at 186 of 186.
+
 **Two things nobody said (179th pass).** The method the last pass turned up was
 run over the whole catalogue: of 185 keys, **two** are said by no surface, and
 both were a capability nobody wired up.

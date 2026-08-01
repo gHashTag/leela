@@ -72,7 +72,21 @@ export type Script =
   | 'kana'
   | 'hangul';
 
-const SCRIPTS: Record<string, Script> = {
+/**
+ * The script each language is written in.
+ *
+ * **`Record<Language, Script>`, so a twenty-third language will not compile.**
+ * It was `Record<string, Script>` behind a `?? 'latin'`, which is a restated
+ * list of the twenty-two with the worst possible ending: a language added to
+ * `LANGUAGES` would have been declared latin, and `audit-dataset` — the check
+ * written *because* the English book once shipped a Russian chapter — would
+ * have exempted it in CI while still printing that every chapter is written in
+ * the language it is filed under.
+ *
+ * `RANGES` below has been `Record<Script, RegExp>` since it was written. One
+ * map in this file was total and the other was not.
+ */
+const SCRIPTS: Record<Language, Script> = {
   ar: 'arabic',
   bn: 'bengali',
   de: 'latin',
@@ -97,8 +111,19 @@ const SCRIPTS: Record<string, Script> = {
   zh: 'han',
 };
 
+/**
+ * @throws when handed a tag that is not one of the twenty-two.
+ *
+ * Loud rather than latin. The type makes that unreachable from TypeScript, and
+ * the one caller that is not TypeScript is `scripts/audit-dataset.mjs`, reading
+ * a generated manifest — where a language nobody has declared a script for is
+ * a thing to be told about, not to be quietly waved through the check.
+ */
 export function scriptOf(language: Language): Script {
-  return SCRIPTS[language] ?? 'latin';
+  const script = SCRIPTS[language];
+  if (!script) throw new Error(`no script declared for "${language}"`);
+
+  return script;
 }
 
 const RANGES: Record<Script, RegExp> = {

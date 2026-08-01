@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Direction } from '@leela/engine';
-import { LANGUAGES, planFor } from '@leela/content';
+import { LANGUAGES, LANGUAGE_NAMES as CONTENT_NAMES, planFor } from '@leela/content';
 import { TOTAL_PLANS, WIN_LOKA } from '@leela/engine';
 import { MAX_REPORT_CHARS } from '@leela/journal';
 import {
@@ -74,6 +74,58 @@ describe('the prompt rests on the canonical text', () => {
   it('names the answer language explicitly rather than implying it', () => {
     expect(systemPrompt({ plan: 1, language: 'ru' })).toContain('Answer in Russian.');
     expect(systemPrompt({ plan: 1, language: 'ja' })).toContain('Answer in Japanese.');
+  });
+
+  it('names one for every language the game is published in', () => {
+    /**
+     * The shape rather than the two above. The names were a
+     * `Record<string, string>` behind a `?? 'English'`, which is a restated
+     * list of the twenty-two with the one ending that reads as correct: a
+     * twenty-third language would have been handed the traditional text in its
+     * own script under the instruction *Answer in English*, and every test here
+     * would have passed.
+     *
+     * The map is `Record<Language, string>` now, so the compiler refuses a
+     * short one — and this is the run-time half, because a name can be present
+     * and wrong.
+     */
+    for (const language of LANGUAGES) {
+      const named = /Answer in (.+)\./.exec(systemPrompt({ plan: 1, language }))?.[1];
+
+      expect(named, `${language} is named at all`).toBeTruthy();
+      expect(named, `${language} is named in English, for a model`).toMatch(/^[A-Z][A-Za-z ]+$/);
+    }
+  });
+
+  it('gives each language a name of its own', () => {
+    // A map filled in by copying a neighbouring line would pass everything
+    // above. Twenty-two languages, twenty-two names.
+    const named = LANGUAGES.map(
+      (language) => /Answer in (.+)\./.exec(systemPrompt({ plan: 1, language }))?.[1],
+    );
+
+    expect(new Set(named).size).toBe(LANGUAGES.length);
+  });
+
+  it('does not name the language in its own script, which is for a reader', () => {
+    // `@leela/content`'s `LANGUAGE_NAMES` holds the endonyms — Русский, 日本語,
+    // العربية — and those are for somebody choosing a language, not for an
+    // instruction to a model.
+    const differs = LANGUAGES.filter(
+      // English is its own endonym, so there is nothing to tell apart there.
+      (language) => CONTENT_NAMES[language] !== /Answer in (.+)\./.exec(
+        systemPrompt({ plan: 1, language }),
+      )?.[1],
+    );
+
+    expect(differs.length, 'twenty-one of the twenty-two have two names').toBe(
+      LANGUAGES.length - 1,
+    );
+    for (const language of differs) {
+      expect(systemPrompt({ plan: 1, language }), language).not.toContain(
+        `Answer in ${CONTENT_NAMES[language]}.`,
+      );
+    }
   });
 
   it('falls back to English for a locale the dataset does not carry', () => {
