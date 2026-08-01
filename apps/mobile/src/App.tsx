@@ -22,7 +22,9 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { BOARD_ROWS } from '@leela/engine';
-import { bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
+import { bookFor, messageFor, planFor, resolveLanguage,
+  directionOf,
+} from '@leela/content';
 import {
   fileReport,
   isOver,
@@ -55,6 +57,7 @@ import {
   type Journal,
   type Store,
 } from './journal';
+import { MAX_INTENTION_CHARS, MAX_REPORT_CHARS } from '@leela/journal';
 import { deviceKeeper } from './device';
 import { GAME_KEY, keepGame, loadKeptGame } from './game-store';
 import { HANDLE, squareHandle } from './handles';
@@ -151,6 +154,10 @@ export default function App() {
     void keepGame(gameKeeper, game);
   }, [game]);
   const language = resolveLanguage(undefined);
+  // Which way the language reads. Arabic and Urdu are among the twenty-two, and
+  // a field left at the default puts their text against the wrong margin with
+  // the caret in the wrong corner.
+  const reading_direction = directionOf(language);
   const here = standingOn(game);
   // Where the piece is drawn and what may be read are two questions. `here` is
   // 68 for a player who has never thrown — the engine parks them there and the
@@ -313,7 +320,12 @@ export default function App() {
           <TextInput
             testID={HANDLE.intention}
             accessibilityLabel={messageFor(language, 'app.intention')}
-            style={styles.field}
+            maxLength={MAX_INTENTION_CHARS}
+            autoCapitalize="sentences"
+            autoCorrect
+            textContentType="none"
+            placeholderTextColor={PALETTE.hint}
+            style={[styles.field, reading_direction === 'rtl' && styles.rightToLeft]}
             multiline
             value={asking}
             onChangeText={setAsking}
@@ -345,7 +357,12 @@ export default function App() {
           <TextInput
             testID={HANDLE.report}
             accessibilityLabel={messageFor(language, 'app.reportPlaceholder')}
-            style={styles.field}
+            maxLength={MAX_REPORT_CHARS}
+            autoCapitalize="sentences"
+            autoCorrect
+            textContentType="none"
+            placeholderTextColor={PALETTE.hint}
+            style={[styles.field, reading_direction === 'rtl' && styles.rightToLeft]}
             multiline
             value={draft}
             onChangeText={setDraft}
@@ -444,7 +461,12 @@ export default function App() {
         <TextInput
           testID={HANDLE.paste}
           accessibilityLabel={messageFor(language, 'app.pasteEither')}
-          style={styles.field}
+          autoCapitalize="none"
+          autoCorrect={false}
+          spellCheck={false}
+          textContentType="none"
+          placeholderTextColor={PALETTE.hint}
+          style={[styles.field, reading_direction === 'rtl' && styles.rightToLeft]}
           multiline
           value={pasted}
           onChangeText={setPasted}
@@ -544,6 +566,8 @@ const styles = StyleSheet.create({
   },
   entry: { fontSize: 15, lineHeight: 21, color: PALETTE.entry },
   writer: { paddingHorizontal: 16, gap: 8 },
+  /** Arabic and Urdu read the other way; the field has to as well. */
+  rightToLeft: { textAlign: 'right', writingDirection: 'rtl' },
   field: {
     borderWidth: 1,
     borderColor: PALETTE.rule,
