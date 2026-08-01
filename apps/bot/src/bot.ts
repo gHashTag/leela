@@ -21,7 +21,7 @@ import {
   isBlockedByUser,
   nudgeToPrivate,
 } from './delivery';
-import { escapeHtml, renderBoardMessage, renderChapter, renderPlan } from './render';
+import { escapeHtml, intoMessages, renderBoardMessage, renderChapter, renderPlan } from './render';
 import { FILE_TIMEOUT_MS, MAX_FILE_BYTES, asReport, decide, decideSquare, keep, within } from './take-in';
 import { offer, serialise } from './take-out';
 import {
@@ -194,6 +194,16 @@ export function createBot({
    * Only the last one carries the buttons — repeating them under each message
    * clutters the chat and leaves stale keyboards above.
    */
+  /**
+   * Each piece with whether it is the last one.
+   *
+   * The buttons belong under the end of a reply, not under every piece of it —
+   * a keyboard repeated three times is three keyboards in the chat.
+   */
+  function withLast<T>(items: T[]): Array<[T, boolean]> {
+    return items.map((item, index) => [item, index === items.length - 1]);
+  }
+
   async function deliver(ctx: Context, replies: Reply[]): Promise<void> {
     const who = sender(ctx);
     const chatType = ctx.chat?.type ?? 'private';
@@ -215,8 +225,15 @@ export function createBot({
           })
         : ({ kind: 'chat' } as const);
 
+      // Long enough to be refused is long enough to be split. Only text this
+      // side escaped: a reply that carries its own HTML is paginated upstream
+      // and cutting tags in half here would break it.
+      const pieces = reply.html ? [text] : intoMessages(reply.text).map(escapeHtml);
+
       if (destination.kind === 'chat') {
-        await ctx.reply(text, options);
+        for (const [piece, isLast] of withLast(pieces)) {
+          await ctx.reply(piece, isLast ? options : { ...options, reply_markup: undefined });
+        }
         continue;
       }
 
@@ -227,7 +244,13 @@ export function createBot({
       }
 
       try {
-        await ctx.api.sendMessage(destination.userId, text, options);
+        for (const [piece, isLast] of withLast(pieces)) {
+          await ctx.api.sendMessage(
+            destination.userId,
+            piece,
+            isLast ? options : { ...options, reply_markup: undefined },
+          );
+        }
         channels.allow(destination.userId);
       } catch (error) {
         if (!isBlockedByUser(error)) throw error;

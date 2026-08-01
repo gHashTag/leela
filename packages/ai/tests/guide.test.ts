@@ -589,3 +589,59 @@ describe('every option a caller gives reaches the prompt', () => {
     );
   });
 });
+
+describe('an answer the player can be shown', () => {
+  /**
+   * `Reflection.text` promises *what to show the player, always non-empty*, and
+   * the call site handed back whatever the model said. A filtered response, a
+   * completion cut at zero tokens, a provider answering 200 with an empty
+   * choice — all of them arrive as success, and all of them were passed on.
+   *
+   * Downstream that is worse than a failure: an empty message is the one thing
+   * Telegram refuses, so the reply throws and the player reads *something went
+   * wrong, try again in a moment* about a companion that answered instantly.
+   * Trying again asks the same model the same prompt.
+   */
+  const nothings = [
+    ['an empty string', ''],
+    ['a space', ' '],
+    ['newlines', '\n\n\n'],
+    ['a tab', '\t'],
+    // Whatever the shape, the rule is *no words*, not a list of blank strings.
+    ['every kind of blank at once', ' \n\t\r\n '],
+  ] as const;
+
+  it.each(nothings)('%s is not an answer', async (_name, said) => {
+    const guide = new Guide({ model: fixedModel(said), log: () => undefined });
+    const reflection = await guide.reflect('my own account', { plan: 6, language: 'en' });
+
+    expect(reflection.text.trim().length, 'the promise this type makes').toBeGreaterThan(0);
+    expect(reflection.fromModel, 'it did not come from the model').toBe(false);
+  });
+
+  it('says the fallback, which names the plan', async () => {
+    // Not a sentence invented here: the same one every other failure uses, so
+    // a player meets one voice for "the companion cannot answer right now".
+    const guide = new Guide({ model: fixedModel('   '), log: () => undefined });
+    const reflection = await guide.answer('what does this ask of me', { plan: 41, language: 'en' });
+
+    expect(reflection.text).toBe(fallbackText({ plan: 41, language: 'en' }));
+  });
+
+  it('lets a real answer through untouched, whitespace and all', async () => {
+    // The other half: a check on emptiness must not become a check on shape.
+    const guide = new Guide({ model: fixedModel('  Sit with it.\n\nWhat is it asking?  ') });
+    const reflection = await guide.reflect('my own account', { plan: 6, language: 'en' });
+
+    expect(reflection.text).toBe('Sit with it.\n\nWhat is it asking?');
+    expect(reflection.fromModel).toBe(true);
+  });
+
+  it('tells the operator, because a model answering nothing is not weather', async () => {
+    const logged: string[] = [];
+    const guide = new Guide({ model: fixedModel(''), log: (message) => logged.push(message) });
+    await guide.reflect('my own account', { plan: 6, language: 'en' });
+
+    expect(logged.join(' ')).toContain('nothing');
+  });
+});

@@ -225,7 +225,31 @@ export class Guide {
       // A call that worked ends any silence: whoever fixed it need not restart.
       this.silentUntil = 0;
       this.silentReason = undefined;
-      return { text: text.trim(), fromModel: true };
+
+      /**
+       * Nothing is not an answer, and this type promises one.
+       *
+       * `Reflection.text` says *what to show the player, always non-empty*, and
+       * this line handed back `''` whenever the model did: a filtered response,
+       * a completion cut at zero tokens, a provider answering 200 with an empty
+       * choice. All of them arrive as success.
+       *
+       * Downstream that is worse than a failure. The bot sends the text, and an
+       * empty message is the one thing Telegram refuses — the reply throws, the
+       * player is shown *something went wrong, try again in a moment*, and
+       * trying again asks the same model the same prompt. The fallback exists
+       * for exactly this and was skipped because the call did not throw.
+       *
+       * `fromModel: false`, because it did not come from the model. That flag
+       * is what the bot logs the companion's silence on.
+       */
+      const said = text.trim();
+      if (said.length === 0) {
+        this.log('the model answered with nothing', new Error('empty completion'));
+        return { text: fallbackText(contextOf(options)), fromModel: false };
+      }
+
+      return { text: said, fromModel: true };
     } catch (error) {
       if (error instanceof PromptError) throw error;
 

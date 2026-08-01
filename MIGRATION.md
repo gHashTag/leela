@@ -5251,6 +5251,38 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Two answers the player could never be shown (194th pass).** Handed the
+companion a stub model and read what the transport was asked to send.
+
+**An empty answer was passed on as an answer.** `Reflection.text` promises *what
+to show the player, always non-empty*, and the call site handed back whatever
+the model said — a filtered response, a completion cut at zero tokens, a
+provider answering 200 with an empty choice. All of them arrive as success, so
+the fallback that exists for exactly this was skipped: the call did not throw.
+Downstream it is worse than a failure, because an empty message is the one thing
+Telegram refuses. The player reads *something went wrong, try again in a moment*
+about a companion that answered instantly, and trying again asks the same model
+the same prompt.
+
+**And a long one was sent whole.** The prompt asks for brevity and usually gets
+it, but *usually* is not a limit. Nine thousand characters went to the transport
+in one message, which is refused, which is the same generic error — about an
+answer that was written and then thrown away.
+
+Split rather than truncated, and in the transport rather than at the one call
+site: `paginate` truncates an over-long block on purpose, because the blocks it
+packs are *reports* and half of somebody's writing is worse than none, while the
+companion's own prose loses nothing by arriving in two messages. Paragraphs
+first, then lines, then a space, then mid-word — something has to give, and a
+message that cannot be sent gives everything. Only text this side of escaping is
+cut: a reply carrying its own HTML is paginated upstream and cutting a tag in
+half would break it.
+
+**Three of my own mistakes, caught by the tests before the commit.** The splitter
+made an empty message out of a leading blank line; two of the tests compared
+whitespace they had themselves inserted at the break; and one asserted about a
+paragraph break in a text short enough to need no breaking at all.
+
 **A new game asked the question of the one before it (193rd pass).** Played a
 game, ended it, opened another, and read what the second one said about itself.
 `/intention` answered *You are playing to answer this:* with the sentence

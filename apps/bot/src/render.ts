@@ -123,6 +123,57 @@ export function renderBoardMessage(room: Room): string {
  */
 export const MAX_MESSAGE_CHARS = 3500;
 
+/**
+ * A text as the messages a chat will actually accept.
+ *
+ * The companion's answer went to Telegram whole. The prompt asks it to be brief
+ * and it usually is, but *usually* is not a limit: a model that runs long
+ * produces a message the transport refuses, and a refused reply reaches the
+ * player as *something went wrong, try again in a moment* — an error about a
+ * good answer that was written and then thrown away.
+ *
+ * Split rather than truncated. `paginate` truncates a single over-long block on
+ * purpose, because the blocks it packs are *reports* and half of somebody's
+ * writing is worse than none. This splits the companion's own prose, where a
+ * second message loses nothing.
+ *
+ * Paragraphs first, then lines, then — for a wall of text with no break in it
+ * at all — on a space, and failing that mid-word, because something has to
+ * give and a message that cannot be sent gives everything.
+ */
+export function intoMessages(text: string, limit = MAX_MESSAGE_CHARS): string[] {
+  if (text.length <= limit) return text.length > 0 ? [text] : [];
+
+  const out: string[] = [];
+  let rest = text;
+
+  while (rest.length > limit) {
+    const window = rest.slice(0, limit);
+    // The last break of each kind inside the window, best first. `+ 2` and
+    // `+ 1` keep the break itself out of the next message.
+    const at =
+      lastEnd(window, '\n\n', 2) ?? lastEnd(window, '\n', 1) ?? lastEnd(window, ' ', 1) ?? limit;
+
+    const piece = rest.slice(0, at).trimEnd();
+    // A break at the very front of the text cuts nothing but whitespace off.
+    // Dropping the empty piece keeps a leading blank line from becoming a
+    // message with nothing in it.
+    if (piece.length > 0) out.push(piece);
+    rest = rest.slice(at).trimStart();
+  }
+
+  if (rest.length > 0) out.push(rest);
+  return out;
+}
+
+/** Where to cut, when the window holds this separator at all. */
+function lastEnd(window: string, separator: string, width: number): number | null {
+  const found = window.lastIndexOf(separator);
+  // Not at the very start: cutting there would make an empty message and leave
+  // the rest exactly as long as it was, which is a loop that never ends.
+  return found > 0 ? found + width : null;
+}
+
 export interface Page {
   text: string;
   /** 1-based, and never past the end: asking for page 9 of 3 gives page 3. */
