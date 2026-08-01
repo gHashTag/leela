@@ -5432,6 +5432,28 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**Sixteen commands and no way to find any of them (166th pass).** Telegram
+shows a menu behind the `/` button, built from `setMyCommands`, and this bot
+registered nothing — so a player had to already know `/help` existed in order to
+be told about the other fifteen, and `/help` was not discoverable either.
+
+`BOT_COMMANDS` is the one list and `index.ts` the only place that hands it over.
+Registered in both languages whose catalogue is complete, and English scopeless
+as well: Telegram falls back to the unscoped list for a client whose language
+nothing was registered for, and without that the menu is empty for twenty of the
+twenty-two. Not all twenty-two, because `messageFor` falls back to English and a
+menu registered *as Russian* holding English sentences is worse than none — a
+test asserts the two say different things word by word, since agreement would
+mean the fallback happened silently.
+
+A menu is a **fourth** place to write the same names down, and six restated
+lists have gone wrong here already. So the help text and the menu are both held
+to `bot.command('x')`, in both directions: removing `/returns` from the menu
+fails, and adding a `/ghost` no handler answers fails too — the second costing a
+player more, because they tried it. Telegram refuses a description over 256
+characters and refuses the *whole call*, so one sentence that grows in
+translation would take the menu down; `menuFor` clamps and a test holds it.
+
 **A debug build is not the published application (165th pass).** Installing
 `apps/mobile` on a simulator replaced the published app twice in one day — two
 apps with one identifier are one app to iOS, the install simply succeeds, and on
