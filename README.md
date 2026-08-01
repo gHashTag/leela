@@ -199,7 +199,7 @@ cd packages/engine && bun test
 | `@leela/mobile` | 73 | the board on a phone (Expo), moved by the engine and by nothing else |
 | everything else | — | not yet ported |
 
-2039 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+2041 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
