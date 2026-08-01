@@ -43,3 +43,8 @@ this they were not on the board.*
 Found by playing a game and printing the prompt the model actually received. No
 unit test could see it: they build a `PlanContext` by hand, with a previous plan
 chosen to be interesting.
+
+The bot's side of this is checked over every arrival of one whole game, with the
+clock fixed. Checking one throw is a coin toss: the die is seeded from
+`(chatId, now())`, so which kind of arrival the second report describes is drawn
+fresh on every run.

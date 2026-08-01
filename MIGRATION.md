@@ -5276,6 +5276,27 @@ a `previousPlan` of 68 on any *other* square can only be the parking space. That
 is the same reasoning `isWaitingToEnter` encodes for the current square, applied
 to the previous one. The prompt says what did happen instead.
 
+**And the suite already held one (189th pass, second finding).** Chasing the
+above, `apps/bot` was run fifteen times: *still offers a real return, when this
+arrival has not been written about* failed about one run in twelve with *no
+square came back in 200 turns*. It played a clock-seeded game and hoped somebody
+would land twice on one square inside the bound — and a player who **finishes**
+stops moving, so the remaining turns were spent throwing for a board nobody was
+on. It now plays fixed games in order until one returns somebody, and finds it
+in the first, in nine milliseconds.
+
+A flaky check is worse than no check: it is a red run nobody believes, and this
+one had been reporting a defect that was not there since the day it was written.
+
+**And my own check was a coin toss.** The first version played a second throw
+and asserted *that* arrival named a square. The die is seeded from
+`(chatId, now())` — a different game every run — so which kind of arrival the
+second report describes is drawn fresh each time. It passed eight runs here and
+failed on CI. This file already carried the lesson, in a comment four hundred
+lines further down: *an assertion on the words of a throw is then a coin toss.*
+Both checks now fix the clock and state the rule over **every** arrival of one
+whole game, with a guard that the game contained a move at all.
+
 **And an existing test encoded this one too**, exactly as last pass: *tells it
 where they came from, when that is somewhere else* filed the first report of a
 game and asserted the prompt said *they came from plan N*. The rule was right

@@ -730,6 +730,9 @@ describe('what the companion is told about the arrival', () => {
    * about the arrival, the prompt says it too.
    */
 
+  /** The same game every run: the die is seeded from `(chatId, now())`. */
+  const FIXED_CLOCK = () => 1_700_000_000_000;
+
   const arrivalOf = (messages: { role: string; content: string }[]) =>
     messages.find((message) => message.role === 'system')?.content ?? '';
 
@@ -763,30 +766,50 @@ describe('what the companion is told about the arrival', () => {
     expect(seen.size).toBeGreaterThan(0);
   });
 
-  it('tells it where they came from, when that is somewhere else', async () => {
-    /**
-     * A *move*, not the entering throw. A player waiting to enter is parked on
-     * `WIN_LOKA`, so the first report of every game carried `previousPlan: 68`
-     * — and this asserted the prompt said *they came from plan 68*, which is a
-     * descent from Cosmic Consciousness that never happened. The rule was
-     * right and the example was the one arrival with no somewhere else.
-     */
+  /**
+   * Every arrival of one whole game, rather than one throw's worth.
+   *
+   * The die is seeded from `(chatId, now())`, so a test that reads the clock
+   * plays a different game every run and an assertion about *the* second
+   * arrival is a coin toss — this file already learned that once, and I lost
+   * the toss on CI having won it eight times here. The clock is fixed and the
+   * rule is stated over every arrival the game produced.
+   */
+  async function arrivalsOfAGame(rolls: number) {
     const recorder = recordingModel('a reflection');
     const guide = new Guide({ model: recorder, log: () => undefined });
-    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink(), now: FIXED_CLOCK });
 
     await bot.handleUpdate(message('/new', PRIVATE));
     await bot.handleUpdate(message('/start', PRIVATE));
-    await rollUntilTheGate(bot, sent);
-    await bot.handleUpdate(message('/report the account of entering, long enough to count', PRIVATE));
+    await bot.handleUpdate(message('/intention to see what I keep avoiding', PRIVATE));
 
-    // On, and reported again: now they have come from a square.
-    await rollUntilTheGate(bot, sent);
-    await bot.handleUpdate(message('/report a reflection long enough to count', PRIVATE));
+    const arrivals: string[] = [];
+    for (let roll = 0; roll < rolls; roll += 1) {
+      const before = sent.length;
+      await bot.handleUpdate(message('/roll', PRIVATE));
 
-    const prompt = arrivalOf(recorder.calls.at(-1)?.messages ?? []);
-    expect(prompt).toMatch(/They came from plan \d+\./);
-    expect(prompt, 'and 68 is the parking space, not an origin').not.toMatch(/came from plan 68/);
+      // The gate: it asks for an account before the game will go on, and the
+      // account is what makes the companion be asked at all.
+      if (texts(sent.slice(before)).join(' ').includes('before you move on')) {
+        await bot.handleUpdate(message('/report a reflection long enough to count', PRIVATE));
+        arrivals.push(arrivalOf(recorder.calls.at(-1)?.messages ?? []));
+      }
+    }
+
+    return arrivals;
+  }
+
+  it('tells it where they came from, when that is somewhere else', async () => {
+    const arrivals = await arrivalsOfAGame(40);
+
+    // The guard on the sample: without a move in it the rule below is vacuous.
+    const moves = arrivals.filter((prompt) => /They came from plan \d+\./.test(prompt));
+    expect(moves.length, 'arrivals that name a square they came from').toBeGreaterThan(0);
+
+    for (const prompt of moves) {
+      expect(prompt, 'a move is not also an entry').not.toContain('have just entered the game');
+    }
   });
 
   it('does not read the parking square as somewhere they came from', async () => {
@@ -794,23 +817,24 @@ describe('what the companion is told about the arrival', () => {
      * The first report of **every game**. Found by playing one and printing the
      * prompt the model actually received: *They walked here one square at a
      * time. They came from plan 68.* — about a player who had been off the
-     * board entirely. Ninth sighting of the 68 ambiguity, and the first inside
-     * a model's instructions.
+     * board entirely. A player waiting to enter is parked on `WIN_LOKA`, and
+     * nothing moves off it, so a previous plan of 68 on any other square is the
+     * parking space and not an origin. Ninth sighting of the 68 ambiguity, and
+     * the first inside a model's instructions.
+     *
+     * Over every arrival of the game, because the claim is that this sentence
+     * is never produced — not that it was absent from one throw.
      */
-    const recorder = recordingModel('a reflection');
-    const guide = new Guide({ model: recorder, log: () => undefined });
-    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+    const arrivals = await arrivalsOfAGame(40);
 
-    await bot.handleUpdate(message('/new', PRIVATE));
-    await bot.handleUpdate(message('/start', PRIVATE));
-    await rollUntilTheGate(bot, sent);
-    await bot.handleUpdate(message('/report the account of entering, long enough to count', PRIVATE));
+    expect(arrivals.length, 'reports filed in this game').toBeGreaterThan(1);
+    for (const prompt of arrivals) {
+      expect(prompt, 'the parking square is never an origin').not.toMatch(/came from plan 68/);
+    }
 
-    const prompt = String(recorder.calls.at(-1)?.messages?.[0]?.content ?? '');
-
-    expect(prompt).not.toMatch(/came from plan 68/);
-    expect(prompt, 'no move is claimed either').not.toMatch(/They walked here|brought down|carried up/);
-    expect(prompt, 'and what did happen is said').toContain('They have just entered the game');
+    const entry = arrivals[0] ?? '';
+    expect(entry, 'and what did happen is said').toContain('They have just entered the game');
+    expect(entry, 'no move is claimed either').not.toMatch(/They walked here|brought down|carried up/);
   });
 
   it('still answers when there is nothing to say about the arrival', async () => {
@@ -1137,44 +1161,67 @@ describe('a question sees what a report sees', () => {
      */
     const recorder = recordingModel('an answer');
     const guide = new Guide({ model: recorder, log: () => undefined });
-    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    /**
+     * A clock the test moves rather than one it reads.
+     *
+     * The die is seeded from `(chatId, now())`. Reading the real clock played a
+     * different game every run, and whether a square came back inside the bound
+     * was then a draw: this failed about one run in twelve, on CI first. A
+     * player can also *finish* — after that no throw moves anybody, and the
+     * remaining turns are spent on a board nobody is on.
+     *
+     * So: fixed games, played in order, until one of them returns somebody to a
+     * square they have written about. Deterministic, and not one lucky sample.
+     */
+    let clock = 1_700_000_000_000;
+
+    const { bot, sent } = harness({
+      guide,
+      reports: new MemoryReportSink(),
+      now: () => clock,
+    });
 
     return (async () => {
-      await bot.handleUpdate(message('/new', PRIVATE));
-      await bot.handleUpdate(message('/start', PRIVATE));
-      // The die will not turn without one.
-      await bot.handleUpdate(message('/intention to see what I keep avoiding', PRIVATE));
+      for (let game = 0; game < 6; game += 1) {
+        // A different seed, the same one on every run.
+        clock += 60_000;
+        await bot.handleUpdate(message('/new', PRIVATE));
+        await bot.handleUpdate(message('/start', PRIVATE));
+        // The die will not turn without one.
+        await bot.handleUpdate(message('/intention to see what I keep avoiding', PRIVATE));
 
-      const written = new Map<number, string>();
+        const written = new Map<number, string>();
 
-      for (let turn = 0; turn < 200; turn += 1) {
-        const before = sent.length;
-        await bot.handleUpdate(message('/roll', PRIVATE));
-        const said = texts(sent.slice(before)).join(' ');
+        for (let turn = 0; turn < 120; turn += 1) {
+          const before = sent.length;
+          await bot.handleUpdate(message('/roll', PRIVATE));
+          const said = texts(sent.slice(before)).join(' ');
 
-        const standing = /standing on (\d+)\./.exec(said);
-        if (!standing) continue;
+          const standing = /standing on (\d+)\./.exec(said);
+          if (!standing) continue;
 
-        const plan = Number(standing[1]);
-        const earlier = written.get(plan);
+          const plan = Number(standing[1]);
+          const earlier = written.get(plan);
 
-        if (earlier) {
-          // Back on a square already written about, and nothing filed yet for
-          // this arrival.
-          await bot.handleUpdate(message('/ask what has changed?', PRIVATE));
-          const prompt = String(recorder.calls.at(-1)?.messages?.[0]?.content ?? '');
+          if (earlier) {
+            // Back on a square already written about, and nothing filed yet for
+            // this arrival.
+            await bot.handleUpdate(message('/ask what has changed?', PRIVATE));
+            const prompt = String(recorder.calls.at(-1)?.messages?.[0]?.content ?? '');
 
-          expect(prompt, 'the earlier account is what a return is').toContain(earlier);
-          expect(prompt).toContain('stood here before');
-          return;
+            expect(prompt, 'the earlier account is what a return is').toContain(earlier);
+            expect(prompt).toContain('stood here before');
+            return;
+          }
+
+          const account = `the account of plan ${plan}, long enough to count as one`;
+          written.set(plan, account);
+          await bot.handleUpdate(message(`/report ${account}`, PRIVATE));
         }
-
-        const account = `the account of plan ${plan}, long enough to count as one`;
-        written.set(plan, account);
-        await bot.handleUpdate(message(`/report ${account}`, PRIVATE));
       }
 
-      throw new Error('no square came back in 200 turns');
+      throw new Error('no square came back in six games');
     })();
   });
 
