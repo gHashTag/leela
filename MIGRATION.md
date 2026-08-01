@@ -5432,6 +5432,44 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**The published app rebuilt in three steps instead of eighteen (161st pass).**
+The `/tmp` copy did not survive a restart, and the app was gone from the
+simulator for a second reason: `apps/mobile` carries the same bundle
+identifier, `xyz.ghashtag.dharma`, so installing the port **replaced** the
+published app. On a real phone that would take a player's game with it.
+
+Rebuilding it found a much shorter road. **`Podfile.lock` is the JavaScript
+lockfile this app never had.** Fourteen packages had drifted — every one a caret
+that npm resolved forward — and the Pods lockfile records exactly what each was
+when the shipped build was made:
+
+    react-native-gesture-handler   2.32.0 installed, 2.14.0 locked
+    react-native-screens           3.37.0 installed, 3.27.0 locked
+    @react-native-async-storage    1.24.0 installed, 1.19.8 locked
+    … eleven more
+
+Reading the pod name out of each package's own `.podspec` and pinning the npm
+version to what the lock remembers turns blockers 3, 4, 5, 14 and 16 into one
+edit, and `pod install` then succeeds where it had refused on changed
+constraints. What remained: the boost mirror (6), the four compiler blockers
+(7, 11, 12, 13) as one settings change on the generated Pods project, the
+RevenueCat `SubscriptionPeriod` ambiguity (10) qualified by module, Sentry
+shimmed (8, 9), and `storageAdapter`'s missing import (18) — still one line, and
+still the app's own defect.
+
+Two things cost a cycle each and are worth writing down. **The Firebase
+placeholder must be exactly 39 characters**: `FIRInstallations validateAPIKey`
+checks the length before anything uses it, and a 41-character stand-in aborts
+the process at launch. And **a shim must keep the shape of every export, not the
+ones somebody remembered** — the same lesson as blocker 17, learned again:
+`Navigation.tsx` ends `export default Sentry.withProfiler(App)`, at module
+scope, so one absent export is `undefined(App)` and `AppRegistry.runApplication`
+has nothing to run.
+
+It reaches the welcome screen — *Version: 6.8 (1)*, Sign In / Sign Up. Signing
+in still needs a real Firebase configuration, which is a secret and was not
+touched.
+
 **apps/mobile runs, and three things came out of running it (159th-160th
 passes).** The Expo app had never been built natively. It builds and launches on
 an iPhone 17 simulator, 0 errors and 0 warnings, and the first screen showed
