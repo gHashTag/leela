@@ -480,7 +480,26 @@ export function roll(
 
   if (isSessionOver(next.session)) {
     replies.push(say(describeStandings(next)));
-    replies.push(say(messageFor(room.language, 'roll.ended')));
+
+    /**
+     * And whether the last account is still owed.
+     *
+     * `classic` asks for a report on 68, and a pass went into making the
+     * winner's account possible at all — the square a whole game is played to
+     * reach was, for a while, the one arrival nobody was ever asked to write
+     * about. Having made it possible, this line pointed at `/path` and `/new`
+     * and not at `/report`, which is the one thing still to do.
+     *
+     * Every other arrival is met with the words that discharge it. The
+     * standings just above do say *owes a report*, in a list — an obligation
+     * named in a parenthesis, in the same breath as *that is the game*, is one
+     * nobody reads as an obligation.
+     */
+    const owing = next.session.players.some(
+      (player) => owesReport(player.state, next.session.rules) && !player.reportSubmitted,
+    );
+
+    replies.push(say(messageFor(room.language, owing ? 'roll.endedOwing' : 'roll.ended')));
   } else if (move.keepsTurn) {
     // The extra turn, which is the engine's answer and not a guess from who
     // holds the turn next. Read the other way round — "the same player throws

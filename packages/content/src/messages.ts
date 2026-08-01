@@ -74,6 +74,25 @@ const EN = {
   'roll.reached': '{name} reaches Cosmic Consciousness. 🕉',
   'roll.ended':
     'That is the game. /path shows what you wrote along the way; /new opens another table.',
+  /**
+   * The end, with the last account still owed.
+   *
+   * `classic` asks for a report on 68 — the square a whole game is played to
+   * reach was, for a while, the one arrival nobody was ever asked to write
+   * about, and a pass went into making that account possible. Having made it
+   * possible, the closing line pointed at `/path` and `/new` and not at
+   * `/report`. Every other arrival is met with the words that discharge it —
+   * *write what it brings up before you move on, send /report followed by your
+   * words* — and this one was met with a sentence about looking back.
+   *
+   * The standings above it do say *owes a report*, in a list. An obligation
+   * named in a parenthesis, in the same breath as *that is the game*, is an
+   * obligation nobody will read as one.
+   */
+  'roll.endedOwing':
+    'That is the game — and the square it was played to reach is still to be ' +
+    'written about. Send /report followed by your words, and then /path shows ' +
+    'the whole of it.',
   'roll.next': '{name} is next.',
   'roll.again': 'A six — throw again.',
   /**
@@ -531,6 +550,9 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'roll.reached': '{name} достигает Космического Сознания. 🕉',
   'roll.ended':
     'Вот и вся игра. /path показывает написанное по пути; /new открывает новый стол.',
+  'roll.endedOwing':
+    'Вот и вся игра — и о квадрате, ради которого она игралась, ещё не написано. ' +
+    'Отправьте /report и свои слова, а потом /path покажет всё целиком.',
   'roll.next': 'Следующий ход — {name}.',
   'roll.again': 'Шестёрка — бросайте ещё раз.',
   'roll.againAfter': 'Шестёрка — и ещё один бросок, когда напишете об этом плане.',

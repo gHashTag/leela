@@ -278,3 +278,25 @@ named now would be wrong by the time it mattered.
 Under `classic` almost every six owes an account, so the immediate promise was
 nearly always the wrong sentence. That is why it lasted: it read as correct
 whenever anybody checked one throw in isolation.
+
+## The end still owes an account
+
+`classic` asks for a report on 68, and a pass went into making the winner's
+account possible at all — the square a whole game is played to reach was, for a
+while, the one arrival nobody was ever asked to write about. Having made it
+possible, the closing line pointed at `/path` and `/new` and not at `/report`,
+which is the one thing still to do.
+
+Every other arrival is met with the words that discharge it: *write what it
+brings up before you move on — send /report followed by your words*. The
+standings just above the closing line do say *owes a report*, in a list. An
+obligation named in a parenthesis, in the same breath as *that is the game*, is
+one nobody reads as an obligation.
+
+Found by playing a game to its end and reading what it said. The account can be
+given — `/report` after the win is accepted and answers *their game is
+complete* — so the sentence had somewhere to point all along.
+
+`onchain` is the guard: it sets `reportOnWinningSquare: false`, because an
+on-chain winner is out of play and `createReport` requires `isStart`, so they
+could not file one if asked. A game under it ends without the instruction.

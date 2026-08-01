@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LANGUAGES, rulesFor, type Language } from '@leela/content';
-import { MAX_SEATS } from '@leela/engine';
+import { MAX_SEATS, ONCHAIN } from '@leela/engine';
 import { planFor } from '@leela/content';
 import {
   MAX_MESSAGE_CHARS,
@@ -490,11 +490,16 @@ describe('the end of a game is not a dead end', () => {
       const holder = room.session.players[room.session.turnIndex];
       const result = roll(room, holder.id, NOW);
       room = result.room as Room;
+
+      // The win first, because one reply can now be both: the closing line
+      // names `/report` when the winning square's account is still owed, and a
+      // helper that reads `/report` before the win files it and plays on
+      // forever.
+      if (result.replies.some((r) => r.text.includes('Cosmic Consciousness'))) return room;
       if (result.replies.some((r) => r.text.includes('/report'))) {
         room = report(room, holder.id, 'noted').room as Room;
         continue;
       }
-      if (result.replies.some((r) => r.text.includes('Cosmic Consciousness'))) return room;
     }
     throw new Error('the game never finished');
   }
@@ -504,6 +509,86 @@ describe('the end of a game is not a dead end', () => {
     const text = replies.map((r) => r.text).join('\n');
     expect(text).toContain('/new');
     expect(text).toContain('/path');
+  });
+
+  it('names the account the end still owes, at the end', () => {
+    /**
+     * `classic` asks for a report on 68, and a pass went into making the
+     * winner's account possible at all — the square a whole game is played to
+     * reach was, for a while, the one arrival nobody was ever asked to write
+     * about. Having made it possible, the closing line pointed at `/path` and
+     * `/new` and not at `/report`.
+     *
+     * Every other arrival is met with the words that discharge it. The
+     * standings just above do say *owes a report*, in a list — an obligation
+     * named in a parenthesis, in the same breath as *that is the game*, is one
+     * nobody reads as an obligation.
+     *
+     * Found by playing a game to its end and reading what it said.
+     */
+    let room = table(1, SEED);
+
+    for (let turn = 0; turn < 3000; turn += 1) {
+      const holder = room.session.players[room.session.turnIndex] as { id: string };
+      const result = roll(room, holder.id, NOW);
+      const text = result.replies.map((reply) => reply.text).join('\n');
+      room = result.room as Room;
+
+      if (text.includes('Cosmic Consciousness')) {
+        const winner = room.session.players[0] as { reportSubmitted: boolean };
+
+        expect(winner.reportSubmitted, 'the winning square owes an account').toBe(false);
+        expect(text, 'the closing line names the way to give it').toContain('/report');
+
+        // And the account can be given: the sentence has to point somewhere.
+        const filed = report(room, holder.id, 'the account of the end of it');
+        expect(filed.replies.map((reply) => reply.text).join(' ')).not.toMatch(/not on the board/);
+        return;
+      }
+
+      if (text.includes('/report')) {
+        room = report(room, holder.id, 'noted').room as Room;
+      }
+    }
+
+    throw new Error('the game never finished');
+  });
+
+  it('says nothing about an account when none is owed', () => {
+    /**
+     * The guard against the new sentence becoming the only one. `onchain` is
+     * the variant with `reportOnWinningSquare: false` — an on-chain winner is
+     * out of play and `createReport` requires `isStart`, so they cannot file
+     * one at all — and a game under it must end without asking for words that
+     * are impossible to give.
+     *
+     * Written after the first version proved nothing: it filed the report and
+     * then rolled a finished game, which answers *this game is over* and never
+     * reaches the closing line at all.
+     */
+    let room: Room = {
+      ...table(1, SEED),
+      session: { ...table(1, SEED).session, rules: ONCHAIN },
+    };
+
+    for (let turn = 0; turn < 3000; turn += 1) {
+      const holder = room.session.players[room.session.turnIndex] as { id: string };
+      const result = roll(room, holder.id, NOW);
+      const text = result.replies.map((reply) => reply.text).join('\n');
+      room = result.room as Room;
+
+      if (text.includes('Cosmic Consciousness')) {
+        expect(text, 'nothing is owed, so nothing is asked for').not.toMatch(/still to be written/);
+        expect(text, 'and the ordinary ending is still said').toContain('/new');
+        return;
+      }
+
+      if (text.includes('/report')) {
+        room = report(room, holder.id, 'noted').room as Room;
+      }
+    }
+
+    throw new Error('the game never finished');
   });
 
   it('offers the path at the moment of winning, not only afterwards', () => {

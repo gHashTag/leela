@@ -5251,6 +5251,45 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**The end still owed an account, and said nothing about it (187th pass).**
+Played a solo game the whole way to 68 and read every line. The closing three:
+
+```
+P100 reaches Cosmic Consciousness. 🕉
+P100: finished 🕉 — owes a report
+That is the game. /path shows what you wrote along the way; /new opens another table.
+```
+
+`classic` asks for a report on 68, and a pass went into making the winner's
+account possible at all — the square a whole game is played to reach was, for a
+while, the one arrival nobody was ever asked to write about. Having made it
+possible, the closing line pointed at `/path` and `/new` and **not** at
+`/report`. Every other arrival is met with the words that discharge it. The
+obligation is named one line above, in a parenthesis in a list, in the same
+breath as *that is the game* — which is not a place anybody reads an obligation.
+
+The account *can* be given: `/report` after the win is accepted and answers
+*their game is complete* 🕉. The sentence had somewhere to point all along.
+`onchain` is the guard — `reportOnWinningSquare: false`, because an on-chain
+winner is out of play and `createReport` requires `isStart` — and a game under
+it ends without the instruction.
+
+**Three instrument errors this pass, all caught before they became claims**,
+which is now the larger half of what this method costs. `/path` reported *you
+have not written anything yet* after fourteen accounts: `ReportSink.record`
+takes one object and I had called it with four positional arguments, so the
+history filtered on a field that was never set. Replaced the hand-rolled stub
+with `MemoryReportSink`, which is the real contract and cannot be got wrong.
+`/save` printed nothing because it sends a document and the harness only
+recorded `sendMessage`. And *A six — throw again* after a refused overshoot
+looked like the defect fixed the pass before — it is correct: nobody moved, so
+nothing is owed, and the throw really can be taken again.
+
+**And a test helper had to be corrected before the fix could land.** `finished()`
+checks a reply for `/report` before checking it for the win, files a report and
+plays on — and the new closing line contains both, so the game never finished.
+One reply can be two things.
+
 **A six that had to wait, and was told to throw (186th pass).** The method that
 found the last two defects, turned on the surface with the most sentences: a
 whole game played through `handleUpdate`, with every line the bot sent printed
