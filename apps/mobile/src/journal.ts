@@ -24,6 +24,7 @@ import {
   isIntention,
   isReport,
   newEntries,
+  merged,
   order,
   parseDocument,
   parseSquare,
@@ -423,8 +424,16 @@ export function shareName(stamp: string): string {
 /** What came of taking a path in. */
 export interface TakenIn {
   journal: Journal;
-  /** How many accounts were added. Zero when the file held nothing new. */
+  /** How many of the file's accounts are in the path now. */
   added: number;
+  /**
+   * How many of the oldest the bound pushed out, and they are gone.
+   *
+   * Zero on every ordinary import. It is not zero for a player near five
+   * hundred accounts, which is a player who has been writing for a long time —
+   * and they were being told only the first number.
+   */
+  dropped: number;
   /** The question the file carried, when this player has none of their own. */
   intention: string | null;
   /** False when the text was not a path this format can read. */
@@ -432,7 +441,7 @@ export interface TakenIn {
 }
 
 /**
- * Take a path in without losing anything.
+ * Take a path in, and say what that cost.
  *
  * The phone could hand a path out and not take one back, so a player who began
  * in the mini app or at a table could not carry it here — the format exists so
@@ -456,15 +465,19 @@ export interface TakenIn {
 export function takeIn(journal: Journal, text: string, intention: string): TakenIn {
   const incoming = parseDocument(text);
   if (incoming === null) {
-    return { journal, added: 0, intention: null, readable: false };
+    return { journal, added: 0, dropped: 0, intention: null, readable: false };
   }
 
-  const added = newEntries(journal.entries, incoming.entries);
+  // What is *there* afterwards, not what was new. The bound cuts the oldest,
+  // and this said `newEntries(...).length` over a cut that had just thrown that
+  // many of them away — under a comment promising nothing is lost.
+  const union = merged(journal.entries, incoming.entries);
   const asked = (incoming.intention ?? '').trim();
 
   return {
-    journal: { entries: order([...journal.entries, ...added]).slice(-MAX_REPORTS) },
-    added: added.length,
+    journal: { entries: union.entries },
+    added: union.added,
+    dropped: union.dropped,
     intention: intention.trim() === '' && asked !== '' ? asked : null,
     readable: true,
   };

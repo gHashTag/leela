@@ -466,6 +466,14 @@ const EN = {
     one: '{count} plan brought back.',
     other: '{count} plans brought back.',
   },
+  /**
+   * What the bound cost. Said beside the count, never instead of it: a player
+   * brought accounts in *and* lost older ones, and both are true.
+   */
+  'app.pathImportedCapped': {
+    one: '{count} of your oldest accounts no longer fits and is gone.',
+    other: '{count} of your oldest accounts no longer fit and are gone.',
+  },
   'app.pathImportedNothing': 'Nothing new in that file.',
   'app.pathUnreadable': 'That file is not a path this app wrote.',
   'app.close': 'Close',
@@ -791,6 +799,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
     few: 'Возвращено {count} плана.',
     many: 'Возвращено {count} планов.',
     other: 'Возвращено {count} плана.',
+  },
+  'app.pathImportedCapped': {
+    one: '{count} самая старая запись больше не помещается и удалена.',
+    few: '{count} самые старые записи больше не помещаются и удалены.',
+    many: '{count} самых старых записей больше не помещаются и удалены.',
+    other: '{count} самых старых записей больше не помещаются и удалены.',
   },
   'app.pathImportedNothing': 'В этом файле нет ничего нового.',
   'app.pathUnreadable': 'Это не путь, записанный этим приложением.',

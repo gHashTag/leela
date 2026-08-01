@@ -5251,6 +5251,35 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Twelve plans brought back, and eleven of them gone (201st pass).** Probed the
+shared format at its bound instead of in the middle. `merge` joins a path and a
+file and cuts to `MAX_REPORTS` — five hundred — and said nothing about the cut,
+so both surfaces that call it told the player a number that was not what
+happened.
+
+The phone said `newEntries(...).length`: what was *new*, over a cut that had
+just thrown that many of the oldest away. Directly above it, in as many words:
+**Nothing is lost.** The mini app said `entries.length - before`: the *growth*
+of the path — and at the bound a path does not grow, because every arrival costs
+one of the oldest, so a player near five hundred was told *nothing new in that
+file* about a file whose accounts had all landed.
+
+Two wrong answers to one question, and the repository had already written down
+the rule that governs it: *saying twelve accounts brought in over a store that
+took none is the untruth this surface told about a report.* One function along.
+
+`merged` in `@leela/journal` answers it once — the union, how many of the
+incoming are **in** it, and how many of the oldest the bound pushed out — and
+both surfaces say both halves. The count is a different question from *how many
+were new*, and the case that proves it is a full path meeting a file of older
+accounts: every one of them new, not one of them kept.
+
+**Three probes before it that found nothing**, and that is worth writing down
+too: the mini app's first launch, its two-seat hand-off and the journal's
+round trip are all sound. Two of the three false starts were my own instruments
+— a twenty-millisecond wait for a throw that takes two seconds, and a seat's
+question written under a key the app does not use.
+
 **The third surface with the same shape (200th pass).** `startOver` in the mini
 app empties this seat's board, releases the gate and forgets the draft — and
 kept the sentence the finished game was *played to answer*. So the new game

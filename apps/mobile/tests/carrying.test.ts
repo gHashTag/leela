@@ -142,6 +142,21 @@ describe('what the phone takes back', () => {
     const taken = takeIn(big, theirs, '');
 
     expect(taken.journal.entries).toHaveLength(MAX_REPORTS);
-    expect(taken.added, 'and it did take them in').toBe(2);
+
+    /**
+     * What is *there*, not what was new. This asserted two — the number
+     * `newEntries` gives — over a path that had just cut two of the oldest to
+     * make room, and said nothing about the cut. The file's accounts are newer
+     * than the five hundred already held, so both do land; the sentence the
+     * player reads now carries the other half as well.
+     */
+    /**
+     * One of the file's two, and this is the defect in miniature: its accounts
+     * are stamped 1 and 2, older than every one of the five hundred already
+     * held, so the cut takes one of them along with the oldest of mine. The
+     * player was told *2 plans brought back* and would have found one.
+     */
+    expect(taken.added, 'what is in the path, not what was new').toBe(1);
+    expect(taken.dropped, 'and what the bound pushed out to fit it').toBe(2);
   });
 });

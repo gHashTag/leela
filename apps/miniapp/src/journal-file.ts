@@ -14,7 +14,7 @@
 
 import {
   MAX_REPORTS,
-  merge as mergeEntries,
+  merged,
   parseDocument,
   toDocument as toJournalDocument,
   type Report,
@@ -63,8 +63,37 @@ export function toDocument(journal: Journal, intention?: string) {
  * to open this player's gate.
  */
 export function merge(journal: Journal, incoming: ReadonlyArray<Report>): Journal {
+  return taking(journal, incoming).journal;
+}
+
+/** A journal, and what taking a file into it cost. */
+export interface Taking {
+  journal: Journal;
+  /** How many of the file's accounts are in it now. */
+  added: number;
+  /** How many of the oldest the bound pushed out. They are gone. */
+  dropped: number;
+}
+
+/**
+ * Take a file in, and be able to say what happened.
+ *
+ * The screen worked its count out as `entries.length - before`, which is the
+ * growth of the path and not the number of accounts it took. At the bound the
+ * path does not grow at all — every arrival costs one of the oldest — so a
+ * player near five hundred was told *nothing new in that file* about a file
+ * whose accounts had all landed, and the ones they lost were never mentioned.
+ *
+ * The phone had the other half of the same hole: it said `newEntries(...)`,
+ * which counts what was new rather than what is there. One question, asked in
+ * `@leela/journal` now, so neither surface answers it for itself again.
+ */
+export function taking(journal: Journal, incoming: ReadonlyArray<Report>): Taking {
+  const union = merged(journal.entries, incoming);
+
   return {
-    reported: journal.reported,
-    entries: mergeEntries(journal.entries, incoming).slice(-MAX_REPORTS),
+    journal: { reported: journal.reported, entries: union.entries },
+    added: union.added,
+    dropped: union.dropped,
   };
 }

@@ -67,7 +67,7 @@ import {
 } from './state';
 import {
   fileName,
-  merge,
+  taking,
   parseDocument,
   parseSquare,
   shareTextFor,
@@ -1392,8 +1392,12 @@ async function importPath(file: File): Promise<void> {
     return;
   }
 
-  const before = journal.entries.length;
-  journal = merge(journal, incoming.entries);
+  // What the file's accounts did, from the one place that knows: at the bound
+  // the path does not grow, so measuring its length said *nothing new in that
+  // file* about a file whose accounts had all landed — and said nothing at all
+  // about the older ones they pushed out.
+  const took = taking(journal, incoming.entries);
+  journal = took.journal;
   saveJournalFor(localStorage, currentPlayer(session).id, journal);
 
   // The question, only where this seat has none. An intention already given is
@@ -1412,15 +1416,23 @@ async function importPath(file: File): Promise<void> {
     }
   }
 
-  const added = journal.entries.length - before;
   const seat = seatNumberOf(session);
   el.reader.close();
-  announce(
-    added === 0
+
+  const brought =
+    took.added === 0
       ? messageFor(language, 'app.pathImportedNothing')
       : session.players.length > 1
-        ? `${messageFor(language, 'app.seatTurn', { seat })} · ${messageFor(language, 'app.pathImported', { count: added })}`
-        : messageFor(language, 'app.pathImported', { count: added }),
+        ? `${messageFor(language, 'app.seatTurn', { seat })} · ${messageFor(language, 'app.pathImported', { count: took.added })}`
+        : messageFor(language, 'app.pathImported', { count: took.added });
+
+  // Both, when both happened. A player brought accounts in *and* lost older
+  // ones, and a sentence that carries only the first is the untruth this app
+  // already caught itself telling about a report a store had refused.
+  announce(
+    took.dropped === 0
+      ? brought
+      : `${brought} ${messageFor(language, 'app.pathImportedCapped', { count: took.dropped })}`,
   );
 }
 

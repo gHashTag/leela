@@ -7,6 +7,7 @@ import {
   isReport,
   keyOf,
   merge,
+  merged,
   newEntries,
   order,
   MAX_INTENTION_CHARS,
@@ -311,5 +312,88 @@ describe('what a file may carry is what the app may write', () => {
     );
 
     expect(merge([], many).length).toBe(MAX_REPORTS);
+  });
+});
+
+describe('the union says what it cost', () => {
+  /**
+   * `merge` cuts to `MAX_REPORTS` and said nothing, and both surfaces that call
+   * it told the player `newEntries(...).length` — *twelve plans brought back* —
+   * while the cut had just thrown twelve of their oldest away. Four hundred and
+   * ninety plus fifty is five hundred, and the sentence said fifty. The comment
+   * above `takeIn` on the phone says **Nothing is lost** in as many words.
+   *
+   * Found by probing the format at its bound rather than in the middle.
+   */
+  const many = (count: number, from = 0): Report[] =>
+    Array.from({ length: count }, (_, index) => ({
+      plan: ((from + index) % 72) + 1,
+      text: `account number ${from + index}, long enough to be one`,
+      at: 1_700_000_000_000 + (from + index) * 1_000,
+    }));
+
+  it('counts what is there, not what was new', () => {
+    const mine = many(MAX_REPORTS - 10);
+    const theirs = many(50, 10_000);
+    const union = merged(mine, theirs);
+
+    expect(union.entries).toHaveLength(MAX_REPORTS);
+    expect(union.added, 'only what fits was brought back').toBe(50);
+    expect(union.dropped, 'and this many of the oldest went').toBe(40);
+  });
+
+  it('never claims more than it holds, at any size', () => {
+    // The shape rather than one pair of numbers: whatever goes in, the count
+    // is of entries a reader can find in the result.
+    for (const [mine, theirs] of [
+      [0, 10],
+      [10, 0],
+      [MAX_REPORTS, 10],
+      [MAX_REPORTS - 1, 1],
+      [MAX_REPORTS + 200, 100],
+      [200, MAX_REPORTS],
+    ] as const) {
+      const union = merged(many(mine), many(theirs, 100_000));
+      const keys = new Set(union.entries.map(keyOf));
+
+      expect(union.entries.length, `${mine}+${theirs}`).toBeLessThanOrEqual(MAX_REPORTS);
+      expect(union.added, `${mine}+${theirs}`).toBe(
+        many(theirs, 100_000).filter((entry) => keys.has(keyOf(entry))).length,
+      );
+    }
+  });
+
+  it('says nothing was brought back when nothing of it fits', () => {
+    /**
+     * A full path and a file of older accounts. Every one of them is new, and
+     * every one is cut — so `newEntries` says fifty and a reader finds none.
+     * This is the case that makes the count a different question from "how many
+     * were new", rather than the same one with a rounding error.
+     */
+    const mine = many(MAX_REPORTS, 10_000);
+    const older = many(50);
+
+    const union = merged(mine, older);
+    expect(newEntries(mine, older), 'all of them are new').toHaveLength(50);
+    expect(union.added, 'and none of them is there').toBe(0);
+    expect(union.dropped).toBe(50);
+  });
+
+  it('costs nothing on an ordinary import', () => {
+    // The other half: a player nowhere near the bound must not be told anything
+    // was let go of.
+    const union = merged(many(20), many(5, 10_000));
+
+    expect(union.added).toBe(5);
+    expect(union.dropped).toBe(0);
+    expect(union.entries).toHaveLength(25);
+  });
+
+  it('is what merge has always returned', () => {
+    // `merge` is the same union; this only adds the two numbers beside it.
+    const mine = many(30);
+    const theirs = many(20, 10_000);
+
+    expect(merge(mine, theirs)).toEqual(merged(mine, theirs).entries);
   });
 });

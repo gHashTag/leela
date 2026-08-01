@@ -7,11 +7,13 @@ import {
   parseDocument,
   parseSquare,
   shareTextFor,
+  taking,
   takeSquare,
   toDocument,
   toText,
 } from '../src/journal-file';
 import { EMPTY, MAX_REPORTS, arrived, record, type Journal } from '../src/reports';
+import type { Report } from '@leela/journal';
 
 /**
  * Getting what you wrote off the device.
@@ -287,5 +289,69 @@ describe('one square, handed back', () => {
   it('loses nothing that was already written', () => {
     const after = takeSquare(journal.entries, { plan: 41, text: 'Sent to me.' }, 1_700_000_100_000);
     expect(after).toEqual(expect.arrayContaining(journal.entries));
+  });
+});
+
+describe('taking a file in says what it cost', () => {
+  /**
+   * The screen worked its count out as `entries.length - before` — the growth
+   * of the path, not the number of accounts it took. At the bound the path does
+   * not grow at all, because every arrival costs one of the oldest, so a player
+   * near five hundred was told *nothing new in that file* about a file whose
+   * accounts had all landed, and the ones they lost were never mentioned.
+   *
+   * The phone had the other half of the same hole, saying `newEntries(...)` —
+   * what was new rather than what is there.
+   */
+  const many = (count: number, from = 0): Report[] =>
+    Array.from({ length: count }, (_, index) => ({
+      plan: ((from + index) % 72) + 1,
+      text: `account ${from + index}, long enough to be one`,
+      at: 1_700_000_000_000 + (from + index) * 1_000,
+    }));
+
+  it('says accounts landed even where the path did not grow', () => {
+    const full: Journal = { reported: true, entries: many(MAX_REPORTS) };
+    const newer = many(20, 10_000);
+
+    const took = taking(full, newer);
+
+    expect(took.journal.entries, 'still at the bound').toHaveLength(MAX_REPORTS);
+    expect(took.added, 'and every one of them is in it').toBe(20);
+    expect(took.dropped, 'at the price of this many of the oldest').toBe(20);
+  });
+
+  it('says nothing landed when nothing of it fits', () => {
+    // Older than everything held: all new, none kept. The count has to be able
+    // to say that, and length-minus-length cannot tell it from the case above.
+    const full: Journal = { reported: true, entries: many(MAX_REPORTS, 10_000) };
+    const older = many(20);
+
+    const took = taking(full, older);
+
+    expect(took.added).toBe(0);
+    expect(took.dropped).toBe(20);
+  });
+
+  it('costs nothing on an ordinary import, and says so', () => {
+    const took = taking({ reported: false, entries: many(20) }, many(5, 10_000));
+
+    expect(took.added).toBe(5);
+    expect(took.dropped).toBe(0);
+    expect(took.journal.entries).toHaveLength(25);
+  });
+
+  it('never lets a file open the gate, whatever it brought', () => {
+    // The rule this file already had, kept while the counting changed.
+    const owing: Journal = { reported: false, entries: many(10) };
+    expect(taking(owing, many(5, 10_000)).journal.reported).toBe(false);
+    expect(taking({ ...owing, reported: true }, many(5, 10_000)).journal.reported).toBe(true);
+  });
+
+  it('is the journal `merge` has always returned', () => {
+    const mine: Journal = { reported: true, entries: many(30) };
+    const theirs = many(20, 10_000);
+
+    expect(merge(mine, theirs)).toEqual(taking(mine, theirs).journal);
   });
 });

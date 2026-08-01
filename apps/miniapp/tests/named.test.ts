@@ -348,6 +348,11 @@ describe('every door into a journal says whose', () => {
   it('tells the player which seat a path came back into', () => {
     // Before the act for a square, after it for a file — a file is chosen in
     // the operating system's own dialog, where this app cannot put a title.
-    expect(MAIN).toContain("`${messageFor(language, 'app.seatTurn', { seat })} · ${messageFor(language, 'app.pathImported', { count: added })}`");
+    // The seat and the count in one sentence, rather than the exact expression
+    // that built it: this asserted a literal and broke when the count stopped
+    // being `added` and started being what the path actually took.
+    expect(MAIN).toMatch(
+      /messageFor\(language, 'app\.seatTurn', \{ seat \}\)\} · \$\{messageFor\(language, 'app\.pathImported'/,
+    );
   });
 });

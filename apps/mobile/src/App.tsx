@@ -775,10 +775,19 @@ export default function App() {
               setIntention(taken.intention);
               saveIntention(store, taken.intention);
             }
-            setSaid(
+            // Both, when both happened: accounts came in *and* older ones no
+            // longer fit. Saying only the first is the untruth this surface
+            // already caught itself telling about a report a disk refused.
+            const brought =
               taken.added === 0
                 ? messageFor(language, 'app.pathImportedNothing')
-                : messageFor(language, 'app.pathImported', { count: taken.added }),
+                : messageFor(language, 'app.pathImported', { count: taken.added });
+            setSaid(
+              taken.dropped === 0
+                ? brought
+                : `${brought} ${messageFor(language, 'app.pathImportedCapped', {
+                    count: taken.dropped,
+                  })}`,
             );
 
             // And whether the device took it — both halves, answered together

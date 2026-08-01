@@ -248,7 +248,57 @@ export function merge(
   existing: ReadonlyArray<Report>,
   incoming: ReadonlyArray<Report>,
 ): Report[] {
-  return order([...existing, ...newEntries(existing, incoming)]).slice(-MAX_REPORTS);
+  return merged(existing, incoming).entries;
+}
+
+/** A union, and what making it cost. */
+export interface Merged {
+  /** Everything that fits, oldest first. */
+  entries: Report[];
+  /** How many of the incoming are in it — not how many were new. */
+  added: number;
+  /**
+   * How many accounts the bound pushed out, oldest first, and they are gone.
+   *
+   * Zero on every ordinary import. It is not zero for a player near five
+   * hundred, which is a player who has been writing for a long time.
+   */
+  dropped: number;
+}
+
+/**
+ * The union, bounded, saying what it did.
+ *
+ * `merge` cuts to `MAX_REPORTS` and says nothing, and both surfaces that call
+ * it told the player `newEntries(...).length` — *twelve plans brought back* —
+ * while the cut had just thrown twelve of their oldest away. Four hundred and
+ * ninety plus fifty is five hundred, and the sentence said fifty.
+ *
+ * The comment above `takeIn` on the phone says **Nothing is lost** in as many
+ * words. It is the same untruth the mini app already caught itself telling
+ * about a report a disk had refused, one function along: *saying twelve
+ * accounts brought in over a store that took none is the untruth this surface
+ * told.*
+ *
+ * So the count is of what is *there* — an entry that arrived and was then cut
+ * was not brought back — and what the bound cost is a number the caller can
+ * say out loud rather than one it has to work out by subtracting.
+ */
+export function merged(
+  existing: ReadonlyArray<Report>,
+  incoming: ReadonlyArray<Report>,
+): Merged {
+  const fresh = newEntries(existing, incoming);
+  const whole = order([...existing, ...fresh]);
+  const entries = whole.slice(-MAX_REPORTS);
+
+  // By key, because the cut takes the oldest and some of those may be the ones
+  // that just arrived — a file of old accounts brought into a full path adds
+  // nothing at all, and the count has to be able to say so.
+  const kept = new Set(entries.map(keyOf));
+  const added = fresh.filter((entry) => kept.has(keyOf(entry))).length;
+
+  return { entries, added, dropped: whole.length - entries.length };
 }
 
 /** A name a file can carry into a chat or a downloads folder. */
