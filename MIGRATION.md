@@ -5251,6 +5251,29 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Ninety characters that disappeared on the way (203rd pass).** The third
+surface, and the same bound. Telegram carries 4,096 characters and
+`MAX_REPORT_CHARS` is 4,000, so a report written in a chat can be longer than
+the format holds. The bot filed the whole of it, said *P has reported*, and the
+tail was cut later — by `parseDocument`, when the path was carried to a phone.
+Ninety characters of somebody's writing gone on the far side of a file, where
+nobody was watching it happen.
+
+Measured, not guessed: sent the longest thing Telegram will carry, read 4,090
+out of the store, and 4,000 back out of the format.
+
+The other two surfaces cap the box a player types in — `maxlength="4000"` and
+`maxLength={MAX_REPORT_CHARS}`. A chat has no box to cap, so the clamp belongs
+where the report is filed. Clamped rather than refused, which is the reading
+`parseDocument` already makes about the same number: *a report of five thousand
+characters is ordinary writing that is longer than the store will hold*, and
+refusing it outright would throw away all of it to enforce a limit on the end of
+it. And said, in English and Russian, because a bound nobody is shown is
+indistinguishable from a bug.
+
+The check states the shape rather than the number: **what is filed and what
+comes back out of a file are the same text.**
+
 **A bound nobody is shown, on the surface that wrote the sentence down (202nd
 pass).** The same lens as last pass, on the other two bounds. `record` cuts a
 report at `MAX_REPORT_CHARS` and drops the oldest account past `MAX_REPORTS`,

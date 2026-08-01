@@ -33,7 +33,7 @@ import {
   isWaitingToEnter,
   owesReport,
 } from '@leela/engine';
-import { revisited } from '@leela/journal';
+import { MAX_REPORT_CHARS, revisited } from '@leela/journal';
 import { MAX_MESSAGE_CHARS } from './render';
 import { bookFor, messageFor, planFor, resolveLanguage, type Language,
   type MessageKey,
@@ -747,6 +747,26 @@ export function report(
   const after = afterReport(next.session, byPlayerId, now);
   const name = nameOf(next, byPlayerId);
 
+  /**
+   * What a path can keep, decided here rather than at the far end of a file.
+   *
+   * Telegram carries 4096 characters and `MAX_REPORT_CHARS` is 4000, so a
+   * report written in a chat can be longer than the format holds. This filed
+   * the whole of it, said *P has reported*, and the tail was cut later — by
+   * `parseDocument`, when the path was carried to a phone, where nobody was
+   * watching it happen. The other two surfaces cap the box a player types in;
+   * a chat has no box to cap.
+   *
+   * Clamped rather than refused, which is the reading `parseDocument` already
+   * makes about the same number: a report of five thousand characters is
+   * ordinary writing that is longer than the store will hold, and refusing it
+   * outright would throw away all of it to enforce a limit on the end of it.
+   * Said, because a bound nobody is shown is indistinguishable from a bug.
+   */
+  const written = text.trim();
+  const kept = written.slice(0, MAX_REPORT_CHARS);
+  const clipped = written.length - kept.length;
+
   const filed =
     after.say === 'finished'
       ? messageFor(room.language, 'report.filedDone', { name })
@@ -764,10 +784,20 @@ export function report(
 
   return {
     room: next,
-    replies: [say(filed, false)],
+    replies: [
+      say(
+        clipped === 0
+          ? filed
+          : `${filed} ${messageFor(room.language, 'report.clipped', {
+              count: clipped,
+              max: MAX_REPORT_CHARS,
+            })}`,
+        false,
+      ),
+    ],
     // The report is what the game is played for; keeping it is the point.
     effects: [
-      { kind: 'report', userId: byPlayerId, plan: seated.state.loka, text: text.trim() },
+      { kind: 'report', userId: byPlayerId, plan: seated.state.loka, text: kept },
     ],
   };
 }

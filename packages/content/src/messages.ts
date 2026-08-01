@@ -134,6 +134,18 @@ const EN = {
   // deployed contract requires before each roll. A second one about the same
   // visit would make the square look like one the player returned to.
   'report.already': 'You have already written about {plan}. The next report belongs to the next square.',
+  /**
+   * What did not fit, said at the moment it did not fit.
+   *
+   * Telegram carries 4096 characters and the format holds 4000, so a report
+   * written in a chat can be longer than a path can keep. The bot filed the
+   * whole of it and said nothing; the tail was cut later, by `parseDocument`,
+   * on the far side of a file — where nobody was watching.
+   */
+  'report.clipped': {
+    one: '{count} character at the end did not fit — a report holds {max}.',
+    other: '{count} characters at the end did not fit — a report holds {max}.',
+  },
   'report.tooShort':
     'A report is a reflection, not a line to open the gate — {count} characters at least.',
   'report.filed': '{name} has reported. You may throw.',
@@ -586,6 +598,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'report.notOnBoard':
     'Вы ещё не на доске. Шестёрка выводит вас туда — тогда и появится план, о котором писать.',
   'report.already': 'Вы уже написали о плане {plan}. Следующий отчёт — о следующей клетке.',
+  'report.clipped': {
+    one: '{count} символ в конце не поместился — отчёт вмещает {max}.',
+    few: '{count} символа в конце не поместились — отчёт вмещает {max}.',
+    many: '{count} символов в конце не поместились — отчёт вмещает {max}.',
+    other: '{count} символов в конце не поместились — отчёт вмещает {max}.',
+  },
   'report.tooShort':
     'Отчёт — это размышление, а не строчка, чтобы открыть ворота: хотя бы {count} символов.',
   'report.filed': 'Отчёт от {name} принят. Можно бросать.',
