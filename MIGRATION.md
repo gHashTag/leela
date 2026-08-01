@@ -5251,6 +5251,27 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**The published app's accounts, audited rather than ported.** The unified
+monorepo has **no accounts at all** — the phone, the mini app and the bot each
+identify a player without one, and nothing here reads a password. The published
+app's sign-up and sign-in were read anyway, because what they do is a list of
+things these surfaces must not grow. Forty-one findings survived a separate
+refutation pass and twelve did not:
+[`docs/published-app-auth-audit.md`](docs/published-app-auth-audit.md).
+
+Three of them destroy or expose something. `getProfile` swallows its own error
+and returns `undefined`, `onSignIn` reads that as *no profile yet* and routes an
+existing player into the username step, and `createProfile` writes with `.set()`
+and no merge — so one failed profile read on launch puts a long-time player's
+`plan` back to 68 and replaces their whole `history`. The SendPulse address-book
+call is awaited **after** the Firebase account is created and **before**
+navigation, with its token fetch outside its own try, so a marketing-list
+failure strands somebody with an account they cannot reach and a message saying
+their brand-new address is already taken. And every sign-up posts the player's
+email to that address book with no opt-in.
+
+Nothing was changed: that code is on `main`.
+
 **Asked once, never shown, never changed (176th pass).** The phone asked what
 the player is playing for, kept it, wrote it into every square they shared —
 and never showed it to them again, and never let them change it.
