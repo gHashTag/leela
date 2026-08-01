@@ -414,6 +414,16 @@ const EN = {
   'app.pathExportSeat': 'Save Player {seat}’s copy',
   'app.pathEveryone': 'The paths at this table',
   'app.pathImport': 'Bring one back',
+  /**
+   * And whose it comes back into.
+   *
+   * The path view shows a section per seat, and its footer has three doors into
+   * and out of a journal. Two of them name the seat — *Save Player 1's copy*,
+   * and *Player 3 · Paste a square somebody sent you* — and this one said only
+   * *Bring one back*, while merging a whole path, and the question it was
+   * written under, into whichever seat happened to hold the turn.
+   */
+  'app.pathImportSeat': 'Bring one back for Player {seat}',
   'app.pathExported': 'Saved, and a readable copy is on the clipboard.',
   'app.pathImported': {
     one: '{count} plan brought back.',
@@ -732,6 +742,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.pathExportSeat': 'Сохранить копию игрока {seat}',
   'app.pathEveryone': 'Пути за этим столом',
   'app.pathImport': 'Вернуть из файла',
+  'app.pathImportSeat': 'Вернуть из файла для игрока {seat}',
   'app.pathExported': 'Сохранено, а читаемая копия — в буфере обмена.',
   'app.pathImported': {
     one: 'Возвращён {count} план.',

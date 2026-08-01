@@ -289,3 +289,65 @@ describe('a dialog can be left', () => {
     }
   });
 });
+
+/**
+ * Three doors into a journal, and each one says whose it opens onto.
+ *
+ * The path view shows a section per seat under the heading *The paths at this
+ * table*, and its footer carries three controls that read or write one player's
+ * journal. Two of them were named when an unnamed one wrote the wrong file:
+ * *Save Player 1's copy*, and a paste dialog that opens as *Player 3 · Paste a
+ * square somebody sent you*.
+ *
+ * **The third said only *Bring one back*** — while merging a whole path, and
+ * the question it was written under, into whichever seat happened to hold the
+ * turn. Found by playing: three seated, a file brought back from a section
+ * headed *Player 1*, and it landed in Player 3's journal with a confirmation
+ * that named a count and no seat.
+ */
+describe('every door into a journal says whose', () => {
+  const doors = [
+    ['the way out', 'app.pathExportSeat'],
+    ['the way in from a file', 'app.pathImportSeat'],
+    ['a square somebody sent', 'app.seatTurn'],
+  ] as const;
+
+  it.each(doors)('%s names a seat', (_what, key) => {
+    // `{seat}` rather than a fixed number: the sentence has to be about a
+    // player, and a key without the placeholder cannot be.
+    expect(messageFor('en', key, { seat: 3 }), key).toMatch(/\b3\b/);
+    expect(messageFor('ru', key, { seat: 3 }), `${key} in Russian`).toMatch(/\b3\b/);
+  });
+
+  it('names one on the control, not only in the dialog behind it', () => {
+    // The export's label is set per section and the import's was not, so the
+    // one that carries a whole path was the one with no name on it.
+    expect(MAIN).toContain("messageFor(language, 'app.pathImportSeat', { seat: seatNumberOf(session) })");
+    expect(MAIN).toContain("messageFor(language, 'app.pathExportSeat', { seat: section.seat })");
+  });
+
+  it('says nothing about a seat when there is only one', () => {
+    // A player alone does not need to be told which of themselves it is.
+    expect(MAIN).toContain("alone\n    ? messageFor(language, 'app.pathImport')");
+  });
+
+  it('counts the seat once, in one place', () => {
+    /**
+     * `session.players.indexOf(currentPlayer(session)) + 1` was written out in
+     * the paste dialog, and the import needed the same number. Two copies of a
+     * counting rule is how a table comes to disagree with itself about which
+     * player it is talking about.
+     */
+    expect(MAIN).toContain('function seatNumberOf(');
+    expect(
+      [...MAIN.matchAll(/players\.indexOf\(currentPlayer\([^)]*\)\) \+ 1/g)].length,
+      'the seat is counted in one place',
+    ).toBe(1);
+  });
+
+  it('tells the player which seat a path came back into', () => {
+    // Before the act for a square, after it for a file — a file is chosen in
+    // the operating system's own dialog, where this app cannot put a title.
+    expect(MAIN).toContain("`${messageFor(language, 'app.seatTurn', { seat })} · ${messageFor(language, 'app.pathImported', { count: added })}`");
+  });
+});

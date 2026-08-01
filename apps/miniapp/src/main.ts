@@ -296,6 +296,7 @@ const el = {
   pasteHint: document.getElementById('paste-hint') as HTMLElement,
   pasteTake: document.getElementById('paste-take') as HTMLButtonElement,
   pathImport: document.getElementById('path-import-input') as HTMLInputElement,
+  pathImportText: document.getElementById('path-import') as HTMLElement,
   pathImportLabel: document.getElementById('path-import-label') as HTMLElement,
   rules: document.getElementById('rules') as HTMLButtonElement,
   plans: document.getElementById('plans') as HTMLButtonElement,
@@ -1241,6 +1242,20 @@ function openPath(): void {
   // The footer's button is the one-seat case: with several, each section has
   // its own, because a button that does not say whose saves the wrong one.
   el.pathExport.hidden = !mayExportHere(written, alone);
+
+  /**
+   * And the door back in says whose it opens onto.
+   *
+   * Three doors sit in this footer and two of them named the seat: the export
+   * became *Save Player 1's copy* when a view showing every seat made an
+   * unnamed one write the wrong file, and the paste dialog opens as *Player 3 ·
+   * Paste a square somebody sent you*. This one said only *Bring one back*
+   * while merging a whole path — and the question it was written under — into
+   * whichever seat happened to hold the turn.
+   */
+  el.pathImportText.textContent = alone
+    ? messageFor(language, 'app.pathImport')
+    : messageFor(language, 'app.pathImportSeat', { seat: seatNumberOf(session) });
 }
 
 /**
@@ -1304,12 +1319,17 @@ function exportPath(seatId = currentPlayer(session).id): void {
  * inventing one would put it at a place in the path where nothing happened, and
  * arriving today is the one true thing about it.
  */
+/** Which seat a path or a square is about to become, counted from one. */
+function seatNumberOf(of: typeof session): number {
+  return of.players.indexOf(currentPlayer(of)) + 1;
+}
+
 function openPaste(): void {
   // Whose journal it will go into, said out loud. The footer's controls are
   // visible in a view that shows every seat, and a square filed into somebody's
   // path without their name on the box is the same silence that made "Save a
   // copy" write the wrong file.
-  const seat = session.players.indexOf(currentPlayer(session)) + 1;
+  const seat = seatNumberOf(session);
   el.pasteTitle.textContent =
     session.players.length > 1
       ? `${messageFor(language, 'app.seatTurn', { seat })} · ${messageFor(language, 'app.pasteAsk')}`
@@ -1377,11 +1397,14 @@ async function importPath(file: File): Promise<void> {
   }
 
   const added = journal.entries.length - before;
+  const seat = seatNumberOf(session);
   el.reader.close();
   announce(
     added === 0
       ? messageFor(language, 'app.pathImportedNothing')
-      : messageFor(language, 'app.pathImported', { count: added }),
+      : session.players.length > 1
+        ? `${messageFor(language, 'app.seatTurn', { seat })} · ${messageFor(language, 'app.pathImported', { count: added })}`
+        : messageFor(language, 'app.pathImported', { count: added }),
   );
 }
 

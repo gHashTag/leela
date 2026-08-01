@@ -188,3 +188,26 @@ A player who tapped *Change it* and cleared the box had nothing left to press.
 
 `mayLeaveTheQuestion` is where that decision lives, not the handler: a control
 drawn shut is the shape three defects in this app came from.
+
+## Three doors into a journal
+
+The path view shows a section per seat under *The paths at this table*, and its
+footer carries three controls that read or write one player's journal. Two of
+them were named when an unnamed one wrote the wrong file: *Save Player 1's
+copy*, and a paste dialog that opens as *Player 3 · Paste a square somebody sent
+you*.
+
+**The third said only *Bring one back*** — while merging a whole path, and the
+question it was written under, into whichever seat happened to hold the turn.
+Found by playing: three seated, a file brought back while looking at the section
+headed *Player 1*, and it landed in Player 3's journal under a confirmation that
+named a count and no seat.
+
+The control says whose now, and so does the confirmation — before the act for a
+square, after it for a file, because a file is chosen in the operating system's
+own dialog where this app cannot put a title.
+
+And the seat is counted in one place. `session.players.indexOf(currentPlayer(
+session)) + 1` was written out in the paste dialog and the import needed the
+same number; two copies of a counting rule is how a table comes to disagree with
+itself about which player it is talking about.

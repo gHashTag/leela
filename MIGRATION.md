@@ -5251,6 +5251,41 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**The third door had no name on it (185th pass).** Played the mini app again,
+further in this time: an intention, into the board, a report filed, three seats,
+a second player asked their own question, a square pasted, a path brought back.
+
+The path view shows a section per seat under *The paths at this table*, and its
+footer carries three controls that read or write one player's journal. Two say
+whose — *Save Player 1's copy*, and a paste dialog opening as *Player 3 · Paste
+a square somebody sent you*, both named after an unnamed one wrote the wrong
+file. **The third said only *Bring one back***, while merging a whole path — and
+the question it was written under — into whichever seat happened to hold the
+turn. Brought a file back while looking at the section headed *Player 1*; it
+landed in Player 3's journal, under a confirmation naming a count and no seat.
+
+The control says whose now, and so does the confirmation: before the act for a
+square, after it for a file, because a file is chosen in the operating system's
+own dialog where this app cannot put a title. And the seat is counted in one
+place — the paste dialog spelled the arithmetic out and the import needed the
+same number, which is how a table comes to disagree with itself about which
+player it is talking about.
+
+**Four things were checked and found right**, which is most of what playing
+buys. Resizing the table mid-game keeps the seats that stay and the journals
+they wrote (pass 96 holds). A second seat is asked its **own** question, with an
+empty box rather than the first player's answer (pass 81 holds). The new Close
+on the question is hidden for a player who has none — the pass before's fix,
+under a real second seat. And the report gate holds the whole table until the
+account is written, which is the game.
+
+**Two false alarms, both mine, both caught before they became claims.** A
+journal read back as empty because I guessed the storage key (`leela.journal.v1`
+for `leela.reports.v1`). And an account that looked like it had landed in the
+wrong player's path was the turn holder's own square, filed correctly — my test
+data was labelled *what the second player noticed* and the second player had not
+written it.
+
 **A dialog with no way out (184th pass).** Found by *playing* the mini app in a
 browser, which this repository has now used four times and which has found
 something every time. With the language set to Russian on the running page, the
