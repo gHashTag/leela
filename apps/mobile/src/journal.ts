@@ -514,6 +514,43 @@ export interface Draft {
 }
 
 /**
+ * Whether the box asking what they are playing for is open, and what is in it.
+ *
+ * The phone asked the question once and locked it. `intention === ''` was the
+ * whole condition, so a player who had answered could never revise it — in a
+ * game of seventy-two squares, where the question somebody started with is the
+ * one most likely to change — and the answer they gave was written into every
+ * square they shared for the rest of it.
+ *
+ * Both other surfaces let it be changed. The published app has a whole screen
+ * for it, reachable twice: `screens/helper.ts` sends a player who has none
+ * there with `blockGoBack: true`, and `ProfileScreen/Tabs/IntentionOfGame.tsx`
+ * sends anyone there at any time with `{ prevIntention: intention }` and no
+ * block. The mini app has a *Change it* button beside the question, added when
+ * seats made whose-question-is-it a real one.
+ *
+ * **And it opens with theirs.** `defaultValues: { newIntention: prevIntention
+ * || '' }` in `ChangeIntention` — revising eight hundred characters is editing,
+ * not retyping. That is the whole difference between a question somebody can
+ * change and one they can only replace.
+ */
+export interface Asking {
+  /** Whether the box is on screen. */
+  open: boolean;
+  /** What it opens with: theirs when they are changing it, nothing when there is none. */
+  prefill: string;
+}
+
+export function askingFor(intention: string, changing: boolean): Asking {
+  return { open: intention === '' || changing, prefill: changing ? intention : '' };
+}
+
+/** Whether there is a question to change. A first answer is not a change. */
+export function mayChangeIntention(intention: string): boolean {
+  return intention.trim() !== '';
+}
+
+/**
  * Where the unfinished sentence waits between two runs of the app.
  *
  * The one thing the game asks a player to produce was the one thing this app

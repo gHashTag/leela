@@ -246,3 +246,31 @@ somebody's turn without telling them.
 `report.tooShort` is the bot's own sentence, reused rather than copied: it names
 no command and reads the same on any surface. A second key with the same words
 would be the seventh restated list in this repository.
+
+## The question the game is played to answer
+
+Asked once, and locked. `intention === ''` was the whole condition for the box
+being open, so a player who had answered could never revise it — over
+seventy-two squares, where the question somebody starts with is the one most
+likely to change — and the app never showed them what they had said, while
+writing it into every square they shared.
+
+Both other surfaces do both. The published app has a screen for it reachable
+**twice**: `screens/helper.ts` sends a player who has none there with
+`blockGoBack: true`, and `ProfileScreen/Tabs/IntentionOfGame.tsx` sends anyone
+there at any time with `{ prevIntention: intention }` and no block. The mini app
+shows it at the head of the path — above the writing it frames — with a *Change
+it* beside it.
+
+**And the box opens with theirs.** `defaultValues: { newIntention: prevIntention
+|| '' }` in the published app's own `ChangeIntention`: revising eight hundred
+characters is editing, not retyping, and that is the whole difference between a
+question somebody can change and one they can only replace. The pre-fill is held
+to `isIntention` over the bounds rather than an example — a box pre-filled with
+what the save will then refuse is a control that cannot be dismissed.
+
+`askingFor(intention, changing)` is where the rule lives, because the screen was
+where the defect lived: a condition written inline has nowhere for a second
+reason to open the box. `app.intentionYours` and `app.intentionChange` have been
+in the catalogue in English and Russian since the mini app needed them, and this
+surface said neither.

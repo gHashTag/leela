@@ -46,6 +46,18 @@ export const HANDLE = {
   intention: 'intention-field',
   intentionSave: 'intention-save',
 
+  /**
+   * The question itself, shown back, and the control that reopens it.
+   *
+   * The app asked it once and never showed it again — while writing it into
+   * every square the player shared. The mini app puts it at the head of the
+   * path, above the writing it frames; the published app puts it on the
+   * profile, where `IntentionOfGame` links to a screen that opens with the
+   * answer already in the box.
+   */
+  intentionYours: 'intention-yours',
+  intentionChange: 'intention-change',
+
   /** The account owed for the square just arrived on. */
   report: 'report-field',
   reportSave: 'report-save',

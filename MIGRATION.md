@@ -5251,6 +5251,38 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Asked once, never shown, never changed (176th pass).** The phone asked what
+the player is playing for, kept it, wrote it into every square they shared —
+and never showed it to them again, and never let them change it.
+`intention === ''` was the whole condition for the box being open, so the second
+time was never. Over seventy-two squares, the question somebody starts with is
+the one most likely to change.
+
+Both other surfaces do both, and the published app does it twice over:
+`screens/helper.ts` sends a player who has none to `CHANGE_INTENTION_SCREEN`
+with `blockGoBack: true`, and `ProfileScreen/Tabs/IntentionOfGame.tsx` sends
+anyone there at any time with `{ prevIntention: intention }` and no block. The
+mini app shows it at the head of the path — above the writing it frames — with
+a *Change it* beside it.
+
+**And the box opens with theirs.** `defaultValues: { newIntention: prevIntention
+|| '' }` in `ChangeIntention`. Revising eight hundred characters is editing, not
+retyping, and that is the whole difference between a question somebody can
+change and one they can only replace. The pre-fill is held to `isIntention` over
+the bounds rather than an example, because a box pre-filled with what the save
+will then refuse is a control that cannot be dismissed.
+
+The rule is `askingFor(intention, changing)` rather than a condition in the
+screen, since the screen is where the defect lived: a comparison written inline
+has nowhere for a second reason to open a box to live. One shape asserted over
+every combination — the control that reopens the question and the box that first
+asks it are the same question read two ways, and a screen showing both would be
+asking somebody to change an answer they have not given.
+
+`app.intentionYours` and `app.intentionChange` have been in the catalogue in
+English and Russian since the mini app needed them. This surface said neither,
+which is what a missing capability looks like from the catalogue's side.
+
 **A rule in the RuleSet that two of three surfaces never asked (175th pass).**
 `minReportChars` has been in `RuleSet` since the published app was read for its
 rules — `yup.string().trim().min(100)` in `CreatePost`, because a line typed to

@@ -42,6 +42,8 @@ import {
   DRAFT_KEY,
   EMPTY,
   NOTHING_WRITTEN,
+  askingFor,
+  mayChangeIntention,
   draftFor,
   draftOn,
   keepDraft,
@@ -113,6 +115,7 @@ export default function App() {
   const [intention, setIntention] = useState('');
   const [asking, setAsking] = useState('');
   const [pasted, setPasted] = useState('');
+  const [changing, setChanging] = useState(false);
   const [reading, setReading] = useState(false);
 
   // The path from the last time the app was open. Read once, and never allowed
@@ -276,6 +279,17 @@ export default function App() {
    */
   const enough = countsAsReport(writing, game.rules);
 
+  /**
+   * The question, and whether the box for it is open.
+   *
+   * `intention === ''` was the whole condition, so a player who had answered
+   * could never revise it — in a game of seventy-two squares, with their answer
+   * written into every square they shared for the rest of it. Both other
+   * surfaces let it be changed, and the published app's screen opens with the
+   * answer already in the box.
+   */
+  const ask = askingFor(intention, changing);
+
   const refusal = mayThrow(game, intention);
 
   const line =
@@ -429,11 +443,45 @@ export default function App() {
       </ScrollView>
 
       {/*
+        The question, shown back.
+
+        The app asked it and never showed it again — while writing it into every
+        square the player shared. The mini app puts it at the head of the path,
+        above the writing it frames; the published app puts it on the profile,
+        where `IntentionOfGame` links to a screen that opens with the answer
+        already in the box.
+      */}
+      {mayChangeIntention(intention) && !ask.open ? (
+        <View style={styles.writer}>
+          <Text testID={HANDLE.intentionYours} style={[styles.line, prose]}>
+            {messageFor(language, 'app.intentionYours')} {intention}
+          </Text>
+          <Pressable
+            testID={HANDLE.intentionChange}
+            accessibilityRole="button"
+            accessibilityLabel={messageFor(language, 'app.intentionChange')}
+            style={styles.button}
+            onPress={() => {
+              // Opened with theirs, which is what makes this a change rather
+              // than a replacement: `defaultValues: { newIntention:
+              // prevIntention || '' }` in the published app's own screen.
+              setAsking(askingFor(intention, true).prefill);
+              setChanging(true);
+            }}
+          >
+            <Text style={[styles.buttonText, label]}>
+              {messageFor(language, 'app.intentionChange')}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {/*
         The question, before the board. `blockGoBack: true` in the published
         app: there is no way past it, because every account is written inside
         it and one written before it was asked answers nothing.
       */}
-      {intention === '' ? (
+      {ask.open ? (
         <View style={styles.writer}>
           <Text style={[styles.line, prose]}>{messageFor(language, 'app.intention')}</Text>
           <TextInput
@@ -460,6 +508,7 @@ export default function App() {
               // Held for the session whatever the device says, and the device
               // is asked separately — the two questions this app keeps apart.
               setIntention(asking.trim());
+              setChanging(false);
               void keepIntention(intentionKeeper, asking.trim());
               if (!saveIntention(store, asking)) {
                 setSaid(messageFor(language, 'app.reportUnkept'));
