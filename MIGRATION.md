@@ -5251,6 +5251,52 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A six that had to wait, and was told to throw (186th pass).** The method that
+found the last two defects, turned on the surface with the most sentences: a
+whole game played through `handleUpdate`, with every line the bot sent printed
+and the addressee beside it.
+
+The transcript put these two one under the other:
+
+```
+Bo: /roll  → P200 throws a six and enters the game on 6.
+           → A six — throw again.
+Bo: /roll  → Write what it brings up before you move on.
+```
+
+`roll.again` was announced whenever the six kept the turn. A six that moves a
+player onto a new square also leaves them owing a report — which is **every
+entering six**, the first six of every game — so the invitation and the refusal
+sat in consecutive messages, contradicting each other. Under `classic` almost
+every six owes an account, so the immediate promise was nearly always the wrong
+sentence; it read as correct whenever anybody checked one throw in isolation.
+
+The announcement asks `canCurrentPlayerRoll` now, the same function that refuses
+the next throw, so the two cannot disagree. A six that can be taken says *throw
+again*; one that must wait says *and another throw, once you have written about
+this plan* — silence would be worse than the contradiction, because a player who
+is not told loses an extra turn without knowing they had one. A six under a
+cooldown says nothing extra: `online` measures the wait from the moment the
+report is written, and any figure named now would be wrong by the time it
+mattered.
+
+**The existing check had the rule one notch too coarse.** It asserted that the
+words *throw again* appear exactly when the turn is kept, which is what made the
+defect invisible: the sentence was there, and it was wrong. The rule is two
+rules — a player is *told* about the extra turn exactly when it is granted, and
+*promised it now* only when it can be taken.
+
+**And my first two tests for it were both wrong**, which is worth recording. One
+required the immediate promise to occur, and after the fix it almost never does
+— the proof of the finding, mistaken for a failure. The other counted a refused
+`/roll` as a throw and read the gate's own words as an announcement.
+
+**Read and left alone: `/intention` answers in the group when it is set and
+privately when it is read.** That looks like an inconsistency and is a decision
+with its reasons written beside it — two of the replies are about the bot rather
+than the player, and the third is about a sentence typed where everyone could
+see it. A decision written down is a decision.
+
 **The third door had no name on it (185th pass).** Played the mini app again,
 further in this time: an intention, into the board, a report filed, three seats,
 a second player asked their own question, a square pasted, a path brought back.

@@ -486,7 +486,24 @@ export function roll(
     // holds the turn next. Read the other way round — "the same player throws
     // next" — a solo table announced every throw as a six, including a one,
     // in the same breath as saying it takes a six to enter.
-    replies.push(say(messageFor(room.language, 'roll.again')));
+    //
+    // **And whether the throw can actually happen is asked of the same
+    // function that will refuse it.** A six that moves a player onto a new
+    // square also leaves them owing a report — which is every entering six,
+    // the first one of every game — so this said *A six — throw again* and the
+    // next `/roll` answered *write what it brings up before you move on*. Two
+    // sentences in a row, contradicting each other, on the most-travelled path
+    // in the game. The announcement and the refusal are one question now.
+    const afterwards = canCurrentPlayerRoll(next.session, now);
+
+    if (afterwards.allowed) {
+      replies.push(say(messageFor(room.language, 'roll.again')));
+    } else if (afterwards.reason === 'report-required') {
+      replies.push(say(messageFor(room.language, 'roll.againAfter')));
+    }
+    // A cooldown says nothing here: `online` measures the wait from the moment
+    // the report is written, so any figure named now would be wrong by the time
+    // it mattered, and `roll.cooldown` says it exactly when they ask.
   } else if (currentPlayer(next.session).id !== move.playerId) {
     // Not when the turn comes straight back: a solo table said "X is next"
     // after every throw, to X, which is half of everything the bot said. And

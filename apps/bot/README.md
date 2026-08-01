@@ -254,3 +254,27 @@ asked and have not answered. An optional string would have made those one.
 A default that quietly skips a gate is an absence reading exactly like a pass,
 so `tests/asked.test.ts` holds `bot.ts` to passing it at both places the die is
 turned — the command and the button.
+
+## A six that has to wait
+
+`A six — throw again.` was announced whenever the six kept the turn. But a six
+that moves a player onto a new square also leaves them owing a report — which is
+**every entering six**, the first six of every game — so the bot said *A six —
+throw again* and answered the next `/roll` with *write what it brings up before
+you move on*. Two sentences in a row, contradicting each other, on the
+most-travelled path there is.
+
+Found by playing a game through `handleUpdate` and reading every line it sent,
+with the addressee beside it. The transcript put the two replies one under the
+other.
+
+The announcement asks `canCurrentPlayerRoll` now — the same function that will
+refuse the next throw — so the two cannot disagree. A six that can be taken says
+*throw again*; a six that must wait says *and another throw, once you have
+written about this plan*; a six under a cooldown says nothing extra, because
+`online` measures the wait from the moment the report is written and any figure
+named now would be wrong by the time it mattered.
+
+Under `classic` almost every six owes an account, so the immediate promise was
+nearly always the wrong sentence. That is why it lasted: it read as correct
+whenever anybody checked one throw in isolation.

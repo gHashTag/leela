@@ -76,6 +76,17 @@ const EN = {
     'That is the game. /path shows what you wrote along the way; /new opens another table.',
   'roll.next': '{name} is next.',
   'roll.again': 'A six — throw again.',
+  /**
+   * The six that has to wait for an account.
+   *
+   * `roll.again` was announced whenever the six kept the turn, and a six that
+   * moves a player onto a new square also leaves them owing a report — which
+   * is **every entering six**, the first one of every game. So the bot said
+   * *A six — throw again*, and refused the next throw with *write what it
+   * brings up before you move on*: two sentences in a row, contradicting each
+   * other, on the most-travelled path in the game.
+   */
+  'roll.againAfter': 'A six — and another throw, once you have written about this plan.',
 
   // --- a move, in words ------------------------------------------------------
   //
@@ -522,6 +533,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
     'Вот и вся игра. /path показывает написанное по пути; /new открывает новый стол.',
   'roll.next': 'Следующий ход — {name}.',
   'roll.again': 'Шестёрка — бросайте ещё раз.',
+  'roll.againAfter': 'Шестёрка — и ещё один бросок, когда напишете об этом плане.',
 
   'move.enter': '{name} бросает шестёрку и входит в игру на {to}.\n{to}. {title}',
   'move.needSix': '{name} бросает {value}. Войти в игру можно только с шестёрки.',

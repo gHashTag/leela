@@ -639,7 +639,15 @@ describe('what the bot says about whose throw it is', () => {
    * `grantsExtraTurn` — and not a guess from who holds the turn next.
    */
 
-  const AGAIN = 'throw again';
+  /**
+   * Either way of saying the six granted one.
+   *
+   * *A six — throw again* when the throw can happen now, and *A six — and
+   * another throw, once you have written about this plan* when it cannot. The
+   * rule below is about being **told**; which of the two is said is the rule
+   * after it.
+   */
+  const AGAIN = /throw again|another throw/;
 
   it('offers another throw exactly when the rules grant one', () => {
     // A table of two, because at a table of one the turn always comes back and
@@ -666,9 +674,69 @@ describe('what the bot says about whose throw it is', () => {
       // from the sixes counter — which the entering six does not touch under
       // `classic`, so counting it called an extra turn a passed one.
       const granted = next.session.players[next.session.turnIndex]?.id === holder.id;
-      expect(said.includes(AGAIN), `turn ${turn}: ${said}`).toBe(granted);
+      expect(AGAIN.test(said), `turn ${turn}: ${said}`).toBe(granted);
       if (said.includes('Cosmic Consciousness')) break;
     }
+  });
+
+  it('never offers a throw the next command refuses', () => {
+    /**
+     * Found by playing a game and reading it. A six that enters the board also
+     * leaves the player owing a report, so the bot said *A six — throw again*
+     * and answered the next `/roll` with *write what it brings up before you
+     * move on*: two sentences in a row, contradicting each other, on the
+     * most-travelled path there is — the entering six is the first six of every
+     * game.
+     *
+     * The shape, over a whole game: **whenever the bot promises a throw now,
+     * the next throw must not be refused.** The announcement and the refusal
+     * ask `canCurrentPlayerRoll` in both places, so they cannot disagree.
+     *
+     * Under `classic` almost every six owes an account, so the immediate
+     * promise is nearly always wrong — which is how long this went unnoticed.
+     * The count is reported rather than required: a game where it is never
+     * made is a game where the promise is never broken.
+     */
+    let room = table(2, SEED);
+    let promised = 0;
+    let deferred = 0;
+
+    for (let turn = 0; turn < 400; turn += 1) {
+      const holder = room.session.players[room.session.turnIndex] as { id: string };
+      const result = roll(room, holder.id, NOW);
+      const said = result.replies.map((reply) => reply.text).join(' ');
+      const next = result.room as Room;
+
+      // A refused throw is not a throw: the gate holds the seat, and the words
+      // it answers with are the refusal, not an announcement about a six.
+      if (said.includes('before you move on')) {
+        room = report(room, holder.id, 'noted').room as Room;
+        continue;
+      }
+
+      if (said.includes('throw again')) {
+        promised += 1;
+        expect(
+          roll(next, holder.id, NOW).replies.map((reply) => reply.text).join(' '),
+          `turn ${turn}: promised a throw and then refused it`,
+        ).not.toMatch(/before you move on|Not yet/);
+      }
+
+      if (said.includes('another throw')) {
+        deferred += 1;
+        // And the other half: what it defers to is real. The next throw is
+        // refused, and refused for the reason the sentence gave.
+        expect(
+          roll(next, holder.id, NOW).replies.map((reply) => reply.text).join(' '),
+          `turn ${turn}: deferred a throw that was not owed`,
+        ).toMatch(/before you move on/);
+      }
+
+      room = next;
+      if (said.includes('Cosmic Consciousness')) break;
+    }
+
+    expect(deferred, 'no six ever landed on a square that owed an account').toBeGreaterThan(0);
   });
 
   it('never says it takes a six and offers another throw in one breath', () => {
@@ -681,7 +749,7 @@ describe('what the bot says about whose throw it is', () => {
       const result = roll(room, holder.id, NOW);
       const said = result.replies.map((reply) => reply.text).join(' ');
 
-      expect(said.includes('takes a six') && said.includes(AGAIN), said).toBe(false);
+      expect(said.includes('takes a six') && AGAIN.test(said), said).toBe(false);
 
       room = result.room as Room;
       if (result.replies.some((reply) => reply.text.includes('/report'))) {
@@ -726,7 +794,7 @@ describe('what the bot says about whose throw it is', () => {
       const said = result.replies.map((reply) => reply.text).join(' ');
       room = result.room as Room;
 
-      if (!said.includes(AGAIN) && !said.includes('/report') && !said.includes('over')) {
+      if (!AGAIN.test(said) && !said.includes('/report') && !said.includes('over')) {
         expect(said).not.toMatch(/next/i);
         return;
       }
