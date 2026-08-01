@@ -185,6 +185,22 @@ const EN = {
   'intention.none': 'You have not said what you are playing for. /intention followed by your answer.',
   'intention.set': 'Held. Everything you write is an answer to it now.',
   'intention.tooShort': 'A little more than that — two characters at least.',
+  /**
+   * The other end of the same rule, which had the same sentence.
+   *
+   * `isIntention` refuses both bounds and the bot answered every refusal with
+   * *a little more than that* — so somebody who wrote a considered question of
+   * nine hundred characters in a chat was told to write more. The wrong cause,
+   * in the one dialog the game will not start without.
+   *
+   * The mini app and the phone cannot reach it: their boxes stop at eight
+   * hundred, so the boundary is met while typing rather than discovered. A chat
+   * has no box.
+   */
+  'intention.tooLong': {
+    one: '{count} character over — a question holds {max}.',
+    other: '{count} characters over — a question holds {max}.',
+  },
   'intention.notKept': 'This bot is not keeping anything, so there is nowhere to hold a question.',
   'ask.notOnBoard':
     'You are not on the board yet, so there is no plan to ask about. A six puts you there; /rules opens the book meanwhile.',
@@ -628,6 +644,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'intention.none': 'Вы не сказали, ради чего играете. /intention и ваш ответ.',
   'intention.set': 'Принято. Теперь всё, что вы пишете, — ответ на это.',
   'intention.tooShort': 'Чуть больше — хотя бы два символа.',
+  'intention.tooLong': {
+    one: 'На {count} символ длиннее — вопрос вмещает {max}.',
+    few: 'На {count} символа длиннее — вопрос вмещает {max}.',
+    many: 'На {count} символов длиннее — вопрос вмещает {max}.',
+    other: 'На {count} символов длиннее — вопрос вмещает {max}.',
+  },
   'intention.notKept': 'Этот бот ничего не хранит, поэтому держать вопрос негде.',
   'ask.notOnBoard':
     'Вы ещё не на доске, и спрашивать пока не о чем. Шестёрка выведет вас туда; а пока /rules открывает книгу.',

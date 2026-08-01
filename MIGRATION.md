@@ -5251,6 +5251,31 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Told to write more, after writing nine hundred characters (204th pass).** The
+same lens, one field along. `isIntention` refuses a question shorter than two
+characters **and** one longer than eight hundred, and the bot answered every
+refusal with the same sentence: *a little more than that — two characters at
+least.* So somebody who had just written a considered question in a chat was
+told to write more, and nothing was held.
+
+The wrong cause, in the one dialog the game will not start without — which is
+the sentence this repository already wrote down about the same shape, when a
+browser's refusal to store came back to a player as *a little longer, please*.
+
+Measured before it was claimed: nine hundred and eighty characters in, *two
+characters at least* out.
+
+The mini app's box is `maxlength="800"` and the phone's is
+`maxLength={MAX_INTENTION_CHARS}`, so on those two the boundary is met while
+typing rather than discovered. A chat has no box to stop — the same reason the
+over-long report was the bot's alone.
+
+**Refused rather than clamped, and that is the difference from a report.** The
+format keeps an over-long report by cutting the end off it and drops an
+over-long question *whole*: a question cut mid-word is a different question, and
+it is the frame every report is written inside. So it is refused at the door,
+with the bound named and the number of characters over it.
+
 **Ninety characters that disappeared on the way (203rd pass).** The third
 surface, and the same bound. Telegram carries 4,096 characters and
 `MAX_REPORT_CHARS` is 4,000, so a report written in a chat can be longer than

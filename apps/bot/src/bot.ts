@@ -10,7 +10,7 @@ import { Bot, InlineKeyboard, InputFile, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 import { type Language, bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
 import { isSessionOver, isWaitingToEnter } from '@leela/engine';
-import { isIntention } from '@leela/journal';
+import { MAX_INTENTION_CHARS, isIntention } from '@leela/journal';
 import type { Guide } from '@leela/ai';
 import { Conversations } from './conversation';
 import * as commands from './commands';
@@ -861,8 +861,28 @@ export function createBot({
     // `said.length < 2 || said.length > MAX_INTENTION_CHARS`, written inline
     // with the two as a literal, under a comment saying it was the mini app's
     // bound — which is exactly how one question comes to have three answers.
+    /**
+     * Which end of the rule was broken, said as itself.
+     *
+     * `isIntention` refuses both bounds and this answered every refusal with
+     * *a little more than that — two characters at least*, so somebody who had
+     * just written a considered question of nine hundred characters was told to
+     * write more. The wrong cause, in the one dialog the game will not start
+     * without — and the same shape as the report one field along: the other two
+     * surfaces stop the box at the bound while it is being typed, and a chat
+     * has no box to stop.
+     *
+     * Refused rather than clamped, unlike a report. The format keeps a report
+     * that is too long by cutting the end off it; it drops an over-long
+     * question **whole**, and a question cut mid-word is a different question.
+     */
     if (!isIntention(said)) {
-      await ctx.reply(messageFor(language, 'intention.tooShort'));
+      const over = said.length - MAX_INTENTION_CHARS;
+      await ctx.reply(
+        over > 0
+          ? messageFor(language, 'intention.tooLong', { count: over, max: MAX_INTENTION_CHARS })
+          : messageFor(language, 'intention.tooShort'),
+      );
       return;
     }
 
