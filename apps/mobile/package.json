@@ -6,13 +6,14 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
-    "ios": "expo run:ios",
-    "android": "expo run:android",
+    "ios": "APP_VARIANT=development expo run:ios",
+    "android": "APP_VARIANT=development expo run:android",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "typecheck:strict": "tsc --noEmit -p tsconfig.src.json",
-    "e2e:build": "detox build --configuration ios.debug",
-    "e2e": "detox test --configuration ios.debug"
+    "e2e:build": "APP_VARIANT=development detox build --configuration ios.debug",
+    "e2e": "APP_VARIANT=development detox test --configuration ios.debug",
+    "prebuild": "APP_VARIANT=development expo prebuild --platform ios --clean"
   },
   "dependencies": {
     "@leela/content": "workspace:*",

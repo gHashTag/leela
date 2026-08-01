@@ -97,8 +97,18 @@ describe('the app that installs, not the config that describes it', () => {
     );
 
     expect(identifiers.size, 'one app, one identifier').toBe(1);
-    expect([...identifiers][0]).toBe(config.expo.ios.bundleIdentifier);
+
+    // Either identity, and nothing else. `ios/` is generated for whichever
+    // variant was asked for — `npm run prebuild` asks for the development one —
+    // so the artifact carries `…dharma` or `…dharma.dev`, and a third value
+    // means the project was built from something other than this config.
+    const shipped = config.expo.ios.bundleIdentifier;
+    expect([shipped, `${shipped}.dev`]).toContain([...identifiers][0]);
+
+    // The one that mattered: the Android identifier is not an iOS identity, and
+    // the app installed under it for a day.
     expect([...identifiers][0], 'never the Android one').not.toBe(config.expo.android.package);
+    expect([...identifiers][0]).not.toBe(`${config.expo.android.package}.dev`);
   });
 
   it('says out loud whether it looked', () => {
@@ -108,6 +118,73 @@ describe('the app that installs, not the config that describes it', () => {
     expect(typeof prebuilt).toBe('boolean');
     if (!prebuilt) {
       console.log('identity: no ios/ — run `npx expo prebuild --platform ios` to check the artifact');
+    }
+  });
+});
+
+describe('a debug build is not the published application', () => {
+  /**
+   * Two apps with one identifier are one app to iOS. Installing this port on a
+   * simulator replaced the published app twice in a single day, and on a real
+   * phone it would have replaced it on somebody's home screen and taken their
+   * game with it — the install simply succeeds and the other one is gone, with
+   * nothing to warn anybody.
+   *
+   * So `app.config.ts` appends `.dev` when `APP_VARIANT=development`, which is
+   * what every script that builds for a simulator sets. What is asserted is the
+   * shape: the shipped identity is untouched, the development one differs on
+   * both platforms, and the default is the safe one.
+   */
+  const variant = (development: boolean) => {
+    const expo = config.expo;
+    if (!development) return expo;
+    return {
+      ...expo,
+      name: `${expo.name} (dev)`,
+      ios: { ...expo.ios, bundleIdentifier: `${expo.ios.bundleIdentifier}.dev` },
+      android: { ...expo.android, package: `${expo.android.package}.dev` },
+    };
+  };
+
+  it('leaves the shipped identity exactly as app.json states it', () => {
+    // The published app's own, on both platforms. A release build sets no
+    // variable and must get this.
+    expect(variant(false).ios.bundleIdentifier).toBe('xyz.ghashtag.dharma');
+    expect(variant(false).android.package).toBe('com.leelagame');
+    expect(variant(false).name).toBe('Leela Chakra');
+  });
+
+  it('gives a development build an identifier of its own, on both platforms', () => {
+    const dev = variant(true);
+
+    expect(dev.ios.bundleIdentifier).not.toBe(config.expo.ios.bundleIdentifier);
+    expect(dev.android.package).not.toBe(config.expo.android.package);
+  });
+
+  it('keeps the two apart on the home screen as well', () => {
+    // Two icons with one name is a person launching the wrong one and reporting
+    // a defect in the other.
+    expect(variant(true).name).not.toBe(variant(false).name);
+  });
+
+  it('is the safe way round', () => {
+    // Forgetting the variable cannot make a release the wrong application —
+    // only a debug build the right one, which is caught the moment somebody
+    // looks at what installed.
+    expect(variant(false).ios.bundleIdentifier).toBe(config.expo.ios.bundleIdentifier);
+  });
+
+  it('every script that builds for a simulator asks for the variant', () => {
+    // The rule that makes the rest of this true. A script that builds and
+    // forgets it installs over the published app, silently.
+    const manifest = JSON.parse(
+      readFileSync(resolve(HERE, '..', 'package.json'), 'utf8'),
+    ) as { scripts: Record<string, string> };
+
+    for (const [name, command] of Object.entries(manifest.scripts)) {
+      const builds = /expo run:|detox (build|test)|expo prebuild/.test(command);
+      if (!builds) continue;
+      expect(command, `${name} builds without APP_VARIANT`).toContain('APP_VARIANT=development');
     }
   });
 });

@@ -20,10 +20,43 @@
  * `expo prebuild` and gitignored. So it is a command a person runs, and this
  * comment is where that is said rather than in a job that would be skipped.
  *
+ * **And it needs port 8081 to itself.** A debug React Native build asks for its
+ * bundle at the default port, baked in at compile time, and that cannot be
+ * moved without rebuilding — `RCT_METRO_PORT` was tried and does not reach a
+ * Debug build's runtime lookup. Another project's packager there answers with
+ * its own bundle, which arrives as *unable to resolve module ./index* and reads
+ * exactly like this app being broken. Two debug apps, one port: run one at a
+ * time. The identifiers are separate (see `app.config.ts`) so they no longer
+ * *replace* each other, which is the part that mattered.
+ *
  *   npx expo prebuild --platform ios      # once, or after changing app.json
  *   npx detox build --configuration ios.debug
  *   npx detox test  --configuration ios.debug
  */
+
+const { readdirSync } = require('node:fs');
+const { join } = require('node:path');
+
+/**
+ * The scheme, found rather than named.
+ *
+ * `expo prebuild --clean` derives the project from `expo.name`, so it is
+ * `LeelaChakra` today and whatever the app is called tomorrow — and a
+ * development build is called something else again. A name written down here
+ * fails as *app not found*, which reads exactly like a build that never
+ * happened. `tests/identity.test.ts` learned the same thing about the bundle
+ * identifier and looks the project up by extension for the same reason.
+ */
+const scheme = (() => {
+  const ios = join(__dirname, 'ios');
+  const found = readdirSync(ios).filter((entry) => entry.endsWith('.xcodeproj'));
+  if (found.length !== 1) {
+    throw new Error(
+      `expected one .xcodeproj in ios/, found ${found.length}. Run: npm run prebuild`,
+    );
+  }
+  return found[0].slice(0, -'.xcodeproj'.length);
+})();
 
 /** @type {Detox.DetoxConfig} */
 module.exports = {
@@ -39,13 +72,9 @@ module.exports = {
   apps: {
     'ios.debug': {
       type: 'ios.app',
-      // Named after `expo.name` in app.json, which `expo prebuild --clean`
-      // derives the project from. Hard-coding `Leela.app` here was wrong for a
-      // day: the project is `LeelaChakra.xcodeproj` and a stale name fails as
-      // "app not found", which reads like a build that never happened.
-      binaryPath: 'ios/build/Build/Products/Debug-iphonesimulator/LeelaChakra.app',
+      binaryPath: `ios/build/Build/Products/Debug-iphonesimulator/${scheme}.app`,
       build:
-        'xcodebuild -workspace ios/LeelaChakra.xcworkspace -scheme LeelaChakra ' +
+        `xcodebuild -workspace ios/${scheme}.xcworkspace -scheme ${scheme} ` +
         '-configuration Debug -sdk iphonesimulator -derivedDataPath ios/build ' +
         '-destination "generic/platform=iOS Simulator" build | cat',
     },
