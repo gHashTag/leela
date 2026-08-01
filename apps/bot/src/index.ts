@@ -17,8 +17,15 @@ import {
   zAI,
   type LanguageModel,
 } from '@leela/ai';
-import { LANGUAGES, messageCoverage, messageIssues, translatedLanguages } from '@leela/content';
+import {
+  FALLBACK_LANGUAGE,
+  LANGUAGES,
+  messageCoverage,
+  messageIssues,
+  translatedLanguages,
+} from '@leela/content';
 import { createBot } from './bot';
+import { menuFor } from './commands';
 import { openStorage } from './storage';
 import { supervise } from './supervisor';
 
@@ -165,6 +172,35 @@ process.once('SIGTERM', stop);
 // `bot.catch` handles a failing update; it does not handle a failing poll. A
 // dropped socket, or a second process calling getUpdates, throws out of the run
 // loop — so the loop is supervised rather than awaited directly.
+/**
+ * The menu behind Telegram's `/` button.
+ *
+ * Sixteen commands and none of them registered: a player had to know `/help`
+ * existed in order to be told about the other fifteen, and `/help` was not
+ * discoverable either. `BOT_COMMANDS` is the one list; this is the only place
+ * that hands it to Telegram.
+ *
+ * Registered before the loop starts, and a failure is said rather than thrown:
+ * a bot that cannot publish its menu can still play the game, and refusing to
+ * start over a popover would be the worse trade.
+ */
+async function publishMenu(): Promise<void> {
+  for (const language of translatedLanguages()) {
+    try {
+      await bot.api.setMyCommands(menuFor(language), {
+        // English is also the default: Telegram falls back to the scopeless
+        // list for a client whose language nothing was registered for, and
+        // without it the menu is empty for twenty of the twenty-two.
+        ...(language === FALLBACK_LANGUAGE ? {} : { language_code: language }),
+      });
+    } catch (error) {
+      console.log(`Could not publish the ${language} command menu: ${String(error)}`);
+    }
+  }
+}
+
+await publishMenu();
+
 await supervise({
   start: async () => {
     if (stopping) return;

@@ -35,7 +35,9 @@ import {
 } from '@leela/engine';
 import { revisited } from '@leela/journal';
 import { MAX_MESSAGE_CHARS } from './render';
-import { bookFor, messageFor, planFor, resolveLanguage, type Language } from '@leela/content';
+import { bookFor, messageFor, planFor, resolveLanguage, type Language,
+  type MessageKey,
+} from '@leela/content';
 
 /** A table, plus the bits the bot needs that the engine does not care about. */
 export interface Room {
@@ -164,6 +166,63 @@ export function waitingButtons(language: Language): Button[] {
  * so it is drawn for the seat holding the turn — which is who the message
  * announcing that turn is about.
  */
+/**
+ * The commands this bot answers, and what each is for.
+ *
+ * Telegram shows a menu behind the `/` button, built from `setMyCommands`, and
+ * this bot registered nothing. Sixteen commands and no way to find any of them:
+ * a player had to know `/help` existed in order to be told the other fifteen,
+ * and `/help` was not in the menu either. The mini app puts every act on a
+ * button and the phone puts every act on the screen; here they were invisible.
+ *
+ * **One list, because there were nearly three.** This repository has had six
+ * restated lists go wrong — Dockerfile manifests, README test counts, this
+ * bot's own command list, its help text, `StoredSeat`, and CI's `for pkg in …`
+ * — and a menu is a fourth place to write the same names down. So the handlers,
+ * the help text and the menu are held to each other by `commands.test.ts`
+ * rather than kept in step by hand.
+ *
+ * `/help` is deliberately absent from the help text and present here: a help
+ * text that lists itself is noise, and a menu that omits the way to read it is
+ * the trap this fixes.
+ */
+export interface BotCommand {
+  /** As Telegram wants it: lowercase, no slash. */
+  readonly command: string;
+  /** The key of the sentence describing it, so the menu is translated too. */
+  readonly describedBy: MessageKey;
+}
+
+export const BOT_COMMANDS: readonly BotCommand[] = [
+  { command: 'new', describedBy: 'menu.new' },
+  { command: 'join', describedBy: 'menu.join' },
+  { command: 'start', describedBy: 'menu.start' },
+  { command: 'roll', describedBy: 'menu.roll' },
+  { command: 'intention', describedBy: 'menu.intention' },
+  { command: 'report', describedBy: 'menu.report' },
+  { command: 'plan', describedBy: 'menu.plan' },
+  { command: 'rules', describedBy: 'menu.rules' },
+  { command: 'ask', describedBy: 'menu.ask' },
+  { command: 'path', describedBy: 'menu.path' },
+  { command: 'returns', describedBy: 'menu.returns' },
+  { command: 'take', describedBy: 'menu.take' },
+  { command: 'save', describedBy: 'menu.save' },
+  { command: 'board', describedBy: 'menu.board' },
+  { command: 'end', describedBy: 'menu.end' },
+  { command: 'help', describedBy: 'menu.help' },
+];
+
+/** The menu as Telegram wants it, in one language. */
+export function menuFor(language: Language): Array<{ command: string; description: string }> {
+  return BOT_COMMANDS.map((one) => ({
+    command: one.command,
+    // Telegram refuses a description over 256 characters, and refuses the whole
+    // call rather than the one entry — so a sentence that grows in translation
+    // would take the entire menu down with it.
+    description: messageFor(language, one.describedBy).slice(0, 256),
+  }));
+}
+
 export function buttonsFor(room: Room): Button[] {
   if (!room.started) return waitingButtons(room.language);
 

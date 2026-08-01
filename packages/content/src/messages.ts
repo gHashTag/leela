@@ -381,6 +381,26 @@ const EN = {
     'the reflection is yours either way. The companion is unavailable.',
 
   // --- help ------------------------------------------------------------------
+  // The menu Telegram shows behind the `/` button. Short by necessity: it is a
+  // list of one-liners in a popover, not documentation, and Telegram refuses a
+  // description over 256 characters — refusing the whole menu, not the entry.
+  'menu.new': 'Open a table',
+  'menu.join': 'Take a seat',
+  'menu.start': 'Begin the game (host only)',
+  'menu.roll': 'Throw the die',
+  'menu.intention': 'Say what you are playing for',
+  'menu.report': 'Reflect on the square you stand on',
+  'menu.plan': 'Read a plan',
+  'menu.rules': 'The rules of the game, in chapters',
+  'menu.ask': 'Ask the companion about where you stand',
+  'menu.path': 'What you have written, and where',
+  'menu.returns': 'The squares that came back',
+  'menu.take': 'Take in a square somebody sent you',
+  'menu.save': 'Your path, as a file to keep',
+  'menu.board': 'Where everyone stands',
+  'menu.end': 'Clear the table',
+  'menu.help': 'What this bot can do',
+
   help: [
     'Leela — the game of self-knowledge.',
     '',
@@ -662,6 +682,23 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'companion.unavailable':
     'Побудьте пока с планом {plan} — текст можно прочесть, и отражение ' +
     'всё равно ваше. Спутник сейчас недоступен.',
+
+  'menu.new': 'Открыть стол',
+  'menu.join': 'Занять место',
+  'menu.start': 'Начать игру (только ведущий)',
+  'menu.roll': 'Бросить кубик',
+  'menu.intention': 'Сказать, ради чего вы играете',
+  'menu.report': 'Написать о клетке, на которой стоите',
+  'menu.plan': 'Прочитать план',
+  'menu.rules': 'Правила игры, по главам',
+  'menu.ask': 'Спросить спутника о том, где вы стоите',
+  'menu.path': 'Что вы написали и где',
+  'menu.returns': 'Клетки, которые вернулись',
+  'menu.take': 'Принять клетку, которую вам прислали',
+  'menu.save': 'Ваш путь — файлом, который можно сохранить',
+  'menu.board': 'Кто где стоит',
+  'menu.end': 'Закрыть стол',
+  'menu.help': 'Что умеет этот бот',
 
   help: [
     'Лила — игра самопознания.',
