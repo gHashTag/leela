@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { Guide } from '@leela/ai';
 import { createBot } from '../src/bot';
 import { openStorage } from '../src/storage';
 
@@ -57,13 +58,28 @@ function message(text: string) {
   } as never;
 }
 
+/** A square handed over from the mini app, as Telegram delivers it. */
+function handedOver(data: string) {
+  updateId += 1;
+  return {
+    update_id: updateId,
+    message: {
+      message_id: updateId,
+      date: 0,
+      chat: { id: CHAT.id, type: CHAT.type, title: 'A table' },
+      from: { id: 100, is_bot: false, first_name: 'Ada' },
+      web_app_data: { button_text: 'Ask', data },
+    },
+  } as never;
+}
+
 interface Sent {
   method: string;
   payload: Record<string, unknown>;
 }
 
 /** Everything `index.ts` does, minus the polling. */
-function assemble(path: string) {
+function assemble(path: string, guide?: Guide) {
   const storage = openStorage({ path, log: () => undefined });
   const sent: Sent[] = [];
 
@@ -74,6 +90,7 @@ function assemble(path: string) {
     store: storage.store,
     reports: storage.reports,
     steps: storage.steps,
+    guide,
   });
 
   bot.api.config.use(async (_next, method, payload) => {
@@ -413,5 +430,50 @@ describe('a page the bot tells you to ask for', () => {
     // The guard against the parser becoming a way of accepting anything.
     expect(Number('99')).toBe(99);
     expect(Number('abc')).toBeNaN();
+  });
+});
+
+describe('a square somebody sent is not where the player stands', () => {
+  /**
+   * The mini app hands a square over through Telegram — `web_app_data` — and
+   * the bot files it and asks the companion about it. The player is **not** on
+   * that square: they may be on plan 6, or waiting to enter the game at all.
+   * `systemPrompt` said *The player is on plan N* for every path alike, so the
+   * companion answered somebody else's account as though it were where the
+   * reader lived.
+   *
+   * (`/take` in a chat files the same square and does *not* call the companion.
+   * The hand-over is the path that does, because it comes from the player's own
+   * app rather than from a message anybody could paste.)
+   *
+   * Through `handleUpdate`, because the fact travels in the transport: removing
+   * `arrival: 'received'` from the handler leaves all five hundred and
+   * thirty-two of this package's other tests green.
+   */
+  it('tells the companion the square was handed over', async () => {
+    const asked: string[] = [];
+    const guide = new Guide({
+      model: {
+        id: 'test',
+        async complete(messages) {
+          asked.push(messages.map((one) => one.content).join('\n'));
+          return 'a reflection';
+        },
+      },
+    });
+
+    const dir = mkdtempSync(join(tmpdir(), 'leela-handed-'));
+    const { bot } = assemble(join(dir, 'leela.db'), guide);
+
+    await bot.handleUpdate(message('/new'));
+    await bot.handleUpdate(message('/start'));
+    await bot.handleUpdate(handedOver('41. Ignorance (avidya)\n\nWhat somebody else wrote.'));
+
+    expect(asked.length, 'the companion was never asked').toBeGreaterThan(0);
+    const prompt = asked.at(-1) ?? '';
+
+    expect(prompt).toContain('sent the player');
+    expect(prompt, 'the player is elsewhere').toContain('not standing there');
+    expect(prompt).not.toContain('The player is on plan 41');
   });
 });

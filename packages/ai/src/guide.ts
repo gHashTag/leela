@@ -22,6 +22,7 @@ import {
   PromptError,
   questionPrompt,
   reportPrompt,
+  type Arrival,
 } from './prompts';
 
 export interface GuideOptions {
@@ -97,6 +98,14 @@ export function fallbackText(context: PlanContext): string {
 export interface AskOptions {
   language: Language;
   plan: number;
+  /**
+   * Whether the player is standing on this plan or was sent it.
+   *
+   * `standing` by default, because that is what every path but the hand-over
+   * does. A received square is somebody else's: the prompt says so, and stops
+   * describing an arrival that never happened.
+   */
+  arrival?: Arrival;
   /** What the player is playing for — the frame the reports answer. */
   intention?: string;
   direction?: Direction;
@@ -254,10 +263,22 @@ function reasonFor(status: number, silenceMs: number): string {
   return `${what} (${status}); trying again in ${minutes} minute${minutes === 1 ? '' : 's'}`;
 }
 
+/**
+ * The options a caller gives, as the context a prompt is built from.
+ *
+ * Copied field by field, which is a restated list — the defect this repository
+ * has met six times — and it bit at once: `arrival` was added to both types and
+ * dropped here, so the fix that stops the companion being told a player stands
+ * on a square somebody sent them would have been dead code, silently.
+ *
+ * `carriesEveryOption` in the tests builds every field and reads them back out
+ * of the prompt, so a seventh field cannot be added and forgotten.
+ */
 function contextOf(options: AskOptions): PlanContext {
   return {
     plan: options.plan,
     language: options.language,
+    arrival: options.arrival,
     direction: options.direction,
     previousPlan: options.previousPlan,
     intention: options.intention,

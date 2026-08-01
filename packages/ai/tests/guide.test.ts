@@ -487,3 +487,105 @@ describe('the deadline', () => {
     expect(guide.status().skipped, 'nothing was skipped unasked').toBe(0);
   }, 5_000);
 });
+
+describe('every option a caller gives reaches the prompt', () => {
+  /**
+   * `contextOf` copies `AskOptions` into a `PlanContext` field by field, which
+   * is a restated list — and this repository has had six of those go wrong.
+   * It bit immediately: `arrival` was declared on both types and left out of
+   * the copy, so the fix that stops the companion being told a player is
+   * standing on a square somebody sent them would have been dead code with
+   * nothing to say so.
+   *
+   * Asserted through the prompt the model is actually handed, not through the
+   * function: a field that reaches the context and is never rendered is the
+   * same silence one field further on.
+   */
+  const seen: string[] = [];
+  const remembers: LanguageModel = {
+    id: 'test',
+    async complete(messages) {
+      seen.push(messages.map((one) => one.content).join('\n'));
+      return 'something';
+    },
+  };
+
+  it('carries every one of them', async () => {
+    seen.length = 0;
+    const guide = guideWith(remembers).guide;
+
+    await guide.reflect('a report about this square', {
+      plan: 41,
+      language: 'en',
+      arrival: 'received',
+      direction: 'snake 🐍',
+      previousPlan: 12,
+      intention: 'What am I holding on to?',
+      journey: [{ plan: 41, text: 'an earlier account of this very square' }],
+    });
+
+    const prompt = seen.at(-1) ?? '';
+
+    // Each option, by something only it can put there.
+    expect(prompt, 'plan').toContain('41');
+    expect(prompt, 'intention').toContain('What am I holding on to?');
+    expect(prompt, 'journey').toContain('an earlier account of this very square');
+    expect(prompt, 'arrival').toContain('sent the player');
+  });
+
+  it('says a received square is not where the player stands', async () => {
+    seen.length = 0;
+    const guide = guideWith(remembers).guide;
+
+    await guide.reflect('what somebody else wrote', {
+      plan: 41,
+      language: 'en',
+      arrival: 'received',
+    });
+
+    const prompt = seen.at(-1) ?? '';
+    expect(prompt).toContain('not standing there');
+    expect(prompt, 'the ordinary sentence').not.toContain('The player is on plan 41');
+  });
+
+  it('describes no arrival for a square nobody arrived on', async () => {
+    // A snake brought nobody here. Saying it would be a fact invented about a
+    // square the player has never been on.
+    seen.length = 0;
+    const guide = guideWith(remembers).guide;
+
+    await guide.reflect('what somebody else wrote', {
+      plan: 41,
+      language: 'en',
+      arrival: 'received',
+      direction: 'snake 🐍',
+      previousPlan: 12,
+    });
+
+    const prompt = seen.at(-1) ?? '';
+    expect(prompt).not.toContain('came from plan 12');
+  });
+
+  it('still says it plainly for a square the player is on', async () => {
+    // The guard against the fix becoming a way of never saying where they are.
+    seen.length = 0;
+    const guide = guideWith(remembers).guide;
+
+    await guide.reflect('my own account', { plan: 41, language: 'en', direction: 'snake 🐍' });
+
+    const prompt = seen.at(-1) ?? '';
+    expect(prompt).toContain('The player is on plan 41');
+    expect(prompt, 'and how they got there').toContain('snake');
+  });
+
+  it('does not call the winning square an ending for somebody handed it', async () => {
+    seen.length = 0;
+    const guide = guideWith(remembers).guide;
+
+    await guide.reflect('a square somebody sent', { plan: 68, language: 'en', arrival: 'received' });
+
+    expect(seen.at(-1) ?? '', 'the sender finished, not the reader').not.toContain(
+      'This is the end of a game',
+    );
+  });
+});

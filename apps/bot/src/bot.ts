@@ -609,6 +609,10 @@ export function createBot({
     const reflection = await guide.reflect(square.text, {
       language,
       plan: square.plan,
+      // Sent, not stood on. Without this the companion is told the player is
+      // on the square — they may be on plan 6, or not in the game at all — and
+      // answers somebody else's account as though it were where they live.
+      arrival: 'received',
       intention: (await reports.intention?.(who.id)) ?? undefined,
       journey,
     });

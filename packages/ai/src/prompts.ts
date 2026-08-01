@@ -21,11 +21,33 @@ export interface JourneyEntry {
   text: string;
 }
 
+/**
+ * Why this plan is in front of the player.
+ *
+ * `standing` is the ordinary case: they threw, they landed, they are sitting
+ * with it. `received` is a square somebody **sent** them — the mini app hands
+ * one over through Telegram and `/take` reads one pasted into a chat — and the
+ * player is not on it. They may be on plan 6, or waiting to enter the game at
+ * all.
+ *
+ * The distinction was missing and the prompt said *The player is on plan N* for
+ * both, so the companion answered every handed-over square as though the
+ * receiver were standing there. It is the same defect this repository has met
+ * five times on the surfaces — a sentence naming the wrong thing because it was
+ * the one already written — arriving here, in what a model is told.
+ */
+export type Arrival = 'standing' | 'received';
+
 export interface PlanContext {
   /** 1..72 */
   plan: number;
   /** Language to answer in. */
   language: Language;
+  /**
+   * Whether the player is on this plan or was sent it. `standing` by default,
+   * because that is what every path but the hand-over does.
+   */
+  arrival?: Arrival;
   /** How the player arrived, when this is about a move. */
   direction?: Direction;
   /** The square they came from. */
@@ -254,6 +276,10 @@ export function systemPrompt(context: PlanContext): string {
   const language = resolveLanguage(context.language);
   const plan = planFor(language, context.plan);
   const languageName = LANGUAGE_NAMES[language] ?? 'English';
+  // Said rather than assumed. Branching on `!== 'received'` left `standing` a
+  // word the vocabulary declared and nothing ever produced — which is exactly
+  // what `audit-reachable` exists to catch, and it caught this within the hour.
+  const arrival: Arrival = context.arrival ?? 'standing';
 
   const lines = [
     'You are a companion in Leela, the game of self-knowledge.',
@@ -262,16 +288,28 @@ export function systemPrompt(context: PlanContext): string {
     'the reflection is the game, not the movement. Your part is to help them',
     'meet what they landed on — never to hurry them along it.',
     '',
-    `The player is on plan ${context.plan}: ${plan.title}.`,
+    arrival === 'received'
+      ? `Somebody has sent the player plan ${context.plan}: ${plan.title}, with what` +
+        ' they wrote about it. The player is not standing there — this is another' +
+        " person's square, handed over, and what follows is that person's words."
+      : `The player is on plan ${context.plan}: ${plan.title}.`,
   ];
 
-  if (context.direction) {
-    lines.push(`They ${ARRIVAL[context.direction]}.`);
+  // Only a move has a direction, and only somebody standing somewhere came
+  // from a previous square. A received square was nobody's arrival: saying
+  // *they were brought down here by a snake* about a square they have never
+  // been on is worse than saying nothing.
+  if (arrival === 'standing') {
+    if (context.direction) {
+      lines.push(`They ${ARRIVAL[context.direction]}.`);
+    }
+    if (context.previousPlan !== undefined && context.previousPlan !== context.plan) {
+      lines.push(`They came from plan ${context.previousPlan}.`);
+    }
   }
-  if (context.previousPlan !== undefined && context.previousPlan !== context.plan) {
-    lines.push(`They came from plan ${context.previousPlan}.`);
-  }
-  if (context.plan === WIN_LOKA) {
+  // And the winning square is an ending only for whoever reached it. A player
+  // handed 68 by somebody else has not finished anything.
+  if (context.plan === WIN_LOKA && arrival === 'standing') {
     lines.push('This is the end of a game, and the start of the next one.');
   }
 
