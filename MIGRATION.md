@@ -5251,6 +5251,43 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A record nobody could read (178th pass).** The phone could write a path, carry
+it away and bring one back, and never once show it — what it printed was the
+writing about the square being stood on, and nothing else. The bot has `/path`
+and `/returns`, the mini app has a view with a section per seat, and *a record
+nobody can read is a record the game is not producing* is this repository's own
+sentence about the bot, from the pass that found reports going into SQLite and
+never coming out.
+
+The absence was named out loud one pass earlier and then **worked around**: the
+sentence about a device refusing a write had to stop saying *save a copy from
+“My path”*, because there was no such screen here. A sentence bent around a hole
+is the shape of one.
+
+`app.path`, `app.pathEmpty`, `app.pathCount` and `app.returns` were already in
+the catalogue in English and Russian, said by the other two surfaces and by
+neither of this one's — the second time in three passes that **an unspoken key
+marked a missing capability**. That is worth keeping as a place to look.
+
+**Counted the format's way**, and proving it took a case that had to be built.
+`revisited` and `writingsOn` are `@leela/journal`'s, so a square that came back
+is the same square on all three surfaces. But a hand-rolled counter was put back
+into `pathOf` to prove these tests and **every one of them still passed**: a
+count kept in a `Map` comes back in first-seen order, `revisited` returns
+most-returned first, and on the path the tests walked those two agree by luck.
+A path where the least-returned square was stood on first tells them apart.
+
+And `writingsOn` here was a local `journal.entries.filter(…)` under a comment
+promising an order it did not impose — true only because `record` and `takeIn`
+keep the list ordered three functions away. A promise held up by an invariant is
+a promise the next writer breaks.
+
+**The check written one pass ago fired on the fix.** It forbade any sentence
+naming *My path*, because the screen did not exist. It does now, so the rule was
+made to say what it meant: naming a screen is wrong only when the screen is not
+there, and whether it is there is a fact about the handles rather than about a
+word.
+
 **The audit turned round on us (177th pass).** The published app's findings were
 read as *a list of things these surfaces must not grow*, and two of them had
 already grown here.

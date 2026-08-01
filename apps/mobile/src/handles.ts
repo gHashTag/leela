@@ -42,6 +42,15 @@ export const HANDLE = {
   /** Opens and closes the rules book. */
   rules: 'rules',
 
+  /**
+   * Opens and closes the whole path.
+   *
+   * This app could write a path, carry it away and bring one back, and never
+   * once show it. The bot has `/path`, the mini app has a view of its own, and
+   * a record nobody can read is a record the game is not producing.
+   */
+  path: 'path',
+
   /** What the player is playing for, and the button that keeps it. */
   intention: 'intention-field',
   intentionSave: 'intention-save',

@@ -306,3 +306,34 @@ the same: the words were already written, so nobody wrote new ones.
 The check reads the keys this screen actually passes to `messageFor`, resolves
 them, and refuses any that mention a browser, a tab, a window, or *My path* — so
 the next borrowed sentence fails before anyone sees it.
+
+## Reading the whole path
+
+The app could write a path, carry it away and bring one back, and never once
+show it: what it printed was the writing about the square being stood on, and
+nothing else. So the record the game exists to produce could only be read by
+sending it somewhere else. The bot has `/path` and `/returns`; the mini app has
+a view with a section per seat.
+
+The absence was named out loud one pass ago and then worked around — the
+sentence about a device refusing a write had to stop saying *save a copy from
+“My path”*, because there was no such screen. A sentence bent around a hole is
+the shape of one.
+
+`app.path`, `app.pathEmpty`, `app.pathCount` and `app.returns` were already in
+the catalogue in English and Russian, said by the other two surfaces and by
+neither of this one's. That is the second time in three passes that an unspoken
+key marked a missing capability.
+
+**Counted the format's way.** `revisited` and `writingsOn` are
+`@leela/journal`'s, so a square that came back is the same square on all three
+surfaces. The check that this is not a second implementation needed a path where
+the two disagree: a counter kept in a `Map` returns squares in first-seen order,
+and `revisited` returns them most-returned first. Written because it had to be —
+a hand-rolled counter was put back to prove these tests and every one of them
+passed until that case existed.
+
+And `writingsOn` here was a local `journal.entries.filter(…)` under a comment
+promising an order it did not impose — true only because `record` and `takeIn`
+keep the list ordered three functions away. A promise held up by an invariant is
+a promise the next writer breaks.

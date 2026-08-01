@@ -49,6 +49,7 @@ import {
   keepDraft,
   loadKeptDraft,
   isIntention,
+  pathOf,
   keep,
   INTENTION_KEY,
   loadIntention,
@@ -117,6 +118,7 @@ export default function App() {
   const [pasted, setPasted] = useState('');
   const [changing, setChanging] = useState(false);
   const [reading, setReading] = useState(false);
+  const [walking, setWalking] = useState(false);
 
   // The path from the last time the app was open. Read once, and never allowed
   // to land on top of something written since: a player who starts writing
@@ -290,6 +292,15 @@ export default function App() {
    */
   const ask = askingFor(intention, changing);
 
+  /**
+   * The whole path, read through the format rather than assembled here.
+   *
+   * `revisited` is `@leela/journal`'s, so a square that came back is the same
+   * square on all three surfaces; counting them again would be a second answer
+   * to a question already answered.
+   */
+  const path = pathOf(journal);
+
   const refusal = mayThrow(game, intention);
 
   const line =
@@ -409,6 +420,67 @@ export default function App() {
         >
           <Text style={[styles.buttonText, label]}>{messageFor(language, 'app.rules')}</Text>
         </Pressable>
+
+        {/*
+          The whole path.
+
+          This app could write one, carry it away and bring one back, and never
+          once show it — so the record the game exists to produce was readable
+          only by sending it somewhere else. The bot has `/path` and
+          `/returns`; the mini app has a section per seat. Named out loud one
+          pass ago and worked around, when the sentence about a device refusing
+          a write had to stop saying *save a copy from “My path”*, because
+          there was no such screen here.
+        */}
+        <Pressable
+          testID={HANDLE.path}
+          accessibilityRole="button"
+          accessibilityLabel={messageFor(language, 'app.path')}
+          style={styles.button}
+          onPress={() => setWalking((open) => !open)}
+        >
+          <Text style={[styles.buttonText, label]}>{messageFor(language, 'app.path')}</Text>
+        </Pressable>
+
+        {walking ? (
+          <View style={styles.written}>
+            {/*
+              The question at the head, above the writing it frames — the mini
+              app's own placement, and its reason: an account is written inside
+              a question, and a page of accounts with no question on it is a
+              page of answers to nothing.
+            */}
+            {mayChangeIntention(intention) ? (
+              <Text style={[styles.line, prose]}>
+                {messageFor(language, 'app.intentionYours')} {intention}
+              </Text>
+            ) : null}
+
+            {path.entries.length === 0 ? (
+              <Text style={[styles.line, prose]}>{messageFor(language, 'app.pathEmpty')}</Text>
+            ) : (
+              <Text style={[styles.line, prose]}>
+                {messageFor(language, 'app.pathCount', { count: path.entries.length })}
+              </Text>
+            )}
+
+            {path.returns.map((visit) => (
+              <Text key={`return-${visit.plan}`} style={[styles.line, prose]}>
+                {visit.plan}. {planFor(language, visit.plan).title} —{' '}
+                {messageFor(language, 'app.returns', { count: visit.times })}
+              </Text>
+            ))}
+
+            {path.entries.map((entry) => (
+              <View key={`walk-${entry.plan}-${entry.at}`}>
+                <Text style={[styles.title, prose]}>
+                  {entry.plan}. {planFor(language, entry.plan).title}
+                </Text>
+                <Text style={[styles.entry, prose]}>{entry.text}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
         {reading
           ? bookFor(language).map((chapter) => (

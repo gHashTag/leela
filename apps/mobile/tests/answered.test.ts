@@ -168,8 +168,19 @@ describe('every sentence it says is true of the device it is held on', () => {
     ['browser', /\bbrowser\b|браузер/i],
     ['a tab', /\btabs?\b|вкладк/i],
     ['a window', /\bwindow\b|окн[оа]/i],
-    ['a screen this app has not got', /My path|Мо[её]м пути/i],
   ] as const;
+
+  /**
+   * A screen this app has not got.
+   *
+   * This was a fourth entry in the table above, forbidding *My path* outright,
+   * because the phone had no such view: the sentence about a device refusing a
+   * write told the player to save a copy from a screen that did not exist. It
+   * does now, so the rule has to say what it meant. Naming a screen is only
+   * wrong when the screen is not there, and whether it is there is a fact about
+   * the handles, not about a word.
+   */
+  const NAMES_THE_PATH = /My path|Мо[её]м пути/i;
 
   it('reads a real handful of them', () => {
     expect(keys.length).toBeGreaterThan(15);
@@ -182,6 +193,17 @@ describe('every sentence it says is true of the device it is held on', () => {
         expect(pattern.test(text), `${language}/${key}: ${text}`).toBe(false);
       }
     }
+  });
+
+  it('names no screen it has not got', () => {
+    const named = keys.some((key) =>
+      (['en', 'ru'] as const).some((language) => NAMES_THE_PATH.test(messageFor(language, key))),
+    );
+
+    if (!named) return;
+    expect(APP, 'a sentence names the path and no control opens one').toContain(
+      'testID={HANDLE.path}',
+    );
   });
 
   it('has the sentence it needed, in every language a phone can ask for', () => {

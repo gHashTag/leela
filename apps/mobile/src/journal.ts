@@ -27,10 +27,13 @@ import {
   order,
   parseDocument,
   parseSquare,
+  revisited,
   squareText,
   takeSquare as takeSquareInto,
   toDocument,
+  writingsOn as writingsOnEntries,
   type Report,
+  type Revisit,
 } from '@leela/journal';
 
 export { isIntention };
@@ -182,9 +185,47 @@ export function takeAccount(
   return { journal: after, written: true, kept: save(store, after), gateOpens: true, refusal: null };
 }
 
-/** Everything written about one square, oldest first. */
+/**
+ * Everything written about one square, oldest first.
+ *
+ * The format's own, not a second one written here. This was
+ * `journal.entries.filter(…)` under a comment promising an order it did not
+ * impose — true only because `record` and `takeIn` both keep the list ordered
+ * three functions away, which is a promise held up by an invariant rather than
+ * by the code that makes it. `@leela/journal` orders and then filters, and the
+ * bot and the mini app have both read squares through it since it moved there.
+ */
 export function writingsOn(journal: Journal, plan: number): Report[] {
-  return journal.entries.filter((entry) => entry.plan === plan);
+  return writingsOnEntries(journal.entries, plan);
+}
+
+/**
+ * The whole path, as something to read.
+ *
+ * This app could write a path, carry it away and bring one back, and never once
+ * show it. The bot has `/path` and `/returns`; the mini app has a view with a
+ * section per seat. The phone showed what was written about the square being
+ * stood on and nothing else — so the record the game exists to produce could
+ * only be read by sending it somewhere else.
+ *
+ * It was named out loud one pass ago and then worked around: the sentence about
+ * a device refusing a write had to stop saying *save a copy from “My path”*,
+ * because there is no such screen here.
+ *
+ * `revisited` is the format's, so a square that came back is the same square on
+ * all three surfaces. Counting them again here would be a second answer to a
+ * question already answered — which is how the bot's plain standings came to
+ * disagree with its own board.
+ */
+export interface Path {
+  /** Squares stood on more than once, most-returned first. */
+  returns: Revisit[];
+  /** Every account, oldest first. */
+  entries: Report[];
+}
+
+export function pathOf(journal: Journal): Path {
+  return { returns: revisited(journal.entries), entries: order(journal.entries) };
 }
 
 /**
