@@ -28,6 +28,7 @@ import { bookFor, messageFor, planFor, resolveLanguage,
 import {
   fileReport,
   isOver,
+  startOver,
   mayThrow,
   newGame,
   owesAnAccount,
@@ -39,6 +40,9 @@ import {
 import { PALETTE } from './palette';
 import {
   EMPTY,
+  NOTHING_WRITTEN,
+  draftFor,
+  draftOn,
   isIntention,
   keep,
   INTENTION_KEY,
@@ -54,6 +58,7 @@ import {
   takeSquare,
   toShare,
   writingsOn,
+  type Draft,
   type Journal,
   type Store,
 } from './journal';
@@ -99,7 +104,7 @@ export default function App() {
   const [game, setGame] = useState<Game>(() => newGame(startingSeed()));
   const [store] = useState<Store>(forTheSession);
   const [journal, setJournal] = useState<Journal>(EMPTY);
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState<Draft>(NOTHING_WRITTEN);
   const [said, setSaid] = useState<string | null>(null);
   const [intention, setIntention] = useState('');
   const [asking, setAsking] = useState('');
@@ -204,6 +209,24 @@ export default function App() {
   const square = squareToRead(game);
   const plan = square === null ? null : planFor(language, square);
 
+  /**
+   * What belongs in the writing box, which is nothing unless it was written
+   * here, in this game.
+   *
+   * A bare string outlives the square it describes. Winning ends a game **on**
+   * 68 while still owing an account of it, so the box and *Start over* are on
+   * screen together; tapping the second with the box full used to carry the
+   * words about Cosmic Consciousness into the next game, where they reappeared
+   * as the opening of an account of the first square landed on — and one tap of
+   * Save filed them there, in the record this game exists to produce.
+   *
+   * Structural rather than a line in the restart handler, the way the mini app
+   * answered it: a draft says which square of which game it is about, and it is
+   * shown only there. A rule kept by remembering to clear something is a rule
+   * the next handler is written without.
+   */
+  const writing = draftFor(draft, game.seed, square);
+
   const refusal = mayThrow(game, intention);
 
   const line =
@@ -226,11 +249,11 @@ export default function App() {
    * still on the screen.
    */
   const write = () => {
-    const taken = takeAccount(journal, here, draft, Date.now(), store);
+    const taken = takeAccount(journal, here, writing, Date.now(), store);
     if (!taken.written) return;
 
     setJournal(taken.journal);
-    setDraft('');
+    setDraft(NOTHING_WRITTEN);
     if (taken.gateOpens) setGame(fileReport(game));
 
     // Said when the device has answered, not before. The session already has
@@ -402,8 +425,8 @@ export default function App() {
             placeholderTextColor={PALETTE.hint}
             style={[styles.field, prose]}
             multiline
-            value={draft}
-            onChangeText={setDraft}
+            value={writing}
+            onChangeText={(text) => setDraft(draftOn(game.seed, here, text))}
             placeholder={messageFor(language, 'app.reportPlaceholder')}
           />
           <Pressable
@@ -412,11 +435,11 @@ export default function App() {
             accessibilityLabel={messageFor(language, 'app.reportSave')}
             // Asked here and asked again by `write`: a dimmed control is a
             // drawing, and a drawing refuses nothing.
-            disabled={draft.trim().length === 0}
-            style={[styles.button, draft.trim().length === 0 && styles.shut]}
+            disabled={writing.trim().length === 0}
+            style={[styles.button, writing.trim().length === 0 && styles.shut]}
             onPress={write}
           >
-            <Text style={[styles.buttonText, label, draft.trim().length === 0 && styles.shutText]}>{messageFor(language, 'app.reportSave')}</Text>
+            <Text style={[styles.buttonText, label, writing.trim().length === 0 && styles.shutText]}>{messageFor(language, 'app.reportSave')}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -566,7 +589,19 @@ export default function App() {
             accessibilityRole="button"
             accessibilityLabel={messageFor(language, 'app.restart')}
             style={[styles.button, styles.abreast]}
-            onPress={() => setGame(newGame(startingSeed()))}
+            onPress={() => {
+              // Asked again, five lines from the control that is already
+              // hidden: a drawing refuses nothing. `startOver` also carries the
+              // ruleset forward and refuses to hand back the seed it was given.
+              const over = startOver(game, startingSeed());
+              if (!over.begun) return;
+
+              setGame(over.game);
+              // The line under the board still said whatever the last act said
+              // — including *Written. You may throw.* over a board that had
+              // just been emptied.
+              setSaid(messageFor(language, 'app.restarted'));
+            }}
           >
             <Text style={[styles.buttonText, label]}>{messageFor(language, 'app.restart')}</Text>
           </Pressable>
@@ -596,7 +631,10 @@ const styles = StyleSheet.create({
    * the moment somebody adds one — which is exactly what *the app now speaks
    * Arabic* invites, so the guard belongs with the change that invites it.
    *
-   * The reader's direction is the text's, and the fields already carry it.
+   * The reader's direction belongs to the prose, which every `Text` on this
+   * screen now answers for. This sentence read *the fields already carry it*
+   * for one pass, as though the fields were the text — they are where the
+   * player answers; the plan is what they are answering.
    */
   board: { gap: 2, alignSelf: 'center', direction: 'ltr' },
   row: { flexDirection: 'row', gap: 2 },

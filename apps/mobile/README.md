@@ -142,3 +142,39 @@ a stylesheet; `audit-drawings` made the same requirement of every disabled
 control after three passes in which one was drawn shut and refused nothing. The
 check has both halves: nothing may be undecided, and nothing whose words come
 from `@leela/content` may answer `geometry`.
+
+## Beginning again
+
+`onPress={() => setGame(newGame(startingSeed()))}` — a whole act in one
+expression, asking nothing, keeping nothing straight and saying nothing. Three
+faults in it, and the third reaches the player's record.
+
+**It trusted the drawing.** The button is hidden unless `isOver`, and the act
+asked nothing itself — the shape three defects in the mini app came from, and
+the reason `throwDie` re-asks `mayThrow` five lines from a control that is
+already disabled. `startOver` asks.
+
+**It took the default ruleset.** A game begun under any other variant came back
+as `CLASSIC`, which decides the report gate, the entering six and the three
+sixes. The variant carries forward now, and `Game.rules` and
+`Game.session.rules` are held to each other — the same fact twice is this
+repository's most-repeated defect.
+
+**And it left the winning square's account in the box.** `CLASSIC` asks for a
+report on 68 and winning also ends the game, so the writing box and *Start
+over* are on screen at the same moment, on the same square. Tapping the second
+with the box full carried the words about Cosmic Consciousness into the next
+game, where they surfaced as the opening of an account of whatever square the
+player first landed on — and one tap of Save filed them there.
+
+Answered structurally rather than by a line in the handler, which is how the
+mini app answered the same thing twice: a `Draft` says **which square of which
+game** it is about, and it is shown only there. A rule kept by remembering to
+clear something is a rule the next handler is written without. The seed is the
+game — `throwDie` already says a game replays from `(seed, rollsTaken)` — and
+`startOver` will not hand back the seed it was given, so the game that replaces
+one is never the same game to a draft, to the die, or to the saved board.
+
+The line under the board is replaced too: `said` survived the act, so a restart
+taken straight after filing the winner's account left *Written. You may throw.*
+over a board that had just been emptied.

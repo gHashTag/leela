@@ -448,3 +448,46 @@ export function takeSquare(journal: Journal, text: string, at: number): SquareTa
     plan: square.plan,
   };
 }
+
+/**
+ * An account being written, and what it is being written about.
+ *
+ * It used to be a bare string in the screen, tied to nothing — and a bare
+ * string outlives the square it describes. Winning ends a game on 68 while
+ * still owing an account of it, so the writing box and *Start over* are on
+ * screen at the same moment; tapping the second with the box full carried the
+ * words about Cosmic Consciousness into the next game, where they surfaced as
+ * the opening of an account of whatever square the player first landed on. One
+ * tap of Save filed them there, permanently, in the record this game exists to
+ * produce.
+ *
+ * The mini app learned the same thing twice and answered it the same way: a
+ * draft carries whose it is (`draftKeyFor`), and `resize` clears the drafts of
+ * seats that are new. What is written here is written about **one square of one
+ * game**, and it is shown only there.
+ *
+ * The seed is the game. It is already what a game is identified by — `throwDie`
+ * says a game replays from `(seed, rollsTaken)` — and `startOver` will not hand
+ * back the seed it was just given, so a draft can never survive into the game
+ * that replaced it.
+ */
+export interface Draft {
+  /** The game, by the seed its die was made from. */
+  seed: number;
+  /** The square it is about. */
+  plan: number;
+  text: string;
+}
+
+/** Nothing being written, which is what a screen opens with. */
+export const NOTHING_WRITTEN: Draft = { seed: 0, plan: 0, text: '' };
+
+/** What belongs in the box on this square of this game — nothing, unless it is this draft's. */
+export function draftFor(draft: Draft, seed: number, plan: number | null): string {
+  return plan !== null && draft.seed === seed && draft.plan === plan ? draft.text : '';
+}
+
+/** What is now being written here. */
+export function draftOn(seed: number, plan: number, text: string): Draft {
+  return { seed, plan, text };
+}

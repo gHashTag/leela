@@ -180,3 +180,34 @@ export function owesAnAccount(game: Game): boolean {
 export function fileReport(game: Game): Game {
   return { ...game, session: submitReport(game.session, SEAT, Date.now()) };
 }
+
+export interface StartingOver {
+  /** The game to show. The one handed in, when the act is refused. */
+  game: Game;
+  /** Whether it happened. A refused act changes nothing and says nothing. */
+  begun: boolean;
+}
+
+/**
+ * Begin again, when there is something to begin again from.
+ *
+ * **The act asks its own question.** The button is drawn from `isOver` and
+ * asked nothing itself, which is the shape three defects in the mini app came
+ * from and the reason `throwDie` re-asks `mayThrow` five lines from the control
+ * that is already disabled. A hidden control cannot be pressed — but that is
+ * the drawing's promise, not this function's.
+ *
+ * **The rules carry forward.** The screen said `newGame(startingSeed())`, which
+ * takes the default, so a game begun under any other variant would have come
+ * back as `CLASSIC` — a second answer to a question the game already holds. The
+ * ruleset is the session's; nothing else here decides it.
+ *
+ * **And never the same seed.** A draft, the die and the saved board are all
+ * told apart by it, so handing back the game just finished would let what was
+ * being written about the winning square reappear in the game that replaced it.
+ */
+export function startOver(game: Game, seed: number): StartingOver {
+  if (!isOver(game)) return { game, begun: false };
+
+  return { game: newGame(seed === game.seed ? seed + 1 : seed, game.rules), begun: true };
+}

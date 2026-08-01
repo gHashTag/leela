@@ -5251,6 +5251,42 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A whole act in one expression (173rd pass).** `onPress={() => setGame(newGame(
+startingSeed()))}` was the restart: it asked nothing, kept nothing straight and
+said nothing. Three faults, and the third puts the wrong words into the record
+this game exists to produce.
+
+**It trusted the drawing.** The button is hidden unless `isOver` and the act
+asked nothing itself — the shape three defects in the mini app came from, and
+the reason `throwDie` re-asks `mayThrow` five lines from a control that is
+already disabled. **It took the default ruleset**, so a game begun under any
+other variant came back as `CLASSIC` — the report gate, the entering six and the
+three sixes all decided by an argument nobody passed.
+
+**And it left the winning square's account in the box.** `CLASSIC` asks for a
+report on 68, and winning also ends the game, so *Start over* and the writing
+box are on screen at the same moment, on the same square — asserted, because the
+whole defect rests on it. Tapping the second with the box full carried the words
+about Cosmic Consciousness into the next game, where they reappeared as the
+opening of an account of whatever square the player first landed on. One tap of
+Save filed them there.
+
+Answered **structurally**, the way the mini app answered the same thing twice
+(`draftKeyFor`, and `resize` clearing only the drafts of seats that are new): a
+`Draft` says which square of *which game* it is about and is shown only there. A
+rule kept by remembering to clear something is a rule the next handler is
+written without. The plan alone is not enough — a player can win, write about
+68, start over, play a second game and win that one too, and both end standing
+on 68 — so the seed is in it, and `startOver` refuses to hand back the seed it
+was given. The game that replaces one is then never the same game to a draft, to
+the die, or to the saved board.
+
+`said` survived the act too, so a restart taken straight after filing the
+winner's account left *Written. You may throw.* over a board that had just been
+emptied — the mini app's 97th-pass defect in a new place. `app.restarted` has
+existed in English and Russian since the messages catalogue was written and this
+surface had never said it.
+
 **Half a rule, and the half it kept was the one it wrote yesterday (172nd
 pass).** The mini app states it in one sentence in `chrome.ts` — *prose follows
 the reader; geometry does not* — and sets `dir` on the whole document, so every

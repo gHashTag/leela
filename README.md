@@ -196,10 +196,10 @@ cd packages/engine && bun test
 | `@leela/bot` | 533 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 141 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
 | `@leela/miniapp` | 377 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
-| `@leela/mobile` | 167 | the board on a phone (Expo), moved by the engine and by nothing else |
+| `@leela/mobile` | 180 | the board on a phone (Expo), moved by the engine and by nothing else |
 | everything else | — | not yet ported |
 
-2197 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+2210 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
