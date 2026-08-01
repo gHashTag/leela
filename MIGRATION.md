@@ -5432,6 +5432,38 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**Detox walks the app, and found two things on its first honest run (163rd
+pass).** Fourteen flows, all passing on an iPhone 16 Pro simulator. The app had
+eleven controls and not one identifier, so `src/handles.ts` names them once and
+both the screen and the walk read from it — a suite reaching for `roll` while
+the screen says `roll-button` fails with *not found*, which is
+indistinguishable from the control being gone.
+
+**The keyboard covered the button that keeps what was just typed.** Detox
+refused to tap Save because it was not visible — `view bounds: {{16, 702.7},
+{370, 45}}` on an 874-point screen, under a keyboard about 300 points tall.
+`KeyboardContainer` in the published app is the same answer to the same problem.
+
+**And the question the game is played to answer was kept in memory.**
+`loadIntention` and `saveIntention` were right and were handed the wrong store:
+`forTheSession()` is a `Map` made fresh at every launch, so a player was asked
+what they were playing for every single time — with a year of their answers to
+it on the device underneath, because the journal went to AsyncStorage and the
+question did not. No unit test could see it; the walk found it by relaunching.
+
+Three things the walk got wrong before the app did: `toHaveToggleValue` is for a
+switch and answered *not a UISwitch* against `accessibilityState`; Detox
+replaces the global `expect`, so `expect(17).toBeGreaterThan(0)` fails with *17
+is not a Detox matcher*; and the restart button is gated on `isOver(game)` — the
+walk called its absence mid-game a defect when it is the rule.
+
+**The die is not seeded, deliberately.** Making the six certain means a launch
+argument only a test passes, and a code path nobody who plays the game takes is
+a code path nobody maintains. The walk taps until the board says it is on it,
+bounded at forty throws — about one run in two thousand — and fails saying so.
+It cannot run in CI, where every job is `ubuntu-latest`, so it is a command a
+person runs and `apps/mobile/README.md` says so.
+
 **The phone kept a year of writing and lost the board (162nd pass).**
 `apps/mobile` restored the journal and the intention at startup and made a
 *fresh* game with a random seed. Somebody who had climbed to plan 41 came back
