@@ -70,3 +70,41 @@ translation of the Arabic `online` chapter is false.
 Arabic and Urdu get `dir="rtl"` and their text aligned, not merely reordered.
 Both are in the dataset, so both are in the book — and the direction comes from
 the language the words are in, not from the directory.
+
+## The book speaks the reader's language
+
+It did not. `apps/docs` generates 1,784 pages in twenty-two languages and said
+**no catalogue key at all** — the only surface in this repository that spoke
+none. A Russian reader met Russian plan text under *The rules*, *The 72 plans*
+and *Legal*, with *Contents* under every page, *Play* in the corner, and a
+language picker announced to a screen reader as *Language*. The contents page's
+`<meta name="description">` was English with the language's own name spliced
+into it: *The game of self-knowledge in Русский*, which is what a search result
+and a Telegram preview showed.
+
+Six of the seven keys did not exist. `app.rules` and `app.plans` did, said by
+two other surfaces and by none of this one's pages.
+
+`app.book` is a **plural**, because it carries a count and Russian agrees with
+one: written flat it read *Игра самопознания — 72 планов*, the genitive plural
+for a number ending in five. Seventy-two takes the few form.
+
+Twenty of the twenty-two fall back to English, which is `@leela/content`'s
+stated position — a visible gap rather than an invisible guess.
+
+**The root page is the exception**, and the check says so: it is the language
+picker, it belongs to nobody's language, and it says *Play* in English on
+purpose.
+
+**An untranslated legal page is English throughout.** The page declares
+`lang="en"` when the body is the English document, so its chrome follows
+`writtenIn` and not the section — Russian chrome inside an English document
+would be the two halves of one page disagreeing.
+
+**A legal document nobody has named stops the build.** `LEGAL_TITLES[name] ??
+name` would have published a `legal/cookies.en.md` with *cookies* as its
+heading, its `<title>` and its `og:title`, in all twenty-two languages. The type
+is derived from the map with `keyof typeof` rather than declared beside it —
+`audit-reachable` refused the declared union within the minute, because a
+vocabulary whose words are never said reads as though the question is answered
+there.

@@ -13,6 +13,7 @@ import {
   LANGUAGES,
   LANGUAGE_NAMES,
   directionOf,
+  messageFor,
   type Language,
   type Plan,
   type RuleChapter,
@@ -135,8 +136,8 @@ ${translations(writtenIn, path, pathFor)}
 </head>
 <body>
 <header class="site">
-  <a class="home" href="${root}${language}/">Leela</a>
-  <a class="play" href="${PLAY_URL}">Play</a>
+  <a class="home" href="${root}${language}/">${SITE_NAME}</a>
+  <a class="play" href="${PLAY_URL}">${escape(messageFor(writtenIn, 'app.play'))}</a>
 </header>
 <main>
 <h1>${escape(title)}</h1>
@@ -144,7 +145,7 @@ ${subtitle ? `<p class="subtitle">${escape(subtitle)}</p>` : ''}
 ${body}
 </main>
 <footer>
-${languagePicker(language, root, pathFor)}
+${languagePicker(language, root, pathFor, writtenIn)}
 </footer>
 </body>
 </html>
@@ -284,6 +285,8 @@ export function languagePicker(
   current: Language | null,
   root: string,
   pathFor: (language: Language) => string | null = () => '',
+  /** The language the page is written in, for the picker's own name. */
+  named: Language = current ?? 'en',
 ): string {
   const links = LANGUAGES.map((language) => {
     const name = escape(LANGUAGE_NAMES[language]);
@@ -292,7 +295,7 @@ export function languagePicker(
       : `<a lang="${language}" href="${root}${language}/${pathFor(language) ?? ''}">${name}</a>`;
   }).join('\n');
 
-  return `<nav class="languages" aria-label="Language">${links}</nav>`;
+  return `<nav class="languages" aria-label="${escape(messageFor(named, 'app.language'))}">${links}</nav>`;
 }
 
 /** The contents page for one language. */
@@ -313,12 +316,19 @@ export function indexPage(language: Language, plans: Plan[], rules: RuleChapter[
     // of this one.
     path: '',
     pathFor: () => '',
-    description: `The game of self-knowledge in ${LANGUAGE_NAMES[language]}: ${plans.length} plans and the rules, read as a book.`,
-    subtitle: 'The game of self-knowledge — 72 plans',
+    // The catalogue's, not a sentence written here. This was English with the
+    // language's own name spliced into it — *The game of self-knowledge in
+    // Русский* — so every contents page's search result and Telegram preview
+    // was in English, in all twenty-two languages. A short description in the
+    // reader's language beats a long one in somebody else's.
+    description: messageFor(language, 'app.book', { count: plans.length }),
+    subtitle: messageFor(language, 'app.book', { count: plans.length }),
     body: [
-      rules.length ? `<h2>The rules</h2>\n<ul class="chapters">\n${ruleLinks}\n</ul>` : '',
-      `<h2>The 72 plans</h2>\n<ol class="plans">\n${planLinks}\n</ol>`,
-      '<h2>Legal</h2>\n<ul class="chapters">\n<li><a href="legal/policy.html">Privacy policy</a></li>\n<li><a href="legal/eula.html">Terms of use</a></li>\n</ul>',
+      rules.length
+        ? `<h2>${escape(messageFor(language, 'app.rules'))}</h2>\n<ul class="chapters">\n${ruleLinks}\n</ul>`
+        : '',
+      `<h2>${escape(messageFor(language, 'app.plans'))}</h2>\n<ol class="plans">\n${planLinks}\n</ol>`,
+      `<h2>${escape(messageFor(language, 'app.legal'))}</h2>\n<ul class="chapters">\n<li><a href="legal/policy.html">${escape(messageFor(language, 'app.policy'))}</a></li>\n<li><a href="legal/eula.html">${escape(messageFor(language, 'app.terms'))}</a></li>\n</ul>`,
     ]
       .filter(Boolean)
       .join('\n'),
@@ -361,7 +371,7 @@ export function planPage(language: Language, plan: Plan, total: number): string 
     body: [
       descriptionIsRedundant(plan) ? '' : `<p class="subtitle">${escape(plan.description!)}</p>`,
       renderMarkdown(plan.body),
-      `<nav class="pager">${previous}<a href="../">Contents</a>${next}</nav>`,
+      `<nav class="pager">${previous}<a href="../">${escape(messageFor(language, 'app.contents'))}</a>${next}</nav>`,
     ]
       .filter(Boolean)
       .join('\n'),
@@ -390,7 +400,7 @@ export function chapterPage(
     path: `rules/${chapter.slug}.html`,
     pathFor: (other) => (hasChapter(other, chapter.slug) ? `rules/${chapter.slug}.html` : null),
     description: summarise(chapter.body),
-    body: `${renderMarkdown(chapter.body)}\n<nav class="pager"><span></span><a href="../">Contents</a><span></span></nav>`,
+    body: `${renderMarkdown(chapter.body)}\n<nav class="pager"><span></span><a href="../">${escape(messageFor(language, 'app.contents'))}</a><span></span></nav>`,
   });
 }
 
@@ -441,7 +451,10 @@ export function legalPage({
     path: `legal/${name}.html`,
     pathFor: (other) => (translatedInto.includes(other) ? `legal/${name}.html` : null),
     description: summarise(body),
-    body: `${renderMarkdown(body)}\n<nav class="pager"><span></span><a href="../">Contents</a><span></span></nav>`,
+    // `writtenIn`, not the section: a page whose body is the English document
+    // declares `lang="en"`, and Russian chrome inside an English document would
+    // be the two halves of one page disagreeing.
+    body: `${renderMarkdown(body)}\n<nav class="pager"><span></span><a href="../">${escape(messageFor(writtenIn, 'app.contents'))}</a><span></span></nav>`,
   });
 }
 

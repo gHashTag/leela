@@ -5251,6 +5251,56 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**The book spoke no language but English (181st pass).** `apps/docs` generates
+1,784 pages in twenty-two languages and said **no catalogue key at all** — the
+only surface in this repository that spoke none. A Russian reader met Russian
+plan text under *The rules*, *The 72 plans* and *Legal*, with *Contents* under
+every page, *Play* in the corner, and a language picker announced to a screen
+reader as *Language*. Found by asking what the mini app had just been caught by
+one surface over: eleven of fifteen controls named there, none of them here.
+
+Six of the seven keys did not exist. `app.rules` and `app.plans` did, said by
+two other surfaces and by none of this one's pages.
+
+**And one of the strings was mine, from the 170th pass.** The contents page's
+`<meta name="description">` was English with the language's own name spliced
+into it — *The game of self-knowledge in Русский* — so every search result and
+every Telegram preview of a contents page was in English. It reads as
+translated at a glance, which is why it survived a whole pass about that page's
+head.
+
+`app.book` is a **plural**: it carries a count, and Russian agrees with one.
+Written flat it read *Игра самопознания — 72 планов*, the genitive plural for a
+number ending in five; seventy-two takes the few form, and `Intl.PluralRules`
+decides. Twenty of the twenty-two fall back to English, which is the
+catalogue's stated position — a visible gap rather than an invisible guess. The
+root page is the exception and the check says so: it is the picker, it belongs
+to nobody's language.
+
+**`LEGAL_TITLES[name] ?? name`** would have published a `legal/cookies.en.md`
+with *cookies* as its heading, its `<title>` and its `og:title`, in all
+twenty-two languages — the same shape as the two maps the pass before, found by
+sweeping every `x[y] ?? z` in the repository. Twelve such sites, eleven of them
+legitimate by design. The build stops now instead.
+
+**`audit-reachable` refused my first fix within the minute.** `type LegalName =
+'policy' | 'eula'` declares a vocabulary whose words nothing ever says — they
+come from a directory listing — and *a vocabulary with an unreachable word reads
+as though the question is answered here*. Derived from the map with `keyof
+typeof` now, so the words are said as the keys of the one place that holds them.
+
+**Read in the donor and deliberately not done.** `translate-leela/locales/*`
+carries `policy-<lang>.md` and `eula-<lang>.md` for **nineteen** languages —
+every one of ours except `ar`, `ms` and `uk` — real translations of the same
+documents, several thousand characters each. So `loadLegal`'s comment, *only
+English and Russian were ever written*, is **false**: they were written and
+never brought across. They are not imported here, for two reasons that are the
+user's to weigh rather than mine: a push to this branch publishes the book, and
+publishing a legal document in seventeen new languages is a commitment somebody
+has to make on purpose. `ja` and `zh` also open with the fullwidth `＃` (U+FF03)
+that cost the third pass twenty-five plan titles, so an import has that to
+normalise too.
+
 **Two restated lists of the twenty-two, both behind a fallback (180th pass).**
 `packages/ai` had never been opened by this loop. It holds `LANGUAGE_NAMES` —
 English names, for the instruction *Answer in Russian* — as a

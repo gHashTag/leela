@@ -258,6 +258,33 @@ const EN = {
   // the rules book, `:books:` opens all 72 plans. See GameScreen's Header.
   'app.rules': 'Rules of the game',
   'app.plans': 'All 72 plans',
+  /**
+   * The book's own chrome, which had none.
+   *
+   * `apps/docs` generates 1,784 pages in twenty-two languages and said **no
+   * catalogue key at all**: a Russian reader met Russian plan text under an
+   * English heading, with English links to the contents, the legal documents
+   * and the game. It was the only surface that spoke none of this.
+   */
+  'app.play': 'Play',
+  'app.contents': 'Contents',
+  'app.legal': 'Legal',
+  'app.policy': 'Privacy policy',
+  'app.terms': 'Terms of use',
+  /** The language picker's name, for a screen reader. */
+  'app.language': 'Language',
+  /**
+   * The book's subtitle, and the description a search result shows.
+   *
+   * `{count}` rather than a second 72 written down, and a **plural**, because
+   * Russian agrees with a count: written flat it read *Игра самопознания — 72
+   * планов*, the genitive plural for a number ending in five. Seventy-two takes
+   * the few form, and `Intl.PluralRules` is what decides.
+   */
+  'app.book': {
+    one: 'The game of self-knowledge — {count} plan',
+    other: 'The game of self-knowledge — {count} plans',
+  },
   'app.restart': 'Start over',
   'app.restarted': 'A new game. Throw a six to enter it.',
   'app.opening': 'A six puts you on the board.',
@@ -620,6 +647,18 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.boardLabel': 'Доска, 72 плана',
   'app.rules': 'Правила игры',
   'app.plans': 'Все 72 плана',
+  'app.play': 'Играть',
+  'app.contents': 'Оглавление',
+  'app.legal': 'Правовые документы',
+  'app.policy': 'Политика конфиденциальности',
+  'app.terms': 'Условия использования',
+  'app.language': 'Язык',
+  'app.book': {
+    one: 'Игра самопознания — {count} план',
+    few: 'Игра самопознания — {count} плана',
+    many: 'Игра самопознания — {count} планов',
+    other: 'Игра самопознания — {count} плана',
+  },
   'app.restart': 'Начать заново',
   'app.restarted': 'Новая игра. Бросьте шестёрку, чтобы войти в неё.',
   'app.opening': 'Шестёрка выводит вас на доску.',

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { LANGUAGES, LANGUAGE_NAMES, directionOf, plansFor, rulesFor } from '@leela/content';
+import {
+  LANGUAGES,
+  LANGUAGE_NAMES,
+  directionOf,
+  messageFor,
+  plansFor,
+  rulesFor,
+} from '@leela/content';
 import { TOTAL_PLANS } from '@leela/engine';
 import {
   DOCS_URL,
@@ -319,8 +326,8 @@ describe('data the content does not currently produce', () => {
     // as a language that has no rules translated.
     const html = indexPage('en', plansFor('en'), []);
 
-    expect(html).not.toContain('The rules');
-    expect(html).toContain('The 72 plans');
+    expect(html).not.toContain(messageFor('en', 'app.rules'));
+    expect(html).toContain(messageFor('en', 'app.plans'));
   });
 
   it('still links the legal documents when there are no rules', () => {

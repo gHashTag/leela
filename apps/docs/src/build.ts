@@ -10,7 +10,14 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LANGUAGES, plansFor, rulesFor, type Language } from '@leela/content';
+import {
+  LANGUAGES,
+  messageFor,
+  plansFor,
+  rulesFor,
+  type Language,
+  type MessageKey,
+} from '@leela/content';
 import { TOTAL_PLANS } from '@leela/engine';
 import { chapterPage, indexPage, legalPage, planPage, rootPage } from './render';
 import { STYLE } from './style';
@@ -34,9 +41,21 @@ export function stripFrontmatter(source: string): string {
 /**
  * Legal documents, by name and language.
  *
- * Only English and Russian were ever written. Every other language is served
- * the English rather than nothing: a missing privacy policy is a store
- * rejection and, for a Telegram mini app, a missing requirement.
+ * Only English and Russian are *here*. Every other language is served the
+ * English rather than nothing: a missing privacy policy is a store rejection
+ * and, for a Telegram mini app, a missing requirement.
+ *
+ * This said *only English and Russian were ever written*, and that is false.
+ * `translate-leela/locales/<lang>/policy-<lang>.md` and `eula-<lang>.md` exist
+ * for **nineteen** languages — every one of ours except `ar`, `ms` and `uk` —
+ * real translations of these same documents, several thousand characters each.
+ * They were written and never brought across.
+ *
+ * Bringing them is a decision rather than a chore: a push to this branch
+ * publishes the book, and publishing a legal document in seventeen new
+ * languages is a commitment somebody has to make on purpose. `ja` and `zh` also
+ * open with the fullwidth `＃` (U+FF03) that cost the third pass twenty-five
+ * plan titles, so an import has that to normalise.
  */
 export function loadLegal(dir: string): Map<string, Map<string, string>> {
   const documents = new Map<string, Map<string, string>>();
@@ -57,10 +76,38 @@ export function loadLegal(dir: string): Map<string, Map<string, string>> {
   return documents;
 }
 
-const LEGAL_TITLES: Record<string, string> = {
-  policy: 'Privacy policy',
-  eula: 'Terms of use',
-};
+/**
+ * What each legal document is called, in the reader's language.
+ *
+ * Typed over the documents that exist, so a third one will not compile — the
+ * lesson `LANGUAGE_NAMES` and `SCRIPTS` both taught the same week. It was
+ * `Record<string, string>` read as `LEGAL_TITLES[name] ?? name`, so a
+ * `legal/cookies.en.md` would have been published with `cookies` as its
+ * heading, its `<title>` and its `og:title`, in all twenty-two languages.
+ */
+const LEGAL_TITLES = {
+  policy: 'app.policy',
+  eula: 'app.terms',
+} as const satisfies Record<string, MessageKey>;
+
+/**
+ * Derived from the map rather than declared beside it.
+ *
+ * It was a `type LegalName = 'policy' | 'eula'` union, and `audit-reachable`
+ * refused it within the minute: a vocabulary whose words are declared and never
+ * said reads as though the question is answered there, and it gets answered
+ * somewhere else instead. These words are said — as the keys of the one map
+ * that holds them.
+ */
+type LegalName = keyof typeof LEGAL_TITLES;
+
+/** A file in `legal/` that nothing knows the name of is a build to stop. */
+function legalTitle(name: string, language: Language): string {
+  const key = LEGAL_TITLES[name as LegalName];
+  if (!key) throw new Error(`legal/${name}: no title declared for this document`);
+
+  return messageFor(language, key);
+}
 
 export function build(outDir: string): BuildResult {
   const legal = loadLegal(join(APP, 'legal'));
@@ -118,7 +165,9 @@ export function build(outDir: string): BuildResult {
         legalPage({
           language,
           name,
-          title: LEGAL_TITLES[name] ?? name,
+          // In the language the document is written in, which is the language
+          // the page declares.
+          title: legalTitle(name, byLanguage.has(language) ? language : 'en'),
           body,
           // The language of the *text*, which is English wherever the document
           // was never translated. The page is still filed under `language` and
