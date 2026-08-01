@@ -26,6 +26,8 @@ import {
   writingsOn as writingsOnEntries,
   MAX_REPORTS,
   MAX_REPORT_CHARS,
+  WARN_WITHIN_CHARS,
+  writerHint,
   type Revisit,
 } from '@leela/journal';
 import type { GameStorage } from './state';
@@ -218,13 +220,9 @@ export function arrived(journal: Journal): Journal {
  * Returns the journal unchanged in that case, so the caller cannot accidentally
  * mark a plan reported by asking twice.
  */
-/**
- * When the writer starts warning about room.
- *
- * Only near the end: a counter that is always on screen is furniture, and a
- * player counting characters is not reflecting.
- */
-export const WARN_WITHIN_CHARS = 200;
+// Kept as an export because this app's tests and its view name it; the number
+// itself is `@leela/journal`'s, beside the bounds it is about.
+export { WARN_WITHIN_CHARS };
 
 /**
  * What to say under the writing box, or nothing.
@@ -239,16 +237,13 @@ export const WARN_WITHIN_CHARS = 200;
  * where this goes.
  */
 export function hintFor(journal: Journal, length: number, language: Language): string {
-  const left = MAX_REPORT_CHARS - length;
+  // The reading is `@leela/journal`'s, which owns both bounds; the words are
+  // the catalogue's. The phone cuts by the same two numbers and said nothing,
+  // so the decision moved to where both surfaces can ask it.
+  const hint = writerHint(journal.entries.length, length);
+  if (hint === null) return '';
 
-  // The immediate concern first: running out of room in this box beats a
-  // standing fact about the path.
-  if (left <= 0) return messageFor(language, 'writer.full');
-  if (left <= WARN_WITHIN_CHARS) return messageFor(language, 'writer.left', { count: left });
-
-  if (journal.entries.length >= MAX_REPORTS) return messageFor(language, 'writer.pathFull');
-
-  return '';
+  return messageFor(language, hint.key, hint.count === undefined ? {} : { count: hint.count });
 }
 
 export function record(

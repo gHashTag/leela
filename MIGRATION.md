@@ -5251,6 +5251,28 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A bound nobody is shown, on the surface that wrote the sentence down (202nd
+pass).** The same lens as last pass, on the other two bounds. `record` cuts a
+report at `MAX_REPORT_CHARS` and drops the oldest account past `MAX_REPORTS`,
+and the phone said neither: the text simply stopped appearing at four thousand
+characters, and a player's first account went without a word when their five
+hundred and first arrived.
+
+The mini app had already met both and answered them — *both limits here used to
+be silent… the published app has no maximum at all; ours exists because
+`localStorage` is bounded, and **a bound nobody is shown is indistinguishable
+from a bug***. It wrote its own `hintFor`, and the phone, cutting by the same two
+numbers in the same two ways, had nothing at all: no counter, no sentence, no
+warning.
+
+`writerHint` in `@leela/journal` answers it once, and answers with a **key**
+rather than a sentence — this package knows the bounds, `@leela/content` knows
+the words, the same split `view.ts` already uses for the line under the mini
+app's board. The order is part of the reading: running out of room in the box
+beats a standing fact about the path, because one is what the next keystroke
+meets. Both surfaces ask it now; the three sentences were already in the
+catalogue in English and Russian.
+
 **Twelve plans brought back, and eleven of them gone (201st pass).** Probed the
 shared format at its bound instead of in the middle. `merge` joins a path and a
 file and cuts to `MAX_REPORTS` — five hundred — and said nothing about the cut,

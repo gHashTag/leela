@@ -68,7 +68,7 @@ import {
   type Journal,
   type Store,
 } from './journal';
-import { MAX_INTENTION_CHARS, MAX_REPORT_CHARS } from '@leela/journal';
+import { MAX_INTENTION_CHARS, MAX_REPORT_CHARS, writerHint } from '@leela/journal';
 import { deviceKeeper, deviceLocale } from './device';
 import { GAME_KEY, keepGame, loadKeptGame } from './game-store';
 import { HANDLE, squareHandle } from './handles';
@@ -280,6 +280,19 @@ export default function App() {
    * app ships they are ninety-nine characters apart.
    */
   const enough = countsAsReport(writing, game.rules);
+
+  /**
+   * What the two bounds on writing have to say, or nothing.
+   *
+   * The box stops taking characters at `MAX_REPORT_CHARS` and `record` drops
+   * the oldest account past `MAX_REPORTS`, and this screen said neither: the
+   * text simply stopped appearing, and a player's first account went without a
+   * word. The mini app wrote that down and answered it for itself — *a bound
+   * nobody is shown is indistinguishable from a bug* — and the reading lives in
+   * `@leela/journal` now, so the two surfaces cannot say different things about
+   * the same two numbers.
+   */
+  const hint = writerHint(journal.entries.length, writing.length);
 
   /**
    * The question, and whether the box for it is open.
@@ -631,6 +644,11 @@ export default function App() {
             onChangeText={(text) => setDraft(draftOn(game.seed, here, text))}
             placeholder={messageFor(language, 'app.reportPlaceholder')}
           />
+          {hint === null ? null : (
+            <Text testID={HANDLE.reportHint} style={[styles.line, prose]}>
+              {messageFor(language, hint.key, hint.count === undefined ? {} : { count: hint.count })}
+            </Text>
+          )}
           <Pressable
             testID={HANDLE.reportSave}
             accessibilityRole="button"

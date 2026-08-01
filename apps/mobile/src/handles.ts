@@ -70,6 +70,15 @@ export const HANDLE = {
   /** The account owed for the square just arrived on. */
   report: 'report-field',
   reportSave: 'report-save',
+  /**
+   * What the two bounds on writing have to say, or nothing.
+   *
+   * The box cuts at `MAX_REPORT_CHARS` and the path drops its oldest past
+   * `MAX_REPORTS`, and this surface said neither — the defect the mini app
+   * wrote down and answered for itself: *a bound nobody is shown is
+   * indistinguishable from a bug.*
+   */
+  reportHint: 'report-hint',
 
   /** The die. The one control the whole game runs through. */
   roll: 'roll',

@@ -8,6 +8,8 @@ import {
   keyOf,
   merge,
   merged,
+  writerHint,
+  WARN_WITHIN_CHARS,
   newEntries,
   order,
   MAX_INTENTION_CHARS,
@@ -395,5 +397,61 @@ describe('the union says what it cost', () => {
     const theirs = many(20, 10_000);
 
     expect(merge(mine, theirs)).toEqual(merged(mine, theirs).entries);
+  });
+});
+
+describe('what a writing box has to say about its bounds', () => {
+  /**
+   * Both were silent everywhere once: `record` cuts a report at
+   * `MAX_REPORT_CHARS` and drops the oldest account past `MAX_REPORTS`, and a
+   * thousand words could go without a word about it. The mini app wrote that
+   * sentence down and answered it for itself — *a bound nobody is shown is
+   * indistinguishable from a bug* — and the phone, which cuts by the same two
+   * numbers in the same two ways, still said nothing at all: the text simply
+   * stopped appearing, and a player's first account went quietly.
+   *
+   * A key rather than a sentence, because this package knows the bounds and the
+   * catalogue knows the words.
+   */
+  it('says nothing while there is room, which is nearly always', () => {
+    // A counter that is always on screen is furniture, and a player counting
+    // characters is not reflecting.
+    expect(writerHint(0, 0)).toBeNull();
+    expect(writerHint(10, 500)).toBeNull();
+    expect(writerHint(MAX_REPORTS - 1, MAX_REPORT_CHARS - WARN_WITHIN_CHARS - 1)).toBeNull();
+  });
+
+  it('counts down only near the end, and counts what is left', () => {
+    const hint = writerHint(0, MAX_REPORT_CHARS - 12);
+
+    expect(hint?.key).toBe('writer.left');
+    expect(hint?.count, 'the characters, not the ones used').toBe(12);
+  });
+
+  it('says the box is full at the bound and past it', () => {
+    // Past it too: a paste can arrive longer than the box would have taken.
+    for (const length of [MAX_REPORT_CHARS, MAX_REPORT_CHARS + 500]) {
+      expect(writerHint(0, length)?.key, String(length)).toBe('writer.full');
+    }
+  });
+
+  it('warns that saving this drops the oldest, once the path is full', () => {
+    expect(writerHint(MAX_REPORTS, 100)?.key).toBe('writer.pathFull');
+    expect(writerHint(MAX_REPORTS + 20, 100)?.key, 'and past it').toBe('writer.pathFull');
+  });
+
+  it('puts the box before the path, because one is happening now', () => {
+    // Both true at once. Running out of room in this box is what the next
+    // keystroke meets; the path is a standing fact about the one after it.
+    expect(writerHint(MAX_REPORTS, MAX_REPORT_CHARS)?.key).toBe('writer.full');
+    expect(writerHint(MAX_REPORTS, MAX_REPORT_CHARS - 10)?.key).toBe('writer.left');
+  });
+
+  it('never asks for a number the sentence does not take', () => {
+    // `writer.full` and `writer.pathFull` say nothing about a count, and a
+    // count handed to them would be an unused placeholder — the shape
+    // `messageIssues` refuses in the catalogue.
+    expect(writerHint(0, MAX_REPORT_CHARS)?.count).toBeUndefined();
+    expect(writerHint(MAX_REPORTS, 0)?.count).toBeUndefined();
   });
 });

@@ -301,6 +301,52 @@ export function merged(
   return { entries, added, dropped: whole.length - entries.length };
 }
 
+/**
+ * When a writing box starts warning about room.
+ *
+ * Only near the end: a counter that is always on screen is furniture, and a
+ * player counting characters is not reflecting.
+ */
+export const WARN_WITHIN_CHARS = 200;
+
+/** What a surface should say under a writing box, or null when nothing. */
+export interface WriterHint {
+  /** A key in `@leela/content`'s catalogue. The words are not this package's. */
+  key: 'writer.full' | 'writer.left' | 'writer.pathFull';
+  /** The number the sentence needs, where it needs one. */
+  count?: number;
+}
+
+/**
+ * The two bounds on writing, as the thing to say about them.
+ *
+ * Both were silent everywhere once: `record` cuts a report at
+ * `MAX_REPORT_CHARS` and drops the oldest entry past `MAX_REPORTS`, and a
+ * thousand words could go without a word about it. The mini app wrote that
+ * sentence down and answered it for itself — *a bound nobody is shown is
+ * indistinguishable from a bug* — and the phone, which cuts by the same two
+ * numbers in the same two ways, still said nothing at all.
+ *
+ * Here rather than in either, and as a key rather than a sentence: this package
+ * knows the bounds and `@leela/content` knows the words. The same split
+ * `view.ts` already uses for the line under the mini app's board.
+ *
+ * @param kept How many accounts the path already holds.
+ * @param length How long what is being written is, in characters.
+ */
+export function writerHint(kept: number, length: number): WriterHint | null {
+  const left = MAX_REPORT_CHARS - length;
+
+  // The immediate concern first: running out of room in this box beats a
+  // standing fact about the path.
+  if (left <= 0) return { key: 'writer.full' };
+  if (left <= WARN_WITHIN_CHARS) return { key: 'writer.left', count: left };
+
+  if (kept >= MAX_REPORTS) return { key: 'writer.pathFull' };
+
+  return null;
+}
+
 /** A name a file can carry into a chat or a downloads folder. */
 export function fileName(stamp: string): string {
   return `leela-path-${stamp}.json`;

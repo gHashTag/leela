@@ -1,6 +1,15 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { MAX_REPORTS, MAX_REPORT_CHARS } from '@leela/journal';
 import { EMPTY, load, record, save, takeAccount, writingsOn, type Store } from '../src/journal';
+
+const APP = blank(
+  readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'App.tsx'), 'utf8'),
+);
 
 /**
  * The gate exists so that a player reflects before they move.
@@ -180,5 +189,47 @@ describe('what follows from taking an account', () => {
 
       expect(taken.gateOpens, JSON.stringify(draft)).toBe(taken.journal.entries.length > 0);
     }
+  });
+});
+
+describe('the bounds on writing are said out loud', () => {
+  /**
+   * The box stops taking characters at `MAX_REPORT_CHARS` and `record` drops
+   * the oldest account past `MAX_REPORTS`, and this screen said neither. The
+   * text simply stopped appearing, and a player's first account went without a
+   * word — the defect the mini app wrote down and answered for itself: *a bound
+   * nobody is shown is indistinguishable from a bug.*
+   *
+   * The reading is `@leela/journal`'s, so the two surfaces cannot say different
+   * things about the same two numbers; what is asserted here is that this one
+   * asks, and shows the answer where it is being typed.
+   */
+  it('asks the shared reading rather than measuring here', () => {
+    // The call with its arguments, not the name somewhere in the file: an
+    // import that is never called is what a check on a mention would pass.
+    expect(APP).toContain('writerHint(journal.entries.length, writing.length)');
+  });
+
+  it('draws it beside the box, not somewhere else on the screen', () => {
+    const writer = APP.slice(APP.indexOf('HANDLE.report}'), APP.indexOf('HANDLE.reportSave}'));
+    expect(writer, 'inside the writer, between the field and Save').toContain('HANDLE.reportHint');
+  });
+
+  it('says nothing when there is nothing to say', () => {
+    // A hint drawn empty is a line of furniture under every account anybody
+    // ever writes.
+    expect(APP).toMatch(/hint === null \? null :/);
+  });
+
+  it('hands the sentence the number only where it takes one', () => {
+    // `writer.full` and `writer.pathFull` name no count, and an unused
+    // placeholder is what `messageIssues` refuses in the catalogue.
+    expect(APP).toContain('hint.count === undefined ? {} : { count: hint.count }');
+  });
+
+  it('measures what is being written, not what was kept', () => {
+    // `writing` is the field; `journal.entries` is the path. Swapping them
+    // would count characters of a report already filed.
+    expect(APP).not.toMatch(/writerHint\([^)]*draft[^)]*\)/);
   });
 });
