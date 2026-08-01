@@ -22,7 +22,9 @@ import {
   standingOn,
   throwDie,
   type Game,
+  squareToRead,
 } from './game';
+import { PALETTE } from './palette';
 import {
   EMPTY,
   isIntention,
@@ -92,7 +94,12 @@ export default function App() {
   }, []);
   const language = resolveLanguage(undefined);
   const here = standingOn(game);
-  const plan = planFor(language, here);
+  // Where the piece is drawn and what may be read are two questions. `here` is
+  // 68 for a player who has never thrown — the engine parks them there and the
+  // published app draws the gem there from the first screen — and printing that
+  // square's teaching hands somebody the end of the game on page one.
+  const square = squareToRead(game);
+  const plan = square === null ? null : planFor(language, square);
 
   const refusal = mayThrow(game, intention);
 
@@ -139,9 +146,11 @@ export default function App() {
     <View style={styles.screen}>
       <StatusBar style="auto" />
       <ScrollView contentContainerStyle={styles.body}>
-        <Text style={styles.title}>
-          {here}. {plan.title}
-        </Text>
+        {plan !== null ? (
+          <Text style={styles.title}>
+            {square}. {plan.title}
+          </Text>
+        ) : null}
         <Text style={styles.line}>{line}</Text>
 
         <View style={styles.board}>
@@ -158,7 +167,7 @@ export default function App() {
           ))}
         </View>
 
-        <Text style={styles.plan}>{plan.body}</Text>
+        {plan !== null ? <Text style={styles.plan}>{plan.body}</Text> : null}
 
         {/*
           The book, which every other surface has and this one did not. A player
@@ -195,9 +204,9 @@ export default function App() {
           again on a square they have stood on is the thing `revisited` exists
           to notice.
         */}
-        {writingsOn(journal, here).length > 0 ? (
+        {square !== null && writingsOn(journal, square).length > 0 ? (
           <View style={styles.written}>
-            {writingsOn(journal, here).map((entry) => (
+            {writingsOn(journal, square).map((entry) => (
               <Text key={`${entry.plan}-${entry.at}`} style={styles.entry}>
                 {entry.text}
               </Text>
@@ -233,7 +242,7 @@ export default function App() {
               }
             }}
           >
-            <Text style={styles.buttonText}>{messageFor(language, 'app.reportSave')}</Text>
+            <Text style={[styles.buttonText, !isIntention(asking) && styles.shutText]}>{messageFor(language, 'app.reportSave')}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -254,7 +263,7 @@ export default function App() {
             style={[styles.button, draft.trim().length === 0 && styles.shut]}
             onPress={write}
           >
-            <Text style={styles.buttonText}>{messageFor(language, 'app.reportSave')}</Text>
+            <Text style={[styles.buttonText, draft.trim().length === 0 && styles.shutText]}>{messageFor(language, 'app.reportSave')}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -265,13 +274,13 @@ export default function App() {
           // the act: a dimmed control is a drawing, and a drawing refuses
           // nothing — a double tap walks straight past it.
           disabled={refusal !== 'yes'}
-          style={[styles.button, refusal !== 'yes' && styles.shut]}
+          style={[styles.button, styles.abreast, refusal !== 'yes' && styles.shut]}
           onPress={() => {
             setSaid(null);
             setGame(throwDie(game, intention).game);
           }}
         >
-          <Text style={styles.buttonText}>{messageFor(language, 'app.roll')}</Text>
+          <Text style={[styles.buttonText, refusal !== 'yes' && styles.shutText]}>{messageFor(language, 'app.roll')}</Text>
         </Pressable>
 
         {/*
@@ -280,15 +289,21 @@ export default function App() {
           surface reads — question included.
         */}
         {/* This square, as a message somebody can read. */}
-        {writingsOn(journal, here).length > 0 ? (
+        {/*
+          `square` and not `here`: a player who won, wrote about 68 and started
+          over is waiting to enter again with that account still in their
+          journal, so this offered them the winning square's text on a board
+          they had not begun. The two are the same number for anybody in play.
+        */}
+        {plan !== null && square !== null && writingsOn(journal, square).length > 0 ? (
           <Pressable
-            style={styles.button}
+            style={[styles.button, styles.abreast]}
             onPress={() => {
               void Share.share({
                 message: shareSquare(
-                  here,
+                  square,
                   plan.title,
-                  writingsOn(journal, here).at(-1)?.text ?? '',
+                  writingsOn(journal, square).at(-1)?.text ?? '',
                   '',
                 ),
               });
@@ -300,7 +315,7 @@ export default function App() {
 
         {journal.entries.length > 0 ? (
           <Pressable
-            style={styles.button}
+            style={[styles.button, styles.abreast]}
             onPress={() => {
               const stamp = new Date().toISOString().slice(0, 10);
               void Share.share({
@@ -331,7 +346,7 @@ export default function App() {
         />
         <Pressable
           disabled={pasted.trim().length === 0}
-          style={[styles.button, pasted.trim().length === 0 && styles.shut]}
+          style={[styles.button, styles.abreast, pasted.trim().length === 0 && styles.shut]}
           onPress={() => {
             // A square first, because that is what people paste. A path is a
             // file and an occasion; a square is a message, and the two are told
@@ -369,11 +384,11 @@ export default function App() {
             void keep(keeper, taken.journal);
           }}
         >
-          <Text style={styles.buttonText}>{messageFor(language, 'app.pathImport')}</Text>
+          <Text style={[styles.buttonText, pasted.trim().length === 0 && styles.shutText]}>{messageFor(language, 'app.pathImport')}</Text>
         </Pressable>
 
         {isOver(game) ? (
-          <Pressable style={styles.button} onPress={() => setGame(newGame(startingSeed()))}>
+          <Pressable style={[styles.button, styles.abreast]} onPress={() => setGame(newGame(startingSeed()))}>
             <Text style={styles.buttonText}>{messageFor(language, 'app.restart')}</Text>
           </Pressable>
         ) : null}
@@ -382,11 +397,12 @@ export default function App() {
   );
 }
 
+
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#faf7f2' },
+  screen: { flex: 1, backgroundColor: PALETTE.page },
   body: { padding: 16, paddingTop: 64, gap: 12 },
   title: { fontSize: 20, fontWeight: '600' },
-  line: { fontSize: 15, color: '#6b6255' },
+  line: { fontSize: 15, color: PALETTE.hint },
   board: { gap: 2, alignSelf: 'center' },
   row: { flexDirection: 'row', gap: 2 },
   cell: {
@@ -394,38 +410,45 @@ const styles = StyleSheet.create({
     height: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#efe9df',
+    backgroundColor: PALETTE.cell,
     borderRadius: 4,
   },
-  standing: { backgroundColor: '#b4643c' },
-  cellText: { fontSize: 12, color: '#6b6255' },
-  standingText: { fontSize: 12, color: '#fff', fontWeight: '700' },
-  plan: { fontSize: 15, lineHeight: 22, color: '#2f2a24' },
+  standing: { backgroundColor: PALETTE.accent },
+  cellText: { fontSize: 12, color: PALETTE.hint },
+  standingText: { fontSize: 12, color: PALETTE.onAccent, fontWeight: '700' },
+  plan: { fontSize: 15, lineHeight: 22, color: PALETTE.text },
   written: {
     gap: 8,
     padding: 12,
     borderRadius: 8,
-    backgroundColor: '#efe9df',
+    backgroundColor: PALETTE.cell,
   },
-  entry: { fontSize: 15, lineHeight: 21, color: '#4a433a' },
+  entry: { fontSize: 15, lineHeight: 21, color: PALETTE.entry },
   writer: { paddingHorizontal: 16, gap: 8 },
   field: {
     borderWidth: 1,
-    borderColor: '#d8d0c4',
+    borderColor: PALETTE.rule,
     borderRadius: 8,
     padding: 12,
     minHeight: 72,
-    backgroundColor: '#fff',
+    backgroundColor: PALETTE.field,
     fontSize: 15,
   },
   controls: { flexDirection: 'row', gap: 8, padding: 16, paddingBottom: 32 },
+  /** A control sharing the bottom row, which is the only place `flex` belongs. */
+  abreast: { flex: 1 },
   button: {
-    flex: 1,
+    // No `flex` here. It belongs to the row at the bottom, where three controls
+    // share a line — and in the two column blocks above it gave the button a
+    // flex-basis of zero, so it collapsed to its padding and clipped its own
+    // label out of existence. The intention's Save button was an empty grey
+    // strip on the one screen a new player cannot get past.
     paddingVertical: 14,
     borderRadius: 8,
-    backgroundColor: '#b4643c',
+    backgroundColor: PALETTE.accent,
     alignItems: 'center',
   },
-  shut: { backgroundColor: '#cdc6ba' },
-  buttonText: { color: '#fff', fontWeight: '600' },
+  shut: { backgroundColor: PALETTE.shut },
+  buttonText: { color: PALETTE.onAccent, fontWeight: '600' },
+  shutText: { color: PALETTE.onShut, fontWeight: '600' },
 });

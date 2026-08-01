@@ -24,6 +24,7 @@ import {
   createSession,
   currentPlayer,
   isSessionOver,
+  isWaitingToEnter,
   owesReport,
   seededRoller,
   submitReport,
@@ -63,6 +64,34 @@ export function newGame(seed: number, rules: RuleSet = CLASSIC): Game {
 /** The plan the player is standing on. */
 export function standingOn(game: Game): number {
   return currentPlayer(game.session).state.loka;
+}
+
+/**
+ * The square whose text belongs on screen, or null while nobody is on one.
+ *
+ * **Where the piece is drawn and what the player may read are two questions**,
+ * and this app answered them with one. A player who has never thrown stands on
+ * `loka` **68** — the engine parks them there, and the published app does the
+ * same from the first screen: `initStore` is `plans: [68, 68, …]` and `Gem`
+ * draws wherever `data === plan`. So the mark on 68 is right and stays.
+ *
+ * The text was not. Opening the app for the first time printed *68. Cosmic
+ * Consciousness (Vaikuntha Loka)* and the whole teaching of the square the
+ * entire game is played to reach, to somebody who has not begun — under a line
+ * that said, correctly, *throw a six to enter the game*. The end of the story
+ * handed over on page one.
+ *
+ * `isWaitingToEnter` is the engine's own separation of the two meanings of
+ * `is_finished`: waiting, and having won. A winner is legitimately on 68 and
+ * that text is exactly what they have earned, so the same question answers both
+ * ends of the game.
+ *
+ * The seventh sighting of the 68 ambiguity, and the first on this surface.
+ * `sixty-eight.test.ts` next door is the table that stops it being the eighth.
+ */
+export function squareToRead(game: Game): number | null {
+  const state = currentPlayer(game.session).state;
+  return isWaitingToEnter(state) ? null : state.loka;
 }
 
 /**
