@@ -5251,6 +5251,36 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**The third surface with the same shape (200th pass).** `startOver` in the mini
+app empties this seat's board, releases the gate and forgets the draft — and
+kept the sentence the finished game was *played to answer*. So the new game
+stood under the old question with `mayThrow` already satisfied by it, and
+nobody beginning again was asked what they were beginning for.
+
+The bot on `/end`, the phone on *Start over*, and now this: one question, three
+surfaces, three separate places where it had to be decided. The mini app's
+answer is its own — only this seat's question goes, because the others are in
+the middle of their games on a shared device.
+
+**Clearing is a different act from keeping, and needed its own function.**
+`saveIntention('')` refuses anything `isIntention` refuses — which is what keeps
+*a little longer, please* out of the store — so `forgetIntention` is beside it,
+for the same reason `clearDraft` is not `saveDraft(…, '')` where a caller means
+forget.
+
+**And it had to ask, not merely forget.** This app already had the rule written
+down, where a hand-off meets a seat that has never answered: *the die is shut
+until it answers, so the question has to arrive by itself rather than wait
+behind a control nobody can press.* Clearing without asking would have been
+exactly that control — a disabled die and no dialog until the page was
+reloaded.
+
+**An existing test held the old behaviour** — *after restart the die is
+usable* — and its rule was right while its example was the case where the die
+must not be: it now asserts the die is shut and the question is on screen. The
+same correction as the two passes where a check was written from the same
+reading as the code.
+
 **Beginning again kept the question of the game just ended (199th pass).**
 `startOver` replaces the board and refuses to hand back the seed it was given —
 written down, and argued for: *what was being written about the winning square*

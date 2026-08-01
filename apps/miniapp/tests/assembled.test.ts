@@ -336,7 +336,12 @@ describe('the mini app as it is assembled', () => {
       entries: unknown[];
     };
 
-    expect(el('roll').disabled).toBe(false);
+    // The die is shut and the question is on screen: a new game is a new
+    // question, and this seat was beginning again under the sentence of the
+    // game it had just finished, with `mayThrow` already satisfied by it.
+    expect(el('roll').disabled, 'until the new game is asked what it is for').toBe(true);
+    expect((el('intention') as HTMLDialogElement).open, 'and it is asked').toBe(true);
+
     expect(seats.players[0]?.state.loka).toBe(68);
     expect(kept.entries, 'starting again is not a reason to burn what was written').toHaveLength(1);
   }, 20_000);

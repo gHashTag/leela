@@ -338,6 +338,32 @@ export function loadIntention(storage: GameStorage | undefined, playerId = 'p1')
 export { isIntention, MIN_INTENTION_CHARS };
 
 /**
+ * Forget one seat's question. The game it was asked of is over.
+ *
+ * `saveIntention('')` cannot do this and should not: it refuses anything
+ * `isIntention` refuses, which is what keeps *a little longer, please* out of
+ * the store. Clearing is a different act from keeping, so it is a different
+ * function — the same reason `clearDraft` is not `saveDraft(…, '')` at the call
+ * sites that mean it.
+ *
+ * Beginning again is beginning with the question too: the bot lets go of it on
+ * `/end` and the phone on *Start over*, and this seat begins again under the
+ * sentence of the game it just finished, with the die already open on it.
+ */
+export function forgetIntention(storage: GameStorage | undefined, playerId = 'p1'): boolean {
+  if (!storage) return false;
+
+  try {
+    storage.setItem(intentionKeyFor(playerId), '');
+    return true;
+  } catch {
+    // A window that cannot store still plays, and the screen has already
+    // cleared its own copy — so the question is asked again either way.
+    return false;
+  }
+}
+
+/**
  * Keep the question, and say whether it was kept.
  *
  * The odd one out until now. Every other writer in this app answers "was it

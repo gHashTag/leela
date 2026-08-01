@@ -55,6 +55,7 @@ import {
 } from './seats';
 import {
   clearDraft,
+  forgetIntention,
   loadDraft,
   loadLastRoll,
   loadState,
@@ -575,8 +576,23 @@ function startOver(): void {
   journal = { ...journal, reported: true };
   saveJournalFor(localStorage, seated.id, journal);
   clearDraft(localStorage, seated.id);
+
+  // A new game is a new question. This seat's own — the others are in the
+  // middle of their games and theirs stand. The board was emptied and the
+  // draft forgotten, and the sentence this game was *played to answer* stayed,
+  // with `mayThrow` already satisfied by it, so nobody beginning again was
+  // asked what they were beginning for. The bot lets go of it on `/end`, the
+  // phone on *Start over*, and this is the third surface with the shape.
+  intention = '';
+  forgetIntention(localStorage, seated.id);
+
   showFace(loadLastRoll(localStorage));
   announce(messageFor(language, 'app.restarted'));
+
+  // And asked, rather than left behind a die nobody can press. This app's own
+  // rule, written where a hand-off meets a seat that has never answered: the
+  // die is shut until it does, so the question has to arrive by itself.
+  askIntention();
 }
 
 /**
