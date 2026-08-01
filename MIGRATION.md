@@ -5432,6 +5432,55 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**Forty pages that claimed to be in a language they were not (170th pass).**
+`/ar/legal/policy.html` served the English privacy policy under `<html lang="ar"
+dir="rtl">`: English laid out right to left, and read aloud by a screen reader
+reaching for Arabic phonemes. Only English and Russian legal documents were ever
+written and the other twenty languages are served the English — which is right,
+a missing privacy policy is a store rejection and a Telegram listing blocker.
+Serving it is not the defect. Filing it as Arabic is.
+
+`build.ts` already knew: it computes `byLanguage.has(language)` to decide
+whether a language counts as translated, and then threw the answer away. So a
+page now declares the language of its *words* and is still filed, linked and
+reachable under the section's — and its `canonical` names the English original
+that twenty URLs are copies of, which is the whole job of that tag.
+
+The comment in `build.ts` had said this out loud about the rules chapters:
+*writing English into `/de/rules/notes.html` is a published page in the wrong
+language*. It was true one directory over the whole time. `audit-dataset` could
+not have caught it — legal documents are not in `packages/content/data`.
+
+**The book knew its own translations and told only the reader.** The `<head>` of
+all 1,784 pages held four tags: charset, viewport, title, stylesheet. No
+description, no canonical and — in a book that exists twenty-two times over — no
+`hreflang` at all. `pathFor` is the function that answers *where does this page
+live in language X*; the footer picker was built from it and nothing upstairs
+was given it.
+
+Both are built from it now, and told different things on purpose. `pathFor`
+returns `null` where a language does not carry the page and `''` for the
+contents — two facts that used to be the same value, because from the picker
+they render the same link. The picker sends a reader looking for a chapter their
+language lacks to that language's contents rather than to a 404, which is help.
+The head declares nothing there, because the German contents is not a
+translation of the Arabic `online` chapter, and saying so to a crawler is false.
+Telling the two apart is what made the head derivable at all.
+
+Descriptions come from `summarise`, which strips markdown and drops headings —
+a heading is a label on the text and the page shows it as the `<h1>` already, so
+kept, the privacy policy's preview opened *Privacy Policy This is the privacy
+policy for…* and spent a quarter of itself repeating the title. The test asserts
+the shape rather than the presence: no two plans may share a description, since
+one repeated across pages describes none of them and any constant satisfies
+"has a description". It cuts at a word where there is one and hard-cuts where
+there is not — Chinese, Japanese and Thai write without word boundaries, and
+walking back to find one returns the empty string.
+
+And the title said the site's name twice. The suffix was appended
+unconditionally, so the contents page — whose title *is* `Leela` — read `Leela —
+Leela`, in all twenty-two languages.
+
 **Two hundred and sixteen pages with nowhere to rest the eye (169th pass).**
 Every reader here splits a plan on blank lines — the book, the mini app's
 `paragraphs()`, the bot's pager. Three languages had no blank line anywhere, so

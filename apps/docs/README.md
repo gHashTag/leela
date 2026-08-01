@@ -34,9 +34,39 @@ them would be expensive — a missing privacy policy is a store rejection, and
 Telegram asks for one before a mini app can be listed.
 
 Only English and Russian were ever written. Every other language is served the
-English rather than an empty page.
+English rather than an empty page — and **says so**. The page is filed under
+`/de/legal/policy.html`, linked from the German contents and reachable exactly
+where a German reader looks for it, but it declares `lang="en"`, and its
+`canonical` points at the English original that twenty URLs are copies of.
+
+It used to declare the folder's language. `/ar/legal/policy.html` announced
+itself as Arabic over English text: laid out right to left, and read aloud by a
+screen reader reaching for Arabic phonemes. Forty pages said the wrong thing and
+four of them looked it.
+
+## What a page says about itself
+
+The `<head>` carried a charset, a viewport, a title and a stylesheet — nothing
+else, on any of 1,784 pages. Now every page states:
+
+- a **description** drawn from its own text (`summarise`), which is also its
+  `og:description`. The bot posts these links into Telegram, and a Telegram
+  preview is built from the Open Graph tags and nothing else.
+- a **canonical** address, absolute, naming the language the *text* is in.
+- **`hreflang` alternates** — and only where the page really exists in that
+  language.
+
+That last one is the point of the book. `pathFor` already answered *where does
+this page live in language X*; the footer picker was built from it and the head
+was given nothing. Both are built from it now, and they are deliberately told
+different things: `pathFor` returns `null` for a chapter a language does not
+carry and `''` for the contents, two facts that render as the same link. The
+picker sends a person to the contents rather than to a 404, which is help. The
+head stays quiet, because telling a crawler that the German contents is a
+translation of the Arabic `online` chapter is false.
 
 ## Right to left
 
 Arabic and Urdu get `dir="rtl"` and their text aligned, not merely reordered.
-Both are in the dataset, so both are in the book.
+Both are in the dataset, so both are in the book — and the direction comes from
+the language the words are in, not from the directory.

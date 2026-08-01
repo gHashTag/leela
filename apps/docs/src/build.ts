@@ -115,7 +115,18 @@ export function build(outDir: string): BuildResult {
 
       write(
         `${language}/legal/${name}.html`,
-        legalPage(language, LEGAL_TITLES[name] ?? name, body),
+        legalPage({
+          language,
+          name,
+          title: LEGAL_TITLES[name] ?? name,
+          body,
+          // The language of the *text*, which is English wherever the document
+          // was never translated. The page is still filed under `language` and
+          // still linked from that contents — it is served, as it must be. It
+          // just no longer claims to be written in a language it is not.
+          writtenIn: byLanguage.has(language) ? language : 'en',
+          translatedInto: LANGUAGES.filter((other) => byLanguage.has(other)),
+        }),
       );
     }
     if (translated) legalTranslated.push(language);

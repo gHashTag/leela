@@ -2,14 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { LANGUAGES, LANGUAGE_NAMES, directionOf, plansFor, rulesFor } from '@leela/content';
 import { TOTAL_PLANS } from '@leela/engine';
 import {
+  DOCS_URL,
+  SITE_NAME,
   chapterPage,
   escape,
   indexPage,
   languagePicker,
+  legalPage,
   planPage,
   renderMarkdown,
   rootPage,
   descriptionIsRedundant,
+  summarise,
+  titleOf,
+  translations,
 } from '../src/render';
 
 describe('escaping', () => {
@@ -321,5 +327,277 @@ describe('data the content does not currently produce', () => {
     // Those are required regardless of what has been translated.
     const html = indexPage('en', plansFor('en'), []);
     expect(html).toContain('legal/policy.html');
+  });
+});
+
+/**
+ * What a page says about itself.
+ *
+ * The `<head>` of all 1,784 pages held four tags: a charset, a viewport, a
+ * title and a stylesheet. No description, no canonical, and — in a book that
+ * exists 22 times over — no `hreflang`. The book knew where every page lived in
+ * every language and told only the reader: `pathFor` is what the footer picker
+ * is built from, and nothing upstairs was given it.
+ */
+
+describe('the title', () => {
+  it('names the site once', () => {
+    // The suffix was appended unconditionally, so the contents page — whose
+    // title *is* the site's name — read `Leela — Leela`, in all 22 languages.
+    expect(titleOf(SITE_NAME)).toBe(SITE_NAME);
+    expect(titleOf('41. Human plane')).toBe(`41. Human plane — ${SITE_NAME}`);
+  });
+
+  it('never says it twice, on any page the book actually builds', () => {
+    const pages = [
+      indexPage('en', plansFor('en'), rulesFor('en')),
+      planPage('en', plansFor('en')[0]!, TOTAL_PLANS),
+      chapterPage('ru', rulesFor('ru')[0]!),
+      rootPage(),
+    ];
+
+    for (const html of pages) {
+      const title = html.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '';
+      expect(title, 'a title').not.toBe('');
+      expect(title.split(SITE_NAME).length - 1, title).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
+describe('a page declares the language its words are in', () => {
+  /**
+   * Not the language of the folder it sits in. Only English and Russian legal
+   * documents were ever written and the other twenty languages are served the
+   * English — which is right, a missing privacy policy is a store rejection.
+   * Filing it as Arabic is not: `/ar/legal/policy.html` said `lang="ar"
+   * dir="rtl"` over English text, so it laid out right to left and a screen
+   * reader reached for Arabic phonemes. Forty pages, four of them visibly.
+   */
+  const english = 'Privacy Policy\n\nWe collect nothing at all.';
+
+  const served = (language: 'ar' | 'de') =>
+    legalPage({
+      language,
+      name: 'policy',
+      title: 'Privacy policy',
+      body: english,
+      writtenIn: 'en',
+      translatedInto: ['en', 'ru'],
+    });
+
+  it('says English over English, whichever section it is filed under', () => {
+    for (const language of ['ar', 'de'] as const) {
+      expect(served(language), language).toContain('<html lang="en" dir="ltr">');
+    }
+  });
+
+  it('does not lay a left-to-right document out right to left', () => {
+    expect(served('ar')).not.toContain('dir="rtl"');
+  });
+
+  it('is still filed where the reader looks for it', () => {
+    // The fix is what the page *claims*, not where it lives. A reader of
+    // Arabic still reaches it from the Arabic contents.
+    expect(served('ar')).toContain('href="../../ar/"');
+  });
+
+  it('says the section language when the document really is in it', () => {
+    const translated = legalPage({
+      language: 'ru',
+      name: 'policy',
+      title: 'Privacy policy',
+      body: 'Политика конфиденциальности',
+      writtenIn: 'ru',
+      translatedInto: ['en', 'ru'],
+    });
+
+    expect(translated).toContain('<html lang="ru"');
+  });
+
+  it('leaves every page whose text is its own section alone', () => {
+    for (const language of LANGUAGES) {
+      const html = planPage(language, plansFor(language)[0]!, TOTAL_PLANS);
+      expect(html, language).toContain(`<html lang="${language}" dir="${directionOf(language)}">`);
+    }
+  });
+});
+
+describe('a page points at itself', () => {
+  it('gives one absolute canonical address', () => {
+    const html = planPage('ru', plansFor('ru')[40]!, TOTAL_PLANS);
+    expect(html).toContain(`<link rel="canonical" href="${DOCS_URL}ru/plans/41.html">`);
+  });
+
+  it('points twenty copies of one document at the one they are copies of', () => {
+    // Twenty URLs serving the identical English policy is exactly what a
+    // canonical is for; without it they compete with each other and with the
+    // original.
+    const html = legalPage({
+      language: 'de',
+      name: 'eula',
+      title: 'Terms of use',
+      body: 'Terms.',
+      writtenIn: 'en',
+      translatedInto: ['en', 'ru'],
+    });
+
+    expect(html).toContain(`<link rel="canonical" href="${DOCS_URL}en/legal/eula.html">`);
+    expect(html).not.toContain(`${DOCS_URL}de/legal/eula.html`);
+  });
+
+  it('agrees with what it tells a link preview', () => {
+    const html = chapterPage('ru', rulesFor('ru')[0]!);
+    const canonical = html.match(/rel="canonical" href="([^"]+)"/)?.[1];
+    const og = html.match(/property="og:url" content="([^"]+)"/)?.[1];
+
+    expect(canonical).toBeTruthy();
+    expect(og).toBe(canonical);
+  });
+});
+
+describe('a page declares its translations', () => {
+  /**
+   * Only where they exist. The picker sends a reader looking for a chapter
+   * their language lacks to that language's contents rather than to a 404 —
+   * help for a person, and a lie to a crawler, because the German contents is
+   * not a translation of the Arabic `online` chapter.
+   *
+   * `pathFor` therefore answers `null` for absent and `''` for the contents.
+   * Those two used to be the same value: from the picker they render the same
+   * link, and telling them apart is what makes the head derivable at all.
+   */
+  const declared = (html: string) =>
+    [...html.matchAll(/hreflang="([a-z-]+)"/g)].map(([, code]) => code);
+
+  it('names every language a plan exists in, which is all of them', () => {
+    const codes = declared(planPage('en', plansFor('en')[0]!, TOTAL_PLANS));
+    expect(new Set(codes)).toEqual(new Set([...LANGUAGES, 'x-default']));
+  });
+
+  it('names only the languages that carry a chapter', () => {
+    const chapter = { slug: 'online', title: 'Online', body: 'text', source: 'test' };
+    const only = new Set(['ar', 'ms', 'uk']);
+    const html = chapterPage('ar', chapter, (language) => only.has(language));
+
+    expect(new Set(declared(html))).toEqual(new Set([...only, 'x-default']));
+  });
+
+  it('offers the reader the contents anyway, where it declares nothing', () => {
+    // The two audiences are told different things on purpose, and this is the
+    // guard that fixing the crawler did not strand the person.
+    const chapter = { slug: 'online', title: 'Online', body: 'text', source: 'test' };
+    const html = chapterPage('ar', chapter, (language) => language === 'ar');
+
+    expect(html).not.toContain('hreflang="de"');
+    expect(html, 'the picker still reaches German').toContain('href="../../de/"');
+  });
+
+  it('sends a reader in no language of the book to the page that asks', () => {
+    for (const html of [planPage('ja', plansFor('ja')[0]!, TOTAL_PLANS), rootPage()]) {
+      expect(html).toContain(`<link rel="alternate" hreflang="x-default" href="${DOCS_URL}">`);
+    }
+  });
+
+  it('is built from the same function the picker is', () => {
+    // Two lists of where a page lives would be two things to keep in step, and
+    // the one nobody reads is the one that rots.
+    const pathFor = (language: string) => (language === 'de' ? null : 'plans/1.html');
+    const head = translations('en', 'plans/1.html', pathFor as never);
+    const foot = languagePicker('en', '../../', pathFor as never);
+
+    expect(head).not.toContain('hreflang="de"');
+    expect(foot, 'German is still reachable, at its contents').toContain('href="../../de/"');
+    for (const language of ['ru', 'ja'] as const) {
+      expect(head).toContain(`href="${DOCS_URL}${language}/plans/1.html"`);
+      expect(foot).toContain(`href="../../${language}/plans/1.html"`);
+    }
+  });
+});
+
+describe('a page describes itself in a sentence', () => {
+  it('carries one on every kind of page the book builds', () => {
+    const pages = [
+      ['contents', indexPage('en', plansFor('en'), rulesFor('en'))],
+      ['a plan', planPage('en', plansFor('en')[0]!, TOTAL_PLANS)],
+      ['a chapter', chapterPage('ru', rulesFor('ru')[0]!)],
+      ['the root', rootPage()],
+    ] as const;
+
+    for (const [name, html] of pages) {
+      const description = html.match(/name="description" content="([^"]*)"/)?.[1];
+      expect(description, name).toBeTruthy();
+      expect((description ?? '').length, name).toBeGreaterThan(20);
+    }
+  });
+
+  it('draws it from the page, so no two plans share one', () => {
+    // The shape, not the presence: a description repeated across pages
+    // describes none of them, and is satisfied by any constant string.
+    const descriptions = plansFor('en').map(
+      (plan) => planPage('en', plan, TOTAL_PLANS).match(/name="description" content="([^"]*)"/)?.[1],
+    );
+
+    expect(new Set(descriptions).size).toBe(descriptions.length);
+  });
+
+  it('tells a link preview the same sentence', () => {
+    // The bot posts these into Telegram, which builds its preview out of the
+    // Open Graph tags and nothing else.
+    const html = planPage('en', plansFor('en')[7]!, TOTAL_PLANS);
+    const meta = html.match(/name="description" content="([^"]*)"/)?.[1];
+    const og = html.match(/property="og:description" content="([^"]*)"/)?.[1];
+
+    expect(meta).toBe(og);
+  });
+
+  it('cannot break out of the attribute it sits in', () => {
+    const html = planPage('en', { ...plansFor('en')[0]!, body: 'a " onload="x' }, TOTAL_PLANS);
+    expect(html).toContain('&quot; onload=&quot;');
+    expect(html).not.toMatch(/content="[^"]*" onload=/);
+  });
+});
+
+describe('summarising a page', () => {
+  it('says nothing the reader did not write', () => {
+    expect(summarise('**Bold** and *thin* and `code` and [a link](https://x.example)')).toBe(
+      'Bold and thin and code and a link',
+    );
+  });
+
+  it('leaves out a heading, which the page already shows as its title', () => {
+    // Kept, the privacy policy opened `Privacy Policy This is the privacy
+    // policy for…` and spent a quarter of the preview repeating the title.
+    expect(summarise('# Privacy Policy\n\nWe collect nothing.')).toBe('We collect nothing.');
+  });
+
+  it('still describes a document that is nothing but headings', () => {
+    expect(summarise('# Terms')).toBe('Terms');
+  });
+
+  it('cuts at a word, not through one', () => {
+    const summary = summarise('one two three four five six seven eight', 20);
+    expect(summary).toBe('one two three four…');
+  });
+
+  it('cuts a script that has no spaces to cut at', () => {
+    // Chinese, Japanese and Thai write without word boundaries; walking back
+    // to find one would return the empty string.
+    const summary = summarise('第一' + 'план'.repeat(0) + '無無無無無無無無無無無無無無無無無無無無', 10);
+    expect(summary.length).toBe(11);
+    expect(summary.endsWith('…')).toBe(true);
+  });
+
+  it('never exceeds the limit it was given, in any real page of the book', () => {
+    for (const language of LANGUAGES) {
+      for (const plan of plansFor(language)) {
+        const summary = summarise(plan.description || plan.body);
+        expect(summary.length, `${language}/${plan.plan}`).toBeLessThanOrEqual(156);
+        expect(summary.trim().length, `${language}/${plan.plan}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('leaves a short text exactly as it is, with no ellipsis', () => {
+    expect(summarise('Short enough.')).toBe('Short enough.');
   });
 });
