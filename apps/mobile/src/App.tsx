@@ -21,7 +21,7 @@ import {
   View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { BOARD_ROWS } from '@leela/engine';
+import { BOARD_ROWS, countsAsReport } from '@leela/engine';
 import { bookFor, messageFor, planFor, resolveLanguage,
   directionOf,
 } from '@leela/content';
@@ -265,6 +265,17 @@ export default function App() {
    */
   const writing = draftFor(draft, game.seed, square);
 
+  /**
+   * Whether what is in the box is an account yet.
+   *
+   * The same question `takeAccount` asks, asked again here — a dimmed control
+   * is a drawing and a drawing refuses nothing — and asked of the **engine**,
+   * so it is the variant's answer and not `length === 0` written out by hand.
+   * Under `classic` those are the same sentence; under the rules the published
+   * app ships they are ninety-nine characters apart.
+   */
+  const enough = countsAsReport(writing, game.rules);
+
   const refusal = mayThrow(game, intention);
 
   const line =
@@ -287,8 +298,17 @@ export default function App() {
    * still on the screen.
    */
   const write = () => {
-    const taken = takeAccount(journal, here, writing, Date.now(), store);
-    if (!taken.written) return;
+    const taken = takeAccount(journal, here, writing, Date.now(), store, game.rules);
+    if (!taken.written) {
+      // Refused, and told why. A control that declines without saying what it
+      // wants is the app ending somebody's turn without telling them.
+      setSaid(
+        taken.refusal === 'too-short'
+          ? messageFor(language, 'report.tooShort', { count: game.rules.minReportChars })
+          : messageFor(language, 'app.reportEmpty'),
+      );
+      return;
+    }
 
     setJournal(taken.journal);
     setDraft(NOTHING_WRITTEN);
@@ -473,11 +493,11 @@ export default function App() {
             accessibilityLabel={messageFor(language, 'app.reportSave')}
             // Asked here and asked again by `write`: a dimmed control is a
             // drawing, and a drawing refuses nothing.
-            disabled={writing.trim().length === 0}
-            style={[styles.button, writing.trim().length === 0 && styles.shut]}
+            disabled={!enough}
+            style={[styles.button, !enough && styles.shut]}
             onPress={write}
           >
-            <Text style={[styles.buttonText, label, writing.trim().length === 0 && styles.shutText]}>{messageFor(language, 'app.reportSave')}</Text>
+            <Text style={[styles.buttonText, label, !enough && styles.shutText]}>{messageFor(language, 'app.reportSave')}</Text>
           </Pressable>
         </View>
       ) : null}

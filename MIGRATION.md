@@ -5251,6 +5251,45 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A rule in the RuleSet that two of three surfaces never asked (175th pass).**
+`minReportChars` has been in `RuleSet` since the published app was read for its
+rules — `yup.string().trim().min(100)` in `CreatePost`, because a line typed to
+open the gate is not a reflection — and `audit-variants` has held the flag to
+that source on every run since. The engine has the function that asks it.
+
+Three surfaces ask *is this enough writing to count* and **only the bot asked
+the engine.** The mini app and the phone each wrote `text.trim().length === 0`,
+which is `classic`'s answer spelled out by hand — twice each, once for the
+control's disabled state and once for the act. Right for the variant being
+played and wrong for two of the five the engine ships: drift in the only
+direction that looks like nothing.
+
+**Not a rules change, and that is the point.** `countsAsReport(text, CLASSIC)`
+and `text.trim().length > 0` are the same sentence, so nothing either surface
+does today changes. What changed is who is asked, so a game handed
+`legacy-mobile` or `online` is played under those rules instead of under a
+comparison written in a screen.
+
+The refusal names itself now. *Nothing was written* and *not enough was* are two
+different things to be told, and one boolean left a player who typed ninety
+characters under `legacy-mobile` looking at a control that declines and says
+nothing — the app ending somebody's turn without telling them, which this
+repository has now met on every surface it has. `report.tooShort` is the bot's
+own sentence reused rather than copied: it names no command and reads the same
+anywhere, and a second key with the same words would have been the seventh
+restated list here.
+
+**And the engine's `isReport` became `countsAsReport`.** `@leela/journal`
+exports an `isReport(value): value is Report` — a type guard on a stored entry —
+and every surface imports that package. Two exports of one name with different
+questions and different signatures is exactly how the phone came to write a
+second `isReport` of its own that let `plan: 900` through. One of them had to
+say what it was for.
+
+Each of the five parts was proved by reverting it: four tests fail when the
+phone's `record` decides for itself, three when the mini app's does, and one
+each for the two refusals and the button's own comparison.
+
 **The one thing the game asks for was the one thing it did not keep (174th
 pass).** The path is on the device, the board is on the device, what the player
 is playing for is on the device — and the account they are **in the middle of

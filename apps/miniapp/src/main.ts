@@ -1088,8 +1088,15 @@ function saveReport(): void {
   const after = record(theirs, writer.state.loka, el.writerText.value, Date.now());
 
   if (after.entries.length === theirs.entries.length) {
-    // Nothing was written, so nothing is recorded and the gate stays shut.
-    announce(messageFor(language, 'app.reportEmpty'));
+    // Nothing is recorded and the gate stays shut — and the player is told
+    // which of the two it was. *Nothing was written* and *not enough was* are
+    // different things to be told, and a control that declines without saying
+    // what it wants ends somebody's turn without telling them.
+    announce(
+      el.writerText.value.trim().length === 0
+        ? messageFor(language, 'app.reportEmpty')
+        : messageFor(language, 'report.tooShort', { count: CLASSIC.minReportChars }),
+    );
     return;
   }
 

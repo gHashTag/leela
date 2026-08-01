@@ -19,7 +19,7 @@
  * The bot is where reports are shared, because the bot has a database.
  */
 
-import { CLASSIC, owesReport, type GameState } from '@leela/engine';
+import { CLASSIC, countsAsReport, owesReport, type GameState } from '@leela/engine';
 import { messageFor, type Language } from '@leela/content';
 import {
   revisited as revisitedEntries,
@@ -251,9 +251,21 @@ export function hintFor(journal: Journal, length: number, language: Language): s
   return '';
 }
 
-export function record(journal: Journal, plan: number, text: string, at: number): Journal {
+export function record(
+  journal: Journal,
+  plan: number,
+  text: string,
+  at: number,
+  rules = CLASSIC,
+): Journal {
+  // How much is enough is the variant's question. This was `length === 0`
+  // written out here — `classic`'s answer by hand — while the published app
+  // refuses fewer than a hundred characters and `legacy-mobile` and `online`
+  // carry that as `minReportChars`. Of the three surfaces asking this, only the
+  // bot asked the engine.
+  if (!countsAsReport(text, rules)) return journal;
+
   const trimmed = text.trim().slice(0, MAX_REPORT_CHARS);
-  if (trimmed.length === 0) return journal;
 
   const entries = [...journal.entries, { plan, text: trimmed, at }];
   return {

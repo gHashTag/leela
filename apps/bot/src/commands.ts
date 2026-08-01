@@ -19,7 +19,7 @@ import {
   currentPlayer,
   formatWait,
   hasWon,
-  isReport,
+  countsAsReport,
   isSessionOver,
   needsSixToEnter,
   rollerFor,
@@ -610,7 +610,7 @@ export function report(
   // What counts as a report is the variant's, not this file's: the published
   // app refuses fewer than a hundred characters, and `classic` asks only that
   // something was written.
-  if (!isReport(text, room.session.rules)) {
+  if (!countsAsReport(text, room.session.rules)) {
     const shortest = room.session.rules.minReportChars;
     return {
       room,

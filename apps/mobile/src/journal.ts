@@ -16,6 +16,7 @@
  * `MAX_REPORTS` — because a bound declared twice is a bound that will disagree.
  */
 
+import { CLASSIC, countsAsReport, type RuleSet } from '@leela/engine';
 import {
   MAX_REPORTS,
   MAX_REPORT_CHARS,
@@ -61,10 +62,25 @@ export const EMPTY: Journal = { entries: [] };
  *
  * Blank is not an account: a gate cleared by an empty string is the same defect
  * as a gate cleared by a button, one keystroke further along.
+ *
+ * **How much is enough is the variant's question, not this file's.** It used to
+ * be `length === 0` written here, which is `classic`'s answer spelled out by
+ * hand — and the published app refuses fewer than a hundred characters
+ * (`yup.string().trim().min(100)` in `CreatePost`), which `legacy-mobile` and
+ * `online` carry as `minReportChars`. Three surfaces asked this and only the
+ * bot asked the engine; the other two each wrote the same literal twice, and a
+ * rule outside `@leela/engine` has already drifted or will.
  */
-export function record(journal: Journal, plan: number, text: string, at: number): Journal {
+export function record(
+  journal: Journal,
+  plan: number,
+  text: string,
+  at: number,
+  rules: RuleSet = CLASSIC,
+): Journal {
+  if (!countsAsReport(text, rules)) return journal;
+
   const written = text.trim().slice(0, MAX_REPORT_CHARS);
-  if (written.length === 0) return journal;
 
   return { entries: order([...journal.entries, { plan, text: written, at }]).slice(-MAX_REPORTS) };
 }
@@ -127,6 +143,17 @@ export interface Taken {
   journal: Journal;
   /** Whether there was anything to take. */
   written: boolean;
+  /**
+   * Why nothing was taken, when nothing was.
+   *
+   * Two refusals, because they are two different things to be told: *nothing
+   * was written* and *not enough was*. One boolean would leave a player who
+   * typed ninety characters under `legacy-mobile` staring at a control that
+   * refuses without saying what it wants — which is the app ending somebody's
+   * turn without telling them, the shape this surface has now been caught by
+   * three times.
+   */
+  refusal: 'empty' | 'too-short' | null;
   /** Whether the store held it. False when it refused, and when there is none. */
   kept: boolean;
   /** Whether the throw may now happen. */
@@ -139,13 +166,20 @@ export function takeAccount(
   draft: string,
   at: number,
   store: Store | undefined,
+  rules: RuleSet = CLASSIC,
 ): Taken {
-  const after = record(journal, plan, draft, at);
+  const after = record(journal, plan, draft, at, rules);
   if (after === journal) {
-    return { journal, written: false, kept: false, gateOpens: false };
+    return {
+      journal,
+      written: false,
+      kept: false,
+      gateOpens: false,
+      refusal: draft.trim().length === 0 ? 'empty' : 'too-short',
+    };
   }
 
-  return { journal: after, written: true, kept: save(store, after), gateOpens: true };
+  return { journal: after, written: true, kept: save(store, after), gateOpens: true, refusal: null };
 }
 
 /** Everything written about one square, oldest first. */

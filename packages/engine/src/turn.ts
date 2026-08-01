@@ -175,8 +175,15 @@ export function owesReport(state: GameState, rules: RuleSet = DEFAULT_RULESET): 
  *
  * Trimmed first: whitespace is not writing, and a gate opened by spaces is the
  * rule with its point removed.
+ *
+ * **Named for what it asks, because `isReport` was taken.** `@leela/journal`
+ * exports an `isReport(value): value is Report` — a type guard on a stored
+ * entry — and every surface imports that package. Two exports of one name with
+ * different questions and different signatures is how the phone came to have a
+ * second `isReport` of its own that let `plan: 900` through. One of them had to
+ * say what it was for.
  */
-export function isReport(text: string, rules: RuleSet = DEFAULT_RULESET): boolean {
+export function countsAsReport(text: string, rules: RuleSet = DEFAULT_RULESET): boolean {
   const written = text.trim();
   return written.length > 0 && written.length >= rules.minReportChars;
 }

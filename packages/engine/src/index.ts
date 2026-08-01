@@ -65,7 +65,7 @@ export {
   arrivedOnSix,
   canRoll,
   formatWait,
-  isReport,
+  countsAsReport,
   isWaitingToEnter,
   needsSixToEnter,
   owesReport,

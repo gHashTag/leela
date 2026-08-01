@@ -218,3 +218,31 @@ revert that was supposed to prove the fix proved the check instead. It asks for
 the calls with their arguments now, and for the effect to be keyed on the draft:
 an effect keyed on the game would keep the sentence only when the board moves,
 which, while a report is owed, it cannot.
+
+## How much writing counts
+
+It is a rule of the game. `minReportChars` has been in `RuleSet` since the
+published app was read for its rules — `yup.string().trim().min(100)` in
+`CreatePost`, because a line typed to open the gate is not a reflection — and
+`audit-variants` holds the flag to that source on every run. The engine has the
+function that asks it.
+
+Three surfaces ask this question and **only the bot asked the engine.** The mini
+app and this app each wrote `text.trim().length === 0`: `classic`'s answer,
+spelled out by hand, twice each — once for the control's disabled state and once
+for the act. Right for the variant being played and wrong for two of the five
+the engine ships, which is drift in the only direction that looks like nothing.
+
+Behaviour under `classic` is unchanged: `countsAsReport(text, CLASSIC)` and
+`text.trim().length > 0` are the same sentence. What changed is who is asked, so
+that a game handed `legacy-mobile` or `online` is played under those rules
+rather than under a comparison written here.
+
+The refusal names itself. *Nothing was written* and *not enough was* are two
+different things to be told, and one boolean left a player who typed ninety
+characters looking at a control that declines and says nothing — the app ending
+somebody's turn without telling them.
+
+`report.tooShort` is the bot's own sentence, reused rather than copied: it names
+no command and reads the same on any surface. A second key with the same words
+would be the seventh restated list in this repository.
