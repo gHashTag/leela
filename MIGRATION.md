@@ -5251,6 +5251,30 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A title is two parts, and the check read one string (191st pass).** Played a
+game as a Japanese player and read every line the bot sent. Plan 62 came back
+as **`62. Happiness (スカ)`** — the Sanskrit rendered into katakana beside an
+English word where the name of the square goes.
+
+The check written the pass before asked whether the whole title held any of the
+language's script, and about that title the answer is yes. Every title in this
+dataset is `<the name> (<the Sanskrit>)`, and the term in parentheses is kept in
+every language — Japanese plan 6 is `妄想(モハ)`. So a title can carry the
+language's script in the half nobody is reading as the name. Four of them were:
+Japanese 17 *Compassion (だや)*, 37 *Jnana（ジナナ）*, 58 *Plan of Radiance
+(テジャ・ロカ)* and 62 *Happiness (スカ)*, recorded now at fourteen.
+
+Both parenthesis characters, because the same file mixes them: plan 37 in
+Japanese uses the full-width pair. A title that is only the term — `Sattvaguna`,
+`マヤ` — is judged whole, since stripping it to nothing and then asking about
+nothing would pass every one of them.
+
+**The instrument was right about presence and wrong about where to look**, which
+is the third time in three passes that the check needed checking before the
+finding did. It was found the way all six of the last ones were: play the
+surface and read every line, rather than ask the data a question it has already
+answered.
+
 **The script check had never looked at the game (190th pass).** `audit-dataset`
 has asked *is this text written in the language it is filed under* since the
 English rules book was found to have a Russian chapter in it. It asks it of the

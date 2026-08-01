@@ -8,7 +8,7 @@
  * sentence it printed on a green run said *every rules chapter is written in the
  * language it is filed under*, which is true, and reads like the dataset.
  *
- * Pointed at the plans it finds ten titles. A Japanese player standing on plan
+ * Pointed at the plans it finds fourteen titles. A Japanese player standing on plan
  * 12 is told they are on **Envy (irasya)**, in a list where every neighbour is
  * Japanese; a Chinese, Korean, Bengali and Tamil player on plan 40 read
  * `Vyana-loka`. The donor did it: `translate-leela/locales/ja/12-envy-ja.md`
@@ -38,6 +38,34 @@ export const BLIND_TO = 'latin';
 const A_PARAGRAPH = 40;
 
 /**
+ * A title is two parts, and only one of them is translated.
+ *
+ * Every title in this dataset is `<the name> (<the Sanskrit>)`, and the term in
+ * parentheses is kept in every language — Japanese plan 6 is `妄想(モハ)`,
+ * Chinese plan 41 is `人类平面 (jana-loka)`. So a title can hold the language's
+ * script and still be untranslated where a player reads it: Japanese plan 62 is
+ * **`Happiness (スカ)`**, and asking whether the whole string has any kana in it
+ * answers yes, about a square whose name is an English word.
+ *
+ * Found by playing a Japanese game and reading every line the bot sent. The
+ * check written the pass before had recorded ten titles and passed this one and
+ * three more like it — the instrument was right about presence and wrong about
+ * where to look for it.
+ *
+ * Both parenthesis characters, because Japanese and Chinese use the full-width
+ * pair and the same file mixes them: plan 37 in Japanese is `Jnana（ジナナ）`.
+ */
+const TERM = /[(（][^)）]*[)）]/g;
+
+export function headOf(title) {
+  const head = title.replace(TERM, ' ').trim();
+
+  // A title that is nothing but the Sanskrit term has no head to judge; the
+  // whole of it is then the thing to ask about.
+  return head || title.trim();
+}
+
+/**
  * Every part of a language's plans with none of that language's script in it.
  *
  * Titles and paragraphs separately, because the whole body is never the unit
@@ -54,7 +82,9 @@ export function untranslatedIn(plans, language, writtenIn) {
 
   for (const plan of plans) {
     const title = String(plan.title ?? '');
-    if (title.trim() && !writtenIn(language, title)) {
+    // The name, not the Sanskrit term beside it: the part a player reads as
+    // the name of the square they are standing on.
+    if (title.trim() && !writtenIn(language, headOf(title))) {
       found.push({ language, plan: plan.plan, part: 'title', text: title });
     }
 
@@ -79,16 +109,24 @@ export const nameOf = (finding) =>
   `${finding.language} plan ${finding.plan} ${finding.part}: ${finding.text.trim()}`;
 
 /**
- * The ten that are there now, each as its own sentence.
+ * The fourteen that are there now, each as its own sentence.
  *
  * Not a list of exemptions — a list of what the machine did, kept so that the
- * eleventh is loud. Every one of them was read in the donor it came from.
+ * fifteenth is loud. Every one of them was read in the donor it came from.
  */
 export const RECORDED = [
-  // Plainly English, in a language that is written in neither of its scripts.
+  // Plainly English where the name of the square goes. The last four hold the
+  // Sanskrit in the language's own script and were read as translated by the
+  // first version of this check, which asked about the whole string.
   'ja plan 12 title: Envy (irasya)',
+  'ja plan 17 title: Compassion (だや)',
+  'ja plan 58 title: Plan of Radiance (テジャ・ロカ)',
   'ja plan 59 title: Plan of Reality (Satya Loka)',
+  'ja plan 62 title: Happiness (スカ)',
   'zh plan 12 title: Envy (irasya)',
+  // The Sanskrit name left in transliteration where the name goes, with the
+  // same term rendered into the language beside it.
+  'ja plan 37 title: Jnana（ジナナ）',
   'ur plan 37 title: Jnana (jnana)',
   // A loka name kept in transliteration where every neighbouring title in the
   // same language translates it and keeps the Sanskrit in parentheses —

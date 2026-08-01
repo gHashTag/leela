@@ -7,6 +7,7 @@ import {
   BLIND_TO,
   RECORDED,
   against,
+  headOf,
   nameOf,
   untranslatedIn,
 } from '../../../scripts/lib/untranslated.mjs';
@@ -18,10 +19,10 @@ import type { Language } from '../src/language';
  *
  * The script check has run over the rules book since the English edition was
  * found to have a Russian chapter in it, and never over the seventy-two plans —
- * the text the game puts on the screen on every throw. Ten titles were sitting
- * in it: a Japanese player on plan 12 stands on **Envy (irasya)** among Japanese
- * neighbours, and Chinese, Korean, Bengali and Tamil players on plan 40 read
- * `Vyana-loka`.
+ * the text the game puts on the screen on every throw. Fourteen titles are
+ * sitting in it: a Japanese player on plan 12 stands on **Envy (irasya)** among
+ * Japanese neighbours, on plan 62 on **Happiness (スカ)**, and Chinese, Korean,
+ * Bengali and Tamil players on plan 40 read `Vyana-loka`.
  *
  * They are recorded rather than repaired, under the bar `corrections.mjs`
  * states: a correction must be checkably wrong, and what a title should say in
@@ -73,10 +74,64 @@ describe('presence, not weight', () => {
   });
 });
 
+describe('a title is two parts, and one of them is not translated', () => {
+  /**
+   * Found by playing a Japanese game and reading every line the bot sent. Plan
+   * 62 came back as **`62. Happiness (スカ)`** — the Sanskrit rendered into
+   * katakana beside an English word where the name of the square goes. The
+   * first version of this check asked whether the whole string held any of the
+   * language's script, and about that title the answer is yes.
+   *
+   * Four of the fourteen were being read as translated on exactly that.
+   */
+  it('reads the name, not the Sanskrit term kept beside it', () => {
+    expect(headOf('Happiness (スカ)')).toBe('Happiness');
+    expect(headOf('妄想(モハ)')).toBe('妄想');
+    expect(headOf('人类平面 (jana-loka)')).toBe('人类平面');
+  });
+
+  it('reads the full-width parentheses Japanese and Chinese actually use', () => {
+    // The same file mixes them: plan 37 in Japanese is `Jnana（ジナナ）`.
+    expect(headOf('Jnana（ジナナ）')).toBe('Jnana');
+    expect(headOf('负面情报 (durbuddhi)')).toBe('负面情报');
+  });
+
+  it('judges the whole of a title that is only the term', () => {
+    // `Sattvaguna` and `マヤ` carry no parenthesis. Stripping to nothing and
+    // then asking about nothing would pass every one of them.
+    expect(headOf('Sattvaguna')).toBe('Sattvaguna');
+    expect(headOf('(スカ)')).toBe('(スカ)');
+  });
+
+  it('catches an English name beside a term in the language, in every language', () => {
+    // The shape, planted in each language the check can see: script present in
+    // the string, absent from the name.
+    for (const language of READABLE) {
+      const term = plansOf(language)[5]?.title ?? '';
+      const script = headOf(term) || term;
+      const plans = plansOf(language).map((plan) =>
+        plan.plan === 5 ? { ...plan, title: `Happiness (${script})` } : plan,
+      );
+
+      const found = untranslatedIn(plans, language, writtenIn);
+      expect(found.map(nameOf), language).toContain(`${language} plan 5 title: Happiness (${script})`);
+    }
+  });
+
+  it('still calls a name in the language translated, term or no term', () => {
+    // The other half of the rule, or the check would report every title.
+    const plans = plansOf('ja');
+    const found = untranslatedIn(plans, 'ja', writtenIn).map((finding) => finding.plan);
+
+    expect(found, 'plan 6 is 妄想(モハ)').not.toContain(6);
+    expect(found, 'plan 2 is マヤ').not.toContain(2);
+  });
+});
+
 describe('the check finds the shape wherever it is', () => {
   /**
    * Planted, in each language the check can see, rather than asserted about the
-   * ten that are there. A check that happens to name today's findings would go
+   * fourteen that are there. A check that happens to name today's findings would go
    * on passing if it stopped working — the failure mode this repository has met
    * more than once, most recently as a test that only asked whether a symbol
    * was *mentioned*.

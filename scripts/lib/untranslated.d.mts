@@ -26,6 +26,9 @@ export function untranslatedIn<L extends string>(
   writtenIn: (language: L, text: string) => boolean,
 ): Untranslated[];
 
+/** A title without the Sanskrit term beside it: the name a player reads. */
+export function headOf(title: string): string;
+
 export function nameOf(finding: Untranslated): string;
 
 export function against(findings: readonly Untranslated[]): {
