@@ -54,10 +54,41 @@ require(
 );
 ```
 
-This is the only implementation that ever enforced it. The published mobile app
+This is the only implementation that ever *stated* it. The published mobile app
 gated online play; the Expo rewrite kept a `needs_report` column and checked it
-nowhere. That the rule survives in the contract is the evidence it belongs to
-the game rather than to one app's product decisions — and why `classic` has it.
+nowhere. That the rule survives here is the evidence it belongs to the game
+rather than to one app's product decisions — and why `classic` has it.
+
+**The sentence is not the condition, and this README quoted the sentence.**
+`reportIdCounter` is the id of the last report filed by *anybody*, so what the
+require asks is *were you the last person to write* — not *have you written
+about the square you are standing on*. Alone at the table, a player writes once
+and may throw for the rest of the game: nothing on the roll path touches
+`reports` or `reportIdCounter`, so the answer cannot change. With two players it
+becomes a turn-taking rule nobody wrote, where B's report shuts A out until A
+writes again.
+
+And the flag that would have been the rule as everyone reads it —
+`playerReportCreated`, set true on a report and false on a roll — is written in
+both places and **read nowhere**. It is public state that looks exactly like the
+gate and is not consulted by it.
+
+None of this is a bug to fix: the bytecode is deployed, unreachable, and
+described rather than corrected. It is a description to get right, which is what
+this package is for. `tests/gate.test.ts` holds every sentence above to the
+Solidity, including the dead flag — a future edit that *reads* it fails, because
+the flag becoming live would change what the gate means.
+
+## Every field of `onchain`, held to the source
+
+Four of the twelve were checked against the Solidity and the other eight were
+memory — which is exactly how the one wrong flag got in: `onchain` carried
+`classic`'s values for the five rules added after it was written, and the
+winning square was one of them. Each field is now read off the contract, or
+recorded as one the contract cannot express and why. `turnCooldownMs`,
+`cooldownFrom` and `refusedThrowStartsCooldown` are the last kind: a contract
+keeps no clock, `block.timestamp` is stamped onto a report and consulted by
+nothing that decides whether a throw is allowed.
 
 ## Where it diverges, permanently
 

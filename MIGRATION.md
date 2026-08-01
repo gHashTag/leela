@@ -5251,6 +5251,49 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**The gate everyone quoted, and the condition nobody read (197th pass).** The
+contract is the one implementation that ever stated the report rule, and both
+`contracts/README.md` and `ONCHAIN`'s comment rest on it:
+
+```solidity
+require(
+  reports[reportIdCounter].reporter == msg.sender,
+  'You must create a report before rolling the dice.'
+);
+```
+
+The sentence is what has been quoted. The condition is a different rule.
+`reportIdCounter` is the id of the last report filed by **anybody**, so what is
+asked is *were you the last person to write* — not *have you written about the
+square you are standing on*. Alone at the table a player writes once and may
+throw for the rest of the game: nothing on the roll path touches `reports` or
+`reportIdCounter`, so the answer cannot change. With two players it becomes a
+turn-taking rule nobody wrote, where one player's report shuts the other out.
+
+**And the flag that would have been the rule as everyone reads it is dead.**
+`playerReportCreated` is set true on a report and false on a roll, and read
+nowhere — public state that looks exactly like the gate and is not consulted by
+it. The check states that as a shape: every mention outside the declaration is
+an assignment, so an edit that *reads* it fails, because the flag becoming live
+would change what the gate means.
+
+Not a bug to fix. The bytecode is deployed and unreachable, `onchain` describes
+it rather than correcting it, and `requireReportBeforeRoll` is still the nearest
+true thing to say. It is a description to get right, which is the whole purpose
+of this package — so the description now says what the condition asks.
+
+**Four of `onchain`'s twelve fields were held to the Solidity and eight were
+memory**, which is exactly how the one wrong flag got in the last time. Each is
+now read off the source, or recorded as one the contract cannot express:
+`turnCooldownMs`, `cooldownFrom` and `refusedThrowStartsCooldown` are that kind,
+because a contract keeps no clock — `block.timestamp` is stamped onto a report
+and consulted by nothing that decides whether a throw is allowed.
+
+**A second contract exists and agrees.** `leela-ai-web3/contracts/LeelaGame.sol`
+is a different, smaller implementation with a token attached — a sixth
+description of the board. Run through this package's own comparison it reports
+zero divergences: all twenty jumps and all three constants match the engine.
+
 **Two arrows pointing away from where they led (196th pass).** The pager under
 every plan is `← 11 · Contents · 13 →`. It is a flex row, so in an Arabic or
 Urdu page the browser already puts the previous link on the right and the next

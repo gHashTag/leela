@@ -194,9 +194,17 @@ export const ONLINE: RuleSet = Object.freeze({
  *
  * A deployed contract cannot be corrected, so its behaviour is described here
  * rather than treated as a bug to fix. It is the only implementation that ever
- * enforced the report gate — `require(..., 'You must create a report before
+ * stated the report gate — `require(..., 'You must create a report before
  * rolling the dice.')` — which is the evidence that the gate belongs to the
  * game and not to one app's product decisions.
+ *
+ * **What it asks is not what it says.** The condition is
+ * `reports[reportIdCounter].reporter == msg.sender`, and that counter is the
+ * last report filed by *anybody* — so the question is *were you the last person
+ * to write*, not *have you written about this square*. A lone player writes once
+ * and may throw for the rest of the game. `requireReportBeforeRoll` is still the
+ * nearest true thing to say about it, and `packages/contracts/tests/gate.test.ts`
+ * holds the reading to the Solidity.
  *
  * Two ways it differs from `classic`, both recorded in `contracts/README.md`:
  *
