@@ -39,10 +39,13 @@ import {
 } from './game';
 import { PALETTE } from './palette';
 import {
+  DRAFT_KEY,
   EMPTY,
   NOTHING_WRITTEN,
   draftFor,
   draftOn,
+  keepDraft,
+  loadKeptDraft,
   isIntention,
   keep,
   INTENTION_KEY,
@@ -96,6 +99,7 @@ const forTheSession = (): Store => {
 const keeper = deviceKeeper();
 const gameKeeper = deviceKeeper(GAME_KEY);
 const intentionKeeper = deviceKeeper(INTENTION_KEY);
+const draftKeeper = deviceKeeper(DRAFT_KEY);
 
 /** A game's die is seeded once, and the seed is what a player carries away. */
 const startingSeed = () => Math.floor(Math.random() * 1_000_000);
@@ -159,6 +163,40 @@ export default function App() {
       stale = true;
     };
   }, []);
+
+  /**
+   * And the sentence being written, from the last time.
+   *
+   * Read once, and never allowed to land on top of something typed since — the
+   * same rule the path, the question and the board all follow. `draftFor` then
+   * decides whether it is shown at all: a draft belonging to a game that no
+   * longer exists comes back and is never seen.
+   */
+  useEffect(() => {
+    let stale = false;
+    void loadKeptDraft(draftKeeper).then((kept) => {
+      if (!stale) setDraft((now) => (now === NOTHING_WRITTEN ? kept : now));
+    });
+    return () => {
+      stale = true;
+    };
+  }, []);
+
+  /**
+   * And kept on every keystroke.
+   *
+   * Deliberately every one. A timer or a debounce would keep the sentence
+   * except for the words typed in the last second or two, which is exactly the
+   * window an app is killed in: the moment before somebody switches away is the
+   * moment they stop typing.
+   *
+   * Not told about here. A device that refuses is worth saying at the moment
+   * the player files — `takeAccount` says it there — and a warning that appears
+   * mid-sentence and vanishes on the next keystroke is noise.
+   */
+  useEffect(() => {
+    void keepDraft(draftKeeper, draft);
+  }, [draft]);
 
   /**
    * And kept after every throw.

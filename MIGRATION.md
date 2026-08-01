@@ -5251,6 +5251,43 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**The one thing the game asks for was the one thing it did not keep (174th
+pass).** The path is on the device, the board is on the device, what the player
+is playing for is on the device — and the account they are **in the middle of
+writing** lived in a `useState` and nowhere else. An iPhone reclaiming a
+backgrounded app took it, and the gate that will not open without it was still
+shut when they came back.
+
+The mini app lost the same words the same way and wrote down why in `state.ts`:
+*a phone discards a backgrounded tab, and a notification arriving mid-sentence
+took the sentence with it.* A phone discards an **app** far more readily than a
+browser discards a tab. And the published app loses it too — read rather than
+assumed: `CreatePost` holds the text in `react-hook-form` and clears it with
+`methods.reset()`, under `yup.string().trim().min(100)`. At least a paragraph,
+held nowhere.
+
+Kept on **every keystroke**, deliberately. A timer or a debounce keeps the
+sentence except for the words typed in the last second or two, which is exactly
+the window an app is killed in: the moment before somebody switches away is the
+moment they stop typing. Read back once and never allowed to land on top of
+something typed since — the rule all four reads follow — and `draftFor` decides
+whether it is shown at all, so a draft from a game that no longer exists comes
+back and is never seen. The reader asks no second question about a restored
+draft, because it is the same question it asks about a live one.
+
+**And the revert caught the check instead of the fix.** The first version of the
+test asked whether `DRAFT_KEY` and `loadKeptDraft` were *mentioned* in
+`App.tsx`. Deleting both effects left them mentioned — the import stayed — so
+**removing the fix outright left all twenty-four tests green**. A check that an
+import exists is a check on an import. It asks for the calls with their
+arguments now, and for the effect to be keyed on `[draft]`: keyed on the game it
+would keep the sentence only when the board moves, which, while a report is
+owed, it cannot.
+
+That is the second time in three passes that proving a fix by reverting it found
+something the fix itself had not. It is the cheapest step in this loop and the
+only one that has never been wrong.
+
 **A whole act in one expression (173rd pass).** `onPress={() => setGame(newGame(
 startingSeed()))}` was the restart: it asked nothing, kept nothing straight and
 said nothing. Three faults, and the third puts the wrong words into the record

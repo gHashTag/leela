@@ -178,3 +178,43 @@ one is never the same game to a draft, to the die, or to the saved board.
 The line under the board is replaced too: `said` survived the act, so a restart
 taken straight after filing the winner's account left *Written. You may throw.*
 over a board that had just been emptied.
+
+## The sentence that has not been filed yet
+
+The path is on the device. The board is on the device. What the player is
+playing for is on the device. The account they are **in the middle of writing**
+lived in a `useState` and nowhere else — so an iPhone reclaiming a backgrounded
+app took it, and the gate that will not open without it was still shut when they
+came back.
+
+The one thing the game asks a player to produce was the one thing this app did
+not keep. The mini app lost the same words the same way and says so in
+`state.ts`; a browser discards a tab, and a phone discards an app far more
+readily. The published app loses it too: `CreatePost` holds the text in
+`react-hook-form` and clears it with `methods.reset()`, under a rule of
+`yup.string().trim().min(100)` — at least a paragraph, held nowhere.
+
+Kept on **every keystroke**, deliberately. A timer or a debounce keeps the
+sentence except for the words typed in the last second or two, which is exactly
+the window an app is killed in: the moment before somebody switches away is the
+moment they stop typing. One key, last write wins.
+
+Read back once at startup and never allowed to land on top of something typed
+since — the rule all four reads follow. `draftFor` then decides whether it is
+shown at all, so a draft belonging to a game that no longer exists comes back
+and is never seen; the reader does not have to ask a second question about a
+restored draft, because it is the same question it asks about a live one.
+
+Nothing rather than half a draft, the choice `loadKept` and `loadKeptGame` both
+make: a store has been on a disk between two runs, and half a write is what a
+process killed mid-save leaves behind.
+
+### What the check was worth
+
+The first version of this test asked whether `DRAFT_KEY` and `loadKeptDraft`
+were *mentioned* in `App.tsx`. Deleting the effects that use them left both
+mentioned — so **removing the fix outright left every test green**, and the
+revert that was supposed to prove the fix proved the check instead. It asks for
+the calls with their arguments now, and for the effect to be keyed on the draft:
+an effect keyed on the game would keep the sentence only when the board moves,
+which, while a report is owed, it cannot.

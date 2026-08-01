@@ -479,6 +479,24 @@ export interface Draft {
   text: string;
 }
 
+/**
+ * Where the unfinished sentence waits between two runs of the app.
+ *
+ * The one thing the game asks a player to produce was the one thing this app
+ * did not keep. The path is on the device, the board is on the device, what
+ * they are playing for is on the device — and the account being written lived
+ * in a `useState` and nowhere else, so an iPhone reclaiming a backgrounded app
+ * took it, and the gate that will not open without it was still shut.
+ *
+ * The mini app lost the same words the same way and says so in `state.ts`. Its
+ * fix is this one; the difference is that a browser discards a tab and a phone
+ * discards an app, which it does far more readily. The published app loses it
+ * too: `CreatePost` holds the text in `react-hook-form` and clears it with
+ * `methods.reset()`, under a rule of `yup.string().trim().min(100)` — at least
+ * a paragraph, held nowhere.
+ */
+export const DRAFT_KEY = 'leela.draft.v1';
+
 /** Nothing being written, which is what a screen opens with. */
 export const NOTHING_WRITTEN: Draft = { seed: 0, plan: 0, text: '' };
 
@@ -490,4 +508,72 @@ export function draftFor(draft: Draft, seed: number, plan: number | null): strin
 /** What is now being written here. */
 export function draftOn(seed: number, plan: number, text: string): Draft {
   return { seed, plan, text };
+}
+
+/**
+ * Keep what is being written, and say whether it landed.
+ *
+ * Written on every keystroke, deliberately. A timer or a debounce would keep
+ * the sentence *except* for the words typed in the last second or two — which
+ * is exactly the window an app is killed in, since the moment before a player
+ * switches away is the moment they stop typing. One key, last write wins, and
+ * the store settles them in order.
+ *
+ * The answer is returned rather than swallowed, so a caller *can* say a device
+ * refused it. The screen does not say it on every character: a warning that
+ * appears mid-sentence and disappears on the next one is noise, and the moment
+ * a player needs to be told is when they file. `takeAccount` tells them there.
+ */
+export async function keepDraft(
+  keeper: Keeper | undefined,
+  draft: Draft,
+  timeoutMs = KEEP_TIMEOUT_MS,
+): Promise<boolean> {
+  if (!keeper) return false;
+
+  try {
+    const held = draft.text.trim().length === 0 ? '' : JSON.stringify(draft);
+    return await within(keeper.write(held), timeoutMs, false);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * What was being written last time, or nothing.
+ *
+ * Nothing rather than a half-restored one, the choice `loadKept` and
+ * `loadKeptGame` both make: a device store has been on a disk between two runs
+ * and half a write is what a process killed mid-save leaves behind. Anything
+ * that is not a whole draft is no draft.
+ *
+ * It does not have to ask whether the draft is still the right one. `draftFor`
+ * answers that on every render — a draft is shown only on the square of the
+ * game it was written in — so a draft belonging to a game that no longer exists
+ * comes back and is never seen, which is what it should do.
+ */
+export async function loadKeptDraft(
+  keeper: Keeper | undefined,
+  timeoutMs = KEEP_TIMEOUT_MS,
+): Promise<Draft> {
+  if (!keeper) return NOTHING_WRITTEN;
+
+  try {
+    const raw = await within(keeper.read(), timeoutMs, null);
+    if (!raw) return NOTHING_WRITTEN;
+
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null) return NOTHING_WRITTEN;
+
+    const { seed, plan, text } = parsed as Partial<Draft>;
+    if (typeof seed !== 'number' || !Number.isFinite(seed)) return NOTHING_WRITTEN;
+    if (typeof plan !== 'number' || !Number.isInteger(plan)) return NOTHING_WRITTEN;
+    if (typeof text !== 'string' || text.trim().length === 0) return NOTHING_WRITTEN;
+
+    // The bound is the format's, applied on the way in as well as on the way
+    // out: a store can hold anything, and `record` would cut it anyway.
+    return { seed, plan, text: text.slice(0, MAX_REPORT_CHARS) };
+  } catch {
+    return NOTHING_WRITTEN;
+  }
 }
