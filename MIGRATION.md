@@ -5251,6 +5251,47 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**The audit turned round on us (177th pass).** The published app's findings were
+read as *a list of things these surfaces must not grow*, and two of them had
+already grown here.
+
+**The check was on the write that cannot fail.** Saving the question ran `void
+keepIntention(intentionKeeper, …)` — the device, whose answer was thrown away —
+beside `if (!saveIntention(store, …))`, which writes to the session's own `Map`.
+`setItem` on a `Map` does not throw, so that returns false only when there is no
+store, which there always is. The branch that spoke was **dead code**, and the
+one write that can really refuse was the one nobody asked. A player answered the
+question the game is played to answer, the disk said no, they were told it was
+held, and at the next launch they were asked again as though they never had.
+`UserEdit` in the published app closes its screen the same way, and this
+repository has now fixed this shape on five writes.
+
+Four were unanswered, not one: the question, a path brought back, a question
+adopted with it, and a square somebody sent. The import answers once for both
+halves, because bringing a path back is one act. The board and the draft stay
+silent deliberately and each carries its reason beside it.
+
+**And the one sentence it did say was the browser's.** `app.reportUnkept` reads
+*this browser will not keep it — save a copy from “My path” before you close the
+tab*. The phone has no browser, no tab, and **no path view at all**. One of the
+twenty-three sentences it says, and the only borrowed one — eighth sighting of a
+sentence naming the wrong thing, and the shape never varies: the words were
+already written, so nobody wrote new ones. `app.notKept` and
+`app.intentionNotKept` are what the catalogue was missing.
+
+The check resolves the keys the screen actually passes to `messageFor` and
+refuses any that mention a browser, a tab, a window or *My path*, so the next
+borrowing fails before anyone reads it.
+
+**And the check had the bug it was looking for.** Its first version found the
+writes in a comment-stripped copy and read their reasons out of the original, at
+indices that had drifted apart by every comment in between — so it reported a
+defect in code that already carried the explanation it was demanding. Comments
+are blanked character-for-character now rather than removed, so an index into
+one is an index into the other. Stripping them at all is not optional: this file
+documents its own defects, and one of them quotes `void keepIntention(…)` as the
+thing that was wrong, which a plain reader counts as a fifth write.
+
 **The published app's accounts, audited rather than ported.** The unified
 monorepo has **no accounts at all** — the phone, the mini app and the bot each
 identify a player without one, and nothing here reads a password. The published

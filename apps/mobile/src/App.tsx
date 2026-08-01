@@ -335,7 +335,7 @@ export default function App() {
       setSaid(
         landed && taken.kept
           ? messageFor(language, 'app.reportSaved')
-          : messageFor(language, 'app.reportUnkept'),
+          : messageFor(language, 'app.notKept'),
       ),
     );
   };
@@ -509,10 +509,21 @@ export default function App() {
               // is asked separately — the two questions this app keeps apart.
               setIntention(asking.trim());
               setChanging(false);
-              void keepIntention(intentionKeeper, asking.trim());
-              if (!saveIntention(store, asking)) {
-                setSaid(messageFor(language, 'app.reportUnkept'));
-              }
+              saveIntention(store, asking);
+
+              // The device, and its answer.
+              //
+              // This used to be `void keepIntention(…)` beside a check on
+              // `saveIntention`, which writes to the session's own `Map` and
+              // can only fail when there is no store at all — so the branch
+              // that spoke was dead, and the one write that can really refuse
+              // was the one nobody asked. A player answered the question the
+              // game is played to answer, the disk said no, and they were told
+              // it was held: asked again at the next launch as though they
+              // never had.
+              void keepIntention(intentionKeeper, asking.trim()).then((landed) => {
+                if (!landed) setSaid(messageFor(language, 'app.intentionNotKept'));
+              });
             }}
           >
             <Text style={[styles.buttonText, label, !isIntention(asking) && styles.shutText]}>{messageFor(language, 'app.reportSave')}</Text>
@@ -662,7 +673,9 @@ export default function App() {
                   ? messageFor(language, 'square.took', { plan: square.plan ?? here })
                   : messageFor(language, 'app.pathImportedNothing'),
               );
-              void keep(keeper, square.journal);
+              void keep(keeper, square.journal).then((landed) => {
+                if (!landed) setSaid(messageFor(language, 'app.notKept'));
+              });
               return;
             }
 
@@ -677,14 +690,26 @@ export default function App() {
             if (taken.intention !== null) {
               setIntention(taken.intention);
               saveIntention(store, taken.intention);
-              void keepIntention(intentionKeeper, taken.intention);
             }
             setSaid(
               taken.added === 0
                 ? messageFor(language, 'app.pathImportedNothing')
                 : messageFor(language, 'app.pathImported', { count: taken.added }),
             );
-            void keep(keeper, taken.journal);
+
+            // And whether the device took it — both halves, answered together
+            // and said once, because bringing a path back is one act. A path
+            // that was not kept has to be brought back again, and saying
+            // *twelve accounts brought in* over a disk that refused all twelve
+            // is the untruth this surface told about a report.
+            void Promise.all([
+              keep(keeper, taken.journal),
+              taken.intention === null
+                ? Promise.resolve(true)
+                : keepIntention(intentionKeeper, taken.intention),
+            ]).then(([path, question]) => {
+              if (!path || !question) setSaid(messageFor(language, 'app.notKept'));
+            });
           }}
         >
           <Text style={[styles.buttonText, label, pasted.trim().length === 0 && styles.shutText]}>{messageFor(language, 'app.pathImport')}</Text>

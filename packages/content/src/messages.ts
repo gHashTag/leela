@@ -318,6 +318,27 @@ const EN = {
   // next load, with nothing to say it had ever existed.
   'app.reportUnkept':
     'Written, and this browser will not keep it — save a copy from “My path” before you close the tab.',
+  /**
+   * The same fact on a device that is not a browser.
+   *
+   * The phone said the sentence above, which names a browser, a tab and a
+   * screen it does not have: `apps/mobile` shows what was written about the
+   * square being stood on and has no path view at all. So the one thing it
+   * said at the one moment a player needed a true instruction was impossible
+   * on three counts. Share is what that surface has.
+   */
+  'app.notKept':
+    'Written, and this phone will not keep it — send yourself a copy with Share.',
+  /**
+   * And the question, which nothing said anything about.
+   *
+   * The device write that keeps it had its answer discarded, while the check
+   * that decided what to say was on the session's own `Map`, which cannot fail.
+   * So a player answered what they are playing for, the disk refused, and they
+   * were told it was held — and asked again at the next launch.
+   */
+  'app.intentionNotKept':
+    'Held for this game, and this phone will not keep it — you may be asked again next time.',
   // The table itself could not be stored. Said once, not on every throw: the
   // game plays on in a window that keeps nothing, and used to describe every
   // snake and arrow as though the board would still be there tomorrow.
@@ -633,6 +654,10 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.reportSavedDone': 'Записано. Игра завершена. 🕉',
   'app.reportUnkept':
     'Записано, но этот браузер не сохранит — заберите копию в «Моём пути», прежде чем закрыть вкладку.',
+  'app.notKept':
+    'Записано, но этот телефон не сохранит — отправьте себе копию через «Поделиться».',
+  'app.intentionNotKept':
+    'Принято на эту игру, но этот телефон не сохранит — в следующий раз вопрос могут задать снова.',
   'app.gameUnkept':
     'Этот браузер не сохранит игру — доска будет такой, какой вы её оставили в прошлый раз.',
   'app.reportSavedTurn': 'Записано. Ход игрока {seat}.',

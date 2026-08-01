@@ -274,3 +274,35 @@ where the defect lived: a condition written inline has nowhere for a second
 reason to open the box. `app.intentionYours` and `app.intentionChange` have been
 in the catalogue in English and Russian since the mini app needed them, and this
 surface said neither.
+
+## Who answers for the keeping
+
+Found by taking the published app's audit (`docs/published-app-auth-audit.md`)
+and asking whether any of its shapes had grown here. Two had.
+
+**The check was on the write that cannot fail.** Saving the question ran `void
+keepIntention(intentionKeeper, …)` — the device, whose answer was thrown away —
+beside `if (!saveIntention(store, …))`, which writes to the session's own `Map`.
+`setItem` on a `Map` does not throw, so that returns false only when there is no
+store, which there always is: the branch that spoke was dead code, and the one
+write that can really refuse was the one nobody asked. A player answered the
+question the game is played to answer, the disk said no, and they were told it
+was held — then asked again at the next launch as though they never had.
+
+Four writes were unanswered, not one: the question, a path brought back, a
+question adopted with it, and a square somebody sent. All four answer now, and
+the import says it once for both halves, because bringing a path back is one
+act. The board and the draft stay silent on purpose and each carries its reason
+beside it — the requirement `audit-drawings` makes of every control drawn shut.
+
+**And the one sentence it did say was the browser's.** `app.reportUnkept` reads
+*this browser will not keep it — save a copy from “My path” before you close the
+tab*: a browser, a tab and a screen this app does not have. It is one of the
+twenty-three sentences the phone says, and it was the only borrowed one — the
+eighth sighting of a sentence naming the wrong thing, and the shape is always
+the same: the words were already written, so nobody wrote new ones.
+`app.notKept` and `app.intentionNotKept` are the two the catalogue was missing.
+
+The check reads the keys this screen actually passes to `messageFor`, resolves
+them, and refuses any that mention a browser, a tab, a window, or *My path* — so
+the next borrowed sentence fails before anyone sees it.
