@@ -5251,6 +5251,37 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A dialog with no way out (184th pass).** Found by *playing* the mini app in a
+browser, which this repository has now used four times and which has found
+something every time. With the language set to Russian on the running page, the
+four Close buttons read back as *Закрыть*, *Close*, *Close*, *Close*:
+`applyChrome` named `#reader form button`, and there are four of them. The plans
+list, the paste dialog and the writer kept the English in the markup, in every
+one of the twenty-two languages.
+
+None of the four carries an `id` — a way out does not need one to be read by a
+person — which is how they slipped past the check that holds every named control
+to the catalogue. The check reads ids; the rule is *named from the catalogue*,
+and a group can satisfy it, so it asks the markup rather than trusting a name.
+
+**And the question's dialog had no way out at all**, alone among the five. That
+is right the first time: the published app blocks the back gesture for a player
+who has none, and the `cancel` handler here refuses it for the same reason. It
+is wrong every time after — and this is a phone. No Escape key, Telegram's own
+back button unwired, Save refusing fewer than two characters. A player who
+tapped *Change it* and cleared the box had **nothing left to press**.
+
+`mayLeaveTheQuestion` is where that decision lives rather than the handler,
+which the app's own check insisted on within the minute: a control drawn shut is
+the shape three defects here came from.
+
+**Two instrument corrections, both caught before they became claims.** A
+synthetic `KeyboardEvent` does not make a browser cancel a `<dialog>` — that is
+a user-agent action — so the first Escape reading proved nothing. And a *real*
+Escape through the browser tool did not close the reader either, which has no
+cancel handler at all: the control experiment said the instrument was at fault,
+not the app. The Escape question was dropped rather than reported.
+
 **The audit could not see the drawer it was standing next to (183rd pass).**
 `audit-unread` searches `scripts` for *readers* and scans only `.tsx?` for
 *declarations* — so an export in `scripts/lib/*.mjs` had no way of ever being

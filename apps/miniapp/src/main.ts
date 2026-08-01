@@ -102,6 +102,7 @@ import {
   mayShare,
   mayAsk,
   mayStartOver,
+  mayLeaveTheQuestion,
   mayThrow,
   mayWrite,
   standing,
@@ -286,6 +287,7 @@ const el = {
   intentionText: document.getElementById('intention-text') as HTMLTextAreaElement,
   intentionHint: document.getElementById('intention-hint') as HTMLElement,
   intentionSave: document.getElementById('intention-save') as HTMLButtonElement,
+  intentionClose: document.getElementById('intention-close') as HTMLButtonElement,
   pathExport: document.getElementById('path-export') as HTMLButtonElement,
   pathPaste: document.getElementById('path-paste') as HTMLButtonElement,
   paste: document.getElementById('paste') as HTMLDialogElement,
@@ -584,10 +586,27 @@ function startOver(): void {
  * not a profile field: it is the question the game is being played to answer,
  * and the reports are the answer accumulating.
  */
+/**
+ * Ask what the player is playing for.
+ *
+ * **A way out, but only once there is one to go back to.** Four of the five
+ * dialogs here carry a Close and this one carried none, on the reasoning the
+ * published app states by blocking the back gesture: a player who has not
+ * answered must not walk past the question. That is right the first time and
+ * wrong every time after — and this is a mini app, which is a phone. There is
+ * no Escape key on a phone, Telegram's own back button is not wired, and the
+ * `cancel` handler below refuses the gesture anyway. So a player who tapped
+ * *Change it* and cleared the box had nothing left: Save refuses two
+ * characters, and there was no other control in the dialog at all.
+ *
+ * The same rule the phone was given: the way out appears when there is an
+ * answer to keep.
+ */
 function askIntention(): void {
   el.intentionTitle.textContent = messageFor(language, 'app.intention');
   el.intentionText.value = intention;
   el.intentionHint.textContent = messageFor(language, 'app.intentionHint');
+  el.intentionClose.hidden = !mayLeaveTheQuestion(intention);
   el.intention.showModal();
   el.intentionText.focus();
 }

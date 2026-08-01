@@ -79,6 +79,20 @@ export function applyChrome(document: Document, language: Language): void {
     board.setAttribute('dir', 'ltr');
   }
 
-  const close = document.querySelector('#reader form button');
-  if (close) close.textContent = messageFor(language, 'app.close');
+  /**
+   * Every way out, not the reader's.
+   *
+   * This named `#reader form button` and there are four of them: the plans
+   * list, the paste dialog and the writer kept the English in the markup, in
+   * every one of the twenty-two languages. None of them carries an `id`, which
+   * is how they slipped past the check that holds every named control to the
+   * catalogue — the check reads ids, and a way out of a dialog does not need
+   * one to be read by a person.
+   *
+   * Found by setting the language to Russian on the running page and reading
+   * the four buttons back: one said *Закрыть* and three said *Close*.
+   */
+  for (const close of document.querySelectorAll('dialog form[method="dialog"] button')) {
+    close.textContent = messageFor(language, 'app.close');
+  }
 }

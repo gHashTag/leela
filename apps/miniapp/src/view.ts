@@ -260,6 +260,25 @@ export function mayStartOver(session: Session): boolean {
 }
 
 /**
+ * Whether the question can be walked away from.
+ *
+ * Only once it has been answered. The published app blocks the back gesture for
+ * a player who has none — `navigate('CHANGE_INTENTION_SCREEN', { blockGoBack:
+ * true })` — and this app's `cancel` handler refuses the same gesture for the
+ * same reason. That is right the first time and wrong every time after: four of
+ * the five dialogs here carry a Close and this one carried none, so a player
+ * who tapped *Change it* and cleared the box had nothing left to press. Save
+ * refuses two characters, there is no Escape key on a phone, and Telegram's own
+ * back button is not wired.
+ *
+ * Named rather than written into the handler, because a control drawn shut is
+ * the shape three defects in this app came from.
+ */
+export function mayLeaveTheQuestion(intention: string): boolean {
+  return intention.trim() !== '';
+}
+
+/**
  * Whether anybody at this table owes an account the game is waiting for.
  *
  * The button was drawn from `owingSeat(...) === null` written out in place, and

@@ -165,3 +165,26 @@ hundred characters of the id and called four untranslated controls translated,
 because an event listener happened to sit beside a line that translated
 something else. It follows the statement now, and the local a `getElementById`
 is bound to.
+
+## Every dialog can be left
+
+Found by using the app rather than reading it. With the language set to Russian
+on the running page, the four Close buttons read back as *Закрыть*, *Close*,
+*Close*, *Close*: `applyChrome` named `#reader form button`, and there are four
+of them. The plans list, the paste dialog and the writer kept the English in the
+markup, in every one of the twenty-two languages.
+
+None of the four carries an `id` — a way out of a dialog does not need one to be
+read by a person — which is how they slipped past the check that holds every
+named control to the catalogue. The check reads ids; the rule is *named from the
+catalogue*, and a group can satisfy it.
+
+**And the question's dialog had no way out at all.** That is right the first
+time: the published app blocks the back gesture for a player who has none
+(`blockGoBack: true`), and the `cancel` handler here refuses it for the same
+reason. It is wrong every time after, and this is a phone — no Escape key,
+Telegram's own back button unwired, and Save refusing fewer than two characters.
+A player who tapped *Change it* and cleared the box had nothing left to press.
+
+`mayLeaveTheQuestion` is where that decision lives, not the handler: a control
+drawn shut is the shape three defects in this app came from.

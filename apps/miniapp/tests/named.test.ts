@@ -33,6 +33,7 @@ const HTML = blank(readFileSync(resolve(HERE, 'index.html'), 'utf8'));
 const SOURCES = ['chrome.ts', 'main.ts', 'view.ts'].map((file) =>
   blank(readFileSync(resolve(HERE, 'src', file), 'utf8')),
 );
+const MAIN = blank(readFileSync(resolve(HERE, 'src', 'main.ts'), 'utf8'));
 
 /** An id as `main.ts` holds it: `path-export` is `el.pathExport`. */
 const handleOf = (id: string) => id.replace(/-(\w)/g, (_dash, letter) => letter.toUpperCase());
@@ -47,6 +48,22 @@ const handleOf = (id: string) => id.replace(/-(\w)/g, (_dash, letter) => letter.
  */
 function namedFromTheCatalogue(id: string): boolean {
   if (SOURCES.some((source) => source.includes(`set('${id}'`) || source.includes(`name('${id}'`))) {
+    return true;
+  }
+
+  /**
+   * A way out of a dialog, named as a group.
+   *
+   * They carry no `id` of their own — a Close does not need one to be read by a
+   * person — and `applyChrome` names all four with one selector. The rule is
+   * still *named from the catalogue*; what changes is that a group can satisfy
+   * it, which is why this asks the markup whether the control is one of them
+   * rather than trusting the name.
+   */
+  const inADialogForm = new RegExp(
+    `<form method="dialog"><button[^>]*id="${id}"`,
+  ).test(HTML);
+  if (inADialogForm && SOURCES.some((source) => source.includes(`form[method="dialog"] button`))) {
     return true;
   }
 
@@ -86,6 +103,58 @@ const spoken = [...HTML.matchAll(/<(button|section|span|input|textarea)([^>]*)>(
   }))
   .filter((element) => element.id !== '' && (element.named.length > 0 || element.words !== ''));
 
+function chromed(language: (typeof LANGUAGES)[number]) {
+  const document = {
+    documentElement: {} as Record<string, string>,
+    elements: new Map<string, { text: string | null; attributes: Map<string, string> }>(),
+    getElementById(id: string) {
+      if (!HTML.includes(`id="${id}"`)) return null;
+      const held = this.elements.get(id) ?? { text: null, attributes: new Map<string, string>() };
+      this.elements.set(id, held);
+      return {
+        set textContent(value: string) {
+          held.text = value;
+        },
+        setAttribute(attribute: string, value: string) {
+          held.attributes.set(attribute, value);
+        },
+      };
+    },
+    querySelector() {
+      return null;
+    },
+    /**
+     * The ways out, which `applyChrome` names as a group.
+     *
+     * They carry no `id` — a Close does not need one to be read by a person —
+     * so this stub answers by the shape of the markup, from the same
+     * `index.html` the check reads.
+     */
+    querySelectorAll(selector: string) {
+      if (selector !== 'dialog form[method="dialog"] button') return [];
+
+      const held = this.elements;
+      return [...HTML.matchAll(/<dialog id="([\w-]+)"[\s\S]*?<\/dialog>/g)]
+        .filter(([body]) => /<form method="dialog">/.test(body))
+        .map(([, id]) => {
+          const found = held.get(`close:${id}`) ?? {
+            text: null,
+            attributes: new Map<string, string>(),
+          };
+          held.set(`close:${id}`, found);
+          return {
+            set textContent(value: string) {
+              found.text = value;
+            },
+          };
+        });
+    },
+  };
+
+  applyChrome(document as unknown as Document, language);
+  return document.elements;
+}
+
 describe('the markup speaks English until the script runs', () => {
   it('has controls to speak for, or this check proves nothing', () => {
     // An empty list would make every assertion below vacuously true — the shape
@@ -123,31 +192,6 @@ describe('applyChrome, run over the real markup', () => {
    * the function never mentioned — and a stub built from the function's own
    * list of ids would have had exactly the same hole in it.
    */
-  function chromed(language: (typeof LANGUAGES)[number]) {
-    const document = {
-      documentElement: {} as Record<string, string>,
-      elements: new Map<string, { text: string | null; attributes: Map<string, string> }>(),
-      getElementById(id: string) {
-        if (!HTML.includes(`id="${id}"`)) return null;
-        const held = this.elements.get(id) ?? { text: null, attributes: new Map<string, string>() };
-        this.elements.set(id, held);
-        return {
-          set textContent(value: string) {
-            held.text = value;
-          },
-          setAttribute(attribute: string, value: string) {
-            held.attributes.set(attribute, value);
-          },
-        };
-      },
-      querySelector() {
-        return null;
-      },
-    };
-
-    applyChrome(document as unknown as Document, language);
-    return document.elements;
-  }
 
   it('gives every icon button a name in the reader\'s language', () => {
     // Over every language the game is published in: a name that is right in
@@ -185,5 +229,63 @@ describe('applyChrome, run over the real markup', () => {
 
   it('names the Save in the dialog that asks the question', () => {
     expect(chromed('ru').get('intention-save')?.text).toBe(messageFor('ru', 'app.reportSave'));
+  });
+});
+
+/**
+ * Every dialog offers a way out, except while asking a question never answered.
+ *
+ * Found by using the app rather than reading it: with the language set to
+ * Russian on the running page, the four Close buttons read back as *Закрыть*,
+ * *Close*, *Close*, *Close* — `applyChrome` named `#reader form button` and
+ * there are four of them. And the question's dialog had **no way out at all**.
+ *
+ * That is right the first time: the published app blocks the back gesture for a
+ * player who has none — `blockGoBack: true` — and the `cancel` handler here
+ * refuses the same gesture for the same reason. It is wrong every time after,
+ * and this is a phone: no Escape key, Telegram's own back button unwired, Save
+ * refusing two characters. A player who tapped *Change it* and cleared the box
+ * had nothing left to press.
+ */
+describe('a dialog can be left', () => {
+  const dialogs = [...HTML.matchAll(/<dialog id="([\w-]+)"([\s\S]*?)<\/dialog>/g)].map(
+    ([, id = '', body = '']) => ({ id, body }),
+  );
+
+  it('finds the dialogs, or this proves nothing', () => {
+    expect(dialogs.length).toBeGreaterThan(3);
+  });
+
+  it('gives every one of them a control that closes it', () => {
+    // `form method="dialog"` is how a button closes one without a listener,
+    // and it is the idiom four of the five already used.
+    for (const dialog of dialogs) {
+      expect(
+        /<form method="dialog">\s*<button/.test(dialog.body),
+        `#${dialog.id} cannot be left`,
+      ).toBe(true);
+    }
+  });
+
+  it('hides the question\'s until there is an answer to go back to', () => {
+    // The one that must not be walked past. Hidden in the markup, and shown by
+    // `askIntention` through a named decision rather than a comparison written
+    // into the handler.
+    const question = dialogs.find((dialog) => dialog.id === 'intention');
+
+    expect(question?.body).toMatch(/id="intention-close"[^>]*hidden/);
+    expect(MAIN).toContain('el.intentionClose.hidden = !mayLeaveTheQuestion(intention)');
+  });
+
+  it('says so in the reader\'s language, all four of them', () => {
+    // Three of the four kept the English in the markup, in every one of the
+    // twenty-two languages, because the selector named one.
+    const named = chromed('ru');
+
+    for (const dialog of dialogs) {
+      expect(named.get(`close:${dialog.id}`)?.text, `#${dialog.id}`).toBe(
+        messageFor('ru', 'app.close'),
+      );
+    }
   });
 });
