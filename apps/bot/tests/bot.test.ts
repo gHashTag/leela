@@ -131,6 +131,11 @@ async function rollUntilTheGate(
   sent: Sent[],
   chat: typeof PRIVATE | typeof GROUP = PRIVATE,
 ) {
+  // The question first, because the die will not turn without one — the gate
+  // the mini app, the phone and the published app have always had, and the bot
+  // was the surface where a whole game could be played without being asked.
+  await bot.handleUpdate(message('/intention to see what I keep avoiding', chat));
+
   for (let attempt = 0; attempt < 60; attempt += 1) {
     const before = sent.length;
     await bot.handleUpdate(message('/roll', chat));
@@ -736,6 +741,9 @@ describe('what the companion is told about the arrival', () => {
     await bot.handleUpdate(message('/new', PRIVATE));
     await bot.handleUpdate(message('/start', PRIVATE));
 
+    // The die will not turn without one, here as on every other surface.
+    await bot.handleUpdate(message('/intention to see what I keep avoiding', PRIVATE));
+
     // Play until several different arrivals have been reported on.
     const seen = new Set<string>();
     for (let turn = 0; turn < 60 && seen.size < 2; turn += 1) {
@@ -1230,6 +1238,7 @@ describe('a write a turn asked for, that did not happen', () => {
 
     await bot.handleUpdate(message('/new', PRIVATE));
     await bot.handleUpdate(message('/start', PRIVATE));
+    await bot.handleUpdate(message('/intention to see what I keep avoiding', PRIVATE));
 
     const before = sent.length;
     await bot.handleUpdate(message('/roll', PRIVATE));
@@ -1396,6 +1405,7 @@ describe('a new game is a new conversation', () => {
     // from the default sender, who is not seated here.
     await bot.handleUpdate(message('/new', GROUP, 200));
     await bot.handleUpdate(message('/start', GROUP, 200));
+    await bot.handleUpdate(message('/intention to see what I keep avoiding', GROUP, 200));
     for (let attempt = 0; attempt < 60; attempt += 1) {
       const before = sent.length;
       await bot.handleUpdate(message('/roll', GROUP, 200));

@@ -119,6 +119,8 @@ describe('the bot as it is actually assembled', () => {
 
     await bot.handleUpdate(message('/new'));
     await bot.handleUpdate(message('/start'));
+    // The die will not turn without one, here as on every other surface.
+    await bot.handleUpdate(message('/intention to see what I keep avoiding'));
 
     for (let attempt = 0; attempt < 60; attempt += 1) {
       const before = sent.length;
@@ -158,6 +160,7 @@ describe('the bot as it is actually assembled', () => {
 
     await bot.handleUpdate(message('/new'));
     await bot.handleUpdate(message('/start'));
+    await bot.handleUpdate(message('/intention to see what I keep avoiding'));
     for (let attempt = 0; attempt < 60; attempt += 1) {
       const before = sent.length;
       await bot.handleUpdate(message('/roll'));

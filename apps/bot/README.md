@@ -227,3 +227,30 @@ from the page, and is this file's business rather than the code's.
   afterwards.
 - The companion cannot be verified without an OpenRouter key: the prompt is
   tested, the answer's quality is not.
+
+## The question comes before the die
+
+The published app will not let anybody near the board without one —
+`if (!prof.intention) navigate('CHANGE_INTENTION_SCREEN', { blockGoBack: true })`
+in `screens/helper.ts`, with the back gesture blocked — the mini app's
+`mayThrow` refuses, and the phone was given the same gate. The bot was the one
+surface where a whole game could be played without ever being asked what it was
+being played for.
+
+*The one difference between surfaces this repository does not allow is what the
+game asks of a player.* Not a `RuleSet` change: the gate lives in the surfaces
+and not in `@leela/engine`, exactly as it did when the phone joined them.
+
+`intention.ask` has been in the catalogue in English and Russian since the bot
+learned `/intention`, and was said by nobody. That is how this was found.
+
+`roll` takes an `Asked` or nothing, and the two are different facts: **nothing**
+means this caller does not deal in intentions — a deployment whose store cannot
+hold one, and every test that plays a game without them — and then there is no
+gate, because refusing a throw for an answer there is nowhere to keep would end
+the game over a fact about the deployment. `{ intention: '' }` means they were
+asked and have not answered. An optional string would have made those one.
+
+A default that quietly skips a gate is an absence reading exactly like a pass,
+so `tests/asked.test.ts` holds `bot.ts` to passing it at both places the die is
+turned — the command and the button.

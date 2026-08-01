@@ -140,3 +140,28 @@ the browser's, then to English.
   their own journal, intention and draft — but a table spread across phones
   needs `initData` verified server-side, which needs somewhere to run. Group
   play in one chat lives in the bot, and the two do not share a game yet.
+
+## Every name comes from the catalogue
+
+The markup says something before the script runs, so it says it in English, and
+`applyChrome` replaces it. It replaced eleven of the fifteen. The three buttons
+along the top — the rules, the players, the list of all seventy-two plans — and
+the Save in the dialog that asks the question kept the English in the file, in
+every one of the twenty-two languages.
+
+For an **icon button** that English is the only name it has. The button renders
+an emoji; `aria-label` and `title` are the whole of what a screen reader and a
+tooltip have to go on. So a player reading the game in Russian heard *Players*.
+The die beside them was named correctly, with the reason written down — *the die
+shows a face, not a word* — and that reasoning was applied to one of the four.
+
+`app.rules`, `app.plans` and `app.players` were already in the catalogue in both
+complete languages and said by nobody, which is how this was found.
+
+`tests/named.test.ts` reads the markup for every element whose name a person
+reads or hears and requires each one to be named from the catalogue. Written
+twice: the first version asked whether `messageFor` appeared within three
+hundred characters of the id and called four untranslated controls translated,
+because an event listener happened to sit beside a line that translated
+something else. It follows the statement now, and the local a `getElementById`
+is bound to.

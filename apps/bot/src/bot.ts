@@ -466,7 +466,23 @@ export function createBot({
 
   bot.command('join', (ctx) => withRoom(ctx, (room, who) => commands.join(room, who)));
 
-  bot.command('roll', (ctx) => withRoom(ctx, (room, who) => commands.roll(room, who.id, now())));
+  /**
+   * What this player is playing for, read before the throw.
+   *
+   * Absent when this bot's store cannot hold one at all, which is what tells
+   * `roll` not to gate: refusing a throw for a question a deployment has
+   * nowhere to keep would end the game for everybody using it.
+   */
+  async function askedOf(userId: string): Promise<commands.Asked | undefined> {
+    if (!reports.intention) return undefined;
+    return { intention: (await reports.intention(userId)) ?? '' };
+  }
+
+  bot.command('roll', async (ctx) => {
+    const who = sender(ctx);
+    const asked = who ? await askedOf(who.id) : undefined;
+    await withRoom(ctx, (room, holder) => commands.roll(room, holder.id, now(), asked));
+  });
 
   // The board and a plan are drawn here rather than in `commands.ts`, because
   // drawing is a property of the surface: the mini app renders the same game
@@ -900,7 +916,7 @@ export function createBot({
 
     const result =
       action === 'roll'
-        ? commands.roll(room, who.id, now())
+        ? commands.roll(room, who.id, now(), await askedOf(who.id))
         : action === 'join'
           ? commands.join(room, who)
           : action === 'start'

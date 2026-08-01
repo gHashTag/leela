@@ -21,19 +21,42 @@ export function applyChrome(document: Document, language: Language): void {
     if (element) element.textContent = messageFor(language, key);
   };
 
-  // The die shows a face, not a word: its name is for a screen reader and for
-  // the tooltip, and printing it would put "Roll" across the pips.
-  const die = document.getElementById('roll');
-  if (die) {
-    const name = messageFor(language, 'app.roll');
-    die.setAttribute('aria-label', name);
-    die.setAttribute('title', name);
-  }
+  /**
+   * A control that shows a picture instead of a word.
+   *
+   * Its name is for a screen reader and for the tooltip, and printing it would
+   * put "Roll" across the pips. Four controls are drawn this way and this was
+   * written for one of them: the die was named, and the three buttons along the
+   * top — the rules, the players, the list of all seventy-two plans — kept the
+   * English in the markup, in every one of the twenty-two languages. For an
+   * icon button that English is the **only** name it has, so a player reading
+   * the game in Russian heard "Players".
+   *
+   * Every key existed already. `app.rules`, `app.plans` and `app.players` are
+   * in the catalogue in both complete languages and were said by nobody, which
+   * is how this was found.
+   */
+  const name = (id: string, key: Parameters<typeof messageFor>[1]) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    const said = messageFor(language, key);
+    element.setAttribute('aria-label', said);
+    element.setAttribute('title', said);
+  };
+
+  name('roll', 'app.roll');
+  name('rules', 'app.rules');
+  name('players', 'app.players');
+  name('plans', 'app.plans');
 
   set('read', 'app.read');
   set('report', 'app.reportWrite');
   set('path', 'app.path');
   set('writer-save', 'app.reportSave');
+  // The other Save, in the dialog that asks the question. Same word, same key,
+  // and it was the one button in the markup that nothing ever touched.
+  set('intention-save', 'app.reportSave');
   set('path-export', 'app.pathExport');
   set('path-import', 'app.pathImport');
   set('path-paste', 'app.paste');

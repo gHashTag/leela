@@ -5251,6 +5251,53 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Two things nobody said (179th pass).** The method the last pass turned up was
+run over the whole catalogue: of 185 keys, **two** are said by no surface, and
+both were a capability nobody wired up.
+
+**`app.players`, and three controls with it.** The mini app's markup speaks
+English until `applyChrome` replaces it, and it replaced eleven of fifteen. The
+three buttons along the top — the rules, the players, the list of all
+seventy-two plans — and the Save in the dialog that asks the question kept the
+English in the file, in every one of the twenty-two languages. For an **icon
+button** that English is the only name it has: the button renders an emoji, and
+`aria-label` and `title` are the whole of what a screen reader and a tooltip
+have. A player reading the game in Russian heard *Players*. The die beside them
+was named correctly and the reasoning was written down — *the die shows a face,
+not a word* — and applied to one of the four.
+
+**`intention.ask`, and the gate it was written for.** The published app blocks
+the board without an intention, the mini app's `mayThrow` refuses, the phone was
+given the same gate two passes ago — and the bot was the surface where a whole
+game could be played without ever being asked what it was being played for.
+*The one difference between surfaces this repository does not allow is what the
+game asks of a player.* Not a `RuleSet` change: the gate lives in the surfaces
+and not in `@leela/engine`, exactly as it did when the phone joined them.
+
+`roll` takes an `Asked` or nothing, and those are **different facts**: nothing
+means this caller does not deal in intentions — a deployment whose store cannot
+hold one — and there is no gate, because refusing a throw for an answer there is
+nowhere to keep would end the game over a fact about the deployment.
+`{ intention: '' }` means asked and unanswered. An optional string would have
+made those one. A default that quietly skips a gate is an absence reading
+exactly like a pass, so `bot.ts` is held to passing it at both places the die is
+turned.
+
+**Six existing tests failed, and they were right to.** Each plays a game and
+none of them answered the question — which is what the gate is. They answer it
+now, in the same place a player would.
+
+**The same regex mistake, a third time.** `commands.roll\(([^;]*?)\)` stops at
+the `)` in `now()` and read a four-argument call as three, reporting a defect in
+code that was right. Twice before it was `[^)]*` over `asking.trim()` and an
+index into a comment-stripped copy. A balanced-parenthesis assumption in a check
+that reads source has now been wrong every time it has been made.
+
+And the check for the mini app was written twice: the first version asked
+whether `messageFor` appeared within three hundred characters of an id and
+called four untranslated controls translated, because an event listener happened
+to sit beside a line translating something else. **Proximity is not a citation.**
+
 **A record nobody could read (178th pass).** The phone could write a path, carry
 it away and bring one back, and never once show it — what it printed was the
 writing about the square being stood on, and nothing else. The bot has `/path`

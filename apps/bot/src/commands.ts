@@ -352,7 +352,49 @@ export function start(room: Room, byPlayerId: string): CommandResult {
  * taken, so the whole game can be replayed from `(seed, rollsTaken)` and no
  * player has to take another's word for a roll.
  */
-export function roll(room: Room, byPlayerId: string, now: number): CommandResult {
+/**
+ * What this player is playing for, as the roll needs to know it.
+ *
+ * Absent means *this caller does not deal in intentions* — a bot built with a
+ * store that cannot hold one, and every test that plays a game without them —
+ * and then there is no gate. Present with nothing in it means they have not
+ * answered, and that is what the gate is for. The two are different facts and
+ * an optional string would make them one.
+ *
+ * `bot.ts` always passes it, and `asked.test.ts` holds it to that: a default
+ * that quietly skips the gate is an absence reading exactly like a pass.
+ */
+export interface Asked {
+  intention: string;
+}
+
+/**
+ * Take a throw.
+ *
+ * **The question comes before the die**, on this surface as on the other three.
+ * The published app blocks the board without one (`screens/helper.ts`, with the
+ * back gesture blocked), the mini app's `mayThrow` refuses, and the phone was
+ * given the same gate two passes ago under the rule this repository states
+ * plainly: *the one difference between surfaces this repository does not allow
+ * is what the game asks of a player.* The bot was the surface where a whole
+ * game could be played without ever being asked.
+ *
+ * `intention.ask` has been in the catalogue in English and Russian since the
+ * bot learned `/intention`, and was said by nobody — which is how this was
+ * found. Not a `RuleSet` change: the gate lives in the surfaces and not in
+ * `@leela/engine`, as it did when the phone joined them.
+ *
+ * After *whose turn is it*, because a question is not worth asking of somebody
+ * who is not up; before the engine's verdict, because every account is written
+ * inside the question and asking for the writing first is asking somebody to
+ * answer a question nobody put.
+ */
+export function roll(
+  room: Room,
+  byPlayerId: string,
+  now: number,
+  asked?: Asked,
+): CommandResult {
   if (!room.started) {
     return { room, replies: [say(messageFor(room.language, 'roll.notStarted'), false)] };
   }
@@ -374,6 +416,10 @@ export function roll(room: Room, byPlayerId: string, now: number): CommandResult
         say(messageFor(room.language, 'roll.notYourTurn', { name: nameOf(room, holder.id) }), false),
       ],
     };
+  }
+
+  if (asked && asked.intention.trim() === '') {
+    return { room, replies: [say(messageFor(room.language, 'intention.ask'), false)] };
   }
 
   const verdict = canCurrentPlayerRoll(room.session, now);
