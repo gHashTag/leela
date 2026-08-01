@@ -9,7 +9,17 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { BOARD_ROWS } from '@leela/engine';
 import { bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
@@ -29,7 +39,10 @@ import {
   EMPTY,
   isIntention,
   keep,
+  INTENTION_KEY,
   loadIntention,
+  loadKeptIntention,
+  keepIntention,
   loadKept,
   saveIntention,
   shareName,
@@ -44,6 +57,7 @@ import {
 } from './journal';
 import { deviceKeeper } from './device';
 import { GAME_KEY, keepGame, loadKeptGame } from './game-store';
+import { HANDLE, squareHandle } from './handles';
 
 /**
  * The session's own copy of the path.
@@ -60,6 +74,7 @@ const forTheSession = (): Store => {
 /** The device's store, made once, one per thing kept. */
 const keeper = deviceKeeper();
 const gameKeeper = deviceKeeper(GAME_KEY);
+const intentionKeeper = deviceKeeper(INTENTION_KEY);
 
 /** A game's die is seeded once, and the seed is what a player carries away. */
 const startingSeed = () => Math.floor(Math.random() * 1_000_000);
@@ -82,7 +97,18 @@ export default function App() {
   // What they are playing for, from the last time. The published app will not
   // show the board without one; neither will this.
   useEffect(() => {
+    // The session's copy first, so the screen answers at once, and then the
+    // device's — which is the one that survives a launch. Never allowed to land
+    // on an answer given since: somebody typing before a slow disk replies must
+    // not have their question replaced by yesterday's.
     setIntention(loadIntention(store));
+    let stale = false;
+    void loadKeptIntention(intentionKeeper).then((kept) => {
+      if (kept !== '' && !stale) setIntention((now) => (now === '' ? kept : now));
+    });
+    return () => {
+      stale = true;
+    };
   }, [store]);
 
   useEffect(() => {
@@ -175,11 +201,28 @@ export default function App() {
   };
 
   return (
-    <View style={styles.screen}>
+    /*
+     * The keyboard covers the button that keeps what was just typed.
+     *
+     * Found by the walk rather than by reading: Detox refused to tap Save
+     * because it was *not visible* — `view bounds: {{16, 702.7}, {370, 45}}` on
+     * an 874-point screen, under a keyboard about 300 points tall. A player
+     * would have to dismiss the keyboard to reach it, and nothing on screen
+     * says so.
+     *
+     * `KeyboardContainer` in the published app is the same answer to the same
+     * problem: `behavior={Platform.OS === 'ios' ? 'padding' : 'height'}`. This
+     * is that, at the root, because both writers and the controls row all sit
+     * below the fold.
+     */
+    <KeyboardAvoidingView
+      style={styles.screen}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <StatusBar style="auto" />
-      <ScrollView contentContainerStyle={styles.body}>
+      <ScrollView testID={HANDLE.page} contentContainerStyle={styles.body}>
         {plan !== null ? (
-          <Text style={styles.title}>
+          <Text testID={HANDLE.square} accessibilityRole="header" style={styles.title}>
             {square}. {plan.title}
           </Text>
         ) : null}
@@ -189,7 +232,13 @@ export default function App() {
           {BOARD_ROWS.map((row, index) => (
             <View key={index} style={styles.row}>
               {row.map((square) => (
-                <View key={square} style={[styles.cell, square === here && styles.standing]}>
+                <View
+                  key={square}
+                  testID={squareHandle(square)}
+                  accessibilityLabel={String(square)}
+                  accessibilityState={{ selected: square === here }}
+                  style={[styles.cell, square === here && styles.standing]}
+                >
                   <Text style={square === here ? styles.standingText : styles.cellText}>
                     {square}
                   </Text>
@@ -211,7 +260,13 @@ export default function App() {
           own is served the English ones, and a chapter its book is missing is
           borrowed and marked — the reader gets a whole book either way.
         */}
-        <Pressable style={styles.button} onPress={() => setReading((open) => !open)}>
+        <Pressable
+          testID={HANDLE.rules}
+          accessibilityRole="button"
+          accessibilityLabel={messageFor(language, 'app.rules')}
+          style={styles.button}
+          onPress={() => setReading((open) => !open)}
+        >
           <Text style={styles.buttonText}>{messageFor(language, 'app.rules')}</Text>
         </Pressable>
 
@@ -256,6 +311,8 @@ export default function App() {
         <View style={styles.writer}>
           <Text style={styles.line}>{messageFor(language, 'app.intention')}</Text>
           <TextInput
+            testID={HANDLE.intention}
+            accessibilityLabel={messageFor(language, 'app.intention')}
             style={styles.field}
             multiline
             value={asking}
@@ -263,12 +320,16 @@ export default function App() {
             placeholder={messageFor(language, 'app.intentionHint')}
           />
           <Pressable
+            testID={HANDLE.intentionSave}
+            accessibilityRole="button"
+            accessibilityLabel={messageFor(language, 'app.reportSave')}
             disabled={!isIntention(asking)}
             style={[styles.button, !isIntention(asking) && styles.shut]}
             onPress={() => {
               // Held for the session whatever the device says, and the device
               // is asked separately — the two questions this app keeps apart.
               setIntention(asking.trim());
+              void keepIntention(intentionKeeper, asking.trim());
               if (!saveIntention(store, asking)) {
                 setSaid(messageFor(language, 'app.reportUnkept'));
               }
@@ -282,6 +343,8 @@ export default function App() {
       {owesAnAccount(game) ? (
         <View style={styles.writer}>
           <TextInput
+            testID={HANDLE.report}
+            accessibilityLabel={messageFor(language, 'app.reportPlaceholder')}
             style={styles.field}
             multiline
             value={draft}
@@ -289,6 +352,9 @@ export default function App() {
             placeholder={messageFor(language, 'app.reportPlaceholder')}
           />
           <Pressable
+            testID={HANDLE.reportSave}
+            accessibilityRole="button"
+            accessibilityLabel={messageFor(language, 'app.reportSave')}
             // Asked here and asked again by `write`: a dimmed control is a
             // drawing, and a drawing refuses nothing.
             disabled={draft.trim().length === 0}
@@ -302,6 +368,9 @@ export default function App() {
 
       <View style={styles.controls}>
         <Pressable
+          testID={HANDLE.roll}
+          accessibilityRole="button"
+          accessibilityLabel={messageFor(language, 'app.roll')}
           // The same question the disabled state is drawn from, asked again by
           // the act: a dimmed control is a drawing, and a drawing refuses
           // nothing — a double tap walks straight past it.
@@ -329,6 +398,9 @@ export default function App() {
         */}
         {plan !== null && square !== null && writingsOn(journal, square).length > 0 ? (
           <Pressable
+            testID={HANDLE.shareSquare}
+            accessibilityRole="button"
+            accessibilityLabel={messageFor(language, 'app.share')}
             style={[styles.button, styles.abreast]}
             onPress={() => {
               void Share.share({
@@ -347,6 +419,9 @@ export default function App() {
 
         {journal.entries.length > 0 ? (
           <Pressable
+            testID={HANDLE.sharePath}
+            accessibilityRole="button"
+            accessibilityLabel={messageFor(language, 'app.pathExport')}
             style={[styles.button, styles.abreast]}
             onPress={() => {
               const stamp = new Date().toISOString().slice(0, 10);
@@ -367,6 +442,8 @@ export default function App() {
           opened, the question taken only where there is none.
         */}
         <TextInput
+          testID={HANDLE.paste}
+          accessibilityLabel={messageFor(language, 'app.pasteEither')}
           style={styles.field}
           multiline
           value={pasted}
@@ -377,6 +454,9 @@ export default function App() {
           placeholder={messageFor(language, 'app.pasteEither')}
         />
         <Pressable
+          testID={HANDLE.pasteTake}
+          accessibilityRole="button"
+          accessibilityLabel={messageFor(language, 'app.pathImport')}
           disabled={pasted.trim().length === 0}
           style={[styles.button, styles.abreast, pasted.trim().length === 0 && styles.shut]}
           onPress={() => {
@@ -407,6 +487,7 @@ export default function App() {
             if (taken.intention !== null) {
               setIntention(taken.intention);
               saveIntention(store, taken.intention);
+              void keepIntention(intentionKeeper, taken.intention);
             }
             setSaid(
               taken.added === 0
@@ -420,12 +501,18 @@ export default function App() {
         </Pressable>
 
         {isOver(game) ? (
-          <Pressable style={[styles.button, styles.abreast]} onPress={() => setGame(newGame(startingSeed()))}>
+          <Pressable
+            testID={HANDLE.restart}
+            accessibilityRole="button"
+            accessibilityLabel={messageFor(language, 'app.restart')}
+            style={[styles.button, styles.abreast]}
+            onPress={() => setGame(newGame(startingSeed()))}
+          >
             <Text style={styles.buttonText}>{messageFor(language, 'app.restart')}</Text>
           </Pressable>
         ) : null}
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

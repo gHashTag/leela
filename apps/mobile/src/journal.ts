@@ -221,6 +221,50 @@ export async function loadKept(
   }
 }
 
+/**
+ * The question, kept on the device rather than for the session.
+ *
+ * `loadIntention` and `saveIntention` were right and were handed the wrong
+ * store: `forTheSession()` is a `Map` made fresh at every launch, so what the
+ * player is playing for was asked again every single time. The journal went to
+ * the device and survived; the question that frames it did not.
+ *
+ * Invisible to a unit test, which passes whatever store it likes and gets the
+ * right answer. Found by relaunching the app and being asked the question
+ * again, with a year of answers to it sitting underneath.
+ */
+export async function keepIntention(
+  keeper: Keeper | undefined,
+  text: string,
+  timeoutMs = KEEP_TIMEOUT_MS,
+): Promise<boolean> {
+  if (!keeper) return false;
+
+  try {
+    return await within(keeper.write(text), timeoutMs, false);
+  } catch {
+    return false;
+  }
+}
+
+/** What they were playing for, from the last time, or nothing. */
+export async function loadKeptIntention(
+  keeper: Keeper | undefined,
+  timeoutMs = KEEP_TIMEOUT_MS,
+): Promise<string> {
+  if (!keeper) return '';
+
+  try {
+    const raw = await within(keeper.read(), timeoutMs, null);
+    // The same bound the format states, applied on the way in: a device holds
+    // whatever was written to it, including by a version of this app that
+    // asked for less.
+    return raw !== null && isIntention(raw) ? raw.trim() : '';
+  } catch {
+    return '';
+  }
+}
+
 /** Keep the path, and say whether it was kept. */
 export async function keep(
   keeper: Keeper | undefined,

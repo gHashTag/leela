@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_INTENTION_CHARS, MIN_INTENTION_CHARS } from '@leela/journal';
-import { isIntention, loadIntention, saveIntention, type Store } from '../src/journal';
+import { isIntention, loadIntention, saveIntention, type Store,
+  keepIntention,
+  loadKeptIntention,
+  type Keeper,
+} from '../src/journal';
 import { mayThrow, newGame, throwDie } from '../src/game';
 
 /**
@@ -159,5 +163,60 @@ describe('the die will not turn without a question', () => {
     expect(mayThrow(newGame(4242), ''), 'and nothing at all is the one refusal').toBe(
       'no-intention',
     );
+  });
+});
+
+describe('the question survives the app closing', () => {
+  /**
+   * `loadIntention` and `saveIntention` were right and were handed the wrong
+   * store. `forTheSession()` is a `Map` made fresh at every launch, so what a
+   * player is playing for was asked again every time — with a year of their
+   * answers to it sitting underneath, on a device that had kept those.
+   *
+   * No unit test could see it: this file passes whatever store it likes and
+   * gets the right answer back. The wiring is the defect, and the walk through
+   * the app is what found it — relaunching and being asked the question again.
+   */
+  const disk = (): Keeper & { held: string | null } => {
+    const it = {
+      held: null as string | null,
+      async read() {
+        return it.held;
+      },
+      async write(value: string) {
+        it.held = value;
+        return true;
+      },
+    };
+    return it;
+  };
+
+  it('comes back from the device, not from this run', async () => {
+    const device = disk();
+
+    expect(await keepIntention(device, 'What am I holding on to?')).toBe(true);
+    // A second launch: nothing in memory, everything on the device.
+    expect(await loadKeptIntention(device)).toBe('What am I holding on to?');
+  });
+
+  it('holds an answer to the bound the format states', async () => {
+    // A device holds whatever was written to it, including by a version of this
+    // app that asked for less. The question is checked on the way in.
+    const device = disk();
+    device.held = 'x';
+
+    expect(await loadKeptIntention(device)).toBe('');
+  });
+
+  it('has nothing to say when there is no device', async () => {
+    expect(await loadKeptIntention(undefined)).toBe('');
+    expect(await keepIntention(undefined, 'anything')).toBe(false);
+  });
+
+  it('gives up on a device that never answers', async () => {
+    const silent: Keeper = { read: () => new Promise(() => {}), write: () => new Promise(() => {}) };
+
+    expect(await loadKeptIntention(silent, 10)).toBe('');
+    expect(await keepIntention(silent, 'anything', 10)).toBe(false);
   });
 });
