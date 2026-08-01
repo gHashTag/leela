@@ -5251,6 +5251,41 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A descent from Cosmic Consciousness that never happened (189th pass).** Read
+the other prompt — the one every report produces — for a real game, printing one
+example of each arrival sentence. The first report of **every game** said:
+
+```
+The player is on plan 6: Delusion (moha).
+They walked here one square at a time.
+They came from plan 68.
+```
+
+Two false things in two lines. A player waiting to enter is parked on `WIN_LOKA`
+— the engine's own choice, and the published app draws the piece there from the
+first screen — so an entering throw carries `previousPlan: 68` and a `direction`
+of `step 🚶🏼`. The prompt read the first as a square they had come from and the
+second as a walk, about somebody who had been off the board entirely.
+
+The ninth sighting of the 68 ambiguity, and the first inside a model's
+instructions: the companion's first answer of every game rested on a descent
+from the winning square.
+
+Nothing moves off 68 — a player who stood there has won and is out of play — so
+a `previousPlan` of 68 on any *other* square can only be the parking space. That
+is the same reasoning `isWaitingToEnter` encodes for the current square, applied
+to the previous one. The prompt says what did happen instead.
+
+**And an existing test encoded this one too**, exactly as last pass: *tells it
+where they came from, when that is somewhere else* filed the first report of a
+game and asserted the prompt said *they came from plan N*. The rule was right
+and the example was the one arrival with no somewhere else. It plays a move
+first now, and a second test holds the entering case.
+
+That is twice in two passes that a check was written from the same reading as
+the code, and inherited its mistake. Both were found by looking at the artefact
+— the prompt itself — rather than at either.
+
 **A first visit announced as a return (188th pass).** Played a game and printed
 the system prompt the model actually received, which no unit test can do: they
 build a context by hand, and the defect was in what the caller assembles.

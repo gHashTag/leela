@@ -314,11 +314,29 @@ export function systemPrompt(context: PlanContext): string {
       : `The player is on plan ${context.plan}: ${plan.title}.`,
   ];
 
+  /**
+   * Whether this is the game beginning rather than a move within it.
+   *
+   * A player waiting to enter is parked on `WIN_LOKA` — the engine's own choice,
+   * and the published app draws the piece there from the first screen — so a
+   * `previousPlan` of 68 on any *other* square is not a square they came from.
+   * Nothing moves off 68: a player who stood there has won and is out of play.
+   *
+   * Without this, the first report of **every game** told the companion two
+   * false things — *they walked here one square at a time*, about entering the
+   * board, and *they came from plan 68*, a descent from Cosmic Consciousness
+   * that never happened. The ninth sighting of the 68 ambiguity, and the first
+   * inside a model's instructions.
+   */
+  const entered = context.previousPlan === WIN_LOKA && context.plan !== WIN_LOKA;
+
   // Only a move has a direction, and only somebody standing somewhere came
   // from a previous square. A received square was nobody's arrival: saying
   // *they were brought down here by a snake* about a square they have never
   // been on is worse than saying nothing.
-  if (arrival === 'standing') {
+  if (arrival === 'standing' && entered) {
+    lines.push('They have just entered the game; before this they were not on the board.');
+  } else if (arrival === 'standing') {
     if (context.direction) {
       lines.push(`They ${ARRIVAL[context.direction]}.`);
     }

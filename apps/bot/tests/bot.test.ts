@@ -764,6 +764,13 @@ describe('what the companion is told about the arrival', () => {
   });
 
   it('tells it where they came from, when that is somewhere else', async () => {
+    /**
+     * A *move*, not the entering throw. A player waiting to enter is parked on
+     * `WIN_LOKA`, so the first report of every game carried `previousPlan: 68`
+     * — and this asserted the prompt said *they came from plan 68*, which is a
+     * descent from Cosmic Consciousness that never happened. The rule was
+     * right and the example was the one arrival with no somewhere else.
+     */
     const recorder = recordingModel('a reflection');
     const guide = new Guide({ model: recorder, log: () => undefined });
     const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
@@ -771,10 +778,39 @@ describe('what the companion is told about the arrival', () => {
     await bot.handleUpdate(message('/new', PRIVATE));
     await bot.handleUpdate(message('/start', PRIVATE));
     await rollUntilTheGate(bot, sent);
+    await bot.handleUpdate(message('/report the account of entering, long enough to count', PRIVATE));
+
+    // On, and reported again: now they have come from a square.
+    await rollUntilTheGate(bot, sent);
     await bot.handleUpdate(message('/report a reflection long enough to count', PRIVATE));
 
     const prompt = arrivalOf(recorder.calls.at(-1)?.messages ?? []);
     expect(prompt).toMatch(/They came from plan \d+\./);
+    expect(prompt, 'and 68 is the parking space, not an origin').not.toMatch(/came from plan 68/);
+  });
+
+  it('does not read the parking square as somewhere they came from', async () => {
+    /**
+     * The first report of **every game**. Found by playing one and printing the
+     * prompt the model actually received: *They walked here one square at a
+     * time. They came from plan 68.* — about a player who had been off the
+     * board entirely. Ninth sighting of the 68 ambiguity, and the first inside
+     * a model's instructions.
+     */
+    const recorder = recordingModel('a reflection');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+    await rollUntilTheGate(bot, sent);
+    await bot.handleUpdate(message('/report the account of entering, long enough to count', PRIVATE));
+
+    const prompt = String(recorder.calls.at(-1)?.messages?.[0]?.content ?? '');
+
+    expect(prompt).not.toMatch(/came from plan 68/);
+    expect(prompt, 'no move is claimed either').not.toMatch(/They walked here|brought down|carried up/);
+    expect(prompt, 'and what did happen is said').toContain('They have just entered the game');
   });
 
   it('still answers when there is nothing to say about the arrival', async () => {

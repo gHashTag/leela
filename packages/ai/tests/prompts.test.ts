@@ -602,3 +602,88 @@ describe('a prompt this package builds is a prompt this package bounds', () => {
     expect(first?.content).toBe(said);
   });
 });
+
+/**
+ * Entering the game is not an arrival from anywhere.
+ *
+ * A player waiting to enter is parked on `WIN_LOKA` — the engine's own choice,
+ * and the published app draws the piece there from the first screen. So the
+ * first report of **every game** carried a `previousPlan` of 68, and the prompt
+ * read it as a square they had come from: *They walked here one square at a
+ * time. They came from plan 68.* A descent from Cosmic Consciousness that never
+ * happened, in the instructions the companion answers from.
+ *
+ * The ninth sighting of the 68 ambiguity, and the first inside a model's
+ * instructions. Found by playing a game and printing the prompt the model
+ * actually received.
+ */
+describe('the game beginning', () => {
+  const entering = (plan: number) => systemPrompt({ plan, language: 'en', previousPlan: WIN_LOKA });
+
+  it('is not described as a descent from the winning square', () => {
+    // Over every square a six can put somebody on, rather than the one the
+    // seeded die happened to produce.
+    for (const plan of [1, 6, 9, 41, 67, 72]) {
+      expect(entering(plan), `plan ${plan}`).not.toContain(`came from plan ${WIN_LOKA}`);
+    }
+  });
+
+  it('is not described as a walk, or as any other kind of move', () => {
+    // `direction` for an entering throw is `step 🚶🏼`, so the sentence read
+    // *they walked here one square at a time* about a player who had been off
+    // the board entirely.
+    const prompt = systemPrompt({
+      plan: 6,
+      language: 'en',
+      previousPlan: WIN_LOKA,
+      direction: 'step 🚶🏼',
+    });
+
+    expect(prompt).not.toMatch(/They walked here|They were brought|They were carried/);
+    expect(prompt, 'and says what did happen').toContain('They have just entered the game');
+  });
+
+  it('still describes a real move from a real square', () => {
+    // The guard against the rule swallowing every arrival: a snake from 21 to 9
+    // is a move, and the sentence for it is the point of the section.
+    const prompt = systemPrompt({
+      plan: 9,
+      language: 'en',
+      previousPlan: 21,
+      direction: 'snake 🐍',
+    });
+
+    expect(prompt).toContain('They were brought down here by a snake.');
+    expect(prompt).toContain('They came from plan 21.');
+  });
+
+  it('still lets the winner have come from somewhere', () => {
+    // 68 as a destination is the end of a game, and the arrow that carried them
+    // there is worth saying. Only 68 as an *origin* is the parking space.
+    const prompt = systemPrompt({
+      plan: WIN_LOKA,
+      language: 'en',
+      previousPlan: 54,
+      direction: 'arrow 🏹',
+    });
+
+    expect(prompt).toContain('They came from plan 54.');
+    expect(prompt).toContain('This is the end of a game');
+  });
+
+  it('says nothing about arriving at all for a square somebody sent', () => {
+    // The rule this joins: a received square was nobody's arrival, and the
+    // beginning of a game is nobody's arrival either.
+    const prompt = systemPrompt({
+      plan: 6,
+      language: 'en',
+      arrival: 'received',
+      previousPlan: WIN_LOKA,
+    });
+
+    // The whole sentence, not the phrase: the traditional texts talk about
+    // entering the game constantly, and the plan's own body is in the prompt.
+    expect(prompt).not.toContain('They have just entered the game');
+    expect(prompt).not.toContain(`came from plan ${WIN_LOKA}`);
+  });
+});
