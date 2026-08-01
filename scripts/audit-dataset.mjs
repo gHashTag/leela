@@ -102,6 +102,39 @@ for (const fix of CORRECTIONS) {
   }
 }
 
+/**
+ * A language whose every plan is one paragraph.
+ *
+ * Every reader splits a plan on blank lines. Three languages had none at all —
+ * `leela/src/locales/<lang>` separates paragraphs with a single newline and the
+ * markdown donors use a blank line — so 216 pages of the book rendered as one
+ * unbroken wall of text, in Arabic, Malay and Ukrainian.
+ *
+ * Nothing could see it. Every check here asks whether a plan has *text*, and a
+ * wall of text is text. This asks whether it has *paragraphs*, which is the
+ * question a reader asks by looking at the page.
+ *
+ * A handful genuinely are one paragraph — they are short. Seventy-two of
+ * seventy-two is a donor in a shape the generator does not know.
+ */
+const SOLID_ENOUGH_TO_WORRY = 10;
+
+for (const language of coverage.keys()) {
+  let plans;
+  try {
+    plans = read(join(DATA, `plans.${language}.json`));
+  } catch {
+    continue; // Already reported above.
+  }
+
+  const solid = plans.filter((plan) => !(plan.body ?? '').includes('\n\n')).length;
+  if (solid >= SOLID_ENOUGH_TO_WORRY) {
+    problems.push(
+      `${language}: ${solid} of ${plans.length} plans have no paragraph break — the whole book reads as one block`,
+    );
+  }
+}
+
 // The rules book, which nothing had ever looked at. English shipped a seventh
 // chapter written in Russian — `game-logic.md`, filed among six numbered
 // English files in a donor repository and mapped straight through. A reader

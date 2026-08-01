@@ -21,6 +21,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { checkRegression, coverageOf } from './lib/coverage.mjs';
 import { corrected, unappliedIn } from './lib/corrections.mjs';
+import { paragraphed } from './lib/paragraphs.mjs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -281,7 +282,11 @@ function readAppLocales() {
           plan: n,
           title: stripNumbering(title, n) ?? `${n}`,
           description: null,
-          body: (body ?? '').trim(),
+          // Paragraphs, written the way every reader splits on them. This
+          // donor separates them with a single newline and the markdown ones
+          // use a blank line; passing both through unchanged is what made all
+          // 72 plans in Arabic, Malay and Ukrainian one unbroken wall of text.
+          body: paragraphed((body ?? '').trim()),
           source: `${label}/src/locales/${lang}/translation.json#plan_${n}`,
         });
       }
