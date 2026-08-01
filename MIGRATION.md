@@ -5251,6 +5251,46 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Half a rule, and the half it kept was the one it wrote yesterday (172nd
+pass).** The mini app states it in one sentence in `chrome.ts` — *prose follows
+the reader; geometry does not* — and sets `dir` on the whole document, so every
+word it shows obeys the first clause. This app obeyed **only the second**. The
+board was pinned last pass, and the reader's direction reached the three boxes
+the player types into and not one word the game says.
+
+So the 72 plans and the entire rules book, in Arabic and Urdu, were laid out
+left to right: the teaching this app exists to deliver, ragged down the wrong
+margin, with each sentence's full stop on the wrong side of it. Nothing was
+missing and nothing was broken — it was the direction of the whole text, which
+is the one thing about a page a reader sees before they read a word.
+
+It was invisible until the pass before, because the language was always English.
+`writingDirection` on the fields had been **dead code since it was written**.
+
+And the comment left here one pass ago says *the reader's direction is the
+text's, and the fields already carry it* — as though the fields were the text.
+They are where the player answers; the plan is what they are answering. Seventh
+sighting of a sentence naming the wrong thing, and the first of them mine.
+
+A screen has no `dir` to set, so every `Text` answers for itself and
+`reader.test.ts` requires an answer: `prose` for a paragraph, `label` for a
+centred control (where `textAlign: 'right'` would push *Roll* off the middle of
+its own button), `styles.geometry` for a number in the grid. **Named rather than
+omitted**, because an omission and a decision look identical in a stylesheet —
+`audit-drawings` made the same requirement of every disabled control after three
+passes in which one was drawn shut and refused nothing.
+
+Both halves are checked, since a rule with one is a rule that can be satisfied
+wrongly: nothing may be undecided, and nothing whose words come from
+`@leela/content` may answer `geometry`. The first version of the second half
+also caught the plan's heading — `{square}. {plan.title}` contains a number and
+then prose, and is prose; a cell is a text that is **nothing but** the number.
+
+The three fields had it spelled out at each site, three times, which is how they
+came to be the only text in the app that carried it: **a thing written at each
+site is a thing the next site can be written without.** One name now, and
+`fields.test.ts` asks for that name.
+
 Still to bring across from `leela`: RevenueCat, notifee and Sentry. **notifee
 was read this pass and is not a port.** Its two uses are a chat-reply
 notification with an inline reply action (`replyNotification.ts`,

@@ -117,6 +117,28 @@ every row and put the snakes and arrows on the wrong side; `styles.board` pins
 It cannot happen today — the app declares no right-to-left localisation, so
 `I18nManager.isRTL` is false on an Arabic phone too. It becomes possible the
 moment somebody adds one, which is exactly what *the app now speaks Arabic*
-invites, so the guard is here with the change that invites it. The **text**
-still follows the reader: the writing fields take `writingDirection` from
-`directionOf(language)`, and Arabic and Urdu are two of the twenty-two.
+invites, so the guard is here with the change that invites it.
+
+### And the prose is the reader's
+
+The sentence is the mini app's, written in `chrome.ts`: **prose follows the
+reader; geometry does not.** It sets `dir` on the whole document, so every word
+it shows obeys the first clause. This app obeyed only the second. The reader's
+direction reached the three boxes the player types into and **not one word the
+game says** — so the 72 plans and the entire rules book, in Arabic and Urdu,
+were laid out left to right, ragged down the wrong margin with each sentence's
+full stop on the wrong side of it.
+
+A screen has no `dir` to set, so every `Text` answers for itself, and
+`reader.test.ts` requires an answer:
+
+- `prose` — a paragraph: the reader's margin and base direction;
+- `label` — a centred control, base direction only, since `textAlign: 'right'`
+  would push *Roll* off the middle of its own button;
+- `styles.geometry` — a number in the grid, which is not prose and says so.
+
+Named rather than omitted, because an omission and a decision look identical in
+a stylesheet; `audit-drawings` made the same requirement of every disabled
+control after three passes in which one was drawn shut and refused nothing. The
+check has both halves: nothing may be undecided, and nothing whose words come
+from `@leela/content` may answer `geometry`.

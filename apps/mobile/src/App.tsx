@@ -171,6 +171,31 @@ export default function App() {
   // a field left at the default puts their text against the wrong margin with
   // the caret in the wrong corner.
   const reading_direction = directionOf(language);
+
+  /**
+   * The reader's direction, for the two kinds of text that take it.
+   *
+   * The mini app writes the rule down in one sentence — *prose follows the
+   * reader; geometry does not* (`chrome.ts`) — and sets `dir` on the whole
+   * document, so every word it shows obeys it. This app obeyed **only the
+   * second half**: the board was pinned last pass, and the direction reached
+   * the three boxes the player types into and not one word the game says.
+   *
+   * So the 72 plans and the whole rules book, in Arabic and Urdu, were laid out
+   * left to right — the teaching this app exists to deliver, ragged down the
+   * wrong margin, with every full stop on the wrong side of its sentence. The
+   * comment written here one pass ago says *the fields already carry it* as
+   * though the fields were the text. They are where the player answers; the
+   * plan is what they are answering.
+   *
+   * Two, because a paragraph and a centred button label want different things.
+   * `textAlign` is the half both platforms have always honoured;
+   * `writingDirection` sets the paragraph's base direction, which is what
+   * decides the side a full stop lands on — and on a control whose label is
+   * centred, it is the only half that applies.
+   */
+  const prose = reading_direction === 'rtl' ? styles.rightToLeft : null;
+  const label = reading_direction === 'rtl' ? styles.labelDirection : null;
   const here = standingOn(game);
   // Where the piece is drawn and what may be read are two questions. `here` is
   // 68 for a player who has never thrown — the engine parks them there and the
@@ -242,11 +267,11 @@ export default function App() {
       <StatusBar style="auto" />
       <ScrollView testID={HANDLE.page} contentContainerStyle={styles.body}>
         {plan !== null ? (
-          <Text testID={HANDLE.square} accessibilityRole="header" style={styles.title}>
+          <Text testID={HANDLE.square} accessibilityRole="header" style={[styles.title, prose]}>
             {square}. {plan.title}
           </Text>
         ) : null}
-        <Text style={styles.line}>{line}</Text>
+        <Text style={[styles.line, prose]}>{line}</Text>
 
         <View style={styles.board}>
           {BOARD_ROWS.map((row, index) => (
@@ -259,7 +284,7 @@ export default function App() {
                   accessibilityState={{ selected: square === here }}
                   style={[styles.cell, square === here && styles.standing]}
                 >
-                  <Text style={square === here ? styles.standingText : styles.cellText}>
+                  <Text style={[square === here ? styles.standingText : styles.cellText, styles.geometry]}>
                     {square}
                   </Text>
                 </View>
@@ -268,7 +293,7 @@ export default function App() {
           ))}
         </View>
 
-        {plan !== null ? <Text style={styles.plan}>{plan.body}</Text> : null}
+        {plan !== null ? <Text style={[styles.plan, prose]}>{plan.body}</Text> : null}
 
         {/*
           The book, which every other surface has and this one did not. A player
@@ -287,14 +312,14 @@ export default function App() {
           style={styles.button}
           onPress={() => setReading((open) => !open)}
         >
-          <Text style={styles.buttonText}>{messageFor(language, 'app.rules')}</Text>
+          <Text style={[styles.buttonText, label]}>{messageFor(language, 'app.rules')}</Text>
         </Pressable>
 
         {reading
           ? bookFor(language).map((chapter) => (
               <View key={chapter.slug} style={styles.written}>
-                <Text style={styles.title}>{chapter.title}</Text>
-                <Text style={styles.plan}>{chapter.body}</Text>
+                <Text style={[styles.title, prose]}>{chapter.title}</Text>
+                <Text style={[styles.plan, prose]}>{chapter.body}</Text>
               </View>
             ))
           : null}
@@ -314,7 +339,7 @@ export default function App() {
         {square !== null && writingsOn(journal, square).length > 0 ? (
           <View style={styles.written}>
             {writingsOn(journal, square).map((entry) => (
-              <Text key={`${entry.plan}-${entry.at}`} style={styles.entry}>
+              <Text key={`${entry.plan}-${entry.at}`} style={[styles.entry, prose]}>
                 {entry.text}
               </Text>
             ))}
@@ -329,7 +354,7 @@ export default function App() {
       */}
       {intention === '' ? (
         <View style={styles.writer}>
-          <Text style={styles.line}>{messageFor(language, 'app.intention')}</Text>
+          <Text style={[styles.line, prose]}>{messageFor(language, 'app.intention')}</Text>
           <TextInput
             testID={HANDLE.intention}
             accessibilityLabel={messageFor(language, 'app.intention')}
@@ -338,7 +363,7 @@ export default function App() {
             autoCorrect
             textContentType="none"
             placeholderTextColor={PALETTE.hint}
-            style={[styles.field, reading_direction === 'rtl' && styles.rightToLeft]}
+            style={[styles.field, prose]}
             multiline
             value={asking}
             onChangeText={setAsking}
@@ -360,7 +385,7 @@ export default function App() {
               }
             }}
           >
-            <Text style={[styles.buttonText, !isIntention(asking) && styles.shutText]}>{messageFor(language, 'app.reportSave')}</Text>
+            <Text style={[styles.buttonText, label, !isIntention(asking) && styles.shutText]}>{messageFor(language, 'app.reportSave')}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -375,7 +400,7 @@ export default function App() {
             autoCorrect
             textContentType="none"
             placeholderTextColor={PALETTE.hint}
-            style={[styles.field, reading_direction === 'rtl' && styles.rightToLeft]}
+            style={[styles.field, prose]}
             multiline
             value={draft}
             onChangeText={setDraft}
@@ -391,7 +416,7 @@ export default function App() {
             style={[styles.button, draft.trim().length === 0 && styles.shut]}
             onPress={write}
           >
-            <Text style={[styles.buttonText, draft.trim().length === 0 && styles.shutText]}>{messageFor(language, 'app.reportSave')}</Text>
+            <Text style={[styles.buttonText, label, draft.trim().length === 0 && styles.shutText]}>{messageFor(language, 'app.reportSave')}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -411,7 +436,7 @@ export default function App() {
             setGame(throwDie(game, intention).game);
           }}
         >
-          <Text style={[styles.buttonText, refusal !== 'yes' && styles.shutText]}>{messageFor(language, 'app.roll')}</Text>
+          <Text style={[styles.buttonText, label, refusal !== 'yes' && styles.shutText]}>{messageFor(language, 'app.roll')}</Text>
         </Pressable>
 
         {/*
@@ -443,7 +468,7 @@ export default function App() {
               });
             }}
           >
-            <Text style={styles.buttonText}>{messageFor(language, 'app.share')}</Text>
+            <Text style={[styles.buttonText, label]}>{messageFor(language, 'app.share')}</Text>
           </Pressable>
         ) : null}
 
@@ -461,7 +486,7 @@ export default function App() {
               });
             }}
           >
-            <Text style={styles.buttonText}>{messageFor(language, 'app.pathExport')}</Text>
+            <Text style={[styles.buttonText, label]}>{messageFor(language, 'app.pathExport')}</Text>
           </Pressable>
         ) : null}
 
@@ -479,7 +504,7 @@ export default function App() {
           spellCheck={false}
           textContentType="none"
           placeholderTextColor={PALETTE.hint}
-          style={[styles.field, reading_direction === 'rtl' && styles.rightToLeft]}
+          style={[styles.field, prose]}
           multiline
           value={pasted}
           onChangeText={setPasted}
@@ -532,7 +557,7 @@ export default function App() {
             void keep(keeper, taken.journal);
           }}
         >
-          <Text style={[styles.buttonText, pasted.trim().length === 0 && styles.shutText]}>{messageFor(language, 'app.pathImport')}</Text>
+          <Text style={[styles.buttonText, label, pasted.trim().length === 0 && styles.shutText]}>{messageFor(language, 'app.pathImport')}</Text>
         </Pressable>
 
         {isOver(game) ? (
@@ -543,7 +568,7 @@ export default function App() {
             style={[styles.button, styles.abreast]}
             onPress={() => setGame(newGame(startingSeed()))}
           >
-            <Text style={styles.buttonText}>{messageFor(language, 'app.restart')}</Text>
+            <Text style={[styles.buttonText, label]}>{messageFor(language, 'app.restart')}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -596,7 +621,26 @@ const styles = StyleSheet.create({
   entry: { fontSize: 15, lineHeight: 21, color: PALETTE.entry },
   writer: { paddingHorizontal: 16, gap: 8 },
   /** Arabic and Urdu read the other way; the field has to as well. */
+  /** A paragraph in a right-to-left language: the margin and the base direction. */
   rightToLeft: { textAlign: 'right', writingDirection: 'rtl' },
+
+  /**
+   * A control's label, which is centred and only wants the base direction.
+   *
+   * `textAlign: 'right'` here would push *Roll* off the middle of its own
+   * button.
+   */
+  labelDirection: { writingDirection: 'rtl' },
+
+  /**
+   * A number in the grid, which is not prose and says so.
+   *
+   * Named rather than left out, because `reader.test.ts` requires every `Text`
+   * in this file to answer whether it follows the reader — an omission and a
+   * decision look identical otherwise, and this repository has now been caught
+   * six times by a list that stopped being complete.
+   */
+  geometry: { writingDirection: 'ltr' },
   field: {
     borderWidth: 1,
     borderColor: PALETTE.rule,

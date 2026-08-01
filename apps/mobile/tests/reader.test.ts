@@ -168,16 +168,106 @@ describe('the board is the game\'s direction, the text is the reader\'s', () => 
     expect(style('row'), 'derived from the reader').not.toContain('reading_direction');
   });
 
-  it('does lay the writing out in it', () => {
+  it('does lay the prose out in it', () => {
     // The other half of the same rule, and the reason this is not simply "no
-    // right-to-left anywhere": Arabic and Urdu are two of the twenty-two, and
-    // a field at the default puts their text against the wrong margin.
-    expect(APP).toContain("reading_direction === 'rtl' && styles.rightToLeft");
-    expect(APP).toContain('directionOf(language)');
+    // right-to-left anywhere": Arabic and Urdu are two of the twenty-two.
+    expect(code(APP)).toContain("directionOf(language)");
+    expect(code(APP)).toContain("reading_direction === 'rtl' ? styles.rightToLeft : null");
   });
 
   it('has a direction for every language a phone can now ask for', () => {
     const directions = new Set(LANGUAGES.map((language) => directionOf(language)));
     expect(directions, 'both, or the rule is untested').toEqual(new Set(['ltr', 'rtl']));
+  });
+});
+
+/**
+ * Prose follows the reader; geometry does not.
+ *
+ * The sentence is the mini app's, written down in `chrome.ts` a hundred passes
+ * ago, and it sets `dir` on the whole document so that every word it shows
+ * obeys it. This app obeyed **only the second clause**: the board was pinned to
+ * one direction, and the reader's direction reached the three boxes the player
+ * types into and not one word the game says.
+ *
+ * So the 72 plans and the entire rules book, in Arabic and Urdu, were laid out
+ * left to right — the teaching this app exists to deliver, ragged down the
+ * wrong margin, with each sentence's full stop on the wrong side of it. The
+ * comment written here one pass ago said *the fields already carry it* as
+ * though the fields were the text. They are where the player answers; the plan
+ * is what they are answering. Seventh sighting of a sentence naming the wrong
+ * thing, and the first that was mine.
+ *
+ * A screen has no `dir` to set, so this is the check that stands in for one.
+ */
+describe('every text on the screen answers whether it follows the reader', () => {
+  /** Each `<Text …>…</Text>`, opening tag and children. React Native's, not nested. */
+  const texts = [...code(APP).matchAll(/<Text\b([^>]*)>([\s\S]*?)<\/Text>/g)].map(
+    ([whole, open = '', children = '']) => ({ whole, open, children }),
+  );
+
+  it('finds the texts at all, or the rest of this proves nothing', () => {
+    // A regular expression that matched nothing would make every assertion
+    // below vacuously true — the shape this repository has been caught by
+    // before, where a check iterated an empty list and reported a pass.
+    expect(texts.length).toBeGreaterThan(10);
+  });
+
+  it('gives each one a direction, taken or declined', () => {
+    /**
+     * Three answers, and one of them must be present:
+     *
+     *   - `prose`  — a paragraph: the reader's margin and base direction;
+     *   - `label`  — a centred control: the base direction only, since
+     *                `textAlign: 'right'` would push *Roll* off its own button;
+     *   - `geometry` — a number in the grid, which is not prose and says so.
+     *
+     * Named rather than omitted, because an omission and a decision look
+     * identical in a stylesheet. `audit-drawings` made the same requirement of
+     * every disabled control for the same reason, after three passes in which a
+     * control was drawn shut and refused nothing.
+     */
+    for (const text of texts) {
+      const answered = /\b(prose|label|styles\.geometry)\b/.test(text.open);
+      expect(answered, `undecided: ${text.whole.replace(/\s+/g, ' ').slice(0, 90)}`).toBe(true);
+    }
+  });
+
+  it('gives the reader\'s own to everything written in the reader\'s language', () => {
+    /**
+     * The half that catches a wrong answer rather than a missing one. Anything
+     * whose words come from `@leela/content` — a plan, a chapter, an account,
+     * a message — is prose in the reader's language, and `geometry` on it would
+     * pass the check above while laying Arabic out left to right.
+     */
+    const reads = /messageFor\(|plan\.(title|body)|chapter\.(title|body)|entry\.text|\{line\}/;
+    const inReadersLanguage = texts.filter((text) => reads.test(text.children));
+
+    expect(inReadersLanguage.length, 'the screen shows content at all').toBeGreaterThan(5);
+    for (const text of inReadersLanguage) {
+      expect(
+        /\b(prose|label)\b/.test(text.open),
+        `not the reader's: ${text.whole.replace(/\s+/g, ' ').slice(0, 90)}`,
+      ).toBe(true);
+    }
+  });
+
+  it('keeps the board out of it', () => {
+    /**
+     * The other direction of the same rule, and the reason `geometry` is a name
+     * and not an absence: a square's number belongs to the grid, and the grid
+     * is the path itself.
+     *
+     * A cell is a text that is **nothing but** the number. Matching anything
+     * containing `{square}` caught the plan's heading too — `{square}. {plan
+     * .title}`, which is a number and then prose, and is prose.
+     */
+    const cells = texts.filter((text) => text.children.trim() === '{square}');
+
+    expect(cells.length, 'the board draws its numbers').toBeGreaterThan(0);
+    for (const cell of cells) {
+      expect(cell.open).toContain('styles.geometry');
+      expect(cell.open, 'a number is not prose').not.toMatch(/\bprose\b/);
+    }
   });
 });

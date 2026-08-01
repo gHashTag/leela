@@ -95,9 +95,16 @@ describe('every field, whatever it takes', () => {
      * puts their text against the wrong margin with the caret in the wrong
      * corner — and `directionOf` has been in `@leela/content` since the docs
      * needed it.
+     *
+     * `prose`, the same expression every paragraph on the screen carries. It
+     * used to be spelled out here — `reading_direction === 'rtl' &&
+     * styles.rightToLeft`, three times — which is how the fields came to be the
+     * only text in the app that had it: a thing written at each site is a thing
+     * the next site can be written without. `reader.test.ts` holds every `Text`
+     * to the same name.
      */
     for (const handle of ['intention', 'report', 'paste']) {
-      expect(field(handle), handle).toContain('styles.rightToLeft');
+      expect(field(handle), handle).toContain('prose');
     }
 
     expect(APP).toContain('directionOf(language)');
