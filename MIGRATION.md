@@ -5251,6 +5251,46 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A first visit announced as a return (188th pass).** Played a game and printed
+the system prompt the model actually received, which no unit test can do: they
+build a context by hand, and the defect was in what the caller assembles.
+
+The prompt said:
+
+```
+They have stood here before, and wrote:
+70. Sattvaguna — account 24: what this square asked of me…
+```
+
+One account, and the preamble says *before*. Three call sites hand the companion
+a path — the report gate, a handed-over square, and `/ask` — and the first two
+take out the words they are about to answer, with the reason written beside
+them: *so the companion is not handed the words it is about to answer as though
+they were already history*. `/ask` took none out. So a player who arrived
+somewhere, wrote about it because the game requires that before anything else,
+and then asked a question had their own minutes-old account announced as a
+return, under a paragraph asking the model to notice *what changed between the
+tellings* — of which there was one. Ninth sighting of a sentence naming the
+wrong thing, and the first inside a model's instructions.
+
+`/ask` has no text to filter by, so the rule is asked a different way: the newest
+account on the square being stood on, and only once `reportSubmitted` says this
+arrival has been written about. A player who asks **before** writing still gets a
+real return, which is the whole reason that section exists.
+
+**An existing test encoded the defect.** *carries what the player wrote before,
+when they ask about a square* filed an account on the square being stood on and
+asserted the prompt contained it. Its rule was right and its example was the one
+case where the entry must not appear; it reports on a square, moves on, and then
+asks now.
+
+**And the second revert did not bite until the test was fixed.** Cutting the
+entry unconditionally passed everything, because reaching a genuine return takes
+a played game — and the first attempt never moved at all: the bot has refused a
+throw without an intention since the 179th pass, and the loop had not answered
+one. A test that cannot reach the case proves the case is unreachable in the
+test, and nothing else.
+
 **The end still owed an account, and said nothing about it (187th pass).**
 Played a solo game the whole way to 68 and read every line. The closing three:
 

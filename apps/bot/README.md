@@ -300,3 +300,27 @@ complete* — so the sentence had somewhere to point all along.
 `onchain` is the guard: it sets `reportOnWinningSquare: false`, because an
 on-chain winner is out of play and `createReport` requires `isStart`, so they
 could not file one if asked. A game under it ends without the instruction.
+
+## What the companion is told about a return
+
+Three call sites hand the companion a player's path: the report gate, a
+handed-over square, and `/ask`. The first two take out the words they are about
+to answer, and say why in as many words — *so the companion is not handed the
+words it is about to answer as though they were already history*. `/ask` took
+none out.
+
+So a player who arrived on a square, wrote about it because the game requires
+that before anything else, and then asked a question had their own minutes-old
+account announced to the model as **They have stood here before, and wrote:** —
+under a paragraph asking it to notice *what changed between the tellings*, of
+which there was one.
+
+Found by playing a game and printing the system prompt the model actually
+received. No unit test could see it: they build a context by hand, and the
+defect is in what the caller assembles.
+
+`/ask` has no text to filter by, so the rule is asked a different way — the
+newest account on the square being stood on, and only once `reportSubmitted`
+says this arrival has been written about. A player who asks **before** writing
+still gets a real return, which is the whole reason that section exists: the
+eight-most-recent window is structurally unable to see it.

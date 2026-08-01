@@ -1025,6 +1025,11 @@ describe('a question sees what a report sees', () => {
    */
 
   it('carries what the player wrote before, when they ask about a square', () => {
+    /**
+     * The account has to be about a square they have *left*. Written on the
+     * square they are standing on, it is not path — it is this arrival, and the
+     * test below is what happens when it is passed as though it were.
+     */
     const recorder = recordingModel('an answer');
     const guide = new Guide({ model: recorder, log: () => undefined });
     const reports = new MemoryReportSink();
@@ -1037,11 +1042,103 @@ describe('a question sees what a report sees', () => {
       await bot.handleUpdate(
         message('/report the first account, long enough to count as one', PRIVATE),
       );
+      // And on, so that the account is behind them.
+      await bot.handleUpdate(message('/roll', PRIVATE));
 
       await bot.handleUpdate(message('/ask what does this ask of me?', PRIVATE));
 
       const prompt = String(recorder.calls.at(-1)?.messages?.[0]?.content ?? '');
       expect(prompt).toContain('the first account');
+    })();
+  });
+
+  it('does not offer this arrival\'s own account as a return', () => {
+    /**
+     * Found by reading the prompt of a real game. The report gate and the
+     * handed-over square both take out the words they are about to answer —
+     * *so the companion is not handed the words it is about to answer as
+     * though they were already history* — and `/ask` took none out.
+     *
+     * So a player who arrived on a square, wrote about it because the game
+     * requires that before anything else, and then asked a question, had their
+     * own minutes-old account announced to the model as **They have stood here
+     * before, and wrote:** — under a paragraph asking it to notice *what
+     * changed between the tellings*, of which there was one.
+     */
+    const recorder = recordingModel('an answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    return (async () => {
+      await bot.handleUpdate(message('/new', PRIVATE));
+      await bot.handleUpdate(message('/start', PRIVATE));
+      await rollUntilTheGate(bot, sent);
+      await bot.handleUpdate(
+        message('/report the account of this very arrival, long enough to count', PRIVATE),
+      );
+
+      await bot.handleUpdate(message('/ask what does this ask of me?', PRIVATE));
+
+      const prompt = String(recorder.calls.at(-1)?.messages?.[0]?.content ?? '');
+
+      expect(prompt, 'a first visit is not a return').not.toContain('stood here before');
+      expect(prompt, "and this arrival's words are not path").not.toContain(
+        'the account of this very arrival',
+      );
+      expect(prompt, 'the square itself is still what the answer rests on').toMatch(
+        /The player is on plan \d+/,
+      );
+    })();
+  });
+
+  it('still offers a real return, when this arrival has not been written about', () => {
+    /**
+     * The other half. What comes out is the account for *this* arrival, and
+     * only once the gate says there is one — so a player who lands on a square
+     * they have stood on before and asks **before** writing must still be met
+     * with what they said last time. That is the whole reason the returns
+     * section exists: the eight-most-recent window cannot see it.
+     */
+    const recorder = recordingModel('an answer');
+    const guide = new Guide({ model: recorder, log: () => undefined });
+    const { bot, sent } = harness({ guide, reports: new MemoryReportSink() });
+
+    return (async () => {
+      await bot.handleUpdate(message('/new', PRIVATE));
+      await bot.handleUpdate(message('/start', PRIVATE));
+      // The die will not turn without one.
+      await bot.handleUpdate(message('/intention to see what I keep avoiding', PRIVATE));
+
+      const written = new Map<number, string>();
+
+      for (let turn = 0; turn < 200; turn += 1) {
+        const before = sent.length;
+        await bot.handleUpdate(message('/roll', PRIVATE));
+        const said = texts(sent.slice(before)).join(' ');
+
+        const standing = /standing on (\d+)\./.exec(said);
+        if (!standing) continue;
+
+        const plan = Number(standing[1]);
+        const earlier = written.get(plan);
+
+        if (earlier) {
+          // Back on a square already written about, and nothing filed yet for
+          // this arrival.
+          await bot.handleUpdate(message('/ask what has changed?', PRIVATE));
+          const prompt = String(recorder.calls.at(-1)?.messages?.[0]?.content ?? '');
+
+          expect(prompt, 'the earlier account is what a return is').toContain(earlier);
+          expect(prompt).toContain('stood here before');
+          return;
+        }
+
+        const account = `the account of plan ${plan}, long enough to count as one`;
+        written.set(plan, account);
+        await bot.handleUpdate(message(`/report ${account}`, PRIVATE));
+      }
+
+      throw new Error('no square came back in 200 turns');
     })();
   });
 

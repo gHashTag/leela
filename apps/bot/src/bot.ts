@@ -90,6 +90,25 @@ function chatIdOf(ctx: Context): string | null {
   return ctx.chat ? String(ctx.chat.id) : null;
 }
 
+/**
+ * A player's path with the account for their current arrival taken out.
+ *
+ * `history` is newest first, so the first entry on the square they are standing
+ * on is the one this arrival produced — when there is one. `reportSubmitted` is
+ * the gate's own answer to *has this arrival been written about*, so this asks
+ * the question rather than inferring it from a timestamp.
+ */
+function behind<T extends { plan: number }>(
+  history: ReadonlyArray<T>,
+  plan: number,
+  filedThisArrival: boolean,
+): T[] {
+  if (!filedThisArrival) return [...history];
+
+  const at = history.findIndex((entry) => entry.plan === plan);
+  return at === -1 ? [...history] : [...history.slice(0, at), ...history.slice(at + 1)];
+}
+
 export function createBot({
   token,
   store = new MemoryRoomStore(),
@@ -817,16 +836,30 @@ export function createBot({
       return;
     }
 
-    // The path, as the report gate already passes it. Without it the companion
-    // answering a *question* was blind to everything the same companion sees
-    // when answering a report — including, since the eighty-eighth pass, what
-    // this player wrote the last times they stood on this very square.
+    /**
+     * The path, as the report gate already passes it — **minus the account
+     * this arrival has already produced.**
+     *
+     * Without the path at all, the companion answering a *question* was blind
+     * to everything the same companion sees when answering a report, including
+     * what this player wrote the last times they stood on this very square.
+     * With the whole of it, the account they wrote *on this arrival* went in
+     * too, and `summariseReturns` announced it: **They have stood here before,
+     * and wrote:** — about words from minutes ago — under a paragraph asking
+     * the model to notice *what changed between the tellings*, of which there
+     * was one.
+     *
+     * The report gate and the handed-over square both take out the words they
+     * are about to answer, and say so in as many words. This is the same rule,
+     * asked a different way: `/ask` has no text to filter by, so what comes out
+     * is the newest account on this square, and only once the gate says this
+     * arrival has been written about.
+     */
     const journey =
       reports.history && guide.status().available
-        ? (await reports.history(who.id)).reverse().map((entry) => ({
-            plan: entry.plan,
-            text: entry.text,
-          }))
+        ? behind(await reports.history(who.id), seat.state.loka, seat.reportSubmitted)
+            .reverse()
+            .map((entry) => ({ plan: entry.plan, text: entry.text }))
         : undefined;
 
     const reflection = await guide.answer(question, {
