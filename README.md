@@ -188,7 +188,7 @@ cd packages/engine && bun test
 | Package | Tests | State |
 |---|---|---|
 | `@leela/engine` | 334 | rules, four variants, sessions, turn gating, seeded dice |
-| `@leela/content` | 267 | 22 languages of plans, 2 of the game's own voice |
+| `@leela/content` | 269 | 22 languages of plans, 2 of the game's own voice |
 | `@leela/journal` | 54 | the path as a file, and what came back — shared by the bot and the mini app |
 | `@leela/db` | 101 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 165 | the companion — prompts built from the plan text |

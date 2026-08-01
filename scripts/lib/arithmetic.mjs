@@ -204,3 +204,45 @@ export function falseClaimsIn(plans) {
 export function keyOf(language, claim) {
   return `${language}/${claim.plan}: ${claim.said}`;
 }
+
+/**
+ * The sums whose multiplication sign the machine translation ate, each with the
+ * reading of what it did — not a calculation, which is why none is repaired
+ * here.
+ *
+ * `ms/8: 8 80 = 80 = 8` — the English is `8x10=80, 8+0=8`. The `10` is not in
+ * the line at all; `80` stands where it should be.
+ * `ar/8: 8 9 9 = 72` — three numbers for a two-operand claim. `8x9=72`, so one
+ * `9` is the sign read as a digit.
+ * `ar/8: 81 10 = 80 = 8` — `81` has to become `8` before the rest reads; the
+ * `1` is where the sign was.
+ *
+ * Kept as data rather than as three literals in the audit and three more in a
+ * test, because a record written twice is a record that will disagree with
+ * itself. Held to `staleRecords` below.
+ */
+export const OPERATORLESS_RECORDED = [
+  'ms/8: 8 80 = 80 = 8',
+  'ar/8: 8 9 9 = 72',
+  'ar/8: 81 10 = 80 = 8',
+];
+
+/**
+ * Records that no longer match anything in the shipped text.
+ *
+ * A record excuses a defect. Once the defect is gone the excuse is still
+ * granted, and the next sum that happens to read the same way is waved through
+ * by a licence issued for something else. That is the same failure this
+ * repository already wrote down about editions: *nothing found* and *nothing
+ * looked for* print the same sentence, so a check that cannot tell them apart
+ * is agreeing by luck.
+ *
+ * Deliberately not "the found set equals the recorded set" — that would be one
+ * comparison answering two questions. An unrecorded defect is work for a
+ * translator; a record with nothing behind it is work for whoever keeps this
+ * list, and telling somebody the wrong one is how a check gets switched off.
+ */
+export function staleRecords(recorded, found) {
+  const present = new Set(found);
+  return recorded.filter((line) => !present.has(line));
+}

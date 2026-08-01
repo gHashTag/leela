@@ -34,7 +34,9 @@ import {
   factorisationsIn,
   falseClaimsIn,
   keyOf,
+  OPERATORLESS_RECORDED,
   operatorlessClaimsIn,
+  staleRecords,
 } from './lib/arithmetic.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -88,7 +90,7 @@ const RECORDED = [];
  *
  * Recorded, named on every run, and a fifth fails the audit.
  */
-const OPERATORLESS = ['ms/8: 8 80 = 80 = 8', 'ar/8: 8 9 9 = 72', 'ar/8: 81 10 = 80 = 8'];
+const OPERATORLESS = OPERATORLESS_RECORDED;
 
 const languages = readdirSync(DATA)
   .filter((file) => file.startsWith('plans.') && file.endsWith('.json'))
@@ -120,6 +122,10 @@ for (const language of languages) {
 const known = new Set(RECORDED);
 const fresh = found.filter(({ line }) => !known.has(line));
 const newlyBroken = broken.filter(({ line }) => !new Set(OPERATORLESS).has(line));
+// A record excuses a defect; once the defect is gone the excuse is still
+// granted, and the next sum that reads the same way is waved through on a
+// licence issued for something else.
+const stale = staleRecords(OPERATORLESS, broken.map(({ line }) => line));
 
 console.log(
   `\nChecked ${equations} sums in ${languages.length} languages, and every plan for a sum whose operator is gone.\n`,
@@ -138,13 +144,22 @@ if (broken.length > 0) {
   console.log('');
 }
 
-if (fresh.length === 0 && newlyBroken.length === 0) {
+if (fresh.length === 0 && newlyBroken.length === 0 && stale.length === 0) {
   console.log('No sum is wrong or unreadable that was not already written down.');
 } else {
   if (fresh.length > 0) {
     console.log('\nAnd these sums are new:\n');
     for (const { line, claim } of fresh) console.log(`  ${line}  —  ${claim.faults.join('; ')}`);
     console.log('\nA sum is true or false in every language at once. This one is false.');
+  }
+  if (stale.length > 0) {
+    console.log('\nAnd these records no longer match anything:\n');
+    for (const line of stale) console.log(`  ${line}`);
+    console.log(
+      '\nA record grants an excuse. Once what it names is gone the excuse is still\n' +
+        'granted, and the next sum that reads the same way passes on a licence issued\n' +
+        'for something else. Delete the record in the same change that repairs the sum.',
+    );
   }
   if (newlyBroken.length > 0) {
     console.log('\nAnd these have lost their operator:\n');

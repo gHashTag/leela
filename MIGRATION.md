@@ -5512,6 +5512,32 @@ left of an `=` — a left side is one number or an expression, never two numbers
 side by side — and across 22 languages and 1,584 plans it matches four times,
 all four of them this.
 
+**A record that outlives its reason (159th pass).** The three operator-less
+sums are recorded so the audit does not fail on them, and nothing ever asked
+whether a record still matched anything. Repair one and the excuse stays: the
+next sum that reads the same way passes on a licence issued for something else.
+This repository had already written the principle down one section above, about
+editions — *nothing found* and *nothing looked for* print the same sentence — and
+then granted three permanent exemptions without it.
+
+The list lives in `lib/arithmetic.mjs` now as `OPERATORLESS_RECORDED`, read by
+both the audit and the test, because a record written in two places is a record
+that will disagree with itself. `staleRecords` answers the new question, and it
+is deliberately not *the found set equals the recorded set*: an unrecorded
+defect is work for a translator and a stale record is work for whoever keeps the
+list, and one comparison answering both sends somebody to fix the wrong thing.
+
+The test that enumerated the three lines is gone. It asserted the cases, not the
+shape, and it was the second copy of the list — the day one was repaired, the
+two would have disagreed and the failure would have been a string comparison
+saying nothing about why. What is asserted now is that no record is stale and no
+defect is unrecorded, which is true of a list of three and of a list of none.
+
+Proven by breaking, in both directions: repairing `ms/8` fails the audit with
+*these records no longer match anything* and fails the test that grants no
+excuse; adding an unrecorded `7 7 = 49` to Ukrainian fails the other one. Before
+this pass the first of those two was silent.
+
 **A rule was tried and thrown away**, and it matters which one. Comparing the
 rows a translation carries against the rows both editions carry reports `ar/8`
 and `ms/8` as having *lost* `8x9` and `8x10`; they have not, and a check that

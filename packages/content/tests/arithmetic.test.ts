@@ -6,6 +6,10 @@ import {
   factorisationsIn,
   falseClaimsIn,
   operatorlessIn,
+  OPERATORLESS_RECORDED,
+  keyOf,
+  operatorlessClaimsIn,
+  staleRecords,
   // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 } from '../../../scripts/lib/arithmetic.mjs';
 
@@ -131,15 +135,42 @@ describe('the shipped text, held to what the audit records', () => {
   const bodyOf = (language: string, plan: number) =>
     plansFor(language).find((entry) => entry.plan === plan)?.body ?? '';
 
-  it('has the three broken sums the audit names, and no more', () => {
-    // The guard against a record outliving its reason, and against a fourth
-    // arriving unseen — the audit fails on a new one and this says which three.
-    const all = Object.fromEntries(
-      ['ms', 'ar'].map((language) => [language, operatorlessIn(bodyOf(language, 8))]),
+  // What is asserted here is the shape of the record, not its contents. Naming
+  // the three lines again would put the same list in a second place, and the
+  // day one of them is repaired the two disagree — with the test failing on a
+  // string comparison that says nothing about why.
+  const foundNow = () =>
+    ['ms', 'ar', 'uk', 'en', 'ru'].flatMap((language) =>
+      operatorlessClaimsIn(
+        plansFor(language).map((plan) => ({ plan: plan.plan, body: plan.body })),
+      ).map((claim: { plan: number; said: string }) => keyOf(language, claim)),
     );
 
-    expect(all.ms).toEqual(['8 80 = 80 = 8']);
-    expect(all.ar).toEqual(['8 9 9 = 72', '81 10 = 80 = 8']);
+  it('grants no excuse for a defect that is gone', () => {
+    // A record excuses a sum the audit would otherwise fail on. Once the sum is
+    // repaired the excuse is still granted, and the next one that reads the
+    // same way passes on a licence issued for something else. Repairing a
+    // recorded sum must therefore fail the audit until the record goes with it.
+    expect(staleRecords(OPERATORLESS_RECORDED, foundNow())).toEqual([]);
+  });
+
+  it('records every operator-less sum the shipped text carries', () => {
+    // The other direction, and a separate question: an unrecorded defect is
+    // work for a translator, a stale record is work for whoever keeps the list.
+    // One comparison answering both is how somebody is sent to fix the wrong
+    // thing.
+    expect(foundNow().filter((line: string) => !OPERATORLESS_RECORDED.includes(line))).toEqual([]);
+  });
+
+  it('sees a record go stale, which is the whole point of asking', () => {
+    // The check proved against a case it can actually be wrong about: a green
+    // result from a list nobody could falsify is the absence this file exists
+    // to distinguish from a pass.
+    expect(staleRecords(['ms/8: 8 80 = 80 = 8'], ['ms/8: 8 80 = 80 = 8'])).toEqual([]);
+    expect(staleRecords(['ms/8: 8 80 = 80 = 8'], ['ms/8: 8x10 = 80 = 8'])).toEqual([
+      'ms/8: 8 80 = 80 = 8',
+    ]);
+    expect(staleRecords(['ms/8: 8 80 = 80 = 8'], [])).toEqual(['ms/8: 8 80 = 80 = 8']);
   });
 
   it('reads the sum that was repaired, and finds it true', () => {
