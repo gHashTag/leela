@@ -186,6 +186,22 @@ export interface StartingOver {
   game: Game;
   /** Whether it happened. A refused act changes nothing and says nothing. */
   begun: boolean;
+  /**
+   * Whether the question goes with it.
+   *
+   * A new game is a new question. This screen carried the last one forward:
+   * the board was emptied, the seed replaced so no draft could survive it —
+   * and the sentence the finished game was played to answer stood over the new
+   * one, with the gate before the first throw already open on it, so a player
+   * beginning again was never asked what they were beginning for.
+   *
+   * The bot reached the same place by a different route and answered it the
+   * same way: `/end` lets go of the question with the game. Said here rather
+   * than done here, because the question is on the device and in the screen's
+   * own state and this file holds neither — but the *decision* is the game's,
+   * and a screen that had to decide it would decide it differently.
+   */
+  askAgain: boolean;
 }
 
 /**
@@ -207,7 +223,11 @@ export interface StartingOver {
  * being written about the winning square reappear in the game that replaced it.
  */
 export function startOver(game: Game, seed: number): StartingOver {
-  if (!isOver(game)) return { game, begun: false };
+  if (!isOver(game)) return { game, begun: false, askAgain: false };
 
-  return { game: newGame(seed === game.seed ? seed + 1 : seed, game.rules), begun: true };
+  return {
+    game: newGame(seed === game.seed ? seed + 1 : seed, game.rules),
+    begun: true,
+    askAgain: true,
+  };
 }

@@ -813,6 +813,28 @@ export default function App() {
               if (!over.begun) return;
 
               setGame(over.game);
+
+              // A new game is a new question. The board was emptied and the
+              // seed replaced so no draft could survive it, and the sentence
+              // the finished game was played to answer stood over the new one
+              // — with the gate before the first throw already open on it, so
+              // nobody beginning again was asked what they were beginning for.
+              // Both places it is held, because a question cleared in one and
+              // kept in the other comes back at the next launch.
+              if (over.askAgain) {
+                setIntention('');
+                setAsking('');
+                saveIntention(store, '');
+
+                // Whether the device took the clearing is not said here, and
+                // that is the smaller loss: the screen is already asking again,
+                // and the answer they give writes over the old one on both
+                // sides. A refusal costs them only the question coming back if
+                // they close the app before answering — which is what happened
+                // on every restart until now.
+                void keepIntention(intentionKeeper, '');
+              }
+
               // The line under the board still said whatever the last act said
               // — including *Written. You may throw.* over a board that had
               // just been emptied.

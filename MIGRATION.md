@@ -5251,6 +5251,30 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Beginning again kept the question of the game just ended (199th pass).**
+`startOver` replaces the board and refuses to hand back the seed it was given —
+written down, and argued for: *what was being written about the winning square*
+must not reappear in the game that replaced it. The sentence the finished game
+was **played to answer** survived all of it. It stood over the new game, and the
+gate before the first throw — the one this app was given because it let a player
+straight to the die — was already open on it, so nobody beginning again was ever
+asked what they were beginning for.
+
+The bot reached the same place from the other end two passes ago and answered it
+the same way: `/end` lets go of the question along with the game. The decision is
+the game's, so `StartingOver` says it — `askAgain` — and the screen clears the
+question in both places it is held, because one cleared and one kept comes back
+at the next launch. The box the question is typed into is cleared too: left as
+it was, the new game opens with the old sentence in the field, one tap from
+being answered again by accident.
+
+**And a defect I did not report, because it was not there.** The report box
+looked unguarded: it is drawn from the length of the text alone, and
+`takeAccount` files against `standingOn`, which is the parking square for a
+player who has not entered. Both true, and neither reachable — the whole writer
+block is inside `owesAnAccount(game)`, so the box does not exist in either state.
+Checked before claiming; the surface is protected by where it is drawn.
+
 **The last act of a finished game was a crash (198th pass).** Played a game
 through `apps/mobile`'s own functions until it ended, and then asked the two
 questions the screen asks. On Cosmic Consciousness `mayThrow` answered **yes**

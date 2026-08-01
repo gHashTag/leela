@@ -8,6 +8,7 @@ import { CLASSIC, ONLINE } from '@leela/engine';
 import {
   fileReport,
   isOver,
+  mayThrow,
   newGame,
   owesAnAccount,
   standingOn,
@@ -194,5 +195,90 @@ describe('the line under the board', () => {
      * just been emptied — the mini app's 97th-pass defect, in a new place.
      */
     expect(APP).toContain("setSaid(messageFor(language, 'app.restarted'))");
+  });
+});
+
+describe('beginning again is beginning with the question too', () => {
+  /**
+   * The board was emptied and the seed replaced so that nothing being written
+   * about the winning square could survive into the game that replaced it. The
+   * sentence the finished game was *played to answer* survived all of it: it
+   * stood over the new game, and the gate before the first throw — the one this
+   * app was given because it let a player straight to the die — was already
+   * open on it. Nobody beginning again was asked what they were beginning for.
+   *
+   * The bot reached the same place from the other end and answered it the same
+   * way: `/end` lets go of the question along with the game.
+   */
+  const finished = (): Game => {
+    let game = newGame(1_700_000_000_000);
+    const intention = 'to see what I keep avoiding';
+
+    for (let turn = 0; turn < 500 && !isOver(game); turn += 1) {
+      if (mayThrow(game, intention, 1_700_000_000_000) !== 'yes') {
+        if (!owesAnAccount(game)) break;
+        game = fileReport(game);
+        continue;
+      }
+      game = throwDie(game, intention).game;
+    }
+
+    return game;
+  };
+
+  it('says the question goes with the game', () => {
+    const over = startOver(finished(), 4_242);
+
+    expect(over.begun).toBe(true);
+    expect(over.askAgain).toBe(true);
+  });
+
+  it('says nothing of the kind when the act is refused', () => {
+    // A game still being played is not begun again, and a screen that cleared
+    // the question on a refused act would empty it mid-game.
+    const running = newGame(1_700_000_000_000);
+    const refused = startOver(running, 4_242);
+
+    expect(refused.begun).toBe(false);
+    expect(refused.askAgain, 'nothing happened, so nothing is let go of').toBe(false);
+    expect(refused.game).toBe(running);
+  });
+
+  it('leaves the new game unable to throw until it is asked again', () => {
+    /**
+     * The shape rather than the flag: whatever the screen does with `askAgain`,
+     * a game begun again with no question must refuse the die — which is the
+     * behaviour the gate has always had and the one the old question was
+     * hiding.
+     */
+    const over = startOver(finished(), 4_242);
+
+    expect(mayThrow(over.game, '', 1_700_000_000_000)).toBe('no-intention');
+    expect(mayThrow(over.game, 'a question for the new game', 1_700_000_000_000)).toBe('yes');
+  });
+});
+
+describe('the screen lets go of it in both places', () => {
+  /**
+   * A question cleared in the session's own store and left on the device comes
+   * back at the next launch — the reason the screen writes to both when one is
+   * answered, and the reason it has to clear both when the game is begun again.
+   */
+  const RESTART = APP.slice(APP.indexOf('const over = startOver('), APP.indexOf("'app.restarted'"));
+
+  it('clears what it holds and what the device holds', () => {
+    expect(RESTART).toContain("setIntention('')");
+    expect(RESTART).toContain("saveIntention(store, '')");
+    expect(RESTART).toContain("keepIntention(intentionKeeper, '')");
+  });
+
+  it('clears the box the question is typed into as well', () => {
+    // `asking` is what the field shows. Left as it was, the new game opens with
+    // the old sentence typed in, one tap from being answered again by accident.
+    expect(RESTART).toContain("setAsking('')");
+  });
+
+  it('does it only when the act happened', () => {
+    expect(RESTART).toMatch(/if \(over\.askAgain\)/);
   });
 });
