@@ -5251,6 +5251,40 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**The audit could not see the drawer it was standing next to (183rd pass).**
+`audit-unread` searches `scripts` for *readers* and scans only `.tsx?` for
+*declarations* — so an export in `scripts/lib/*.mjs` had no way of ever being
+reported. The waiver list already named a dozen of them (`declaredFields`,
+`readsOf`, `auditBoard`, `extractBoards`…), every one written by hand for a name
+the audit could not have found.
+
+Proved by walking into it: two exports were added to `scripts/lib/source.mjs`
+one pass ago and **nothing said a word**. Widened to scan `scripts/lib`, and the
+first run reported three — the two new ones and `brokenSomewhere` in
+`promises.mjs`, a one-line wrapper over `windowsBreaking` with no caller
+anywhere, sitting there unnoticed.
+
+This is the same blind spot for the third time: a package left out of a
+hand-written list (`packages/journal/src`), a file extension nobody had thought
+of (`.tsx`, the day a React screen arrived), and now a directory scanned for one
+question and not the other. Each was found by something new walking into it,
+which is a poor way to find them and the only one that has worked.
+
+`statementAt` was mine, written a pass ago for a caller that never came: removed
+rather than waived, which is what the audit's own sentence says to do.
+`brokenSomewhere` removed. `callsTo` waived with the true reason — its consumers
+are the checks that read source, and those are tests, which this audit does not
+search.
+
+**And `callsTo` had a live one waiting.** `reader.test.ts` matched
+`resolveLanguage\(([^)]*)\)` over the screen and captured **`deviceLocale(`** —
+the call truncated at the bracket inside it — then asserted that the truncation
+did not begin with a quote. It passed, on a reading of half a call, which is the
+fourth sighting of that mistake and the first that was still live. Both it and
+the bot's roll check read their calls by counting brackets now, and the
+truncation is written down as its own case so the next reader can see what the
+pattern saw.
+
 **Nine checks were one comment away from asserting nothing (182nd pass).** A
 dozen tests here read source rather than behaviour — every control carries a
 name, a decision is asked and not written twice, no sentence is spelled into a

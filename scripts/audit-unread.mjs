@@ -262,10 +262,31 @@ const PUBLIC_API = {
   playerUpdateFromState: 'writes a players row; for a client that is not the bot',
   ruleChapter: 'one rules chapter by slug, for a reader that wants one',
   validatePosition: 'the old GameService name, delegating to isOnBoard',
+  // The shared way to read a source file. Its consumers are the checks that do
+  // — `reader.test.ts` and `asked.test.ts` — and this audit searches sources
+  // rather than tests, so a check is a caller it cannot see.
+  callsTo: 'used by the checks that read source, which are tests',
 };
 
+/**
+ * Where an export is a contract, which is not only TypeScript.
+ *
+ * Fields are read from `.tsx?` alone, and the reason is written above: an
+ * object literal in a script is configuration. An **export** is not. The shared
+ * modules under `scripts/lib` are libraries with real consumers — `whose.mjs`
+ * by `audit-whose.mjs`, `paragraphs.mjs` by the content generator — and the
+ * waiver list below already names a dozen of them.
+ *
+ * It named them by hand, because this line read `.tsx?` and the audit could
+ * never have reported one. Two exports were added to `scripts/lib/source.mjs`
+ * with no caller but their own test and nothing said a word — the same blind
+ * spot this audit has now been widened for three times: a package left out of a
+ * hand-written list, a `.tsx` extension nobody had thought of, and this.
+ */
+const declaresExports = (file) => /\.tsx?$/.test(file) || /scripts\/lib\/[^/]+\.mjs$/.test(file);
+
 const exportDeclarations = files.flatMap((file, index) =>
-  /\.tsx?$/.test(file) ? declaredExports(sources[index], relative(ROOT, file)) : [],
+  declaresExports(file) ? declaredExports(sources[index], relative(ROOT, file)) : [],
 );
 
 /**

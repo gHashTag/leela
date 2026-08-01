@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 // Shared with the audit scripts, which are plain JavaScript.
-import { blank } from '../../../scripts/lib/source.mjs';
+import { blank, callsTo } from '../../../scripts/lib/source.mjs';
 import { messageFor } from '@leela/content';
 import { currentPlayer } from '@leela/engine';
 import { openRoom, roll, start, type Room } from '../src/commands';
@@ -115,15 +115,17 @@ describe('the gate is asked where the die is turned', () => {
      * *can* read a question must always hand it over, at both the command and
      * the button.
      */
-    // To the end of the line rather than to the first `)`: `now()` closes one,
-    // and a pattern that stops there reads the call as taking three arguments.
-    // Third time a balanced-parenthesis assumption has reported a defect in
-    // code that was right.
-    const rolls = BOT.split('\n').filter((line) => line.includes('commands.roll('));
+    /**
+     * By counting brackets, not by splitting lines. `now()` closes a bracket
+     * inside the argument list, and the line split was itself a workaround —
+     * one that a call written across two lines defeats. `callsTo` is the shared
+     * answer, written down after four checks got this wrong in one night.
+     */
+    const rolls = callsTo(BOT, 'commands.roll');
 
     expect(rolls.length, 'the bot rolls somewhere').toBeGreaterThan(1);
-    for (const line of rolls) {
-      expect(line.trim(), 'a roll with no question read for it').toMatch(/asked/);
+    for (const { args } of rolls) {
+      expect(args, 'a roll with no question read for it').toMatch(/asked/);
     }
   });
 

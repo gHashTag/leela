@@ -161,10 +161,6 @@ export function blocksIn(source) {
   return blocks.length > 0 ? blocks : [source];
 }
 
-export function brokenSomewhere(point, tests, hostileShapes) {
-  return windowsBreaking(point, tests, hostileShapes).length > 0;
-}
-
 /** The stretches of test source where this member is handed a broken one. */
 export function windowsBreaking(point, tests, hostileShapes) {
   const named = new RegExp(`\\b${point.property}\\b`);

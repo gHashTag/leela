@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 // Shared with the audit scripts, which are plain JavaScript.
-import { blank as code } from '../../../scripts/lib/source.mjs';
+import { blank as code, callsTo } from '../../../scripts/lib/source.mjs';
 import { FALLBACK_LANGUAGE, LANGUAGES, directionOf, resolveLanguage } from '@leela/content';
 
 /**
@@ -47,11 +47,11 @@ describe('the reader is asked, not assumed', () => {
      * documented way to say *I have no locale*, and it silently answers
      * English.
      */
-    const calls = [...code(APP).matchAll(/resolveLanguage\(([^)]*)\)/g)].map(([, argument]) => argument);
+    const calls = callsTo(APP, 'resolveLanguage');
 
     expect(calls.length, 'the screen resolves a language at all').toBeGreaterThan(0);
-    for (const argument of calls) {
-      expect(argument.trim(), 'resolveLanguage argument').not.toMatch(/^(undefined|null|'|")/);
+    for (const { args } of calls) {
+      expect(args.trim(), 'resolveLanguage argument').not.toMatch(/^(undefined|null|'|")/);
     }
   });
 

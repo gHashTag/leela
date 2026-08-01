@@ -15,4 +15,3 @@ export interface Call {
 
 export function blank(source: string): string;
 export function callsTo(source: string, name: string): Call[];
-export function statementAt(source: string, index: number): string;

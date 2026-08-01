@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 // Shared with the audit scripts, which are plain JavaScript.
-import { blank, callsTo, statementAt } from '../../../scripts/lib/source.mjs';
+import { blank, callsTo } from '../../../scripts/lib/source.mjs';
 
 /**
  * Reading a source file in a check.
@@ -105,6 +105,21 @@ describe('finding a call', () => {
     expect(() => callsTo('roll(a, b', 'roll')).toThrow(/never closed/);
   });
 
+  it('reads what a regular expression read short', () => {
+    /**
+     * The live one, and the reason this exists rather than being written for a
+     * rainy day. `reader.test.ts` matched `resolveLanguage\(([^)]*)\)` over the
+     * screen and captured **`deviceLocale(`** — the call truncated at the
+     * bracket inside it — then asserted that the truncation did not start with
+     * a quote. It passed, on a reading of half a call.
+     */
+    const source = 'const language = resolveLanguage(deviceLocale());';
+    const short = [...source.matchAll(/resolveLanguage\(([^)]*)\)/g)].map(([, args]) => args);
+
+    expect(short, 'what the pattern read').toEqual(['deviceLocale(']);
+    expect(callsTo(source, 'resolveLanguage')[0].args, 'what is written').toBe('deviceLocale()');
+  });
+
   it('finds the real calls in the real screen', () => {
     // Over the file rather than a fixture: a helper that works on examples and
     // not on the thing it was written for is worth nothing.
@@ -112,17 +127,6 @@ describe('finding a call', () => {
 
     expect(kept.length).toBeGreaterThan(0);
     for (const call of kept) expect(call.args).toContain('draftKeeper');
-  });
-});
-
-describe('the statement a reference sits in', () => {
-  it('runs to the semicolon and no further', () => {
-    const source = 'const a = one();\nconst b = two();';
-    expect(statementAt(source, source.indexOf('one'))).toBe('one()');
-  });
-
-  it('runs to the end when there is no semicolon left', () => {
-    expect(statementAt('one()', 0)).toBe('one()');
   });
 });
 

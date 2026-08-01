@@ -92,17 +92,3 @@ export function callsTo(source, name) {
 
   return calls;
 }
-
-/**
- * The statement a position sits in: from there to the next `;`.
- *
- * Enough for *is this reference part of a call that also mentions X*, which is
- * what the checks ask. Not a parser, and not pretending to be one — a caller
- * that needs a block should say so and read the braces itself.
- */
-export function statementAt(source, index) {
-  const code = blank(source);
-  const end = code.indexOf(';', index);
-
-  return code.slice(index, end === -1 ? code.length : end);
-}
