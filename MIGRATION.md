@@ -5202,7 +5202,62 @@ square* and was the nearest key to hand; using it would have been the same
 defect this repository has now met four times — a sentence that names the wrong
 thing because it was the one already written.
 
-Still to bring across from `leela`: RevenueCat, notifee and Sentry.
+**And it spoke one language, on a device that knows twenty-two (171st pass).**
+`App.tsx` said `resolveLanguage(undefined)` — a literal — so the fallback was
+the answer and every player on earth was handed English, by a game whose whole
+third pass was spent repairing 744 titles in fifteen languages.
+
+Every other surface asks. The bot reads `ctx.from?.language_code`, the mini app
+reads Telegram's user language and then `navigator.language`, and the app this
+one replaces read `RNLocalize.getLocales()[0].languageCode` in `src/i18n.ts` and
+served ten languages from it — falling back to *Russian* rather than English for
+a Russian device (`ruOrEnLang`). Only the phone declared, and it declared the
+one wrong answer that looks correct from an English desk.
+
+`deviceLocale` in `device.ts`, which is where it has to live: everything else in
+this app takes a `Keeper` or a `Store` and is content with a `Map`, and
+`no-rules.test.ts` fails on a native import anywhere else. Three sources in the
+order they are trustworthy — `Intl.DateTimeFormat().resolvedOptions().locale`,
+which is the language the platform would format a date in and therefore the
+question being asked, then iOS's `AppleLocale` and Android's `localeIdentifier`,
+which are what `react-native-localize` reads underneath. Intl is present in the
+Hermes this app links: checked in the `ios-arm64_x86_64-simulator` slice of
+`hermes.xcframework` rather than assumed from a version number. **Nothing rather
+than a guess** when none of them answers, because an invented locale is
+indistinguishable from a phone really set to it.
+
+The test states the shape rather than the call site: **no literal ever reaches
+the resolver**, since a source cannot know what phone it is running on, and
+`undefined` is the worst of them — it typechecks, it is the documented way to
+say *I have no locale*, and it silently answers English. Plus every one of the
+twenty-two resolves from the tag a device would report, in all three forms a
+platform emits (`ru-RU`, `ru_RU`, `zh-Hans-CN`, and an `-u-ca-gregory`
+extension), or asking the phone would mean nothing.
+
+It also failed on its own explanation the first time it ran: `App.tsx` documents
+the defect it fixed, and a comment naming `resolveLanguage(undefined)` reads
+exactly like the defect to a regular expression. Comments are stripped before
+the source is scanned — `no-rules.test.ts` takes the stylesheet out for the same
+reason.
+
+**And the guard that came with it.** `BOARD_ROWS` is the path itself, so which
+side a row begins on is geometry and not typography; React Native reverses
+`flexDirection: 'row'` under a right-to-left layout, which would mirror every
+row and move the snakes and arrows to the wrong side. `styles.board` pins
+`direction: 'ltr'`. It cannot happen today — the app declares no right-to-left
+localisation, so `I18nManager.isRTL` is false on an Arabic phone too — and it
+becomes possible the moment somebody adds one, which is what *the app now speaks
+Arabic* invites. The text still follows the reader; the fields have carried
+`writingDirection` from `directionOf(language)` since they were written, and it
+was dead code until this pass, because the language was always English.
+
+Still to bring across from `leela`: RevenueCat, notifee and Sentry. **notifee
+was read this pass and is not a port.** Its two uses are a chat-reply
+notification with an inline reply action (`replyNotification.ts`,
+`actionHandlers/reply.ts` — needs the posts server) and a daily phrase fetched
+from `leelachakra.com/resource/LeelaChakra/dailyPhrases.json`, an endpoint
+outside this repository. Neither is the local reminder the `online` cooldown
+would want. RevenueCat and Sentry need keys.
 
 **The published app cannot be rebuilt from its own source, and the reason is not
 Xcode.** It has **no JavaScript lockfile at all** — `Gemfile.lock` and

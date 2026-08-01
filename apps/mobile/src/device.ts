@@ -18,7 +18,55 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NativeModules } from 'react-native';
 import { REPORTS_KEY, type Keeper } from './journal';
+
+/**
+ * What language the phone is set to, as a locale tag, or nothing.
+ *
+ * The app asked for none. `App.tsx` said `resolveLanguage(undefined)` — a
+ * literal, hard-coded — so a game published in twenty-two languages showed
+ * **English to everybody**, on a device that has known its own language since
+ * it was switched on.
+ *
+ * Every other surface asks. The bot reads `ctx.from?.language_code`, the mini
+ * app reads Telegram's user language and then `navigator.language`, and the app
+ * this one replaces read `RNLocalize.getLocales()[0].languageCode` and served
+ * ten languages from it (`src/i18n.ts` in `leela`). Only the phone declared an
+ * answer instead of asking a question — and it declared the fallback, which is
+ * the one answer that looks correct from an English desk.
+ *
+ * Three sources, in the order they are trustworthy. `Intl` is the language the
+ * platform would format a date in, which is the question being asked, and
+ * Hermes carries the platform's own locale data on both. The two native
+ * settings are what `react-native-localize` reads underneath, kept for a build
+ * whose Hermes was compiled without them: `AppleLocale` is `ru_RU`,
+ * `localeIdentifier` is `ru_RU` too, and `resolveLanguage` takes either.
+ *
+ * Nothing rather than a guess when none of them answers. A locale invented here
+ * would be indistinguishable from a phone that really is in English.
+ */
+export function deviceLocale(): string | undefined {
+  try {
+    const formatted = Intl.DateTimeFormat().resolvedOptions().locale;
+    if (typeof formatted === 'string' && formatted !== '') return formatted;
+  } catch {
+    // A runtime built without Intl. The natives below are the same answer.
+  }
+
+  try {
+    const apple = NativeModules.SettingsManager?.settings;
+    const ios = apple?.AppleLocale ?? apple?.AppleLanguages?.[0];
+    if (typeof ios === 'string' && ios !== '') return ios;
+
+    const android = NativeModules.I18nManager?.localeIdentifier;
+    if (typeof android === 'string' && android !== '') return android;
+  } catch {
+    // Neither module is present off a device — under vitest, for one.
+  }
+
+  return undefined;
+}
 
 /**
  * A keeper for one key.

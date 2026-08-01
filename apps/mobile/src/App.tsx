@@ -58,9 +58,22 @@ import {
   type Store,
 } from './journal';
 import { MAX_INTENTION_CHARS, MAX_REPORT_CHARS } from '@leela/journal';
-import { deviceKeeper } from './device';
+import { deviceKeeper, deviceLocale } from './device';
 import { GAME_KEY, keepGame, loadKeptGame } from './game-store';
 import { HANDLE, squareHandle } from './handles';
+
+/**
+ * The reader's language, asked of the phone once.
+ *
+ * This said `resolveLanguage(undefined)` — a literal, so the fallback was the
+ * answer and every player on earth was handed English. A phone knows what
+ * language it is in; the bot asks Telegram, the mini app asks the browser, and
+ * the app this replaces asked `RNLocalize`. Only this one declared.
+ *
+ * Once, at module scope, beside the keepers: the language of a phone does not
+ * change while somebody is looking at a board.
+ */
+const READER_LANGUAGE = resolveLanguage(deviceLocale());
 
 /**
  * The session's own copy of the path.
@@ -153,7 +166,7 @@ export default function App() {
   useEffect(() => {
     void keepGame(gameKeeper, game);
   }, [game]);
-  const language = resolveLanguage(undefined);
+  const language = READER_LANGUAGE;
   // Which way the language reads. Arabic and Urdu are among the twenty-two, and
   // a field left at the default puts their text against the wrong margin with
   // the caret in the wrong corner.
@@ -544,7 +557,23 @@ const styles = StyleSheet.create({
   body: { padding: 16, paddingTop: 64, gap: 12 },
   title: { fontSize: 20, fontWeight: '600' },
   line: { fontSize: 15, color: PALETTE.hint },
-  board: { gap: 2, alignSelf: 'center' },
+  /**
+   * The board reads left to right, whatever the reader does.
+   *
+   * `BOARD_ROWS` is the path itself — eight rows of nine, counted from the
+   * bottom and alternating direction — so which side a row starts on is the
+   * game's geometry and not a matter of taste. Under a right-to-left layout
+   * React Native reverses `flexDirection: 'row'`, which would mirror every row
+   * and put the snakes and arrows on the wrong side of the board.
+   *
+   * It cannot happen today: the app declares no right-to-left localisation, so
+   * `I18nManager.isRTL` is false on an Arabic phone too. It becomes possible
+   * the moment somebody adds one — which is exactly what *the app now speaks
+   * Arabic* invites, so the guard belongs with the change that invites it.
+   *
+   * The reader's direction is the text's, and the fields already carry it.
+   */
+  board: { gap: 2, alignSelf: 'center', direction: 'ltr' },
   row: { flexDirection: 'row', gap: 2 },
   cell: {
     width: 34,

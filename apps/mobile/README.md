@@ -77,3 +77,46 @@ certain is a launch argument only a test passes. A code path nobody who plays
 the game takes is a code path nobody maintains, so the walk taps the die until
 the board says it is on it, with a stated bound: forty throws without a six is
 about one run in two thousand, and it fails saying so rather than hanging.
+
+## The language of the reader
+
+Read from the phone, once, in `device.ts` — the one file here that knows what a
+phone is. `App.tsx` used to say `resolveLanguage(undefined)`, a literal, so the
+fallback was the answer and a game published in **twenty-two** languages showed
+English to everybody, on a device that has known its own language since it was
+switched on.
+
+Every other surface asks: the bot reads `ctx.from?.language_code`, the mini app
+reads Telegram's user language and then `navigator.language`, and the app this
+one replaces read `RNLocalize.getLocales()[0].languageCode` (`src/i18n.ts` in
+`leela`) and served ten languages from it — falling back to Russian rather than
+English for a Russian device. Only the phone declared, and it declared the
+answer that looks right from an English desk.
+
+Three sources, in the order they are trustworthy: `Intl.DateTimeFormat()
+.resolvedOptions().locale` — the language the platform would format a date in,
+which is the question being asked, and present in the Hermes this app links
+(verified in the framework binary, not assumed) — then iOS's `AppleLocale` and
+Android's `localeIdentifier`, which are what `react-native-localize` reads
+underneath. **Nothing rather than a guess** when none of them answers: an
+invented locale is indistinguishable from a phone really set to it.
+
+Plans and the rules book arrive in all twenty-two. The sentences *around* them
+are complete in English and Russian and fall back to English elsewhere — a
+visible gap, which is `@leela/content`'s own stated position and the reason 744
+machine-translated titles once rotted unnoticed.
+
+### The board's direction is the game's
+
+`BOARD_ROWS` is the path itself, eight rows of nine counted from the bottom and
+alternating direction, so which side a row begins on is geometry. React Native
+reverses `flexDirection: 'row'` under a right-to-left layout, which would mirror
+every row and put the snakes and arrows on the wrong side; `styles.board` pins
+`direction: 'ltr'`.
+
+It cannot happen today — the app declares no right-to-left localisation, so
+`I18nManager.isRTL` is false on an Arabic phone too. It becomes possible the
+moment somebody adds one, which is exactly what *the app now speaks Arabic*
+invites, so the guard is here with the change that invites it. The **text**
+still follows the reader: the writing fields take `writingDirection` from
+`directionOf(language)`, and Arabic and Urdu are two of the twenty-two.
