@@ -20,11 +20,23 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { REPORTS_KEY, type Keeper } from './journal';
 
-export function deviceKeeper(): Keeper {
+/**
+ * A keeper for one key.
+ *
+ * The path was the only thing this app kept, so the key was written into the
+ * two methods. The game is kept now too — the phone used to lose the board on
+ * every launch while holding on to what the player wrote about it — and two
+ * things kept in one slot would overwrite each other silently.
+ *
+ * The key is a parameter rather than a second `deviceKeeper`, so this stays the
+ * one file that knows what a phone is. `identity`-style: `no-rules.test.ts`
+ * asserts that nothing else imports anything native.
+ */
+export function deviceKeeper(key: string = REPORTS_KEY): Keeper {
   return {
     async read() {
       try {
-        return await AsyncStorage.getItem(REPORTS_KEY);
+        return await AsyncStorage.getItem(key);
       } catch {
         // A store that cannot be read is a store with nothing in it. The path
         // starts empty and this run's writing will try to land on top of it.
@@ -34,7 +46,7 @@ export function deviceKeeper(): Keeper {
 
     async write(value: string) {
       try {
-        await AsyncStorage.setItem(REPORTS_KEY, value);
+        await AsyncStorage.setItem(key, value);
         return true;
       } catch {
         return false;

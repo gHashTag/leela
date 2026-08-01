@@ -43,6 +43,7 @@ import {
   type Store,
 } from './journal';
 import { deviceKeeper } from './device';
+import { GAME_KEY, keepGame, loadKeptGame } from './game-store';
 
 /**
  * The session's own copy of the path.
@@ -56,8 +57,9 @@ const forTheSession = (): Store => {
   return { getItem: (key) => held.get(key) ?? null, setItem: (key, value) => void held.set(key, value) };
 };
 
-/** The device's store, made once. */
+/** The device's store, made once, one per thing kept. */
 const keeper = deviceKeeper();
+const gameKeeper = deviceKeeper(GAME_KEY);
 
 /** A game's die is seeded once, and the seed is what a player carries away. */
 const startingSeed = () => Math.floor(Math.random() * 1_000_000);
@@ -92,6 +94,36 @@ export default function App() {
       stale = true;
     };
   }, []);
+
+  /**
+   * The board, from the last time.
+   *
+   * This app kept a year of writing and lost where the player was standing on
+   * every launch. Read once and never allowed to land on a game already in
+   * progress, for the reason the journal is not: somebody who begins throwing
+   * before a slow disk answers must not be pulled back to yesterday.
+   */
+  useEffect(() => {
+    let stale = false;
+    void loadKeptGame(gameKeeper).then((kept) => {
+      if (kept !== null && !stale) setGame((now) => (now.rollsTaken === 0 ? kept : now));
+    });
+    return () => {
+      stale = true;
+    };
+  }, []);
+
+  /**
+   * And kept after every throw.
+   *
+   * On the game rather than on the throw, so a report — which changes the
+   * session without turning the die — is kept too. Whether the device took it
+   * is not said here: the player is told about their *writing*, which is
+   * theirs, and a board that has to be re-entered is a smaller loss than words.
+   */
+  useEffect(() => {
+    void keepGame(gameKeeper, game);
+  }, [game]);
   const language = resolveLanguage(undefined);
   const here = standingOn(game);
   // Where the piece is drawn and what may be read are two questions. `here` is

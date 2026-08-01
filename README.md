@@ -196,10 +196,10 @@ cd packages/engine && bun test
 | `@leela/bot` | 510 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 115 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
 | `@leela/miniapp` | 377 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
-| `@leela/mobile` | 96 | the board on a phone (Expo), moved by the engine and by nothing else |
+| `@leela/mobile` | 117 | the board on a phone (Expo), moved by the engine and by nothing else |
 | everything else | — | not yet ported |
 
-2064 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+2085 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
@@ -211,6 +211,8 @@ node scripts/audit-scripts.mjs      # every script runs under the runtime it nam
 node scripts/audit-arithmetic.mjs   # the sums the text states, in all 22 languages,
                                     # and sums a translation dropped the operator out of
 node scripts/audit-doubles.mjs      # one bound, declared once
+node scripts/audit-podlock.mjs      # Podfile.lock as the JS lockfile an app never had
+                                    # (needs a donor with node_modules and ios/)
 node scripts/audit-reachable.mjs    # every word a type declares, against the code that says it
 node scripts/audit-offers.mjs       # what the game offers, on every surface that is the game
 node scripts/audit-promises.mjs     # every injected dependency, against a test that breaks it
