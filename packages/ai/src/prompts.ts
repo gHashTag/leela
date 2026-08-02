@@ -12,7 +12,7 @@
  */
 
 import { TOTAL_PLANS, WIN_LOKA, type Direction } from '@leela/engine';
-import { planFor, resolveLanguage, type Language } from '@leela/content';
+import { lastSentenceEnd, planFor, resolveLanguage, type Language } from '@leela/content';
 
 /** Where the player is, and how they got there. */
 /** One square a player has already stood on, and what they wrote there. */
@@ -242,12 +242,10 @@ export function trimToParagraph(text: string, limit = MAX_PLAN_CHARS): string {
   // already — a sweep for texts that end without a terminator called two
   // hundred and ninety-eight Bengali and Hindi plans broken, on the same two
   // characters.
-  const lastStop = Math.max(
-    head.lastIndexOf('. '),
-    head.lastIndexOf('。'),
-    head.lastIndexOf('।'),
-    head.lastIndexOf('۔'),
-  );
+  // `@leela/content` counts these off the texts themselves. Written by hand
+  // here first, with two of the four, which is how the plan text came to reach
+  // the companion cut mid-word.
+  const lastStop = lastSentenceEnd(head);
   // No colon check here, and the reason is that it could never fire. This
   // branch is reached only when no sentence ends after the halfway mark, and
   // the way back from a dangling colon is that same mark — so there is never
@@ -269,13 +267,7 @@ export function trimToParagraph(text: string, limit = MAX_PLAN_CHARS): string {
 function withoutADanglingColon(text: string): string {
   if (!/[:：]\s*$/.test(text)) return text;
 
-  const before = Math.max(
-    text.lastIndexOf('. ', text.length - 2),
-    text.lastIndexOf('。'),
-    text.lastIndexOf('।'),
-    text.lastIndexOf('۔'),
-    text.lastIndexOf('\n\n'),
-  );
+  const before = Math.max(lastSentenceEnd(text, text.length - 2), text.lastIndexOf('\n\n'));
 
   // Only if what is left is still worth handing over. A colon in the opening
   // sentence would otherwise take the whole text away.

@@ -7506,6 +7506,31 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The same two characters were missing in a third place, and this one a player
+reads.** `whole` trims a reply that ran out of tokens back to the last sentence
+that finished — its own comment says why: *a player reading "the plan asks you
+to sit with what you have avoided, and the" has been handed a defect.* It knew
+six marks and not `।` or `۔`, so a Hindi, Marathi, Punjabi, Bengali or Urdu
+player was handed exactly that, while every other language got a finished
+sentence.
+
+Three places now: the plan text going in, the reply coming out, and a sweep of
+mine that called two hundred and ninety-eight plans broken. One omission each
+time.
+
+**So the marks are counted off the texts and kept where the languages are.**
+Over the last character of every paragraph in all twenty-two languages: `.`
+6,961 times, `।` 1,239, `。` 854, `۔` 428, then `!`, `?` and `…` in the tens.
+`SENTENCE_ENDS` and `lastSentenceEnd` are `@leela/content`'s now, and both
+places in `@leela/ai` ask them.
+
+The test asserts the shape rather than the four: **whatever the shipped texts
+lean on, the list has it** — a mark ending more than a hundred paragraphs and
+missing from the list fails, so a twenty-third language arriving with its own
+fails on the day it lands rather than in a reply somebody reads half of. And it
+asserts that no file writes a second copy, because two copies drifted apart once
+each and a third would too.
+
 **The plan text reached the companion cut mid-word.** Six hundred and seventeen
 of the 1,584 plans are longer than the budget, so most of what the model is told
 about a square is a trimmed version of it. `trimToParagraph` prefers a paragraph

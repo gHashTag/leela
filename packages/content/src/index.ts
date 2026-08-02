@@ -343,3 +343,31 @@ function apart(block: string): string[] {
   keep();
   return parts;
 }
+
+/**
+ * The marks a sentence ends with, in the scripts these texts are written in.
+ *
+ * Derived from the texts rather than remembered. Counted over the last
+ * character of every paragraph in all twenty-two languages: `.` 6,961 times,
+ * `।` 1,239, `。` 854, `۔` 428, and `!`, `?` and `…` in the tens.
+ *
+ * It is here because it has been got wrong twice in two different places, and
+ * both times the same two characters were missing. `trimToParagraph` in
+ * `@leela/ai` knew `.` and `。`, so the plan text reached the companion cut
+ * mid-word for every language that ends a sentence with `।` or `۔` — Hindi
+ * plan 23 stopped inside `सर्वोच`. `whole`, one file over, trims the
+ * companion's own reply back to the last finished sentence and knew six marks
+ * without those two, so a Hindi or Urdu player read the half sentence that
+ * every other language is spared. And a sweep of mine for texts ending without
+ * a terminator called two hundred and ninety-eight Bengali and Hindi plans
+ * broken, on the same two characters again.
+ *
+ * Three places, one omission. A list that has to be remembered is a list that
+ * will be written short again.
+ */
+export const SENTENCE_ENDS = ['.', '。', '।', '۔', '!', '?', '…', '！', '？'] as const;
+
+/** Where the last sentence in a text finishes, or -1 if none does. */
+export function lastSentenceEnd(text: string, before = text.length): number {
+  return Math.max(...SENTENCE_ENDS.map((mark) => text.lastIndexOf(mark, before)));
+}

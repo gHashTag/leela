@@ -11,6 +11,7 @@
  * rather than at startup.
  */
 
+import { lastSentenceEnd } from '@leela/content';
 import type { Message } from './prompts';
 
 export interface CompletionOptions {
@@ -103,9 +104,12 @@ export const DEFAULT_MAX_TOKENS = 800;
  * poor, and nothing at all is worse.
  */
 export function whole(text: string): string {
-  const end = Math.max(
-    ...['.', '!', '?', '。', '！', '？', '…'].map((mark) => text.lastIndexOf(mark)),
-  );
+  // The marks come from `@leela/content`, where they are counted off the texts
+  // themselves. This list was written here by hand with six of them and
+  // without `।` or `۔`, so a Hindi, Marathi, Punjabi, Bengali or Urdu player
+  // whose reply ran out of tokens read the half sentence every other language
+  // is spared — the exact thing the paragraph above calls a defect.
+  const end = lastSentenceEnd(text);
   if (end < 0) return text;
 
   const trimmed = text.slice(0, end + 1).trim();
