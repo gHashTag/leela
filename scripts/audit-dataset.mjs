@@ -23,7 +23,15 @@ import { join } from 'node:path';
 import { LANGUAGES, couldBe, dominantScript, scriptOf, writtenIn } from '../packages/content/src/index.ts';
 import { TOTAL_PLANS } from '../packages/engine/src/index.ts';
 import { CORRECTIONS } from './lib/corrections.mjs';
-import { BLIND_TO, RECORDED, against, nameOf, untranslatedIn } from './lib/untranslated.mjs';
+import {
+  BLIND_TO,
+  FUNCTION_WORDS,
+  RECORDED,
+  against,
+  nameOf,
+  untranslatedIn,
+  wrongLanguageIn,
+} from './lib/untranslated.mjs';
 import { checkCoverage, coverageOf } from './lib/coverage.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -143,19 +151,30 @@ for (const language of coverage.keys()) {
 // puts on the screen on every throw. Ten titles were sitting in it.
 const findings = [];
 let unseeable = 0;
+let byWords = 0;
 
 for (const language of coverage.keys()) {
-  if (scriptOf(language) === BLIND_TO) {
-    // An English title left in German has every letter a German title has.
-    unseeable += 1;
-    continue;
-  }
-
   let plans;
   try {
     plans = read(join(DATA, `plans.${language}.json`));
   } catch {
     continue; // Already reported above.
+  }
+
+  if (scriptOf(language) === BLIND_TO) {
+    // An English title left in German has every letter a German title has, so
+    // the script test says nothing here. The words a language cannot write a
+    // paragraph without say it instead — measured at 329 of 341 on English fed
+    // in as German, and none on German. A Latin-script language with no list is
+    // still unseen, and `unseeable` is now that and only that.
+    if (!FUNCTION_WORDS[language]) {
+      unseeable += 1;
+      continue;
+    }
+
+    byWords += 1;
+    findings.push(...wrongLanguageIn(plans, language));
+    continue;
   }
 
   findings.push(...untranslatedIn(plans, language, writtenIn));
@@ -208,7 +227,8 @@ console.log(
 // count of what it recorded is the thing that makes an eleventh loud.
 console.log(
   `Read the plans of ${coverage.size - unseeable} languages for text left in the language it was translated from; ` +
-    `${unseeable} are written in the Latin script and cannot be checked this way. ` +
+    `${byWords} of them by the words their language cannot do without, the rest by script; ` +
+    `${unseeable} written in the Latin script can be read by neither. ` +
     `${RECORDED.length} part(s) are recorded as untranslated.\n`,
 );
 

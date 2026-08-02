@@ -7506,6 +7506,51 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Two of the twenty-two languages were read by nothing at all.** The check for
+text left in the language it was translated from asks whether a paragraph is
+written in the script it is filed under, and `lib/untranslated.mjs` said so
+about its own hole: *an English title left in German has every letter a German
+title has*. The count of what had been checked was printed beside the count of
+what had not, which is the honest version of a green run and not a substitute
+for the check.
+
+The closed class answers it a different way. A language cannot write a
+paragraph of prose without its articles, conjunctions and prepositions, and that
+part of a language says nothing about meaning — so asking whether a German
+paragraph holds `der`, `und` or `ist` overrules no translator, which is the line
+`corrections.mjs` draws.
+
+Measured before it was trusted, in both directions:
+
+- Over the prose of the language itself, in all eight lists, it accuses
+  **nothing**. A check that accuses a translator wrongly is worse than none,
+  because somebody would act on it.
+- Fed the English plans as though they were each of the other seven, it fires on
+  **340 of 341** paragraphs every time.
+
+Getting there took three corrections of my own instrument, each of them
+measured rather than argued:
+
+- **A rule may only be used at the bound it was measured at.** Written first
+  with a letter count, it called two Javanese paragraphs of fourteen words
+  foreign. They are Javanese. The bound is twenty-five words, which is where the
+  measurement was taken.
+- **A word English also writes cannot tell the two apart.** German's `die`
+  appears twelve times in the English plans, Spanish's `no` seventy-one,
+  Portuguese's `a` five hundred and forty-four. Left in, the Portuguese list
+  called English prose Portuguese nearly every time — the test that feeds
+  English in under every language is what said so.
+- **Turkish is left out, and the reason is about Turkish.** It is agglutinative:
+  `bu` arrives as `bundan`, `kendi` as `kendisi`, and a word-boundary match
+  finds neither. One real Turkish paragraph of three hundred and ninety-seven
+  holds none of sixteen ordinary function words, and adding one until it passed
+  would be fitting the rule to the sample it was measured on.
+
+Twenty-one of the twenty-two are read now, one by neither instrument, and the
+audit says which. Nothing was found: the dataset is clean, and this is what a
+donor update would have to get past. Proved by putting an English paragraph into
+the German plans, where the audit names it and exits 1.
+
 **Sixteen texts arrive with nowhere for the eye to rest.** Plans 12 and 24 in
 Arabic, Malay and Ukrainian, and four chapters besides: one paragraph, where
 every other language has three or four. The words are all there — seventy to a
