@@ -7506,6 +7506,32 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A slow disk destroyed thirty-nine accounts.** The pass before found the
+game's read collapsing *empty* and *silent*; the same collapse was in the
+journal's, one file over, with a worse ending. Measured through the app's own
+functions: forty accounts on the phone, a read that answers a moment past the
+five-second timeout, and the app holds an empty path and reports nothing lost —
+then the player writes their next account, `keep` writes the whole path, and the
+file holds **one** entry.
+
+Thirty-nine gone, on the record the game exists to produce, with the screen
+saying the account was saved.
+
+`Read` carries `answered` now, and `keepPath` is the other half: **a path nobody
+managed to read is not a path to write over.** It reads again, merges what comes
+back with what the session holds — `merged` is the same function the file import
+uses — and writes that. If the phone still will not answer, nothing is written:
+the account lives in the session, the disk keeps what it has, and
+`app.pathNotRead` says so. That is the only choice that cannot lose anything.
+
+**And the audit caught two of my own copies in the same hour.** `EMPTY_SLOT` —
+the sentinel that tells a timeout from an empty slot — was written twice, in the
+two files, on two consecutive days. `within` was duplicated word for word beside
+it, invisible to `audit-doubles` because it is a function. Both now live in
+`journal.ts` and the game store imports them. `NO_ANSWER` was one name for two
+different records, so it became `PATH_NOT_HEARD` and `GAME_NOT_HEARD` — each
+naming its subject, as `EMPTY_PATH` already did.
+
 **A device that did not answer is not a device with nothing on it.** The pass
 before taught the app to adopt the game the published application left on the
 phone, on the condition *this app has none of its own*. `loadKeptGame` answered

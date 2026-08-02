@@ -95,9 +95,39 @@ export interface Read {
   journal: Journal;
   /** Entries that were in the file and are not in the path. */
   dropped: number;
+  /**
+   * Whether the device said anything at all.
+   *
+   * *There is nothing here* and *I did not answer in five seconds* were one
+   * value, and what follows the read makes them very different. Measured: a
+   * phone holding forty accounts, a read that answers a moment past the
+   * timeout, and the app reads **nothing** and reports nothing lost — then the
+   * next account is written, and the file holds **one** entry. Thirty-nine
+   * accounts destroyed by a slow disk, on the record the game exists to
+   * produce.
+   *
+   * `keepPath` is the other half: a path nobody managed to read is not a path
+   * to write over.
+   */
+  answered: boolean;
 }
 
-const NOTHING_READ: Read = { journal: EMPTY_PATH, dropped: 0 };
+const NOTHING_READ: Read = { journal: EMPTY_PATH, dropped: 0, answered: true };
+/**
+ * The device was asked about the path and said nothing — not even that it holds
+ * nothing. Named for its subject: the two files each had a `NO_ANSWER`, of two
+ * different shapes, and one word for two records is how somebody carries the
+ * wrong one across.
+ */
+const PATH_NOT_HEARD: Read = { journal: EMPTY_PATH, dropped: 0, answered: false };
+/**
+ * A word the store cannot hold, so an empty slot is not a silence.
+ *
+ * Exported because `game-store.ts` needs the same trick for the same reason,
+ * and `audit-doubles` caught the second copy on the day it was written — a
+ * sentinel that means "not the store's answer" cannot be two different strings.
+ */
+export const EMPTY_SLOT = '\u0000empty';
 
 /**
  * Add one account to a path.
@@ -170,7 +200,11 @@ export function read(store: Store | undefined): Read {
     // exactly this shape.
     const kept = entries.filter(isReport);
 
-    return { journal: { entries: order(kept) }, dropped: entries.length - kept.length };
+    return {
+      journal: { entries: order(kept) },
+      dropped: entries.length - kept.length,
+      answered: true,
+    };
   } catch {
     return NOTHING_READ;
   }
@@ -310,7 +344,7 @@ export interface Keeper {
 export const KEEP_TIMEOUT_MS = 5_000;
 
 /** Whatever it is, settled within `ms`. */
-async function within<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
+export async function within<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
@@ -335,16 +369,59 @@ export async function loadKept(
   keeper: Keeper | undefined,
   timeoutMs = KEEP_TIMEOUT_MS,
 ): Promise<Read> {
-  if (!keeper) return NOTHING_READ;
+  if (!keeper) return PATH_NOT_HEARD;
 
   try {
-    const raw = await within(keeper.read(), timeoutMs, null);
-    if (raw === null) return NOTHING_READ;
+    // The fallback is a value the store can also return, so it is marked where
+    // the timeout happens rather than recognised afterwards: `null` from five
+    // seconds of silence and `null` from an empty slot are the same word for
+    // very different facts.
+    const raw = await within(
+      keeper.read().then((held) => held ?? EMPTY_SLOT),
+      timeoutMs,
+      null,
+    );
+
+    if (raw === null) return PATH_NOT_HEARD;
+    if (raw === EMPTY_SLOT) return NOTHING_READ;
 
     return read({ getItem: () => raw, setItem: () => undefined });
   } catch {
-    return NOTHING_READ;
+    return PATH_NOT_HEARD;
   }
+}
+
+/**
+ * Keep the path, without writing over one nobody has read.
+ *
+ * `keep` writes the whole path. That is right when the app knows what the phone
+ * already holds and wrong when it does not: a read that timed out leaves the
+ * app holding an empty path, and the first account then written replaces
+ * everything on the disk with one entry.
+ *
+ * So a path that was never read is read again here, and what comes back is
+ * merged with what the session has — `merged` is the same function the file
+ * import uses, and it keeps both sides. If the phone still will not answer,
+ * nothing is written: today's account lives in the session and the disk keeps
+ * what it has. That is the only choice that cannot lose anything, and the
+ * caller is told so it can be said.
+ *
+ * @param alreadyRead  Whether the path on this device has been read this run.
+ */
+export async function keepPath(
+  keeper: Keeper | undefined,
+  journal: Journal,
+  alreadyRead: boolean,
+  timeoutMs = KEEP_TIMEOUT_MS,
+): Promise<{ kept: boolean; unread: boolean; journal: Journal }> {
+  if (alreadyRead) return { kept: await keep(keeper, journal, timeoutMs), unread: false, journal };
+
+  const held = await loadKept(keeper, timeoutMs);
+  if (!held.answered) return { kept: false, unread: true, journal };
+
+  const whole: Journal = { entries: merged(held.journal.entries, journal.entries).entries };
+
+  return { kept: await keep(keeper, whole, timeoutMs), unread: false, journal: whole };
 }
 
 /**

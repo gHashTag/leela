@@ -8,7 +8,7 @@
  * board.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -51,6 +51,7 @@ import {
   isIntention,
   pathOf,
   keep,
+  keepPath,
   INTENTION_KEY,
   loadIntention,
   loadKeptIntention,
@@ -119,6 +120,15 @@ export default function App() {
   const [said, setSaid] = useState<string | null>(null);
 
   /**
+   * Whether this phone has told the app what path it already holds.
+   *
+   * A ref rather than state: nothing on the screen depends on it, and a render
+   * between the answer and the next account would be a render that changed
+   * nothing a player can see.
+   */
+  const pathRead = useRef(false);
+
+  /**
    * Add a sentence to the status line without erasing one already there.
    *
    * The two things read at startup can both come back short, and they answer at
@@ -160,6 +170,9 @@ export default function App() {
     void loadKept(keeper).then((kept) => {
       if (stale) return;
       setJournal((now) => (now === EMPTY_PATH ? kept.journal : now));
+      // Whether this phone has said what it holds. A path nobody read is not a
+      // path to write over: see `keepPath`.
+      if (kept.answered) pathRead.current = true;
 
       // Entries that were on the disk and are not on the screen. Said, because
       // a path that came back three accounts short looks exactly like a path
@@ -423,13 +436,23 @@ export default function App() {
     // Said when the device has answered, not before. The session already has
     // the words — the game goes on either way — and the sentence is about
     // whether they will still be here tomorrow, which nobody knows yet.
-    void keep(keeper, taken.journal).then((landed) =>
+    void keepPath(keeper, taken.journal, pathRead.current).then((written) => {
+      if (written.unread) {
+        setSaid(messageFor(language, 'app.pathNotRead'));
+        return;
+      }
+
+      // The disk answered this time, so what it holds is now known — and what
+      // it holds includes whatever the session had not seen.
+      pathRead.current = true;
+      if (written.journal !== taken.journal) setJournal(written.journal);
+
       setSaid(
-        landed && taken.kept
+        written.kept && taken.kept
           ? messageFor(language, 'app.reportSaved')
           : messageFor(language, 'app.notKept'),
-      ),
-    );
+      );
+    });
   };
 
   return (

@@ -34,24 +34,12 @@ import {
   type Session,
 } from '@leela/engine';
 import { newGame, type Game } from './game';
-import { KEEP_TIMEOUT_MS, type Keeper } from './journal';
+// `within` and its sentinel come from the journal beside this: the same
+// clock, and the same word for "that was not the store answering".
+import { EMPTY_SLOT, KEEP_TIMEOUT_MS, within, type Keeper } from './journal';
 
 export const GAME_KEY = 'leela.game.v1';
 
-/** Whatever it is, settled within `ms` — the journal's own clock, same reason. */
-async function within<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      work,
-      new Promise<T>((resolve) => {
-        timer = setTimeout(() => resolve(fallback), ms);
-      }),
-    ]);
-  } finally {
-    clearTimeout(timer);
-  }
-}
 
 /** What is written down: two numbers and the state they produced. */
 interface Saved {
@@ -186,8 +174,13 @@ export interface KeptGame {
 
 const NOTHING_KEPT: KeptGame = { game: null, unreadable: false, answered: true };
 const UNREADABLE: KeptGame = { game: null, unreadable: true, answered: true };
-/** The device was asked and said nothing — not even that it holds nothing. */
-const NO_ANSWER: KeptGame = { game: null, unreadable: false, answered: false };
+/**
+ * The device was asked about the game and said nothing — not even that it holds
+ * nothing. Named for its subject: the two files each had a `NO_ANSWER`, of two
+ * different shapes, and one word for two records is how somebody carries the
+ * wrong one across.
+ */
+const GAME_NOT_HEARD: KeptGame = { game: null, unreadable: false, answered: false };
 
 /**
  * The game as it was, or nothing to begin one — and which of the two.
@@ -207,7 +200,7 @@ export async function loadKeptGame(
   rules: RuleSet = CLASSIC,
   timeoutMs = KEEP_TIMEOUT_MS,
 ): Promise<KeptGame> {
-  if (!keeper) return NO_ANSWER;
+  if (!keeper) return GAME_NOT_HEARD;
 
   let raw: string | null;
   let silent = false;
@@ -225,10 +218,10 @@ export async function loadKeptGame(
   } catch {
     // The device would not answer. Nothing is known about what it holds, so
     // this is not a loss to report — only a game that cannot be continued now.
-    return NO_ANSWER;
+    return GAME_NOT_HEARD;
   }
 
-  if (silent) return NO_ANSWER;
+  if (silent) return GAME_NOT_HEARD;
   if (raw === null) return NOTHING_KEPT;
 
   let parsed: unknown;
@@ -264,6 +257,3 @@ export async function loadKeptGame(
     answered: true,
   };
 }
-
-/** A word the store cannot hold, so an empty slot is not a silence. */
-const EMPTY_SLOT = '\u0000empty';

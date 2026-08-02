@@ -90,7 +90,7 @@ describe('the path, read back off the disk', () => {
     // There is no count to give and the player has written nothing this is
     // about. Saying "some of your accounts were lost" here would be a lie.
     for (const raw of ['not json at all', '42', 'null', '{"entries":"none"}', '{}']) {
-      expect(read(storeOf(raw))).toEqual({ journal: { entries: [] }, dropped: 0 });
+      expect(read(storeOf(raw))).toEqual({ journal: { entries: [] }, dropped: 0, answered: true });
     }
   });
 

@@ -367,6 +367,17 @@ const EN = {
    * across, because a game that reappears without explanation is as unsettling
    * as one that vanishes.
    */
+  /**
+   * The phone would not say what it already holds.
+   *
+   * Measured: forty accounts on the disk, a read that answers a moment past the
+   * five-second timeout, and the app holds an empty path — then the next
+   * account is written and the file holds one entry. Thirty-nine destroyed by a
+   * slow disk. Nothing is written now, and this says why: what the player just
+   * wrote is in the session and their path on the disk is untouched.
+   */
+  'app.pathNotRead':
+    'This phone has not said what you have written before, so nothing has been written over it. Your account is here for now — reopen the app when it is less busy.',
   'app.gameInherited': 'Your game from the previous version is here: you are on {plan}.',
   'app.othersInherited': {
     one: '{count} other player on this phone had a game too. This version seats one.',
@@ -820,6 +831,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.arrow': 'Выпало {value}. Стрела на {from} поднимает вас на {to}. {title}',
   'app.step': 'Выпало {value}. {from} → {to}. {title}',
   'app.unloadable': 'Тексты планов не загрузились. Обычно помогает открыть приложение заново.',
+  'app.pathNotRead':
+    'Телефон не сказал, что вы писали раньше, поэтому поверх ничего не записано. Ваш отчёт пока здесь — откройте приложение, когда телефон будет посвободнее.',
   'app.gameInherited': 'Ваша игра из прошлой версии здесь: вы на плане {plan}.',
   'app.othersInherited': {
     one: 'На этом телефоне играл ещё {count} человек. В этой версии место одно.',

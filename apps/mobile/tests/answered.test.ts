@@ -91,6 +91,11 @@ describe('what the player is told about keeping comes from the device', () => {
       const at = source.indexOf(`messageFor(language, '${key}')`);
       const opened = Math.max(
         source.lastIndexOf('keep(', at),
+        // The writer that reads first. A path nobody has read is not a path to
+        // write over, so the account goes through `keepPath` — which is still a
+        // write to the device, and the rule is about where the answer comes
+        // from rather than about the name of the function that gives it.
+        source.lastIndexOf('keepPath(', at),
         source.lastIndexOf('keepIntention(', at),
         source.lastIndexOf('Promise.all([', at),
       );
