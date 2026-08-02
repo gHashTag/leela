@@ -11,7 +11,7 @@
  * assert twenty numbers would be a heavy way to learn very little.
  */
 
-import { ARROWS, SNAKES, TOTAL_PLANS, WIN_LOKA } from '@leela/engine';
+import { ARROWS, SIXES_TO_RESET, SNAKES, TOTAL_PLANS, WIN_LOKA } from '@leela/engine';
 
 export interface ContractBoard {
   /** `newPlan == X` → `newPlan = Y`, in source order. */
@@ -139,4 +139,107 @@ export function describeDivergences(divergences: Divergence[]): string {
   return divergences
     .map((d) => `${d.from}: engine → ${d.engine ?? 'nowhere'}, contract → ${d.contract ?? 'nowhere'} (${d.reason})`)
     .join('\n');
+}
+
+/**
+ * The run of sixes, read out of the Solidity rather than described beside it.
+ *
+ * `ONCHAIN` exists because the contract counts a run differently, and both
+ * differences were written in prose — in the rule set's own comment and in
+ * `contracts/README.md` — while the board twenty lines above them is parsed
+ * from this same source and asserted. A hand-written list beside a computable
+ * one is the shape this repository keeps finding, and here it sat next to the
+ * machine that would have computed it.
+ *
+ * Reading it also says more than the prose did. *A third six returns the player
+ * to where the third six began rather than the first* is true and understates
+ * what happens: `positionBeforeThreeSixes` is assigned `player.plan` at the top
+ * of the same call that then assigns it back, so **the reset cannot move
+ * anybody**. It costs the throw and leaves the player standing where they were.
+ * The engine under `threeSixesReset` walks them back to where the run began —
+ * from plan 14 to plan 6 in a run started on the entering six.
+ */
+export interface ContractSixes {
+  /** The six that enters the game sets the run to this. Null if it sets none. */
+  runAfterEntry: number | null;
+  /** `positionBeforeThreeSixes` is written on every six, not only the first. */
+  fallbackWrittenOnEverySix: boolean;
+  /** The run length the reset fires on. Null if nothing resets. */
+  resetsAt: number | null;
+  /** The reset sends the player to the square the same call recorded. */
+  resetReturnsToFallback: boolean;
+  /** The reset returns without moving, so the throw is spent and nothing else. */
+  resetSkipsTheMove: boolean;
+}
+
+/**
+ * Read how the contract keeps a run of sixes.
+ *
+ * Source, not an EVM, for the reason `parseContract` gives: a Hardhat toolchain
+ * to learn five facts would be a heavy way to learn very little.
+ */
+export function parseSixes(source: string): ContractSixes {
+  const entry = /!player\.isStart\s*&&\s*rollResult\s*==\s*6\s*\)\s*\{[\s\S]*?\}/.exec(source)?.[0];
+  const runAfterEntry = entry
+    ? Number(/player\.consecutiveSixes\s*=\s*(\d+)\s*;/.exec(entry)?.[1] ?? Number.NaN)
+    : Number.NaN;
+
+  // The branch a six takes, up to the `else` that clears the run.
+  const onSix = /if\s*\(\s*roll\s*==\s*MAX_ROLL\s*\)\s*\{([\s\S]*?)\n\s*\}\s*else\s*\{/.exec(source)?.[1] ?? '';
+
+  const reset = /if\s*\(\s*player\.consecutiveSixes\s*==\s*(\d+)\s*\)\s*\{([\s\S]*?)\n\s*\}/.exec(onSix);
+
+  return {
+    runAfterEntry: Number.isNaN(runAfterEntry) ? null : runAfterEntry,
+    // Written unconditionally inside the six branch: no `if` between the branch
+    // opening and the assignment.
+    fallbackWrittenOnEverySix:
+      /^[\s\S]*?player\.positionBeforeThreeSixes\s*=\s*player\.plan\s*;/.test(onSix) &&
+      !/if[\s\S]*?player\.positionBeforeThreeSixes\s*=\s*player\.plan\s*;/.test(onSix),
+    resetsAt: reset ? Number(reset[1]) : null,
+    resetReturnsToFallback: /player\.plan\s*=\s*player\.positionBeforeThreeSixes\s*;/.test(reset?.[2] ?? ''),
+    resetSkipsTheMove: /\breturn\s*;/.test(reset?.[2] ?? ''),
+  };
+}
+
+/**
+ * What the contract does with a run of sixes that the engine does not.
+ *
+ * `from` is the run length each difference is about, so the list reads in the
+ * order a player would meet them.
+ */
+export function compareSixes(sixes: ContractSixes): Divergence[] {
+  const divergences: Divergence[] = [];
+
+  // The engine enters the game with no run: `initialState` starts at zero and
+  // the entering six is the arrival, not the first of three.
+  if (sixes.runAfterEntry !== null && sixes.runAfterEntry !== 0) {
+    divergences.push({
+      from: 1,
+      engine: 0,
+      contract: sixes.runAfterEntry,
+      reason: 'the six that enters the game is counted as the first of a run, so the reset comes a throw sooner',
+    });
+  }
+
+  if (sixes.fallbackWrittenOnEverySix) {
+    divergences.push({
+      from: sixes.resetsAt ?? SIXES_TO_RESET,
+      engine: null,
+      contract: null,
+      reason:
+        'the fallback square is overwritten on every six, so the reset returns the player to where they already stand and cannot move them',
+    });
+  }
+
+  if (sixes.resetsAt !== null && sixes.resetsAt !== SIXES_TO_RESET) {
+    divergences.push({
+      from: sixes.resetsAt,
+      engine: SIXES_TO_RESET,
+      contract: sixes.resetsAt,
+      reason: 'the reset fires on a different run length',
+    });
+  }
+
+  return divergences;
 }

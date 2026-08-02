@@ -7506,6 +7506,37 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The two on-chain divergences were prose, beside the machine that reads the
+board.** `parseContract` has taken the twenty jump branches off `LeelaGame.sol`
+and asserted them against the engine since the beginning. The two rule
+differences that the `onchain` variant exists for — the entering six counted as
+the first of a run, and `positionBeforeThreeSixes` written on every six — were
+described in the rule set's comment and in `contracts/README.md`, and read by
+nothing. A hand-written list beside a computable one, sitting next to the
+computer.
+
+`parseSixes` and `compareSixes` now take both off the source. Every reading is
+checked against a source edited to say something else, so a parser that returned
+constants would fail the file.
+
+**And the reading says more than the prose did.** *A third six returns the
+player to where the third six began rather than the first* is true, and reads as
+though a move happens. The assignment is at the top of the same call that reads
+it back:
+
+```solidity
+player.positionBeforeThreeSixes = player.plan;
+player.consecutiveSixes += 1;
+if (player.consecutiveSixes == 3) {
+  player.plan = player.positionBeforeThreeSixes;   // the square they are on
+```
+
+So `plan = plan`: the on-chain reset **cannot move anybody**. It spends the
+throw and leaves the player standing where they were. The engine under
+`threeSixesReset` walks them back — four sixes from the start put a player on
+plan 14 and then return them to plan 6. `ONCHAIN.threeSixesReset` is `true`, and
+on chain that rule is a throw lost and nothing more. Both documents now say so.
+
 **Switching language lost the page, 840 times.** Every language is served
 `legal/policy.html` and `legal/eula.html` — in English wherever nobody
 translated them, because a missing privacy policy is a store rejection and, for

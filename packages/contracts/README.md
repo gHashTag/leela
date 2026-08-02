@@ -95,6 +95,12 @@ nothing that decides whether a throw is allowed.
 Two differences from `classic`, both in deployed bytecode and therefore fixed.
 They are described by the `onchain` ruleset, not treated as bugs.
 
+**Read out of the source, not remembered here.** `parseSixes` and `compareSixes`
+in `src/verify.ts` take both differences off `LeelaGame.sol` the way
+`parseContract` takes the board, and `tests/a-run-of-sixes.test.ts` checks each
+reading against a source edited to say something else. What follows describes
+what they compute; if the two ever disagree, the tests are the ones to believe.
+
 **The entering six counts as the first of a run.** On entry the contract sets
 `consecutiveSixes = 1`; the engine leaves it at `0`. On chain, two more sixes
 after entering trigger the reset — one throw sooner than anywhere else.
@@ -106,9 +112,25 @@ when a run begins:
 newBeforeThreeSixes: consecutive === 0 ? currentLoka : positionBeforeThreeSixes
 ```
 
-The contract assigns it unconditionally inside `if (roll == MAX_ROLL)`, so a
-third six returns the player to where the *third* six began rather than the
-first. The player loses one move instead of the run.
+The contract assigns it unconditionally inside `if (roll == MAX_ROLL)`, and it
+does so at the top of the very call that reads it back:
+
+```solidity
+player.positionBeforeThreeSixes = player.plan;
+player.consecutiveSixes += 1;
+if (player.consecutiveSixes == 3) {
+  player.plan = player.positionBeforeThreeSixes;   // the square they are on
+  player.consecutiveSixes = 0;
+  return;
+}
+```
+
+So `plan = positionBeforeThreeSixes` is `plan = plan`: **the on-chain reset
+cannot move anybody.** It spends the throw and leaves the player standing where
+they were. Saying it *returns the player to where the third six began* was true
+and read as though a move happened. The engine under `threeSixesReset` walks
+them back to where the run began — four sixes from the start put a player on
+plan 14 and then return them to plan 6.
 
 Neither is expressible as a flag on a `RuleSet`, so anything that needs to
 reproduce an on-chain move exactly should consult the contract.

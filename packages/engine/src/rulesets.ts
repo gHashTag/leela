@@ -206,12 +206,18 @@ export const ONLINE: RuleSet = Object.freeze({
  * nearest true thing to say about it, and `packages/contracts/tests/gate.test.ts`
  * holds the reading to the Solidity.
  *
- * Two ways it differs from `classic`, both recorded in `contracts/README.md`:
+ * Two ways it differs from `classic`. Both are now **read out of the Solidity**
+ * by `parseSixes` in `packages/contracts`, rather than described here and
+ * nowhere else — the board in that same file had been parsed and asserted since
+ * the beginning, and these two sat beside it in prose:
  *
  *   - the six that enters the game is counted as the first of a run, so two
  *     more sixes trigger the reset;
- *   - `positionBeforeThreeSixes` is overwritten on *every* six, so a third six
- *     returns the player to where the third six began rather than the first.
+ *   - `positionBeforeThreeSixes` is written on *every* six, at the top of the
+ *     same call that reads it back — so `plan = positionBeforeThreeSixes` is
+ *     `plan = plan`, and the on-chain reset **cannot move anybody**. It spends
+ *     the throw. This flag says the variant has the reset, and on chain the
+ *     reset is a throw lost and nothing more.
  *
  * Neither is expressible as a flag, so anything reading this variant should
  * consult the contract for a move it needs to reproduce exactly.
