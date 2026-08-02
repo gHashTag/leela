@@ -7506,6 +7506,38 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Twenty of the twenty-two books hold two languages and declare one.** The
+message catalogue falls back to English **one key at a time**, which is what
+lets half a translation be useful the day it is started. On the page that reads:
+the Japanese book declares `lang="ja"`, gives every chapter title and plan name
+in Japanese, and says *Play*, *Rules of the game*, *All 72 plans* and *Legal* in
+English, because those keys have no Japanese yet.
+
+A screen reader takes the page at its word and reads those English words with
+Japanese phonetics. The book already knew how to mark an element's own
+language — its language picker does it twenty-two times — and had no way to ask
+which words needed it.
+
+`answeredIn` is `@leela/content`'s now: it says which language a sentence
+actually came back in, per key, because that is how the fallback works. Six
+strings on the Japanese page are marked; the Russian and English pages mark
+nothing, which is the other half of being right.
+
+Left unmarked on purpose: an `aria-label` and a `<meta>` cannot carry a `lang`,
+and marking them would mean putting an element where an attribute goes.
+
+**Three rediscoveries, recorded so they are not made a fourth time.** `apps/site`
+does not exist and the README says why — the donor was an untouched
+`create-next-app`. The catalogue holding two languages is stated in the README
+too. And the fourteen untranslated plan titles that show up as duplicate page
+titles across twelve languages are `untranslated.mjs`'s record, exactly as
+written down. What was *not* recorded is what this pass fixed: that the fallback
+is silent on the page.
+
+**The two catalogues are in step.** All 209 keys answer differently in Russian
+and English, so nothing has quietly fallen back for the one language that is
+supposed to be complete.
+
 **The test that proves the phone carries no rules of its own read the source
 raw.** `no-rules.test.ts` strips the comments out before every check that looks
 for a rule *being there* — a jump written as a number pair, arithmetic on a

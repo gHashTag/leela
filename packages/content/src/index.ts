@@ -204,6 +204,7 @@ export type { Script } from './languages';
 export {
   englishCatalogue,
   messageCoverage,
+  answeredIn,
   messageFor,
   messageIssues,
   placeholdersIn,

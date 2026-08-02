@@ -1171,3 +1171,24 @@ export function translatedLanguages(): Language[] {
   const languages = Object.keys(CATALOGUES) as Language[];
   return [FALLBACK_LANGUAGE, ...languages.filter((l) => l !== FALLBACK_LANGUAGE)];
 }
+
+/**
+ * The language a sentence actually came back in.
+ *
+ * `messageFor` falls back to English **per key**, so half a catalogue is useful
+ * the day it is started rather than all-or-nothing. The cost is that a page can
+ * hold two languages at once and say it holds one: the Japanese book declares
+ * `lang="ja"`, gives every chapter title and plan name in Japanese, and says
+ * *Play*, *Rules of the game* and *All 72 plans* in English, because those keys
+ * have no Japanese yet.
+ *
+ * A screen reader takes the page at its word and reads those English words with
+ * Japanese phonetics. The book already knows how to mark an element's own
+ * language — its language picker does it twenty-two times — and had no way to
+ * ask which words needed it.
+ */
+export function answeredIn(locale: string | Language | undefined | null, key: MessageKey): Language {
+  const language = resolveLanguage(typeof locale === 'string' ? locale : undefined);
+
+  return CATALOGUES[language]?.[key] === undefined ? FALLBACK_LANGUAGE : language;
+}

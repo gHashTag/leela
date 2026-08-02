@@ -10,6 +10,7 @@
  */
 
 import {
+  answeredIn,
   LANGUAGES,
   LANGUAGE_NAMES,
   directionOf,
@@ -28,6 +29,26 @@ export function escape(text: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+
+/**
+ * A word the book says, in the reader's language or marked when it is not.
+ *
+ * The catalogue falls back to English one key at a time, so a page can hold two
+ * languages and declare one. The Japanese book says *Play*, *Rules of the game*
+ * and *All 72 plans* inside `<html lang="ja">`, and a screen reader reads them
+ * with Japanese phonetics because the page told it to.
+ *
+ * Only where the words flow. An `aria-label` and a `<meta>` cannot carry a
+ * `lang`, and marking them would mean putting an element where an attribute
+ * goes.
+ */
+function says(language: Language, key: Parameters<typeof messageFor>[1], params?: Parameters<typeof messageFor>[2]): string {
+  const text = escape(messageFor(language, key, params));
+  const answered = answeredIn(language, key);
+
+  return answered === language ? text : `<span lang="${answered}">${text}</span>`;
 }
 
 /**
@@ -239,7 +260,7 @@ ${translations(writtenIn, path, translated)}
 <body>
 <header class="site">
   <a class="home" href="${root}${language}/">${SITE_NAME}</a>
-  <a class="play" href="${PLAY_URL}">${escape(messageFor(writtenIn, 'app.play'))}</a>
+  <a class="play" href="${PLAY_URL}">${says(writtenIn, 'app.play')}</a>
 </header>
 <main>
 <h1>${escape(title)}</h1>
@@ -440,7 +461,7 @@ export function indexPage(
     .map(
       (chapter) =>
         `<li><a href="../en/rules/${chapter.slug}.html">${escape(chapter.title ?? chapter.slug)}</a>` +
-        ` <span class="quiet">${escape(messageFor(language, 'app.borrowed'))}</span></li>`,
+        ` <span class="quiet">${says(language, 'app.borrowed')}</span></li>`,
     )
     .join('\n');
 
@@ -465,12 +486,12 @@ export function indexPage(
     subtitle: messageFor(language, 'app.book', { count: plans.length }),
     body: [
       rules.length
-        ? `<h2>${escape(messageFor(language, 'app.rules'))}</h2>\n<ul class="chapters">\n${ruleLinks}${
+        ? `<h2>${says(language, 'app.rules')}</h2>\n<ul class="chapters">\n${ruleLinks}${
             borrowedLinks ? `\n${borrowedLinks}` : ''
           }\n</ul>`
         : '',
-      `<h2>${escape(messageFor(language, 'app.plans'))}</h2>\n<ol class="plans">\n${planLinks}\n</ol>`,
-      `<h2>${escape(messageFor(language, 'app.legal'))}</h2>\n<ul class="chapters">\n<li><a href="legal/policy.html">${escape(messageFor(language, 'app.policy'))}</a></li>\n<li><a href="legal/eula.html">${escape(messageFor(language, 'app.terms'))}</a></li>\n</ul>`,
+      `<h2>${says(language, 'app.plans')}</h2>\n<ol class="plans">\n${planLinks}\n</ol>`,
+      `<h2>${says(language, 'app.legal')}</h2>\n<ul class="chapters">\n<li><a href="legal/policy.html">${says(language, 'app.policy')}</a></li>\n<li><a href="legal/eula.html">${says(language, 'app.terms')}</a></li>\n</ul>`,
     ]
       .filter(Boolean)
       .join('\n'),
@@ -543,7 +564,7 @@ export function planPage(language: Language, plan: Plan, total: number): string 
     body: [
       descriptionIsRedundant(plan) ? '' : `<p class="subtitle">${escape(plan.description!)}</p>`,
       renderMarkdown(plan.body),
-      `<nav class="pager">${previous}<a href="../">${escape(messageFor(language, 'app.contents'))}</a>${next}</nav>`,
+      `<nav class="pager">${previous}<a href="../">${says(language, 'app.contents')}</a>${next}</nav>`,
     ]
       .filter(Boolean)
       .join('\n'),
@@ -572,7 +593,7 @@ export function chapterPage(
     path: `rules/${chapter.slug}.html`,
     pathFor: (other) => (hasChapter(other, chapter.slug) ? `rules/${chapter.slug}.html` : null),
     description: summarise(chapter.body),
-    body: `${renderMarkdown(chapter.body)}\n<nav class="pager"><span></span><a href="../">${escape(messageFor(language, 'app.contents'))}</a><span></span></nav>`,
+    body: `${renderMarkdown(chapter.body)}\n<nav class="pager"><span></span><a href="../">${says(language, 'app.contents')}</a><span></span></nav>`,
   });
 }
 
@@ -642,7 +663,7 @@ export function legalPage({
     // `writtenIn`, not the section: a page whose body is the English document
     // declares `lang="en"`, and Russian chrome inside an English document would
     // be the two halves of one page disagreeing.
-    body: `${renderMarkdown(body)}\n<nav class="pager"><span></span><a href="../">${escape(messageFor(writtenIn, 'app.contents'))}</a><span></span></nav>`,
+    body: `${renderMarkdown(body)}\n<nav class="pager"><span></span><a href="../">${says(writtenIn, 'app.contents')}</a><span></span></nav>`,
   });
 }
 
