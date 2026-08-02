@@ -70,7 +70,8 @@ import {
 } from './journal';
 import { MAX_INTENTION_CHARS, MAX_REPORT_CHARS, writerHint } from '@leela/journal';
 import { deviceKeeper, deviceLocale } from './device';
-import { GAME_KEY, keepGame, loadKeptGame } from './game-store';
+import { GAME_KEY, carryOver, keepGame, loadKeptGame } from './game-store';
+import { PUBLISHED_KEY, inheritedGame } from './inherited';
 import { HANDLE, squareHandle } from './handles';
 
 /**
@@ -101,6 +102,9 @@ const forTheSession = (): Store => {
 /** The device's store, made once, one per thing kept. */
 const keeper = deviceKeeper();
 const gameKeeper = deviceKeeper(GAME_KEY);
+
+/** Where the published app keeps the game this one is succeeding. */
+const inheritedKeeper = deviceKeeper(PUBLISHED_KEY);
 const intentionKeeper = deviceKeeper(INTENTION_KEY);
 const draftKeeper = deviceKeeper(DRAFT_KEY);
 
@@ -190,7 +194,25 @@ export default function App() {
       // screen used to treat them alike: begin again, say nothing. That is the
       // player coming back to the waiting square with their own writing intact
       // underneath it, about squares they are no longer standing on.
-      if (kept.unreadable) alsoSay(messageFor(language, 'app.gameNotRead'));
+      if (kept.unreadable) {
+        alsoSay(messageFor(language, 'app.gameNotRead'));
+        return;
+      }
+
+      // Nothing of ours on this phone. There may still be a game on it: this
+      // app installs over the published one, into the same store, and until now
+      // read nothing of what was there. See `inherited.ts`.
+      void inheritedKeeper.read().then((raw) => {
+        if (stale) return;
+        const found = inheritedGame(raw);
+        if (!found) return;
+
+        setGame((now) => (now.rollsTaken === 0 ? carryOver(now, found.state) : now));
+        alsoSay(messageFor(language, 'app.gameInherited', { plan: found.state.loka }));
+        if (found.others > 0) {
+          alsoSay(messageFor(language, 'app.othersInherited', { count: found.others }));
+        }
+      });
     });
     return () => {
       stale = true;

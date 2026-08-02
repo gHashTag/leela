@@ -358,6 +358,20 @@ const EN = {
    * Said once, at startup, and not again: a loss is news the first time and
    * noise after it.
    */
+  /**
+   * The game the previous version of this app was keeping.
+   *
+   * This app succeeds the published one and installs over it, into the same
+   * store — and read nothing of it, so somebody who had climbed to plan 41
+   * updated and met the waiting square. Said once, at the moment it is carried
+   * across, because a game that reappears without explanation is as unsettling
+   * as one that vanishes.
+   */
+  'app.gameInherited': 'Your game from the previous version is here: you are on {plan}.',
+  'app.othersInherited': {
+    one: '{count} other player on this phone had a game too. This version seats one.',
+    other: '{count} other players on this phone had games too. This version seats one.',
+  },
   'app.gameNotRead': 'The board that was saved could not be read, so this game begins again. Your accounts are untouched.',
   'app.pathPartlyRead': {
     one: '{count} account could not be read and is not shown.',
@@ -806,6 +820,13 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.arrow': 'Выпало {value}. Стрела на {from} поднимает вас на {to}. {title}',
   'app.step': 'Выпало {value}. {from} → {to}. {title}',
   'app.unloadable': 'Тексты планов не загрузились. Обычно помогает открыть приложение заново.',
+  'app.gameInherited': 'Ваша игра из прошлой версии здесь: вы на плане {plan}.',
+  'app.othersInherited': {
+    one: 'На этом телефоне играл ещё {count} человек. В этой версии место одно.',
+    few: 'На этом телефоне играли ещё {count} человека. В этой версии место одно.',
+    many: 'На этом телефоне играли ещё {count} человек. В этой версии место одно.',
+    other: 'На этом телефоне играли ещё {count} человека. В этой версии место одно.',
+  },
   'app.gameNotRead': 'Сохранённое поле не прочиталось, поэтому игра начинается заново. Ваши отчёты не тронуты.',
   'app.pathPartlyRead': {
     one: '{count} отчёт не прочитался и не показан.',

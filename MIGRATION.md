@@ -7506,6 +7506,44 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The game the published app left on the phone, that nothing read.**
+`apps/mobile` succeeds the published application and carries its identity in a
+release build — two apps with one identifier are one app to iOS, so the update
+installs **over** it and inherits its storage. `device.ts` chose AsyncStorage
+for exactly that reason and says so: *same dependency, same place on the device,
+so a phone that has played the old app and the new one is not keeping two
+unrelated things in two unrelated ways.*
+
+Nothing read it. The published app keeps its offline game under one key,
+`OfflinePlayers`, written by `mobx-persist-store` from
+`src/store/OfflinePlayers.ts` — six seats as four parallel arrays, `plans`,
+`start`, `finish`, `histories`. A player standing on plan 41 would have updated
+the app and met the waiting square, with their own history sitting in the same
+store under a key nobody opened. This repository's oldest defect, on the one
+path where it happens to somebody who never asked for a migration.
+
+`inheritedGame` reads it, `carryOver` seats it, and the screen says so — with
+the count of any other seats that were in play, because this app seats one and
+the published one seats six, and five games not carried across is a loss rather
+than an absence. Adopted only when this app has nothing of its own, and only
+when somebody actually played: the published app writes that key on its first
+launch with everyone on 68, so *the key is there* and *somebody played* are
+different questions.
+
+**The rule was already written, once.** `stateFromLegacy` in `packages/db` maps
+the same four facts out of a Firebase document, because the offline store keeps
+per seat what a user document keeps per person. It moved to `@leela/engine` as
+`stateFromKept`, and the database delegates to it — the phone cannot import a
+database driver, and a second copy of the rule is the defect this whole
+repository is about.
+
+**How it was found.** `audit-doubles` compares constants by *name*, so a copy
+that was renamed is invisible to it. Asked instead for the same *value* under
+different names, across the ten workspaces, it answered once:
+`'leela.game.v1'`, as `STORAGE_KEY` in the mini app and `GAME_KEY` on the
+phone — the same key holding two different shapes. Following that to the phone's
+storage is what turned up the store the published app had left there.
+
 **Two more audits kept their own list of where to look, and both were wrong.**
 The pass before widened `workspaceSources` and used it in one audit. Three
 others kept hand-written arrays of the same set, and computing them found what

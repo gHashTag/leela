@@ -33,6 +33,12 @@ export type { PositionOutcome, SixesOutcome } from './rules';
 export { allPlans, applyRoll, hasWon, initialState, replay } from './game';
 
 export {
+  isKeptPlayer,
+  stateFromKept,
+} from './published';
+export type { KeptPlayer, KeptStep } from './published';
+
+export {
   isPlayableState,
   isSeatedTable,
   whyNotPlayable,

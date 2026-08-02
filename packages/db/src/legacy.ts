@@ -17,7 +17,7 @@
  *     game they installed. Nothing about their rules changes on migration.
  */
 
-import { WIN_LOKA, type GameState } from '@leela/engine';
+import { stateFromKept, type GameState } from '@leela/engine';
 import type { NewPlayer } from './schema';
 
 /** A player document as the published app stores it in Firebase. */
@@ -68,18 +68,11 @@ export function stateFromLegacy(user: LegacyUser): GameState {
     throw new LegacyMigrationError(`user ${user.owner}: plan ${user.plan} is off the board`);
   }
 
-  // A player who has not started, or who has finished, is out of play.
-  const outOfPlay = !user.start || user.finish;
-
-  return {
-    loka: outOfPlay ? WIN_LOKA : user.plan,
-    previous_loka: previousPlanFrom(user),
-    direction: directionFromStatus(latestEntry(user)?.status),
-    // The published app has no three-sixes rule, so there is no run to carry.
-    consecutive_sixes: 0,
-    position_before_three_sixes: 0,
-    is_finished: outOfPlay,
-  };
+  // The rule itself is `@leela/engine`'s. It was written here for the Firebase
+  // documents, and the phone needs the same four facts out of the offline store
+  // the published app keeps on the device — where importing this package, which
+  // is a database driver, is not something a React Native bundle can do.
+  return stateFromKept(user);
 }
 
 /** The most recent history entry, or undefined for a player who never rolled. */

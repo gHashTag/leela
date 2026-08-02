@@ -26,6 +26,7 @@
 
 import {
   CLASSIC,
+  type GameState,
   isRuleSetId,
   isSeatedTable,
   ruleSetById,
@@ -125,6 +126,26 @@ export async function keepGame(
   } catch {
     return false;
   }
+}
+
+/**
+ * The same game, seated on a square somebody else's app kept.
+ *
+ * The die is this app's — a new game's seed, turned nowhere — because the
+ * published app's throws are not replayable here: it has no seed, only a
+ * history. What carries across is where the player is standing, which is the
+ * part they would otherwise have to win back.
+ */
+export function carryOver(game: Game, state: GameState): Game {
+  return {
+    ...game,
+    session: {
+      ...game.session,
+      players: game.session.players.map((player, seat) =>
+        seat === 0 ? { ...player, state } : player,
+      ),
+    },
+  };
 }
 
 /**
