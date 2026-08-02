@@ -5286,6 +5286,34 @@ one test that already builds the site — every *N pages* in either document mus
 be the number the build wrote, and there must be at least one of them, or the
 check is checking nothing.
 
+**Two formats that nothing had ever carried across (211th pass).**
+`@leela/journal` says of itself that *a format written on one surface and parsed
+on another is exactly what this package exists to prevent*. Both halves of both
+formats were tested and neither crossing was: `/save` writes a document and
+`message:document` reads one — each driven, never the same bytes through both —
+and the mini app builds a square with `squareText` while the bot's reader was
+only ever handed text typed into a test file.
+
+Played instead of asserted. The bot's own file goes back in and it says
+*nothing in that file is new to me*; a second player's bot reads it and every
+account crosses. The square the mini app hands over lands on the plan it names,
+carries its words, gives its question to a player who has none and **does not
+replace one they already gave** — the rule every surface states and each had to
+be held to separately, now held across the join.
+
+**Two of my own mistakes, both the format doing exactly what it says.** The
+first version wrote the same sentence on every turn against a fixed clock, and
+one account went missing on the round trip: `keyOf` is the plan, the words and
+the moment, so two identical entries are one entry. The second compared the
+entries by position, and with every timestamp equal there is nothing for `order`
+to sort by — the crossing is a set, not a sequence.
+
+**Three probes before it that found nothing**, worth writing down as much as the
+one that did: the hand-over adopts a question only where there is none, `/take`
+does the same, and the file the bot saves is one the bot accepts. The bot image
+builds in CI, and the contract at `0x2741…` still holds no code on any chain
+that answers — asked again today rather than quoted from July.
+
 **The deploy watched four paths and the app is made of five (210th pass).**
 `pages.yml` publishes the mini app on a push that touches one of a hand-written
 list: the two apps, `packages/engine`, `packages/content`. The mini app also
