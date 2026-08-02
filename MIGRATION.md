@@ -5286,6 +5286,27 @@ one test that already builds the site — every *N pages* in either document mus
 be the number the build wrote, and there must be at least one of them, or the
 check is checking nothing.
 
+**Two lockfiles, and they had already forked (209th pass).** The lens the
+published app taught, turned on this repository: what pins its own versions?
+Two files do. `bun.lock` at the root, and `packages/engine/bun.lock`, committed
+with the first unification and never looked at again.
+
+They disagree. The root pins vite 6.4.3 and esbuild 0.25.12; the engine's pinned
+**vite 5.4.21 and esbuild 0.21.5**. A bun workspace resolves from the lockfile
+beside the root manifest, so anything run *from that directory* used the other
+one — and the package every surface depends on could be tested by a different
+bundler than the surfaces are. CI installs at the root and would never have seen
+it.
+
+The same shape as the app one repository over, from the other side: there a
+missing lockfile let versions drift, here a spare one let them fork.
+
+`audit-configs` asks it now, off the filesystem rather than off `git ls-files` —
+an untracked stray forks an install just as well as a committed one, and the
+first version of the check could not see one. Both ends of the rule are held: a
+second lockfile inside a workspace is named, and no lockfile at all is a
+different sentence, because it is a different repair.
+
 **A decision nothing defended, and the list that could not see it (206th
 pass).** `audit-mutants` breaks a decision on purpose and runs the suite that
 owns it. It closed with *Broke 42 decisions on purpose. Every one of them was

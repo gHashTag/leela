@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 // A plain module, shared with the scripts that use it. One suppressed line
 // rather than a `.d.ts`, which would be a second description of it.
 // @ts-expect-error - untyped .mjs
-import { checkCiPackages, checkCounts, workspaceSources, checkManifests, checkTotal, claimedCounts, claimedTotal, copiedManifests, packagesCheckedByCi } from '../../../scripts/lib/claims.mjs';
+import { checkCiPackages, checkCounts, checkLockfiles, workspaceSources, checkManifests, checkTotal, claimedCounts, claimedTotal, copiedManifests, packagesCheckedByCi } from '../../../scripts/lib/claims.mjs';
 
 /**
  * The numbers this repository says about itself.
@@ -291,5 +291,64 @@ describe('where an audit looks for source', () => {
 
   it('finds nothing where there is nothing, rather than throwing', () => {
     expect(workspaceSources(treeOf([]))).toEqual([]);
+  });
+});
+
+describe('one workspace, one lockfile', () => {
+  /**
+   * `packages/engine/bun.lock` was committed with the first unification and
+   * nobody looked at it again. A bun workspace resolves from the lockfile beside
+   * the root manifest; a second one inside a package is what anything run *from
+   * that directory* uses — and the two had already come apart. The root pinned
+   * vite 6.4.3 and esbuild 0.25.12, this package's pinned 5.4.21 and 0.21.5, so
+   * the one package every surface depends on could be tested by a different
+   * bundler than the surfaces are, and CI installs at the root and would never
+   * have seen it.
+   *
+   * The same shape as the published app one repository over, from the other
+   * side: a missing lockfile lets versions drift, a spare one lets them fork.
+   */
+  it('accepts a repository with only a lockfile at the root', () => {
+    expect(checkLockfiles(['package.json', 'bun.lock', 'packages/engine/package.json'])).toEqual([]);
+  });
+
+  it('names a lockfile inside a workspace, whatever it is called', () => {
+    // Four package managers, and a repository can acquire any of them by
+    // somebody running the wrong install in the wrong directory once.
+    for (const stray of [
+      'packages/engine/bun.lock',
+      'packages/engine/bun.lockb',
+      'apps/bot/package-lock.json',
+      'apps/miniapp/yarn.lock',
+      'packages/db/pnpm-lock.yaml',
+    ]) {
+      const said = checkLockfiles(['bun.lock', stray]);
+      expect(said, stray).toHaveLength(1);
+      expect(said[0], stray).toContain(stray);
+    }
+  });
+
+  it('says so when there is no lockfile at all', () => {
+    /**
+     * The other end of the same rule, and the one that cost the published app
+     * three years: with nothing pinned, every install resolves its caret ranges
+     * fresh. It is a different sentence because it is a different repair.
+     */
+    expect(checkLockfiles(['package.json', 'src/index.ts'])).toEqual([
+      'no lockfile at all: every install resolves fresh',
+    ]);
+  });
+
+  it('is not fooled by a file that merely has the word in it', () => {
+    // `podlock.mjs`, `scripts/lib/podlock.d.mts`, a test called `lockfile.ts` —
+    // this repository has all three, and none of them pins anything.
+    expect(
+      checkLockfiles([
+        'bun.lock',
+        'scripts/lib/podlock.mjs',
+        'apps/mobile/tests/podlock.test.ts',
+        'docs/lockfiles.md',
+      ]),
+    ).toEqual([]);
   });
 });

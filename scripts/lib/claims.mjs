@@ -127,6 +127,35 @@ export const packagesCheckedByCi = (workflow) => {
   return loops;
 };
 
+/**
+ * One workspace, one lockfile.
+ *
+ * `packages/engine/bun.lock` was committed in the first unification commit and
+ * nobody looked at it again. A bun workspace resolves from the lockfile beside
+ * the root manifest; a second one inside a package is used by anything run
+ * *from that directory* — and the two had already come apart. The root pinned
+ * vite 6.4.3 and esbuild 0.25.12, the engine's pinned 5.4.21 and 0.21.5, so the
+ * one package every surface depends on could be tested by a different bundler
+ * than the surfaces are, and CI — which installs at the root — would never see
+ * it.
+ *
+ * The same shape as the app one repository over, from the other side: there a
+ * missing lockfile let versions drift, here a spare one let them fork.
+ *
+ * @param files Every file the repository tracks, as repo-relative paths.
+ */
+export function checkLockfiles(files) {
+  const locks = files.filter((path) => /(^|\/)(bun\.lockb?|package-lock\.json|yarn\.lock|pnpm-lock\.yaml)$/.test(path));
+  const stray = locks.filter((path) => path.includes('/'));
+
+  if (locks.length === 0) return ['no lockfile at all: every install resolves fresh'];
+
+  return stray.map(
+    (path) =>
+      `${path}: a second lockfile inside a workspace — the root's is the one an install at the root uses, and these two can pin different versions of the same tool`,
+  );
+}
+
 /** Workspaces CI iterates, against the ones that exist. */
 export function checkCiPackages(loops, workspaces) {
   const problems = [];

@@ -17,7 +17,7 @@
 
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { checkCiPackages, checkManifests, copiedManifests, packagesCheckedByCi } from './lib/claims.mjs';
+import { checkCiPackages, checkLockfiles, checkManifests, copiedManifests, packagesCheckedByCi } from './lib/claims.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const WORKSPACES = ['packages', 'apps'];
@@ -94,6 +94,17 @@ if (existsSync(dockerfile)) {
     ...checkManifests(copiedManifests(readFileSync(dockerfile, 'utf8')), workspaces),
   );
 }
+
+// One workspace, one lockfile. A second one inside a package is used by
+// anything run from that directory, and the two had already forked.
+problems.push(
+  ...checkLockfiles([
+    ...readdirSync(ROOT),
+    ...[...workspaces].flatMap((where) =>
+      readdirSync(join(ROOT, where)).map((file) => `${where}/${file}`),
+    ),
+  ]),
+);
 
 // CI iterates a hand-written list in a shell loop, three times over. A package
 // missing from it does not turn the build red — it is simply never run, which
