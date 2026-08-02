@@ -28,11 +28,28 @@ export function escape(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
-/** Markdown, as far as the plan texts actually use it. */
+/**
+ * Markdown, as far as the plan texts actually use it.
+ *
+ * **A list separated by blank lines is one list.** The plan texts write their
+ * enumerations that way — plan 6's four kleshas, plan 58's states of
+ * consciousness, plan 64's material contents — one numbered line, a blank line,
+ * the next. Each block was rendered on its own, so the page carried four lists
+ * of one item each and no `start`, and a browser numbers those **1. 1. 1. 1.**
+ * Eighty-four of the hundred and seven pages with a list in them said that,
+ * including a rules chapter with eleven items every one of which was item one.
+ *
+ * Nothing was missing: every word was on the page. Only the numbering, which is
+ * the whole of what an enumeration says. CommonMark calls blank-line separated
+ * items one loose list, and the game shows them as the text writes them — so
+ * both the standard and the other surface were already agreed, and this was the
+ * only reader that was not.
+ */
 export function renderMarkdown(source: string): string {
   const blocks = source.split(/\n{2,}/).filter((block) => block.trim().length > 0);
 
-  return blocks
+  return joinLists(
+    blocks
     .map((block) => {
       const trimmed = block.trim();
 
@@ -54,8 +71,34 @@ export function renderMarkdown(source: string): string {
       }
 
       return `<p>${inline(trimmed.replace(/\n/g, ' '))}</p>`;
-    })
-    .join('\n');
+    }),
+  ).join('\n');
+}
+
+/**
+ * Runs of lists of the same kind, folded into one.
+ *
+ * On the rendered blocks rather than on the source, because *is this a list*
+ * has already been decided once above and deciding it twice is how the two
+ * answers come to differ.
+ */
+function joinLists(blocks: string[]): string[] {
+  const folded: string[] = [];
+
+  for (const block of blocks) {
+    const previous = folded.at(-1);
+    const tag = block.startsWith('<ol>') ? 'ol' : block.startsWith('<ul>') ? 'ul' : null;
+
+    if (tag && previous?.startsWith(`<${tag}>`) && previous.endsWith(`</${tag}>`)) {
+      folded[folded.length - 1] =
+        `${previous.slice(0, -`</${tag}>`.length)}${block.slice(`<${tag}>`.length)}`;
+      continue;
+    }
+
+    folded.push(block);
+  }
+
+  return folded;
 }
 
 /** Emphasis and links, escaped first so nothing in the source can inject. */

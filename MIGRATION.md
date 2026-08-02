@@ -7506,6 +7506,29 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Eighty-four pages of the book numbered every list item one.** The plan texts
+write their enumerations with a blank line between the items — plan 6's four
+kleshas, plan 58's states of consciousness, plan 64's material contents, a rules
+chapter with eleven of them. `renderMarkdown` splits on blank lines and decides
+what each block is, so each item became a list of **one** item with no `start`,
+and a browser numbers a run of those **1. 1. 1. 1.**
+
+Nothing was missing: every word was on the page. Only the numbering, which is
+the whole of what an enumeration says. A reader met four things all called the
+first, in a text about four states that follow one another.
+
+Found by asking whether the book and the game show the same text: 45 of 1,584
+plan pages did not carry a paragraph the game does, and every one of them began
+with a number. Measured over the built book, 84 of the 107 pages that have a
+list in them held two or more lists of one item with nothing between.
+
+CommonMark calls blank-line separated items one loose list, and the game shows
+them as the text writes them — so the standard and the other surface were
+already agreed, and this was the only reader that was not. Runs of lists of the
+same kind are folded into one, on the rendered blocks rather than on the source,
+because *is this a list* has already been decided once and deciding it twice is
+how the two answers come to differ. 84 → 0.
+
 **One question, two spellings.** Both surfaces that draw a board have a
 `mayThrow`, and both carry a comment about the same defect: *the rest was
 written out by hand and re-decided `report-required` and `finished` under the
