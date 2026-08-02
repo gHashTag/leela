@@ -7506,6 +7506,31 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Switching language lost the page, 840 times.** Every language is served
+`legal/policy.html` and `legal/eula.html` — in English wherever nobody
+translated them, because a missing privacy policy is a store rejection and, for
+a Telegram mini app, a blocker. The build says so in its own comment: *the page
+is still filed under `language` and still linked from that contents — it is
+served, as it must be.* The language picker refused to link to it anyway, and a
+reader on the privacy policy who chose another language landed at the front of
+the book.
+
+One callback answered two questions. `languagePicker` had already written down
+that they are not one fact — *sending a person to the contents is help, telling
+a crawler that the contents is a translation of a chapter is false* — and the
+legal pages are exactly where they diverge: served in twenty-two languages,
+translated into two. `pathFor` keeps its meaning for `hreflang`, and `servedAt`
+answers for the reader. Measured over the built book: **840 → 0**, with the 211
+that legitimately go to a contents untouched — those are chapters a language's
+book does not carry, and there is nothing to send anyone to.
+
+**Three clean probes first, on real data.** All 47,683 internal links in the
+1,784 built pages resolve. Every page is reachable from the root. And the
+declared `lang` of every page matches the script its text is written in — the
+two Japanese legal pages that looked wrong are correctly declared `lang="en"`,
+and my own instrument was reading the language picker's endonyms rather than
+the body.
+
 **A return told in the same words was not a return at all.** Both places that
 ask the companion anything hand it the player's path with the entry being
 answered removed, so the words being answered are not also offered as history.

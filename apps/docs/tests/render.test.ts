@@ -390,6 +390,7 @@ describe('a page declares the language its words are in', () => {
       body: english,
       writtenIn: 'en',
       translatedInto: ['en', 'ru'],
+      servedTo: LANGUAGES,
     });
 
   it('says English over English, whichever section it is filed under', () => {
@@ -416,6 +417,7 @@ describe('a page declares the language its words are in', () => {
       body: 'Политика конфиденциальности',
       writtenIn: 'ru',
       translatedInto: ['en', 'ru'],
+      servedTo: LANGUAGES,
     });
 
     expect(translated).toContain('<html lang="ru"');
@@ -446,6 +448,7 @@ describe('a page points at itself', () => {
       body: 'Terms.',
       writtenIn: 'en',
       translatedInto: ['en', 'ru'],
+      servedTo: LANGUAGES,
     });
 
     expect(html).toContain(`<link rel="canonical" href="${DOCS_URL}en/legal/eula.html">`);

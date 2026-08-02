@@ -180,6 +180,10 @@ export function build(outDir: string): BuildResult {
           // just no longer claims to be written in a language it is not.
           writtenIn: byLanguage.has(language) ? language : 'en',
           translatedInto: LANGUAGES.filter((other) => byLanguage.has(other)),
+          // The same condition the loop above writes a file under: a language
+          // is served this document if it has its own or if there is an
+          // English one to serve instead. That is what the picker may link to.
+          servedTo: LANGUAGES.filter((other) => byLanguage.has(other) || byLanguage.has('en')),
         }),
       );
     }

@@ -95,8 +95,27 @@ export interface PageOptions {
   body: string;
   /** Shown under the title. */
   subtitle?: string;
-  /** Where this page lives in another language. See `languagePicker`. */
+  /**
+   * Where this page exists **as a translation** in another language.
+   *
+   * This is the answer `hreflang` needs, and it is a claim about the text: an
+   * alternate that is not a translation tells a crawler something false.
+   */
   pathFor?: (language: Language) => string | null;
+  /**
+   * Where a reader who switches language lands. Defaults to `pathFor`.
+   *
+   * The two were one callback, and `languagePicker` had already written down
+   * that they are not one fact — *sending a person to the contents is help,
+   * telling a crawler that the contents is a translation of a chapter is
+   * false*. For a chapter a language does not carry they agree, because there
+   * is nothing to send anyone to. For the legal pages they do not: every
+   * language is served `legal/policy.html`, in English where nobody translated
+   * it, and 840 picker links sent a reader on the privacy policy back to the
+   * front of the book in the language they chose — a page that was there,
+   * refused because it was not a translation.
+   */
+  servedAt?: (language: Language) => string | null;
 }
 
 /** One page, complete. */
@@ -110,6 +129,7 @@ export function page({
   body,
   subtitle,
   pathFor = () => '',
+  servedAt,
 }: PageOptions): string {
   /**
    * The address of the text, which is this page's own on every page in the
@@ -145,7 +165,7 @@ ${subtitle ? `<p class="subtitle">${escape(subtitle)}</p>` : ''}
 ${body}
 </main>
 <footer>
-${languagePicker(language, root, pathFor, writtenIn)}
+${languagePicker(language, root, servedAt ?? pathFor, writtenIn)}
 </footer>
 </body>
 </html>
@@ -475,6 +495,15 @@ export function chapterPage(
 }
 
 export interface LegalPageOptions {
+  /**
+   * The languages this document is *filed under*, translated or not.
+   *
+   * Not the same list as `translatedInto`, and that is the point: a reader
+   * switching language from the privacy policy should arrive at the privacy
+   * policy, which every language is served, while `hreflang` may only claim
+   * the two that were actually written.
+   */
+  servedTo: ReadonlyArray<Language>;
   /** The section of the book the document is filed under. */
   language: Language;
   /** `policy` or `eula` — its file name, and how it is filed. */
@@ -512,6 +541,7 @@ export function legalPage({
   body,
   writtenIn,
   translatedInto,
+  servedTo,
 }: LegalPageOptions): string {
   return page({
     title,
@@ -519,7 +549,13 @@ export function legalPage({
     writtenIn,
     root: '../../',
     path: `legal/${name}.html`,
+    // A translation, for `hreflang`: only English and Russian were written.
     pathFor: (other) => (translatedInto.includes(other) ? `legal/${name}.html` : null),
+    // And where the reader lands, which is wherever the page is served — the
+    // build files one under every language it writes a body for, English where
+    // nobody translated it. Sending them to the contents instead lost the page
+    // they were reading, 840 times across the book.
+    servedAt: (other) => (servedTo.includes(other) ? `legal/${name}.html` : null),
     description: summarise(body),
     // `writtenIn`, not the section: a page whose body is the English document
     // declares `lang="en"`, and Russian chrome inside an English document would

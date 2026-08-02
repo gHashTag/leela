@@ -189,6 +189,7 @@ describe('an untranslated legal page is English throughout', () => {
       body: 'We collect nothing.',
       writtenIn: 'en',
       translatedInto: ['en', 'ru'],
+      servedTo: LANGUAGES,
     });
 
     expect(german).toContain('<html lang="en"');
@@ -206,6 +207,7 @@ describe('an untranslated legal page is English throughout', () => {
       body: 'Мы ничего не собираем.',
       writtenIn: 'ru',
       translatedInto: ['en', 'ru'],
+      servedTo: LANGUAGES,
     });
 
     expect(russian).toContain('<html lang="ru"');
