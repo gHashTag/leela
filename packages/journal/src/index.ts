@@ -368,6 +368,47 @@ export function fileName(stamp: string): string {
  * of them can supply.
  */
 
+/**
+ * The path minus the one entry a companion is about to answer.
+ *
+ * Both surfaces that ask the companion anything built this by hand, and both
+ * built it the same wrong way: `entry.plan !== plan || entry.text !== text`,
+ * which is not *this entry* but *every entry that says what this one says*.
+ *
+ * Two of them is the case the game is about. The prompt says so in its own
+ * words — *returning is what this game is about: the same state arrives again,
+ * and what changed between the tellings is the thing worth noticing* — and when
+ * nothing changed between the tellings, when a player came back to plan 41 and
+ * wrote the same sentence they wrote the first time, both entries were dropped
+ * and the companion was told there had been no return at all. A return told in
+ * different words was reported; the same return told in the same words was
+ * invisible, which is the loudest signal this record can carry.
+ *
+ * One occurrence, and the newest of them, because the entry being answered is
+ * the one just written. Order-independent: the bot hands its rows newest-first
+ * and a file is oldest-first, and neither has to say which.
+ *
+ * The moment is asked for rather than read, for the reason stated above this
+ * whole section: the bot's rows carry `createdAt` where the file format carries
+ * `at`, so the rule is written over the least either of them can supply.
+ *
+ * @param momentOf  When an entry was written, as a number to compare.
+ */
+export function withoutOne<T extends { plan: number; text: string }>(
+  entries: ReadonlyArray<T>,
+  one: { plan: number; text: string },
+  momentOf: (entry: T) => number = (entry) => Number((entry as { at?: unknown }).at ?? 0),
+): T[] {
+  let found = -1;
+
+  for (const [index, entry] of entries.entries()) {
+    if (entry.plan !== one.plan || entry.text !== one.text) continue;
+    if (found === -1 || momentOf(entry) > momentOf(entries[found] as T)) found = index;
+  }
+
+  return found === -1 ? [...entries] : entries.filter((_, index) => index !== found);
+}
+
 /** One square somebody keeps returning to. */
 export interface Revisit {
   plan: number;

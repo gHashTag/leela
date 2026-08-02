@@ -7506,6 +7506,41 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A return told in the same words was not a return at all.** Both places that
+ask the companion anything hand it the player's path with the entry being
+answered removed, so the words being answered are not also offered as history.
+Both wrote the removal by hand and both wrote it the same way —
+`entry.plan !== plan || entry.text !== text` — which is not *this entry* but
+*every entry that says what this one says*.
+
+Measured through the real prompt. A player on plan 41 who had stood there
+before:
+
+| how they told it | what the companion was given |
+|---|---|
+| in different words | 2 of 3 entries, and *They have stood here before, and wrote: …* |
+| in the same words | 1 of 3 entries, and nothing about a return at all |
+
+The second is the case the game exists for, and the prompt says so in its own
+sentence: *returning is what this game is about: the same state arrives again,
+and what changed between the tellings is the thing worth noticing.* When
+nothing changed between the tellings — the loudest signal this record can carry
+— the companion was told there had been no return.
+
+`withoutOne` in `@leela/journal` removes **one** occurrence, the newest, since
+the entry being answered is the one just written. It asks for the moment rather
+than reading it, for the reason stated above that whole section: the bot's rows
+carry `createdAt` where the file format carries `at`, so the rule is written
+over the least either can supply.
+
+**Two things measured and left alone.** The report and the question are the only
+inputs `prompts.ts` does not clip — a million characters go through whole, where
+the same million arriving as history is cut to 5,869. It is unreachable today:
+Telegram carries 4096, the composer clamps at `MAX_REPORT_CHARS`, and
+`parseDocument` clamps an imported entry to the same. And the report path
+already filters the answered entry exactly as `/square` does, which was the
+first thing checked and was a clean probe.
+
 **The fourth surface: a table in a chat, and the chat told there is none.**
 `DatabaseRoomStore.get` answered `null` both to *no table here* and to *there is
 a table and the engine will not take it*. The log line beside that choice

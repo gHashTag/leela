@@ -10,7 +10,7 @@ import { Bot, InlineKeyboard, InputFile, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 import { type Language, bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
 import { isSessionOver, isWaitingToEnter } from '@leela/engine';
-import { MAX_INTENTION_CHARS, isIntention } from '@leela/journal';
+import { MAX_INTENTION_CHARS, isIntention, withoutOne } from '@leela/journal';
 import type { Guide } from '@leela/ai';
 import { Conversations } from './conversation';
 import * as commands from './commands';
@@ -344,8 +344,7 @@ export function createBot({
       // is not going to be made.
       const journey =
         reports.history && guide.status().available
-        ? (await reports.history(effect.userId))
-            .filter((entry) => entry.plan !== effect.plan || entry.text !== effect.text)
+        ? withoutOne(await reports.history(effect.userId), effect, (row) => row.createdAt.getTime())
             .reverse()
             .map((entry) => ({ plan: entry.plan, text: entry.text }))
         : undefined;
@@ -743,8 +742,7 @@ export function createBot({
     // the report gate follows, so the companion is not handed the words it is
     // about to answer as though they were already history.
     const journey = reports.history
-      ? (await reports.history(who.id))
-          .filter((entry) => entry.plan !== square.plan || entry.text !== square.text)
+      ? withoutOne(await reports.history(who.id), square, (row) => row.createdAt.getTime())
           .reverse()
           .map((entry) => ({ plan: entry.plan, text: entry.text }))
       : undefined;
