@@ -98,6 +98,22 @@ for (const fix of CORRECTIONS) {
     if (!plan) continue;
 
     const named = fix.languages.includes(language);
+
+    // A repair stated as a change to the body rather than as one string for
+    // another states what must be true afterwards, and that is what is asked
+    // here. Asking whether running the repair again changes anything is a check
+    // that cannot fail — a repair that has stopped firing changes nothing
+    // either — and it passed eighteen broken translations before this line was
+    // written the second time.
+    if (named && fix.holds) {
+      if (!fix.holds(plan.body)) {
+        problems.push(
+          `${language}/${fix.plan}: the correction is stated and the data does not carry it — ${fix.where}`,
+        );
+      }
+      continue;
+    }
+
     if (named && plan.body.includes(fix.from)) {
       problems.push(
         `${language}/${fix.plan}: still says \`${fix.from}\` — ${fix.where}`,

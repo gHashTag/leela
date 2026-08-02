@@ -24,6 +24,37 @@
 
 export const CORRECTIONS = [
   {
+    where: 'the eighth plan ends with a quotation mark that opens nothing',
+    // The donor has it: `translate-leela/docs/8-greed.md` holds exactly one `"`
+    // and it is the last character of the file. Eighteen machine translations
+    // carry it, seventeen at the very end and the Spanish one character in,
+    // because Spanish sets the full stop outside the quotation.
+    //
+    // Checkable, and on three counts rather than one. The mark closes nothing —
+    // counting says so, in every language at once. The two sources of this text
+    // that did not come through that donor disagree with it: the Russian, which
+    // is written rather than translated, has no quotation in plan 8 at all, and
+    // Arabic, Malay and Ukrainian carry a properly paired one around a
+    // different phrase entirely. And removing it removes no words, which is the
+    // line this file draws — what a sentence should say is not the question,
+    // and nobody is overruled.
+    languages: ['bn', 'de', 'en', 'es', 'fr', 'hi', 'ja', 'jv', 'ko', 'mr', 'pa', 'pt', 'ta', 'te', 'tr', 'ur', 'vi', 'zh'],
+    plan: 8,
+    // Only where it is alone. A body with a pair in it is a body with a
+    // quotation in it, and this must not touch that.
+    repair: (body) => {
+      const marks = body.match(/["“”„«»「」]/g) ?? [];
+      return marks.length === 1 ? body.replace(/["“”„«»「」]/, '') : body;
+    },
+    // What must be true of the shipped text, said without reference to the
+    // repair. Asking instead whether running the repair again changes anything
+    // is a check that cannot fail: a repair that has stopped firing changes
+    // nothing either, and the audit called eighteen broken translations
+    // correct. A structural entry states the property, and the property is
+    // read out of the data.
+    holds: (body) => (body.match(/["“”„«»「」]/g) ?? []).length !== 1,
+  },
+  {
     where: 'the ninth plan argues that nine keeps itself; 9 × 280 is 2520, not 7380',
     // The three translations that follow the English rather than the Russian
     // edition, which is how they inherited the English donor's false product.
@@ -65,6 +96,23 @@ export function corrected(body, language, plan) {
 
   for (const fix of CORRECTIONS) {
     if (fix.plan !== plan || !fix.languages.includes(language)) continue;
+
+    // Some of what a donor gets wrong is structural rather than textual. The
+    // eighth plan ends with a quotation mark that opens nothing, and the words
+    // in front of it are different in each of the eighteen languages that
+    // carry it — there is no `from` to write. An entry may therefore state the
+    // repair as a function of the body, and is recorded and checked for rot on
+    // exactly the same terms: it counts as applied when it changes something,
+    // and `unappliedIn` fails on it when it stops.
+    if (fix.repair) {
+      const next = fix.repair(out);
+      if (next !== out) {
+        out = next;
+        applied.push(fix.where);
+      }
+      continue;
+    }
+
     if (!out.includes(fix.from)) continue;
 
     out = out.split(fix.from).join(fix.to);

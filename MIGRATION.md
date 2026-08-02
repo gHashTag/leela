@@ -7506,6 +7506,50 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The eighth plan ended with a quotation mark that opens nothing, in eighteen
+languages.** The donor has it: `translate-leela/docs/8-greed.md` holds exactly
+one `"` and it is the last character of the file. Every machine translation
+carried it down — seventeen at the very end, and the Spanish one character in,
+because Spanish sets the full stop outside the quotation.
+
+Repaired, and the case for repairing it is counted rather than argued, on three
+counts. The mark closes nothing, which counting says in every language at once.
+The two sources of this text that did not come through that donor disagree with
+it: the Russian, written rather than translated, has no quotation in plan 8 at
+all, and Arabic, Malay and Ukrainian carry a properly paired one around a
+different phrase. And removing it removes no words, which is the line
+`corrections.mjs` draws — what a sentence should say is not the question, and
+nobody is overruled.
+
+**A correction may now state a change rather than a string.** The words in front
+of that mark are different in each of the eighteen, so there is no `from` to
+write.
+
+**And the first version of that check could not fail.** A structural entry was
+verified by running its repair again and seeing nothing change — which is what a
+repair that has *stopped firing* also does. Switching the repair off and
+rebuilding, the audit reported no problem at all and eighteen broken
+translations passed. A structural entry now states what must be true of the
+shipped text — plan 8 holds no lone quotation mark — and the audit and the test
+read that out of the data. With the repair off, they name all eighteen.
+
+An entry that states neither kind would apply to nothing and be recorded as a
+repair that is happening, and an entry with a repair and no property could only
+be checked by running it. The shape refuses both.
+
+**Three others were read and left, and the difference is the point.** Each is in
+one language only, and each is a mark that was *lost* rather than one that was
+added: Arabic plan 17 keeps one of the English text's six, French plan 43 opens
+`«` and never closes it, Malay plan 10 has one of two. Putting those right means
+deciding where a quotation ends, which is deciding what the sentence says.
+
+**Three classes were swept and are empty**, each with the instrument checked
+before the zero was believed. No plan is truncated against its own language's
+norm. Every one of the 1,584 ends with a terminator — once `।`, `。` and `۔` are
+counted as the terminators they are, which the first attempt did not, and 298
+Bengali and Hindi plans looked broken. And no sentence is repeated where a
+machine translation would repeat one.
+
 **Two of the twenty-two languages were read by nothing at all.** The check for
 text left in the language it was translated from asks whether a paragraph is
 written in the script it is filed under, and `lib/untranslated.mjs` said so

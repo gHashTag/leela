@@ -27,11 +27,42 @@ import {
  * says so instead of quietly doing nothing.
  */
 
-type Correction = { where: string; languages: string[]; plan: number; from: string; to: string };
+type Correction = {
+  where: string;
+  languages: string[];
+  plan: number;
+  from?: string;
+  to?: string;
+  /**
+   * A repair stated as a change to the body rather than as one string for
+   * another.
+   *
+   * The eighth plan ends with a quotation mark that opens nothing, and the
+   * words in front of it are different in each of the eighteen languages that
+   * carry it — there is no `from` to write. Both kinds are recorded and checked
+   * for rot on the same terms, and the assertions below take each on its own.
+   */
+  repair?: (body: string) => string;
+  /**
+   * What must be true of the shipped text, said without reference to the
+   * repair.
+   *
+   * Asking instead whether running the repair again changes anything is a check
+   * that cannot fail: a repair that has stopped firing changes nothing either.
+   * Written that way first, it called eighteen broken translations correct.
+   */
+  holds?: (body: string) => boolean;
+};
 const stated = CORRECTIONS as Correction[];
 
+/** The ones that name a string, which is what a textual assertion can read. */
+const textual = stated.filter((fix) => fix.from !== undefined);
+
+/** The ones that state a change instead, which is asserted by making one. */
+const structural = stated.filter((fix) => fix.repair !== undefined);
+
 describe('a correction is stated once and applied by the generator', () => {
-  const fix = stated[0]!;
+  const fix = textual[0]!;
 
   it('rewrites the text it names', () => {
     const applied = corrected(`nine keeps itself: 9х280=${fix.from}=9.`, fix.languages[0], fix.plan);
@@ -75,7 +106,7 @@ describe('the shipped data carries every correction', () => {
    * this catches one to the sentences somebody has already written down.
    */
   it('has the corrected form in the languages named, and not the donor’s', () => {
-    for (const fix of stated) {
+    for (const fix of textual) {
       for (const language of fix.languages) {
         const body = plansFor(language).find((plan) => plan.plan === fix.plan)?.body ?? '';
 
@@ -83,6 +114,38 @@ describe('the shipped data carries every correction', () => {
         expect(body, `${language}/${fix.plan}`).not.toContain(fix.from);
       }
     }
+  });
+
+  it('holds in the data for a structural repair, not merely in the repair', () => {
+    // The same assertion for the other kind, and it must read the data rather
+    // than the function. Written as *running the repair again changes nothing*
+    // it passed with the repair switched off, because a repair that never fires
+    // changes nothing either — eighteen broken translations called correct by a
+    // check that could not fail.
+    for (const fix of structural) {
+      for (const language of fix.languages) {
+        const body = String(plansFor(language).find((plan) => plan.plan === fix.plan)?.body ?? '');
+
+        expect({ language, plan: fix.plan, holds: fix.holds?.(body) }).toEqual({
+          language,
+          plan: fix.plan,
+          holds: true,
+        });
+      }
+    }
+  });
+
+  it('states what a structural repair leaves behind, or it cannot be checked', () => {
+    // An entry with a `repair` and no `holds` can only be verified by running
+    // the repair, which is the check that cannot fail.
+    expect(structural.filter((fix) => fix.holds === undefined)).toEqual([]);
+  });
+
+  it('states one kind or the other, and not neither', () => {
+    // A row with no `from` and no `repair` applies to nothing and is recorded
+    // as a repair that is happening. That is the failure this whole file is
+    // about, written into the shape of an entry.
+    expect(stated.filter((fix) => fix.from === undefined && fix.repair === undefined)).toEqual([]);
   });
 
   it('names only languages that exist and plans that exist', () => {
