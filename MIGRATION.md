@@ -7506,6 +7506,36 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The question a player is playing for was stored and never proved to come
+back.** The durable sink keeps four things — the accounts, the moves, the
+intention and the setting of it — and the assembled restart test proves two: it
+plays, writes an account, reassembles on the same file and asks `/path`. It
+*sets* an intention before the restart and never asks about one after.
+
+Which leaves the capability that decides whether a player can play at all. The
+bot refuses the throw before the question, so an intention that did not survive
+would mean every player at every table asked again after each deploy — and a
+path leaving the chat without the question in it, which the pass that put it
+there would not have caught. It does survive. Nothing said so, which is exactly
+where `reportsFor` sat before `/path` existed.
+
+**Measured twice, because the first measurement was wrong in both directions.**
+Searching the database file for the words found nothing — they were still in the
+write-ahead log — and `storage.ts` holds no mention of an intention at all,
+because `sqlite.ts` is where it is implemented. Reassembling inside one process
+proves neither: a map on a module lives exactly that long. The test opens the
+file with a handle of its own, through the same `node:sqlite` the bot loads.
+
+**Four sweeps came back clean and one came back already answered**, which is
+worth writing down so they are not re-trodden. No audit reads its subject from a
+place CI lacks except the three that say so in their own headers and are not in
+CI. The three book audits read sources rather than the built pages. `/returns`
+answers from the accounts and says so in its own message, so it does not want
+the move log. And the move log's reader — `stepsFor`, written on every throw and
+called by nothing — is already recorded in `audit-unread`'s `PUBLIC_MEMBERS`,
+with the same fork this pass arrived at independently: either the bot grows a
+command that reads a game's throws back, or it stops writing them.
+
 **The cut that keeps one plan's text out of another was verified nowhere that
 runs.** The Arabic, Malay and Ukrainian donor edition runs plan 12 into plan 13,
 so a player standing on Envy read the whole of Nullity. The generator cuts it,
