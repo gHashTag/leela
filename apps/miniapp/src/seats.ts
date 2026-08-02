@@ -30,11 +30,12 @@ import {
   MAX_SEATS,
   createSession,
   initialState,
+  isSeatedTable,
   type GameState,
   type SeatedPlayer,
   type Session,
 } from '@leela/engine';
-import { isSavedGame, loadState, type GameStorage } from './state';
+import { loadState, type GameStorage } from './state';
 
 /** Where the seated game lives. A shape change starts a new key. */
 export const SEATS_KEY = 'leela.seats.v1';
@@ -64,26 +65,9 @@ export function seatId(index: number): string {
  * which no game reaches is a shape check that hands the engine a lie.
  */
 export function isSavedSeats(value: unknown): value is SavedSeats {
-  if (typeof value !== 'object' || value === null) return false;
-
-  const table = value as { turnIndex?: unknown; players?: unknown };
-  if (!Array.isArray(table.players)) return false;
-  if (table.players.length < 1 || table.players.length > MAX_SEATS) return false;
-
-  if (!Number.isInteger(table.turnIndex)) return false;
-  const turn = table.turnIndex as number;
-  if (turn < 0 || turn >= table.players.length) return false;
-
-  return table.players.every((seat: unknown) => {
-    if (typeof seat !== 'object' || seat === null) return false;
-    const one = seat as { id?: unknown; state?: unknown; reportSubmitted?: unknown };
-    return (
-      typeof one.id === 'string' &&
-      one.id.length > 0 &&
-      typeof one.reportSubmitted === 'boolean' &&
-      isSavedGame(one.state)
-    );
-  });
+  // One statement of it, in `@leela/engine`. This asked the same question as
+  // the database's `checkSeat` and the phone's `isSaved`, in three wordings.
+  return isSeatedTable(value);
 }
 
 /**

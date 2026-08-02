@@ -24,7 +24,14 @@
  * numbers that got them there.
  */
 
-import { CLASSIC, type RuleSet, type Session } from '@leela/engine';
+import {
+  CLASSIC,
+  isRuleSetId,
+  isSeatedTable,
+  ruleSetById,
+  type RuleSet,
+  type Session,
+} from '@leela/engine';
 import { newGame, type Game } from './game';
 import { KEEP_TIMEOUT_MS, type Keeper } from './journal';
 
@@ -52,6 +59,22 @@ interface Saved {
   session: Session;
 }
 
+/**
+ * Whether the file holds a game, judged by the engine rather than by this app.
+ *
+ * This asked that `state.loka` be a *number*, and nothing else about it. The
+ * mini app's `isSavedGame`, its `isSavedSeats` and the database's `checkSeat`
+ * all asked the whole question; this one shipped to a phone.
+ *
+ * Read through this loader, that accepted plan 999 — a tile numbered 999 that
+ * no throw ever leaves — plan 41.5 walking on to 47.5, and `is_finished` on
+ * plan 41, which draws no square while still letting the player throw off it.
+ * Worst of the four, a `turnIndex` of 7 at a table of one was let through here
+ * and then thrown by everything downstream: the tile, the throw gate and the
+ * move all raise `turn 7 at a table of 1`. On a phone that is the app failing
+ * to open, over a file whose only right answer was to begin again — which this
+ * function returning false already does.
+ */
 function isSaved(value: unknown): value is Saved {
   if (typeof value !== 'object' || value === null) return false;
   const one = value as Partial<Saved>;
@@ -60,14 +83,25 @@ function isSaved(value: unknown): value is Saved {
     Number.isFinite(one.seed) &&
     Number.isInteger(one.rollsTaken) &&
     (one.rollsTaken ?? -1) >= 0 &&
-    typeof one.session === 'object' &&
-    one.session !== null &&
-    Array.isArray((one.session as Session).players) &&
-    (one.session as Session).players.length > 0 &&
-    (one.session as Session).players.every(
-      (player) => typeof player?.id === 'string' && typeof player?.state?.loka === 'number',
-    )
+    isSeatedTable(one.session)
   );
+}
+
+/**
+ * The variant the file names, rebuilt — not the one it carries.
+ *
+ * `keepGame` writes `session.rules` whole, so the file holds a rule *object*: a
+ * hand-edited `{"id":"classic","threeSixesReset":false}` would come back as a
+ * RuleSet the engine never defined and be played as though it had. A saved game
+ * may say which variant it is; it may not say what that variant means.
+ *
+ * An id nobody defines is not guessed at either. Falling back to `CLASSIC`
+ * would change the rules of a game already in progress, which is the one thing
+ * this repository exists to have stopped happening.
+ */
+function ruleSetOf(session: Session): RuleSet | null {
+  const id: unknown = (session.rules as Partial<RuleSet> | undefined)?.id;
+  return typeof id === 'string' && isRuleSetId(id) ? ruleSetById(id) : null;
 }
 
 /**
@@ -124,12 +158,17 @@ export async function loadKeptGame(
 
   if (!isSaved(parsed)) return null;
 
+  // The variant is taken from the file by name; an unknown one is a file to
+  // start again from, not a game to play under a guess.
+  const kept = ruleSetOf(parsed.session);
+  if (kept === null) return null;
+
   const fresh = newGame(parsed.seed, rules);
   for (let turn = 0; turn < parsed.rollsTaken; turn += 1) fresh.die();
 
   return {
     ...fresh,
-    session: parsed.session,
+    session: { ...parsed.session, rules: kept },
     rollsTaken: parsed.rollsTaken,
     // The last throw is not kept. It is a sentence about something that has
     // already happened, and a player returning tomorrow is told where they are

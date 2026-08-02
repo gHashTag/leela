@@ -32,6 +32,13 @@ export type { PositionOutcome, SixesOutcome } from './rules';
 
 export { allPlans, applyRoll, hasWon, initialState, replay } from './game';
 
+export {
+  isPlayableState,
+  isSeatedTable,
+  whyNotPlayable,
+  whyNotSeated,
+} from './stored';
+
 export { noRepeatRoller, rollDie, rollMany, rollerFor, seededRoller } from './dice';
 
 export {

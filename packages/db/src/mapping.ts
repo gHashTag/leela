@@ -14,12 +14,11 @@ import {
   type TurnContext,
   type TurnVerdict,
   MAX_SEATS,
-  TOTAL_PLANS,
-  WIN_LOKA,
   canRoll,
   isRuleSetId,
   owesReport,
   ruleSetById,
+  whyNotPlayable,
 } from '@leela/engine';
 import type {
   NewGameStepRow,
@@ -31,39 +30,30 @@ import type {
 /**
  * A state the engine could have produced, or a complaint saying why not.
  *
- * One statement of the rule, because there are three readers of these columns
- * and they were not agreeing. `checkSeat` had it — plan on the board, a run of
- * at most two sixes, out of play only on the win square — with a comment
- * explaining that a database is as writable by hand as `localStorage`.
- * `stateFromLegacy` has its own. `stateFromPlayer` had none at all, and that is
- * the one the published app's rows come through.
+ * The rule was written out by hand in five places and agreed in four:
+ * `checkSeat` here, `isSavedGame` and `isSavedSeats` in the mini app,
+ * `stateFromLegacy` next door — and `isSaved` on the phone, where it had shrunk
+ * to *the plan is a number*. It lives in `@leela/engine` now, which is the one
+ * package all of them already depend on and whose header asks for exactly this:
+ * a rule reimplemented outside the engine belongs inside it.
  *
- * What passed it, measured rather than guessed: plan 999 reads back as a game
- * where every throw is refused as `stop` and the player never moves again, with
- * nothing anywhere reporting a fault; plan 41.5 walks a board of half squares
- * that has no text for any of them; and `is_finished` on plan 41 — the row
- * `checkSeat` names in its own message as *not a game* — let the player stroll
- * off the winning square to 47.
+ * What the unchecked readers passed, measured rather than guessed: plan 999
+ * reads back as a game where every throw is refused as `stop` and the player
+ * never moves again; plan 41.5 walks a board of half squares that has no text
+ * for any of them; and `is_finished` on plan 41 — the row `checkSeat` names in
+ * its own message as *not a game* — let the player stroll off the winning
+ * square to 47.
  *
  * @param complain  How to report a fault, so each caller names its own row.
  */
 function checkPlayable(state: GameState, complain: (what: string) => never): void {
-  if (!whole(state.loka, 1, TOTAL_PLANS)) complain(`plan ${state.loka} is off the board`);
-  if (!whole(state.previous_loka, 0, TOTAL_PLANS)) {
-    complain(`previous plan ${state.previous_loka} is off the board`);
-  }
-  if (!whole(state.position_before_three_sixes, 0, TOTAL_PLANS)) {
-    complain(`fallback square ${state.position_before_three_sixes} is off the board`);
-  }
-  if (!whole(state.consecutive_sixes, 0, 2)) {
-    complain(`a run of ${state.consecutive_sixes} sixes cannot have been stored`);
-  }
-  if (typeof state.is_finished !== 'boolean') complain('is_finished is not a boolean');
-  // Out of play means on the win square and nowhere else — the engine only
-  // ever sets the flag there. "Finished on plan 41" is not a game.
-  if (state.is_finished && state.loka !== WIN_LOKA) {
-    complain(`finished on plan ${state.loka}, which is not the win square`);
-  }
+  // The rule moved into `@leela/engine` once a fourth reader was found. It was
+  // written out by hand here, twice in the mini app, and once on the phone —
+  // where it had shrunk to *the plan is a number*. `whyNotPlayable` answers
+  // with the sentence rather than a boolean precisely so this caller can keep
+  // naming the column: an operator holding a row needs to know which one.
+  const why = whyNotPlayable(state);
+  if (why !== null) complain(why);
 }
 
 /**

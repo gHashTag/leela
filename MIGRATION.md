@@ -7506,6 +7506,42 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Four places keep a game, and one of them was not asking the question.** The
+mini app checks a saved game and a saved table, the database checks a seat row,
+and the phone checks a file. Each had the rule written out by hand, and three of
+the four agreed. `isSaved` in `apps/mobile/src/game-store.ts` asked that
+`state.loka` be a **number** — and that is the surface that ships to a device
+nobody can inspect.
+
+Measured through the phone's own loader before anything was changed: plan 999
+came back as a game, drew a tile numbered 999 and never left it, `stop` on every
+throw with nothing reporting a fault; plan 41.5 walked on to 47.5; `is_finished`
+on plan 41 drew no square at all and still let the player throw off it. Worst,
+`turnIndex: 7` at a table of one was accepted here and then thrown by everything
+that read it — the tile, the throw gate, the move all raise `turn 7 at a table
+of 1`. On a phone that is the app failing to open, over a file whose only right
+answer was *begin again* — which the loader already knew how to do.
+
+**The rule now lives in `@leela/engine`**, whose own header asks for exactly
+this: *if you find yourself reimplementing a rule outside this package, that
+rule belongs in here instead*. `whyNotPlayable` and `whyNotSeated` answer with
+the sentence, not a boolean, so the database can keep naming the column it
+refuses while an app needs only yes or no. All four readers ask it.
+
+**And the phone was taking its rule set from the file as an object.** `keepGame`
+writes `session.rules` whole, so a hand-edited `{"id":"online", …classic
+flags}` came back as a variant the engine never defined and was played as
+though it had: on a run of two sixes that state owes a report under `classic`
+and does not under `online`, and the forged one answered `classic` while calling
+itself `online`. The variant is now read as a **name**, checked with
+`isRuleSetId` and rebuilt with `ruleSetById`; a name nobody defines is a file to
+start again from rather than a game to play under a guess. No rule of the game
+changed — a forged variant is refused, not reinterpreted.
+
+`rollCount` is checked only where it is written. The mini app's saved table has
+no such field, and demanding one would have refused every game saved before the
+line existed.
+
 **A verdict that never moved.** `audit-copies.mjs` ended on
 `process.exit(wrong > 0 ? 1 : 0)`, counting copies that disagree with the
 engine. Six of the eighteen do, and not one of them is ours to fix: four are the

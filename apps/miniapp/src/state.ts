@@ -17,52 +17,26 @@
  * history cannot be trusted.
  */
 
-import { TOTAL_PLANS, WIN_LOKA, initialState, type Direction, type GameState } from '@leela/engine';
+import { isPlayableState, initialState, type GameState } from '@leela/engine';
 
 /** Where a saved game lives. Versioned: a shape change starts a new key. */
 export const STORAGE_KEY = 'leela.game.v1';
 
-/** The directions the engine can leave behind, plus "has not moved". */
-const DIRECTIONS: ReadonlySet<string> = new Set<Direction | ''>([
-  '',
-  'step 🚶🏼',
-  'snake 🐍',
-  'arrow 🏹',
-  'stop 🛑',
-  'win 🕉',
-]);
-
-function isSquare(value: unknown, from: number): boolean {
-  return Number.isInteger(value) && (value as number) >= from && (value as number) <= TOTAL_PLANS;
-}
-
 /**
  * Whether this could have come out of the engine.
  *
- * The consistency rule at the end is the one a field-by-field check misses:
+ * The consistency rule inside is the one a field-by-field check misses:
  * `is_finished` is only ever set on the win square, before a game and after
  * one. A state claiming to be finished on plan 41 has no meaning — the app
  * would show "throw a six to enter" while a throw moved the player from 41.
+ *
+ * The rule itself now lives in `@leela/engine`. Four surfaces keep a game and
+ * read it back — this one, the seat table beside it, a file on the phone and
+ * two tables in the database — and each had written it out by hand. Three
+ * agreed; the phone's asked only that the plan be a *number*. See `stored.ts`.
  */
 export function isSavedGame(value: unknown): value is GameState {
-  if (typeof value !== 'object' || value === null) return false;
-  const state = value as Record<string, unknown>;
-
-  if (!isSquare(state.loka, 1)) return false;
-  if (!isSquare(state.previous_loka, 0)) return false;
-  if (!isSquare(state.position_before_three_sixes, 0)) return false;
-  if (typeof state.is_finished !== 'boolean') return false;
-  if (typeof state.direction !== 'string' || !DIRECTIONS.has(state.direction)) return false;
-
-  // 0, 1 or 2: a third six resets the run, so it is never stored.
-  if (!Number.isInteger(state.consecutive_sixes)) return false;
-  const sixes = state.consecutive_sixes as number;
-  if (sixes < 0 || sixes > 2) return false;
-
-  // Out of play means on the win square, and nowhere else.
-  if (state.is_finished && state.loka !== WIN_LOKA) return false;
-
-  return true;
+  return isPlayableState(value);
 }
 
 /** Somewhere a game can be kept. `localStorage` is one; a Map is another. */
