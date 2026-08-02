@@ -268,19 +268,36 @@ export function arrivedOnSix(state: GameState): boolean {
   return state.previous_loka === WIN_LOKA && state.loka === START_LOKA;
 }
 
+/** A wait, in the pieces a sentence about it needs. */
+export interface WaitParts {
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
+
 /**
- * Format a wait as `Hh Mm` / `Mm Ss`, for the "next step in…" label.
- * Returns an empty string when there is nothing to wait for.
+ * A wait, taken apart. Null when there is nothing to wait for.
+ *
+ * This used to return the sentence as well — `${hours}h ${minutes}m` — and the
+ * bot put it inside `roll.cooldown`, which is in the catalogue in Russian: *Пока
+ * нет. Следующий бросок через 23h 45m.* Two letters of English in the middle of
+ * a Russian sentence, in the one place a player is told to come back later.
+ *
+ * The same split the rest of the repository uses: this package does the
+ * arithmetic, `@leela/content` has the words. It cannot have them itself — it
+ * has no catalogue and no language, on purpose.
+ *
+ * Rounded up, so a wait of 100ms is a second rather than nothing: *in 0s* reads
+ * as a refusal for no reason.
  */
-export function formatWait(waitMs: number): string {
-  if (waitMs <= 0) return '';
+export function waitParts(waitMs: number): WaitParts | null {
+  if (waitMs <= 0) return null;
 
   const totalSeconds = Math.ceil(waitMs / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
 
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m ${seconds}s`;
-  return `${seconds}s`;
+  return {
+    hours: Math.floor(totalSeconds / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+  };
 }

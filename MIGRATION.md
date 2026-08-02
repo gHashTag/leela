@@ -5251,6 +5251,30 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**Two letters of English in the sentence that says come back later (205th
+pass).** `formatWait` lived in `@leela/engine` and returned
+`${hours}h ${minutes}m`. The bot drops that into `roll.cooldown`, which is in
+the catalogue in Russian — so a player under a variant with a day between
+throws read *Пока нет. Следующий бросок через 23h 45m.*
+
+The engine has no catalogue and no language, on purpose, so the words could
+never have been right there. It does the arithmetic now — `waitParts` — and
+`@leela/content` has the sentence, which is the split `describeMove` and
+`writerHint` already use. Abbreviations in both languages, because that is how a
+clock is written in either and it sidesteps four Russian plural forms for an
+hour.
+
+The check states the shape rather than the two letters: **a language whose own
+script is not Latin is never handed Latin letters**, over every size of wait,
+and every one of the twenty-two answers with something that is not a
+placeholder.
+
+**And a probe that found nothing, worth writing down.** Every command that takes
+an argument was sent a bad one — `/plan 0`, `/plan 73`, `/plan 3.7`, `/plan abc`,
+a twenty-one-digit number, `/rules 0`, `/rules two`, `/rules 2 99`, `/take` with
+nothing and with prose. Each answered with the range it wanted, and paging past
+the end gives the last page, as its own comment promises.
+
 **Told to write more, after writing nine hundred characters (204th pass).** The
 same lens, one field along. `isIntention` refuses a question shorter than two
 characters **and** one longer than eight hundred, and the bot answered every

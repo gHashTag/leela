@@ -64,13 +64,13 @@ export {
   arrivedByJump,
   arrivedOnSix,
   canRoll,
-  formatWait,
+  waitParts,
   countsAsReport,
   isWaitingToEnter,
   needsSixToEnter,
   owesReport,
 } from './turn';
-export type { TurnBlockedReason, TurnContext, TurnVerdict } from './turn';
+export type { TurnBlockedReason, TurnContext, TurnVerdict, WaitParts } from './turn';
 
 export {
   MAX_SEATS,

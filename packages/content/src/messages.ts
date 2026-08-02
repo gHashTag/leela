@@ -71,6 +71,21 @@ const EN = {
     'You are standing on {plan}. {title}.\n' +
     'Write what it brings up before you move on — send /report followed by your words.',
   'roll.cooldown': 'Not yet. Your next throw is in {wait}.',
+  /**
+   * The wait itself, which used to be built in `@leela/engine`.
+   *
+   * It returned `${hours}h ${minutes}m` and the bot dropped that into
+   * `roll.cooldown` — in the catalogue in Russian — so a player under a variant
+   * with a day between throws read *Пока нет. Следующий бросок через 23h 45m.*
+   * Two letters of English in the one sentence that tells somebody to come back
+   * later.
+   *
+   * Abbreviations rather than words, in both languages, which is how a clock is
+   * written in either and sidesteps four Russian plural forms for an hour.
+   */
+  'wait.hoursMinutes': '{hours}h {minutes}m',
+  'wait.minutesSeconds': '{minutes}m {seconds}s',
+  'wait.seconds': '{seconds}s',
   'roll.reached': '{name} reaches Cosmic Consciousness. 🕉',
   'roll.ended':
     'That is the game. /path shows what you wrote along the way; /new opens another table.',
@@ -590,6 +605,9 @@ const RU: Partial<Record<MessageKey, Message>> = {
     'Вы стоите на плане {plan}. {title}.\n' +
     'Напишите, что он в вас поднимает, прежде чем идти дальше — отправьте /report и свои слова.',
   'roll.cooldown': 'Пока нет. Следующий бросок через {wait}.',
+  'wait.hoursMinutes': '{hours} ч {minutes} мин',
+  'wait.minutesSeconds': '{minutes} мин {seconds} с',
+  'wait.seconds': '{seconds} с',
   'roll.reached': '{name} достигает Космического Сознания. 🕉',
   'roll.ended':
     'Вот и вся игра. /path показывает написанное по пути; /new открывает новый стол.',

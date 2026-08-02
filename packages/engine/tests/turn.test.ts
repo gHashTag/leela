@@ -18,7 +18,7 @@ import {
   applyRoll,
   arrivedByJump,
   canRoll,
-  formatWait,
+  waitParts,
   hasWon,
   initialState,
   isWaitingToEnter,
@@ -203,23 +203,40 @@ describe('canRoll — cooldown', () => {
   });
 });
 
-describe('formatWait', () => {
+describe('a wait, taken apart', () => {
+  /**
+   * This used to return the sentence as well — `${hours}h ${minutes}m` — and
+   * the bot put it inside `roll.cooldown`, which is in the catalogue in
+   * Russian: *Пока нет. Следующий бросок через 23h 45m.* Two letters of English
+   * in the one sentence that tells somebody to come back later.
+   *
+   * The arithmetic stays here; `@leela/content` has the words, and its own
+   * tests hold the sentences. What is asserted here is the taking apart.
+   */
   it('says nothing when there is nothing to wait for', () => {
-    expect(formatWait(0)).toBe('');
-    expect(formatWait(-1)).toBe('');
+    expect(waitParts(0)).toBeNull();
+    expect(waitParts(-1)).toBeNull();
   });
 
-  it('reads as hours and minutes for a long wait', () => {
-    expect(formatWait(ONE_DAY_MS)).toBe('24h 0m');
-    expect(formatWait(3 * 3600_000 + 25 * 60_000)).toBe('3h 25m');
+  it('carries hours, minutes and seconds, whatever the size', () => {
+    expect(waitParts(ONE_DAY_MS)).toEqual({ hours: 24, minutes: 0, seconds: 0 });
+    expect(waitParts(3 * 3600_000 + 25 * 60_000)).toEqual({ hours: 3, minutes: 25, seconds: 0 });
+    expect(waitParts(90_000)).toEqual({ hours: 0, minutes: 1, seconds: 30 });
+    expect(waitParts(5_000)).toEqual({ hours: 0, minutes: 0, seconds: 5 });
   });
 
-  it('reads as minutes and seconds under an hour', () => {
-    expect(formatWait(90_000)).toBe('1m 30s');
+  it('rounds up, so a moment is a second rather than nothing', () => {
+    // `in 0s` reads as a refusal for no reason.
+    expect(waitParts(1)).toEqual({ hours: 0, minutes: 0, seconds: 1 });
+    expect(waitParts(999)).toEqual({ hours: 0, minutes: 0, seconds: 1 });
   });
 
-  it('reads as seconds under a minute', () => {
-    expect(formatWait(5_000)).toBe('5s');
+  it('adds up to the wait it was given, at any size', () => {
+    // The shape: the pieces are that wait and not some other one.
+    for (const ms of [1_000, 59_000, 60_000, 3_599_000, 3_600_000, ONE_DAY_MS, 40 * 3600_000]) {
+      const parts = waitParts(ms)!;
+      expect(parts.hours * 3600 + parts.minutes * 60 + parts.seconds, String(ms)).toBe(ms / 1000);
+    }
   });
 });
 

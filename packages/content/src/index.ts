@@ -177,6 +177,10 @@ export function ruleChapter(locale: string, slug: string): RuleChapter | null {
   return rulesFor(locale).find((c) => c.slug === slug) ?? null;
 }
 
+// How long until the next throw, in the player's language. The engine does the
+// arithmetic and had the words too, in English, inside a Russian sentence.
+export { formatWait } from './wait';
+
 // A move, in a sentence. Beside the catalogue it is built from, because two
 // surfaces need the same nine sentences and a tenth would be a tenth wording.
 export { describeMove } from './describe';

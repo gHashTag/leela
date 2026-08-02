@@ -17,7 +17,6 @@ import {
   canCurrentPlayerRoll,
   createSession,
   currentPlayer,
-  formatWait,
   hasWon,
   countsAsReport,
   isSessionOver,
@@ -35,7 +34,7 @@ import {
 } from '@leela/engine';
 import { MAX_REPORT_CHARS, revisited } from '@leela/journal';
 import { MAX_MESSAGE_CHARS } from './render';
-import { bookFor, messageFor, planFor, resolveLanguage, type Language,
+import { bookFor, formatWait, messageFor, planFor, resolveLanguage, type Language,
   type MessageKey,
 } from '@leela/content';
 
@@ -475,7 +474,12 @@ export function roll(
     return {
       room,
       replies: [
-        say(messageFor(room.language, 'roll.cooldown', { wait: formatWait(verdict.waitMs) }), false),
+        say(
+          messageFor(room.language, 'roll.cooldown', {
+            wait: formatWait(room.language, verdict.waitMs),
+          }),
+          false,
+        ),
       ],
     };
   }
@@ -778,7 +782,7 @@ export function report(
         : after.say === 'wait'
           ? messageFor(room.language, 'report.filedWait', {
               name,
-              wait: formatWait(after.waitMs),
+              wait: formatWait(room.language, after.waitMs),
             })
           : messageFor(room.language, 'report.filed', { name });
 
