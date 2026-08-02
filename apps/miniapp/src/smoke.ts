@@ -17,6 +17,14 @@ export interface Check {
   what: string;
   /** Fragments the response must contain. */
   mustContain?: string[];
+  /**
+   * Fragments the response must **not** contain.
+   *
+   * A missing asset does not always answer 404. A static host that falls back
+   * to `index.html` answers 200 with a page, and a check asking only for a
+   * status and a size reads that as the bundle.
+   */
+  mustNotContain?: string[];
   /** Smallest response that could be the real thing, in bytes. */
   minBytes?: number;
 }
@@ -27,6 +35,8 @@ export interface CheckResult {
   status: number;
   bytes: number;
   missing: string[];
+  /** Fragments that were there and should not have been. */
+  instead: string[];
   error?: string;
 }
 
@@ -85,6 +95,7 @@ export async function runCheck(
   try {
     const { status, text } = await fetcher(url);
     const missing = (check.mustContain ?? []).filter((fragment) => !text.includes(fragment));
+    const present = (check.mustNotContain ?? []).filter((fragment) => text.includes(fragment));
     const bytes = text.length;
 
     return {
@@ -92,7 +103,12 @@ export async function runCheck(
       status,
       bytes,
       missing,
-      ok: status === 200 && missing.length === 0 && bytes >= (check.minBytes ?? 0),
+      instead: present,
+      ok:
+        status === 200 &&
+        missing.length === 0 &&
+        present.length === 0 &&
+        bytes >= (check.minBytes ?? 0),
     };
   } catch (error) {
     return {
@@ -100,20 +116,81 @@ export async function runCheck(
       status: 0,
       bytes: 0,
       missing: check.mustContain ?? [],
+      instead: [],
       ok: false,
       error: error instanceof Error ? error.message : String(error),
     };
   }
 }
 
-/** Run every check. All of them, so one failure does not hide the rest. */
+/**
+ * Everything the game's own page asks the browser to load.
+ *
+ * Relative references only: an absolute one is somebody else's server, and
+ * `telegram-web-app.js` being down is not this deployment being broken.
+ *
+ * They cannot be listed by hand. Vite puts a content hash in every asset name,
+ * so `assets/index-pd0t01pZ.js` is a different file on every build — which is
+ * why the checks below name five pages and not one line of the game's code,
+ * and why the failure this module opens by naming is the one it did not look
+ * for. The page says what it needs; ask it.
+ */
+export function assetsIn(html: string): string[] {
+  const found = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((match) => match[1] as string);
+
+  return [...new Set(found.filter((reference) => /^\.?\/?assets\//.test(reference)))].map(
+    (reference) => reference.replace(/^\.?\//, ''),
+  );
+}
+
+/**
+ * A check for one of them.
+ *
+ * Weaker than the five written by hand, and deliberately: nobody can say what
+ * a bundle contains from one build to the next. What can be said is that it
+ * answers, that it is not a few bytes of nothing, and that it is not the
+ * index page handed back by a host that could not find it.
+ */
+export function assetCheck(path: string): Check {
+  const isStyle = path.endsWith('.css');
+
+  return {
+    path,
+    what: isStyle ? "the game's stylesheet" : "the game's code",
+    minBytes: isStyle ? 200 : 1000,
+    mustNotContain: ['<!doctype html', '<!DOCTYPE html'],
+  };
+}
+
+/**
+ * Run every check. All of them, so one failure does not hide the rest.
+ *
+ * The game's own assets are added from its HTML once that has been fetched:
+ * a build that emits a broken asset path is the first failure this module
+ * names, and the page it emits still contains `id="board"` and passes every
+ * hand-written check while the game is a blank screen.
+ */
 export async function runChecks(
   base: string,
   fetcher: Fetcher,
   checks: Check[] = DEPLOYMENT_CHECKS,
 ): Promise<CheckResult[]> {
   const results: CheckResult[] = [];
-  for (const check of checks) results.push(await runCheck(base, check, fetcher));
+
+  for (const check of checks) {
+    const result = await runCheck(base, check, fetcher);
+    results.push(result);
+
+    // The game's page, and only if it came back: there is nothing to read the
+    // asset names out of otherwise, and its own failure is already reported.
+    if (check.path !== '' || !result.ok) continue;
+
+    const { text } = await fetcher(`${base.replace(/\/$/, '')}/`);
+    for (const asset of assetsIn(text)) {
+      results.push(await runCheck(base, assetCheck(asset), fetcher));
+    }
+  }
+
   return results;
 }
 
@@ -130,6 +207,7 @@ export function describeResults(results: CheckResult[]): string {
               ? `only ${result.bytes}b, expected at least ${result.check.minBytes}`
               : '',
             result.missing.length > 0 ? `missing: ${result.missing.join(', ')}` : '',
+            result.instead.length > 0 ? `served instead: ${result.instead.join(', ')}` : '',
           ]
             .filter(Boolean)
             .join('; ');

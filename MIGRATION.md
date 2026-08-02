@@ -7506,6 +7506,40 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The deployment check did not look at the game's code.** `smoke.ts` opens by
+naming the failure it exists for — *a build that emits a broken asset path
+deploys green* — and runs against the live site after every deploy, exiting
+non-zero so the run goes red. Five checks, written by hand: the game's HTML, the
+book's index, a plan deep in it, the book's stylesheet, a legal document.
+
+Fetched from the live site, the game's page references exactly two files:
+`assets/index-pd0t01pZ.js` and `assets/index-BTH6tunC.css`. Neither was checked,
+and neither could be — Vite puts a content hash in the name, so both are a
+different file on every build and no hand-written list can hold them. The one
+failure the module names first was the one it did not look for, and it would
+have passed: `index.html` still contains `id="board"` when the bundle beside it
+is a 404, and the player is looking at a blank screen.
+
+The page says what it needs, so it is asked. `assetsIn` reads the relative
+references out of the game's HTML once it has come back, and each is fetched.
+Absolute ones are somebody else's server — failing a deploy because
+`telegram-web-app.js` is down would teach an operator to ignore the check.
+
+`mustNotContain` came with it. A static host that cannot find a file often
+answers **200** with `index.html`, which a status-and-size check reads as the
+bundle; the browser then refuses to run HTML as a module. Against the live site
+the check now covers seven things, including a 97 KB bundle it had never asked
+for.
+
+**Six clean probes came first**, and are worth listing so nobody re-treads them:
+the bot's Dockerfile mounts a volume at the database path and says so; the mini
+app sets `documentElement.lang` and `dir` from the resolved language, and the
+function that does it is called and tested; plural forms fall back correctly for
+all twenty languages that carry no catalogue; and `messageCoverage` listing only
+`en` and `ru` is a **recorded decision**, asserted by a test in `apps/bot` that
+says the distinction between *not listed* and *0%* is deliberate. That one was
+reverted after being written — the decision is somebody's, not mine to reverse.
+
 **The two on-chain divergences were prose, beside the machine that reads the
 board.** `parseContract` has taken the twenty jump branches off `LeelaGame.sol`
 and asserted them against the engine since the beginning. The two rule
