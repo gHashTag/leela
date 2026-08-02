@@ -7506,6 +7506,43 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Two more audits kept their own list of where to look, and both were wrong.**
+The pass before widened `workspaceSources` and used it in one audit. Three
+others kept hand-written arrays of the same set, and computing them found what
+they had never seen:
+
+- **`audit-doubles` listed nine of the ten workspaces** and had never looked at
+  the phone app. It holds four constants declared twice: `REPORTS_KEY`,
+  `DRAFT_KEY` and `INTENTION_KEY`, identical to the mini app's, and an `EMPTY`
+  that is **not** identical — `{ reported, entries }` against `{ entries }`. The
+  audit's green sentence, *every bound is declared once*, was true of nine
+  directories.
+- **`audit-promises` listed five of the ten.** Of the five it left out,
+  `apps/docs` holds two injected dependencies nothing had ever handed a broken
+  one — `PageOptions.pathFor` and the `servedAt` added two passes ago.
+
+That is the sixth and seventh hand-kept list here to be wrong, in a repository
+whose fix for the fifth is one function away. `workspacePackages` answers for
+all three now.
+
+**What the widening then required.** The three storage keys moved into
+`@leela/journal`, beside `MAX_REPORT_CHARS`, which is there for the same reason
+and says so: it is the one package both surfaces already depend on, and it has
+no dependencies of its own. The strings are unchanged, so nothing a player has
+stored moved. `EMPTY` is not a copy to unify — the mini app tracks whether an
+arrival has been written about in the journal and the phone tracks it in the
+session — so the phone's became `EMPTY_PATH`: one word for two records, in two
+apps whose code moves between them constantly, is how somebody carries the wrong
+one across.
+
+**And the audit's second question found a third thing.** It asks not only that a
+dependency be broken deliberately but that *somebody is told* when it breaks. A
+`pathFor` that throws stopped the build with the callback's own words and no
+page name — so whoever ran it learned that something could not say where a page
+lives, and not which page, in which language, or which of the two questions.
+`page` names all three now. Stopping is still right: 1,784 pages with a picker
+pointing somewhere wrong is the larger harm.
+
 **A workspace is not only its `src`.** `workspaceSources` exists because
 `audit-unread.mjs` walked a hand-written array of directories and
 `packages/journal/src` was not in it — so the file format shared by the bot and

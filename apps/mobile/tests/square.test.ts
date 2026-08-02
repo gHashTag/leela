@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseSquare } from '@leela/journal';
-import { EMPTY, record, shareSquare, takeSquare, writingsOn } from '../src/journal';
+import { EMPTY_PATH, record, shareSquare, takeSquare, writingsOn } from '../src/journal';
 
 /**
  * One square, which is what people actually pass on.
@@ -34,7 +34,7 @@ describe('a square sent on', () => {
   });
 
   it('arrives in the path, on the square it was written about', () => {
-    const taken = takeSquare(EMPTY, shared, 500);
+    const taken = takeSquare(EMPTY_PATH, shared, 500);
 
     expect(taken.readable).toBe(true);
     expect(taken.added).toBe(true);
@@ -44,7 +44,7 @@ describe('a square sent on', () => {
   });
 
   it('is stamped when it arrives, because it carries no time of its own', () => {
-    const taken = takeSquare(EMPTY, shared, 500);
+    const taken = takeSquare(EMPTY_PATH, shared, 500);
 
     expect(taken.journal.entries[0]?.at).toBe(500);
   });
@@ -53,7 +53,7 @@ describe('a square sent on', () => {
     // Sameness is the square and the words, which is what a person pasting
     // twice means by "the same one" — a second stamp would make `revisited`
     // report a return that never happened.
-    const once = takeSquare(EMPTY, shared, 500).journal;
+    const once = takeSquare(EMPTY_PATH, shared, 500).journal;
     const twice = takeSquare(once, shared, 900);
 
     expect(twice.added).toBe(false);
@@ -64,7 +64,7 @@ describe('a square sent on', () => {
     // The one thing this route must not do. Reading somebody's frame is not
     // taking it on; the mini app's hand-over is the only route that may set a
     // question, because Telegram delivers it from the player's own app.
-    const taken = takeSquare(EMPTY, shared, 500);
+    const taken = takeSquare(EMPTY_PATH, shared, 500);
 
     expect(JSON.stringify(taken.journal)).not.toContain('to stop hurrying');
     expect(Object.keys(taken).sort()).toEqual(['added', 'journal', 'plan', 'readable']);
@@ -75,12 +75,12 @@ describe('a square sent on', () => {
     // which. Reporting the reader's square instead is the shape this repository
     // has now met five times: a sentence that names the wrong thing because it
     // was the value nearest to hand.
-    expect(takeSquare(record(EMPTY, 6, 'mine', 1), shared, 500).plan).toBe(41);
-    expect(takeSquare(EMPTY, 'not a square', 500).plan, 'and nothing arrived').toBeNull();
+    expect(takeSquare(record(EMPTY_PATH, 6, 'mine', 1), shared, 500).plan).toBe(41);
+    expect(takeSquare(EMPTY_PATH, 'not a square', 500).plan, 'and nothing arrived').toBeNull();
   });
 
   it('says so, and changes nothing, when the words are not a square', () => {
-    const mine = record(EMPTY, 6, 'mine', 1);
+    const mine = record(EMPTY_PATH, 6, 'mine', 1);
 
     for (const rubbish of ['', 'hello', '999. Nowhere\n\nsomething', 'just a sentence']) {
       const taken = takeSquare(mine, rubbish, 500);
@@ -101,7 +101,7 @@ describe('a square sent on', () => {
       '',
     );
 
-    expect(takeSquare(EMPTY, ownWords, 500).journal.entries[0]?.text).toContain(
+    expect(takeSquare(EMPTY_PATH, ownWords, 500).journal.entries[0]?.text).toContain(
       'afraid of being ordinary',
     );
   });

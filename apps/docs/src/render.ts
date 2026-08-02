@@ -138,6 +138,32 @@ export function page({
    */
   const canonical = `${DOCS_URL}${writtenIn}/${path}`;
 
+  /**
+   * Ask a caller's callback, and say which page was being built if it will not
+   * answer.
+   *
+   * A generator writes 1,784 files. Stopping is right — a page whose picker
+   * cannot be answered must not go out with the picker wrong — but stopping
+   * with only the callback's own words leaves whoever runs the build knowing
+   * that something could not say where a page lives, and not which page, in
+   * which language, or which of the two questions it was.
+   *
+   * Found by `audit-promises`, whose second question is the one every defect of
+   * this family failed: something breaks the dependency, and nobody checks what
+   * the person on the other end is told.
+   */
+  const asking = <T>(what: string, ask: () => T): T => {
+    try {
+      return ask();
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      throw new Error(`${language}/${path}: ${what} would not say where this page is — ${reason}`);
+    }
+  };
+
+  const translated = (other: Language) => asking('pathFor', () => pathFor(other));
+  const served = (other: Language) => asking('servedAt', () => (servedAt ?? pathFor)(other));
+
   return `<!doctype html>
 <html lang="${writtenIn}" dir="${directionOf(writtenIn)}">
 <head>
@@ -146,7 +172,7 @@ export function page({
 <title>${escape(titleOf(title))}</title>
 <meta name="description" content="${escape(description)}">
 <link rel="canonical" href="${canonical}">
-${translations(writtenIn, path, pathFor)}
+${translations(writtenIn, path, translated)}
 <meta property="og:site_name" content="${SITE_NAME}">
 <meta property="og:type" content="article">
 <meta property="og:title" content="${escape(titleOf(title))}">
@@ -165,7 +191,7 @@ ${subtitle ? `<p class="subtitle">${escape(subtitle)}</p>` : ''}
 ${body}
 </main>
 <footer>
-${languagePicker(language, root, servedAt ?? pathFor, writtenIn)}
+${languagePicker(language, root, served, writtenIn)}
 </footer>
 </body>
 </html>

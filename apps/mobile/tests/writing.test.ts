@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 // Shared with the audit scripts, which are plain JavaScript.
 import { blank } from '../../../scripts/lib/source.mjs';
 import { MAX_REPORTS, MAX_REPORT_CHARS } from '@leela/journal';
-import { EMPTY, load, record, save, takeAccount, writingsOn, type Store } from '../src/journal';
+import { EMPTY_PATH, load, record, save, takeAccount, writingsOn, type Store } from '../src/journal';
 
 const APP = blank(
   readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'App.tsx'), 'utf8'),
@@ -43,24 +43,24 @@ const refuses = (): Store => ({
 
 describe('a writer says whether it was kept', () => {
   it('says kept when it was', () => {
-    expect(save(keeps(), record(EMPTY, 41, 'What this square asked.', 1))).toBe(true);
+    expect(save(keeps(), record(EMPTY_PATH, 41, 'What this square asked.', 1))).toBe(true);
   });
 
   it('says not kept when the store refuses', () => {
-    expect(save(refuses(), record(EMPTY, 41, 'What this square asked.', 1))).toBe(false);
+    expect(save(refuses(), record(EMPTY_PATH, 41, 'What this square asked.', 1))).toBe(false);
   });
 
   it('says not kept when there is no store', () => {
     // Nowhere to write is not a write. `store?.setItem` on nothing is a no-op
     // that fell through to a happy return in the mini app for four passes, and
     // the app put "Written." under it.
-    expect(save(undefined, record(EMPTY, 41, 'What this square asked.', 1))).toBe(false);
+    expect(save(undefined, record(EMPTY_PATH, 41, 'What this square asked.', 1))).toBe(false);
   });
 });
 
 describe('an account is what opens the gate, not a button', () => {
   it('keeps what was written, on the square it was written about', () => {
-    const journal = record(EMPTY, 41, 'I kept circling the same thing.', 1);
+    const journal = record(EMPTY_PATH, 41, 'I kept circling the same thing.', 1);
 
     expect(writingsOn(journal, 41).map((entry) => entry.text)).toEqual([
       'I kept circling the same thing.',
@@ -70,17 +70,17 @@ describe('an account is what opens the gate, not a button', () => {
 
   it('refuses a blank one, which is the same defect one keystroke further on', () => {
     for (const nothing of ['', '   ', '\n\t ']) {
-      expect(record(EMPTY, 41, nothing, 1), JSON.stringify(nothing)).toBe(EMPTY);
+      expect(record(EMPTY_PATH, 41, nothing, 1), JSON.stringify(nothing)).toBe(EMPTY_PATH);
     }
   });
 
   it('holds a path to the bounds the format states', () => {
     // Against the constants rather than their values: raising one must not
     // leave this asserting the old number.
-    const long = record(EMPTY, 41, 'x'.repeat(MAX_REPORT_CHARS + 500), 1);
+    const long = record(EMPTY_PATH, 41, 'x'.repeat(MAX_REPORT_CHARS + 500), 1);
     expect(long.entries[0]?.text.length).toBe(MAX_REPORT_CHARS);
 
-    let many = EMPTY;
+    let many = EMPTY_PATH;
     for (let index = 0; index < MAX_REPORTS + 20; index += 1) {
       many = record(many, (index % 72) + 1, `entry ${index}`, index + 1);
     }
@@ -94,7 +94,7 @@ describe('an account is what opens the gate, not a button', () => {
 describe('what comes back out of a store', () => {
   it('comes back as it went in', () => {
     const store = keeps();
-    const journal = record(record(EMPTY, 6, 'first', 1), 41, 'second', 2);
+    const journal = record(record(EMPTY_PATH, 6, 'first', 1), 41, 'second', 2);
 
     expect(save(store, journal)).toBe(true);
     expect(load(store)).toEqual(journal);
@@ -105,7 +105,7 @@ describe('what comes back out of a store', () => {
     // a half-written value is what a process killed mid-write leaves.
     for (const rubbish of ['half a write{', 'null', '42', '{"entries":7}', '{}']) {
       const store: Store = { getItem: () => rubbish, setItem: () => undefined };
-      expect(load(store), rubbish).toEqual(EMPTY);
+      expect(load(store), rubbish).toEqual(EMPTY_PATH);
     }
   });
 
@@ -138,7 +138,7 @@ describe('what comes back out of a store', () => {
       setItem: () => undefined,
     };
 
-    expect(load(blind)).toEqual(EMPTY);
+    expect(load(blind)).toEqual(EMPTY_PATH);
   });
 });
 
@@ -154,15 +154,15 @@ describe('what follows from taking an account', () => {
    * refused write came to be reported as "Written." in the app next door.
    */
   it('opens the gate only when something was written', () => {
-    const nothing = takeAccount(EMPTY, 41, '   ', 1, keeps());
+    const nothing = takeAccount(EMPTY_PATH, 41, '   ', 1, keeps());
 
     expect(nothing.written).toBe(false);
     expect(nothing.gateOpens, 'a blank draft buys nothing').toBe(false);
-    expect(nothing.journal, 'and changes nothing').toBe(EMPTY);
+    expect(nothing.journal, 'and changes nothing').toBe(EMPTY_PATH);
   });
 
   it('opens it when there is, and says the account was kept', () => {
-    const taken = takeAccount(EMPTY, 41, 'What this square asked.', 1, keeps());
+    const taken = takeAccount(EMPTY_PATH, 41, 'What this square asked.', 1, keeps());
 
     expect(taken.written).toBe(true);
     expect(taken.gateOpens).toBe(true);
@@ -173,7 +173,7 @@ describe('what follows from taking an account', () => {
     // They wrote it. A phone that will not hold the words is not their doing,
     // and shutting a gate they have earned would charge them for it — the same
     // decision the mini app made at a full quota.
-    const taken = takeAccount(EMPTY, 41, 'What this square asked.', 1, refuses());
+    const taken = takeAccount(EMPTY_PATH, 41, 'What this square asked.', 1, refuses());
 
     expect(taken.written).toBe(true);
     expect(taken.gateOpens, 'the game goes on').toBe(true);
@@ -185,7 +185,7 @@ describe('what follows from taking an account', () => {
     // The shape of the defect, over the drafts a person actually types rather
     // than the two somebody thought of.
     for (const draft of ['', ' ', '\n', '\t\t', '   \n  ', 'x', 'a real account of it']) {
-      const taken = takeAccount(EMPTY, 41, draft, 1, keeps());
+      const taken = takeAccount(EMPTY_PATH, 41, draft, 1, keeps());
 
       expect(taken.gateOpens, JSON.stringify(draft)).toBe(taken.journal.entries.length > 0);
     }

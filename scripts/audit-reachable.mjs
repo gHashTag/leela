@@ -15,26 +15,24 @@
  * Run:  node scripts/audit-reachable.mjs
  */
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { codeIn, unionsIn, unsaidIn } from './lib/reachable.mjs';
+import { workspacePackages } from './lib/claims.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..');
 
-const SOURCES = [
-  'packages/engine/src',
-  'packages/content/src',
-  'packages/journal/src',
-  'packages/db/src',
-  'packages/ai/src',
-  'packages/contracts/src',
-  'apps/bot/src',
-  'apps/miniapp/src',
-  'apps/docs/src',
-  'apps/mobile/src',
-];
+// Found rather than listed: the same ten workspaces `audit-doubles` had nine
+// of. See `workspacePackages`.
+const read = {
+  exists: (path) => existsSync(join(ROOT, path)),
+  entries: (path) => readdirSync(join(ROOT, path)),
+  isDirectory: (path) => statSync(join(ROOT, path)).isDirectory(),
+};
+
+const SOURCES = workspacePackages(read).map((workspace) => workspace.src);
 
 /**
  * Unions whose words arrive from outside, and are therefore never said here.

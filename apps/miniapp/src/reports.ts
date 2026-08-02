@@ -30,12 +30,13 @@ import {
   WARN_WITHIN_CHARS,
   writerHint,
   type Revisit,
+  REPORTS_KEY,
 } from '@leela/journal';
 import type { GameStorage } from './state';
 
 export type { Revisit } from '@leela/journal';
 
-export const REPORTS_KEY = 'leela.reports.v1';
+export { REPORTS_KEY };
 
 /** One thing a player wrote, on the plan they wrote it about. */
 export interface Report {

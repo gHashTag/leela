@@ -40,7 +40,7 @@ import {
 import { PALETTE } from './palette';
 import {
   DRAFT_KEY,
-  EMPTY,
+  EMPTY_PATH,
   NOTHING_WRITTEN,
   askingFor,
   mayChangeIntention,
@@ -110,7 +110,7 @@ const startingSeed = () => Math.floor(Math.random() * 1_000_000);
 export default function App() {
   const [game, setGame] = useState<Game>(() => newGame(startingSeed()));
   const [store] = useState<Store>(forTheSession);
-  const [journal, setJournal] = useState<Journal>(EMPTY);
+  const [journal, setJournal] = useState<Journal>(EMPTY_PATH);
   const [draft, setDraft] = useState<Draft>(NOTHING_WRITTEN);
   const [said, setSaid] = useState<string | null>(null);
 
@@ -155,7 +155,7 @@ export default function App() {
     let stale = false;
     void loadKept(keeper).then((kept) => {
       if (stale) return;
-      setJournal((now) => (now === EMPTY ? kept.journal : now));
+      setJournal((now) => (now === EMPTY_PATH ? kept.journal : now));
 
       // Entries that were on the disk and are not on the screen. Said, because
       // a path that came back three accounts short looks exactly like a path

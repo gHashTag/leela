@@ -260,6 +260,33 @@ export function checkCiPackages(loops, workspaces) {
  *              so the rule can be asserted against a made-up tree.
  */
 
+/**
+ * Every workspace, with where its source and its tests live.
+ *
+ * `workspaceSources` answers *what to read for declarations*; three other
+ * audits want the same set for their own questions and each kept its own array
+ * of it. Two were wrong on the day this was written, both by omission:
+ * `audit-doubles` listed nine of the ten and never saw the phone app, which
+ * holds four constants declared twice — including an `EMPTY` that means two
+ * different things; `audit-promises` listed five, and the five it left out hold
+ * injected dependencies nothing has ever handed a broken one.
+ *
+ * That is the sixth and seventh hand-kept list here to be wrong, in a
+ * repository whose fix for the fifth is one function above this one. A rule
+ * that closes a class of omission has to be *used* by everything in the class.
+ *
+ * @param read  The same injected reader `workspaceSources` takes.
+ */
+export function workspacePackages(read, groups = ['packages', 'apps']) {
+  return workspaceSources(read, groups)
+    .filter((path) => path.endsWith('/src'))
+    .map((src) => {
+      const path = src.slice(0, -'/src'.length);
+      const tests = `${path}/tests`;
+      return { path, src, tests: read.exists(tests) ? tests : null };
+    });
+}
+
 /** Directories that are not a workspace's own source, whatever they hold. */
 const NOT_SOURCE = new Set(['node_modules', 'dist', 'build', 'coverage', 'tests', '.expo']);
 

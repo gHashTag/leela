@@ -138,7 +138,7 @@ export function saveLastRoll(storage: GameStorage | undefined, value: number): b
  * Its own key, like the die's: the saved game refuses anything it does not
  * recognise, and a draft has no business making a player's path unreadable.
  */
-export const DRAFT_KEY = 'leela.draft.v1';
+export { DRAFT_KEY };
 
 /**
  * Where each player's unfinished sentence waits.
@@ -236,7 +236,7 @@ export function clearDraft(storage: GameStorage | undefined, playerId = 'p1'): b
 }
 
 /** Where the first seat's intention lives. */
-export const INTENTION_KEY = 'leela.intention.v1';
+export { INTENTION_KEY };
 
 /**
  * Where each player's intention lives, once there is more than one player.
@@ -276,7 +276,13 @@ export function intentionKeyFor(playerId: string): string {
  * `@leela/journal` has no dependencies at all, on purpose, so that a browser
  * bundle and a Bun process can both hold it.
  */
-import { MAX_INTENTION_CHARS, MIN_INTENTION_CHARS, isIntention } from '@leela/journal';
+import {
+  DRAFT_KEY,
+  INTENTION_KEY,
+  MAX_INTENTION_CHARS,
+  MIN_INTENTION_CHARS,
+  isIntention,
+} from '@leela/journal';
 export { MAX_INTENTION_CHARS };
 
 /**

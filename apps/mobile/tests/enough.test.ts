@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 // Shared with the audit scripts, which are plain JavaScript.
 import { blank } from '../../../scripts/lib/source.mjs';
 import { CLASSIC, LEGACY_MOBILE, RULESETS, countsAsReport, type RuleSet } from '@leela/engine';
-import { EMPTY, record, takeAccount, type Store } from '../src/journal';
+import { EMPTY_PATH, record, takeAccount, type Store } from '../src/journal';
 
 /**
  * How much writing counts as an account.
@@ -42,11 +42,11 @@ describe('what counts is the variant\'s answer', () => {
     '%s takes what it asks for and refuses less',
     (_id, rules) => {
       const enough = 'x'.repeat(Math.max(rules.minReportChars, 1));
-      expect(record(EMPTY, 30, enough, 1, rules).entries).toHaveLength(1);
+      expect(record(EMPTY_PATH, 30, enough, 1, rules).entries).toHaveLength(1);
 
       if (rules.minReportChars > 0) {
         const short = 'x'.repeat(rules.minReportChars - 1);
-        expect(record(EMPTY, 30, short, 1, rules).entries, 'one short').toHaveLength(0);
+        expect(record(EMPTY_PATH, 30, short, 1, rules).entries, 'one short').toHaveLength(0);
       }
     },
   );
@@ -61,7 +61,7 @@ describe('what counts is the variant\'s answer', () => {
   it('is never whitespace, whatever the variant says', () => {
     // A gate opened by spaces is the rule with its point removed.
     for (const rules of shipped) {
-      expect(record(EMPTY, 30, '   \n\t  ', 1, rules).entries, rules.id).toHaveLength(0);
+      expect(record(EMPTY_PATH, 30, '   \n\t  ', 1, rules).entries, rules.id).toHaveLength(0);
     }
   });
 
@@ -74,8 +74,8 @@ describe('what counts is the variant\'s answer', () => {
 
     expect(countsAsReport(ninetyNine, CLASSIC)).toBe(true);
     expect(countsAsReport(ninetyNine, LEGACY_MOBILE)).toBe(false);
-    expect(record(EMPTY, 30, ninetyNine, 1, CLASSIC).entries).toHaveLength(1);
-    expect(record(EMPTY, 30, ninetyNine, 1, LEGACY_MOBILE).entries).toHaveLength(0);
+    expect(record(EMPTY_PATH, 30, ninetyNine, 1, CLASSIC).entries).toHaveLength(1);
+    expect(record(EMPTY_PATH, 30, ninetyNine, 1, LEGACY_MOBILE).entries).toHaveLength(0);
   });
 });
 
@@ -88,7 +88,7 @@ describe('a refusal says which refusal it is', () => {
    * this surface has now been caught by three times.
    */
   it('names an empty draft', () => {
-    const taken = takeAccount(EMPTY, 30, '   ', 1, nowhere(), LEGACY_MOBILE);
+    const taken = takeAccount(EMPTY_PATH, 30, '   ', 1, nowhere(), LEGACY_MOBILE);
 
     expect(taken.written).toBe(false);
     expect(taken.refusal).toBe('empty');
@@ -96,14 +96,14 @@ describe('a refusal says which refusal it is', () => {
   });
 
   it('names one that is short of what the variant asks', () => {
-    const taken = takeAccount(EMPTY, 30, 'x'.repeat(99), 1, nowhere(), LEGACY_MOBILE);
+    const taken = takeAccount(EMPTY_PATH, 30, 'x'.repeat(99), 1, nowhere(), LEGACY_MOBILE);
 
     expect(taken.written).toBe(false);
     expect(taken.refusal).toBe('too-short');
   });
 
   it('names nothing when the account was taken', () => {
-    const taken = takeAccount(EMPTY, 30, 'x'.repeat(100), 1, nowhere(), LEGACY_MOBILE);
+    const taken = takeAccount(EMPTY_PATH, 30, 'x'.repeat(100), 1, nowhere(), LEGACY_MOBILE);
 
     expect(taken.written).toBe(true);
     expect(taken.refusal).toBe(null);

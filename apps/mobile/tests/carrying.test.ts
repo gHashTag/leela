@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_REPORTS, SCHEMA_VERSION, parseDocument } from '@leela/journal';
-import { EMPTY, record, shareName, takeIn, toShare } from '../src/journal';
+import { EMPTY_PATH, record, shareName, takeIn, toShare } from '../src/journal';
 
 /**
  * A path that can leave the phone, and be read where it lands.
@@ -16,7 +16,7 @@ import { EMPTY, record, shareName, takeIn, toShare } from '../src/journal';
  * that checked the fields would pass while the reader refused the file.
  */
 
-const path = record(record(EMPTY, 6, 'the first square', 1), 41, 'and the human plane', 2);
+const path = record(record(EMPTY_PATH, 6, 'the first square', 1), 41, 'and the human plane', 2);
 
 describe('what the phone hands out', () => {
   it('comes back through the format’s own reader', () => {
@@ -58,7 +58,7 @@ describe('what the phone hands out', () => {
   });
 
   it('hands out nothing readable when nothing was written', () => {
-    const back = parseDocument(JSON.stringify(toShare(EMPTY, 'to see it through')));
+    const back = parseDocument(JSON.stringify(toShare(EMPTY_PATH, 'to see it through')));
 
     expect(back?.entries, 'an empty path is still a path').toEqual([]);
     expect(back?.intention, 'and the question survives an empty one').toBe('to see it through');
@@ -77,9 +77,9 @@ describe('what the phone takes back', () => {
    * rather than answering them again — which is the point of the format having
    * no dependencies at all.
    */
-  const mine = record(EMPTY, 41, 'what I wrote here', 10);
+  const mine = record(EMPTY_PATH, 41, 'what I wrote here', 10);
   const theirs = JSON.stringify(
-    toShare(record(record(EMPTY, 6, 'from the table', 1), 23, 'and heaven', 2), 'to stop hurrying'),
+    toShare(record(record(EMPTY_PATH, 6, 'from the table', 1), 23, 'and heaven', 2), 'to stop hurrying'),
   );
 
   it('adds what is new and keeps what was here', () => {
@@ -134,7 +134,7 @@ describe('what the phone takes back', () => {
   });
 
   it('holds the joined path to the bound the format states', () => {
-    let big = EMPTY;
+    let big = EMPTY_PATH;
     for (let index = 0; index < MAX_REPORTS; index += 1) {
       big = record(big, (index % 72) + 1, `mine ${index}`, index + 1);
     }

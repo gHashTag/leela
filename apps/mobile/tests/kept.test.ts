@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  EMPTY,
+  EMPTY_PATH,
   KEEP_TIMEOUT_MS,
   keep,
   loadKept,
@@ -52,7 +52,7 @@ const silent: Keeper = {
   write: () => new Promise<boolean>(() => {}),
 };
 
-const path = record(record(EMPTY, 6, 'the first square', 1), 41, 'and the human plane', 2);
+const path = record(record(EMPTY_PATH, 6, 'the first square', 1), 41, 'and the human plane', 2);
 
 describe('a path comes back after the app is closed', () => {
   it('comes back as it went in', async () => {
@@ -63,12 +63,12 @@ describe('a path comes back after the app is closed', () => {
   });
 
   it('is an empty path when there is nothing kept yet', async () => {
-    expect((await loadKept(kept())).journal).toEqual(EMPTY);
+    expect((await loadKept(kept())).journal).toEqual(EMPTY_PATH);
   });
 
   it('is an empty path when there is no keeper at all', async () => {
     // The app on a device that has none, which is what this ran as until now.
-    expect((await loadKept(undefined)).journal).toEqual(EMPTY);
+    expect((await loadKept(undefined)).journal).toEqual(EMPTY_PATH);
     expect(await keep(undefined, path), 'and nothing pretends otherwise').toBe(false);
   });
 });
@@ -83,7 +83,7 @@ describe('the keeper is handed the worst its type allows', () => {
   });
 
   it('starts with an empty path rather than crashing on a device that throws', async () => {
-    expect((await loadKept(throws)).journal).toEqual(EMPTY);
+    expect((await loadKept(throws)).journal).toEqual(EMPTY_PATH);
   });
 
   it('gives up on a device that never answers, rather than waiting for it', async () => {
@@ -97,7 +97,7 @@ describe('the keeper is handed the worst its type allows', () => {
     const started = Date.now();
 
     expect(await keep(silent, path, 20), 'not kept, and said so').toBe(false);
-    expect((await loadKept(silent, 20)).journal, 'and an empty path rather than a spinner').toEqual(EMPTY);
+    expect((await loadKept(silent, 20)).journal, 'and an empty path rather than a spinner').toEqual(EMPTY_PATH);
     expect(Date.now() - started, 'both inside the deadline').toBeLessThan(1_000);
   });
 
@@ -137,7 +137,7 @@ describe('what is written comes back to be read', () => {
    */
   it('is there when the player stands on that square again, after a restart', async () => {
     const keeper = kept();
-    const written = record(EMPTY, 41, 'What the human plane asked of me.', 1);
+    const written = record(EMPTY_PATH, 41, 'What the human plane asked of me.', 1);
 
     expect(await keep(keeper, written)).toBe(true);
 
@@ -150,7 +150,7 @@ describe('what is written comes back to be read', () => {
   });
 
   it('is not shown under a square it was not written about', () => {
-    const written = record(record(EMPTY, 6, 'about six', 1), 41, 'about forty-one', 2);
+    const written = record(record(EMPTY_PATH, 6, 'about six', 1), 41, 'about forty-one', 2);
 
     expect(writingsOn(written, 6).map((entry) => entry.text)).toEqual(['about six']);
     expect(writingsOn(written, 40), 'and nothing under a square never stood on').toEqual([]);
@@ -161,7 +161,7 @@ describe('what is written comes back to be read', () => {
     // times has three things to compare, and showing the last one only would
     // hide the thing worth seeing.
     const keeper = kept();
-    let journal = EMPTY;
+    let journal = EMPTY_PATH;
     for (const [at, text] of [
       [1, 'the first time'],
       [2, 'the second time'],

@@ -21,6 +21,26 @@ export const SCHEMA_VERSION = 1;
 /** The longest report kept. A bound, because storage is one. */
 export const MAX_REPORT_CHARS = 4000;
 
+/**
+ * Where a device keeps what a player wrote, and the two drafts around it.
+ *
+ * The mini app and the phone each declared all three, with the same strings —
+ * and `audit-doubles` never saw it, because its list of places to look held
+ * nine of the ten workspaces. The `v1` is this format's version: the day one
+ * surface bumps it the other has to, and two copies of a version are how one
+ * app starts reading a shape the other stopped writing.
+ *
+ * Here for the reason `MAX_REPORT_CHARS` above it is here — this package is the
+ * one thing both surfaces already depend on, and it has no dependencies of its
+ * own so a browser bundle and a phone can each hold it.
+ *
+ * The names each surface builds from these are its own: the mini app keeps a
+ * path per seat and a draft per square, and the phone keeps one of each.
+ */
+export const REPORTS_KEY = 'leela.reports.v1';
+export const DRAFT_KEY = 'leela.draft.v1';
+export const INTENTION_KEY = 'leela.intention.v1';
+
 /** The most reports kept, oldest dropped first. */
 export const MAX_REPORTS = 500;
 

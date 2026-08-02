@@ -19,22 +19,28 @@
  * Run:  node scripts/audit-promises.mjs
  */
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { injectionPoints, windowsBreaking, answeredIn } from './lib/promises.mjs';
+import { workspacePackages } from './lib/claims.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..');
 
-/** Where dependencies are declared, and where their tests live. */
-const PACKAGES = [
-  { src: 'apps/bot/src', tests: 'apps/bot/tests' },
-  { src: 'apps/miniapp/src', tests: 'apps/miniapp/tests' },
-  { src: 'packages/ai/src', tests: 'packages/ai/tests' },
-  { src: 'packages/db/src', tests: 'packages/db/tests' },
-  { src: 'packages/journal/src', tests: 'packages/journal/tests' },
-];
+/**
+ * Where dependencies are declared, and where their tests live.
+ *
+ * Found rather than listed. This held five of the ten workspaces, and the five
+ * it left out hold injected dependencies nothing has ever handed a broken one.
+ */
+const read = {
+  exists: (path) => existsSync(join(ROOT, path)),
+  entries: (path) => readdirSync(join(ROOT, path)),
+  isDirectory: (path) => statSync(join(ROOT, path)).isDirectory(),
+};
+
+const PACKAGES = workspacePackages(read).filter((workspace) => workspace.tests);
 
 /**
  * Members nothing can usefully break.

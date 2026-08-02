@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 // Shared with the audit scripts, which are plain JavaScript.
 import { blank } from '../../../scripts/lib/source.mjs';
 import { order, revisited, writingsOn as writingsOnEntries } from '@leela/journal';
-import { EMPTY, pathOf, record, takeIn, toShare, writingsOn, type Journal } from '../src/journal';
+import { EMPTY_PATH, pathOf, record, takeIn, toShare, writingsOn, type Journal } from '../src/journal';
 import { HANDLE } from '../src/handles';
 
 /**
@@ -35,7 +35,7 @@ const APP = blank(readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8'));
 function walked(visits: ReadonlyArray<[plan: number, at: number]>): Journal {
   return visits.reduce(
     (journal, [plan, at]) => record(journal, plan, `what ${plan} asked at ${at}`, at),
-    EMPTY,
+    EMPTY_PATH,
   );
 }
 
@@ -80,14 +80,14 @@ describe('the whole path', () => {
   it('is empty for a player who has written nothing', () => {
     // Not "a heading with nothing under it", which reads as a screen that
     // failed rather than a path not yet walked.
-    expect(pathOf(EMPTY)).toEqual({ returns: [], entries: [] });
+    expect(pathOf(EMPTY_PATH)).toEqual({ returns: [], entries: [] });
   });
 
   it('survives a path brought back from a file', () => {
     // The round trip the whole format exists for: what was carried away is
     // what is read here.
     const mine = walked(A_GAME);
-    const brought = takeIn(EMPTY, JSON.stringify(toShare(mine, 'why I am playing')), '');
+    const brought = takeIn(EMPTY_PATH, JSON.stringify(toShare(mine, 'why I am playing')), '');
 
     expect(brought.readable).toBe(true);
     expect(pathOf(brought.journal).entries).toEqual(pathOf(mine).entries);

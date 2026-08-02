@@ -35,6 +35,9 @@ import {
   writingsOn as writingsOnEntries,
   type Report,
   type Revisit,
+  REPORTS_KEY,
+  DRAFT_KEY,
+  INTENTION_KEY,
 } from '@leela/journal';
 
 export { isIntention };
@@ -52,14 +55,25 @@ export interface Store {
   setItem(key: string, value: string): void;
 }
 
-export const REPORTS_KEY = 'leela.reports.v1';
+export { REPORTS_KEY };
 
 /** A path, as it is held while the app runs. */
 export interface Journal {
   entries: Report[];
 }
 
-export const EMPTY: Journal = { entries: [] };
+/**
+ * A path with nothing written on it yet.
+ *
+ * `EMPTY` until `audit-doubles` was pointed at this workspace for the first
+ * time: the mini app has an `EMPTY` too, and it is a different shape —
+ * `{ reported, entries }` against this one's `{ entries }`. One word for two
+ * records, in two apps whose code moves between them constantly, is how
+ * somebody carries the wrong one across. Not a copy to unify: the mini app
+ * tracks whether an arrival has been written about in the journal, and this app
+ * tracks it in the session.
+ */
+export const EMPTY_PATH: Journal = { entries: [] };
 
 /**
  * A path read back, and what could not be read with it.
@@ -83,7 +97,7 @@ export interface Read {
   dropped: number;
 }
 
-const NOTHING_READ: Read = { journal: EMPTY, dropped: 0 };
+const NOTHING_READ: Read = { journal: EMPTY_PATH, dropped: 0 };
 
 /**
  * Add one account to a path.
@@ -392,7 +406,7 @@ export async function keep(
   }
 }
 
-export const INTENTION_KEY = 'leela.intention.v1';
+export { INTENTION_KEY };
 
 /**
  * What the player is playing for.
@@ -656,7 +670,7 @@ export function mayChangeIntention(intention: string): boolean {
  * `methods.reset()`, under a rule of `yup.string().trim().min(100)` — at least
  * a paragraph, held nowhere.
  */
-export const DRAFT_KEY = 'leela.draft.v1';
+export { DRAFT_KEY };
 
 /** Nothing being written, which is what a screen opens with. */
 export const NOTHING_WRITTEN: Draft = { seed: 0, plan: 0, text: '' };
