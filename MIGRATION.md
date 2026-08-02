@@ -7506,6 +7506,28 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The one place a player's record moves between two shipped applications was
+tested from neither side.** The mini app writes a file and the phone reads it;
+the phone writes one and the mini app reads it. Each side is tested in its own
+package, against a document it built itself. The **crossing** was not — and a
+crossing is where this repository has found most of what it has found.
+
+Asserted now in both directions and at the edges where a loss hides: the bound
+on how many accounts a path holds, the bound on how long one may be, the
+question the path was written under, a file handed over twice, and a file
+neither wrote. Both surfaces refuse the same rubbish and take the same document,
+and the two write documents with the same fields — which is not implied by
+reading compatibly, and is the day-one condition for one of them not quietly
+dropping something the other added.
+
+**Written after a probe of mine claimed they disagreed.** It reported the phone
+taking 4,000 characters of a long account where the mini app took 4,500. They do
+not: the probe had handed the mini app `JSON.parse(...).entries` while the
+application reads through `parseDocument`, which is what clamps. The measurement
+was wrong and the code was right — which is the argument for asserting a
+crossing the way the applications actually make it, rather than the way a test
+finds convenient.
+
 **The flag that would have caught last pass's defect was off in all ten
 workspaces.** Three functions died in `packages/db/src/legacy.ts` the moment
 `stateFromLegacy` began delegating, and nothing said so — `audit-unread` reads
