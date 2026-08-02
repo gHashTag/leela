@@ -5286,6 +5286,33 @@ one test that already builds the site — every *N pages* in either document mus
 be the number the build wrote, and there must be at least one of them, or the
 check is checking nothing.
 
+**A wrong address led to GitHub (212th pass).** Played the deployed site rather
+than a harness, and then asked it for a page that is not there. A book of 1,784
+pages at a public URL collects old links, and the host answered
+`/leela/docs/en/plans/73.html` — a plan number one past the board — with *Page
+not found · GitHub Pages*: somebody else's page, about GitHub, with nothing on
+it about this game and no way back to it.
+
+No test here could have seen it. Every link check resolves links **within** the
+site, over forty thousand of them, and this is the page for an address that is
+not in it.
+
+`public/404.html` ships with the app, because Vite copies that directory
+verbatim and GitHub Pages serves `/404.html` for anything missing under the
+site. It says what happened in a sentence and offers the two things this site
+is. Its links are absolute, and that is the one property it cannot borrow from
+the app: the same file answers for three different depths, so a relative `../`
+would be right for exactly one of them. It fetches nothing — no script, no
+stylesheet — because it is the page that has to render when something else did
+not.
+
+**And four probes that found nothing, which is what a live site is for.** The
+deployed bundle carries the newest journal work, so the deploy the pass before
+had not gone stale; the Arabic pager reads `→ 11` and `13 ←` on the live page;
+the Arabic contents links the chapter its book lacks to `/en/`, and that link
+resolves — asked over HTTP rather than asserted as a string, which is the
+difference between a check on a mention and a check.
+
 **Two formats that nothing had ever carried across (211th pass).**
 `@leela/journal` says of itself that *a format written on one surface and parsed
 on another is exactly what this package exists to prevent*. Both halves of both
