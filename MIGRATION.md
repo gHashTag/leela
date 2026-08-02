@@ -7517,10 +7517,10 @@ Nothing was missing: every word was on the page. Only the numbering, which is
 the whole of what an enumeration says. A reader met four things all called the
 first, in a text about four states that follow one another.
 
-Found by asking whether the book and the game show the same text: 45 of 1,584
-plan pages did not carry a paragraph the game does, and every one of them began
-with a number. Measured over the built book, 84 of the 107 pages that have a
-list in them held two or more lists of one item with nothing between.
+Found by asking whether the book and the game show the same text: 45 plan pages
+of the 1,584 built did not carry a paragraph the game does, and every one of
+them began with a number. Measured over the built book, 84 of the 107 that have
+a list in them held two or more lists of one item with nothing between.
 
 CommonMark calls blank-line separated items one loose list, and the game shows
 them as the text writes them — so the standard and the other surface were
