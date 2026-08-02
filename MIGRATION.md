@@ -7506,6 +7506,34 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The flag that would have caught last pass's defect was off in all ten
+workspaces.** Three functions died in `packages/db/src/legacy.ts` the moment
+`stateFromLegacy` began delegating, and nothing said so — `audit-unread` reads
+exports and fields, and a private function is neither. They were found by hand a
+pass later, and only because one of them happened to have been copied.
+`noUnusedLocals` names such a function in the file, at the keyboard, the moment
+its last caller goes. It was not on anywhere.
+
+Turned on with `noUnusedParameters` in every `tsconfig.src.json`, beside
+`noUncheckedIndexedAccess`, which is there for the same kind of reason and says
+so. The cost was ten unused imports across three apps — six of them in the mini
+app's `main.ts` alone — and nothing else. Proved by putting a dead private
+function back: the compiler names it, with the line.
+
+`audit-configs` asks for all three now rather than one, and the sentence it was
+written on still holds — *a flag turned on in eight files is a flag that will be
+missing from the ninth*. The test goes one step further than a list: **whatever
+any strict config turns on, all of them turn on.**
+
+**And the artefact corrected the rule.** That test first compared the whole of
+`compilerOptions` and two workspaces refused: `apps/miniapp` needs
+`types: ["vite/client"]`, `apps/mobile` needs `jsx: "react-jsx"`. Neither is a
+standard anybody is held to — they are what an app runs on — so the rule is
+about the boolean flags, which is what it always meant.
+
+**Also measured, and clean:** ninety private functions across the ten
+workspaces, every one of them called. Last pass's three were the only dead ones.
+
 **The same function, written twice, under whatever it was called each time.**
 `audit-doubles` compares the *names* of constants, and says why: two numbers
 that happen to be 500 are not a duplicate. A body is the other way round —

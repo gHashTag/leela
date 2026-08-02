@@ -65,8 +65,21 @@ for (const group of WORKSPACES) {
     }
 
     const config = readJsonc(strict);
-    if (config.compilerOptions?.noUncheckedIndexedAccess !== true) {
-      problems.push(`${where}: tsconfig.src.json does not turn on noUncheckedIndexedAccess`);
+
+    /**
+     * The flags the shipped code is held to, each because something got past.
+     *
+     * `noUncheckedIndexedAccess` is the one this check was written for.
+     * `noUnusedLocals` came later, from three functions that died in
+     * `packages/db/src/legacy.ts` the moment `stateFromLegacy` began
+     * delegating — invisible to `audit-unread`, which reads exports and fields,
+     * and a private function is neither. Listed rather than asked for one by
+     * one, so a fourth is a line here and not a new branch.
+     */
+    for (const flag of ['noUncheckedIndexedAccess', 'noUnusedLocals', 'noUnusedParameters']) {
+      if (config.compilerOptions?.[flag] !== true) {
+        problems.push(`${where}: tsconfig.src.json does not turn on ${flag}`);
+      }
     }
     if (!Array.isArray(config.include) || !config.include.includes('src')) {
       problems.push(`${where}: tsconfig.src.json does not cover src`);
@@ -152,7 +165,7 @@ if (existsSync(workflow)) {
 console.log(`\nChecked ${checked} workspaces that ship code.\n`);
 
 if (problems.length === 0) {
-  console.log('Every one of them is held to noUncheckedIndexedAccess.');
+  console.log('Every one of them is held to the same flags, and can run the check that holds it.');
 } else {
   for (const problem of problems) console.log(`  ${problem}`);
   console.log(

@@ -23,7 +23,6 @@ import {
   fileName,
   isIntention,
   isReport,
-  newEntries,
   merged,
   order,
   parseDocument,

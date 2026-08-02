@@ -13,9 +13,7 @@
  */
 
 import {
-  MAX_REPORTS,
   merged,
-  parseDocument,
   toDocument as toJournalDocument,
   type Report,
 } from '@leela/journal';

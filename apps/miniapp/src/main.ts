@@ -10,10 +10,8 @@
 import {
   BOARD_ROWS,
   CLASSIC,
-  applyRoll,
   hasWon,
   initialState,
-  owesReport,
   rollDie,
   rollerFor,
   type MoveEvent,
@@ -58,7 +56,6 @@ import {
   forgetIntention,
   loadDraft,
   loadLastRoll,
-  loadState,
   saveDraft,
   saveLastRoll,
   loadIntention,
@@ -77,11 +74,9 @@ import {
 } from './journal-file';
 import {
   arrived,
-  loadJournal,
   seatOwesReport,
   path as pathOf,
   record,
-  saveJournal,
   type Journal,
   hintFor,
   loadJournalFor,
@@ -96,7 +91,6 @@ import {
 } from './reports';
 import {
   afterWriting,
-  canRoll,
   headline,
   lineFor,
   mayExport,

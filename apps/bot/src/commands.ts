@@ -12,7 +12,6 @@
 import {
   MAX_SEATS,
   SessionError,
-  WIN_LOKA,
   advance,
   canCurrentPlayerRoll,
   createSession,

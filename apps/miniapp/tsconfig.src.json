@@ -12,9 +12,22 @@
   // Tests are deliberately out of scope. `rows[0]` in a test is a value the
   // test constructed two lines earlier, and a guard there adds noise without
   // adding truth.
+  //
+  // And two flags the editor does not turn on either. `noUnusedLocals` is what
+  // would have caught three functions in `packages/db/src/legacy.ts` — dead the
+  // moment `stateFromLegacy` began delegating, and invisible to everything:
+  // `audit-unread` reads exports and fields, and a private function is neither.
+  // They were found by hand, a pass later, only because one of them had been
+  // copied. `noUnusedParameters` is its other half: an argument nothing reads
+  // is a question the caller was asked and nobody answered.
+  //
+  // Tests are out of scope here for the reason above: a helper written for one
+  // test and left is noise, not a defect.
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     // No Node globals in the browser bundle. `scripts/` and `tests/` get them
     // from the configuration above; `src/` is what ships, and `process` in it
     // is a mistake that should not typecheck.
