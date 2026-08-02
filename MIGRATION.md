@@ -5251,6 +5251,38 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A decision nothing defended, and the list that could not see it (206th
+pass).** `audit-mutants` breaks a decision on purpose and runs the suite that
+owns it. It closed with *Broke 42 decisions on purpose. Every one of them was
+defended by something* — true of forty-two, and it reads as a sentence about the
+code. **Not one of the decisions the last ten passes added was in the list**:
+`merged`, `writerHint`, `describeMove`, `formatWait`, `waitParts`, `mayEnd`,
+`taking`, `forgetIntention`, and the two readings the dataset audits rest on.
+
+All ten are defended. So the list grew again, by the rules three surfaces ask
+rather than by what has already cost a defect — `countsAsReport`, `isIntention`,
+`parseDocument`, `newEntries`, and four verdicts in the mini app's view.
+
+**One of them was defended by nothing at all.** `mayLeaveTheQuestion` decides
+whether the question dialog carries a Close: replaced with `true`, and then with
+`false`, the whole suite stayed green. What was checked was the *line* —
+`named.test.ts` asserts `main.ts` contains
+`el.intentionClose.hidden = !mayLeaveTheQuestion(intention)`, which is true
+however the function answers. A check on a mention passes an empty function.
+
+Both halves matter and each was silent: with `true`, a player on a first launch
+can dismiss the question — and the die is shut until it is answered while
+*Change it*, the only way back in, is not drawn until there is something to
+change, so the game is over until the page is reloaded. With `false`, somebody
+who already has a question can no longer leave it alone.
+
+**And the same rule had two spellings.** The dialog's `cancel` handler asked
+`intention === ''` in its own words while the button asked
+`mayLeaveTheQuestion(intention)` five hundred lines up. One question, one place.
+
+The other four audits CI cannot run — `copies`, `variants`, `mutants`,
+`deployment`'s siblings — were all run here against the donor clones, and pass.
+
 **Two letters of English in the sentence that says come back later (205th
 pass).** `formatWait` lived in `@leela/engine` and returned
 `${hours}h ${minutes}m`. The bot drops that into `roll.cooldown`, which is in

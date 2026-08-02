@@ -109,6 +109,102 @@ const DECISIONS = [
   { package: 'apps/docs', file: 'src/render.ts', name: 'descriptionIsRedundant', to: ['true', 'false'] },
   { package: 'apps/docs', file: 'src/build.ts', name: 'stripFrontmatter', to: 'text' },
   { package: 'apps/docs', file: 'src/render.ts', name: 'escape', to: 'text' },
+
+  // The decisions the last ten passes added. Every one of them was written
+  // because a surface had answered a question for itself and got it wrong, and
+  // not one was in this list — so the closing sentence below, *every one of
+  // them was defended by something*, was true of forty-two decisions and read
+  // as a sentence about the code.
+  {
+    package: 'packages/journal',
+    file: 'src/index.ts',
+    name: 'merged',
+    to: '{ entries: [...existing], added: 0, dropped: 0 }',
+    also: ['apps/miniapp', 'apps/mobile'],
+  },
+  {
+    package: 'packages/journal',
+    file: 'src/index.ts',
+    name: 'writerHint',
+    to: 'null',
+    also: ['apps/miniapp', 'apps/mobile'],
+  },
+  {
+    package: 'packages/content',
+    file: 'src/describe.ts',
+    name: 'describeMove',
+    to: "''",
+    also: ['apps/miniapp', 'apps/mobile'],
+  },
+  {
+    package: 'packages/content',
+    file: 'src/wait.ts',
+    name: 'formatWait',
+    to: "''",
+    also: ['apps/bot'],
+  },
+  { package: 'packages/engine', file: 'src/turn.ts', name: 'waitParts', to: 'null' },
+  { package: 'apps/bot', file: 'src/commands.ts', name: 'mayEnd', to: ['true', 'false'] },
+  { package: 'apps/miniapp', file: 'src/journal-file.ts', name: 'taking', to: '{ journal, added: 0, dropped: 0 }' },
+  { package: 'apps/miniapp', file: 'src/state.ts', name: 'forgetIntention', to: ['true', 'false'] },
+
+  // The two readings the audits themselves rest on. They live in `scripts/lib`
+  // rather than in a package — reached from `packages/content`, which is where
+  // the tests that own them are — and a check whose reading is wrong reports
+  // whatever it likes about the dataset while staying green.
+  {
+    package: 'packages/content',
+    file: '../../scripts/lib/spillover.mjs',
+    name: 'spilloverAt',
+    to: 'null',
+  },
+  {
+    package: 'packages/content',
+    file: '../../scripts/lib/untranslated.mjs',
+    name: 'untranslatedIn',
+    to: '[]',
+  },
+
+  // Rules three surfaces ask, and the readings a shared file rests on. The
+  // list above grew by what had cost a defect; these are the ones that would
+  // cost the same kind and had not yet.
+  {
+    package: 'packages/engine',
+    file: 'src/turn.ts',
+    name: 'countsAsReport',
+    to: ['true', 'false'],
+    also: ['apps/miniapp', 'apps/mobile', 'apps/bot'],
+  },
+  {
+    package: 'packages/journal',
+    file: 'src/index.ts',
+    name: 'isIntention',
+    to: ['true', 'false'],
+    also: ['apps/miniapp', 'apps/mobile', 'apps/bot'],
+  },
+  {
+    package: 'packages/journal',
+    file: 'src/index.ts',
+    name: 'parseDocument',
+    to: 'null',
+    also: ['apps/miniapp', 'apps/mobile', 'apps/bot'],
+  },
+  {
+    package: 'packages/journal',
+    file: 'src/index.ts',
+    name: 'newEntries',
+    to: '[]',
+    also: ['apps/mobile', 'apps/bot'],
+  },
+  { package: 'apps/miniapp', file: 'src/view.ts', name: 'mayWrite', to: ['true', 'false'] },
+  { package: 'apps/miniapp', file: 'src/view.ts', name: 'mayAsk', to: ['true', 'false'] },
+  { package: 'apps/miniapp', file: 'src/view.ts', name: 'fitsHandOver', to: ['true', 'false'] },
+  {
+    package: 'apps/miniapp',
+    file: 'src/view.ts',
+    name: 'mayLeaveTheQuestion',
+    to: ['true', 'false'],
+  },
 ];
 
 /**

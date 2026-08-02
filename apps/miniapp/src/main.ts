@@ -1462,7 +1462,11 @@ el.intentionSave.addEventListener('click', saveTheIntention);
  * question must still be able to close it and keep the old one.
  */
 el.intention.addEventListener('cancel', (event) => {
-  if (intention === '') event.preventDefault();
+  // The same question the Close button is drawn from. It was `intention === ''`
+  // written out here and `mayLeaveTheQuestion(intention)` five hundred lines
+  // up: one rule with two spellings, which is how a control and the act behind
+  // it come to disagree.
+  if (!mayLeaveTheQuestion(intention)) event.preventDefault();
 });
 el.writerText.addEventListener('input', () => {
   // The earliest write of a session, and so the first chance to notice that

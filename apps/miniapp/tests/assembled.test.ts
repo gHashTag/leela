@@ -298,6 +298,36 @@ describe('the mini app as it is assembled', () => {
     expect(kept.entries.map((entry) => entry.text)).toEqual(['From another device.']);
   }, 20_000);
 
+  it('draws no way out of the question until there is one to come back to', async () => {
+    /**
+     * The decision `audit-mutants` found undefended: replacing
+     * `mayLeaveTheQuestion` with `true`, and then with `false`, left the whole
+     * suite green. What was checked was the line in `main.ts`, which reads the
+     * same however the function answers.
+     *
+     * This is what a player meets. A first launch has no question, the die is
+     * shut until there is one, and *Change it* — the only way back into the
+     * dialog — is not drawn until there is something to change: a Close button
+     * here would end the game until the page was reloaded.
+     */
+    const storage = remembering();
+    await play(storage);
+
+    expect(dialog('intention').open, 'the question is asked on a first launch').toBe(true);
+    expect(el('intention-close').hidden, 'and cannot be walked away from').toBe(true);
+
+    (el('intention-text') as HTMLTextAreaElement).value = 'to see what I keep avoiding';
+    el('intention-save').click();
+    await new Promise((resolve) => setTimeout(resolve, 40));
+
+    // And opened again by somebody who now has one to keep.
+    el('intention-open')?.click();
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    if (dialog('intention').open) {
+      expect(el('intention-close').hidden, 'a question already given may be left alone').toBe(false);
+    }
+  }, 20_000);
+
   it('ends a game and begins another without burning the writing', async () => {
     const storage = remembering({
       'leela.intention.v1': 'to finish what I started',
