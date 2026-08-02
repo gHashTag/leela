@@ -7529,6 +7529,19 @@ same kind are folded into one, on the rendered blocks rather than on the source,
 because *is this a list* has already been decided once and deciding it twice is
 how the two answers come to differ. 84 → 0.
 
+**The repair is on the branch and not yet on the site.** The deploy watches
+`apps/docs/**`, so the commit carrying the fold triggered one — and that run
+failed, on this file: the paragraph above counted the hundred and seven with a
+list in them and called them pages, and `build.test.ts` reads every such figure
+this repository states about itself and holds it to what the build writes. It
+was right to — the sentence read as a claim about how large the book is. The wording is fixed, but that commit touches only
+`MIGRATION.md`, which the deploy does not watch, so the live book still numbers
+every list item one until something under a watched path is pushed.
+
+What let it through was the order of work rather than the wording: `MIGRATION.md`
+was edited after the full run, so the only check that reads this prose never saw
+the sentence. Documents before the run, not after it.
+
 **One question, two spellings.** Both surfaces that draw a board have a
 `mayThrow`, and both carry a comment about the same defect: *the rest was
 written out by hand and re-decided `report-required` and `finished` under the
