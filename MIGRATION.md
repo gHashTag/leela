@@ -7506,6 +7506,36 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**One unreadable line, and forty accounts gone — on the published surface.**
+The mini app's `loadJournal` refused the whole file over any single bad entry,
+on an argument written above `isJournal`: *losing what someone wrote is bad, and
+handing the game a report about plan 900 is worse*. Both halves are true. The
+choice between them was not — dropping the entry about plan 900 and keeping the
+other forty does neither harm.
+
+Measured on the browser, before anything changed. Forty accounts and one damaged
+entry in `localStorage`: forty-one on the disk, **nothing** read into the app,
+nothing said. The player writes their next account, the app saves what it is
+holding, and the disk then holds **one** entry. A year of writing destroyed by
+one bad line, permanently, with the overwrite done by the app itself a moment
+later.
+
+`readJournal` keeps what parses and returns the count of what it could not,
+which is the shape the phone was given the pass before. The screen says it once,
+beside `unkept` and separately from it: one sentence is about tomorrow and the
+other about yesterday, and a player who reads only the first would think their
+path intact. The file-import path stays whole-or-nothing — a document somebody
+hands over is one thing to accept or refuse, and that distinction is deliberate.
+
+**And the mini app had its own `isReport`, which is the version `@leela/journal`
+already fixed.** The comment above the bounds in the same file says why that
+matters: *two copies of one bound agree until one of them is changed*. The
+bounds were unified and the predicate beside them was not. The format's reader
+had been tightened to `Number.isInteger(at) && at >= 0`, with the reason
+recorded there — `Number.isFinite` lets through `1.5` and `-1`, which are not
+times anything wrote — and this copy still asked the old question, and spelled
+the last square as a literal `72` beside a package exporting `TOTAL_PLANS`.
+
 **What the phone found on its own disk and threw away without a word.** The app
 reads two things when it opens: the path and the board. Both discarded whatever
 they could not use and said nothing.

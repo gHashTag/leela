@@ -22,6 +22,7 @@
 import { CLASSIC, countsAsReport, owesReport, type GameState } from '@leela/engine';
 import { messageFor, type Language } from '@leela/content';
 import {
+  isReport,
   revisited as revisitedEntries,
   writingsOn as writingsOnEntries,
   MAX_REPORTS,
@@ -71,18 +72,18 @@ export const EMPTY: Journal = { reported: true, entries: [] };
  */
 export { MAX_REPORTS, MAX_REPORT_CHARS };
 
-function isReport(value: unknown): value is Report {
-  if (typeof value !== 'object' || value === null) return false;
-  const entry = value as Record<string, unknown>;
-  return (
-    Number.isInteger(entry.plan) &&
-    (entry.plan as number) >= 1 &&
-    (entry.plan as number) <= 72 &&
-    typeof entry.text === 'string' &&
-    entry.text.length > 0 &&
-    Number.isFinite(entry.at)
-  );
-}
+/**
+ * What an entry is — the format's answer, not a second copy of it.
+ *
+ * This file had its own, written before `@leela/journal` existed and left
+ * behind when the bounds beside it were unified. The comment above those bounds
+ * says why that matters: *two copies of one bound agree until one of them is
+ * changed*. They had already diverged. The format's own reader was tightened
+ * to `Number.isInteger(at) && at >= 0`, with the reason recorded there —
+ * `Number.isFinite` lets through `1.5` and `-1`, which are not times anything
+ * wrote — and this copy still asked the old question. It also spelled the last
+ * square as a literal `72` beside a package that exports `TOTAL_PLANS`.
+ */
 
 /**
  * Whether this could have been written by this app.
@@ -120,6 +121,14 @@ export function loadJournalFor(storage: GameStorage | undefined, playerId: strin
   return loadJournal(storage, journalKeyFor(playerId));
 }
 
+/** One seat's path, with what could not be read with it. */
+export function readJournalFor(
+  storage: GameStorage | undefined,
+  playerId: string,
+): { journal: Journal; dropped: number } {
+  return readJournal(storage, journalKeyFor(playerId));
+}
+
 export function saveJournalFor(
   storage: GameStorage | undefined,
   playerId: string,
@@ -128,15 +137,55 @@ export function saveJournalFor(
   return saveJournal(storage, journal, journalKeyFor(playerId));
 }
 
-export function loadJournal(storage: GameStorage | undefined, key = REPORTS_KEY): Journal {
+/**
+ * A path read back off this browser, and what could not be read with it.
+ *
+ * `loadJournal` refused the whole file over any one bad entry, on an argument
+ * written above `isJournal`: *losing what someone wrote is bad, and handing the
+ * game a report about plan 900 is worse*. Both halves are true and the choice
+ * between them was false — dropping the entry about plan 900 and keeping the
+ * other forty does neither harm.
+ *
+ * What the choice cost, measured: forty accounts and one damaged entry on the
+ * disk read back as **nothing**, silently; the player wrote their next account;
+ * the app saved what it was holding; and the disk then held one entry. A year
+ * of writing destroyed by one bad line, permanently, with the overwrite done by
+ * the app itself a moment later.
+ *
+ * `reported` is still all-or-nothing, because there is no salvage in it: a file
+ * whose flag is not a boolean is not this app's file, and no entry inside it
+ * can be trusted to be either.
+ */
+export function readJournal(
+  storage: GameStorage | undefined,
+  key = REPORTS_KEY,
+): { journal: Journal; dropped: number } {
+  const nothing = { journal: EMPTY, dropped: 0 };
+
   try {
     const raw = storage?.getItem(key);
-    if (!raw) return EMPTY;
+    if (!raw) return nothing;
+
     const parsed: unknown = JSON.parse(raw);
-    return isJournal(parsed) ? parsed : EMPTY;
+    if (typeof parsed !== 'object' || parsed === null) return nothing;
+
+    const file = parsed as Record<string, unknown>;
+    if (typeof file.reported !== 'boolean' || !Array.isArray(file.entries)) return nothing;
+
+    const kept = file.entries.filter(isReport);
+
+    return {
+      journal: { reported: file.reported, entries: kept },
+      dropped: file.entries.length - kept.length,
+    };
   } catch {
-    return EMPTY;
+    return nothing;
   }
+}
+
+/** The path alone, for a caller with nowhere to say what was lost. */
+export function loadJournal(storage: GameStorage | undefined, key = REPORTS_KEY): Journal {
+  return readJournal(storage, key).journal;
 }
 
 /**

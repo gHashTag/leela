@@ -85,6 +85,7 @@ import {
   type Journal,
   hintFor,
   loadJournalFor,
+  readJournalFor,
   owingSeat,
   pathSections,
   revisited,
@@ -199,7 +200,7 @@ let session = sessionFrom(seats);
 
 /** The player whose turn it is, and the writing they have done. */
 let state = currentPlayer(session).state;
-let journal = loadJournalFor(localStorage, currentPlayer(session).id);
+let journal = takeJournalFor(currentPlayer(session).id);
 
 /**
  * The seat the writing box is addressing.
@@ -233,6 +234,31 @@ let announcement: string | null = null;
 let unkept = false;
 let saidUnkept = false;
 
+/**
+ * Accounts that were on this browser and are not on the screen.
+ *
+ * A path that came back short looks exactly like a path that was never that
+ * long, and this app used to make the loss total: one entry it could not read
+ * and the whole file was replaced, without a word, a moment before the next
+ * account was saved over what was left. Said once, like `unkept`, and for the
+ * same reason — under every throw it would bury the sentence about the snake.
+ */
+let lost = 0;
+let saidLost = false;
+
+/** One seat's path, counting what could not be read into the notice. */
+function takeJournalFor(playerId: string): Journal {
+  const read = readJournalFor(localStorage, playerId);
+  if (read.dropped > 0) {
+    lost += read.dropped;
+    // A different seat's loss is still this device's loss, and the player
+    // changing seats is the person who can do something about it.
+    saidLost = false;
+  }
+
+  return read.journal;
+}
+
 function announce(text: string): void {
   announcement = text;
   draw();
@@ -242,7 +268,7 @@ function announce(text: string): void {
 function takeSeat(): void {
   const seated = currentPlayer(session);
   state = seated.state;
-  journal = loadJournalFor(localStorage, seated.id);
+  journal = takeJournalFor(seated.id);
   intention = loadIntention(localStorage, seated.id);
 }
 
@@ -437,6 +463,15 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
   if (unkept && !saidUnkept) {
     saidUnkept = true;
     el.say.textContent = `${el.say.textContent ?? ''} ${messageFor(language, 'app.gameUnkept')}`.trim();
+  }
+
+  // And what this browser held and could not give back. A separate sentence
+  // from `unkept`: one is about tomorrow and this one is about yesterday, and a
+  // player who reads only the first would think their path is intact.
+  if (lost > 0 && !saidLost) {
+    saidLost = true;
+    const line = messageFor(language, 'app.pathPartlyRead', { count: lost });
+    el.say.textContent = `${el.say.textContent ?? ''} ${line}`.trim();
   }
 }
 
