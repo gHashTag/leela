@@ -20,7 +20,7 @@ import {
   submitReport,
   MAX_SEATS,
 } from '@leela/engine';
-import { messageFor, resolveLanguage, type Language } from '@leela/content';
+import { messageFor, piecesOf, resolveLanguage, type Language } from '@leela/content';
 import { loadBook, loadPlans, plan as planFor, plans as loadedPlans } from './content';
 import { applyChrome } from './chrome';
 import { describeMove, attribute} from './describe';
@@ -905,15 +905,35 @@ function openReader(kind: ReaderKind, title: string, body: HTMLElement[]): void 
 }
 
 /** Text as nodes, never as innerHTML: the plans are data, not markup. */
+/**
+ * A text as the elements a reader meets.
+ *
+ * A heading is a heading. The rules chapters write their sections as
+ * `## The second chakra (Svadhisthana)` — three hundred and five of them across
+ * nineteen languages — and this put the paragraph on the screen as text, so a
+ * reader met the hashes. Markup shown to somebody who never asked to see any,
+ * on the surface that is published.
+ *
+ * `headingOf` is the format's own answer, shared with the book and the phone,
+ * because three surfaces reading one text had each decided this for themselves
+ * and two of them decided it wrong.
+ *
+ * `h3` at the shallowest: the dialog's own title is above this, and a reader
+ * using headings to move through a chapter should not meet one that claims to
+ * be the page.
+ */
 function paragraphs(text: string): HTMLElement[] {
-  return text
-    .split(/\n{2,}/)
-    .filter((paragraph) => paragraph.trim().length > 0)
-    .map((paragraph) => {
-      const node = document.createElement('p');
-      node.textContent = paragraph.trim();
-      return node;
-    });
+  return piecesOf(text).map((piece) => {
+    if (piece.heading) {
+      const said = document.createElement(`h${Math.min(piece.heading.level + 2, 6)}`);
+      said.textContent = piece.text;
+      return said;
+    }
+
+    const node = document.createElement('p');
+    node.textContent = piece.text;
+    return node;
+  });
 }
 
 // --- playing ----------------------------------------------------------------------

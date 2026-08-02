@@ -215,3 +215,123 @@ export {
   type MessageParams,
   type PluralForms,
 } from './messages';
+
+/** A paragraph of a text that is a heading rather than prose. */
+export interface Heading {
+  /** How many hashes were written, 1 to 6. */
+  level: number;
+  /** What it says, without them. */
+  text: string;
+}
+
+/**
+ * Whether a paragraph is a heading, and what it says.
+ *
+ * The rules chapters write their sections as `## The second chakra
+ * (Svadhisthana)` — three hundred and five of them across nineteen languages.
+ * The book renders those as headings. The mini app and the phone put the
+ * paragraph on the screen as text, so a reader of either met the hashes:
+ * literally `## দ্বিতীয় চক্রে (স্বাধিষ্ঠান)`, markup shown to somebody who
+ * never asked to see any.
+ *
+ * Here because three surfaces read one text and each had decided for itself
+ * what a paragraph is — which is the shape this repository keeps finding, and
+ * the reason `stateFromKept` and `whyNotPlayable` live in the engine rather
+ * than in the app that needed them first.
+ *
+ * The level is the author's, not a place in anybody's document: what a surface
+ * does with a level — the book adds one so the page's own title stays the
+ * first — is the surface's own business.
+ */
+export function headingOf(paragraph: string): Heading | null {
+  // The space is not required. CommonMark asks for one and seventeen headings
+  // in the shipped texts have lost theirs — `##Vedanta`, `##Yoga`, `##श्रुति`,
+  // `##ਪੁਰਾਣ` — every one of them a section of the glossary that the same
+  // chapter in another language writes with the space. Measured before it was
+  // loosened: seventeen paragraphs change meaning under this rule and all
+  // seventeen are section names. Nothing else in twenty-two languages does.
+  //
+  // Repaired at the reader rather than in the text, because this repository
+  // does not edit translations — and a missing space is not a judgement about
+  // what a sentence should say.
+  const found = /^(#{1,6})\s*(.*)$/.exec(paragraph.trim());
+  if (!found) return null;
+
+  const [, hashes = '', text = ''] = found;
+  const said = text.trim();
+
+  // Hashes and nothing else is a heading whose words were lost — the Turkish
+  // glossary has one — and it is not a heading anybody can read. `piecesOf`
+  // drops it rather than drawing the marks.
+  return said === '' ? null : { level: hashes.length, text: said };
+}
+
+/** A paragraph as a reader meets it: prose, or a heading with its level. */
+export interface Piece {
+  /** The heading it is, or null for prose. */
+  heading: Heading | null;
+  /** What to draw: the prose, or the heading's own words. */
+  text: string;
+}
+
+/**
+ * A text as the pieces a reader meets.
+ *
+ * Three surfaces read these texts and each had split them for itself. The book
+ * rendered headings; the mini app put every paragraph on the screen as text and
+ * the phone put the whole body in one block, so a reader of either met the
+ * hashes — three hundred and five of them across nineteen languages, markup
+ * shown to somebody who never asked to see any.
+ *
+ * A paragraph that is only hashes is dropped. It is a heading whose words did
+ * not survive a translation, it says nothing, and drawing `##` says less than
+ * nothing.
+ */
+export function piecesOf(text: string): Piece[] {
+  return text
+    .split(/\n{2,}/)
+    .flatMap(apart)
+    .map((paragraph) => paragraph.trim())
+    .filter((paragraph) => paragraph.length > 0)
+    .filter((paragraph) => !/^#{1,6}$/.test(paragraph))
+    .map((paragraph) => {
+      const heading = headingOf(paragraph);
+      return heading ? { heading, text: heading.text } : { heading: null, text: paragraph };
+    });
+}
+
+/**
+ * A block, split where a heading is written inside it.
+ *
+ * The blank line is not always there. Seventeen blocks — all of them Russian,
+ * in `ru/chakras` and `ru/notes` — write `#### Первая чакра (Муладхара)` and
+ * the paragraph it heads on the next line down, with nothing between, and
+ * every surface read that as one paragraph beginning with hashes. The published
+ * Russian chapter had **no headings on it at all** and four hash marks in their
+ * place. Russian is one of the two languages nobody machine-translated, which
+ * is why it is the one where somebody wrote it by hand this way.
+ *
+ * A heading is a line, not a paragraph. This is the only place that says so.
+ */
+function apart(block: string): string[] {
+  const parts: string[] = [];
+  let prose: string[] = [];
+
+  const keep = () => {
+    if (prose.length > 0) parts.push(prose.join('\n'));
+    prose = [];
+  };
+
+  for (const line of block.split('\n')) {
+    if (headingOf(line) === null) {
+      prose.push(line);
+      continue;
+    }
+
+    keep();
+    parts.push(line);
+  }
+
+  keep();
+  return parts;
+}

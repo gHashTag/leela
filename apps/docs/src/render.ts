@@ -17,6 +17,8 @@ import {
   type Language,
   type Plan,
   type RuleChapter,
+  headingOf,
+  piecesOf,
 } from '@leela/content';
 
 /** Escape for HTML text and attribute values. */
@@ -46,18 +48,29 @@ export function escape(text: string): string {
  * only reader that was not.
  */
 export function renderMarkdown(source: string): string {
-  const blocks = source.split(/\n{2,}/).filter((block) => block.trim().length > 0);
+  // The format cuts the text and this draws it. A heading is a line rather
+  // than a paragraph — seventeen Russian blocks write one with its prose on the
+  // next line down, and this page carried four hash marks and no headings at
+  // all until `piecesOf` said where to cut. The other two surfaces ask the same
+  // question of the same function.
+  const blocks = piecesOf(source).map((piece) =>
+    piece.heading ? `${'#'.repeat(piece.heading.level)} ${piece.text}` : piece.text,
+  );
 
   return joinLists(
     blocks
     .map((block) => {
       const trimmed = block.trim();
 
-      const heading = trimmed.match(/^(#{1,6})\s+(.*)$/);
+      // The format's answer, not a second copy of it. Two other surfaces read
+      // the same texts and each had decided this for itself; both showed the
+      // hashes to a reader. See `headingOf`.
+      const heading = headingOf(trimmed);
       if (heading) {
-        const [, hashes = '', text = ''] = heading;
-        const level = Math.min(hashes.length + 1, 6);
-        return `<h${level}>${inline(text)}</h${level}>`;
+        // One deeper than the source says, so the page's own title stays the
+        // first heading on it. That part is this surface's, and stays here.
+        const level = Math.min(heading.level + 1, 6);
+        return `<h${level}>${inline(heading.text)}</h${level}>`;
       }
 
       // A run of numbered or bulleted lines is a list.

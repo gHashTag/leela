@@ -24,6 +24,7 @@ import { StatusBar } from 'expo-status-bar';
 import { BOARD_ROWS, countsAsReport } from '@leela/engine';
 import { bookFor, describeMove, messageFor, planFor, resolveLanguage,
   directionOf,
+  piecesOf,
 } from '@leela/content';
 import {
   fileReport,
@@ -590,7 +591,21 @@ export default function App() {
           ? bookFor(language).map((chapter) => (
               <View key={chapter.slug} style={styles.written}>
                 <Text style={[styles.title, prose]}>{chapter.title}</Text>
-                <Text style={[styles.plan, prose]}>{chapter.body}</Text>
+                {piecesOf(chapter.body).map((part, at) =>
+                  part.heading ? (
+                    <Text
+                      key={`${chapter.slug}-${at}`}
+                      accessibilityRole="header"
+                      style={[styles.section, prose]}
+                    >
+                      {part.text}
+                    </Text>
+                  ) : (
+                    <Text key={`${chapter.slug}-${at}`} style={[styles.plan, prose]}>
+                      {part.text}
+                    </Text>
+                  ),
+                )}
               </View>
             ))
           : null}
@@ -960,6 +975,15 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: PALETTE.page },
   body: { padding: 16, paddingTop: 64, gap: 12 },
   title: { fontSize: 20, fontWeight: '600' },
+  /**
+   * A section inside a chapter.
+   *
+   * Smaller than the chapter's own title and heavier than its prose, which is
+   * what the hashes in the source were asking for and what the book draws. The
+   * chapters wrote them as `## The second chakra (Svadhisthana)` and this app
+   * put the paragraph on the screen whole, so a reader met the hashes.
+   */
+  section: { fontSize: 17, fontWeight: '600', marginTop: 8 },
   line: { fontSize: 15, color: PALETTE.hint },
   /**
    * The board reads left to right, whatever the reader does.

@@ -7506,6 +7506,37 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Three hundred and five headings were shown to readers as hashes.** The rules
+chapters write their sections as `## The second chakra (Svadhisthana)`. The book
+rendered those; the mini app split the chapter on blank lines and put each part
+on the screen as text, and the phone put the whole body in one block — so a
+reader of either met the marks, literally `## দ্বিতীয় চক্রে (স্বাধিষ্ঠান)`, on
+the surface that is published.
+
+Three surfaces reading one text, and each had decided for itself what a
+paragraph is. The question moved to where the texts live: `headingOf` and
+`piecesOf` in `@leela/content`, and all three ask them.
+
+Asking it once turned up two more that nobody had seen, in the same texts:
+
+- **Seventeen headings had lost the space** CommonMark asks for — `##Vedanta`,
+  `##Yoga`, `##श्रुति`, `##ਪੁਰਾਣ` — every one a section of the glossary that the
+  same chapter in another language writes with it. Measured before the rule was
+  loosened: seventeen paragraphs change meaning under a lenient reading and all
+  seventeen are section names. Nothing else in twenty-two languages does.
+  Repaired at the reader, because this repository does not edit translations,
+  and a missing space is not a judgement about what a sentence should say.
+- **The Russian chapters write the heading on the line above its prose**, with
+  no blank line between — seventeen blocks, in `ru/chakras` and `ru/notes`.
+  Every surface read that as one paragraph beginning with hashes, so the
+  published Russian chakras chapter had **no headings on it at all** and four
+  hash marks in their place. Russian is one of the two languages nobody
+  machine-translated, which is why it is the one somebody wrote by hand this
+  way. A heading is a line, not a paragraph.
+- **The Turkish glossary holds a paragraph that is two hashes and nothing
+  else** — a heading whose words did not survive the translation. It is dropped
+  rather than drawn: it says nothing, and `##` on a page says less than nothing.
+
 **Eighty-four pages of the book numbered every list item one.** The plan texts
 write their enumerations with a blank line between the items — plan 6's four
 kleshas, plan 58's states of consciousness, plan 64's material contents, a rules
