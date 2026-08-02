@@ -7506,6 +7506,32 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A table of three, refused whole, handed back as somebody else's game.** The
+same file, the neighbouring key. `loadSeats` asked `isSavedSeats` about the
+entire table and threw all of it away on any single fault. Measured on the
+browser — three players on plans 41, 23 and 7, one seat damaged:
+
+| | |
+|---|---|
+| in the file | 3 seats, on 41, 23 and 7 |
+| read into the app | 1 seat, on plan 12 |
+| after one throw | 1 seat, on plan 12, on the disk |
+
+Plan 12 was never at that table. It comes from `leela.game.v1`, the key this app
+used before there were seats, which the fallback resurrects — so two players
+vanished and the third was handed a stranger's square as though it were their
+own, with nothing said and the overwrite one throw away. A stale `turnIndex` did
+exactly the same with every seat in the file intact.
+
+Two repairs, neither of which loses anything that could be kept. **The turn is a
+pointer, not a fact:** one past the end names nobody, `resize` already clamps it
+for that reason, and clamping recovers every seat in the file. **A seat is a
+person:** a damaged one is one game lost, and the table it sits at is two or
+five more, so the seat is dropped and the rest survive — with their ids left
+alone, because `leela.reports.v1.p3` belongs to p3 and a survivor renumbered to
+p2 would be handed somebody else's writing. `readSeats` returns the count, and
+`app.seatsPartlyRead` says it.
+
 **One unreadable line, and forty accounts gone — on the published surface.**
 The mini app's `loadJournal` refused the whole file over any single bad entry,
 on an argument written above `isJournal`: *losing what someone wrote is bad, and

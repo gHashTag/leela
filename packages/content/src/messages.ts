@@ -352,6 +352,18 @@ const EN = {
     one: '{count} account could not be read and is not shown.',
     other: '{count} accounts could not be read and are not shown.',
   },
+  /**
+   * A seat is a person, and the table used to be refused whole.
+   *
+   * A table of three with one damaged seat came back as a table of one standing
+   * on a square that was never theirs — the pre-seats game underneath, offered
+   * as though it were the game in progress. Two players gone without a word,
+   * and the first throw wrote it over the disk.
+   */
+  'app.seatsPartlyRead': {
+    one: "{count} player's game could not be read and is not at the table.",
+    other: "{count} players' games could not be read and are not at the table.",
+  },
   'app.boardLabel': 'The board, 72 plans',
   // The published app's own two header buttons: `:information_source:` opens
   // the rules book, `:books:` opens all 72 plans. See GameScreen's Header.
@@ -787,6 +799,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
     few: '{count} отчёта не прочитались и не показаны.',
     many: '{count} отчётов не прочитались и не показаны.',
     other: '{count} отчёта не прочитались и не показаны.',
+  },
+  'app.seatsPartlyRead': {
+    one: 'Игра {count} игрока не прочиталась, и его нет за столом.',
+    few: 'Игры {count} игроков не прочитались, и их нет за столом.',
+    many: 'Игры {count} игроков не прочитались, и их нет за столом.',
+    other: 'Игры {count} игроков не прочитались, и их нет за столом.',
   },
   'app.boardLabel': 'Доска, 72 плана',
   'app.rules': 'Правила игры',

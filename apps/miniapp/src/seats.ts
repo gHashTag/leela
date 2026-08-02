@@ -30,6 +30,7 @@ import {
   MAX_SEATS,
   createSession,
   initialState,
+  isPlayableState,
   isSeatedTable,
   type GameState,
   type SeatedPlayer,
@@ -70,28 +71,88 @@ export function isSavedSeats(value: unknown): value is SavedSeats {
   return isSeatedTable(value);
 }
 
+/** One seat, judged on its own — the engine's rule for the state inside it. */
+function isSavedSeat(value: unknown): value is SavedSeat {
+  if (typeof value !== 'object' || value === null) return false;
+  const seat = value as { id?: unknown; reportSubmitted?: unknown; state?: unknown };
+
+  return (
+    typeof seat.id === 'string' &&
+    seat.id.length > 0 &&
+    typeof seat.reportSubmitted === 'boolean' &&
+    isPlayableState(seat.state)
+  );
+}
+
 /**
- * The table, or one seat holding whatever single game was already saved.
+ * The table as it can be read, and the seats that could not be.
  *
- * The migration is the point: this app has been played for weeks with one
- * player and one key, and a table that started empty would throw those games
- * away to add a feature nobody had asked for yet.
+ * `loadSeats` asked `isSavedSeats` about the whole table and threw all of it
+ * away on any single fault. Measured on a table of three — players on plans 41,
+ * 23 and 7 — with one seat damaged: what came back was a table of **one**,
+ * standing on plan 12, resurrected out of the pre-seats key beneath. Two
+ * players gone, the third moved to a square that was never theirs, presented as
+ * their game, and the first throw wrote it over the disk. A stale `turnIndex`
+ * did the same, with every seat in the file intact.
+ *
+ * Two repairs, both of which lose nothing that can be kept:
+ *
+ * - **The turn is a pointer, not a fact.** One past the end names nobody, and
+ *   `resize` already clamps it for exactly this reason. Clamping recovers every
+ *   seat in the file; refusing the table loses all of them.
+ * - **A seat is a person.** A damaged one is one game lost; the table it sits
+ *   at is two or five more. Dropping the seat keeps them, and the ids of the
+ *   survivors are left alone so their journals stay attached to them.
+ *
+ * `dropped` is what the screen needs in order to say so, since a table that
+ * came back short looks exactly like a table that was never that wide.
  */
-export function loadSeats(storage: GameStorage | undefined): SavedSeats {
+export function readSeats(
+  storage: GameStorage | undefined,
+): { seats: SavedSeats; dropped: number } {
+  let dropped = 0;
+
   try {
     const raw = storage?.getItem(SEATS_KEY);
     if (raw) {
       const parsed: unknown = JSON.parse(raw);
-      if (isSavedSeats(parsed)) return parsed;
+      const table = parsed as { players?: unknown; turnIndex?: unknown };
+
+      if (typeof parsed === 'object' && parsed !== null && Array.isArray(table.players)) {
+        const readable = table.players.filter(isSavedSeat);
+        const players = readable.slice(0, MAX_SEATS);
+        dropped = table.players.length - players.length;
+
+        if (players.length > 0) {
+          const turn = table.turnIndex;
+          const seated =
+            Number.isInteger(turn) && (turn as number) >= 0 && (turn as number) < players.length
+              ? (turn as number)
+              : 0;
+
+          return { seats: { turnIndex: seated, players }, dropped };
+        }
+      }
     }
   } catch {
     // A table that cannot be read is a table to start again, not a crash.
   }
 
+  // The migration is the point: this app has been played for weeks with one
+  // player and one key, and a table that started empty would throw those games
+  // away to add a feature nobody had asked for yet.
   return {
-    turnIndex: 0,
-    players: [{ id: seatId(0), state: loadState(storage), reportSubmitted: true }],
+    seats: {
+      turnIndex: 0,
+      players: [{ id: seatId(0), state: loadState(storage), reportSubmitted: true }],
+    },
+    dropped,
   };
+}
+
+/** The table alone, for a caller with nowhere to say what was lost. */
+export function loadSeats(storage: GameStorage | undefined): SavedSeats {
+  return readSeats(storage).seats;
 }
 
 /**

@@ -47,7 +47,7 @@ import boardLight from './board-light.webp';
 import boardDark from './board-dark.webp';
 import gemArt from './gem.webp';
 import {
-  loadSeats,
+  readSeats,
   resize,
   saveSeats,
   seatsFrom,
@@ -195,7 +195,8 @@ const language: Language = resolveLanguage(
  * published app offers, and `advance` moves the turn between them exactly as
  * it does for the bot.
  */
-let seats = loadSeats(localStorage);
+const openedWith = readSeats(localStorage);
+let seats = openedWith.seats;
 let session = sessionFrom(seats);
 
 /** The player whose turn it is, and the writing they have done. */
@@ -245,6 +246,17 @@ let saidUnkept = false;
  */
 let lost = 0;
 let saidLost = false;
+
+/**
+ * Seats that were in the table and are not at it.
+ *
+ * Counted at startup, before anything is drawn, because the table is read
+ * before this file has a screen to say it on. Kept apart from `lost`: an
+ * account nobody can read is a page of writing, and a seat nobody can read is
+ * somebody's whole game.
+ */
+const seatsLost = openedWith.dropped;
+let saidSeatsLost = false;
 
 /** One seat's path, counting what could not be read into the notice. */
 function takeJournalFor(playerId: string): Journal {
@@ -471,6 +483,15 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
   if (lost > 0 && !saidLost) {
     saidLost = true;
     const line = messageFor(language, 'app.pathPartlyRead', { count: lost });
+    el.say.textContent = `${el.say.textContent ?? ''} ${line}`.trim();
+  }
+
+  // And whoever is not at the table who should be. Its own sentence, because
+  // the answer to it is not the answer to a missing account: a player whose
+  // game is gone may want to sit down again before anybody throws.
+  if (seatsLost > 0 && !saidSeatsLost) {
+    saidSeatsLost = true;
+    const line = messageFor(language, 'app.seatsPartlyRead', { count: seatsLost });
     el.say.textContent = `${el.say.textContent ?? ''} ${line}`.trim();
   }
 }
