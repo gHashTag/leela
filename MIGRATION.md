@@ -7506,6 +7506,28 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Sri Ramana Maharshi was printed in a monospace code font.** `ru/chakras` puts
+two of his paragraphs between ``` marks, and nothing in this repository knew
+what a fence was — so the book's rule for inline `code` matched from the third
+backtick to the fourth, wrapped his words in `<code>`, and left two stray marks
+on either side. On the published page, in the language the chapter was actually
+written in. The two apps showed the marks as text, as they had shown the hashes.
+
+Dropped where the hash-only paragraph is dropped: a line of backticks holds no
+words, so losing it loses none.
+
+**The rule in code stayed narrow and the assertion went wide.** Measured over
+all twenty-two languages, exactly two kinds of wordless line exist — these
+fences and the Turkish `##` — so the test says *no line that holds no words is
+ever drawn*, and `piecesOf` names only the two. A third kind should fail that
+test rather than be swallowed by a wider regexp: a divider an author meant is
+not markup, and which one it is is a decision somebody should make on purpose.
+
+Two clean probes stand beside it. There is no other inline markup in any shipped
+text — no bold, no italics, no links, and the one backtick pair was this — and
+across all 1,784 built pages there is no double-escaped entity, no raw tag shown
+as text, and no unterminated entity.
+
 **Three hundred and five headings were shown to readers as hashes.** The rules
 chapters write their sections as `## The second chakra (Svadhisthana)`. The book
 rendered those; the mini app split the chapter on blank lines and put each part

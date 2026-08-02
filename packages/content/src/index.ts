@@ -323,6 +323,14 @@ function apart(block: string): string[] {
   };
 
   for (const line of block.split('\n')) {
+    // A fence is not content. The Russian chakras chapter puts two paragraphs
+    // of Sri Ramana Maharshi between ``` marks, and nothing here knows what a
+    // fence is — so the book's inline rule for `code` matched from the third
+    // backtick to the fourth and drew his words in a monospace font with two
+    // stray marks on either side, on the published page. A line of backticks
+    // holds no words, so dropping it loses none.
+    if (/^\s*`{3,}\s*\w*\s*$/.test(line)) continue;
+
     if (headingOf(line) === null) {
       prose.push(line);
       continue;

@@ -159,6 +159,36 @@ describe('the texts this repository ships', () => {
     expect(glued.length).toBeGreaterThan(10);
   });
 
+  it('draw no line that holds no words', () => {
+    // The general shape, and the reason it is stated here rather than as a list
+    // of the marks somebody thought of. Measured over all twenty-two languages:
+    // exactly two kinds of wordless line exist — the Turkish `##` and the two
+    // fences in `ru/chakras` — and both are dropped.
+    //
+    // The rule in `piecesOf` is deliberately narrower than this assertion. A
+    // wordless line that is neither is a decision somebody should make on
+    // purpose: a divider an author meant is not markup, and this failing is how
+    // that question gets asked rather than answered by a regexp.
+    const drawn = [...paragraphs()]
+      .flatMap((one) => piecesOf(one.paragraph).map((piece) => ({ ...one, piece })))
+      .flatMap((one) => one.piece.text.split('\n').map((line) => ({ ...one, line: line.trim() })))
+      .filter((one) => one.line.length > 0)
+      .filter((one) => !/[\p{L}\p{N}]/u.test(one.line));
+
+    expect(drawn.map((one) => `${one.where}: ${JSON.stringify(one.line)}`)).toEqual([]);
+  });
+
+  it('drop the fence around words that are not code', () => {
+    // `ru/chakras` puts two paragraphs of Sri Ramana Maharshi between ```
+    // marks. Nothing knew what a fence was, so the book's rule for inline
+    // `code` matched from the third backtick to the fourth: his words were
+    // drawn in a monospace font with two stray marks on either side, on the
+    // published page, and the two apps showed the marks as text.
+    const pieces = piecesOf('```\nHis words, which are prose.\n```');
+
+    expect(pieces).toEqual([{ heading: null, text: 'His words, which are prose.' }]);
+  });
+
   it('drop a heading whose words did not survive the translation', () => {
     // The Turkish glossary holds a paragraph that is two hashes and nothing
     // else. It says nothing, and drawing `##` says less than nothing.
