@@ -91,6 +91,32 @@ export function packageOf(podspecPath) {
 }
 
 /**
+ * The version CocoaPods will read, which is the podspec's own.
+ *
+ * This compared the lock against `package.json` and they agree for nineteen of
+ * the twenty packages that had drifted — and disagree for `react-native-spinkit`,
+ * whose podspec says `1.0.2` while its `package.json` says `1.4.1`. CocoaPods
+ * reads the podspec, so a `pod install` writes 1.0.2 into the lock, and this
+ * check then reported a drift against a package that was pinned exactly as the
+ * shipped lock asked — and advised pinning npm to a number that is not the
+ * package's version.
+ *
+ * A literal only. A podspec is Ruby and may compute its version from
+ * `package.json`, which is the common form; there the two agree by
+ * construction and reading the manifest is right.
+ *
+ * @param source The podspec's text.
+ * @returns The version it declares outright, or null to fall back.
+ */
+export function declaredVersion(source) {
+  const found = /^\s*\w+\.version\s*=\s*["']([^"']+)["']/m.exec(source);
+  return found?.[1] ?? null;
+}
+
+/** No podspec reader given: every caller before this one passed three things. */
+const noVersion = (/** @type {string} */ _podspec) => /** @type {string | null} */ (null);
+
+/**
  * What has drifted, and what the lock says it was.
  *
  * `installed` is what is on disk now; `locked` is what the shipped build used.
@@ -98,7 +124,7 @@ export function packageOf(podspecPath) {
  * so the lock never saw it, and claiming otherwise would be this check
  * inventing a pin.
  */
-export function driftFrom({ locked, podspecs, versionOf }) {
+export function driftFrom({ locked, podspecs, versionOf, declaredOf = noVersion }) {
   const drift = [];
   const unmatched = [];
 
@@ -116,7 +142,11 @@ export function driftFrom({ locked, podspecs, versionOf }) {
       continue;
     }
 
-    const got = versionOf(pkg);
+    // The podspec first, because that is the file CocoaPods reads. Falling
+    // back to the manifest keeps every package whose podspec computes its
+    // version from `package.json` — which is most of them — answering as it
+    // always did.
+    const got = declaredOf(path) ?? versionOf(pkg);
     if (got !== null && got !== want) drift.push({ package: pkg, pod, installed: got, locked: want });
   }
 

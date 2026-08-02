@@ -11,8 +11,11 @@
  * `Podfile.lock` is the pin that survived. Every package with a native side
  * ships a `.podspec`, CocoaPods writes the version it saw, and that file is in
  * the repository. For the half of the tree that decides whether the app
- * compiles, the shipped build's versions are recoverable — and fourteen of them
- * had drifted.
+ * compiles, the shipped build's versions are recoverable — and **twenty** of
+ * them had drifted, counted against a real install rather than estimated.
+ *
+ * Pinning them is one of the eight repairs that turn *cannot be rebuilt* into
+ * `** BUILD SUCCEEDED **`; the rest are in `MIGRATION.md`.
  *
  * Run:  node scripts/audit-podlock.mjs --app ../leela-src/leela
  *
@@ -24,7 +27,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { driftFrom, lockedVersions } from './lib/podlock.mjs';
+import { declaredVersion, driftFrom, lockedVersions } from './lib/podlock.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..');
@@ -84,7 +87,16 @@ const versionOf = (pkg) => {
   }
 };
 
-const { drift, unmatched } = driftFrom({ locked, podspecs, versionOf });
+/** What the podspec declares outright, which is what CocoaPods reads. */
+const declaredOf = (podspec) => {
+  try {
+    return declaredVersion(readFileSync(podspec, 'utf8'));
+  } catch {
+    return null;
+  }
+};
+
+const { drift, unmatched } = driftFrom({ locked, podspecs, versionOf, declaredOf });
 
 console.log(
   `\n${relative(ROOT, lockPath)} records ${locked.size} pods; ` +

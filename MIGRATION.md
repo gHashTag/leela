@@ -6549,10 +6549,55 @@ from `leelachakra.com/resource/LeelaChakra/dailyPhrases.json`, an endpoint
 outside this repository. Neither is the local reminder the `online` cooldown
 would want. RevenueCat and Sentry need keys.
 
-**The published app cannot be rebuilt from its own source, and the reason is not
-Xcode.** It has **no JavaScript lockfile at all** — `Gemfile.lock` and
-`Podfile.lock` are there, `yarn.lock` and `package-lock.json` are not — so its
-dependencies are caret ranges resolved fresh at every install. Three years on
+**The published app can be rebuilt from its own source — measured, not
+assumed.** This section used to open *cannot*, and that sentence was true of
+every attempt until one was carried all the way through. A clean copy of the
+repository now goes `npm install` → autolinking → `pod install` (105 pods) →
+**`** BUILD SUCCEEDED **`**, installs on a simulator and launches. Eight
+repairs, each one measured at the wall it removed:
+
+1. **Drop `@react-native/eslint-config@0.70.4`** — a version that has never
+   existed, so no resolver can build the tree at all.
+2. **Pin all forty-six dependencies to the versions they declare.** With no
+   lockfile the carets resolve three years forward; twenty of them are native
+   modules the `Podfile.lock` records exactly, and the rest is what a lockfile
+   would have been.
+3. **`scripts/patch-boost-url.js`** — boost 1.76's tarball moved off JFrog, so
+   the checksum never matches and `pod install` dies before a file is compiled.
+4. **`LANG=en_US.UTF-8`** — CocoaPods 1.16 refuses a non-UTF-8 terminal with a
+   Ruby stack trace that names none of this.
+5. **Warnings that became errors**: Yoga's `operator"" _pt`, gRPC's `template`
+   keyword, both inside pods built with `-Werror`.
+6. **Headers a newer libc++ no longer pulls in for free**: `<exception>` for
+   Sentry's `std::set_terminate`, `_ucontext64.h` for its arm64 crash handler,
+   and `_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION` for boost's
+   `std::unary_function`.
+7. **BoringSSL's `-GCC_WARN_INHIBIT_ALL_WARNINGS`**, which a current clang reads
+   as an option `-G` it does not have.
+8. **The pods' deployment target.** The Podfile forced 12.4 onto every one of
+   them, and RevenueCat 4.26.1 — which this app ships — requires 13.0. The
+   declared minimum has been untrue since that dependency was added.
+
+**And the app no longer dies at launch without its Firebase file.**
+`[FIRApp configure]` raised an uncaught exception when
+`GoogleService-Info.plist` was missing or carried a key from nowhere, and
+Firebase Installations raised a second one asynchronously — so the process was
+gone before React Native loaded. Not a message, not a blank screen: the game
+vanished, which on a player's phone is indistinguishable from a crash. The file
+is read first now, and the sign-in screens say so.
+
+**What is still blocked, and only this.** `ios/GoogleService-Info.plist` is in
+that app's `.gitignore` and is in no clone. Without it the JS throws *No
+Firebase App '[DEFAULT]' has been created* at import and no screen is reached,
+so registration cannot be exercised here. It is the owner's file to supply.
+
+The repairs are in the donor working tree, uncommitted and unpushed: this
+repository's rule is that only `unified` is ever pushed, and that is a different
+repository.
+
+**The root cause, unchanged.** It has **no JavaScript lockfile at all** —
+`Gemfile.lock` and `Podfile.lock` are there, `yarn.lock` and `package-lock.json`
+are not — so its dependencies are caret ranges resolved fresh at every install. Three years on
 they resolve to versions its own tooling cannot read:
 `react-native-gesture-handler` is declared `^2.9.0` and comes back as 2.32.0,
 whose Android manifest carries no `package=` attribute, and React Native 0.70's

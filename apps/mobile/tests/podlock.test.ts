@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  declaredVersion,
   driftFrom,
   lockedVersions,
   packageOf,
@@ -16,7 +17,7 @@ import {
  * **that file is committed**. For the half of the tree that decides whether the
  * app compiles, the shipped build's versions are recoverable.
  *
- * What is asserted is the reading, not the fourteen packages that had drifted:
+ * What is asserted is the reading, not the twenty packages that had drifted:
  * the numbers will change, the file's shape will not.
  */
 
@@ -156,5 +157,87 @@ describe('what has drifted from the shipped build', () => {
     });
 
     expect(drift).toEqual([]);
+  });
+});
+
+describe('the version CocoaPods will read', () => {
+  /**
+   * This check compared the lock against `package.json`, and for nineteen of
+   * the twenty packages that had drifted the two agree. They disagree for
+   * `react-native-spinkit`, whose podspec says `1.0.2` while its `package.json`
+   * says `1.4.1` — so `pod install` writes 1.0.2 into the lock, and the check
+   * then reported a drift against a package pinned exactly as the shipped lock
+   * asked, advising a pin to a number that is not the package's version.
+   *
+   * Found by running this audit against a repaired copy of the published app,
+   * which is the first time it had been run against one.
+   */
+  it('reads a version the podspec states outright', () => {
+    expect(declaredVersion('Pod::Spec.new do |s|\n  s.version = "1.0.2"\n  s.name = "x"\nend')).toBe(
+      '1.0.2',
+    );
+    expect(declaredVersion("  spec.version    = '2.14.0'\n")).toBe('2.14.0');
+  });
+
+  it('says nothing when the podspec works it out from the manifest', () => {
+    /**
+     * The common form, and the reason this falls back rather than guessing:
+     * `s.version = package['version']` means the two agree by construction, and
+     * a reader that returned the literal `package['version']` would compare a
+     * string of Ruby to a version number.
+     */
+    const computed = "package = JSON.parse(File.read('package.json'))\ns.version = package['version']\n";
+    expect(declaredVersion(computed)).toBeNull();
+  });
+
+  it('prefers the podspec over the manifest, which is the whole point', () => {
+    // The spinkit shape: the lock and the podspec agree, the manifest does not.
+    const drift = driftFrom({
+      locked: new Map([['react-native-spinkit', '1.0.2']]),
+      podspecs: ['node_modules/react-native-spinkit/react-native-spinkit.podspec'],
+      versionOf: () => '1.4.1',
+      declaredOf: () => '1.0.2',
+    });
+
+    expect(drift.drift, 'pinned exactly as the lock asks').toEqual([]);
+  });
+
+  it('still finds a real drift when both agree and the lock does not', () => {
+    // The other half. A check that stopped reporting would be worse than one
+    // that over-reported, and this one exists because twenty packages had.
+    const drift = driftFrom({
+      locked: new Map([['RNScreens', '3.27.0']]),
+      podspecs: ['node_modules/react-native-screens/RNScreens.podspec'],
+      versionOf: () => '3.37.0',
+      declaredOf: () => '3.37.0',
+    });
+
+    expect(drift.drift).toEqual([
+      { package: 'react-native-screens', pod: 'RNScreens', installed: '3.37.0', locked: '3.27.0' },
+    ]);
+  });
+
+  it('falls back to the manifest when the podspec declares nothing', () => {
+    const drift = driftFrom({
+      locked: new Map([['RNScreens', '3.27.0']]),
+      podspecs: ['node_modules/react-native-screens/RNScreens.podspec'],
+      versionOf: () => '3.37.0',
+      declaredOf: () => null,
+    });
+
+    expect(drift.drift[0]?.installed).toBe('3.37.0');
+  });
+
+  it('reads the same when nobody hands it a podspec reader at all', () => {
+    // Every other caller of `driftFrom` — including this file's own older
+    // tests — passes three arguments, and an optional fourth must not change
+    // what they get.
+    const drift = driftFrom({
+      locked: new Map([['RNScreens', '3.27.0']]),
+      podspecs: ['node_modules/react-native-screens/RNScreens.podspec'],
+      versionOf: () => '3.37.0',
+    });
+
+    expect(drift.drift[0]?.locked).toBe('3.27.0');
   });
 });
