@@ -1,4 +1,7 @@
 import { readFileSync } from 'node:fs';
+// The audits' comment stripper, shared so a claim about source text is made
+// about code rather than about prose describing it.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -25,7 +28,7 @@ import { FALLBACK_LANGUAGE, LANGUAGES, directionOf, resolveLanguage } from '@lee
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SRC = join(HERE, '..', 'src');
-const APP = readFileSync(join(SRC, 'App.tsx'), 'utf8');
+const APP = blank(readFileSync(join(SRC, 'App.tsx'), 'utf8'));
 const DEVICE = readFileSync(join(SRC, 'device.ts'), 'utf8');
 
 /**

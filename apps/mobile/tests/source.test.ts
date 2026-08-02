@@ -251,3 +251,68 @@ describe('a document has comments too', () => {
     expect(blank(code, 'html'), 'html knows nothing of those').toContain('a note');
   });
 });
+
+/**
+ * Everyone who reads a source file reads it with the comments taken out.
+ *
+ * `blank` exists because a comment saying *this used to be
+ * `resolveLanguage(undefined)`* reads to a regular expression exactly like the
+ * defect still being there. The test above proves it works. This one asks
+ * whether it is used, which is a different question and the one that was open:
+ * `no-rules.test.ts` stripped the source for every check that looks for a rule
+ * *being there* and read it raw for the single check that looks for the engine
+ * being there — so a comment mentioning the import would have satisfied the
+ * assertion that the phone still asks the engine at all.
+ *
+ * Swept across every test in the repository rather than fixed where it was
+ * found, because the next file to read a source will be written by somebody who
+ * has not read this one.
+ */
+describe('a claim about source text', () => {
+  /** Every test file in the repository, wherever it lives. */
+  function testFiles(from: string): string[] {
+    const found: string[] = [];
+
+    for (const entry of readdirSync(from, { withFileTypes: true })) {
+      if (['node_modules', 'dist', 'coverage', '.git'].includes(entry.name)) continue;
+
+      const path = join(from, entry.name);
+      if (entry.isDirectory()) found.push(...testFiles(path));
+      else if (/\.test\.(ts|tsx|mjs)$/.test(entry.name)) found.push(path);
+    }
+
+    return found;
+  }
+
+  it('is made about code, in every test that makes one', () => {
+    const REPO = join(HERE, '..', '..', '..');
+    const raw: string[] = [];
+
+    for (const file of testFiles(REPO)) {
+      const text = readFileSync(file, 'utf8');
+
+      // A source file read into a name, and that name matched against.
+      for (const read of text.matchAll(
+        /const\s+(\w+)\s*=\s*(blank\()?readFileSync\([^;]*?\.(ts|tsx|mjs)['"][^;]*?\)/g,
+      )) {
+        const [, name = '', stripped] = read;
+        const asserted = new RegExp(`expect\\(\\s*${name}\\b[\\s\\S]{0,30}?\\.(toContain|toMatch)`);
+
+        if (!stripped && asserted.test(text)) raw.push(`${file.slice(REPO.length + 1)}: ${name}`);
+      }
+    }
+
+    expect(raw).toEqual([]);
+  });
+
+  it('finds the reads it is looking for, so the sweep is about something', () => {
+    // Zero source-reading tests would make the assertion above pass on a
+    // repository that never reads a source file at all.
+    const REPO = join(HERE, '..', '..', '..');
+    const reading = testFiles(REPO).filter((file) =>
+      /blank\(readFileSync\(/.test(readFileSync(file, 'utf8')),
+    );
+
+    expect(reading.length).toBeGreaterThan(5);
+  });
+});

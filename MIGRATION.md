@@ -7506,6 +7506,39 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The test that proves the phone carries no rules of its own read the source
+raw.** `no-rules.test.ts` strips the comments out before every check that looks
+for a rule *being there* — a jump written as a number pair, arithmetic on a
+position — and read the file raw for the one check that looks for the engine
+being there:
+
+    expect(source).toContain("from '@leela/engine'");
+    expect(source).toMatch(/\badvance\b/);
+
+So a comment saying *this used to import from `@leela/engine`* satisfied it
+exactly as the import does, in the test whose whole subject is that the phone
+still asks the engine rather than deciding for itself. The file already imported
+`blank` and already used it four lines up. A claim about source text is only as
+good as the text it is made about.
+
+The hazard is now a case in the same file: a `game.ts` that computes a move by
+hand and keeps the old import in a comment passes both assertions read raw and
+neither read stripped.
+
+**Swept rather than fixed where it was found.** Across every test in the
+repository, twelve read a source file and match against it; one other —
+`reader.test.ts` — did it raw. Both are stripped now, and the sweep is a test:
+whatever reads a source and asserts on it must strip it first, which the next
+person to write one will meet on their first run rather than in a claim that
+quietly stopped being true.
+
+**A caveat worth stating.** Rendering the phone's screen would be better than
+reading its source, and it is not possible here: `react-native` does not load
+under vitest without a preset, and `react-test-renderer` is not a dependency.
+Seventy-seven assertions about what a player sees are assertions about text.
+That is a build decision rather than a defect, and it is recorded rather than
+taken.
+
 **The same two characters were missing in a third place, and this one a player
 reads.** `whole` trims a reply that ran out of tokens back to the last sentence
 that finished — its own comment says why: *a player reading "the plan asks you

@@ -98,10 +98,32 @@ describe('the app carries no rule of its own', () => {
   }
 
   it('imports its movement rather than defining it', () => {
-    const source = readFileSync(join(SRC, 'game.ts'), 'utf8');
+    // `blank` first, as every check above it does. This one read the file raw,
+    // so a comment saying *this used to import from `@leela/engine`* satisfied
+    // it exactly as the import does — in the test whose whole subject is that
+    // the phone still asks the engine rather than deciding for itself. The
+    // checks that look for a rule *being there* were stripped from the first
+    // day; the one that looks for the engine being there was not, and a claim
+    // about source text is only as good as the text it is made about.
+    const source = blank(readFileSync(join(SRC, 'game.ts'), 'utf8'));
 
     expect(source).toContain("from '@leela/engine'");
     expect(source).toMatch(/\badvance\b/);
+  });
+
+  it('would not have been satisfied by a comment', () => {
+    // The hazard, made concrete. Both assertions above pass on this text when
+    // it is read raw and neither passes once it is stripped.
+    const pretending = [
+      "// this used to say: import { advance } from '@leela/engine';",
+      'export function step(game: Game): Game {',
+      '  return { ...game, plan: game.plan + game.roll };',
+      '}',
+    ].join('\n');
+
+    expect(pretending).toContain("from '@leela/engine'");
+    expect(blank(pretending)).not.toContain("from '@leela/engine'");
+    expect(blank(pretending)).not.toMatch(/\badvance\b/);
   });
 });
 
