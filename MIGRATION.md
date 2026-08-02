@@ -7506,6 +7506,39 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**One question, two spellings.** Both surfaces that draw a board have a
+`mayThrow`, and both carry a comment about the same defect: *the rest was
+written out by hand and re-decided `report-required` and `finished` under the
+names `owes-report` and `game-over`, while the bot asked
+`canCurrentPlayerRoll` — three surfaces, one question, and only one of them
+asking it.* That was repaired; both ask the engine now.
+
+What was left is the part each surface answers for itself — the question the
+game is played to answer, which the engine has never heard of. There the two had
+drifted apart again: the phone asked `intention.trim() === ''` and the mini app
+asked `intention === ''`, so **three spaces were no question on a phone and a
+question in a browser**.
+
+Unreachable today, and measured rather than assumed: every assignment to that
+variable trims — the dialog, the file import and the store, in both apps, four
+places agreeing by hand. Which is the state a hand-kept agreement is in the
+moment before it stops holding, and nothing would have said which of the four
+had stopped.
+
+The spelling is one now, and the crossing is asserted as a shape rather than a
+case: **for a state either surface can be in, the two answer the same.** The
+differences each keeps on purpose are held constant — a spin is an animation the
+engine has never heard of, and the mini app asks the journal as well as the
+seat, because it keeps two records where the phone keeps one. Without the repair
+fifteen states disagree.
+
+**Six clean probes first**, all computable: the three surfaces on the document
+are the three the crossing test covers; no `messageFor` with a literal language;
+no `resolveLanguage(undefined)` outside the comments describing the old defect;
+all three surfaces gate the throw on a question; the conversation window asserts
+*which* exchanges it keeps and not only how many; and whitespace cannot reach
+the store.
+
 **The file `/save` hands a player was asserted by counting.** *One document was
 sent* — and nothing read it. So the defect the pass before found, a file
 carrying no `intention` field at all, was invisible at the level where it

@@ -206,7 +206,14 @@ export function mayThrow(
   // Three surfaces, one question, and only one of them asking it — which is how
   // the phone came to have no intention gate at all.
   if (rolling) return 'rolling';
-  if (intention === '') return 'no-intention';
+  // Trimmed, as the phone's is. This asked `intention === ''` and the phone
+  // asked `intention.trim() === ''`, so a question of three spaces was refused
+  // on one surface and accepted on the other — one rule in two spellings, which
+  // is the shape the comment above is about. Unreachable today, because every
+  // assignment to this variable trims: the dialog, the file import and the
+  // store all do. That is four places agreeing by hand, and this is the one
+  // that would have to be found again if any of them stopped.
+  if (intention.trim() === '') return 'no-intention';
 
   // `owed` still comes in, because this surface asks it of the *journal* as
   // well as the seat and the two are separate records. When it says yes there
