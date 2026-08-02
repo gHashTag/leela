@@ -5286,6 +5286,34 @@ one test that already builds the site — every *N pages* in either document mus
 be the number the build wrote, and there must be at least one of them, or the
 check is checking nothing.
 
+**The link players actually send had no preview (213th pass).** Asked the live
+site for its own `<head>` and put it beside a book page's. Every one of the
+book's 1,784 pages carries a description and five Open Graph tags — `render.ts`
+writes them because the bot posts links into Telegram and Telegram builds its
+preview from them. The game's page carried a charset, a viewport and a title. It
+is the link players send each other and the one every button in the bot points
+at, and a chat rendered it as a bare URL.
+
+The same words the book's own root page uses, so the two agree rather than
+inventing a second description of one game, and in English because the head is
+served identically to everybody while the language is chosen after the page has
+loaded.
+
+**And the repository caught my check before CI did.** `one blanker, not five`
+refuses a test that reads source and asserts over the text without blanking its
+comments — and the new one read `index.html` raw, directly under a comment
+naming every tag it looks for. Commented out, they would have satisfied it. So
+`blank` takes a syntax now: one blanker, two comment forms, rather than a second
+function nobody finds. Proved by commenting a tag out and watching the check go
+red.
+
+**Also measured, and left alone.** `cache-control: max-age=600` on the HTML, so
+a deploy reaches players within ten minutes. There is no `robots.txt` and no
+`sitemap.xml` anywhere on the site — a 1,784-page book with canonical and
+hreflang on every page and nothing tying them together. Written down here rather
+than done, because it is a decision about how the book is found rather than a
+defect in it.
+
 **A wrong address led to GitHub (212th pass).** Played the deployed site rather
 than a harness, and then asked it for a page that is not there. A book of 1,784
 pages at a public URL collects old links, and the host answered

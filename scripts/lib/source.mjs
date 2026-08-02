@@ -41,7 +41,16 @@
  * String contents are left alone: a check that forbids a sentence in the source
  * has to be able to see the sentence.
  */
-export function blank(source) {
+export function blank(source, syntax = 'js') {
+  // HTML has one comment form and no strings to protect, and a document read
+  // by a check needs the same treatment as a module: `shared-link.test.ts`
+  // asserts that `index.html` carries a description, and the tags it looks for
+  // sit directly under a comment that names every one of them. Commented out,
+  // they would have satisfied it.
+  if (syntax === 'html') {
+    return source.replace(/<!--[\s\S]*?-->/g, (block) => block.replace(/[^\n]/g, ' '));
+  }
+
   const blanked = source.replace(/\/\*[\s\S]*?\*\//g, (block) =>
     block.replace(/[^\n]/g, ' '),
   );

@@ -13,5 +13,9 @@ export interface Call {
   args: string;
 }
 
-export function blank(source: string): string;
+/**
+ * @param syntax `js` for a module, `html` for a document — one blanker, two
+ *   comment syntaxes, rather than a second function nobody finds.
+ */
+export function blank(source: string, syntax?: 'js' | 'html'): string;
 export function callsTo(source: string, name: string): Call[];

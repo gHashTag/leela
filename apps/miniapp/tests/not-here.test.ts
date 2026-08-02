@@ -2,6 +2,9 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript. A document read by
+// a check needs its comments blanked exactly as a module does.
+import { blank } from '../../../scripts/lib/source.mjs';
 
 /**
  * The page a wrong address lands on.
@@ -21,7 +24,7 @@ import { describe, expect, it } from 'vitest';
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const PAGE = readFileSync(join(HERE, '..', 'public', '404.html'), 'utf8');
+const PAGE = blank(readFileSync(join(HERE, '..', 'public', '404.html'), 'utf8'), 'html');
 
 /**
  * Where this site is served from.

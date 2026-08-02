@@ -213,3 +213,41 @@ describe('one blanker, not five', () => {
     }
   });
 });
+
+describe('a document has comments too', () => {
+  /**
+   * `blank` was written for modules and a check that reads `index.html` got the
+   * text raw. That is the same defect this file exists about, one syntax over:
+   * `shared-link.test.ts` asserts the game's page carries a description and an
+   * Open Graph set, and the tags it looks for sit directly under a comment that
+   * names every one of them. Commented out, they would have satisfied it.
+   *
+   * One blanker, two comment syntaxes — rather than a second function nobody
+   * finds when they need it.
+   */
+  it('blanks an HTML comment and keeps the markup around it', () => {
+    const page = '<title>Leela</title>\n<!-- <meta name="description" content="x"> -->\n<meta charset="utf-8">';
+    const blanked = blank(page, 'html');
+
+    expect(blanked).toContain('<title>Leela</title>');
+    expect(blanked).toContain('<meta charset="utf-8">');
+    expect(blanked, 'the tag inside the comment is gone').not.toContain('name="description"');
+  });
+
+  it('keeps every offset, as the module blanker does', () => {
+    // A check that finds something in the blanked text and reads around it in
+    // the original is reading a different place.
+    const page = '<a>\n<!-- two\n   lines -->\n<b>';
+    expect(blank(page, 'html')).toHaveLength(page.length);
+    expect(blank(page, 'html').split('\n')).toHaveLength(page.split('\n').length);
+  });
+
+  it('leaves a module alone when asked for a module', () => {
+    // The default is unchanged: every existing caller passes one argument.
+    const code = 'const x = 1; // a note\n/* and a block */\nconst y = 2;';
+
+    expect(blank(code)).toContain('const x = 1;');
+    expect(blank(code)).not.toContain('a note');
+    expect(blank(code, 'html'), 'html knows nothing of those').toContain('a note');
+  });
+});
