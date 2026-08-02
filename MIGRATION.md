@@ -7506,6 +7506,40 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The plan text reached the companion cut mid-word.** Six hundred and seventeen
+of the 1,584 plans are longer than the budget, so most of what the model is told
+about a square is a trimmed version of it. `trimToParagraph` prefers a paragraph
+break, falls back to the end of a sentence, and only then cuts where the budget
+runs out — and **it knew where a sentence ends in two scripts**: `. ` and `。`,
+and nothing else. For the languages that end one with `।` or `۔` the fallback
+never matched: Hindi plan 23 stopped inside `सर्वोच`, Urdu plan 23 inside `رہا`.
+
+The same blindness cost this repository a measurement once already, when a sweep
+for texts ending without a terminator called two hundred and ninety-eight
+Bengali and Hindi plans broken on exactly these two characters.
+
+**And three plans ended on a colon with nothing after it.** Plan 64 in Hindi,
+Malay and Punjabi introduces a list in one paragraph and gives it in the next,
+so the cut handed the companion *energy manifests itself in three dimensions:*
+and no dimensions. The rule against that is already written one function up,
+about a heading with nothing under it.
+
+Mid-word cuts across all twenty-two languages: five, then zero.
+
+**A guard was written where it could not act, and taken out again.** The colon
+check went on both ways out of the function. On the sentence branch the cut
+always lands on a sentence mark, and on the raw branch there is by definition no
+mark after the halfway point to step back to — so it could never fire on either.
+Measured rather than reasoned: the case that proves it is in the tests, and what
+comes out of it must keep coming out whole. A line that reads like a guard and
+cannot act is worse than no line.
+
+**Found by building a real prompt and reading every line of it.** That is also
+how the arrival sentence appeared to say *They undefined.* — which was my own
+probe handing in a direction without the mark that belongs to it, not a defect.
+The instrument was wrong and the code was right, for the third time in five
+passes.
+
 **The question a player is playing for was stored and never proved to come
 back.** The durable sink keeps four things — the accounts, the moves, the
 intention and the setting of it — and the assembled restart test proves two: it

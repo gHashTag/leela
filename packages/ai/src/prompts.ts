@@ -232,10 +232,54 @@ export function trimToParagraph(text: string, limit = MAX_PLAN_CHARS): string {
   const head = text.slice(0, limit);
   const lastBreak = head.lastIndexOf('\n\n');
   // Only respect a paragraph break if it leaves a useful amount of text.
-  if (lastBreak > limit * 0.5) return head.slice(0, lastBreak).trim();
+  if (lastBreak > limit * 0.5) return withoutADanglingColon(head.slice(0, lastBreak).trim());
 
-  const lastStop = Math.max(head.lastIndexOf('. '), head.lastIndexOf('。'));
+  // Where a sentence ends, in the scripts these texts are actually written in.
+  // This knew `. ` and `。` and nothing else, so for the languages that end a
+  // sentence with `।` or `۔` the fallback never matched and the text reached
+  // the companion cut mid-word: Hindi plan 23 stopped inside `सर्वोच`, Urdu 23
+  // inside `رہا`. The same blindness cost this repository a measurement once
+  // already — a sweep for texts that end without a terminator called two
+  // hundred and ninety-eight Bengali and Hindi plans broken, on the same two
+  // characters.
+  const lastStop = Math.max(
+    head.lastIndexOf('. '),
+    head.lastIndexOf('。'),
+    head.lastIndexOf('।'),
+    head.lastIndexOf('۔'),
+  );
+  // No colon check here, and the reason is that it could never fire. This
+  // branch is reached only when no sentence ends after the halfway mark, and
+  // the way back from a dangling colon is that same mark — so there is never
+  // anywhere to go back to. A cut on a sentence mark cannot end on a colon
+  // either. Tried, measured, and taken out again rather than left as a line
+  // that reads like a guard.
   return (lastStop > limit * 0.5 ? head.slice(0, lastStop + 1) : head).trim();
+}
+
+/**
+ * The text back to the last thing that finished, when it ends on a promise.
+ *
+ * Only the paragraph branch needs this, and only it can use it: a paragraph
+ * that ends on a colon gives its list in the next one, which the cut has
+ * dropped. Three plans do exactly that — 64 in Hindi, Malay and Punjabi — and
+ * the companion was handed *energy manifests itself in three dimensions:* and
+ * no dimensions.
+ */
+function withoutADanglingColon(text: string): string {
+  if (!/[:：]\s*$/.test(text)) return text;
+
+  const before = Math.max(
+    text.lastIndexOf('. ', text.length - 2),
+    text.lastIndexOf('。'),
+    text.lastIndexOf('।'),
+    text.lastIndexOf('۔'),
+    text.lastIndexOf('\n\n'),
+  );
+
+  // Only if what is left is still worth handing over. A colon in the opening
+  // sentence would otherwise take the whole text away.
+  return before > text.length * 0.5 ? text.slice(0, before + 1).trim() : text;
 }
 
 /**
