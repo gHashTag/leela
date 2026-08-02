@@ -7506,6 +7506,33 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The surface people actually play on was in the same state.** The mini app
+sets `lang` on the document from the reader's language and puts English on every
+control, because the catalogue falls back one key at a time — so a page declares
+`lang="ja"` and a screen reader reads *Read this plan* and *Save* with Japanese
+phonetics, in twenty of the twenty-two languages.
+
+The mark goes on the element here rather than in a `<span>`, because these are
+buttons: the name of an element is read in that element's own language, so
+marking the button marks the word it is called by. The four icon controls have
+no text of their own to affect.
+
+Both funnels in `applyChrome` do it — the one that writes a word and the one
+that gives an icon its name — and the mark comes **off** again when a reader
+switches to a language that has the word, which is the half that is easy to lose
+by being thorough.
+
+**Said plainly: this does not close the class.** Fifty-odd strings in `main.ts`
+are composed into sentences or handed to `announce` already built, and a text
+node cannot carry a language. Marking those means turning assignments into
+elements at sixty-five call sites, which is a decision about the app rather than
+a repair, and it is not taken here.
+
+**A test double that could not do what the thing does.** `named.test.ts` stubs
+an element with `setAttribute` and no `removeAttribute`, so the first version of
+this could not take a mark off — the double was deciding what the code was
+allowed to say. It has both now.
+
 **Twenty of the twenty-two books hold two languages and declare one.** The
 message catalogue falls back to English **one key at a time**, which is what
 lets half a translation be useful the day it is started. On the page that reads:

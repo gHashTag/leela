@@ -10,15 +10,35 @@
  * direction of a page is not something to find out from a player.
  */
 
-import { directionOf, messageFor, type Language } from '@leela/content';
+import { answeredIn, directionOf, messageFor, type Language } from '@leela/content';
 
 export function applyChrome(document: Document, language: Language): void {
   document.documentElement.lang = language;
   document.documentElement.dir = directionOf(language);
 
+  /**
+   * A word, and the language it turned out to be in.
+   *
+   * The catalogue falls back to English one key at a time, so this page can
+   * declare `lang="ja"` two lines up and put English on every button. A screen
+   * reader takes the page at its word and reads *Play* and *Save* with Japanese
+   * phonetics, in twenty of the twenty-two languages.
+   *
+   * `answeredIn` says which language actually came back, and an element that
+   * holds a word from another one says so.
+   */
+  const mark = (element: Element, key: Parameters<typeof messageFor>[1]) => {
+    const answered = answeredIn(language, key);
+    if (answered === language) element.removeAttribute('lang');
+    else element.setAttribute('lang', answered);
+  };
+
   const set = (id: string, key: Parameters<typeof messageFor>[1]) => {
     const element = document.getElementById(id);
-    if (element) element.textContent = messageFor(language, key);
+    if (!element) return;
+
+    element.textContent = messageFor(language, key);
+    mark(element, key);
   };
 
   /**
@@ -43,6 +63,11 @@ export function applyChrome(document: Document, language: Language): void {
     const said = messageFor(language, key);
     element.setAttribute('aria-label', said);
     element.setAttribute('title', said);
+    // An attribute cannot carry a `lang`, and it does not have to: the name of
+    // an element is read in the element's own language, so marking the button
+    // marks the word it is called by. These four have no text of their own —
+    // they are icons — so nothing else on them is affected.
+    mark(element, key);
   };
 
   name('roll', 'app.roll');

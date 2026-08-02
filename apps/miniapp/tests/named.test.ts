@@ -118,6 +118,13 @@ function chromed(language: (typeof LANGUAGES)[number]) {
         setAttribute(attribute: string, value: string) {
           held.attributes.set(attribute, value);
         },
+        // A double that cannot do what the thing does is a double that decides
+        // what the code may say. `applyChrome` takes a `lang` off an element
+        // whose word came back in the reader's own language, and this stub had
+        // no way to be asked.
+        removeAttribute(attribute: string) {
+          held.attributes.delete(attribute);
+        },
       };
     },
     querySelector() {
