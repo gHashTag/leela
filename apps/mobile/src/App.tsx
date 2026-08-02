@@ -199,9 +199,15 @@ export default function App() {
         return;
       }
 
-      // Nothing of ours on this phone. There may still be a game on it: this
-      // app installs over the published one, into the same store, and until now
-      // read nothing of what was there. See `inherited.ts`.
+      // Nothing of ours on this phone — said, not merely not heard. A device
+      // that did not answer in five seconds knows something this app does not,
+      // and adopting the published app's game over it would put the old board
+      // on the screen and write it over the real one at the next throw.
+      if (!kept.answered) return;
+
+      // There may still be a game here: this app installs over the published
+      // one, into the same store, and until now read nothing of what was
+      // there. See `inherited.ts`.
       void inheritedKeeper.read().then((raw) => {
         if (stale) return;
         const found = inheritedGame(raw);

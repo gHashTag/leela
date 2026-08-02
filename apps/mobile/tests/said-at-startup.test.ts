@@ -139,8 +139,9 @@ describe('the board, read back off the disk', () => {
     expect(await loadKeptGame(gameFile(null) as never)).toEqual({
       game: null,
       unreadable: false,
+      // The device answered, and what it said was that it holds nothing.
+      answered: true,
     });
-    expect(await loadKeptGame(undefined)).toEqual({ game: null, unreadable: false });
   });
 
   it('calls every file it refuses a game that was lost', async () => {
@@ -157,7 +158,7 @@ describe('the board, read back off the disk', () => {
 
     for (const [name, raw] of refused) {
       const kept = await loadKeptGame(gameFile(raw as string) as never);
-      expect({ name, ...kept }).toEqual({ name, game: null, unreadable: true });
+      expect({ name, ...kept }).toEqual({ name, game: null, unreadable: true, answered: true });
     }
   });
 
@@ -168,15 +169,25 @@ describe('the board, read back off the disk', () => {
     expect(kept.game?.session.players[0]?.state.loka).toBe(10);
   });
 
-  it('says nothing when the device never answered', async () => {
+  it('says nothing when the device never answered, and says that too', async () => {
     // Nothing is known about what is on the disk, so nothing is known to be
-    // lost. A silent device is a game that cannot be continued now, not one
-    // that has gone.
+    // lost: a silent device is a game that cannot be continued now, not one
+    // that has gone. And *not heard* is not *said*, which is a difference the
+    // app acts on — it adopts the game the published application left on this
+    // phone when it has none of its own, and a slow disk said none of its own.
     const silent = { read: () => new Promise<string | null>(() => undefined), write: async () => true };
 
     expect(await loadKeptGame(silent as never, CLASSIC, 10)).toEqual({
       game: null,
       unreadable: false,
+      answered: false,
+    });
+
+    // Asked nothing, so it knows nothing.
+    expect(await loadKeptGame(undefined)).toEqual({
+      game: null,
+      unreadable: false,
+      answered: false,
     });
   });
 });

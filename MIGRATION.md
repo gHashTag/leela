@@ -7506,6 +7506,29 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A device that did not answer is not a device with nothing on it.** The pass
+before taught the app to adopt the game the published application left on the
+phone, on the condition *this app has none of its own*. `loadKeptGame` answered
+that to three different situations: the slot is empty, the read threw, and the
+read **did not come back within five seconds**. `within` returns its fallback on
+a timeout and the fallback was `null` — the same word the store returns for an
+empty slot.
+
+So a slow disk said *none of its own*, the published app's board went on the
+screen, and the next throw wrote it over the game this app really had. The
+timing is the worst there is: the inheritance runs on the first launch after an
+update, which is when a phone's storage is busiest.
+
+`KeptGame` carries `answered` now, and the adoption asks for it. An empty slot
+is an answer; a silence is not, and neither is a store that refuses or one that
+was never there. The fallback is a sentinel the store cannot hold, so the
+distinction is made where the timeout happens rather than guessed at afterwards.
+
+Written and found in the same day, which is the argument for reading a pass's
+own diff the next morning: it was a defect of exactly the kind four earlier
+passes were spent on — two facts collapsed into one value — introduced by the
+pass that had just finished fixing that.
+
 **The game the published app left on the phone, that nothing read.**
 `apps/mobile` succeeds the published application and carries its identity in a
 release build — two apps with one identifier are one app to iOS, so the update

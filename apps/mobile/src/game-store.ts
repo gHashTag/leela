@@ -169,10 +169,25 @@ export interface KeptGame {
   game: Game | null;
   /** True when there was a file and it could not be played. */
   unreadable: boolean;
+  /**
+   * Whether the device said anything at all.
+   *
+   * *There is nothing here* and *I did not answer in five seconds* were one
+   * value, and one caller acts on the difference. The app adopts the game the
+   * published application left on this phone when it has none of its own — and
+   * a slow disk said *none of its own*. Adopting then puts the old game on the
+   * screen, and the next throw writes it over the one this app really had.
+   *
+   * The timing is the worst there is: the inheritance runs on the first launch
+   * after an update, which is when a phone's storage is busiest.
+   */
+  answered: boolean;
 }
 
-const NOTHING_KEPT: KeptGame = { game: null, unreadable: false };
-const UNREADABLE: KeptGame = { game: null, unreadable: true };
+const NOTHING_KEPT: KeptGame = { game: null, unreadable: false, answered: true };
+const UNREADABLE: KeptGame = { game: null, unreadable: true, answered: true };
+/** The device was asked and said nothing — not even that it holds nothing. */
+const NO_ANSWER: KeptGame = { game: null, unreadable: false, answered: false };
 
 /**
  * The game as it was, or nothing to begin one — and which of the two.
@@ -192,17 +207,28 @@ export async function loadKeptGame(
   rules: RuleSet = CLASSIC,
   timeoutMs = KEEP_TIMEOUT_MS,
 ): Promise<KeptGame> {
-  if (!keeper) return NOTHING_KEPT;
+  if (!keeper) return NO_ANSWER;
 
   let raw: string | null;
+  let silent = false;
   try {
-    raw = await within(keeper.read(), timeoutMs, null);
+    // The fallback is a value the store can also return, so it is marked here
+    // rather than recognised afterwards: `null` from a five-second timeout and
+    // `null` from an empty slot are the same word for different facts.
+    raw = await within(
+      keeper.read().then((held) => held ?? EMPTY_SLOT),
+      timeoutMs,
+      null,
+    );
+    silent = raw === null;
+    if (raw === EMPTY_SLOT) raw = null;
   } catch {
     // The device would not answer. Nothing is known about what it holds, so
     // this is not a loss to report — only a game that cannot be continued now.
-    return NOTHING_KEPT;
+    return NO_ANSWER;
   }
 
+  if (silent) return NO_ANSWER;
   if (raw === null) return NOTHING_KEPT;
 
   let parsed: unknown;
@@ -235,5 +261,9 @@ export async function loadKeptGame(
       event: null,
     },
     unreadable: false,
+    answered: true,
   };
 }
+
+/** A word the store cannot hold, so an empty slot is not a silence. */
+const EMPTY_SLOT = '\u0000empty';
