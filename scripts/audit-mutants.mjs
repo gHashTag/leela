@@ -39,8 +39,9 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
+import { putItBack, remember } from './lib/undo.mjs';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -205,6 +206,28 @@ const DECISIONS = [
     name: 'mayLeaveTheQuestion',
     to: ['true', 'false'],
   },
+
+  // The phone, which had nothing in this list at all. A whole surface's
+  // decisions, and the one that reads *which square may be written about* is
+  // the one this repository has met the parking square through twice.
+  { package: 'apps/mobile', file: 'src/game.ts', name: 'squareToRead', to: 'null' },
+  { package: 'apps/mobile', file: 'src/game.ts', name: 'owesAnAccount', to: ['true', 'false'] },
+  { package: 'apps/mobile', file: 'src/game.ts', name: 'isOver', to: ['true', 'false'] },
+  { package: 'apps/mobile', file: 'src/game.ts', name: 'mayThrow', to: "'yes'" },
+  { package: 'apps/mobile', file: 'src/journal.ts', name: 'mayChangeIntention', to: ['true', 'false'] },
+  { package: 'apps/mobile', file: 'src/journal.ts', name: 'pathOf', to: '{ entries: [], returns: [] }' },
+  { package: 'apps/mobile', file: 'src/journal.ts', name: 'draftFor', to: "''" },
+
+  // A book half in one language and half in another, and where a reply goes.
+  {
+    package: 'packages/content',
+    file: 'src/index.ts',
+    name: 'bookFrom',
+    to: '[...chapters]',
+    also: ['apps/miniapp'],
+  },
+  { package: 'packages/content', file: 'src/languages.ts', name: 'writtenIn', to: ['true', 'false'] },
+  { package: 'apps/bot', file: 'src/delivery.ts', name: 'destinationFor', to: "{ kind: 'chat' }" },
 ];
 
 /**
@@ -264,6 +287,28 @@ const chosen = wanted.length > 0 ? DECISIONS.filter((d) => wanted.includes(d.nam
 const survived = [];
 let checked = 0;
 
+/**
+ * The file this script has broken on purpose right now, and how to undo it.
+ *
+ * `finally` restores after each mutation, and a `finally` does not run when the
+ * process is killed. This script was interrupted by a timeout mid-run and left
+ * `return { kind: 'chat' };` at the top of `destinationFor` in a shipped file —
+ * seven tests failed afterwards for a reason that had nothing to do with the
+ * code, and a commit made without running them would have shipped it.
+ *
+ * A script that edits the repository on purpose has to survive being stopped.
+ * The handlers are registered once and the state is one file, because only one
+ * is ever broken at a time.
+ */
+const UNDO = join(HERE, '.mutants-undo.json');
+
+// Whatever the last run left behind, before this one reads a single file: the
+// mutation is *in* the source it is about to copy.
+const leftBroken = putItBack(UNDO);
+if (leftBroken !== null) {
+  console.log(`Put back what a stopped run had broken: ${relative(ROOT, leftBroken)}\n`);
+}
+
 for (const decision of chosen) {
   const path = join(ROOT, decision.package, decision.file);
   const original = readFileSync(path, 'utf8');
@@ -277,6 +322,7 @@ for (const decision of chosen) {
   }
 
   checked += 1;
+  remember(UNDO, path, original);
   writeFileSync(path, broken);
 
   let failed = 0;
@@ -294,7 +340,7 @@ for (const decision of chosen) {
       }
     }
   } finally {
-    writeFileSync(path, original);
+    putItBack(UNDO);
   }
 
   const mark = failed === 0 ? 'NOBODY NOTICED' : `${failed} failed`;

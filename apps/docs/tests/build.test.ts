@@ -225,3 +225,53 @@ describe('the built site', () => {
     expect(html).toContain('href="ru/');
   });
 });
+
+describe('the number this book says about itself', () => {
+  /**
+   * A hand-kept number, which is the kind of sentence `audit-claims` was
+   * written for: *the two passes before this one were each about a confident
+   * sentence that had never been checked… a hand-kept number is the same kind
+   * of sentence, waiting.* That audit runs every suite and holds the README's
+   * test counts to it, and the page count was left out of it — so three
+   * sentences in the two documents state it and nothing compares them to a
+   * build.
+   *
+   * They had already come apart: two say 1,784 and one said 1,785, and the
+   * build writes 1,784.
+   *
+   * Held here rather than in `audit-claims`, because this is the only place a
+   * build already happens — the audit is node and this book is written by bun.
+   */
+  const DOCUMENTS = ['README.md', 'MIGRATION.md'] as const;
+  const REPO = join(APP, '..', '..');
+
+  /** Every "N pages" this repository says, with the file it says it in. */
+  const claims = DOCUMENTS.flatMap((name) => {
+    const text = readFileSync(join(REPO, name), 'utf8');
+    return [...text.matchAll(/\b([0-9][0-9,]{2,6})\s+pages\b/g)].map((found) => ({
+      name,
+      said: Number((found[1] ?? '').replace(/,/g, '')),
+    }));
+  });
+
+  it('is said at all, or this check is checking nothing', () => {
+    // The guard against a regular expression that has stopped matching: a
+    // sentence reworded is a sentence this no longer holds, and silence would
+    // read exactly like agreement.
+    expect(claims.length).toBeGreaterThan(1);
+  });
+
+  it('is the number the build writes, wherever it is said', () => {
+    for (const claim of claims) {
+      expect(claim.said, `${claim.name} says ${claim.said}`).toBe(result.pages);
+    }
+  });
+
+  it('is the number of pages there are, not of files', () => {
+    // `result.pages` is the build's own count and the stylesheet is not a page.
+    // Both halves, because a count that agreed with itself and with nothing
+    // else is what a hand-kept number already was.
+    expect(files.filter((file) => file.endsWith('.html'))).toHaveLength(result.pages);
+    expect(files).toContain('style.css');
+  });
+});

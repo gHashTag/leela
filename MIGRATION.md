@@ -5251,6 +5251,41 @@ Arabic* invites. The text still follows the reader; the fields have carried
 `writingDirection` from `directionOf(language)` since they were written, and it
 was dead code until this pass, because the language was always English.
 
+**A check that left its own damage behind (207th pass).** The mutation list grew
+again — the phone had nothing in it at all, so its seven decisions went in, with
+`bookFrom`, `writtenIn` and `destinationFor`. Eighty now, and every one is
+defended.
+
+The finding came from running it. A ten-minute limit killed the audit
+mid-mutation and it left `return { kind: 'chat' };` at the top of
+`destinationFor` **in a shipped file**. Seven bot tests failed afterwards for a
+reason that had nothing to do with the code, and a commit made without running
+the whole workspace would have shipped it.
+
+`finally` restores after each mutation and a `finally` does not run when the
+process is killed.
+
+**The first fix did not work, and measuring is what said so.** Handlers on
+`SIGINT`, `SIGTERM` and `exit` — and a kill mid-run still left the mutation in
+the file: this script spends its whole life inside `execFileSync`, a synchronous
+child, so the event loop never turns and the handler never runs. It dies where
+it stands.
+
+A note on disk survives that, and a `SIGKILL`, and the machine losing power. It
+is written before the file is broken, the next run reads it **before it reads
+anything else** — the file it would otherwise copy *is* the mutated one — and
+says what it put back. Proved by killing a run with `-9` and watching the next
+one restore it. `scripts/lib/undo.mjs`, beside the other things the checks
+share, with its own tests.
+
+**And a hand-kept number that had already come apart.** Three sentences state
+how many pages the book is: two say 1,784 and one said 1,785, and the build
+writes 1,784. `audit-claims` exists because *a hand-kept number is a sentence
+waiting*, and it holds the test counts only. The page count is held now, by the
+one test that already builds the site — every *N pages* in either document must
+be the number the build wrote, and there must be at least one of them, or the
+check is checking nothing.
+
 **A decision nothing defended, and the list that could not see it (206th
 pass).** `audit-mutants` breaks a decision on purpose and runs the suite that
 owns it. It closed with *Broke 42 decisions on purpose. Every one of them was
@@ -6714,7 +6749,7 @@ that made `openAI` send `max_completion_tokens` is OpenAI's, not the format's.
 `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, `OPENROUTER_API_KEY`: the first one set
 wins, in that order, and the startup line names the provider and model chosen.
 
-**4b. `apps/docs` — done.** The book, generated from `@leela/content`: 1785
+**4b. `apps/docs` — done.** The book, generated from `@leela/content`: 1784
 pages, 72 plans and the rules chapters in each of 22 languages, served from
 `t27.ai/leela/docs/` in the same Pages artifact as the game.
 
