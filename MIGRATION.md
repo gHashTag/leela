@@ -7506,6 +7506,34 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The same function, written twice, under whatever it was called each time.**
+`audit-doubles` compares the *names* of constants, and says why: two numbers
+that happen to be 500 are not a duplicate. A body is the other way round —
+nobody writes eighty identical characters of logic by coincidence, and the copy
+is usually made under a different name, which is what makes it invisible to a
+check that reads names.
+
+Asked for identical bodies across the ten workspaces, the repository answered
+twice, and **both copies were made while removing another duplication**:
+
+- `whole`, the guard for *a whole number in a range*, in `packages/db` and in
+  the `stored.ts` the rule moved to two passes earlier;
+- `directionFromStatus` in `packages/db` and `directionOf` in
+  `packages/engine` — one switch under two names, left behind when
+  `stateFromLegacy` began delegating, and **called by nothing afterwards**.
+
+The second is the shape worth naming. It was dead in one file and live in the
+other, and neither audit could see it: `audit-unread` reads exports and fields,
+and a private function is neither; `audit-doubles` read names, and the names
+differed. Two more private functions had died beside it — `latestEntry` and
+`previousPlanFrom` — for the same reason and equally unseen.
+
+`whole` moved to the engine, the three dead ones are gone, and
+`functionsIn`/`repeated` close the class: 278 functions across the ten
+workspaces, each written once. Short bodies are not reported — a one-line getter
+is a shape rather than an idea, and a check that flags them is a check somebody
+turns off.
+
 **A slow disk destroyed thirty-nine accounts.** The pass before found the
 game's read collapsing *empty* and *silent*; the same collapse was in the
 journal's, one file over, with a worse ending. Measured through the app's own

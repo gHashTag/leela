@@ -67,3 +67,80 @@ export function doubled(declarations) {
       disagreeing: new Set(seen.map((one) => one.value)).size > 1,
     }));
 }
+
+/**
+ * The same function written twice, whatever it was called each time.
+ *
+ * `doubled` above compares *names*, and says why: two constants that happen to
+ * be 500 are not a duplicate. A function body is the other way round. Nobody
+ * writes forty identical characters of logic by coincidence, and the copy is
+ * usually made under a different name — which is exactly what makes it
+ * invisible to a check that reads names.
+ *
+ * Both of the ones this found were made while *removing* a duplication.
+ * `within`, the clock the phone's two stores share, was copied word for word
+ * into the second of them. `directionFromStatus` in `packages/db` and
+ * `directionOf` in `packages/engine` were the same switch under two names,
+ * left behind when the rule moved and called by nothing afterwards — dead in
+ * one file and live in the other, seen by neither audit: `audit-unread` reads
+ * exports and fields, and a private function is neither.
+ *
+ * Comments and whitespace are stripped, so two copies that were commented
+ * differently are still one copy. Short bodies are not reported: a one-line
+ * getter is a shape, not an idea, and a check that flags them is a check
+ * somebody turns off.
+ */
+
+/** Shortest body worth calling a copy. Below this it is a shape, not an idea. */
+export const A_FUNCTION = 80;
+
+/** Every top-level function in a source, with its body stripped to substance. */
+export function functionsIn(source, file) {
+  const found = [];
+
+  for (const match of source.matchAll(/(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*(?:<[^>]*>)?\s*\(/g)) {
+    const opens = source.indexOf('{', (match.index ?? 0) + match[0].length);
+    if (opens === -1) continue;
+
+    let depth = 0;
+    let at = opens;
+    for (; at < source.length; at += 1) {
+      if (source[at] === '{') depth += 1;
+      if (source[at] === '}') {
+        depth -= 1;
+        if (depth === 0) break;
+      }
+    }
+
+    const body = source
+      .slice(opens, at + 1)
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .replace(/\/\/[^\n]*/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (body.length >= A_FUNCTION) found.push({ name: match[1], file, body });
+  }
+
+  return found;
+}
+
+/** Bodies written in more than one file, under whatever names. */
+export function repeated(functions) {
+  const byBody = new Map();
+
+  for (const one of functions) {
+    const seen = byBody.get(one.body) ?? [];
+    seen.push(one);
+    byBody.set(one.body, seen);
+  }
+
+  return [...byBody.values()]
+    .filter((seen) => new Set(seen.map((one) => one.file)).size > 1)
+    .map((seen) => ({
+      names: [...new Set(seen.map((one) => one.name))],
+      where: seen,
+      /** Two names for one body: the copy a name-based check cannot see. */
+      renamed: new Set(seen.map((one) => one.name)).size > 1,
+    }));
+}

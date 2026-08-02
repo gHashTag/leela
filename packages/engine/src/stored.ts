@@ -42,8 +42,15 @@ const DIRECTIONS: ReadonlySet<string> = new Set<Direction | ''>([
   'win 🕉',
 ]);
 
-/** A whole number in a range, which is what every one of these fields holds. */
-function whole(value: unknown, from: number, to: number): boolean {
+/**
+ * A whole number in a range, which is what every one of these fields holds.
+ *
+ * Exported because `packages/db` had it too, word for word, for the bounds its
+ * rows carry that a state does not — a seat number, a turn index, a count of
+ * rolls. Two copies of a guard agree until one of them learns something, and
+ * the one that learns it is never the one the next reader is looking at.
+ */
+export function whole(value: unknown, from: number, to: number): boolean {
   return Number.isInteger(value) && (value as number) >= from && (value as number) <= to;
 }
 

@@ -20,7 +20,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { declarationsIn, doubled } from './lib/doubles.mjs';
+import { declarationsIn, doubled, functionsIn, repeated } from './lib/doubles.mjs';
 import { workspacePackages } from './lib/claims.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -109,5 +109,36 @@ if (copies.length === 0) {
     '\nCopies agree on the day they are made. Nothing goes wrong until one of them is',
   );
   console.log('changed, and then two modules mean different things by one name.');
+  process.exitCode = 1;
+}
+
+// --- the same function, under whatever name -----------------------------------
+//
+// Names are the wrong question for a body. Nobody writes eighty identical
+// characters of logic by coincidence, and the copy is usually made under a
+// different name — which is what kept `within` and `directionFromStatus`
+// invisible to everything here until somebody went looking by hand.
+
+const functions = SOURCES.flatMap((source) =>
+  filesUnder(join(ROOT, source)).flatMap((path) =>
+    functionsIn(readFileSync(path, 'utf8'), relative(ROOT, path)),
+  ),
+);
+
+const written = repeated(functions);
+
+console.log(`\nChecked ${functions.length} functions across ${SOURCES.length} sources.\n`);
+
+if (written.length === 0) {
+  console.log('Every one of them is written once, so a change to it reaches everywhere it is.');
+} else {
+  for (const { names, where, renamed } of written) {
+    console.log(`  ${names.join(' / ')}${renamed ? '  — the same body under two names' : ''}`);
+    for (const one of where) console.log(`      ${one.name.padEnd(24)} ${one.file}`);
+  }
+  console.log(
+    '\nA function copied is a decision copied. Move it to something both can import,',
+  );
+  console.log('or delete the one nobody calls — a private copy is invisible to audit-unread.');
   process.exitCode = 1;
 }

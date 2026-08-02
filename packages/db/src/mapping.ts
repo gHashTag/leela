@@ -18,6 +18,7 @@ import {
   isRuleSetId,
   owesReport,
   ruleSetById,
+  whole,
   whyNotPlayable,
 } from '@leela/engine';
 import type {
@@ -203,11 +204,6 @@ export class StoredRowsError extends Error {
     super(message);
     this.name = 'StoredRowsError';
   }
-}
-
-/** A whole number in a range, which is what every column here should hold. */
-function whole(value: unknown, from: number, to: number): boolean {
-  return Number.isInteger(value) && (value as number) >= from && (value as number) <= to;
 }
 
 /**

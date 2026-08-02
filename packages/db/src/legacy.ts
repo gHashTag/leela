@@ -75,43 +75,6 @@ export function stateFromLegacy(user: LegacyUser): GameState {
   return stateFromKept(user);
 }
 
-/** The most recent history entry, or undefined for a player who never rolled. */
-function latestEntry(user: LegacyUser): LegacyHistoryEntry | undefined {
-  if (!Array.isArray(user.history) || user.history.length === 0) return undefined;
-  // The app unshifts, so index 0 is newest — but do not trust it; sort.
-  return [...user.history].sort((a, b) => b.createDate - a.createDate)[0];
-}
-
-/**
- * Where the player stood before their current plan.
- *
- * Read from the second-newest history entry. With no history to read, return
- * the current plan: equal values mean "has not moved", which is what
- * `owesReport` and the report gate both key off.
- */
-function previousPlanFrom(user: LegacyUser): number {
-  if (!Array.isArray(user.history) || user.history.length < 2) return user.plan;
-  const sorted = [...user.history].sort((a, b) => b.createDate - a.createDate);
-  return sorted[1]?.plan ?? user.plan;
-}
-
-/** Map a legacy history status onto a direction. */
-function directionFromStatus(status: string | undefined): GameState['direction'] {
-  switch (status) {
-    case 'snake':
-      return 'snake 🐍';
-    case 'arrow':
-      return 'arrow 🏹';
-    case 'liberation':
-      return 'win 🕉';
-    case 'cube':
-      return 'step 🚶🏼';
-    default:
-      // 'start', or anything a future export adds.
-      return '';
-  }
-}
-
 /**
  * A full player row for a migrated account.
  *

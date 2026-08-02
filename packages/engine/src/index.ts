@@ -41,6 +41,7 @@ export type { KeptPlayer, KeptStep } from './published';
 export {
   isPlayableState,
   isSeatedTable,
+  whole,
   whyNotPlayable,
   whyNotSeated,
 } from './stored';
