@@ -7506,6 +7506,29 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The file `/save` hands a player was asserted by counting.** *One document was
+sent* — and nothing read it. So the defect the pass before found, a file
+carrying no `intention` field at all, was invisible at the level where it
+happened and was fixed one layer down, where a unit test could see it. That is
+this repository's own recurring shape: `sqliteStepSink` wrote a table nothing
+read, the durable report sink had `record` and no `history`, and both were found
+only where the thing is **assembled**, because every unit test holds a store it
+built itself.
+
+The document is opened now — built by the bot an operator runs, on a real SQLite
+file, played until there is something to write about. It parses with the
+format's own reader, which is what the other two hand an incoming file to; it
+carries the question; it is named so a folder can hold three of them; and it is
+indented, because a person may well open it.
+
+**And the fixture taught something.** The first version built a player who had
+written an account and never said what for, and no file was sent at all: the bot
+refuses the throw before the question — *what are you playing for?* — so a path
+out of a chat has an intention **by construction**. The empty case is asserted
+where it is reachable, at `offer`, because that function is not only the bot's;
+a file saying `intention: ""` would hand the receiving surface something to
+adopt, and it adopts only where it has none.
+
 **A path taken out of a chat arrived without the question it was written
 under.** The crossing test written the pass before held **two** of the three
 surfaces, and the one it left out was the one that had gone wrong. `offer` in
