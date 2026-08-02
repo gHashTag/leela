@@ -31,7 +31,7 @@ import {
   detectRules,
   extractBoards,
 } from '../packages/engine/src/index.ts';
-import { agreesWithEngine, markFor, renderResult } from './lib/copies.mjs';
+import { RECORDED, against, agreesWithEngine, markFor, nameOf, renderResult } from './lib/copies.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const srcFlag = process.argv.indexOf('--src');
@@ -161,4 +161,30 @@ if (unparsed.length > 0) {
   for (const file of unparsed) console.log(`  ${file}`);
   console.log('Check these by hand, or teach extractBoards their shape.');
 }
-process.exit(wrong > 0 ? 1 : 0);
+
+// The exit code is about the record, not about the count. Six of these copies
+// disagree and none of them is ours to fix, so `wrong > 0` was true the day
+// this was written and true every day since — a verdict that never moves is
+// one nobody reads. See `against` in lib/copies.mjs.
+const { fresh, rotted } = against(results);
+
+if (fresh.length > 0) {
+  console.log(`\n${fresh.length} copy(ies) disagree in a way nobody has recorded:`);
+  for (const result of fresh) console.log(`  ${nameOf(result)}`);
+  console.log('Read the file. Then add the line above to RECORDED, or fix what it describes.');
+}
+
+if (rotted.length > 0) {
+  console.log(`\n${rotted.length} record(s) describe a copy that is no longer there:`);
+  for (const line of rotted) console.log(`  ${line}`);
+  console.log('A donor was fixed, a file moved, or a disagreement changed shape. Check, then drop it.');
+}
+
+if (fresh.length === 0 && rotted.length === 0) {
+  console.log(
+    `\n${results.length - wrong} of ${results.length} copies agree with the engine, and the ` +
+      `${RECORDED.length} that do not are the ${RECORDED.length} on record.`,
+  );
+}
+
+process.exit(fresh.length + rotted.length > 0 ? 1 : 0);

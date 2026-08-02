@@ -7506,6 +7506,29 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A verdict that never moved.** `audit-copies.mjs` ended on
+`process.exit(wrong > 0 ? 1 : 0)`, counting copies that disagree with the
+engine. Six of the eighteen do, and not one of them is ours to fix: four are the
+100-square Snakes and Ladders board dropped into `processDiceRoll`, two are the
+web3 hooks with no arrow from 54, and all six sit in frozen donor repositories.
+So the check was red the day it was written and red every day since — an exit
+code carrying no news, on a check nobody would run twice. A seventh
+disagreement would have arrived into a report that already said `1`.
+
+The answer was already in this repository, twice. `untranslated.mjs` and
+`spillover.mjs` both record what they cannot repair and then guard the record,
+in two directions: a finding nobody has written down is **fresh**, and a record
+matching nothing is **rotted**. `audit-copies` now does the same, and passes.
+
+The record is one line per copy, and every part of it is arithmetic — jumps,
+differences counted *by kind*, board problems counted by kind — which is the bar
+`corrections.mjs` sets for anything recorded rather than fixed. Counted by kind
+on purpose: a board whose one missing jump became one extra jump is a different
+board, and a record keeping only `1 difference` would pass over it. Proved
+against the real donors in both directions: doctor a recorded line and the audit
+reports the copy as fresh *and* the line as rotted; delete a line and the
+seventh copy is named, with the sentence to add printed underneath it.
+
 **6. Archive the source repositories.** Twenty of the twenty-five have been
 superseded. Archiving on GitHub is reversible and keeps every commit, which
 matters for `leela` (211 commits) and `NeuroLeelaExpo` (114) — `NeuroLeelaAgent`
