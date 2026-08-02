@@ -7506,6 +7506,33 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The cut that keeps one plan's text out of another was verified nowhere that
+runs.** The Arabic, Malay and Ukrainian donor edition runs plan 12 into plan 13,
+so a player standing on Envy read the whole of Nullity. The generator cuts it,
+and the cut has a rot check — the build fails when a recorded spillover matches
+nothing — but **the generator needs the donor and the donor is not in CI**. The
+only workflow that touches the dataset runs `audit-dataset`, which had no
+mention of spillovers at all. So the repair held because nobody had disturbed
+it, and if it came back nothing on a push would have said so.
+
+Asked now of the shipped data, where the answer does not need the donor. Proved
+both ways: a planted spillover in the German plans is named, and the data as it
+stands is clean.
+
+**And asked so that the silence means something.** A finder that has stopped
+finding is silent in exactly the way clean data is. This is the shape from the
+pass before one step further out — there a structural correction was verified by
+running its own repair again — so the check proves the finder on a plan built to
+carry the next one before it believes the quiet. With `LONG_ENOUGH` raised so
+the finder can never fire, the audit says its own silence means nothing.
+
+**The rest of the family came with it.** The generator does four things to a
+donor's text, and each is a step that can stop happening: the corrections, the
+paragraph breaks, the spillover cut, and taking the markdown off. The first two
+already had data-side checks; the last had none, so a horizontal rule or a
+double blank line reaching a reader would have gone unremarked. Both are asked
+of the data now, and both catch a planted one.
+
 **The eighth plan ended with a quotation mark that opens nothing, in eighteen
 languages.** The donor has it: `translate-leela/docs/8-greed.md` holds exactly
 one `"` and it is the last character of the file. Every machine translation

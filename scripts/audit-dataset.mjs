@@ -23,6 +23,7 @@ import { join } from 'node:path';
 import { LANGUAGES, couldBe, dominantScript, scriptOf, writtenIn } from '../packages/content/src/index.ts';
 import { TOTAL_PLANS } from '../packages/engine/src/index.ts';
 import { CORRECTIONS } from './lib/corrections.mjs';
+import { nameOf as spilloverName, spilloversIn } from './lib/spillover.mjs';
 import {
   BLIND_TO,
   FUNCTION_WORDS,
@@ -237,6 +238,76 @@ for (const [language, chapters] of Object.entries(rules)) {
 console.log(
   `\nChecked ${coverage.size} languages against the ${LANGUAGES.length} declared, ${Object.values(rules).flat().length} rules chapters against their scripts, and ${CORRECTIONS.length} stated correction(s) against the data.`,
 );
+
+// A page that becomes the next page halfway down.
+//
+// The donor edition Arabic, Malay and Ukrainian are translated from runs plan 12
+// into plan 13, so a player standing on Envy read the whole of Nullity. The cut
+// is in the generator and it has a rot check — the build fails when a recorded
+// spillover matches nothing — but **the generator needs the donor, and the donor
+// is not in CI**. So the repair that keeps one plan's text out of another was
+// verified nowhere that runs. Asked here, of the shipped data, where it runs on
+// every push.
+//
+// The detector is proved before its silence is believed. Asking whether it finds
+// anything is worth nothing if it can no longer find anything: a repair verified
+// by re-running the repair is the check that passed eighteen broken translations
+// a pass ago, and this is the same shape one step further out.
+// Longer than `LONG_ENOUGH`, because a short run of the next page is a book
+// naming what comes next and the detector is right to leave it alone.
+const CARRIED = 'Nullity is the second snake and it takes the player back to the start. '.repeat(6);
+let rulesRead = {};
+try {
+  rulesRead = read(join(DATA, 'rules.json'));
+} catch {
+  // Reported elsewhere; the plans are still worth reading.
+}
+
+const canary = spilloversIn(
+  [
+    { plan: 12, body: `Envy is the first snake on the board. ${'It stings and it returns them. '.repeat(20)}\n\n${CARRIED}` },
+    { plan: 13, body: `${CARRIED}\n\nIt is a long fall and a familiar one.` },
+  ],
+  'canary',
+);
+
+if (canary.length === 0) {
+  problems.push(
+    'the spillover detector finds nothing in a plan built to carry the next one — its silence about the data means nothing',
+  );
+}
+
+for (const language of coverage.keys()) {
+  let plans;
+  try {
+    plans = read(join(DATA, `plans.${language}.json`));
+  } catch {
+    continue; // Already reported above.
+  }
+
+  for (const finding of spilloversIn(plans, language)) {
+    problems.push(`${spilloverName(finding)} — and the shipped data still carries it`);
+  }
+
+  // The rest of what the generator does to a text, asked of the text rather
+  // than of the generator. Neither of these is a repair of a donor defect —
+  // they are the markdown a page is written in, taken off on the way out — but
+  // the same rule holds: a step nothing checks is a step that can stop
+  // happening. Both run in the same place the spillover cut does, which is the
+  // place CI cannot reach.
+  const chapters = rulesRead[language] ?? [];
+  for (const text of [...plans, ...chapters]) {
+    const body = String(text.body ?? '');
+    const name = text.plan ? `plan ${text.plan}` : text.slug;
+
+    if (/^[ \t]*-{3,}[ \t]*$/m.test(body)) {
+      problems.push(`${language}/${name}: a horizontal rule reached the data`);
+    }
+    if (/\n{3,}/.test(body)) {
+      problems.push(`${language}/${name}: three or more newlines reached the data`);
+    }
+  }
+}
 
 // Said on a green run as well as a red one. A check that cannot see eleven of
 // the twenty-two languages must not be read as having passed them, and the
