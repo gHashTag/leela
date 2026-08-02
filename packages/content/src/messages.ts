@@ -264,6 +264,17 @@ const EN = {
   // a broken bot, which is how this one first looked.
   'chat.notKept': 'I could not keep that. Nothing has moved — send it again in a moment.',
 
+  /**
+   * A table that is there and cannot be read.
+   *
+   * `get` answered `null` to this and to *no table here* alike, so `/end`
+   * cleared nothing and `/new` walked past its own guard and wrote a fresh
+   * table over every seat at the old one. The reason went to a server log,
+   * which nobody at the table can read. Naming `/end` in the sentence is the
+   * point: the only way out of this is a deliberate one.
+   */
+  'chat.tableUnreadable':
+    'There is a table in this chat and I cannot read it — the game in it cannot be continued. /end clears it, and then /new opens another.',
   'chat.noTable': 'No table here yet. Send /new to open one.',
   'chat.running': 'A game is already running here. Finish it, or send /end.',
   'chat.tableOpen': 'A table is already open here. /join to sit, /start to begin, /end to clear it.',
@@ -743,6 +754,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
 
   'chat.notKept': 'Не удалось сохранить. Ничего не сдвинулось — отправьте ещё раз через мгновение.',
 
+  'chat.tableUnreadable':
+    'В этом чате есть стол, и я не могу его прочитать — игру в нём не продолжить. /end уберёт его, и тогда /new откроет новый.',
   'chat.noTable': 'Здесь ещё нет стола. Отправьте /new, чтобы открыть.',
   'chat.running': 'Здесь уже идёт игра. Закончите её или отправьте /end.',
   'chat.tableOpen': 'Здесь уже открыт стол. /join — сесть, /start — начать, /end — убрать стол.',

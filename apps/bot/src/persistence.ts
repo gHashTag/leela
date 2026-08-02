@@ -14,7 +14,7 @@ import { StoredRowsError, sessionFromRows, sessionUpdate, seatUpdate } from '@le
 import type { SessionPlayerRow, SessionRow } from '@leela/db';
 import { resolveLanguage } from '@leela/content';
 import type { Room } from './commands';
-import type { RoomStore } from './store';
+import type { ReadRoom, RoomStore } from './store';
 
 /** The session row a room writes, minus the columns the database fills in. */
 export interface StoredSession {
@@ -136,25 +136,44 @@ export class DatabaseRoomStore implements RoomStore {
     private readonly log: (message: string) => void = console.error,
   ) {}
 
-  async get(chatId: string): Promise<Room | null> {
+  /**
+   * The table, and whether a row was refused to give that answer.
+   *
+   * Both halves used to be `null`, and the log line beside them says why that
+   * mattered: *without this line nobody ever finds out why their game
+   * vanished*. It went to a server log, and the people at the table were told
+   * there was no table — so `/end` cleared nothing and `/new` sailed past the
+   * guard that refuses to replace a game in progress, writing a fresh table
+   * over every seat at the old one.
+   */
+  async read(chatId: string): Promise<ReadRoom> {
     const session = await this.queries.loadSession(chatId);
-    if (!session) return null;
+    if (!session) return { room: null, unreadable: false };
 
     const seats = await this.queries.loadSeats(chatId);
     // A session with no seats is corrupt rather than empty — a table always
-    // has at least the host. Treat it as absent instead of crashing a chat.
-    if (seats.length === 0) return null;
+    // has at least the host. Not absent: there is a row here, and something
+    // has to be able to say so.
+    if (seats.length === 0) {
+      this.log(`[bot] chat ${chatId}: a table with no seats`);
+      return { room: null, unreadable: true };
+    }
 
     try {
-      return roomFromRows(session, seats);
+      return { room: roomFromRows(session, seats), unreadable: false };
     } catch (error) {
       // A row the engine cannot be handed is not a reason to break every
-      // command sent to this chat from now on. "No table here" is recoverable
-      // — /new opens another — and a throw on every update is not.
+      // command sent to this chat from now on. A throw on every update is not
+      // recoverable; being told which of the two happened is.
       if (!(error instanceof StoredRowsError)) throw error;
-      this.log(`[bot] chat ${chatId}: unreadable table, treating it as none — ${error.message}`);
-      return null;
+      this.log(`[bot] chat ${chatId}: unreadable table — ${error.message}`);
+      return { room: null, unreadable: true };
     }
+  }
+
+  /** The table alone, for a caller with nothing to say about the difference. */
+  async get(chatId: string): Promise<Room | null> {
+    return (await this.read(chatId)).room;
   }
 
   async save(room: Room): Promise<void> {

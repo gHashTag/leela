@@ -485,6 +485,17 @@ export function createBot({
    * @param except A chat whose table is being replaced, so a room still stored
    *   under it does not count as somewhere they are still playing.
    */
+  /**
+   * The table, and whether there is one that will not assemble.
+   *
+   * A store that keeps its rooms in memory cannot have an unreadable one and
+   * says so by not having the method — the convention `roomOf` already follows.
+   */
+  async function readTable(chatId: string): Promise<{ room: Room | null; unreadable: boolean }> {
+    if (store.read) return store.read(chatId);
+    return { room: await store.get(chatId), unreadable: false };
+  }
+
   async function letGoOfTheGame(room: Room | null, except?: string): Promise<void> {
     for (const seat of room?.session.players ?? []) {
       const elsewhere = await store.roomOf?.(seat.id);
@@ -500,7 +511,20 @@ export function createBot({
     const who = sender(ctx);
     if (!chatId || !who) return;
 
-    const existing = await store.get(chatId);
+    const opened = await readTable(chatId);
+
+    // A table that cannot be read is not an empty chat, and this is where the
+    // difference was paid for: the guard below asks about `existing`, which was
+    // null for both, so `/new` wrote a fresh table over every seat at a table
+    // it had merely failed to parse. Refused rather than replaced, and `/end`
+    // named in the answer, because clearing somebody's game should be a thing
+    // they did on purpose.
+    if (opened.unreadable) {
+      await ctx.reply(messageFor(languageOf(ctx), 'chat.tableUnreadable'));
+      return;
+    }
+
+    const existing = opened.room;
 
     // `players.every(is_finished)` looked like "the game is over" and was not:
     // a player waiting to enter sits on 68 with `is_finished` set, so a table
@@ -529,7 +553,18 @@ export function createBot({
     const who = sender(ctx);
     if (!chatId || !who) return;
 
-    const ending = await store.get(chatId);
+    const there = await readTable(chatId);
+    const ending = there.room;
+
+    // The way out. A row nobody can read belongs to nobody — `mayEnd` cannot be
+    // asked about a table that will not assemble — and the alternative is a
+    // chat that can neither continue its game nor start another. So anyone in
+    // the chat may clear it, and this is the only command that will.
+    if (!ending && there.unreadable) {
+      await store.delete(chatId);
+      await ctx.reply(messageFor(languageOf(ctx), 'chat.cleared'));
+      return;
+    }
 
     // Clearing nothing is not clearing something. The old reply said *the table
     // is cleared* to a chat that had never had one, which is the shape this

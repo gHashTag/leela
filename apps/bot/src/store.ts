@@ -8,8 +8,32 @@
 
 import type { Room } from './commands';
 
+/** A table read back, and whether one was refused to give the answer. */
+export interface ReadRoom {
+  room: Room | null;
+  /** True when a row is there and cannot be handed to the engine. */
+  unreadable: boolean;
+}
+
 export interface RoomStore {
   get(chatId: string): Promise<Room | null>;
+  /**
+   * The table, and whether there is one that cannot be read.
+   *
+   * `get` answers `null` to both *no table here* and *there is a table and the
+   * engine will not take it*, and two commands act on the difference. `/end`
+   * replied *there is no table here* and left the row where it was, so the
+   * chat had no way to clear it; `/new` has a guard against replacing a game in
+   * progress, and the guard never fired, so the next `/new` wrote a fresh table
+   * over every seat at that one — silently, with the reason in a server log
+   * nobody at the table can read.
+   *
+   * Optional, like `roomOf`: a store that keeps rooms in memory cannot have an
+   * unreadable one, and saying so by not having the method is this file's own
+   * convention.
+   */
+  read?(chatId: string): Promise<ReadRoom>;
+
   save(room: Room): Promise<void>;
   delete(chatId: string): Promise<void>;
   /**

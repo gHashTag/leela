@@ -7506,6 +7506,34 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The fourth surface: a table in a chat, and the chat told there is none.**
+`DatabaseRoomStore.get` answered `null` both to *no table here* and to *there is
+a table and the engine will not take it*. The log line beside that choice
+already said what it cost — *without this line nobody ever finds out why their
+game vanished* — and it goes to a server log, which nobody at the table can
+read.
+
+Two commands act on the difference and both acted wrongly. `/end` replied *there
+is no table here* and left the row exactly where it was, so nothing in the chat
+could clear it. `/new` carries a guard that refuses to replace a game in
+progress, and the guard asks whether a room came back; none did, so the next
+`/new` wrote a fresh table over every seat at the old one. Played through the
+assembled bot on SQLite, the reverted code answers `/new` with *A table is open.
+Ada is seated.* — a two-player game destroyed and the reply congratulating the
+chat on a new one.
+
+`read` returns the room **and whether a row was refused to give that answer**.
+`/new` refuses and names `/end`; `/end` clears an unreadable row for anyone in
+the chat, because `mayEnd` cannot be asked about a table that will not assemble
+and the alternative is a chat that can neither continue its game nor start
+another. Destroying somebody's game is now something a person did on purpose.
+
+**Not salvaged per seat, unlike the mini app.** There the seats are one person's
+own games on one device, and dropping the unreadable one keeps the rest. Here a
+seat is a different human being in a shared chat, and quietly removing them from
+a game the others go on playing is not a repair. The table is refused whole and
+said so.
+
 **A table of three, refused whole, handed back as somebody else's game.** The
 same file, the neighbouring key. `loadSeats` asked `isSavedSeats` about the
 entire table and threw all of it away on any single fault. Measured on the
