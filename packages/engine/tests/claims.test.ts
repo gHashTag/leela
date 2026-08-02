@@ -232,6 +232,10 @@ describe('where an audit looks for source', () => {
    */
   const treeOf = (paths: string[]) => ({
     exists: (path: string) => paths.includes(path) || paths.some((p) => p.startsWith(`${path}/`)),
+    // A path with something under it. The reader's own docstring has always
+    // named this, and nothing supplied it until a workspace's second source
+    // directory needed telling from a file.
+    isDirectory: (path: string) => paths.some((p) => p.startsWith(`${path}/`)),
     entries: (path: string) =>
       [
         ...new Set(

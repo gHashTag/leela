@@ -244,9 +244,25 @@ export function checkCiPackages(loops, workspaces) {
  * placeholders — they exist on one machine and not in CI, and a check that
  * disagreed with itself in the two places would be worse than none.
  *
+ * **And a workspace is not only its `src`.** Having stopped a package being
+ * missed, this returned one directory per package and missed the rest of two of
+ * them: `apps/miniapp/scripts/smoke-run.ts`, the post-deploy check CI runs on
+ * every release, and `apps/mobile/index.ts`, the phone app's entry point. Both
+ * are readers, and the audit could not see them reading — so three exports
+ * carried hand-written waivers naming a file the audit was not looking at, and
+ * a waiver that names a file nobody checks is one that outlives the file.
+ *
+ * `tests` is deliberately not here. Several waivers say *used by its tests*,
+ * which is a real and weaker answer than *used by the game*, and folding tests
+ * in would silently turn every one of those into a pass.
+ *
  * @param read  `{ entries(dir), isDirectory(path), exists(path) }` — injected
  *              so the rule can be asserted against a made-up tree.
  */
+
+/** Directories that are not a workspace's own source, whatever they hold. */
+const NOT_SOURCE = new Set(['node_modules', 'dist', 'build', 'coverage', 'tests', '.expo']);
+
 export function workspaceSources(read, groups = ['packages', 'apps']) {
   const found = [];
 
@@ -257,9 +273,29 @@ export function workspaceSources(read, groups = ['packages', 'apps']) {
       const pkg = `${group}/${name}`;
       if (!read.exists(`${pkg}/package.json`)) continue;
       if (!read.exists(`${pkg}/src`)) continue;
-      if (!read.entries(`${pkg}/src`).some((file) => file.endsWith('.ts'))) continue;
+      // `.tsx` counts. This asked for `.ts` alone, so a workspace whose `src`
+      // holds only components — which `apps/mobile` is one refactor from being
+      // — would have been skipped whole, by the same rule that exists to stop a
+      // workspace being skipped.
+      if (!read.entries(`${pkg}/src`).some((file) => /\.tsx?$/.test(file))) continue;
 
       found.push(`${pkg}/src`);
+
+      // Whatever else the workspace ships: another directory of sources, or a
+      // file at its root. Paths rather than directories, because an entry point
+      // is usually one file beside the folders.
+      for (const entry of read.entries(pkg).sort()) {
+        if (entry === 'src' || NOT_SOURCE.has(entry)) continue;
+
+        const path = `${pkg}/${entry}`;
+        if (/\.(ts|tsx|mjs)$/.test(entry)) {
+          found.push(path);
+          continue;
+        }
+
+        if (!read.isDirectory?.(path)) continue;
+        if (read.entries(path).some((file) => /\.(ts|tsx|mjs)$/.test(file))) found.push(path);
+      }
     }
   }
 

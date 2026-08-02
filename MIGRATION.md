@@ -7506,6 +7506,33 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A workspace is not only its `src`.** `workspaceSources` exists because
+`audit-unread.mjs` walked a hand-written array of directories and
+`packages/journal/src` was not in it — so the file format shared by the bot and
+the mini app was never checked, while the audit reported that every export had a
+caller. Its comment says the fix means *a tenth package cannot be missed the
+same way*.
+
+It returned one directory per package, and two workspaces keep sources
+elsewhere: `apps/miniapp/scripts/smoke-run.ts`, the post-deploy check CI runs on
+every release and the only caller of three exports, and `apps/mobile/index.ts`,
+the whole of what the phone runs. Neither was looked at. The three exports
+carried waivers reading `smoke-run.ts` — **a waiver naming a file the audit
+cannot see is one that outlives the file**: delete it and three dead exports
+stay permanently exempt, with the reason still pointing at it.
+
+Waivers removed, and the audit finds the caller itself. 110 files scanned
+before, 115 after; 648 field declarations, 650; 536 exports, 537. Nothing new
+was hiding in them — but now it could not.
+
+**Two more, found while fixing that one.** The walk took only directories, so
+the file paths this returns went into a `catch` written for *a package with no
+sources yet*, where a source nobody looks at is indistinguishable from one that
+is not there. And a workspace counted as shipping TypeScript only if its `src`
+held a `.ts`, so an app whose `src` is all components — which `apps/mobile` is
+one refactor from being — would have been skipped whole, by the rule that exists
+to stop a workspace being skipped.
+
 **The deployment check did not look at the game's code.** `smoke.ts` opens by
 naming the failure it exists for — *a build that emits a broken asset path
 deploys green* — and runs against the live site after every deploy, exiting

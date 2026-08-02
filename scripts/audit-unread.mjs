@@ -51,6 +51,9 @@ const SEARCH = [
   ...workspaceSources({
     exists: (path) => existsSync(join(ROOT, path)),
     entries: (path) => readdirSync(join(ROOT, path)),
+    // A workspace's sources are not only its `src`: the post-deploy check and
+    // the phone's entry point live beside it, and both are readers.
+    isDirectory: (path) => statSync(join(ROOT, path)).isDirectory(),
   }),
   'scripts',
 ];
@@ -130,10 +133,16 @@ function* walk(dir) {
 }
 
 const files = [];
-for (const dir of SEARCH) {
-  const full = join(ROOT, dir);
+for (const source of SEARCH) {
+  const full = join(ROOT, source);
   try {
-    files.push(...walk(full));
+    // A path, not always a directory: an entry point is one file beside the
+    // folders — `apps/mobile/index.ts` is the whole of what the phone runs.
+    // `walk` reads a directory, and handing it a file threw into the catch
+    // below, where a source nobody looks at is indistinguishable from a package
+    // with nothing in it yet.
+    if (statSync(full).isDirectory()) files.push(...walk(full));
+    else if (/\.(ts|tsx|mjs)$/.test(full)) files.push(full);
   } catch {
     // A package without sources yet is not an error.
   }
@@ -213,11 +222,7 @@ const PUBLIC_API = {
   extractBoards: 'used by audit-copies.mjs',
   declaresBoard: 'used by audit-copies.mjs',
   compareRules: 'offered beside detectRules for a consumer comparing variants',
-  // Deployment checks, run from smoke-run.ts.
-  runChecks: 'smoke-run.ts',
   runCheck: 'tested directly; used by runChecks',
-  describeResults: 'smoke-run.ts',
-  allPassed: 'smoke-run.ts',
   // Offered beside the pieces that are used, for a consumer assembling their own.
   canPlayerRoll: 'the gate from a players row, for a client that is not the bot',
   turnContextFromPlayer: 'used by canPlayerRoll; exported for the same consumer',
