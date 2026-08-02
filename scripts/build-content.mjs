@@ -614,6 +614,75 @@ for (const [name, plans] of Object.entries(EDITIONS)) {
   writeFileSync(join(OUT, 'editions', `${name}.json`), `${JSON.stringify(plans, null, 2)}\n`);
 }
 
+// A text that arrives as one paragraph where every other language has three.
+//
+// Plans 12 and 24 in Arabic, Malay and Ukrainian, and four chapters besides:
+// the words are all there — seventy to a hundred per cent of the characters the
+// other languages use — and not one blank line among them, so a reader of those
+// three meets a wall where everybody else is given somewhere to rest. The three
+// come from `leela/src/locales`, whose plan text is one JSON string;
+// `paragraphed` restores the breaks where that donor wrote single newlines, and
+// for these it wrote none at all.
+//
+// Reported rather than repaired. Deciding where a paragraph ends in somebody
+// else's translation is deciding what their text says, which is the line
+// `lib/corrections.mjs` draws and does not cross. Said out loud so it is a
+// known gap rather than a silent one, and so a language that arrives this way
+// is seen on the day it arrives.
+warnings.push(
+  ...wallsOfText(OUT, coverage).map(
+    (wall) => `${wall}: one paragraph, where most languages have several`,
+  ),
+);
+
+/**
+ * Texts that carry no paragraph break where the same text has several
+ * elsewhere.
+ *
+ * Compared across languages rather than against a number, because how many
+ * paragraphs a plan has is the donor's business and differs from plan to plan.
+ * What is not the donor's business is one language having none of them.
+ */
+function wallsOfText(out, coverage) {
+  const langs = Object.keys(coverage).sort();
+  const read = (name) => {
+    try {
+      return JSON.parse(readFileSync(join(out, name), 'utf8'));
+    } catch {
+      return [];
+    }
+  };
+
+  const bodies = new Map();
+  const put = (key, lang, body) => {
+    if (!bodies.has(key)) bodies.set(key, new Map());
+    bodies.get(key).set(lang, String(body ?? ''));
+  };
+
+  const allRules = read('rules.json');
+  for (const lang of langs) {
+    for (const plan of read(`plans.${lang}.json`)) put(`plan ${plan.plan}`, lang, plan.body);
+    for (const chapter of allRules[lang] ?? []) put(`chapter ${chapter.slug}`, lang, chapter.body);
+  }
+
+  const blocks = (text) => text.split(/\n{2,}/).filter((part) => part.trim().length > 0).length;
+  const middle = (numbers) => [...numbers].sort((a, b) => a - b)[Math.floor(numbers.length / 2)] ?? 0;
+
+  const found = [];
+  for (const [key, byLang] of bodies) {
+    if (middle([...byLang.values()].map(blocks)) < 3) continue;
+
+    // Only where the words are there. A translation that is half the length of
+    // every other is a different finding, and the audits have it.
+    const usual = middle([...byLang.values()].map((body) => body.length));
+    for (const [lang, body] of byLang) {
+      if (blocks(body) === 1 && body.length > usual * 0.6) found.push(`${lang} ${key}`);
+    }
+  }
+
+  return found.sort();
+}
+
 const manifest = {
   // Relative to the repository, not as typed. The committed manifest carried
   // one machine's home directory, and the same rebuild from `../leela-src` and

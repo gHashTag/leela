@@ -137,5 +137,22 @@
       "withBody": 72
     }
   },
-  "warnings": []
+  "warnings": [
+    "ar chapter introduction: one paragraph, where most languages have several",
+    "ar chapter meaning: one paragraph, where most languages have several",
+    "ar chapter notes: one paragraph, where most languages have several",
+    "ar chapter summary: one paragraph, where most languages have several",
+    "ar plan 12: one paragraph, where most languages have several",
+    "ar plan 24: one paragraph, where most languages have several",
+    "ms chapter introduction: one paragraph, where most languages have several",
+    "ms chapter notes: one paragraph, where most languages have several",
+    "ms chapter summary: one paragraph, where most languages have several",
+    "ms plan 12: one paragraph, where most languages have several",
+    "ms plan 24: one paragraph, where most languages have several",
+    "uk chapter introduction: one paragraph, where most languages have several",
+    "uk chapter notes: one paragraph, where most languages have several",
+    "uk chapter summary: one paragraph, where most languages have several",
+    "uk plan 12: one paragraph, where most languages have several",
+    "uk plan 24: one paragraph, where most languages have several"
+  ]
 }

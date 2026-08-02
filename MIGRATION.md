@@ -7506,6 +7506,40 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Sixteen texts arrive with nowhere for the eye to rest.** Plans 12 and 24 in
+Arabic, Malay and Ukrainian, and four chapters besides: one paragraph, where
+every other language has three or four. The words are all there — seventy to a
+hundred per cent of the characters the others use — and not one blank line
+among them.
+
+The three come from `leela/src/locales`, whose plan text is one JSON string.
+`paragraphed` restores the breaks where that donor wrote single newlines, which
+is why the other sixty-nine plans in those languages read properly; for these it
+wrote none at all, so there is nothing to restore. Exactly three plans — 12, 24
+and 40 — and exactly those three languages, the same set in each, which is what
+a donor defect looks like rather than a translator's habit.
+
+**Reported rather than repaired.** Deciding where a paragraph ends in somebody
+else's translation is deciding what their text says, and `lib/corrections.mjs`
+draws that line: *checkably wrong — arithmetic, not judgement*. The build names
+all sixteen now and the manifest carries them, so this is a known gap rather
+than a silent one, and a language that arrives this way is seen on the day it
+arrives.
+
+The test asserts the reporting rather than the sixteen: whatever ships as one
+paragraph while most languages give it several must be named, **and** a name
+that is no longer a wall must go — a repair upstream that nobody noticed is the
+other way this goes quiet. Written first with the count after the manifest was
+written, so the build printed all sixteen and shipped a manifest with none; the
+test caught it.
+
+**A near miss worth recording.** Malay plan 12 reads `di pesawat^^.` — two caret
+marks in the middle of a sentence, the only ones in twenty-two languages. The
+case for deleting them looked strong until the evidence was checked: the two
+sibling copies of that Malay translation do not hold that sentence at all, so
+what remained was *carets are not letters*, which is a reading and not a
+calculation. Left alone, under the same rule as the paragraphs.
+
 **Sri Ramana Maharshi was printed in a monospace code font.** `ru/chakras` puts
 two of his paragraphs between ``` marks, and nothing in this repository knew
 what a fence was — so the book's rule for inline `code` matched from the third
