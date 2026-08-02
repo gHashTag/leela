@@ -5040,6 +5040,28 @@ free roll.
 What is still needed here is the export itself — a Firebase dump and a Supabase
 dump — and a decision on how ids are assigned. The conversion is ready.
 
+**One database, two readers, one rule.** These columns are read twice: by
+`sessionFromRows` for a player at a table, and by `stateFromPlayer` for a player
+alone. The first refused a row no game could have reached and said why it must —
+*a database is as writable by hand as `localStorage`*. The second refused
+nothing, and it is the reader the published app's own rows come through.
+
+Measured rather than argued: a row saying plan 999 read back as a game where
+every throw is answered `stop` and the player never moves again, with `canRoll`
+still saying *may roll* and no fault reported anywhere; plan 41.5 walked on to
+47.5 and 53.5, squares the board has no text for; and `is_finished` on plan 41 —
+the row the seat reader names in its own message as *not a game* — let the
+player stroll off the winning square to 47. The rule is now stated once, in
+`checkPlayable`, and both readers ask it. The test asserts the shape rather than
+those four rows: over a grid built from the edge of every column, whatever one
+reader calls impossible the other does too. Without the fix 346 rows disagree.
+
+The join itself was probed first and was sound: 48,000 turns of played games
+through `sessionUpdate`/`seatUpdate` and back out of `sessionFromRows`, nothing
+refused and nothing read back differently. `direction` is the one field a lone
+`players` row cannot keep — it has no column — which is why `needs_report` is
+computed at write time while the engine still knows.
+
 **3. `apps/mobile` — the game is there; the shipped app's services are not.**
 An Expo app that builds, installs and runs on an iOS simulator: the board from
 `BOARD_ROWS`, the plan texts from `@leela/content`, the bundle id

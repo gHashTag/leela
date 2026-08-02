@@ -28,12 +28,58 @@ import type {
   SessionRow,
 } from './schema';
 
-/** Read a player row as the state the engine expects. */
+/**
+ * A state the engine could have produced, or a complaint saying why not.
+ *
+ * One statement of the rule, because there are three readers of these columns
+ * and they were not agreeing. `checkSeat` had it — plan on the board, a run of
+ * at most two sixes, out of play only on the win square — with a comment
+ * explaining that a database is as writable by hand as `localStorage`.
+ * `stateFromLegacy` has its own. `stateFromPlayer` had none at all, and that is
+ * the one the published app's rows come through.
+ *
+ * What passed it, measured rather than guessed: plan 999 reads back as a game
+ * where every throw is refused as `stop` and the player never moves again, with
+ * nothing anywhere reporting a fault; plan 41.5 walks a board of half squares
+ * that has no text for any of them; and `is_finished` on plan 41 — the row
+ * `checkSeat` names in its own message as *not a game* — let the player stroll
+ * off the winning square to 47.
+ *
+ * @param complain  How to report a fault, so each caller names its own row.
+ */
+function checkPlayable(state: GameState, complain: (what: string) => never): void {
+  if (!whole(state.loka, 1, TOTAL_PLANS)) complain(`plan ${state.loka} is off the board`);
+  if (!whole(state.previous_loka, 0, TOTAL_PLANS)) {
+    complain(`previous plan ${state.previous_loka} is off the board`);
+  }
+  if (!whole(state.position_before_three_sixes, 0, TOTAL_PLANS)) {
+    complain(`fallback square ${state.position_before_three_sixes} is off the board`);
+  }
+  if (!whole(state.consecutive_sixes, 0, 2)) {
+    complain(`a run of ${state.consecutive_sixes} sixes cannot have been stored`);
+  }
+  if (typeof state.is_finished !== 'boolean') complain('is_finished is not a boolean');
+  // Out of play means on the win square and nowhere else — the engine only
+  // ever sets the flag there. "Finished on plan 41" is not a game.
+  if (state.is_finished && state.loka !== WIN_LOKA) {
+    complain(`finished on plan ${state.loka}, which is not the win square`);
+  }
+}
+
+/**
+ * Read a player row as the state the engine expects.
+ *
+ * @throws StoredRowsError when the row is not a game the engine could have
+ *         reached. Thrown for the reason `sessionFromRows` throws: a caller
+ *         handed a verdict about an impossible row has no way to know it was
+ *         impossible, and `canPlayerRoll` answered *may roll* to every one of
+ *         them.
+ */
 export function stateFromPlayer(player: Pick<
   Player,
   'plan' | 'previous_plan' | 'consecutiveSixes' | 'positionBeforeThreeSixes' | 'isFinished'
 >): GameState {
-  return {
+  const state: GameState = {
     loka: player.plan ?? 1,
     previous_loka: player.previous_plan ?? 0,
     direction: '',
@@ -41,6 +87,14 @@ export function stateFromPlayer(player: Pick<
     position_before_three_sixes: player.positionBeforeThreeSixes ?? 0,
     is_finished: player.isFinished ?? false,
   };
+
+  // After the defaults, not before: a null column is an unwritten one, and the
+  // value it stands in for is a legal opening state.
+  checkPlayable(state, (what) => {
+    throw new StoredRowsError(`stored player: ${what}`);
+  });
+
+  return state;
 }
 
 /**
@@ -181,23 +235,21 @@ function checkSeat(seat: SessionPlayerRow, at: number): void {
 
   if (typeof seat.user_id !== 'string' || seat.user_id.length === 0) complain('has no user id');
   if (!whole(seat.seat, 0, MAX_SEATS - 1)) complain(`seat number ${seat.seat} is not a seat`);
-  if (!whole(seat.plan, 1, TOTAL_PLANS)) complain(`plan ${seat.plan} is off the board`);
-  if (!whole(seat.previous_plan, 0, TOTAL_PLANS)) {
-    complain(`previous plan ${seat.previous_plan} is off the board`);
-  }
-  if (!whole(seat.position_before_three_sixes, 0, TOTAL_PLANS)) {
-    complain(`fallback square ${seat.position_before_three_sixes} is off the board`);
-  }
-  if (!whole(seat.consecutive_sixes, 0, 2)) {
-    complain(`a run of ${seat.consecutive_sixes} sixes cannot have been stored`);
-  }
-  if (typeof seat.is_finished !== 'boolean') complain('is_finished is not a boolean');
+
+  // The columns a lone `players` row has too, judged by the one rule.
+  checkPlayable(
+    {
+      loka: seat.plan,
+      previous_loka: seat.previous_plan,
+      direction: seat.direction ?? '',
+      consecutive_sixes: seat.consecutive_sixes,
+      position_before_three_sixes: seat.position_before_three_sixes,
+      is_finished: seat.is_finished,
+    } as GameState,
+    complain,
+  );
+
   if (typeof seat.report_submitted !== 'boolean') complain('report_submitted is not a boolean');
-  // Out of play means on the win square and nowhere else — the engine only
-  // ever sets the flag there. "Finished on plan 41" is not a game.
-  if (seat.is_finished && seat.plan !== WIN_LOKA) {
-    complain(`finished on plan ${seat.plan}, which is not the win square`);
-  }
 }
 
 export function sessionFromRows(
