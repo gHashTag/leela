@@ -62,6 +62,30 @@ export interface Journal {
 export const EMPTY: Journal = { entries: [] };
 
 /**
+ * A path read back, and what could not be read with it.
+ *
+ * `load` kept the entries that parse and dropped the rest — eight written, five
+ * returned, nothing said. Every other reader of this format takes a file whole
+ * or not at all: `parseDocument` in `@leela/journal` refuses a document with
+ * one bad entry in it, and the mini app's `isJournalFile` does the same, under
+ * a test named *takes all of a file or none of it*.
+ *
+ * Both rules are right, for different files. A document a player hands over is
+ * one thing to accept or refuse. This app's own store is the record itself, and
+ * throwing a year of writing away over one unreadable line would be the larger
+ * loss — so the partial read stays, and stops being silent. `dropped` is what
+ * the screen needs to say *three of your accounts could not be read*, which is
+ * the difference between a loss and an absence.
+ */
+export interface Read {
+  journal: Journal;
+  /** Entries that were in the file and are not in the path. */
+  dropped: number;
+}
+
+const NOTHING_READ: Read = { journal: EMPTY, dropped: 0 };
+
+/**
  * Add one account to a path.
  *
  * Blank is not an account: a gate cleared by an empty string is the same defect
@@ -109,26 +133,38 @@ export function save(store: Store | undefined, journal: Journal): boolean {
   }
 }
 
-/** Read one back, or start with nothing. A store that throws has nothing. */
-export function load(store: Store | undefined): Journal {
+/**
+ * Read one back with what it cost, or nothing. A store that throws has nothing.
+ *
+ * A file that is not a path at all reads as nothing rather than as a loss:
+ * there is no count to give, and the player has written nothing this is about.
+ */
+export function read(store: Store | undefined): Read {
   try {
     const raw = store?.getItem(REPORTS_KEY);
-    if (!raw) return EMPTY;
+    if (!raw) return NOTHING_READ;
 
     const parsed: unknown = JSON.parse(raw);
-    if (typeof parsed !== 'object' || parsed === null) return EMPTY;
+    if (typeof parsed !== 'object' || parsed === null) return NOTHING_READ;
 
     const entries = (parsed as { entries?: unknown }).entries;
-    if (!Array.isArray(entries)) return EMPTY;
+    if (!Array.isArray(entries)) return NOTHING_READ;
 
     // The format's own question, not a second copy of it written here. The
     // first draft of this file had one, and it let `plan: 900` through — a
     // square nobody has stood on, in a repository that keeps an audit for
     // exactly this shape.
-    return { entries: order(entries.filter(isReport)) };
+    const kept = entries.filter(isReport);
+
+    return { journal: { entries: order(kept) }, dropped: entries.length - kept.length };
   } catch {
-    return EMPTY;
+    return NOTHING_READ;
   }
+}
+
+/** The path alone, for a caller with nowhere to say what was lost. */
+export function load(store: Store | undefined): Journal {
+  return read(store).journal;
 }
 
 /**
@@ -284,16 +320,16 @@ async function within<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> 
 export async function loadKept(
   keeper: Keeper | undefined,
   timeoutMs = KEEP_TIMEOUT_MS,
-): Promise<Journal> {
-  if (!keeper) return EMPTY;
+): Promise<Read> {
+  if (!keeper) return NOTHING_READ;
 
   try {
     const raw = await within(keeper.read(), timeoutMs, null);
-    if (raw === null) return EMPTY;
+    if (raw === null) return NOTHING_READ;
 
-    return load({ getItem: () => raw, setItem: () => undefined });
+    return read({ getItem: () => raw, setItem: () => undefined });
   } catch {
-    return EMPTY;
+    return NOTHING_READ;
   }
 }
 

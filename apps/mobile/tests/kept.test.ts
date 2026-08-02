@@ -59,16 +59,16 @@ describe('a path comes back after the app is closed', () => {
     const keeper = kept();
 
     expect(await keep(keeper, path)).toBe(true);
-    expect(await loadKept(keeper)).toEqual(path);
+    expect((await loadKept(keeper)).journal).toEqual(path);
   });
 
   it('is an empty path when there is nothing kept yet', async () => {
-    expect(await loadKept(kept())).toEqual(EMPTY);
+    expect((await loadKept(kept())).journal).toEqual(EMPTY);
   });
 
   it('is an empty path when there is no keeper at all', async () => {
     // The app on a device that has none, which is what this ran as until now.
-    expect(await loadKept(undefined)).toEqual(EMPTY);
+    expect((await loadKept(undefined)).journal).toEqual(EMPTY);
     expect(await keep(undefined, path), 'and nothing pretends otherwise').toBe(false);
   });
 });
@@ -83,7 +83,7 @@ describe('the keeper is handed the worst its type allows', () => {
   });
 
   it('starts with an empty path rather than crashing on a device that throws', async () => {
-    expect(await loadKept(throws)).toEqual(EMPTY);
+    expect((await loadKept(throws)).journal).toEqual(EMPTY);
   });
 
   it('gives up on a device that never answers, rather than waiting for it', async () => {
@@ -97,7 +97,7 @@ describe('the keeper is handed the worst its type allows', () => {
     const started = Date.now();
 
     expect(await keep(silent, path, 20), 'not kept, and said so').toBe(false);
-    expect(await loadKept(silent, 20), 'and an empty path rather than a spinner').toEqual(EMPTY);
+    expect((await loadKept(silent, 20)).journal, 'and an empty path rather than a spinner').toEqual(EMPTY);
     expect(Date.now() - started, 'both inside the deadline').toBeLessThan(1_000);
   });
 
@@ -142,7 +142,7 @@ describe('what is written comes back to be read', () => {
     expect(await keep(keeper, written)).toBe(true);
 
     // A new run of the app: nothing in memory, everything from the device.
-    const afterRestart = await loadKept(keeper);
+    const afterRestart = (await loadKept(keeper)).journal;
 
     expect(writingsOn(afterRestart, 41).map((entry) => entry.text)).toEqual([
       'What the human plane asked of me.',
@@ -172,7 +172,7 @@ describe('what is written comes back to be read', () => {
 
     await keep(keeper, journal);
 
-    expect(writingsOn(await loadKept(keeper), 41).map((entry) => entry.text)).toEqual([
+    expect(writingsOn((await loadKept(keeper)).journal, 41).map((entry) => entry.text)).toEqual([
       'the first time',
       'the second time',
       'the third time',

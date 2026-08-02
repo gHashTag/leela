@@ -76,7 +76,7 @@ const fileOf = (session: unknown) => ({
   write: async () => true,
 });
 
-const open = (session: unknown) => loadKeptGame(fileOf(session) as never, CLASSIC);
+const open = async (session: unknown) => (await loadKeptGame(fileOf(session) as never, CLASSIC)).game;
 
 /** Every field of the table, at and just past the edge of what it may hold. */
 function* corruptions(): Generator<[string, unknown]> {

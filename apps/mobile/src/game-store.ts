@@ -128,7 +128,33 @@ export async function keepGame(
 }
 
 /**
- * The game as it was, or null to begin one.
+ * A game read back, and whether one was thrown away to give it.
+ *
+ * `loadKeptGame` answered `null` to both *nothing has ever been saved* and *the
+ * file is there and cannot be read*, and the screen treated them the same: it
+ * began a fresh game and said nothing. After the check above was tightened, the
+ * second case became commoner — and it is the exact failure this module was
+ * written to end. Its own header describes it: somebody who had climbed to plan
+ * 41 comes back to the waiting square, *with a year of their own writing intact
+ * underneath, about squares they were no longer on*.
+ *
+ * A board that has to be re-entered is a smaller loss than words, which is why
+ * the app does not interrupt a throw to report a failed *write*. Reading is the
+ * other direction: what is gone is already gone, and the player is the only one
+ * who can decide what to do about it — so they are told.
+ */
+export interface KeptGame {
+  /** The game that was kept, or null if there is none to continue. */
+  game: Game | null;
+  /** True when there was a file and it could not be played. */
+  unreadable: boolean;
+}
+
+const NOTHING_KEPT: KeptGame = { game: null, unreadable: false };
+const UNREADABLE: KeptGame = { game: null, unreadable: true };
+
+/**
+ * The game as it was, or nothing to begin one — and which of the two.
  *
  * Null rather than a thrown error, and null rather than a half-restored game:
  * a board that came back wrong is worse than a board that came back empty,
@@ -144,35 +170,49 @@ export async function loadKeptGame(
   keeper: Keeper | undefined,
   rules: RuleSet = CLASSIC,
   timeoutMs = KEEP_TIMEOUT_MS,
-): Promise<Game | null> {
-  if (!keeper) return null;
+): Promise<KeptGame> {
+  if (!keeper) return NOTHING_KEPT;
+
+  let raw: string | null;
+  try {
+    raw = await within(keeper.read(), timeoutMs, null);
+  } catch {
+    // The device would not answer. Nothing is known about what it holds, so
+    // this is not a loss to report — only a game that cannot be continued now.
+    return NOTHING_KEPT;
+  }
+
+  if (raw === null) return NOTHING_KEPT;
 
   let parsed: unknown;
   try {
-    const raw = await within(keeper.read(), timeoutMs, null);
-    if (raw === null) return null;
     parsed = JSON.parse(raw);
   } catch {
-    return null;
+    // Something was written here and is not a game. Half a write is what a
+    // process killed mid-save leaves behind, and it is still a game lost.
+    return UNREADABLE;
   }
 
-  if (!isSaved(parsed)) return null;
+  if (!isSaved(parsed)) return UNREADABLE;
 
   // The variant is taken from the file by name; an unknown one is a file to
   // start again from, not a game to play under a guess.
   const kept = ruleSetOf(parsed.session);
-  if (kept === null) return null;
+  if (kept === null) return UNREADABLE;
 
   const fresh = newGame(parsed.seed, rules);
   for (let turn = 0; turn < parsed.rollsTaken; turn += 1) fresh.die();
 
   return {
-    ...fresh,
-    session: { ...parsed.session, rules: kept },
-    rollsTaken: parsed.rollsTaken,
-    // The last throw is not kept. It is a sentence about something that has
-    // already happened, and a player returning tomorrow is told where they are
-    // rather than what they rolled yesterday.
-    event: null,
+    game: {
+      ...fresh,
+      session: { ...parsed.session, rules: kept },
+      rollsTaken: parsed.rollsTaken,
+      // The last throw is not kept. It is a sentence about something that has
+      // already happened, and a player returning tomorrow is told where they
+      // are rather than what they rolled yesterday.
+      event: null,
+    },
+    unreadable: false,
   };
 }

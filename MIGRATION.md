@@ -7506,6 +7506,40 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**What the phone found on its own disk and threw away without a word.** The app
+reads two things when it opens: the path and the board. Both discarded whatever
+they could not use and said nothing.
+
+Measured. Eight accounts written to the store with three of them damaged: five
+came back, and `load` had no way to mention the other three — a path three
+accounts short looks precisely like a path three accounts were never written
+into. The board was worse: `loadKeptGame` answered `null` both to *nothing has
+ever been saved* and to *there is a file here and it cannot be played*, and the
+screen treated them alike — begin a fresh game, say nothing. That is the
+sentence `game-store.ts` opens with as the reason it exists: a player back on
+the waiting square with a year of their own writing intact underneath, about
+squares they are no longer standing on. Tightening the check the pass before
+made the second case commoner, so this is a door that had just been widened.
+
+`read` now returns the path **and what it cost**, in the vocabulary `merged`
+already uses; `loadKeptGame` returns the game **and whether one was thrown away
+to give it**. A device that never answered is not a loss — nothing is known
+about what it holds — and a file that is not a path at all is an absence, since
+there is no count to give and the player has written nothing it is about.
+
+The two readers of this format make opposite choices on purpose, and neither is
+wrong. `parseDocument` and the mini app's `isJournalFile` take a document whole
+or not at all — a file a player hands over is one thing to accept or refuse. The
+app's own store is the record itself, and throwing a year of writing away over
+one unreadable line is the larger loss. What was missing was not a rule; it was
+the sentence saying which happened.
+
+Two new catalogue keys, `app.gameNotRead` and `app.pathPartlyRead`, in English
+and Russian, the other twenty falling back as the catalogue intends. Said once
+at startup and not again — a loss is news the first time and noise after it —
+and the two are joined rather than one silencing the other, since both are read
+off the same disk at whatever speed it answers.
+
 **Four places keep a game, and one of them was not asking the question.** The
 mini app checks a saved game and a saved table, the database checks a seat row,
 and the phone checks a file. Each had the rule written out by hand, and three of

@@ -72,6 +72,7 @@ describe('a game comes back where it was left', () => {
 
     return keepGame(device, game)
       .then(() => loadKeptGame(device))
+      .then((kept) => kept.game)
       .then((back) => {
         expect(back).not.toBe(null);
         expect(standingOn(back as Game)).toBe(standingOn(game));
@@ -88,6 +89,7 @@ describe('a game comes back where it was left', () => {
 
     return keepGame(device, owing)
       .then(() => loadKeptGame(device))
+      .then((kept) => kept.game)
       .then((back) => {
         expect(back?.session.players[0]?.reportSubmitted).toBe(
           owing.session.players[0]?.reportSubmitted,
@@ -122,6 +124,7 @@ describe('a game comes back where it was left', () => {
 
     return keepGame(device, game)
       .then(() => loadKeptGame(device))
+      .then((kept) => kept.game)
       .then((back: Game | null) => {
         expect(nextThree(back as Game)).toEqual(continued);
         // A sequence rather than one value: any single throw may coincide with
@@ -139,6 +142,7 @@ describe('a game comes back where it was left', () => {
 
     return keepGame(device, game)
       .then(() => loadKeptGame(device))
+      .then((kept) => kept.game)
       .then((back) => {
         expect(back?.seed).toBe(game.seed);
         expect(back?.rollsTaken).toBe(game.rollsTaken);
@@ -153,6 +157,7 @@ describe('a game comes back where it was left', () => {
 
     return keepGame(device, played(5, [1, 2]))
       .then(() => loadKeptGame(device))
+      .then((kept) => kept.game)
       .then((back) => expect(back?.event).toBe(null));
   });
 });
@@ -164,7 +169,7 @@ describe('what a device that will not answer means', () => {
     for (const rubbish of ['half a write{', 'null', '42', '{"seed":1}', '{}', '[]']) {
       const device: Keeper = { async read() { return rubbish; }, async write() { return true; } };
       // eslint-disable-next-line no-await-in-loop
-      expect(loadKeptGame(device), rubbish).resolves.toBe(null);
+      expect(loadKeptGame(device).then((kept) => kept.game), rubbish).resolves.toBe(null);
     }
   });
 
@@ -180,7 +185,7 @@ describe('what a device that will not answer means', () => {
       },
     };
 
-    return expect(loadKeptGame(device)).resolves.toBe(null);
+    return expect(loadKeptGame(device).then((kept) => kept.game)).resolves.toBe(null);
   });
 
   it('says the game was not kept when the device refuses', () => {
@@ -189,7 +194,7 @@ describe('what a device that will not answer means', () => {
 
   it('has nothing to restore when there is no device at all', () => {
     return Promise.all([
-      expect(loadKeptGame(undefined)).resolves.toBe(null),
+      expect(loadKeptGame(undefined).then((kept) => kept.game)).resolves.toBe(null),
       expect(keepGame(undefined, newGame(1))).resolves.toBe(false),
     ]);
   });
@@ -200,7 +205,7 @@ describe('what a device that will not answer means', () => {
     const silent: Keeper = { read: () => new Promise(() => {}), write: () => new Promise(() => {}) };
 
     return Promise.all([
-      expect(loadKeptGame(silent, CLASSIC, 10)).resolves.toBe(null),
+      expect(loadKeptGame(silent, CLASSIC, 10).then((kept) => kept.game)).resolves.toBe(null),
       expect(keepGame(silent, newGame(1), 10)).resolves.toBe(false),
     ]);
   });

@@ -113,6 +113,16 @@ export default function App() {
   const [journal, setJournal] = useState<Journal>(EMPTY);
   const [draft, setDraft] = useState<Draft>(NOTHING_WRITTEN);
   const [said, setSaid] = useState<string | null>(null);
+
+  /**
+   * Add a sentence to the status line without erasing one already there.
+   *
+   * The two things read at startup can both come back short, and they answer at
+   * whatever speed the disk answers. A plain `setSaid` would have the second to
+   * arrive silence the first, which is the defect twice over.
+   */
+  const alsoSay = (line: string) =>
+    setSaid((now) => (now === null || now === '' ? line : now.includes(line) ? now : `${now} ${line}`));
   const [intention, setIntention] = useState('');
   const [asking, setAsking] = useState('');
   const [pasted, setPasted] = useState('');
@@ -144,7 +154,15 @@ export default function App() {
   useEffect(() => {
     let stale = false;
     void loadKept(keeper).then((kept) => {
-      if (!stale) setJournal((now) => (now === EMPTY ? kept : now));
+      if (stale) return;
+      setJournal((now) => (now === EMPTY ? kept.journal : now));
+
+      // Entries that were on the disk and are not on the screen. Said, because
+      // a path that came back three accounts short looks exactly like a path
+      // three accounts were never written into.
+      if (kept.dropped > 0) {
+        alsoSay(messageFor(language, 'app.pathPartlyRead', { count: kept.dropped }));
+      }
     });
     return () => {
       stale = true;
@@ -162,7 +180,17 @@ export default function App() {
   useEffect(() => {
     let stale = false;
     void loadKeptGame(gameKeeper).then((kept) => {
-      if (kept !== null && !stale) setGame((now) => (now.rollsTaken === 0 ? kept : now));
+      if (stale) return;
+      if (kept.game !== null) {
+        setGame((now) => (now.rollsTaken === 0 ? (kept.game as Game) : now));
+        return;
+      }
+
+      // A file that could not be read is not the same as no file, and the
+      // screen used to treat them alike: begin again, say nothing. That is the
+      // player coming back to the waiting square with their own writing intact
+      // underneath it, about squares they are no longer standing on.
+      if (kept.unreadable) alsoSay(messageFor(language, 'app.gameNotRead'));
     });
     return () => {
       stale = true;

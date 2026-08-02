@@ -333,6 +333,25 @@ const EN = {
   'app.arrow': 'You threw {value}. An arrow at {from} takes you to {to}. {title}',
   'app.step': 'You threw {value}. {from} → {to}. {title}',
   'app.unloadable': 'The plan texts could not be loaded. Reopening the app usually fixes it.',
+  /**
+   * What the phone found on its own disk and could not use.
+   *
+   * The app read its store at startup, kept whatever parsed and said nothing
+   * about the rest: eight accounts written, five shown, three gone. The board
+   * was worse — a file that could not be read and no file at all were the same
+   * `null`, so a player whose save was damaged came back to the waiting square
+   * with a year of their own writing underneath it, about squares they were no
+   * longer standing on. That is the failure `game-store.ts` was written to end,
+   * arriving through the other door.
+   *
+   * Said once, at startup, and not again: a loss is news the first time and
+   * noise after it.
+   */
+  'app.gameNotRead': 'The board that was saved could not be read, so this game begins again. Your accounts are untouched.',
+  'app.pathPartlyRead': {
+    one: '{count} account could not be read and is not shown.',
+    other: '{count} accounts could not be read and are not shown.',
+  },
   'app.boardLabel': 'The board, 72 plans',
   // The published app's own two header buttons: `:information_source:` opens
   // the rules book, `:books:` opens all 72 plans. See GameScreen's Header.
@@ -762,6 +781,13 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.arrow': 'Выпало {value}. Стрела на {from} поднимает вас на {to}. {title}',
   'app.step': 'Выпало {value}. {from} → {to}. {title}',
   'app.unloadable': 'Тексты планов не загрузились. Обычно помогает открыть приложение заново.',
+  'app.gameNotRead': 'Сохранённое поле не прочиталось, поэтому игра начинается заново. Ваши отчёты не тронуты.',
+  'app.pathPartlyRead': {
+    one: '{count} отчёт не прочитался и не показан.',
+    few: '{count} отчёта не прочитались и не показаны.',
+    many: '{count} отчётов не прочитались и не показаны.',
+    other: '{count} отчёта не прочитались и не показаны.',
+  },
   'app.boardLabel': 'Доска, 72 плана',
   'app.rules': 'Правила игры',
   'app.plans': 'Все 72 плана',
