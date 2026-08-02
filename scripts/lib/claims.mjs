@@ -128,6 +128,56 @@ export const packagesCheckedByCi = (workflow) => {
 };
 
 /**
+ * What the deploy job watches, against what the deployed apps are made of.
+ *
+ * `pages.yml` publishes the mini app on a push that touches one of four paths,
+ * written by hand: the two apps, `packages/engine` and `packages/content`. The
+ * mini app also declares and imports **`@leela/journal`** — the format every
+ * surface reads and writes, and the package two of the last ten passes changed.
+ * A push that touches only it changes what players run and deploys nothing, so
+ * the live site keeps the old code with nothing to say it does.
+ *
+ * The same shape as `checkCiPackages` one job over: a hand-written list beside a
+ * dependency graph is a list that will disagree with it.
+ *
+ * @param watched The paths the workflow lists, without their globs.
+ * @param needed Every workspace a deployed app depends on, transitively.
+ */
+export function checkDeployPaths(watched, needed) {
+  const seen = new Set(watched);
+
+  return [...needed]
+    .filter((where) => !seen.has(where))
+    .sort()
+    .map(
+      (where) =>
+        `${where}: a deployed app depends on it and the deploy job does not watch it — a push that touches only this changes what players run and publishes nothing`,
+    );
+}
+
+/**
+ * Every workspace a set of apps depends on, following the graph rather than
+ * naming it.
+ *
+ * @param roots Where to start, as workspace paths.
+ * @param dependenciesOf Reads one workspace's `@leela/*` dependencies, as paths.
+ */
+export function workspacesNeededBy(roots, dependenciesOf) {
+  const needed = new Set();
+  const queue = [...roots];
+
+  while (queue.length > 0) {
+    const where = queue.shift();
+    if (where === undefined || needed.has(where)) continue;
+
+    needed.add(where);
+    queue.push(...dependenciesOf(where));
+  }
+
+  return needed;
+}
+
+/**
  * One workspace, one lockfile.
  *
  * `packages/engine/bun.lock` was committed in the first unification commit and

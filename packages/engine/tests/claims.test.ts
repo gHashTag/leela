@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 // A plain module, shared with the scripts that use it. One suppressed line
 // rather than a `.d.ts`, which would be a second description of it.
 // @ts-expect-error - untyped .mjs
-import { checkCiPackages, checkCounts, checkLockfiles, workspaceSources, checkManifests, checkTotal, claimedCounts, claimedTotal, copiedManifests, packagesCheckedByCi } from '../../../scripts/lib/claims.mjs';
+import { checkCiPackages, checkCounts, checkDeployPaths, checkLockfiles, workspacesNeededBy, workspaceSources, checkManifests, checkTotal, claimedCounts, claimedTotal, copiedManifests, packagesCheckedByCi } from '../../../scripts/lib/claims.mjs';
 
 /**
  * The numbers this repository says about itself.
@@ -350,5 +350,77 @@ describe('one workspace, one lockfile', () => {
         'docs/lockfiles.md',
       ]),
     ).toEqual([]);
+  });
+});
+
+describe('what the deploy job watches', () => {
+  /**
+   * `pages.yml` publishes the mini app on a push that touches one of a
+   * hand-written list of paths: the two apps, `packages/engine` and
+   * `packages/content`. The mini app also declares and imports
+   * **`@leela/journal`** — the format every surface reads and writes, and the
+   * package two of the last ten passes changed. A push that touched only it
+   * changed what players run and published nothing, with nothing to say so.
+   *
+   * The same shape as `checkCiPackages` one job over: a hand-written list
+   * beside a dependency graph is a list that will disagree with it.
+   */
+  it('names a package a deployed app needs and the job does not watch', () => {
+    const said = checkDeployPaths(
+      ['apps/miniapp', 'apps/docs', 'packages/engine', 'packages/content'],
+      new Set(['apps/miniapp', 'packages/content', 'packages/engine', 'packages/journal']),
+    );
+
+    expect(said).toHaveLength(1);
+    expect(said[0]).toContain('packages/journal');
+  });
+
+  it('says nothing when the list covers the graph', () => {
+    expect(
+      checkDeployPaths(
+        ['apps/miniapp', 'packages/engine', 'packages/journal'],
+        new Set(['apps/miniapp', 'packages/engine', 'packages/journal']),
+      ),
+    ).toEqual([]);
+  });
+
+  it('does not mind a path watched that nothing needs', () => {
+    // Watching more than is needed costs a deploy nobody wanted, which is a
+    // different thing from shipping nothing. Only the gap is a defect.
+    expect(
+      checkDeployPaths(['apps/miniapp', 'packages/db'], new Set(['apps/miniapp'])),
+    ).toEqual([]);
+  });
+
+  it('follows the graph rather than the first step of it', () => {
+    /**
+     * The reason this is computed and not listed: `apps/miniapp` depends on
+     * `@leela/journal`, which depends on `@leela/engine`. A reader that took
+     * only what the app declares would miss whatever its dependencies declare,
+     * and the deploy would go stale one level down.
+     */
+    const graph: Record<string, string[]> = {
+      'apps/miniapp': ['packages/journal'],
+      'packages/journal': ['packages/engine'],
+      'packages/engine': [],
+    };
+
+    expect(
+      [...workspacesNeededBy(['apps/miniapp'], (where: string) => graph[where] ?? [])].sort(),
+    ).toEqual([
+      'apps/miniapp',
+      'packages/engine',
+      'packages/journal',
+    ]);
+  });
+
+  it('stops rather than circling when two packages need each other', () => {
+    // Nothing in this repository does, and a reader that looped would hang CI
+    // rather than fail it — the worst way for a check to be wrong.
+    const graph: Record<string, string[]> = { a: ['b'], b: ['a'] };
+    expect([...workspacesNeededBy(['a'], (where: string) => graph[where] ?? [])].sort()).toEqual([
+      'a',
+      'b',
+    ]);
   });
 });

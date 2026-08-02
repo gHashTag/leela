@@ -17,7 +17,7 @@
 
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { checkCiPackages, checkLockfiles, checkManifests, copiedManifests, packagesCheckedByCi } from './lib/claims.mjs';
+import { checkCiPackages, checkDeployPaths, checkLockfiles, workspacesNeededBy, checkManifests, copiedManifests, packagesCheckedByCi } from './lib/claims.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const WORKSPACES = ['packages', 'apps'];
@@ -105,6 +105,36 @@ problems.push(
     ),
   ]),
 );
+
+// The deploy job watches a hand-written list of paths, and the apps it
+// publishes are made of packages. A push that touches a package nobody listed
+// changes what players run and publishes nothing.
+const pages = join(ROOT, '.github/workflows/pages.yml');
+if (existsSync(pages)) {
+  const workflow = readFileSync(pages, 'utf8');
+
+  /** The `paths:` entries, without their globs. */
+  const watched = [...workflow.matchAll(/^\s*- '([^']+)\/\*\*'/gm)].map((found) => found[1]);
+
+  /** One workspace's own `@leela/*` dependencies, as workspace paths. */
+  const dependenciesOf = (where) => {
+    const manifest = join(ROOT, where, 'package.json');
+    if (!existsSync(manifest)) return [];
+
+    const { dependencies = {}, devDependencies = {} } = JSON.parse(readFileSync(manifest, 'utf8'));
+    return Object.keys({ ...dependencies, ...devDependencies })
+      .filter((name) => name.startsWith('@leela/'))
+      .map((name) => `packages/${name.slice('@leela/'.length)}`)
+      .filter((path) => existsSync(join(ROOT, path)));
+  };
+
+  // What the job builds, read from the job rather than assumed.
+  const deployed = [...workflow.matchAll(/--cwd (apps\/[a-z]+)/g)].map((found) => found[1]);
+
+  problems.push(
+    ...checkDeployPaths(watched, workspacesNeededBy([...new Set(deployed)], dependenciesOf)),
+  );
+}
 
 // CI iterates a hand-written list in a shell loop, three times over. A package
 // missing from it does not turn the build red — it is simply never run, which

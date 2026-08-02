@@ -5286,6 +5286,28 @@ one test that already builds the site — every *N pages* in either document mus
 be the number the build wrote, and there must be at least one of them, or the
 check is checking nothing.
 
+**The deploy watched four paths and the app is made of five (210th pass).**
+`pages.yml` publishes the mini app on a push that touches one of a hand-written
+list: the two apps, `packages/engine`, `packages/content`. The mini app also
+declares and imports **`@leela/journal`** — the format every surface reads and
+writes, and the package two of the last ten passes changed.
+
+So a push touching only the journal changes what players run and publishes
+nothing, with nothing to say so. It has not bitten yet only because every
+journal change so far happened to touch the mini app in the same commit.
+
+The same shape as `checkCiPackages` one job over, and the answer is the same:
+the list is read against the dependency graph rather than trusted.
+`audit-configs` follows it — from what the job actually builds (`--cwd apps/…`),
+through each workspace's own `@leela/*` dependencies, to the end — so a package
+added one level down is covered without anybody remembering to add it. It stops
+rather than circling if two ever need each other, because a check that hangs CI
+is worse than one that fails it.
+
+**And a false alarm, checked before it was claimed.** `@leela/ai` appears in
+`apps/miniapp/src/state.ts` — in a comment. A grep for the name says the app
+imports it and the app does not.
+
 **Two lockfiles, and they had already forked (209th pass).** The lens the
 published app taught, turned on this repository: what pins its own versions?
 Two files do. `bun.lock` at the root, and `packages/engine/bun.lock`, committed
