@@ -7506,6 +7506,36 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A path taken out of a chat arrived without the question it was written
+under.** The crossing test written the pass before held **two** of the three
+surfaces, and the one it left out was the one that had gone wrong. `offer` in
+`apps/bot` called `toDocument` with the entries alone, so the file `/path` hands
+a player carried no `intention` field at all — while the mini app and the phone
+both write it and all three read it.
+
+The loss is invisible from either end. A player exports from the chat, imports
+on their phone, and the phone takes a file's question **only where it has
+none** — which is exactly the case — so it takes nothing, and asks them again
+what they are playing for. Nobody is told anything.
+
+The argument is passed now, and **required rather than optional**: an optional
+one is how this happens twice, and `languagePicker`'s `path` — written on the
+first day, never passed, every picker pointing at the wrong place — is the
+precedent. Empty is not a question, so the field is left out rather than written
+blank, which is what the other two do.
+
+**And a comment that had outlived its truth.** `decide` said *this bot has
+nowhere to keep one — a chat has no profile*, beside code that takes the
+intention out of an incoming file; `ReportSink` keeps one per player and the
+caller sets it where the player has none. A comment about what the code cannot
+do outlives the day it could not.
+
+**The crossing now covers all three surfaces and every direction, including each
+to itself.** One difference is stated rather than asserted away: the bot keeps a
+path in a database, so `MAX_REPORTS` is not its bound and it drops nothing —
+which is why the bound is asserted over the two that keep a path in a slot on a
+device.
+
 **The one place a player's record moves between two shipped applications was
 tested from neither side.** The mini app writes a file and the phone reads it;
 the phone writes one and the mini app reads it. Each side is tested in its own

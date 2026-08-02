@@ -2,10 +2,19 @@
  * The one place a player's record moves between two shipped applications.
  *
  * The mini app writes a file and the phone reads it; the phone writes one and
- * the mini app reads it. Both sides are tested — each in its own package, each
- * against a document it built itself. **The crossing is not**, and a crossing is
- * where this repository has found its defects: two surfaces agreeing about a
- * format on the day it was written, and one of them changing.
+ * the bot reads it; the bot writes one and either reads it. All three sides are
+ * tested — each in its own package, each against a document it built itself.
+ * **The crossings are not**, and a crossing is where this repository has found
+ * its defects: surfaces agreeing about a format on the day it was written, and
+ * one of them changing.
+ *
+ * The first version of this file held two of the three, and the one it left out
+ * was the one that had gone wrong: the bot called `toDocument` with the entries
+ * alone, so its file carried no `intention` field at all. A player who took
+ * their path out of a chat and into a phone arrived with everything they had
+ * written and without the question they had written it under — and was quietly
+ * asked again, because the receiving surface takes a file's question only where
+ * it has none, and had none.
  *
  * These assert it in both directions, at the edges where a loss would hide: the
  * bound on how many accounts a path holds, the bound on how long one may be,
@@ -26,6 +35,8 @@ import { MAX_REPORTS, MAX_REPORT_CHARS, parseDocument, type Report } from '../sr
 // format, which is this package.
 import { toDocument as fromMiniApp, taking } from '../../../apps/miniapp/src/journal-file';
 import { toShare as fromPhone, takeIn } from '../../../apps/mobile/src/journal';
+import { offer, serialise } from '../../../apps/bot/src/take-out';
+import { decide } from '../../../apps/bot/src/take-in';
 
 const account = (n: number): Report => ({
   plan: (n % 72) + 1,
@@ -41,6 +52,16 @@ const files = {
     JSON.stringify(fromMiniApp({ reported: true, entries }, intention)),
   'the phone': (entries: Report[], intention = ASKED) =>
     JSON.stringify(fromPhone({ entries }, intention)),
+  'the bot': (entries: Report[], intention: string | null = ASKED) => {
+    const offered = offer(
+      entries.map((entry) => ({ plan: entry.plan, text: entry.text, createdAt: new Date(entry.at) })),
+      '2026-08-02',
+      intention,
+    );
+
+    if (offered.kind !== 'file') throw new Error(`the bot offered ${offered.kind}`);
+    return serialise(offered.document);
+  },
 };
 
 /** Taking a file in, as each application does it. */
@@ -70,12 +91,40 @@ const readers = {
       intention: took.intention,
     };
   },
+  'the bot': (held: Report[], text: string) => {
+    // `decide` is what a file sent to the chat is handed to. It answers with
+    // what is new rather than with a whole path: the bot's store is a database
+    // and the other two are a slot on a device, so what it keeps is the union
+    // and there is nothing for it to drop.
+    const took = decide(text, text.length, held);
+    if (took.kind === 'unreadable' || took.kind === 'not-kept' || took.kind === 'too-big') {
+      return null;
+    }
+
+    const added = took.kind === 'took' ? took.added : [];
+
+    return {
+      entries: [...held, ...added],
+      added: added.length,
+      dropped: 0,
+      intention: (took.kind === 'took' ? took.intention : undefined) ?? null,
+    };
+  },
 };
 
-const both = Object.keys(files) as Array<keyof typeof files>;
+const surfaces = Object.keys(files) as Array<keyof typeof files>;
 
 /** Every direction the record can travel, including a surface to itself. */
-const crossings = both.flatMap((wrote) => both.map((reads) => ({ wrote, reads })));
+const crossings = surfaces.flatMap((wrote) => surfaces.map((reads) => ({ wrote, reads })));
+
+/**
+ * The two that keep a path in a slot on a device.
+ *
+ * The bot keeps one in a database, so `MAX_REPORTS` is not its bound and it
+ * drops nothing — a real difference rather than a divergence, and the reason
+ * the bound is asserted over these two and not over all three.
+ */
+const onADevice = ['the mini app', 'the phone'] as const;
 
 describe('a path carried from one application to the other', () => {
   it('arrives whole, whichever wrote it and whichever reads it', () => {
@@ -153,9 +202,11 @@ describe('a path carried from one application to the other', () => {
     const arriving = Array.from({ length: 10 }, (_, n) => account(MAX_REPORTS + n));
     const answers = new Set<string>();
 
-    for (const { wrote, reads } of crossings) {
-      const took = readers[reads](held, files[wrote](arriving));
-      answers.add(`${took?.entries.length}/${took?.added}/${took?.dropped}`);
+    for (const wrote of surfaces) {
+      for (const reads of onADevice) {
+        const took = readers[reads](held, files[wrote](arriving));
+        answers.add(`${took?.entries.length}/${took?.added}/${took?.dropped}`);
+      }
     }
 
     expect([...answers]).toEqual([`${MAX_REPORTS}/${arriving.length}/${arriving.length}`]);
@@ -165,9 +216,9 @@ describe('a path carried from one application to the other', () => {
     // The other half: a file neither wrote must be refused by both, and refused
     // the same way, or one application opens what the other calls rubbish.
     for (const raw of ['', 'not json', '42', '{}', '{"entries":[]}', '{"schemaVersion":99,"entries":[]}']) {
-      const answers = both.map((reads) => readers[reads]([], raw) === null);
+      const refused = surfaces.filter((reads) => readers[reads]([], raw) === null);
 
-      expect({ raw, answers }).toEqual({ raw, answers: [true, true] });
+      expect({ raw, refused }).toEqual({ raw, refused: surfaces });
     }
   });
 
@@ -177,8 +228,8 @@ describe('a path carried from one application to the other', () => {
     // is the day one of them has a field the other will quietly drop.
     const entries = [account(1), account(2)];
 
-    expect(Object.keys(JSON.parse(files['the mini app'](entries))).sort()).toEqual(
-      Object.keys(JSON.parse(files['the phone'](entries))).sort(),
-    );
+    const fields = surfaces.map((wrote) => Object.keys(JSON.parse(files[wrote](entries))).sort().join(','));
+
+    expect(new Set(fields).size).toBe(1);
   });
 });

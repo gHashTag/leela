@@ -1124,7 +1124,13 @@ export function createBot({
 
     const language = languageOf(ctx);
     const existing = reports.history ? await reports.history(who.id) : null;
-    const offered = offer(existing, new Date(now()).toISOString().slice(0, 10));
+    const offered = offer(
+      existing,
+      new Date(now()).toISOString().slice(0, 10),
+      // The question goes with the path, as it does out of the other two
+      // surfaces. Without it a player arriving on a phone is asked again.
+      (await reports.intention?.(who.id)) ?? null,
+    );
 
     if (offered.kind !== 'file') {
       await ctx.reply(

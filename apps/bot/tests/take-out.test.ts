@@ -33,7 +33,7 @@ const stored = (plan: number, text: string, at: number): StoredReport => ({
  * which typechecks nowhere and says nothing.
  */
 function fileFrom(existing: StoredReport[] | null, stamp = '2026-07-30') {
-  const offered = offer(existing, stamp);
+  const offered = offer(existing, stamp, null);
   if (offered.kind !== 'file') throw new Error(`expected a file, got ${offered.kind}`);
   return offered;
 }
@@ -47,7 +47,7 @@ function history(count: number): StoredReport[] {
 
 describe('what is offered', () => {
   it('is a file when there is something to give', () => {
-    const offered = offer(history(3), '2026-07-30');
+    const offered = offer(history(3), '2026-07-30', null);
     expect(offered.kind).toBe('file');
     if (offered.kind === 'file') {
       expect(offered.count).toBe(3);
@@ -58,19 +58,19 @@ describe('what is offered', () => {
   it('is not a file when nothing has been written', () => {
     // Not a failure and not an empty document: an empty file in a chat is a
     // thing a person has to open to find out it is empty.
-    expect(offer([], '2026-07-30').kind).toBe('nothing');
+    expect(offer([], '2026-07-30', null).kind).toBe('nothing');
   });
 
   it('says the store keeps nothing, which is a different answer', () => {
     // The distinction `/path` has made since it was written: "you have written
     // nothing" and "this bot does not keep what you write" are not the same
     // sentence, and only one of them is about the player.
-    expect(offer(null, '2026-07-30').kind).toBe('not-kept');
+    expect(offer(null, '2026-07-30', null).kind).toBe('not-kept');
   });
 
   it('has an answer for every store, so a command always replies', () => {
     for (const existing of [null, [], history(1), history(500)]) {
-      const offered = offer(existing, '2026-07-30');
+      const offered = offer(existing, '2026-07-30', null);
       expect(['file', 'nothing', 'not-kept']).toContain(offered.kind);
     }
   });
@@ -145,7 +145,7 @@ describe('a path that goes through the bot and comes back', () => {
     if (taken.kind !== 'took') return;
     await keep(sink, 'a', taken.added);
 
-    const offered = offer((await sink.history?.('a')) ?? [], '2026-07-31');
+    const offered = offer((await sink.history?.('a')) ?? [], '2026-07-31', null);
     expect(offered.kind).toBe('file');
     if (offered.kind !== 'file') return;
 
@@ -161,7 +161,7 @@ describe('a path that goes through the bot and comes back', () => {
     await keep(sink, 'a', taken.added);
 
     const kept = (await sink.history?.('a')) ?? [];
-    const offered = offer(kept, '2026-07-31');
+    const offered = offer(kept, '2026-07-31', null);
     if (offered.kind !== 'file') throw new Error(offered.kind);
 
     const returned = serialise(offered.document);

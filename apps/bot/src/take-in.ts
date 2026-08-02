@@ -105,9 +105,11 @@ export function decide(
   const incoming = parseDocument(text);
   if (incoming === null) return { kind: 'unreadable' };
 
-  // The entries alone. A file may carry the question the player was playing
-  // for, and this bot has nowhere to keep one — a chat has no profile — so it
-  // takes what it can hold and says nothing about the rest.
+  // The entries, and the question beside them. This said *this bot has nowhere
+  // to keep one — a chat has no profile*, and by the time anybody read it again
+  // that was no longer true: `ReportSink` keeps an intention per player, `/path`
+  // hands this one on, and the caller sets it where the player has none. A
+  // comment about what the code cannot do outlives the day it could not.
   const added = newEntries(existing, incoming.entries);
   if (added.length === 0) return { kind: 'nothing-new' };
 

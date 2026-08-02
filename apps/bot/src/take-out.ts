@@ -32,12 +32,32 @@ export type Offer =
  *                  `/path` has made since it was written.
  * @param stamp     A date for the file name, passed in rather than read from a
  *                  clock so the name is a decision and not a surprise.
+ * @param intention What the player is playing for, or null where they have not
+ *                  said. Required rather than optional on purpose: this called
+ *                  `toDocument` with the entries alone, and the field simply
+ *                  was not in the file — while the mini app and the phone both
+ *                  write it and all three read it. A player who took their path
+ *                  out of a chat and into either of the others arrived with
+ *                  everything they had written and without the question they
+ *                  had written it under, and was quietly asked again.
+ *
+ *                  An optional argument is how that happens twice. The one in
+ *                  `languagePicker` was written on the first day and never
+ *                  passed, and every page's picker pointed at the wrong place
+ *                  until somebody noticed.
  */
-export function offer(existing: ReadonlyArray<StoredReport> | null, stamp: string): Offer {
+export function offer(
+  existing: ReadonlyArray<StoredReport> | null,
+  stamp: string,
+  intention: string | null,
+): Offer {
   if (existing === null) return { kind: 'not-kept' };
   if (existing.length === 0) return { kind: 'nothing' };
 
-  const document = toDocument(existing.map(asReport));
+  // Empty is not a question. `toDocument` leaves the field out rather than
+  // writing one nobody asked, which is what the other two surfaces do.
+  const asked = (intention ?? '').trim();
+  const document = toDocument(existing.map(asReport), asked === '' ? undefined : asked);
 
   return {
     kind: 'file',
