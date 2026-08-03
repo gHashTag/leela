@@ -27,18 +27,29 @@ export function applyChrome(document: Document, language: Language): void {
    * `answeredIn` says which language actually came back, and an element that
    * holds a word from another one says so.
    */
-  const mark = (element: Element, key: Parameters<typeof messageFor>[1]) => {
+  /**
+   * The one place a word is asked for, so the mark cannot be forgotten.
+   *
+   * Written first as a `mark` beside two of the five funnels, and three were
+   * missed: the board's own name, the placeholder in the writing box, and the
+   * Close on every dialog. Marking at the call site is a rule that has to be
+   * remembered five times, and it was remembered twice — so the word and the
+   * mark come from the same call now, and a check below says nothing else in
+   * this file asks for one.
+   */
+  const said = (element: Element, key: Parameters<typeof messageFor>[1]): string => {
     const answered = answeredIn(language, key);
     if (answered === language) element.removeAttribute('lang');
     else element.setAttribute('lang', answered);
+
+    return messageFor(language, key);
   };
 
   const set = (id: string, key: Parameters<typeof messageFor>[1]) => {
     const element = document.getElementById(id);
     if (!element) return;
 
-    element.textContent = messageFor(language, key);
-    mark(element, key);
+    element.textContent = said(element, key);
   };
 
   /**
@@ -60,14 +71,13 @@ export function applyChrome(document: Document, language: Language): void {
     const element = document.getElementById(id);
     if (!element) return;
 
-    const said = messageFor(language, key);
-    element.setAttribute('aria-label', said);
-    element.setAttribute('title', said);
     // An attribute cannot carry a `lang`, and it does not have to: the name of
     // an element is read in the element's own language, so marking the button
     // marks the word it is called by. These four have no text of their own —
     // they are icons — so nothing else on them is affected.
-    mark(element, key);
+    const name = said(element, key);
+    element.setAttribute('aria-label', name);
+    element.setAttribute('title', name);
   };
 
   name('roll', 'app.roll');
@@ -89,13 +99,15 @@ export function applyChrome(document: Document, language: Language): void {
   set('writer-hint', 'app.pathLocal');
 
   const writing = document.getElementById('writer-text');
-  if (writing) writing.setAttribute('placeholder', messageFor(language, 'app.reportPlaceholder'));
+  // The words in an empty writing box are read out as its name when it has no
+  // other, and were English on every page but the Russian one.
+  if (writing) writing.setAttribute('placeholder', said(writing, 'app.reportPlaceholder'));
   set('say', 'app.opening');
   set('plan-title', 'app.waiting');
 
   const board = document.getElementById('board');
   if (board) {
-    board.setAttribute('aria-label', messageFor(language, 'app.boardLabel'));
+    board.setAttribute('aria-label', said(board, 'app.boardLabel'));
 
     // The board is a diagram, not a sentence, so it keeps its own direction.
     // Under `dir="rtl"` the grid mirrors: plan 1 moves to the bottom right and
@@ -118,6 +130,6 @@ export function applyChrome(document: Document, language: Language): void {
    * the four buttons back: one said *Закрыть* and three said *Close*.
    */
   for (const close of document.querySelectorAll('dialog form[method="dialog"] button')) {
-    close.textContent = messageFor(language, 'app.close');
+    close.textContent = said(close, 'app.close');
   }
 }

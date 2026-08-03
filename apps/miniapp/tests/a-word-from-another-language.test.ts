@@ -23,8 +23,13 @@
  */
 
 // @vitest-environment happy-dom
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { LANGUAGES, answeredIn, messageFor } from '@leela/content';
+// The audits' comment stripper: a claim about source text is made about code.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { applyChrome } from '../src/chrome';
 
 /** The controls `applyChrome` names, with the key each is named by. */
@@ -48,6 +53,9 @@ beforeEach(() => {
     <button id="read">Read this plan</button>
     <button id="report">Write</button>
     <button id="path">Path</button>
+    <section id="board" aria-label="The board, 72 plans"></section>
+    <textarea id="writer-text" placeholder="What happened here?"></textarea>
+    <dialog id="reader"><form method="dialog"><button>Close</button></form></dialog>
   `;
 });
 
@@ -106,6 +114,39 @@ describe('a control the catalogue could not translate', () => {
     );
 
     expect(falling.length).toBeGreaterThan(15);
+  });
+
+  it('marks every element it puts a word into, not only the ones with an id', () => {
+    // The first version of this marked two of the five ways a word reaches the
+    // page and left three: the board's own name, the placeholder in the writing
+    // box, and the Close on every dialog. Marking at each call site is a rule
+    // that has to be remembered five times and it was remembered twice, so the
+    // word and the mark come from one call now.
+    applyChrome(document, 'ja');
+
+    const board = document.getElementById('board');
+    const writing = document.getElementById('writer-text');
+    const close = document.querySelector('dialog form[method="dialog"] button');
+
+    expect(board?.getAttribute('lang')).toBe('en');
+    expect(writing?.getAttribute('lang')).toBe('en');
+    expect(close?.getAttribute('lang')).toBe('en');
+  });
+
+  it('asks the catalogue in one place, so a sixth way cannot forget', () => {
+    // The guard on the funnel rather than on its callers. `said` is the only
+    // thing in the file that may ask for a word; anything else asking directly
+    // would be a word on the page with nothing saying what language it is in.
+    // Stripped, because this file's own comments name the funnel and a count
+    // of `messageFor(` that included prose would be a count of the prose.
+    const source = blank(
+      readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'chrome.ts'), 'utf8'),
+    );
+
+    const asks = [...source.matchAll(/messageFor\(/g)].length;
+
+    expect(asks).toBe(1);
+    expect(source).toMatch(/const said = \(/);
   });
 
   it('marks the word it actually put there', () => {

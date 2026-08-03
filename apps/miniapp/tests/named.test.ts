@@ -85,7 +85,14 @@ function namedFromTheCatalogue(id: string): boolean {
         // The statement it stands in, from this reference to the next semicolon.
         const from = at.index ?? 0;
         const end = source.indexOf(';', from);
-        return source.slice(from, end === -1 ? source.length : end).includes('messageFor');
+        const statement = source.slice(from, end === -1 ? source.length : end);
+
+        // Either spelling of asking the catalogue. `applyChrome` funnels every
+        // word through `said`, which asks `messageFor` and marks the element
+        // with the language it answered in; a rule that knew only the older
+        // spelling called the board untranslated the moment it went through the
+        // funnel.
+        return statement.includes('messageFor') || /\bsaid\(/.test(statement);
       }),
     );
   });
@@ -152,6 +159,15 @@ function chromed(language: (typeof LANGUAGES)[number]) {
           return {
             set textContent(value: string) {
               found.text = value;
+            },
+            // As capable as the thing it stands for. A Close is marked with the
+            // language its word came back in, like every other control, and a
+            // double that could only take text decided this one could not be.
+            setAttribute(attribute: string, value: string) {
+              found.attributes.set(attribute, value);
+            },
+            removeAttribute(attribute: string) {
+              found.attributes.delete(attribute);
             },
           };
         });

@@ -7506,6 +7506,34 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**My own repair of the pass before covered two of the five ways a word reaches
+the page.** Playing the mini app as a Japanese reader and reading every line it
+draws: the plan title and the four icon buttons carried their mark, and three
+things did not — the board's own name, the placeholder in the writing box, and
+the Close on every dialog. All three ask the catalogue, all three were English
+for twenty-one of the twenty-two languages, and none of them said so.
+
+Marking at the call site is a rule that has to be remembered five times, and it
+was remembered twice. The word and the mark come from one call now — `said`
+returns the sentence and marks the element in the same breath — and a test says
+`chrome.ts` asks the catalogue exactly once, so a sixth way cannot be added
+without going through it.
+
+**Two doubles weaker than the thing they stand for, again.** The Close buttons'
+stub could take text and not attributes, so it decided those controls could not
+be marked. And the rule that asks *is this control named from the catalogue*
+knew one spelling — `messageFor` in the statement — so the moment the board went
+through the funnel the check called it untranslated. Both are the same shape as
+the `removeAttribute` stub from the pass before: a test that cannot do what the
+program does is a test that decides what the program may do.
+
+**And the sweep from four passes ago caught the test written in this one.** The
+new check reads `chrome.ts` to count how many times it asks the catalogue, and
+read it raw — which the repository-wide rule forbids, because a claim about
+source text is only as good as the text it is made about. Here it would have
+failed rather than passed wrongly, since a comment naming `messageFor(` inflates
+a count; the rule is absolute either way, and it caught its author.
+
 **On chain, the die is the caller's.** `packages/contracts` exists to know
 *precisely where the contract agrees with the engine and where it does not*. It
 checks the board — twenty jumps, the win square, the size — the report gate and
