@@ -26,6 +26,7 @@ import {
   isSessionOver,
   isWaitingToEnter,
   owesReport,
+  rollerFor,
   seededRoller,
   submitReport,
   type TurnBlockedReason,
@@ -53,7 +54,20 @@ export interface Game {
 export function newGame(seed: number, rules: RuleSet = CLASSIC): Game {
   return {
     session: createSession('device', [{ id: SEAT, name: 'You' }], rules),
-    die: seededRoller(seed),
+    // The variant's own die, not a bare one.
+    //
+    // This said `seededRoller(seed)` and took the rules for everything else,
+    // so a game under `legacy-mobile` or `online` — both of which re-roll a
+    // repeat — rolled a plain die while calling itself that variant. The bot
+    // and the mini app have always gone through `rollerFor`; this app reads its
+    // ruleset out of the store, which is how a player brought across from the
+    // published app arrives holding `legacy-mobile`.
+    //
+    // `rerollOnRepeat` is the field this repository once found declared, set
+    // correctly everywhere and consulted by nothing. It is consulted here now.
+    // Under `CLASSIC` and `neuroleela` the flag is false and `rollerFor` hands
+    // the same die straight back, so nothing changes for a game in play today.
+    die: rollerFor(rules, seededRoller(seed)),
     rollsTaken: 0,
     event: null,
     rules,

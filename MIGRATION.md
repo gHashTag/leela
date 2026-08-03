@@ -7680,6 +7680,35 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The phone turned a plain die while calling itself a variant that re-rolls.**
+`rollerFor(rules, base)` is the engine's answer to *which die does this variant
+turn*: under `rerollOnRepeat` it wraps the roller so a repeated value is thrown
+again once, and otherwise hands the same die straight back. The bot goes through
+it. So does the mini app. `newGame` on the phone took a `RuleSet` and used it
+for everything else, and built its die as `seededRoller(seed)`.
+
+**And it is reachable there of all places.** `game-store.ts` calls
+`newGame(parsed.seed, rules)` with a ruleset read out of the store — which is
+how a player brought across from the published app arrives, holding
+`legacy-mobile`, the variant this repository keeps *only* so that app can be
+reproduced exactly. `legacy-mobile` and `online` are the two that re-roll.
+
+`rerollOnRepeat` is the field this repository once found declared, set correctly
+everywhere and consulted by nothing — the finding `audit-unread` exists because
+of. This was the same field, half-consulted.
+
+Nothing changes for a game in play today: under `CLASSIC` and `neuroleela` the
+flag is false and `rollerFor` returns the die it was given. The test says that
+in both directions, and says the strong form as well — for every variant, the
+phone's die and the die the bot would build from the same seed agree throw for
+throw.
+
+**The three shared rules I had put in place are each held by their surfaces.**
+Checked the way the pass before was: by taking the call out and running the
+suite. `whole` and `trimToParagraph` in `@leela/ai`, the book's language marking
+and the mini app's — all four reverts fail a test. The class is closed for
+those; this pass found the next one out, in a rule I did not write.
+
 **Two of the three surfaces could stop asking the format and nothing would
 say so.** `piecesOf` decides what a paragraph is for all three: it cuts a
 heading away from the prose written under it on the next line, drops a line that
