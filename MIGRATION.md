@@ -7680,6 +7680,38 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Two readers of one database, and the one square they answer differently.** A
+turn can be asked about from a `players` row — `canPlayerRoll` — or from a
+table, `canCurrentPlayerRoll(sessionFromRows(...))`. *One database, two readers*
+has gone wrong here before, over which rows are playable at all; `checkPlayable`
+was the answer. The verdict is the next question both take, and nothing crossed
+them.
+
+Measured over the same standing written both ways, they agree everywhere but
+one: **a winner**. The row says *may roll*; the session says *finished*. That is
+two questions rather than a divergence — `canRoll`'s winner branch is guarded by
+`mayReenterAfterWinning`, which `classic` sets true, and
+`canCurrentPlayerRoll` asks a prior one, whether a throw can happen in this
+session at all. It has to: `advance` throws on a finished session, and on the
+phone the button stayed lit on Cosmic Consciousness until pressing it crashed
+inside the handler.
+
+**`canPlayerRoll` has no caller in the program.** It is exported for a client
+that is not the bot and recorded as such. So the crossing is written for whoever
+that client turns out to be: the row answers about a player, and a client asking
+*may a throw happen here* must ask the session too, or meet the crash the
+session guard exists for. `legacy-mobile` sets the flag false, and there the two
+agree again — which is what keeps the winner case from reading as a rule of the
+row reader's own.
+
+**Six sweeps came back clean before it**, and are written down so they are not
+walked again. Every one of the 209 message keys is said by something. Every
+audit outside CI says in its own header why — three need the donor, one needs
+the network, one takes twelve minutes. The deployment claim in
+`packages/contracts/README.md` still holds: asked again today, the address holds
+no code on any chain that answered, exactly as recorded on 2026-07-30. And
+`minReportChars` reaches the engine from every surface that asks it.
+
 **A rule a variant declares is now held to being asked.** `rerollOnRepeat` has
 been caught twice: first declared, set correctly on all five variants,
 documented and read by nothing — the finding `audit-unread` exists because of —
