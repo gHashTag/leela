@@ -7680,6 +7680,35 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Two of the three surfaces could stop asking the format and nothing would
+say so.** `piecesOf` decides what a paragraph is for all three: it cuts a
+heading away from the prose written under it on the next line, drops a line that
+is only hashes, and hands back a heading's words without them. Each of those was
+a defect when a surface answered for itself — the Russian chakras chapter had no
+headings at all on the page and four hash marks in their place, and the phone
+showed `## দ্বিতীয় চক্রে (স্বাধিষ্ঠান)` with the marks still on it.
+
+Measured rather than assumed, by taking the call out of each surface in turn:
+
+- **The book** renders the glued Russian heading as one paragraph beginning with
+  `####` again, and a bare `##` as a paragraph of its own — and **all 235 of its
+  tests pass**.
+- **The phone** puts the whole chapter body back in one block — and **all 366 of
+  its tests pass**.
+- **The mini app** is caught, by the test written the pass before that opens a
+  chapter and reads the heading levels off the dialog.
+
+So the rule's own test passes whatever the surfaces do with it. That is the
+lesson of the pass before, one step further out: a rule that lives in a shared
+package needs the surfaces' *use* of it asserted too, or reverting the use
+proves nothing.
+
+The book is now held to what it renders — a glued heading becomes a heading and
+a paragraph, a hash-only line is drawn not at all. The phone cannot be rendered
+here, so the claim is made about its source with the comments taken out, and
+about the call rather than the import: an import with no call is exactly what
+the check that missed this would have accepted.
+
 **The outline a reader walks had a hole in it, on both surfaces.** Somebody who
 cannot see a page moves through it by heading level — *next heading*, *next at
 this level*, *up one*. A level that is skipped tells them a section is missing.
