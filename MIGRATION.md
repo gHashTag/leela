@@ -7506,6 +7506,40 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**On chain, the die is the caller's.** `packages/contracts` exists to know
+*precisely where the contract agrees with the engine and where it does not*. It
+checks the board — twenty jumps, the win square, the size — the report gate and
+the run of sixes. It had never asked the question a player would ask first.
+
+`rollDice(uint8 rollResult)` takes the number as an argument and checks only
+that it is between one and six. Everything after that — the gate, the jumps, the
+three-sixes reset — is enforced exactly as written, on a number the player
+chose. On every other surface the die is `rollerFor(CLASSIC, rollDie)`, which is
+the variant's own.
+
+That may well be deliberate: a contract that records what a client rolled is a
+ledger rather than a referee, and this one generates nothing at all. It is
+written down because a divergence nobody has written down is one somebody will
+later mistake for an oversight — or assume is not there.
+
+**And the family holds two contracts.** Measured, not assumed:
+`smart-contract-leela/contracts/LeelaGame.sol` is the file this repository ships,
+byte for byte. `leela-ai-web3/contracts/LeelaGame.sol` has **the same board** —
+twenty jumps and three constants, no divergence at all — and a different die:
+`rollDice()` with no argument, returning
+`keccak256(block.timestamp, blockhash(block.number - 1), msg.sender) % 6 + 1`.
+One takes the roll from the player and one takes it from the chain. The donor is
+not in CI, so that comparison is recorded rather than asserted.
+
+**`ONCHAIN` describes this contract as a `RuleSet` and cannot say this.** Its
+twelve fields say when a throw is allowed and what follows it; none says where
+the number came from. Adding one would be a field nothing reads, which is the
+defect `audit-unread` exists for — so the divergence lives in the package whose
+subject it is. The fields are listed by name in the test rather than matched by
+pattern: the first version asked whether any matched `/die|roll|random/` and
+three do, because `rerollOnRepeat` and `requireReportBeforeRoll` are about when,
+not who.
+
 **The surface people actually play on was in the same state.** The mini app
 sets `lang` on the document from the reader's language and puts English on every
 control, because the catalogue falls back one key at a time — so a page declares
