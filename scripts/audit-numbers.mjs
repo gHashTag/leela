@@ -75,12 +75,14 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  LOSSES_RECORDED,
   alsoWrittenOutSomewhere,
   editionOf,
   identifyingTerms,
   keyOf,
   kindOf,
   lossesIn,
+  staleRecords,
   unrecorded,
 } from './lib/numbers.mjs';
 
@@ -90,14 +92,12 @@ const DATA = join(HERE, '..', 'packages', 'content', 'data');
 /**
  * Board references already known to be missing, as `language/plan: numbers`.
  *
- * Every line is a sentence in a shipped translation that refers to a square and
- * does not say which. They are here so that a rebuild cannot add a forty-third
- * quietly, and so that anyone re-translating knows exactly what to look for.
+ * The list itself is `LOSSES_RECORDED` in `lib/numbers.mjs`, beside the readers
+ * and beside the test that holds it. It was here, which meant the test kept a
+ * second copy written by hand — the arrangement `lib/arithmetic.mjs` had
+ * already been burned by once.
  */
-const RECORDED = [
-  'ar/9: 72000',
-  'uk/23: 11',
-];
+const RECORDED = LOSSES_RECORDED;
 
 const read = (language) => JSON.parse(readFileSync(join(DATA, `plans.${language}.json`), 'utf8'));
 
@@ -194,7 +194,7 @@ for (const language of languages) {
 }
 
 const news = unrecorded(found, RECORDED);
-const healed = RECORDED.filter((line) => !found.includes(line));
+const healed = staleRecords(RECORDED, found);
 
 console.log(`\nChecked ${languages.length} languages for the board references both editions state.\n`);
 
@@ -210,7 +210,13 @@ if (found.length > 0) {
 if (healed.length > 0) {
   console.log('Recorded as missing and now present — take these out of RECORDED:');
   for (const line of healed) console.log(`  ${line}`);
+  console.log(
+    '\nA record that outlives its reason is a licence issued for something else:\n' +
+      'the next translation to lose these numbers passes on it. This printed and\n' +
+      'exited zero for a hundred and ninety-nine passes, so nothing ever read it.',
+  );
   console.log('');
+  process.exitCode = 1;
 }
 
 if (uncovered.length > 0) {

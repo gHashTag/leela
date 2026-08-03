@@ -7382,6 +7382,28 @@ left of an `=` — a left side is one number or an expression, never two numbers
 side by side — and across 22 languages and 1,584 plans it matches four times,
 all four of them this.
 
+**The same record, one file over (200th pass).** `audit-arithmetic` was taught
+to fail on a record that no longer matches anything, and `audit-numbers` — its
+sibling, reading the same translations for the same kind of damage — was not.
+It computed the healed set, printed *take these out of RECORDED*, and exited
+zero. A hundred and ninety-nine passes of green with a sentence nobody read.
+
+Measured rather than argued, in both directions. Restoring `72` to Arabic plan 9
+made the audit print the line and exit **0**; the same experiment against
+`audit-arithmetic`, repairing `ms/8`, exits **1** and says *these records no
+longer match anything*. The lesson had been written down and applied once.
+
+`LOSSES_RECORDED` moved into `lib/numbers.mjs` for the reason the arithmetic
+list moved: the test kept a second copy by hand, and two copies disagree on the
+day one is repaired — a string comparison saying nothing about why.
+`staleRecords` is deliberately not *found equals recorded*, because an
+unrecorded loss is work for a translator and a stale record is work for whoever
+keeps the list.
+
+The test asserts the shape over every subset of a recorded list rather than the
+two lines this repository happens to carry, so it stays true of a list of two,
+of none, and of whatever remains after somebody translates.
+
 **A record that outlives its reason (159th pass).** The three operator-less
 sums are recorded so the audit does not fail on them, and nothing ever asked
 whether a record still matched anything. Repair one and the excuse stays: the

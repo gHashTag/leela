@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { LANGUAGES, plansFor } from '../src';
 import {
+  LOSSES_RECORDED,
   alsoWrittenOutSomewhere,
   editionOf,
   identifyingTerms,
@@ -10,6 +11,7 @@ import {
   lostFrom,
   namesOf,
   numbersIn,
+  staleRecords,
   toAsciiDigits,
   unrecorded,
   withoutArithmetic,
@@ -155,6 +157,54 @@ describe('what is already known', () => {
 
   it('does not treat a repaired line as new damage', () => {
     expect(unrecorded(['uk/60: 68'], ['uk/60: 68', 'ms/51: 72'])).toEqual([]);
+  });
+
+  /**
+   * The other half of that question, unasked here for a hundred and ninety-nine
+   * passes while its sibling in `lib/arithmetic.mjs` asked it.
+   *
+   * Forgiving a repaired line is right — a repair is not new damage. But the
+   * record stays behind, and the audit printed *take these out of RECORDED* and
+   * exited zero, so CI stayed green over a licence that had stopped describing
+   * anything. The next translation to lose that number in that plan would have
+   * passed on it.
+   *
+   * Asserted as the shape rather than as `ar/9` and `uk/23`: over every subset
+   * of a recorded list, whatever is recorded and not found is stale and nothing
+   * else is. That is true of a list of two, of a list of none, and of the list
+   * this repository will have after somebody translates.
+   */
+  it('sees a record go stale, whatever the list is', () => {
+    const recorded = ['uk/60: 68', 'ms/51: 72', 'ar/9: 72000'];
+
+    for (let mask = 0; mask < 1 << recorded.length; mask += 1) {
+      const found = recorded.filter((_, i) => (mask >> i) & 1);
+      const stale = recorded.filter((line) => !found.includes(line));
+
+      expect(staleRecords(recorded, found)).toEqual(stale);
+      // The two questions stay separate: what is stale says nothing about what
+      // is new, or one answer sends somebody to fix the wrong thing.
+      expect(unrecorded(found, recorded)).toEqual([]);
+    }
+  });
+
+  it('is not answered by comparing the two sets', () => {
+    // A found line nobody recorded is work for a translator; a recorded line
+    // nothing found is work for whoever keeps the list. `found equals recorded`
+    // would report both as one failure and name neither.
+    expect(staleRecords(['uk/60: 68'], ['uk/60: 68', 'de/9: 45'])).toEqual([]);
+    expect(unrecorded(['uk/60: 68', 'de/9: 45'], ['uk/60: 68'])).toEqual(['de/9: 45']);
+  });
+
+  it('holds the list the audit actually reads', () => {
+    // The list used to live in `audit-numbers.mjs` and the test kept a second
+    // copy by hand. Two copies disagree the day one is repaired, and the
+    // failure is a string comparison saying nothing about why.
+    expect(Array.isArray(LOSSES_RECORDED)).toBe(true);
+    expect(LOSSES_RECORDED.length).toBeGreaterThan(0);
+    for (const line of LOSSES_RECORDED) {
+      expect(line).toMatch(/^[a-z]{2}\/\d+: \d+(,\d+)*$/);
+    }
   });
 });
 

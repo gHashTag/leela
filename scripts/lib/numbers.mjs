@@ -388,6 +388,24 @@ export function keyOf(language, loss) {
 }
 
 /**
+ * Board references already known to be missing, as `language/plan: numbers`.
+ *
+ * Every line is a sentence in a shipped translation that refers to a square and
+ * does not say which. They are here so that a rebuild cannot add another one
+ * quietly, and so that anyone re-translating knows exactly what to look for.
+ *
+ * The list lives beside the readers rather than in the audit because the test
+ * has to hold the real one. `lib/arithmetic.mjs` learned this the same way: a
+ * record written in two places is a record that will disagree with itself, and
+ * the day one is repaired the disagreement is a string comparison saying
+ * nothing about why.
+ */
+export const LOSSES_RECORDED = [
+  'ar/9: 72000',
+  'uk/23: 11',
+];
+
+/**
  * What is new against what is already known.
  *
  * The damage below is real and cannot be repaired here — repairing it means
@@ -398,4 +416,22 @@ export function keyOf(language, loss) {
 export function unrecorded(found, recorded) {
   const known = new Set(recorded);
   return found.filter((line) => !known.has(line));
+}
+
+/**
+ * Which records no longer match anything found.
+ *
+ * The other half of the same question, and the half this file did not ask for
+ * a hundred and ninety-nine passes. `unrecorded` forgives a repaired line, which
+ * is right — a repair is not new damage. But the record stays, and a record
+ * that outlives its reason is a licence issued for something else: the next
+ * translation to lose `72000` on plan 9 in Arabic passes on it.
+ *
+ * Deliberately not `found equals recorded`. An unrecorded loss is work for a
+ * translator and a stale record is work for whoever keeps the list, and one
+ * comparison answering both sends somebody to fix the wrong thing.
+ */
+export function staleRecords(recorded, found) {
+  const seen = new Set(found);
+  return recorded.filter((line) => !seen.has(line));
 }
