@@ -23,7 +23,7 @@
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 import { FUNCTION_WORDS, unseeableIn, wrongLanguageIn } from '../../../scripts/lib/untranslated.mjs';
-import { LANGUAGES, plansFor, type Language } from '../src/index';
+import { LANGUAGES, plansFor, scriptOf, type Language } from '../src/index';
 
 const words = FUNCTION_WORDS as Record<string, RegExp>;
 const covered = Object.keys(words);
@@ -96,7 +96,38 @@ describe('the words a language cannot do without', () => {
     // words, and adding one until it passes would be fitting the rule to the
     // sample. It stays unread, and the audit says which languages those are.
     expect(words.tr).toBeUndefined();
-    expect(unseeableIn([...LANGUAGES]).filter((language: string) => language === 'tr')).toEqual(['tr']);
+    expect(unseeableIn([...LANGUAGES], scriptOf).filter((language: string) => language === 'tr')).toEqual(['tr']);
+  });
+
+  /**
+   * The shape, not the one language this test used to name.
+   *
+   * `unseeableIn` filtered on the word list alone while its own comment promised
+   * *Latin script and no words listed*, so it counted the fourteen languages the
+   * script test reads perfectly well. It had been wrong since it was written and
+   * nothing noticed: `audit-dataset` asked the same question in a counter of its
+   * own — correctly — and nothing called this. The old assertion here passed
+   * either way, because it looked for `tr` in the answer rather than asking what
+   * the answer is.
+   *
+   * Both halves, over every declared language: unseeable exactly when the script
+   * test cannot read it and no word list covers it.
+   */
+  it('is Latin script and no word list, and neither half alone', () => {
+    const unseeable = new Set(unseeableIn([...LANGUAGES], scriptOf));
+
+    for (const language of LANGUAGES) {
+      const latin = scriptOf(language) === 'latin';
+      const listed = Boolean(words[language]);
+
+      expect(unseeable.has(language)).toBe(latin && !listed);
+    }
+
+    // A language the script test reads is never unseeable, however few words are
+    // listed for it — which is the half the body was missing.
+    const nonLatin = LANGUAGES.filter((language) => scriptOf(language) !== 'latin');
+    expect(nonLatin.length).toBeGreaterThan(0);
+    for (const language of nonLatin) expect(unseeable.has(language)).toBe(false);
   });
 
   it('covers every Latin-script language it can, so the hole is named and small', () => {

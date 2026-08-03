@@ -60,10 +60,6 @@ export function toDocument(journal: Journal, intention?: string) {
  * report about some other plan, written on some other device, is not a reason
  * to open this player's gate.
  */
-export function merge(journal: Journal, incoming: ReadonlyArray<Report>): Journal {
-  return taking(journal, incoming).journal;
-}
-
 /** A journal, and what taking a file into it cost. */
 export interface Taking {
   journal: Journal;

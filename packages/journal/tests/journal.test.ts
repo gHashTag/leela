@@ -6,7 +6,6 @@ import {
   fileName,
   isReport,
   keyOf,
-  merge,
   merged,
   writerHint,
   WARN_WITHIN_CHARS,
@@ -125,9 +124,9 @@ describe('taking a file in loses nothing', () => {
   it('keeps everything that was already there', () => {
     const mine = path(60);
     const theirs = path(60, 500);
-    const merged = merge(mine, theirs);
+    const union = merged(mine, theirs).entries;
 
-    for (const entry of mine) expect(merged).toContainEqual(entry);
+    for (const entry of mine) expect(union).toContainEqual(entry);
   });
 
   it('adds nothing the second time', () => {
@@ -136,8 +135,8 @@ describe('taking a file in loses nothing', () => {
     const mine = path(40);
     const theirs = path(40, 500);
 
-    const once = merge(mine, theirs);
-    expect(merge(once, theirs)).toEqual(once);
+    const once = merged(mine, theirs).entries;
+    expect(merged(once, theirs).entries).toEqual(once);
     expect(newEntries(once, theirs)).toEqual([]);
   });
 
@@ -148,11 +147,11 @@ describe('taking a file in loses nothing', () => {
 
   it('is oldest first, whatever order the file was in', () => {
     const scrambled = [report(41, 'c', 300), report(6, 'a', 100), report(23, 'b', 200)];
-    expect(merge([], scrambled).map((e) => e.text)).toEqual(['a', 'b', 'c']);
+    expect(merged([], scrambled).entries.map((e) => e.text)).toEqual(['a', 'b', 'c']);
   });
 
   it('stays bounded, so a file cannot fill a store', () => {
-    expect(merge([], path(MAX_REPORTS * 2))).toHaveLength(MAX_REPORTS);
+    expect(merged([], path(MAX_REPORTS * 2)).entries).toHaveLength(MAX_REPORTS);
   });
 
   it('tells apart two reports that differ only in when', () => {
@@ -167,7 +166,7 @@ describe('taking a file in loses nothing', () => {
   it('does not mutate what it was given', () => {
     const mine = path(5);
     const before = JSON.stringify(mine);
-    merge(mine, path(5, 100));
+    merged(mine, path(5, 100));
     expect(JSON.stringify(mine)).toBe(before);
   });
 });
@@ -313,7 +312,7 @@ describe('what a file may carry is what the app may write', () => {
       report(((index % 72) + 1), `entry ${index}`, index + 1),
     );
 
-    expect(merge([], many).length).toBe(MAX_REPORTS);
+    expect(merged([], many).entries.length).toBe(MAX_REPORTS);
   });
 });
 
@@ -396,7 +395,7 @@ describe('the union says what it cost', () => {
     const mine = many(30);
     const theirs = many(20, 10_000);
 
-    expect(merge(mine, theirs)).toEqual(merged(mine, theirs).entries);
+    expect(merged(mine, theirs).entries).toEqual(merged(mine, theirs).entries);
   });
 });
 

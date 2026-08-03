@@ -7382,6 +7382,40 @@ left of an `=` — a left side is one number or an expression, never two numbers
 side by side — and across 22 languages and 1,584 plans it matches four times,
 all four of them this.
 
+**The audit gates both halves now (204th pass).** Four findings stood in its
+output; none of them was excused.
+
+**`unseeableIn` had been wrong since it was written.** Its comment promised
+*Latin script and no words listed* and its body filtered on the word list alone,
+so it counted the fourteen languages the script test reads perfectly well.
+Nothing noticed because nothing called it — `audit-dataset` asked the same
+question in a counter of its own, correctly, one file over. Wiring the function
+in made the printed number jump from one language to fourteen, which is how the
+disagreement surfaced. Two statements of one rule agree until one is changed;
+this pair had never agreed. The test that covered it looked for `tr` in the
+answer rather than asking what the answer is, so it passed either way. What is
+asserted now is both halves over every declared language, and it fails on the
+old body.
+
+**Two `merge` wrappers, both lossy, both gone.** `@leela/journal`'s returned
+`merged(...).entries` and the mini app's returned `taking(...).journal` —
+each discarding the count that the file they live in argues must not be
+discarded: *saying twelve accounts brought in over a store that took none is the
+untruth this surface told.* Their tests call the richer functions now.
+
+**Two remain and are declared rather than deleted.** `isJournal` and
+`isSavedSeats` are the strict form of rules whose live readers are deliberately
+lenient — both drop what they cannot read and keep the rest, measured, because
+refusing a whole table over one damaged seat returned a table of one. The strict
+statement is the oracle those tests hold the lenient reading to:
+`one-bad-line.test.ts` asks `isJournal` whether what `readJournal` returned is
+well formed, which is the invariant leniency must not break. That is a role, and
+it is written down as one.
+
+So `audit-unread` fails on its own findings now, both halves, and has none.
+Proven by breaking each: an export nobody calls and a field nobody reads each
+exit 1.
+
 **Eight exports with callers, reported as having none (203rd pass).** The guard
 that stops a class member's own declaration counting as a use of it —
 *a bare name at one indent level, followed by a bracket* — also erases every

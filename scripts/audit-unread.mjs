@@ -149,6 +149,12 @@ console.log(`Checked ${declarations.length} field declarations across ${files.le
 // silence that reads like nothing to do.
 if (unread.length > 0) process.exitCode = 1;
 
+// And the exports half, which had been reporting into a green job for as long
+// as it has existed. Four of the six it named last pass were resolved rather
+// than excused: `unseeableIn` was wired into the audit that had been asking its
+// question in a counter of its own, and two lossy `merge` wrappers were deleted
+// in favour of the functions that also say what the merge cost.
+
 if (unread.length === 0) {
   console.log('Every field has at least one reader.');
 } else {
@@ -190,6 +196,14 @@ const PUBLIC_API = {
   // Read out of the vendored Solidity, beside compareBoards and
   // compareConstants which are already here. A consumer holding a redeployed
   // contract to the engine needs all four.
+  // The strict form of a rule whose live reader is deliberately lenient. Both
+  // readers drop what they cannot read and keep the rest — measured, because
+  // refusing a whole table over one damaged seat returned a table of one — and
+  // the strict statement is what their tests hold the lenient reading to. It is
+  // a caller: `one-bad-line.test.ts` asks it whether what `readJournal` returned
+  // is well formed, which is the invariant the leniency must not break.
+  isJournal: 'the strict form of the journal rule, the oracle its lenient reader is held to',
+  isSavedSeats: 'the strict form of the table rule, the oracle its per-seat reader is held to',
   parseSixes: 'contract surface: reads the three-sixes rule out of the source',
   compareSixes: 'contract surface: names where that rule and the engine part company',
   snakeAt: 'board helper for consumers; the tables are the thing it guards',
@@ -347,6 +361,15 @@ const orphaned = unusedInOwnPackage(
   sources,
   Object.keys(PUBLIC_API),
 );
+
+// The exports half, gated at last. It had reported into a green job for as long
+// as it has existed: this file had no `process.exitCode` anywhere, so CI ran it,
+// printed eight uncalled exports and went on. Two of the eight had live callers
+// the reader could not see, `unseeableIn` was wired into the audit that asked
+// its question in a counter of its own, and two lossy `merge` wrappers went in
+// favour of the functions that also say what the merge cost. What is left is
+// declared in `PUBLIC_API` with a reason apiece.
+if (uncalled.length > 0 || orphaned.length > 0) process.exitCode = 1;
 
 console.log(`${ambiguous.length} name(s) are declared in more than one place.\n`);
 

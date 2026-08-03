@@ -24,6 +24,7 @@ import { LANGUAGES, couldBe, dominantScript, scriptOf, writtenIn } from '../pack
 import { TOTAL_PLANS } from '../packages/engine/src/index.ts';
 import { CORRECTIONS } from './lib/corrections.mjs';
 import { nameOf as spilloverName, spilloversIn } from './lib/spillover.mjs';
+import { unseeableIn } from './lib/untranslated.mjs';
 import {
   BLIND_TO,
   FUNCTION_WORDS,
@@ -167,7 +168,12 @@ for (const language of coverage.keys()) {
 // a player may never open — and never over the seventy-two squares the game
 // puts on the screen on every throw. Ten titles were sitting in it.
 const findings = [];
-let unseeable = 0;
+// The same question `unseeableIn` answers, and it used to be asked twice: a
+// counter here and an exported function nobody called. Two statements of one
+// rule agree until one of them is changed, which is the defect this repository
+// keeps finding — and here the second copy was the tidier one.
+const unseeableLanguages = unseeableIn([...coverage.keys()], scriptOf);
+const unseeable = unseeableLanguages.length;
 let byWords = 0;
 
 for (const language of coverage.keys()) {
@@ -184,10 +190,7 @@ for (const language of coverage.keys()) {
     // paragraph without say it instead — measured at 329 of 341 on English fed
     // in as German, and none on German. A Latin-script language with no list is
     // still unseen, and `unseeable` is now that and only that.
-    if (!FUNCTION_WORDS[language]) {
-      unseeable += 1;
-      continue;
-    }
+    if (unseeableLanguages.includes(language)) continue;
 
     byWords += 1;
     findings.push(...wrongLanguageIn(plans, language));

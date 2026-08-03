@@ -263,14 +263,6 @@ export function newEntries(
   return order(added);
 }
 
-/** Everything, oldest first, bounded — the union of a path and a file. */
-export function merge(
-  existing: ReadonlyArray<Report>,
-  incoming: ReadonlyArray<Report>,
-): Report[] {
-  return merged(existing, incoming).entries;
-}
-
 /** A union, and what making it cost. */
 export interface Merged {
   /** Everything that fits, oldest first. */

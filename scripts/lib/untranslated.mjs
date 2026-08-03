@@ -212,9 +212,22 @@ export function wrongLanguageIn(plans, language) {
   return found;
 }
 
-/** Languages neither check can read: Latin script and no words listed. */
-export const unseeableIn = (languages) =>
-  languages.filter((language) => !FUNCTION_WORDS[language]);
+/**
+ * Languages neither check can read: Latin script **and** no words listed.
+ *
+ * The comment said that from the day it was written and the body did not: it
+ * filtered on the word list alone, so it counted every language without one,
+ * including the fourteen the script test reads perfectly well. Nothing noticed
+ * because nothing called it — `audit-dataset` asked the same question in a
+ * counter of its own, correctly, one file over. Two statements of one rule agree
+ * until one of them is changed, and this pair had never agreed: the live one
+ * answers one language, the exported one answered fourteen.
+ *
+ * `scriptOf` is passed in rather than imported, because this module is plain
+ * JavaScript read by the audits and the answer lives in TypeScript.
+ */
+export const unseeableIn = (languages, scriptOf) =>
+  languages.filter((language) => scriptOf(language) === BLIND_TO && !FUNCTION_WORDS[language]);
 
 /** One finding as the line the audit prints and the record is matched on. */
 export const nameOf = (finding) =>

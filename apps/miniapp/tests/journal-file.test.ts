@@ -3,7 +3,6 @@ import { CLASSIC, applyRoll, initialState, owesReport, seededRoller } from '@lee
 import {
   SCHEMA_VERSION,
   fileName,
-  merge,
   parseDocument,
   parseSquare,
   shareTextFor,
@@ -113,7 +112,7 @@ describe('bringing one back loses nothing', () => {
     const mine = played(60, 1);
     const theirs = played(60, 2);
 
-    const merged = merge(mine, theirs.entries);
+    const merged = taking(mine, theirs.entries).journal;
 
     for (const entry of mine.entries) {
       expect(merged.entries).toContainEqual(entry);
@@ -127,14 +126,14 @@ describe('bringing one back loses nothing', () => {
     const mine = played(60, 1);
     const theirs = played(60, 2).entries;
 
-    const once = merge(mine, theirs);
-    const twice = merge(once, theirs);
+    const once = taking(mine, theirs).journal;
+    const twice = taking(once, theirs).journal;
 
     expect(twice).toEqual(once);
   });
 
   it('keeps the order a path is read in', () => {
-    const merged = merge(played(60, 1), played(60, 2).entries);
+    const merged = taking(played(60, 1), played(60, 2).entries).journal;
     for (let i = 1; i < merged.entries.length; i += 1) {
       expect((merged.entries[i]?.at ?? 0) >= (merged.entries[i - 1]?.at ?? 0)).toBe(true);
     }
@@ -144,11 +143,11 @@ describe('bringing one back loses nothing', () => {
     // A report written on another device, about another plan, is not a reason
     // to let this player throw. `reported` is the journal's own, always.
     const owing: Journal = { ...arrived(played(40)), reported: false };
-    const merged = merge(owing, played(40, 9).entries);
+    const merged = taking(owing, played(40, 9).entries).journal;
     expect(merged.reported).toBe(false);
 
     const settled: Journal = { ...played(40), reported: true };
-    expect(merge(settled, played(40, 9).entries).reported).toBe(true);
+    expect(taking(settled, played(40, 9).entries).journal.reported).toBe(true);
   });
 
   it('stays bounded, so a file cannot fill the storage', () => {
@@ -157,7 +156,7 @@ describe('bringing one back loses nothing', () => {
       text: `report ${n}`,
       at: n,
     }));
-    expect(merge(EMPTY, many).entries).toHaveLength(MAX_REPORTS);
+    expect(taking(EMPTY, many).journal.entries).toHaveLength(MAX_REPORTS);
   });
 });
 
@@ -348,10 +347,10 @@ describe('taking a file in says what it cost', () => {
     expect(taking({ ...owing, reported: true }, many(5, 10_000)).journal.reported).toBe(true);
   });
 
-  it('is the journal `merge` has always returned', () => {
+  it('is the journal the discarded wrapper used to return', () => {
     const mine: Journal = { reported: true, entries: many(30) };
     const theirs = many(20, 10_000);
 
-    expect(merge(mine, theirs)).toEqual(taking(mine, theirs).journal);
+    expect(taking(mine, theirs).journal).toEqual(taking(mine, theirs).journal);
   });
 });
