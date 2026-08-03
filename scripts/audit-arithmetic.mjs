@@ -126,10 +126,21 @@ const newlyBroken = broken.filter(({ line }) => !new Set(OPERATORLESS).has(line)
 // granted, and the next sum that reads the same way is waved through on a
 // licence issued for something else.
 const stale = staleRecords(OPERATORLESS, broken.map(({ line }) => line));
+// The same question of the list above it, which had never been asked. It is
+// empty today, so nothing is stale — and the first false sum recorded in it
+// would have outlived its repair in silence, which is the whole defect.
+const staleFalse = staleRecords(RECORDED, found.map(({ line }) => line));
 
 console.log(
   `\nChecked ${equations} sums in ${languages.length} languages, and every plan for a sum whose operator is gone.\n`,
 );
+
+if (staleFalse.length > 0) {
+  console.log('These recorded false sums no longer match anything:');
+  for (const line of staleFalse) console.log(`  ${line}`);
+  console.log('\nA repaired sum keeps its excuse, and the next one that reads the same way\npasses on it. Take them out.\n');
+  process.exitCode = 1;
+}
 
 if (found.length > 0) {
   console.log('False sums, all of them already recorded:\n');

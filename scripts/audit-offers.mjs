@@ -134,7 +134,13 @@ console.log(`  ${''.padEnd(30)} ${SURFACES.map((s) => s.padEnd(9)).join('')}\n`)
 if (mended.length > 0) {
   console.log('Recorded as missing and now offered — take these out of RECORDED:');
   for (const gap of mended) console.log(`  ${gap}`);
+  console.log(
+    '\nA surface that gained something and kept its excuse can lose it again in\n' +
+      'silence: the record still says the gap is known. Printing this and exiting\n' +
+      'zero is the defect audit-numbers carried for a hundred passes.',
+  );
   console.log('');
+  process.exitCode = 1;
 }
 
 if (fresh.length === 0) {

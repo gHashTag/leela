@@ -205,7 +205,7 @@ cd packages/engine && bun test
 | Package | Tests | State |
 |---|---|---|
 | `@leela/engine` | 382 | rules, four variants, sessions, turn gating, seeded dice |
-| `@leela/content` | 386 | 22 languages of plans, 2 of the game's own voice |
+| `@leela/content` | 389 | 22 languages of plans, 2 of the game's own voice |
 | `@leela/journal` | 79 | the path as a file, and what came back — shared by the bot and the mini app |
 | `@leela/db` | 105 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 198 | the companion — prompts built from the plan text |
@@ -216,7 +216,7 @@ cd packages/engine && bun test
 | `@leela/mobile` | 366 | the board on a phone (Expo), moved by the engine and by nothing else |
 | everything else | — | not yet ported |
 
-2914 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+2917 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
@@ -231,7 +231,9 @@ node scripts/audit-arithmetic.mjs   # the sums the text states, in all 22 langua
 node scripts/audit-numbers.mjs      # board references a translation lost — and records
                                     # that have stopped describing anything
 node scripts/audit-records.mjs      # every recorded exception is asked whether it still
-                                    # describes anything, including this rule's own list
+                                    # describes anything, including this rule's own list;
+                                    # a record, a standing permission or a vocabulary, and
+                                    # a fourth kind spelled by hand fails
 node scripts/audit-doubles.mjs      # one bound, declared once
 node scripts/audit-podlock.mjs      # Podfile.lock as the JS lockfile an app never had
                                     # (needs a donor with node_modules and ios/)

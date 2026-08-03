@@ -10,6 +10,8 @@ import {
   unasked,
   undeclared,
   unexplained,
+  unknownKinds,
+  staleAmong,
   // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 } from '../../../scripts/lib/records.mjs';
 
@@ -19,7 +21,7 @@ const LIB = join(REPO, 'scripts/lib');
 type Declaration = {
   module: string;
   name: string;
-  kind: 'record' | 'vocabulary';
+  kind: 'record' | 'permission' | 'vocabulary';
   askedIn?: string;
   asks?: string;
   because: string;
@@ -27,17 +29,25 @@ type Declaration = {
 
 const declared = DECLARED as Declaration[];
 
+const SCRIPTS = join(REPO, 'scripts');
+
 const listsOnDisk = (): string[] => {
   const found: string[] = [];
-  for (const module of readdirSync(LIB).filter((name) => name.endsWith('.mjs'))) {
-    const source = readFileSync(join(LIB, module), 'utf8');
+  const modules = [
+    ...readdirSync(SCRIPTS).filter((name) => name.endsWith('.mjs')),
+    ...readdirSync(LIB)
+      .filter((name) => name.endsWith('.mjs'))
+      .map((name) => `lib/${name}`),
+  ];
+  for (const module of modules) {
+    const source = readFileSync(join(SCRIPTS, module), 'utf8');
     for (const name of exportedLists(source) as string[]) found.push(keyOf(module, name));
   }
   return found;
 };
 
 describe('finding the lists', () => {
-  it('reads an exported array and leaves everything else alone', () => {
+  it('reads a list, exported or not, and leaves everything else alone', () => {
     const source = [
       'export const RECORDED = [',
       "  'one',",
@@ -52,10 +62,12 @@ describe('finding the lists', () => {
       'export const lower = [1];',
     ].join('\n');
 
-    // A threshold and a lookup table excuse nothing, so they are not records.
-    // A private list is not somebody else's to rely on, and a lowercase export
-    // is a value rather than a set of excused things.
-    expect(exportedLists(source)).toEqual(['RECORDED']);
+    // A threshold is not a set of excused things. Everything list-shaped is,
+    // whether written as an array or as an object carrying a reason per entry,
+    // and whether exported or kept to the audit that owns it: the two largest
+    // excuse lists here are unexported objects, and the first version of this
+    // rule was blind to both.
+    expect(exportedLists(source)).toEqual(['FUNCTION_WORDS', 'PRIVATE', 'RECORDED']);
   });
 
   it('does not read a list out of a comment or a string', () => {
@@ -169,6 +181,51 @@ describe('the two halves, over any list at all', () => {
   });
 });
 
+describe('the third kind, which was measured rather than assumed', () => {
+  /**
+   * A permission and a record rot differently, and calling them one thing loses
+   * whichever half is wrong. `WRITE_ONLY` asserts a fact about now — this field
+   * is written and never read — so an entry suppressing nothing means the fact
+   * changed, and twenty-four of thirty-four had. `PUBLIC_API` asserts an intent
+   * — this export is a surface whether or not we call it — so an entry
+   * suppressing nothing means somebody is calling it today, which withdraws
+   * nothing.
+   */
+  it('asks no staleness of a permission, which is about intent and not about now', () => {
+    const permission = [
+      {
+        module: 'a.mjs',
+        name: 'PUBLIC_API',
+        kind: 'permission' as const,
+        because: 'x'.repeat(30),
+      },
+    ];
+    expect(unasked(permission, () => '')).toEqual([]);
+  });
+
+  it('refuses a kind nobody defined, or the rule closes by spelling', () => {
+    expect(unknownKinds([{ module: 'a.mjs', name: 'X', kind: 'exception', because: 'y' }]))
+      .toHaveLength(1);
+    expect(
+      unknownKinds([
+        { module: 'a.mjs', name: 'X', kind: 'record', because: 'y' },
+        { module: 'b.mjs', name: 'Y', kind: 'permission', because: 'y' },
+        { module: 'c.mjs', name: 'Z', kind: 'vocabulary', because: 'y' },
+      ]),
+    ).toEqual([]);
+  });
+
+  it('has one primitive under every staleness question', () => {
+    // Written once because the third copy was written the day before this, and
+    // a rule restated is a rule that will disagree with itself.
+    for (let mask = 0; mask < 8; mask += 1) {
+      const all = ['a', 'b', 'c'];
+      const found = all.filter((_, i) => (mask >> i) & 1);
+      expect(staleAmong(all, found)).toEqual(all.filter((x) => !found.includes(x)));
+    }
+  });
+});
+
 describe('the repository as it stands', () => {
   it('has every list declared, and no declaration of a list that is gone', () => {
     const onDisk = listsOnDisk();
@@ -188,10 +245,11 @@ describe('the repository as it stands', () => {
 
     expect(unasked(declared, readOr)).toEqual([]);
     expect(unexplained(declared)).toEqual([]);
+    expect(unknownKinds(declared)).toEqual([]);
   });
 
   it('declares its own list, because a declaration is a record too', () => {
-    const own = declared.find((one) => one.module === 'records.mjs' && one.name === 'DECLARED');
+    const own = declared.find((one) => one.module === 'lib/records.mjs' && one.name === 'DECLARED');
 
     expect(own).toBeDefined();
     expect(own?.kind).toBe('record');

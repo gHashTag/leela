@@ -32,10 +32,12 @@ import {
   unasked,
   undeclared,
   unexplained,
+  unknownKinds,
 } from './lib/records.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
+const SCRIPTS = HERE;
 const LIB = join(HERE, 'lib');
 
 const readOr = (path) => {
@@ -46,13 +48,27 @@ const readOr = (path) => {
   }
 };
 
-const modules = readdirSync(LIB)
-  .filter((name) => name.endsWith('.mjs'))
-  .sort();
+/**
+ * Both the readers and the audits that own them.
+ *
+ * The first version read `scripts/lib` only and found eight lists where there
+ * are thirty-one. `audit-numbers.mjs` had held its own `RECORDED` until the pass
+ * before, which is to say the rule was written to look everywhere except the
+ * place the defect had just been found.
+ */
+const modules = [
+  ...readdirSync(SCRIPTS)
+    .filter((name) => name.endsWith('.mjs'))
+    .sort(),
+  ...readdirSync(LIB)
+    .filter((name) => name.endsWith('.mjs'))
+    .sort()
+    .map((name) => `lib/${name}`),
+];
 
 const found = [];
 for (const module of modules) {
-  const source = readFileSync(join(LIB, module), 'utf8');
+  const source = readFileSync(join(SCRIPTS, module), 'utf8');
   for (const name of exportedLists(source)) found.push(keyOf(module, name));
 }
 
@@ -60,10 +76,12 @@ const news = undeclared(found, DECLARED);
 const gone = staleDeclarations(DECLARED, found);
 const silent = unasked(DECLARED, readOr);
 const mute = unexplained(DECLARED);
+const odd = unknownKinds(DECLARED);
 
 console.log(
   `\nRead ${modules.length} modules for exported lists of excused things: ` +
-    `${found.length} found, ${DECLARED.filter((one) => one.kind === 'record').length} of them records ` +
+    `${found.length} found, ${DECLARED.filter((one) => one.kind === 'record').length} records, ` +
+    `${DECLARED.filter((one) => one.kind === 'permission').length} standing permissions ` +
     `and ${DECLARED.filter((one) => one.kind === 'vocabulary').length} vocabulary.\n`,
 );
 
@@ -101,6 +119,13 @@ if (mute.length > 0) {
   process.exitCode = 1;
 }
 
-if (news.length === 0 && gone.length === 0 && silent.length === 0 && mute.length === 0) {
+if (odd.length > 0) {
+  console.log('\nThese declarations name a kind that does not exist:');
+  for (const line of odd) console.log(`  ${line}`);
+  console.log('\nThree kinds are defined. A fourth spelled by hand lets a list through.');
+  process.exitCode = 1;
+}
+
+if (news.length === 0 && gone.length === 0 && silent.length === 0 && mute.length === 0 && odd.length === 0) {
   console.log('Every list is declared, every record is asked, and every asker still asks.');
 }

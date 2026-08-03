@@ -20,6 +20,7 @@
  * gets switched off rather than heeded.
  */
 
+import { staleAmong } from './lib/records.mjs';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -65,45 +66,14 @@ const SEARCH = [
  * fields go to be forgotten.
  */
 const WRITE_ONLY = {
-  // Timestamps the database maintains; nothing in the app reads them back.
-  created_at: 'set by the database, read by operators not by code',
-  updated_at: 'set by the database, used by pruneFinished in SQL rather than TS',
-  // Carried across from the legacy shape for reconciliation by hand.
-  isStart: 'migrated from the published app for provenance; the engine uses is_finished',
-  host_id: 'recorded so a table has an owner on the record; no rule depends on it',
-  // Display-only columns written for a client that has not been ported.
-  message: 'written for a client to show; no rule reads it',
-  avatar: 'display only',
-  intention: 'display only',
   fullName: 'display only',
   email: 'part of the legacy document shape, not used here',
   firstGame: 'part of the legacy document shape, not used here',
-  likes: 'display only',
-  comments: 'display only',
-  // The move log exists to be read by a person or a later replay, not by the
-  // running game — which already has the state the log describes.
-  from_plan: 'move log, for replay and audit rather than for a rule',
-  to_plan: 'move log',
-  jumped_from: 'move log',
-  is_game_start: 'move log',
-  is_game_finished: 'move log',
-  is_three_sixes_reset: 'move log',
-  // The chat history is written for a client to display and for later analysis.
-  user_message: 'chat history, written for display',
-  ai_response: 'chat history, written for display',
-  message_type: 'chat history, written for display',
-  report_id: 'chat history, links an exchange to a report for later reading',
-  plan_number: 'reports and chat history, read by a client not by a rule',
-  // The names OpenRouter's API expects, written from camelCase options.
-  max_tokens: "OpenRouter's own field name, written from maxTokens",
-  temperature: "OpenRouter's own field name, written from the option",
   // Read by string key in audit-copies.mjs, which no static search can see.
   entryOnSix: 'read dynamically by audit-copies.mjs via RULE_LABELS',
-  threeSixesReset: 'read dynamically by audit-copies.mjs via RULE_LABELS',
   refusesOvershoot: 'read dynamically by audit-copies.mjs via RULE_LABELS',
   winsOnExactLanding: 'read dynamically by audit-copies.mjs via RULE_LABELS',
   reportGate: 'read dynamically by audit-copies.mjs via RULE_LABELS',
-  rerollOnRepeat: 'read by rollerFor, and dynamically by audit-copies.mjs',
   // Preserved so a migrated account can be reconciled with Firebase by hand.
   legacyId: 'provenance for a migrated account; migrateBatch matches on owner',
   // Handed to grammY, which calls it. A reader outside this repository is
@@ -159,6 +129,13 @@ const declarations = files.flatMap((file, index) =>
 
 const unread = unreadFields(declarations, sources, Object.keys(WRITE_ONLY));
 
+// The other half, which had never been asked. An excuse that suppresses nothing
+// is a licence issued for something else: the field is read now, and the next
+// one written and never read under the same name is waved through. Twenty-four
+// of the thirty-four entries here were in exactly that state.
+const wouldFlag = unreadFields(declarations, sources, []).map((field) => field.name ?? field);
+const staleExcuses = staleAmong(Object.keys(WRITE_ONLY), wouldFlag);
+
 console.log(`Checked ${declarations.length} field declarations across ${files.length} files.\n`);
 
 if (unread.length === 0) {
@@ -175,6 +152,17 @@ if (unread.length === 0) {
 }
 
 console.log(`\n${Object.keys(WRITE_ONLY).length} field(s) are write-only on purpose.`);
+
+if (staleExcuses.length > 0) {
+  console.log('\nThese write-only excuses no longer describe anything:\n');
+  for (const name of staleExcuses) console.log(`  ${name}`);
+  console.log(
+    '\nEach names a field that is read now, or that this check no longer sees.\n' +
+      'Take them out: an excuse kept past its reason waves through the next field\n' +
+      'written and never read under the same name.',
+  );
+  process.exitCode = 1;
+}
 
 // --- exports ----------------------------------------------------------------
 

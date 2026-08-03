@@ -7382,6 +7382,49 @@ left of an `=` — a left side is one number or an expression, never two numbers
 side by side — and across 22 languages and 1,584 plans it matches four times,
 all four of them this.
 
+**A rule that looked in the tidy place (202nd pass).** The rule from the pass
+before read `export const NAME = [` in `scripts/lib`, and found eight lists where
+there are thirty-two. It was blind on three counts at once, and every one of them
+hid something: **objects**, because an excuse list carries a reason per entry and
+is written `= {`; **unexported** constants, because the audit that owns a list is
+often its only reader; and the **audits themselves**, which is where
+`audit-numbers` had kept its own `RECORDED` until the pass before. The rule had
+been written to look everywhere except the place the defect had just been found.
+
+What it hid, once widened: `RECORDED` in `audit-book.mjs` and in
+`audit-offers.mjs` both computed the healed set, printed *take these out of
+RECORDED*, and exited zero — the same defect as `audit-numbers`, word for word,
+twice more. The pass before had declared the class closed after grepping for
+`stale` and `rotted`; these say `healed` and `mended`. Searching for the
+vocabulary instead of the shape is how a class stays open while somebody writes
+that it is shut. A fourth, `RECORDED` in `audit-arithmetic.mjs`, has no staleness
+reader at all — it is empty today, and the first false sum recorded in it would
+have outlived its repair in silence.
+
+**`WRITE_ONLY`, and a third kind.** `audit-unread.mjs` excuses thirty-four fields
+from *written and never read*, and nothing had ever asked whether an excuse still
+described anything. Measured by removing them: twelve fields are flagged without
+the list, two with it, so **ten** entries were doing work and **twenty-four** were
+licences for something else. They are gone, and the audit's findings before and
+after are identical — which is what pruning an excuse that suppresses nothing
+must look like.
+
+Its neighbour `PUBLIC_API` measures worse — sixty-nine of seventy suppress
+nothing — and is **not** stale, which is the distinction that mattered.
+`WRITE_ONLY` asserts a fact about now, so an inert entry means the fact changed.
+`PUBLIC_API` asserts an intent — this export is a package surface whether or not
+this repository calls it — so an inert entry means only that somebody calls it
+today. A `permission` rots the other way, by naming something that no longer
+exists, and nothing in it does. Three kinds now, and a fourth spelled by hand
+fails rather than passing.
+
+**Still open, and named here so it is not mistaken for done:** `audit-unread.mjs`
+has no `process.exitCode` for its own findings. It runs in CI, reads 668 field
+declarations, and reports two unread fields and eight uncalled exports that
+nobody has acted on, because it cannot fail on them. Only the stale-excuse branch
+added here can. Resolving the ten needs a judgement per case, which is the next
+pass rather than this one.
+
 **The rule instead of the instance (201st pass).** Fixing `audit-numbers` fixed
 one list. Six others hold recorded exceptions, and every one of them happened to
 be asked — `copies` has `rotted`, `build-content` has `missedSpillovers` and

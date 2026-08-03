@@ -65,7 +65,13 @@ if (found.length > 0) {
 if (healed.length > 0) {
   console.log('Recorded as missing and now present — take these out of RECORDED:');
   for (const line of healed) console.log(`  ${line}`);
+  console.log(
+    '\nA record that outlives its reason is a licence issued for something else:\n' +
+      'the next book to lose this chapter passes on it. This printed and exited\n' +
+      'zero, which is the defect audit-numbers carried for a hundred passes.',
+  );
   console.log('');
+  process.exitCode = 1;
 }
 
 if (news.length === 0) {
