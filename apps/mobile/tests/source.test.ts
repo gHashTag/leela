@@ -193,6 +193,8 @@ describe('one blanker, not five', () => {
     // `index.html` to build the page, and asserts about the document that comes
     // out rather than about the file that went in.
     'which-square-is-mine.test.ts',
+    // Plays the mini app to its winning square, for the same reason.
+    'the-end-of-a-game.test.ts',
   ];
 
   it('makes every check that asserts over source blank it first', () => {

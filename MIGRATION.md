@@ -7680,6 +7680,43 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The same question asked of the surface people play on.** `assembled.test.ts`
+puts a player on 68 with `is_finished` already true and asks what the app does
+with a winner. That is the state after; the act was never played. Played now
+from one arrow's throw away: the board reaches 68, the line announces it, the
+die closes, and the winner still owes an account — the report gate carried to
+the last square, the same as in the chat. Writing it is taken, the game is
+called complete, and the die stays shut. Turning `reportOnWinningSquare` off
+fails all three; leaving the die open fails two.
+
+**The waits were learned the hard way, and are written down in the test.** A
+throw spins for `(value / 2) * 500` ms with the button disabled, so a throw is
+known to be over by watching the button go down and come back — not by watching
+the sentence change, because *not enough room — you stay on 70* repeats word for
+word and a wait for new text never returns. And the app opens the reader on
+landing, which covers the die, so a dialog left open stalls the next throw. Both
+cost a probe each before the test could be written.
+
+**The first version cost thirty-eight seconds and doubled the mutation audit.**
+Three tests, each playing its own game. `audit-mutants` runs a package's suite
+once per mutation, so a slow test is paid for eighty-two times — and the audit
+went from twelve minutes to over twenty-five. The play is the cost, so it
+happens once now and is read in three places, at seven and a half seconds.
+
+Two things had to be got right for that. The last of the three writes the
+winner's account, so it must run last — vitest keeps the written order, and the
+test says so, because that order is load-bearing rather than incidental. And a
+`beforeAll` has its own bound that a `describe` timeout does not reach: without
+one it ran out under load and was reported as three *skipped* tests and a
+failing suite, which reads nothing like *the game took too long*.
+
+**One thing measured and left alone.** After the winning throw the line says
+*You reach Cosmic Consciousness*, not *write before you throw again* — even
+though `standing()` puts the gate before the win. It is right: the standing line
+is what shows when there is no news, the news of the last throw is the win, and
+*before you throw again* would be false on a square there is no throwing from.
+The bot says it because a chat has no dead button to explain.
+
 **Nothing had ever played a game to its end.** `sixty-eight.test.ts` holds what
 the engine leaves behind on the winning square, and `assembled.test.ts` plays a
 real game as far as one account. The win is what the whole thing is for, and
