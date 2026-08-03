@@ -7680,6 +7680,36 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A rule a variant declares is now held to being asked.** `rerollOnRepeat` has
+been caught twice: first declared, set correctly on all five variants,
+documented and read by nothing — the finding `audit-unread` exists because of —
+and then, rehabilitated, read by two surfaces of three.
+
+`audit-unread` asks that question of every field in the repository and exits
+zero either way, on purpose: a field can be legitimately write-only, and a check
+that blocks a build on a judgement call gets switched off rather than heeded. A
+`RuleSet` field is not one of those. It exists to make a variant behave
+differently, so one that nothing reads is a variant promising something it does
+not do, and there is no judgement in that.
+
+The same question is asked of the twelve now, and it fails. Measured when it was
+written: every one is read at least twice by code that is not a test, the
+thinnest at two. Adding a field nothing consults fails on the day it lands.
+
+**And the sweep behind it came back clean, which is worth writing down so it is
+not walked again.** Every `RuleSet` field is consulted where it should be: the
+report gate's length reaches the engine from the phone through
+`takeAccount → record → countsAsReport`, the three-sixes reset and the winning
+square are the engine's own, and the fields only one surface reads —
+`mayReenterAfterWinning`, `turnCooldownMs` — are read by the surface that has
+the question.
+
+**One phantom of my own.** `reportOnWinningSquare` looked unread for half an
+hour because a `grep … | head -4` cut off the line in `turn.ts` that reads it.
+Third time this session that a truncated search has sent me after nothing: when
+the question is *does anything read this*, the answer must not be piped through
+`head`.
+
 **The phone turned a plain die while calling itself a variant that re-rolls.**
 `rollerFor(rules, base)` is the engine's answer to *which die does this variant
 turn*: under `rerollOnRepeat` it wraps the roller so a repeated value is thrown
