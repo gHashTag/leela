@@ -7680,6 +7680,36 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Nothing checked what a throw tells a player.** The catalogue is held to having
+a key for every outcome on both surfaces and to saying it in both languages.
+What it *says* was unasserted — so taking `{title}` out of `app.step` would
+leave a player reading *You threw 3. 1 → 6.*, a number with no name, and every
+test would pass.
+
+That sentence is not decoration on the mini app. `#say` is
+`role="status" aria-live="polite"` and is the **only** live region on the page:
+the square's name is also in `plan-title`, and that element changes silently. A
+player who cannot see the board learns where a throw put them from this sentence
+or from nothing.
+
+The shape, asserted on both surfaces and in both complete languages: **a throw
+that moves the player names the square they are now on — the number and the
+name; a throw that moves nobody names neither**, because a player still waiting
+for a six has not arrived anywhere and being told a square would say they had.
+Five outcomes move, two do not, and the list is read out of the catalogue rather
+than counted, so an outcome added later cannot be passed over in silence.
+
+The markup the rule rests on is asserted too. If the live region moved or lost
+its role the rule would still pass and its reason would be gone.
+
+**Measured on the way, and left alone.** The two surfaces put the square's name
+in different places: the bot on its own line after the sentence, the mini app
+inline after the full stop. `.say` does not preserve newlines, so matching the
+bot would change nothing a player sees; and the name cannot simply be dropped
+from the mini app, because that line is what is read aloud. The difference is
+recorded rather than tidied — it is typography, and this repository does not
+change what a player reads on a preference.
+
 **My own repair of the pass before covered two of the five ways a word reaches
 the page.** Playing the mini app as a Japanese reader and reading every line it
 draws: the plan title and the four icon buttons carried their mark, and three

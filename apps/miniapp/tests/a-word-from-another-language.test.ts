@@ -159,3 +159,44 @@ describe('a control the catalogue could not translate', () => {
     expect(read?.getAttribute('lang')).toBe('en');
   });
 });
+
+/**
+ * The one line a player who cannot see the board is read.
+ *
+ * `#say` is `role="status" aria-live="polite"`, so it is announced when it
+ * changes; `plan-title` holds the square's name too and changes **silently**. A
+ * blind player learns where a throw put them from this sentence or from
+ * nothing — which is why `where-a-player-now-is.test.ts` in `@leela/content`
+ * holds every move announcement to naming the square.
+ *
+ * That rule rests on this markup. If the live region moved or lost its role,
+ * the rule would still pass and the reason for it would be gone.
+ */
+describe('the sentence after a throw', () => {
+  it('is the one the page announces', () => {
+    const markup = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), '..', 'index.html'),
+      'utf8',
+    );
+
+    const say = /<section[^>]*id="say"[^>]*>/.exec(markup)?.[0] ?? '';
+
+    expect(say).toContain('role="status"');
+    expect(say).toContain('aria-live="polite"');
+  });
+
+  it('is the only thing that announces, so the square is named in it', () => {
+    // `plan-title` must stay silent: two live regions changing together make a
+    // screen reader read the square's name twice, and the announcement is the
+    // sentence rather than the label.
+    const markup = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), '..', 'index.html'),
+      'utf8',
+    );
+
+    const title = /<[a-z]+[^>]*id="plan-title"[^>]*>/.exec(markup)?.[0] ?? '';
+
+    expect(title).not.toContain('aria-live');
+    expect([...markup.matchAll(/aria-live=/g)]).toHaveLength(1);
+  });
+});
