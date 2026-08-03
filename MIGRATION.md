@@ -7382,6 +7382,33 @@ left of an `=` — a left side is one number or an expression, never two numbers
 side by side — and across 22 languages and 1,584 plans it matches four times,
 all four of them this.
 
+**The rule instead of the instance (201st pass).** Fixing `audit-numbers` fixed
+one list. Six others hold recorded exceptions, and every one of them happened to
+be asked — `copies` has `rotted`, `build-content` has `missedSpillovers` and
+`unappliedIn`, `audit-dataset` has its own `rotted`. The class was closed by
+content and open by rule: nothing stopped the next list being written without
+the question, which is exactly how `numbers` came to sit unasked beside a
+sibling that had been hardened.
+
+`scripts/audit-records.mjs` reads every `export const NAME = [` in `scripts/lib`
+and requires a declaration: a **record**, which must name the file and the symbol
+that asks whether its entries still match, or a **vocabulary**, which excuses
+nothing and needs a sentence saying so. A list written tomorrow fails until
+somebody says which it is.
+
+Three ways it rots, all three checked because each is silent alone: a list nobody
+declared, a declaration for a list that is gone, and an asker that has stopped
+asking. The rule turned on itself immediately — its own `DECLARED` came back as
+undeclared on the first run, and it is now a record like the rest, held by
+`staleDeclarations`.
+
+The third check was wrong when first written, and the experiment is what said so.
+Replacing the call to `staleRecords` in `audit-numbers` with the filter written
+out by hand did **not** fail: the name was still in the import list, and a
+whole-file search read that as asking. Imports are stripped now. Matched by name
+rather than as a call, because two of the seven askers are variables holding the
+answer rather than functions.
+
 **The same record, one file over (200th pass).** `audit-arithmetic` was taught
 to fail on a record that no longer matches anything, and `audit-numbers` — its
 sibling, reading the same translations for the same kind of damage — was not.

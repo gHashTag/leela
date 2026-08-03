@@ -142,6 +142,12 @@ jobs:
       # Ukrainian as it is here, and in three languages the text says it is not.
       - run: node scripts/audit-arithmetic.mjs
 
+      # Every recorded exception, asked whether it still describes anything.
+      # Three lists were hardened one at a time and the fourth was missed for a
+      # hundred and ninety-nine passes, so the rule is a check rather than a
+      # paragraph: a list written tomorrow fails until somebody declares it.
+      - run: node scripts/audit-records.mjs
+
       # The rules book's table of contents. Three books came through a
       # different donor and are missing chapters the two editions agree on;
       # this names them and fails on a fourth.
