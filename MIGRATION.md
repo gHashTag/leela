@@ -7680,6 +7680,37 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**And of the third surface, the phone.** Two of the three ends of a game were
+held; this one was played twice and to the end neither time.
+`sixty-eight.test.ts` walks to Cosmic Consciousness through the *engine* —
+`advance`, `submitReport` — and asks what the app's readers then say.
+`no-rules.test.ts` plays through the app's own `throwDie`, and stops at
+`isOver(game)` without asking what being over means. So the path a person takes
+had never been taken to its end.
+
+Played now with `newGame` → `throwDie` → `takeAccount` — `takeAccount` rather
+than `fileReport`, because the gate opening and the words being kept are two
+answers, and running them together is how a refused write came to be reported as
+written in the app next door. The game reaches 68; the die is shut, and shut to
+the *act* as well, so throwing again returns the same game rather than raising
+inside a handler; the winner still owes an account, the same gate the chat says
+out loud and the browser keeps a box open for; and that account is taken, kept,
+and filed under 68. An account that is not one is still refused there — the gate
+does not loosen because the game is ending.
+
+All of it was already right, and none of it was held. Turning
+`reportOnWinningSquare` off fails the gate claim; taking out
+`canCurrentPlayerRoll`'s session guard fails the die claim, and would have run
+straight into the `SessionError` that guard was written for. The seed is
+searched for rather than pinned, as `sixty-eight.test.ts` does — one that wins
+today is one throw away from not winning tomorrow — and the whole thing costs
+nine milliseconds, which is what the mutation audit pays eighty-two times.
+
+**Three surfaces, one shape, three passes.** *Played as far as X, never to the
+end* found a gap in every one of them. The last thing a person experiences is
+reliably the least asserted, and it is worth asking of anything else that has a
+last step.
+
 **The same question asked of the surface people play on.** `assembled.test.ts`
 puts a player on 68 with `is_finished` already true and asks what the app does
 with a winner. That is the state after; the act was never played. Played now
