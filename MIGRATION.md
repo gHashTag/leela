@@ -7382,6 +7382,54 @@ left of an `=` — a left side is one number or an expression, never two numbers
 side by side — and across 22 languages and 1,584 plans it matches four times,
 all four of them this.
 
+**Eight exports with callers, reported as having none (203rd pass).** The guard
+that stops a class member's own declaration counting as a use of it —
+*a bare name at one indent level, followed by a bracket* — also erases every
+call written two spaces in, which is every call at the top of a function body.
+`forgetIntention(localStorage, seated.id);` in `main.ts` is one, and the audit
+had been reporting it as uncalled. A declaration opens a body; a call ends the
+statement, and the semicolon is what tells them apart. Where neither applies the
+line counts as a use, because claiming code is dead when it is not costs more
+than the reverse — this file has a paragraph about a standing false alarm being
+a check people stop reading, and it had grown two more. Eight became six.
+
+**The two fields the comparer that owns them never asked.** `parseSixes` has
+always answered `resetReturnsToFallback` and `resetSkipsTheMove`, and
+`compareSixes` read neither, so the audit reported them as written and never
+read. They are the shape that found the sixth divergent game: `LeelaAiWeb3`
+counts the run, prints a message, resets the counter and **moves nobody** — a
+rule present in every way a reader can see, and inert. Both are branches now,
+with the second one for a reset that sends the player back and then moves them
+anyway, spending the throw twice.
+
+Writing them turned two fixtures red, which is the point: both carried
+`resetSkipsTheMove: false` while nothing read the field, and one of them was
+named *a contract that agrees*. A value nobody consumes is a value nobody
+chose. The fields half of `audit-unread` now fails, and there is nothing for it
+to fail on.
+
+**The audit could not fail at all.** It has no `process.exitCode` anywhere: CI
+ran it, it printed its findings, and the job went green. That is why two unread
+fields and eight uncalled exports had stood in its output. The fields half is
+gated now; the exports half is not, because four remain — `isJournal`,
+`isSavedSeats`, `merge` and `unseeableIn` — and each is a judgement rather than
+a sweep. Said here so the silence is not read as nothing to do.
+
+**A stopped mutation run was still in the tree.** A ten-minute timeout killed
+`audit-mutants` mid-sweep and left `return [...chapters];` at the top of
+`bookFrom`. Two book tests went red for a reason that had nothing to do with the
+borrowing rule, and this is the second time it has happened. The on-disk note
+already handles it — a signal handler cannot, measured, because the script lives
+inside a synchronous child and dies where it stands — but the note is read by
+the *next run of that script*, which may be days away. `audit-scripts` reads it
+now, in CI, on every push.
+
+**And my own hand did the same damage.** Restoring a probe with `git
+checkout-index -f` threw away the `compareSixes` work in the same file, which is
+the hazard the standing rule about `git checkout --` is about, one command over.
+The mechanism to use is the script's own: `putItBack` restored the file byte for
+byte and removed its note.
+
 **A rule that looked in the tidy place (202nd pass).** The rule from the pass
 before read `export const NAME = [` in `scripts/lib`, and found eight lists where
 there are thirty-two. It was blind on three counts at once, and every one of them

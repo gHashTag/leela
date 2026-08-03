@@ -66,6 +66,34 @@ for (const name of readdirSync(join(ROOT, 'scripts')).sort()) {
 // Every place a reader is told to run one of them. Kept as a list of documents
 // rather than a list of commands: a command in a document nobody checks is how
 // README came to name `node` for a script that cannot use it.
+/**
+ * A mutation run that was stopped, still in the tree.
+ *
+ * `audit-mutants` edits shipped source on purpose and leaves a note on disk so
+ * the next run of *that script* can put it back — a signal handler cannot,
+ * because the process lives inside a synchronous child and dies where it
+ * stands. That works, and it waits for a run that may not come for days.
+ *
+ * It happened twice. The second time a timeout left `return [...chapters];` at
+ * the top of `bookFrom`, two book tests went red, and the reason had nothing to
+ * do with the code. Anybody reading that would debug the borrowing rule.
+ *
+ * This runs in CI on every push, so the note is loud within minutes rather than
+ * on the next mutation sweep. Recovery stays where it is: `bun
+ * scripts/audit-mutants.mjs` reads the note before it reads anything else.
+ */
+const UNDO_NOTE = join(ROOT, 'scripts', '.mutants-undo.json');
+
+if (existsSync(UNDO_NOTE)) {
+  const note = JSON.parse(readFileSync(UNDO_NOTE, 'utf8'));
+  console.log(`\nA stopped mutation run left a file broken on purpose:\n\n  ${note.path}\n`);
+  console.log(
+    'Every other check is now failing for a reason that has nothing to do with\n' +
+      'the code. Put it back with: bun scripts/audit-mutants.mjs\n',
+  );
+  process.exitCode = 1;
+}
+
 const DOCS = ['README.md', 'MIGRATION.md', 'packages/contracts/README.md', 'apps/bot/README.md'];
 
 const documented = new Map();

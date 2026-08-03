@@ -209,14 +209,14 @@ cd packages/engine && bun test
 | `@leela/journal` | 79 | the path as a file, and what came back — shared by the bot and the mini app |
 | `@leela/db` | 105 | schema, mapping, SQL migrations, legacy import |
 | `@leela/ai` | 198 | the companion — prompts built from the plan text |
-| `@leela/contracts` | 68 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
+| `@leela/contracts` | 74 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
 | `@leela/bot` | 613 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 234 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
 | `@leela/miniapp` | 483 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | `@leela/mobile` | 366 | the board on a phone (Expo), moved by the engine and by nothing else |
 | everything else | — | not yet ported |
 
-2917 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+2923 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
@@ -225,7 +225,8 @@ node scripts/audit-unread.mjs       # fields nobody reads, exports and class mem
 # scripts/lib/source.mjs           # blank a comment, read a call: shared by every check that reads source
 node scripts/audit-configs.mjs
 node scripts/audit-claims.mjs       # the table above, against the suites
-node scripts/audit-scripts.mjs      # every script runs under the runtime it names
+node scripts/audit-scripts.mjs      # every script runs under the runtime it names, and a
+                                    # stopped mutation run is not still in the tree
 node scripts/audit-arithmetic.mjs   # the sums the text states, in all 22 languages,
                                     # and sums a translation dropped the operator out of
 node scripts/audit-numbers.mjs      # board references a translation lost — and records

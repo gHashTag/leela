@@ -138,6 +138,17 @@ const staleExcuses = staleAmong(Object.keys(WRITE_ONLY), wouldFlag);
 
 console.log(`Checked ${declarations.length} field declarations across ${files.length} files.\n`);
 
+// The fields half can fail now, and does. It reported for passes and gated
+// nothing: this audit had no `process.exitCode` anywhere, so CI ran it, printed
+// its findings and went green. Two fields were standing in that output — both
+// on the contract's three-sixes rule, both now read by the comparer that owns
+// them — and nobody had acted on them because nothing made them act.
+//
+// The exports half is deliberately not gated yet: four remain, and each needs a
+// judgement rather than a sweep. Said in MIGRATION.md rather than left as a
+// silence that reads like nothing to do.
+if (unread.length > 0) process.exitCode = 1;
+
 if (unread.length === 0) {
   console.log('Every field has at least one reader.');
 } else {
@@ -176,6 +187,11 @@ if (staleExcuses.length > 0) {
 const PUBLIC_API = {
   // Small helpers a consumer would reach for; kept because the alternative is
   // every caller writing `plan in SNAKES` and drifting from the tables.
+  // Read out of the vendored Solidity, beside compareBoards and
+  // compareConstants which are already here. A consumer holding a redeployed
+  // contract to the engine needs all four.
+  parseSixes: 'contract surface: reads the three-sixes rule out of the source',
+  compareSixes: 'contract surface: names where that rule and the engine part company',
   snakeAt: 'board helper for consumers; the tables are the thing it guards',
   arrowAt: 'board helper for consumers',
   isOnBoard: 'board helper for consumers',

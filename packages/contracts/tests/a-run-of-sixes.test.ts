@@ -97,8 +97,11 @@ describe('where the contract and the engine part company', () => {
         runAfterEntry: 0,
         fallbackWrittenOnEverySix: false,
         resetsAt: SIXES_TO_RESET,
+        // Both as the vendored contract has them. These two carried arbitrary
+        // values while nothing read them, and `false` here described a reset
+        // that sends the player back and then walks them six squares on.
         resetReturnsToFallback: true,
-        resetSkipsTheMove: false,
+        resetSkipsTheMove: true,
       }),
     ).toEqual([]);
   });
@@ -109,7 +112,7 @@ describe('where the contract and the engine part company', () => {
       fallbackWrittenOnEverySix: false,
       resetsAt: 4,
       resetReturnsToFallback: true,
-      resetSkipsTheMove: false,
+      resetSkipsTheMove: true,
     });
 
     expect(divergences.map((one) => one.reason)).toEqual([
@@ -139,5 +142,66 @@ describe('the difference a player would feel', () => {
     // And the contract cannot do this at all, whatever square it happens on.
     const sixes = parseSixes(CONTRACT);
     expect(sixes.fallbackWrittenOnEverySix && sixes.resetReturnsToFallback).toBe(true);
+  });
+});
+
+describe('a rule that is present and does nothing', () => {
+  /**
+   * The two fields `parseSixes` had always answered and `compareSixes` had
+   * never asked. Nothing read them, so the audit reported them as written and
+   * never read, and the shape they describe is the one that found the sixth
+   * divergent game: `LeelaAiWeb3` counts the run, prints a message, resets the
+   * counter, and moves nobody.
+   *
+   * Asserted over the shape rather than over that donor: for every combination
+   * of the two answers, a reset that does not send the player back diverges,
+   * and one that sends them back and then moves them diverges too. Only the
+   * pair the contract actually has is silent.
+   */
+  const shapes = [
+    { returns: true, skips: true, expected: 0 },
+    { returns: false, skips: true, expected: 1 },
+    { returns: false, skips: false, expected: 1 },
+    { returns: true, skips: false, expected: 1 },
+  ];
+
+  for (const { returns, skips, expected } of shapes) {
+    it(`says ${expected} about a reset that ${returns ? 'returns' : 'does not return'} and ${skips ? 'skips' : 'does not skip'} the move`, () => {
+      const divergences = compareSixes({
+        runAfterEntry: 0,
+        fallbackWrittenOnEverySix: false,
+        resetsAt: SIXES_TO_RESET,
+        resetReturnsToFallback: returns,
+        resetSkipsTheMove: skips,
+      });
+
+      expect(divergences).toHaveLength(expected);
+    });
+  }
+
+  it('says nothing about either when no rule resets at all', () => {
+    // A contract with no three-sixes rule is a variant, not an inert rule, and
+    // reporting it here would name the wrong defect.
+    expect(
+      compareSixes({
+        runAfterEntry: 0,
+        fallbackWrittenOnEverySix: false,
+        resetsAt: null,
+        resetReturnsToFallback: false,
+        resetSkipsTheMove: false,
+      }),
+    ).toEqual([]);
+  });
+
+  it('says neither of these two about the contract this repository vendors', () => {
+    // The vendored contract diverges on two counts already recorded — it counts
+    // the entering six, and it overwrites the fallback on every six. Neither of
+    // the two branches added here is about those, and asserting the whole list
+    // is empty would have been asserting the wrong thing: the contract does
+    // send the player back, and does spend the throw doing it.
+    const reasons = compareSixes(parseSixes(CONTRACT)).map((one) => one.reason);
+
+    expect(reasons.some((one) => one.includes('present and inert'))).toBe(false);
+    expect(reasons.some((one) => one.includes('spent twice'))).toBe(false);
   });
 });

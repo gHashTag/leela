@@ -307,6 +307,16 @@ function directUsesOf(name, sources) {
     `^  (?:private |protected |readonly |static |async |get |set )*${name}\\s*[(<]`,
   );
 
+  // ...and a call written at the same indent reads exactly like that
+  // declaration. `forgetIntention(localStorage, seated.id);` sits two spaces in
+  // at the top of a function body, and the guard above erased it — so eight
+  // exports with live callers were reported as having none, which is the kind
+  // of standing false alarm this file has been burned by before. A declaration
+  // opens a body or ends a signature; a call ends the statement. The semicolon
+  // is what tells them apart, and when neither applies the line is counted as a
+  // use: claiming code is dead when it is not costs more than the reverse.
+  const statement = /;\s*$/;
+
   for (const source of sources) {
     // Import and export lists are plumbing; drop them before counting.
     const withoutPlumbing = source.replace(
@@ -318,7 +328,7 @@ function directUsesOf(name, sources) {
       if (!raw.includes(name)) continue;
       if (comment.test(raw)) continue;
       if (declaration.test(raw)) continue;
-      if (member.test(raw)) continue;
+      if (member.test(raw) && !statement.test(raw)) continue;
 
       // A name inside a string is not a call. `bot.command('board', …)`
       // registers a Telegram command that happens to share a name with an

@@ -241,5 +241,34 @@ export function compareSixes(sixes: ContractSixes): Divergence[] {
     });
   }
 
+  // The two fields nothing read. `parseSixes` had answered both since it was
+  // written and this comparer, which owns them, asked neither — so the shape
+  // that found the sixth divergent game was computed and thrown away.
+  //
+  // `LeelaAiWeb3` resets the counter, prints a message, and moves nobody: a
+  // rule present in every way a reader can see, and inert. A run length and a
+  // fallback square are the setup; whether the player is sent back is the rule.
+  if (sixes.resetsAt !== null && !sixes.resetReturnsToFallback) {
+    divergences.push({
+      from: sixes.resetsAt,
+      engine: 0,
+      contract: null,
+      reason:
+        'the reset counts the run and does not send the player back, so the rule is present and inert',
+    });
+  }
+
+  // And having sent them back, the throw must be spent. A reset that falls
+  // through into the move applies the six as well, so the player is returned
+  // and then walked six squares from there — further on than standing still.
+  if (sixes.resetsAt !== null && sixes.resetReturnsToFallback && !sixes.resetSkipsTheMove) {
+    divergences.push({
+      from: sixes.resetsAt,
+      engine: 0,
+      contract: null,
+      reason: 'the reset sends the player back and then moves them, so the throw is spent twice',
+    });
+  }
+
   return divergences;
 }
