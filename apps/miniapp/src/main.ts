@@ -935,14 +935,26 @@ function openReader(kind: ReaderKind, title: string, body: HTMLElement[]): void 
  * because three surfaces reading one text had each decided this for themselves
  * and two of them decided it wrong.
  *
- * `h3` at the shallowest: the dialog's own title is above this, and a reader
- * using headings to move through a chapter should not meet one that claims to
- * be the page.
+ * `h3` at the shallowest: the dialog's own title is an `h2` above this, and a
+ * reader using headings to move through a chapter should meet the next level
+ * down rather than one that claims to be the page.
+ *
+ * **Down by the distance, not by a fixed two.** The chakras chapter writes its
+ * sections as `####`, so a fixed shift drew them as `h6` under an `h2` title —
+ * a reader moving by heading level is told three levels are missing. Where a
+ * text starts counting is not something its author decided; the distances
+ * between its headings are.
  */
 function paragraphs(text: string): HTMLElement[] {
-  return piecesOf(text).map((piece) => {
+  const pieces = piecesOf(text);
+  const shallowest = Math.min(...pieces.map((piece) => piece.heading?.level ?? 9), 9);
+  const shift = shallowest === 9 ? 0 : 3 - shallowest;
+
+  return pieces.map((piece) => {
     if (piece.heading) {
-      const said = document.createElement(`h${Math.min(piece.heading.level + 2, 6)}`);
+      const said = document.createElement(
+        `h${Math.min(Math.max(piece.heading.level + shift, 3), 6)}`,
+      );
       said.textContent = piece.text;
       return said;
     }

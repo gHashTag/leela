@@ -7680,6 +7680,33 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The outline a reader walks had a hole in it, on both surfaces.** Somebody who
+cannot see a page moves through it by heading level — *next heading*, *next at
+this level*, *up one*. A level that is skipped tells them a section is missing.
+
+Both surfaces shifted every heading by a fixed amount and both assumed the text
+starts at `#`. It does not: the rules chapters write their sections as `##` and
+the chakras chapter as `####`. So the book drew **thirty-eight pages** as
+`h1 → h3`, and the mini app drew the chakras under an `h2` dialog title as
+`h6` — three levels missing at once, on the surface people play on.
+
+Where a text starts counting is not something its author decided. The distances
+between its headings are, and those are what a reader is owed. Each surface
+shifts by the distance from its own container now: the book's pages carry an
+`h1`, so the shallowest heading becomes `h2`; the mini app's reader has an `h2`
+title, so it becomes `h3`. Thirty-eight to zero.
+
+**No shipped text uses two heading levels**, measured across all twenty-two
+languages — so the half of the rule that keeps the distances is asserted on a
+text written for it. A rule proved only by the data it was written for is a rule
+that stops the day the data changes.
+
+**And the rule-shaped test could not see the surfaces using it.** It computes an
+outline of its own, so reverting the shift in either application broke nothing
+it could notice. The book is caught by building it; the mini app by opening the
+rules, clicking the chapter, and reading the levels off the dialog a player
+gets. Both reverts now fail.
+
 **A player who cannot see the board could not find their own square.** The
 board is seventy-two `<button>`s and each is named after the plan it is —
 *41. The human plane (jana-loka)* — which was already right. Which one the

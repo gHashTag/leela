@@ -54,8 +54,20 @@ describe('markdown', () => {
   });
 
   it('demotes headings, so a page has exactly one h1', () => {
+    // The page's own title is the `h1`; nothing in a body may claim to be one.
     expect(renderMarkdown('# Title')).toBe('<h2>Title</h2>');
-    expect(renderMarkdown('## Sub')).toBe('<h3>Sub</h3>');
+    expect(renderMarkdown('###### Deep')).toBe('<h2>Deep</h2>');
+  });
+
+  it('starts a text at h2 whatever depth its author counted from', () => {
+    // This asserted `## Sub` becomes an `h3`, which was the old mechanism
+    // rather than the rule: a shift of exactly one, and a text that begins at
+    // `##` then went `h1 → h3` with nothing between. Thirty-eight pages did.
+    // What a reader is owed is the distances the author wrote, and those are
+    // kept: the shallowest heading becomes the `h2`, the rest keep their gap.
+    expect(renderMarkdown('## Sub')).toBe('<h2>Sub</h2>');
+    expect(renderMarkdown('## Sub\n\n### Under it')).toBe('<h2>Sub</h2>\n<h3>Under it</h3>');
+    expect(renderMarkdown('# Title\n\n## Sub')).toBe('<h2>Title</h2>\n<h3>Sub</h3>');
   });
 
   it('escapes before it formats, so markup in the source cannot inject', () => {

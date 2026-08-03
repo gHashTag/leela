@@ -74,6 +74,23 @@ export function renderMarkdown(source: string): string {
   // next line down, and this page carried four hash marks and no headings at
   // all until `piecesOf` said where to cut. The other two surfaces ask the same
   // question of the same function.
+  // The shallowest heading the text actually uses, so the outline a reader
+  // walks has no hole in it.
+  //
+  // Shifting every heading down by one keeps the page's own title first, and
+  // it assumed the text starts at `#`. The rules chapters start at `##`, so
+  // thirty-eight pages went h1 → h3 with no h2 — and a reader moving by
+  // heading level is told a section is missing. The author's *relative* depths
+  // are what matter; where they start is not something a chapter decides on
+  // purpose.
+  const shallowest = Math.min(
+    ...piecesOf(source).map((piece) => piece.heading?.level ?? 9),
+    9,
+  );
+  // Two, because one belongs to the page. A text with no headings shifts by
+  // nothing, since there is nothing to shift.
+  const shift = shallowest === 9 ? 0 : 2 - shallowest;
+
   const blocks = piecesOf(source).map((piece) =>
     piece.heading ? `${'#'.repeat(piece.heading.level)} ${piece.text}` : piece.text,
   );
@@ -88,9 +105,10 @@ export function renderMarkdown(source: string): string {
       // hashes to a reader. See `headingOf`.
       const heading = headingOf(trimmed);
       if (heading) {
-        // One deeper than the source says, so the page's own title stays the
-        // first heading on it. That part is this surface's, and stays here.
-        const level = Math.min(heading.level + 1, 6);
+        // Deep enough that the page's own title stays first, and no deeper —
+        // the shallowest heading in the text becomes `h2` and the rest keep
+        // their distance from it.
+        const level = Math.min(Math.max(heading.level + shift, 2), 6);
         return `<h${level}>${inline(heading.text)}</h${level}>`;
       }
 

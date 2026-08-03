@@ -169,6 +169,40 @@ describe('the square the player is standing on', { timeout: 30_000 }, () => {
     expect(mine()[0]?.classList.contains('here')).toBe(true);
   });
 
+  it('opens a chapter whose headings step down one at a time', async () => {
+    // The rule lives in `@leela/content`'s test; this is the surface using it.
+    // Reverting the shift in `main.ts` breaks nothing a rule-shaped test can
+    // see, because such a test computes the outline itself — so the reader is
+    // opened and the levels are read off the dialog that a player gets.
+    //
+    // The dialog's own title is an `h2`, so the chapter's sections must start
+    // at `h3`. The chakras chapter writes them as `####`, which a fixed shift
+    // drew as `h6`: three levels missing under the title.
+    await play(held());
+
+    (document.getElementById('rules') as HTMLButtonElement).click();
+    await until(() => document.querySelectorAll('#list-items button').length > 0, 'the rules list');
+
+    const chapters = [...document.querySelectorAll('#list-items button')];
+    const chakras = chapters.find((one) => /chakra|чакр/i.test(one.textContent ?? '')) ?? chapters[0];
+    (chakras as HTMLButtonElement).click();
+    await until(
+      () => (document.getElementById('reader-body')?.children.length ?? 0) > 0,
+      'the chapter to open',
+    );
+
+    const levels = [...(document.getElementById('reader-body')?.children ?? [])]
+      .filter((node) => /^H[1-6]$/.test(node.tagName))
+      .map((node) => Number(node.tagName.slice(1)));
+
+    expect(levels.length).toBeGreaterThan(0);
+    // The title is an `h2`; nothing under it may jump more than one level.
+    for (const [at, level] of [2, ...levels].entries()) {
+      if (at === 0) continue;
+      expect(level - Number([2, ...levels][at - 1])).toBeLessThanOrEqual(1);
+    }
+  });
+
   it('is the winning square before the first six, where the piece actually sits', async () => {
     // Measured rather than assumed. The first version of this expected no mark
     // at all and was wrong about the game: a waiting player's piece stands on
