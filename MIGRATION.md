@@ -7680,6 +7680,28 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Nothing had ever played a game to its end.** `sixty-eight.test.ts` holds what
+the engine leaves behind on the winning square, and `assembled.test.ts` plays a
+real game as far as one account. The win is what the whole thing is for, and
+every claim about it was a claim about a function.
+
+Played now, through the bot an operator runs, on a real SQLite file: throw until
+somebody reaches Cosmic Consciousness, writing an account whenever the gate
+closes, and then read the end. The throw names the square and who reached it;
+the winner **still owes an account**, which is the report gate's argument
+carried to the last square; that account is taken and the game called complete;
+it is in the path afterwards, filed under 68, because a record that loses the
+last thing written is not a record; and a throw after that is refused in words
+that say what can still be done.
+
+All of it was already right. None of it was held.
+
+**The bound is twenty thousand throws, and it is not a guess.** Twenty games
+played here ran from ten throws to two hundred and fifty-seven, median
+ninety-one — a die and a board of snakes has a long tail, and a test that fails
+once a year because a game ran long is worse than no test. At about a third of a
+millisecond a throw it costs nothing to be generous.
+
 **Two readers of one database, and the one square they answer differently.** A
 turn can be asked about from a `players` row — `canPlayerRoll` — or from a
 table, `canCurrentPlayerRoll(sessionFromRows(...))`. *One database, two readers*
