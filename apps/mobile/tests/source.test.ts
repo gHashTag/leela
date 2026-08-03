@@ -185,7 +185,15 @@ describe('one blanker, not five', () => {
    * so the rule is about **asserting** over source, and the exception is named
    * rather than left to a pattern to miss.
    */
-  const RUNS_IT = ['assembled.test.ts', 'partly-written.test.ts', 'build.test.ts'];
+  const RUNS_IT = [
+    'assembled.test.ts',
+    'partly-written.test.ts',
+    'build.test.ts',
+    // Plays the mini app to see which square carries `aria-current`. It reads
+    // `index.html` to build the page, and asserts about the document that comes
+    // out rather than about the file that went in.
+    'which-square-is-mine.test.ts',
+  ];
 
   it('makes every check that asserts over source blank it first', () => {
     /**

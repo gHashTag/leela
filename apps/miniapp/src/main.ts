@@ -376,6 +376,7 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
   for (const cell of cells.values()) {
     cell.classList.remove('here', 'from', 'other');
     cell.removeAttribute('data-seat');
+    cell.removeAttribute('aria-current');
   }
 
   // Everyone at the table, not only whoever holds the turn. The published app
@@ -394,7 +395,23 @@ function draw(event?: MoveEvent, threwSeat = session.turnIndex): void {
     cell.dataset.seat = String(seat + 1);
   }
 
-  if (show.here !== null) cells.get(show.here)?.classList.add('here');
+  if (show.here !== null) {
+    const here = cells.get(show.here);
+    here?.classList.add('here');
+
+    // Where the player is standing, for somebody who cannot see the board.
+    //
+    // The square was marked by a class and nothing else, so a player moving
+    // across seventy-two buttons by keyboard heard *41. The human plane
+    // (jana-loka)* on every one of them and had no way to find their own. The
+    // sentence in `#say` announces it once, on the throw; the board itself said
+    // nothing, and a board is what a player comes back to.
+    //
+    // `aria-current` is the word for exactly this — the one item of a set that
+    // is the current one — so nothing new has to be said in twenty-two
+    // languages for it to be understood.
+    here?.setAttribute('aria-current', 'true');
+  }
   if (show.from !== null) cells.get(show.from)?.classList.add('from');
 
   el.planNumber.textContent = show.number;

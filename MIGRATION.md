@@ -7680,6 +7680,32 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A player who cannot see the board could not find their own square.** The
+board is seventy-two `<button>`s and each is named after the plan it is —
+*41. The human plane (jana-loka)* — which was already right. Which one the
+player is standing on was a CSS class, and a class is a colour. So a player
+moving across the board by keyboard heard seventy-two square names and had no
+way to find their own.
+
+The sentence in `#say` announces the square once, on the throw. A board is a
+thing a player comes back to, and it said nothing.
+
+`aria-current` is the word for exactly this — the one item of a set that is the
+current one — so nothing new has to be said in twenty-two languages for it to be
+understood, which matters for a catalogue that is complete in two.
+
+**The half a repair like this loses.** Every test that starts a fresh document
+passes whether or not the mark is ever cleared: measured, taking the
+`removeAttribute` out broke nothing until a board was drawn twice. So one test
+throws and looks again, and the mark has to have moved.
+
+**And the board taught me something about itself.** The first version expected
+no mark before the first six and was wrong about the game: a waiting player's
+piece stands on **68**. The published app starts every seat there —
+`plans: [68, 68, …]` — and this app followed it so that a player looking for
+their piece before the first six finds one. The mark says where the piece is, so
+it says 68.
+
 **Nothing checked what a throw tells a player.** The catalogue is held to having
 a key for every outcome on both surfaces and to saying it in both languages.
 What it *says* was unasserted — so taking `{title}` out of `app.step` would
