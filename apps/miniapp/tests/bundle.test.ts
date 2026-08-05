@@ -57,7 +57,17 @@ async function buildOnce(): Promise<{ warnings: string[]; chunks: Map<string, nu
   return { warnings, chunks };
 }
 
-describe('the mini app ships one language, not twenty-two', () => {
+/**
+ * The bound is generous because a real bundle is built inside it.
+ *
+ * `buildOnce` is shared, so whichever test awaits it first pays for the build —
+ * and under `bun run verify`, with nine other packages running beside it, that
+ * first one timed out at the default five seconds while passing on its own.
+ * The same shape has bitten the play-through tests twice; the cost is a build,
+ * not a hang, and a bound that fits an idle machine is a bound that fails on a
+ * busy one.
+ */
+describe('the mini app ships one language, not twenty-two', { timeout: 120_000 }, () => {
   const built = buildOnce();
 
   it('splits every language into its own chunk', async () => {

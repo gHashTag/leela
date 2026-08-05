@@ -7680,6 +7680,41 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The other two places the companion is called, asked the same way.** The
+companion answers from three doors — a question asked with `/ask`, a reflection
+on an account just filed, and a square handed over from the mini app — and each
+assembles the player's own material for itself. Probed one decision at a time,
+because a combined mutation that turns a test red reads as *defended* when only
+half of it is.
+
+Two more were held by nothing. The reflection on a filed account is the mirror
+image of `/ask`: its journey is defended and **its question is not**, so an
+account of Bob's could be framed by the question Ada is playing under — up to
+eight hundred characters of her own writing, sent to a model to shape his
+answer. And the handed-over square's path is defended against being *another
+player's* and not against being **nobody's**: reading a history for an id at no
+seat assembles an empty journey, and the companion answers a stranger's square
+blind to everything the taker has ever written, with nothing to say so.
+
+All five decisions across the three doors now fail when broken.
+
+**Three instrument errors before any of it could be claimed, and each one read
+like a defect.** A wrong-seat mutation is invisible from the first seat — Ada
+opened the table, so `players[0]` *is* her, and the reflection under test had to
+be Bob's. A window measured from the start of the test caught the other seat's
+reflection, asked for by the loop itself to move the turn, and reported a leak
+that was the instrument reading its own noise; it is taken immediately before
+the account is filed now. And the fixture had to play further than it did: a
+round rolls for **both** seats or the turn stops dead the first time it belongs
+to the other, and each seat needs **two** accounts rather than one, because
+`behind` takes out the newest account on the square being answered — with one,
+that is the whole path, and the prompt came out empty.
+
+**A flake in the shared suite, fixed while it was visible.** `bundle.test.ts`
+builds a real bundle inside the default five-second bound; it passed alone and
+timed out under `bun run verify` beside nine other packages. The same shape has
+bitten the play-through tests twice. The cost is a build, not a hang.
+
 **The same leak one level in: whose writing the companion is told.** `/save`
 sending a journal to the wrong *place* was the pass before. `/ask` builds what
 the model is sent out of three things belonging to the asker — the path they
