@@ -161,12 +161,35 @@ async function atATableOfTwo() {
    * turn dead the first time it belongs to the other, and a loop waiting for an
    * account then spins five hundred times and gives up. Written that way first.
    */
+  /**
+   * Where the model-call window for each seat's newest account starts.
+   *
+   * Kept as the game is played rather than opened afterwards. Written the other
+   * way first — play on until one more account is filed — and it **failed on
+   * CI**: a seat that reached Cosmic Consciousness during the setup can never
+   * owe another account, so the loop spun five hundred times and gave up. The
+   * accounts are already there; nothing has to be played to read them.
+   */
+  const lastReport = new Map<number, { from: number; to: number }>();
+
   const round = async (nth: number) => {
     for (const who of [ADA, BOB]) {
       await tell(who, '/roll');
+
+      // Immediately before, so what comes back is the window this one report
+      // opened. Measured from the start of the test instead, and the other
+      // seat's reflection — asked for by this very loop, to move the turn —
+      // was in it.
+      const from = model.calls.length;
       const answer = await tell(who, `/report ${words.get(who.id)}, on the ${nth}th square`);
 
-      if (/has reported/i.test(answer)) wrote.set(who.id, (wrote.get(who.id) ?? 0) + 1);
+      if (/has reported/i.test(answer)) {
+        wrote.set(who.id, (wrote.get(who.id) ?? 0) + 1);
+        // Closed as well as opened. Left open, the window ran on into the
+        // rounds that followed and caught the other seat's reflections, which
+        // reads exactly like a leak.
+        lastReport.set(who.id, { from, to: model.calls.length });
+      }
     }
   };
 
@@ -192,37 +215,17 @@ async function atATableOfTwo() {
    * and produced an **empty prompt** under the full run, which reads like a
    * leak and is a fixture that did not play far enough.
    */
-  const writeOnce = async (who: typeof ADA, text: string) => {
-    for (let tries = 0; tries < 500; tries += 1) {
-      // Through a whole round, so the turn keeps moving. Only this seat's words
-      // are the ones being watched for; the other's keep the game going.
-      await tell(who, '/roll');
-
-      // Taken **immediately before** the account is filed, so what comes back
-      // is the window this one report opened. Measured over everything since
-      // the test began instead, and the other seat's reflection — asked for by
-      // this very loop, to move the turn — was in it: the check reported a leak
-      // that was the instrument reading its own noise.
-      const from = model.calls.length;
-      if (/has reported/i.test(await tell(who, `/report ${text}`))) return { filed: true, from };
-
-      await tell(who === ADA ? BOB : ADA, '/roll');
-      await tell(who === ADA ? BOB : ADA, `/report ${words.get(who === ADA ? BOB.id : ADA.id)}`);
-    }
-
-    return { filed: false, from: model.calls.length };
-  };
-
-  return { bot, sent, said, model, storage, tell, wrote, writeOnce };
+  return { bot, sent, said, model, storage, tell, wrote, lastReport };
 }
 
-/** Everything the model was told, across every call, as one piece of text. */
+/** Everything the model was told, across a window of calls, as one text. */
 const toldTheModel = (
   model: { calls: Array<{ messages: Array<{ content: string }> }> },
   start: number,
+  end = model.calls.length,
 ): string =>
   model.calls
-    .slice(start)
+    .slice(start, end)
     .flatMap((call) => call.messages.map((message) => message.content))
     .join('\n');
 
@@ -286,13 +289,17 @@ describe('a reflection on an account just filed', () => {
     const table = await atATableOfTwo();
     expect(Math.min(...table.wrote.values()), 'both players wrote more than once').toBeGreaterThan(1);
 
-    const written = await table.writeOnce(BOB, `${BOBS}, and once more at the end`);
     table.storage.stopPruning?.();
 
-    const told = toldTheModel(table.model, written.from);
+    const window = table.lastReport.get(BOB.id);
+    const told = toldTheModel(table.model, window?.from ?? 0, window?.to);
 
-    expect(written.filed, 'an account was filed').toBe(true);
-    expect(table.model.calls.length, 'the companion was asked at all').toBeGreaterThan(written.from);
+    expect(window, 'an account of his was filed').toBeDefined();
+    expect(window!.to, 'the companion was asked about it').toBeGreaterThan(window!.from);
+    // His own path is behind it. Without this the check passes over a prompt
+    // with no journey at all — which is the state the first report of a game
+    // produces, and it reads exactly like nothing having leaked.
+    expect(told, 'his own writing is there to leak from').toContain(BOBS);
     expect(told, 'nothing of Ada’s').not.toContain(ADAS);
     expect(told, 'and not the question she is playing under').not.toContain(ADAS_QUESTION);
   });
@@ -302,11 +309,12 @@ describe('a reflection on an account just filed', () => {
     // over an empty prompt.
     const table = await atATableOfTwo();
 
-    const written = await table.writeOnce(BOB, `${BOBS}, and once more at the end`);
     table.storage.stopPruning?.();
 
-    expect(written.filed, 'an account was filed').toBe(true);
-    expect(toldTheModel(table.model, written.from)).toContain(BOBS);
+    const window = table.lastReport.get(BOB.id);
+
+    expect(window, 'an account of his was filed').toBeDefined();
+    expect(toldTheModel(table.model, window!.from, window!.to)).toContain(BOBS);
   });
 });
 
