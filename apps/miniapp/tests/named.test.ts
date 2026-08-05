@@ -29,7 +29,13 @@ import { applyChrome } from '../src/chrome';
  */
 
 const HERE = resolve(__dirname, '..');
-const HTML = blank(readFileSync(resolve(HERE, 'index.html'), 'utf8'));
+// As a document, not as a module. Read with the module blanker, an HTML
+// comment stays visible: a control that exists only inside one was demanded to
+// be translated, and — the direction that matters — the writer dialog's way out
+// was commented out and *"gives every one of them a control that closes it"
+// still passed*. That check exists because a player was left in a dialog with
+// nothing to press.
+const HTML = blank(readFileSync(resolve(HERE, 'index.html'), 'utf8'), 'html');
 const SOURCES = ['chrome.ts', 'main.ts', 'view.ts'].map((file) =>
   blank(readFileSync(resolve(HERE, 'src', file), 'utf8')),
 );

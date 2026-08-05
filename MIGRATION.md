@@ -7680,6 +7680,41 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A dialog with no way out passed the check that exists to prevent it.** Three
+tests read the mini app's `index.html` without reading it as a *document*:
+`named.test.ts` handed it to the module blanker, and
+`a-word-from-another-language.test.ts` and `style.test.ts` handed it to no
+blanker at all. An HTML comment therefore stayed visible to every regular
+expression in them.
+
+Both directions were measured before anything was changed. A control that exists
+only inside a comment was demanded to be translated — a false failure somebody
+debugging would have to work out. And the writer dialog's way out was put inside
+a comment, and *"gives every one of them a control that closes it"* **passed**.
+That check is there because a player was once left in a dialog with nothing to
+press: no Escape key on a phone, Telegram's back button unwired, Save refusing
+two characters.
+
+**The sweep that was written to catch this class did not catch it.** `blank`
+grew an `html` mode, and a repository-wide rule was written the same pass so the
+next file to read a source would be held to it. The rule asks whether `blank`
+was *called*; it never asked whether the blanker was given the syntax of the
+file it was handed, and one of the two rules only looks at `.ts`, `.tsx` and
+`.mjs` reads at all. So the fix and the guard around it both shipped, and the
+document went on being read as a module underneath them.
+
+Asked now with the balanced-parentheses reader rather than a pattern — the call
+is `blank(readFileSync(resolve(HERE, 'index.html'), 'utf8'), 'html')`, and
+`[^)]*` stops at the first bracket of three. The documents that are *run* rather
+than asserted over are named with their reason, as the sibling rule names its
+own, and so is the one test that reads the pages the build produced: a comment
+in an artefact is not a developer's note that could pass for markup.
+
+**And the first version of the check was wrong before the code was**, in the way
+this file keeps recording: it required the `'html'` argument to be last, and a
+call broken over lines gets a trailing comma from the formatter, so two correct
+calls were reported as defects.
+
 **Four doors and three answers about the question.** A path leaves this app two
 ways — the whole thing as a file, one square in words somebody can send — and
 each is written here and read back here. `squareText` and `toDocument` wrote a

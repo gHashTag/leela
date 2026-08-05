@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { blank } from '../../../scripts/lib/source.mjs';
 
 /**
  * What a phone does to a field it thinks is too small to read.
@@ -21,7 +22,9 @@ const STYLE = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8').repl
   /\/\*[\s\S]*?\*\//g,
   '',
 );
-const HTML = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
+// As a document. A selector named only inside an HTML comment is not on the
+// page, and this file's whole question is which of them are.
+const HTML = blank(readFileSync(resolve(process.cwd(), 'index.html'), 'utf8'), 'html');
 
 /** Every selector's declarations, as text. */
 function rulesFor(selector: string): string[] {

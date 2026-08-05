@@ -174,9 +174,11 @@ describe('a control the catalogue could not translate', () => {
  */
 describe('the sentence after a throw', () => {
   it('is the one the page announces', () => {
-    const markup = readFileSync(
-      join(dirname(fileURLToPath(import.meta.url)), '..', 'index.html'),
-      'utf8',
+    // Blanked as a document: `aria-live=` inside an HTML comment counts to a
+    // regular expression exactly like the one on the page.
+    const markup = blank(
+      readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'index.html'), 'utf8'),
+      'html',
     );
 
     const say = /<section[^>]*id="say"[^>]*>/.exec(markup)?.[0] ?? '';
@@ -189,9 +191,11 @@ describe('the sentence after a throw', () => {
     // `plan-title` must stay silent: two live regions changing together make a
     // screen reader read the square's name twice, and the announcement is the
     // sentence rather than the label.
-    const markup = readFileSync(
-      join(dirname(fileURLToPath(import.meta.url)), '..', 'index.html'),
-      'utf8',
+    // Blanked as a document: `aria-live=` inside an HTML comment counts to a
+    // regular expression exactly like the one on the page.
+    const markup = blank(
+      readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'index.html'), 'utf8'),
+      'html',
     );
 
     const title = /<[a-z]+[^>]*id="plan-title"[^>]*>/.exec(markup)?.[0] ?? '';

@@ -315,6 +315,91 @@ describe('a claim about source text', () => {
     expect(raw).toEqual([]);
   });
 
+  /**
+   * And a document is read as a document.
+   *
+   * The rule above sweeps modules; the one further up asks only whether `blank`
+   * was *called*. Neither asks whether the blanker was given the syntax of the
+   * file it was handed — so `named.test.ts` read `index.html` with the module
+   * blanker for as long as it has existed, and an HTML comment stayed visible
+   * to every regular expression in it.
+   *
+   * Both directions were measured before this was written. A control that
+   * exists only inside a comment was demanded to be translated, which is a
+   * false failure somebody debugging would have to work out. And the way out of
+   * the writer dialog was put inside a comment, and *"gives every one of them a
+   * control that closes it"* **passed** — a check written because a player was
+   * left in a dialog with nothing to press, satisfied by a comment.
+   *
+   * Asked with the balanced-parentheses reader rather than a pattern: the call
+   * is `blank(readFileSync(resolve(HERE, 'index.html'), 'utf8'), 'html')`, and
+   * `[^)]*` stops at the first bracket of three.
+   */
+  /**
+   * The documents this sweep is not about, each named with its reason.
+   *
+   * Named rather than left to a pattern, which is how the sibling rule above
+   * handles the same distinction: a list somebody has to add to is a list
+   * somebody has to justify adding to.
+   */
+  const READS_IT_OTHERWISE = [
+    // These load `index.html` into happy-dom and play the app through it.
+    // Blanking would alter the thing under test.
+    'assembled.test.ts',
+    'partly-written.test.ts',
+    'which-square-is-mine.test.ts',
+    'the-end-of-a-game.test.ts',
+    // Reads the pages the build just produced. A comment in an artefact is not
+    // a developer's note that could pass for markup, and asserting over output
+    // is a different question from asserting over source.
+    'build.test.ts',
+  ];
+
+  it('is made about a document with the document syntax', () => {
+    const REPO = join(HERE, '..', '..', '..');
+    const wrong: string[] = [];
+
+    for (const file of testFiles(REPO)) {
+      const text = readFileSync(file, 'utf8');
+      const here = file.slice(REPO.length + 1);
+
+      // Every read of a document, and whether a blanker was told it is one.
+      for (const call of callsTo(text, 'blank') as Array<{ args: string }>) {
+        if (!/\.html['"]/.test(call.args)) continue;
+        // The trailing comma is allowed: a call broken over lines gets one from
+        // the formatter, and the first version of this check read that as a
+        // missing argument.
+        if (!/,\s*['"]html['"],?\s*$/.test(call.args.trim())) {
+          wrong.push(`${here}: blanked as a module`);
+        }
+      }
+
+      // And a read that never reached a blanker at all. `blank(readFileSync(…`
+      // is the shape above, so what is left is a raw one. Two of these were
+      // found by writing the check: `a-word-from-another-language.test.ts`
+      // counted `aria-live=` over the whole file, and `style.test.ts` asked
+      // which selectors the page uses.
+      if (READS_IT_OTHERWISE.some((named) => here.endsWith(named))) continue;
+
+      for (const read of text.matchAll(/(blank\(\s*)?readFileSync\([^;]*?\.html['"]/g)) {
+        if (!read[1]) wrong.push(`${here}: read raw`);
+      }
+    }
+
+    expect(wrong).toEqual([]);
+  });
+
+  it('finds the document reads it is looking for, so that sweep is about something too', () => {
+    // The same guard the module sweep has. No document reads at all would make
+    // the assertion above pass over a question nobody asked.
+    const REPO = join(HERE, '..', '..', '..');
+    const reading = testFiles(REPO).filter((file) =>
+      /readFileSync\([^;]*?\.html['"]/.test(readFileSync(file, 'utf8')),
+    );
+
+    expect(reading.length).toBeGreaterThan(2);
+  });
+
   it('finds the reads it is looking for, so the sweep is about something', () => {
     // Zero source-reading tests would make the assertion above pass on a
     // repository that never reads a source file at all.
