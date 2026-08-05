@@ -7680,6 +7680,38 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A whole journal could be posted to the table again, and nothing would say
+so.** `/save` hands a player back every account they have written, about every
+square they have stood on. It used to hand it to *the chat the command came
+from* — `replyWithDocument` answers the chat and nothing else — so at a table of
+six one player's year of writing was posted for everybody to read and to keep.
+That was found and fixed, and **the fix was held by nothing**: replacing the
+whole `destinationFor` call in the handler with `{ kind: 'chat' }` leaves all
+six hundred and seventeen of the bot's tests passing.
+
+The reason is the shape this repository keeps meeting. Both halves were tested
+and the crossing was not: `destinationFor` has its own unit tests, and `deliver`
+is held by two — take its routing out and *"sends a private answer directly, not
+into the group"* goes red at once. But a document is not a `Reply`, so `/save` is
+the one route that had to write the decision out again, and the copy was the one
+nothing asked about. Every existing `/save` test asked in a private chat, where
+the answer is the same either way.
+
+Held now as a property rather than as a route: **nothing a player wrote reaches
+the table.** Everything the bot sends to the group is searched for the words she
+actually wrote, at the end of a played game where the record is longest — so a
+reply that quoted the path fails it too, and a fourth branch added inside the
+handler tomorrow is covered without being named. All three answers are asserted,
+because the first attempt at the fix required `direct` and broke the ordinary
+one: in a private chat the destination *is* the chat, and refusing to send there
+sent a player who had asked in a direct message a note telling them to ask in a
+direct message.
+
+**Four corners of the same path were measured and are right**: `/save` after
+winning carries the winning square's account and the question; asked in the
+group it goes to the player; after `/new` the file still holds the whole record;
+and `/path` and the file name the same squares.
+
 **The same defect one syntax over, found by asking the question again.** Five
 tests read a stylesheet and four of them read it differently: one raw, one raw,
 one through a comment-stripper written on the spot, one through the module
