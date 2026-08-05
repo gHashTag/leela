@@ -130,6 +130,49 @@ describe('finding a call', () => {
   });
 });
 
+/**
+ * The documents that are run or produced rather than asserted over, each with
+ * the ground it is excused on — and the ground is checked.
+ *
+ * Two things were wrong with the list this replaces. It named files by their
+ * **basename** and matched with `endsWith`, so one waiver covered every file
+ * of that name: `the-end-of-a-game.test.ts` is written three times in this
+ * repository, and naming the mini app's excused the bot's and the phone's as
+ * well. And its own comment promised *"has to exist and has to be one that
+ * loads a document"* while the code checked only that it existed — the shape
+ * `audit-whose` was caught by the pass before, where a waiver said something
+ * nothing read back.
+ *
+ * `runs` means the markup goes into a live document, which is what makes
+ * blanking wrong: it would alter the thing under test. `built` means the file
+ * reads pages a build has just produced into a directory of its own — an
+ * artefact rather than source, and a comment in one is not a developer's note
+ * that could pass for markup.
+ */
+const EXCUSED: Array<{ file: string; because: 'runs' | 'built' }> = [
+  { file: 'apps/miniapp/tests/assembled.test.ts', because: 'runs' },
+  { file: 'apps/miniapp/tests/partly-written.test.ts', because: 'runs' },
+  { file: 'apps/miniapp/tests/which-square-is-mine.test.ts', because: 'runs' },
+  { file: 'apps/miniapp/tests/the-end-of-a-game.test.ts', because: 'runs' },
+  { file: 'apps/miniapp/tests/the-same-seat-asked-three-times.test.ts', because: 'runs' },
+  { file: 'apps/miniapp/tests/a-copy-of-whose-path.test.ts', because: 'runs' },
+  { file: 'apps/docs/tests/build.test.ts', because: 'built' },
+];
+
+/** The two grounds, as something a file either does or does not do. */
+const GROUNDS = {
+  runs: (source: string) => /document\.body\.innerHTML\s*=/.test(source),
+  built: (source: string) => /mkdtempSync\(/.test(source),
+};
+
+const excused = (file: string) => {
+  // Absolute in one sweep and repo-relative in the other, so the entry is
+  // matched as a whole path or as a tail of one — never as a bare name, which
+  // is what let a single waiver cover three files.
+  const path = file.replace(/\\/g, '/');
+  return EXCUSED.some((one) => path === one.file || path.endsWith(`/${one.file}`));
+};
+
 describe('one blanker, not five', () => {
   /**
    * Every check that reads source uses the shared one. It was written by hand
@@ -185,22 +228,7 @@ describe('one blanker, not five', () => {
    * so the rule is about **asserting** over source, and the exception is named
    * rather than left to a pattern to miss.
    */
-  const RUNS_IT = [
-    'assembled.test.ts',
-    'partly-written.test.ts',
-    'build.test.ts',
-    // Plays the mini app to see which square carries `aria-current`. It reads
-    // `index.html` to build the page, and asserts about the document that comes
-    // out rather than about the file that went in.
-    'which-square-is-mine.test.ts',
-    // Plays the mini app to its winning square, for the same reason.
-    'the-end-of-a-game.test.ts',
-    // Seats a table of two and opens the writing box on it. Same reason again:
-    // the document is loaded and run, not asserted over.
-    'the-same-seat-asked-three-times.test.ts',
-    // Opens the path view at a table and presses a seat's own Save a copy.
-    'a-copy-of-whose-path.test.ts',
-  ];
+
 
   it('makes every check that asserts over source blank it first', () => {
     /**
@@ -209,7 +237,7 @@ describe('one blanker, not five', () => {
      * were wrong on the next comment somebody wrote. Ten of them.
      */
     const unblanked = files.filter((file) => {
-      if (RUNS_IT.some((runs) => file.endsWith(runs))) return false;
+      if (excused(file)) return false;
 
       const source = readFileSync(file, 'utf8');
       const reads = /readFileSync\([^)]*['"`][^'"`]*(src|index\.html)/.test(source);
@@ -219,13 +247,31 @@ describe('one blanker, not five', () => {
     expect(unblanked.map((file) => file.replace(TESTS, ''))).toEqual([]);
   });
 
-  it('names the ones that run a document rather than reading it', () => {
-    // The guard against the exception growing quietly: each named file has to
-    // exist and has to be one that loads a document.
-    for (const runs of RUNS_IT) {
-      const named = files.filter((file) => file.endsWith(runs));
-      expect(named.length, runs).toBeGreaterThan(0);
+  it('names one file each, and only files that exist', () => {
+    // A name that matches nothing is a waiver for a file somebody deleted, and
+    // a name that matches two is a waiver somebody else inherited.
+    for (const one of EXCUSED) {
+      const named = files.filter((file) => file.replace(/\\/g, '/').endsWith(`/${one.file}`));
+      expect(named.length, one.file).toBe(1);
     }
+  });
+
+  it('excuses each of them on a ground it can be seen to have', () => {
+    // The half the comment promised and the code did not do. A file added here
+    // to quiet the rule, while asserting over source like everything else, is
+    // the waiver-shaped defect this repository has now met twice.
+    const wrong: string[] = [];
+
+    for (const one of EXCUSED) {
+      const named = files.find((file) => file.replace(/\\/g, '/').endsWith(`/${one.file}`));
+      if (!named) continue;
+
+      if (!GROUNDS[one.because](readFileSync(named, 'utf8'))) {
+        wrong.push(`${one.file}: excused as ${one.because}, and does not`);
+      }
+    }
+
+    expect(wrong).toEqual([]);
   });
 });
 
@@ -382,20 +428,9 @@ describe('a claim about source text', () => {
    */
   const SYNTAX_OF: Record<string, string> = { html: 'html', css: 'css' };
 
-  const READS_IT_OTHERWISE = [
-    // These load `index.html` into happy-dom and play the app through it.
-    // Blanking would alter the thing under test.
-    'assembled.test.ts',
-    'partly-written.test.ts',
-    'which-square-is-mine.test.ts',
-    'the-end-of-a-game.test.ts',
-    'the-same-seat-asked-three-times.test.ts',
-    'a-copy-of-whose-path.test.ts',
-    // Reads the pages the build just produced. A comment in an artefact is not
-    // a developer's note that could pass for markup, and asserting over output
-    // is a different question from asserting over source.
-    'build.test.ts',
-  ];
+  // The same list, and it has to be: a document that is run or produced is
+  // excused from being blanked *and* from being blanked as a document. Two
+  // lists of the same files is two places for one of them to be forgotten.
 
   it('is made about a document with the document syntax', () => {
     const REPO = join(HERE, '..', '..', '..');
@@ -421,7 +456,7 @@ describe('a claim about source text', () => {
         // is the shape above, so what is left is a raw one. Four of these were
         // found by writing the check: two counting over `index.html`, and two
         // over the stylesheet.
-        if (READS_IT_OTHERWISE.some((named) => here.endsWith(named))) continue;
+        if (excused(here)) continue;
 
         const reads = new RegExp(`(blank\\(\\s*)?readFileSync\\([^;]*?\\.${extension}['"]`, 'g');
         for (const read of text.matchAll(reads)) {

@@ -7680,6 +7680,27 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The waiver shape again, in the list of files excused from being blanked.** The
+pass before found an audit passing on a defect because it read a written reason
+and never asked whether the reason was true. The same repository has another
+list of that kind, and it had the same two holes.
+
+Its guard's own comment says each named file *"has to exist and has to be one
+that loads a document"* — and the code checked only that it existed. And the
+names were **basenames**, matched with `endsWith`, so one waiver covered every
+file of that name: `the-end-of-a-game.test.ts` is written three times here, and
+excusing the mini app's excused the bot's and the phone's as well. Neither of
+those reads source today, so nothing was hidden — the exemption was simply
+waiting for the day one of them did.
+
+Named by path now, one file each, and each excused on a **ground that is
+checked**: `runs` means the markup goes into a live document, which is what
+makes blanking wrong; `built` means the file reads pages a build has just made
+into a directory of its own. The two lists that held the same seven files are
+one list, because two copies of a set is two places for one of them to be
+forgotten. Proved against all three ways round it: a false ground, a bare
+basename, and an entry naming a file that does not exist.
+
 **And the test written two passes ago was flaky, in both directions at once.**
 CI went red on it: it played on until one more account was filed, and a seat
 that had reached Cosmic Consciousness during the setup can never owe another, so
