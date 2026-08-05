@@ -7680,6 +7680,35 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The same leak one level in: whose writing the companion is told.** `/save`
+sending a journal to the wrong *place* was the pass before. `/ask` builds what
+the model is sent out of three things belonging to the asker — the path they
+have written, the question they are playing under, and the running conversation
+— because a companion that cannot see the path can only respond to a single
+square. At a table, all three belong to one person among several.
+
+Two of the three were held by nothing. Measured by putting the defect in:
+reading `reports.history(room.session.players[0].id)` instead of the asker's
+leaves **all six hundred and twenty-one** of the bot's tests passing, and so
+does taking the running conversation from the first seat. Bob asks a question
+and Ada's year of writing goes to a model and comes back to him. The intention
+is the one that *is* defended, which is what made the handler read as covered.
+
+Asserted on the wire: `recordingModel` keeps what the model was actually sent,
+and the property is over the whole of it rather than over a field — **nothing of
+Ada's is in what the companion is told when Bob asks** — so a fourth thing added
+to the prompt tomorrow is held without being named. The other half is asserted
+too, because a check that Ada's words are absent passes just as well over a
+prompt with nothing in it.
+
+**Two things the fixture had to learn, both of them the repository's own
+lessons.** `/join` after `/start` is refused — *this game has already begun* —
+so the first version played a table of one while looking like a table of two.
+And the report gate cannot be read out of prose: the words differ by how the
+square was reached, *before you move on* after an ordinary landing and *once you
+have written* after a six. An account is offered after every throw instead, and
+one that is not owed is refused at no cost.
+
 **A whole journal could be posted to the table again, and nothing would say
 so.** `/save` hands a player back every account they have written, about every
 square they have stood on. It used to hand it to *the chat the command came
