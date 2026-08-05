@@ -7680,6 +7680,39 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The audit written for that defect was passing on it, because a waiver is
+prose.** `audit-whose` exists for exactly the class the pass before found — it
+lists every function that reads the mini app's three turn-holder values and
+requires each to say why. `exportPath` is on that list, with the reason *"reads
+it only for the seat it was asked about"*. That sentence was untrue while the
+clipboard copied the turn holder's whole path, and the audit read the waiver and
+reported that everything was named. It was run, green, on the day the defect was
+there.
+
+A reason is prose and prose is not a claim anything checks. What *can* be
+checked is the shape the reason describes: **a function handed a seat reads
+those values only inside the guard that says the seat is the turn holder** —
+`seatId === currentPlayer(session).id ? journal : loadJournalFor(…, seatId)`,
+which is the fast path for the seat already in hand. Everywhere else it is
+talking about one player and reading another's.
+
+Asked now as a second question beside the first, and proved against the code as
+it was: put the clipboard line back and the audit names `exportPath` and exits
+one. The first question stays, because a function with no seat parameter — the
+board, the die, the line underneath — genuinely is the turn holder's, and a rule
+that flagged those would be switched off within a week.
+
+**The reader behind both questions had no test of its own**, and two audits rest
+on it. It has one now, held against the shape rather than against the app as it
+happens to be: the defect as it was, the same function once fixed, a function
+with no seat, a comment mentioning the values, and a guard whose own arguments
+close a bracket before the statement ends — the mistake three checks in this
+repository have already made.
+
+**It also rolled its own comment stripper**, the fifth in a repository whose
+rule is one blanker, and that one *removed* where `blank` blanks, so an index
+into the result was not an index into the file. It uses the shared one now.
+
 **A defect, not a gap: *Save a copy* wrote one seat's file and copied
 another's.** `exportPath` states what it is for in its own words — *"it used to
 save whoever held the turn, so a player could scroll to their own section, tap

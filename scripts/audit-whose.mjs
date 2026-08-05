@@ -25,7 +25,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { unnamedReaders } from './lib/whose.mjs';
+import { unguardedReaders, unnamedReaders } from './lib/whose.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MAIN = join(HERE, '..', 'apps', 'miniapp', 'src', 'main.ts');
@@ -50,11 +50,37 @@ const ALLOWED = new Map([
 const source = readFileSync(MAIN, 'utf8');
 const unnamed = unnamedReaders(source, new Set(ALLOWED.keys()));
 
+/**
+ * The second question, because the first one takes a sentence at its word.
+ *
+ * `exportPath` is on the list above with the reason *"reads it only for the
+ * seat it was asked about"*, and for a while that was not true: two lines below
+ * the download it copied the turn holder's whole path to the clipboard, and
+ * this audit passed, reading the waiver. A reason is prose and prose is not a
+ * claim anything checks.
+ *
+ * What can be checked is the shape the reason describes: a function handed a
+ * seat reads those values only inside `seat === currentPlayer(session).id ? ...`
+ * — the fast path for the seat already in hand. Anywhere else it is talking
+ * about one player and reading another's.
+ */
+const unguarded = unguardedReaders(source);
+
 console.log('\nChecked every function in apps/miniapp/src/main.ts for whose values it reads.\n');
 
-if (unnamed.length === 0) {
-  console.log(`Every one of the ${ALLOWED.size} that read the turn holder’s values says why.`);
-} else {
+if (unguarded.length > 0) {
+  console.log('Given a seat, and reading the turn holder’s values outside the guard:\n');
+  for (const fn of unguarded) console.log(`  ${fn.name} reads ${fn.reads.join(', ')}`);
+  console.log('\nA function that was handed a seat is talking about that seat.');
+  process.exitCode = 1;
+}
+
+if (unnamed.length === 0 && unguarded.length === 0) {
+  console.log(
+    `Every one of the ${ALLOWED.size} that read the turn holder’s values says why, ` +
+      'and every one handed a seat reads them only for it.',
+  );
+} else if (unnamed.length > 0) {
   for (const fn of unnamed) {
     console.log(`  ${fn.name} reads ${fn.reads.join(', ')}`);
   }
