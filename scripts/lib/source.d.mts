@@ -14,8 +14,11 @@ export interface Call {
 }
 
 /**
- * @param syntax `js` for a module, `html` for a document — one blanker, two
- *   comment syntaxes, rather than a second function nobody finds.
+ * @param syntax `js` for a module, `html` for a document, `css` for a
+ *   stylesheet — one blanker and three comment syntaxes, rather than a second
+ *   function nobody finds. The type is the list: a check that asks for a
+ *   syntax the blanker does not have would otherwise get the module one back
+ *   and read a stylesheet as code.
  */
-export function blank(source: string, syntax?: 'js' | 'html'): string;
+export function blank(source: string, syntax?: 'js' | 'html' | 'css'): string;
 export function callsTo(source: string, name: string): Call[];

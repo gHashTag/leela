@@ -244,6 +244,31 @@ describe('a document has comments too', () => {
     expect(blanked, 'the tag inside the comment is gone').not.toContain('name="description"');
   });
 
+  it('blanks a CSS comment and keeps the rules around it', () => {
+    /**
+     * The third syntax, and it cost the same thing twice before it existed.
+     * `.cell.win { color: transparent }` was commented out whole and the check
+     * that the winning square keeps no number painted over it still passed;
+     * and `.board`'s `aspect-ratio` was read out of a note above the live
+     * declaration, so a test compared the value somebody had replaced.
+     */
+    const sheet = '.a { color: red }\n/* .b { color: blue } */\n.c { color: green }';
+    const blanked = blank(sheet, 'css');
+
+    expect(blanked).toContain('.a { color: red }');
+    expect(blanked).toContain('.c { color: green }');
+    expect(blanked, 'the rule inside the comment is gone').not.toContain('color: blue');
+  });
+
+  it('leaves a double slash alone in a stylesheet, because it is not a comment there', () => {
+    // The reason `css` is its own mode rather than the module blanker reused:
+    // `//` starts a comment in a module and nothing in a stylesheet.
+    const sheet = '.a { content: "before // after" }';
+
+    expect(blank(sheet, 'css')).toBe(sheet);
+    expect(blank(sheet), 'the module blanker does take it').not.toBe(sheet);
+  });
+
   it('keeps every offset, as the module blanker does', () => {
     // A check that finds something in the blanked text and reads around it in
     // the original is reading a different place.
@@ -342,6 +367,16 @@ describe('a claim about source text', () => {
    * handles the same distinction: a list somebody has to add to is a list
    * somebody has to justify adding to.
    */
+  /**
+   * The syntaxes that are not modules, and what `blank` calls each.
+   *
+   * A table so the next one is a line rather than a second copy of this check.
+   * Both are here because both were read wrongly and it cost something: a
+   * dialog with no way out passed, and a stylesheet handed back the value
+   * somebody had replaced.
+   */
+  const SYNTAX_OF: Record<string, string> = { html: 'html', css: 'css' };
+
   const READS_IT_OTHERWISE = [
     // These load `index.html` into happy-dom and play the app through it.
     // Blanking would alter the thing under test.
@@ -363,26 +398,28 @@ describe('a claim about source text', () => {
       const text = readFileSync(file, 'utf8');
       const here = file.slice(REPO.length + 1);
 
-      // Every read of a document, and whether a blanker was told it is one.
-      for (const call of callsTo(text, 'blank') as Array<{ args: string }>) {
-        if (!/\.html['"]/.test(call.args)) continue;
-        // The trailing comma is allowed: a call broken over lines gets one from
-        // the formatter, and the first version of this check read that as a
-        // missing argument.
-        if (!/,\s*['"]html['"],?\s*$/.test(call.args.trim())) {
-          wrong.push(`${here}: blanked as a module`);
+      for (const [extension, syntax] of Object.entries(SYNTAX_OF)) {
+        // Every read of a document, and whether a blanker was told what it is.
+        for (const call of callsTo(text, 'blank') as Array<{ args: string }>) {
+          if (!new RegExp(`\\.${extension}['"]`).test(call.args)) continue;
+          // The trailing comma is allowed: a call broken over lines gets one
+          // from the formatter, and the first version of this check read that
+          // as a missing argument.
+          if (!new RegExp(`,\\s*['"]${syntax}['"],?\\s*$`).test(call.args.trim())) {
+            wrong.push(`${here}: a .${extension} blanked as something else`);
+          }
         }
-      }
 
-      // And a read that never reached a blanker at all. `blank(readFileSync(…`
-      // is the shape above, so what is left is a raw one. Two of these were
-      // found by writing the check: `a-word-from-another-language.test.ts`
-      // counted `aria-live=` over the whole file, and `style.test.ts` asked
-      // which selectors the page uses.
-      if (READS_IT_OTHERWISE.some((named) => here.endsWith(named))) continue;
+        // And a read that never reached a blanker at all. `blank(readFileSync(…`
+        // is the shape above, so what is left is a raw one. Four of these were
+        // found by writing the check: two counting over `index.html`, and two
+        // over the stylesheet.
+        if (READS_IT_OTHERWISE.some((named) => here.endsWith(named))) continue;
 
-      for (const read of text.matchAll(/(blank\(\s*)?readFileSync\([^;]*?\.html['"]/g)) {
-        if (!read[1]) wrong.push(`${here}: read raw`);
+        const reads = new RegExp(`(blank\\(\\s*)?readFileSync\\([^;]*?\\.${extension}['"]`, 'g');
+        for (const read of text.matchAll(reads)) {
+          if (!read[1]) wrong.push(`${here}: a .${extension} read raw`);
+        }
       }
     }
 
@@ -390,14 +427,18 @@ describe('a claim about source text', () => {
   });
 
   it('finds the document reads it is looking for, so that sweep is about something too', () => {
-    // The same guard the module sweep has. No document reads at all would make
-    // the assertion above pass over a question nobody asked.
+    // The same guard the module sweep has, and one per syntax rather than one
+    // in total: with `html` alone reading, the `css` half of the check above
+    // would pass over a question nobody asked, which is the state it was
+    // written to end.
     const REPO = join(HERE, '..', '..', '..');
-    const reading = testFiles(REPO).filter((file) =>
-      /readFileSync\([^;]*?\.html['"]/.test(readFileSync(file, 'utf8')),
-    );
 
-    expect(reading.length).toBeGreaterThan(2);
+    for (const extension of Object.keys(SYNTAX_OF)) {
+      const reads = new RegExp(`readFileSync\\([^;]*?\\.${extension}['"]`);
+      const reading = testFiles(REPO).filter((file) => reads.test(readFileSync(file, 'utf8')));
+
+      expect({ extension, reading: reading.length > 2 }).toEqual({ extension, reading: true });
+    }
   });
 
   it('finds the reads it is looking for, so the sweep is about something', () => {

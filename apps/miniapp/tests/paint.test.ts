@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest';
+import { blank } from '../../../scripts/lib/source.mjs';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { boardFor, paintBoard, type ImageLoader } from '../src/paint';
@@ -77,7 +78,10 @@ describe('the stylesheet keeps its side of it', () => {
   //
   // Read from the working directory rather than from `import.meta.url`: under
   // happy-dom that is an http URL and `readFileSync` will not take it.
-  const style = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8');
+  // As a stylesheet. Commented out whole, `.cell.win { color: transparent }`
+  // still satisfied the assertion below -- so the rule that keeps the Flower
+  // of Life from having a number painted over it could be deleted in place.
+  const style = blank(readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8'), 'css');
 
   it('keeps the numbers on both boards, because the painting has none', () => {
     // The published app writes every number itself over art that carries only

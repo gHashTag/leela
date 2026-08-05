@@ -42,13 +42,27 @@
  * has to be able to see the sentence.
  */
 export function blank(source, syntax = 'js') {
-  // HTML has one comment form and no strings to protect, and a document read
-  // by a check needs the same treatment as a module: `shared-link.test.ts`
-  // asserts that `index.html` carries a description, and the tags it looks for
-  // sit directly under a comment that names every one of them. Commented out,
-  // they would have satisfied it.
-  if (syntax === 'html') {
-    return source.replace(/<!--[\s\S]*?-->/g, (block) => block.replace(/[^\n]/g, ' '));
+  // The syntaxes with one comment form and no strings to protect, in a table
+  // rather than a branch each: the third one was about to be a third copy of
+  // the same two lines, in the file whose whole argument is that a rule the
+  // checks share is written once.
+  //
+  // HTML, because `shared-link.test.ts` asserts that `index.html` carries a
+  // description and the tags it looks for sit directly under a comment naming
+  // every one of them — and because a dialog's only way out, moved into a
+  // comment, satisfied the check that exists to keep a player from being
+  // trapped in one.
+  //
+  // CSS, because two checks read the stylesheet raw. The winning square's own
+  // rule was commented out whole and *"keeps the numbers on both boards"*
+  // passed; and `.board`'s `aspect-ratio` was read out of a note above the live
+  // declaration, so the test compared the value somebody had replaced. `//` is
+  // deliberately not a comment here — in CSS it is not one, and the module
+  // blanker below would blank half of a `content: "a // b"`.
+  const ONE_FORM = { html: /<!--[\s\S]*?-->/g, css: /\/\*[\s\S]*?\*\//g };
+
+  if (syntax in ONE_FORM) {
+    return source.replace(ONE_FORM[syntax], (block) => block.replace(/[^\n]/g, ' '));
   }
 
   const blanked = source.replace(/\/\*[\s\S]*?\*\//g, (block) =>

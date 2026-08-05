@@ -7680,6 +7680,31 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The same defect one syntax over, found by asking the question again.** Five
+tests read a stylesheet and four of them read it differently: one raw, one raw,
+one through a comment-stripper written on the spot, one through the module
+blanker. The sweep written the pass before covered `.html` and nothing else.
+
+Both directions measured on the real stylesheet before anything changed.
+`.cell.win { color: transparent }` was commented out **whole** and *"keeps the
+numbers on both boards, because the painting has none"* still passed — so the
+rule that stops a number being painted over the Flower of Life could be deleted
+in place and nothing would say so. And `.board`'s `aspect-ratio` was read out of
+a note written above the live declaration: `declaration()` takes the first match
+on a line, the test compared `3/4` against the board's real `714/630`, and the
+value it read was one somebody had replaced.
+
+`blank` grew a third syntax, and the two one-form syntaxes now sit in a table
+rather than a branch each — in the file whose whole argument is that a rule the
+checks share is written once. `//` is deliberately not a comment there: in CSS
+it is not one, and the module blanker takes half of a `content: "a // b"`.
+
+**The sweep is a table now too**, extension to syntax, so the next document
+language is a line rather than a second copy of the check — and its own guard is
+one per syntax rather than one in total, because with `html` alone reading, the
+`css` half would have passed over a question nobody asked. Which is exactly the
+state it was written to end.
+
 **A dialog with no way out passed the check that exists to prevent it.** Three
 tests read the mini app's `index.html` without reading it as a *document*:
 `named.test.ts` handed it to the module blanker, and

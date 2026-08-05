@@ -18,10 +18,9 @@ import { blank } from '../../../scripts/lib/source.mjs';
 
 // Comments out first: `[^{}]+` before a `{` otherwise swallows the paragraph
 // above the rule, and a selector with an essay in front of it matches nothing.
-const STYLE = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8').replace(
-  /\/\*[\s\S]*?\*\//g,
-  '',
-);
+// Through the shared blanker rather than a fourth stripper written here -- and
+// blanked rather than removed, so an index into this is an index into the file.
+const STYLE = blank(readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8'), 'css');
 // As a document. A selector named only inside an HTML comment is not on the
 // page, and this file's whole question is which of them are.
 const HTML = blank(readFileSync(resolve(process.cwd(), 'index.html'), 'utf8'), 'html');

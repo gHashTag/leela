@@ -93,7 +93,7 @@ describe('the stylesheet does not assume which way the page reads', () => {
 describe('the mini app is held to the same rule', () => {
   // Read from disk rather than imported: it is a real stylesheet, and a copy
   // in a test would be the thing under test lying about itself.
-  const css = blank(readFileSync(new URL('../../miniapp/src/style.css', import.meta.url), 'utf8'));
+  const css = blank(readFileSync(new URL('../../miniapp/src/style.css', import.meta.url), 'utf8'), 'css');
 
   /**
    * One exception, with a reason.
