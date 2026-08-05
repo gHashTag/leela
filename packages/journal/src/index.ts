@@ -125,7 +125,9 @@ export function toDocument(
   entries: ReadonlyArray<Report>,
   intention?: string,
 ): JournalDocument {
-  const asked = (intention ?? '').trim();
+  // The same rule the reader applies, so a file never carries a question that
+  // reads back as a different one — or, as it did, as none.
+  const asked = asIntention(intention);
   const document: JournalDocument = {
     schemaVersion: SCHEMA_VERSION,
     app: 'leela',
@@ -134,7 +136,7 @@ export function toDocument(
 
   // Absent rather than empty: a file that carries `""` says the player was
   // asked and answered nothing, and that is not what happened.
-  return asked.length > 0 ? { ...document, intention: asked } : document;
+  return asked === null ? document : { ...document, intention: asked };
 }
 
 /**
@@ -168,7 +170,7 @@ export function parseDocument(text: string): JournalDocument | null {
   // The whole document rather than its entries. It used to hand back the list
   // alone, which is why the question could not travel with the answers: there
   // was nowhere in the return value to put it.
-  const asked = typeof document.intention === 'string' ? document.intention.trim() : '';
+  const asked = typeof document.intention === 'string' ? asIntention(document.intention) : null;
 
   // Bounded on the way in, as the intention below is and for the reason stated
   // there: a file has been out of the app and through an editor. It used to be
@@ -199,7 +201,7 @@ export function parseDocument(text: string): JournalDocument | null {
     schemaVersion: document.schemaVersion,
     app: 'leela',
     entries,
-    ...(asked.length > 0 && asked.length <= MAX_INTENTION_CHARS ? { intention: asked } : {}),
+    ...(asked === null ? {} : { intention: asked }),
   };
 }
 
@@ -238,6 +240,36 @@ export const MIN_INTENTION_CHARS = 2;
 export function isIntention(text: string): boolean {
   const written = text.trim();
   return written.length >= MIN_INTENTION_CHARS && written.length <= MAX_INTENTION_CHARS;
+}
+
+/**
+ * The question as this format keeps one, or null when there is not one.
+ *
+ * `isIntention` is the rule. This is the rule applied where there is nobody to
+ * tell: a question arriving inside something written — a file, a shared square —
+ * rather than typed into a surface that can answer back. The bot refuses an
+ * over-long one and says by how much; a file cannot be told anything.
+ *
+ * **There were four doors and three answers.** `squareText` and `toDocument`
+ * wrote a question of any length. `parseDocument` dropped one past the ceiling.
+ * `parseSquare` *clamped* one — so the same question, a character over the
+ * bound, came back cut short when it was shared as a square and came back as
+ * nothing when it was carried as a file. And neither reader applied the floor at
+ * all: a file carrying `"x"` handed back a question the game does not hold, and
+ * that no surface would have let anybody write.
+ *
+ * Dropped rather than shortened, which is the older decision and stays — *a
+ * question cut in half is a different question, and a report cut short is still
+ * most of what was said*. That is why the clamp `parseSquare` had is the one
+ * that goes, and not the other way about: the report text one screen up is
+ * clamped for a reason that was argued about the report and not about this.
+ *
+ * Applied at the writers too, so a file never carries a question that reads back
+ * as a different one — or, as it did, as none at all.
+ */
+export function asIntention(text: string | null | undefined): string | null {
+  const asked = (text ?? '').trim();
+  return isIntention(asked) ? asked : null;
 }
 
 /** Two reports are the same when the same words were written at the same moment. */
@@ -490,7 +522,10 @@ export function squareText(
   intention: string,
 ): string {
   const said = written.trim();
-  const asked = intention.trim();
+  // The same rule the reader applies. A question past the bound used to be
+  // written into the square and come back cut short, so what was sent and what
+  // was read were two different questions.
+  const asked = asIntention(intention) ?? '';
   const lines = [`${plan}. ${title}`];
 
   if (said.length > 0) lines.push('', said);
@@ -576,7 +611,9 @@ export function parseSquare(
 
   if (body.length >= 2 && above.length === 0 && something) {
     if (INTENTION_LINE.test(last)) {
-      asked = last.replace(/^[—–-]\s*/, '').trim().slice(0, MAX_INTENTION_CHARS);
+      // This clamped, alone among the four doors, and a question cut in half is
+      // a different question. The square still arrives; the question does not.
+      asked = asIntention(last.replace(/^[—–-]\s*/, '')) ?? '';
       body.pop();
     } else if (/^[—–-]$/.test(last)) {
       // The bare dash `squareText` writes to say the question is not here.

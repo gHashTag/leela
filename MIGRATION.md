@@ -7680,6 +7680,44 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**Four doors and three answers about the question.** A path leaves this app two
+ways — the whole thing as a file, one square in words somebody can send — and
+each is written here and read back here. `squareText` and `toDocument` wrote a
+question of any length. `parseDocument` dropped one past the ceiling.
+`parseSquare` **clamped** one. So the same question, a character over the bound,
+came back cut short when it was shared as a square and came back as nothing when
+it was carried as a file: one question, two doors, two different things arriving
+at the far end. And neither reader applied the floor at all, so a file carrying
+`"x"` handed back a question `isIntention` says the game does not hold, and that
+no surface would have let anybody write.
+
+**The clamp is the one that went, and that was the repository's call rather than
+mine.** The first fix here clamped everywhere — a question past the bound is
+ordinary writing that is longer than the bound, which is exactly why the report
+text is clamped one screen up. Two tests in `journal.test.ts` went red and said
+why: *dropped rather than shortened, which is the older decision and stays — a
+question cut in half is a different question, and a report cut short is still
+most of what was said.* That is a judgement somebody made, not an oversight, so
+the change was backed out and made the other way about: `isIntention` at all four
+doors, which is the one rule that already existed.
+
+**And the round trips alone were not enough to hold it.** With the writers
+fixed, putting the clamp back inside `parseSquare` broke nothing — a question
+past the bound never reached it. A reader is not only reached through our own
+writer: a shared square is text somebody pastes, a file has been through an
+editor, and either may have been written by a build from before any of this. So
+each reader is asked directly as well, with a document made by hand. The test
+asks two properties and names no case — *whatever comes back is a question the
+game holds, or nothing*, and *a question the game holds is never lost* — over
+lengths built from the two bounds rather than listed.
+
+**One probe of mine was wrong before the code was.** The first version padded
+every question with newlines, and the hand-made square failed thirty-two ways.
+A shared square carries the question on one line, `— <question>`; a newline in
+it is not a question written oddly, it is a square that no longer says what it
+says. The space is what all four doors can carry, and the newline an editor
+actually leaves is asked of the file, where it means something.
+
 **An account with nothing written in it, and the one door it could come
 through.** All nine crossings between the three applications were held — on a
 *whole* file. Asked of a damaged one, the three agree everywhere: a truncated
