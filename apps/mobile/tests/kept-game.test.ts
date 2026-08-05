@@ -166,11 +166,21 @@ describe('what a device that will not answer means', () => {
   it('begins a game rather than restoring half of one', () => {
     // Null, never a partly-built board. A game that came back wrong is worse
     // than one that came back empty, because only one of them is visible.
-    for (const rubbish of ['half a write{', 'null', '42', '{"seed":1}', '{}', '[]']) {
-      const device: Keeper = { async read() { return rubbish; }, async write() { return true; } };
-      // eslint-disable-next-line no-await-in-loop
-      expect(loadKeptGame(device).then((kept) => kept.game), rubbish).resolves.toBe(null);
-    }
+    //
+    // Collected rather than awaited in the loop. Each of these six lines used
+    // to be written straight into the loop body under an
+    // `eslint-disable-next-line no-await-in-loop`, with no `await` beneath it —
+    // the suppression outlived the statement it was suppressing. Vitest still
+    // caught a wrong value, because it auto-awaits assertions left hanging at
+    // the end of a test, and it printed six warnings saying it will stop doing
+    // that. So the test was correct only for as long as that rescue lasts, and
+    // `scripts/audit-awaited.mjs` now reads every test for the same shape.
+    return Promise.all(
+      ['half a write{', 'null', '42', '{"seed":1}', '{}', '[]'].map((rubbish) => {
+        const device: Keeper = { async read() { return rubbish; }, async write() { return true; } };
+        return expect(loadKeptGame(device).then((kept) => kept.game), rubbish).resolves.toBe(null);
+      }),
+    );
   });
 
   it('refuses a saved game whose seat has no square', () => {

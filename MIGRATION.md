@@ -6970,6 +6970,55 @@ lines of which every functional one is commented out, and both locale files —
 `public/locales/en/common.json`, `de/common.json` — are empty. There is nothing
 in it to port. The docs root is the landing page.
 
+**An hour spent debugging a package a tool had broken (205th pass).**
+`bun run verify` exits 0 and prints its own findings on the way past. Two of
+them were sitting in that output.
+
+The first: six warnings from `apps/mobile`, all from one site. A loop over six
+malformed saved games asserted `expect(...).resolves.toBe(null)` with no `await`
+under it, beneath an `eslint-disable-next-line no-await-in-loop` — somebody
+wrote the `await`, the rule refused it, and the excuse outlived the statement it
+was excusing. The obvious sentence about it is false and was measured to be
+false: breaking one on purpose *does* fail the test today, because Vitest
+auto-awaits assertions left hanging at the end of a test. What it prints
+alongside is *this will cause the test to fail in Vitest 3*. So it is not a dead
+check — it is a live one standing on a rescue its own runner has announced it is
+removing, correct today and failing on the next major whether or not the code
+under it is right.
+
+`scripts/audit-awaited.mjs` reads every test in every workspace for the shape,
+through the TypeScript parser rather than a line search: three sites in
+`apps/bot` are written with the `await` on an earlier line, and a check that
+names three innocents to catch one defect is one somebody switches off. The
+judgement lives in `scripts/lib/awaited.mjs` and is asked directly by
+`apps/mobile/tests/awaited.test.ts`, which is what settled the one case the
+first draft got wrong: `expect(p).resolves.toBe(x).catch(() => {})` reads as
+though somebody dealt with the promise, and waits for nothing either way — the
+`.catch` only makes the failure quieter.
+
+The second cost an hour and was self-inflicted, which is the useful part.
+Running every audit in one loop under a ten-minute timeout killed
+`audit-mutants.mjs` while it held `packages/ai/src/prompts.ts` mutated. Ten
+tests in that package went red for a reason that had nothing to do with the
+code, and the first thing suspected was `bun run --filter '*'` lying about a
+package's result.
+
+Nothing was wrong with the runner, and nothing was wrong with the recovery
+either: `scripts/.mutants-undo.json` was on disk naming the exact file, and
+`audit-scripts.mjs` already reads it, prints the right sentence and exits 1.
+What it also did was print *Every one of them starts under the runtime it
+declares, and the docs agree* twenty lines further down, as its last line. The
+exit code was right and the closing sentence was wrong, and a human reads the
+closing sentence. The all-clear is now conditional on the whole run rather than
+on one list of problems, and the note has the final say instead of the first,
+because it is the one finding that makes every other check in the repository
+lie.
+
+Still open, and larger than either: `bun run verify` — the command README tells
+people to run — never looks at that note. A stopped mutation run leaves shipped
+source broken, and `verify` reports the resulting failures with no hint that a
+tool caused them. Only CI catches it, on a separate job.
+
 **Forty pages that claimed to be in a language they were not (170th pass).**
 `/ar/legal/policy.html` served the English privacy policy under `<html lang="ar"
 dir="rtl">`: English laid out right to left, and read aloud by a screen reader

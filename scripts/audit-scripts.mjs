@@ -20,7 +20,7 @@
  */
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import {
   auditsRunByCi,
   checkAuditsRun,
@@ -117,10 +117,32 @@ if (existsSync(workflow)) {
 
 console.log(`\nChecked ${declared.size} scripts against the runtime each names, and ${audits.size} audits against CI.\n`);
 
-if (problems.length === 0) {
+// `problems` holds what THIS block found. The stale-mutation note above sets
+// `process.exitCode` on its own and is not in that list, so a run that found a
+// broken file and no runtime problem used to print the all-clear as its last
+// line — twenty lines below the alarm, which is where nobody is still looking.
+// The exit code was right and the sentence under it was wrong, and a human
+// reads the sentence: it is how an hour went into debugging `packages/ai` for
+// ten failures a tool had caused and this script had already named.
+const failed = problems.length > 0 || process.exitCode === 1;
+
+if (!failed) {
   console.log('Every one of them starts under the runtime it declares, and the docs agree.');
 } else {
   for (const problem of problems) console.log(`  ${problem}`);
-  console.log('\nA check nobody can run reads exactly like a check that passes.');
+  if (problems.length > 0) {
+    console.log('\nA check nobody can run reads exactly like a check that passes.');
+  }
   process.exitCode = 1;
+}
+
+// Last, so it is the line still on screen. The note is the one finding here
+// that makes every other check in the repository lie, so it gets the final say
+// rather than the first.
+if (existsSync(UNDO_NOTE)) {
+  const note = JSON.parse(readFileSync(UNDO_NOTE, 'utf8'));
+  console.log(
+    `\nStill broken on purpose: ${relative(ROOT, note.path)}\n` +
+      'Put it back with: bun scripts/audit-mutants.mjs',
+  );
 }

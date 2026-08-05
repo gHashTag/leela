@@ -126,6 +126,12 @@ jobs:
       # there is no judgement call in whether a config file exists.
       - run: node scripts/audit-configs.mjs
 
+      # Assertions nothing waits on. `bun run verify` exits 0 while printing the
+      # warning that names them, and an exit code is what CI reads -- so the
+      # suite said green for six malformed-input cases standing on a rescue
+      # Vitest has announced it is removing.
+      - run: node scripts/audit-awaited.mjs
+
       # The per-package counts in README.md, against the suites that produce
       # them. Maintained by hand for forty passes, which is exactly how long a
       # number survives before it is quietly wrong.
