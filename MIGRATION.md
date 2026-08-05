@@ -7680,6 +7680,23 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**And the test written two passes ago was flaky, in both directions at once.**
+CI went red on it: it played on until one more account was filed, and a seat
+that had reached Cosmic Consciousness during the setup can never owe another, so
+the loop spun five hundred times and gave up. Nothing has to be played — the
+setup already files two accounts each — so the window for each seat's newest
+report is kept as the game goes, opened immediately before the report and
+**closed immediately after**.
+
+Left open, it ran on into the rounds that followed and caught the other seat's
+reflections, which reads exactly like a leak. That accident was what had been
+*catching* one of the five mutations. With the window closed, that mutation went
+uncaught whenever the newest report happened to have an empty journey behind it —
+so the leak assertion now carries its positive half: his own writing must be in
+the prompt for there to be anything to leak from, and an empty window fails
+loudly instead of passing quietly. Eight runs clean, five decisions caught twice
+each.
+
 **The audit written for that defect was passing on it, because a waiver is
 prose.** `audit-whose` exists for exactly the class the pass before found — it
 lists every function that reads the mini app's three turn-holder values and
