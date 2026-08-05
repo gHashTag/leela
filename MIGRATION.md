@@ -7680,6 +7680,25 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A defect, not a gap: *Save a copy* wrote one seat's file and copied
+another's.** `exportPath` states what it is for in its own words — *"it used to
+save whoever held the turn, so a player could scroll to their own section, tap
+Save a copy, and carry away a file of somebody else's writing"* — and the fix
+reached the file. It stopped two lines short of the clipboard, which still read
+`journal`, whatever the **current** player holds, while everything above it read
+`theirs`.
+
+So at a table, tapping *Save a copy* under seat two handed you seat two's file
+and put seat one's whole path, in readable text, on the clipboard. The next
+paste — into a message, into a notes app — is somebody else's year of writing.
+Reproduced on the running app before anything was changed: pressing the second
+seat's button copied out the first seat's square and account.
+
+The clipboard asks the same seat now. Held as the property the function's own
+comment states — one seat is asked, and everything the button produces is that
+seat's — over **both** of the things it produces, in both directions, so the fix
+cannot become *always the other seat*.
+
 **The same question of the surface people play on, and it says the answer
 itself.** The mini app's writing box belongs to the seat that owes an account,
 not to the seat holding the turn — this app states that twice in its own source.

@@ -1415,7 +1415,13 @@ function exportPath(seatId = currentPlayer(session).id): void {
   // The file is for coming back; the clipboard is for reading, pasting into a
   // message, or keeping in a notes app. One action, because a second button
   // for the same path is a choice nobody wants to make.
-  void navigator.clipboard?.writeText(toText(journal, (plan) => planFor(plan).title)).catch(() => {
+  //
+  // **`theirs`, not `journal`.** Everything above asks which seat the button
+  // belongs to and this line did not, so at a table *Save a copy* under seat two
+  // downloaded seat two's file and put seat one's whole path — readable text,
+  // ready to paste into a message — on the clipboard. The fix that reached the
+  // file stopped two lines short of it.
+  void navigator.clipboard?.writeText(toText(theirs, (plan) => planFor(plan).title)).catch(() => {
     // A browser that refuses the clipboard still downloaded the file, which is
     // the part that matters.
   });

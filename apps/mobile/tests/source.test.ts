@@ -198,6 +198,8 @@ describe('one blanker, not five', () => {
     // Seats a table of two and opens the writing box on it. Same reason again:
     // the document is loaded and run, not asserted over.
     'the-same-seat-asked-three-times.test.ts',
+    // Opens the path view at a table and presses a seat's own Save a copy.
+    'a-copy-of-whose-path.test.ts',
   ];
 
   it('makes every check that asserts over source blank it first', () => {
@@ -388,6 +390,7 @@ describe('a claim about source text', () => {
     'which-square-is-mine.test.ts',
     'the-end-of-a-game.test.ts',
     'the-same-seat-asked-three-times.test.ts',
+    'a-copy-of-whose-path.test.ts',
     // Reads the pages the build just produced. A comment in an artefact is not
     // a developer's note that could pass for markup, and asserting over output
     // is a different question from asserting over source.
