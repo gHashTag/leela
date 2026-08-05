@@ -97,7 +97,15 @@ export function isReport(value: unknown): value is Report {
     (entry.plan as number) >= 1 &&
     (entry.plan as number) <= TOTAL_PLANS &&
     typeof entry.text === 'string' &&
-    entry.text.length > 0 &&
+    // Trimmed before it is measured, because that is what every door that
+    // *writes* an account does. `''` was refused here from the beginning and
+    // `'   '` was not, and the difference between them is nothing anybody
+    // meant: `takeSquare` and `squareFrom` both trim first and refuse what is
+    // left when it is empty, and the phone and the mini app never store one
+    // either. A file was the one door an account with nothing in it could come
+    // through — and once in it is a square written about, in the path, in the
+    // squares that came back, and taking a real account's place at the bound.
+    entry.text.trim().length > 0 &&
     // A moment, not merely a number. `Number.isFinite` let through `1.5` and
     // `-1`, which are not times anything wrote, and a file is the least
     // trustworthy thing either surface handles.
@@ -175,11 +183,17 @@ export function parseDocument(text: string): JournalDocument | null {
   // characters is ordinary writing that is longer than the store will hold.
   // Refusing the whole path over that would throw away a year of somebody's
   // writing to enforce a limit on one entry of it.
-  const entries = (document.entries as Report[]).map((entry) =>
-    entry.text.length > MAX_REPORT_CHARS
-      ? { ...entry, text: entry.text.slice(0, MAX_REPORT_CHARS) }
-      : entry,
-  );
+  //
+  // Trimmed on the way in for the same reason, and it is not only tidiness:
+  // sameness is the square and the words, so an account that came back through
+  // an editor with a newline on the end was a *second* account of a square
+  // already written about — and `revisits` would then say the player returned
+  // to a square they never returned to. `takeSquare` trims before it compares;
+  // this is the same rule at the other door.
+  const entries = (document.entries as Report[]).map((entry) => {
+    const said = entry.text.trim().slice(0, MAX_REPORT_CHARS);
+    return said === entry.text ? entry : { ...entry, text: said };
+  });
 
   return {
     schemaVersion: document.schemaVersion,

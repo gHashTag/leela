@@ -7680,6 +7680,36 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**An account with nothing written in it, and the one door it could come
+through.** All nine crossings between the three applications were held — on a
+*whole* file. Asked of a damaged one, the three agree everywhere: a truncated
+file, a plan off the board, an entry that is not an object, a schema from the
+future, all refused by all three. One case was not damage and was taken by all
+three: an account whose text is `'   '`.
+
+Every door that *writes* an account trims before it decides — `takeSquare`,
+`squareFrom`, the phone's `takeAccount`, both apps' writers. `isReport` measured
+`text.length` raw, so `''` was refused from the beginning and `'   '` was not.
+The difference between them is nothing anybody meant, and the file was the one
+door an account with nothing in it could come through. Once in it is a square
+written about: on the board, in the path, among the squares that came back, and
+at `MAX_REPORTS` pushing a real account out.
+
+**The second half is worse, because it is silent.** Sameness is the square and
+the words. A path exported, opened in an editor that put a newline on the end,
+and brought back arrived as a **second** account of a square already written
+about — measured on all three surfaces, `added 1` where the account was already
+held. `revisits` would then say the player returned to a square they never
+returned to, which is the thing `takeSquare`'s own comment exists to prevent:
+*the record the game exists to produce would be saying something that did not
+happen.*
+
+One call in each place: trim before measuring, trim before storing. The test
+asks the property rather than the two cases — an account wrapped in every
+combination of surrounding whitespace, and whitespace with no account in it,
+through both doors, which must answer the same. Reverting either half fails it,
+and a future door that forgets to trim fails on the day it is written.
+
 **And of the third surface, the phone.** Two of the three ends of a game were
 held; this one was played twice and to the end neither time.
 `sixty-eight.test.ts` walks to Cosmic Consciousness through the *engine* —
