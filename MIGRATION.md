@@ -7680,6 +7680,42 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**The same question of the surface people play on, and it says the answer
+itself.** The mini app's writing box belongs to the seat that owes an account,
+not to the seat holding the turn — this app states that twice in its own source.
+`whatIsBeingWritten` ends *"The whole of the fix is asking the same seat three
+times instead of three different ones"*, and `writingSeat` records the fourth
+place that asked differently: the keystroke handler saved a draft under the turn
+holder while `openWriter` loaded it under the seat that owed one, so at a table
+the writing seat's draft was never kept and the other seat's was destroyed on
+every keystroke.
+
+Both were fixed. **Three of the asks were then held by nothing**, each measured
+by putting the defect back alone and running the whole package:
+
+- the shared square carries the **turn holder's question** — 494 of 494 green,
+  and it is a leak off the device: what the other player is playing for, signed
+  to a square they did not write, which is the recorded defect's own words *a
+  square nobody stood on, signed by somebody who did not write it*;
+- the box opens holding the **turn holder's unsaved words** — 494 green, and
+  saving files them under the writer;
+- *room left in your path* counts the **turn holder's** journal — 494 green.
+
+The title and the accounts shown above the box *are* held, which is what made
+the box read as covered.
+
+**Two of the three assertions were too weak to fail, and the fixture is why.**
+A draft is kept per seat **and per square**, so a turn holder standing anywhere
+else has theirs discarded by the plan check and the wrong-seat read cannot be
+seen; both seats stand on 41 now. And the hint is a number, not words — it says
+different things about the two journals only at the bound, so the seat being
+written for has a path of five hundred and the turn holder none.
+
+**The rule from two passes ago caught this pass's own test**, which is what it
+is for: a check that reads `index.html` raw was named, and this one loads the
+document and runs it. Added to both exception lists with its reason, the way the
+lists are meant to grow.
+
 **The other two places the companion is called, asked the same way.** The
 companion answers from three doors — a question asked with `/ask`, a reflection
 on an account just filed, and a square handed over from the mini app — and each
