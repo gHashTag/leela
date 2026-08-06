@@ -29,6 +29,7 @@ import React, { useState } from 'react'
 import Emoji from 'react-native-emoji'
 
 import { useRevenueCat } from '../../providers/RevenueCatProvider'
+import { SampleAnswerModal } from './SampleAnswerModal'
 // @ts-ignore
 import Ganesha from './ganesha.jpg'
 
@@ -40,6 +41,7 @@ const SubscriptionScreen: React.FC = () => {
 
   const [selectedPackage, setSelectedPackage] =
     useState<PurchasesPackage | null>(null)
+  const [showSample, setShowSample] = useState(false)
 
   const handlePackageSelection = (pack: PurchasesPackage) => {
     setSelectedPackage(pack)
@@ -170,7 +172,19 @@ const SubscriptionScreen: React.FC = () => {
           title={t('subscriptionHelper.title')}
           onPress={onWhyAmISeeingThis}
         />
+        <Space height={12} />
+        <Text
+          h="h4"
+          textStyle={styles.sampleLink}
+          title={t('sampleAnswer.title')}
+          onPress={() => setShowSample(true)}
+        />
         <Space height={50} />
+        <SampleAnswerModal
+          visible={showSample}
+          onClose={() => setShowSample(false)}
+          onContinue={() => setShowSample(false)}
+        />
       </View>
     </View>
   )
@@ -217,6 +231,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     textAlign: 'center',
     color: gray,
+    textDecorationLine: 'underline'
+  },
+  sampleLink: {
+    fontSize: ms(13, 0.6),
+    fontWeight: 'bold',
+    alignSelf: 'center',
+    color: secondary,
     textDecorationLine: 'underline'
   },
   test: {

@@ -601,5 +601,12 @@
     "message": "Leela AI gives every player 2 free reports so you can experience the game. After that, a subscription keeps the AI guide, daily verses, and community features available and supports ongoing development.",
     "restore": "Restore purchase",
     "close": "Close"
+  },
+  "sampleAnswer": {
+    "title": "See Leela answer before subscribing",
+    "question": "I landed on plane 12 — Confusion. I feel stuck between choices and don't know which direction to take.",
+    "answer": "Plane 12 is the field of confusion (moha), where the mind sees many paths and cannot discern the true one. In the Bhagavad Gita, Krishna reminds Arjuna that confusion arises when the senses dominate the intellect (Bhagavad Gita 2.62–63). The game invites you to step back, breathe, and let the dice of karma show the next move rather than forcing a decision from anxiety.\n\nOne practical step today: sit quietly for five minutes before your next choice. Ask, 'Is this action moving me toward clarity or away from it?' Clarity is not found by thinking more, but by quieting the mind.\n\nSources: Bhagavad Gita 2.62–63; Yoga Sutras 1.33",
+    "cta": "Continue to subscribe",
+    "dismiss": "Back"
   }
 }
