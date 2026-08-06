@@ -504,6 +504,10 @@
   "nextStep": "Next step through",
   "you": "you",
   "placeholderReport": "Make a plan report",
+  "voiceInput": {
+    "hint": "Tap the mic and speak your report",
+    "listening": "Listening…"
+  },
   "clearly": "clearly",
   "profile": "Profile",
   "intention": "Intention",

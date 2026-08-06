@@ -2,7 +2,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import auth from '@react-native-firebase/auth'
 import { LEELA_ID } from '@env'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   FieldValues,
   FormProvider,
@@ -15,13 +15,17 @@ import * as yup from 'yup'
 
 import { Button, Input, Space, Text } from '..'
 import { Loading } from '../'
+import { ButtonVectorIcon } from '../Buttons/ButtonVectorIcon'
 import {
   captureException,
   dimGray,
   generateComment,
   navigate,
-  recordPositiveEvent
+  primary,
+  recordPositiveEvent,
+  red
 } from '../../constants'
+import { useVoiceInput } from '../../hooks'
 import { startStepTimer } from '../../screens/helper'
 import { PostStore } from '../../store'
 import { useRevenueCat } from '../../providers/RevenueCatProvider'
@@ -39,6 +43,40 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
   const { t } = useTranslation()
   const { user } = useRevenueCat()
   const systemMessage = t('system')
+
+  const schema = useMemo(
+    () =>
+      yup
+        .object()
+        .shape({
+          text: yup
+            .string()
+            .trim()
+            .min(100, t('fewChars') || '')
+            .required(t('requireField') || '')
+        })
+        .required(),
+    [t]
+  )
+
+  const { ...methods } = useForm({
+    mode: 'onChange',
+    resolver: yupResolver(schema)
+  })
+
+  const handleVoiceResult = useCallback(
+    (value: string) => {
+      const current = methods.getValues('text') || ''
+      const separator = current.length > 0 && !current.endsWith(' ') ? ' ' : ''
+      methods.setValue('text', `${current}${separator}${value}`, {
+        shouldValidate: true
+      })
+    },
+    [methods]
+  )
+
+  const { isListening, startListening, stopListening } =
+    useVoiceInput(handleVoiceResult)
 
   const [draftLoaded, setDraftLoaded] = useState(false)
   const [stage, setStage] = useState(0)
@@ -75,21 +113,6 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
     }
     saveDraft()
   }, [reportText, draftLoaded])
-
-  const schema = useMemo(
-    () =>
-      yup
-        .object()
-        .shape({
-          text: yup
-            .string()
-            .trim()
-            .min(100, t('fewChars') || '')
-            .required(t('requireField') || '')
-        })
-        .required(),
-    [t]
-  )
 
   const showError = (message: string) => {
     Alert.alert(t('error') || 'Error', message, [{ text: 'OK' }])
@@ -209,11 +232,6 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
     }
   }
 
-  const { ...methods } = useForm({
-    mode: 'onChange',
-    resolver: yupResolver(schema)
-  })
-
   if (!draftLoaded || loading) {
     return <Loading />
   }
@@ -249,6 +267,21 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
         placeholder={t('placeholderReport')}
         additionalStyle={styles.input}
       />
+      <View style={styles.voiceRow}>
+        <ButtonVectorIcon
+          name={isListening ? 'mic' : 'mic-outline'}
+          ionicons
+          size={24}
+          color={isListening ? red : primary}
+          onPress={isListening ? stopListening : startListening}
+        />
+        <Space width={10} />
+        <Text
+          h="h7"
+          title={isListening ? t('voiceInput.listening') : t('voiceInput.hint')}
+          textStyle={styles.voiceHint}
+        />
+      </View>
       <Space height={20} />
       <Button
         title={t('actions.send')}
@@ -264,6 +297,15 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     alignItems: 'center'
+  },
+  voiceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8
+  },
+  voiceHint: {
+    color: dimGray
   },
   streamContainer: {
     width: '100%',

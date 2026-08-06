@@ -44,7 +44,7 @@
 ## 6. Competitive Differentiation (inspired by Vedas AI, DivineSarathi, Svastha)
 
 - [x] **6.1** Add daily Vedic verse / reflection card on the home screen.
-- [ ] **6.2** Add voice input for reports (like DivineSarathi voice-first companion).
+- [x] **6.2** Add voice input for reports (like DivineSarathi voice-first companion).
 - [x] **6.3** Add scripture citations in AI answers (chapter/verse references).
 - [ ] **6.4** Add a streak/reflection journal to encourage daily play.
 
