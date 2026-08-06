@@ -119,7 +119,13 @@ export const PostStore = {
     throw new Error('Missing userUid or email')
   },
 
-  createComment: async ({ text, postId, postOwner, ownerId }: FormCommentT) => {
+  createComment: async ({
+    text,
+    postId,
+    postOwner,
+    ownerId,
+    id
+  }: FormCommentT & { id?: string }) => {
     try {
       const isAiComment = ownerId === LEELA_ID
       const userUid = isAiComment ? ownerId : auth().currentUser?.uid
@@ -129,7 +135,7 @@ export const PostStore = {
         throw new Error('Cannot create comment: no authenticated user')
       }
 
-      const path = nanoid(22)
+      const path = id || nanoid(22)
       const comment: CommentT = {
         text,
         postId,
@@ -152,6 +158,16 @@ export const PostStore = {
       captureException(error, 'createComment')
       throw error
     }
+  },
+
+  addOptimisticComment: (comment: CommentT) => {
+    PostStore.store.comments = [comment, ...PostStore.store.comments].sort(
+      (a, b) => b.createTime - a.createTime
+    )
+  },
+
+  removeOptimisticComment: (id: string) => {
+    PostStore.store.comments = PostStore.store.comments.filter((a) => a.id !== id)
   },
   removeCommentIdInPost: async ({ commentId, postId }: delCommentIdT) => {
     postId &&

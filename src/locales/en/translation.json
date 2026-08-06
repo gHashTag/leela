@@ -423,7 +423,9 @@
     "retry": "Retry",
     "reportBug": "Report a problem",
     "bugReportSubject": "Leela bug report: feed not loading",
-    "goToGame": "Go to game"
+    "goToGame": "Go to game",
+    "sending": "sending…",
+    "commentFailed": "Could not send the comment. Please try again."
   },
   "pipeline": {
     "stage_0": "Leela is reading the board…",

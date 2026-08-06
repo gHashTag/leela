@@ -185,6 +185,7 @@ export interface CommentT extends FormCommentT {
   email: string
   reply: false
   id: string
+  pending?: boolean
 }
 
 export interface FormReplyCom {

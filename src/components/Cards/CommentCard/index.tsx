@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 
 import { observer } from 'mobx-react'
+import { useTranslation } from 'react-i18next'
 import { FlatList, LayoutChangeEvent, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import { useTypedNavigation } from '../../../hooks'
@@ -15,7 +16,7 @@ import {
   SubCommentCard,
   Text
 } from '../../'
-import { OpenActionsModal, gray, lightGray } from '../../../constants'
+import { OpenActionsModal, brightTurquoise, gray, lightGray } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
 import { PostStore } from '../../../store'
 import { CommentT } from '../../../types/types'
@@ -34,6 +35,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
     const [hideTranslate, setHideTranslate] = useState(true)
     const [transText, setTransText] = useState('')
     const { navigate } = useTypedNavigation()
+    const { t } = useTranslation()
 
     const avaUrl = PostStore.getAvaById(item.ownerId)
 
@@ -102,12 +104,22 @@ export const CommentCard: React.FC<CommentCardI> = observer(
                 h={'h6'}
                 title={`  · ${date}`}
               />
+              {item.pending && (
+                <Text
+                  h="h11"
+                  title={t('online-part.sending') || 'sending…'}
+                  oneColor={brightTurquoise}
+                  textStyle={styles.sending}
+                />
+              )}
               <View style={styles.flexOne} />
-              <ButtonVectorIcon
-                size={s(15)}
-                name="chevron-down"
-                onPress={OpenModal}
-              />
+              {!item.pending && (
+                <ButtonVectorIcon
+                  size={s(15)}
+                  name="chevron-down"
+                  onPress={OpenModal}
+                />
+              )}
               <Space width={s(5)} />
             </View>
             <HashtagFormat h="h6" title={text} selectable />
@@ -154,5 +166,9 @@ const styles = StyleSheet.create({
   },
   flexOne: {
     flex: 1
+  },
+  sending: {
+    marginLeft: s(6),
+    fontStyle: 'italic'
   }
 })

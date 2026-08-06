@@ -15,7 +15,7 @@
 
 - [x] **2.1** Fix comments silently failing due to empty-email guard in `PostStore.createComment`.
 - [x] **2.2** Add pull-to-refresh on the reports feed (`PostScreen`).
-- [ ] **2.3** Show optimistic comment after the user sends one; confirm from Firestore.
+- [x] **2.3** Show optimistic comment after the user sends one; confirm from Firestore.
 - [x] **2.4** Add empty-state illustration and CTA on the reports feed.
 - [ ] **2.5** Allow the player to edit/delete their own comments.
 
