@@ -420,7 +420,9 @@
     "createIntention": "Create intention",
     "updateIntention": "Update intention",
     "postsLoadError": "Could not load reports. Please check your connection and try again.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "reportBug": "Report a problem",
+    "bugReportSubject": "Leela bug report: feed not loading"
   },
   "timestamps": {
     "yday": "yesterday",

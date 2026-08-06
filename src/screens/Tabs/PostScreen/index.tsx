@@ -10,8 +10,15 @@ import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
-import { Button, Header, PostCard, Space, Spin, Text } from '../../../components'
-import { captureException } from '../../../constants'
+import {
+  Button,
+  Header,
+  PostCard,
+  PostsSkeleton,
+  Space,
+  Text
+} from '../../../components'
+import { captureException, openUrl } from '../../../constants'
 import { lang } from '../../../i18n'
 import { DiceStore, OnlinePlayer, PostStore } from '../../../store'
 import { RootTabParamList } from '../../../types/types'
@@ -45,6 +52,16 @@ export const PostScreen = observer(({}: Ipost) => {
     setLoadError('')
     setRetryKey((k) => k + 1)
   }, [])
+
+  const onReportBug = useCallback(() => {
+    const subject = encodeURIComponent(
+      t('online-part.bugReportSubject') || 'Leela bug report'
+    )
+    const body = encodeURIComponent(
+      `${t('online-part.postsLoadError') || 'Feed error'}: ${loadError}`
+    )
+    openUrl(`mailto:reactnativeinitru@gmail.com?subject=${subject}&body=${body}`)
+  }, [loadError, t])
 
   useEffect(() => {
     if (!DiceStore.online) return
@@ -107,7 +124,10 @@ export const PostScreen = observer(({}: Ipost) => {
   const load = PostStore.store.loadPosts && data.length === 0 && !loadError
 
   return load ? (
-    <Spin centered />
+    <>
+      <Header textAlign="center" title={t('online-part.reports')} />
+      <PostsSkeleton count={4} />
+    </>
   ) : (
     <FlatList
       removeClippedSubviews={false}
@@ -140,6 +160,8 @@ export const PostScreen = observer(({}: Ipost) => {
               />
               <Space height={vs(20)} />
               <Button onPress={onRetry} title={t('online-part.retry')} />
+              <Space height={vs(12)} />
+              <Button onPress={onReportBug} title={t('online-part.reportBug')} />
             </>
           ) : (
             <>

@@ -38,8 +38,8 @@
 
 - [ ] **5.1** Replace all `console.error('error')` and silent catches with `captureException` + user alert.
 - [x] **5.2** Add a global network-offline banner.
-- [ ] **5.3** Add a "Report a bug" button that captures the last 50 lines of logs.
-- [ ] **5.4** Add loading skeletons for the feed and detail screens.
+- [x] **5.3** Add a "Report a bug" button that captures the last 50 lines of logs.
+- [x] **5.4** Add loading skeletons for the feed and detail screens.
 
 ## 6. Competitive Differentiation (inspired by Vedas AI, DivineSarathi, Svastha)
 
