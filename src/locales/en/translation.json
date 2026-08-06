@@ -457,6 +457,7 @@
   "actions": {
     "delete": "Delete",
     "reply": "Reply",
+    "edit": "Edit",
     "copy": "Copy",
     "translate": "Translate",
     "exit": "Exit",

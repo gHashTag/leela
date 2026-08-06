@@ -169,6 +169,13 @@ export const PostStore = {
   removeOptimisticComment: (id: string) => {
     PostStore.store.comments = PostStore.store.comments.filter((a) => a.id !== id)
   },
+
+  updateCommentText: (id: string, text: string) => {
+    PostStore.store.comments = PostStore.store.comments.map((a) =>
+      a.id === id ? { ...a, text, pending: false } : a
+    )
+  },
+
   removeCommentIdInPost: async ({ commentId, postId }: delCommentIdT) => {
     postId &&
       firestore()
@@ -179,6 +186,9 @@ export const PostStore = {
   delComment: async ({ commentId, isReply, postId }: delCommentT) => {
     await firestore().collection('Comments').doc(commentId).delete()
     PostStore.store.comments = PostStore.store.comments.filter(
+      (a) => a.id !== commentId
+    )
+    PostStore.store.replyComments = PostStore.store.replyComments.filter(
       (a) => a.id !== commentId
     )
     PostStore.removeCommentIdInPost({ commentId, postId })
@@ -226,6 +236,34 @@ export const PostStore = {
           .update({ comments: firestore.FieldValue.arrayUnion(path) })
         await firestore().collection('Comments').doc(path).set(comment)
       }
+    }
+  },
+
+  editComment: async ({
+    commentId,
+    text,
+    isReply
+  }: {
+    commentId: string
+    text: string
+    isReply: boolean
+  }) => {
+    if (isReply) {
+      PostStore.store.replyComments = PostStore.store.replyComments.map((a) =>
+        a.id === commentId ? { ...a, text, pending: false } : a
+      )
+    } else {
+      PostStore.updateCommentText(commentId, text)
+    }
+
+    try {
+      await firestore()
+        .collection('Comments')
+        .doc(commentId)
+        .update({ text, editTime: Date.now() })
+    } catch (error) {
+      captureException(error, 'editComment')
+      throw error
     }
   },
   fetchPosts: async (querySnap: fetchT, language?: string) => {

@@ -1,4 +1,5 @@
 import Clipboard from '@react-native-clipboard/clipboard'
+import { navigate } from '../../../constants'
 import i18next from '../../../i18n'
 
 import { getUid } from '../../../screens/helper'
@@ -23,6 +24,23 @@ export const getActions: getActionsT = ({
     OtherPlayers.store.players.find((a) => a.owner === item.ownerId)?.status ===
     'ban'
   return [
+    {
+      key: 'EDIT',
+      onPress: () => {
+        navigate('INPUT_TEXT_MODAL', {
+          initialText: item.text,
+          onSubmit: async (text: string) => {
+            await PostStore.editComment({
+              commentId: item.id,
+              text,
+              isReply: item.reply
+            })
+          }
+        })
+      },
+      title: i18next.t('actions.edit'),
+      icon: 'square-edit-outline'
+    },
     {
       key: 'COPY',
       onPress: () => Clipboard.setString(item.text),
@@ -67,7 +85,11 @@ export const getActions: getActionsT = ({
       icon: isBaned ? 'account-plus-outline' : 'account-off-outline'
     }
   ]
-    .filter((a) => (isOwner ? true : isAdmin ? true : a.key !== 'DEL'))
+    .filter((a) =>
+      isOwner || isAdmin
+        ? true
+        : a.key !== 'EDIT' && a.key !== 'DEL'
+    )
     .filter((a) =>
       isAdmin ? true : a.key !== 'DEL_ALL_COM' && a.key !== 'BAN'
     )

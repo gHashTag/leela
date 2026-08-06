@@ -31,14 +31,15 @@ const schema = yup
   .required()
 
 export function InputTextModal({ navigation, route }: InputTextT) {
-  const { onError, onSubmit } = route.params
+  const { onError, onSubmit, initialText = '' } = route.params
   const { t } = useTranslation()
 
   const { ...methods } = useForm({
     mode: 'onChange',
-    resolver: yupResolver(schema)
+    resolver: yupResolver(schema),
+    defaultValues: { text: initialText }
   })
-  const [length, setLength] = useState(0)
+  const [length, setLength] = useState(initialText.length)
 
   // The timer is cleared when this goes away, and that is the whole bug.
   //

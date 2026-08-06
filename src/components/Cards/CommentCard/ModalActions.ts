@@ -34,6 +34,23 @@ export const getActions: getActionsT = ({ item }) => {
       icon: 'ios-paper-plane-outline'
     },
     {
+      key: 'EDIT',
+      onPress: () => {
+        navigate('INPUT_TEXT_MODAL', {
+          initialText: item.text,
+          onSubmit: async (text: string) => {
+            await PostStore.editComment({
+              commentId: item.id,
+              text,
+              isReply: item.reply
+            })
+          }
+        })
+      },
+      title: i18next.t('actions.edit'),
+      icon: 'ios-create-outline'
+    },
+    {
       key: 'COPY',
       onPress: () => {
         Clipboard.setString(item.text)
@@ -79,7 +96,11 @@ export const getActions: getActionsT = ({ item }) => {
       icon: isBaned ? 'person-add-outline' : 'person-remove-outline'
     }
   ]
-    .filter((a) => (isOwner ? true : isAdmin ? true : a.key !== 'DEL'))
+    .filter((a) =>
+      isOwner || isAdmin
+        ? true
+        : a.key !== 'EDIT' && a.key !== 'DEL'
+    )
     .filter((a) =>
       isAdmin ? true : a.key !== 'DEL_ALL_COM' && a.key !== 'BAN'
     )

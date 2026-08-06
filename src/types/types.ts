@@ -52,6 +52,7 @@ export type RootStackParamList = {
   INPUT_TEXT_MODAL: {
     onSubmit?: (text: string) => void
     onError?: (err: any) => void
+    initialText?: string
   }
   EXIT_MODAL: undefined
   NETWORK_MODAL: undefined
