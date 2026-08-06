@@ -7,24 +7,24 @@
 - [x] **1.1** Show AI reasoning streaming on plan report screen.
 - [x] **1.2** Ground AI answers in Vedic scriptures and Leela board rules via system prompt.
 - [x] **1.3** Add fallback non-thinking completion if reasoning consumes whole token budget.
-- [ ] **1.4** Add user-facing error feedback when AI streaming fails (stay on screen, allow retry).
+- [x] **1.4** Add user-facing error feedback when AI streaming fails (stay on screen, allow retry).
 - [ ] **1.5** Save a failed report draft locally so the player does not lose their text.
 - [ ] **1.6** Show a progress indicator for the full pipeline: post created → AI reflecting → answer saved.
 
 ## 2. Comments & Community
 
 - [x] **2.1** Fix comments silently failing due to empty-email guard in `PostStore.createComment`.
-- [ ] **2.2** Add pull-to-refresh on the reports feed (`PostScreen`).
+- [x] **2.2** Add pull-to-refresh on the reports feed (`PostScreen`).
 - [ ] **2.3** Show optimistic comment after the user sends one; confirm from Firestore.
 - [ ] **2.4** Add empty-state illustration and CTA on the reports feed.
 - [ ] **2.5** Allow the player to edit/delete their own comments.
 
 ## 3. Game Board & Dice UX
 
-- [ ] **3.1** Add haptic feedback and dice roll animation on cube tap.
-- [ ] **3.2** Show a clear toast/message when the cube is disabled (step timer not elapsed).
+- [x] **3.1** Add haptic feedback and dice roll animation on cube tap.
+- [x] **3.2** Show a clear toast/message when the cube is disabled (step timer not elapsed).
 - [ ] **3.3** Animate piece movement across planes instead of jumping instantly.
-- [ ] **3.4** Highlight the current plane name and chakra on the board.
+- [x] **3.4** Highlight the current plane name and chakra on the board.
 - [ ] **3.5** Explain arrows/snakes when the player lands on them.
 
 ## 4. Onboarding, Trust & Pro
@@ -37,7 +37,7 @@
 ## 5. Stability & Observability
 
 - [ ] **5.1** Replace all `console.error('error')` and silent catches with `captureException` + user alert.
-- [ ] **5.2** Add a global network-offline banner.
+- [x] **5.2** Add a global network-offline banner.
 - [ ] **5.3** Add a "Report a bug" button that captures the last 50 lines of logs.
 - [ ] **5.4** Add loading skeletons for the feed and detail screens.
 

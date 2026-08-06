@@ -9,7 +9,7 @@ import Orientation from 'react-native-orientation-locker'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
 import TabBar from './TabBar'
 import { RU_STORE } from '@env'
-import { Fallback } from './components'
+import { Fallback, OfflineBanner } from './components'
 import {
   black,
   dimGray,
@@ -165,6 +165,7 @@ const App = () => {
       ref={navRef}
       theme={theme}
     >
+      <OfflineBanner />
       <StatusBar backgroundColor={isDark ? black : white} barStyle={color} />
       <Stack.Navigator
         screenOptions={{

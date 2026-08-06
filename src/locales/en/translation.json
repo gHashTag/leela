@@ -485,6 +485,7 @@
   "gameMode": "Game mode",
   "online": "Online",
   "offline": "Offline",
+  "offlineBanner": "No internet connection",
   "takeStep": "Click on the cube",
   "nextStep": "Next step through",
   "you": "you",

@@ -5,7 +5,7 @@ import { ms, mvs, s } from 'react-native-size-matters'
 
 import { Text } from '../'
 import { H, W } from '../../constants'
-import { DiceStore } from '../../store'
+import { DiceStore, OfflinePlayers, OnlinePlayer } from '../../store'
 import { Gem } from '../Gem'
 import { ICONS } from './images'
 
@@ -48,6 +48,10 @@ export const GameBoard = observer(() => {
     [1, 2, 3, 4, 5, 6, 7, 8, 9]
   ]
 
+  const currentPlan = DiceStore.online
+    ? OnlinePlayer.store.plan
+    : OfflinePlayers.store.plans[0]
+
   return (
     <View
       style={[styles.imageContainer, { width: curImageHeight * imgObj.aspect }]}
@@ -58,7 +62,13 @@ export const GameBoard = observer(() => {
           {rows.map((a, i) => (
             <View style={styles.row} key={i}>
               {a.map((b, index) => (
-                <View key={index} style={styles.box}>
+                <View
+                  key={index}
+                  style={[
+                    styles.box,
+                    b === currentPlan && styles.activeBox
+                  ]}
+                >
                   <View style={styles.numberStyle} key={index}>
                     <Gem
                       key={b.toString()}
@@ -109,6 +119,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: s(31) / 2
+  },
+  activeBox: {
+    backgroundColor: 'rgba(80, 227, 194, 0.35)',
+    borderWidth: 1.5,
+    borderColor: '#50E3C2'
   },
   bgImage: {
     width: '100%',

@@ -8,6 +8,7 @@ import {
   Pressable,
   StyleSheet,
   ToastAndroid,
+  Vibration,
   View
 } from 'react-native'
 
@@ -57,6 +58,7 @@ export const Dice = observer(({ disabled }: DiceT) => {
       easing: Easing.linear,
       useNativeDriver: true
     }).start(() => {
+      Vibration.vibrate(30)
       DiceStore.online
         ? OnlinePlayer.updateStep()
         : OfflinePlayers.updateStep(DiceStore.players - 1)
@@ -95,6 +97,7 @@ export const Dice = observer(({ disabled }: DiceT) => {
     }
     setCanRoll(false)
     actionsDice.random()
+    Vibration.vibrate(50)
     handleSpin(DiceStore.count)
   }
 
