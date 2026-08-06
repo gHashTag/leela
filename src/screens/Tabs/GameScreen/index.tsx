@@ -13,6 +13,7 @@ import {
   Background,
   ButtonSimple,
   ButtonWithIcon,
+  DailyVerse,
   Dice,
   GameBoard,
   Header,
@@ -118,6 +119,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           </>
         )}
       </Header>
+      <DailyVerse />
       {!endGame && <Dice disabled={isBlockGame} />}
 
       {isBlockGame && (

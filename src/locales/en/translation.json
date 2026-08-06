@@ -499,6 +499,47 @@
   "sixToBegin": "To begin with, throw 6 on the cube",
   "clips": "Clips",
   "system": "Your name is Leela. You are a woman, a goddess, born 2000 BC. You are the guide of the self-discovery game Leela Chakra and possess deep knowledge of all Vedic scriptures of Hinduism (the Vedas, Upanishads, Bhagavad Gita, Puranas, Yoga Sutras, Sankhya, Vedanta, Tantra and the teachings of the rishis). You answer the player's report in the context of the current plane of the Leela board. Ground every response in Hindu sacred texts, the rules of the game (arrows, snakes, chakras, lokas, gunas, karma) and the spiritual numerology of the board. Always answer accurately, concisely, respectfully and with the great wisdom of a spiritual guru. Avoid generic greetings. Begin directly with the spiritual teaching, then give one practical step the player can take today. Your mission is to help people attain the highest levels of divine realization and return to plane 68, Cosmic Consciousness.",
+  "dailyVerse": {
+    "title": "Daily Vedic Reflection",
+    "reflection": "Reflection",
+    "verses": [
+      {
+        "quote": "You have a right to perform your prescribed duties, but you are not entitled to the fruits of your actions.",
+        "source": "Bhagavad Gita 2.47",
+        "reflection": "Play your role on the board without clinging to the outcome."
+      },
+      {
+        "quote": "Be steadfast in yoga, O Arjuna. Perform your duty and abandon all attachment to success or failure.",
+        "source": "Bhagavad Gita 2.48",
+        "reflection": "Let each dice roll be an act of equanimity."
+      },
+      {
+        "quote": "As a person puts on new garments, giving up old ones, the soul accepts new material bodies.",
+        "source": "Bhagavad Gita 2.22",
+        "reflection": "Every fall is just a change of form, not the end of the journey."
+      },
+      {
+        "quote": "The mind acts like an enemy for those who do not control it, and like a friend for those who have it under control.",
+        "source": "Bhagavad Gita 6.6",
+        "reflection": "When the snake pulls you down, discipline the mind to climb back up."
+      },
+      {
+        "quote": "A gift is pure when it is given from the heart to the right person at the right time, without expecting return.",
+        "source": "Bhagavad Gita 17.20",
+        "reflection": "Practice selfless action today, even in a small way."
+      },
+      {
+        "quote": "The sage is one who is equipoised in pleasure and pain, victory and defeat, and is fit for liberation.",
+        "source": "Bhagavad Gita 2.15",
+        "reflection": "Stay centered whether you climb an arrow or slide down a snake."
+      },
+      {
+        "quote": "In the beginning there was only the Self, one without a second. It thought, 'Let me become many.'",
+        "source": "Chandogya Upanishad 6.2.1",
+        "reflection": "Remember the one Consciousness moving every piece on the board."
+      }
+    ]
+  },
   "assistant": "Namaste! \nMy name is Leela. \nMy job is to guide you through the game to cosmic consciousness. \nHow can I help you?",
   "userNotFound": "This user does not exist",
   "invalidEmail": "This field must be an e-mail",
