@@ -47,6 +47,7 @@
 - [x] **6.2** Add voice input for reports (like DivineSarathi voice-first companion).
 - [x] **6.3** Add scripture citations in AI answers (chapter/verse references).
 - [x] **6.4** Add a streak/reflection journal to encourage daily play.
+- [x] **6.5** Add iOS/Android microphone and speech recognition permissions for voice input.
 
 ---
 
