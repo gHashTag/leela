@@ -25,7 +25,7 @@
 - [x] **3.2** Show a clear toast/message when the cube is disabled (step timer not elapsed).
 - [ ] **3.3** Animate piece movement across planes instead of jumping instantly.
 - [x] **3.4** Highlight the current plane name and chakra on the board.
-- [ ] **3.5** Explain arrows/snakes when the player lands on them.
+- [x] **3.5** Explain arrows/snakes when the player lands on them.
 
 ## 4. Onboarding, Trust & Pro
 

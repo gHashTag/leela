@@ -28,6 +28,11 @@ async function upFuncOnline(step: stepT) {
     await updatePlan(plan)
     OnlinePlayer.store.history.unshift(historyObj)
     OnlinePlayer.store.plan = plan
+    if (history.status === 'snake') {
+      actionsDice.setMessage(i18next.t('snakeMessage'))
+    } else if (history.status === 'arrow') {
+      actionsDice.setMessage(i18next.t('arrowMessage'))
+    }
     if (stepCount !== 6 || plan === 68) {
       navigate('PLANS_DETAIL_SCREEN', {
         plan,
@@ -82,6 +87,11 @@ const upFuncOffline = async (step: stepT): Promise<void> => {
   if (id !== undefined) {
     OfflinePlayers.store.histories[id].unshift(historyObj)
     OfflinePlayers.store.plans[id] = plan
+    if (history.status === 'snake') {
+      actionsDice.setMessage(i18next.t('snakeMessage'))
+    } else if (history.status === 'arrow') {
+      actionsDice.setMessage(i18next.t('arrowMessage'))
+    }
     if (plan === 68) {
       DiceStore.finishArr = DiceStore.finishArr.map(
         (x: boolean, index: number) => (index === id ? (x = false) : x)
