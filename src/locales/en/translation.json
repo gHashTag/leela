@@ -422,7 +422,8 @@
     "postsLoadError": "Could not load reports. Please check your connection and try again.",
     "retry": "Retry",
     "reportBug": "Report a problem",
-    "bugReportSubject": "Leela bug report: feed not loading"
+    "bugReportSubject": "Leela bug report: feed not loading",
+    "goToGame": "Go to game"
   },
   "pipeline": {
     "stage_0": "Leela is reading the board…",

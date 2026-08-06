@@ -38,7 +38,7 @@ const isIndexError = (error: FirebaseFirestoreTypes.NativeError) => {
   )
 }
 
-export const PostScreen = observer(({}: Ipost) => {
+export const PostScreen = observer(({ navigation }: Ipost) => {
   const [limit, setLimit] = useState(15)
   const [refreshing, setRefreshing] = useState(false)
   const [loadError, setLoadError] = useState('')
@@ -165,16 +165,23 @@ export const PostScreen = observer(({}: Ipost) => {
             </>
           ) : (
             <>
+              <Text h="h0" title="🪷" textStyle={styles.emptyIcon} />
+              <Space height={vs(12)} />
               <Text
                 textStyle={styles.noPostText}
                 h={'h4'}
                 title={t('online-part.noPosts')}
               />
-              <Space height={vs(20)} />
+              <Space height={vs(16)} />
               <Text
                 h={'h6'}
                 textStyle={styles.hintText}
                 title={t('online-part.makeReport')}
+              />
+              <Space height={vs(20)} />
+              <Button
+                onPress={() => navigation.navigate('TAB_BOTTOM_0')}
+                title={t('online-part.goToGame')}
               />
             </>
           )}
@@ -191,5 +198,8 @@ const styles = StyleSheet.create({
   hintText: {
     textAlign: 'center',
     opacity: 0.7
+  },
+  emptyIcon: {
+    textAlign: 'center'
   }
 })
