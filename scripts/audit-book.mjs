@@ -29,6 +29,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gaps, keyOf, sharedChapters, unrecorded } from './lib/book.mjs';
+import { finish } from './lib/report.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA = join(HERE, '..', 'packages', 'content', 'data');
@@ -53,32 +54,37 @@ console.log(
   `\nChecked ${Object.keys(books).length} books against the ${shared.length} chapters both editions teach.\n`,
 );
 
-if (found.length > 0) {
-  console.log('Missing chapters the reader is owed (borrowed from English at runtime):');
-  for (const gap of found) {
-    const instead = gap.extra.length > 0 ? `, and carries ${gap.extra.join(',')} instead` : '';
-    console.log(`  ${gap.language}: no ${gap.missing.join(', ')}${instead}`);
-  }
-  console.log('');
-}
-
-if (healed.length > 0) {
-  console.log('Recorded as missing and now present — take these out of RECORDED:');
-  for (const line of healed) console.log(`  ${line}`);
-  console.log(
-    '\nA record that outlives its reason is a licence issued for something else:\n' +
-      'the next book to lose this chapter passes on it. This printed and exited\n' +
-      'zero, which is the defect audit-numbers carried for a hundred passes.',
-  );
-  console.log('');
-  process.exitCode = 1;
-}
-
-if (news.length === 0) {
-  console.log('No book is missing a chapter that was not already recorded.');
-} else {
-  console.log('These are new:');
-  for (const line of news) console.log(`  ${line}`);
-  console.log('\nA teaching no reader in that language can reach is a teaching they do not have.');
-  process.exitCode = 1;
-}
+// *This printed and exited zero, which is the defect audit-numbers carried for
+// a hundred passes* — printed here, above an all-clear that asked only about
+// `news`, by a script carrying the defect it was naming. The arrangement is
+// `lib/report.mjs`'s now, so the sentence and the exit code are decided in one
+// place instead of being restated in a fourth epilogue.
+process.exitCode = finish({
+  allClear: 'No book is missing a chapter that was not already recorded.',
+  sections: [
+    {
+      failing: true,
+      heading: 'Recorded as missing and now present — take these out of RECORDED:',
+      lines: healed.map((line) => `  ${line}`),
+      epilogue:
+        '\nA record that outlives its reason is a licence issued for something else:\n' +
+        'the next book to lose this chapter passes on it. This printed and exited\n' +
+        'zero, which is the defect audit-numbers carried for a hundred passes.',
+    },
+    {
+      failing: true,
+      heading: 'These are new:',
+      lines: news.map((line) => `  ${line}`),
+      epilogue:
+        '\nA teaching no reader in that language can reach is a teaching they do not have.',
+    },
+    {
+      failing: false,
+      heading: 'Missing chapters the reader is owed (borrowed from English at runtime):',
+      lines: found.map((gap) => {
+        const instead = gap.extra.length > 0 ? `, and carries ${gap.extra.join(',')} instead` : '';
+        return `  ${gap.language}: no ${gap.missing.join(', ')}${instead}`;
+      }),
+    },
+  ],
+});

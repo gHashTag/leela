@@ -220,6 +220,22 @@ const EN = {
   'ask.notOnBoard':
     'You are not on the board yet, so there is no plan to ask about. A six puts you there; /rules opens the book meanwhile.',
   'ask.silent': 'The companion is not answering just now. Your question is not lost; ask again later.',
+  /**
+   * The companion's balance is one balance, and it was one player's to empty.
+   *
+   * Said rather than silently dropped, and it says both halves: *why* — the
+   * balance is shared, so this is not a punishment but a share of it — and
+   * *when*, because a refusal with no time in it is one the player answers by
+   * sending the same thing again.
+   *
+   * A plural, because the minutes are counted. Russian agrees with the number
+   * and would otherwise read *через 5 минуту*; the accusative after «через» is
+   * минуту / минуты / минут.
+   */
+  'ask.tooSoon': {
+    one: 'That is all the questions the companion holds for one player just now ({allowed}). Ask again in {count} minute — it answers everyone out of one balance.',
+    other: 'That is all the questions the companion holds for one player just now ({allowed}). Ask again in {count} minutes — it answers everyone out of one balance.',
+  },
 
   // --- the path --------------------------------------------------------------
   'path.absent': 'This bot is not keeping reports, so there is no path to show.',
@@ -739,6 +755,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'ask.notOnBoard':
     'Вы ещё не на доске, и спрашивать пока не о чем. Шестёрка выведет вас туда; а пока /rules открывает книгу.',
   'ask.silent': 'Спутник сейчас не отвечает. Вопрос не потерян — спросите позже.',
+  'ask.tooSoon': {
+    one: 'Это все вопросы, которые спутник держит сейчас для одного игрока ({allowed}). Спросите снова через {count} минуту — он отвечает всем из одного счёта.',
+    few: 'Это все вопросы, которые спутник держит сейчас для одного игрока ({allowed}). Спросите снова через {count} минуты — он отвечает всем из одного счёта.',
+    many: 'Это все вопросы, которые спутник держит сейчас для одного игрока ({allowed}). Спросите снова через {count} минут — он отвечает всем из одного счёта.',
+    other: 'Это все вопросы, которые спутник держит сейчас для одного игрока ({allowed}). Спросите снова через {count} минуты — он отвечает всем из одного счёта.',
+  },
 
   'path.absent': 'Этот бот не хранит отчёты, поэтому пути не показать.',
   'path.empty': 'Вы пока ничего не написали. /report на плане, где стоите.',

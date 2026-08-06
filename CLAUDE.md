@@ -30,10 +30,16 @@ lost.
 
 ## Before you write anything
 
-`/Users/playra/leela-src` holds the twenty-five source repositories. **Read
+`/Users/playra/leela-src` is where the source repositories are kept. **Read
 them.** Do not infer what the published app did; open it. The first board that
 shipped here was the illustration from the rules screen rather than the game
 board, and it survived a pass because it looked close.
+
+The inventory of all twenty-five is in `MIGRATION.md`; not all of them are on
+this disk. `bun scripts/audit-copies.mjs` names which are there and which are
+not, and every sentence it prints says how much of the tree it read. If what you
+need is one of the absent ones, say so rather than inferring it from a
+neighbour — that is the same guess this rule exists to stop.
 
 ## Gates
 
@@ -50,7 +56,7 @@ and at the root:
 ```bash
 node scripts/audit-unread.mjs     # fields written and never read; exports with no caller
 node scripts/audit-configs.mjs    # every workspace held to the strict config
-bun scripts/board-overlay.mjs out.svg   # the engine's jumps drawn over the painting
+node scripts/board-overlay.mjs out.svg   # the engine's jumps drawn over the painting
 ```
 
 Green means green. If the audit names something you just wrote, the answer is

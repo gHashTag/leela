@@ -2,7 +2,7 @@
 
 `LeelaGame.sol`, and a check that its board still matches the engine.
 
-## Where it is, which is nowhere reachable
+## Where it is, on three chains out of four
 
 `smart-contract-leela/address.json` records
 `0x2741CE9C9fA1c9B78b20cab7F07998d77846b7Af`, and this README used to state that
@@ -17,12 +17,27 @@ Asked, on 2026-07-30 — `node scripts/audit-deployment.mjs`:
   bsc:          absent
 ```
 
+**That is a partial answer, and it is kept here as one.** Three chains answered
+that the address holds no code. Polygon did not answer — and Polygon is the one
+chain a Polygon-targeted project would have deployed to, so the chain that
+matters most is the chain that was never asked. The run is not re-run here
+because re-running it needs the network; it is corrected in what it is called.
+
+What the run supports, in full: *the address holds no code on any chain that
+answered.* It does not support "the contract is nowhere", and the probe now
+refuses to say that on its behalf — `summarise` returns `partly-absent` for a
+run with a hole in it, `describe` names the silent chains in its conclusion, and
+`exitCodeFor` exits 2, this repository's code for *no answer for at least one of
+these*. The heading above used to say "which is nowhere reachable", which was a
+conclusion drawn from three chains and written as though from four.
+
 The only network the project ever configured is **Mumbai** — `hardhat.config.ts`
 has exactly one network entry and it is that — and Polygon shut Mumbai down in
-April 2024. There is nothing left to ask, and the address holds no code on any
-chain that answered.
+April 2024. There is nothing left to ask *there*, which is a fact about Mumbai
+rather than a substitute for the Polygon mainnet answer nobody has.
 
-So the contract is a **historical artefact**, not a live one. That changes one
+So the contract is best treated as a **historical artefact** rather than a live
+one — on the evidence of three chains, plus Mumbai's shutdown. That changes one
 thing and not another:
 
 - It does **not** change the value of the check below. The Solidity is a fifth

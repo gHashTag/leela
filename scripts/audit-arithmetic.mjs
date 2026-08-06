@@ -38,6 +38,7 @@ import {
   operatorlessClaimsIn,
   staleRecords,
 } from './lib/arithmetic.mjs';
+import { finish } from './lib/report.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA = join(HERE, '..', 'packages', 'content', 'data');
@@ -135,50 +136,54 @@ console.log(
   `\nChecked ${equations} sums in ${languages.length} languages, and every plan for a sum whose operator is gone.\n`,
 );
 
-if (staleFalse.length > 0) {
-  console.log('These recorded false sums no longer match anything:');
-  for (const line of staleFalse) console.log(`  ${line}`);
-  console.log('\nA repaired sum keeps its excuse, and the next one that reads the same way\npasses on it. Take them out.\n');
-  process.exitCode = 1;
-}
-
-if (found.length > 0) {
-  console.log('False sums, all of them already recorded:\n');
-  for (const { line, claim } of found) {
-    console.log(`  ${line}  —  ${claim.faults.join('; ')}`);
-  }
-}
-
-if (broken.length > 0) {
-  console.log('Sums whose operator the translation dropped, all of them recorded:\n');
-  for (const { line } of broken) console.log(`  ${line}`);
-  console.log('');
-}
-
-if (fresh.length === 0 && newlyBroken.length === 0 && stale.length === 0) {
-  console.log('No sum is wrong or unreadable that was not already written down.');
-} else {
-  if (fresh.length > 0) {
-    console.log('\nAnd these sums are new:\n');
-    for (const { line, claim } of fresh) console.log(`  ${line}  —  ${claim.faults.join('; ')}`);
-    console.log('\nA sum is true or false in every language at once. This one is false.');
-  }
-  if (stale.length > 0) {
-    console.log('\nAnd these records no longer match anything:\n');
-    for (const line of stale) console.log(`  ${line}`);
-    console.log(
-      '\nA record grants an excuse. Once what it names is gone the excuse is still\n' +
+// Every finding this run has, said once, with what it means beside it. The
+// arrangement — notes first, alarms last, all-clear only when no alarm spoke —
+// belongs to `lib/report.mjs`, because this file used to decide to fail in the
+// stale-record branch and then print *No sum is wrong or unreadable that was
+// not already written down* as its final line, the exit code disagreeing with
+// the sentence a reader actually reads.
+process.exitCode = finish({
+  allClear: 'No sum is wrong or unreadable that was not already written down.',
+  sections: [
+    {
+      failing: true,
+      heading: 'These recorded false sums no longer match anything:',
+      lines: staleFalse.map((line) => `  ${line}`),
+      epilogue:
+        '\nA repaired sum keeps its excuse, and the next one that reads the same way\npasses on it. Take them out.\n',
+    },
+    {
+      failing: true,
+      heading: '\nAnd these records no longer match anything:\n',
+      lines: stale.map((line) => `  ${line}`),
+      epilogue:
+        '\nA record grants an excuse. Once what it names is gone the excuse is still\n' +
         'granted, and the next sum that reads the same way passes on a licence issued\n' +
         'for something else. Delete the record in the same change that repairs the sum.',
-    );
-  }
-  if (newlyBroken.length > 0) {
-    console.log('\nAnd these have lost their operator:\n');
-    for (const { line } of newlyBroken) console.log(`  ${line}`);
-    console.log(
-      '\nA sum with no sign in it is not checked and not reported missing — it reads as\n' +
+    },
+    {
+      failing: true,
+      heading: '\nAnd these sums are new:\n',
+      lines: fresh.map(({ line, claim }) => `  ${line}  —  ${claim.faults.join('; ')}`),
+      epilogue: '\nA sum is true or false in every language at once. This one is false.',
+    },
+    {
+      failing: true,
+      heading: '\nAnd these have lost their operator:\n',
+      lines: newlyBroken.map(({ line }) => `  ${line}`),
+      epilogue:
+        '\nA sum with no sign in it is not checked and not reported missing — it reads as\n' +
         'prose with numbers in it, which is where this check was blind.',
-    );
-  }
-  process.exitCode = 1;
-}
+    },
+    {
+      failing: false,
+      heading: 'False sums, all of them already recorded:\n',
+      lines: found.map(({ line, claim }) => `  ${line}  —  ${claim.faults.join('; ')}`),
+    },
+    {
+      failing: false,
+      heading: 'Sums whose operator the translation dropped, all of them recorded:\n',
+      lines: broken.map(({ line }) => `  ${line}`),
+    },
+  ],
+});

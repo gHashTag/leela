@@ -22,6 +22,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { finish } from './lib/report.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..');
@@ -131,26 +132,30 @@ for (const { what } of OFFERS) {
 }
 console.log(`  ${''.padEnd(30)} ${SURFACES.map((s) => s.padEnd(9)).join('')}\n`);
 
-if (mended.length > 0) {
-  console.log('Recorded as missing and now offered — take these out of RECORDED:');
-  for (const gap of mended) console.log(`  ${gap}`);
-  console.log(
-    '\nA surface that gained something and kept its excuse can lose it again in\n' +
-      'silence: the record still says the gap is known. Printing this and exiting\n' +
-      'zero is the defect audit-numbers carried for a hundred passes.',
-  );
-  console.log('');
-  process.exitCode = 1;
-}
-
-if (fresh.length === 0) {
-  console.log('No surface offers less than it did, and the gaps are the ones written down.');
-} else {
-  console.log('These are new:');
-  for (const gap of fresh) console.log(`  ${gap}`);
-  console.log(
-    '\nThe surfaces differ in drawing, not in what the game asks or gives. Four passes\n' +
-      'running found one of these by reading, one at a time.',
-  );
-  process.exitCode = 1;
-}
+// The table above stays where it is: it is the picture of the whole run and it
+// is read from the top. What follows it is arranged by `lib/report.mjs`, which
+// exists because *printing this and exiting zero is the defect audit-numbers
+// carried for a hundred passes* was printed here, by a script whose own
+// all-clear asked only about `fresh` and knew nothing of `mended`.
+process.exitCode = finish({
+  allClear: 'No surface offers less than it did, and the gaps are the ones written down.',
+  sections: [
+    {
+      failing: true,
+      heading: 'Recorded as missing and now offered — take these out of RECORDED:',
+      lines: mended.map((gap) => `  ${gap}`),
+      epilogue:
+        '\nA surface that gained something and kept its excuse can lose it again in\n' +
+        'silence: the record still says the gap is known. Printing this and exiting\n' +
+        'zero is the defect audit-numbers carried for a hundred passes.',
+    },
+    {
+      failing: true,
+      heading: 'These are new:',
+      lines: fresh.map((gap) => `  ${gap}`),
+      epilogue:
+        '\nThe surfaces differ in drawing, not in what the game asks or gives. Four passes\n' +
+        'running found one of these by reading, one at a time.',
+    },
+  ],
+});

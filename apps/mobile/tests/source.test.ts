@@ -230,6 +230,14 @@ describe('one blanker, not five', () => {
    */
 
 
+  /**
+   * How this sweep recognises a read of a source file.
+   *
+   * Hoisted out of the check below so it can be asked a question of its own —
+   * see the test after it, which is about what this pattern cannot see.
+   */
+  const READS = /readFileSync\([^)]*['"`][^'"`]*(src|index\.html)/;
+
   it('makes every check that asserts over source blank it first', () => {
     /**
      * The shape. A check that reads `src/` and asserts over the text has to see
@@ -240,11 +248,49 @@ describe('one blanker, not five', () => {
       if (excused(file)) return false;
 
       const source = readFileSync(file, 'utf8');
-      const reads = /readFileSync\([^)]*['"`][^'"`]*(src|index\.html)/.test(source);
-      return reads && !source.includes('blank(') && !source.includes('blank as code');
+      return READS.test(source) && !source.includes('blank(') && !source.includes('blank as code');
     });
 
     expect(unblanked.map((file) => file.replace(TESTS, ''))).toEqual([]);
+  });
+
+  /**
+   * And a read the sweep above cannot see, pinned at its measured size.
+   *
+   * MEASURED, and it is the reason this rule found nothing in `bot.test.ts` for
+   * as long as both have existed. `registered()` there read `src/bot.ts` and
+   * matched `bot.command\('([a-z]+)'` over it with no blanking at all — exactly
+   * the defect this sweep is for — and the sweep reported all clear, because
+   * the read was spelled `readFileSync(resolve(process.cwd(), 'src/bot.ts'))`
+   * and `[^)]*` stops at the bracket that closes `process.cwd()`, before the
+   * quote it needs to find. Two spellings of one read: one the rule polices,
+   * one it is blind to. The file was only ever named on the day its path was
+   * anchored to `import.meta.url` — the fix made it visible, not defective.
+   *
+   * So the check that exists to stop a comment being read as code was itself
+   * one bracket away from asserting nothing, and the way out of it was a
+   * spelling nobody chose for that reason.
+   *
+   * Left open on purpose rather than papered over, and the reason is a boundary
+   * rather than a judgement: widening the pattern to `[^;]*?` names
+   * `apps/miniapp/tests/reports.test.ts`, which reads source and does not blank
+   * it — a real find, in a file this change does not own. It is a defect to
+   * close with that file in hand, not one to close by making somebody else's
+   * suite red. This test holds the gap to its size in the meantime: closing it
+   * is a deliberate act with a red test in front of it, and this comment says
+   * what to expect when it goes red.
+   */
+  it('is blind to a read spelled through the working directory, which is a defect', () => {
+    // The same read of the same file, written the two ways this repository
+    // writes it. Over fixtures rather than over the tree, so this names nobody
+    // and cannot go red because somebody moved a file.
+    const anchored = "const source = readFileSync(new URL('../src/bot.ts', import.meta.url), 'utf8');";
+    const throughCwd = "const source = readFileSync(resolve(process.cwd(), 'src/bot.ts'), 'utf8');";
+
+    expect({ anchored: READS.test(anchored), throughCwd: READS.test(throughCwd) }).toEqual({
+      anchored: true,
+      throughCwd: false,
+    });
   });
 
   it('names one file each, and only files that exist', () => {

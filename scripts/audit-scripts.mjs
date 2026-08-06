@@ -30,6 +30,7 @@ import {
   needsOf,
   runtimeOf,
 } from './lib/runnable.mjs';
+import { pendingMutation } from './lib/undo.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -63,9 +64,6 @@ for (const name of readdirSync(join(ROOT, 'scripts')).sort()) {
   });
 }
 
-// Every place a reader is told to run one of them. Kept as a list of documents
-// rather than a list of commands: a command in a document nobody checks is how
-// README came to name `node` for a script that cannot use it.
 /**
  * A mutation run that was stopped, still in the tree.
  *
@@ -79,22 +77,85 @@ for (const name of readdirSync(join(ROOT, 'scripts')).sort()) {
  * do with the code. Anybody reading that would debug the borrowing rule.
  *
  * This runs in CI on every push, so the note is loud within minutes rather than
- * on the next mutation sweep. Recovery stays where it is: `bun
- * scripts/audit-mutants.mjs` reads the note before it reads anything else.
+ * on the next mutation sweep. Recovery is not restated here: `lib/undo.mjs`
+ * exports it, and both messages below print that constant.
+ *
+ * **It read the note with a bare `JSON.parse` and died on it.** MEASURED on
+ * 2026-08-06 against a copy of this script: given a note holding
+ * `{"path": "/repo/packages/ai/src/prompts.ts", "orig` — a prefix, which is
+ * exactly what a kill mid-write leaves, since `remember` writes the note with
+ * one non-atomic `writeFileSync` — this file exited with an uncaught
+ * `SyntaxError` at the parse, before the runtime audit had run at all. So in CI
+ * the one push that most needed the sentence *a tool did this and not your
+ * code* got a stack trace in `audit-scripts.mjs` instead, and lost the runtime
+ * check with it. `pendingMutation` already handled that input correctly and was
+ * simply not imported here; it is now, and there is one reader of this note in
+ * the repository rather than three.
+ *
+ * `--mutation-note` moves where the note is looked for, never whether it is,
+ * the same seam `build-content.mjs` carries and for the same reason: a test
+ * that drives this path must not write to `scripts/.mutants-undo.json`, which
+ * would block every build on the machine — including the one that recovers.
  */
-const UNDO_NOTE = join(ROOT, 'scripts', '.mutants-undo.json');
+const noteFlag = process.argv.indexOf('--mutation-note');
+const UNDO_NOTE =
+  noteFlag > -1 ? process.argv[noteFlag + 1] : join(ROOT, 'scripts', '.mutants-undo.json');
 
-if (existsSync(UNDO_NOTE)) {
-  const note = JSON.parse(readFileSync(UNDO_NOTE, 'utf8'));
-  console.log(`\nA stopped mutation run left a file broken on purpose:\n\n  ${note.path}\n`);
+/**
+ * Read once, printed twice — at the top where an alarm belongs and at the
+ * bottom where a reader is still looking. Reading it once also means the two
+ * messages cannot disagree about whether there is a note.
+ */
+const stopped = pendingMutation(UNDO_NOTE);
+
+/** What a note says is broken, or an admission that it cannot say. */
+const brokenFile = (note) =>
+  note.path === null
+    ? 'unknown — the note itself will not parse, which is a run stopped mid-write'
+    : note.path;
+
+if (stopped) {
+  console.log(`\nA stopped mutation run left a file broken on purpose:\n\n  ${brokenFile(stopped)}\n`);
   console.log(
     'Every other check is now failing for a reason that has nothing to do with\n' +
-      'the code. Put it back with: bun scripts/audit-mutants.mjs\n',
+      `the code. Put it back with: ${stopped.recovery}\n`,
   );
   process.exitCode = 1;
 }
 
-const DOCS = ['README.md', 'MIGRATION.md', 'packages/contracts/README.md', 'apps/bot/README.md'];
+/**
+ * Every place a reader is told to run one of them.
+ *
+ * Kept as a list of documents rather than a list of commands: a command in a
+ * document nobody checks is how README came to name `node` for a script that
+ * cannot use it.
+ *
+ * The list held four documents, and the three an agent is told to read *before*
+ * anything else were not among them. `CLAUDE.md`, `AGENTS.md` and
+ * `.specify/memory/constitution.md` name script commands too, and nothing
+ * looked at them: between them they named six commands, all unaudited, while
+ * README's eighteen and MIGRATION's one were held to the shebang.
+ *
+ * One of the six was already wrong. `bun scripts/board-overlay.mjs` in the
+ * gates block of `CLAUDE.md`, for a script whose shebang says node — the exact
+ * finding MIGRATION.md records as closed, because it was fixed in README and
+ * left standing in the file Claude Code opens first. The audit ended on "the
+ * docs agree" for a year while the instructions disagreed.
+ *
+ * `packages/engine/tests/runnable.test.ts` holds this list to the documents
+ * that exist, so the next document to name a command is either audited or
+ * named as unaudited. Adding a document here is cheap; being outside it is
+ * invisible.
+ */
+const DOCS = [
+  'README.md',
+  'MIGRATION.md',
+  'CLAUDE.md',
+  'AGENTS.md',
+  '.specify/memory/constitution.md',
+  'packages/contracts/README.md',
+  'apps/bot/README.md',
+];
 
 const documented = new Map();
 for (const doc of DOCS) {
@@ -132,6 +193,14 @@ if (!failed) {
   for (const problem of problems) console.log(`  ${problem}`);
   if (problems.length > 0) {
     console.log('\nA check nobody can run reads exactly like a check that passes.');
+  } else {
+    // Scoped to this block on purpose. The unscoped all-clear is suppressed
+    // above and stays suppressed — it was the sentence a human read while the
+    // exit code said otherwise. But saying nothing at all is the other way to
+    // be wrong: this script used to *die* on a corrupt note, so a run that
+    // survives one has to show that the runtime audit itself ran and found
+    // nothing, or the reader cannot tell it from the crash.
+    console.log('  No runtime problem: the failure above is the stopped mutation, not this check.');
   }
   process.exitCode = 1;
 }
@@ -139,10 +208,9 @@ if (!failed) {
 // Last, so it is the line still on screen. The note is the one finding here
 // that makes every other check in the repository lie, so it gets the final say
 // rather than the first.
-if (existsSync(UNDO_NOTE)) {
-  const note = JSON.parse(readFileSync(UNDO_NOTE, 'utf8'));
+if (stopped) {
   console.log(
-    `\nStill broken on purpose: ${relative(ROOT, note.path)}\n` +
-      'Put it back with: bun scripts/audit-mutants.mjs',
+    `\nStill broken on purpose: ${stopped.path === null ? brokenFile(stopped) : relative(ROOT, stopped.path)}\n` +
+      `Put it back with: ${stopped.recovery}`,
   );
 }

@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import {
   CLASSIC,
   LEGACY_MOBILE,
@@ -181,22 +183,79 @@ describe('every engine answer about a player', () => {
   it('covers every engine function that takes a state', () => {
     // The guard against the ninth: a function added later that reads a state
     // and answers a question is a function that has to appear here.
-    const source = [
-      readSource('turn.ts'),
-      readSource('game.ts'),
-    ].join('\n');
-
     const declared = new Set(ASKED.map((asked) => asked.what));
-    const found = [...source.matchAll(/export function (\w+)\(\s*state: GameState/g)].map(
-      (match) => match[1] as string,
-    );
+    const found = declaredIn([readSource('turn.ts'), readSource('game.ts')].join('\n'));
 
     expect(found.length).toBeGreaterThan(0);
     expect(found.filter((name) => !declared.has(name))).toEqual([]);
   });
+
+  /**
+   * And the guard above reads declarations, not sentences about them.
+   *
+   * MEASURED, and the honest part first: blanking changes nothing in the engine
+   * today. Neither `turn.ts` nor `game.ts` currently writes a signature out in
+   * prose, so `declaredIn` finds the same seven names with the comments in and
+   * with them out. That is a fact about this afternoon, not about the check —
+   * these files are all doc-comment, and the sentence a defect would hide
+   * behind is one somebody writes on the day they move a function.
+   *
+   * Both directions are wrong and neither is loud. A comment noting that
+   * `askedOf(state: GameState)` *used to live here* would put a name into
+   * `found` that nothing declares, and the guard would demand a row in `ASKED`
+   * for code that does not exist — a red test with the engine innocent, which
+   * is the failure this repository has already paid for four times in one
+   * night. And a real declaration commented out would keep answering for the
+   * function somebody removed.
+   *
+   * So it is proven over a fixture rather than by waiting for that comment: the
+   * only `export function` in the text below is inside a block comment and
+   * behind a `//`, and one is written in code beneath them.
+   */
+  it('reads a declaration and not a sentence quoting one', () => {
+    const proseOnly = [
+      '/**',
+      ' * export function askedOf(state: GameState): boolean — moved to game.ts.',
+      ' */',
+      '// export function alsoAsked(state: GameState): boolean { return true; }',
+      'export function stillHere(state: GameState): boolean {',
+      '  return state.is_finished;',
+      '}',
+    ].join('\n');
+
+    // Not `not.toContain` twice: the whole answer, so a derivation that has
+    // quietly stopped finding anything fails here as loudly as one that reads
+    // prose.
+    expect(declaredIn(proseOnly)).toEqual(['stillHere']);
+  });
 });
 
-/** Vitest runs from the package root, so the sources are where they look. */
+/**
+ * The engine functions a text declares as taking a state.
+ *
+ * Blanked first. The pattern cannot tell a declaration from a sentence quoting
+ * one, and everything this repository has learned about reading source with a
+ * regular expression says that is where the mistakes are — see the test above
+ * for the two ways it goes wrong and the fixture that proves the blanking is
+ * doing something.
+ */
+function declaredIn(source: string): string[] {
+  return [...blank(source).matchAll(/export function (\w+)\(\s*state: GameState/g)].map(
+    (match) => match[1] as string,
+  );
+}
+
+/**
+ * A source file of this package, found from this file rather than from a
+ * working directory.
+ *
+ * This used to read `src/${file}` and say *vitest runs from the package root*
+ * in a comment. MEASURED: it does when `bun run test` starts it, and it does
+ * not when anybody runs `npx vitest run packages/engine/tests/sixty-eight.test.ts`
+ * from the repository root — which threw `ENOENT: open 'src/turn.ts'` and took
+ * the guard below with it. The claim was true of one way of invoking the suite
+ * and was written as though it were true of the file.
+ */
 function readSource(file: string): string {
-  return readFileSync(`src/${file}`, 'utf8');
+  return readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8');
 }

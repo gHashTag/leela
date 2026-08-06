@@ -38,11 +38,212 @@ export function declaredFields(source, file) {
   return fields;
 }
 
-/** Blank out template literals, keeping line numbers intact. */
-function stripTemplateLiterals(source) {
-  return source.replace(/`(?:[^`\\]|\\.)*`/gs, (block) =>
-    block.replace(/[^\n]/g, ' '),
-  );
+/**
+ * Blank out template literals, keeping line numbers and offsets intact.
+ *
+ * Everything the audit knows about a file it knows from what this returns:
+ * `declaredFields`, `declaredExports` and `declaredMembers` all read the
+ * stripped copy and never the original. So this function decides what the audit
+ * can see, and a version of it that loses its place does not report a defect —
+ * it reports a smaller repository, in the same confident sentences.
+ *
+ * It was one regex, `/`(?:[^`\\]|\\.)*`/gs`, which is neither quote- nor
+ * regex-aware. One backtick that is not a template delimiter desynchronises it,
+ * and everything up to the next stray backtick is blanked.
+ *
+ * Measured on `apps/docs/src/render.ts:161`, a markdown renderer whose inline
+ * pass reads `.replace(/`([^`]+)`/g, '<code>$1</code>')`. That line holds four
+ * backticks inside a regex literal. The old reader took the first for the start
+ * of a template: 18 top-level exports in the raw file, 10 after stripping.
+ * `PageOptions`, `page`, `PLAY_URL`, `DOCS_URL`, `SITE_NAME`, `titleOf`,
+ * `translations` and `summarise` all vanished, and so did the `PageOptions`
+ * fields at :165-215, which dropped out of the unread-field check as well. The
+ * audit then printed "Checked 568 exports" and "Every export has at least one
+ * caller" about a set it had never seen: on one tree, measured with this
+ * function and then with the old regex, the same run counted 583 against 572,
+ * and 682 field declarations against 670. Six of the eight exports carry no
+ * `PUBLIC_API` waiver, so a genuinely dead one there would never have been
+ * named.
+ *
+ * All eight have callers today, so nothing was in fact hidden. The reason to
+ * fix it is not the exports: it is the report. It is the same reason written
+ * over `aliasesOf` below — a check that always says one thing it cannot back up
+ * is a check people stop reading.
+ *
+ * The remedy was already 150 lines further down. `withoutStrings` is a
+ * character scanner that tracks which quote it is inside and treats `${…}` as
+ * code, and its doc-comment states the principle this one inherits: stripping
+ * text and stripping code look the same from outside, and the difference is
+ * which exports get reported as dead. This is that state machine widened to the
+ * whole file, with comments and regex literals added, because the ambiguous `/`
+ * is what put backticks somewhere a line reader could not expect them.
+ *
+ * A `/` opens a regex only where a value cannot precede it: at the start of a
+ * line, after one of `( , = : [ ! & | ? { ;`, or after a keyword that is
+ * followed by an expression. Anywhere else it is division. Getting this wrong
+ * in the safe direction costs a line: an unterminated string or regex is
+ * abandoned at the newline, because neither can span one in valid JavaScript.
+ *
+ * Note for later: `knip` would replace the uncalled-export half of
+ * `audit-unread` outright, and is the better long-term move. It does not do the
+ * write-only-field half, which uses this same parser, so this stands on its own
+ * either way.
+ */
+export function stripTemplateLiterals(source) {
+  const out = source.split('');
+
+  // Newlines survive, so an index into the result is an index into the source
+  // and line N is still line N.
+  const blank = (index) => {
+    if (out[index] !== undefined && out[index] !== '\n') out[index] = ' ';
+  };
+
+  // Where a `/` begins a regex rather than dividing. The empty string is the
+  // start of a line, which is why `previous` is cleared on every newline.
+  const openings = new Set(['', '(', ',', '=', ':', '[', '!', '&', '|', '?', '{', ';', '\n']);
+  // ...and the keywords after which an expression, not a value, follows.
+  const openingWords = new Set([
+    'return',
+    'typeof',
+    'instanceof',
+    'in',
+    'of',
+    'new',
+    'delete',
+    'do',
+    'else',
+    'case',
+    'yield',
+    'await',
+    'void',
+    'throw',
+  ]);
+
+  // A stack rather than a flag, because `${…}` can hold another template
+  // literal. A `code` frame counts its own braces so it knows which `}` closes
+  // the expression it lives in; a `template` frame is text and gets blanked.
+  const frames = [{ kind: 'code', braces: 0, previous: '', word: '' }];
+  // The leaf states, which cannot nest: a string holds no code, a comment holds
+  // no string, a regex holds neither.
+  let mode = null;
+  let inClass = false;
+
+  for (let i = 0; i < source.length; i += 1) {
+    const char = source[i];
+    const next = source[i + 1];
+    const frame = frames[frames.length - 1];
+
+    if (frame.kind === 'template') {
+      blank(i);
+
+      if (char === '\\') {
+        blank(i + 1);
+        i += 1;
+        continue;
+      }
+      if (char === '$' && next === '{') {
+        blank(i + 1);
+        i += 1;
+        frames.push({ kind: 'code', braces: 0, previous: '', word: '' });
+        continue;
+      }
+      if (char === '`') frames.pop();
+      continue;
+    }
+
+    if (mode === 'line') {
+      if (char === '\n') mode = null;
+      continue;
+    }
+
+    if (mode === 'block') {
+      if (char === '*' && next === '/') {
+        mode = null;
+        i += 1;
+      }
+      continue;
+    }
+
+    if (mode === "'" || mode === '"') {
+      if (char === '\\') {
+        // Which also covers a line continuation: the escaped newline is skipped
+        // and the string carries on, as it does in the language.
+        i += 1;
+        continue;
+      }
+      // An unterminated quote is an apostrophe in prose the comment rules did
+      // not catch. Ending it at the newline keeps the damage to one line
+      // instead of to everything up to the next apostrophe in the file.
+      if (char === mode || char === '\n') {
+        mode = null;
+        frame.previous = char === '\n' ? '' : ')';
+        frame.word = '';
+      }
+      continue;
+    }
+
+    if (mode === 'regex') {
+      if (char === '\\') {
+        i += 1;
+        continue;
+      }
+      if (char === '[') inClass = true;
+      else if (char === ']') inClass = false;
+      else if (char === '\n') {
+        mode = null;
+        frame.previous = '';
+      } else if (char === '/' && !inClass) {
+        mode = null;
+        // A regex is a value, so the next `/` divides it.
+        frame.previous = ')';
+      }
+      continue;
+    }
+
+    if (char === '/' && next === '/') {
+      mode = 'line';
+      i += 1;
+      continue;
+    }
+    if (char === '/' && next === '*') {
+      mode = 'block';
+      i += 1;
+      continue;
+    }
+    if (char === "'" || char === '"') {
+      mode = char;
+      continue;
+    }
+    if (char === '`') {
+      blank(i);
+      frames.push({ kind: 'template' });
+      continue;
+    }
+    if (char === '/' && (openings.has(frame.previous) || openingWords.has(frame.word))) {
+      mode = 'regex';
+      inClass = false;
+      continue;
+    }
+
+    if (char === '{') frame.braces += 1;
+    if (char === '}') {
+      if (frame.braces === 0 && frames.length > 1) {
+        // The `}` that closes a `${…}`; it belongs to the template around it.
+        blank(i);
+        frames.pop();
+        continue;
+      }
+      frame.braces -= 1;
+    }
+
+    if (/[A-Za-z0-9_$]/.test(char)) frame.word += char;
+    else frame.word = '';
+
+    if (char === '\n') frame.previous = '';
+    else if (!/\s/.test(char)) frame.previous = char;
+  }
+
+  return out.join('');
 }
 
 /**
@@ -297,6 +498,43 @@ function directUsesOf(name, sources) {
     `^export\\s+(?:async\\s+)?(?:function|const|class)\\s+${name}\\b`,
   );
 
+  // The name written as the key of an object literal, at the head of its line.
+  //
+  // This is the hole through which the whole exports gate fell out. `SEARCH` in
+  // `audit-unread.mjs` includes `'scripts'` and the walk reads `.mjs`, so the
+  // audit script is one of the sources searched for callers — and its own
+  // waiver lists are object literals written `  snakeAt: 'board helper for
+  // consumers',`. `withoutStrings` blanks the reason and leaves `snakeAt:`
+  // standing, and that counted as a use. Measured, against this tree: a name
+  // mentioned in no source at all returned 0 uses, and the same name given one
+  // source whose only line was `zzNothingCallsThis: 'a reason',` returned 1.
+  // `usesOf('stepsFor', [audit-unread source])` returned 1, and the mention it
+  // counted was that name's own `PUBLIC_MEMBERS` entry — whose comment says
+  // nothing calls it. So writing the excuse was the act that stopped the audit
+  // asking, for every name in `PUBLIC_API` and `PUBLIC_MEMBERS`, including one
+  // whose only real caller is deleted tomorrow.
+  //
+  // The fields half of this file solved the same problem in `readsOf` and its
+  // rule is not reusable here. `readsOf` strips every `NAME\s*:` anywhere on the
+  // line, with a global regex. Copied into this function it cries wolf, and that
+  // was measured too: `node scripts/audit-unread.mjs` went from exit 0 to exit 1
+  // naming `ZAI_CODING_BASE_URL`, whose caller at `apps/bot/src/index.ts:89` is
+  //     baseUrl: process.env.ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : undefined,
+  // The unanchored rule matches the colon of the ternary's other arm and erases
+  // a live use. In this repository a check that names an innocent gets deleted
+  // rather than obeyed, so the rule is anchored: a key is a name at the START of
+  // its line followed by a colon, and a name anywhere else on that line is an
+  // expression. `{ paginate: paginate }` therefore still counts — the strip is
+  // anchored and not global, so it removes the key and leaves the value — and so
+  // does the shorthand `{ paginate }`, which has no colon to strip.
+  //
+  // Anchored and without the `g` flag on purpose. `readsOf`'s `write` carries
+  // `g`, and `.test()` on a global regex advances `lastIndex` between calls, so
+  // a rule shaped that way answers differently depending on what was asked
+  // before it. `String.replace` on a non-global `^`-anchored regex has no state
+  // to carry.
+  const leadingKey = new RegExp(`^\\s*${name}\\s*:`);
+
   // A class member's own declaration, which reads exactly like a use of it and
   // was counted as one — so `DirectChannels.refusedCount`, whose only mention
   // anywhere is the line declaring it, came back as called once. A member is
@@ -337,7 +575,14 @@ function directUsesOf(name, sources) {
       // command name and every slug is a chance for the same accident.
       const line = withoutStrings(raw);
       if (!line.includes(name)) continue;
-      if (new RegExp(boundary).test(line)) uses++;
+
+      // The key is removed rather than the line dropped, so a line that both
+      // writes the name and reads it still counts as a read: `paginate:
+      // paginate,` keeps its value half. This mirrors the same decision written
+      // over `readsOf` above, and for the same reason — the three separate rules
+      // it replaced threw away the read in `temperature: options.temperature`.
+      const withoutKey = line.replace(leadingKey, ' ');
+      if (new RegExp(boundary).test(withoutKey)) uses++;
     }
   }
 

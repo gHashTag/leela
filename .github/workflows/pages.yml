@@ -46,9 +46,15 @@ jobs:
       - run: bun install --frozen-lockfile
 
       # A broken build must not reach players, and the tests are quick.
+      #
+      # This file states what the app is made of twice — in `paths:` above and
+      # in this list — and for one pass the two disagreed: the journal was added
+      # up there and not down here, so the format both surfaces read and write
+      # could be red and still deploy green. `audit-configs` now reads both
+      # against the dependency graph, so the next divergence is loud.
       - name: Test what is being shipped
         run: |
-          for pkg in packages/engine packages/content apps/miniapp apps/docs; do
+          for pkg in packages/engine packages/content packages/journal apps/miniapp apps/docs; do
             (cd "$pkg" && bunx vitest run)
           done
 

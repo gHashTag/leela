@@ -30,12 +30,32 @@ import { unguardedReaders, unnamedReaders } from './lib/whose.mjs';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MAIN = join(HERE, '..', 'apps', 'miniapp', 'src', 'main.ts');
 
-/** Functions whose subject really is the seat holding the turn. */
+/**
+ * Functions whose subject really is the seat holding the turn.
+ *
+ * Two of these were added the day the reader stopped being blind, and it is
+ * worth saying which day that was. For every pass until now this file printed
+ * *"Every one of the 13 that read the turn holder’s values says why"* and
+ * exited 0 — and the sentence was false. `readsTurnHolder` skipped a name
+ * followed by a colon, to leave object keys alone, and a ternary's else-colon
+ * answered that test: `x ? journal : y` was not a read as far as this audit was
+ * concerned. Separately, a function's body was taken as the first `{` after its
+ * name, and for `whatIsBeingWritten(): { plan: number; intention: string }` that
+ * brace opens the *return type* — the six lines underneath were never read at
+ * all.
+ *
+ * So a check written to backstop a prose waiver was reporting success on
+ * failure, which is worse than not existing: the passing line is what anybody
+ * reads. `openPlan` and `whatIsBeingWritten` are here now because the reader
+ * can finally see them, not because anything in the app changed.
+ */
 const ALLOWED = new Map([
   ['takeSeat', 'sets them — it is what "the seat holding the turn" means here'],
   ['draw', 'the board, the die and the line underneath are that seat’s'],
   ['roll', 'the throw is the turn holder’s, by definition'],
   ['openPlans', 'the list is opened from the header by whoever is looking at the board'],
+  ['openPlan', 'reads it only on the fast path where the seat it was asked about is the turn holder — and the second question below proves that, rather than believing this line'],
+  ['whatIsBeingWritten', 'reads them only on the `!writer` fallback: `writingFor` is null unless a box is open, so that branch is the case where no box is open for anybody, and the turn holder is then the only seat the app has to be about'],
   ['askIntention', 'asks the seat about to throw'],
   ['saveTheIntention', 'answers for the seat that was asked'],
   ['startOver', 'restarts the seat holding the turn and nobody else'],

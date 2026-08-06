@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { messageFor } from '@leela/content';
 import { Guide, ModelError, fixedModel, recordingModel, type LanguageModel } from '@leela/ai';
 import { createBot } from '../src/bot';
@@ -157,9 +158,29 @@ function documented(): string[] {
   return [...messageFor('en', 'help').matchAll(/^\/([a-z]+)/gm)].map(([, name]) => `/${name}`);
 }
 
-/** The commands `bot.ts` actually registers, read from the file. */
+/**
+ * The commands `bot.ts` actually registers, read from the file.
+ *
+ * Two things about the read, both of which were assumptions until they were
+ * measured.
+ *
+ * The path is anchored to *this file* rather than to `process.cwd()`. Vitest
+ * chdirs into the package when `bun run test` starts it, so the working
+ * directory happened to be right for exactly one way of invoking this suite;
+ * `npx vitest run apps/bot/tests/bot.test.ts` from the repository root — which
+ * is how anybody outside this package runs one test — threw ENOENT on
+ * `<root>/src/bot.ts` before a single assertion ran. A test that only exists
+ * when it is started a particular way is a test the next person deletes.
+ *
+ * And the source is blanked. `bot.ts` documents its own command surface in
+ * prose, so a doc-comment writing `bot.command('...')` out reads to this
+ * pattern exactly like the command being registered — and this list is used in
+ * both directions, so a command described in a comment and never registered
+ * would be demanded of the help message, and the failure would name the help
+ * for a command that does not exist.
+ */
 function registered(): string[] {
-  const source = readFileSync(resolve(process.cwd(), 'src/bot.ts'), 'utf8');
+  const source = blank(readFileSync(new URL('../src/bot.ts', import.meta.url), 'utf8'));
   return [...source.matchAll(/bot\.command\('([a-z]+)'/g)].map(([, name]) => `/${name}`);
 }
 
@@ -856,7 +877,7 @@ describe('a path leaving and arriving as a file', () => {
     // The path that had never run: the fetch always failed, so a file has
     // never been *received* in a test. The bytes are the mini app's own,
     // captured from its download and kept in tests/fixtures.
-    const file = readFileSync(resolve(process.cwd(), 'tests/fixtures/miniapp-export.json'), 'utf8');
+    const file = readFileSync(new URL('./fixtures/miniapp-export.json', import.meta.url), 'utf8');
     const reports = new MemoryReportSink();
     const { bot, sent } = harness({ reports, readFile: async () => file });
 
@@ -869,7 +890,7 @@ describe('a path leaving and arriving as a file', () => {
   });
 
   it('says so when the same path arrives twice', async () => {
-    const file = readFileSync(resolve(process.cwd(), 'tests/fixtures/miniapp-export.json'), 'utf8');
+    const file = readFileSync(new URL('./fixtures/miniapp-export.json', import.meta.url), 'utf8');
     const reports = new MemoryReportSink();
     const { bot, sent } = harness({ reports, readFile: async () => file });
 

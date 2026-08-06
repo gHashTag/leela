@@ -28,14 +28,33 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const MAIN = join(HERE, '..', 'apps', 'miniapp', 'src', 'main.ts');
 
 /**
- * Controls whose state is mechanical rather than a decision about the game.
+ * Decisions that are mechanical rather than about the game: a control together
+ * with the exact expressions excused on it.
  *
  * The die is disabled for the length of its own spin and enabled again in the
- * `finally` that follows: that is one act holding its own control, not a
+ * `finally` that follows: `el.roll.disabled = true` at the top of `roll`, and
+ * `= false` on the way out. That is one act holding its own control, not a
  * question about whether a throw is allowed. The question is `mayThrow`, and
  * `draw` asks it.
+ *
+ * This was written as `new Set(['roll.disabled'])`, and the spelling was the
+ * defect. The excuse above it argues about two bare literals; what it granted
+ * was the control. `el.roll.disabled` is assigned in three places in `main.ts`,
+ * and the third — the one in `draw`, the only one that decides anything — was
+ * exempt from this audit for as long as the Set existed. Planting
+ * `el.roll.disabled = el.writerText.value.trim().length === 0;` there, the
+ * exact shape `lib/drawings.mjs` says it exists to catch, produced no findings;
+ * the identical plant on `el.report.disabled` produced one. So the audit whose
+ * own header says *the die took a throw the drawing had already refused* was
+ * blind on the die, and the audit reported success.
+ *
+ * The lesson is not about dice. An excuse keyed on the thing a statement
+ * touches excuses every statement that will ever touch it, including the ones
+ * nobody has written yet; an excuse keyed on the statement itself expires the
+ * moment somebody writes a different one. So the waiver is a pair, and
+ * `namesItsDecision` reads the decision and not only the name of the control.
  */
-const MECHANICAL = new Set(['roll.disabled']);
+const MECHANICAL = new Map([['roll.disabled', new Set(['true', 'false'])]]);
 
 const source = readFileSync(MAIN, 'utf8');
 const inline = inlineDrawings(source, MECHANICAL);

@@ -22,3 +22,12 @@ export interface Call {
  */
 export function blank(source: string, syntax?: 'js' | 'html' | 'css'): string;
 export function callsTo(source: string, name: string): Call[];
+
+/**
+ * Every `.ts`, `.mts` and `.tsx` under a directory, however deep.
+ *
+ * Absolute paths, in the order a sorted walk finds them. A directory that
+ * cannot be read is empty rather than a throw, because the callers hand in a
+ * `src` or `tests` path a workspace may not have.
+ */
+export function sourceFilesUnder(directory: string): string[];

@@ -31,7 +31,19 @@ import {
   detectRules,
   extractBoards,
 } from '../packages/engine/src/index.ts';
-import { RECORDED, against, agreesWithEngine, markFor, nameOf, renderResult } from './lib/copies.mjs';
+import {
+  RECORDED,
+  absentDonors,
+  against,
+  agreesWithEngine,
+  censusLines,
+  inventoryFrom,
+  markFor,
+  nameOf,
+  presentDirectories,
+  renderResult,
+  withCoverage,
+} from './lib/copies.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const srcFlag = process.argv.indexOf('--src');
@@ -69,6 +81,28 @@ if (!existsSync(SRC)) {
   console.error(`No source directory at ${SRC}. Clone the repositories, or pass --src.`);
   process.exit(1);
 }
+
+/**
+ * How much of the donor tree is here to be read.
+ *
+ * This walked `../leela-src` and reported eighteen copies without ever saying
+ * eighteen copies out of what. Fifteen of the twenty-five repositories
+ * MIGRATION.md inventories are on this disk; ten are not, and one of them is
+ * `leelachakra`, the original React Native app — the first generation of the
+ * game whose rules this whole audit compares against.
+ *
+ * Read out of MIGRATION.md rather than listed here, and the count MIGRATION.md
+ * states in words is checked against the count parsed out of it, so a parse
+ * that goes wrong says so instead of shrinking the denominator quietly.
+ *
+ * Absence does not fail the run. The ten cannot be cloned from in here, and an
+ * audit that can only be red is one somebody deletes rather than obeys. What
+ * was wrong was the claim of coverage, and that is what changes.
+ */
+const inventory = inventoryFrom(readFileSync(join(HERE, '..', 'MIGRATION.md'), 'utf8'));
+const present = presentDirectories(readdirSync(SRC, { withFileTypes: true }));
+const absent = absentDonors(inventory.donors, present);
+const inventoried = inventory.donors.length;
 
 const results = [];
 
@@ -116,8 +150,21 @@ for (const result of results) {
 }
 
 console.log(
-  `\n${results.length - wrong} of ${results.length} copies agree with @leela/engine.`,
+  `\n${withCoverage(`${results.length - wrong} of ${results.length} copies agree with @leela/engine`, { inventoried, present: inventoried - absent.length })}`,
 );
+
+for (const line of censusLines(absent, inventoried)) console.log(line);
+
+// The parse and the prose disagreeing is itself a finding: it means either a
+// donor was added to the inventory in a shape this cannot read, or the stated
+// total has drifted from the names under it. Said out loud rather than
+// absorbed, because everything above is measured against this denominator.
+if (inventory.declared !== null && inventory.declared !== inventoried) {
+  console.log(
+    `\nMIGRATION.md says ${inventory.declared} repositories and names ${inventoried}. The census above` +
+      '\nis against the names, and one of the two is wrong.',
+  );
+}
 
 // The boards mostly agree; the rules do not. Print them side by side, because
 // a copy with the right board and no three-sixes rule is a different game
@@ -162,6 +209,32 @@ if (unparsed.length > 0) {
   console.log('Check these by hand, or teach extractBoards their shape.');
 }
 
+/**
+ * A board nobody could read is not a board that agrees.
+ *
+ * `unparsed` was collected, printed, and then governed nothing. It touched
+ * neither the exit code below — which sees only `fresh` and `rotted` — nor the
+ * closing sentence, which printed *12 of 18 copies agree with the engine* over
+ * however many files `declaresBoard` had recognised and `extractBoards` had not.
+ * The comment where it is collected has always said the right thing — *a
+ * scanner that quietly skips what it cannot read is worse than no scanner,
+ * because it reads as coverage* — and the run went on reading as coverage.
+ *
+ * `audit-claims` already decided this exact question in the other direction and
+ * wrote down why: a package whose suite would not run is not a package with zero
+ * tests, so it takes an exit code of its own — 2, *the check has no answer for
+ * at least one of these, which no amount of editing will settle* — rather than
+ * being folded into the ordinary disagreement at 1. The same two sentences apply
+ * here word for word, so the same two codes are used, and the ordering is the
+ * sibling's: an unreadable board is reported before a recorded one, because
+ * nothing anybody does to `RECORDED` answers it.
+ *
+ * Set with `process.exit(...)`, a spelling the all-clear gate could not read
+ * until 2026-08-06; that blind spot is now written down where the reader is, in
+ * `packages/content/tests/a-closing-sentence-nothing-governs.test.ts`.
+ */
+const unreadable = unparsed.length > 0;
+
 // The exit code is about the record, not about the count. Six of these copies
 // disagree and none of them is ours to fix, so `wrong > 0` was true the day
 // this was written and true every day since — a verdict that never moves is
@@ -180,11 +253,39 @@ if (rotted.length > 0) {
   console.log('A donor was fixed, a file moved, or a disagreement changed shape. Check, then drop it.');
 }
 
-if (fresh.length === 0 && rotted.length === 0) {
+if (fresh.length === 0 && rotted.length === 0 && unparsed.length === 0) {
+  // The closing line is the one a reader quotes, so it carries the coverage.
+  // "12 of 18 copies agree" was true and read as a statement about the game
+  // rather than about the fifteen repositories anybody had on disk.
+  //
+  // And `unparsed.length === 0` for the same reason one step in: `results.length`
+  // counts the boards this run could read, so "12 of 18" over a nineteenth file
+  // nobody could parse is a denominator quietly shrunk to fit. The coverage
+  // clause says which repositories were read; it cannot also say which files
+  // inside them were, so the sentence is withheld rather than qualified.
+  //
+  // Spelled over `unparsed` rather than as `!unreadable`, which is the same
+  // question and reads better, because the gate in
+  // `a-closing-sentence-nothing-governs.test.ts` recognises an all-clear by the
+  // shape of its condition — a claim of emptiness — and a negated boolean is not
+  // that shape. With `!unreadable` here this file had no closing sentence the
+  // gate could find and was skipped in silence; written out, it is read. A rule
+  // one is exempt from by accident of spelling is a rule one is not held to.
   console.log(
-    `\n${results.length - wrong} of ${results.length} copies agree with the engine, and the ` +
-      `${RECORDED.length} that do not are the ${RECORDED.length} on record.`,
+    `\n${withCoverage(
+      `${results.length - wrong} of ${results.length} copies agree with the engine, and the ` +
+        `${RECORDED.length} that do not are the ${RECORDED.length} on record`,
+      { inventoried, present: inventoried - absent.length },
+    )}`,
   );
+}
+
+if (unreadable) {
+  console.log(
+    `\n${unparsed.length} file(s) declare a board this run could not read. That is not a copy that` +
+      '\ndisagrees; it is a copy nobody measured, and the count above is of the rest.',
+  );
+  process.exit(2);
 }
 
 process.exit(fresh.length + rotted.length > 0 ? 1 : 0);

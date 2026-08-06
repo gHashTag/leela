@@ -1,0 +1,188 @@
+/**
+ * How many tests a suite ran, read out of vitest's own report.
+ *
+ * `audit-claims` is the check whose entire subject is whether the numbers this
+ * repository states about itself are true. It runs every workspace's suite with
+ * `--reporter=json`, reads `numTotalTests`, and compares that against the table
+ * in README. On 2026-08-06 it printed nine measured counts, reached
+ * `@leela/mobile`, and died with a hundred kilobytes of stack trace.
+ *
+ * Nothing was wrong with the reading. `execFileSync` throws on any non-zero
+ * exit, vitest exits non-zero whenever one assertion is red, and the report the
+ * audit wanted was sitting on the thrown error the whole time — the string
+ * `{"numTotalTests":396,"numFailedTests":1,...}` was there in `output[1]`, and
+ * the runner threw it away and replaced it with a stack. The one check that
+ * exists to say "README claims 3025 and the suites run 3336" said instead that
+ * a command failed, at a line number, in `child_process`. A reader learns
+ * nothing about README's staleness from that, and the table went unenforced for
+ * as long as any suite anywhere was red.
+ *
+ * So the parsing lives here, apart from anything that spawns a process, and it
+ * cannot tell a green run from a red one: it is handed text and it finds the
+ * report. Whether that text came back as stdout or off the `stdout` of an
+ * exception is the caller's problem, not the format's.
+ *
+ * The other half of the defect is the silent one. `output.indexOf('{')` on a
+ * truncated capture returns -1, `slice(-1)` is the last character, and
+ * `JSON.parse` of that raises `Unexpected token` naming neither the package nor
+ * the reason — and a version that swallowed it and returned 0 would be worse
+ * still: a package whose suite could not start would read as a package with no
+ * tests, and `--write` would then put that zero into README as fact. Every path
+ * that cannot produce a number here raises `UnreadableSuiteReport` with a kind
+ * that names which way it failed.
+ */
+
+/**
+ * A capture that carries no report, and which way it failed to.
+ *
+ * `kind` is one of:
+ *
+ *   - `empty` — nothing was captured at all. The child wrote no stdout, which
+ *     usually means it never started: a missing binary, a bad cwd.
+ *   - `no-json` — text arrived and no balanced JSON object could be read out of
+ *     it. Typically the runner's own error message, `Command failed` and
+ *     nothing else, which is exactly the string the old code fed to `slice`.
+ *   - `not-a-report` — JSON was read and it is not vitest's: no
+ *     `numTotalTests`. A different reporter, or a different tool.
+ */
+export class UnreadableSuiteReport extends Error {
+  constructor(kind, message, text = '') {
+    super(message);
+    this.name = 'UnreadableSuiteReport';
+    this.kind = kind;
+    this.text = text;
+  }
+}
+
+/** As much of a capture as is worth quoting back at a person. */
+const excerpt = (text, limit = 200) => {
+  const trimmed = text.trim().replace(/\s+/g, ' ');
+  return trimmed.length > limit ? `${trimmed.slice(0, limit)}…` : trimmed;
+};
+
+/**
+ * The span of the first balanced JSON object starting at `from`, or null.
+ *
+ * String-aware, because the report is full of file paths and message text and a
+ * brace inside a quoted string closes nothing. Escapes are honoured so that a
+ * `\"` in an assertion message does not end the string early — a test name
+ * containing a quote is not exotic, and counting braces naively would stop the
+ * scan in the middle of the object and hand `JSON.parse` a fragment.
+ */
+function objectAt(text, from) {
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = from; i < text.length; i += 1) {
+    const ch = text[i];
+
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+
+    if (ch === '"') inString = true;
+    else if (ch === '{') depth += 1;
+    else if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) return text.slice(from, i + 1);
+    }
+  }
+  return null;
+}
+
+/**
+ * The vitest report inside a capture.
+ *
+ * Vitest prints banner lines before the object often enough that the original
+ * code already allowed for it — `indexOf('{')` was there for that reason. But a
+ * banner can itself contain a brace (a path under a `{foo,bar}` glob, a config
+ * echo), so the first `{` is not reliably the report's. Every opening brace is
+ * tried in turn and the first one that both closes and looks like a vitest
+ * report wins. Text after the object is ignored the same way: a summary line
+ * printed once the reporter has flushed is not a parse error.
+ */
+function reportIn(text) {
+  for (let i = text.indexOf('{'); i !== -1; i = text.indexOf('{', i + 1)) {
+    const span = objectAt(text, i);
+    if (span === null) continue;
+
+    let parsed;
+    try {
+      parsed = JSON.parse(span);
+    } catch {
+      continue;
+    }
+    if (parsed && typeof parsed === 'object' && typeof parsed.numTotalTests === 'number') return parsed;
+  }
+  return null;
+}
+
+/**
+ * What a suite ran, from the raw stdout of `vitest run --reporter=json`.
+ *
+ * Identical for a green run and a red one — that is the whole point of it. A
+ * red run has counted its tests just as carefully as a green one; the number is
+ * not less true for one of them having failed.
+ *
+ * `red` is reported alongside the counts rather than instead of them, so a
+ * caller can say "the suite is red, and here are its counts" — two facts, which
+ * the old code collapsed into one stack trace.
+ *
+ * @param text Raw stdout, green run or red, banner lines and all.
+ * @returns `{ total, passed, failed, red }`.
+ * @throws {UnreadableSuiteReport} When no vitest report can be read out.
+ */
+export function countsFrom(text) {
+  const source = typeof text === 'string' ? text : String(text ?? '');
+
+  if (source.trim() === '') {
+    throw new UnreadableSuiteReport('empty', 'the suite produced no output at all — it likely never started');
+  }
+
+  const report = reportIn(source);
+  if (report === null) {
+    const looksLikeJson = source.includes('{');
+    throw new UnreadableSuiteReport(
+      looksLikeJson ? 'not-a-report' : 'no-json',
+      looksLikeJson
+        ? `the suite printed JSON that is not a vitest report (no numTotalTests): ${excerpt(source)}`
+        : `the suite printed no JSON report: ${excerpt(source)}`,
+      source,
+    );
+  }
+
+  const number = (value) => (typeof value === 'number' ? value : 0);
+  const total = number(report.numTotalTests);
+  const failed = number(report.numFailedTests);
+
+  return {
+    total,
+    passed: typeof report.numPassedTests === 'number' ? report.numPassedTests : total - failed,
+    failed,
+    // `success` is the reporter's own verdict and covers what the counts do
+    // not: a suite that fails to collect a file has zero failed *tests* and is
+    // still red. Falling back to the count keeps an older reporter readable.
+    red: report.success === false || failed > 0,
+  };
+}
+
+/**
+ * The stdout hiding on an exception thrown by `execFileSync`.
+ *
+ * Node puts it in two places and neither is documented as the one to use:
+ * `error.stdout`, and `error.output[1]` (index 1 being fd 1). Both are Buffers
+ * unless `encoding` was set. This is the single line that the crash of
+ * 2026-08-06 came down to — the numbers were always right here.
+ *
+ * Returns `''` rather than throwing when the error carries nothing, so that the
+ * diagnosis comes from `countsFrom`, in one voice, with one set of kinds.
+ */
+export function capturedOutput(error) {
+  const candidate = error?.stdout ?? error?.output?.[1];
+  if (candidate === null || candidate === undefined) return '';
+  return typeof candidate === 'string' ? candidate : candidate.toString('utf8');
+}

@@ -26,6 +26,66 @@
  * a rule the checks share is a rule to write down once.
  */
 
+import { readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+
+/**
+ * The extensions a TypeScript source can be written in.
+ *
+ * `.tsx` is here because of what `lib/claims.mjs` had already written down at
+ * lines 303-306, in the one place this repository had learned it:
+ *
+ *   > `.tsx` counts. This asked for `.ts` alone, so a workspace whose `src`
+ *   > holds only components — which `apps/mobile` is one refactor from being —
+ *   > would have been skipped whole, by the same rule that exists to stop a
+ *   > workspace being skipped.
+ *
+ * The lesson was written in `claims.mjs` and then not carried anywhere: three
+ * audits went on filtering `.ts` alone underneath it. `apps/mobile/src/App.tsx`
+ * is a thousand lines of shipped code that `audit-doubles` and `audit-promises`
+ * had never read a character of, and reported *every bound is declared once*
+ * over.
+ *
+ * `.mts` because `audit-promises` reads test files written as modules.
+ *
+ * A `.d.ts` ends in `.ts` and is therefore included, which is what the three
+ * callers already did and is left alone deliberately: a declaration file states
+ * the same constants and the same injected dependencies as the code beside it,
+ * and excluding it here would be a rule about names rather than about content.
+ */
+const SOURCE = /\.(ts|mts|tsx)$/;
+
+/**
+ * Every TypeScript source under a directory, however deep.
+ *
+ * The walk two audits had written out separately and a third had written a
+ * third time with a different extension filter — which is precisely how the two
+ * of them came to disagree about whether a component is source. A rule the
+ * checks share is a rule to write down once, which is the argument of this
+ * whole module.
+ *
+ * A directory that cannot be read is empty rather than an error: the callers
+ * pass a `src` or `tests` path that a workspace may not have, and a throw there
+ * would stop the audit at the first workspace missing one.
+ */
+export function sourceFilesUnder(directory) {
+  const found = [];
+  let entries;
+  try {
+    entries = readdirSync(directory);
+  } catch {
+    return found;
+  }
+
+  for (const entry of entries.sort()) {
+    const path = join(directory, entry);
+    if (statSync(path).isDirectory()) found.push(...sourceFilesUnder(path));
+    else if (SOURCE.test(entry)) found.push(path);
+  }
+
+  return found;
+}
+
 /**
  * The same source with its comments blanked, character for character.
  *

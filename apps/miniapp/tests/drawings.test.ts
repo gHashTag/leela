@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 // Shared with the audit scripts, which are plain JavaScript.
 import { blank } from '../../../scripts/lib/source.mjs';
 // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
-import { drawings, inlineDrawings, namesItsDecision } from '../../../scripts/lib/drawings.mjs';
+import { LITERALS, drawings, inlineDrawings, namesItsDecision } from '../../../scripts/lib/drawings.mjs';
 // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 import { unnamedReaders } from '../../../scripts/lib/whose.mjs';
 import { readFileSync } from 'node:fs';
@@ -40,8 +40,54 @@ import { canRoll, mayAsk, mayExport, mayShare, mayStartOver, mayThrow, mayWrite 
  * questions that happened to agree.
  */
 
-const MECHANICAL = new Set(['roll.disabled']);
+// Duplicated from `audit-drawings.mjs` by design — the audit carries the whole
+// account of why the waiver is a pair and this carries the pair alone — and the
+// two must agree. It was a `Set(['roll.disabled'])` in both places, and that
+// spelling excused not the two literals it was written for but every statement
+// that would ever be assigned to that control. The grid below is what now holds
+// it to its own words.
+const MECHANICAL = new Map([['roll.disabled', new Set(['true', 'false'])]]);
 const SOURCE = blank(readFileSync('src/main.ts', 'utf8'));
+
+/** A drawing as `drawings` reports it, with the span of the decision it read. */
+type Drawing = {
+  control: string;
+  property: string;
+  decided: string;
+  from: number;
+  to: number;
+};
+
+/**
+ * Every decided-expression shape `lib/drawings.mjs` itself calls un-naming.
+ *
+ * Read off the module's own rules rather than listed by hand: each member of
+ * its exported `LITERALS` and each of those negated, a numeric literal in the
+ * three forms its `/^!?-?\d/` admits, and a read of the DOM in the two forms
+ * its `/^!?el\./` admits — the second of which, `el.…value.trim().length === 0`,
+ * is the exact expression the module's own comment names as the thing it exists
+ * to catch.
+ *
+ * None of them contains a `;`, a newline, or a `.disabled`/`.hidden` of its
+ * own, so substituting one into a statement can neither split that statement
+ * nor conjure a second one. The grid would otherwise be measuring the
+ * substitution rather than the check.
+ */
+function unNaming(): string[] {
+  const literals = [...(LITERALS as Set<string>)];
+
+  return [
+    ...literals,
+    ...literals.map((literal) => `!${literal}`),
+    '0',
+    '1',
+    '-1',
+    '!0',
+    'el.writerText.checked',
+    '!el.writerText.checked',
+    'el.writerText.value.trim().length === 0',
+  ];
+}
 
 describe('every control the app draws', () => {
   it('names the decision behind it', () => {
@@ -65,18 +111,108 @@ describe('every control the app draws', () => {
     const negated = { control: 'x', property: 'hidden', decided: '!mayStartOver(session)' };
     const plain = { control: 'x', property: 'hidden', decided: '!tools' };
 
-    expect(namesItsDecision(inline, new Set())).toBe(false);
-    expect(namesItsDecision(named, new Set())).toBe(true);
-    expect(namesItsDecision(negated, new Set())).toBe(true);
+    expect(namesItsDecision(inline, new Map())).toBe(false);
+    expect(namesItsDecision(named, new Map())).toBe(true);
+    expect(namesItsDecision(negated, new Map())).toBe(true);
     // A plain name is a decision something else computed and can be read again.
-    expect(namesItsDecision(plain, new Set())).toBe(true);
+    expect(namesItsDecision(plain, new Map())).toBe(true);
   });
 
-  it('may be mechanical, but only where that is written down', () => {
+  it('may be mechanical, but only in the decision that is written down', () => {
+    // The waiver excuses a decision on a control, not the control. `= true` and
+    // `= false` are the die holding its own control for the length of a spin;
+    // a question about the game assigned to the same control is still a
+    // question about the game, and still has to carry a name.
     const spin = { control: 'roll', property: 'disabled', decided: 'true' };
+    const finally_ = { control: 'roll', property: 'disabled', decided: 'false' };
+    const decision = {
+      control: 'roll',
+      property: 'disabled',
+      decided: 'el.writerText.value.trim().length === 0',
+    };
 
-    expect(namesItsDecision(spin, new Set())).toBe(false);
+    expect(namesItsDecision(spin, new Map())).toBe(false);
     expect(namesItsDecision(spin, MECHANICAL)).toBe(true);
+    expect(namesItsDecision(finally_, MECHANICAL)).toBe(true);
+    // The plant that this audit reported nothing about for as long as the
+    // waiver was a Set of control names.
+    expect(namesItsDecision(decision, MECHANICAL)).toBe(false);
+  });
+
+  it('refuses an un-naming decision on every control, waived or not', () => {
+    /**
+     * The shape of the defect rather than the case that revealed it.
+     *
+     * Over the grid of every drawing in `main.ts` — the waived control included,
+     * all three of its statements — against every expression the module itself
+     * calls un-naming, putting that expression in that one statement must
+     * produce exactly one finding. The file is clean to begin with, so one
+     * substitution can account for exactly one finding and nothing else.
+     *
+     * The single exception is the waiver's own pair, which is read out of
+     * `MECHANICAL` rather than spelled out here.
+     *
+     * Reading it out of `MECHANICAL` alone is not enough, and that was measured
+     * rather than reasoned. The first version of this grid took the waiver's
+     * word for what was excused, so a waiver that grew took the grid's
+     * expectation with it: adding `el.writerText.checked` to the pair left
+     * every one of these cells green — the very shape of the defect this test
+     * was written for, reproduced inside the test written to close it. An
+     * excuse that decides what it is checked against is not checked. So the
+     * grid also says what a waiver is allowed to contain: `HELD` below.
+     */
+    const statements = drawings(SOURCE) as Drawing[];
+    const shapes = unNaming();
+
+    /**
+     * What a mechanical waiver may excuse: a control simply on, or simply off.
+     *
+     * Not a sample of two — the whole population. `disabled` and `hidden` are
+     * booleans, so an act holding its own control for the length of itself can
+     * only write one of these two. Anything else assigned there is a question
+     * about the game, whatever the comment above the waiver says, and a
+     * question about the game has to carry a name like every other.
+     */
+    const HELD = new Set(['true', 'false']);
+
+    // A grid over nothing would pass for ever, and the control this exists for
+    // must be in it.
+    expect(statements.length).toBeGreaterThan(5);
+    expect(statements.filter((one) => `${one.control}.${one.property}` === 'roll.disabled').length)
+      .toBeGreaterThan(1);
+    expect(shapes.length).toBeGreaterThan(10);
+
+    // A waiver may only ever hold a control in a state. Asked of the waiver
+    // itself, before any of it is believed.
+    const questions: string[] = [];
+    for (const [control, excused] of MECHANICAL) {
+      for (const shape of excused) {
+        if (!HELD.has(shape)) questions.push(`el.${control} = ${shape}`);
+      }
+    }
+    expect(questions).toEqual([]);
+
+    const wrong: string[] = [];
+    let waivedCells = 0;
+
+    for (const statement of statements) {
+      const control = `${statement.control}.${statement.property}`;
+
+      for (const shape of shapes) {
+        const mutated = SOURCE.slice(0, statement.from) + shape + SOURCE.slice(statement.to);
+        const waived = (MECHANICAL.get(control)?.has(shape) ?? false) === true;
+        const wanted = waived ? 0 : 1;
+        const found = (inlineDrawings(mutated, MECHANICAL) as unknown[]).length;
+
+        if (waived) waivedCells += 1;
+        if (found !== wanted) wrong.push(`el.${control} = ${shape} — ${found}, wanted ${wanted}`);
+      }
+    }
+
+    expect(wrong).toEqual([]);
+    // And the waiver is still a waiver: some cells really were excused, so the
+    // grid above is not green merely because nothing was ever exempt.
+    expect(waivedCells).toBeGreaterThan(0);
   });
 });
 
@@ -164,10 +300,16 @@ describe('whose values a function reads', () => {
    * `audit-whose.mjs` runs the same check in CI; this one fails in the package
    * the change was made in.
    */
+  // Duplicated from `audit-whose.mjs` by design — the audit carries a sentence
+  // per name and this carries the names alone — and the two must agree. They
+  // gained `openPlan` and `whatIsBeingWritten` together, on the pass where the
+  // reader stopped mistaking a ternary's else-colon for an object key and
+  // stopped mistaking an object return-type annotation for a body. Neither
+  // function changed; both were simply unreadable before.
   const ALLOWED = new Set([
-    'takeSeat', 'draw', 'roll', 'openPlans', 'askIntention', 'saveTheIntention',
-    'startOver', 'showWriterHint', 'saveReport', 'openPath', 'exportPath',
-    'takeThePastedSquare', 'importPath',
+    'takeSeat', 'draw', 'roll', 'openPlans', 'openPlan', 'askIntention',
+    'saveTheIntention', 'startOver', 'showWriterHint', 'saveReport', 'openPath',
+    'exportPath', 'takeThePastedSquare', 'importPath', 'whatIsBeingWritten',
   ]);
 
   it('is said out loud, or the function has a seat of its own', () => {

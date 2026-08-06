@@ -2,8 +2,9 @@
 
 Leela is one game with several surfaces: an engine, a dataset in 22 languages, a
 Telegram bot, a mini app, a book, and a deployed contract. It was assembled from
-twenty-five repositories in which the rules had been written out ten times and
-disagreed six ways.
+twenty-five repositories in which the rules had been written out eighteen times
+and disagreed six ways — the count `audit-copies` prints, not the one this
+paragraph carried until 2026-08-06.
 
 Every principle below is here because breaking it cost something. The passes
 that found each one are in `MIGRATION.md`.
@@ -14,8 +15,13 @@ that found each one are in `MIGRATION.md`.
 
 The engine is the rules. Nothing else may re-derive them.
 
-Ten copies of the board across twenty-five repositories disagreed six ways; four
-of them were a Snakes and Ladders set rather than Leela. Since then the same
+`bun scripts/audit-copies.mjs --src ../leela-src` is the thing that knows how
+many copies of the board exist and how many of them play a different game. Cite
+the command, not its answer: on 2026-08-06 it printed eighteen copies, of which
+six disagree with the engine and four of those six are a hundred-square Snakes
+and Ladders set rather than Leela. This sentence said "ten copies" until that
+day — a figure nobody had re-derived against the disk it describes, in the one
+principle whose subject is not trusting a copy. Since then the same
 mistake has cost something five more times, always in the same shape: square 68
 means "waiting to enter" *or* "has won" depending on how you got there, and every
 place that re-derived the difference instead of asking `hasWon` got it wrong —
@@ -78,15 +84,28 @@ than approximating it: the numbers come from `GameBoard`'s own layout, and being
 
 ### VII. Nothing here is a guess about the sources
 
-`/Users/playra/leela-src` holds the twenty-five repositories this came from. Read
+`/Users/playra/leela-src` is where the repositories this came from are kept. Read
 them. The first board that shipped was the illustration from the rules screen
 rather than the board, and it survived a pass because it looked close.
+
+All twenty-five are inventoried in `MIGRATION.md`; fewer than that are on any
+given disk. `bun scripts/audit-copies.mjs` names which are present and which are
+absent, and says how much of the tree each of its findings covers. What is not
+there is reported as not there — never inferred from a repository that is.
 
 ## Boundaries
 
 These are not judgement calls.
 
-- Push to `unified` only. Never to `main`, never force.
+- ~~Push to `unified` only. Never to `main`, never force.~~ **RETRACTED
+  2026-08-06.** Nothing here is committed and nothing is pushed. Work is left in
+  the tree and the parent session handles git once it has verified it, because
+  several agents share this checkout and two of them pushing collide. The line
+  is struck rather than deleted because deleting it would hide what it was: a
+  ratified in-repo document, in the register of law, licensing the one action
+  the operating rule forbids absolutely — and an autonomous agent reads a
+  ratified document as authority and does what it says. What survives of it is
+  the half that was a prohibition: never `main`, never force, by anyone.
 - No archiving, deleting or creating repositories.
 - No deploying, publishing to stores, or sending messages.
 - Never touch the keystore or a secret. A key pasted into a conversation is
@@ -102,16 +121,37 @@ These are not judgement calls.
 Green means all of it, in every package:
 
 ```bash
-npx vitest run                          # 1117 tests
-npx tsc --noEmit
-npx tsc --noEmit -p tsconfig.src.json   # what ships, with noUncheckedIndexedAccess
+bun run verify                          # the gate: content, both typechecks, every package's tests
 node scripts/audit-unread.mjs           # fields written and never read, exports with no caller
 node scripts/audit-configs.mjs          # every workspace held to the strict config
 ```
 
+`verify` is one command rather than four because the four have to agree: it
+chains the content build, `typecheck`, `typecheck:strict` — which is where
+`noUncheckedIndexedAccess` is applied to what ships — and then the test run, and
+it runs the tests *per workspace*, which is the part that matters. Read
+`package.json` for what it expands to; do not restate it here.
+
 A field nobody reads is a question nobody asked. An export with no caller is code
 no caller has disagreed with. Both are reported, and the answer is usually to
 delete rather than to waive.
+
+**What this block used to say, and why it is written down rather than quietly
+replaced.** Until 2026-08-06 it named three commands and a test count, and all
+four were false when somebody finally ran them. The count was a number that
+appeared nowhere else in the tree and that no audit could see: `audit-claims`
+reads README's table, `audit-scripts` reads the runtime a document names and not
+the figures beside it, so a count in this file was unowned from the day it was
+written. That is the whole argument for writing the command instead of its
+answer — a command is re-derived every time it is read, and a number rots in
+place while the document around it still reads as law. The bare `npx vitest run`
+was not the gate either: from the root it collects the whole tree without the
+per-workspace configuration and fails in packages that are green in their own
+directory (measured 2026-08-06 — `apps/miniapp` passed 526 of 526 under its own
+`vitest run` and failed twenty-eight of the same tests from the root, the same
+minute). And the third line pointed `tsc` at a project file that has never
+existed at this root; it had been exiting TS5058 — a path error, not a
+type error — for as long as anyone had been pasting it.
 
 ## Governance
 
@@ -121,4 +161,10 @@ it, and is the record to read before arguing with a principle here.
 An amendment needs the same evidence the principle did: something that broke, and
 a test that would have caught it.
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-30 | **Last Amended**: 2026-07-30
+**Version**: 1.1.0 | **Ratified**: 2026-07-30 | **Last Amended**: 2026-08-06
+
+The 2026-08-06 amendment changed no principle. It struck a boundary that
+licensed pushing, and it replaced the gate commands with the one command that
+runs — the evidence being that every command in that block had been measured
+false the same day, which is the kind of thing a document nobody opens does to
+itself.

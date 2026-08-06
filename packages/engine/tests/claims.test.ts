@@ -1,8 +1,11 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 // A plain module, shared with the scripts that use it. One suppressed line
 // rather than a `.d.ts`, which would be a second description of it.
 // @ts-expect-error - untyped .mjs
-import { checkCiPackages, checkCounts, checkDeployPaths, checkLockfiles, workspacesNeededBy, workspaceSources, checkManifests, checkTotal, claimedCounts, claimedTotal, copiedManifests, packagesCheckedByCi } from '../../../scripts/lib/claims.mjs';
+import { checkCiPackages, checkCounts, checkDeployPaths, checkDeployTests, checkLockfiles, workspacesNeededBy, workspaceSources, checkManifests, checkTotal, claimedCounts, claimedTotal, copiedManifests, packagesCheckedByCi, packagesTestedByDeploy, rewriteClaims } from '../../../scripts/lib/claims.mjs';
 
 /**
  * The numbers this repository says about itself.
@@ -107,6 +110,143 @@ describe('the total is checked against the table, not against the suites', () =>
   });
 });
 
+describe('writing back what the check already measured', () => {
+  /**
+   * The check ran all ten suites, learned the true counts, and then failed and
+   * asked a person to retype six numbers into a table. Its commonest failure
+   * was therefore *nobody retyped what the check computed* — a red that is not
+   * about the code, on a build where a red that is not about the code teaches
+   * people to scroll past the ones that are.
+   *
+   * These assert the two properties that make the writer safe to point at
+   * README, over a generated grid rather than over a handful of remembered
+   * cases:
+   *
+   *   1. the writer and the readers cannot drift apart. Whatever the writer
+   *      produces, the readers must find nothing wrong with it — including the
+   *      total, which is the half a writer forgets, because rows are what you
+   *      are thinking about and the total is one line further down.
+   *   2. it moves digits and nothing else. The State column's prose and its
+   *      links live on the *same line* as a count, so "changed only the row" is
+   *      not a strong enough claim; the skeleton of the document with every run
+   *      of digits blanked has to come back identical.
+   *
+   * Invented packages, and a fixture that carries the things a careless rewrite
+   * eats: a link with punctuation, an em dash, a version number that is not a
+   * claim about tests, blank lines, and a trailing newline.
+   */
+  const README = [
+    '# Something',
+    '',
+    'Runs on `oven/bun:1.3.12-slim`, which is a number and not a claim.',
+    '',
+    '| Package | Tests | State |',
+    '|---|---|---|',
+    '| `@leela/alpha` | 41 | the rules — [readme](packages/alpha/README.md) |',
+    '| `@leela/beta` | 7 | 22 languages of plans, 2 of the game’s own voice |',
+    '| `@leela/gamma` | 128 | the board on a phone (Expo) |',
+    '| `@leela/delta` | 3 | group play, durable on SQLite |',
+    '| everything else | — | not yet ported |',
+    '',
+    '179 tests, run on every push by [CI](.github/workflows/ci.yml), which also',
+    'builds the image and starts it.',
+    '',
+  ].join('\n');
+
+  const NAMES = ['@leela/alpha', '@leela/beta', '@leela/gamma', '@leela/delta'];
+  // Grown, shrunk, gone to zero, unchanged, and — across four packages drawn
+  // from one list — the same value in two rows at once, which is the case a
+  // writer keyed on the *number* rather than the row gets wrong.
+  const VALUES = [0, 1, 7, 41, 128, 999];
+
+  /** Every combination of those counts across those packages. */
+  const grid = () => {
+    let maps: Map<string, number>[] = [new Map()];
+    for (const name of NAMES) {
+      maps = maps.flatMap((counts) =>
+        VALUES.map((value) => new Map([...counts, [name, value] as [string, number]])),
+      );
+    }
+    return maps;
+  };
+
+  /** The line-carries-a-number question, asked of the readers themselves. */
+  const carriesANumber = (line: string) =>
+    claimedCounts(line).size > 0 || claimedTotal(line) !== null;
+
+  it('leaves the readers with nothing to report, rows and total alike', () => {
+    for (const actual of grid()) {
+      const rewritten = rewriteClaims(README, actual);
+      const claimed = claimedCounts(rewritten);
+
+      const rows = checkCounts(claimed, actual);
+      expect(rows, [...actual].join(' ')).toEqual([]);
+
+      // The half that is one line further down, and the half a writer forgets.
+      const total = checkTotal(claimed, claimedTotal(rewritten));
+      expect(total, [...actual].join(' ')).toEqual([]);
+    }
+  });
+
+  it('is byte-identical outside the lines that carry a number', () => {
+    for (const actual of grid()) {
+      const rewritten = rewriteClaims(README, actual);
+
+      const before = README.split('\n');
+      const after = rewritten.split('\n');
+      expect(after, [...actual].join(' ')).toHaveLength(before.length);
+
+      for (const [index, line] of before.entries()) {
+        if (line === after[index]) continue;
+        // A line that changed and holds no claim — the bun version, a blank
+        // line, the `everything else` row, the prose after the total.
+        expect(carriesANumber(line), `${line}\n${after[index]}`).toBe(true);
+      }
+
+      // And within the lines that do carry one: only the digits moved. The
+      // State column's prose shares a line with its count, so "the right lines
+      // changed" is not on its own a promise that the prose survived.
+      const skeleton = (text: string) => text.replace(/\d+/g, '#');
+      expect(skeleton(rewritten), [...actual].join(' ')).toBe(skeleton(README));
+    }
+  });
+
+  it('does not invent a row for a package the table has never heard of', () => {
+    /**
+     * The deliberate limit, asserted so it is a decision rather than an
+     * oversight. A row carries a sentence about what the package is *for*, and
+     * writing that is not arithmetic — so the writer leaves it, and the check
+     * stays red until a person says the sentence.
+     */
+    const actual = new Map([...NAMES.map((name) => [name, 1] as [string, number]), ['@leela/new', 5]]);
+    const rewritten = rewriteClaims(README, actual);
+
+    expect(claimedCounts(rewritten).has('@leela/new')).toBe(false);
+    const problems = checkCounts(claimedCounts(rewritten), actual);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain('not in the table');
+  });
+
+  it('does not delete a row for a package that ran nothing', () => {
+    // The other direction, and the same reason: removing a line from a document
+    // is an edit somebody should make on purpose.
+    const actual = new Map(NAMES.slice(1).map((name) => [name, 2] as [string, number]));
+    const rewritten = rewriteClaims(README, actual);
+
+    expect(claimedCounts(rewritten).get(NAMES[0] as string)).toBe(41);
+    expect(checkCounts(claimedCounts(rewritten), actual)[0]).toContain('ran nothing');
+  });
+
+  it('writes nothing at all when the numbers already agree', () => {
+    // Idempotence, which is what makes it safe to put in front of a commit: a
+    // second run must not produce a diff.
+    const truth = claimedCounts(README);
+    const once = rewriteClaims(README, truth);
+    expect(once).toBe(README);
+    expect(rewriteClaims(once, truth)).toBe(README);
+  });
+});
+
 describe('the manifests a Dockerfile copies', () => {
   /**
    * Docker cannot glob a path and keep it, so the bot's image carries a
@@ -154,9 +294,29 @@ COPY packages packages
   });
 });
 
+/**
+ * One job, one `steps:`, and whatever is put under it.
+ *
+ * The fixtures below were shell fragments floating at column six until the
+ * reader stopped being a text search and became a structural one. The structure
+ * is now the claim — a loop is only run if it is inside a step of a job — and a
+ * fixture that has no step in it would be asserting nothing about a reader that
+ * looks for steps. The same sentence is written above `workflowOf` in
+ * `runnable.test.ts`, where the neighbouring reader learned this first.
+ */
+const jobWith = (steps: string) => `name: CI
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+${steps}
+`;
+
 describe('the packages CI actually runs', () => {
   /**
-   * The three jobs each iterate a `for pkg in …` list written by hand, because
+   * The three steps each iterate a `for pkg in …` list written by hand, because
    * a shell loop cannot ask the repository what its workspaces are. A package
    * missing from that line does not turn the build red — it is simply never
    * run, and an absent check reads exactly like a passing one.
@@ -164,14 +324,17 @@ describe('the packages CI actually runs', () => {
    * This pass was pushed with a strict-typecheck error for the neighbouring
    * reason: the command run locally and the command run by CI were different.
    */
-  const WORKFLOW = `
-      for pkg in packages/engine apps/bot; do
-        (cd "$pkg" && bunx tsc --noEmit)
-      done
-      for pkg in packages/engine apps/bot; do
-        (cd "$pkg" && bunx vitest run)
-      done
-`;
+  const WORKFLOW = jobWith(`      - name: Typecheck
+        run: |
+          for pkg in packages/engine apps/bot; do
+            (cd "$pkg" && bunx tsc --noEmit)
+          done
+
+      - name: Test
+        run: |
+          for pkg in packages/engine apps/bot; do
+            (cd "$pkg" && bunx vitest run)
+          done`);
 
   it('reads every loop, not just the first', () => {
     const loops = packagesCheckedByCi(WORKFLOW);
@@ -190,7 +353,10 @@ describe('the packages CI actually runs', () => {
   });
 
   it('catches a package added to one loop and not the other', () => {
-    const halfway = WORKFLOW.replace('for pkg in packages/engine apps/bot; do\n        (cd "$pkg" && bunx vitest run)', 'for pkg in packages/engine apps/bot packages/new; do\n        (cd "$pkg" && bunx vitest run)');
+    const halfway = WORKFLOW.replace(
+      'for pkg in packages/engine apps/bot; do\n            (cd "$pkg" && bunx vitest run)',
+      'for pkg in packages/engine apps/bot packages/new; do\n            (cd "$pkg" && bunx vitest run)',
+    );
     const problems = checkCiPackages(
       packagesCheckedByCi(halfway),
       new Set(['packages/engine', 'apps/bot', 'packages/new']),
@@ -426,5 +592,435 @@ describe('what the deploy job watches', () => {
       'a',
       'b',
     ]);
+  });
+});
+
+describe('what the deploy job tests before it publishes', () => {
+  /**
+   * The same file says what the app is made of **twice**: in `paths:`, which
+   * decides whether a push deploys at all, and in a `for pkg in …` loop, which
+   * decides what is tested before it does. Only the first was ever asked
+   * whether it agreed with the dependency graph, and the two had already come
+   * apart — a package added up there, the loop below still iterating the list
+   * it had before. A suite that is never run is not a red build; it is an
+   * absent one, and an absent check reads exactly like a passing one.
+   *
+   * The graph here is deliberately not this repository's, and the workflow text
+   * is generated from it rather than written out. Naming today's workspaces
+   * would make this file a second hand-kept copy of the very list under
+   * suspicion — the reason given at the top of this file for not asserting
+   * today's numbers, applied to a list instead of a total.
+   */
+
+  /** A shape, not this repository's: two apps, one shared package, one orphan. */
+  const GRAPH: Record<string, string[]> = {
+    'apps/one': ['packages/alpha'],
+    'apps/two': ['packages/beta', 'packages/alpha'],
+    'packages/alpha': ['packages/gamma'],
+    'packages/beta': [],
+    'packages/gamma': [],
+    // Ships code, and nothing the job publishes reaches it.
+    'packages/delta': ['packages/gamma'],
+  };
+
+  const DEPLOYED = ['apps/one', 'apps/two'];
+
+  const needed = (): Set<string> =>
+    workspacesNeededBy(DEPLOYED, (where: string) => GRAPH[where] ?? []);
+
+  /** The job the graph implies: a loop that tests a list, then the builds. */
+  const workflowFor = (loop: string[]) =>
+    jobWith(`      - name: Test what is being shipped
+        run: |
+          for pkg in ${loop.join(' ')}; do
+            (cd "$pkg" && bunx vitest run)
+          done
+
+      - name: Build
+        run: |
+${DEPLOYED.map((app) => `          bun run --cwd ${app} build`).join('\n')}`);
+
+  const said = (loop: string[]): string[] =>
+    checkDeployTests(packagesTestedByDeploy(workflowFor(loop)), needed());
+
+  it('is quiet when the loop runs what the graph says the apps are made of', () => {
+    expect(said([...needed()])).toEqual([]);
+  });
+
+  it('names whichever workspace the graph makes necessary and the loop drops', () => {
+    // Over the edge of every column: each package the graph reaches, dropped in
+    // turn. A test that dropped one chosen package would prove the checker can
+    // see that package, which is not the claim.
+    const caught = Object.fromEntries(
+      [...needed()].map((dropped) => {
+        const problems = said([...needed()].filter((where) => where !== dropped));
+        return [dropped, problems.length === 1 && (problems[0] ?? '').includes(dropped)];
+      }),
+    );
+
+    expect(caught).toEqual(Object.fromEntries([...needed()].map((where) => [where, true])));
+  });
+
+  it('does not demand a package the graph does not make necessary', () => {
+    // `packages/delta` ships code and is nobody's dependency here. Demanding it
+    // would be a check the job could only satisfy by testing the whole
+    // repository on every deploy — which is `ci.yml`'s job, and why
+    // `checkCiPackages` was never pointed at this workflow.
+    const orphan = Object.keys(GRAPH).filter((where) => !needed().has(where));
+    expect(orphan.length).toBeGreaterThan(0);
+
+    for (const problem of said([...needed()])) {
+      for (const where of orphan) expect(problem).not.toContain(where);
+    }
+    expect(said([...needed()])).toEqual([]);
+  });
+
+  it('does not mind a loop that tests more than is shipped', () => {
+    // Testing something the deploy does not need costs a minute; shipping
+    // something untested costs a player. Only the gap is a defect, which is
+    // what `checkDeployPaths` decided one job over.
+    expect(said([...needed(), ...Object.keys(GRAPH).filter((w) => !needed().has(w))])).toEqual([]);
+  });
+
+  it('holds the loop that tests and not the loop that builds', () => {
+    // A deploy job legitimately builds a subset. Were every loop held to the
+    // graph — `checkCiPackages`' rule — this correct workflow would go red, and
+    // a check that cries wolf is one somebody deletes rather than obeys.
+    const both = jobWith(`      - name: Test what is being shipped
+        run: |
+          for pkg in ${[...needed()].join(' ')}; do
+            (cd "$pkg" && bunx vitest run)
+          done
+
+      - name: Build
+        run: |
+          for pkg in ${DEPLOYED.join(' ')}; do
+            (cd "$pkg" && bun run build)
+          done`);
+
+    expect(packagesTestedByDeploy(both)).toHaveLength(1);
+    expect(checkDeployTests(packagesTestedByDeploy(both), needed())).toEqual([]);
+  });
+
+  it('says so when nothing in the job runs tests at all', () => {
+    // The failure this whole pass is about is a check that is absent rather
+    // than red. A loop renamed out of recognition must not read as covered.
+    const buildsOnly = jobWith(`      - name: Build
+        run: |
+          for pkg in ${DEPLOYED.join(' ')}; do
+            (cd "$pkg" && bun run build)
+          done`);
+
+    expect(packagesTestedByDeploy(buildsOnly)).toEqual([]);
+    expect(checkDeployTests(packagesTestedByDeploy(buildsOnly), needed())).toHaveLength(1);
+  });
+
+  it('says so when the job has no loop at all', () => {
+    expect(checkDeployTests(packagesTestedByDeploy('jobs: {}'), needed())).toHaveLength(1);
+  });
+});
+
+/**
+ * A `for pkg in` line that no runner will execute, and what the guard made of
+ * it.
+ *
+ * MEASURED on 2026-08-06, on this repository, with nothing edited on disk:
+ * `packagesCheckedByCi` regexed the loop header out of the raw workflow string.
+ * Against `.github/workflows/ci.yml` it returned three loops. With every one of
+ * those three lines prefixed with `#` — all three loops commented out, CI
+ * typechecking and testing nothing at all — it returned three loops again, ten
+ * workspaces in each, and `checkCiPackages` reported full coverage.
+ * `packagesTestedByDeploy` shared the source string and so shared the defect:
+ * one live test loop in `pages.yml`, whether or not the step existed.
+ *
+ * That is worth a grid rather than three examples, because of what this guard
+ * is for. Its whole subject is *coverage nobody notices is absent* — a tenth
+ * workspace added to the repository and left out of CI. Every other failure
+ * here is at worst a red build; this one is a green one that reads exactly like
+ * the day the list was right.
+ *
+ * So: the real workflows, every live step that holds a loop, and in turn each
+ * way YAML has of taking that step out of the run. Not the three ways it was
+ * measured wrong — a test that enumerated those would pass the day somebody
+ * invents a fourth. Every cell says the same thing: whatever the runner will
+ * not execute, the reader does not count.
+ *
+ * The inverse is asserted in the same breath, because 'return nothing' passes
+ * every cell above. Against the untouched files the reader must agree, loop for
+ * loop, with the text search it replaced: the two can only disagree where a
+ * step is disabled, and neither workflow disables anything today. The day one
+ * does, this assertion is where it shows, and the disagreement will be the
+ * point rather than a fault. `runnable.test.ts` holds `auditsRunByCi` to its
+ * own naive twin the same way and for the same reason.
+ *
+ * Every mutation is a string in memory. Nothing here writes a workflow.
+ */
+describe('a loop inside a step that will not run', () => {
+  const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
+  const WORKFLOWS = ['.github/workflows/ci.yml', '.github/workflows/pages.yml'];
+
+  const indentOf = (line: string) => line.length - line.trimStart().length;
+
+  /**
+   * The readers under test, each beside the text search it replaced.
+   *
+   * The naive twin is the old body, kept deliberately: it is both the baseline
+   * the fixed reader must match on a workflow that disables nothing, and the
+   * exact thing every cell of the grid must now distinguish itself from.
+   */
+  const READERS = [
+    {
+      reader: 'packagesCheckedByCi',
+      read: packagesCheckedByCi,
+      asText: (workflow: string) =>
+        [...workflow.matchAll(/for pkg in ([^;\n]+); do/g)].map(([, list]) => list ?? ''),
+    },
+    {
+      reader: 'packagesTestedByDeploy',
+      read: packagesTestedByDeploy,
+      asText: (workflow: string) =>
+        [...workflow.matchAll(/for pkg in ([^;\n]+); do([\s\S]*?)\bdone\b/g)]
+          .filter(([, , body]) => /\b(vitest|jest|playwright|bun\s+test|run\s+test)\b/.test(body ?? ''))
+          .map(([, list]) => list ?? ''),
+    },
+  ];
+
+  /** One loop's list, in a form two lists can be compared by. */
+  const named = (list: string) => list.trim().split(/\s+/).sort().join(' ');
+  const signature = (loops: Set<string>[]) =>
+    loops.map((loop) => [...loop].sort().join(' ')).sort();
+  const textSignature = (lists: string[]) => lists.map(named).sort();
+
+  /** One step of one job: where it starts, where it ends, and whose it is. */
+  type Step = { job: string; jobAt: number; from: number; to: number };
+
+  /**
+   * Every step in a workflow, found by indentation.
+   *
+   * Written here rather than borrowed from `runnable.mjs`, on purpose and for
+   * once: the reader under test answers *which steps are live*, and a grid that
+   * asked the reader where the steps are would be asking the suspect to mark
+   * its own paper. This walk knows nothing about `if:` or `#`; it finds list
+   * items under a `steps:` key and stops.
+   */
+  const stepsIn = (text: string): Step[] => {
+    const lines = text.split('\n');
+    const found: Step[] = [];
+
+    let job = '';
+    let jobAt = -1;
+    let inJobs = false;
+    let stepsAt: number | null = null;
+
+    for (let at = 0; at < lines.length; at += 1) {
+      const line = lines[at] ?? '';
+      if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
+
+      if (/^jobs:\s*$/.test(line)) {
+        inJobs = true;
+        continue;
+      }
+      if (inJobs && indentOf(line) === 2 && /^[A-Za-z][\w-]*:\s*$/.test(line.trim())) {
+        job = line.trim().slice(0, -1);
+        jobAt = at;
+        stepsAt = null;
+        continue;
+      }
+      if (inJobs && /^steps:\s*$/.test(line.trim())) {
+        stepsAt = indentOf(line);
+        continue;
+      }
+      if (stepsAt === null) continue;
+
+      const indent = indentOf(line);
+      if (indent <= stepsAt || !/^-(\s|$)/.test(line.trim())) continue;
+
+      let to = at + 1;
+      while (to < lines.length) {
+        const next = lines[to] ?? '';
+        if (next.trim() !== '' && indentOf(next) <= indent) break;
+        to += 1;
+      }
+
+      found.push({ job, jobAt, from: at, to });
+    }
+
+    return found;
+  };
+
+  /** The step on its own, so a reader can be asked what that one step is worth. */
+  const onlyThisStep = (lines: string[], step: Step) => {
+    const dash = indentOf(lines[step.from] ?? '');
+    const pad = (width: number) => ' '.repeat(Math.max(width, 1));
+    return `jobs:\n${pad(dash - 4)}j:\n${pad(dash - 2)}steps:\n${lines
+      .slice(step.from, step.to)
+      .join('\n')}\n`;
+  };
+
+  /** The job on its own, for the removal that takes the whole job out. */
+  const onlyThisJob = (lines: string[], step: Step) => {
+    const indent = indentOf(lines[step.jobAt] ?? '');
+
+    let to = step.jobAt + 1;
+    while (to < lines.length) {
+      const next = lines[to] ?? '';
+      if (next.trim() !== '' && indentOf(next) <= indent) break;
+      to += 1;
+    }
+
+    return `jobs:\n${lines.slice(step.jobAt, to).join('\n')}\n`;
+  };
+
+  /** The last line of a step that holds anything. */
+  const lastOf = (lines: string[], step: Step) => {
+    let at = step.to;
+    while (at > step.from && (lines[at - 1] ?? '').trim() === '') at -= 1;
+    return at;
+  };
+
+  /**
+   * The ways a step stops being a step, each as a string edit.
+   *
+   * Three, and the grid is over these rather than about them: a hash in front
+   * of every line, a false condition on the step, a false condition on the job
+   * that holds it. A fourth belongs here the day YAML grows one.
+   *
+   * `scope` is what the edit takes away, and it is not decoration. Disabling
+   * the job that holds a step disables the job's other steps too — `ci.yml`'s
+   * `test` job holds all three loops — so the reader is right to drop three
+   * there and would be wrong to drop one. An expectation that ignored this
+   * would have demanded the defect back.
+   */
+  const REMOVALS = [
+    {
+      removal: 'commented out, line by line',
+      scope: 'step' as const,
+      apply: (lines: string[], step: Step) =>
+        lines.map((line, at) =>
+          at >= step.from && at < step.to && line.trim() !== ''
+            ? line.replace(/^(\s*)/, '$1# ')
+            : line,
+        ),
+    },
+    {
+      removal: 'if: false on the step',
+      scope: 'step' as const,
+      apply: (lines: string[], step: Step) => {
+        const copy = lines.slice();
+        // At the end of the step and at its keys' indentation: a sibling key,
+        // which also closes the `run: |` block above it. Put after the dash it
+        // would land inside that block on a step written `- run: |`.
+        copy.splice(lastOf(lines, step), 0, `${' '.repeat(indentOf(lines[step.from] ?? '') + 2)}if: false`);
+        return copy;
+      },
+    },
+    {
+      removal: 'if: false on the job that holds it',
+      scope: 'job' as const,
+      apply: (lines: string[], step: Step) => {
+        const copy = lines.slice();
+        copy.splice(step.jobAt + 1, 0, `${' '.repeat(indentOf(lines[step.jobAt] ?? '') + 2)}if: false`);
+        return copy;
+      },
+    },
+  ];
+
+  /** Every (workflow, reader, step that holds a loop that reader counts). */
+  const PLACES = WORKFLOWS.flatMap((workflow) => {
+    const text = readFileSync(join(ROOT, workflow), 'utf8');
+    const lines = text.split('\n');
+
+    return stepsIn(text).flatMap((step) =>
+      READERS.flatMap(({ reader, read, asText }) => {
+        // What this one step is worth to this one reader, asked of the step on
+        // its own rather than by subtracting: a reader that answered nothing to
+        // everything would otherwise agree with itself.
+        const mine = signature(read(onlyThisStep(lines, step)));
+        if (mine.length === 0) return [];
+
+        return [
+          {
+            workflow,
+            reader,
+            job: step.job,
+            step,
+            label: (lines[step.from] ?? '').trim(),
+            read,
+            asText,
+            text,
+            lines,
+            mine,
+            itsJob: signature(read(onlyThisJob(lines, step))),
+          },
+        ];
+      }),
+    );
+  });
+
+  const CELLS = PLACES.flatMap((place) =>
+    REMOVALS.map(({ removal, scope, apply }) => ({
+      ...place,
+      removal,
+      gone: scope === 'job' ? place.itsJob : place.mine,
+      without: apply(place.lines, place.step).join('\n'),
+    })),
+  );
+
+  it.each(CELLS)(
+    '$workflow $reader: $job / $label, $removal',
+    ({ read, text, mine, gone, without }) => {
+      const before = signature(read(text));
+
+      // Whatever else the edit took with it, it took this step's loop.
+      expect(gone).toEqual(expect.arrayContaining(mine));
+
+      // What the file says once that step cannot run: everything it said
+      // before, minus one occurrence of each loop the edit removed. `ci.yml`
+      // runs the same ten workspaces in three loops, so this is a count going
+      // down rather than a name going missing.
+      const expected = before.slice();
+      for (const loop of gone) {
+        const at = expected.indexOf(loop);
+        expect(at).toBeGreaterThanOrEqual(0);
+        expected.splice(at, 1);
+      }
+
+      expect(signature(read(without))).toEqual(expected);
+    },
+  );
+
+  it('has a cell for every loop in both workflows, so the grid is not thin', () => {
+    // The grid is built from the files, and a walk that found nothing would
+    // make every row above vacuous by simply not existing. Each loop the reader
+    // returns has to be some step's contribution, in both files and for both
+    // readers.
+    for (const workflow of WORKFLOWS) {
+      const text = readFileSync(join(ROOT, workflow), 'utf8');
+
+      for (const { reader, read } of READERS) {
+        const here = PLACES.filter(
+          (place) => place.workflow === workflow && place.reader === reader,
+        );
+
+        expect(signature(read(text)).length).toBeGreaterThan(0);
+        expect(here.flatMap((place) => place.mine).sort()).toEqual(signature(read(text)));
+      }
+    }
+
+    expect(CELLS).toHaveLength(PLACES.length * REMOVALS.length);
+  });
+
+  it('reads the untouched workflows exactly as the text search it replaced did', () => {
+    // The other direction, and the one that stops the fix being 'return
+    // nothing'. The structural reader and the naive one can only disagree where
+    // a step is disabled, and neither file disables anything today.
+    for (const workflow of WORKFLOWS) {
+      const text = readFileSync(join(ROOT, workflow), 'utf8');
+
+      for (const { read, asText } of READERS) {
+        expect(textSignature(asText(text)).length).toBeGreaterThan(0);
+        expect(signature(read(text))).toEqual(textSignature(asText(text)));
+      }
+    }
   });
 });

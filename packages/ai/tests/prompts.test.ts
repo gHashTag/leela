@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Direction } from '@leela/engine';
 import { LANGUAGES, LANGUAGE_NAMES as CONTENT_NAMES, planFor } from '@leela/content';
-import { TOTAL_PLANS, WIN_LOKA } from '@leela/engine';
+import { ARROWS, MAX_ROLL, SNAKES, TOTAL_PLANS, WIN_LOKA } from '@leela/engine';
 import { MAX_REPORT_CHARS } from '@leela/journal';
 import {
   MAX_HISTORY,
@@ -604,6 +604,86 @@ describe('a prompt this package builds is a prompt this package bounds', () => {
 });
 
 /**
+ * Arrivals read off the board, rather than typed out from memory.
+ *
+ * Two committed fixtures named their squares by hand and both named jumps this
+ * board does not hold: *a snake from 21 to 9*, and — in `guide.test.ts` — a
+ * `previousPlan` of 30 onto plan 12. Neither survives the table. From 21 the
+ * only snake head within one throw is 24, and 24 ends on 7, not 9. From 30 no
+ * throw of 1..6 reaches a snake head at all, and 12 is itself a head, so
+ * nothing settles there. A fixture that spells a jump the board does not hold
+ * is the exact defect `boardHoldsJump` was added to catch, and it caught these
+ * two: the suite went red for the prompt telling the truth.
+ *
+ * Picking a different pair of numbers by hand rots the same way the first pair
+ * did, one board change later. So the fixture is read off the same table the
+ * guard reads. Stand the player `roll` squares short of a head and the arrival
+ * is one the board can produce by construction — there is no number in the
+ * test for the board to disagree with.
+ */
+type BoardArrival = {
+  /** The square the player threw from. */
+  previousPlan: number;
+  /** The jump's head, which they landed on. */
+  head: number;
+  /** Where the jump left them, and the square the prompt describes. */
+  plan: number;
+  roll: number;
+};
+
+/**
+ * Every arrival the given table can produce: each head, each throw that can
+ * reach it, and the tail the player ends on.
+ *
+ * Two squares are left out, and neither because they are awkward. A
+ * `previousPlan` of `WIN_LOKA` is the parking space a player waits on before
+ * entering, not a square anybody came from — that is what the block below is
+ * about. And a jump that lands the player back where they threw from has no
+ * *came from* sentence to assert, because the prompt drops it as a mistake.
+ */
+function arrivalsTheBoardHolds(jumps: Readonly<Record<number, number>>): BoardArrival[] {
+  const arrivals: BoardArrival[] = [];
+
+  for (const [key, plan] of Object.entries(jumps)) {
+    const head = Number(key);
+    for (let roll = 1; roll <= MAX_ROLL; roll += 1) {
+      const previousPlan = head - roll;
+      if (previousPlan < 1 || previousPlan > TOTAL_PLANS) continue;
+      if (previousPlan === WIN_LOKA || previousPlan === plan) continue;
+      arrivals.push({ previousPlan, head, plan, roll });
+    }
+  }
+
+  return arrivals;
+}
+
+/** The first arrival of a table, for a case that needs one rather than all. */
+function anArrivalTheBoardHolds(
+  jumps: Readonly<Record<number, number>>,
+  matching: (arrival: BoardArrival) => boolean = () => true,
+): BoardArrival {
+  const found = arrivalsTheBoardHolds(jumps).find(matching);
+  // Not a soft skip: a board that holds no such jump is a board these tests
+  // are no longer about, and silently testing nothing is the worse failure.
+  if (!found) throw new Error('the board holds no jump matching that');
+  return found;
+}
+
+/** The two directions that make a claim about the board. */
+type Jump = Extract<Direction, 'snake 🐍' | 'arrow 🏹'>;
+
+/** The sentence the prompt says for each kind of jump, kept beside the table. */
+const ARRIVAL_SENTENCE: Record<Jump, string> = {
+  'snake 🐍': 'They were brought down here by a snake.',
+  'arrow 🏹': 'They were carried up here by an arrow.',
+};
+
+const JUMP_TABLES: ReadonlyArray<[Jump, Readonly<Record<number, number>>]> = [
+  ['snake 🐍', SNAKES],
+  ['arrow 🏹', ARROWS],
+];
+
+/**
  * Entering the game is not an arrival from anywhere.
  *
  * A player waiting to enter is parked on `WIN_LOKA` — the engine's own choice,
@@ -644,30 +724,38 @@ describe('the game beginning', () => {
   });
 
   it('still describes a real move from a real square', () => {
-    // The guard against the rule swallowing every arrival: a snake from 21 to 9
-    // is a move, and the sentence for it is the point of the section.
-    const prompt = systemPrompt({
-      plan: 9,
-      language: 'en',
-      previousPlan: 21,
-      direction: 'snake 🐍',
-    });
+    // The guard against the rule swallowing every arrival: a snake somebody
+    // really was brought down by is a move, and the sentence for it is the
+    // point of the section. The squares come off SNAKES rather than out of
+    // this test — see `arrivalsTheBoardHolds` for why the hand-written pair
+    // that stood here was a jump the board does not hold.
+    const { previousPlan, plan, head } = anArrivalTheBoardHolds(SNAKES);
+    const prompt = systemPrompt({ plan, language: 'en', previousPlan, direction: 'snake 🐍' });
 
-    expect(prompt).toContain('They were brought down here by a snake.');
-    expect(prompt).toContain('They came from plan 21.');
+    expect(prompt, `${previousPlan} onto the head at ${head}, down to ${plan}`).toContain(
+      ARRIVAL_SENTENCE['snake 🐍'],
+    );
+    expect(prompt).toContain(`They came from plan ${previousPlan}.`);
   });
 
   it('still lets the winner have come from somewhere', () => {
     // 68 as a destination is the end of a game, and the arrow that carried them
     // there is worth saying. Only 68 as an *origin* is the parking space.
-    const prompt = systemPrompt({
-      plan: WIN_LOKA,
-      language: 'en',
-      previousPlan: 54,
-      direction: 'arrow 🏹',
-    });
+    //
+    // The arrow is the one the board actually has: 54 lifts to 68, so the
+    // square they threw from is short of 54, not 54 itself. Written by hand,
+    // this said `previousPlan: 54` — a throw from the head, which reaches
+    // 55..60 and no arrow at all — and passed only because it never asked for
+    // the arrival sentence. It asks now.
+    const { previousPlan, plan } = anArrivalTheBoardHolds(
+      ARROWS,
+      (arrival) => arrival.plan === WIN_LOKA,
+    );
+    const prompt = systemPrompt({ plan, language: 'en', previousPlan, direction: 'arrow 🏹' });
 
-    expect(prompt).toContain('They came from plan 54.');
+    expect(plan, 'an arrow that ends on the winning square').toBe(WIN_LOKA);
+    expect(prompt).toContain(ARRIVAL_SENTENCE['arrow 🏹']);
+    expect(prompt).toContain(`They came from plan ${previousPlan}.`);
     expect(prompt).toContain('This is the end of a game');
   });
 
@@ -685,5 +773,85 @@ describe('the game beginning', () => {
     // entering the game constantly, and the plan's own body is in the prompt.
     expect(prompt).not.toContain('They have just entered the game');
     expect(prompt).not.toContain(`came from plan ${WIN_LOKA}`);
+  });
+});
+
+/**
+ * Whatever the board holds, the prompt describes; whatever it does not hold,
+ * the prompt drops.
+ *
+ * The section above tests one snake and one arrow, because a sentence is
+ * easier to read about one square than about a hundred. This is the same claim
+ * asked of the whole board at once, and it is the claim that matters: not that
+ * *these* numbers work, but that the prompt's account of an arrival tracks the
+ * table it is an account of.
+ *
+ * The two halves are one grid read twice. Stand the player short of a head and
+ * the jump exists, so the sentence must be there. Stand them one square *past*
+ * the same head — a die only moves forward, so no throw can put them back on
+ * it — and the jump does not exist, so the sentence must be gone, while *where
+ * they came from* stays: that part was never a claim about a jump.
+ *
+ * The far half is filtered rather than assumed. Standing past one head can put
+ * a player within reach of another head of the same table, and if that second
+ * head happens to end on the same square, the arrival is real after all and
+ * dropping the sentence would be the wrong answer. Those cases are removed by
+ * asking the table, not by naming them — and the count that survives is
+ * asserted, so a filter that quietly empties the grid fails instead of passing.
+ */
+describe('the prompt against the whole board', () => {
+  /** Whether any single throw from `previousPlan` produces this arrival. */
+  const boardHolds = (jumps: Readonly<Record<number, number>>, previousPlan: number, plan: number) =>
+    Array.from({ length: MAX_ROLL }, (_, index) => previousPlan + index + 1).some(
+      (head) => head <= TOTAL_PLANS && jumps[head] === plan,
+    );
+
+  it('says the arrival for every jump the board can produce', () => {
+    let asked = 0;
+
+    for (const [direction, jumps] of JUMP_TABLES) {
+      for (const { previousPlan, plan, head, roll } of arrivalsTheBoardHolds(jumps)) {
+        const prompt = systemPrompt({ plan, language: 'en', previousPlan, direction });
+        const where = `${direction} ${previousPlan} +${roll} -> ${head} -> ${plan}`;
+
+        expect(prompt, where).toContain(ARRIVAL_SENTENCE[direction]);
+        expect(prompt, where).toContain(`They came from plan ${previousPlan}.`);
+        asked += 1;
+      }
+    }
+
+    // Ten snakes and ten arrows, up to six throws each, less the throws that
+    // fall off the board or land where they started.
+    expect(asked, 'the grid is not empty').toBeGreaterThan(100);
+  });
+
+  it('drops the arrival, and only the arrival, for a jump it cannot', () => {
+    let asked = 0;
+
+    for (const [direction, jumps] of JUMP_TABLES) {
+      for (const key of Object.keys(jumps)) {
+        const head = Number(key);
+        const plan = jumps[head] as number;
+        // One square past the head: the throw that reached it cannot be taken
+        // from here, because a die does not go backwards.
+        const previousPlan = head + 1;
+        if (previousPlan > TOTAL_PLANS || previousPlan === WIN_LOKA) continue;
+        if (previousPlan === plan) continue;
+        // Unless some *other* head of the same table, within reach and ending
+        // on the same square, makes the arrival true anyway.
+        if (boardHolds(jumps, previousPlan, plan)) continue;
+
+        const prompt = systemPrompt({ plan, language: 'en', previousPlan, direction });
+        const where = `${direction} ${previousPlan} -> ${plan}, past the head at ${head}`;
+
+        expect(prompt, where).not.toContain(ARRIVAL_SENTENCE[direction]);
+        // And the half that was never about a jump is still said. This is what
+        // separates dropping a false sentence from going silent about the move.
+        expect(prompt, where).toContain(`They came from plan ${previousPlan}.`);
+        asked += 1;
+      }
+    }
+
+    expect(asked, 'the grid is not empty').toBeGreaterThan(15);
   });
 });

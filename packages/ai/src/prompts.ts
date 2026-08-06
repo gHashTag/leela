@@ -11,7 +11,7 @@
  * comes from `@leela/content`; the model only helps the player meet it.
  */
 
-import { TOTAL_PLANS, WIN_LOKA, type Direction } from '@leela/engine';
+import { ARROWS, MAX_ROLL, SNAKES, TOTAL_PLANS, WIN_LOKA, type Direction } from '@leela/engine';
 import { lastSentenceEnd, planFor, resolveLanguage, type Language } from '@leela/content';
 
 /** Where the player is, and how they got there. */
@@ -50,6 +50,30 @@ export interface PlanContext {
   arrival?: Arrival;
   /** How the player arrived, when this is about a move. */
   direction?: Direction;
+  /**
+   * Whether a third consecutive six burned the run and sent them back.
+   *
+   * The engine has no square on the *state* for this. `handleConsecutiveSixes`
+   * returns `direction: 'snake ..'` for a reset, `applyRoll` recovers the truth
+   * as `sixes.direction !== undefined` and puts it on the **event** only, and
+   * `GameState.direction` keeps the snake string. So every reader that works
+   * from the event knows a reset happened — `@leela/content` does, and the
+   * bot's own move message does — and every reader that works from the state
+   * cannot tell a reset from a snake, because the state does not carry the
+   * difference.
+   *
+   * This package is on the state side of that line: the bot passes
+   * `seat.state.direction`, and the companion was told *they were brought down
+   * here by a snake* about an arrival no snake produced. Measured, one player,
+   * CLASSIC, rolls 6,6,6,6: reset from 14 to 6, and the board holds no snake
+   * that ends on 6 from anywhere near 14.
+   *
+   * A caller that has the event should set this and be believed; the board
+   * check below is what covers the callers that do not. Note that the two are
+   * not the same thing — the flag states the truth, the board check only
+   * refuses a claim it can prove false.
+   */
+  threeSixes?: boolean;
   /** The square they came from. */
   previousPlan?: number;
   /**
@@ -321,6 +345,72 @@ const ARRIVAL: Record<Direction, string> = {
 };
 
 /**
+ * The arrival a third six produces, said as what it is.
+ *
+ * Not a snake's teaching and not a descent somebody was given: haste took the
+ * run back to the square it started on. `@leela/content` has said this to the
+ * *player* all along (`app.threeSixes`); only the companion was told a snake.
+ */
+const THREE_SIXES =
+  'rolled a third six in a row: the run burned, and they are back on the square it began on';
+
+/**
+ * Whether the board really holds the jump a direction claims.
+ *
+ * This is the half of the fix that does not depend on the caller knowing
+ * anything. Every caller today passes `state.direction`, and that field says
+ * `'snake ..'` for two different arrivals: a real snake, and a three-sixes
+ * reset the state has no other place to record. So the module refuses to state
+ * a jump the board cannot produce, whatever it was told.
+ *
+ * **What `previousPlan` is, and why the obvious check is the wrong one.** It is
+ * `GameState.previous_loka` — the square the player stood on *before the
+ * throw*, not the snake's head. A player on 10 who throws a 2 lands on 12,
+ * where a snake takes them to 8; the state that results is `previous_loka: 10,
+ * loka: 8`, and `SNAKES[10]` is nothing at all. A check written as
+ * `SNAKES[previousPlan] === plan` would therefore call almost every real snake
+ * in the game a lie and suppress a sentence that was true — a check that cries
+ * wolf on correct code, which is the kind somebody deletes rather than obeys.
+ *
+ * So the question the board is actually asked is: *from that square, could any
+ * one throw have put them on a head that ends here?* One die, six faces, and
+ * the board is asked about all six.
+ *
+ * **The misses, measured rather than reasoned.** 80,000 engine-played states
+ * over 400 seeded games produced 45 distinct three-sixes resets, and exactly
+ * two of them are arrivals the board cannot tell from a snake:
+ *
+ * - 19 → 7. A run that began on 7 (7, 13, 19) burns back to 7, and from 19 a
+ *   throw of 5 reaches 24, where a snake ends on 7.
+ * - 47 → 35. A run that began on 35 (35, 41, 47) burns back to 35, and from 47
+ *   a throw of 5 reaches 52, where a snake ends on 35.
+ *
+ * Those two are still described as snakes, and they will be until the truth is
+ * carried rather than guessed: set `threeSixes` from `MoveEvent.isThreeSixesReset`
+ * at the call site and this check is never consulted for them. The board check
+ * is a floor, not a substitute — it can only refuse what it can disprove.
+ *
+ * (The pass that opened this expected one miss, 16 → 4, on the reading that a
+ * reset always lands 12 squares back. It does not: a snake or an arrow on
+ * either of the two intermediate squares moves the player, so a run beginning
+ * on 23 can burn back to 23 from 8. 16 → 4 never occurs, and the reading that
+ * predicted it is written down here as false rather than left standing.)
+ */
+function boardHoldsJump(direction: Direction, previousPlan: number, plan: number): boolean {
+  const jumps = direction === 'snake 🐍' ? SNAKES : direction === 'arrow 🏹' ? ARROWS : null;
+  // Not a claim about a jump at all — walking, being blocked, winning. Nothing
+  // for the board to contradict.
+  if (jumps === null) return true;
+
+  for (let roll = 1; roll <= MAX_ROLL; roll += 1) {
+    const head = previousPlan + roll;
+    if (head <= TOTAL_PLANS && jumps[head] === plan) return true;
+  }
+
+  return false;
+}
+
+/**
  * The instruction that defines the voice.
  *
  * Written in English regardless of the player's language: the model follows
@@ -366,6 +456,14 @@ export function systemPrompt(context: PlanContext): string {
    */
   const entered = context.previousPlan === WIN_LOKA && context.plan !== WIN_LOKA;
 
+  // The direction, held against the board it makes its claim on. `contradicted`
+  // is the arrival the state cannot express: the field says snake, and no snake
+  // on this board reaches this square from where the player stood.
+  const contradicted =
+    context.direction !== undefined &&
+    context.previousPlan !== undefined &&
+    !boardHoldsJump(context.direction, context.previousPlan, context.plan);
+
   // Only a move has a direction, and only somebody standing somewhere came
   // from a previous square. A received square was nobody's arrival: saying
   // *they were brought down here by a snake* about a square they have never
@@ -373,9 +471,22 @@ export function systemPrompt(context: PlanContext): string {
   if (arrival === 'standing' && entered) {
     lines.push('They have just entered the game; before this they were not on the board.');
   } else if (arrival === 'standing') {
-    if (context.direction) {
+    // How they arrived, when that can be said truthfully. A caller that knows
+    // the run burned is believed ahead of `ARRIVAL`, because a reset reaches
+    // this module carrying `direction: 'snake ..'` and the flag exists to
+    // overrule it. A direction the board contradicts is dropped rather than
+    // softened: there is no honest way to say half of a jump that is not there.
+    if (context.threeSixes) {
+      lines.push(`They ${THREE_SIXES}.`);
+    } else if (context.direction && !contradicted) {
       lines.push(`They ${ARRIVAL[context.direction]}.`);
     }
+
+    // And where from, which is true in all three cases — including the one
+    // where nothing above was said at all, and where it is then the only thing
+    // the companion is told about the arrival. Not when it names this same
+    // square: a burned run can end where it began, and *They came from plan 67*
+    // on plan 67 reads as a mistake to anyone, model included.
     if (context.previousPlan !== undefined && context.previousPlan !== context.plan) {
       lines.push(`They came from plan ${context.previousPlan}.`);
     }

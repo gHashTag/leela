@@ -14,11 +14,15 @@ the two things that are not negotiable.
 
 ## The two rules that matter most
 
-**Read the sources.** `/Users/playra/leela-src` holds the twenty-five
-repositories this was assembled from. Do not infer what the published app did —
-open it. The first board that shipped here was the illustration from the rules
-screen rather than the game board, and it survived a pass because it looked
-close.
+**Read the sources.** `/Users/playra/leela-src` is where the repositories this
+was assembled from are kept. Do not infer what the published app did — open it.
+The first board that shipped here was the illustration from the rules screen
+rather than the game board, and it survived a pass because it looked close.
+
+`MIGRATION.md` inventories all twenty-five. Not all of them are on this disk:
+`bun scripts/audit-copies.mjs` names which are present and which are absent, and
+qualifies its findings with how much of the tree it read. A donor that is not
+there is a thing to say out loud, not a gap to fill in by inference.
 
 **Assert the shape, not the case.** A test that lists what broke passes the
 moment the next thing breaks differently. Where the shape can be checked

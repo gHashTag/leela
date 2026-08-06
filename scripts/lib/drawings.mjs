@@ -19,20 +19,47 @@
  * called from anywhere else, which is exactly why the acts did not.
  */
 
-/** Values that look like a name and decide nothing. */
-const LITERALS = new Set(['true', 'false', 'null', 'undefined', 'NaN']);
+/**
+ * Values that look like a name and decide nothing.
+ *
+ * Exported because a check is worth what it refuses, and the only way to ask
+ * that of every control at once is to read the shapes out of the module that
+ * declares them rather than to keep a second list in a test. A list kept twice
+ * is a list that drifts, and the half that drifts is always the half nothing
+ * runs against real source.
+ */
+export const LITERALS = new Set(['true', 'false', 'null', 'undefined', 'NaN']);
 
 /** `el.something.disabled = …` and `el.something.hidden = …`, with the reason. */
+const DRAWING = /el\.(\w+)\.(disabled|hidden)\s*=\s*([^;]+);/g;
+
+/**
+ * Every drawing in a source, and what decided it.
+ *
+ * Each carries `from` and `to`: the half-open span of the decided expression
+ * inside `source`, `to` being the index of the `;`. They are here so that a
+ * test can put a different decision in one exact statement and ask what the
+ * check then says — over every statement and every un-naming shape, rather than
+ * over the two or three anybody thought to write out by hand. Without the span
+ * a test has to find the statement itself, which means a second copy of the
+ * pattern above, which means the test and the audit can disagree about what a
+ * drawing even is. That is the mistake `lib/source.mjs` was written to stop.
+ */
 export function drawings(source) {
   const found = [];
 
-  for (const [, control, property, decided] of source.matchAll(
-    /el\.(\w+)\.(disabled|hidden)\s*=\s*([^;]+);/g,
-  )) {
+  for (const match of source.matchAll(DRAWING)) {
+    const [whole, control, property, decided] = match;
+    // `[^;]+` runs up to the `;`, so the whole match ends with the expression
+    // and one semicolon: the span is arithmetic rather than a second search.
+    const to = match.index + whole.length - 1;
+
     found.push({
       control,
       property,
       decided: decided.replace(/\s+/g, ' ').trim(),
+      from: to - decided.length,
+      to,
     });
   }
 
@@ -46,9 +73,22 @@ export function drawings(source) {
  * check is deliberately about *shape* rather than about a list of approved
  * functions: a new decision should not have to be registered anywhere, it only
  * has to be a function somebody else can call.
+ *
+ * `mechanical` is a Map from `control.property` to the exact decided
+ * expressions excused there — a permission over pairs, not over controls. It
+ * used to be a Set of controls, and the first line of this function used to be
+ * `if (mechanical.has(...)) return true;`, which excused every statement that
+ * would ever be written on a waived control. See the note above `MECHANICAL` in
+ * `audit-drawings.mjs` for what that cost.
+ *
+ * A Set passed here now throws rather than quietly excusing a control, which is
+ * the loud failure this would rather have than the silent one it had.
  */
 export function namesItsDecision(drawing, mechanical) {
-  if (mechanical.has(`${drawing.control}.${drawing.property}`)) return true;
+  // The waiver names a decision, so it is asked about the decision. Anything
+  // else assigned to a waived control falls through to the shape rules below,
+  // exactly as it would on any other control.
+  if (mechanical.get(`${drawing.control}.${drawing.property}`)?.has(drawing.decided)) return true;
 
   // A literal is not a decision. `= true` was passing the name check as a bare
   // word, which would have let the very thing this exists to catch through —
@@ -71,6 +111,6 @@ export function namesItsDecision(drawing, mechanical) {
 }
 
 /** The drawings that decide something inline, which is what nothing else can call. */
-export function inlineDrawings(source, mechanical = new Set()) {
+export function inlineDrawings(source, mechanical = new Map()) {
   return drawings(source).filter((drawing) => !namesItsDecision(drawing, mechanical));
 }

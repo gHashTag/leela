@@ -48,10 +48,21 @@ const SOURCES = workspacePackages(read).map((workspace) => workspace.src);
  * `Conversations.add` is what makes them. A package that never says a word it
  * accepts is not a package failing to produce it.
  *
+ * `Arrival` is `role` again, and it was invisible until the reader learned to
+ * tell a word said from a word asked about. `packages/ai` declares `'standing'
+ * | 'received'` and makes exactly one of them: `systemPrompt` defaults to
+ * `'standing'`. The other is somebody else's — `apps/bot/src/bot.ts:966`, the
+ * roll handler, is what decides a square was handed over rather than landed on,
+ * and this package only ever asks `arrival === 'received'` about the answer it
+ * was given. That comparison used to count as the word being said, so the union
+ * passed while being half-real; see the header of `lib/reachable.mjs`. It is
+ * the same shape `role` is and it belongs on the same list, for the same
+ * reason and not because the report was inconvenient.
+ *
  * The distinction is the whole of this check. Everything not on this list is
  * something this repository claims to produce.
  */
-const RECEIVED = new Set(['chatType', 'role']);
+const RECEIVED = new Set(['chatType', 'role', 'Arrival']);
 
 function filesUnder(directory) {
   const found = [];

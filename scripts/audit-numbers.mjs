@@ -85,6 +85,7 @@ import {
   staleRecords,
   unrecorded,
 } from './lib/numbers.mjs';
+import { finish } from './lib/report.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA = join(HERE, '..', 'packages', 'content', 'data');
@@ -198,44 +199,54 @@ const healed = staleRecords(RECORDED, found);
 
 console.log(`\nChecked ${languages.length} languages for the board references both editions state.\n`);
 
-if (found.length > 0) {
-  console.log(`Already known to be missing, in ${found.length} plans:`);
-  for (const line of found) {
-    console.log(`  ${line}`);
-    for (const note of evidence.get(line) ?? []) console.log(`      ${note}`);
-  }
-  console.log('');
+// The standing losses, each with what was read about it underneath.
+const standing = [];
+for (const line of found) {
+  standing.push(`  ${line}`);
+  for (const note of evidence.get(line) ?? []) standing.push(`      ${note}`);
 }
 
-if (healed.length > 0) {
-  console.log('Recorded as missing and now present — take these out of RECORDED:');
-  for (const line of healed) console.log(`  ${line}`);
-  console.log(
-    '\nA record that outlives its reason is a licence issued for something else:\n' +
-      'the next translation to lose these numbers passes on it. This printed and\n' +
-      'exited zero for a hundred and ninety-nine passes, so nothing ever read it.',
-  );
-  console.log('');
-  process.exitCode = 1;
-}
+const capped = uncovered.slice(0, 20).map((line) => `  ${line}`);
+if (uncovered.length > 20) capped.push(`  … and ${uncovered.length - 20} more`);
 
-if (uncovered.length > 0) {
-  console.log('An edition does not cover plans the translation has:\n');
-  for (const line of uncovered.slice(0, 20)) console.log(`  ${line}`);
-  if (uncovered.length > 20) console.log(`  … and ${uncovered.length - 20} more`);
-  console.log(
-    '\nA plan the edition lacks is a plan nothing is expected of, so every number in\n' +
-      'it is excused — and a silent excuse reads exactly like a language with nothing\n' +
-      'wrong. The editions are generated; an emptied one turns this whole check green.',
-  );
-  process.exitCode = 1;
-}
-
-if (news.length === 0 && uncovered.length === 0) {
-  console.log('No board reference has gone missing that was not already recorded.');
-} else if (news.length > 0) {
-  console.log('These are new:');
-  for (const line of news) console.log(`  ${line}`);
-  console.log('\nA cross-reference without its number points nowhere.');
-  process.exitCode = 1;
-}
+// This is the file the sentence below was written about. *This printed and
+// exited zero for a hundred and ninety-nine passes, so nothing ever read it*
+// stood directly above an all-clear condition that asked about `news` and
+// `uncovered` and knew nothing of `healed` — so the run that finally noticed a
+// healed record would have said, as its last line, that nothing had gone
+// missing. `lib/report.mjs` now decides the ordering and the exit code
+// together, from one list.
+process.exitCode = finish({
+  allClear: 'No board reference has gone missing that was not already recorded.',
+  sections: [
+    {
+      failing: true,
+      heading: 'Recorded as missing and now present — take these out of RECORDED:',
+      lines: healed.map((line) => `  ${line}`),
+      epilogue:
+        '\nA record that outlives its reason is a licence issued for something else:\n' +
+        'the next translation to lose these numbers passes on it. This printed and\n' +
+        'exited zero for a hundred and ninety-nine passes, so nothing ever read it.',
+    },
+    {
+      failing: true,
+      heading: 'An edition does not cover plans the translation has:\n',
+      lines: capped,
+      epilogue:
+        '\nA plan the edition lacks is a plan nothing is expected of, so every number in\n' +
+        'it is excused — and a silent excuse reads exactly like a language with nothing\n' +
+        'wrong. The editions are generated; an emptied one turns this whole check green.',
+    },
+    {
+      failing: true,
+      heading: 'These are new:',
+      lines: news.map((line) => `  ${line}`),
+      epilogue: '\nA cross-reference without its number points nowhere.',
+    },
+    {
+      failing: false,
+      heading: `Already known to be missing, in ${found.length} plans:`,
+      lines: standing,
+    },
+  ],
+});

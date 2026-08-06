@@ -174,6 +174,32 @@ describe('a debug build is not the published application', () => {
     expect(variant(false).ios.bundleIdentifier).toBe(config.expo.ios.bundleIdentifier);
   });
 
+  /**
+   * The shape that matters here is a loop that can run zero times.
+   *
+   * The rule below — a script that builds for a simulator must set
+   * `APP_VARIANT=development` — is asserted over a collection that is **not a
+   * literal**. It is a regex matched against free-text shell commands, and the
+   * vocabulary of those commands belongs to expo and detox rather than to this
+   * repository. `expo run:ios` becoming `expo run --platform ios`, `detox build`
+   * becoming `detox-cli build`, or a move to `eas build` each remove matches
+   * without anybody editing this file. At the limit the set is empty, the body
+   * of the loop never executes, and Vitest reports a green test that checked
+   * nothing — the failure mode this repository has named for itself, and the
+   * one sitting between a rename and a wiped player.
+   *
+   * So the load-bearing assertion is the emptiness one, not the ones inside the
+   * loop. `expect(builders.length).toBeGreaterThan(0)` is the only line here
+   * that can notice that the world moved on; the per-command assertions can
+   * only speak about commands that were found. The claim is *this check found
+   * work to do*, deliberately not *this check found exactly this work*: the
+   * count is not pinned and the names are not enumerated, because a guard
+   * calibrated to today's manifest fails on the next legitimate script and gets
+   * deleted rather than obeyed.
+   *
+   * The pattern is not new to this file — `says out loud whether it looked`,
+   * one describe up, does the same for a skip. It was simply not carried down.
+   */
   it('every script that builds for a simulator asks for the variant', () => {
     // The rule that makes the rest of this true. A script that builds and
     // forgets it installs over the published app, silently.
@@ -181,9 +207,17 @@ describe('a debug build is not the published application', () => {
       readFileSync(resolve(HERE, '..', 'package.json'), 'utf8'),
     ) as { scripts: Record<string, string> };
 
-    for (const [name, command] of Object.entries(manifest.scripts)) {
-      const builds = /expo run:|detox (build|test)|expo prebuild/.test(command);
-      if (!builds) continue;
+    const BUILDS = /expo run:|detox (build|test)|expo prebuild/;
+    const builders = Object.entries(manifest.scripts).filter(([, command]) =>
+      BUILDS.test(command),
+    );
+
+    expect(
+      builders.length,
+      'no script matched -- the build-command shapes have moved, and this test was about to pass by checking nothing',
+    ).toBeGreaterThan(0);
+
+    for (const [name, command] of builders) {
       expect(command, `${name} builds without APP_VARIANT`).toContain('APP_VARIANT=development');
     }
   });

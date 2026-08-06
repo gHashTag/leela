@@ -15,10 +15,19 @@
  * in the file that claims to do it. A list written tomorrow fails until somebody
  * says which of the two it is.
  *
- * Three ways it can rot, and all three are checked because each is silent on its
- * own: a list nobody declared, a declaration for a list that is gone, and a
- * declaration whose asker has stopped asking. The last is the quietest — the
- * audit still runs and still passes, and no longer looks.
+ * Four ways it can rot, and all four are checked because each is silent on its
+ * own: a list nobody declared, a declaration for a list that is gone, a
+ * declaration whose asker has stopped asking, and a permission naming something
+ * that no longer exists. The third is the quietest — the audit still runs and
+ * still passes, and no longer looks.
+ *
+ * The fourth was the loudest and the last found, because this file was printing
+ * the all-clear over it. `lib/records.mjs` has said since it was written that *a
+ * permission rots the other way: by naming something that no longer exists*, and
+ * nothing implemented that sentence: seven standing permissions had their entries
+ * read by no check at all, while this audit closed with *every asker still asks*
+ * — true of the records, silent about the permissions, and printed as though it
+ * covered both.
  */
 
 import { readFileSync, readdirSync } from 'node:fs';
@@ -29,6 +38,7 @@ import {
   exportedLists,
   keyOf,
   staleDeclarations,
+  stalePermissions,
   unasked,
   undeclared,
   unexplained,
@@ -75,8 +85,12 @@ for (const module of modules) {
 const news = undeclared(found, DECLARED);
 const gone = staleDeclarations(DECLARED, found);
 const silent = unasked(DECLARED, readOr);
+const withdrawn = stalePermissions(DECLARED, readOr);
 const mute = unexplained(DECLARED);
 const odd = unknownKinds(DECLARED);
+
+const permissions = DECLARED.filter((one) => one.kind === 'permission');
+const placed = permissions.filter((one) => one.namesIn !== null && one.namesIn !== undefined);
 
 console.log(
   `\nRead ${modules.length} modules for exported lists of excused things: ` +
@@ -113,6 +127,20 @@ if (silent.length > 0) {
   process.exitCode = 1;
 }
 
+if (withdrawn.length > 0) {
+  console.log('\nThese permissions name something that is no longer there:');
+  for (const line of withdrawn) console.log(`  ${line}`);
+  console.log(
+    '\nThe way a permission rots, which this repository stated and did not check.\n' +
+      'A record excuses a fact about today and goes stale when the fact changes; a\n' +
+      'permission excuses an intent, and nothing about being called withdraws it. What\n' +
+      'withdraws it is the thing it was granted to disappearing — a function renamed, a\n' +
+      'member deleted, a union moved. The entry then excuses nothing, and the next thing\n' +
+      'given that name inherits a permission nobody granted it.',
+  );
+  process.exitCode = 1;
+}
+
 if (mute.length > 0) {
   console.log('\nThese declarations do not say why:');
   for (const line of mute) console.log(`  ${line}`);
@@ -126,6 +154,22 @@ if (odd.length > 0) {
   process.exitCode = 1;
 }
 
-if (news.length === 0 && gone.length === 0 && silent.length === 0 && mute.length === 0 && odd.length === 0) {
+if (
+  news.length === 0 &&
+  gone.length === 0 &&
+  silent.length === 0 &&
+  withdrawn.length === 0 &&
+  mute.length === 0 &&
+  odd.length === 0
+) {
+  // Counted rather than asserted, because the sentence that used to close this
+  // audit was the defect: it said *every asker still asks* over seven permissions
+  // no asker had ever read. What is not covered is named here in the all-clear.
   console.log('Every list is declared, every record is asked, and every asker still asks.');
+  console.log(
+    `Of ${permissions.length} standing permissions, ${placed.length} name a place their entries must ` +
+      `still be\nfound in and every entry is found there. The other ` +
+      `${permissions.length - placed.length} say why no single place can be\nnamed, and nothing ` +
+      'checks their entries.',
+  );
 }

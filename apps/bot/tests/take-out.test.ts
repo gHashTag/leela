@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parseDocument } from '@leela/journal';
 import { asReport, decide, keep } from '../src/take-in';
@@ -131,9 +130,17 @@ describe('a path that goes through the bot and comes back', () => {
    * have passed: the store stamped the import, so a file that went in came out
    * with today's dates on every entry — and arrived as new the next time it was
    * sent.
+   *
+   * Anchored to this file rather than to `process.cwd()`. MEASURED: the working
+   * directory was assumed, and `npx vitest run apps/bot/tests/take-out.test.ts`
+   * from the repository root threw ENOENT on
+   * `<root>/tests/fixtures/miniapp-export.json` while the suite was collected,
+   * so the whole file failed before any of it ran. `bun run test` chdirs into
+   * the package, which is why the assumption held for one way of invoking it
+   * and no other.
    */
   const recorded = readFileSync(
-    resolve(process.cwd(), 'tests/fixtures/miniapp-export.json'),
+    new URL('./fixtures/miniapp-export.json', import.meta.url),
     'utf8',
   );
 

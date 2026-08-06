@@ -24,7 +24,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 // @ts-expect-error -- a plain .mjs module with no types, deliberately.
-import { readsTurnHolder, unguardedReaders, unnamedReaders } from '../../../scripts/lib/whose.mjs';
+import { functionsIn, readsTurnHolder, unguardedReaders, unnamedReaders } from '../../../scripts/lib/whose.mjs';
 import { blank } from '../../../scripts/lib/source.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -64,6 +64,118 @@ describe('a bare read of the turn holder’s values', () => {
     // `journal` is in a great many of them.
     expect(readsTurnHolder('{ /* it used to read journal here */ return theirs; }')).toEqual([]);
     expect(readsTurnHolder('{ // journal, once\n  return theirs; }')).toEqual([]);
+  });
+});
+
+/**
+ * Every place an expression can stand, with the same expression in it.
+ *
+ * Written as a grid rather than as a list of the positions that were once
+ * wrong, because the list would have been the wrong list. The reader skipped a
+ * name followed by `:` in order to leave `{ journal: theirs }` alone, and a
+ * ternary's else-colon answered that test too — so `x ? journal : y` was not a
+ * read as far as either audit was concerned, while the identical read inside an
+ * `if` was. Nobody wrote a rule saying a ternary is exempt; a rule about one
+ * thing was silently a rule about two.
+ *
+ * The claim here is that no syntactic position is privileged: whatever one of
+ * them reports, all of them report. A grid catches the next colon nobody
+ * thought about, which enumerating today's eight cannot.
+ */
+const POSITIONS: Array<readonly [string, (put: string) => string]> = [
+  ['a bare statement', (put) => `const t = ${put};`],
+  ['an if body', (put) => `if (b) { const t = ${put}; }`],
+  ['a ternary consequent', (put) => `const t = b ? ${put} : other;`],
+  ['a ternary alternate', (put) => `const t = b ? other : ${put};`],
+  ['an arrow body', (put) => `const t = () => ${put};`],
+  ['a template expression', (put) => 'const t = `${' + put + '}`;'],
+  ['an argument', (put) => `send(${put}, seatId);`],
+  ['an array element', (put) => `const t = [${put}, other];`],
+  ['a returned value', (put) => `return ${put};`],
+];
+
+/** The same expression wrapped as a body, so the reader is given what it takes. */
+const bodyOf = (statement: string): string => `{\n  ${statement}\n}`;
+
+describe('where the read is written', () => {
+  it('makes no difference — every position reports what every other does', () => {
+    const answers = POSITIONS.map(
+      ([where, put]) => [where, readsTurnHolder(bodyOf(put('journal'))).join(',')] as const,
+    );
+    const distinct = new Set(answers.map(([, reads]) => reads));
+
+    // Named in the message, so a position that goes blind says which one it is
+    // rather than leaving somebody to bisect nine fixtures.
+    expect(distinct.size, `positions disagreed: ${JSON.stringify(answers)}`).toBe(1);
+    // And they agree that it *is* a read. Nine positions agreeing on nothing
+    // would satisfy the line above and prove the opposite of the point.
+    expect([...distinct][0]).toBe('journal');
+  });
+
+  it('makes no difference to a key either, which is still not a read', () => {
+    // The other half, and the reason the colon rule existed at all. Writing a
+    // field called `journal` is not reading the module's `journal`, in any of
+    // the same nine places — so the fix has to keep telling them apart rather
+    // than call everything a read and go quiet a different way.
+    const answers = POSITIONS.map(
+      ([where, put]) =>
+        [where, readsTurnHolder(bodyOf(put('({ journal: theirs })'))).join(',')] as const,
+    );
+    const distinct = new Set(answers.map(([, reads]) => reads));
+
+    expect(distinct.size, `positions disagreed: ${JSON.stringify(answers)}`).toBe(1);
+    expect([...distinct][0]).toBe('');
+  });
+});
+
+/**
+ * Every shape a signature can have, with the same statement inside the body.
+ *
+ * The body was taken as the first `{` after `function NAME(`, and for a
+ * function whose return type is an object that brace opens the *type*.
+ * `whatIsBeingWritten(): { plan: number; intention: string }` handed the reader
+ * the string `"{ plan: number; intention: string }"` and the six lines it was
+ * asked about were never read — so a function that reads two of the turn
+ * holder's values on its fallback, and feeds both surfaces this audit exists
+ * about, was invisible while the audit printed that every reader was named.
+ *
+ * A marker statement is placed in the real body and every signature shape is
+ * asked to hand it back. The annotation is a type, and a type can be spelled
+ * an unbounded number of ways; naming today's five and stopping is how the
+ * first brace came to be trusted.
+ */
+const SIGNATURES: Array<readonly [string, string]> = [
+  ['no annotation', 'function f(a: number)'],
+  ['a primitive annotation', 'function f(a: number): void'],
+  ['an object-literal annotation', 'function f(a: number): { plan: number; intention: string }'],
+  ['a generic annotation', 'function f(a: number): Promise<{ plan: number }>'],
+  ['a union annotation', 'function f(a: number): { plan: number } | undefined'],
+  ['a function-type annotation', 'function f(a: number): (x: number) => { plan: number }'],
+  ['a destructured parameter', 'function f({ board, die }: Parts): void'],
+  ['a call in a default', 'function f(seatId = currentPlayer(session).id): void'],
+];
+
+describe('where the body begins', () => {
+  const MARKER = 'const marker = journal;';
+
+  it('is after the signature, whatever the signature is made of', () => {
+    const missed = SIGNATURES.filter(([, signature]) => {
+      const [fn] = functionsIn(`${signature} {\n  ${MARKER}\n}\n`);
+      return !fn || !String(fn.body).includes(MARKER);
+    }).map(([where]) => where);
+
+    expect(missed, 'these signature shapes hid their own bodies').toEqual([]);
+  });
+
+  it('excludes the annotation itself, or the reader is reading a type', () => {
+    // Containing the marker is not enough on its own: a body that began at the
+    // annotation would contain it too, and would also carry `plan: number` —
+    // which is a field of a type and reads to any of these checks like code.
+    const [fn] = functionsIn(
+      `function f(): { plan: number; intention: string } {\n  ${MARKER}\n}\n`,
+    );
+
+    expect(String(fn.body)).toBe(`{\n  ${MARKER}\n}`);
   });
 });
 
@@ -109,6 +221,27 @@ function openPlan(plan: number, seatId = currentPlayer(session).id): void {
 
     expect(unguardedReaders(nested)).toEqual([]);
   });
+
+  it('is found by its own name and not by a longer one declared above it', () => {
+    // Measured in the app. The parameters were looked up with
+    // `indexOf('function ' + name)`, and `indexOf('function openPlan')` lands
+    // on `function openPlans()` a hundred lines earlier — which takes no seat.
+    // So `openPlan`, the one function in the app that is handed a seat *and*
+    // reads the turn holder's journal, was read as having no parameters and
+    // skipped whole. A prefix is not a name, and the order two functions happen
+    // to be written in is not a rule about either.
+    const both = `
+function openPlans(): void {
+  show(everything);
+}
+
+function openPlan(plan: number, seatId = currentPlayer(session).id): void {
+  show(journal, plan, seatId);
+}
+`;
+
+    expect(unguardedReaders(both)).toEqual([{ name: 'openPlan', reads: ['journal'] }]);
+  });
 });
 
 describe('the app as it stands', () => {
@@ -117,6 +250,21 @@ describe('the app as it stands', () => {
     // the thing it was written for is worth nothing.
     expect(unguardedReaders(MAIN)).toEqual([]);
     expect(unnamedReaders(MAIN, new Set(['draw']))).not.toEqual([]);
+  });
+
+  it('reads the body of the function whose return type is an object', () => {
+    // The anchor for the defect this all began with, over the real file rather
+    // than a fixture. `whatIsBeingWritten` is written
+    // `(): { plan: number; intention: string }`, and what came back as its body
+    // was that annotation — thirty-four characters of type, in place of the
+    // lines that read `state` and `intention` on the `!writer` fallback.
+    const fn = functionsIn(MAIN).find(
+      (each: { name: string }) => each.name === 'whatIsBeingWritten',
+    );
+
+    expect(fn, 'the function this check exists about has been renamed').toBeDefined();
+    expect(String(fn.body)).toContain('writingSeat()');
+    expect(readsTurnHolder(String(fn.body)).sort()).toEqual(['intention', 'state']);
   });
 
   it('finds seat-taking functions at all, or this proves nothing', () => {

@@ -17,7 +17,7 @@
 
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { checkCiPackages, checkDeployPaths, checkLockfiles, workspacesNeededBy, checkManifests, copiedManifests, packagesCheckedByCi } from './lib/claims.mjs';
+import { checkCiPackages, checkDeployPaths, checkDeployTests, checkLockfiles, workspacesNeededBy, checkManifests, copiedManifests, packagesCheckedByCi, packagesTestedByDeploy } from './lib/claims.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const WORKSPACES = ['packages', 'apps'];
@@ -48,8 +48,16 @@ for (const group of WORKSPACES) {
     if (!existsSync(join(pkg, 'package.json'))) continue;
 
     // Nothing to hold to a rule about shipped code if nothing ships.
+    //
+    // `.tsx` counts, for the reason `lib/claims.mjs` had already written down
+    // one import away and this file went on ignoring: a workspace whose `src`
+    // holds only components would otherwise drop out here, and this filter is
+    // not local. The `workspaces` set it fills feeds the Dockerfile check and
+    // the three CI shell loops below, so a workspace missed here is a workspace
+    // missed by all four at once — silently, since every one of them then
+    // reports success over a set that no longer contains it.
     const sources = existsSync(join(pkg, 'src'))
-      ? readdirSync(join(pkg, 'src')).filter((file) => file.endsWith('.ts'))
+      ? readdirSync(join(pkg, 'src')).filter((file) => /\.tsx?$/.test(file))
       : [];
     if (sources.length === 0) continue;
 
@@ -143,10 +151,17 @@ if (existsSync(pages)) {
 
   // What the job builds, read from the job rather than assumed.
   const deployed = [...workflow.matchAll(/--cwd (apps\/[a-z]+)/g)].map((found) => found[1]);
+  const needed = workspacesNeededBy([...new Set(deployed)], dependenciesOf);
 
-  problems.push(
-    ...checkDeployPaths(watched, workspacesNeededBy([...new Set(deployed)], dependenciesOf)),
-  );
+  problems.push(...checkDeployPaths(watched, needed));
+
+  // The same file states its dependencies a second time, five lines below the
+  // first: the loop that tests what is about to be published. Only the `paths:`
+  // list above was ever held to the graph, and the two already disagreed — the
+  // pass that added `packages/journal` to `paths:` left the loop iterating the
+  // four it had before, so the format both surfaces read and write could go red
+  // and deploy green.
+  problems.push(...checkDeployTests(packagesTestedByDeploy(workflow), needed));
 }
 
 // CI iterates a hand-written list in a shell loop, three times over. A package

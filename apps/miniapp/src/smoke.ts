@@ -38,6 +38,16 @@ export interface CheckResult {
   /** Fragments that were there and should not have been. */
   instead: string[];
   error?: string;
+  /**
+   * Why this failed, when the reason is not a status, a size or a fragment.
+   *
+   * A verdict reached by *reading* rather than by fetching — the page names no
+   * asset of its own, the page asks the site root for one — has no status and
+   * no byte count to print, and a report that says only `FAIL ... status 0`
+   * sends whoever reads the CI log looking for a network problem that never
+   * happened.
+   */
+  why?: string;
 }
 
 /**
@@ -123,24 +133,70 @@ export async function runCheck(
   }
 }
 
+/** Every `src=` / `href=` the page carries, in the order it carries them. */
+function referencesIn(html: string): string[] {
+  return [
+    ...new Set([...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((match) => match[1] as string)),
+  ];
+}
+
+/** `assets/index-abc.js` or `./assets/index-abc.js` — read from the page's own directory. */
+const OWN_ASSET = /^(?:\.\/)?assets\//;
+
+/** `/assets/index-abc.js` — read from the origin, wherever the page itself lives. */
+const ROOT_ASSET = /^\/assets\//;
+
 /**
  * Everything the game's own page asks the browser to load.
  *
- * Relative references only: an absolute one is somebody else's server, and
- * `telegram-web-app.js` being down is not this deployment being broken.
- *
  * They cannot be listed by hand. Vite puts a content hash in every asset name,
  * so `assets/index-pd0t01pZ.js` is a different file on every build — which is
- * why the checks below name five pages and not one line of the game's code,
+ * why the checks above name five pages and not one line of the game's code,
  * and why the failure this module opens by naming is the one it did not look
  * for. The page says what it needs; ask it.
+ *
+ * **What this returns is the page's *own* assets, and nothing else.** The
+ * sentence this function used to carry — *an absolute reference is somebody
+ * else's server* — is true of `https://telegram.org/js/telegram-web-app.js`
+ * and flatly false of `/assets/index-abc.js`. The second one is this
+ * deployment's file, asked for from the wrong place: a page served at
+ * `https://site/leela/` that writes `/assets/index-abc.js` sends the browser
+ * to `https://site/assets/index-abc.js`, which is a 404 and a blank screen.
+ * The old reader matched it — `/^\.?\/?assets\//` accepts a leading slash —
+ * and then erased the leading slash with `.replace(/^\.?\//, '')` before
+ * handing the name back to a checker that re-roots every path under the base
+ * it was given. So the checker fetched `https://site/leela/assets/index-abc.js`
+ * and got a healthy 200 from the one URL the browser was never going to ask
+ * for. Normalising the reference destroyed the only difference between a
+ * correct path and a broken one, and the module whose first sentence is *a
+ * build that emits a broken asset path deploys green* passed that build.
+ *
+ * The one line that keeps this from happening is `base: './'` in
+ * `vite.config.ts`. It is a default away from being gone.
+ *
+ * Dropping absolute references instead of normalising them would be the same
+ * blindness moved one layer down: nothing would fetch the wrong URL, and
+ * nothing would say the page is broken either. They come back from
+ * {@link assetProblems}, which is a verdict rather than a list of things to go
+ * and fetch.
  */
 export function assetsIn(html: string): string[] {
-  const found = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((match) => match[1] as string);
+  return referencesIn(html)
+    .filter((reference) => OWN_ASSET.test(reference))
+    .map((reference) => reference.replace(/^\.\//, ''));
+}
 
-  return [...new Set(found.filter((reference) => /^\.?\/?assets\//.test(reference)))].map(
-    (reference) => reference.replace(/^\.?\//, ''),
-  );
+/**
+ * References to this deployment's assets that the page cannot reach.
+ *
+ * Root-absolute, i.e. `/assets/...`. Correct only when the site is served from
+ * `/`, which this one is not: GitHub Pages puts it under `/<repo>/` and the
+ * custom host under `/leela/`. There is nothing to fetch and no ambiguity to
+ * resolve — the page as shipped is broken, and the only honest thing to do
+ * with the reference is report it.
+ */
+export function assetProblems(html: string): string[] {
+  return referencesIn(html).filter((reference) => ROOT_ASSET.test(reference));
 }
 
 /**
@@ -162,6 +218,44 @@ export function assetCheck(path: string): Check {
   };
 }
 
+/** A failure reached by reading the page, with nothing fetched. */
+function verdict(check: Check, why: string): CheckResult {
+  return { check, ok: false, status: 0, bytes: 0, missing: [], instead: [], why };
+}
+
+/**
+ * The verdict on a page that asks the site root for one of its own files.
+ *
+ * Not fetched. Fetching it would mean choosing a base to resolve it against,
+ * and every choice available is a lie: resolve it under the deployment's base
+ * and you have re-created the bug this exists to catch; resolve it under the
+ * origin and you have confirmed a URL no browser loading this page will ever
+ * request.
+ */
+export function rootAssetVerdict(reference: string): CheckResult {
+  return verdict(
+    { path: reference, what: "an asset the page asks the site root for, not its own directory" },
+    `the page references ${reference}; served from a subdirectory the browser asks the origin ` +
+      `for it and gets a 404. Vite emits this when \`base\` is not './'`,
+  );
+}
+
+/**
+ * The verdict on a page that names none of its own files.
+ *
+ * The hand-written checks read a title, an element id and a byte count, and an
+ * empty shell has all three. Everything below them is generated per asset, so
+ * a page with no assets generates no checks and the run passes on five green
+ * lines about a page that loads nothing.
+ */
+export function noAssetsVerdict(): CheckResult {
+  return verdict(
+    { path: '', what: "the game's own code, which its page never names" },
+    'the page names no asset of its own: no ./assets/... script or stylesheet. A shell with a ' +
+      'title and an empty board passes every other check and loads nothing',
+  );
+}
+
 /**
  * Run every check. All of them, so one failure does not hide the rest.
  *
@@ -169,6 +263,11 @@ export function assetCheck(path: string): Check {
  * a build that emits a broken asset path is the first failure this module
  * names, and the page it emits still contains `id="board"` and passes every
  * hand-written check while the game is a blank screen.
+ *
+ * Expanding a page into per-asset checks has no floor of its own, so the two
+ * ways of naming nothing — naming no asset, and naming one the browser cannot
+ * reach — are verdicts rather than fetches. Without them, the fewer files a
+ * page asks for the greener the run, and a page asking for none is perfect.
  */
 export async function runChecks(
   base: string,
@@ -186,9 +285,17 @@ export async function runChecks(
     if (check.path !== '' || !result.ok) continue;
 
     const { text } = await fetcher(`${base.replace(/\/$/, '')}/`);
-    for (const asset of assetsIn(text)) {
+    const assets = assetsIn(text);
+
+    for (const asset of assets) {
       results.push(await runCheck(base, assetCheck(asset), fetcher));
     }
+
+    for (const reference of assetProblems(text)) {
+      results.push(rootAssetVerdict(reference));
+    }
+
+    if (assets.length === 0) results.push(noAssetsVerdict());
   }
 
   return results;
@@ -202,7 +309,9 @@ export function describeResults(results: CheckResult[]): string {
       const detail = result.ok
         ? `${result.bytes}b`
         : [
-            result.error ? `error: ${result.error}` : `status ${result.status}`,
+            // A verdict read off the page has no status to report, and
+            // `status 0` reads as a network failure that never happened.
+            result.why ? result.why : result.error ? `error: ${result.error}` : `status ${result.status}`,
             result.bytes < (result.check.minBytes ?? 0)
               ? `only ${result.bytes}b, expected at least ${result.check.minBytes}`
               : '',
@@ -212,7 +321,11 @@ export function describeResults(results: CheckResult[]): string {
             .filter(Boolean)
             .join('; ');
 
-      return `${mark}  ${result.check.what} (/${result.check.path})  ${detail}`;
+      // A root-absolute path already carries its slash; `//assets/...` would
+      // be a third thing that is neither what the page said nor what it meant.
+      const where = result.check.path.startsWith('/') ? result.check.path : `/${result.check.path}`;
+
+      return `${mark}  ${result.check.what} (${where})  ${detail}`;
     })
     .join('\n');
 }

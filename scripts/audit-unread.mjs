@@ -15,15 +15,32 @@
  *
  * Run:  node scripts/audit-unread.mjs
  *
- * Exits 0 always: this is a prompt to look, not a gate. A field can be
- * legitimately write-only, and a check that blocks a build on a judgement call
- * gets switched off rather than heeded.
+ * Four findings fail the run, and each is declared `failing` where it is
+ * collected, at the foot of this file: a field written and never read, a
+ * `WRITE_ONLY` excuse that no longer suppresses anything, an export with no
+ * caller anywhere, and an export its own application does not use. Each is a
+ * statement about the code that can be checked, so each gates. The exit code is
+ * returned once, by `lib/report.mjs`, from the same decision that prints the
+ * closing sentence — the two used to be written separately and disagreed.
+ *
+ * Three things are reported and do not: the counts, the names declared in more
+ * than one place — which this reader cannot tell apart without resolving
+ * imports, so an ambiguity is a place to look rather than a verdict — and a
+ * class member with no caller here.
+ *
+ * This header promised for several passes that the run always ends in a zero
+ * exit code and is a prompt to look rather than a gate, while the file below it
+ * set `process.exitCode = 1` in three separate places. The header is what a
+ * person reads to decide whether a red job matters, so a wrong one is worse
+ * than none: the retracted sentence is described here rather than quoted, so
+ * that grepping for it finds the code and not the claim.
  */
 
 import { staleAmong } from './lib/records.mjs';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { finish } from './lib/report.mjs';
 import {
   ambiguousExports,
   declaredExports,
@@ -144,42 +161,11 @@ console.log(`Checked ${declarations.length} field declarations across ${files.le
 // on the contract's three-sixes rule, both now read by the comparer that owns
 // them — and nobody had acted on them because nothing made them act.
 //
-// The exports half is deliberately not gated yet: four remain, and each needs a
-// judgement rather than a sweep. Said in MIGRATION.md rather than left as a
-// silence that reads like nothing to do.
-if (unread.length > 0) process.exitCode = 1;
-
-// And the exports half, which had been reporting into a green job for as long
-// as it has existed. Four of the six it named last pass were resolved rather
-// than excused: `unseeableIn` was wired into the audit that had been asking its
-// question in a counter of its own, and two lossy `merge` wrappers were deleted
-// in favour of the functions that also say what the merge cost.
-
-if (unread.length === 0) {
-  console.log('Every field has at least one reader.');
-} else {
-  console.log(`${unread.length} field(s) are written and never read:\n`);
-  for (const field of unread) {
-    console.log(`  ${field.name}  (${field.kind}, declared in ${field.file})`);
-  }
-  console.log(
-    '\nEither read it, remove it, or add it to WRITE_ONLY with a reason.\n' +
-      'A field nobody reads is often a question nobody asked.',
-  );
-}
+// What both halves say, and the exit code they add up to, is assembled at the
+// foot of this file: this audit has four gates and its closing sentence used to
+// ask after one of them. See the note above that `finish` call.
 
 console.log(`\n${Object.keys(WRITE_ONLY).length} field(s) are write-only on purpose.`);
-
-if (staleExcuses.length > 0) {
-  console.log('\nThese write-only excuses no longer describe anything:\n');
-  for (const name of staleExcuses) console.log(`  ${name}`);
-  console.log(
-    '\nEach names a field that is read now, or that this check no longer sees.\n' +
-      'Take them out: an excuse kept past its reason waves through the next field\n' +
-      'written and never read under the same name.',
-  );
-  process.exitCode = 1;
-}
 
 // --- exports ----------------------------------------------------------------
 
@@ -362,49 +348,99 @@ const orphaned = unusedInOwnPackage(
   Object.keys(PUBLIC_API),
 );
 
-// The exports half, gated at last. It had reported into a green job for as long
-// as it has existed: this file had no `process.exitCode` anywhere, so CI ran it,
-// printed eight uncalled exports and went on. Two of the eight had live callers
-// the reader could not see, `unseeableIn` was wired into the audit that asked
-// its question in a counter of its own, and two lossy `merge` wrappers went in
-// favour of the functions that also say what the merge cost. What is left is
-// declared in `PUBLIC_API` with a reason apiece.
-if (uncalled.length > 0 || orphaned.length > 0) process.exitCode = 1;
+// The ambiguity report is printed with the rest of the run below, as a section
+// of `finish`, rather than here as a bare count. `ambiguousExports` computes
+// `{name, files}` and this line printed only the length, throwing away every
+// `files` array it had just built — while the library's own justification for
+// the check reads "an ambiguity reported is a place to look". Twenty-three is
+// not a place to look. It is the number of places somebody else now has to
+// find.
 
-console.log(`${ambiguous.length} name(s) are declared in more than one place.\n`);
-
-if (orphaned.length > 0) {
-  console.log(`${orphaned.length} of them are not used by the package that declares them:\n`);
-  for (const item of orphaned) {
-    console.log(`  ${item.name}  (${item.file})`);
-  }
-  console.log(
-    '\nUses are counted by name, so a live caller in one package covers a dead export in\n' +
-      'another. That is how the phone app came to write a path no screen read back.\n',
-  );
-}
-
-if (unusedMembers.length > 0) {
-  console.log(`${unusedMembers.length} class member(s) have no caller here:\n`);
-  for (const item of unusedMembers) {
-    console.log(`  ${item.owner}.${item.name}  (${item.kind}, ${item.file})`);
-  }
-  console.log(
-    '\nA class is exported and its members are not, so this is the half of the surface\n' +
-      '`export` cannot see. It is where `reportsFor` hid: a durable sink that kept every\n' +
-      'report and answered that it kept nothing.\n',
-  );
-}
-
-if (uncalled.length === 0) {
-  console.log('Every export has at least one caller.');
-} else {
-  console.log(`${uncalled.length} export(s) have no caller here:\n`);
-  for (const item of uncalled) {
-    console.log(`  ${item.name}  (${item.kind}, ${item.file})`);
-  }
-  console.log(
-    '\nAn export with no caller is code no caller has disagreed with.\n' +
-      'Call it, remove it, or add it to PUBLIC_API with a reason.',
-  );
-}
+// Everything this audit found, and the exit code that agrees with it.
+//
+// The exports half is gated at last. It had reported into a green job for as
+// long as it has existed: this file had no `process.exitCode` anywhere, so CI
+// ran it, printed eight uncalled exports and went on. Two of the eight had live
+// callers the reader could not see, `unseeableIn` was wired into the audit that
+// asked its question in a counter of its own, and two lossy `merge` wrappers
+// went in favour of the functions that also say what the merge cost. What is
+// left is declared in `PUBLIC_API` with a reason apiece.
+//
+// And then there were four gates and one closing sentence that asked after one
+// of them. `unread`, `staleExcuses`, `orphaned` and `uncalled` each set the exit
+// code, and the last line of the run was decided by `uncalled.length === 0`
+// alone — so a run that failed on a field written and never read, or on a
+// withdrawn excuse, or on an export its own package does not use, ended on
+// *every export has at least one caller*. That sentence was true; it was also
+// the verdict a person reads, twenty lines below the alarm. `lib/report.mjs`
+// now owns the arrangement: notes first, whatever failed last, the all-clear
+// only when nothing failing has anything to say, and the code returned from the
+// same decision that printed the words.
+//
+// `Every field has at least one reader.` stays a note rather than an all-clear.
+// It is a true statement about the fields half whenever that half is clean, and
+// there is no reason to hide it because the exports half failed — it simply
+// must not be the last thing on screen when something did.
+process.exitCode = finish({
+  allClear: 'Every export has at least one caller.',
+  sections: [
+    {
+      failing: false,
+      lines: unread.length === 0 ? ['Every field has at least one reader.'] : [],
+    },
+    {
+      failing: false,
+      heading: `${unusedMembers.length} class member(s) have no caller here:\n`,
+      lines: unusedMembers.map(
+        (item) => `  ${item.owner}.${item.name}  (${item.kind}, ${item.file})`,
+      ),
+      epilogue:
+        '\nA class is exported and its members are not, so this is the half of the surface\n' +
+        '`export` cannot see. It is where `reportsFor` hid: a durable sink that kept every\n' +
+        'report and answered that it kept nothing.\n',
+    },
+    {
+      failing: false,
+      heading: `${ambiguous.length} name(s) are declared in more than one place:\n`,
+      lines: ambiguous.map((a) => `  ${a.name}  (${a.files.join(', ')})`),
+      epilogue:
+        '\nUses are counted by name across every source, so one live caller anywhere covers\n' +
+        'every declaration of that name. Telling them apart means resolving imports, which\n' +
+        'is a different tool; naming the files is not, and an ambiguity reported is only a\n' +
+        'place to look if the report says where.\n',
+    },
+    {
+      failing: true,
+      heading: `${unread.length} field(s) are written and never read:\n`,
+      lines: unread.map((field) => `  ${field.name}  (${field.kind}, declared in ${field.file})`),
+      epilogue:
+        '\nEither read it, remove it, or add it to WRITE_ONLY with a reason.\n' +
+        'A field nobody reads is often a question nobody asked.',
+    },
+    {
+      failing: true,
+      heading: '\nThese write-only excuses no longer describe anything:\n',
+      lines: staleExcuses.map((name) => `  ${name}`),
+      epilogue:
+        '\nEach names a field that is read now, or that this check no longer sees.\n' +
+        'Take them out: an excuse kept past its reason waves through the next field\n' +
+        'written and never read under the same name.',
+    },
+    {
+      failing: true,
+      heading: `${orphaned.length} of them are not used by the package that declares them:\n`,
+      lines: orphaned.map((item) => `  ${item.name}  (${item.file})`),
+      epilogue:
+        '\nUses are counted by name, so a live caller in one package covers a dead export in\n' +
+        'another. That is how the phone app came to write a path no screen read back.\n',
+    },
+    {
+      failing: true,
+      heading: `${uncalled.length} export(s) have no caller here:\n`,
+      lines: uncalled.map((item) => `  ${item.name}  (${item.kind}, ${item.file})`),
+      epilogue:
+        '\nAn export with no caller is code no caller has disagreed with.\n' +
+        'Call it, remove it, or add it to PUBLIC_API with a reason.',
+    },
+  ],
+});

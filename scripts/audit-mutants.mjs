@@ -36,6 +36,10 @@
  * be run by hand rather than a gate. CI runs the suites themselves.
  *
  * Run:  node scripts/audit-mutants.mjs [name…]
+ *
+ * To only put back what a stopped run left behind, and break nothing new:
+ *
+ *       node scripts/audit-mutants.mjs --restore
  */
 
 import { execFileSync } from 'node:child_process';
@@ -281,7 +285,34 @@ function mutate(source, name, to) {
   return null;
 }
 
-const wanted = process.argv.slice(2);
+/**
+ * The arguments, which are decision names and two flags.
+ *
+ * `--restore` puts back what a stopped run left and stops there. It exists
+ * because the recovery this repository prints everywhere used to be the bare
+ * sweep: the restore happens first, prints *Put back what a stopped run had
+ * broken*, and then several minutes of fresh mutations begin. Somebody who read
+ * the message, ran it, saw the line they were told to expect and pressed Ctrl-C
+ * was left with a NEW mutation in a DIFFERENT file — the same defect the
+ * message was curing, moved. `lib/undo.mjs`'s `RECOVERY` now names this flag,
+ * so the printed command does the one thing it says.
+ *
+ * `--mutation-note` moves where the note lives, the same seam
+ * `build-content.mjs` and `audit-scripts.mjs` carry: a test may drive the
+ * restore path, and a test that wrote `scripts/.mutants-undo.json` would block
+ * every build on the machine, including the one that recovers from it.
+ *
+ * Names are filtered out of the flags by hand rather than by a parser, and the
+ * value after `--mutation-note` is dropped explicitly — a path that survived
+ * into `wanted` would silently select no decisions, which reads like a clean
+ * sweep of nothing.
+ */
+const args = process.argv.slice(2);
+const restoreOnly = args.includes('--restore');
+const noteFlag = args.indexOf('--mutation-note');
+const wanted = args.filter(
+  (arg, index) => !arg.startsWith('--') && !(noteFlag > -1 && index === noteFlag + 1),
+);
 const chosen = wanted.length > 0 ? DECISIONS.filter((d) => wanted.includes(d.name)) : DECISIONS;
 
 const survived = [];
@@ -300,14 +331,32 @@ let checked = 0;
  * The handlers are registered once and the state is one file, because only one
  * is ever broken at a time.
  */
-const UNDO = join(HERE, '.mutants-undo.json');
+const UNDO = noteFlag > -1 ? args[noteFlag + 1] : join(HERE, '.mutants-undo.json');
 
 // Whatever the last run left behind, before this one reads a single file: the
 // mutation is *in* the source it is about to copy.
 const leftBroken = putItBack(UNDO);
-if (leftBroken !== null) {
-  console.log(`Put back what a stopped run had broken: ${relative(ROOT, leftBroken)}\n`);
+
+if (leftBroken === null) {
+  // Only worth saying when somebody asked for a restore and there was nothing
+  // to restore. In a sweep this is the ordinary case and silence is right.
+  if (restoreOnly) console.log('Nothing to put back: no stopped run left a note.');
+} else if (leftBroken.restored !== null) {
+  console.log(`Put back what a stopped run had broken: ${relative(ROOT, leftBroken.restored)}\n`);
+} else {
+  // The note is there and will not parse, so which file is broken is not
+  // knowable from it — and the note is deliberately left on disk, because it
+  // holds the only copy of the original text. See `lib/undo.mjs`.
+  console.error('\nA stopped run left a note that will not parse, so this cannot name the file.');
+  console.error(`  Note:             ${leftBroken.note}`);
+  console.error(`  Put it back with: ${leftBroken.recovery}\n`);
+  process.exit(1);
 }
+
+// Restore and nothing else. Deliberately before a single decision is read: the
+// whole point of the flag is that the command a message prints does not go on
+// to break something new.
+if (restoreOnly) process.exit(0);
 
 for (const decision of chosen) {
   const path = join(ROOT, decision.package, decision.file);
@@ -340,7 +389,18 @@ for (const decision of chosen) {
       }
     }
   } finally {
-    putItBack(UNDO);
+    // Loud rather than silent, and that is a change of manner rather than of
+    // policy. `putItBack` used to throw on a note it could not read, which at
+    // least stopped the sweep where it stood; it now returns instead, so a
+    // restore that did not happen has to stop the sweep explicitly. Carrying
+    // on would break a second file on top of a first that is still broken,
+    // and the note only ever describes one.
+    const back = putItBack(UNDO);
+    if (back === null || back.restored === null) {
+      console.error(`\nCould not put ${relative(ROOT, path)} back — stopping before anything else is broken.`);
+      console.error(back === null ? '  The note is gone.' : `  Put it back with: ${back.recovery}`);
+      process.exit(1);
+    }
   }
 
   const mark = failed === 0 ? 'NOBODY NOTICED' : `${failed} failed`;

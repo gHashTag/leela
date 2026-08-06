@@ -56,9 +56,32 @@ describe('the page for an address that is not here', () => {
      *
      * The app's own assets are the opposite case and are built with
      * `base: './'` for it: they are always beside the page that loads them.
+     *
+     * Collected first, and the collection asserted non-empty before anything is
+     * asserted about its members. The set is `matchAll` over the page's own
+     * markup, so it goes to zero the moment the page is rewritten without
+     * `href="…"` — a nav rendered from a list, an anchor built in a script, a
+     * redesign that links with `<a>` elements that carry the address somewhere
+     * else. The loop would then run zero times and this test would report green
+     * over an unchecked rule.
+     *
+     * It was already non-vacuous, but only by accident: the sibling above,
+     * `offers the way back to both things this site is`, happens to assert that
+     * two hrefs exist. A guard that is only non-vacuous because a neighbouring
+     * test happens to assert something is a guard one deletion away from
+     * silence — nobody deleting that test would know it was holding this one
+     * up. So this one says out loud that it found something to check.
      */
-    for (const [, href] of PAGE.matchAll(/href="([^"]+)"/g)) {
-      if (href.startsWith('http')) continue;
+    const local = [...PAGE.matchAll(/href="([^"]+)"/g)]
+      .map(([, href]) => href!)
+      .filter((href) => !href.startsWith('http'));
+
+    expect(
+      local.length,
+      'no in-site href found -- the page stopped linking the way this test reads links, and the check was about to pass by checking nothing',
+    ).toBeGreaterThan(0);
+
+    for (const href of local) {
       expect(href.startsWith('/'), `${href} is relative`).toBe(true);
     }
   });

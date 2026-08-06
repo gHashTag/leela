@@ -19,7 +19,8 @@
  */
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { checkRegression, coverageOf } from './lib/coverage.mjs';
+import { checkRegression, dimensionsIn } from './lib/coverage.mjs';
+import { pendingMutation } from './lib/undo.mjs';
 import { corrected, unappliedIn } from './lib/corrections.mjs';
 import {
   RECORDED as SPILLOVERS,
@@ -34,6 +35,60 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
 const OUT = join(REPO, 'packages/content/data');
+
+/**
+ * Refuse before anything else, while a mutation run is unfinished.
+ *
+ * `audit-mutants` edits shipped source on purpose to see whether the tests
+ * notice, and a run that is killed mid-mutation leaves the edit in the file —
+ * a note on disk is the only thing that survives the kill, because the script
+ * lives inside synchronous `execFileSync` and no signal handler ever runs. On
+ * 2026-08-06 a stopped run left `return '';` at the top of `summariseReturns`
+ * in `packages/ai/src/prompts.ts` and ten tests in a package nobody had
+ * touched went red. It cost an hour, and it cost an hour because nothing on
+ * the path anybody actually walks reads that note: `bun run verify` is
+ * `content:build && typecheck && typecheck:strict && test`, and the restore
+ * only happens at the start of the *next* `audit-mutants` run.
+ *
+ * `content:build` is the first thing `verify` executes, so the refusal belongs
+ * here. It comes before `--src` is read, before the donor repositories are
+ * touched, and before the regression guard, because the order is the point: a
+ * tree holding a live mutation should say so first, whatever else is also
+ * wrong with the arguments. Nothing is restored here — see `lib/undo.mjs` for
+ * why a build is the wrong process to repair a developer's tree.
+ *
+ * `--force` does not reach this. An unfinished mutation is not a judgement
+ * call about the dataset that a human can overrule; it is a broken tool, and
+ * the answer to it is one command. `--mutation-note` exists so a test can put
+ * the note somewhere harmless — it changes where the note is looked for, never
+ * whether it is.
+ *
+ * The intended replacement for all of this is StrykerJS with
+ * `@stryker-mutator/vitest-runner`, which defaults to `inPlace: false`: it
+ * copies the tree into a sandbox and mutates the copy, so a `SIGKILL` cannot
+ * leave anything behind and this guard has nothing to guard. Adopting it needs
+ * a network install that rewrites `package.json` and `bun.lock`, and its
+ * behaviour on a ten-workspace Bun monorepo is untested here. Until somebody
+ * has measured that, this is the cheap gate.
+ */
+const noteFlag = process.argv.indexOf('--mutation-note');
+const MUTATION_NOTE =
+  noteFlag > -1 ? process.argv[noteFlag + 1] : join(HERE, '.mutants-undo.json');
+
+const pending = pendingMutation(MUTATION_NOTE);
+if (pending) {
+  console.error('\nRefusing to build: a mutation run was stopped and never put the file back.\n');
+  console.error(
+    pending.path
+      ? `  Currently broken: ${pending.path}`
+      : `  A note is there and will not parse, so which file is broken is unknown.`,
+  );
+  console.error(`  Note:             ${MUTATION_NOTE}`);
+  console.error(`\n  Put it back with: ${pending.recovery}\n`);
+  console.error('A test failing right now is a tool\'s doing and not the code\'s.');
+  console.error('Nothing here is restored for you: that would repair your tree mid-commit.');
+  process.exit(1);
+}
 
 const srcFlag = process.argv.indexOf('--src');
 const SRC = srcFlag > -1 ? process.argv[srcFlag + 1] : join(REPO, '..', 'leela-src');
@@ -537,14 +592,48 @@ const rules = readRules();
  * Losing ground is the signal. Gaining is the generator working.
  */
 const before = existsSync(join(OUT, 'manifest.json'))
-  ? coverageOf(JSON.parse(readFileSync(join(OUT, 'manifest.json'), 'utf8')))
+  ? dimensionsIn(JSON.parse(readFileSync(join(OUT, 'manifest.json'), 'utf8')))
   : new Map();
 
+/**
+ * What this build found, counted the same way the manifest records it.
+ *
+ * The rules chapters are counted here as well as the plans, because the run
+ * that started all of this emptied `rules.json` *first* and the guard watched
+ * only plans — a build that found all 72 plans in every language and not one
+ * rules chapter used to pass. Same counts as the manifest written below, so
+ * this build's `after` and the next build's `before` are the same measurement.
+ *
+ * That last sentence was a claim and not a fact until `withBody` was added
+ * here. The manifest below has always written `{ plans, rules, withBody }`
+ * while this map wrote two of the three, so the field that says whether the
+ * pages have any text on them went into the file and was never compared to
+ * anything. It is the cheapest one to lose, too: `plans` and `withBody` are
+ * counted over the *same* plans, so a donor whose body extraction breaks — a
+ * changed markup, a renamed field, a reader handing back the metadata and not
+ * the page — still offers 72 plans and 72 empty bodies. Every count in this map
+ * is now a count the manifest also records, and the refusal below sees all of
+ * them.
+ *
+ * Counted over the same filtered array `plans` is counted over, so the two
+ * numbers cannot disagree about which plans they are describing. The manifest's
+ * own `withBody` is taken after `corrected()` has run over each body, which is
+ * a text substitution and empties nothing — if a correction ever did empty a
+ * body, the manifest would record one fewer than this and the next build would
+ * read that smaller number as its floor, which is the safe direction.
+ */
 const after = new Map(
-  Object.entries(byLang).map(([lang, plans]) => [
-    lang,
-    plans.filter((plan) => plan.plan >= 1 && plan.plan <= TOTAL_PLANS).length,
-  ]),
+  Object.entries(byLang).map(([lang, plans]) => {
+    const inRange = plans.filter((plan) => plan.plan >= 1 && plan.plan <= TOTAL_PLANS);
+    return [
+      lang,
+      {
+        plans: inRange.length,
+        rules: rules[lang]?.length ?? 0,
+        withBody: inRange.filter((plan) => plan.body.length > 0).length,
+      },
+    ];
+  }),
 );
 
 const losses = checkRegression(before, after);

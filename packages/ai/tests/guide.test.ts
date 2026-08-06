@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { planFor } from '@leela/content';
+import { MAX_ROLL, SNAKES, WIN_LOKA } from '@leela/engine';
 import {
   Guide,
   ModelError,
@@ -12,6 +13,39 @@ import {
 } from '../src';
 
 const ask = { plan: 12, language: 'en' as const };
+
+/**
+ * An arrival read off the board rather than typed out.
+ *
+ * This fixture used to be `{ ...ask, direction: 'snake 🐍', previousPlan: 30 }`,
+ * which asked for plan 12 — and 12 is a snake *head*, the square a snake starts
+ * from. No `previousPlan` at all makes that pair legal: nothing settles on a
+ * head, and from 30 no throw of 1..6 even reaches one. The prompt's board check
+ * dropped the arrival sentence, correctly, and the test read the correct output
+ * as a failure.
+ *
+ * So both numbers come from SNAKES now. Standing `roll` squares short of a head
+ * is an arrival the board can produce by construction — there is nothing here
+ * for a board change to falsify, only to move. `prompts.test.ts` asks the same
+ * question of the whole table; this asks it of the guide, which is the layer
+ * that assembles the context the prompt is built from.
+ */
+function aJumpTheBoardHolds(jumps: Readonly<Record<number, number>>) {
+  for (const [key, plan] of Object.entries(jumps)) {
+    const head = Number(key);
+    for (let roll = 1; roll <= MAX_ROLL; roll += 1) {
+      const previousPlan = head - roll;
+      // Not the parking square a player waits to enter on, and not a jump that
+      // ends where it began: the prompt says nothing about either, by design.
+      if (previousPlan < 1 || previousPlan === WIN_LOKA || previousPlan === plan) continue;
+      return { previousPlan, plan };
+    }
+  }
+
+  throw new Error('the board holds no jump at all, which cannot be true of this board');
+}
+
+const brought = aJumpTheBoardHolds(SNAKES);
 
 /** A guide whose log is captured rather than printed. */
 function guideWith(model: LanguageModel, timeoutMs?: number) {
@@ -52,11 +86,17 @@ describe('reflect', () => {
   it('passes how the player arrived, so the answer can meet them there', async () => {
     const model = recordingModel();
     const { guide } = guideWith(model);
-    await guide.reflect('report', { ...ask, direction: 'snake 🐍', previousPlan: 30 });
+    await guide.reflect('report', {
+      ...ask,
+      direction: 'snake 🐍',
+      // Both squares, not just the origin: `ask` stands on 12, which is a head.
+      plan: brought.plan,
+      previousPlan: brought.previousPlan,
+    });
 
     const prompt = model.calls[0].messages[0].content;
     expect(prompt).toMatch(/brought down/i);
-    expect(prompt).toContain('came from plan 30');
+    expect(prompt).toContain(`came from plan ${brought.previousPlan}`);
   });
 });
 

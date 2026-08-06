@@ -25,7 +25,15 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { allPassed, assetsIn, runChecks, type Check, type Fetcher } from '../src/smoke';
+import {
+  allPassed,
+  assetProblems,
+  assetsIn,
+  describeResults,
+  runChecks,
+  type Check,
+  type Fetcher,
+} from '../src/smoke';
 
 const GAME = (assets: string[]) =>
   `<!doctype html><html lang="en"><head><title>Leela</title>` +
@@ -84,7 +92,35 @@ describe('the assets the deployed page asks for', () => {
   it('do not include somebody else\'s server', () => {
     // `telegram-web-app.js` being down is not this deployment being broken, and
     // failing a deploy over it would teach an operator to ignore the check.
-    expect(assetsIn(GAME([]))).toEqual([]);
+    //
+    // The fixture carries one local asset on purpose. This line used to read
+    // `assetsIn(GAME([]))` — a page with no local assets at all — so it proved
+    // the Telegram script was dropped and, in the same breath and invisibly,
+    // froze *a page naming none of its own files is a normal page*. Every
+    // reference has to survive or be dropped for its own reason, which needs
+    // one of each in the page.
+    expect(assetsIn(GAME(['./assets/index-ok.js']))).toEqual(['assets/index-ok.js']);
+  });
+
+  it("name the page's own files even when it never says './'", () => {
+    // Vite writes `./assets/...`; a hand-edited page or another bundler may
+    // write `assets/...`. Both are read from the page's own directory.
+    expect(assetsIn(GAME(['assets/index-bare.js']))).toEqual(['assets/index-bare.js']);
+  });
+
+  it('do not turn a reference to the site root into a reference to this page', () => {
+    // The failure that made this file's opening sentence false a second time.
+    // `/assets/index-abc.js` is *this* deployment's file asked for from the
+    // origin: a page at `https://site/leela/` sends the browser to
+    // `https://site/assets/index-abc.js`. The old reader accepted the leading
+    // slash and then stripped it, so the checker fetched it back under
+    // `https://site/leela/` — the one URL the browser was never going to ask
+    // for — and reported 200. It is not one of the page's own assets.
+    expect(assetsIn(GAME(['/assets/index-abc.js']))).toEqual([]);
+    expect(assetProblems(GAME(['/assets/index-abc.js']))).toEqual(['/assets/index-abc.js']);
+
+    // And it is not confused with the two references that are fine.
+    expect(assetProblems(GAME(['./assets/index-ok.js']))).toEqual([]);
   });
 
   it('are every one of them fetched', async () => {
@@ -139,6 +175,33 @@ describe('the assets the deployed page asks for', () => {
     expect(results).toHaveLength(7);
   });
 
+  it('fail a page that names none of its own files', async () => {
+    // Five hand-written checks read a title, an element id and a byte count,
+    // and a shell has all three. The asset checks are generated from the page,
+    // so a page naming no assets generates none of them, and the run passes on
+    // five green lines about a page that loads nothing at all.
+    const { fetcher } = siteWith([], good);
+
+    const results = await runChecks('https://site/', fetcher);
+
+    expect(allPassed(results)).toBe(false);
+    expect(describeResults(results)).toMatch(/names no asset of its own/);
+  });
+
+  it("do not fetch a root-absolute reference back under the page's own base", async () => {
+    // The whole of the defect in one assertion. `/assets/root-abc.js` from a
+    // page at `https://site/leela/` is a request to `https://site/`; a checker
+    // that strips the slash asks `https://site/leela/assets/root-abc.js`,
+    // which exists, and calls the deployment healthy.
+    const { fetcher, asked } = siteWith(['/assets/root-abc.js'], good);
+
+    const results = await runChecks('https://site/', fetcher);
+
+    expect(asked.some((path) => path.includes('root-abc.js'))).toBe(false);
+    expect(allPassed(results)).toBe(false);
+    expect(describeResults(results)).toMatch(/site root/);
+  });
+
   it('do not go looking for assets when the page itself did not come back', async () => {
     // Nothing to read the names out of, and the page's own failure is already
     // reported. A second failure about a file nobody named is noise.
@@ -155,4 +218,53 @@ describe('the assets the deployed page asks for', () => {
     expect(results).toHaveLength(1);
     expect(asked).toEqual(['https://site/']);
   });
+});
+
+/**
+ * The verdict over the whole grid, rather than over the cases we thought of.
+ *
+ * Six pages, built from every combination of *how many of its own files the
+ * page names* and *whether it also names one from the site root*. Nothing here
+ * lists a bad string: what is asserted is that the verdict is a function of
+ * those two facts, and of nothing else. A page passes exactly when it names at
+ * least one file it can reach and none it cannot — so the two kinds of nothing
+ * are told apart from each other and from a healthy page, whatever the build
+ * happens to have called the files.
+ *
+ * A page naming one root-absolute asset and one relative one is a real build:
+ * `base: '/'` rewrites both, but a stylesheet written by hand into `index.html`
+ * does not move. It fails here for the reference it cannot reach, not for the
+ * one it can.
+ */
+describe('what the page names decides the verdict', () => {
+  const OWN = ['./assets/one.js', './assets/two.css'];
+  const FROM_ROOT = '/assets/root-abc.js';
+
+  for (const own of [0, 1, 2]) {
+    for (const fromRoot of [0, 1]) {
+      const named = [...OWN.slice(0, own), ...(fromRoot === 1 ? [FROM_ROOT] : [])];
+      const reachable = own > 0;
+      const wellFormed = fromRoot === 0;
+
+      it(`names ${own} of its own and ${fromRoot} from the site root`, async () => {
+        const { fetcher, asked } = siteWith(named, good);
+
+        const results = await runChecks('https://site/', fetcher);
+        const report = describeResults(results);
+
+        expect(allPassed(results), report).toBe(reachable && wellFormed);
+
+        // Each bad kind is named, and only when it is the kind that is wrong.
+        expect(/names no asset of its own/.test(report), report).toBe(!reachable);
+        expect(/site root/.test(report), report).toBe(!wellFormed);
+
+        // Every file the page can reach is still fetched, and the one it
+        // cannot is never re-rooted into a URL that answers.
+        for (const asset of OWN.slice(0, own)) {
+          expect(asked, `${asset} was never asked for`).toContain(asset.replace('./', ''));
+        }
+        expect(asked.some((path) => path.includes('root-abc.js'))).toBe(false);
+      });
+    }
+  }
 });

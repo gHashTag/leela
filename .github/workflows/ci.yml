@@ -48,10 +48,6 @@ jobs:
             echo "::endgroup::"
           done
 
-  # Three fields in three passes were written everywhere and read nowhere -
-  # broadcast, rerollOnRepeat, needs_report - each looking complete in review.
-  # Reported rather than enforced: a field can be legitimately write-only, and a
-  # check that fails a build on a judgement call gets switched off.
   # The bot ships as an image, and a Dockerfile that is never built is a
   # description nobody has checked. Two defects were found in this one by hand
   # and both fail the build step: a frozen install missing two workspace
@@ -119,6 +115,22 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
+
+      # Three fields in three passes were written everywhere and read nowhere -
+      # broadcast, rerollOnRepeat, needs_report - each looking complete in
+      # review. Four findings fail this step: a field written and never read, a
+      # WRITE_ONLY excuse that no longer suppresses anything, an export with no
+      # caller anywhere, and an export its own application does not use.
+      #
+      # Reported and not enforced: the counts, a name declared in two packages -
+      # which the reader cannot tell apart without resolving imports - and a
+      # class member with no caller.
+      #
+      # This comment called the whole job report-only long after three of those
+      # gates went in, and it sat above bot-image rather than above the job it
+      # describes. A person reads the comment to decide whether a red job
+      # matters, so the retracted claim is described here and not repeated
+      # verbatim - grepping for it should find the code, not the claim.
       - run: node scripts/audit-unread.mjs
 
       # A flag turned on in eight packages is a flag that will be missing from

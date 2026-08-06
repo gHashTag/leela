@@ -17,14 +17,31 @@ function siteServing(pages: Record<string, string>): Fetcher {
   };
 }
 
-/** A site where every check passes. */
-const healthy = siteServing({
-  '': '<title>Leela</title><div id="board"></div><script src="telegram-web-app.js"></script>'.padEnd(600, ' '),
+/**
+ * A whole site where every check passes.
+ *
+ * The game's page names `./assets/index-ok.js`, and it did not always. It was
+ * a title, a board and the Telegram script — a page that loads no code of its
+ * own — and every check in this file passed on it, because the run expands the
+ * game's page into one check per asset and a page with no assets expands into
+ * nothing. So the fixture for *healthy* was a blank screen, and the assertion
+ * that the healthy site passes was also, silently, an assertion that a page
+ * naming none of its own files is acceptable. The asset is here so that
+ * `allPassed` on this fixture means what its name says.
+ */
+const PAGES: Record<string, string> = {
+  '': (
+    '<title>Leela</title><div id="board"></div><script src="telegram-web-app.js"></script>' +
+    '<script type="module" src="./assets/index-ok.js"></script>'
+  ).padEnd(600, ' '),
+  'assets/index-ok.js': 'console.log(1)'.padEnd(2000, ' '),
   'docs/': 'Leela <a href="ru/">Русский</a>'.padEnd(600, ' '),
   'docs/ru/plans/1.html': '<h1>1. Рождение (джанма)</h1>'.padEnd(2000, ' '),
   'docs/style.css': ':root { --measure: 34rem; }'.padEnd(600, ' '),
   'docs/en/legal/policy.html': '<h1>Privacy policy</h1>'.padEnd(900, ' '),
-});
+};
+
+const healthy = siteServing(PAGES);
 
 describe('a healthy deployment passes', () => {
   it('passes every check', async () => {
@@ -128,13 +145,14 @@ describe('runCheck', () => {
   });
 });
 
-/** The pages a fetcher serves, recovered so a test can vary one of them. */
+/**
+ * The pages a fetcher serves, so a test can vary one of them.
+ *
+ * It used to be a second copy of the same object literal, which meant a page
+ * added to the healthy site was a page missing from every broken-site test
+ * built on top of it. One source now; the parameter is kept because it is how
+ * the call sites read.
+ */
 function pagesOf(_fetcher: Fetcher): Record<string, string> {
-  return {
-    '': '<title>Leela</title><div id="board"></div><script src="telegram-web-app.js"></script>'.padEnd(600, ' '),
-    'docs/': 'Leela <a href="ru/">Русский</a>'.padEnd(600, ' '),
-    'docs/ru/plans/1.html': '<h1>1. Рождение (джанма)</h1>'.padEnd(2000, ' '),
-    'docs/style.css': ':root { --measure: 34rem; }'.padEnd(600, ' '),
-    'docs/en/legal/policy.html': '<h1>Privacy policy</h1>'.padEnd(900, ' '),
-  };
+  return { ...PAGES };
 }

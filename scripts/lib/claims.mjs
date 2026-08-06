@@ -10,11 +10,36 @@
  * suite, so the rules can be asserted without one.
  */
 
+// The workflow reader, borrowed rather than rebuilt. Two functions below ask
+// whether a line of a workflow will be executed, and that question already had
+// a careful answer next door; asking it a second way here is how they came to
+// disagree. See `packagesCheckedByCi`.
+import { liveStepsOf } from './runnable.mjs';
+
+/**
+ * Where a per-package count lives: one row of the Status table.
+ *
+ * `| `@leela/engine` | 202 | rules, four variants… |`
+ *
+ * Written as *prefix, name, digits* with the closing pipe as a lookahead, so
+ * the one description of the row serves the reader and the writer both. The
+ * alternative — a second regex beside `rewriteClaims` — is the defect this
+ * whole file exists to catch, one level up: two hand-kept descriptions of one
+ * format, drifting.
+ *
+ * A fresh regex per call. A module-level `/g` literal carries `lastIndex`
+ * between callers, and `matchAll` copies it, so a reader run after a partial
+ * scan would silently start in the middle of the table and report a short one.
+ */
+const row = () => /^(\|\s*`(@leela\/[\w-]+)`\s*\|\s*)(\d+)(?=\s*\|)/gm;
+
+/** Where the stated total lives: "1135 tests, run on every push". */
+const total = () => /^(\d[\d,]*)(?= tests, run on every push)/m;
+
 /** A claim the README makes about a package. */
 export const claimedCounts = (readme) => {
   const counts = new Map();
-  // `| `@leela/engine` | 202 | rules, four variants… |`
-  for (const [, name, count] of readme.matchAll(/^\|\s*`(@leela\/[\w-]+)`\s*\|\s*(\d+)\s*\|/gm)) {
+  for (const [, , name, count] of readme.matchAll(row())) {
     counts.set(name, Number(count));
   }
   return counts;
@@ -22,9 +47,53 @@ export const claimedCounts = (readme) => {
 
 /** The total the README states in prose: "1135 tests, run on every push". */
 export const claimedTotal = (readme) => {
-  const match = readme.match(/^(\d[\d,]*) tests, run on every push/m);
+  const match = readme.match(total());
   return match ? Number(match[1].replace(/,/g, '')) : null;
 };
+
+/**
+ * The same README with the numbers it states replaced by the numbers measured.
+ *
+ * The check above already knows the truth: it runs all ten suites and counts.
+ * Having computed it, the script then asked a person to retype six numbers into
+ * a table, and the build stayed red until somebody did. A check whose failure
+ * mode is *a human did not retype what the check computed* is red more often
+ * than the code is wrong, and a red that is usually not about the code is a red
+ * people learn to scroll past. So the answer is not a better reminder; it is
+ * not asserting a number the check is holding in its hand.
+ *
+ * Pure, and narrow on purpose. Rows and the total, nothing else: not the State
+ * column's prose, not the links in it, not a blank line, not the trailing
+ * newline. Everything outside the digits comes back byte for byte, because a
+ * writer that reflows a document is one nobody dares point at README.
+ *
+ * Two things it deliberately does **not** do, both of which stay a person's
+ * job and stay red until that person does them:
+ *
+ *   - add a row for a package the table has never heard of. The row carries a
+ *     sentence about what the package is for, and inventing that is writing,
+ *     not arithmetic.
+ *   - remove a row for a package that no longer runs anything.
+ *
+ * `checkCounts` reports both, and it should keep reporting both. What is
+ * automated here is only the part that was never a decision.
+ *
+ * @param readme The document, as written.
+ * @param actual `Map<name, count>` — what the suites just ran.
+ * @returns The document to write back. The total becomes the sum of the table
+ *          *as rewritten*, which is what `checkTotal` compares it against.
+ */
+export function rewriteClaims(readme, actual) {
+  const rows = readme.replace(row(), (whole, prefix, name) =>
+    actual.has(name) ? `${prefix}${actual.get(name)}` : whole,
+  );
+
+  const sum = [...claimedCounts(rows).values()].reduce((a, b) => a + b, 0);
+
+  // If the README states no total there is nothing to correct and nothing to
+  // invent — `checkTotal` says so in its own words, and says it after this ran.
+  return rows.replace(total(), String(sum));
+}
 
 /**
  * Everything wrong with the numbers.
@@ -110,7 +179,7 @@ export function checkManifests(copied, workspaces) {
 /**
  * Which workspaces the CI workflow names.
  *
- * The three jobs that matter — loose typecheck, strict typecheck, tests — each
+ * The three steps that matter — loose typecheck, strict typecheck, tests — each
  * iterate a `for pkg in …` list written by hand, because a shell loop cannot
  * ask the repository what its workspaces are. A tenth package added without
  * touching that line is a package CI silently never runs: not a red build, an
@@ -118,14 +187,148 @@ export function checkManifests(copied, workspaces) {
  *
  * Returns one set per loop, so a package added to two of the three is caught as
  * readily as one added to none.
+ *
+ * **It reads the workflow as YAML, and only inside a step that will run.** It
+ * used to read it as text: one `matchAll` for the loop header anywhere in the
+ * file. MEASURED on 2026-08-06, on this repository, with nothing edited on
+ * disk: against `.github/workflows/ci.yml` it returned three loops, and with
+ * every one of those three lines prefixed with `#` — that is, with all three
+ * loops commented out and CI typechecking and testing nothing at all — it
+ * returned three loops again, all ten workspaces in each, and
+ * `checkCiPackages` reported full coverage.
+ *
+ * That is worth spelling out, because of what this particular guard is for. A
+ * `for pkg in` line that no runner will execute is a line that described full
+ * coverage to the one check whose entire subject is *coverage nobody notices is
+ * absent*. Every other failure in this repository is at worst a red build; this
+ * one is a green one, and it reads identically to the day the list was right.
+ * The guard against silent absence was itself silently absent.
+ *
+ * `liveStepsOf` is the same reader `auditsRunByCi` uses one file over, where
+ * this class of mistake — a step behind a `#`, behind `if: false`, behind a
+ * job's `if: false`, or with `continue-on-error: true` — was closed for audits
+ * and left open here. It is imported rather than rewritten: a second
+ * description of "will this text be executed" is precisely the drift this file
+ * exists to catch, one level up.
  */
 export const packagesCheckedByCi = (workflow) => {
   const loops = [];
-  for (const [, list] of workflow.matchAll(/for pkg in ([^;\n]+); do/g)) {
-    loops.push(new Set(list.trim().split(/\s+/)));
+
+  for (const { run } of liveStepsOf(workflow)) {
+    if (run === null) continue;
+    for (const [, list] of run.matchAll(new RegExp(LOOP_HEADER, 'g'))) {
+      loops.push(namesIn(list));
+    }
   }
+
   return loops;
 };
+
+/**
+ * One `for pkg in …; do` header, and the list it iterates.
+ *
+ * A source string rather than a literal because two readers here want it: the
+ * one above, which wants only the list, and `packagesTestedByDeploy`, which
+ * wants the list *and the body* so it can tell a loop that runs tests from a
+ * loop that builds. Written twice they would drift, and this file's whole
+ * subject is two descriptions of one thing drifting apart.
+ */
+const LOOP_HEADER = String.raw`for pkg in ([^;\n]+); do`;
+
+/** The workspaces one loop header iterates. */
+const namesIn = (list) => new Set(list.trim().split(/\s+/));
+
+/** A loop body that runs a test runner, as opposed to building or copying. */
+const RUNS_TESTS = /\b(vitest|jest|playwright|bun\s+test|run\s+test)\b/;
+
+/**
+ * Which workspaces the deploy job's **test** loop runs.
+ *
+ * The same source string and the same walk as `packagesCheckedByCi` — the list
+ * is the same shape in both workflows, and a second parser for it would be the
+ * defect this file is about. What that reader cannot do is *choose* a loop: it
+ * returns one set per `for pkg in …` in every live step, and the rule its
+ * consumer applies is "every workspace in every loop". That rule is right for
+ * `ci.yml`, where every job is meant to cover the repository, and wrong for a
+ * deploy job, which legitimately handles a subset — the apps it publishes and
+ * what they are made of. Pointing `checkCiPackages` here would have cried wolf
+ * on correct code.
+ *
+ * So this narrows: the loops whose body runs a test runner. A build loop over
+ * the apps alone is not asked to cover the graph.
+ *
+ * It shares the other reader's blindness and its cure both. It used to match the
+ * loop against the raw file, so it reported one live test loop in `pages.yml`
+ * whether or not the step holding it existed — MEASURED on 2026-08-06 by
+ * commenting the loop out and watching the count stay at one. A deploy job that
+ * tests nothing must not read as a deploy job that tests everything it ships.
+ *
+ * If a rewrite makes the test loop unrecognisable, this returns nothing and
+ * `checkDeployTests` says so out loud. An unrecognised loop must not read as a
+ * covered one — that is the failure this pass exists to close, one level up.
+ */
+export const packagesTestedByDeploy = (workflow) => {
+  const loops = [];
+  const block = new RegExp(`${LOOP_HEADER}([\\s\\S]*?)\\bdone\\b`, 'g');
+
+  for (const { run } of liveStepsOf(workflow)) {
+    if (run === null) continue;
+    for (const [, list, body] of run.matchAll(block)) {
+      if (RUNS_TESTS.test(body)) loops.push(namesIn(list));
+    }
+  }
+
+  return loops;
+};
+
+/**
+ * What the deploy job tests, against what the deployed apps are made of.
+ *
+ * `pages.yml` states its dependencies **twice**, five lines apart: once in
+ * `paths:`, which decides whether a push deploys at all, and once in a
+ * `for pkg in …` loop, which decides what is tested before it does. Only the
+ * first was ever asked whether it agreed with the dependency graph —
+ * `checkDeployPaths` has read it since the pass that added `packages/journal`
+ * to it, and the loop five lines below still iterated the four it had before.
+ * So the shared file format both surfaces read and write could go red and
+ * deploy green, and the file that knew the package mattered was the same file
+ * that skipped it.
+ *
+ * The comparison is against `workspacesNeededBy(deployed, …)` rather than
+ * against every workspace, for the reason spelled out on
+ * `packagesTestedByDeploy`: the bot and the phone app are not in this artifact
+ * and demanding them here would be a check nobody could satisfy.
+ *
+ * A loop entry the graph does not make necessary is **not** reported, matching
+ * `checkDeployPaths` one function up: testing more than is shipped costs a
+ * minute, and shipping something untested costs a player. Only the gap is a
+ * defect. Whether an entry names a workspace that exists at all is
+ * `checkCiPackages`' question, and it asks it of the workflow that iterates
+ * everything.
+ *
+ * @param loops  One set per test loop, from `packagesTestedByDeploy`.
+ * @param needed Every workspace a deployed app depends on, transitively.
+ */
+export function checkDeployTests(loops, needed) {
+  if (loops.length === 0) {
+    return [
+      'the deploy job runs no test loop at all: whatever it publishes reaches players unchecked',
+    ];
+  }
+
+  const problems = [];
+
+  for (const [index, named] of loops.entries()) {
+    for (const where of [...needed].sort()) {
+      if (named.has(where)) continue;
+      problems.push(
+        `${where}: a deployed app depends on it and test loop ${index + 1} of the deploy job does not run it — its suite can be red and the deploy still goes green`,
+      );
+    }
+  }
+
+  return problems;
+}
 
 /**
  * What the deploy job watches, against what the deployed apps are made of.
