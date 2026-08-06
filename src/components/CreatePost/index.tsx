@@ -9,7 +9,7 @@ import {
   useForm
 } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { Alert, StyleSheet, View } from 'react-native'
 import * as yup from 'yup'
 
 import { Button, Input, Space, Text } from '..'
@@ -52,6 +52,10 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
         .required(),
     [t]
   )
+
+  const showError = (message: string) => {
+    Alert.alert(t('error') || 'Error', message, [{ text: 'OK' }])
+  }
 
   const runAiStream = async (reportText: string, postData: any) => {
     const planText = t(`plan_${plan}.content`)
@@ -109,9 +113,14 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
         })
       }
 
+      methods.reset()
       navigate('TAB_BOTTOM_1')
     } catch (error) {
       captureException(error as Error, 'CreatePost: AI stream')
+      showError(
+        t('aiCommentFailed') ||
+          'Leela could not answer this report. You can try sending it again.'
+      )
     } finally {
       setIsStreaming(false)
     }
@@ -120,7 +129,6 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
   const handleSubmit: SubmitHandler<FieldValues> = async (data) => {
     try {
       setLoading(true)
-      methods.reset()
       startStepTimer()
       const createdPost = await PostStore.createPost({
         text: data.text,
@@ -134,11 +142,18 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
       if (createdPost?.id) {
         await runAiStream(data.text, createdPost)
       } else {
-        navigate('TAB_BOTTOM_1')
+        showError(
+          t('postCreateFailed') ||
+            'The report could not be created. Please try again.'
+        )
       }
     } catch (error) {
       captureException(error as Error, 'CreatePost: handleSubmit')
       setLoading(false)
+      showError(
+        t('postCreateFailed') ||
+          'The report could not be created. Please try again.'
+      )
     }
   }
 

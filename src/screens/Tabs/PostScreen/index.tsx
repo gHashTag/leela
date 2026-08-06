@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 import firestore from '@react-native-firebase/firestore'
 import { RouteProp } from '@react-navigation/native'
@@ -21,6 +21,7 @@ interface Ipost {
 
 export const PostScreen = observer(({}: Ipost) => {
   const [limit, setLimit] = useState(15)
+  const [refreshing, setRefreshing] = useState(false)
 
   const { t } = useTranslation()
   const isAdmin = OnlinePlayer.store.status === 'Admin'
@@ -37,7 +38,16 @@ export const PostScreen = observer(({}: Ipost) => {
           query = query.where('language', '==', lang)
         }
 
-        const subPosts = query.onSnapshot(PostStore.fetchPosts)
+        const subPosts = query.onSnapshot(
+          (snap) => {
+            PostStore.fetchPosts(snap)
+            setRefreshing(false)
+          },
+          (err) => {
+            captureException(err, 'PostScreen: subscription')
+            setRefreshing(false)
+          }
+        )
         return () => {
           subPosts()
         }
@@ -46,6 +56,11 @@ export const PostScreen = observer(({}: Ipost) => {
 
     fetchPosts()
   }, [limit, isAdmin])
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true)
+    setLimit((prev) => prev + 15)
+  }, [])
 
   const data = PostStore.store.posts
   const newLimit = () => {
@@ -60,6 +75,8 @@ export const PostScreen = observer(({}: Ipost) => {
   ) : (
     <FlatList
       removeClippedSubviews={false}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
       onScrollToIndexFailed={(error) =>
         captureException(error, 'PostScreen: Flatlist')
       }

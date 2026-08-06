@@ -526,5 +526,7 @@
   "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
   "authUnknownError": "Something went wrong. Please try again.",
   "leelaReflects": "Leela is reflecting…",
-  "leelaAnswer": "Leela's answer"
+  "leelaAnswer": "Leela's answer",
+  "aiCommentFailed": "Leela could not answer this report. You can try sending it again.",
+  "postCreateFailed": "The report could not be created. Please try again."
 }
