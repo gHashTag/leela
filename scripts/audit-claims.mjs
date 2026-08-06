@@ -39,6 +39,30 @@
  * trace, thrown away with the counts. See `lib/suites.mjs`.
  */
 
+/*
+ * KNOWN AND UNRESOLVED, 2026-08-06: this audit cannot be green in two places at
+ * once, and the numbers in README.md are the ones a STRANGER gets.
+ *
+ * `packages/content` runs 705 cases on the machine the donor repositories are
+ * cloned to (`/Users/playra/leela-src`) and 661 on a fresh clone, because
+ * `content.test.ts` parameterises over what it finds in that tree. CI has no
+ * donors, so CI is the stranger, and README states CI's numbers: content 661,
+ * total 3499.
+ *
+ * The consequence, stated rather than hidden: run this on a machine holding the
+ * donor clones and it reports `@leela/content: the table says 661, the suite
+ * runs 705`, and it is right to. Do NOT "fix" that by writing 705 — README is
+ * read by people who have just cloned, and 705 is false for every one of them,
+ * and turns CI red besides. `--write` on a donor machine will do exactly that,
+ * so do not run it there.
+ *
+ * The real repair is to make the count environment-independent: a suite whose
+ * number of cases depends on a directory outside the repository cannot be held
+ * to one published figure. Either the donor-driven cases collapse into a single
+ * case asserting the tree is absent, or this audit learns to exclude them.
+ * Until one of those lands, this paragraph is the whole of the guard, which is
+ * exactly the kind of thing this repository normally refuses to accept.
+ */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
