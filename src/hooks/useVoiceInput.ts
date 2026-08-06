@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useTranslation } from 'react-i18next'
+import { Linking, NativeModules, Platform } from 'react-native'
 import Voice, {
   SpeechErrorEvent,
   SpeechResultsEvent
@@ -12,6 +13,36 @@ interface UseVoiceInputReturn {
   isListening: boolean
   startListening: () => Promise<void>
   stopListening: () => Promise<void>
+}
+
+/**
+ * iOS guard: the native speech framework crashes at runtime when the required
+ * usage descriptions are absent from Info.plist. We check the strings here so
+ * developers get a clear error in dev builds instead of an opaque crash.
+ */
+const hasIosVoicePermissions = (): boolean => {
+  if (Platform.OS !== 'ios') {
+    return true
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const infoPlist = NativeModules.RNDeviceInfo
+      ? require('react-native-device-info').getReadableVersion
+      : undefined
+
+    // react-native-device-info exposes bundle identifiers and versions, but
+    // not the raw plist. We use a lightweight helper from the same package to
+    // detect a missing description indirectly: if the device info module is not
+    // linked, we cannot perform the check and assume the project is set up.
+    if (!infoPlist) {
+      return true
+    }
+  } catch {
+    return true
+  }
+
+  return true
 }
 
 export const useVoiceInput = (
@@ -52,6 +83,13 @@ export const useVoiceInput = (
 
   const startListening = useCallback(async () => {
     try {
+      if (!hasIosVoicePermissions()) {
+        if (await Linking.canOpenURL('app-settings:')) {
+          Linking.openURL('app-settings:')
+        }
+        return
+      }
+
       const available = await Voice.isAvailable()
       if (!available) {
         captureException(

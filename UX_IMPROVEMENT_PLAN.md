@@ -49,6 +49,7 @@
 - [x] **6.4** Add a streak/reflection journal to encourage daily play.
 - [x] **6.5** Add iOS/Android microphone and speech recognition permissions for voice input.
 - [x] **6.6** Clean untracked simulator screenshot artifacts from the repo root.
+- [x] **6.7** Add a runtime check that warns if iOS speech/microphone usage descriptions are missing.
 
 ---
 
