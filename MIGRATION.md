@@ -7729,6 +7729,35 @@ The subgraph is not ported. `leela-ai-4` is the newest of four iterations, and
 running it needs a deployed indexer — a deployment decision rather than a code
 one.
 
+**A prompt bounded by whoever called it, in the two fields the player writes.**
+`MAX_HISTORY_CHARS` in `packages/ai` records why that sentence matters: the
+history used to be clipped by count alone, so six messages of any length went in
+whole, and the note ends *"the prompt this package so carefully bounds was
+bounded by whatever the caller happened to be holding."* It lists what is
+clipped — the plan's text, a journey line, the intention.
+
+The report and the question were not on that list and were not clipped. Measured
+before anything changed: forty thousand characters of report made a prompt of
+forty-three thousand, and so did forty thousand characters of question, while the
+same flood as an *intention* added eight hundred and as a *journey* a hundred and
+seventy.
+
+Nothing shipped that way, and that is the finding rather than an excuse for it.
+The bot slices a report at `MAX_REPORT_CHARS` before it arrives and Telegram
+will not carry a message past four thousand and ninety-six — so both bounds
+belonged to callers, which is the thing the note argues against, and a second
+caller is a phone away. The failure it would produce is the quiet kind the note
+also names: a refused request comes back as the fallback sentence, so a
+companion that had stopped answering the longest conversations would look, from
+inside the game, exactly like one having a bad day.
+
+Both are clipped here now, with `trimToParagraph` rather than a slice, for the
+reason the history uses it: a cut at a paragraph or a sentence is still
+something somebody wrote. Held as the property rather than the two fields —
+**every input a caller supplies is one the package clips** — with each flooded
+in turn against a ceiling stated from this package's own constants, and a guard
+that each is carried at all when it fits.
+
 **The waiver shape again, in the list of files excused from being blanked.** The
 pass before found an audit passing on a defect because it read a written reason
 and never asked whether the reason was true. The same repository has another

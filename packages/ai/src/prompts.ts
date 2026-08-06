@@ -156,8 +156,8 @@ export const MAX_RETURN_CHARS = 600;
  * hundred — a validator, a file reader and a prompt, three jobs and one number,
  * agreeing until somebody changed one of them.
  */
-import { MAX_INTENTION_CHARS } from '@leela/journal';
-export { MAX_INTENTION_CHARS };
+import { MAX_INTENTION_CHARS, MAX_REPORT_CHARS } from '@leela/journal';
+export { MAX_INTENTION_CHARS, MAX_REPORT_CHARS };
 
 /** One line per entry, clipped, in the shape both summaries use. */
 function line(entry: JourneyEntry, language: Language): string {
@@ -592,8 +592,31 @@ export function reportPrompt(
   return [
     { role: 'system', content: systemPrompt(context) },
     ...recentHistory(history),
-    { role: 'user', content: text },
+    { role: 'user', content: asTyped(text) },
   ];
+}
+
+/**
+ * What a player typed, bounded here rather than wherever it came from.
+ *
+ * `MAX_HISTORY_CHARS` above ends *"the prompt this package so carefully bounds
+ * was bounded by whatever the caller happened to be holding"*, and lists what is
+ * clipped: the plan's text, a journey line, the intention. The two things the
+ * player **writes** were not on that list and were not clipped — measured, forty
+ * thousand characters of report produced forty-three thousand characters of
+ * prompt, while the same forty thousand as an intention added eight hundred.
+ *
+ * Nothing ships that way today: the bot slices a report at `MAX_REPORT_CHARS`
+ * before it gets here, and Telegram will not carry a message longer than four
+ * thousand and ninety-six. That is the point — both bounds belong to callers,
+ * and this package's own argument is that a prompt is bounded by the package.
+ * A second caller is a phone away.
+ *
+ * `trimToParagraph` rather than `slice`, for the reason the history uses it: a
+ * cut at a paragraph or a sentence is still something somebody wrote.
+ */
+function asTyped(text: string): string {
+  return text.length > MAX_REPORT_CHARS ? trimToParagraph(text, MAX_REPORT_CHARS) : text;
 }
 
 /** A question about the plan, rather than a report on it. */
@@ -612,7 +635,7 @@ export function questionPrompt(
   return [
     { role: 'system', content: systemPrompt(context) },
     ...recentHistory(history),
-    { role: 'user', content: text },
+    { role: 'user', content: asTyped(text) },
   ];
 }
 
