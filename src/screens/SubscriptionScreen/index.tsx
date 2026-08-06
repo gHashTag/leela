@@ -62,6 +62,20 @@ const SubscriptionScreen: React.FC = () => {
 
   const onPress = () => goBack()
 
+  const onWhyAmISeeingThis = () => {
+    Alert.alert(
+      t('subscriptionHelper.title'),
+      t('subscriptionHelper.message'),
+      [
+        { text: t('subscriptionHelper.close'), style: 'cancel' },
+        {
+          text: t('subscriptionHelper.restore'),
+          onPress: onAlreadyBought
+        }
+      ]
+    )
+  }
+
   const onAlreadyBought = async () => {
     try {
       if (restorePermissions) {
@@ -149,6 +163,13 @@ const SubscriptionScreen: React.FC = () => {
           title={t('alreadyBought')}
           onPress={onAlreadyBought}
         />
+        <Space height={12} />
+        <Text
+          h="h4"
+          textStyle={styles.helper}
+          title={t('subscriptionHelper.title')}
+          onPress={onWhyAmISeeingThis}
+        />
         <Space height={50} />
       </View>
     </View>
@@ -189,6 +210,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: gray,
     alignSelf: 'center',
+    textDecorationLine: 'underline'
+  },
+  helper: {
+    fontSize: ms(12, 0.6),
+    alignSelf: 'center',
+    textAlign: 'center',
+    color: gray,
     textDecorationLine: 'underline'
   },
   test: {

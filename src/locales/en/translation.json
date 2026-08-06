@@ -595,5 +595,11 @@
     "message": "If the game is helping your journey, a quick review means a lot.",
     "rate": "Rate Leela",
     "later": "Maybe later"
+  },
+  "subscriptionHelper": {
+    "title": "Why am I seeing this?",
+    "message": "Leela AI gives every player 2 free reports so you can experience the game. After that, a subscription keeps the AI guide, daily verses, and community features available and supports ongoing development.",
+    "restore": "Restore purchase",
+    "close": "Close"
   }
 }
