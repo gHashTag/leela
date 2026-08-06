@@ -1,6 +1,7 @@
 declare module '@env' {
   export const LEELA_ID: string
   export const OPEN_AI_KEY: string
+  export const ZAI_PLAN: string
   export const APPLE: string
   export const GOOGLE: string
   export const NFT_STORAGE_API_KEY: string
@@ -21,5 +22,6 @@ declare module '@env' {
   export const YANDEX_TRANSLATE_API_KEY: string
   export const EMAIL: string
   export const PASSWORD: string
+  export const STEP_ANYTIME: string
   export const RU_STORE: boolean
 }

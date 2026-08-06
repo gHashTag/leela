@@ -99,9 +99,13 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
             <Space height={10} />
             <Button
               title={t('done')}
-              onPress={methods.handleSubmit(onSubmit, (errors) =>
-                captureException(errors, 'ChangeIntention')
-              )}
+              // A form filled in wrongly is not a crash: each of these errors is
+              // already drawn under the field it belongs to, and reporting them
+              // put `[object Object]` on the screen and a validation object into
+              // Sentry every time somebody mistyped something.
+              onPress={methods.handleSubmit(onSubmit, (errors) => {
+                if (__DEV__) console.log('form refused', errors)
+              })}
             />
             <Space height={vs(50)} />
           </FormProvider>

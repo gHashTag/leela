@@ -6,6 +6,7 @@ import i18next from '../i18n'
 import { upStepOffline } from './helper'
 
 import { actionsDice } from './'
+import { storageAdapter } from './storageAdapter'
 import { navigate } from '../constants'
 import { HistoryT } from '../types/types'
 

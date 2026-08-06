@@ -376,5 +376,7 @@
     "title": "এক বছর",
     "description": "বারো মাসের জন্য অ্যাক্সেস"
   },
-  "free": "বিনামূল্যে অধিগমন"
+  "free": "বিনামূল্যে অধিগমন",
+  "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
+  "authUnknownError": "Something went wrong. Please try again."
 }

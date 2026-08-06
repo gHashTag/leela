@@ -1,14 +1,18 @@
-import { OPEN_AI_KEY } from '@env'
-import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  View
+} from 'react-native'
 import { Bubble, GiftedChat, IMessage } from 'react-native-gifted-chat'
 import { s } from 'react-native-size-matters'
 import { ButtonWithIcon, Header, Space } from '../../../components'
-import { brightTurquoise, onLeaveFeedback, trueBlue } from '../../../constants'
+import { brightTurquoise, captureException, onLeaveFeedback, trueBlue } from '../../../constants'
 import { DiceStore, actionsDice } from '../../../store'
 import { useRevenueCat } from '../../../providers/RevenueCatProvider'
+import { streamZaiChat } from '../../../utils/aiStream'
 
 const LEELA_AI = require('../../../../assets/defaultImage/leelaAI.jpg')
 
@@ -100,49 +104,112 @@ const ChatScreen: React.FC = () => {
         }
       ])
     )
-    const modelGPT = user.pro ? 'gpt-4-1106-preview' : 'gpt-4-1106-preview'
 
-    // Запрос к OpenAI API
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: modelGPT,
-        messages: apiMessages,
-        max_tokens: 800,
-        temperature: 0.1
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${OPEN_AI_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    )
+    const reasoningId = `reasoning-${Date.now()}`
+    const contentId = `content-${Date.now()}`
+    let finalAssistantContent = ''
 
-    setLoading(false)
+    const removeLoading = (messages: IMessage[]) =>
+      messages.filter((message) => message._id !== LOADING_MESSAGE_ID)
 
-    setMessages((previousMessages) =>
-      previousMessages.filter((message) => message._id !== LOADING_MESSAGE_ID)
-    )
-
-    const assistantReply = response.data.choices[0].message.content
-
-    const loadingMessageId = Date.now().toString()
-
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, [
+    try {
+      await streamZaiChat(
         {
-          _id: loadingMessageId,
-          text: assistantReply,
-          createdAt: new Date(),
-          user: {
-            _id: 2,
-            name: 'Assistant',
-            avatar: LEELA_AI
+          messages: apiMessages,
+          maxTokens: 4000,
+          temperature: 0.1,
+          thinking: { type: 'enabled' }
+        },
+        {
+          onReasoning: (chunk, fullReasoning) => {
+            setLoading(false)
+            setMessages((previousMessages) => {
+              const cleaned = removeLoading(previousMessages)
+              const reasoningMessage = cleaned.find(
+                (message) => message._id === reasoningId
+              )
+              if (!reasoningMessage) {
+                return GiftedChat.append(cleaned, [
+                  {
+                    _id: reasoningId,
+                    text: fullReasoning,
+                    createdAt: new Date(),
+                    user: {
+                      _id: 2,
+                      name: 'Assistant (thinking)',
+                      avatar: LEELA_AI
+                    }
+                  }
+                ])
+              }
+              return cleaned.map((message) =>
+                message._id === reasoningId
+                  ? { ...message, text: fullReasoning }
+                  : message
+              )
+            })
+          },
+          onContent: (chunk, fullContent) => {
+            setLoading(false)
+            finalAssistantContent = fullContent
+            setMessages((previousMessages) => {
+              const cleaned = removeLoading(previousMessages)
+              const contentMessage = cleaned.find(
+                (message) => message._id === contentId
+              )
+              if (!contentMessage) {
+                return GiftedChat.append(cleaned, [
+                  {
+                    _id: contentId,
+                    text: fullContent,
+                    createdAt: new Date(),
+                    user: {
+                      _id: 2,
+                      name: 'Assistant',
+                      avatar: LEELA_AI
+                    }
+                  }
+                ])
+              }
+              return cleaned.map((message) =>
+                message._id === contentId
+                  ? { ...message, text: fullContent }
+                  : message
+              )
+            })
+          },
+          onError: (error) => {
+            setLoading(false)
+            setMessages((previousMessages) =>
+              removeLoading(previousMessages)
+            )
+            captureException(error, 'ChatScreen: streamZaiChat')
           }
         }
-      ])
-    )
+      )
+    } catch (error) {
+      captureException(error as Error, 'ChatScreen: onSend')
+      Alert.alert(
+        t('error') || 'Error',
+        t('aiMessageFailed') ||
+          'Leela could not answer. Please try again.',
+        [{ text: 'OK' }]
+      )
+    } finally {
+      setLoading(false)
+      setMessages((previousMessages) =>
+        removeLoading(previousMessages)
+      )
+    }
+
+    if (finalAssistantContent) {
+      updateContextSummary({
+        _id: 2,
+        text: finalAssistantContent,
+        createdAt: new Date(),
+        user: { _id: 2, name: 'Assistant', avatar: LEELA_AI }
+      } as IMessage)
+    }
   }
 
   const onPressRate = () => {

@@ -73,12 +73,26 @@ export const useSignIn = () => {
             case 'auth/network-request-failed':
               setError(t('networkRequestFailed'))
               break
+            // The build cannot reach Firebase at all: no
+            // `GoogleService-Info.plist`, a key from another project, or a
+            // provider nobody enabled in the console. It is not the player's
+            // doing and there is nothing for them to retype.
+            case 'auth/invalid-api-key':
+            case 'auth/app-not-authorized':
+            case 'auth/operation-not-allowed':
+            case 'auth/configuration-not-found':
+            case 'auth/internal-error':
+              captureException(err, 'auth-not-configured')
+              setError(t('authNotConfigured'))
+              break
             case 'auth/too-many-requests':
               setError(t('manyRequests'))
               break
             default:
-              captureException(err.message, 'onSubmit')
-              setError(err.code)
+              captureException(err, 'onSubmit')
+              // `auth/too-many-requests` is not a sentence anybody reads. The
+              // code goes to the log; the player gets words.
+              setError(t('authUnknownError'))
               break
           }
         })

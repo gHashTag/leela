@@ -55,22 +55,46 @@ export const RevenueCatProvider = ({ children }: any) => {
 
   useEffect(() => {
     const init = async () => {
-      if (Platform.OS === 'android') {
-        Purchases.configure({ apiKey: APIKeys.google })
+      const apiKey = Platform.OS === 'android' ? APIKeys.google : APIKeys.apple
+      /**
+       * RevenueCat's own prefix for a public SDK key on this platform.
+       *
+       * The test here used to be *"does it start with the placeholder text"* —
+       * `appl_...` and `googl_...`, the two strings the example `.env` carries
+       * — so any other value at all went straight into `Purchases.configure`.
+       * A thirteen-character string meant for something else got through, and
+       * the first offering fetch came back **Invalid API Key** as a red console
+       * error on the game screen. (`googl_` was a typo besides: the prefix is
+       * `goog_`.)
+       *
+       * Asking for the shape instead means a key that cannot work is the same
+       * as no key: the branch below says so once and unblocks the offline
+       * board, which is what it was written to do.
+       */
+      const expected = Platform.OS === 'android' ? 'goog_' : 'appl_'
+      if (apiKey?.startsWith(expected)) {
+        if (Platform.OS === 'android') {
+          Purchases.configure({ apiKey: APIKeys.google })
+        } else {
+          Purchases.configure({ apiKey: APIKeys.apple })
+        }
+
+        // Use more logging during debug if want!
+        Purchases.setLogLevel(LOG_LEVEL.DEBUG)
+
+        // Listen for customer updates
+        Purchases.addCustomerInfoUpdateListener(async (info) => {
+          updateCustomerInformation(info)
+        })
+
+        // Load all offerings and the user object with entitlements
+        await loadOfferings()
       } else {
-        Purchases.configure({ apiKey: APIKeys.apple })
+        console.log('[leela] RevenueCat not configured — running without purchases')
+        // When no RevenueCat key is present (dev / revival build), unblock the
+        // offline board so the dice and AI commentary can be tested.
+        actionSubscribeStore.unBlock()
       }
-
-      // Use more logging during debug if want!
-      Purchases.setLogLevel(LOG_LEVEL.DEBUG)
-
-      // Listen for customer updates
-      Purchases.addCustomerInfoUpdateListener(async (info) => {
-        updateCustomerInformation(info)
-      })
-
-      // Load all offerings and the user object with entitlements
-      await loadOfferings()
     }
     init()
   }, [])

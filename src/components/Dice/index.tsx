@@ -1,10 +1,19 @@
 import React, { useRef, useState } from 'react'
 
 import { observer } from 'mobx-react'
-import { Animated, Easing, Pressable, StyleSheet } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import {
+  Animated,
+  Easing,
+  Pressable,
+  StyleSheet,
+  ToastAndroid,
+  View
+} from 'react-native'
 
 import { vs } from 'react-native-size-matters'
 
+import { Text } from '../../components'
 import {
   DiceStore,
   OfflinePlayers,
@@ -37,6 +46,7 @@ type DiceT = {
 export const Dice = observer(({ disabled }: DiceT) => {
   const [canRoll, setCanRoll] = useState<boolean>(true)
   const spinValue = useRef(new Animated.Value(0)).current
+  const { t } = useTranslation()
 
   const handleSpin = (value: number) => {
     const duration = (value / 2) * 500
@@ -61,8 +71,26 @@ export const Dice = observer(({ disabled }: DiceT) => {
     outputRange: ['0deg', '360deg']
   })
 
+  const showLockedMessage = () => {
+    const message = OnlinePlayer.store.isReported
+      ? t('online-part.stepLocked', {
+          time: OnlinePlayer.store.timeText
+        })
+      : t('online-part.notReported')
+    if (ToastAndroid) {
+      ToastAndroid.showWithGravityAndOffset(
+        message,
+        ToastAndroid.LONG,
+        ToastAndroid.BOTTOM,
+        25,
+        50
+      )
+    }
+  }
+
   const rollDice = (): void => {
     if (isOpacity) {
+      showLockedMessage()
       return
     }
     setCanRoll(false)
@@ -71,26 +99,42 @@ export const Dice = observer(({ disabled }: DiceT) => {
   }
 
   return (
-    <Pressable
-      onPress={() => {
-        canRoll && rollDice()
-      }}
-      style={[styles.diceContainer, isOpacity && styles.opacityCube]}
-      disabled={disabled}
-    >
-      <Animated.Image
-        style={[styles.image, { transform: [{ rotate: spin }] }]}
-        source={getImage(DiceStore.count)}
-      />
-    </Pressable>
+    <View style={styles.container}>
+      <Pressable
+        onPress={() => {
+          canRoll && rollDice()
+        }}
+        style={[styles.diceContainer, isOpacity && styles.opacityCube]}
+        disabled={disabled}
+      >
+        <Animated.Image
+          style={[styles.image, { transform: [{ rotate: spin }] }]}
+          source={getImage(DiceStore.count)}
+        />
+      </Pressable>
+      {isOpacity && (
+        <Text
+          h="h6"
+          title={
+            OnlinePlayer.store.isReported
+              ? t('online-part.waitForNextStep')
+              : t('online-part.notReported')
+          }
+          textStyle={styles.lockedText}
+        />
+      )}
+    </View>
   )
 })
 
 const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    marginVertical: vs(12)
+  },
   diceContainer: {
     alignItems: 'center',
-    alignSelf: 'center',
-    marginVertical: vs(12)
+    alignSelf: 'center'
   },
   image: {
     height: vs(65),
@@ -98,5 +142,10 @@ const styles = StyleSheet.create({
   },
   opacityCube: {
     opacity: 0.4
+  },
+  lockedText: {
+    marginTop: vs(6),
+    textAlign: 'center',
+    opacity: 0.7
   }
 })

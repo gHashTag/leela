@@ -14,6 +14,7 @@ import {
 } from '../../'
 import {
   brightTurquoise,
+  captureException,
   fuchsia,
   handleCommentAi,
   lightGray,
@@ -69,15 +70,19 @@ export const PostCard: React.FC<postCardI> = memo(
       const planText = t(`plan_${item?.plan}.content`)
       await i18n.changeLanguage(currentLanguage)
 
-      await handleCommentAi({
-        curItem,
-        systemMessage,
-        message: text as string,
-        planText: planText,
-        pro: user.pro
-      })
-
-      setIsLoading(false)
+      try {
+        await handleCommentAi({
+          curItem,
+          systemMessage,
+          message: text as string,
+          planText: planText,
+          pro: user.pro
+        })
+      } catch (error) {
+        captureException(error, 'PostCard: AI comment')
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     const fullName = item ? PostStore.getOwnerName(item.ownerId, true) : ''

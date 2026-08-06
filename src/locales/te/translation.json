@@ -521,5 +521,7 @@
     "title": "ఒక సంవత్సరం",
     "description": "పదకొండి నెలల యాక్సెస్"
   },
-  "free": "ఉచిత ప్రాప్తి"
+  "free": "ఉచిత ప్రాప్తి",
+  "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
+  "authUnknownError": "Something went wrong. Please try again."
 }

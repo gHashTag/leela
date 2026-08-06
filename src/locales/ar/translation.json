@@ -522,5 +522,7 @@
     "title": "سنة واحدة",
     "description": "الوصول لمدة اثنتا عشرة شهرًا"
   },
-  "free": "مجاني"
+  "free": "مجاني",
+  "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
+  "authUnknownError": "Something went wrong. Please try again."
 }

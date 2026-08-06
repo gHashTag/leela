@@ -212,7 +212,7 @@ export const PostStore = {
       }
     }
   },
-  fetchPosts: async (querySnap: fetchT) => {
+  fetchPosts: async (querySnap: fetchT, language?: string) => {
     PostStore.store.loadPosts = true
     const uid = getUid()
     const isAdmin = OnlinePlayer.store.status === 'Admin'
@@ -231,6 +231,7 @@ export const PostStore = {
       })
       .filter((a) => a !== undefined)
       .filter((a) => (isAdmin ? true : a?.ownerId === uid ? true : a?.accept))
+      .filter((a) => (language ? a?.language === language : true))
     if (querySnap) {
       PostStore.store.posts = res.sort((a, b) => b.createTime - a.createTime)
     }

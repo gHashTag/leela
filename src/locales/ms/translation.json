@@ -524,5 +524,7 @@
     "title": "Setahun",
     "description": "Akses selama dua belas bulan"
   },
-  "free": "Akses percuma"
+  "free": "Akses percuma",
+  "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
+  "authUnknownError": "Something went wrong. Please try again."
 }

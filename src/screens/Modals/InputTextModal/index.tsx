@@ -15,7 +15,7 @@ import { s, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
 
 import { Input, KeyboardContainer, Text } from '../../../components'
-import { W, secondary } from '../../../constants'
+import { W, captureException, secondary } from '../../../constants'
 import { RootStackParamList } from '../../../types/types'
 
 interface InputTextT {
@@ -40,15 +40,35 @@ export function InputTextModal({ navigation, route }: InputTextT) {
   })
   const [length, setLength] = useState(0)
 
+  // The timer is cleared when this goes away, and that is the whole bug.
+  //
+  // `setFocus` reaches into react-hook-form's `_fields[name]._f`, so focusing a
+  // field that is no longer registered throws `Cannot read property '_f' of
+  // undefined` — uncaught, red screen, and the comment box is gone. Nothing
+  // cleared this timer, and the input closes itself on blur, so one hundred
+  // milliseconds was long enough for the field to disappear before the focus
+  // arrived.
   useEffect(() => {
-    setTimeout(() => methods.setFocus('text'), 100)
+    const focusing = setTimeout(() => methods.setFocus('text'), 100)
+    return () => clearTimeout(focusing)
   }, [methods])
   const {
     colors: { background, text }
   } = useTheme()
 
   const handleSubmit: SubmitHandler<FieldValues> = async (data) => {
-    onSubmit && onSubmit(data.text)
+    try {
+      if (onSubmit) {
+        await onSubmit(data.text)
+      }
+    } catch (error) {
+      if (onError) {
+        onError(error)
+      } else {
+        captureException(error, 'InputTextModal: submit')
+      }
+      return
+    }
     navigation.goBack()
     methods.reset()
   }

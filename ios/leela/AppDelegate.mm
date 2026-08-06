@@ -58,7 +58,31 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
   } else {
     rootView.backgroundColor = [UIColor whiteColor];
   }
-  [FIRApp configure];
+  // Firebase, only when there is something to configure it with.
+  //
+  // `[FIRApp configure]` raises an uncaught Objective-C exception when
+  // `GoogleService-Info.plist` is missing or carries a key from nowhere, and
+  // Firebase Installations raises a second one asynchronously a moment later —
+  // so catching around this call is not enough, and the app died at launch
+  // before React Native ever loaded. Not a message, not a blank screen: the
+  // game vanished, which on a player's phone is indistinguishable from a crash.
+  //
+  // That file is in `.gitignore`, so every fresh clone of this repository built
+  // an app that could not start. Reading it first is what lets the app run and
+  // the sign-in screens say `authNotConfigured` instead.
+  NSString *firebasePlist = [[NSBundle mainBundle] pathForResource:@"GoogleService-Info" ofType:@"plist"];
+  NSDictionary *firebaseOptions = firebasePlist ? [NSDictionary dictionaryWithContentsOfFile:firebasePlist] : nil;
+  NSString *firebaseKey = firebaseOptions[@"API_KEY"];
+  // Firebase's own rule, stated in the exception it throws: 39 characters,
+  // beginning with `A`.
+  BOOL firebaseUsable = firebaseKey.length == 39 && [firebaseKey hasPrefix:@"A"];
+
+  if (firebaseUsable) {
+    [FIRApp configure];
+  } else {
+    NSLog(@"[leela] GoogleService-Info.plist is missing or its API key is not a real one — starting without Firebase; sign-in will be unavailable");
+  }
+
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   UIViewController *rootViewController = [UIViewController new];
   rootViewController.view = rootView;

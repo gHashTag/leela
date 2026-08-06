@@ -29,7 +29,11 @@ import {
 export const SignUp = (): ReactElement => {
   const { loading, error, methods, onSubmit } = useSignUp()
   const onError: SubmitErrorHandler<FieldValues> = (errors) => {
-    captureException(errors, 'SignUp')
+    // A form filled in wrongly is not a crash: every one of these errors
+    // is already drawn under the field it belongs to, and sending them
+    // here put `[object Object]` on the screen and a validation object
+    // into Sentry every time somebody mistyped an e-mail.
+    if (__DEV__) console.log('form refused', errors)
   }
   const { t } = useTranslation()
 

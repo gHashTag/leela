@@ -46,10 +46,19 @@ export function CreateComment({
     resolver: yupResolver(schema)
   })
   const [length, setLength] = useState(0)
+  // The timer is cleared when this goes away, and that is the whole bug.
+  //
+  // `setFocus` reaches into react-hook-form's `_fields[name]._f`, so focusing a
+  // field that is no longer registered throws `Cannot read property '_f' of
+  // undefined` — uncaught, red screen, and the comment box is gone. Nothing
+  // cleared this timer, and the input closes itself on blur, so two hundred
+  // milliseconds was long enough for the field to disappear before the focus
+  // arrived.
   useEffect(() => {
-    if (visible) {
-      setTimeout(() => methods.setFocus('text'), 200)
-    }
+    if (!visible) return
+
+    const focusing = setTimeout(() => methods.setFocus('text'), 200)
+    return () => clearTimeout(focusing)
   }, [visible, methods])
   const handleSubmit: SubmitHandler<FieldValues> = async (data) => {
     methods.reset()

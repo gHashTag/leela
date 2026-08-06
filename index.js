@@ -21,8 +21,12 @@ try {
 
 setCategories()
 
-messaging().setBackgroundMessageHandler(displayNotification)
-messaging().onMessage(displayNotification)
+try {
+  messaging().setBackgroundMessageHandler(displayNotification)
+  messaging().onMessage(displayNotification)
+} catch (error) {
+  console.log('[leela] Firebase messaging unavailable in this build:', error.message)
+}
 
 notifee.onBackgroundEvent((e) => notificationActionsHandler(e, true))
 notifee.onForegroundEvent((e) => notificationActionsHandler(e, false))

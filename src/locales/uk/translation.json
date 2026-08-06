@@ -521,5 +521,7 @@
     "title": "Один рік",
     "description": "Доступ на дванадцять місяців"
   },
-  "free": "Безкоштовний доступ"
+  "free": "Безкоштовний доступ",
+  "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
+  "authUnknownError": "Something went wrong. Please try again."
 }

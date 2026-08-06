@@ -409,6 +409,8 @@
     "noPosts": "No posts yet. Make a move so you can post",
     "notReported": "Write a report to the plan to continue",
     "makeReport": "To continue the game - write a report",
+    "waitForNextStep": "Wait for the next step",
+    "stepLocked": "Next step available in {{time}}",
     "report": "Report",
     "reports": "Reports on plans",
     "youBanned": "You have been banned",
@@ -416,7 +418,9 @@
     "banText": "We found out that you are violating the \"Rules of posts and comments\" and for this reason we decided to ban you.",
     "review": "On moderation...",
     "createIntention": "Create intention",
-    "updateIntention": "Update intention"
+    "updateIntention": "Update intention",
+    "postsLoadError": "Could not load reports. Please check your connection and try again.",
+    "retry": "Retry"
   },
   "timestamps": {
     "yday": "yesterday",
@@ -528,5 +532,7 @@
   "leelaReflects": "Leela is reflecting…",
   "leelaAnswer": "Leela's answer",
   "aiCommentFailed": "Leela could not answer this report. You can try sending it again.",
-  "postCreateFailed": "The report could not be created. Please try again."
+  "postCreateFailed": "The report could not be created. Please try again.",
+  "aiMessageFailed": "Leela could not answer. Please try again.",
+  "error": "Error"
 }

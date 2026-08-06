@@ -3,6 +3,7 @@ import React, { memo } from 'react'
 import { useTheme } from '@react-navigation/native'
 import {
   ImageBackground,
+  ImageSourcePropType,
   ImageStyle,
   Pressable,
   StyleProp,
@@ -18,7 +19,7 @@ import { orange, primary } from '../../constants'
 interface PlanAvatarI {
   plan: number
   size: 'xLarge' | 'large' | 'medium' | 'small'
-  avaUrl?: string
+  avaUrl?: string | number
   isAccept?: boolean
   aditionalStyle?: StyleProp<ImageStyle>
   onPress?: () => void
@@ -38,10 +39,14 @@ export const PlanAvatar = memo(function ({
   const textPlan = plan < 10 ? `0${plan}` : `${plan}`
   const fontSize = size === 'small' ? s(6) : s(10)
   const badgeS = size === 'small' || size === 'medium' ? smallBadge : bigBadge
+
+  const imageSource: ImageSourcePropType =
+    typeof avaUrl === 'number' ? avaUrl : { uri: avaUrl }
+
   return (
     <Pressable onPress={onPress}>
       <ImageBackground
-        source={{ uri: avaUrl }}
+        source={imageSource}
         style={[styles[size], aditionalStyle]}
         imageStyle={container}
       >

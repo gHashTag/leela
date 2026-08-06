@@ -25,7 +25,7 @@ interface GemT {
 interface dataI {
   data: number
   id: number
-  ava?: string
+  ava?: string | number
   ownerId?: string
 }
 
@@ -62,9 +62,13 @@ const Gem = observer(({ plan, index }: GemT) => {
         })
       ]
 
-  const source = (id: number, ava?: string): ImageSourcePropType => {
+  const source = (id: number, ava?: string | number): ImageSourcePropType => {
+    if (typeof ava === 'number') {
+      return ava
+    }
+
     let uri
-    if (ava !== undefined) {
+    if (ava !== undefined && ava !== '') {
       uri = ava
     } else {
       uri =
@@ -101,7 +105,13 @@ const Gem = observer(({ plan, index }: GemT) => {
             </GestureDetector>
           )
         } else {
-          return <></>
+          // `null`, not `<></>`. An empty fragment is still a child of the
+          // list, and it carried no `key` — which is the whole of *"Each child
+          // in a list should have a unique key prop"* on the game screen, from
+          // an `observer` component, seventy-two boards' worth of squares at a
+          // time. React drops a `null` child outright, so there is nothing left
+          // to key.
+          return null
         }
       })}
     </View>

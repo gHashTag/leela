@@ -524,5 +524,7 @@
     "title": "Bir yıl",
     "description": "On iki aylık erişim"
   },
-  "free": "Ücretsiz erişim"
+  "free": "Ücretsiz erişim",
+  "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
+  "authUnknownError": "Something went wrong. Please try again."
 }

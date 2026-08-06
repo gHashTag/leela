@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-native-image-crop-picker/ios/src/ImageCropPicker.m b/node_modules/react-native-image-crop-picker/ios/src/ImageCropPicker.m
+index 9f20973..203bc03 100644
+--- a/node_modules/react-native-image-crop-picker/ios/src/ImageCropPicker.m
++++ b/node_modules/react-native-image-crop-picker/ios/src/ImageCropPicker.m
+@@ -887,7 +887,7 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
+             CGFloat heightRatio = [[self.options objectForKey:@"height"] floatValue];
+             if (widthRatio > 0 && heightRatio > 0){
+                 CGSize aspectRatio = CGSizeMake(widthRatio, heightRatio);
+-                cropVC.customAspectRatio = aspectRatio;
++                [cropVC setAspectRatioPreset:aspectRatio animated:NO];
+ 
+             }
+             cropVC.aspectRatioLockEnabled = ![[self.options objectForKey:@"freeStyleCropEnabled"] boolValue];

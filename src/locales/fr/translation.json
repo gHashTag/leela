@@ -522,5 +522,7 @@
     "title": "Un an",
     "description": "Accès pendant douze mois"
   },
-  "free": "Accès gratuit"
+  "free": "Accès gratuit",
+  "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
+  "authUnknownError": "Something went wrong. Please try again."
 }

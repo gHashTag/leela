@@ -1,40 +1,48 @@
 /* eslint-disable react-native/no-unused-styles */
 import React, { memo } from 'react'
 
-import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
+import {
+  ImageSourcePropType,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle
+} from 'react-native'
 import FastImage from 'react-native-fast-image'
 import { s } from 'react-native-size-matters'
 import Spinner from 'react-native-spinkit'
 
 import { secondary } from '../../constants'
 import { Pressable } from '../Pressable'
-import { Image } from 'react-native'
 
 type sizeType = 'xLarge' | 'large' | 'medium' | 'small'
+
+const defaultAvatar = require('./pickaface.png')
 
 interface AvatarT {
   loading: boolean
   size?: sizeType
-  uri?: string
+  uri?: string | number
   viewStyle?: StyleProp<ViewStyle>
-  localImageSource?: StyleProp<Image>
+  localImageSource?: ImageSourcePropType
 }
 export const Avatar = memo<AvatarT>(
   ({ loading, uri, localImageSource, size = 'large', viewStyle }) => {
+    const numericUri = typeof uri === 'number' ? uri : undefined
+    const stringUri = typeof uri === 'string' ? uri : undefined
+
+    const source: ImageSourcePropType = numericUri
+      ? numericUri
+      : stringUri
+      ? { uri: stringUri, priority: FastImage.priority.high }
+      : localImageSource || defaultAvatar
+
     return (
       <View style={[styles.container, viewStyle]} testID="avatar">
         {loading ? (
           <Spinner size={styles[size].height} type="Pulse" color={secondary} />
-        ) : !uri ? (
-          <FastImage
-            style={styles[size]}
-            source={localImageSource || require('./pickaface.png')}
-          />
         ) : (
-          <FastImage
-            style={styles[size]}
-            source={{ uri, priority: FastImage.priority.high }}
-          />
+          <FastImage style={styles[size]} source={source} />
         )}
       </View>
     )

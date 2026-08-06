@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
-import firestore from '@react-native-firebase/firestore'
+import firestore, {
+  FirebaseFirestoreTypes
+} from '@react-native-firebase/firestore'
 import { RouteProp } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
@@ -8,54 +10,88 @@ import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
-import { Header, PostCard, Space, Spin, Text } from '../../../components'
+import { Button, Header, PostCard, Space, Spin, Text } from '../../../components'
 import { captureException } from '../../../constants'
+import { lang } from '../../../i18n'
 import { DiceStore, OnlinePlayer, PostStore } from '../../../store'
 import { RootTabParamList } from '../../../types/types'
-import { lang } from '../../../i18n'
 
 interface Ipost {
   navigation: NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_1'>
   route: RouteProp<RootTabParamList, 'TAB_BOTTOM_1'>
 }
 
+const isIndexError = (error: FirebaseFirestoreTypes.NativeError) => {
+  if (!error) return false
+  const code = (error as any)?.code
+  const message = (error as Error)?.message || ''
+  return (
+    code === 'firestore/failed-precondition' ||
+    message.toLowerCase().includes('requires an index')
+  )
+}
+
 export const PostScreen = observer(({}: Ipost) => {
   const [limit, setLimit] = useState(15)
   const [refreshing, setRefreshing] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const [retryKey, setRetryKey] = useState(0)
 
   const { t } = useTranslation()
   const isAdmin = OnlinePlayer.store.status === 'Admin'
+  const unsubscribeRef = useRef<(() => void) | null>(null)
+
+  const onRetry = useCallback(() => {
+    setLoadError('')
+    setRetryKey((k) => k + 1)
+  }, [])
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      if (DiceStore.online) {
-        let query = firestore()
-          .collection('Posts')
-          .orderBy('createTime', 'desc')
-          .limit(limit)
+    if (!DiceStore.online) return
 
-        if (!isAdmin) {
-          query = query.where('language', '==', lang)
-        }
+    const buildQuery = (withLanguageFilter: boolean) => {
+      let query = firestore()
+        .collection('Posts')
+        .orderBy('createTime', 'desc')
+        .limit(limit)
 
-        const subPosts = query.onSnapshot(
-          (snap) => {
-            PostStore.fetchPosts(snap)
-            setRefreshing(false)
-          },
-          (err) => {
-            captureException(err, 'PostScreen: subscription')
-            setRefreshing(false)
-          }
-        )
-        return () => {
-          subPosts()
-        }
+      if (!isAdmin && withLanguageFilter) {
+        query = query.where('language', '==', lang)
       }
+      return query
     }
 
-    fetchPosts()
-  }, [limit, isAdmin])
+    const subscribe = (withLanguageFilter: boolean) => {
+      return buildQuery(withLanguageFilter).onSnapshot(
+        (snap) => {
+          PostStore.fetchPosts(snap, withLanguageFilter ? undefined : lang)
+          setLoadError('')
+          setRefreshing(false)
+        },
+        (err) => {
+          if (withLanguageFilter && isIndexError(err)) {
+            // Firestore lacks the composite index for language + createTime.
+            // Tear down the failing listener and fall back to an unfiltered
+            // query, then apply the language filter in memory so the feed
+            // still works while the index is being created.
+            unsubscribeRef.current?.()
+            unsubscribeRef.current = subscribe(false)
+            return
+          }
+          captureException(err, 'PostScreen: subscription')
+          setLoadError(t('online-part.postsLoadError'))
+          setRefreshing(false)
+        }
+      )
+    }
+
+    unsubscribeRef.current = subscribe(true)
+
+    return () => {
+      unsubscribeRef.current?.()
+      unsubscribeRef.current = null
+    }
+  }, [limit, isAdmin, retryKey])
 
   const onRefresh = useCallback(() => {
     setRefreshing(true)
@@ -68,7 +104,7 @@ export const PostScreen = observer(({}: Ipost) => {
       setLimit((pr) => pr + 15)
     }
   }
-  const load = PostStore.store.loadPosts && data.length === 0
+  const load = PostStore.store.loadPosts && data.length === 0 && !loadError
 
   return load ? (
     <Spin centered />
@@ -94,12 +130,32 @@ export const PostScreen = observer(({}: Ipost) => {
         </>
       }
       ListEmptyComponent={
-        <View style={{ paddingHorizontal: s(20) }}>
-          <Text
-            textStyle={styles.noPostText}
-            h={'h4'}
-            title={t('online-part.noPosts')}
-          />
+        <View style={{ paddingHorizontal: s(20), alignItems: 'center' }}>
+          {loadError ? (
+            <>
+              <Text
+                textStyle={styles.noPostText}
+                h={'h4'}
+                title={loadError}
+              />
+              <Space height={vs(20)} />
+              <Button onPress={onRetry} title={t('online-part.retry')} />
+            </>
+          ) : (
+            <>
+              <Text
+                textStyle={styles.noPostText}
+                h={'h4'}
+                title={t('online-part.noPosts')}
+              />
+              <Space height={vs(20)} />
+              <Text
+                h={'h6'}
+                textStyle={styles.hintText}
+                title={t('online-part.makeReport')}
+              />
+            </>
+          )}
         </View>
       }
     />
@@ -109,5 +165,9 @@ export const PostScreen = observer(({}: Ipost) => {
 const styles = StyleSheet.create({
   noPostText: {
     textAlign: 'center'
+  },
+  hintText: {
+    textAlign: 'center',
+    opacity: 0.7
   }
 })
