@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { StyleSheet } from 'react-native'
 import firestore from '@react-native-firebase/firestore'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -6,7 +6,13 @@ import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 
 import { s, vs } from 'react-native-size-matters'
-import { captureException, gray, onLeaveFeedback } from '../../../constants'
+import {
+  captureException,
+  gray,
+  maybeRequestReview,
+  onLeaveFeedback,
+  recordPositiveEvent
+} from '../../../constants'
 import { getUid } from '../../../screens/helper'
 
 import {
@@ -40,6 +46,22 @@ type navigation = NativeStackNavigationProp<
 type GameScreenT = {
   navigation: navigation
 }
+
+const RequestReviewOnWin = observer(() => {
+  const prevEndGame = useRef(false)
+  const endGame = DiceStore.online
+    ? OnlinePlayer.store.finish
+    : DiceStore.finishArr.indexOf(true) === -1
+
+  useEffect(() => {
+    if (!prevEndGame.current && endGame) {
+      recordPositiveEvent().then(() => maybeRequestReview())
+    }
+    prevEndGame.current = endGame
+  }, [endGame])
+
+  return null
+})
 
 const GameScreen = observer(({ navigation }: GameScreenT) => {
   const { user } = useRevenueCat()
@@ -116,6 +138,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
             ) : (
               <Space height={s(38)} />
             )}
+            <RequestReviewOnWin />
           </>
         )}
       </Header>

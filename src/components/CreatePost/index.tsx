@@ -19,7 +19,8 @@ import {
   captureException,
   dimGray,
   generateComment,
-  navigate
+  navigate,
+  recordPositiveEvent
 } from '../../constants'
 import { startStepTimer } from '../../screens/helper'
 import { PostStore } from '../../store'
@@ -164,6 +165,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
 
       await AsyncStorage.removeItem('@draftReport')
       methods.reset()
+      await recordPositiveEvent()
       navigate('TAB_BOTTOM_1')
     } catch (error) {
       captureException(error as Error, 'CreatePost: AI stream')

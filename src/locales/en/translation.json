@@ -589,5 +589,11 @@
   "aiCommentFailed": "Leela could not answer this report. Your text is saved — you can try sending it again.",
   "postCreateFailed": "The report could not be created. Please try again.",
   "aiMessageFailed": "Leela could not answer. Please try again.",
-  "error": "Error"
+  "error": "Error",
+  "reviewPrompt": {
+    "title": "Enjoying Leela?",
+    "message": "If the game is helping your journey, a quick review means a lot.",
+    "rate": "Rate Leela",
+    "later": "Maybe later"
+  }
 }
