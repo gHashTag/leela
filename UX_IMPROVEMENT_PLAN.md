@@ -36,7 +36,7 @@
 
 ## 5. Stability & Observability
 
-- [ ] **5.1** Replace all `console.error('error')` and silent catches with `captureException` + user alert.
+- [x] **5.1** Replace all `console.error('error')` and silent catches with `captureException` + user alert.
 - [x] **5.2** Add a global network-offline banner.
 - [x] **5.3** Add a "Report a bug" button that captures the last 50 lines of logs.
 - [x] **5.4** Add loading skeletons for the feed and detail screens.

@@ -16,7 +16,7 @@ import {
 import { TextInputProps as RNTextInputProps } from 'react-native'
 import { ScaledSheet, s, vs } from 'react-native-size-matters'
 
-import { classicRose, dimGray, red } from '../../constants'
+import { captureException, classicRose, dimGray, red } from '../../constants'
 
 export interface TextInputProps extends RNTextInputProps, UseControllerProps {
   color: ColorValue
@@ -51,7 +51,7 @@ const Input: React.FC<TextInputProps> = ({
     const msg = !formContext
       ? 'TextInput должен быть обернут в FormProvider'
       : 'Имя должно быть определено(Input)'
-    console.error(msg)
+    captureException(msg, 'Input: missing context')
     return null
   }
 

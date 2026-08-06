@@ -286,6 +286,7 @@ const getIMG = async (fileName?: string) => {
     try {
       return await storage().ref(fileName).getDownloadURL()
     } catch (error) {
+      captureException(error, 'getIMG')
       return defaultImg
     }
   } else if (fileName?.includes('https://')) {
