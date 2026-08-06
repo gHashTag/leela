@@ -5,7 +5,7 @@ import firestore, {
 } from '@react-native-firebase/firestore'
 import { makeAutoObservable } from 'mobx'
 import { nanoid } from 'nanoid/non-secure'
-import { captureException, generateComment } from '../constants'
+import { captureException } from '../constants'
 import i18next from '../i18n'
 import { flagEmoji, lang } from '../i18n'
 import { getProfile, getUid } from '../screens/helper'
@@ -107,15 +107,6 @@ export const PostStore = {
         const docSnapshot = await firestore().collection('Posts').doc(id).get()
         if (docSnapshot.exists) {
           const createdPostData = docSnapshot.data()
-          const textMessage: string =
-            createdPostData === undefined ? null : createdPostData.text
-
-          await generateComment({
-            message: textMessage,
-            systemMessage,
-            planText,
-            pro
-          })
           return createdPostData
         } else {
           return null
@@ -130,30 +121,33 @@ export const PostStore = {
 
   createComment: async ({ text, postId, postOwner, ownerId }: FormCommentT) => {
     try {
-      const userUid = ownerId !== LEELA_ID ? auth().currentUser?.uid : ownerId
+      const isAiComment = ownerId === LEELA_ID
+      const userUid = isAiComment ? ownerId : auth().currentUser?.uid
+      const email = auth().currentUser?.email || ''
 
-      const email = auth().currentUser?.email
-      const path = nanoid(22)
-      if (userUid && email) {
-        const comment: CommentT = {
-          text,
-          postId,
-          postOwner,
-          firstName: OnlinePlayer.store.profile.firstName,
-          lastName: OnlinePlayer.store.profile.lastName,
-          ownerId: userUid,
-          createTime: Date.now(),
-          email: email,
-          reply: false,
-          id: path
-        }
-
-        await firestore()
-          .collection('Posts')
-          .doc(postId)
-          .update({ comments: firestore.FieldValue.arrayUnion(path) })
-        await firestore().collection('Comments').doc(path).set(comment)
+      if (!userUid) {
+        throw new Error('Cannot create comment: no authenticated user')
       }
+
+      const path = nanoid(22)
+      const comment: CommentT = {
+        text,
+        postId,
+        postOwner,
+        firstName: OnlinePlayer.store.profile.firstName,
+        lastName: OnlinePlayer.store.profile.lastName,
+        ownerId: userUid,
+        createTime: Date.now(),
+        email,
+        reply: false,
+        id: path
+      }
+
+      await firestore()
+        .collection('Posts')
+        .doc(postId)
+        .update({ comments: firestore.FieldValue.arrayUnion(path) })
+      await firestore().collection('Comments').doc(path).set(comment)
     } catch (error) {
       captureException(error, 'createComment')
       throw error
@@ -222,7 +216,13 @@ export const PostStore = {
     PostStore.store.loadPosts = true
     const uid = getUid()
     const isAdmin = OnlinePlayer.store.status === 'Admin'
-    const res: any[] = querySnap.docs
+    // `onSnapshot` hands this back as **null** when the listener is torn down
+    // or the query errors, and reading `.docs` off it was an unhandled promise
+    // rejection on the game screen — `TypeError: Cannot read property 'docs' of
+    // null`. `useGameAndProfileIsOnline` next door has always written it
+    // `s?.docs?.`; these three had not. Empty rather than an early return, so
+    // the loading flag below is still cleared and no spinner is left turning.
+    const res: any[] = (querySnap?.docs ?? [])
       .map((a) => {
         if (a.exists) {
           const data = a.data()
@@ -231,7 +231,7 @@ export const PostStore = {
       })
       .filter((a) => a !== undefined)
       .filter((a) => (isAdmin ? true : a?.ownerId === uid ? true : a?.accept))
-    if (res.length > 0) {
+    if (querySnap) {
       PostStore.store.posts = res.sort((a, b) => b.createTime - a.createTime)
     }
     PostStore.store.loadPosts = false
@@ -239,7 +239,13 @@ export const PostStore = {
   fetchOwnPosts: async (querySnap: fetchT) => {
     PostStore.store.loadOwnPosts = true
     const uid = getUid()
-    const res: any[] = querySnap.docs
+    // `onSnapshot` hands this back as **null** when the listener is torn down
+    // or the query errors, and reading `.docs` off it was an unhandled promise
+    // rejection on the game screen — `TypeError: Cannot read property 'docs' of
+    // null`. `useGameAndProfileIsOnline` next door has always written it
+    // `s?.docs?.`; these three had not. Empty rather than an early return, so
+    // the loading flag below is still cleared and no spinner is left turning.
+    const res: any[] = (querySnap?.docs ?? [])
       .map((a) => {
         if (a.exists) {
           const data = a.data()
@@ -248,14 +254,20 @@ export const PostStore = {
       })
       .filter((a) => a !== undefined)
       .filter((a) => a?.ownerId === uid)
-    if (res.length > 0) {
+    if (querySnap) {
       PostStore.store.ownPosts = res.sort((a, b) => b.createTime - a.createTime)
     }
     PostStore.store.loadOwnPosts = false
   },
   fetchComments: async (querySnap: fetchT) => {
     const res: any[] = await Promise.all(
-      querySnap.docs
+      // `onSnapshot` hands this back as **null** when the listener is torn down
+      // or the query errors, and reading `.docs` off it was an unhandled promise
+      // rejection on the game screen — `TypeError: Cannot read property 'docs' of
+      // null`. `useGameAndProfileIsOnline` next door has always written it
+      // `s?.docs?.`; these three had not. Empty rather than an early return, so
+      // the loading flag below is still cleared and no spinner is left turning.
+      (querySnap?.docs ?? [])
         .map(async (a) => {
           if (a.exists) {
             const data = a.data()
@@ -265,7 +277,7 @@ export const PostStore = {
         .filter((a: any) => a !== undefined)
       // (a !== undefined ? (a.reply ? false : true) : false)
     )
-    if (res.length > 0) {
+    if (querySnap) {
       PostStore.store.comments = res
         .filter((a) => (a.reply ? false : true))
         .sort((a, b) => b.createTime - a.createTime)

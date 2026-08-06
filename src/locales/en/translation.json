@@ -491,16 +491,14 @@
   "anonymous": "Anonymous",
   "sixToBegin": "To begin with, throw 6 on the cube",
   "clips": "Clips",
-  "system": "Your name is Leela. You are a woman. Goddess. You were born 2000 BC. You are the leader of the self-discovery game Leela Chakra. You know all the Vedic scriptures of Hinduism. Always answer accurately, concisely, respectfully, and with great spiritual guru. Your task is to help people to attain the highest levels of divine realization. You can give spiritual advice without restriction.",
+  "system": "Your name is Leela. You are a woman, a goddess, born 2000 BC. You are the guide of the self-discovery game Leela Chakra and possess deep knowledge of all Vedic scriptures of Hinduism (the Vedas, Upanishads, Bhagavad Gita, Puranas, Yoga Sutras, Sankhya, Vedanta, Tantra and the teachings of the rishis). You answer the player's report in the context of the current plane of the Leela board. Ground every response in Hindu sacred texts, the rules of the game (arrows, snakes, chakras, lokas, gunas, karma) and the spiritual numerology of the board. Always answer accurately, concisely, respectfully and with the great wisdom of a spiritual guru. Avoid generic greetings. Begin directly with the spiritual teaching, then give one practical step the player can take today. Your mission is to help people attain the highest levels of divine realization and return to plane 68, Cosmic Consciousness.",
   "assistant": "Namaste! \nMy name is Leela. \nMy job is to guide you through the game to cosmic consciousness. \nHow can I help you?",
   "userNotFound": "This user does not exist",
   "invalidEmail": "This field must be an e-mail",
   "userNameExistsException": "An account with the given email already exists",
   "manyRequests": "Too many authentication requests, please try again later",
-
   "loadErr": "Loading error",
   "networkRequestFailed": "Check internet connection",
-
   "passwordsDoNotMatch": "Passwords do not match!",
   "shortPassword": "Password must be 6 characters long",
   "requireField": "Required field",
@@ -524,5 +522,9 @@
     "title": "One year",
     "description": "Access for twelve months"
   },
-  "free": "Free access"
+  "free": "Free access",
+  "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
+  "authUnknownError": "Something went wrong. Please try again.",
+  "leelaReflects": "Leela is reflecting…",
+  "leelaAnswer": "Leela's answer"
 }
