@@ -8,7 +8,7 @@ import {
 } from 'react-native'
 import { Bubble, GiftedChat, IMessage } from 'react-native-gifted-chat'
 import { s } from 'react-native-size-matters'
-import { ButtonWithIcon, Header, Space } from '../../../components'
+import { ButtonWithIcon, Header, Space, Text } from '../../../components'
 import { brightTurquoise, captureException, onLeaveFeedback, trueBlue } from '../../../constants'
 import { DiceStore, actionsDice } from '../../../store'
 import { useRevenueCat } from '../../../providers/RevenueCatProvider'
@@ -19,6 +19,38 @@ const LEELA_AI = require('../../../../assets/defaultImage/leelaAI.jpg')
 interface IContextSummary {
   user: string[]
   assistant: string[]
+}
+
+const CITATION_REGEX = [
+  /Bhagavad Gita \d+\.\d+/gi,
+  /Бхагавад-гита \d+\.\d+/gi,
+  /Chandogya Upanishad \d+\.\d+(?:\.\d+)?/gi,
+  /Чандогья-упанишада \d+\.\d+(?:\.\d+)?/gi,
+  /Brihadaranyaka Upanishad \d+\.\d+(?:\.\d+)?/gi,
+  /Katha Upanishad \d+\.\d+(?:\.\d+)?/gi,
+  /Mundaka Upanishad \d+\.\d+(?:\.\d+)?/gi,
+  /Yoga Sutras \d+\.\d+/gi,
+  /Йога-сутры \d+\.\d+/gi,
+  /Shiva Sutras \d+\.\d+/gi,
+  /Vedanta Sutras \d+\.\d+(?:\.\d+)?/gi
+]
+
+const SOURCES_REGEX = /(?:Sources|Источники)[\s:—–-]+(.+?)(?:\n|$)/is
+
+const extractCitations = (text: string): string[] => {
+  const found = new Set<string>()
+  CITATION_REGEX.forEach((re) =>
+    text.match(re)?.forEach((match) => found.add(match))
+  )
+  const sourcesMatch = text.match(SOURCES_REGEX)
+  if (sourcesMatch) {
+    sourcesMatch[1]
+      .split(/[,;•·]/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .forEach((s) => found.add(s))
+  }
+  return Array.from(found).slice(0, 6)
 }
 
 const LOADING_MESSAGE_ID = 'loading-message-id'
@@ -217,6 +249,11 @@ const ChatScreen: React.FC = () => {
   }
   // @ts-expect-error
   const renderBubble = (props) => {
+    const isAssistant = props.position === 'left'
+    const citations = isAssistant
+      ? extractCitations(props.currentMessage.text || '')
+      : []
+
     if (props.currentMessage._id === LOADING_MESSAGE_ID) {
       return (
         <View>
@@ -230,16 +267,32 @@ const ChatScreen: React.FC = () => {
     }
 
     return (
-      <Bubble
-        {...props}
-        wrapperStyle={{
-          right: { backgroundColor: `${brightTurquoise}` }
-        }}
-        textStyle={{
-          left: { fontFamily: 'Montserrat' },
-          right: { color: '#000', fontFamily: 'Montserrat' }
-        }}
-      />
+      <View style={styles.bubbleWrapper}>
+        <Bubble
+          {...props}
+          wrapperStyle={{
+            right: { backgroundColor: `${brightTurquoise}` }
+          }}
+          textStyle={{
+            left: { fontFamily: 'Montserrat' },
+            right: { color: '#000', fontFamily: 'Montserrat' }
+          }}
+        />
+        {citations.length > 0 && (
+          <View
+            style={[
+              styles.citationsRow,
+              isAssistant ? { marginLeft: s(8) } : { marginRight: s(8) }
+            ]}
+          >
+            {citations.map((citation) => (
+              <View key={citation} style={styles.citationChip}>
+                <Text h="h11" title={citation} oneColor="#50E3C2" />
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
     )
   }
 
@@ -277,6 +330,24 @@ const styles = StyleSheet.create({
     padding: 10,
     top: 1,
     alignItems: 'center'
+  },
+  bubbleWrapper: {
+    flexDirection: 'column'
+  },
+  citationsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: s(4),
+    maxWidth: '80%'
+  },
+  citationChip: {
+    backgroundColor: 'rgba(80, 227, 194, 0.2)',
+    borderRadius: s(12),
+    borderWidth: 1,
+    borderColor: 'rgba(80, 227, 194, 0.5)',
+    paddingHorizontal: s(8),
+    paddingVertical: s(3),
+    margin: s(2)
   },
   feadbackContainer: {
     alignSelf: 'center'
