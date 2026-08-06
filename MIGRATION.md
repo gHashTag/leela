@@ -7751,6 +7751,15 @@ also names: a refused request comes back as the fallback sentence, so a
 companion that had stopped answering the longest conversations would look, from
 inside the game, exactly like one having a bad day.
 
+**One number in this pass came from the wrong machine.** Verifying in a separate
+worktree meant `bun run verify` could not find the donor — the content build
+resolves it beside the repository root — so a symlink was put in `/tmp` to stand
+in for it. That made forty-four donor-only tests run, `audit-claims --write`
+recorded `@leela/content` at 705, and CI, which has no donor, said 661. The
+commit before this one exists to publish *the numbers a fresh clone runs*, and
+the symlink quietly published this machine's instead. Put back by hand, because
+`--write` on a machine that has the donor writes 705 again.
+
 Both are clipped here now, with `trimToParagraph` rather than a slice, for the
 reason the history uses it: a cut at a paragraph or a sentence is still
 something somebody wrote. Held as the property rather than the two fields —
