@@ -1,9 +1,14 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 
 import { observer } from 'mobx-react'
 import { Image, ImageSourcePropType, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
-import { runOnJS } from 'react-native-reanimated'
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming
+} from 'react-native-reanimated'
 import { ScaledSheet, ms } from 'react-native-size-matters'
 import { useTypedNavigation } from '../../hooks'
 import { getUid } from '../../screens/helper'
@@ -27,6 +32,35 @@ interface dataI {
   id: number
   ava?: string | number
   ownerId?: string
+}
+
+const BOX_SIZE = 31
+const BOX_MARGIN_H = 1
+const BOX_MARGIN_V = 2
+
+const getCoordinatesForPlan = (plan: number) => {
+  const rows = [
+    [72, 71, 70, 69, 68, 67, 66, 65, 64],
+    [55, 56, 57, 58, 59, 60, 61, 62, 63],
+    [54, 53, 52, 51, 50, 49, 48, 47, 46],
+    [37, 38, 39, 40, 41, 42, 43, 44, 45],
+    [36, 35, 34, 33, 32, 31, 30, 29, 28],
+    [19, 20, 21, 22, 23, 24, 25, 26, 27],
+    [18, 17, 16, 15, 14, 13, 12, 11, 10],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  ]
+
+  for (let row = 0; row < rows.length; row++) {
+    const col = rows[row].indexOf(plan)
+    if (col !== -1) {
+      return {
+        x: col * (BOX_SIZE + BOX_MARGIN_H * 2),
+        y: row * (BOX_SIZE + BOX_MARGIN_V * 2)
+      }
+    }
+  }
+
+  return { x: 0, y: 0 }
 }
 
 const Gem = observer(({ plan, index }: GemT) => {
@@ -92,15 +126,13 @@ const Gem = observer(({ plan, index }: GemT) => {
               gesture={Gesture.Tap().onTouchesUp(() => runOnJS(onPressAva)())}
               key={id}
             >
-              <Image
-                style={[
-                  gems,
-                  {
-                    zIndex: -index
-                  },
-                  id === 1 && online && styles.primaryGem
-                ]}
+              <AnimatedGem
+                plan={data}
+                index={index}
+                id={id}
+                online={online}
                 source={source(id, ava)}
+                onPressAva={onPressAva}
               />
             </GestureDetector>
           )
@@ -117,6 +149,60 @@ const Gem = observer(({ plan, index }: GemT) => {
     </View>
   )
 })
+
+interface AnimatedGemT {
+  plan: number
+  index: number
+  id: number
+  online: boolean
+  source: ImageSourcePropType
+  onPressAva: () => void
+}
+
+const AnimatedGem = observer(
+  ({ plan, index, id, online, source }: AnimatedGemT) => {
+    const prevPlanRef = useRef(plan)
+    const translateX = useSharedValue(0)
+    const translateY = useSharedValue(0)
+
+    useEffect(() => {
+      const previousPlan = prevPlanRef.current
+      if (previousPlan !== plan) {
+        const from = getCoordinatesForPlan(previousPlan)
+        const to = getCoordinatesForPlan(plan)
+
+        translateX.value = from.x - to.x
+        translateY.value = from.y - to.y
+
+        translateX.value = withTiming(0, { duration: 350 })
+        translateY.value = withTiming(0, { duration: 350 })
+
+        prevPlanRef.current = plan
+      }
+    }, [plan])
+
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value }
+      ]
+    }))
+
+    return (
+      <Animated.Image
+        style={[
+          gems,
+          {
+            zIndex: -index
+          },
+          id === 1 && online && styles.primaryGem,
+          animatedStyle
+        ]}
+        source={source}
+      />
+    )
+  }
+)
 
 const styles = ScaledSheet.create({
   container: {
