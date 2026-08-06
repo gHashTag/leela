@@ -24,6 +24,7 @@ import {
   GameBoard,
   Header,
   Space,
+  StreakJournal,
   Text
 } from '../../../components'
 import { useLeftTimeForStep } from '../../../hooks'
@@ -143,6 +144,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
         )}
       </Header>
       <DailyVerse />
+      <StreakJournal />
       {!endGame && <Dice disabled={isBlockGame} />}
 
       {isBlockGame && (

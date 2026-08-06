@@ -508,6 +508,18 @@
     "hint": "Tap the mic and speak your report",
     "listening": "Listening…"
   },
+  "streakJournal": {
+    "title": "Reflection Journal",
+    "streakLabel": "Current streak:",
+    "daySingular": "day",
+    "dayPlural": "days",
+    "reflectionPrompt": "What did today's play reveal to you?",
+    "todayReflection": "Today's reflection saved",
+    "placeholder": "Write a short reflection…",
+    "save": "Save reflection",
+    "noEntries": "No reflections yet. Start your streak today.",
+    "close": "Close"
+  },
   "clearly": "clearly",
   "profile": "Profile",
   "intention": "Intention",
