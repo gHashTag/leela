@@ -29,7 +29,7 @@
 
 ## 4. Onboarding, Trust & Pro
 
-- [ ] **4.1** Add a short onboarding explaining Leela, planes, and the AI guide.
+- [x] **4.1** Add a short onboarding explaining Leela, planes, and the AI guide.
 - [x] **4.2** Show a sample AI answer before asking the player to buy Pro/subscribe.
 - [x] **4.3** Add a "Why am I seeing this?" helper on the subscription screen.
 - [x] **4.4** Add review prompt only after a positive event (report answered, step completed).

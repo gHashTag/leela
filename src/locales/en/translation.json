@@ -472,7 +472,8 @@
     "start": "Start",
     "startOver": "Start Over",
     "deleteAcc": "Delete account",
-    "leaveFeedback": "Leave feedback"
+    "leaveFeedback": "Leave feedback",
+    "skip": "Skip"
   },
   "or": "or",
   "done": "Done",
@@ -608,5 +609,15 @@
     "answer": "Plane 12 is the field of confusion (moha), where the mind sees many paths and cannot discern the true one. In the Bhagavad Gita, Krishna reminds Arjuna that confusion arises when the senses dominate the intellect (Bhagavad Gita 2.62–63). The game invites you to step back, breathe, and let the dice of karma show the next move rather than forcing a decision from anxiety.\n\nOne practical step today: sit quietly for five minutes before your next choice. Ask, 'Is this action moving me toward clarity or away from it?' Clarity is not found by thinking more, but by quieting the mind.\n\nSources: Bhagavad Gita 2.62–63; Yoga Sutras 1.33",
     "cta": "Continue to subscribe",
     "dismiss": "Back"
+  },
+  "onboarding": {
+    "step1Title": "Welcome to Leela",
+    "step1Body": "Leela is an ancient self-discovery game. The board is a map of 72 planes — each plane is an inner state, a chakra, a step on the path back to Cosmic Consciousness.",
+    "step2Title": "Planes, snakes and arrows",
+    "step2Body": "As you roll the dice you move through the planes. Arrows lift you upward when insight ripens; snakes remind you of old patterns that still need attention.",
+    "step3Title": "Your AI guide",
+    "step3Body": "Leela AI reads your report and answers from the Vedas, Upanishads, Bhagavad Gita and the rules of the board. It gives one practical step you can take today.",
+    "next": "Next",
+    "start": "Start the journey"
   }
 }

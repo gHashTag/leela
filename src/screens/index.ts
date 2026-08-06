@@ -1,3 +1,4 @@
+export * from './OnboardingScreen'
 export * from './RulesScreen'
 export * from './RulesDetailScreen'
 export * from './PlansScreen'

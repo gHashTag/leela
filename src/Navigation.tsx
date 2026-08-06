@@ -31,6 +31,7 @@ import {
   InputTextModal,
   NetworkModal,
   OfflineProfileScreen, // OnlineGameScreen,
+  OnboardingScreen,
   PlanReportModal,
   PlansDetailScreen,
   PlansScreen,
@@ -172,8 +173,12 @@ const App = () => {
           headerShown: false,
           gestureEnabled: false
         }}
-        initialRouteName="HELLO"
+        initialRouteName="ONBOARDING_SCREEN"
       >
+        <Stack.Screen
+          name="ONBOARDING_SCREEN"
+          component={OnboardingScreen}
+        />
         <Stack.Screen name="HELLO" component={Hello} />
         <Stack.Screen name="WELCOME_SCREEN" component={WelcomeScreen} />
 

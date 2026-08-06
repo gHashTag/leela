@@ -1,6 +1,7 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
 
 export type RootStackParamList = {
+  ONBOARDING_SCREEN: undefined
   HELLO: undefined
   WELCOME_SCREEN: undefined
   UI: undefined
