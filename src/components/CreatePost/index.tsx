@@ -1,7 +1,8 @@
 import { yupResolver } from '@hookform/resolvers/yup'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import auth from '@react-native-firebase/auth'
 import { LEELA_ID } from '@env'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   FieldValues,
   FormProvider,
@@ -38,6 +39,42 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
   const { user } = useRevenueCat()
   const systemMessage = t('system')
 
+  const [draftLoaded, setDraftLoaded] = useState(false)
+  const [stage, setStage] = useState(0)
+  const reportText = methods.watch('text')
+
+  useEffect(() => {
+    const loadDraft = async () => {
+      try {
+        const draft = await AsyncStorage.getItem('@draftReport')
+        if (draft) {
+          methods.setValue('text', draft, { shouldValidate: true })
+        }
+      } catch (error) {
+        captureException(error as Error, 'CreatePost: loadDraft')
+      } finally {
+        setDraftLoaded(true)
+      }
+    }
+    loadDraft()
+  }, [methods])
+
+  useEffect(() => {
+    if (!draftLoaded) return
+    const saveDraft = async () => {
+      try {
+        if (reportText) {
+          await AsyncStorage.setItem('@draftReport', reportText)
+        } else {
+          await AsyncStorage.removeItem('@draftReport')
+        }
+      } catch (error) {
+        captureException(error as Error, 'CreatePost: saveDraft')
+      }
+    }
+    saveDraft()
+  }, [reportText, draftLoaded])
+
   const schema = useMemo(
     () =>
       yup
@@ -70,6 +107,10 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
     setIsStreaming(true)
     setReasoning('')
     setAiContent('')
+    setStage(0)
+
+    let hasReasoning = false
+    let hasContent = false
 
     try {
       const result = await streamZaiChat(
@@ -81,9 +122,17 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
         },
         {
           onReasoning: (_chunk, fullReasoning) => {
+            if (!hasReasoning) {
+              hasReasoning = true
+              setStage(1)
+            }
             setReasoning(fullReasoning)
           },
           onContent: (_chunk, fullContent) => {
+            if (!hasContent) {
+              hasContent = true
+              setStage(2)
+            }
             setAiContent(fullContent)
           }
         }
@@ -113,6 +162,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
         })
       }
 
+      await AsyncStorage.removeItem('@draftReport')
       methods.reset()
       navigate('TAB_BOTTOM_1')
     } catch (error) {
@@ -162,14 +212,14 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
     resolver: yupResolver(schema)
   })
 
-  if (loading) {
+  if (!draftLoaded || loading) {
     return <Loading />
   }
 
   if (isStreaming) {
     return (
       <View style={styles.streamContainer}>
-        <Text h="h6" title={t('leelaReflects') || 'Leela is reflecting…'} />
+        <Text h="h6" title={t(`pipeline.stage_${stage}`)} />
         <Space height={10} />
         <Text
           h="h7"

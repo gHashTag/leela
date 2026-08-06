@@ -8,8 +8,8 @@
 - [x] **1.2** Ground AI answers in Vedic scriptures and Leela board rules via system prompt.
 - [x] **1.3** Add fallback non-thinking completion if reasoning consumes whole token budget.
 - [x] **1.4** Add user-facing error feedback when AI streaming fails (stay on screen, allow retry).
-- [ ] **1.5** Save a failed report draft locally so the player does not lose their text.
-- [ ] **1.6** Show a progress indicator for the full pipeline: post created → AI reflecting → answer saved.
+- [x] **1.5** Save a failed report draft locally so the player does not lose their text.
+- [x] **1.6** Show a progress indicator for the full pipeline: post created → AI reflecting → answer saved.
 
 ## 2. Comments & Community
 

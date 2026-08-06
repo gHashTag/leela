@@ -424,6 +424,11 @@
     "reportBug": "Report a problem",
     "bugReportSubject": "Leela bug report: feed not loading"
   },
+  "pipeline": {
+    "stage_0": "Leela is reading the board…",
+    "stage_1": "Leela is searching the scriptures…",
+    "stage_2": "Leela is writing the answer…"
+  },
   "timestamps": {
     "yday": "yesterday",
     "today": "today",
@@ -577,7 +582,7 @@
   "authUnknownError": "Something went wrong. Please try again.",
   "leelaReflects": "Leela is reflecting…",
   "leelaAnswer": "Leela's answer",
-  "aiCommentFailed": "Leela could not answer this report. You can try sending it again.",
+  "aiCommentFailed": "Leela could not answer this report. Your text is saved — you can try sending it again.",
   "postCreateFailed": "The report could not be created. Please try again.",
   "aiMessageFailed": "Leela could not answer. Please try again.",
   "error": "Error"
