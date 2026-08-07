@@ -55,7 +55,7 @@
 
 - [x] **7.1** Add full VoiceOver route labels for the tab navigator. (wave 067)
 - [x] **7.2** Increase touch targets on dice and small icons to 44×44 pt. (wave 068)
-- [ ] **7.3** Add RTL layout support for Arabic.
+- [x] **7.3** Add RTL layout support for Arabic. (wave 069)
 - [ ] **7.4** Add font-size override respecting system dynamic type.
 - [ ] **7.5** Translate the new v2 plan items into `ru`.
 

@@ -14,10 +14,17 @@ import { useTranslation } from 'react-i18next'
 import Navigation from './Navigation'
 import { RevenueCatProvider } from './providers/RevenueCatProvider'
 import { markSessionCrashed, markSessionStarted } from './utils/sessionHealth'
+import { syncRTLDirection } from './utils/rtl'
 import { updateAndroidBadgeCount } from './utils/notifications/NotificationHelper'
 import { scheduleDailyVerseNotification } from './utils/notifications'
 
 const routingInstrumentation = new Sentry.ReactNavigationInstrumentation()
+
+// Synchronize RTL layout once at bootstrap. A full reload is required for
+// native layout mirroring to take effect, so we just set the flag here.
+import('./i18n').then(({ lang: resolvedLang }) => {
+  syncRTLDirection(resolvedLang)
+})
 
 configurePersistable(
   {

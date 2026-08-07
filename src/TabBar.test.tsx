@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { fireEvent, render } from '@testing-library/react-native'
+import { I18nManager } from 'react-native'
 
 import { TabBar } from './TabBar'
 
@@ -66,5 +67,19 @@ describe('TabBar', () => {
     const tabs = getAllByRole('tab')
     fireEvent.press(tabs[0])
     expect(mockNavigate).not.toHaveBeenCalled()
+  })
+
+  it('reverses the tab container direction in RTL mode', () => {
+    I18nManager.isRTL = true
+    const { getByTestId } = render(
+      <TabBar state={baseState} navigation={baseNavigation as any} />
+    )
+    const tablist = getByTestId('tab-bar-container')
+    const styleArray = Array.isArray(tablist.props.style)
+      ? tablist.props.style
+      : [tablist.props.style]
+    const flattened = Object.assign({}, ...styleArray)
+    expect(flattened.flexDirection).toBe('row-reverse')
+    I18nManager.isRTL = false
   })
 })

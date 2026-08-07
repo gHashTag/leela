@@ -2,7 +2,7 @@ import React from 'react'
 
 import { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs'
 import { observer } from 'mobx-react'
-import { View, useColorScheme } from 'react-native'
+import { I18nManager, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import { ScaledSheet, ms, s } from 'react-native-size-matters'
@@ -10,6 +10,7 @@ import { ScaledSheet, ms, s } from 'react-native-size-matters'
 import { Pressable, Tab } from './components'
 import { black, white } from './constants'
 import { minTouchTarget } from './utils/hitTarget'
+import { rtlAware } from './utils/rtl'
 
 const routeLabels: Record<string, string> = {
   TAB_BOTTOM_0: 'tabRoute.game',
@@ -33,12 +34,13 @@ export const TabBar = observer(function TabBar({
     container,
     {
       backgroundColor: scheme === 'dark' ? black : white,
-      paddingBottom: bottom + s(10)
+      paddingBottom: bottom + s(10),
+      flexDirection: I18nManager.isRTL ? rtlAware.flexDirection : 'row'
     }
   ]
 
   return (
-    <View style={tabContainer} accessibilityRole="tablist">
+    <View style={tabContainer} accessibilityRole="tablist" testID="tab-bar-container">
       {routes.map(({ name, key }, id) => {
         const isFocused = index === id
         const labelKey = routeLabels[name] || name
@@ -90,8 +92,7 @@ const styles = ScaledSheet.create({
     elevation: 5,
     justifyContent: 'space-around',
     alignItems: 'flex-start',
-    paddingTop: ms(10, 0.5),
-    flexDirection: 'row'
+    paddingTop: ms(10, 0.5)
   }
 })
 
