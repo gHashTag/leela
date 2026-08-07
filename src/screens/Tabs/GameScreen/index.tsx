@@ -23,6 +23,7 @@ import {
   Dice,
   GameBoard,
   Header,
+  ResumeLastGame,
   Space,
   StreakJournal,
   Text,
@@ -148,6 +149,11 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       </Header>
       <DailyVerse />
       <WeeklyStreak />
+      <ResumeLastGame
+        onResume={() =>
+          navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
+        }
+      />
       <StreakJournal />
       <UxFeedback />
       {!endGame && <Dice disabled={isBlockGame} />}

@@ -550,6 +550,14 @@
     "fri": "F",
     "sat": "S"
   },
+  "resumeLastGame": {
+    "title": "Resume last game",
+    "offline": "Offline match in progress",
+    "online": "Online match in progress",
+    "playerSingular": "player",
+    "playerPlural": "players",
+    "accessibilityLabel": "Resume the last saved game"
+  },
   "uxFeedback": {
     "button": "Feedback",
     "buttonLabel": "Send feedback about the app",

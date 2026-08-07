@@ -548,6 +548,14 @@
     "fri": "Пт",
     "sat": "Сб"
   },
+  "resumeLastGame": {
+    "title": "Продолжить последнюю игру",
+    "offline": "Оффлайн-матч в процессе",
+    "online": "Онлайн-матч в процессе",
+    "playerSingular": "игрок",
+    "playerPlural": "игрока",
+    "accessibilityLabel": "Продолжить последнюю сохранённую игру"
+  },
   "uxFeedback": {
     "button": "Обратная связь",
     "buttonLabel": "Отправить отзыв о приложении",
