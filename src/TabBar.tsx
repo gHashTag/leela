@@ -9,6 +9,7 @@ import { ScaledSheet, ms, s } from 'react-native-size-matters'
 
 import { Pressable, Tab } from './components'
 import { black, white } from './constants'
+import { minTouchTarget } from './utils/hitTarget'
 
 const routeLabels: Record<string, string> = {
   TAB_BOTTOM_0: 'tabRoute.game',
@@ -50,6 +51,7 @@ export const TabBar = observer(function TabBar({
             accessibilityState={{ selected: isFocused }}
             accessibilityLabel={label}
             accessibilityHint={hint}
+            style={minTouchTarget}
             onPress={() => {
               const event = navigation.emit({
                 type: 'tabPress',

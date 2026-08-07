@@ -7,6 +7,7 @@ import { ScaledSheet, ms, mvs, s, vs } from 'react-native-size-matters'
 import { HeaderMessage, Text } from '../'
 import { navigate } from '../../constants'
 import { Pressable } from '../Pressable'
+import { minTouchTarget } from '../../utils/hitTarget'
 import { DiceStore, SubscribeStore } from '../../store'
 
 const isIos = Platform.OS === 'ios'
@@ -58,12 +59,12 @@ const Header = memo<HeaderT>(
         testID="header"
       >
         {iconLeft && (
-          <Pressable style={{ opacity: iconLeftOpacity }} onPress={onPress}>
+          <Pressable style={[minTouchTarget, { opacity: iconLeftOpacity }]} onPress={onPress}>
             <Emoji name={iconLeft} style={leftIconStyle} />
           </Pressable>
         )}
         {isBlockGame && online && (
-          <Pressable style={{ opacity: iconLeftOpacity }} onPress={onPressSub}>
+          <Pressable style={[minTouchTarget, { opacity: iconLeftOpacity }]} onPress={onPressSub}>
             <Emoji name="star" style={leftIconStyle} />
           </Pressable>
         )}
@@ -86,14 +87,14 @@ const Header = memo<HeaderT>(
         </View>
         {isBlockGame && online && (
           <Pressable
-            style={[styles.pressStyle, { opacity: iconLeftOpacity }]}
+            style={[minTouchTarget, styles.pressStyle, { opacity: iconLeftOpacity }]}
             onPress={onPressSub}
           >
             <Emoji name="star" style={leftIconStyle} />
           </Pressable>
         )}
         {iconRight ? (
-          <Pressable onPress={onPressRight}>
+          <Pressable style={minTouchTarget} onPress={onPressRight}>
             <Emoji name={iconRight} style={rightIconStyle} />
           </Pressable>
         ) : (

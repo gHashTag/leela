@@ -22,6 +22,7 @@ import {
   actionsDice
 } from '../../store'
 import { playDiceSound } from '../../utils/soundEffects'
+import { minTouchTarget } from '../../utils/hitTarget'
 
 const getImage = (number: number) => {
   // don`t working return require(`./assets/${number}.png`)
@@ -113,7 +114,7 @@ export const Dice = observer(({ disabled }: DiceT) => {
         onPress={() => {
           canRoll && rollDice()
         }}
-        style={[styles.diceContainer, isOpacity && styles.opacityCube]}
+        style={[minTouchTarget, styles.diceContainer, isOpacity && styles.opacityCube]}
         disabled={disabled}
         accessible
         accessibilityRole="button"

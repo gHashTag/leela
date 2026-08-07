@@ -4,6 +4,7 @@ import { Image, StyleProp, StyleSheet, ViewStyle } from 'react-native'
 import { vs } from 'react-native-size-matters'
 
 import { Pressable } from '../../Pressable'
+import { minTouchTarget } from '../../../utils/hitTarget'
 
 const styles = StyleSheet.create({
   img: {
@@ -19,7 +20,7 @@ interface ButtonEditT {
 
 const ButtonEdit = ({ onPress, viewStyle }: ButtonEditT) => {
   return (
-    <Pressable onPress={onPress} style={viewStyle}>
+    <Pressable onPress={onPress} style={[minTouchTarget, viewStyle]}>
       <Image style={styles.img} source={require('./edit.png')} />
     </Pressable>
   )

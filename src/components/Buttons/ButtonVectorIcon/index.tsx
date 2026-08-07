@@ -9,6 +9,7 @@ import { Text } from '../../'
 import { dimGray, gray } from '../../../constants'
 import { Pressable } from '../../Pressable'
 import { Space } from '../../Space'
+import { minTouchTarget } from '../../../utils/hitTarget'
 
 interface ButtonVectorIconI {
   name: string
@@ -39,7 +40,7 @@ export function ButtonVectorIcon({
   const summaryIoniconsSize = iconSize ? iconSize + s(2) : size + s(2)
   return (
     <Pressable
-      style={viewStyle}
+      style={[minTouchTarget, viewStyle]}
       onPress={onPress}
       activeOpacity={0.7}
       onPressIn={onPressIn}
