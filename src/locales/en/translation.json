@@ -586,6 +586,11 @@
     "reports": "reports",
     "streak": "streak"
   },
+  "welcomeBack": {
+    "title": "Welcome back",
+    "body": "You have been away for a while. Your next roll is waiting.",
+    "continue": "Continue"
+  },
   "weeklyStreak": {
     "title": "This week",
     "daySingular": "day",

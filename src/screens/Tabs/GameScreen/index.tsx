@@ -39,6 +39,7 @@ import {
   UxFeedback,
   WeeklyRecap,
   WeeklyStreak,
+  WelcomeBack,
   WinCelebration
 } from '../../../components'
 import { useLeftTimeForStep } from '../../../hooks'
@@ -164,6 +165,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       <WeeklyStreak />
       <StreakMilestone />
       <WeeklyRecap />
+      <WelcomeBack />
       <ResumeLastGame
         onResume={() =>
           navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
