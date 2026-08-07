@@ -926,5 +926,9 @@
     "shareTitle": "Invite a friend to Leela",
     "shareMessage": "Join me on the Leela game board: {{link}}",
     "error": "Could not create invite link"
+  },
+  "report": {
+    "shareTitle": "Leela report",
+    "shareMessage": "Here is my Leela report from plane {{plan}}:\n{{link}}"
   }
 }

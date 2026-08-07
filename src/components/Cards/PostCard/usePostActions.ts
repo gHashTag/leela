@@ -1,5 +1,6 @@
 import { Share } from 'react-native'
-import { OpenActionsModal } from '../../../constants'
+import { useTranslation } from 'react-i18next'
+import { captureException, OpenActionsModal } from '../../../constants'
 import { useTypedNavigation } from '../../../hooks'
 import { getUid } from '../../../screens/helper'
 import { PostStore } from '../../../store'
@@ -23,6 +24,7 @@ export const usePostActions = ({
   transText,
   hideTranslate
 }: usePostActionsParams) => {
+  const { t } = useTranslation()
   const { navigate } = useTypedNavigation()
   const isLiked =
     item?.liked?.findIndex((a) => a === getUid()) === -1 ? false : true
@@ -66,13 +68,20 @@ export const usePostActions = ({
   }
 
   async function handleShareLink() {
-    const { id, text } = item || {}
-    if (id && text) {
+    const { id, text, plan } = item || {}
+    if (!id || !text) return
+
+    try {
       const deepLink = await buildReportLink(id, text)
-      Share.share({
-        title: 'Leela Chakra',
-        message: deepLink
+      await Share.share({
+        title: t('report.shareTitle'),
+        message: t('report.shareMessage', {
+          plan,
+          link: deepLink
+        })
       })
+    } catch (error) {
+      captureException(error, 'usePostActions:handleShareLink')
     }
   }
 
