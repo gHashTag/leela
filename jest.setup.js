@@ -18,8 +18,11 @@ jest.mock('react-native-image-crop-picker', () => ({
 jest.mock('react-native-sound', () => ({
   default: jest.fn().mockReturnValue({
     play: jest.fn(),
-    release: jest.fn()
-  })
+    release: jest.fn(),
+    getCurrentTime: jest.fn((_cb) => _cb(0)),
+    setCurrentTime: jest.fn()
+  }),
+  setCategory: jest.fn()
 }))
 
 jest.mock('react-native-rate', () => ({

@@ -21,6 +21,7 @@ import {
   OnlinePlayer,
   actionsDice
 } from '../../store'
+import { playDiceSound } from '../../utils/soundEffects'
 
 const getImage = (number: number) => {
   // don`t working return require(`./assets/${number}.png`)
@@ -98,6 +99,7 @@ export const Dice = observer(({ disabled }: DiceT) => {
     setCanRoll(false)
     actionsDice.random()
     Vibration.vibrate(50)
+    playDiceSound()
     handleSpin(DiceStore.count)
   }
 

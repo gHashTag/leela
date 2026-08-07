@@ -597,6 +597,12 @@
     "notificationBody": "A few minutes of reflection before sleep can clear the day.",
     "notificationChannelName": "Bedtime reminders"
   },
+  "soundToggle": {
+    "tab": "Sound",
+    "title": "Game sounds",
+    "description": "Play short sounds when you roll the cube and move between planes.",
+    "enabled": "Enabled"
+  },
   "intentionPrompt": {
     "title": "Today's intention",
     "body": "What is your intention for today's game?",

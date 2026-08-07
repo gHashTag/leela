@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react'
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { Image, StyleSheet, View, useColorScheme } from 'react-native'
 import { ms, mvs, s } from 'react-native-size-matters'
 import { useTranslation } from 'react-i18next'
@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { Text } from '../'
 import { H, W } from '../../constants'
 import { DiceStore, OfflinePlayers, OnlinePlayer } from '../../store'
+import { playPlaneSound } from '../../utils/soundEffects'
 import { Gem } from '../Gem'
 import { ICONS } from './images'
 
@@ -64,6 +65,14 @@ export const GameBoard = observer(() => {
   const currentPlan = DiceStore.online
     ? OnlinePlayer.store.plan
     : OfflinePlayers.store.plans[DiceStore.players - 1]
+
+  const previousPlanRef = useRef(currentPlan)
+  useEffect(() => {
+    if (currentPlan !== previousPlanRef.current && currentPlan > 1) {
+      playPlaneSound()
+    }
+    previousPlanRef.current = currentPlan
+  }, [currentPlan])
 
   const currentPlane = getPlaneNumber(currentPlan)
   const planeNameKey = `accessibility.planeNames.${currentPlane}` as const

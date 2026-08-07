@@ -41,7 +41,7 @@
 - [x] **5.2** Show a replay of the last move for online games. (wave 058)
 - [x] **5.3** Add a "roll history" strip above the dice. (wave 059)
 - [x] **5.4** Highlight the previous and next planes during piece movement. (wave 060)
-- [ ] **5.5** Add a sound toggle and distinct dice/plane SFX.
+- [x] **5.5** Add a sound toggle and distinct dice/plane SFX. (wave 061)
 
 ## 6. Performance & Stability
 

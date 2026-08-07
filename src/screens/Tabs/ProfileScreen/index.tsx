@@ -14,6 +14,7 @@ import {
   HeaderMaster,
   OwnTabView,
   SecondaryTab,
+  SoundToggle,
   Space,
   Spin
 } from '../../../components'
@@ -108,6 +109,11 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                       key: 'bedtimeReminder',
                       title: t('bedtimeReminder.tab'),
                       Scene: BedtimeReminder
+                    },
+                    {
+                      key: 'soundToggle',
+                      title: t('soundToggle.tab'),
+                      Scene: SoundToggle
                     },
                     {
                       key: 'aiPersona',
