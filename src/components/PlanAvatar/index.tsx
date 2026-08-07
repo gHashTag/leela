@@ -1,15 +1,15 @@
-import React, { memo } from 'react'
-
 import { useTheme } from '@react-navigation/native'
+import React, { memo, useState } from 'react'
 import {
+  ActivityIndicator,
   ImageBackground,
-  ImageSourcePropType,
   ImageStyle,
   Pressable,
   StyleProp,
   StyleSheet,
   View
 } from 'react-native'
+import FastImage from 'react-native-fast-image'
 import { ms, s } from 'react-native-size-matters'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
@@ -23,7 +23,11 @@ interface PlanAvatarI {
   isAccept?: boolean
   aditionalStyle?: StyleProp<ImageStyle>
   onPress?: () => void
+  testID?: string
 }
+
+const isNumber = (value?: string | number): value is number =>
+  typeof value === 'number'
 
 export const PlanAvatar = memo(function ({
   size = 'medium',
@@ -31,25 +35,43 @@ export const PlanAvatar = memo(function ({
   avaUrl,
   aditionalStyle,
   isAccept,
-  onPress
+  onPress,
+  testID
 }: PlanAvatarI) {
   const {
     colors: { background }
   } = useTheme()
+  const [loaded, setLoaded] = useState(false)
   const textPlan = plan < 10 ? `0${plan}` : `${plan}`
   const fontSize = size === 'small' ? s(6) : s(10)
   const badgeS = size === 'small' || size === 'medium' ? smallBadge : bigBadge
 
-  const imageSource: ImageSourcePropType =
-    typeof avaUrl === 'number' ? avaUrl : { uri: avaUrl }
+  const isLocalImage = isNumber(avaUrl)
 
   return (
-    <Pressable onPress={onPress}>
-      <ImageBackground
-        source={imageSource}
-        style={[styles[size], aditionalStyle]}
-        imageStyle={container}
-      >
+    <Pressable onPress={onPress} testID={testID}>
+      <View style={[styles[size], aditionalStyle, styles.wrapper]}>
+        {isLocalImage ? (
+          <ImageBackground
+            source={avaUrl as number}
+            style={StyleSheet.absoluteFill}
+            imageStyle={container}
+          />
+        ) : (
+          <FastImage
+            source={{ uri: avaUrl, priority: FastImage.priority.normal }}
+            style={[StyleSheet.absoluteFill, styles.roundImage]}
+            resizeMode="cover"
+            onLoadStart={() => setLoaded(false)}
+            onLoadEnd={() => setLoaded(true)}
+            onError={() => setLoaded(true)}
+          />
+        )}
+        {!loaded && !isLocalImage && (
+          <View style={[styles.placeholder, { backgroundColor: background }]}>
+            <ActivityIndicator size="small" color={primary} />
+          </View>
+        )}
         <View style={[badge, badgeS, { backgroundColor: background }]}>
           {!isAccept ? (
             <Ionicons size={s(15)} color={orange} name="time-sharp" />
@@ -57,7 +79,7 @@ export const PlanAvatar = memo(function ({
             <Text textStyle={{ fontSize }} title={textPlan} h="h12" />
           )}
         </View>
-      </ImageBackground>
+      </View>
     </Pressable>
   )
 })
@@ -85,6 +107,17 @@ const styles = StyleSheet.create({
     borderRadius: ms(130),
     borderColor: primary,
     borderWidth: s(0.9)
+  },
+  wrapper: {
+    overflow: 'hidden'
+  },
+  roundImage: {
+    borderRadius: ms(130)
+  },
+  placeholder: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   badge: {
     alignItems: 'center',

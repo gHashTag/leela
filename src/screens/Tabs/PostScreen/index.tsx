@@ -139,7 +139,10 @@ export const PostScreen = observer(({ navigation }: Ipost) => {
     </>
   ) : (
     <FlatList
-      removeClippedSubviews={false}
+      removeClippedSubviews={true}
+      maxToRenderPerBatch={8}
+      windowSize={5}
+      initialNumToRender={8}
       refreshing={refreshing}
       onRefresh={onRefresh}
       onScrollToIndexFailed={(error) =>
