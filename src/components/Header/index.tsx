@@ -55,6 +55,7 @@ const Header = memo<HeaderT>(
     return (
       <View
         style={[container, { paddingTop: top, alignItems, backgroundColor }]}
+        testID="header"
       >
         {iconLeft && (
           <Pressable style={{ opacity: iconLeftOpacity }} onPress={onPress}>

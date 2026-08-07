@@ -49,7 +49,15 @@ jest.mock('react-native-video', () => 'Video')
 jest.mock('react-native-video-controls', () => 'VideoControls')
 jest.mock('react-native-youtube-iframe', () => 'YoutubeIframe')
 jest.mock('react-native-webview', () => 'WebView')
-jest.mock('react-native-fast-image', () => 'FastImage')
+jest.mock('react-native-fast-image', () => {
+  const FastImage = () => null
+  FastImage.priority = { high: 'high', normal: 'normal', low: 'low' }
+  return {
+    __esModule: true,
+    default: FastImage,
+    priority: FastImage.priority
+  }
+})
 
 // MobX stores import autoruns at module load time. Provide a minimal store
 // shape so imports do not throw while loading components under test.
