@@ -543,6 +543,9 @@
       "liberation": "освобождение"
     }
   },
+  "rollHistory": {
+    "title": "История бросков"
+  },
   "you": "Вы",
   "placeholderReport": "Сделать отчет о плане",
   "voiceInput": {

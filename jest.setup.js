@@ -85,7 +85,11 @@ jest.mock('./src/store', () => ({
     finishArr: [true, true, true]
   },
   OfflinePlayers: {
-    store: {}
+    store: {
+      histories: [
+        [{ createDate: 1700000000000, plan: 68, count: 6, status: 'start' }]
+      ]
+    }
   },
   OnlinePlayer: {
     store: {

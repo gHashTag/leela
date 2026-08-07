@@ -545,6 +545,9 @@
       "liberation": "liberation"
     }
   },
+  "rollHistory": {
+    "title": "Roll history"
+  },
   "you": "you",
   "placeholderReport": "Make a plan report",
   "voiceInput": {
