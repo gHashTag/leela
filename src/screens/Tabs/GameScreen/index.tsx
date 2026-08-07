@@ -16,6 +16,7 @@ import {
   recordPositiveEvent
 } from '../../../constants'
 import { getUid } from '../../../screens/helper'
+import { subscribeTracked } from '../../../utils/listenerRegistry'
 
 import {
   Background,
@@ -95,12 +96,14 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           .orderBy('createTime', 'desc')
           .limit(limit)
 
-    const unsubscribe = query.onSnapshot(PostStore.fetchOwnPosts, (error) =>
-      captureException(error, 'fetchOwnPosts')
+    const dispose = subscribeTracked('GameScreen', () =>
+      query.onSnapshot(PostStore.fetchOwnPosts, (error) =>
+        captureException(error, 'fetchOwnPosts')
+      )
     )
 
     return () => {
-      unsubscribe()
+      dispose()
     }
   }, [limit])
 

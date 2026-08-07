@@ -10,6 +10,7 @@ import { s, vs } from 'react-native-size-matters'
 import { PostCard, Space, Text } from '../../../../components'
 import { captureException } from '../../../../constants'
 import { PostStore } from '../../../../store'
+import { subscribeTracked } from '../../../../utils/listenerRegistry'
 import { getUid } from '../../../helper'
 import { TabContext } from '../TabContext'
 
@@ -21,16 +22,18 @@ export const ReportsScene = observer(() => {
     useContext(TabContext) as any
 
   useEffect(() => {
-    const subPosts = firestore()
-      .collection('Posts')
-      .where('ownerId', '==', getUid())
-      .orderBy('createTime', 'desc')
-      .limit(limit)
-      .onSnapshot(PostStore.fetchOwnPosts, (error) =>
-        captureException(error, 'subPosts')
-      )
+    const dispose = subscribeTracked('ReportsScene', () =>
+      firestore()
+        .collection('Posts')
+        .where('ownerId', '==', getUid())
+        .orderBy('createTime', 'desc')
+        .limit(limit)
+        .onSnapshot(PostStore.fetchOwnPosts, (error) =>
+          captureException(error, 'subPosts')
+        )
+    )
     return () => {
-      subPosts()
+      dispose()
     }
   }, [limit])
 

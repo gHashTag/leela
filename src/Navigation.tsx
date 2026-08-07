@@ -26,6 +26,7 @@ import {
   useWhatsNewModal
 } from './hooks'
 import { lang } from './i18n'
+import { subscribeTracked } from './utils/listenerRegistry'
 import {
   ActionsModal,
   ChangeIntention,
@@ -160,11 +161,15 @@ const App = () => {
   }, [isDark])
 
   useEffect(() => {
-    const unsub = getFireBaseRef('/minVersion/').on('value', async (snap) => {
-      checkVersion(snap.val())
+    const dispose = subscribeTracked('Navigation', () => {
+      const ref = getFireBaseRef('/minVersion/')
+      const listener = ref.on('value', async (snap) => {
+        checkVersion(snap.val())
+      })
+      return () => ref.off('value', listener)
     })
     //https://console.firebase.google.com/u/0/project/leela-chakra/database/leela-chakra-default-rtdb/data/minVersion
-    return () => getFireBaseRef('/minVersion/').off('value', unsub)
+    return dispose
   }, [])
 
   return (

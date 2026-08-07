@@ -21,6 +21,7 @@ import {
 import { captureException, lightGray } from '../../constants'
 import { OnlinePlayer, PostStore } from '../../store'
 import { CommentT, PostT, RootStackParamList } from '../../types/types'
+import { subscribeTracked } from '../../utils/listenerRegistry'
 import { getUid } from '../helper'
 
 interface DetailPostI {
@@ -89,14 +90,17 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
     const { t } = useTranslation()
     useFocusEffect(
       useCallback(() => {
-        if (curItem) {
-          const subComments = firestore()
+        if (!curItem) return
+        const dispose = subscribeTracked('DetailPostScreen', () =>
+          firestore()
             .collection('Comments')
             .where('postId', '==', curItem.id)
             .onSnapshot(PostStore.fetchComments, (err) =>
               captureException(err, 'DetailPostScreen')
             )
-          return subComments
+        )
+        return () => {
+          dispose()
         }
       }, [curItem])
     )

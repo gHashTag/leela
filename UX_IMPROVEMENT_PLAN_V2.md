@@ -47,7 +47,7 @@
 
 - [x] **6.1** Add bundle splitting for the AI/report screens. (wave 062)
 - [x] **6.2** Add image lazy-loading and placeholder in the reports feed. (wave 063)
-- [ ] **6.3** Add a memory-leak audit for chat subscriptions and listeners.
+- [x] **6.3** Add a memory-leak audit for chat subscriptions and listeners. (wave 064)
 - [ ] **6.4** Add offline queue for reports created without connectivity.
 - [ ] **6.5** Add a crash-free session rate dashboard in Sentry tagging.
 

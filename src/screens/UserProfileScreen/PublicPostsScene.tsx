@@ -9,6 +9,7 @@ import { s, vs } from 'react-native-size-matters'
 
 import { PostCard, Space, Text } from '../../components'
 import { captureException } from '../../constants'
+import { subscribeTracked } from '../../utils/listenerRegistry'
 import { TabContext } from '../Tabs/ProfileScreen/TabContext'
 
 interface PublicPostsSceneT {
@@ -26,27 +27,29 @@ export const PublicPostsScene = observer(({ ownerId }: PublicPostsSceneT) => {
 
   useEffect(() => {
     setLoading(true)
-    const unsub = firestore()
-      .collection('Posts')
-      .where('ownerId', '==', ownerId)
-      .where('accept', '==', true)
-      .orderBy('createTime', 'desc')
-      .limit(limit)
-      .onSnapshot(
-        (snap) => {
-          const res = (snap?.docs ?? [])
-            .map((a) => (a.exists ? a.data() : undefined))
-            .filter((a): a is any => a !== undefined)
-          setPosts(res.sort((a, b) => b.createTime - a.createTime))
-          setLoading(false)
-        },
-        (error) => {
-          captureException(error, 'PublicPostsScene')
-          setLoading(false)
-        }
-      )
+    const dispose = subscribeTracked('PublicPostsScene', () =>
+      firestore()
+        .collection('Posts')
+        .where('ownerId', '==', ownerId)
+        .where('accept', '==', true)
+        .orderBy('createTime', 'desc')
+        .limit(limit)
+        .onSnapshot(
+          (snap) => {
+            const res = (snap?.docs ?? [])
+              .map((a) => (a.exists ? a.data() : undefined))
+              .filter((a): a is any => a !== undefined)
+            setPosts(res.sort((a, b) => b.createTime - a.createTime))
+            setLoading(false)
+          },
+          (error) => {
+            captureException(error, 'PublicPostsScene')
+            setLoading(false)
+          }
+        )
+    )
     return () => {
-      unsub()
+      dispose()
     }
   }, [ownerId, limit])
 

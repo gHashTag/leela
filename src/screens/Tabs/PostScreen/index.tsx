@@ -27,6 +27,7 @@ import {
   filterPosts,
   PostFeedFilter
 } from '../../../utils/postFeedFilter'
+import { subscribeTracked } from '../../../utils/listenerRegistry'
 import { getUid } from '../../helper'
 
 interface Ipost {
@@ -86,26 +87,28 @@ export const PostScreen = observer(({ navigation }: Ipost) => {
     }
 
     const subscribe = (withLanguageFilter: boolean) => {
-      return buildQuery(withLanguageFilter).onSnapshot(
-        (snap) => {
-          PostStore.fetchPosts(snap, withLanguageFilter ? undefined : lang)
-          setLoadError('')
-          setRefreshing(false)
-        },
-        (err) => {
-          if (withLanguageFilter && isIndexError(err)) {
-            // Firestore lacks the composite index for language + createTime.
-            // Tear down the failing listener and fall back to an unfiltered
-            // query, then apply the language filter in memory so the feed
-            // still works while the index is being created.
-            unsubscribeRef.current?.()
-            unsubscribeRef.current = subscribe(false)
-            return
+      return subscribeTracked('PostScreen', () =>
+        buildQuery(withLanguageFilter).onSnapshot(
+          (snap) => {
+            PostStore.fetchPosts(snap, withLanguageFilter ? undefined : lang)
+            setLoadError('')
+            setRefreshing(false)
+          },
+          (err) => {
+            if (withLanguageFilter && isIndexError(err)) {
+              // Firestore lacks the composite index for language + createTime.
+              // Tear down the failing listener and fall back to an unfiltered
+              // query, then apply the language filter in memory so the feed
+              // still works while the index is being created.
+              unsubscribeRef.current?.()
+              unsubscribeRef.current = subscribe(false)
+              return
+            }
+            captureException(err, 'PostScreen: subscription')
+            setLoadError(t('online-part.postsLoadError'))
+            setRefreshing(false)
           }
-          captureException(err, 'PostScreen: subscription')
-          setLoadError(t('online-part.postsLoadError'))
-          setRefreshing(false)
-        }
+        )
       )
     }
 

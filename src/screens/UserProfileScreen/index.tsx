@@ -22,6 +22,7 @@ import {
 } from '../../components'
 import { computeHistoryStreak } from '../../utils/historyStreak'
 import { isPro } from '../../utils/isPro'
+import { subscribeTracked } from '../../utils/listenerRegistry'
 import { PublicPostsScene } from './PublicPostsScene'
 import { RootStackParamList, UserT } from '../../types/types'
 
@@ -58,33 +59,37 @@ export const UserProfileScreen = observer(
     const { t } = useTranslation()
 
     useEffect(() => {
-      const unsub = firestore()
-        .collection('Profiles')
-        .doc(ownerId)
-        .onSnapshot(async (snap) => {
-          const {
-            avatar,
-            intention,
-            history,
-            plan,
-            firstName,
-            lastName,
-            status
-          } = snap.data() as UserT
-          const avaUrl = await getIMG(avatar)
-          setData({
-            intention: intention || '',
-            history: history as any,
-            avatar: avaUrl,
-            plan: plan,
-            fullName: `${firstName} ${lastName}`,
-            streak: computeHistoryStreak(history || []),
-            status
+      const dispose = subscribeTracked('UserProfileScreen', () =>
+        firestore()
+          .collection('Profiles')
+          .doc(ownerId)
+          .onSnapshot(async (snap) => {
+            const {
+              avatar,
+              intention,
+              history,
+              plan,
+              firstName,
+              lastName,
+              status
+            } = snap.data() as UserT
+            const avaUrl = await getIMG(avatar)
+            setData({
+              intention: intention || '',
+              history: history as any,
+              avatar: avaUrl,
+              plan: plan,
+              fullName: `${firstName} ${lastName}`,
+              streak: computeHistoryStreak(history || []),
+              status
+            })
+            setLoad(false)
           })
-          setLoad(false)
-        })
+      )
 
-      return unsub
+      return () => {
+        dispose()
+      }
     }, [ownerId])
 
     const { width: W, height: H } = useWindowDimensions()
