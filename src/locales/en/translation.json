@@ -558,6 +558,17 @@
     "playerPlural": "players",
     "accessibilityLabel": "Resume the last saved game"
   },
+  "bedtimeReminder": {
+    "tab": "Reminder",
+    "title": "Gentle bedtime reminder",
+    "description": "Close the day with a moment of reflection.",
+    "enabled": "Enabled",
+    "decrease": "Decrease reminder hour",
+    "increase": "Increase reminder hour",
+    "notificationTitle": "Time to unwind with Leela",
+    "notificationBody": "A few minutes of reflection before sleep can clear the day.",
+    "notificationChannelName": "Bedtime reminders"
+  },
   "uxFeedback": {
     "button": "Feedback",
     "buttonLabel": "Send feedback about the app",

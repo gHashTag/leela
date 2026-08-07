@@ -20,6 +20,7 @@ import { OnlinePlayer } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types/types'
 
 import { TabContextProvider } from './TabContext'
+import { BedtimeReminder } from '../../../components'
 import { HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
 import { useActions } from '../../../components/HeaderMaster/useActions'
 
@@ -93,6 +94,11 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                       key: 'intentionOfGame',
                       title: t('intention'),
                       Scene: IntentionOfGame
+                    },
+                    {
+                      key: 'bedtimeReminder',
+                      title: t('bedtimeReminder.tab'),
+                      Scene: BedtimeReminder
                     }
                   ]}
                   style={[styles.tabContainer, { height: tabViewH }]}

@@ -8,6 +8,7 @@ import { s } from 'react-native-size-matters'
 
 import {
   AppContainer,
+  BedtimeReminder,
   Button,
   CenterView,
   HistoryStep,
@@ -48,6 +49,7 @@ export const OfflineProfileScreen = observer(({}: ProfileScreenT) => {
             ListHeaderComponent={<Space height={10} />}
             ListFooterComponent={
               <>
+                <BedtimeReminder />
                 <Space height={70} />
                 <Button
                   title={t('actions.startOver')}
