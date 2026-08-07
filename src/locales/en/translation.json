@@ -686,7 +686,12 @@
       "Chat history supports pull-to-refresh.",
       "New scroll-to-bottom button in AI chat.",
       "Haptic feedback on copy and share actions.",
-      "Improved accessibility labels for dice and board."
+      "Improved accessibility labels for dice and board.",
+      "Subtle liberation celebration animation when you reach Cosmic Consciousness."
     ]
+  },
+  "winCelebration": {
+    "title": "✦ Liberation ✦",
+    "accessibilityLabel": "Liberation celebration animation"
   }
 }

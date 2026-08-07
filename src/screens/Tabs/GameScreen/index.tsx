@@ -26,7 +26,8 @@ import {
   Space,
   StreakJournal,
   Text,
-  UxFeedback
+  UxFeedback,
+  WinCelebration
 } from '../../../components'
 import { useLeftTimeForStep } from '../../../hooks'
 import {
@@ -157,6 +158,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       <Text h="h3" title={`isBlockGame: ${isBlockGame}`} /> */}
 
       <GameBoard />
+      <WinCelebration />
     </Background>
   )
 })

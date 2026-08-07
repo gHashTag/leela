@@ -69,7 +69,7 @@
 - [x] **8.1** Add haptic feedback to copy and share actions in ChatScreen and DailyVerse.
 - [x] **8.2** Add a "What's new" changelog modal after app updates.
 - [x] **8.3** Add pull-to-refresh to the AI chat history.
-- [ ] **8.4** Add a subtle win celebration animation when the player reaches liberation.
+- [x] **8.4** Add a subtle win celebration animation when the player reaches liberation.
 
 ---
 
