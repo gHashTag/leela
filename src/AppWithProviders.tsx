@@ -9,10 +9,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import SplashScreen from 'react-native-splash-screen'
 import VersionInfo from 'react-native-version-info'
+import { useTranslation } from 'react-i18next'
 
 import Navigation from './Navigation'
 import { RevenueCatProvider } from './providers/RevenueCatProvider'
 import { updateAndroidBadgeCount } from './utils/notifications/NotificationHelper'
+import { scheduleDailyVerseNotification } from './utils/notifications'
 
 const routingInstrumentation = new Sentry.ReactNavigationInstrumentation()
 
@@ -64,8 +66,12 @@ LogBox.ignoreLogs([
 ])
 
 function AppWithProviders() {
+  const { t } = useTranslation()
+
   useEffect(() => {
     SplashScreen.hide()
+    scheduleDailyVerseNotification(t)
+
     const unsub = AppState.addEventListener('change', async (state) => {
       if (state === 'active') {
         updateAndroidBadgeCount({ type: 'clear' })
@@ -73,7 +79,7 @@ function AppWithProviders() {
       }
     })
     return unsub.remove
-  }, [])
+  }, [t])
 
   return (
     <SafeAreaProvider>

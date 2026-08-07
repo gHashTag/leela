@@ -24,3 +24,4 @@ export async function notificationActionsHandler(event: Event) {
 }
 
 export * from './dailyPhrasesNotification'
+export * from './dailyVerseNotification'

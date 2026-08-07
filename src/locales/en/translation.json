@@ -567,6 +567,8 @@
     "shareTitle": "Daily Vedic Reflection",
     "shareMessage": "Today's reflection from Leela:",
     "shareError": "Could not share the verse image. Please try again.",
+    "notificationTitle": "Today's Vedic Reflection",
+    "notificationChannelName": "Daily verse reminders",
     "accessibilityLabel": "Daily Vedic reflection card",
     "accessibilityHint": "Tap to expand the reflection",
     "shareAccessibilityLabel": "Share the daily verse as an image",

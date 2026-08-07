@@ -14,12 +14,7 @@ import { s, vs } from 'react-native-size-matters'
 import ViewShot from 'react-native-view-shot'
 import { Space, Text } from '../../components'
 import { captureException } from '../../constants'
-
-interface Verse {
-  quote: string
-  source: string
-  reflection: string
-}
+import { getVerseOfTheDay } from '../../utils/dailyVerse'
 
 export const DailyVerse = memo(() => {
   const { t } = useTranslation()
@@ -29,21 +24,7 @@ export const DailyVerse = memo(() => {
   const [isSharing, setIsSharing] = useState(false)
   const cardRef = useRef<ViewShot>(null)
 
-  const verses = useMemo(
-    () =>
-      (t('dailyVerse.verses', { returnObjects: true }) || []) as Verse[],
-    [t]
-  )
-
-  const verse = useMemo(() => {
-    if (!verses.length) return null
-    const now = new Date()
-    const start = new Date(now.getFullYear(), 0, 0)
-    const dayOfYear = Math.floor(
-      (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-    )
-    return verses[dayOfYear % verses.length]
-  }, [verses])
+  const verse = useMemo(() => getVerseOfTheDay(t), [t])
 
   const handleShareImage = async () => {
     if (!cardRef.current || isSharing) return
