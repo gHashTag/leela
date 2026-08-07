@@ -23,6 +23,7 @@ import {
   useExitModal,
   useGameAndProfileIsOnline,
   useNetwork,
+  useOfflinePostRetry,
   useWhatsNewModal
 } from './hooks'
 import { lang } from './i18n'
@@ -103,6 +104,7 @@ const Tab = observer(() => {
   useGameAndProfileIsOnline()
   useExitModal()
   useNetwork()
+  useOfflinePostRetry()
   useWhatsNewModal()
   const isBlockGame = SubscribeStore.isBlockGame
   return (

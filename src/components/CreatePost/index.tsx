@@ -1,6 +1,7 @@
 import { yupResolver } from '@hookform/resolvers/yup'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import auth from '@react-native-firebase/auth'
+import NetInfo from '@react-native-community/netinfo'
 import { LEELA_ID } from '@env'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
@@ -29,6 +30,10 @@ import { useVoiceInput } from '../../hooks'
 import { startStepTimer } from '../../screens/helper'
 import { PostStore } from '../../store'
 import { useRevenueCat } from '../../providers/RevenueCatProvider'
+import {
+  buildQueuedPost,
+  enqueuePost
+} from '../../utils/offlinePostQueue'
 import { streamZaiChat } from '../../utils/aiStream'
 import { buildSystemMessage, loadAiPersona } from '../../utils/aiPersona'
 
@@ -232,6 +237,31 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
     } catch (error) {
       captureException(error as Error, 'CreatePost: handleSubmit')
       setLoading(false)
+
+      const netInfo = await NetInfo.fetch()
+      if (netInfo.isConnected === false) {
+        const queued = await buildQueuedPost({
+          text: data.text,
+          plan,
+          systemMessage,
+          planText: t(`plan_${plan}.content`),
+          pro: user.pro
+        })
+        if (queued) {
+          await enqueuePost(queued)
+          await AsyncStorage.removeItem('@draftReport')
+          methods.reset()
+          navigate('TAB_BOTTOM_1')
+          Alert.alert(
+            t('offlineQueue.title') || 'Offline',
+            t('offlineQueue.saved') ||
+              'No connection. Your report is saved and will be sent automatically when you are back online.',
+            [{ text: 'OK' }]
+          )
+          return
+        }
+      }
+
       showError(
         t('postCreateFailed') ||
           'The report could not be created. Please try again.'

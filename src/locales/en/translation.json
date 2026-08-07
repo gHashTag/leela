@@ -873,5 +873,11 @@
   "winCelebration": {
     "title": "✦ Liberation ✦",
     "accessibilityLabel": "Liberation celebration animation"
+  },
+  "offlineQueue": {
+    "title": "Offline",
+    "saved": "No connection. Your report is saved and will be sent automatically when you are back online.",
+    "sending": "Sending queued report...",
+    "sent": "Queued report sent."
   }
 }

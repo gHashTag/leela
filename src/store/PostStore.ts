@@ -119,6 +119,17 @@ export const PostStore = {
     throw new Error('Missing userUid or email')
   },
 
+  savePostFromQueue: async (post: PostT) => {
+    try {
+      await firestore().collection('Posts').doc(post.id).set(post)
+      const docSnapshot = await firestore().collection('Posts').doc(post.id).get()
+      return docSnapshot.exists ? docSnapshot.data() : null
+    } catch (error) {
+      captureException(error, 'savePostFromQueue')
+      throw error
+    }
+  },
+
   createComment: async ({
     text,
     postId,
