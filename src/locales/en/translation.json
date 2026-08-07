@@ -566,6 +566,14 @@
     "noEntries": "No reflections yet. Start your streak today.",
     "close": "Close"
   },
+  "streakMilestone": {
+    "title": "{{days}}-day streak!",
+    "body": "You have been reflecting with Leela for {{days}} days. Keep the momentum going.",
+    "shareButton": "Share",
+    "close": "Close",
+    "shareTitle": "Leela streak",
+    "shareMessage": "I just reached a {{days}}-day reflection streak in Leela Chakra. 🕉️"
+  },
   "weeklyStreak": {
     "title": "This week",
     "daySingular": "day",

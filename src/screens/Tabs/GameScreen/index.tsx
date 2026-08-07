@@ -33,6 +33,7 @@ import {
   RollHistory,
   Space,
   StreakJournal,
+  StreakMilestone,
   Text,
   TutorialOverlay,
   UxFeedback,
@@ -160,6 +161,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       </Header>
       <DailyVerse />
       <WeeklyStreak />
+      <StreakMilestone />
       <ResumeLastGame
         onResume={() =>
           navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })

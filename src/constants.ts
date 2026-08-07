@@ -112,7 +112,11 @@ export const onLeaveFeedback = (onAction: (success: any) => void) => {
   Rate.rate(options, onAction)
 }
 
-export { recordPositiveAiAnswer, resetPositiveAiAnswerCount } from './utils/reviewPrompt'
+export {
+  recordPositiveAiAnswer,
+  recordPositiveEvent,
+  resetPositiveAiAnswerCount
+} from './utils/reviewPrompt'
 
 export const maybeRequestReview = async () => {
   if (!(await canRequestReview())) return

@@ -27,6 +27,22 @@ export async function resetPositiveAiAnswerCount(): Promise<void> {
   }
 }
 
+const POSITIVE_EVENT_COUNT_KEY = '@positiveEvents'
+
+export async function recordPositiveEvent(): Promise<void> {
+  try {
+    const current = Number(
+      (await AsyncStorage.getItem(POSITIVE_EVENT_COUNT_KEY)) || '0'
+    )
+    await AsyncStorage.setItem(
+      POSITIVE_EVENT_COUNT_KEY,
+      String(current + 1)
+    )
+  } catch (error) {
+    captureException(error, 'recordPositiveEvent')
+  }
+}
+
 export async function getPositiveAiAnswerCount(): Promise<number> {
   try {
     return Number((await AsyncStorage.getItem(AI_THUMBS_UP_COUNT_KEY)) || '0')
