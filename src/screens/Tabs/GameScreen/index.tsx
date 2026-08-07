@@ -34,6 +34,7 @@ import {
   Space,
   StreakJournal,
   Text,
+  TutorialOverlay,
   UxFeedback,
   WeeklyStreak,
   WinCelebration
@@ -190,6 +191,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
         visible={showLegend}
         onClose={() => setShowLegend(false)}
       />
+      <TutorialOverlay />
     </Background>
   )
 })

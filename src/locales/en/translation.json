@@ -908,5 +908,18 @@
     "larger": "Larger",
     "smaller": "Smaller",
     "reset": "Reset to default"
+  },
+  "tutorial": {
+    "introTitle": "How to play",
+    "introBody": "Leela is a journey across 72 inner planes. Each roll moves your piece and surfaces a reflection to explore.",
+    "rollTitle": "Roll the dice",
+    "rollBody": "Tap the dice to roll. The number moves your piece along the path. Every plane has a lesson and an AI-guided reflection.",
+    "reportTitle": "Write a report",
+    "reportBody": "When you land, write a short report about what is happening inside. Leela AI answers from the board's wisdom.",
+    "finishTitle": "Reach liberation",
+    "finishBody": "Arrows lift you forward, snakes invite you to look again. The goal is not to win quickly — it is to see yourself clearly.",
+    "next": "Next",
+    "skip": "Skip",
+    "done": "Start playing"
   }
 }
