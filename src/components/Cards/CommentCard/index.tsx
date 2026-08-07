@@ -14,6 +14,7 @@ import {
   ButtonVectorIcon,
   FollowUpQuestions,
   PlanAvatar,
+  Reactions,
   SimplifyAnswer,
   Space,
   SubCommentCard,
@@ -150,6 +151,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
               displayText={text}
               isAi={isAiComment(item.ownerId)}
             />
+            <Reactions postId={item.postId} commentId={item.id} />
             {isAiComment(item.ownerId) && (
               <>
                 <AiSources text={text} />

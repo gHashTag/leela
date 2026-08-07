@@ -633,6 +633,11 @@
     "mostDiscussed": "Most discussed",
     "myPosts": "My reports"
   },
+  "reactions": {
+    "praying": "Praying",
+    "heart": "Love",
+    "fire": "Fire"
+  },
   "dailyVerse": {
     "title": "Daily Vedic Reflection",
     "reflection": "Reflection",

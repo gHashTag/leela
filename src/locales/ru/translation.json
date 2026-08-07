@@ -631,6 +631,11 @@
     "mostDiscussed": "Обсуждаемые",
     "myPosts": "Мои отчёты"
   },
+  "reactions": {
+    "praying": "Молитва",
+    "heart": "Любовь",
+    "fire": "Огонь"
+  },
   "dailyVerse": {
     "title": "Ежедневное ведическое размышление",
     "reflection": "Размышление",

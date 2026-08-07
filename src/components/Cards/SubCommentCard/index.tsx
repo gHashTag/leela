@@ -6,7 +6,7 @@ import { useTypedNavigation } from '../../../hooks'
 
 import { getActions } from './ModalActions'
 
-import { HashtagFormat, Space, Text } from '../../'
+import { HashtagFormat, Reactions, Space, Text } from '../../'
 import { PlanAvatar } from '../../'
 import { OpenActionsModal, fuchsia, lightGray } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
@@ -81,6 +81,10 @@ export function SubCommentCard({ item }: SubComT) {
         <Space width={s(5)} />
         <HashtagFormat hashTagColor={fuchsia} title={text} h="h6" selectable />
       </View>
+      <View style={styles.reactionsContainer}>
+        <Space width={s(5)} />
+        <Reactions postId={item.postId} commentId={item.id} />
+      </View>
     </View>
   )
 }
@@ -102,6 +106,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap'
   },
   textContainer: {
+    flexDirection: 'row'
+  },
+  reactionsContainer: {
     flexDirection: 'row'
   }
 })

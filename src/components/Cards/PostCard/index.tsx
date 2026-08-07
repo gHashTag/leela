@@ -9,6 +9,7 @@ import {
   ButtonVectorIcon,
   HashtagFormat,
   PlanAvatar,
+  Reactions,
   Space,
   Text
 } from '../../'
@@ -151,6 +152,7 @@ export const PostCard: React.FC<postCardI> = memo(
               title={text || ' '}
               selectable
             />
+            <Reactions postId={item.id} />
             {/* Detail Date */}
             <View style={headerS}>
               <View style={flex1} />
@@ -245,6 +247,7 @@ export const PostCard: React.FC<postCardI> = memo(
               h={'h5'}
               title={text || ' '}
             />
+            <Reactions postId={item.id} />
             {!item.accept && (
               <>
                 <Space height={vs(5)} />
