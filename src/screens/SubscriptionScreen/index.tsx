@@ -20,6 +20,7 @@ import {
 import {
   GiftSubscriptionButton,
   Loading,
+  PayWhatYouWantOption,
   PurchaseButton,
   Space,
   Text,
@@ -152,6 +153,7 @@ const SubscriptionScreen: React.FC = () => {
             ))}
           </>
         )}
+        <PayWhatYouWantOption selectedPackage={selectedPackage} />
         <Space height={10} />
         <PurchaseButton
           title="buy"

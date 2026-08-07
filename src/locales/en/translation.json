@@ -769,6 +769,14 @@
     "emailSubject": "Gift Leela Pro — {{package}}",
     "emailBody": "Hello Leela team,\n\nI would like to gift a Leela Pro subscription to a friend or family member.\n\nSelected plan: {{package}}\nPrice: {{price}}\nApp language: {{language}}\n\nPlease let me know the next steps to complete the gift.\n\nThank you."
   },
+  "payWhatYouWant": {
+    "title": "Pay what you want",
+    "subtitle": "Choose a yearly support level that works for your region",
+    "minimum": "Minimum",
+    "balanced": "Balanced",
+    "generous": "Generous",
+    "selected": "Selected: {{tier}}"
+  },
   "sampleAnswer": {
     "title": "See Leela answer before subscribing",
     "question": "I landed on plane 12 — Confusion. I feel stuck between choices and don't know which direction to take.",
