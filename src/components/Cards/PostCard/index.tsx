@@ -10,6 +10,7 @@ import {
   ButtonVectorIcon,
   HashtagFormat,
   PlanAvatar,
+  ProBadge,
   Reactions,
   Space,
   Text
@@ -51,6 +52,7 @@ export const PostCard: React.FC<postCardI> = memo(
       isHideTranslate
     } = props
     const { user } = useRevenueCat()
+    const isPostPro = Boolean(item?.pro || user.pro)
     const [isLoading, setIsLoading] = useState(false)
     const item: PostT | undefined =
       post ||
@@ -146,6 +148,12 @@ export const PostCard: React.FC<postCardI> = memo(
                 <Space height={vs(6.5)} />
                 <View style={headerName}>
                   <Text numberOfLines={1} h={'h6'} title={fullName as string} />
+                  {isPostPro && (
+                    <>
+                      <Space width={s(6)} />
+                      <ProBadge small />
+                    </>
+                  )}
                 </View>
                 <Text
                   h={'h5'}
@@ -249,6 +257,12 @@ export const PostCard: React.FC<postCardI> = memo(
             <Space height={vs(2)} />
             <View style={headerName}>
               <Text numberOfLines={1} h={'h6'} title={fullName as string} />
+              {isPostPro && (
+                <>
+                  <Space width={s(6)} />
+                  <ProBadge small />
+                </>
+              )}
               <Text h={'h6'} textStyle={lightText} title={` · ${date}`} />
               <View style={flex1} />
               {/* <Pressable onPress={handleTranslate}>

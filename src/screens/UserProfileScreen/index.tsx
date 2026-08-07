@@ -21,6 +21,7 @@ import {
   Text
 } from '../../components'
 import { computeHistoryStreak } from '../../utils/historyStreak'
+import { isPro } from '../../utils/isPro'
 import { PublicPostsScene } from './PublicPostsScene'
 import { RootStackParamList, UserT } from '../../types/types'
 
@@ -49,7 +50,8 @@ export const UserProfileScreen = observer(
       avatar: '',
       plan: 0,
       fullName: '',
-      streak: 0
+      streak: 0,
+      status: null as UserT['status']
     })
 
     const [load, setLoad] = useState(true)
@@ -60,8 +62,15 @@ export const UserProfileScreen = observer(
         .collection('Profiles')
         .doc(ownerId)
         .onSnapshot(async (snap) => {
-          const { avatar, intention, history, plan, firstName, lastName } =
-            snap.data() as UserT
+          const {
+            avatar,
+            intention,
+            history,
+            plan,
+            firstName,
+            lastName,
+            status
+          } = snap.data() as UserT
           const avaUrl = await getIMG(avatar)
           setData({
             intention: intention || '',
@@ -69,7 +78,8 @@ export const UserProfileScreen = observer(
             avatar: avaUrl,
             plan: plan,
             fullName: `${firstName} ${lastName}`,
-            streak: computeHistoryStreak(history || [])
+            streak: computeHistoryStreak(history || []),
+            status
           })
           setLoad(false)
         })
@@ -102,6 +112,7 @@ export const UserProfileScreen = observer(
                     plan={data.plan}
                     fullName={data.fullName}
                     editable={editable}
+                    pro={isPro({ status: data.status } as UserT)}
                   />
                   {data.streak > 0 && (
                     <>

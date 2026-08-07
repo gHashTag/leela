@@ -15,6 +15,7 @@ import {
   ButtonVectorIcon,
   FollowUpQuestions,
   PlanAvatar,
+  ProBadge,
   Reactions,
   SimplifyAnswer,
   Space,
@@ -135,6 +136,12 @@ export const CommentCard: React.FC<CommentCardI> = observer(
           <View style={styles.content}>
             <View style={styles.commentHead}>
               <Text numberOfLines={1} h={'h6'} title={curName as string} />
+              {Boolean(item.pro) && (
+                <>
+                  <Space width={s(6)} />
+                  <ProBadge small />
+                </>
+              )}
               <Text
                 numberOfLines={1}
                 colors={{ light: lightGray, dark: gray }}

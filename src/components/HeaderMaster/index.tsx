@@ -9,9 +9,11 @@ import { useActions } from './useActions'
 import { Text } from '../'
 import { PressableAvatar } from '../Avatar'
 import { Pressable } from '../Pressable'
-import { Space } from '../Space'
+import { ProBadge, Space } from '../'
 import { useChooseAvatarImage } from '../../hooks/useChooseAvatarImage'
 import { captureException } from '../../constants'
+import { OnlinePlayer } from '../../store'
+import { isPro } from '../../utils/isPro'
 
 interface HeaderMasterT {
   avatar: string
@@ -21,6 +23,7 @@ interface HeaderMasterT {
   fullName?: string
   onPressName?: () => void
   editable?: boolean
+  pro?: boolean
 }
 
 const HeaderMaster = observer(
@@ -31,7 +34,8 @@ const HeaderMaster = observer(
     plan,
     firstName = '',
     lastName = '',
-    fullName = ''
+    fullName = '',
+    pro
   }: HeaderMasterT) => {
     const { onPressEdit } = useActions()
     const { ava, chooseAvatarImage, isLoading, setAva } = useChooseAvatarImage()
@@ -79,6 +83,12 @@ const HeaderMaster = observer(
             </>
           )}
         </Pressable>
+        {(pro || isPro(OnlinePlayer.store as any)) && (
+          <>
+            <Space height={vs(4)} />
+            <ProBadge />
+          </>
+        )}
       </View>
     )
   }

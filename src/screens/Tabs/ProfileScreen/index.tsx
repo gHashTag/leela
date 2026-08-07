@@ -75,6 +75,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                   firstName={firstName}
                   lastName={lastName}
                   editable
+                  pro
                   onPressName={() =>
                     navigation.navigate('USER_EDIT', OnlinePlayer.store.profile)
                   }

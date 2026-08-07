@@ -6,7 +6,7 @@ import { useTypedNavigation } from '../../../hooks'
 
 import { getActions } from './ModalActions'
 
-import { HashtagFormat, Reactions, Space, Text } from '../../'
+import { HashtagFormat, ProBadge, Reactions, Space, Text } from '../../'
 import { PlanAvatar } from '../../'
 import { OpenActionsModal, fuchsia, lightGray } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
@@ -61,6 +61,12 @@ export function SubCommentCard({ item }: SubComT) {
         <View style={styles.infoContainer}>
           <View style={styles.infoLine}>
             <Text numberOfLines={1} h={'h6'} title={curName as string} />
+            {Boolean(item.pro) && (
+              <>
+                <Space width={s(6)} />
+                <ProBadge small />
+              </>
+            )}
             <Text
               numberOfLines={1}
               h={'h6'}
