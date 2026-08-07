@@ -9,6 +9,7 @@ import { useTypedNavigation } from '../../../hooks'
 import { getActions } from './ModalActions'
 
 import {
+  AiFeedbackButtons,
   ButtonVectorIcon,
   FollowUpQuestions,
   HashtagFormat,
@@ -144,7 +145,10 @@ export const CommentCard: React.FC<CommentCardI> = observer(
             </View>
             <HashtagFormat h="h6" title={text} selectable />
             {isAiComment(item.ownerId) && (
-              <FollowUpQuestions postId={item.postId} />
+              <>
+                <AiFeedbackButtons postId={item.postId} />
+                <FollowUpQuestions postId={item.postId} />
+              </>
             )}
             <Space height={vs(20)} />
             <FlatList

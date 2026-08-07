@@ -616,6 +616,10 @@
     "tab": "Saved Answers",
     "title": "Leela's answer for plane {{plan}}"
   },
+  "aiFeedback": {
+    "up": "Helpful answer",
+    "down": "Not helpful answer"
+  },
   "dailyVerse": {
     "title": "Daily Vedic Reflection",
     "reflection": "Reflection",
