@@ -6,6 +6,7 @@ import {
   Alert,
   FlatList,
   StyleSheet,
+  Vibration,
   View
 } from 'react-native'
 import { Bubble, GiftedChat, IMessage } from 'react-native-gifted-chat'
@@ -262,6 +263,7 @@ const ChatScreen: React.FC = () => {
       if (!text) return
       try {
         await Clipboard.setString(text)
+        Vibration.vibrate(20)
         setCopiedId(messageId)
         setTimeout(() => setCopiedId(null), 2000)
       } catch (error) {

@@ -5,6 +5,7 @@ import {
   Share,
   StyleSheet,
   TouchableOpacity,
+  Vibration,
   View,
   useColorScheme
 } from 'react-native'
@@ -55,6 +56,7 @@ export const DailyVerse = memo(() => {
         message: `${t('dailyVerse.shareMessage')}\n${verse?.quote || ''}`,
         url: uri
       })
+      Vibration.vibrate(30)
     } catch (error) {
       if ((error as Error)?.message?.includes('cancel')) return
       captureException(error, 'DailyVerse: shareImage')

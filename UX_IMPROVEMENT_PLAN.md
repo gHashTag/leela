@@ -64,8 +64,17 @@
 
 ---
 
+## 8. Polish & Delight
+
+- [x] **8.1** Add haptic feedback to copy and share actions in ChatScreen and DailyVerse.
+- [ ] **8.2** Add a "What's new" changelog modal after app updates.
+- [ ] **8.3** Add pull-to-refresh to the AI chat history.
+- [ ] **8.4** Add a subtle win celebration animation when the player reaches liberation.
+
+---
+
 ## Cooperation options for the next loop
 
-1. **Finish section 7** — complete the remaining sharing and accessibility items.
-2. **Quality sweep** — run the full test suite, fix warnings, and improve TypeScript strictness in one area.
-3. **Analytics-driven** — wire up lightweight event tracking for the new copy/share actions and prioritize the next plan by real usage.
+1. **Finish section 8** — complete the remaining polish and delight items.
+2. **Quality sweep** — run the full test suite, fix the Sentry/Messaging teardown warnings, and tighten TypeScript in one area.
+3. **Analytics-driven extension** — instrument the new copy/share/haptic actions and use the data to seed plan v2.
