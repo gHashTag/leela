@@ -3,6 +3,7 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from 'react-i18next'
 import {
+  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -23,13 +24,19 @@ export interface JournalEntry {
 }
 
 const STORAGE_KEY = '@streakJournal'
+const RECOVERY_KEY = '@streakRecoveryLastUsed'
 
 export const getLocalDateString = (date: Date) => {
   const offset = date.getTimezoneOffset() * 60000
   return new Date(date.getTime() - offset).toISOString().split('T')[0]
 }
 
-const loadEntries = async (): Promise<JournalEntry[]> => {
+const parseLocalDate = (dateString: string) => {
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+export const loadEntries = async (): Promise<JournalEntry[]> => {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY)
     return raw ? JSON.parse(raw) : []
@@ -44,6 +51,23 @@ const saveEntries = async (entries: JournalEntry[]) => {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
   } catch (error) {
     captureException(error as Error, 'StreakJournal: saveEntries')
+  }
+}
+
+const getLastRecoveryDate = async (): Promise<string | null> => {
+  try {
+    return await AsyncStorage.getItem(RECOVERY_KEY)
+  } catch (error) {
+    captureException(error as Error, 'StreakJournal: getLastRecoveryDate')
+    return null
+  }
+}
+
+const setLastRecoveryDate = async (date: string) => {
+  try {
+    await AsyncStorage.setItem(RECOVERY_KEY, date)
+  } catch (error) {
+    captureException(error as Error, 'StreakJournal: setLastRecoveryDate')
   }
 }
 
@@ -65,6 +89,33 @@ export const computeStreak = (entries: JournalEntry[]) => {
   return streak
 }
 
+export const canRecoverStreak = (
+  entries: JournalEntry[],
+  lastRecoveryDate: string | null
+): boolean => {
+  const dates = new Set(entries.map((entry) => entry.date))
+  const yesterdayDate = new Date()
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+  const yesterday = getLocalDateString(yesterdayDate)
+  const dayBeforeYesterdayDate = new Date()
+  dayBeforeYesterdayDate.setDate(dayBeforeYesterdayDate.getDate() - 2)
+  const dayBeforeYesterday = getLocalDateString(dayBeforeYesterdayDate)
+
+  if (dates.has(yesterday)) return false
+  if (!dates.has(dayBeforeYesterday)) return false
+
+  if (lastRecoveryDate) {
+    const today = parseLocalDate(getLocalDateString(new Date()))
+    const lastRecovery = parseLocalDate(lastRecoveryDate)
+    const diffDays = Math.floor(
+      (today.getTime() - lastRecovery.getTime()) / (1000 * 60 * 60 * 24)
+    )
+    if (diffDays < 7) return false
+  }
+
+  return true
+}
+
 export const StreakJournal = memo(() => {
   const { t } = useTranslation()
   const scheme = useColorScheme()
@@ -73,14 +124,20 @@ export const StreakJournal = memo(() => {
   const [entries, setEntries] = useState<JournalEntry[]>([])
   const [modalVisible, setModalVisible] = useState(false)
   const [draft, setDraft] = useState('')
+  const [lastRecoveryDate, setLastRecoveryDate] = useState<string | null>(null)
 
   useEffect(() => {
     loadEntries().then(setEntries)
+    getLastRecoveryDate().then(setLastRecoveryDate)
   }, [])
 
   const streak = useMemo(() => computeStreak(entries), [entries])
   const today = getLocalDateString(new Date())
   const todayEntry = entries.find((entry) => entry.date === today)
+  const recoveryAvailable = useMemo(
+    () => canRecoverStreak(entries, lastRecoveryDate),
+    [entries, lastRecoveryDate]
+  )
 
   const openModal = useCallback(() => {
     setDraft(todayEntry?.text || '')
@@ -104,6 +161,38 @@ export const StreakJournal = memo(() => {
     setDraft('')
     setModalVisible(false)
   }, [draft, entries, today, todayEntry])
+
+  const handleRecover = useCallback(async () => {
+    Alert.alert(
+      t('streakJournal.recoveryTitle'),
+      t('streakJournal.recoveryBody'),
+      [
+        {
+          text: t('streakJournal.recoveryCancel'),
+          style: 'cancel'
+        },
+        {
+          text: t('streakJournal.recoveryConfirm'),
+          onPress: async () => {
+            const yesterdayDate = new Date()
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+            const yesterday = getLocalDateString(yesterdayDate)
+            const recovered: JournalEntry = {
+              date: yesterday,
+              text: t('streakJournal.recoveredEntry')
+            }
+            const next = [...entries, recovered]
+            next.sort((a, b) => b.date.localeCompare(a.date))
+            await saveEntries(next)
+            await setLastRecoveryDate(today)
+            setEntries(next)
+            setLastRecoveryDate(today)
+          }
+        }
+      ],
+      { cancelable: true }
+    )
+  }, [entries, t, today])
 
   const streakLabel = `${t('streakJournal.streakLabel')} ${streak} ${
     streak === 1 ? t('streakJournal.daySingular') : t('streakJournal.dayPlural')
@@ -138,6 +227,17 @@ export const StreakJournal = memo(() => {
           }
           oneColor="#E0E0E0"
         />
+        {recoveryAvailable && (
+          <>
+            <Space height={vs(8)} />
+            <ButtonWithIcon
+              iconName="refresh-outline"
+              h="h10"
+              title={t('streakJournal.recoverStreak')}
+              onPress={handleRecover}
+            />
+          </>
+        )}
       </TouchableOpacity>
 
       <Modal

@@ -564,7 +564,13 @@
     "placeholder": "Write a short reflection…",
     "save": "Save reflection",
     "noEntries": "No reflections yet. Start your streak today.",
-    "close": "Close"
+    "close": "Close",
+    "recoverStreak": "Recover yesterday's streak",
+    "recoveredEntry": "Streak recovered",
+    "recoveryTitle": "Recover streak?",
+    "recoveryBody": "You can forgive one missed day every 7 days. This will keep your current streak alive.",
+    "recoveryConfirm": "Recover",
+    "recoveryCancel": "Cancel"
   },
   "streakMilestone": {
     "title": "{{days}}-day streak!",
