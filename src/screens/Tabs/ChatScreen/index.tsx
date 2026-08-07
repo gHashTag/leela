@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Clipboard from '@react-native-clipboard/clipboard'
 import { useTranslation } from 'react-i18next'
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   StyleSheet,
   View
 } from 'react-native'
@@ -65,6 +66,12 @@ const ChatScreen: React.FC = () => {
   })
   const [loading, setLoading] = useState(false)
   const [copiedId, setCopiedId] = useState<string | number | null>(null)
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false)
+
+  const listRef = useRef<FlatList<IMessage> | null>(null)
+  const scrollOffsetRef = useRef(0)
+  const contentHeightRef = useRef(0)
+  const layoutHeightRef = useRef(0)
 
   const { t } = useTranslation()
 
@@ -347,6 +354,55 @@ const ChatScreen: React.FC = () => {
 
   const messagesCount = messages.length
 
+  const scrollToBottom = useCallback(() => {
+    listRef.current?.scrollToOffset({ offset: contentHeightRef.current, animated: true })
+    setShowScrollToBottom(false)
+  }, [])
+
+  const handleScroll = useCallback(
+    (event) => {
+      scrollOffsetRef.current = event.nativeEvent.contentOffset.y
+      layoutHeightRef.current = event.nativeEvent.layoutMeasurement.height
+      contentHeightRef.current = event.nativeEvent.contentSize.height
+      updateScrollButtonVisibility()
+    },
+    []
+  )
+
+  const updateScrollButtonVisibility = useCallback(() => {
+    const nearBottom =
+      contentHeightRef.current -
+        (scrollOffsetRef.current + layoutHeightRef.current) <
+      s(80)
+    setShowScrollToBottom(!nearBottom)
+  }, [])
+
+  const handleContentSizeChange = useCallback(
+    (_width: number, height: number) => {
+      contentHeightRef.current = height
+      updateScrollButtonVisibility()
+    },
+    [updateScrollButtonVisibility]
+  )
+
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1]
+    if (lastMessage?.user._id === 2) {
+      // New assistant message arrived; auto-scroll only if user is already near bottom.
+      const nearBottom =
+        contentHeightRef.current -
+          (scrollOffsetRef.current + layoutHeightRef.current) <
+        s(120)
+      if (nearBottom) {
+        setTimeout(() => {
+          listRef.current?.scrollToEnd({ animated: true })
+        }, 100)
+      } else {
+        setShowScrollToBottom(true)
+      }
+    }
+  }, [messages])
+
   return (
     <>
       <Header title="Leela AI" textAlign="center" />
@@ -362,19 +418,40 @@ const ChatScreen: React.FC = () => {
           <Space height={s(7)} />
         </View>
       ) : null}
-      <GiftedChat
-        messages={messages}
-        renderBubble={renderBubble}
-        onSend={(newMessages) => onSend(newMessages)}
-        user={{
-          _id: 1
-        }}
-      />
+      <View style={styles.chatContainer}>
+        <GiftedChat
+          messages={messages}
+          renderBubble={renderBubble}
+          onSend={(newMessages) => onSend(newMessages)}
+          user={{
+            _id: 1
+          }}
+          listViewProps={{
+            ref: listRef,
+            onScroll: handleScroll,
+            onContentSizeChange: handleContentSizeChange
+          }}
+        />
+        {showScrollToBottom && (
+          <View style={styles.scrollButtonContainer}>
+            <ButtonVectorIcon
+              ionicons
+              name="chevron-down-circle-outline"
+              size={s(24)}
+              color={brightTurquoise}
+              onPress={scrollToBottom}
+            />
+          </View>
+        )}
+      </View>
     </>
   )
 }
 
 const styles = StyleSheet.create({
+  chatContainer: {
+    flex: 1
+  },
   bubble: {
     padding: 10,
     top: 1,
@@ -410,6 +487,14 @@ const styles = StyleSheet.create({
   },
   feadbackContainer: {
     alignSelf: 'center'
+  },
+  scrollButtonContainer: {
+    position: 'absolute',
+    bottom: s(80),
+    right: s(16),
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderRadius: s(20),
+    padding: s(6)
   }
 })
 
