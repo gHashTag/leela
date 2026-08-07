@@ -29,19 +29,15 @@ import { lang } from './i18n'
 import {
   ActionsModal,
   ChangeIntention,
-  ChatScreen,
-  DetailPostScreen,
   ExitPopup,
   GameScreen,
   InputTextModal,
   NetworkModal,
   OfflineProfileScreen, // OnlineGameScreen,
   OnboardingScreen,
-  PlanReportModal,
   PlansDetailScreen,
   PlansScreen,
   PlayraScreen,
-  PostScreen,
   PosterScreen,
   ProfileScreen,
   RulesDetailScreen,
@@ -54,6 +50,12 @@ import {
   WelcomeScreen,
   WhatsNewModal
 } from './screens'
+import {
+  LazyChatScreen,
+  LazyDetailPostScreen,
+  LazyPlanReportModal,
+  LazyPostScreen
+} from './utils/lazyScreens'
 import {
   ConfirmSignUp,
   Forgot,
@@ -113,7 +115,7 @@ const Tab = observer(() => {
     >
       <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
       {DiceStore.online && (
-        <TabNavigator.Screen name="TAB_BOTTOM_1" component={PostScreen} />
+        <TabNavigator.Screen name="TAB_BOTTOM_1" component={LazyPostScreen} />
       )}
       <TabNavigator.Screen
         name="TAB_BOTTOM_2"
@@ -128,10 +130,10 @@ const Tab = observer(() => {
           name="TAB_BOTTOM_5"
           component={
             RU_STORE
-              ? ChatScreen
+              ? LazyChatScreen
               : isBlockGame
               ? SubscriptionScreen
-              : ChatScreen
+              : LazyChatScreen
           }
         />
       )}
@@ -256,7 +258,7 @@ const App = () => {
             animation: 'slide_from_right'
           }}
           name="DETAIL_POST_SCREEN"
-          component={DetailPostScreen}
+          component={LazyDetailPostScreen}
         />
         {/* Modals */}
         <Stack.Screen name="VIDEO_SCREEN" component={VideoPopup} />
@@ -290,7 +292,7 @@ const App = () => {
           <Stack.Screen name="INPUT_TEXT_MODAL" component={InputTextModal} />
           <Stack.Screen name="EXIT_MODAL" component={ExitPopup} />
           <Stack.Screen name="NETWORK_MODAL" component={NetworkModal} />
-          <Stack.Screen name="PLAN_REPORT_MODAL" component={PlanReportModal} />
+          <Stack.Screen name="PLAN_REPORT_MODAL" component={LazyPlanReportModal} />
         </Stack.Group>
       </Stack.Navigator>
     </NavigationContainer>
