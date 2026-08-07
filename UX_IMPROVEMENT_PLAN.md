@@ -83,6 +83,6 @@
 
 ## Cooperation options for the next loop
 
-1. **Quality sweep continuation** — address remaining Sentry/Messaging teardown warnings and tighten TypeScript in the newest components (`WhatsNewModal`, `WinCelebration`).
-2. **Analytics-driven extension** — instrument the new copy/share/haptic actions and use the data to seed plan v2.
-3. **Plan v2** — draft the next 40-item UX improvement plan based on analytics, user feedback, and remaining technical debt.
+1. **Start section 1 of UX_IMPROVEMENT_PLAN_V2.md** — build the daily habit loop (notification, streak summary, resume game).
+2. **Start section 2 of UX_IMPROVEMENT_PLAN_V2.md** — improve the AI guide experience (personas, follow-up, offline cache).
+3. **Instrument v1 features** — add lightweight analytics for copy/share/haptic/report to validate which v2 items matter most.
