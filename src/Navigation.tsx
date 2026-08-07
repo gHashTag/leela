@@ -116,17 +116,30 @@ const Tab = observer(() => {
       }}
       initialRouteName={'TAB_BOTTOM_0'}
     >
-      <TabNavigator.Screen name="TAB_BOTTOM_0" component={GameScreen} />
+      <TabNavigator.Screen
+        name="TAB_BOTTOM_0"
+        component={GameScreen}
+        options={{ title: 'tabRoute.game' }}
+      />
       {DiceStore.online && (
-        <TabNavigator.Screen name="TAB_BOTTOM_1" component={LazyPostScreen} />
+        <TabNavigator.Screen
+          name="TAB_BOTTOM_1"
+          component={LazyPostScreen}
+          options={{ title: 'tabRoute.feed' }}
+        />
       )}
       <TabNavigator.Screen
         name="TAB_BOTTOM_2"
         component={DiceStore.online ? ProfileScreen : OfflineProfileScreen}
+        options={{ title: 'tabRoute.profile' }}
       />
       {/* <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} /> */}
       {lang === 'ru' && (
-        <TabNavigator.Screen name="TAB_BOTTOM_4" component={PosterScreen} />
+        <TabNavigator.Screen
+          name="TAB_BOTTOM_4"
+          component={PosterScreen}
+          options={{ title: 'tabRoute.poster' }}
+        />
       )}
       {DiceStore.online && (
         <TabNavigator.Screen
@@ -138,6 +151,7 @@ const Tab = observer(() => {
               ? SubscriptionScreen
               : LazyChatScreen
           }
+          options={{ title: 'tabRoute.chat' }}
         />
       )}
     </TabNavigator.Navigator>

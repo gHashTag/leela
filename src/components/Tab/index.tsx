@@ -16,14 +16,22 @@ const styles = ScaledSheet.create({
 interface TabT {
   title: string
   imageStyle?: StyleProp<ImageStyle>
+  accessibilityLabel?: string
 }
 
-const Tab = memo<TabT>(({ title, imageStyle }) => {
+const Tab = memo<TabT>(({ title, imageStyle, accessibilityLabel }) => {
   const { img } = styles
 
   const source = () => ICONS.filter((x) => x.title === title)[0].path
 
-  return <Image source={source()} style={[img, imageStyle]} />
+  return (
+    <Image
+      source={source()}
+      style={[img, imageStyle]}
+      accessibilityLabel={accessibilityLabel}
+      accessible={!!accessibilityLabel}
+    />
+  )
 })
 
 export { Tab }

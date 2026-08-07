@@ -53,7 +53,7 @@
 
 ## 7. Accessibility & Localization
 
-- [ ] **7.1** Add full VoiceOver route labels for the tab navigator.
+- [x] **7.1** Add full VoiceOver route labels for the tab navigator. (wave 067)
 - [ ] **7.2** Increase touch targets on dice and small icons to 44×44 pt.
 - [ ] **7.3** Add RTL layout support for Arabic.
 - [ ] **7.4** Add font-size override respecting system dynamic type.

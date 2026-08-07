@@ -891,5 +891,15 @@
     "reset": "Start clean session",
     "explanation": "Leela tracks whether the app reached the end of a session without a fatal crash. This helps the team measure stability in Sentry.",
     "accessibilityLabel": "Crash-free status: {{status}}"
+  },
+  "tabRoute": {
+    "game": "Game board",
+    "feed": "Reports feed",
+    "profile": "Profile",
+    "onlineGame": "Online game",
+    "poster": "Poster",
+    "chat": "AI chat",
+    "activeHint": "Active tab",
+    "inactiveHint": "Double tap to switch to this tab"
   }
 }
