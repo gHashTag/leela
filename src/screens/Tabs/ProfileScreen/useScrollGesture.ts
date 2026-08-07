@@ -43,6 +43,7 @@ export const useScrollGesture = (props?: useScrollGestureProps) => {
   const translationY = useSharedValue(0)
   const scrollOffset0 = useSharedValue(0)
   const scrollOffset1 = useSharedValue(0)
+  const scrollOffset2 = useSharedValue(0)
   const bottomSheetTranslateY = useSharedValue(CLOSED_SNAP_POINT)
 
   const onHandlerEndOnJS = (point: number) => {
@@ -129,6 +130,27 @@ export const useScrollGesture = (props?: useScrollGestureProps) => {
     blockScrollUntilAtTheTop1
   )
 
+  const panGesture2 = Gesture.Pan()
+    .onUpdate((e) => {
+      if (snapPoint === FULLY_OPEN_SNAP_POINT) {
+        translationY.value = e.translationY - scrollOffset2.value
+      } else {
+        translationY.value = e.translationY
+      }
+    })
+    .onEnd(onHandlerEnd)
+    .withRef(panGestureRef)
+
+  const blockScrollUntilAtTheTop2 = Gesture.Tap()
+    .maxDeltaY(snapPoint - FULLY_OPEN_SNAP_POINT)
+    .maxDuration(100000)
+    .simultaneousWithExternalGesture(panGesture2)
+    .withRef(blockScrollUntilAtTheTopRef)
+
+  const scrollViewGesture2 = Gesture.Native().requireExternalGestureToFail(
+    blockScrollUntilAtTheTop2
+  )
+
   const headerGesture = Gesture.Pan()
     .onUpdate((e) => {
       translationY.value = e.translationY
@@ -155,7 +177,11 @@ export const useScrollGesture = (props?: useScrollGestureProps) => {
     scrollViewGesture0,
     scrollOffset0,
     scrollOffset1,
+    scrollOffset2,
     blockScrollUntilAtTheTop1,
-    blockScrollUntilAtTheTop0
+    blockScrollUntilAtTheTop0,
+    blockScrollUntilAtTheTop2,
+    panGesture2,
+    scrollViewGesture2
   }
 }

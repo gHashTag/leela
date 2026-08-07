@@ -32,6 +32,7 @@ import { buildSystemMessage, loadAiPersona } from '../../../utils/aiPersona'
 
 interface postCardI {
   postId: string
+  post?: PostT
   isDetail?: boolean
   translatedText?: string
   isHideTranslate?: boolean
@@ -42,6 +43,7 @@ export const PostCard: React.FC<postCardI> = memo(
   observer((props) => {
     const {
       postId,
+      post,
       isDetail = false,
       onPressCom,
       translatedText,
@@ -50,6 +52,7 @@ export const PostCard: React.FC<postCardI> = memo(
     const { user } = useRevenueCat()
     const [isLoading, setIsLoading] = useState(false)
     const item: PostT | undefined =
+      post ||
       PostStore.store.posts.find((a) => a.id === postId) ||
       PostStore.store.ownPosts.find((a) => a.id === postId)
     const { t, i18n } = useTranslation()

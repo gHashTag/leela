@@ -20,6 +20,8 @@ import {
   Spin,
   Text
 } from '../../components'
+import { computeHistoryStreak } from '../../utils/historyStreak'
+import { PublicPostsScene } from './PublicPostsScene'
 import { RootStackParamList, UserT } from '../../types/types'
 
 import { getIMG } from '../helper'
@@ -46,7 +48,8 @@ export const UserProfileScreen = observer(
       history: [],
       avatar: '',
       plan: 0,
-      fullName: ''
+      fullName: '',
+      streak: 0
     })
 
     const [load, setLoad] = useState(true)
@@ -65,7 +68,8 @@ export const UserProfileScreen = observer(
             history: history as any,
             avatar: avaUrl,
             plan: plan,
-            fullName: `${firstName} ${lastName}`
+            fullName: `${firstName} ${lastName}`,
+            streak: computeHistoryStreak(history || [])
           })
           setLoad(false)
         })
@@ -99,6 +103,23 @@ export const UserProfileScreen = observer(
                     fullName={data.fullName}
                     editable={editable}
                   />
+                  {data.streak > 0 && (
+                    <>
+                      <Space height={vs(5)} />
+                      <View style={styles.streakRow}>
+                        <Text h="h5" title="🔥" />
+                        <Space width={s(6)} />
+                        <Text
+                          h="h6"
+                          title={`${data.streak} ${
+                            data.streak === 1
+                              ? t('profile.streakDay')
+                              : t('profile.streakDays')
+                          }`}
+                        />
+                      </View>
+                    </>
+                  )}
                   <Space height={vs(5)} />
                   <OwnTabView
                     renderTabBar={(props) => (
@@ -119,6 +140,12 @@ export const UserProfileScreen = observer(
                         title: t('intention'),
                         props: { intention: data.intention },
                         Scene: RenderIntentionOfGameTab
+                      },
+                      {
+                        key: 'publicPosts',
+                        title: t('profile.publicPosts'),
+                        props: { ownerId },
+                        Scene: PublicPostsScene
                       }
                     ]}
                     style={{ height: tabViewH }}
@@ -193,6 +220,12 @@ const styles = StyleSheet.create({
   },
   mainContainer: {
     alignItems: 'center',
+    width: '100%'
+  },
+  streakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     width: '100%'
   }
 })
