@@ -563,6 +563,13 @@
   "dailyVerse": {
     "title": "Daily Vedic Reflection",
     "reflection": "Reflection",
+    "shareButton": "Share image",
+    "shareTitle": "Daily Vedic Reflection",
+    "shareMessage": "Today's reflection from Leela:",
+    "shareError": "Could not share the verse image. Please try again.",
+    "accessibilityLabel": "Daily Vedic reflection card",
+    "accessibilityHint": "Tap to expand the reflection",
+    "shareAccessibilityLabel": "Share the daily verse as an image",
     "verses": [
       {
         "quote": "You have a right to perform your prescribed duties, but you are not entitled to the fruits of your actions.",

@@ -60,7 +60,7 @@
 - [x] **7.1** Add a copy-to-clipboard action for AI assistant answers in ChatScreen.
 - [x] **7.2** Add a scroll-to-bottom button in ChatScreen when new messages arrive off-screen.
 - [x] **7.3** Add accessibility labels and hints to the dice and primary board controls.
-- [ ] **7.4** Add a share-as-image option for the daily verse card.
+- [x] **7.4** Add a share-as-image option for the daily verse card.
 
 ---
 
