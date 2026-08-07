@@ -65,6 +65,7 @@ export type RootStackParamList = {
     plan: number
   }
   UPDATE_VERSION_MODAL: undefined
+  WHATS_NEW_MODAL: undefined
   CHANGE_INTENTION_SCREEN: {
     prevIntention?: string
     blockGoBack?: boolean

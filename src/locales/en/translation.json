@@ -675,5 +675,18 @@
     "step3Body": "Leela AI reads your report and answers from the Vedas, Upanishads, Bhagavad Gita and the rules of the board. It gives one practical step you can take today.",
     "next": "Next",
     "start": "Start the journey"
+  },
+  "whatsNew": {
+    "title": "What's new",
+    "version": "Version {{version}}",
+    "close": "Close",
+    "items": [
+      "AI answers can now be copied to the clipboard.",
+      "Daily verse cards can be shared as images.",
+      "Chat history supports pull-to-refresh.",
+      "New scroll-to-bottom button in AI chat.",
+      "Haptic feedback on copy and share actions.",
+      "Improved accessibility labels for dice and board."
+    ]
   }
 }

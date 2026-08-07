@@ -205,6 +205,12 @@ export function OpenUpdateVersionModal() {
   }
 }
 
+export function OpenWhatsNewModal() {
+  if (navRef.isReady()) {
+    navRef.navigate('WHATS_NEW_MODAL')
+  }
+}
+
 export function OpenExitModal() {
   if (navRef.isReady()) {
     navRef.navigate('EXIT_MODAL')

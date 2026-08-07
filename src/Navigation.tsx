@@ -19,7 +19,12 @@ import {
   secondary,
   white
 } from './constants'
-import { useExitModal, useGameAndProfileIsOnline, useNetwork } from './hooks'
+import {
+  useExitModal,
+  useGameAndProfileIsOnline,
+  useNetwork,
+  useWhatsNewModal
+} from './hooks'
 import { lang } from './i18n'
 import {
   ActionsModal,
@@ -46,7 +51,8 @@ import {
   UpdateVersionModal,
   UserProfileScreen,
   VideoPopup,
-  WelcomeScreen
+  WelcomeScreen,
+  WhatsNewModal
 } from './screens'
 import {
   ConfirmSignUp,
@@ -94,6 +100,7 @@ const Tab = observer(() => {
   useGameAndProfileIsOnline()
   useExitModal()
   useNetwork()
+  useWhatsNewModal()
   const isBlockGame = SubscribeStore.isBlockGame
   return (
     <TabNavigator.Navigator
@@ -268,6 +275,10 @@ const App = () => {
           <Stack.Screen
             name="UPDATE_VERSION_MODAL"
             component={UpdateVersionModal}
+          />
+          <Stack.Screen
+            name="WHATS_NEW_MODAL"
+            component={WhatsNewModal}
           />
           <Stack.Screen
             name="REPLY_MODAL"
