@@ -520,6 +520,21 @@
     "noEntries": "No reflections yet. Start your streak today.",
     "close": "Close"
   },
+  "uxFeedback": {
+    "button": "Feedback",
+    "buttonLabel": "Send feedback about the app",
+    "title": "Send feedback",
+    "categoryLabel": "What is this about?",
+    "categories": {
+      "ux": "UX issue",
+      "bug": "Bug",
+      "feature": "Feature idea",
+      "content": "Content / text"
+    },
+    "placeholder": "Tell us what feels unclear, slow, or missing…",
+    "send": "Send feedback",
+    "thanks": "Thank you. Your feedback has been saved."
+  },
   "clearly": "clearly",
   "profile": "Profile",
   "intention": "Intention",

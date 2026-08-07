@@ -17,14 +17,14 @@ import { s, vs } from 'react-native-size-matters'
 import { ButtonWithIcon, Space, Text } from '../../components'
 import { captureException, dimGray, white } from '../../constants'
 
-interface JournalEntry {
+export interface JournalEntry {
   date: string
   text: string
 }
 
 const STORAGE_KEY = '@streakJournal'
 
-const getLocalDateString = (date: Date) => {
+export const getLocalDateString = (date: Date) => {
   const offset = date.getTimezoneOffset() * 60000
   return new Date(date.getTime() - offset).toISOString().split('T')[0]
 }
@@ -47,7 +47,7 @@ const saveEntries = async (entries: JournalEntry[]) => {
   }
 }
 
-const computeStreak = (entries: JournalEntry[]) => {
+export const computeStreak = (entries: JournalEntry[]) => {
   const dates = new Set(entries.map((entry) => entry.date))
   const today = getLocalDateString(new Date())
   let streak = 0
