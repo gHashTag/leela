@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { StyleSheet } from 'react-native'
+
+
 import firestore from '@react-native-firebase/firestore'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
@@ -17,6 +19,7 @@ import { getUid } from '../../../screens/helper'
 
 import {
   Background,
+  BoardLegend,
   ButtonSimple,
   ButtonWithIcon,
   DailyVerse,
@@ -70,6 +73,7 @@ const RequestReviewOnWin = observer(() => {
 })
 
 const GameScreen = observer(({ navigation }: GameScreenT) => {
+  const [showLegend, setShowLegend] = React.useState(false)
   const { user } = useRevenueCat()
   useLeftTimeForStep()
 
@@ -167,8 +171,18 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       {/* <Text h="h3" title={`user.pro: ${user.pro}`} />
       <Text h="h3" title={`isBlockGame: ${isBlockGame}`} /> */}
 
+      <ButtonSimple
+        viewStyle={styles.legendButton}
+        h="h5"
+        title={t('boardLegend.open')}
+        onPress={() => setShowLegend(true)}
+      />
       <GameBoard />
       <WinCelebration />
+      <BoardLegend
+        visible={showLegend}
+        onClose={() => setShowLegend(false)}
+      />
     </Background>
   )
 })
@@ -180,7 +194,11 @@ const styles = StyleSheet.create({
   centerButton: {
     alignSelf: 'center'
   },
-  textStyle: { color: gray, fontSize: 19 }
+  textStyle: { color: gray, fontSize: 19 },
+  legendButton: {
+    alignSelf: 'center',
+    marginVertical: vs(6)
+  }
 })
 
 export { GameScreen }
