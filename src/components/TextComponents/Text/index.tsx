@@ -10,6 +10,7 @@ import {
   useColorScheme
 } from 'react-native'
 import { ms, s } from 'react-native-size-matters'
+import { applyFontScale, useFontScale } from '../../../utils/fontScale'
 
 export const textStyles = StyleSheet.create({
   h0: {
@@ -109,6 +110,7 @@ export const Text = memo<TxtT>(
       colors: { primary, text }
     } = useTheme()
     const scheme = useColorScheme()
+    const fontScale = useFontScale()
     const isDark = scheme === 'dark'
     const curColor = oneColor
       ? oneColor
@@ -124,12 +126,26 @@ export const Text = memo<TxtT>(
 
     const hStyle = h
       ? [
-          { ...textStyles[h], color: curColor },
+          { ...applyFontScale(textStyles[h], fontScale), color: curColor },
           hasShadow && { textShadowColor: primary }
         ]
       : undefined
+
+    const scaledTextStyle = textStyle
+      ? applyFontScale(
+          Array.isArray(textStyle)
+            ? textStyle.reduce((acc, st) => ({ ...acc, ...st }), {})
+            : textStyle,
+          fontScale
+        )
+      : undefined
+
     return (
-      <RNText style={[hStyle, textStyle]} {...textProps}>
+      <RNText
+        style={[hStyle, scaledTextStyle]}
+        allowFontScaling={false}
+        {...textProps}
+      >
         {title}
       </RNText>
     )
