@@ -66,6 +66,9 @@ const getCustomNavState = ({ path, config }: getCustomNavStateT) => {
   if (path.includes('reply_detail')) {
     return getDetailPostState({ path })
   }
+  if (path.includes('invite')) {
+    return getReferralState({ path })
+  }
   return getStateFromPath(path, config)
 }
 
@@ -91,6 +94,29 @@ const getDetailPostState = ({ path }: getCustomNavStateT) => {
           postId
         },
         path
+      }
+    ]
+  }
+}
+
+const getReferralState = ({ path }: getCustomNavStateT) => {
+  const splitedPath = path.split('/')
+  const referralCode = splitedPath[splitedPath.length - 1]
+
+  return {
+    routes: [
+      {
+        name: 'MAIN',
+        state: {
+          routes: [
+            {
+              name: 'TAB_BOTTOM_0',
+              params: {
+                referralCode
+              }
+            }
+          ]
+        }
       }
     ]
   }

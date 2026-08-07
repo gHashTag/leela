@@ -78,7 +78,9 @@ export type RootStackParamList = {
 }
 
 export type RootTabParamList = {
-  TAB_BOTTOM_0: undefined
+  TAB_BOTTOM_0?: {
+    referralCode?: string
+  }
   TAB_BOTTOM_1?: {
     scrollToId?: number
   }

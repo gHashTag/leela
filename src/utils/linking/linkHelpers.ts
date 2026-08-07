@@ -53,3 +53,26 @@ export async function buildReportLink(reportId: string, reportText: string) {
     return 'error'
   }
 }
+
+export async function buildReferralLink(referralCode: string) {
+  try {
+    const buo = await Branch.createBranchUniversalObject(
+      `invite/${referralCode}`,
+      {
+        title: 'Leela game board invite',
+        contentDescription: 'Join me on the Leela game board',
+        contentMetadata: {
+          customMetadata: {
+            referralCode
+          }
+        }
+      }
+    )
+    let { url } = await buo.generateShortUrl({}, {})
+
+    return url
+  } catch (error) {
+    captureException(error, 'buildReferralLink')
+    return 'error'
+  }
+}

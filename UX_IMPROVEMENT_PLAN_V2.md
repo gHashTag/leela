@@ -62,7 +62,7 @@
 ## 8. Discoverability & Onboarding
 
 - [x] **8.1** Add a short "How to play" interactive tutorial overlay. (wave 072)
-- [ ] **8.2** Add a referral link with a deep-link into the game board.
+- [x] **8.2** Add a referral link with a deep-link into the game board. (wave 073)
 - [ ] **8.3** Add App Store review prompts after the third positive AI answer.
 - [ ] **8.4** Add a public "share report as link" option.
 

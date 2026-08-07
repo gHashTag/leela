@@ -921,5 +921,10 @@
     "next": "Next",
     "skip": "Skip",
     "done": "Start playing"
+  },
+  "referral": {
+    "shareTitle": "Invite a friend to Leela",
+    "shareMessage": "Join me on the Leela game board: {{link}}",
+    "error": "Could not create invite link"
   }
 }

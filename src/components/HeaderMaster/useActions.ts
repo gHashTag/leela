@@ -1,19 +1,38 @@
+import auth from '@react-native-firebase/auth'
 import { useTranslation } from 'react-i18next'
+import { Share } from 'react-native'
 
-import { OpenActionsModal } from '../../constants'
+import { OpenActionsModal, captureException } from '../../constants'
 import { OnlinePlayer } from '../../store'
 import { ButtonsModalT } from '../../types/types'
+import { buildReferralLink } from '../../utils/linking/linkHelpers'
 
 export const useActions = () => {
   const { t } = useTranslation()
 
+  const onPressShare = async () => {
+    try {
+      const referralCode = auth().currentUser?.uid || 'guest'
+      const link = await buildReferralLink(referralCode)
+
+      if (link && link !== 'error') {
+        await Share.share({
+          title: t('referral.shareTitle'),
+          message: t('referral.shareMessage', { link })
+        })
+      }
+    } catch (error) {
+      captureException(error, 'useActions:onPressShare')
+    }
+  }
+
   const menuItems: ButtonsModalT[] = [
-    // {
-    //   key: 'SHARE',
-    //   onPress: onPressShare,
-    //   title: I18n.t('actions.shareProfile'),
-    //   icon: 'share-outline'
-    // },
+    {
+      key: 'INVITE',
+      onPress: onPressShare,
+      title: t('referral.shareTitle'),
+      icon: 'share-outline'
+    },
     {
       key: 'EXIT',
       color: 'red',
