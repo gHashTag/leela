@@ -38,7 +38,7 @@
 ## 5. Game Board Depth
 
 - [x] **5.1** Add a board legend overlay explaining planes, chakras, and arrows. (wave 057)
-- [ ] **5.2** Show a replay of the last move for online games.
+- [x] **5.2** Show a replay of the last move for online games. (wave 058)
 - [ ] **5.3** Add a "roll history" strip above the dice.
 - [ ] **5.4** Highlight the previous and next planes during piece movement.
 - [ ] **5.5** Add a sound toggle and distinct dice/plane SFX.

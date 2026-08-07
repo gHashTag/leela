@@ -94,7 +94,10 @@ jest.mock('./src/store', () => ({
       timeText: '0:00',
       finish: false,
       profile: {},
-      loadingProf: false
+      loadingProf: false,
+      history: [
+        { createDate: 1700000000000, plan: 10, count: 4, status: 'cube' }
+      ]
     },
     resetGame: jest.fn()
   },

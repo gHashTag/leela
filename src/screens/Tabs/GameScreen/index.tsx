@@ -27,6 +27,7 @@ import {
   GameBoard,
   Header,
   IntentionPrompt,
+  LastMoveReplay,
   ResumeLastGame,
   Space,
   StreakJournal,
@@ -162,6 +163,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       <IntentionPrompt />
       <StreakJournal />
       <UxFeedback />
+      {online && <LastMoveReplay />}
       {!endGame && <Dice disabled={isBlockGame} />}
 
       {isBlockGame && (

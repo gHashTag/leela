@@ -532,6 +532,17 @@
   },
   "takeStep": "Нажмите на кубик",
   "nextStep": "Следующий шаг через",
+  "lastMoveReplay": {
+    "title": "Последний ход",
+    "move": "{{from}} → {{to}} · {{count}} · {{status}}",
+    "status": {
+      "cube": "бросок",
+      "start": "старт",
+      "snake": "змей",
+      "arrow": "стрела",
+      "liberation": "освобождение"
+    }
+  },
   "you": "Вы",
   "placeholderReport": "Сделать отчет о плане",
   "voiceInput": {

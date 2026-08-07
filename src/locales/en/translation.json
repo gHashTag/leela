@@ -534,6 +534,17 @@
   },
   "takeStep": "Click on the cube",
   "nextStep": "Next step through",
+  "lastMoveReplay": {
+    "title": "Last move",
+    "move": "{{from}} → {{to}} · {{count}} · {{status}}",
+    "status": {
+      "cube": "roll",
+      "start": "start",
+      "snake": "snake",
+      "arrow": "arrow",
+      "liberation": "liberation"
+    }
+  },
   "you": "you",
   "placeholderReport": "Make a plan report",
   "voiceInput": {
