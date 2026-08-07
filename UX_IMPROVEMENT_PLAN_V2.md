@@ -16,7 +16,7 @@
 - [x] **2.2** Add follow-up questions inside the report answer card.
 - [x] **2.3** Cache the last 5 AI answers for offline reading.
 - [x] **2.4** Show a thumbs up/down feedback button on AI answers.
-- [ ] **2.5** Add a "simplify this answer" action for long responses.
+- [x] **2.5** Add a "simplify this answer" action for long responses.
 - [ ] **2.6** Surface the exact scripture quote that grounded the answer.
 
 ## 3. Social & Community

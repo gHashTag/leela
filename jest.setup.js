@@ -65,6 +65,11 @@ jest.mock('react-native-reanimated', () => {
   return Reanimated
 })
 
+jest.mock(
+  '@react-native-async-storage/async-storage',
+  () => require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+)
+
 // MobX stores import autoruns at module load time. Provide a minimal store
 // shape so imports do not throw while loading components under test.
 jest.mock('./src/store', () => ({

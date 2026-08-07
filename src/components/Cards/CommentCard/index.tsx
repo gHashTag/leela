@@ -12,8 +12,8 @@ import {
   AiFeedbackButtons,
   ButtonVectorIcon,
   FollowUpQuestions,
-  HashtagFormat,
   PlanAvatar,
+  SimplifyAnswer,
   Space,
   SubCommentCard,
   Text
@@ -143,7 +143,12 @@ export const CommentCard: React.FC<CommentCardI> = observer(
               )}
               <Space width={s(5)} />
             </View>
-            <HashtagFormat h="h6" title={text} selectable />
+            <SimplifyAnswer
+              postId={item.postId}
+              text={item.text}
+              displayText={text}
+              isAi={isAiComment(item.ownerId)}
+            />
             {isAiComment(item.ownerId) && (
               <>
                 <AiFeedbackButtons postId={item.postId} />

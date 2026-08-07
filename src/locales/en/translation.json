@@ -620,6 +620,10 @@
     "up": "Helpful answer",
     "down": "Not helpful answer"
   },
+  "aiSimplify": {
+    "simplify": "Simplify this answer",
+    "showOriginal": "Show original answer"
+  },
   "dailyVerse": {
     "title": "Daily Vedic Reflection",
     "reflection": "Reflection",
