@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
 import { ms, s, vs } from 'react-native-size-matters'
 import {
+  BookmarkButton,
   ButtonVectorIcon,
   HashtagFormat,
   PlanAvatar,
@@ -117,6 +118,16 @@ export const PostCard: React.FC<postCardI> = memo(
     const heartColor = isLiked ? fuchsia : undefined
     const avaUrl = PostStore.getAvaById(item.ownerId)
 
+    const postBookmark = {
+      id: item.id,
+      type: 'post' as const,
+      postId: item.id,
+      text: item.text || '',
+      plan: item.plan,
+      ownerName: fullName,
+      savedAt: Date.now()
+    }
+
     if (isDetail) {
       return (
         <>
@@ -197,6 +208,7 @@ export const PostCard: React.FC<postCardI> = memo(
                 name="md-link-outline"
                 onPress={handleShareLink}
               />
+              <BookmarkButton bookmark={postBookmark} size={iconSize + s(2)} />
               {isAdmin && (
                 <ButtonVectorIcon
                   viewStyle={mediumBtn}
@@ -301,6 +313,7 @@ export const PostCard: React.FC<postCardI> = memo(
                 iconSize={iconSize + s(4)}
                 onPress={handleShareLink}
               />
+              <BookmarkButton bookmark={postBookmark} size={iconSize + s(2)} />
             </View>
           </View>
         </View>

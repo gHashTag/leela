@@ -1,5 +1,6 @@
 export * from './AiAnswersScene'
 export * from './AiPersonaScene'
+export * from './BookmarksScene'
 export * from './HistoryScene'
 export * from './ReportsScene'
 export * from './IntentionOfGame'

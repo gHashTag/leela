@@ -11,6 +11,7 @@ import { getActions } from './ModalActions'
 import {
   AiFeedbackButtons,
   AiSources,
+  BookmarkButton,
   ButtonVectorIcon,
   FollowUpQuestions,
   PlanAvatar,
@@ -101,6 +102,19 @@ export const CommentCard: React.FC<CommentCardI> = observer(
       }
     }
 
+    const aiBookmark = isAiComment(item.ownerId)
+      ? {
+          id: item.id,
+          type: 'comment' as const,
+          postId: item.postId,
+          commentId: item.id,
+          text: item.text,
+          plan: PostStore.getComPlan(item.ownerId),
+          ownerName: 'Leela',
+          savedAt: Date.now()
+        }
+      : null
+
     return (
       <>
         <View style={styles.container}>
@@ -152,8 +166,11 @@ export const CommentCard: React.FC<CommentCardI> = observer(
               isAi={isAiComment(item.ownerId)}
             />
             <Reactions postId={item.postId} commentId={item.id} />
-            {isAiComment(item.ownerId) && (
+            {isAiComment(item.ownerId) && aiBookmark && (
               <>
+                <View style={styles.aiActions}>
+                  <BookmarkButton bookmark={aiBookmark} size={s(16)} />
+                </View>
                 <AiSources text={text} />
                 <AiFeedbackButtons postId={item.postId} />
                 <FollowUpQuestions postId={item.postId} />
@@ -206,5 +223,10 @@ const styles = StyleSheet.create({
   sending: {
     marginLeft: s(6),
     fontStyle: 'italic'
+  },
+  aiActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: vs(4)
   }
 })

@@ -621,6 +621,12 @@
     "tab": "Saved Answers",
     "title": "Leela's answer for plane {{plan}}"
   },
+  "bookmarks": {
+    "tab": "Bookmarks",
+    "title": "Reflection journal",
+    "empty": "No bookmarks yet. Tap the bookmark icon on a report or Leela's answer to save it here.",
+    "removeLabel": "Remove bookmark"
+  },
   "aiFeedback": {
     "up": "Helpful answer",
     "down": "Not helpful answer"

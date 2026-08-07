@@ -25,7 +25,7 @@
 - [x] **3.2** Add comment threading (reply to a specific comment).
 - [x] **3.3** Add reactions (🙏 ❤️ 🔥) to comments and reports.
 - [x] **3.4** Add user profile screen with public posts and streak.
-- [ ] **3.5** Add report bookmarking for private reflection journal.
+- [x] **3.5** Add report bookmarking for private reflection journal.
 
 ## 4. Monetization & Pro
 

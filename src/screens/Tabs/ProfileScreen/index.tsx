@@ -22,7 +22,14 @@ import { RootStackParamList, RootTabParamList } from '../../../types/types'
 
 import { TabContextProvider } from './TabContext'
 import { BedtimeReminder } from '../../../components'
-import { AiAnswersScene, AiPersonaScene, HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
+import {
+  AiAnswersScene,
+  AiPersonaScene,
+  BookmarksScene,
+  HistoryScene,
+  IntentionOfGame,
+  ReportsScene
+} from './Tabs'
 import { useActions } from '../../../components/HeaderMaster/useActions'
 
 type ProfileScreenT = {
@@ -110,6 +117,11 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                       key: 'aiAnswers',
                       title: t('aiAnswers.tab'),
                       Scene: AiAnswersScene
+                    },
+                    {
+                      key: 'bookmarks',
+                      title: t('bookmarks.tab'),
+                      Scene: BookmarksScene
                     }
                   ]}
                   style={[styles.tabContainer, { height: tabViewH }]}
