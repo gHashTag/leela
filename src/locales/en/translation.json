@@ -679,7 +679,8 @@
     "q1": "How does this apply to my life today?",
     "q2": "Which scripture deepens this teaching?",
     "q3": "What is one small step I can take now?",
-    "q4": "What hidden pattern is this pointing to?"
+    "q4": "What hidden pattern is this pointing to?",
+    "askFreeform": "Ask your own question…"
   },
   "aiAnswers": {
     "tab": "Saved Answers",

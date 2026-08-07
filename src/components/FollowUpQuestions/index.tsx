@@ -21,9 +21,9 @@ export const FollowUpQuestions = memo(({ postId }: FollowUpQuestionsI) => {
     PostStore.store.ownPosts.find((a) => a.id === postId)?.ownerId ||
     ''
 
-  const handlePress = (question: string) => {
+  const openInput = (initialText: string) => {
     navigate('INPUT_TEXT_MODAL', {
-      initialText: question,
+      initialText,
       onSubmit: (text: string) =>
         PostStore.createComment({
           text,
@@ -31,6 +31,14 @@ export const FollowUpQuestions = memo(({ postId }: FollowUpQuestionsI) => {
           postOwner
         })
     })
+  }
+
+  const handleChipPress = (question: string) => {
+    openInput(question)
+  }
+
+  const handleFreeformPress = () => {
+    openInput('')
   }
 
   return (
@@ -45,13 +53,20 @@ export const FollowUpQuestions = memo(({ postId }: FollowUpQuestionsI) => {
         {questions.map((question, index) => (
           <Pressable
             key={index}
-            onPress={() => handlePress(question)}
+            onPress={() => handleChipPress(question)}
             style={styles.chip}
             accessibilityLabel={question}
           >
             <Text h="h11" title={question} oneColor={primary} />
           </Pressable>
         ))}
+        <Pressable
+          onPress={handleFreeformPress}
+          style={[styles.chip, styles.freeformChip]}
+          accessibilityLabel={t('followUpQuestions.askFreeform')}
+        >
+          <Text h="h11" title={t('followUpQuestions.askFreeform')} oneColor={primary} />
+        </Pressable>
       </View>
     </View>
   )
@@ -76,5 +91,8 @@ const styles = StyleSheet.create({
     paddingVertical: vs(4),
     marginRight: s(6),
     marginBottom: vs(6)
+  },
+  freeformChip: {
+    borderStyle: 'dashed'
   }
 })
