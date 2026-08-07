@@ -10,6 +10,7 @@ import { getActions } from './ModalActions'
 
 import {
   AiFeedbackButtons,
+  AiSources,
   ButtonVectorIcon,
   FollowUpQuestions,
   PlanAvatar,
@@ -151,6 +152,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
             />
             {isAiComment(item.ownerId) && (
               <>
+                <AiSources text={text} />
                 <AiFeedbackButtons postId={item.postId} />
                 <FollowUpQuestions postId={item.postId} />
               </>
