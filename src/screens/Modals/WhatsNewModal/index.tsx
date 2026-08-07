@@ -19,7 +19,7 @@ export function WhatsNewModal() {
   const onClose = () => navigation.goBack()
 
   // `returnObjects: true` lets us render a list of translated changelog bullets.
-  const items = t('whatsNew.items', { returnObjects: true }) as string[]
+  const items = t<string[]>('whatsNew.items', { returnObjects: true })
 
   return (
     <View style={styles.container}>

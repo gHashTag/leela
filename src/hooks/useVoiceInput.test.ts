@@ -31,6 +31,7 @@ describe('useVoiceInput', () => {
   })
 
   it('does not start when voice recognition is unavailable', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     mockedVoice.isAvailable.mockResolvedValue(false)
 
     const onResult = jest.fn()
@@ -43,6 +44,7 @@ describe('useVoiceInput', () => {
     expect(mockedVoice.start).not.toHaveBeenCalled()
     expect(result.current.isListening).toBe(false)
     expect(onResult).not.toHaveBeenCalled()
+    consoleSpy.mockRestore()
   })
 
   it('streams partial results to the callback', async () => {
@@ -64,6 +66,7 @@ describe('useVoiceInput', () => {
   })
 
   it('ignores cancellation errors and captures real errors', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     mockedVoice.isAvailable.mockResolvedValue(true)
 
     const { result } = renderHook(() => useVoiceInput(jest.fn()))
@@ -87,5 +90,6 @@ describe('useVoiceInput', () => {
     })
 
     expect(result.current.isListening).toBe(true)
+    consoleSpy.mockRestore()
   })
 })

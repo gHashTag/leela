@@ -73,11 +73,13 @@
 
 ---
 
-## Quality Sweep Retrospective (wave 33)
+## Quality Sweep Retrospective (waves 33–34)
 
 - All 41 plan items are now complete.
-- Jest test suite: 19/19 passing after fixing `Header` testID, `useImageAspect` null-source guard, and `react-native-fast-image` mock shape.
+- Jest test suite: 24/24 passing after wave 34 added coverage for `WhatsNewModal` and `WinCelebration`, suppressed expected `console.error` noise in `useVoiceInput` tests, and expanded the global store mock for `Header`/`AppContainer`.
+- TypeScript tightened in `WhatsNewModal` (typed `t<string[]>` instead of `as string[]`) and `WinCelebration` (memoized end-game computation, `includes` over `indexOf`).
 - iOS bundle verification passes; remaining `@sentry/react-native` and `rn-fetch-blob` config warnings are pre-existing and non-blocking.
+- No open handles or Sentry/Messaging teardown warnings detected with `--detectOpenHandles`.
 
 ## Cooperation options for the next loop
 

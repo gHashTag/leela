@@ -61,7 +61,21 @@ jest.mock('react-native-fast-image', () => {
 
 // MobX stores import autoruns at module load time. Provide a minimal store
 // shape so imports do not throw while loading components under test.
-jest.mock('./src/store/OnlinePlayer', () => ({
+jest.mock('./src/store', () => ({
+  DiceStore: {
+    online: false,
+    count: 6,
+    startGame: false,
+    players: 1,
+    message: ' ',
+    topMessage: ' ',
+    multi: 0,
+    rate: false,
+    finishArr: [true, true, true]
+  },
+  OfflinePlayers: {
+    store: {}
+  },
   OnlinePlayer: {
     store: {
       isReported: true,
@@ -72,5 +86,8 @@ jest.mock('./src/store/OnlinePlayer', () => ({
       loadingProf: false
     },
     resetGame: jest.fn()
+  },
+  SubscribeStore: {
+    isBlockGame: false
   }
 }))

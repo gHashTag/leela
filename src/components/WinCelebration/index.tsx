@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
@@ -22,9 +22,13 @@ const DURATION = 1600
 export const WinCelebration = observer(() => {
   const { t } = useTranslation()
   const online = DiceStore.online
-  const endGame = online
-    ? OnlinePlayer.store.finish
-    : DiceStore.finishArr.indexOf(true) === -1
+  const endGame = useMemo(
+    () =>
+      online
+        ? OnlinePlayer.store.finish
+        : !DiceStore.finishArr.includes(true),
+    [online]
+  )
 
   const progress = useRef(new Animated.Value(0)).current
   const prevEndGame = useRef(false)
