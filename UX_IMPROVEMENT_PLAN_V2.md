@@ -31,7 +31,7 @@
 
 - [x] **4.1** Show a limited-time trial timer on the subscription screen.
 - [x] **4.2** Add a "Pro" badge on the profile and in the community.
-- [ ] **4.3** Add a gift-subscription flow for friends/family.
+- [x] **4.3** Add a gift-subscription flow for friends/family. (wave 054)
 - [ ] **4.4** Add a pay-what-you-want yearly option for emerging markets.
 - [ ] **4.5** Explain each Pro feature with a short inline video/gif.
 

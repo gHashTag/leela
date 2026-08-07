@@ -17,7 +17,14 @@ import {
   secondary,
   white
 } from '../../constants'
-import { Loading, PurchaseButton, Space, Text, TrialTimer } from '../../components'
+import {
+  GiftSubscriptionButton,
+  Loading,
+  PurchaseButton,
+  Space,
+  Text,
+  TrialTimer
+} from '../../components'
 
 import { PurchasesPackage } from 'react-native-purchases'
 
@@ -151,6 +158,7 @@ const SubscriptionScreen: React.FC = () => {
           selectedPackage={selectedPackage}
           onPress={handlePurchase}
         />
+        <GiftSubscriptionButton selectedPackage={selectedPackage} />
         <Space height={10} />
         {/* <Text
           h="h4"

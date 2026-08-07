@@ -756,6 +756,19 @@
     "endsIn": "Ends in {{hours}}h {{minutes}}m {{seconds}}s",
     "endsInDays": "Ends in {{days}}d {{hours}}h {{minutes}}m"
   },
+  "giftSubscription": {
+    "title": "Gift subscription",
+    "defaultPackageTitle": "Leela Pro subscription",
+    "shareTitle": "Gift Leela Pro",
+    "shareMessage": "I want to gift you Leela Pro ({{package}}{{#price}} — {{price}}{{/price}}). Download the Leela Chakra app and I'll send the subscription details to support.",
+    "sendAlertTitle": "Send the gift",
+    "sendAlertMessage": "Share this message with the recipient, then contact support to complete the gift subscription.",
+    "later": "Later",
+    "contactSupport": "Contact support",
+    "emailTitle": "Gift Leela Pro",
+    "emailSubject": "Gift Leela Pro — {{package}}",
+    "emailBody": "Hello Leela team,\n\nI would like to gift a Leela Pro subscription to a friend or family member.\n\nSelected plan: {{package}}\nPrice: {{price}}\nApp language: {{language}}\n\nPlease let me know the next steps to complete the gift.\n\nThank you."
+  },
   "sampleAnswer": {
     "title": "See Leela answer before subscribing",
     "question": "I landed on plane 12 — Confusion. I feel stuck between choices and don't know which direction to take.",
