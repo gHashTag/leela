@@ -605,6 +605,13 @@
     "friend": "You are a kind, supportive friend. Use warm, simple language, ask gentle clarifying questions, and offer one compassionate, everyday step. Keep the tone conversational and encouraging.",
     "guru": "You are a wise spiritual guru. Speak with calm authority, use traditional metaphors, and end each teaching with a short practical meditation or reflection. Maintain a reverent, timeless tone."
   },
+  "followUpQuestions": {
+    "title": "Continue the reflection",
+    "q1": "How does this apply to my life today?",
+    "q2": "Which scripture deepens this teaching?",
+    "q3": "What is one small step I can take now?",
+    "q4": "What hidden pattern is this pointing to?"
+  },
   "dailyVerse": {
     "title": "Daily Vedic Reflection",
     "reflection": "Reflection",

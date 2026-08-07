@@ -10,6 +10,7 @@ import { getActions } from './ModalActions'
 
 import {
   ButtonVectorIcon,
+  FollowUpQuestions,
   HashtagFormat,
   PlanAvatar,
   Space,
@@ -20,6 +21,7 @@ import { OpenActionsModal, brightTurquoise, gray, lightGray } from '../../../con
 import { getTimeStamp } from '../../../screens/helper'
 import { PostStore } from '../../../store'
 import { CommentT } from '../../../types/types'
+import { isAiComment } from '../../../utils/aiComment'
 
 interface CommentCardI {
   item: CommentT
@@ -123,6 +125,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
               <Space width={s(5)} />
             </View>
             <HashtagFormat h="h6" title={text} selectable />
+            {isAiComment(item.ownerId) && <FollowUpQuestions postId={item.postId} />}
             <Space height={vs(20)} />
             <FlatList
               data={subCom}

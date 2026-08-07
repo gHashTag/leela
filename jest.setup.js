@@ -95,5 +95,24 @@ jest.mock('./src/store', () => ({
   },
   SubscribeStore: {
     isBlockGame: false
+  },
+  PostStore: {
+    store: {
+      posts: [],
+      ownPosts: [],
+      comments: [],
+      replyComments: []
+    },
+    createComment: jest.fn(),
+    replyComment: jest.fn(),
+    editComment: jest.fn(),
+    delComment: jest.fn(),
+    delAllUserComments: jest.fn(),
+    fetchComments: jest.fn(),
+    fetchOwnPosts: jest.fn(),
+    translateText: jest.fn(),
+    getOwnerName: jest.fn(),
+    getComPlan: jest.fn(),
+    getAvaById: jest.fn()
   }
 }))
