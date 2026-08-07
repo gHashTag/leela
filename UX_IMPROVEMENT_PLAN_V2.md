@@ -5,7 +5,7 @@
 ## 1. Retention & Daily Habit
 
 - [x] **1.1** Add a daily push notification reminder with the verse of the day.
-- [ ] **1.2** Show a weekly play-streak summary on the home screen.
+- [x] **1.2** Show a weekly play-streak summary on the home screen.
 - [ ] **1.3** Add a "resume last game" card that re-enters the saved offline/online match.
 - [ ] **1.4** Add gentle bedtime/reminder setting in the profile screen.
 - [ ] **1.5** Add a "today's intention" prompt before the first dice roll.

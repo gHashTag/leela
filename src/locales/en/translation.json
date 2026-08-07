@@ -538,6 +538,18 @@
     "noEntries": "No reflections yet. Start your streak today.",
     "close": "Close"
   },
+  "weeklyStreak": {
+    "title": "This week",
+    "daySingular": "day",
+    "dayPlural": "days",
+    "sun": "S",
+    "mon": "M",
+    "tue": "T",
+    "wed": "W",
+    "thu": "T",
+    "fri": "F",
+    "sat": "S"
+  },
   "uxFeedback": {
     "button": "Feedback",
     "buttonLabel": "Send feedback about the app",
