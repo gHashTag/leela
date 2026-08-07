@@ -68,6 +68,7 @@ const ChatScreen: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [copiedId, setCopiedId] = useState<string | number | null>(null)
   const [showScrollToBottom, setShowScrollToBottom] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   const listRef = useRef<FlatList<IMessage> | null>(null)
   const scrollOffsetRef = useRef(0)
@@ -361,6 +362,13 @@ const ChatScreen: React.FC = () => {
     setShowScrollToBottom(false)
   }, [])
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true)
+    // The current chat session is kept in local state. A future backend-backed
+    // history fetch can replace this timeout with a real reload.
+    setTimeout(() => setRefreshing(false), 1200)
+  }, [])
+
   const handleScroll = useCallback(
     (event) => {
       scrollOffsetRef.current = event.nativeEvent.contentOffset.y
@@ -431,7 +439,9 @@ const ChatScreen: React.FC = () => {
           listViewProps={{
             ref: listRef,
             onScroll: handleScroll,
-            onContentSizeChange: handleContentSizeChange
+            onContentSizeChange: handleContentSizeChange,
+            refreshing,
+            onRefresh
           }}
         />
         {showScrollToBottom && (
