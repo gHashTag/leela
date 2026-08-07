@@ -30,6 +30,7 @@ import { startStepTimer } from '../../screens/helper'
 import { PostStore } from '../../store'
 import { useRevenueCat } from '../../providers/RevenueCatProvider'
 import { streamZaiChat } from '../../utils/aiStream'
+import { buildSystemMessage, loadAiPersona } from '../../utils/aiPersona'
 
 interface CreatePostT {
   plan: number
@@ -42,7 +43,13 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
   const [aiContent, setAiContent] = useState('')
   const { t } = useTranslation()
   const { user } = useRevenueCat()
-  const systemMessage = t('system')
+  const [systemMessage, setSystemMessage] = useState(t('system'))
+
+  useEffect(() => {
+    loadAiPersona().then((persona) => {
+      setSystemMessage(buildSystemMessage(t, persona))
+    })
+  }, [t])
 
   const schema = useMemo(
     () =>

@@ -27,6 +27,7 @@ import { PostT } from '../../../types/types'
 import { usePostActions } from './usePostActions'
 import { usePostTranslation } from './usePostTranslation'
 import { useRevenueCat } from '../../../providers/RevenueCatProvider'
+import { buildSystemMessage, loadAiPersona } from '../../../utils/aiPersona'
 
 interface postCardI {
   postId: string
@@ -62,7 +63,8 @@ export const PostCard: React.FC<postCardI> = memo(
       const curItem: PostT | undefined = PostStore.store.posts.find(
         (a) => a.id === postId
       )
-      const systemMessage = t('system')
+      const persona = await loadAiPersona()
+      const systemMessage = buildSystemMessage(t, persona)
       const postLanguage = item?.language
       const currentLanguage = i18n.language
 

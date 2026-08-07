@@ -8,6 +8,7 @@ import { GestureDetector } from 'react-native-gesture-handler'
 import Animated from 'react-native-reanimated'
 import { vs } from 'react-native-size-matters'
 import {
+  AiPersonaSelector,
   AppContainer,
   CenterView,
   HeaderMaster,
@@ -21,7 +22,7 @@ import { RootStackParamList, RootTabParamList } from '../../../types/types'
 
 import { TabContextProvider } from './TabContext'
 import { BedtimeReminder } from '../../../components'
-import { HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
+import { AiPersonaScene, HistoryScene, IntentionOfGame, ReportsScene } from './Tabs'
 import { useActions } from '../../../components/HeaderMaster/useActions'
 
 type ProfileScreenT = {
@@ -99,6 +100,11 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                       key: 'bedtimeReminder',
                       title: t('bedtimeReminder.tab'),
                       Scene: BedtimeReminder
+                    },
+                    {
+                      key: 'aiPersona',
+                      title: t('aiPersona.tab'),
+                      Scene: AiPersonaScene
                     }
                   ]}
                   style={[styles.tabContainer, { height: tabViewH }]}

@@ -16,6 +16,7 @@ import { brightTurquoise, captureException, onLeaveFeedback, trueBlue } from '..
 import { DiceStore, actionsDice } from '../../../store'
 import { useRevenueCat } from '../../../providers/RevenueCatProvider'
 import { streamZaiChat } from '../../../utils/aiStream'
+import { buildSystemMessage, loadAiPersona } from '../../../utils/aiPersona'
 
 const LEELA_AI = require('../../../../assets/defaultImage/leelaAI.jpg')
 
@@ -120,10 +121,11 @@ const ChatScreen: React.FC = () => {
 
     updateContextSummary(newMessages[0])
 
+    const persona = await loadAiPersona()
     const apiMessages = [
       {
         role: 'system',
-        content: t('system')
+        content: buildSystemMessage(t, persona)
       },
       ...contextSummary.user.map((content) => ({ role: 'user', content })),
       ...contextSummary.assistant.map((content) => ({

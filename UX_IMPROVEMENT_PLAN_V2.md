@@ -12,7 +12,7 @@
 
 ## 2. AI Guide Experience
 
-- [ ] **2.1** Allow players to choose an AI guide persona (scholar, friend, guru).
+- [x] **2.1** Allow players to choose an AI guide persona (scholar, friend, guru).
 - [ ] **2.2** Add follow-up questions inside the report answer card.
 - [ ] **2.3** Cache the last 5 AI answers for offline reading.
 - [ ] **2.4** Show a thumbs up/down feedback button on AI answers.
