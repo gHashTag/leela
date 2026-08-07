@@ -23,7 +23,29 @@ export const getActions: getActionsT = ({
   const isBaned =
     OtherPlayers.store.players.find((a) => a.owner === item.ownerId)?.status ===
     'ban'
+  const replyTargetName = item.replyToOwnerName
+  const parentReplyId = item.parentReplyId || item.id
+
   return [
+    {
+      key: 'REPLY_THREAD',
+      onPress: () => {
+        navigate('INPUT_TEXT_MODAL', {
+          initialText: `@${PostStore.getOwnerName(item.ownerId, false) || ''} `,
+          onSubmit: (text: string) =>
+            PostStore.replyComment({
+              text,
+              commentId: item.commentId,
+              commentOwner: item.commentOwner,
+              postId: item.postId,
+              parentReplyId,
+              replyToOwnerName: PostStore.getOwnerName(item.ownerId, false)
+            })
+        })
+      },
+      title: i18next.t('actions.replyThread'),
+      icon: 'chatbubbles-outline'
+    },
     {
       key: 'EDIT',
       onPress: () => {

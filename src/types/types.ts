@@ -196,6 +196,8 @@ export interface FormReplyCom {
   commentId: string
   commentOwner: string
   postId: string
+  parentReplyId?: string | null
+  replyToOwnerName?: string | null
 }
 
 export interface ReplyComT extends FormReplyCom {

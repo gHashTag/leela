@@ -34,6 +34,25 @@ export const getActions: getActionsT = ({ item }) => {
       icon: 'ios-paper-plane-outline'
     },
     {
+      key: 'REPLY_THREAD',
+      onPress: () => {
+        navigate('INPUT_TEXT_MODAL', {
+          initialText: `@${PostStore.getOwnerName(item.ownerId, false) || ''} `,
+          onSubmit: (text: string) =>
+            PostStore.replyComment({
+              text,
+              commentId: item.id,
+              commentOwner: item.ownerId,
+              postId: item.postId,
+              parentReplyId: null,
+              replyToOwnerName: PostStore.getOwnerName(item.ownerId, false)
+            })
+        })
+      },
+      title: i18next.t('actions.replyThread'),
+      icon: 'chatbubbles-outline'
+    },
+    {
       key: 'EDIT',
       onPress: () => {
         navigate('INPUT_TEXT_MODAL', {

@@ -210,7 +210,9 @@ export const PostStore = {
     text,
     commentId,
     postId,
-    commentOwner
+    commentOwner,
+    parentReplyId,
+    replyToOwnerName
   }: FormReplyCom) => {
     const userUid = auth().currentUser?.uid
     const prof = await getProfile()
@@ -222,6 +224,8 @@ export const PostStore = {
           postId,
           commentId,
           commentOwner,
+          parentReplyId: parentReplyId || null,
+          replyToOwnerName: replyToOwnerName || null,
           firstName: prof.firstName,
           lastName: prof.lastName,
           ownerId: userUid,
