@@ -23,6 +23,7 @@ import {
   Dice,
   GameBoard,
   Header,
+  IntentionPrompt,
   ResumeLastGame,
   Space,
   StreakJournal,
@@ -154,6 +155,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
         }
       />
+      <IntentionPrompt />
       <StreakJournal />
       <UxFeedback />
       {!endGame && <Dice disabled={isBlockGame} />}

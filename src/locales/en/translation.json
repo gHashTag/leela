@@ -569,6 +569,13 @@
     "notificationBody": "A few minutes of reflection before sleep can clear the day.",
     "notificationChannelName": "Bedtime reminders"
   },
+  "intentionPrompt": {
+    "title": "Today's intention",
+    "body": "What is your intention for today's game?",
+    "placeholder": "For example: stay present, play with kindness…",
+    "inputLabel": "Your intention",
+    "savedLabel": "Today's intention"
+  },
   "uxFeedback": {
     "button": "Feedback",
     "buttonLabel": "Send feedback about the app",

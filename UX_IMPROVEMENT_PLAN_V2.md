@@ -8,7 +8,7 @@
 - [x] **1.2** Show a weekly play-streak summary on the home screen.
 - [x] **1.3** Add a "resume last game" card that re-enters the saved offline/online match.
 - [x] **1.4** Add gentle bedtime/reminder setting in the profile screen.
-- [ ] **1.5** Add a "today's intention" prompt before the first dice roll.
+- [x] **1.5** Add a "today's intention" prompt before the first dice roll.
 
 ## 2. AI Guide Experience
 
@@ -70,6 +70,6 @@
 
 ## Cooperation options for the next loop
 
-1. **Start section 1** — build the daily habit loop (notification, streak summary, resume game).
-2. **Start section 2** — improve the AI guide experience (personas, follow-up, offline cache).
+1. **Start section 2** — improve the AI guide experience (personas, follow-up, offline cache).
+2. **Start section 5** — deepen the game board (legend, replay, roll history, sound).
 3. **Instrument v1 features** — add lightweight analytics for copy/share/haptic/report to validate which v2 items matter most.

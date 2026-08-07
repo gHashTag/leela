@@ -59,6 +59,12 @@ jest.mock('react-native-fast-image', () => {
   }
 })
 
+jest.mock('react-native-reanimated', () => {
+  const Reanimated = require('react-native-reanimated/mock')
+  global.ReanimatedDataMock = { now: () => Date.now() }
+  return Reanimated
+})
+
 // MobX stores import autoruns at module load time. Provide a minimal store
 // shape so imports do not throw while loading components under test.
 jest.mock('./src/store', () => ({
