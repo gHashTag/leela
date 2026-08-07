@@ -2,6 +2,7 @@ import React from 'react'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 
 import { AiFeedbackButtons } from './'
+import { recordPositiveAiAnswer } from '../../constants'
 import { loadAiFeedback, saveAiFeedback } from '../../utils/aiFeedback'
 
 jest.mock('../../utils/aiFeedback', () => ({
@@ -10,8 +11,15 @@ jest.mock('../../utils/aiFeedback', () => ({
   saveAiFeedback: jest.fn()
 }))
 
+jest.mock('../../constants', () => ({
+  ...jest.requireActual('../../constants'),
+  maybeRequestReview: jest.fn(),
+  recordPositiveAiAnswer: jest.fn()
+}))
+
 const mockedLoad = loadAiFeedback as jest.Mock
 const mockedSave = saveAiFeedback as jest.Mock
+const mockedRecordPositive = recordPositiveAiAnswer as jest.Mock
 
 describe('<AiFeedbackButtons />', () => {
   beforeEach(() => {
@@ -33,6 +41,17 @@ describe('<AiFeedbackButtons />', () => {
 
     await waitFor(() => {
       expect(mockedSave).toHaveBeenCalledWith('post-1', 'up')
+    })
+  })
+
+  it('records a positive event on a new thumbs up', async () => {
+    mockedLoad.mockResolvedValue(null)
+    const { findByLabelText } = render(<AiFeedbackButtons postId="post-1" />)
+
+    fireEvent.press(await findByLabelText('Thumbs up'))
+
+    await waitFor(() => {
+      expect(mockedRecordPositive).toHaveBeenCalled()
     })
   })
 

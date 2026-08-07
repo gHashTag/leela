@@ -4,11 +4,15 @@ import { createNavigationContainerRef } from '@react-navigation/native'
 import * as Sentry from '@sentry/react-native'
 import axios from 'axios'
 import { Alert, Dimensions, Linking, Platform } from 'react-native'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import Rate from 'react-native-rate'
 import i18next from './i18n'
 
 import { PostStore } from './store'
+import {
+  canRequestReview,
+  markReviewRequested,
+  recordPositiveAiAnswer
+} from './utils/reviewPrompt'
 import {
   ButtonsModalT,
   HandleCommentAiParamsT,
@@ -108,42 +112,7 @@ export const onLeaveFeedback = (onAction: (success: any) => void) => {
   Rate.rate(options, onAction)
 }
 
-const REVIEW_REQUESTED_KEY = '@reviewRequested'
-const MIN_POSITIVE_EVENTS_BEFORE_REVIEW = 2
-
-const canRequestReview = async () => {
-  try {
-    const requested = await AsyncStorage.getItem(REVIEW_REQUESTED_KEY)
-    if (requested === 'true') return false
-
-    const count = Number(
-      (await AsyncStorage.getItem('@positiveEvents')) || '0'
-    )
-    return count >= MIN_POSITIVE_EVENTS_BEFORE_REVIEW
-  } catch (error) {
-    captureException(error, 'canRequestReview')
-    return false
-  }
-}
-
-const markReviewRequested = async () => {
-  try {
-    await AsyncStorage.setItem(REVIEW_REQUESTED_KEY, 'true')
-  } catch (error) {
-    captureException(error, 'markReviewRequested')
-  }
-}
-
-export const recordPositiveEvent = async () => {
-  try {
-    const current = Number(
-      (await AsyncStorage.getItem('@positiveEvents')) || '0'
-    )
-    await AsyncStorage.setItem('@positiveEvents', String(current + 1))
-  } catch (error) {
-    captureException(error, 'recordPositiveEvent')
-  }
-}
+export { recordPositiveAiAnswer, resetPositiveAiAnswerCount } from './utils/reviewPrompt'
 
 export const maybeRequestReview = async () => {
   if (!(await canRequestReview())) return

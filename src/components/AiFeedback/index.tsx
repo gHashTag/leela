@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
 import { Text } from '../'
-import { gray, lightGray } from '../../constants'
+import { captureException, gray, lightGray, maybeRequestReview, recordPositiveAiAnswer } from '../../constants'
 import { AiFeedback, loadAiFeedback, saveAiFeedback } from '../../utils/aiFeedback'
 
 interface AiFeedbackI {
@@ -26,8 +26,18 @@ export const AiFeedbackButtons = memo(({ postId }: AiFeedbackI) => {
 
   const handlePress = async (value: AiFeedback) => {
     const next = feedback === value ? null : value
+    const wasNewUpvote = next === 'up' && feedback !== 'up'
     setFeedback(next)
     await saveAiFeedback(postId, next)
+
+    if (wasNewUpvote) {
+      try {
+        await recordPositiveAiAnswer()
+        await maybeRequestReview()
+      } catch (error) {
+        captureException(error, 'AiFeedback: handlePress')
+      }
+    }
   }
 
   return (
