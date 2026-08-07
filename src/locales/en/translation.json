@@ -749,6 +749,12 @@
     "restore": "Restore purchase",
     "close": "Close"
   },
+  "trialTimer": {
+    "title": "Limited-time trial offer",
+    "expired": "Offer expired",
+    "endsIn": "Ends in {{hours}}h {{minutes}}m {{seconds}}s",
+    "endsInDays": "Ends in {{days}}d {{hours}}h {{minutes}}m"
+  },
   "sampleAnswer": {
     "title": "See Leela answer before subscribing",
     "question": "I landed on plane 12 — Confusion. I feel stuck between choices and don't know which direction to take.",

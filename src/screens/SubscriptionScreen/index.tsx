@@ -17,7 +17,7 @@ import {
   secondary,
   white
 } from '../../constants'
-import { Loading, PurchaseButton, Space, Text } from '../../components'
+import { Loading, PurchaseButton, Space, Text, TrialTimer } from '../../components'
 
 import { PurchasesPackage } from 'react-native-purchases'
 
@@ -117,6 +117,7 @@ const SubscriptionScreen: React.FC = () => {
           textStyle={styles.header}
           title={t('chooseSubscription')}
         />
+        <TrialTimer />
         {isLoading ? (
           <Loading />
         ) : (
