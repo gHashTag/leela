@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next'
 
 import Navigation from './Navigation'
 import { RevenueCatProvider } from './providers/RevenueCatProvider'
+import { markSessionCrashed, markSessionStarted } from './utils/sessionHealth'
 import { updateAndroidBadgeCount } from './utils/notifications/NotificationHelper'
 import { scheduleDailyVerseNotification } from './utils/notifications'
 
@@ -36,6 +37,15 @@ Sentry.init({
       routingInstrumentation
     })
   ],
+  beforeSend: (event) => {
+    const level = event.level
+    if (level === 'fatal' || level === 'error') {
+      markSessionCrashed().catch(() => {
+        // ignore AsyncStorage failure during crash handling
+      })
+    }
+    return event
+  },
   enabled: process.env.NODE_ENV !== 'development'
 })
 
@@ -70,6 +80,7 @@ function AppWithProviders() {
 
   useEffect(() => {
     SplashScreen.hide()
+    markSessionStarted()
     scheduleDailyVerseNotification(t)
 
     const unsub = AppState.addEventListener('change', async (state) => {

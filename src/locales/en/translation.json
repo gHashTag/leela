@@ -879,5 +879,17 @@
     "saved": "No connection. Your report is saved and will be sent automatically when you are back online.",
     "sending": "Sending queued report...",
     "sent": "Queued report sent."
+  },
+  "sessionHealth": {
+    "tab": "Health",
+    "statusOk": "Session healthy",
+    "statusCrashed": "Last session crashed",
+    "statusUnknown": "No session data",
+    "startedAt": "Session started: {{time}}",
+    "onlineNote": "Online — crash-free status will update automatically.",
+    "offlineNote": "Offline — connect to send any pending reports.",
+    "reset": "Start clean session",
+    "explanation": "Leela tracks whether the app reached the end of a session without a fatal crash. This helps the team measure stability in Sentry.",
+    "accessibilityLabel": "Crash-free status: {{status}}"
   }
 }

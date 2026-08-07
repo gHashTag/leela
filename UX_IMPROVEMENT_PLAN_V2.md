@@ -49,7 +49,7 @@
 - [x] **6.2** Add image lazy-loading and placeholder in the reports feed. (wave 063)
 - [x] **6.3** Add a memory-leak audit for chat subscriptions and listeners. (wave 064)
 - [x] **6.4** Add offline queue for reports created without connectivity. (wave 065)
-- [ ] **6.5** Add a crash-free session rate dashboard in Sentry tagging.
+- [x] **6.5** Add a crash-free session rate dashboard in Sentry tagging. (wave 066)
 
 ## 7. Accessibility & Localization
 

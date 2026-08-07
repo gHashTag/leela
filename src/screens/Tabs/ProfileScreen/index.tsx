@@ -29,7 +29,8 @@ import {
   BookmarksScene,
   HistoryScene,
   IntentionOfGame,
-  ReportsScene
+  ReportsScene,
+  SessionHealthScene
 } from './Tabs'
 import { useActions } from '../../../components/HeaderMaster/useActions'
 
@@ -129,6 +130,11 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                       key: 'bookmarks',
                       title: t('bookmarks.tab'),
                       Scene: BookmarksScene
+                    },
+                    {
+                      key: 'sessionHealth',
+                      title: t('sessionHealth.tab'),
+                      Scene: SessionHealthScene
                     }
                   ]}
                   style={[styles.tabContainer, { height: tabViewH }]}
