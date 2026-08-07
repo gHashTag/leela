@@ -55,8 +55,17 @@
 
 ---
 
+## 7. Sharing & Accessibility
+
+- [x] **7.1** Add a copy-to-clipboard action for AI assistant answers in ChatScreen.
+- [ ] **7.2** Add a scroll-to-bottom button in ChatScreen when new messages arrive off-screen.
+- [ ] **7.3** Add accessibility labels and hints to the dice and primary board controls.
+- [ ] **7.4** Add a share-as-image option for the daily verse card.
+
+---
+
 ## Cooperation options for the next loop
 
-1. **Deep-dive one area** — pick one section (e.g., Game Board UX) and finish all its items in the next loop.
-2. ** breadth-first polish** — implement the top item from each section to raise overall UX evenly.
-3. **User-feedback-driven** — add analytics/in-app feedback button, then prioritize the plan by what real players report.
+1. **Finish section 7** — complete the remaining sharing and accessibility items.
+2. **Quality sweep** — run the full test suite, fix warnings, and improve TypeScript strictness in one area.
+3. **Analytics-driven** — wire up lightweight event tracking for the new copy/share actions and prioritize the next plan by real usage.

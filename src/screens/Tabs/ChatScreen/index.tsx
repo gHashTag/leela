@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import Clipboard from '@react-native-clipboard/clipboard'
 import { useTranslation } from 'react-i18next'
 import {
   ActivityIndicator,
@@ -8,7 +9,7 @@ import {
 } from 'react-native'
 import { Bubble, GiftedChat, IMessage } from 'react-native-gifted-chat'
 import { s } from 'react-native-size-matters'
-import { ButtonWithIcon, Header, Space, Text } from '../../../components'
+import { ButtonVectorIcon, ButtonWithIcon, Header, Space, Text } from '../../../components'
 import { brightTurquoise, captureException, onLeaveFeedback, trueBlue } from '../../../constants'
 import { DiceStore, actionsDice } from '../../../store'
 import { useRevenueCat } from '../../../providers/RevenueCatProvider'
@@ -63,6 +64,7 @@ const ChatScreen: React.FC = () => {
     assistant: []
   })
   const [loading, setLoading] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | number | null>(null)
 
   const { t } = useTranslation()
 
@@ -247,6 +249,21 @@ const ChatScreen: React.FC = () => {
   const onPressRate = () => {
     onLeaveFeedback((success) => actionsDice.setRate(success))
   }
+
+  const handleCopyAnswer = useCallback(
+    async (messageId: string | number, text: string) => {
+      if (!text) return
+      try {
+        await Clipboard.setString(text)
+        setCopiedId(messageId)
+        setTimeout(() => setCopiedId(null), 2000)
+      } catch (error) {
+        captureException(error, 'ChatScreen: copyAnswer')
+      }
+    },
+    []
+  )
+
   // @ts-expect-error
   const renderBubble = (props) => {
     const isAssistant = props.position === 'left'
@@ -265,6 +282,8 @@ const ChatScreen: React.FC = () => {
         </View>
       )
     }
+
+    const isCopied = copiedId === props.currentMessage._id
 
     return (
       <View style={styles.bubbleWrapper}>
@@ -290,6 +309,36 @@ const ChatScreen: React.FC = () => {
                 <Text h="h11" title={citation} oneColor="#50E3C2" />
               </View>
             ))}
+          </View>
+        )}
+        {isAssistant && (
+          <View
+            style={[
+              styles.copyRow,
+              props.position === 'left'
+                ? { marginLeft: s(8) }
+                : { marginRight: s(8) }
+            ]}
+          >
+            <ButtonVectorIcon
+              ionicons
+              name={isCopied ? 'checkmark-outline' : 'copy-outline'}
+              size={s(12)}
+              color={isCopied ? '#50E3C2' : undefined}
+              onPress={() =>
+                handleCopyAnswer(
+                  props.currentMessage._id,
+                  props.currentMessage.text || ''
+                )
+              }
+            />
+            {isCopied && (
+              <Text
+                h="h11"
+                textStyle={styles.copyLabel}
+                title={t('copied') || 'Copied'}
+              />
+            )}
           </View>
         )}
       </View>
@@ -348,6 +397,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: s(8),
     paddingVertical: s(3),
     margin: s(2)
+  },
+  copyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: s(4),
+    maxWidth: '80%'
+  },
+  copyLabel: {
+    marginLeft: s(6),
+    color: '#50E3C2'
   },
   feadbackContainer: {
     alignSelf: 'center'
