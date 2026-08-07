@@ -63,7 +63,7 @@ export const GameBoard = observer(() => {
 
   const currentPlan = DiceStore.online
     ? OnlinePlayer.store.plan
-    : OfflinePlayers.store.plans[0]
+    : OfflinePlayers.store.plans[DiceStore.players - 1]
 
   const currentPlane = getPlaneNumber(currentPlan)
   const planeNameKey = `accessibility.planeNames.${currentPlane}` as const
@@ -76,6 +76,16 @@ export const GameBoard = observer(() => {
     cell: currentPlan,
     plane: planeName
   })
+
+  const history = DiceStore.online
+    ? OnlinePlayer.store.history
+    : OfflinePlayers.store.histories[DiceStore.players - 1]
+  const lastMove = history && history.length > 0 ? history[0] : null
+  const previousPlan = lastMove && lastMove.plan !== currentPlan ? lastMove.plan : null
+  const nextPlan =
+    currentPlan >= 1 && currentPlan < 68
+      ? Math.min(68, currentPlan + (lastMove ? lastMove.count : 1))
+      : null
 
   return (
     <View
@@ -92,6 +102,8 @@ export const GameBoard = observer(() => {
             <View style={styles.row} key={i}>
               {a.map((b, index) => {
                 const isCurrentCell = b === currentPlan
+                const isPreviousCell = previousPlan !== null && b === previousPlan
+                const isNextCell = nextPlan !== null && b === nextPlan
                 const cellPlane = getPlaneNumber(b)
                 const cellPlaneNameKey = `accessibility.planeNames.${cellPlane}` as const
                 const cellPlaneName =
@@ -103,7 +115,9 @@ export const GameBoard = observer(() => {
                     key={index}
                     style={[
                       styles.box,
-                      isCurrentCell && styles.activeBox
+                      isCurrentCell && styles.activeBox,
+                      isPreviousCell && styles.previousBox,
+                      isNextCell && styles.nextBox
                     ]}
                     accessible={isCurrentCell}
                     accessibilityLabel={
@@ -171,6 +185,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(80, 227, 194, 0.35)',
     borderWidth: 1.5,
     borderColor: '#50E3C2'
+  },
+  previousBox: {
+    backgroundColor: 'rgba(252, 40, 71, 0.18)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(252, 40, 71, 0.55)'
+  },
+  nextBox: {
+    backgroundColor: 'rgba(255, 183, 77, 0.22)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 152, 0, 0.55)'
   },
   bgImage: {
     width: '100%',
