@@ -33,7 +33,7 @@
 - [x] **4.2** Add a "Pro" badge on the profile and in the community.
 - [x] **4.3** Add a gift-subscription flow for friends/family. (wave 054)
 - [x] **4.4** Add a pay-what-you-want yearly option for emerging markets. (wave 055)
-- [ ] **4.5** Explain each Pro feature with a short inline video/gif.
+- [x] **4.5** Explain each Pro feature with a short inline video/gif. (wave 056)
 
 ## 5. Game Board Depth
 

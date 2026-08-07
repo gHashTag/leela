@@ -777,6 +777,35 @@
     "generous": "Generous",
     "selected": "Selected: {{tier}}"
   },
+  "proFeatureExplainer": {
+    "link": "What is included in Pro?",
+    "title": "What Pro unlocks",
+    "next": "Next",
+    "gotIt": "Got it",
+    "dismiss": "Skip tour",
+    "features": {
+      "aiGuide": {
+        "title": "AI guide",
+        "body": "Ask Leela anything about your roll, plane, or life question. The AI guide answers in the voice of a scholar, friend, or guru — your choice."
+      },
+      "dailyVerse": {
+        "title": "Daily verse",
+        "body": "Start each day with a scripture chosen for your current path. Save verses, set reminders, and build a reflective daily habit."
+      },
+      "community": {
+        "title": "Community reports",
+        "body": "Share your reports, read others' journeys, add reactions, and reply to comments. The community keeps the game alive between rolls."
+      },
+      "offlineCache": {
+        "title": "Offline reading",
+        "body": "Your last five AI answers are cached automatically. Re-read guidance anywhere, even without a network connection."
+      },
+      "reports": {
+        "title": "Unlimited reports",
+        "body": "Create as many personal reports as you need. Track patterns over time and keep a private journal of your journey."
+      }
+    }
+  },
   "sampleAnswer": {
     "title": "See Leela answer before subscribing",
     "question": "I landed on plane 12 — Confusion. I feel stuck between choices and don't know which direction to take.",

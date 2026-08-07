@@ -21,6 +21,7 @@ import {
   GiftSubscriptionButton,
   Loading,
   PayWhatYouWantOption,
+  ProFeatureExplainer,
   PurchaseButton,
   Space,
   Text,
@@ -50,6 +51,7 @@ const SubscriptionScreen: React.FC = () => {
   const [selectedPackage, setSelectedPackage] =
     useState<PurchasesPackage | null>(null)
   const [showSample, setShowSample] = useState(false)
+  const [showFeatureExplainer, setShowFeatureExplainer] = useState(false)
 
   const handlePackageSelection = (pack: PurchasesPackage) => {
     setSelectedPackage(pack)
@@ -126,6 +128,16 @@ const SubscriptionScreen: React.FC = () => {
           title={t('chooseSubscription')}
         />
         <TrialTimer />
+        <Pressable
+          onPress={() => setShowFeatureExplainer(true)}
+          style={styles.featureLink}
+        >
+          <Text
+            h="h4"
+            textStyle={styles.featureLinkText}
+            title={t('proFeatureExplainer.link')}
+          />
+        </Pressable>
         {isLoading ? (
           <Loading />
         ) : (
@@ -196,6 +208,10 @@ const SubscriptionScreen: React.FC = () => {
           onClose={() => setShowSample(false)}
           onContinue={() => setShowSample(false)}
         />
+        <ProFeatureExplainer
+          visible={showFeatureExplainer}
+          onClose={() => setShowFeatureExplainer(false)}
+        />
       </View>
     </View>
   )
@@ -250,6 +266,15 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     color: secondary,
     textDecorationLine: 'underline'
+  },
+  featureLink: {
+    alignSelf: 'center',
+    marginBottom: 10
+  },
+  featureLinkText: {
+    color: secondary,
+    textDecorationLine: 'underline',
+    fontWeight: 'bold'
   },
   test: {
     fontSize: ms(15, 0.6),
