@@ -6,7 +6,7 @@
 
 - [x] **1.1** Add a shareable streak-milestone card when the player hits a 7-day streak. *(wave 077)*
 - [x] **1.2** Add a streak-break recovery button (one free "missed day" forgiveness per 7 days). *(wave 078)*
-- [ ] **1.3** Add a weekly play recap card on the game screen with total rolls, reports, and streak.
+- [x] **1.3** Add a weekly play recap card on the game screen with total rolls, reports, and streak. *(wave 079)*
 - [ ] **1.4** Add a "welcome back" prompt after 7 days of inactivity.
 
 ## 2. AI Companion Depth

@@ -578,6 +578,12 @@
     "shareTitle": "Серия в Лиле",
     "shareMessage": "Я достиг серии размышлений в {{days}} дней в игре Лила Чакра. 🕉️"
   },
+  "weeklyRecap": {
+    "title": "На этой неделе",
+    "rolls": "броски",
+    "reports": "отчёты",
+    "streak": "серия"
+  },
   "weeklyStreak": {
     "title": "На этой неделе",
     "daySingular": "день",

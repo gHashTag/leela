@@ -37,6 +37,7 @@ import {
   Text,
   TutorialOverlay,
   UxFeedback,
+  WeeklyRecap,
   WeeklyStreak,
   WinCelebration
 } from '../../../components'
@@ -162,6 +163,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
       <DailyVerse />
       <WeeklyStreak />
       <StreakMilestone />
+      <WeeklyRecap />
       <ResumeLastGame
         onResume={() =>
           navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })

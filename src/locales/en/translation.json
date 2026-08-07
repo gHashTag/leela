@@ -580,6 +580,12 @@
     "shareTitle": "Leela streak",
     "shareMessage": "I just reached a {{days}}-day reflection streak in Leela Chakra. 🕉️"
   },
+  "weeklyRecap": {
+    "title": "This week",
+    "rolls": "rolls",
+    "reports": "reports",
+    "streak": "streak"
+  },
   "weeklyStreak": {
     "title": "This week",
     "daySingular": "day",
