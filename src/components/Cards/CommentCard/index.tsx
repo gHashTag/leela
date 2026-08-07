@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
@@ -21,6 +21,7 @@ import { OpenActionsModal, brightTurquoise, gray, lightGray } from '../../../con
 import { getTimeStamp } from '../../../screens/helper'
 import { PostStore } from '../../../store'
 import { CommentT } from '../../../types/types'
+import { addCachedAiAnswer } from '../../../utils/aiAnswerCache'
 import { isAiComment } from '../../../utils/aiComment'
 
 interface CommentCardI {
@@ -60,6 +61,23 @@ export const CommentCard: React.FC<CommentCardI> = observer(
     }
 
     const text = hideTranslate ? item.text : transText
+
+    useEffect(() => {
+      const cacheAnswer = async () => {
+        if (isAiComment(item.ownerId)) {
+          const post =
+            PostStore.store.posts.find((a) => a.id === item.postId) ||
+            PostStore.store.ownPosts.find((a) => a.id === item.postId)
+          await addCachedAiAnswer({
+            postId: item.postId,
+            text: item.text,
+            plan: post?.plan || 0,
+            timestamp: item.createTime
+          })
+        }
+      }
+      cacheAnswer()
+    }, [item.text, item.ownerId, item.postId, item.createTime])
 
     const subCom = PostStore.store.replyComments.filter(
       (a) => a.commentId === item.id
@@ -125,7 +143,9 @@ export const CommentCard: React.FC<CommentCardI> = observer(
               <Space width={s(5)} />
             </View>
             <HashtagFormat h="h6" title={text} selectable />
-            {isAiComment(item.ownerId) && <FollowUpQuestions postId={item.postId} />}
+            {isAiComment(item.ownerId) && (
+              <FollowUpQuestions postId={item.postId} />
+            )}
             <Space height={vs(20)} />
             <FlatList
               data={subCom}

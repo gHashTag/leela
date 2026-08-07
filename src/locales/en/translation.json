@@ -612,6 +612,10 @@
     "q3": "What is one small step I can take now?",
     "q4": "What hidden pattern is this pointing to?"
   },
+  "aiAnswers": {
+    "tab": "Saved Answers",
+    "title": "Leela's answer for plane {{plan}}"
+  },
   "dailyVerse": {
     "title": "Daily Vedic Reflection",
     "reflection": "Reflection",
