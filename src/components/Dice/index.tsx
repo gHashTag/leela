@@ -101,6 +101,10 @@ export const Dice = observer(({ disabled }: DiceT) => {
     handleSpin(DiceStore.count)
   }
 
+  const lockedHint = OnlinePlayer.store.isReported
+    ? t('accessibility.diceLockedHint')
+    : t('online-part.notReported')
+
   return (
     <View style={styles.container}>
       <Pressable
@@ -109,10 +113,19 @@ export const Dice = observer(({ disabled }: DiceT) => {
         }}
         style={[styles.diceContainer, isOpacity && styles.opacityCube]}
         disabled={disabled}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={
+          isOpacity ? t('accessibility.diceLocked') : t('accessibility.rollDice')
+        }
+        accessibilityHint={isOpacity ? lockedHint : t('accessibility.rollDiceHint')}
+        accessibilityState={{ disabled: isOpacity || disabled || !canRoll }}
       >
         <Animated.Image
           style={[styles.image, { transform: [{ rotate: spin }] }]}
           source={getImage(DiceStore.count)}
+          accessible={false}
+          importantForAccessibility="no"
         />
       </Pressable>
       {isOpacity && (

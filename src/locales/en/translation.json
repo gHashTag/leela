@@ -486,6 +486,23 @@
   "cube": "cube",
   "snake": "snake",
   "liberation": "liberation",
+  "accessibility": {
+    "rollDice": "Roll the dice",
+    "rollDiceHint": "Double tap to roll the dice and move your piece",
+    "diceLocked": "Dice is locked",
+    "diceLockedHint": "Write a report or wait for the step timer to roll again",
+    "gameBoard": "Leela board",
+    "currentCell": "Current cell {{cell}}, {{plane}} chakra",
+    "planeNames": {
+      "1": "Physical body",
+      "2": "Prana",
+      "3": "Astral",
+      "4": "Mind",
+      "5": "Causal",
+      "6": "Consciousness",
+      "7": "Liberation"
+    }
+  },
   "plan": "plan",
   "oneMoreThrow": "One More Throw",
   "rules": "Rules of the game",

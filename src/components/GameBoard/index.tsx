@@ -2,6 +2,7 @@ import { observer } from 'mobx-react'
 import React, { useMemo } from 'react'
 import { Image, StyleSheet, View, useColorScheme } from 'react-native'
 import { ms, mvs, s } from 'react-native-size-matters'
+import { useTranslation } from 'react-i18next'
 
 import { Text } from '../'
 import { H, W } from '../../constants'
@@ -21,8 +22,20 @@ const imageWidth = s(279) + s(18)
 const maxImageWidth = ms(279, 0.5) + s(18)
 const curImageWidth = imageWidth >= maxImageWidth ? maxImageWidth : imageWidth
 
+const getPlaneNumber = (cell: number): number => {
+  if (cell <= 8) return 1
+  if (cell <= 17) return 2
+  if (cell <= 26) return 3
+  if (cell <= 35) return 4
+  if (cell <= 44) return 5
+  if (cell <= 53) return 6
+  if (cell <= 62) return 7
+  return cell
+}
+
 export const GameBoard = observer(() => {
   const scheme = useColorScheme()
+  const { t } = useTranslation()
 
   const imgObj = useMemo(() => {
     const image = ICONS.find((x) => {
@@ -52,38 +65,72 @@ export const GameBoard = observer(() => {
     ? OnlinePlayer.store.plan
     : OfflinePlayers.store.plans[0]
 
+  const currentPlane = getPlaneNumber(currentPlan)
+  const planeNameKey = `accessibility.planeNames.${currentPlane}` as const
+  const planeName =
+    currentPlane <= 7
+      ? (t(planeNameKey, { defaultValue: t('liberation') }) as string)
+      : (t('liberation') as string)
+  const boardLabel = t('accessibility.gameBoard')
+  const currentCellLabel = t('accessibility.currentCell', {
+    cell: currentPlan,
+    plane: planeName
+  })
+
   return (
     <View
       style={[styles.imageContainer, { width: curImageHeight * imgObj.aspect }]}
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={`${boardLabel}: ${currentCellLabel}`}
+      accessibilityLiveRegion="polite"
     >
       <Image source={imgObj.image} style={styles.bgImage} resizeMode="cover" />
       <View style={styles.gameBoardContainer}>
         <View style={styles.container}>
           {rows.map((a, i) => (
             <View style={styles.row} key={i}>
-              {a.map((b, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.box,
-                    b === currentPlan && styles.activeBox
-                  ]}
-                >
-                  <View style={styles.numberStyle} key={index}>
-                    <Gem
-                      key={b.toString()}
-                      plan={b}
-                      player={DiceStore.players}
-                      index={index}
-                    />
-                    <Text
-                      key={index}
-                      h={'h11'}
-                      title={b !== 68 ? b.toString() : ' '}
-                    />
+              {a.map((b, index) => {
+                const isCurrentCell = b === currentPlan
+                const cellPlane = getPlaneNumber(b)
+                const cellPlaneNameKey = `accessibility.planeNames.${cellPlane}` as const
+                const cellPlaneName =
+                  cellPlane <= 7
+                    ? (t(cellPlaneNameKey, { defaultValue: t('liberation') }) as string)
+                    : (t('liberation') as string)
+                return (
+                  <View
+                    key={index}
+                    style={[
+                      styles.box,
+                      isCurrentCell && styles.activeBox
+                    ]}
+                    accessible={isCurrentCell}
+                    accessibilityLabel={
+                      isCurrentCell
+                        ? t('accessibility.currentCell', {
+                            cell: b,
+                            plane: cellPlaneName
+                          })
+                        : undefined
+                    }
+                  >
+                    <View style={styles.numberStyle} key={index}>
+                      <Gem
+                        key={b.toString()}
+                        plan={b}
+                        player={DiceStore.players}
+                        index={index}
+                      />
+                      <Text
+                        key={index}
+                        h={'h11'}
+                        title={b !== 68 ? b.toString() : ' '}
+                      />
+                    </View>
                   </View>
-                </View>
-              ))}
+                )
+              })}
             </View>
           ))}
         </View>
