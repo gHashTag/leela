@@ -12,6 +12,7 @@ import { s, vs } from 'react-native-size-matters'
 
 import {
   Button,
+  FeedFilter,
   Header,
   PostCard,
   PostsSkeleton,
@@ -22,6 +23,11 @@ import { captureException, openUrl } from '../../../constants'
 import { lang } from '../../../i18n'
 import { DiceStore, OnlinePlayer, PostStore } from '../../../store'
 import { RootTabParamList } from '../../../types/types'
+import {
+  filterPosts,
+  PostFeedFilter
+} from '../../../utils/postFeedFilter'
+import { getUid } from '../../helper'
 
 interface Ipost {
   navigation: NativeStackNavigationProp<RootTabParamList, 'TAB_BOTTOM_1'>
@@ -43,6 +49,7 @@ export const PostScreen = observer(({ navigation }: Ipost) => {
   const [refreshing, setRefreshing] = useState(false)
   const [loadError, setLoadError] = useState('')
   const [retryKey, setRetryKey] = useState(0)
+  const [feedFilter, setFeedFilter] = useState<PostFeedFilter>('newest')
 
   const { t } = useTranslation()
   const isAdmin = OnlinePlayer.store.status === 'Admin'
@@ -115,7 +122,9 @@ export const PostScreen = observer(({ navigation }: Ipost) => {
     setLimit((prev) => prev + 15)
   }, [])
 
-  const data = PostStore.store.posts
+  const rawData = PostStore.store.posts
+  const uid = getUid()
+  const data = filterPosts(rawData, feedFilter, uid)
   const newLimit = () => {
     if (data.length <= limit) {
       setLimit((pr) => pr + 15)
@@ -146,6 +155,7 @@ export const PostScreen = observer(({ navigation }: Ipost) => {
       ListHeaderComponent={
         <>
           <Header textAlign="center" title={t('online-part.reports')} />
+          <FeedFilter selected={feedFilter} onSelect={setFeedFilter} />
           <Space height={vs(10)} />
         </>
       }

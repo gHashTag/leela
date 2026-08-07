@@ -627,6 +627,11 @@
   "aiSources": {
     "title": "Sources"
   },
+  "feedFilter": {
+    "newest": "Newest",
+    "mostDiscussed": "Most discussed",
+    "myPosts": "My reports"
+  },
   "dailyVerse": {
     "title": "Daily Vedic Reflection",
     "reflection": "Reflection",

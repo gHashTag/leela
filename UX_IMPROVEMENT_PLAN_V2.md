@@ -21,7 +21,7 @@
 
 ## 3. Social & Community
 
-- [ ] **3.1** Add a public reports feed filter (newest / most discussed / my posts).
+- [x] **3.1** Add a public reports feed filter (newest / most discussed / my posts).
 - [ ] **3.2** Add comment threading (reply to a specific comment).
 - [ ] **3.3** Add reactions (🙏 ❤️ 🔥) to comments and reports.
 - [ ] **3.4** Add user profile screen with public posts and streak.

@@ -625,6 +625,11 @@
   "aiSources": {
     "title": "Источники"
   },
+  "feedFilter": {
+    "newest": "Сначала новые",
+    "mostDiscussed": "Обсуждаемые",
+    "myPosts": "Мои отчёты"
+  },
   "dailyVerse": {
     "title": "Ежедневное ведическое размышление",
     "reflection": "Размышление",
