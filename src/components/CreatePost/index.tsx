@@ -36,6 +36,7 @@ import {
 } from '../../utils/offlinePostQueue'
 import { streamZaiChat } from '../../utils/aiStream'
 import { buildSystemMessage, loadAiPersona } from '../../utils/aiPersona'
+import { buildAiSystemMessage } from '../../utils/aiLanguage'
 
 interface CreatePostT {
   plan: number
@@ -46,7 +47,7 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
   const [isStreaming, setIsStreaming] = useState(false)
   const [reasoning, setReasoning] = useState('')
   const [aiContent, setAiContent] = useState('')
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useRevenueCat()
   const [systemMessage, setSystemMessage] = useState(t('system'))
 
@@ -132,10 +133,15 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
 
   const runAiStream = async (reportText: string, postData: any) => {
     const planText = t(`plan_${plan}.content`)
+    const fullSystemMessage = await buildAiSystemMessage(
+      systemMessage,
+      planText,
+      i18n.language
+    )
     const messages = [
       {
         role: 'system' as const,
-        content: `${systemMessage}\n\n${planText}`
+        content: fullSystemMessage
       },
       { role: 'user' as const, content: reportText }
     ]

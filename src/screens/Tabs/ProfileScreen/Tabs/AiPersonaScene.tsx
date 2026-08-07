@@ -4,9 +4,9 @@ import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { GestureDetector } from 'react-native-gesture-handler'
-import { s } from 'react-native-size-matters'
+import { s, vs } from 'react-native-size-matters'
 
-import { AiPersonaSelector, Space, Text } from '../../../../components'
+import { AiLanguageToggle, AiPersonaSelector, Space, Text } from '../../../../components'
 import { TabContext } from '../TabContext'
 
 export const AiPersonaScene = observer(() => {
@@ -20,6 +20,8 @@ export const AiPersonaScene = observer(() => {
         <Text title={t('aiPersona.title')} h="h5" textStyle={styles.title} />
         <Space height={10} />
         <AiPersonaSelector />
+        <Space height={vs(12)} />
+        <AiLanguageToggle />
       </View>
     </GestureDetector>
   )

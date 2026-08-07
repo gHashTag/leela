@@ -13,6 +13,7 @@ import {
   markReviewRequested,
   recordPositiveAiAnswer
 } from './utils/reviewPrompt'
+import { buildAiSystemMessage } from './utils/aiLanguage'
 import {
   ButtonsModalT,
   HandleCommentAiParamsT,
@@ -43,6 +44,12 @@ export const generateComment = async ({
   const baseURL = ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : ZAI_DEFAULT_BASE_URL
   const model = ZAI_DEFAULT_MODEL
 
+  const fullSystemMessage = await buildAiSystemMessage(
+    systemMessage,
+    planText,
+    i18next.language
+  )
+
   try {
     const response = await axios.post(
       `${baseURL}/chat/completions`,
@@ -68,7 +75,7 @@ export const generateComment = async ({
           // its own words rather than to answer the player's.
           {
             role: 'system',
-            content: `${systemMessage}\n\n${planText}`
+            content: fullSystemMessage
           },
           {
             role: 'user',

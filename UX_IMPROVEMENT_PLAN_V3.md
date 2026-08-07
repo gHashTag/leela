@@ -11,7 +11,7 @@
 
 ## 2. AI Companion Depth
 
-- [ ] **2.1** Add a user-facing AI answer language toggle (force answers in the user's language).
+- [x] **2.1** Add a user-facing AI answer language toggle (force answers in the user's language). *(wave 081)*
 - [ ] **2.2** Add a freeform "ask a follow-up" input inside the AI answer card.
 - [ ] **2.3** Allow players to bookmark AI answers and browse them by plane.
 
