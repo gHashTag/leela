@@ -50,7 +50,7 @@
 - [x] **6.5** Add iOS/Android microphone and speech recognition permissions for voice input.
 - [x] **6.6** Clean untracked simulator screenshot artifacts from the repo root.
 - [x] **6.7** Add a runtime check that warns if iOS speech/microphone usage descriptions are missing.
-- [ ] **6.8** Add unit tests for streak computation and voice input hook. (Blocked by existing Sentry/Babel transform conflict in Jest setup; helpers exported in StreakJournal for future tests.)
+- [x] **6.8** Add unit tests for streak computation and voice input hook. (Jest transform conflict resolved; StreakJournal helper tests and useVoiceInput hook tests added.)
 - [x] **6.9** Add an in-app feedback button for UX issues.
 
 ---
