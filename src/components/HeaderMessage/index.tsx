@@ -31,7 +31,7 @@ export const HeaderMessage = observer(() => {
       {DiceStore.topMessage !== ' ' && DiceStore.topMessage && (
         <View style={messContainer}>
           <Text
-            numberOfLines={3}
+            numberOfLines={4}
             h="h5"
             title={subscribeMess}
             textStyle={styles.textStyle}
@@ -42,7 +42,7 @@ export const HeaderMessage = observer(() => {
       {DiceStore.message !== ' ' && DiceStore.message && (
         <View style={messContainer}>
           <Text
-            numberOfLines={2}
+            numberOfLines={3}
             h="h5"
             title={DiceStore.message}
             textStyle={styles.textStyle}

@@ -37,6 +37,7 @@ import {
 import { streamZaiChat } from '../../utils/aiStream'
 import { buildSystemMessage, loadAiPersona } from '../../utils/aiPersona'
 import { buildAiSystemMessage } from '../../utils/aiLanguage'
+import { plainThinking } from '../../utils/plainThinking'
 
 interface CreatePostT {
   plan: number
@@ -283,18 +284,25 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
     return (
       <View style={styles.streamContainer}>
         <Text h="h6" title={t(`pipeline.stage_${stage}`)} />
-        <Space height={10} />
-        <Text
-          h="h7"
-          title={reasoning || '…'}
-          textStyle={styles.thinkingText}
-        />
+        <Space height={12} />
+        {/* Thinking is scaffolding, not the answer: a muted card so the reply
+            below reads as the thing that matters. The model emits markdown,
+            which landed on screen as literal ** and * because nothing renders
+            it here - stripped rather than parsed, since this text is discarded
+            the moment the answer arrives. */}
+        <View style={styles.thinkingCard}>
+          <Text
+            h="h7"
+            title={plainThinking(reasoning) || '…'}
+            textStyle={styles.thinkingText}
+          />
+        </View>
         {aiContent ? (
           <>
             <Space height={20} />
             <Text h="h6" title={t('leelaAnswer') || "Leela's answer"} />
-            <Space height={10} />
-            <Text h="h7" title={aiContent} />
+            <Space height={8} />
+            <Text h="h7" title={aiContent} textStyle={styles.answerText} />
           </>
         ) : null}
       </View>
@@ -328,9 +336,17 @@ export const CreatePost: React.FC<CreatePostT> = ({ plan }) => {
       <Space height={20} />
       <Button
         title={t('actions.send')}
-        onPress={methods.handleSubmit(handleSubmit, (err) =>
+        onPress={methods.handleSubmit(handleSubmit, (err) => {
+          // The error branch only reported to the logger, so a rejected report
+          // looked exactly like a dead button: press, nothing, no clue. The
+          // rule it usually trips is the 100-character minimum.
           captureException(err, 'CreatePost: handleSubmit')
-        )}
+          const message =
+            (err?.text?.message as string) ||
+            t('fewChars') ||
+            'The report cannot be sent yet.'
+          showError(message)
+        })}
       />
     </FormProvider>
   )
@@ -354,8 +370,22 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 4
   },
+  // A quiet container, so the reasoning reads as scaffolding beside the answer
+  // rather than competing with it.
+  thinkingCard: {
+    backgroundColor: 'rgba(80, 227, 194, 0.08)',
+    borderLeftWidth: 3,
+    borderLeftColor: 'rgba(80, 227, 194, 0.5)',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14
+  },
   thinkingText: {
     color: dimGray,
-    fontStyle: 'italic'
+    fontStyle: 'italic',
+    lineHeight: 20
+  },
+  answerText: {
+    lineHeight: 22
   }
 })

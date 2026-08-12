@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 
+import { useTranslation } from 'react-i18next'
 import { s } from 'react-native-size-matters'
 import { ButtonVectorIcon } from '../Buttons'
+import { triggerHaptic } from '../../utils/haptics'
 import { BookmarkT, isBookmarked, toggleBookmark } from '../../utils/bookmarks'
 
 interface BookmarkButtonT {
@@ -10,6 +12,7 @@ interface BookmarkButtonT {
 }
 
 export const BookmarkButton = ({ bookmark, size = s(16) }: BookmarkButtonT) => {
+  const { t } = useTranslation()
   const [active, setActive] = useState(false)
 
   useEffect(() => {
@@ -23,6 +26,7 @@ export const BookmarkButton = ({ bookmark, size = s(16) }: BookmarkButtonT) => {
   }, [bookmark.id])
 
   const onPress = async () => {
+    triggerHaptic(active ? 'impactLight' : 'impactMedium')
     const next = await toggleBookmark(bookmark)
     setActive(next)
   }
@@ -33,6 +37,8 @@ export const BookmarkButton = ({ bookmark, size = s(16) }: BookmarkButtonT) => {
       name={active ? 'bookmark' : 'bookmark-outline'}
       size={size}
       onPress={onPress}
+      accessibilityLabel={active ? t('accessibility.removeBookmark') : t('accessibility.bookmark')}
+      testID="bookmark-button"
     />
   )
 }

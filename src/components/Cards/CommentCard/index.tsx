@@ -13,6 +13,7 @@ import {
   AiSources,
   BookmarkButton,
   ButtonVectorIcon,
+  ConfirmDialog,
   FollowUpQuestions,
   PlanAvatar,
   ProBadge,
@@ -28,6 +29,8 @@ import { PostStore } from '../../../store'
 import { CommentT } from '../../../types/types'
 import { addCachedAiAnswer } from '../../../utils/aiAnswerCache'
 import { isAiComment } from '../../../utils/aiComment'
+import { useConfirmActions } from '../../ConfirmAction'
+import { useFontScale } from '../../../utils/fontScale'
 
 interface CommentCardI {
   item: CommentT
@@ -43,7 +46,10 @@ export const CommentCard: React.FC<CommentCardI> = observer(
     const [hideTranslate, setHideTranslate] = useState(true)
     const [transText, setTransText] = useState('')
     const { navigate } = useTypedNavigation()
+    const fontScale = useFontScale()
+    const isAccessibilityScale = fontScale >= 1.35
     const { t } = useTranslation()
+    const { guardActions, ConfirmDialogComponent } = useConfirmActions(t)
 
     const avaUrl = PostStore.getAvaById(item.ownerId)
 
@@ -61,7 +67,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
       setHideTranslate((pr) => !pr)
     }
     const OpenModal = () => {
-      const modalButtons = getActions({ item, handleTransText })
+      const modalButtons = guardActions(getActions({ item, handleTransText }))
       OpenActionsModal(modalButtons)
     }
 
@@ -134,8 +140,12 @@ export const CommentCard: React.FC<CommentCardI> = observer(
             )}
           </View>
           <View style={styles.content}>
-            <View style={styles.commentHead}>
-              <Text numberOfLines={1} h={'h6'} title={curName as string} />
+            <View style={[styles.commentHead, isAccessibilityScale && styles.commentHeadLarge]}>
+              <Text
+                numberOfLines={isAccessibilityScale ? 2 : 1}
+                h={'h6'}
+                title={curName as string}
+              />
               {Boolean(item.pro) && (
                 <>
                   <Space width={s(6)} />
@@ -143,7 +153,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
                 </>
               )}
               <Text
-                numberOfLines={1}
+                numberOfLines={isAccessibilityScale ? 2 : 1}
                 colors={{ light: lightGray, dark: gray }}
                 h={'h6'}
                 title={`  · ${date}`}
@@ -162,6 +172,8 @@ export const CommentCard: React.FC<CommentCardI> = observer(
                   size={s(15)}
                   name="chevron-down"
                   onPress={OpenModal}
+                  accessibilityLabel={t('accessibility.commentMenu')}
+                  testID="comment-menu-button"
                 />
               )}
               <Space width={s(5)} />
@@ -193,6 +205,7 @@ export const CommentCard: React.FC<CommentCardI> = observer(
             />
           </View>
         </View>
+        <ConfirmDialogComponent />
       </>
     )
   }
@@ -222,7 +235,12 @@ const styles = StyleSheet.create({
   },
   commentHead: {
     flexDirection: 'row',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
+    alignItems: 'center'
+  },
+  commentHeadLarge: {
+    flexDirection: 'column',
+    alignItems: 'flex-start'
   },
   flexOne: {
     flex: 1

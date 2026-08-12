@@ -18,7 +18,7 @@ export const replyActionHandler = async ({ type, detail }: Event) => {
           if (commentOwner && commentId && input) {
             await cancel({ notification, isInput: true })
             await PostStore.replyComment({
-              text: input,
+              text: String(input || ''),
               commentOwner,
               commentId,
               postId

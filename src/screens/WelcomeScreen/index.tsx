@@ -8,14 +8,17 @@ import { s, vs } from 'react-native-size-matters'
 import {
   AppContainer,
   Button,
+  ButtonSimple,
   CenterView,
   IconLeela,
   Loading,
+  ResumeLastGame,
   Space,
   Text
 } from '../../components'
 import { useKeychain } from '../../hooks'
 import { RootStackParamList } from '../../types/types'
+import { triggerHaptic } from '../../utils/haptics'
 
 type navigation = NativeStackNavigationProp<
   RootStackParamList,
@@ -30,9 +33,21 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
   const { loading } = useKeychain()
   const { t } = useTranslation()
 
-  const _onPress = () => {
+  const navigateToAuth = () => {
+    triggerHaptic('impactMedium')
     navigation.navigate('HELLO')
   }
+
+  const navigateToOffline = () => {
+    triggerHaptic('impactLight')
+    navigation.navigate('SELECT_PLAYERS_SCREEN')
+  }
+
+  const resumeGame = () => {
+    triggerHaptic('impactMedium')
+    navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
+  }
+
   return (
     <AppContainer
       enableBackgroundBottomInsets
@@ -46,16 +61,27 @@ const WelcomeScreen = observer(({ navigation }: SelectPlayersScreenT) => {
           <IconLeela />
           <Space height={s(30)} />
           <Text h={'h1'} title={t('gameMode')} />
+          <Space height={s(10)} />
+          <Text
+            h={'h5'}
+            title={t('welcome.subtitle')}
+            testID="welcome-subtitle"
+          />
           <Space height={s(30)} />
-          <Button title={t('online')} onPress={_onPress} />
+          <ResumeLastGame onResume={resumeGame} />
+          <Space height={vs(16)} />
+          <Button
+            title={t('online')}
+            onPress={navigateToAuth}
+            testID="welcome-online-button"
+          />
           <Space height={vs(10)} />
-          {/* <Text h={'h5'} title={t('or')} textStyle={styles.h6} />
-          <Space height={vs(15)} /> */}
-          {/* <Button
-            title={t('offline')}
-            onPress={() => navigation.navigate('SELECT_PLAYERS_SCREEN')}
-          /> */}
-          <Space height={vs(120)} />
+          <ButtonSimple
+            title={t('welcome.offlineButton')}
+            onPress={navigateToOffline}
+            testID="welcome-offline-button"
+          />
+          <Space height={vs(80)} />
         </CenterView>
       )}
     </AppContainer>

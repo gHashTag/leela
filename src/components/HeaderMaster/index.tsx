@@ -37,7 +37,7 @@ const HeaderMaster = observer(
     fullName = '',
     pro
   }: HeaderMasterT) => {
-    const { onPressEdit } = useActions()
+    const { onPressEdit, ConfirmActionsDialog } = useActions()
     const { ava, chooseAvatarImage, isLoading, setAva } = useChooseAvatarImage()
 
     useEffect(() => {
@@ -89,6 +89,7 @@ const HeaderMaster = observer(
             <ProBadge />
           </>
         )}
+        <ConfirmActionsDialog />
       </View>
     )
   }

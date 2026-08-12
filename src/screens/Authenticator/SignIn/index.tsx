@@ -11,11 +11,10 @@ import { useSignIn } from './useSignIn'
 
 import {
   AppContainer,
-  Button,
   ButtonLink,
   Input,
   KeyboardContainer,
-  Loading,
+  LoadingButton,
   Space,
   TextError
 } from '../../../components'
@@ -53,9 +52,7 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
   const { dark } = useTheme()
   const color = dark ? white : black
 
-  return loading ? (
-    <Loading />
-  ) : (
+  return (
     <AppContainer
       enableBackgroundBottomInsets
       iconLeft={':back:'}
@@ -93,9 +90,11 @@ const SignIn = ({ navigation }: SignUpT): ReactElement => {
                 />
               )}
               <Space height={vs(15)} />
-              <Button
+              <LoadingButton
                 title={t('auth.signIn')}
+                loading={loading}
                 onPress={methods.handleSubmit(onSubmit, onError)}
+                haptic="impactMedium"
               />
             </FormProvider>
           </View>

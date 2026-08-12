@@ -52,6 +52,14 @@ async function upFuncOnline(step: stepT) {
 
 export function upStepOnline() {
   if (!OnlinePlayer.store.canGo) {
+    // Used to return in silence, which reads as a broken dice: the roll
+    // animates, the piece stays, nothing explains why. One move per day is a
+    // rule, so say it.
+    actionsDice.setMessage(
+      `${i18next.t('online-part.stepLocked', {
+        time: OnlinePlayer.store.timeText
+      })}`
+    )
     return
   }
   const count = DiceStore.count
@@ -77,6 +85,11 @@ export function upStepOnline() {
   })
   if (step) {
     upFuncOnline(step)
+  } else if (!isStart) {
+    // `entities` declines the move when the player is not on the board and the
+    // roll is not a six. That is the rule, but it used to happen in silence -
+    // the die animated, the piece stayed, and nothing said what was missing.
+    actionsDice.setMessage(`${i18next.t('sixToBegin')}`)
   }
 }
 
@@ -126,6 +139,9 @@ export const upStepOffline = (id: number) => {
   })
   if (step) {
     upFuncOffline({ ...step, id })
+  } else if (!isStart) {
+    // Same silent decline as the online path: no six, no entry, no word.
+    actionsDice.setMessage(`${i18next.t('sixToBegin')}`)
   }
 }
 

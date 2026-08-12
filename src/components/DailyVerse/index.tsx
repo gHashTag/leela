@@ -30,7 +30,7 @@ export const DailyVerse = memo(() => {
     if (!cardRef.current || isSharing) return
     setIsSharing(true)
     try {
-      const uri = await cardRef.current.capture()
+      const uri = await cardRef.current?.capture?.()
       if (!uri) return
       await Share.share({
         title: t('dailyVerse.shareTitle'),

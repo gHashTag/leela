@@ -12,6 +12,7 @@ import { s } from 'react-native-size-matters'
 
 import { Space, Text } from '../../components'
 import { black, dimGray, primary, red, secondary, white } from '../../constants'
+import { useReducedMotion } from '../../utils/useReducedMotion'
 
 interface BoardLegendT {
   visible: boolean
@@ -42,6 +43,7 @@ const getShapeStyle = (key: typeof SYMBOL_KEYS[number]['key']) => {
 
 export const BoardLegend = memo(({ visible, onClose }: BoardLegendT) => {
   const { t } = useTranslation()
+  const reducedMotion = useReducedMotion()
   const [activeIndex, setActiveIndex] = useState(0)
 
   const active = SYMBOL_KEYS[activeIndex]
@@ -51,12 +53,19 @@ export const BoardLegend = memo(({ visible, onClose }: BoardLegendT) => {
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType={reducedMotion ? 'none' : 'slide'}
       onRequestClose={onClose}
+      accessibilityViewIsModal
+      accessibilityLabel={t('boardLegend.title')}
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Pressable onPress={onClose} style={styles.closeRow}>
+          <Pressable
+            onPress={onClose}
+            style={styles.closeRow}
+            accessibilityRole="button"
+            accessibilityLabel={t('boardLegend.close')}
+          >
             <Text h="h5" title="✕" />
           </Pressable>
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -74,6 +83,9 @@ export const BoardLegend = memo(({ visible, onClose }: BoardLegendT) => {
                     key={symbol.key}
                     onPress={() => setActiveIndex(idx)}
                     style={styles.gridItem}
+                    accessibilityRole="radio"
+                    accessibilityLabel={t(`boardLegend.${symbol.key}`)}
+                    accessibilityState={{ checked: idx === activeIndex }}
                   >
                     <View
                       style={[
@@ -81,7 +93,9 @@ export const BoardLegend = memo(({ visible, onClose }: BoardLegendT) => {
                         shapeStyle,
                         {
                           backgroundColor:
-                            idx === activeIndex ? symbol.color : dimGray
+                            idx === activeIndex ? symbol.color : dimGray,
+                          borderWidth: idx === activeIndex ? 2 : 0,
+                          borderColor: black
                         }
                       ]}
                     />
@@ -113,7 +127,12 @@ export const BoardLegend = memo(({ visible, onClose }: BoardLegendT) => {
             />
           </ScrollView>
           <Space height={s(16)} />
-          <Pressable onPress={onClose} style={styles.closeButton}>
+          <Pressable
+            onPress={onClose}
+            style={styles.closeButton}
+            accessibilityRole="button"
+            accessibilityLabel={t('boardLegend.close')}
+          >
             <Text
               h="h4"
               textStyle={styles.closeButtonText}

@@ -8,13 +8,13 @@ import { GestureDetector } from 'react-native-gesture-handler'
 import Animated from 'react-native-reanimated'
 import { vs } from 'react-native-size-matters'
 import {
-  AiPersonaSelector,
   AppContainer,
+  ButtonWithIcon,
   CenterView,
   HeaderMaster,
   OwnTabView,
+  ProfileCompletionCard,
   SecondaryTab,
-  SoundToggle,
   Space,
   Spin
 } from '../../../components'
@@ -22,15 +22,11 @@ import { OnlinePlayer } from '../../../store'
 import { RootStackParamList, RootTabParamList } from '../../../types/types'
 
 import { TabContextProvider } from './TabContext'
-import { BedtimeReminder } from '../../../components'
 import {
-  AiAnswersScene,
-  AiPersonaScene,
   BookmarksScene,
   HistoryScene,
   IntentionOfGame,
-  ReportsScene,
-  SessionHealthScene
+  ReportsScene
 } from './Tabs'
 import { useActions } from '../../../components/HeaderMaster/useActions'
 
@@ -44,7 +40,7 @@ type ProfileScreenT = {
 const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
   const { width: W, height: H } = useWindowDimensions()
   const { t } = useTranslation()
-  const { onPressEdit } = useActions()
+  const { onPressEdit, ConfirmActionsDialog } = useActions()
   const tabViewWidth = W * 0.96
 
   const {
@@ -53,13 +49,31 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
     profile: { firstName, lastName }
   } = OnlinePlayer.store
 
+  const handleCompleteStep = (step: string) => {
+    switch (step) {
+      case 'avatar':
+      case 'name':
+        navigation.navigate('USER_EDIT', OnlinePlayer.store.profile)
+        break
+      case 'intention':
+        navigation.navigate('CHANGE_INTENTION_SCREEN', {
+          prevIntention: OnlinePlayer.store.profile.intention
+        })
+        break
+      case 'firstReport':
+      default:
+        navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
+        break
+    }
+  }
+
   return (
     <AppContainer
       iconLeft={':information_source:'}
       title={t('profile')}
       textAlign="center"
-      iconRight={':leftwards_arrow_with_hook:'}
-      onPressRight={onPressEdit}
+      iconRight=':gear:'
+      onPressRight={() => navigation.navigate('SETTINGS_SCENE')}
     >
       <TabContextProvider>
         {({ tabViewH, screenStyle, headerGesture }: any) => (
@@ -82,7 +96,18 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                     navigation.navigate('USER_EDIT', OnlinePlayer.store.profile)
                   }
                 />
+                <ProfileCompletionCard onCompleteStep={handleCompleteStep} />
                 <Space height={vs(5)} />
+                <ButtonWithIcon
+                  title={t('settings.title')}
+                  iconName="settings-outline"
+                  onPress={() => navigation.navigate('SETTINGS_SCENE')}
+                  viewStyle={styles.settingsButton}
+                  accessibilityLabel={t('settings.title')}
+                  accessibilityHint={t('settings.title')}
+                  testID="profile-settings-button"
+                />
+                <Space height={vs(8)} />
                 <OwnTabView
                   renderTabBar={(props) => (
                     <GestureDetector gesture={headerGesture}>
@@ -107,34 +132,9 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
                       Scene: IntentionOfGame
                     },
                     {
-                      key: 'bedtimeReminder',
-                      title: t('bedtimeReminder.tab'),
-                      Scene: BedtimeReminder
-                    },
-                    {
-                      key: 'soundToggle',
-                      title: t('soundToggle.tab'),
-                      Scene: SoundToggle
-                    },
-                    {
-                      key: 'aiPersona',
-                      title: t('aiPersona.tab'),
-                      Scene: AiPersonaScene
-                    },
-                    {
-                      key: 'aiAnswers',
-                      title: t('aiAnswers.tab'),
-                      Scene: AiAnswersScene
-                    },
-                    {
                       key: 'bookmarks',
                       title: t('bookmarks.tab'),
                       Scene: BookmarksScene
-                    },
-                    {
-                      key: 'sessionHealth',
-                      title: t('sessionHealth.tab'),
-                      Scene: SessionHealthScene
                     }
                   ]}
                   style={[styles.tabContainer, { height: tabViewH }]}
@@ -144,6 +144,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
           </Animated.View>
         )}
       </TabContextProvider>
+      <ConfirmActionsDialog />
     </AppContainer>
   )
 })
@@ -153,6 +154,9 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     width: '100%'
+  },
+  settingsButton: {
+    alignSelf: 'center'
   }
 })
 

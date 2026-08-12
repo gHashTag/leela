@@ -15,7 +15,7 @@ import { StyleSheet, View } from 'react-native'
 import { mvs, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
 
-import { AppContainer, Button, Input, Loading, Space } from '../../components'
+import { AppContainer, Input, LoadingButton, Space, TextError } from '../../components'
 import { black, captureException, lightGray } from '../../constants'
 import { updateIntention } from '../../screens/helper'
 import { RootStackParamList } from '../../types/types'
@@ -37,6 +37,7 @@ interface ChangeIntentionT {
 export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
   const { prevIntention, blockGoBack, title } = route.params || {}
   const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string>('')
   const { t } = useTranslation()
 
   const schema = useMemo(
@@ -62,10 +63,15 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
   })
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+    setError('')
     setLoading(true)
-    const { newIntention } = data
-    await updateIntention(newIntention)
-    navigation.navigate('MAIN')
+    try {
+      const { newIntention } = data
+      await updateIntention(newIntention)
+      navigation.navigate('MAIN')
+    } catch {
+      setError(t('online-part.commentFailed'))
+    }
     setLoading(false)
   }
 
@@ -82,35 +88,35 @@ export const ChangeIntention = ({ navigation, route }: ChangeIntentionT) => {
       title={title || t('online-part.updateIntention')}
       colorLeft={black}
     >
-      {loading ? (
-        <Loading />
-      ) : (
-        <View style={styles.container}>
-          <FormProvider {...methods}>
-            <Space height={mvs(80, 0.4)} />
-            <Input
-              name="newIntention"
-              color={lightGray}
-              multiline
-              autoCapitalize="none"
-              placeholder={t('intention')}
-              additionalStyle={[styles.bigInput, { backgroundColor }]}
-            />
-            <Space height={10} />
-            <Button
-              title={t('done')}
-              // A form filled in wrongly is not a crash: each of these errors is
-              // already drawn under the field it belongs to, and reporting them
-              // put `[object Object]` on the screen and a validation object into
-              // Sentry every time somebody mistyped something.
-              onPress={methods.handleSubmit(onSubmit, (errors) => {
-                if (__DEV__) console.log('form refused', errors)
-              })}
-            />
-            <Space height={vs(50)} />
-          </FormProvider>
-        </View>
-      )}
+      <View style={styles.container}>
+        <FormProvider {...methods}>
+          <Space height={mvs(80, 0.4)} />
+          <Input
+            name="newIntention"
+            color={lightGray}
+            multiline
+            autoCapitalize="none"
+            placeholder={t('intention')}
+            additionalStyle={[styles.bigInput, { backgroundColor }]}
+          />
+          {error !== '' && (
+            <>
+              <Space height={vs(10)} />
+              <TextError title={error} textStyle={styles.errorText} />
+            </>
+          )}
+          <Space height={10} />
+          <LoadingButton
+            title={t('done')}
+            loading={loading}
+            onPress={methods.handleSubmit(onSubmit, (errors) => {
+              if (__DEV__) console.log('form refused', errors)
+            })}
+            haptic="impactMedium"
+          />
+          <Space height={vs(50)} />
+        </FormProvider>
+      </View>
     </AppContainer>
   )
 }
@@ -122,5 +128,8 @@ const styles = StyleSheet.create({
   bigInput: {
     width: '100%',
     alignItems: 'center'
+  },
+  errorText: {
+    textAlign: 'center'
   }
 })

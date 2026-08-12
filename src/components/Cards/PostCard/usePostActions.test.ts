@@ -2,6 +2,7 @@ import { Share } from 'react-native'
 
 import { buildReportLink } from '../../../utils'
 import { usePostActions } from './usePostActions'
+import { renderHook } from '@testing-library/react-native'
 
 jest.mock('@sentry/react-native', () => ({
   init: jest.fn(),
@@ -28,7 +29,33 @@ jest.mock('react-native', () => ({
   },
   Platform: {
     OS: 'ios'
-  }
+  },
+  StyleSheet: {
+    create: jest.fn((styles: any) => styles)
+  },
+  Animated: {
+    ScrollView: 'ScrollView',
+    FlatList: 'FlatList',
+    Value: class {},
+    timing: () => ({ start: jest.fn() }),
+    loop: () => ({ start: jest.fn() }),
+    sequence: (arr: any[]) => ({ start: jest.fn() })
+  },
+  ScrollView: 'ScrollView',
+  FlatList: 'FlatList',
+  View: 'View',
+  Image: 'Image',
+  Text: 'Text',
+  Pressable: 'Pressable'
+}))
+
+jest.mock('react-native-vector-icons/FontAwesome', () => 'Icon')
+jest.mock('react-native-vector-icons/Ionicons', () => 'Ionicons')
+jest.mock('react-native-elements', () => ({
+  Icon: 'Icon'
+}))
+jest.mock('@react-navigation/elements', () => ({
+  useHeaderHeight: () => 0
 }))
 
 jest.mock('@react-navigation/native', () => ({
@@ -68,14 +95,16 @@ describe('usePostActions', () => {
       plan: 12
     } as any
 
-    const { handleShareLink } = usePostActions({
-      item,
-      isDetail: true,
-      transText: '',
-      hideTranslate: true
-    })
+    const { result } = renderHook(() =>
+      usePostActions({
+        item,
+        isDetail: true,
+        transText: '',
+        hideTranslate: true
+      })
+    )
 
-    await handleShareLink()
+    await result.current.handleShareLink()
 
     expect(mockedBuildReportLink).toHaveBeenCalledWith('post-42', 'My report text')
     expect(mockedShare).toHaveBeenCalledWith({
@@ -85,14 +114,16 @@ describe('usePostActions', () => {
   })
 
   it('handleShareLink does nothing when report data is missing', async () => {
-    const { handleShareLink } = usePostActions({
-      item: undefined,
-      isDetail: true,
-      transText: '',
-      hideTranslate: true
-    })
+    const { result } = renderHook(() =>
+      usePostActions({
+        item: undefined,
+        isDetail: true,
+        transText: '',
+        hideTranslate: true
+      })
+    )
 
-    await handleShareLink()
+    await result.current.handleShareLink()
 
     expect(mockedBuildReportLink).not.toHaveBeenCalled()
     expect(mockedShare).not.toHaveBeenCalled()

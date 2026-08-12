@@ -280,20 +280,49 @@ const getImagePicker = async () => {
   }
 }
 
+/**
+ * Resolves an avatar without going to Firebase Storage.
+ *
+ * The bucket is out of quota, so every `getDownloadURL` failed - and this ran
+ * per player on every Firebase snapshot, which turned a dead bucket into an
+ * unbounded stream of native calls: 995 on a single launch. Each leaves an
+ * entry in the bridge's callback registry, Hermes caps one object at 196607
+ * properties, and past that ceiling every native call throws. That is why taps
+ * died across the whole app while scrolling, being pure native, kept working.
+ *
+ * Asking a bucket that cannot answer is not worth a crash. Rows already
+ * holding an absolute URL are used as-is, everything else gets the bundled
+ * placeholder, and no network call is made at all.
+ *
+ * When storage comes back it comes back as a URL: point `AVATAR_BASE_URL` at a
+ * bucket and `images/x.png` becomes `<base>/images/x.png`, computed rather
+ * than requested - the same shape `@leela/storage` uses in the monorepo.
+ */
+const AVATAR_BASE_URL = ''
+
 const getIMG = async (fileName?: string) => {
   const defaultImg = require('../../assets/defaultImage/defaultProfileImage.png')
-  if (fileName?.includes('images/')) {
-    try {
-      return await storage().ref(fileName).getDownloadURL()
-    } catch (error) {
-      captureException(error, 'getIMG')
-      return defaultImg
-    }
-  } else if (fileName?.includes('https://')) {
-    return fileName
-  } else {
+
+  if (typeof fileName !== 'string' || fileName.trim() === '') {
     return defaultImg
   }
+
+  const name = fileName.trim()
+
+  if (/^https?:\/\//i.test(name)) {
+    return name
+  }
+
+  if (name.includes('images/') && AVATAR_BASE_URL !== '') {
+    const key = name.replace(/^\/+/, '')
+    const path = key
+      .split('/')
+      .map(encodeURIComponent)
+      .join('/')
+    return `${AVATAR_BASE_URL.replace(/\/+$/, '')}/${path}`
+  }
+
+  return defaultImg
 }
 
 const uploadImg = async (image: { path: string }) => {

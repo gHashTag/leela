@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Dimensions,
+  GestureResponderEvent,
   Pressable,
   StyleSheet,
   View
@@ -13,17 +14,29 @@ import { ms, s, vs } from 'react-native-size-matters'
 import {
   Background,
   Button,
+  ButtonLink,
   CenterView,
   IconLeela,
   Space,
   Text
 } from '../../components'
-import { black, secondary, white } from '../../constants'
+import { secondary } from '../../constants'
 import { RootStackParamList } from '../../types/types'
+import { triggerHaptic } from '../../utils/haptics'
 
 const { width } = Dimensions.get('window')
 
-const STEPS = ['step1', 'step2', 'step3'] as const
+const STEPS = [
+  'step1',
+  'step2',
+  'step3',
+  'step4',
+  'step5',
+  'step6',
+  'step7',
+  'step8',
+  'step9'
+] as const
 
 type navigation = NativeStackNavigationProp<
   RootStackParamList,
@@ -57,6 +70,26 @@ export const OnboardingScreen: React.FC<OnboardingScreenT> = ({
     }
   }
 
+  const onPrevious = () => {
+    if (step > 0) {
+      setStep(step - 1)
+    }
+  }
+
+  const handleCardTap = (event: GestureResponderEvent) => {
+    const { locationX } = event.nativeEvent
+    const threshold = width * 0.35
+    if (locationX < threshold) {
+      onPrevious()
+    } else {
+      onNext()
+    }
+  }
+
+  useEffect(() => {
+    triggerHaptic('impactLight')
+  }, [step])
+
   const key = STEPS[step]
   const isLast = step === STEPS.length - 1
 
@@ -65,7 +98,13 @@ export const OnboardingScreen: React.FC<OnboardingScreenT> = ({
       <CenterView>
         <IconLeela />
         <Space height={vs(40)} />
-        <View style={styles.card}>
+        <Pressable
+          onPress={handleCardTap}
+          style={styles.card}
+          accessibilityRole="button"
+          accessibilityLabel={t('onboarding.tapToAdvance')}
+          accessibilityHint={t('onboarding.tapLeftRightHint')}
+        >
           <Text
             h="h1"
             textStyle={styles.title}
@@ -77,9 +116,20 @@ export const OnboardingScreen: React.FC<OnboardingScreenT> = ({
             textStyle={styles.body}
             title={t(`onboarding.${key}Body`)}
           />
-        </View>
-        <Space height={vs(40)} />
-        <View style={styles.dots}>
+        </Pressable>
+        <Space height={vs(16)} />
+        <Text
+          h="h6"
+          textStyle={styles.stepCounter}
+          title={t('onboarding.stepCounter', { current: step + 1, total: STEPS.length })}
+          testID="onboarding-step-counter"
+        />
+        <Space height={vs(24)} />
+        <View
+          style={styles.dots}
+          accessibilityRole="tablist"
+          accessibilityLabel={t('onboarding.progressLabel')}
+        >
           {STEPS.map((_, index) => (
             <View
               key={index}
@@ -87,6 +137,9 @@ export const OnboardingScreen: React.FC<OnboardingScreenT> = ({
                 styles.dot,
                 index === step && styles.activeDot
               ]}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: index === step }}
+              accessibilityLabel={t('onboarding.stepLabel', { step: index + 1 })}
             />
           ))}
         </View>
@@ -94,11 +147,15 @@ export const OnboardingScreen: React.FC<OnboardingScreenT> = ({
         <Button
           title={isLast ? t('onboarding.start') : t('onboarding.next')}
           onPress={onNext}
+          testID="onboarding-next-button"
         />
         <Space height={vs(16)} />
-        <Pressable onPress={completeOnboarding}>
-          <Text h="h5" textStyle={styles.skip} title={t('actions.skip') || 'Skip'} />
-        </Pressable>
+        <ButtonLink
+          title={t('actions.skip') || 'Skip'}
+          onPress={completeOnboarding}
+          viewStyle={styles.skip}
+          testID="onboarding-skip-button"
+        />
       </CenterView>
     </Background>
   )
@@ -112,15 +169,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center'
   },
+  // No `color` here on purpose: Text resolves it from the theme, and textStyle
+  // is merged after that, so naming a colour pins the screen to one scheme.
+  // It was `white`, over a light Background - the copy rendered invisible.
   title: {
     fontWeight: 'bold',
-    textAlign: 'center',
-    color: white
+    textAlign: 'center'
   },
   body: {
     textAlign: 'center',
-    lineHeight: vs(24),
-    color: white
+    lineHeight: vs(24)
   },
   dots: {
     flexDirection: 'row'
@@ -136,8 +194,10 @@ const styles = StyleSheet.create({
     backgroundColor: secondary,
     width: s(20)
   },
+  stepCounter: {
+    color: '#aaa'
+  },
   skip: {
-    color: '#aaa',
-    textDecorationLine: 'underline'
+    alignSelf: 'center'
   }
 })

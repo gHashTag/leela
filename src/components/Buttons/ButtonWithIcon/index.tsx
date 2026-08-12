@@ -23,6 +23,9 @@ interface ButtonWithIconT {
   viewStyle?: StyleProp<ViewStyle>
   h?: hT
   iconSize?: number
+  accessibilityLabel?: string
+  accessibilityHint?: string
+  testID?: string
 }
 
 export const ButtonWithIcon = memo<ButtonWithIconT>(
@@ -33,7 +36,10 @@ export const ButtonWithIcon = memo<ButtonWithIconT>(
     iconName,
     viewStyle,
     h = 'h2',
-    iconSize = s(20)
+    iconSize = s(20),
+    accessibilityLabel,
+    accessibilityHint,
+    testID
   }) => {
     const {
       colors: { text }
@@ -73,6 +79,10 @@ export const ButtonWithIcon = memo<ButtonWithIconT>(
           viewStyle,
           animatedStyles
         ]}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel || title}
+        accessibilityHint={accessibilityHint}
+        testID={testID}
       >
         {iconName && (
           <>

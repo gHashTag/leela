@@ -8,6 +8,7 @@ import { Space, Text } from '../'
 import { Pressable } from '../Pressable'
 import { lightGray, primary } from '../../constants'
 import { PostFeedFilter } from '../../utils/postFeedFilter'
+import { triggerHaptic } from '../../utils/haptics'
 
 interface FeedFilterI {
   selected: PostFeedFilter
@@ -19,6 +20,11 @@ const FILTERS: PostFeedFilter[] = ['newest', 'mostDiscussed', 'myPosts']
 export const FeedFilter = memo(({ selected, onSelect }: FeedFilterI) => {
   const { t } = useTranslation()
 
+  const handleSelect = useCallback((filter: PostFeedFilter) => {
+    triggerHaptic('impactLight')
+    onSelect(filter)
+  }, [onSelect])
+
   return (
     <View style={styles.container}>
       {FILTERS.map((filter, index) => {
@@ -27,10 +33,11 @@ export const FeedFilter = memo(({ selected, onSelect }: FeedFilterI) => {
           <React.Fragment key={filter}>
             {index > 0 && <View style={styles.divider} />}
             <Pressable
-              onPress={() => onSelect(filter)}
+              onPress={() => handleSelect(filter)}
               style={[styles.chip, isActive && styles.activeChip]}
               pressedStyle={styles.pressedChip}
               accessibilityState={{ selected: isActive }}
+              accessibilityRole="button"
               accessibilityLabel={t(`feedFilter.${filter}`)}
             >
               <Text

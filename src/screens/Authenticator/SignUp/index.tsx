@@ -10,10 +10,9 @@ import { useSignUp } from './useSignUp'
 
 import {
   AppContainer,
-  Button,
   Input,
   KeyboardContainer,
-  Loading,
+  LoadingButton,
   Space,
   TextError
 } from '../../../components'
@@ -48,53 +47,49 @@ export const SignUp = (): ReactElement => {
       title=" "
       colorLeft={color}
     >
-      {loading ? (
-        <Loading />
-      ) : (
-        <>
-          <KeyboardContainer>
-            <ScrollView
-              contentContainerStyle={styles.container}
-              showsVerticalScrollIndicator={false}
-            >
-              <Space height={H / 7} />
-              <FormProvider {...methods}>
-                <Input
-                  name="email"
-                  placeholder="E-mail"
-                  autoCapitalize="none"
-                  color={color}
-                  additionalStyle={{ width: W - ms(140, 0.9) }}
-                />
-                <Input
-                  name="password"
-                  placeholder={t('auth.password')}
-                  secureTextEntry
-                  color={color}
-                  additionalStyle={{ width: W - ms(140, 0.9) }}
-                />
-                <Input
-                  name="passwordConfirmation"
-                  placeholder={t('auth.passwordConfirmation')}
-                  secureTextEntry
-                  color={color}
-                  additionalStyle={{ width: W - ms(140, 0.9) }}
-                />
-                <Space height={vs(30)} />
-                {error !== '' && (
-                  <TextError title={error} textStyle={styles.centerText} />
-                )}
-                <Space height={vs(20)} />
-                <Button
-                  title={t('auth.signUp')}
-                  onPress={methods.handleSubmit(onSubmit, onError)}
-                />
-                <Space height={vs(10)} />
-              </FormProvider>
-            </ScrollView>
-          </KeyboardContainer>
-        </>
-      )}
+      <KeyboardContainer>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
+          <Space height={H / 7} />
+          <FormProvider {...methods}>
+            <Input
+              name="email"
+              placeholder="E-mail"
+              autoCapitalize="none"
+              color={color}
+              additionalStyle={{ width: W - ms(140, 0.9) }}
+            />
+            <Input
+              name="password"
+              placeholder={t('auth.password')}
+              secureTextEntry
+              color={color}
+              additionalStyle={{ width: W - ms(140, 0.9) }}
+            />
+            <Input
+              name="passwordConfirmation"
+              placeholder={t('auth.passwordConfirmation')}
+              secureTextEntry
+              color={color}
+              additionalStyle={{ width: W - ms(140, 0.9) }}
+            />
+            <Space height={vs(30)} />
+            {error !== '' && (
+              <TextError title={error} textStyle={styles.centerText} />
+            )}
+            <Space height={vs(20)} />
+            <LoadingButton
+              title={t('auth.signUp')}
+              loading={loading}
+              onPress={methods.handleSubmit(onSubmit, onError)}
+              haptic="impactMedium"
+            />
+            <Space height={vs(10)} />
+          </FormProvider>
+        </ScrollView>
+      </KeyboardContainer>
     </AppContainer>
   )
 }

@@ -407,6 +407,8 @@
   "online-part": {
     "uComment": "Your comment",
     "noPosts": "No posts yet. Make a move so you can post",
+    "noPostsFiltered": "You haven't shared a report yet. Play a game and your reflection can appear here.",
+    "noPostsHeadline": "Be the first to share a reflection",
     "notReported": "Write a report to the plan to continue",
     "makeReport": "To continue the game - write a report",
     "waitForNextStep": "Wait for the next step",
@@ -489,11 +491,25 @@
   "liberation": "liberation",
   "accessibility": {
     "rollDice": "Roll the dice",
+    "rollDiceValue": "Roll the dice, current value {{count}}",
     "rollDiceHint": "Double tap to roll the dice and move your piece",
     "diceLocked": "Dice is locked",
     "diceLockedHint": "Write a report or wait for the step timer to roll again",
     "gameBoard": "Leela board",
+    "cell": "Cell {{cell}}",
     "currentCell": "Current cell {{cell}}, {{plane}} chakra",
+    "snakeHead": "head of a snake",
+    "arrowBase": "foot of an arrow",
+    "finalCell": "final cell",
+    "like": "Like",
+    "unlike": "Remove like",
+    "comments": "{{count}} comments",
+    "sharePost": "Share this report",
+    "bookmark": "Save answer",
+    "removeBookmark": "Remove saved answer",
+    "commentMenu": "Open comment options",
+    "commentInput": "Write a comment",
+    "sendComment": "Send comment",
     "planeNames": {
       "1": "Physical body",
       "2": "Prana",
@@ -509,6 +525,21 @@
   "rules": "Rules of the game",
   "plans": "Plans",
   "selectPlayers": "Select the number of players",
+  "selectPlayersSubtitle": "Choose how many human players share this device",
+  "selectPlayers.playerCount": "{{count}} players",
+  "welcome": {
+    "subtitle": "Discover yourself through the ancient game of Leela",
+    "offlineButton": "Play offline"
+  },
+  "hello": {
+    "subtitle": "Sign in to save progress, or play offline",
+    "offlineButton": "Play offline"
+  },
+  "gameCoach": {
+    "title": "Your turn",
+    "message": "Tap the dice to roll. A six places your piece on the board.",
+    "gotIt": "Got it"
+  },
   "author": "About authors",
   "contacts": "Contacts:",
   "events": "Our meetings",
@@ -547,6 +578,13 @@
   },
   "rollHistory": {
     "title": "Roll history"
+  },
+  "rollResult": {
+    "message": "Rolled {{count}}: {{from}} → {{to}}",
+    "hint": "The board moves with the result."
+  },
+  "turnIndicator": {
+    "onlineBlocked": "Online step locked"
   },
   "you": "you",
   "placeholderReport": "Make a plan report",
@@ -609,7 +647,8 @@
     "online": "Online match in progress",
     "playerSingular": "player",
     "playerPlural": "players",
-    "accessibilityLabel": "Resume the last saved game"
+    "accessibilityLabel": "Resume the last saved game",
+    "hint": "Continues the game from where you left off."
   },
   "bedtimeReminder": {
     "tab": "Reminder",
@@ -627,6 +666,53 @@
     "title": "Game sounds",
     "description": "Play short sounds when you roll the cube and move between planes.",
     "enabled": "Enabled"
+  },
+  "hapticToggle": {
+    "title": "Haptic feedback",
+    "description": "Light vibration when you tap controls and roll the cube."
+  },
+  "reducedMotionToggle": {
+    "title": "Reduce motion",
+    "description": "Minimise animations and screen movement."
+  },
+  "themeSelector": {
+    "title": "Theme",
+    "description": "Choose the look of the app, including a high-contrast option.",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark",
+    "highContrast": "High contrast",
+    "highContrastShortcut": "High contrast shortcut",
+    "highContrastAnnouncement": "High contrast theme enabled"
+  },
+  "settings": {
+    "title": "Settings",
+    "experience": "Experience",
+    "ai": "AI",
+    "account": "Account",
+    "editProfile": "Edit profile",
+    "subscription": "Subscription",
+    "reminders": "Reminders",
+    "bedtimeReminder": "Bedtime reminder",
+    "aiPersona": "AI guide",
+    "sessionHealth": "Session health"
+  },
+  "accessibilityStatus": {
+    "title": "Accessibility",
+    "subtitle": "See which system accessibility features are active and open iOS Settings.",
+    "voiceOver": "VoiceOver",
+    "reduceMotion": "Reduce Motion",
+    "boldText": "Bold Text",
+    "highContrast": "High Contrast",
+    "openSettings": "Open iOS Settings"
+  },
+  "accessibilityAnnouncements": {
+    "playerTurn": "Player {{player}}'s turn",
+    "rolled": "Rolled {{count}}",
+    "moved": "Moved from {{from}} to {{to}}",
+    "snake": "A snake carries you down from {{from}} to {{to}}",
+    "arrow": "An arrow lifts you from {{from}} to {{to}}",
+    "win": "Game finished. Cosmic Consciousness reached."
   },
   "intentionPrompt": {
     "title": "Today's intention",
@@ -661,6 +747,12 @@
   "anonymous": "Anonymous",
   "sixToBegin": "To begin with, throw 6 on the cube",
   "clips": "Clips",
+  "offlineProfile": {
+    "emptyTitle": "No game history yet",
+    "emptyMessage": "Play a game of Leela and your journey will appear here. You can also set a bedtime reminder or start fresh.",
+    "playFirstGame": "Play your first game",
+    "firstWinBanner": "✦ First step complete — your journey is saved."
+  },
   "system": "Your name is Leela. You are a woman, a goddess, born 2000 BC. You are the guide of the self-discovery game Leela Chakra and possess deep knowledge of all Vedic scriptures of Hinduism (the Vedas, Upanishads, Bhagavad Gita, Puranas, Yoga Sutras, Sankhya, Vedanta, Tantra and the teachings of the rishis). You answer the player's report in the context of the current plane of the Leela board. Ground every response in Hindu sacred texts, the rules of the game (arrows, snakes, chakras, lokas, gunas, karma) and the spiritual numerology of the board. Always answer accurately, concisely, respectfully and with the great wisdom of a spiritual guru. Avoid generic greetings. Begin directly with the spiritual teaching, then give one practical step the player can take today. Cite your sources explicitly: end every teaching with a `Sources:` line listing the exact Hindu scripture references you used, each followed by a brief direct quote from that scripture (for example, 'Bhagavad Gita 2.47 — \"You have a right to perform your prescribed duties, but you are not entitled to the fruits of your actions.\"; Chandogya Upanishad 6.2.1 — \"That which is the finest essence...\"'). Your mission is to help people attain the highest levels of divine realization and return to plane 68, Cosmic Consciousness.",
   "aiPersona": {
     "tab": "AI Guide",
@@ -684,7 +776,8 @@
   },
   "aiAnswers": {
     "tab": "Saved Answers",
-    "title": "Leela's answer for plane {{plan}}"
+    "title": "Leela's answer for plane {{plan}}",
+    "empty": "No saved answers yet. Ask Leela a question during the game and the answer will appear here."
   },
   "bookmarks": {
     "tab": "Bookmarks",
@@ -801,7 +894,61 @@
   "aiCommentFailed": "Leela could not answer this report. Your text is saved — you can try sending it again.",
   "postCreateFailed": "The report could not be created. Please try again.",
   "aiMessageFailed": "Leela could not answer. Please try again.",
+  "chatStarters": {
+    "title": "Ask Leela about the board, your plane, or a daily step",
+    "explainPlane": "Explain my current plane",
+    "arrowsSnakes": "How do arrows and snakes work?",
+    "dailyIntention": "Give me a daily intention",
+    "goalOfLeela": "What is the goal of Leela?",
+    "chipLabel": "Suggested question: {{prompt}}"
+  },
   "error": "Error",
+  "sceneStates": {
+    "loading": "Loading…",
+    "error": "Error",
+    "retry": "Retry",
+    "emptyTitle": "Nothing here yet",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "errorMessage": "We couldn't load this section. Pull down to refresh or tap Retry."
+  },
+  "profileEmpty": {
+    "historyTitle": "Your journey starts here",
+    "historyMessage": "Play a game of Leela and your path through the 72 planes will appear here.",
+    "historyAction": "Play now",
+    "reportsTitle": "No reports yet",
+    "reportsMessage": "Each plane asks for a reflection; your first report appears here after a game.",
+    "reportsAction": "Start a game",
+    "bookmarksTitle": "Saved answers live here",
+    "bookmarksMessage": "Tap the bookmark on any AI answer to return to it later.",
+    "aiAnswersTitle": "No AI answers yet",
+    "aiAnswersMessage": "Complete a report and Leela will guide you with one practical step.",
+    "aiAnswersAction": "Start a game",
+    "intentionTitle": "Set your intention",
+    "intentionMessage": "An intention gives the game a personal direction; you can change it anytime.",
+    "intentionAction": "Add intention"
+  },
+  "profileCompletion": {
+    "title": "Complete your profile",
+    "message": "Add {{step}} to make Leela feel truly yours.",
+    "avatar": "an avatar",
+    "name": "your name",
+    "intention": "an intention",
+    "firstReport": "your first report",
+    "action": "Complete now"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "We're sorry — an unexpected error occurred. Tap below to reload the app.",
+    "retry": "Try again"
+  },
+  "confirm": {
+    "signOutTitle": "Sign out?",
+    "signOutMessage": "You can sign back in any time.",
+    "resetTitle": "Start over?",
+    "resetMessage": "Current game progress will be lost.",
+    "deleteTitle": "Delete account?",
+    "deleteMessage": "This will permanently remove your account and data. This action cannot be undone."
+  },
   "reviewPrompt": {
     "title": "Enjoying Leela?",
     "message": "If the game is helping your journey, a quick review means a lot.",
@@ -880,12 +1027,29 @@
   "onboarding": {
     "step1Title": "Welcome to Leela",
     "step1Body": "Leela is an ancient self-discovery game. The board is a map of 72 planes — each plane is an inner state, a chakra, a step on the path back to Cosmic Consciousness.",
-    "step2Title": "Planes, snakes and arrows",
-    "step2Body": "As you roll the dice you move through the planes. Arrows lift you upward when insight ripens; snakes remind you of old patterns that still need attention.",
-    "step3Title": "Your AI guide",
-    "step3Body": "Leela AI reads your report and answers from the Vedas, Upanishads, Bhagavad Gita and the rules of the board. It gives one practical step you can take today.",
+    "step2Title": "A six opens the game",
+    "step2Body": "You wait at the edge of the board until the dice give you a six. That six is your birth into the game: it places you on plane 6, Delusion, where every journey begins.",
+    "step3Title": "A six throws again",
+    "step3Body": "Every six earns you another throw. Sixes are how the game accelerates — you can cross several planes before your turn finally settles.",
+    "step4Title": "Arrows lift you",
+    "step4Body": "Nine arrows run up the board. Land on the foot of one and it carries you higher: devotion at 27 lifts you to 41, sacrifice at 17 to 69. An arrow is insight that has ripened into action.",
+    "step5Title": "Snakes return you",
+    "step5Body": "Ten snakes run down. Vanity at 12 drops you to 8, ignorance at 29 to 6, inertia at 72 back to 51. A snake is not a punishment — it is an old pattern asking to be lived through again.",
+    "step6Title": "You cannot overshoot",
+    "step6Body": "A throw that would carry you past plane 72 does not move you at all. You stay where you are and wait for a smaller number — the board will not let you skip what is unfinished.",
+    "step7Title": "Plane 68 is the goal",
+    "step7Body": "Cosmic Consciousness sits at 68, and reaching it completes the game. There is a shorter way: spiritual devotion at 54 leads straight there.",
+    "step8Title": "Every landing asks for a report",
+    "step8Body": "When your turn settles, the plane opens and asks what it means for you today. The report is the real game — the dice only choose the question.",
+    "step9Title": "Your AI guide",
+    "step9Body": "Leela AI reads your report and answers from the Vedas, Upanishads, Bhagavad Gita and the rules of the board. It gives one practical step you can take today.",
     "next": "Next",
-    "start": "Start the journey"
+    "start": "Start the journey",
+    "stepCounter": "Step {{current}} of {{total}}",
+    "progressLabel": "Onboarding progress",
+    "stepLabel": "Step {{step}}",
+    "tapToAdvance": "Tap left or right side to move through the introduction",
+    "tapLeftRightHint": "Tap the right side for the next step, the left side for the previous step"
   },
   "whatsNew": {
     "title": "What's new",
@@ -940,19 +1104,6 @@
     "smaller": "Smaller",
     "reset": "Reset to default"
   },
-  "tutorial": {
-    "introTitle": "How to play",
-    "introBody": "Leela is a journey across 72 inner planes. Each roll moves your piece and surfaces a reflection to explore.",
-    "rollTitle": "Roll the dice",
-    "rollBody": "Tap the dice to roll. The number moves your piece along the path. Every plane has a lesson and an AI-guided reflection.",
-    "reportTitle": "Write a report",
-    "reportBody": "When you land, write a short report about what is happening inside. Leela AI answers from the board's wisdom.",
-    "finishTitle": "Reach liberation",
-    "finishBody": "Arrows lift you forward, snakes invite you to look again. The goal is not to win quickly — it is to see yourself clearly.",
-    "next": "Next",
-    "skip": "Skip",
-    "done": "Start playing"
-  },
   "referral": {
     "shareTitle": "Invite a friend to Leela",
     "shareMessage": "Join me on the Leela game board: {{link}}",
@@ -961,5 +1112,26 @@
   "report": {
     "shareTitle": "Leela report",
     "shareMessage": "Here is my Leela report from plane {{plan}}:\n{{link}}"
+  },
+  "gameTips": {
+    "gotIt": "Got it",
+    "learnMore": "Learn more",
+    "hideAll": "Hide all tips",
+    "six": {
+      "title": "A six opens the game",
+      "body": "Keep rolling until the die gives you a six. That is your birth into the board."
+    },
+    "snake": {
+      "title": "A snake brings you down",
+      "body": "Landing on a snake head means an old pattern wants to be lived through again."
+    },
+    "arrow": {
+      "title": "An arrow lifts you",
+      "body": "Standing at the foot of an arrow carries you higher: insight ripened into action."
+    },
+    "report": {
+      "title": "Write a report to continue",
+      "body": "Every landing asks what the plane means for you today. The dice only choose the question."
+    }
   }
 }

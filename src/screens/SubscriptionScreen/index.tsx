@@ -31,7 +31,7 @@ import {
 import { PurchasesPackage } from 'react-native-purchases'
 
 import { useTheme } from '@react-navigation/native'
-import { ms } from 'react-native-size-matters'
+import { ms, vs } from 'react-native-size-matters'
 import { useTranslation } from 'react-i18next'
 
 import React, { useState } from 'react'
@@ -227,10 +227,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20
   },
+  // `flex: 1` and a percentage height fought each other: flex grew the poster
+  // to half the screen while the height asked for something else, and the copy
+  // below was pulled up on top of it. A fixed share, no flex.
   poster: {
-    flex: 1,
     width: '100%',
-    height: '90%'
+    height: vs(220)
   },
   iconStyle: {
     marginTop: 60,
@@ -276,13 +278,16 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     fontWeight: 'bold'
   },
+  // The `bottom` offset lifted this paragraph onto the photo above it, where
+  // it sat unreadable across a dozen hands. It reads under the poster now.
   test: {
     fontSize: ms(15, 0.6),
     fontWeight: 'bold',
     alignSelf: 'center',
     textAlign: 'center',
-    width: '80%',
-    bottom: Platform.OS === 'ios' ? ms(15, 0.6) : ms(10, 0.6)
+    width: '86%',
+    marginTop: vs(12),
+    marginBottom: vs(8)
   },
   packageItem: {
     borderWidth: 1,

@@ -4,6 +4,10 @@ import { render } from '@testing-library/react-native'
 import { WinCelebration } from './'
 import { DiceStore, OnlinePlayer } from '../../store'
 
+jest.mock('../../utils/useReducedMotion', () => ({
+  useReducedMotion: () => false
+}))
+
 const mockDiceStore = DiceStore as typeof DiceStore
 const mockOnlinePlayer = OnlinePlayer as typeof OnlinePlayer
 
@@ -25,7 +29,7 @@ describe('<WinCelebration />', () => {
     mockDiceStore.finishArr = [false, false, false]
 
     const { getByLabelText } = render(<WinCelebration />)
-    expect(getByLabelText('Liberation celebration animation')).toBeTruthy()
+    expect(getByLabelText('Game finished. Cosmic Consciousness reached.')).toBeTruthy()
   })
 
   it('renders celebration when online game finishes', () => {
@@ -33,6 +37,6 @@ describe('<WinCelebration />', () => {
     mockOnlinePlayer.store.finish = true
 
     const { getByLabelText } = render(<WinCelebration />)
-    expect(getByLabelText('Liberation celebration animation')).toBeTruthy()
+    expect(getByLabelText('Game finished. Cosmic Consciousness reached.')).toBeTruthy()
   })
 })

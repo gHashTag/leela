@@ -36,12 +36,12 @@ export const getActions: getActionsT = ({ item, isDetail }) => {
     {
       key: 'HIDE_OR_ACCEPT',
       color: accept ? 'red' : 'green',
-      onPress: () => PostStore.acceptPost(accept, id),
+      onPress: () => PostStore.acceptPost(!!accept, id),
       title: accept ? 'Hide report' : 'Accept report',
       icon: accept ? 'ios-close-outline' : 'ios-checkmark'
     },
     {
-      key: 'BAN_AND_DEl',
+      key: 'BAN_AND_DEL',
       color: 'red',
       onPress: () => {
         isDetail && goBack()

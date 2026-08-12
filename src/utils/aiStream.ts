@@ -84,7 +84,45 @@ export const streamZaiChat = (
     let finishReason = ''
     let usage: unknown
     let buffer = ''
+    // How much of responseText has already been copied into `buffer`. Its own
+    // counter on purpose: `buffer` shrinks every time an event is parsed out of
+    // it, so using `buffer.length` as the read offset re-read text that had
+    // already been consumed and fed it through again - duplicating the
+    // reasoning and corrupting the JSON that followed.
+    let readOffset = 0
     let done = false
+
+    const applyEvent = (event: unknown) => {
+      const parsed = event as {
+        choices?: {
+          delta?: { reasoning_content?: string; content?: string }
+          finish_reason?: string
+        }[]
+        usage?: unknown
+      }
+      const choice = parsed.choices?.[0]
+      const delta = choice?.delta
+
+      if (delta?.reasoning_content) {
+        const chunkText = delta.reasoning_content
+        reasoning += chunkText
+        callbacks.onReasoning?.(chunkText, reasoning)
+      }
+
+      if (delta?.content) {
+        const chunkText = delta.content
+        content += chunkText
+        callbacks.onContent?.(chunkText, content)
+      }
+
+      if (choice?.finish_reason) {
+        finishReason = choice.finish_reason
+      }
+
+      if (parsed.usage) {
+        usage = parsed.usage
+      }
+    }
 
     const request = new XMLHttpRequest()
     request.open('POST', `${baseURL}/chat/completions`)
@@ -95,47 +133,22 @@ export const streamZaiChat = (
 
     request.onprogress = () => {
       const responseText = request.responseText
-      const newText = responseText.substring(buffer.length)
-      if (!newText) return
+      if (responseText.length <= readOffset) return
 
-      buffer += newText
-      const idx = buffer.indexOf('\n\n')
-      if (idx === -1) return
+      buffer += responseText.substring(readOffset)
+      readOffset = responseText.length
 
-      const chunk = buffer.substring(0, idx)
-      buffer = buffer.substring(idx + 2)
-
-      const events = parseSseEvents(chunk)
-      for (const event of events) {
-        const parsed = event as {
-          choices?: {
-            delta?: { reasoning_content?: string; content?: string }
-            finish_reason?: string
-          }[]
-          usage?: unknown
+      // Drain every complete event, not just the first: one progress event
+      // routinely carries several SSE frames, and the rest used to sit in the
+      // buffer until the next chunk happened to arrive.
+      let idx = buffer.indexOf('\n\n')
+      while (idx !== -1) {
+        const chunk = buffer.substring(0, idx)
+        buffer = buffer.substring(idx + 2)
+        for (const event of parseSseEvents(chunk)) {
+          applyEvent(event)
         }
-        const choice = parsed.choices?.[0]
-        const delta = choice?.delta
-
-        if (delta?.reasoning_content) {
-          const chunkText = delta.reasoning_content
-          reasoning += chunkText
-          callbacks.onReasoning?.(chunkText, reasoning)
-        }
-
-        if (delta?.content) {
-          const chunkText = delta.content
-          content += chunkText
-          callbacks.onContent?.(chunkText, content)
-        }
-
-        if (choice?.finish_reason) {
-          finishReason = choice.finish_reason
-        }
-
-        if (parsed.usage) {
-          usage = parsed.usage
-        }
+        idx = buffer.indexOf('\n\n')
       }
     }
 
@@ -150,32 +163,20 @@ export const streamZaiChat = (
         return
       }
 
-      // Drain any bytes left after the last progress event.
+      // Whatever progress never delivered, plus anything after the last blank
+      // line. Goes through applyEvent so the final chunk reaches the screen -
+      // this path used to update the totals silently, and the last thing the
+      // model said never showed up.
+      if (request.responseText.length > readOffset) {
+        buffer += request.responseText.substring(readOffset)
+        readOffset = request.responseText.length
+      }
+
       if (buffer.trim()) {
-        const events = parseSseEvents(buffer)
-        for (const event of events) {
-          const parsed = event as {
-            choices?: {
-              delta?: { reasoning_content?: string; content?: string }
-              finish_reason?: string
-            }[]
-            usage?: unknown
-          }
-          const choice = parsed.choices?.[0]
-          const delta = choice?.delta
-          if (delta?.reasoning_content) {
-            reasoning += delta.reasoning_content
-          }
-          if (delta?.content) {
-            content += delta.content
-          }
-          if (choice?.finish_reason) {
-            finishReason = choice.finish_reason
-          }
-          if (parsed.usage) {
-            usage = parsed.usage
-          }
+        for (const event of parseSseEvents(buffer)) {
+          applyEvent(event)
         }
+        buffer = ''
       }
 
       done = true

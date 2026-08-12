@@ -50,16 +50,16 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app requires access to the photo library.</string>
+	<string>This app accesses your photo library so you can choose a profile picture or attach images to your reports.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app saves the verse and reflection images you create directly to your photo library.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>This app uses the microphone to transcribe your spoken report into text.</string>
+	<string>This app uses the microphone to transcribe your spoken report into written text.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>This app uses speech recognition to turn your voice into a written report.</string>
+	<string>This app uses speech recognition to turn your spoken report into written text.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>This app requires access to the camera.</string>
+	<string>This app uses the camera so you can take a profile photo or attach an image to your report.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>AntDesign.ttf</string>

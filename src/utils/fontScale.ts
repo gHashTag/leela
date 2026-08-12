@@ -5,7 +5,7 @@ import { useWindowDimensions } from 'react-native'
  * Capping the scale keeps oversized system fonts from breaking layouts that
  * were not designed for very large type (e.g. the game board and tab bar).
  */
-export const MAX_FONT_SCALE = 1.35
+export const MAX_FONT_SCALE = 1.6
 
 /**
  * Minimum font scale multiplier. We never shrink text below the base size.
@@ -47,3 +47,10 @@ export const applyFontScale = (
   }
   return scaled
 }
+
+/**
+ * Whether the current capped font scale is large enough to be considered an
+ * accessibility size. Use this to switch layouts (e.g. stack rows into columns)
+ * when text becomes too large for the default design.
+ */
+export const isAccessibilityFontScale = (scale: number): boolean => scale >= 1.35

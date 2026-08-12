@@ -45,6 +45,7 @@ import {
   RulesDetailScreen,
   RulesScreen,
   SelectPlayersScreen,
+  SettingsScene,
   SubscriptionScreen,
   UpdateVersionModal,
   UserProfileScreen,
@@ -273,6 +274,7 @@ const App = () => {
           name="CHANGE_INTENTION_SCREEN"
           component={ChangeIntention}
         />
+        <Stack.Screen name="SETTINGS_SCENE" component={SettingsScene} />
         {/* Post */}
         <Stack.Screen
           options={{

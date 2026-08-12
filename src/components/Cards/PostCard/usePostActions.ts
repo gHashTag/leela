@@ -6,6 +6,8 @@ import { getUid } from '../../../screens/helper'
 import { PostStore } from '../../../store'
 import { PostT } from '../../../types/types'
 import { buildReportLink } from '../../../utils'
+import { useConfirmActions } from '../../../components/ConfirmAction'
+import { triggerHaptic } from '../../../utils/haptics'
 
 import { getActions } from './ModalActions'
 
@@ -25,6 +27,7 @@ export const usePostActions = ({
   hideTranslate
 }: usePostActionsParams) => {
   const { t } = useTranslation()
+  const { guardActions, ConfirmDialogComponent } = useConfirmActions(t)
   const { navigate } = useTypedNavigation()
   const isLiked =
     item?.liked?.findIndex((a) => a === getUid()) === -1 ? false : true
@@ -39,6 +42,7 @@ export const usePostActions = ({
   }
 
   async function handleLike() {
+    triggerHaptic(isLiked ? 'impactLight' : 'impactMedium')
     if (item && isLiked) {
       await PostStore.unlikePost(item.id)
     } else if (item && !isLiked) {
@@ -47,6 +51,7 @@ export const usePostActions = ({
   }
 
   function handleComment() {
+    triggerHaptic('impactLight')
     onPressCom && onPressCom()
     if (!isDetail) {
       item && navigate('DETAIL_POST_SCREEN', { postId: item.id, comment: true })
@@ -54,7 +59,7 @@ export const usePostActions = ({
   }
 
   const handleAdminMenu = () => {
-    const modalButtons = getActions({ isDetail, item })
+    const modalButtons = guardActions(getActions({ isDetail, item }))
     OpenActionsModal(modalButtons)
   }
 
@@ -92,6 +97,7 @@ export const usePostActions = ({
     handleAdminMenu,
     handleShareLink,
     isLiked,
-    handleProfile
+    handleProfile,
+    ConfirmDialogComponent
   }
 }

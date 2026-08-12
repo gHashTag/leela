@@ -17,11 +17,11 @@ import * as yup from 'yup'
 
 import {
   AppContainer,
-  Button,
   Input,
   KeyboardContainer,
-  Loading,
-  Space
+  LoadingButton,
+  Space,
+  TextError
 } from '../../../components'
 import {
   H,
@@ -48,6 +48,7 @@ type UserEditT = {
 
 const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string>('')
   const { t } = useTranslation()
 
   const schema = useMemo(
@@ -78,10 +79,15 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
   })
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+    setError('')
     setLoading(true)
-    const { firstName, lastName } = data
-    await updateProfName({ firstName, lastName })
-    navigation.goBack()
+    try {
+      const { firstName, lastName } = data
+      await updateProfName({ firstName, lastName })
+      navigation.goBack()
+    } catch {
+      setError(t('authUnknownError'))
+    }
     setLoading(false)
   }
 
@@ -97,42 +103,46 @@ const UserEdit = ({ route, navigation }: UserEditT): ReactElement => {
       colorLeft={black}
       hidestar={isBlockGame}
     >
-      {loading ? (
-        <Loading />
-      ) : (
-        <KeyboardContainer>
-          <ScrollView
-            contentContainerStyle={styles.container}
-            showsVerticalScrollIndicator={false}
-          >
-            <Space height={H / 5} />
-            <FormProvider {...methods}>
-              <Input
-                name="firstName"
-                placeholder={t('auth.firstName')}
-                autoCapitalize="none"
-                color={color}
-                additionalStyle={{ width: W - ms(140, 0.9) }}
-              />
-              <Input
-                name="lastName"
-                placeholder={t('auth.lastName')}
-                autoCapitalize="none"
-                color={color}
-                additionalStyle={{ width: W - ms(140, 0.9) }}
-              />
-              <Space height={30} />
-              <Button
-                title={t('done')}
-                onPress={methods.handleSubmit(onSubmit, (error) =>
-                  captureException(error, 'UserEdit')
-                )}
-              />
-              <Space height={vs(10)} />
-            </FormProvider>
-          </ScrollView>
-        </KeyboardContainer>
-      )}
+      <KeyboardContainer>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
+          <Space height={H / 5} />
+          <FormProvider {...methods}>
+            <Input
+              name="firstName"
+              placeholder={t('auth.firstName')}
+              autoCapitalize="none"
+              color={color}
+              additionalStyle={{ width: W - ms(140, 0.9) }}
+            />
+            <Input
+              name="lastName"
+              placeholder={t('auth.lastName')}
+              autoCapitalize="none"
+              color={color}
+              additionalStyle={{ width: W - ms(140, 0.9) }}
+            />
+            {error !== '' && (
+              <>
+                <Space height={vs(10)} />
+                <TextError title={error} textStyle={styles.errorText} />
+              </>
+            )}
+            <Space height={30} />
+            <LoadingButton
+              title={t('done')}
+              loading={loading}
+              onPress={methods.handleSubmit(onSubmit, (error) =>
+                captureException(error, 'UserEdit')
+              )}
+              haptic="impactMedium"
+            />
+            <Space height={vs(10)} />
+          </FormProvider>
+        </ScrollView>
+      </KeyboardContainer>
     </AppContainer>
   )
 }
@@ -141,6 +151,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center'
+  },
+  errorText: {
+    textAlign: 'center'
   }
 })
 

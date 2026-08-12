@@ -24,13 +24,15 @@ export async function replyNotification(
   })
 
   const { title, body } = notification.data || {}
+  const safeTitle = typeof title === 'string' ? title : ''
+  const safeBody = typeof body === 'string' ? body : ''
 
   updateAndroidBadgeCount({ type: 'increment' })
   notifee.incrementBadgeCount()
 
   await notifee.displayNotification({
-    title: isIos ? title.replace(/(<([^>]+)>)/gi, '') : title,
-    body: isIos ? body.replace(/(<([^>]+)>)/gi, '') : body,
+    title: isIos ? safeTitle.replace(/(<([^>]+)>)/gi, '') : safeTitle,
+    body: isIos ? safeBody.replace(/(<([^>]+)>)/gi, '') : safeBody,
     data: notification.data,
     id: nanoid(10),
     android: {

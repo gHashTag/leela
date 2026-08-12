@@ -18,6 +18,7 @@ import {
   OnlinePlayer,
   OtherPlayers
 } from '../../store'
+import { useAppTheme } from '../../utils/useAppTheme'
 
 import { ICONS } from './images'
 
@@ -66,6 +67,8 @@ const getCoordinatesForPlan = (plan: number) => {
 const Gem = observer(({ plan, index }: GemT) => {
   const { navigate } = useTypedNavigation()
   const { container, gems } = styles
+  const theme = useAppTheme()
+  const highContrast = theme === 'highContrast'
 
   const online = DiceStore.online
 
@@ -133,6 +136,7 @@ const Gem = observer(({ plan, index }: GemT) => {
                 online={online}
                 source={source(id, ava)}
                 onPressAva={onPressAva}
+                highContrast={highContrast}
               />
             </GestureDetector>
           )
@@ -157,10 +161,11 @@ interface AnimatedGemT {
   online: boolean
   source: ImageSourcePropType
   onPressAva: () => void
+  highContrast: boolean
 }
 
 const AnimatedGem = observer(
-  ({ plan, index, id, online, source }: AnimatedGemT) => {
+  ({ plan, index, id, online, source, highContrast }: AnimatedGemT) => {
     const prevPlanRef = useRef(plan)
     const translateX = useSharedValue(0)
     const translateY = useSharedValue(0)
@@ -174,12 +179,13 @@ const AnimatedGem = observer(
         translateX.value = from.x - to.x
         translateY.value = from.y - to.y
 
-        translateX.value = withTiming(0, { duration: 350 })
-        translateY.value = withTiming(0, { duration: 350 })
+        const duration = highContrast ? 0 : 350
+        translateX.value = withTiming(0, { duration })
+        translateY.value = withTiming(0, { duration })
 
         prevPlanRef.current = plan
       }
-    }, [plan])
+    }, [plan, highContrast])
 
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [
@@ -191,9 +197,11 @@ const AnimatedGem = observer(
     return (
       <Animated.Image
         style={[
-          gems,
+          styles.gems,
           {
-            zIndex: -index
+            zIndex: -index,
+            borderWidth: highContrast ? 2 : 0,
+            borderColor: highContrast ? (id === 1 ? '#FFFFFF' : '#000000') : 'transparent'
           },
           id === 1 && online && styles.primaryGem,
           animatedStyle

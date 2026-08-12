@@ -33,13 +33,11 @@ describe('<IntentionPrompt />', () => {
     })
   })
 
-  it('displays the saved intention when one exists', async () => {
+  it('hides the prompt when a saved intention exists', async () => {
     mockedLoad.mockResolvedValue('Play with kindness')
-    const { getByText, queryByText } = render(<IntentionPrompt />)
+    const { queryByText } = render(<IntentionPrompt />)
 
     await waitFor(() => {
-      expect(getByText(/Today's intention/)).toBeTruthy()
-      expect(getByText(/Play with kindness/)).toBeTruthy()
       expect(queryByText(/What is your intention for today's game?/)).toBeNull()
     })
   })

@@ -80,5 +80,5 @@ interface scenes {
   key: string
   title: string
   props?: any
-  Scene: (props?: any) => JSX.Element
+  Scene: React.ComponentType<any>
 }

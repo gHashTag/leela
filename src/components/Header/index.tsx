@@ -72,10 +72,12 @@ const Header = memo<HeaderT>(
         <View style={flexOne}>
           {title && !displayStatus && (
             <Text
-              numberOfLines={2}
+              numberOfLines={3}
               h={'h2'}
               title={title}
               textStyle={[titleStyle, { textAlign, marginTop }]}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
             />
           )}
           {(children || displayStatus) && (

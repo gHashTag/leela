@@ -8,7 +8,6 @@ import {
   Pressable,
   StyleSheet,
   ToastAndroid,
-  Vibration,
   View
 } from 'react-native'
 
@@ -23,6 +22,8 @@ import {
 } from '../../store'
 import { playDiceSound } from '../../utils/soundEffects'
 import { minTouchTarget } from '../../utils/hitTarget'
+import { triggerHaptic } from '../../utils/haptics'
+import { useReducedMotion } from '../../utils/useReducedMotion'
 
 const getImage = (number: number) => {
   // don`t working return require(`./assets/${number}.png`)
@@ -49,9 +50,18 @@ type DiceT = {
 export const Dice = observer(({ disabled }: DiceT) => {
   const [canRoll, setCanRoll] = useState<boolean>(true)
   const spinValue = useRef(new Animated.Value(0)).current
+  const reducedMotion = useReducedMotion()
   const { t } = useTranslation()
 
   const handleSpin = (value: number) => {
+    if (reducedMotion) {
+      triggerHaptic('impactLight')
+      DiceStore.online
+        ? OnlinePlayer.updateStep()
+        : OfflinePlayers.updateStep(DiceStore.players - 1)
+      setTimeout(() => setCanRoll(true), 200)
+      return
+    }
     const duration = (value / 2) * 500
     spinValue.setValue(0)
     Animated.timing(spinValue, {
@@ -60,7 +70,7 @@ export const Dice = observer(({ disabled }: DiceT) => {
       easing: Easing.linear,
       useNativeDriver: true
     }).start(() => {
-      Vibration.vibrate(30)
+      triggerHaptic('impactLight')
       DiceStore.online
         ? OnlinePlayer.updateStep()
         : OfflinePlayers.updateStep(DiceStore.players - 1)
@@ -81,6 +91,7 @@ export const Dice = observer(({ disabled }: DiceT) => {
           time: OnlinePlayer.store.timeText
         })
       : t('online-part.notReported')
+    triggerHaptic('notificationWarning')
     if (ToastAndroid) {
       ToastAndroid.showWithGravityAndOffset(
         message,
@@ -99,7 +110,7 @@ export const Dice = observer(({ disabled }: DiceT) => {
     }
     setCanRoll(false)
     actionsDice.random()
-    Vibration.vibrate(50)
+    triggerHaptic('impactMedium')
     playDiceSound()
     handleSpin(DiceStore.count)
   }
@@ -109,7 +120,7 @@ export const Dice = observer(({ disabled }: DiceT) => {
     : t('online-part.notReported')
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} accessible={false}>
       <Pressable
         onPress={() => {
           canRoll && rollDice()
@@ -118,11 +129,17 @@ export const Dice = observer(({ disabled }: DiceT) => {
         disabled={disabled}
         accessible
         accessibilityRole="button"
+        testID="dice-roll"
         accessibilityLabel={
-          isOpacity ? t('accessibility.diceLocked') : t('accessibility.rollDice')
+          isOpacity
+            ? t('accessibility.diceLocked')
+            : t('accessibility.rollDiceValue', { count: DiceStore.count })
         }
         accessibilityHint={isOpacity ? lockedHint : t('accessibility.rollDiceHint')}
         accessibilityState={{ disabled: isOpacity || disabled || !canRoll }}
+        accessibilityActions={[
+          { name: 'activate', label: t('accessibility.rollDice') }
+        ]}
       >
         <Animated.Image
           style={[styles.image, { transform: [{ rotate: spin }] }]}
@@ -134,6 +151,7 @@ export const Dice = observer(({ disabled }: DiceT) => {
       {isOpacity && (
         <Text
           h="h6"
+          testID="dice-locked-text"
           title={
             OnlinePlayer.store.isReported
               ? t('online-part.waitForNextStep')

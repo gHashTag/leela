@@ -11,10 +11,15 @@ import { Pressable } from '../../Pressable'
 const styles = ScaledSheet.create({
   container: {
     alignSelf: 'center',
-    width: ms(230, 0.9),
+    // minWidth rather than width: every existing title is narrower than this,
+    // so those buttons look unchanged, but a long one ("Start the journey")
+    // used to be clipped by the fixed pill instead of widening it.
+    minWidth: ms(230, 0.9),
+    maxWidth: '90%',
     height: ms(50, 0.9),
     borderRadius: s(40),
     borderWidth: 1,
+    alignItems: 'center',
     justifyContent: 'center'
   },
   h: {
@@ -29,9 +34,19 @@ interface ButtonT {
   cancel?: boolean
   onPress?: () => void
   textStyle?: StyleProp<TextStyle>
+  testID?: string
+  accessibilityLabel?: string
+  accessibilityHint?: string
 }
 
-const Button = memo<ButtonT>(({ title, onPress, textStyle }) => {
+const Button = memo<ButtonT>(({
+  title,
+  onPress,
+  textStyle,
+  testID,
+  accessibilityLabel,
+  accessibilityHint
+}) => {
   const { container, h } = styles
   const { dark } = useTheme()
   const borderColor = dark ? white : black
@@ -40,8 +55,24 @@ const Button = memo<ButtonT>(({ title, onPress, textStyle }) => {
     <Pressable
       style={[container, { backgroundColor, borderColor }]}
       onPress={onPress}
+      testID={testID}
+      accessibilityLabel={accessibilityLabel || title}
+      accessibilityHint={accessibilityHint}
+      accessibilityRole="button"
     >
-      <Text h="h1" textStyle={[h, textStyle]} title={title} />
+      {/*
+        At default sizes one line shrinking-to-fit keeps the pill shape. At
+        accessibility sizes we allow a second line so the button remains usable
+        without clipping.
+      */}
+      <Text
+        h="h1"
+        textStyle={[h, textStyle]}
+        title={title}
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.75}
+      />
     </Pressable>
   )
 })

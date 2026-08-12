@@ -105,7 +105,7 @@ export const PostScreen = observer(({ navigation }: Ipost) => {
               return
             }
             captureException(err, 'PostScreen: subscription')
-            setLoadError(t('online-part.postsLoadError'))
+            setLoadError(String(t('online-part.postsLoadError')))
             setRefreshing(false)
           }
         )
@@ -186,7 +186,11 @@ export const PostScreen = observer(({ navigation }: Ipost) => {
               <Text
                 textStyle={styles.noPostText}
                 h={'h4'}
-                title={t('online-part.noPosts')}
+                title={
+                  feedFilter === 'myPosts'
+                    ? t('online-part.noPostsFiltered')
+                    : t('online-part.noPostsHeadline')
+                }
               />
               <Space height={vs(16)} />
               <Text

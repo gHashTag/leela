@@ -75,6 +75,7 @@ export type RootStackParamList = {
     ownerId: string
     editable: boolean
   }
+  SETTINGS_SCENE: undefined
 }
 
 export type RootTabParamList = {
@@ -146,6 +147,7 @@ export interface FormPostT {
   systemMessage: string
   planText: string
   pro: boolean
+  ownerId?: string
 }
 
 export interface MessageAIT {

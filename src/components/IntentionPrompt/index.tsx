@@ -17,6 +17,7 @@ import {
   loadTodayIntention,
   saveTodayIntention
 } from '../../utils/intention'
+import { triggerHaptic } from '../../utils/haptics'
 
 export const IntentionPrompt = memo(() => {
   const { t } = useTranslation()
@@ -50,26 +51,20 @@ export const IntentionPrompt = memo(() => {
     await saveTodayIntention(intention)
     setSaved(intention)
     setVisible(false)
+    triggerHaptic('impactLight')
   }, [draft])
 
   const handleSkip = useCallback(async () => {
     await clearTodayIntention()
     setVisible(false)
+    triggerHaptic('notificationWarning')
   }, [])
 
+  // Once the intention is saved this component has nothing left to show. The
+  // card that displays it belongs with the other daily numbers in the profile
+  // tab, not floating over the board where its text landed in the artwork.
   if (!visible) {
-    return saved ? (
-      <View style={[styles.card, isDark && styles.cardDark]}>
-        <Text
-          h="h11"
-          title={t('intentionPrompt.savedLabel')}
-          oneColor="#B39DDB"
-          textStyle={styles.label}
-        />
-        <Space height={vs(4)} />
-        <Text h="h8" title={`“${saved}”`} oneColor="#FFFFFF" />
-      </View>
-    ) : null
+    return null
   }
 
   return (

@@ -5,8 +5,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 // eslint-disable-next-line react-native/split-platform-components
-import { BackHandler, Platform, StyleSheet, ToastAndroid } from 'react-native'
-import { ScrollView } from 'react-native-gesture-handler'
+import {
+  BackHandler,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  ToastAndroid
+} from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 import Sound from 'react-native-sound'
 import {
@@ -111,7 +116,10 @@ const PlansDetailScreen = observer(
         status="1x1"
       >
         <KeyboardContainer>
-          <ScrollView>
+          {/* keyboardShouldPersistTaps: with the keyboard up, the scroll view
+              swallows the first tap to dismiss it, so Send needed pressing
+              twice - once to close the keyboard, once to actually submit. */}
+          <ScrollView keyboardShouldPersistTaps="handled">
             <Space height={vs(10)} />
             {/* {soundLoading ? (
             <Loading size={s(60)} />
@@ -134,7 +142,11 @@ const PlansDetailScreen = observer(
               />
             )}
             {report && <CreatePost plan={plan} />}
-            <Space height={!report ? vs(70) : 20} />
+            {/* Report mode ends in the Send button, so it needs MORE room at
+                the bottom, not less. This was inverted - 20pt in report mode
+                against 70 otherwise - which pinned Send to the very edge of
+                the screen, under the home indicator. */}
+            <Space height={report ? vs(90) : vs(70)} />
           </ScrollView>
         </KeyboardContainer>
       </AppContainer>

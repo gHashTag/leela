@@ -6,13 +6,23 @@ import { useTypedNavigation } from '../../../hooks'
 
 import { getActions } from './ModalActions'
 
-import { HashtagFormat, ProBadge, Reactions, Space, Text } from '../../'
-import { PlanAvatar } from '../../'
+import {
+  ConfirmDialog,
+  HashtagFormat,
+  PlanAvatar,
+  ProBadge,
+  Reactions,
+  Space,
+  Text
+} from '../../'
 import { OpenActionsModal, fuchsia, lightGray } from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
 import { PostStore } from '../../../store'
 import { ReplyComT } from '../../../types/types'
 import { ButtonVectorIcon } from '../../Buttons'
+import { useConfirmActions } from '../../ConfirmAction'
+import { useTranslation } from 'react-i18next'
+import { useFontScale } from '../../../utils/fontScale'
 
 interface SubComT {
   item: ReplyComT
@@ -23,6 +33,10 @@ export function SubCommentCard({ item }: SubComT) {
   const [hideTranslate, setHideTranslate] = useState(true)
   const [transText, setTransText] = useState('')
   const { navigate } = useTypedNavigation()
+  const fontScale = useFontScale()
+  const isAccessibilityScale = fontScale >= 1.35
+  const { t } = useTranslation()
+  const { ConfirmDialogComponent, guardActions } = useConfirmActions(t)
 
   const date = getTimeStamp({ lastTime: item.createTime, type: '-short' })
   const avaUrl = PostStore.getAvaById(item.ownerId)
@@ -36,13 +50,15 @@ export function SubCommentCard({ item }: SubComT) {
   }
 
   const OpenModal = () => {
-    const modalButtons = getActions({ handleTransText, hideTranslate, item })
+    const modalButtons = guardActions(
+      getActions({ handleTransText, hideTranslate, item })
+    )
     OpenActionsModal(modalButtons)
   }
 
   const handleProfile = () => {
     if (item?.ownerId) {
-      navigate('USER_PROFILE_SCREEN', { ownerId: item?.ownerId })
+      navigate('USER_PROFILE_SCREEN', { ownerId: item?.ownerId, editable: false })
     }
   }
   const text = hideTranslate ? item.text : transText
@@ -59,16 +75,23 @@ export function SubCommentCard({ item }: SubComT) {
         />
         <Space width={s(6)} />
         <View style={styles.infoContainer}>
-          <View style={styles.infoLine}>
-            <Text numberOfLines={1} h={'h6'} title={curName as string} />
-            {Boolean(item.pro) && (
+          <View style={[styles.infoLine, isAccessibilityScale && styles.infoLineLarge]}>
+            <Text
+              numberOfLines={isAccessibilityScale ? 2 : 1}
+              h={'h6'}
+              title={curName as string}
+            />
+            {/* @ts-expect-error ReplyComT historically lacks `pro` in the
+                type, but runtime objects include it for replies made by pro
+                users. */}
+            {Boolean((item as any).pro) && (
               <>
                 <Space width={s(6)} />
                 <ProBadge small />
               </>
             )}
             <Text
-              numberOfLines={1}
+              numberOfLines={isAccessibilityScale ? 2 : 1}
               h={'h6'}
               title={` ${date}`}
               oneColor={lightGray}
@@ -79,6 +102,8 @@ export function SubCommentCard({ item }: SubComT) {
           size={s(10)}
           name="chevron-down"
           onPress={OpenModal}
+          accessibilityLabel={t('accessibility.commentMenu')}
+          testID="sub-comment-menu-button"
         />
         <Space width={s(8)} />
       </View>
@@ -91,6 +116,7 @@ export function SubCommentCard({ item }: SubComT) {
         <Space width={s(5)} />
         <Reactions postId={item.postId} commentId={item.id} />
       </View>
+      <ConfirmDialogComponent />
     </View>
   )
 }
@@ -101,7 +127,12 @@ const styles = StyleSheet.create({
   },
   infoLine: {
     flexDirection: 'row',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
+    alignItems: 'center'
+  },
+  infoLineLarge: {
+    flexDirection: 'column',
+    alignItems: 'flex-start'
   },
   infoContainer: {
     flexDirection: 'column',

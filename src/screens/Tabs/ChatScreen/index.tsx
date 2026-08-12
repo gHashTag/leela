@@ -11,7 +11,7 @@ import {
 } from 'react-native'
 import { Bubble, GiftedChat, IMessage } from 'react-native-gifted-chat'
 import { s } from 'react-native-size-matters'
-import { ButtonVectorIcon, ButtonWithIcon, Header, Space, Text } from '../../../components'
+import { ButtonVectorIcon, ButtonWithIcon, ChatStarterPrompts, Header, Space, Text } from '../../../components'
 import { brightTurquoise, captureException, onLeaveFeedback, trueBlue } from '../../../constants'
 import { DiceStore, actionsDice } from '../../../store'
 import { useRevenueCat } from '../../../providers/RevenueCatProvider'
@@ -70,6 +70,7 @@ const ChatScreen: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | number | null>(null)
   const [showScrollToBottom, setShowScrollToBottom] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [inputText, setInputText] = useState('')
 
   const listRef = useRef<FlatList<IMessage> | null>(null)
   const scrollOffsetRef = useRef(0)
@@ -358,6 +359,11 @@ const ChatScreen: React.FC = () => {
   }
 
   const messagesCount = messages.length
+  const showStarters = messagesCount === 1
+
+  const handleStarterPrompt = useCallback((prompt: string) => {
+    setInputText(prompt)
+  }, [])
 
   const scrollToBottom = useCallback(() => {
     listRef.current?.scrollToOffset({ offset: contentHeightRef.current, animated: true })
@@ -415,6 +421,15 @@ const ChatScreen: React.FC = () => {
     }
   }, [messages])
 
+  const renderChatFooter = useCallback(() => {
+    return (
+      <ChatStarterPrompts
+        visible={showStarters}
+        onSelect={handleStarterPrompt}
+      />
+    )
+  }, [showStarters, handleStarterPrompt])
+
   return (
     <>
       <Header title="Leela AI" textAlign="center" />
@@ -438,6 +453,9 @@ const ChatScreen: React.FC = () => {
           user={{
             _id: 1
           }}
+          text={inputText}
+          onInputTextChanged={setInputText}
+          renderChatFooter={renderChatFooter}
           listViewProps={{
             ref: listRef,
             onScroll: handleScroll,

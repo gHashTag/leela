@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { StyleSheet } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
 
 
 import firestore from '@react-native-firebase/firestore'
@@ -21,25 +21,18 @@ import { subscribeTracked } from '../../../utils/listenerRegistry'
 import {
   Background,
   BoardLegend,
+  ButtonLink,
   ButtonSimple,
   ButtonWithIcon,
-  DailyVerse,
   Dice,
   GameBoard,
+  GameTooltip,
   Header,
   IntentionPrompt,
-  LastMoveReplay,
-  ResumeLastGame,
-  RollHistory,
+  RollResultAnnouncement,
   Space,
-  StreakJournal,
-  StreakMilestone,
   Text,
-  TutorialOverlay,
-  UxFeedback,
-  WeeklyRecap,
-  WeeklyStreak,
-  WelcomeBack,
+  TurnIndicator,
   WinCelebration
 } from '../../../components'
 import { useLeftTimeForStep } from '../../../hooks'
@@ -121,9 +114,24 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
     ? OnlinePlayer.store.finish
     : DiceStore.finishArr.indexOf(true) === -1
 
+  // Before the first six the player is not on the board yet, so the rule they
+  // need is how to get on it; after that it is the report that gates the next
+  // roll.
+  const hasStarted = online ? OnlinePlayer.store.start : DiceStore.startGame
+
   const isBlockGame = SubscribeStore.isBlockGame
 
   const _onPress = () => navigation.navigate('SUBSCRIPTION_SCREEN')
+
+  const history = online
+    ? OnlinePlayer.store.history
+    : OfflinePlayers.store.histories[DiceStore.players - 1]
+  const lastMove = history && history.length > 0 ? history[0] : null
+  const moveTip: import('../../../components/GameTooltip').GameTipId | null =
+    lastMove && (lastMove.status === 'arrow' || lastMove.status === 'snake')
+      ? lastMove.status
+      : null
+  const activeTip = moveTip || (hasStarted ? 'report' : 'six')
 
   return (
     <Background enableTopInsets paddingTop={vs(50)}>
@@ -161,43 +169,50 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
           </>
         )}
       </Header>
-      <DailyVerse />
-      <WeeklyStreak />
-      <StreakMilestone />
-      <WeeklyRecap />
-      <WelcomeBack />
-      <ResumeLastGame
-        onResume={() =>
-          navigation.navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
-        }
-      />
-      <IntentionPrompt />
-      <StreakJournal />
-      <UxFeedback />
-      {online && <LastMoveReplay />}
-      <RollHistory />
-      {!endGame && <Dice disabled={isBlockGame} />}
+      {/* The rule that matters right now, above the board. */}
+      <GameTooltip tip={activeTip} />
+      {/* Board and dice sit on the floor of the screen, in that order, with
+          air between them. Everything that reports on play - today's summary,
+          the streak cards, the journal - lives in the profile tab; this screen
+          is the game. */}
+      {/* Scrolls when the board does not fit. With a plain flex-end view the
+          board overflowed past the top edge and drew straight over the tip
+          card above it - the numbers landed on the tip's own text. */}
+      <ScrollView
+        style={styles.playScroll}
+        contentContainerStyle={styles.playArea}
+        showsVerticalScrollIndicator={false}
+      >
+        <TurnIndicator />
+        <GameBoard />
+        {!endGame && (
+          <View style={styles.diceSlot}>
+            <Dice disabled={isBlockGame} />
+            <RollResultAnnouncement />
+            <ButtonLink
+              title={t('boardLegend.open')}
+              onPress={() => setShowLegend(true)}
+              viewStyle={styles.legendLink}
+              testID="board-legend-link"
+            />
+          </View>
+        )}
+      </ScrollView>
 
       {isBlockGame && (
         <ButtonSimple onPress={_onPress} h="h3" title={t('buy')} />
       )}
 
-      {/* <Text h="h3" title={`user.pro: ${user.pro}`} />
-      <Text h="h3" title={`isBlockGame: ${isBlockGame}`} /> */}
+      {/* FirstRollCoachMark removed: it said the same thing as the tip card
+          above the board ("a six places your piece"), as a modal on top of it,
+          so the screen carried two coaches arguing over the same rule. */}
 
-      <ButtonSimple
-        viewStyle={styles.legendButton}
-        h="h5"
-        title={t('boardLegend.open')}
-        onPress={() => setShowLegend(true)}
-      />
-      <GameBoard />
+      <IntentionPrompt />
       <WinCelebration />
       <BoardLegend
         visible={showLegend}
         onClose={() => setShowLegend(false)}
       />
-      <TutorialOverlay />
     </Background>
   )
 })
@@ -213,6 +228,26 @@ const styles = StyleSheet.create({
   legendButton: {
     alignSelf: 'center',
     marginVertical: vs(6)
+  },
+  // flex-end pins the pair to the bottom, so board and dice sit on the floor
+  // of the screen instead of floating with dead space beneath them.
+  playScroll: {
+    flex: 1
+  },
+  playArea: {
+    flexGrow: 1,
+    justifyContent: 'flex-end',
+    // Clears the tab bar. Without it the dice sat under it and its bottom row
+    // of pips was cut off with nothing left to scroll to.
+    paddingBottom: vs(28)
+  },
+  diceSlot: {
+    marginTop: vs(16),
+    marginBottom: vs(4)
+  },
+  legendLink: {
+    alignSelf: 'center',
+    marginTop: vs(8)
   }
 })
 

@@ -35,14 +35,29 @@ interface ButtonSimpleT {
   onPress?: () => void
   width?: number
   viewStyle?: StyleProp<ViewStyle>
+  testID?: string
+  accessibilityLabel?: string
+  accessibilityHint?: string
 }
 
 const ButtonSimple = memo<ButtonSimpleT>(
-  ({ title, onPress, h = 'h4', viewStyle }) => {
+  ({ title, onPress, h = 'h4', viewStyle, testID, accessibilityLabel, accessibilityHint }) => {
     const { container, fontStyle } = styles
     return (
-      <Pressable onPress={onPress} style={[container, viewStyle]}>
-        <Text numberOfLines={1} h={h} title={title} textStyle={fontStyle} />
+      <Pressable
+        onPress={onPress}
+        style={[container, viewStyle]}
+        testID={testID}
+        accessibilityLabel={accessibilityLabel || title}
+        accessibilityHint={accessibilityHint}
+        accessibilityRole="button"
+      >
+        {/*
+          Two lines at accessibility sizes keeps link-style buttons readable.
+          The fixed container still centers the text; wrapping is preferable to
+          truncation for low-vision users.
+        */}
+        <Text numberOfLines={2} h={h} title={title} textStyle={fontStyle} />
       </Pressable>
     )
   }

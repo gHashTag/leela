@@ -26,6 +26,8 @@ import {
 import { getTimeStamp } from '../../../screens/helper'
 import { OnlinePlayer, PostStore } from '../../../store'
 import { PostT } from '../../../types/types'
+import { BookmarkT } from '../../../utils/bookmarks'
+import { useFontScale } from '../../../utils/fontScale'
 
 import { usePostActions } from './usePostActions'
 import { usePostTranslation } from './usePostTranslation'
@@ -52,12 +54,14 @@ export const PostCard: React.FC<postCardI> = memo(
       isHideTranslate
     } = props
     const { user } = useRevenueCat()
-    const isPostPro = Boolean(item?.pro || user.pro)
+    const fontScale = useFontScale()
+    const isAccessibilityScale = fontScale >= 1.35
     const [isLoading, setIsLoading] = useState(false)
     const item: PostT | undefined =
       post ||
       PostStore.store.posts.find((a) => a.id === postId) ||
       PostStore.store.ownPosts.find((a) => a.id === postId)
+    const isPostPro = Boolean(item?.pro || user.pro)
     const { t, i18n } = useTranslation()
 
     const { transText, hideTranslate, text } = usePostTranslation({
@@ -102,7 +106,8 @@ export const PostCard: React.FC<postCardI> = memo(
       handleAdminMenu,
       handleShareLink,
       isLiked,
-      handleProfile
+      handleProfile,
+      ConfirmDialogComponent
     } = usePostActions({ isDetail, onPressCom, item, transText, hideTranslate })
     if (!item) {
       return <></>
@@ -120,13 +125,13 @@ export const PostCard: React.FC<postCardI> = memo(
     const heartColor = isLiked ? fuchsia : undefined
     const avaUrl = PostStore.getAvaById(item.ownerId)
 
-    const postBookmark = {
+    const postBookmark: BookmarkT = {
       id: item.id,
-      type: 'post' as const,
+      type: 'post',
       postId: item.id,
       text: item.text || '',
       plan: item.plan,
-      ownerName: fullName,
+      ownerName: fullName || undefined,
       savedAt: Date.now()
     }
 
@@ -147,7 +152,11 @@ export const PostCard: React.FC<postCardI> = memo(
                 {/* name, create date */}
                 <Space height={vs(6.5)} />
                 <View style={headerName}>
-                  <Text numberOfLines={1} h={'h6'} title={fullName as string} />
+                  <Text
+                    numberOfLines={isAccessibilityScale ? 2 : 1}
+                    h={'h6'}
+                    title={fullName as string}
+                  />
                   {isPostPro && (
                     <>
                       <Space width={s(6)} />
@@ -157,7 +166,7 @@ export const PostCard: React.FC<postCardI> = memo(
                 </View>
                 <Text
                   h={'h5'}
-                  numberOfLines={1}
+                  numberOfLines={isAccessibilityScale ? 2 : 1}
                   textStyle={lightText}
                   title={`${date}`}
                 />
@@ -198,6 +207,8 @@ export const PostCard: React.FC<postCardI> = memo(
                 ionicons
                 name="chatbubble-outline"
                 size={iconSize}
+                accessibilityLabel={t('accessibility.comments', { count: commCount })}
+                testID="post-comment-button"
               />
               <ButtonVectorIcon
                 count={likeCount}
@@ -208,6 +219,10 @@ export const PostCard: React.FC<postCardI> = memo(
                 ionicons
                 name={heart}
                 size={iconSize}
+                accessibilityLabel={
+                  isLiked ? t('accessibility.unlike') : t('accessibility.like')
+                }
+                testID="post-like-button"
               />
               <ButtonVectorIcon
                 viewStyle={mediumBtn}
@@ -215,8 +230,13 @@ export const PostCard: React.FC<postCardI> = memo(
                 ionicons
                 name="md-link-outline"
                 onPress={handleShareLink}
+                accessibilityLabel={t('accessibility.sharePost')}
+                testID="post-share-button"
               />
-              <BookmarkButton bookmark={postBookmark} size={iconSize + s(2)} />
+              <BookmarkButton
+                bookmark={postBookmark}
+                size={iconSize + s(2)}
+              />
               {isAdmin && (
                 <ButtonVectorIcon
                   viewStyle={mediumBtn}
@@ -240,7 +260,8 @@ export const PostCard: React.FC<postCardI> = memo(
       )
     }
     return (
-      <Pressable onPress={goDetail} style={container}>
+      <>
+        <Pressable onPress={goDetail} style={container}>
         <View style={headerS}>
           <View style={avaContainer}>
             <PlanAvatar
@@ -255,8 +276,12 @@ export const PostCard: React.FC<postCardI> = memo(
           <View style={headerInfo}>
             {/* name, create date/email */}
             <Space height={vs(2)} />
-            <View style={headerName}>
-              <Text numberOfLines={1} h={'h6'} title={fullName as string} />
+            <View style={[headerName, isAccessibilityScale && styles.headerNameLarge]}>
+              <Text
+                numberOfLines={isAccessibilityScale ? 2 : 1}
+                h={'h6'}
+                title={fullName as string}
+              />
               {isPostPro && (
                 <>
                   <Space width={s(6)} />
@@ -270,9 +295,13 @@ export const PostCard: React.FC<postCardI> = memo(
               </Pressable> */}
             </View>
             <Space height={vs(5)} />
+            {/* ellipsizeMode so a clipped report ends in an ellipsis instead
+                of stopping mid-word, which read as broken text rather than as
+                "there is more". */}
             <HashtagFormat
               textStyle={textStyle}
               numberOfLines={8}
+              ellipsizeMode="tail"
               h={'h5'}
               title={text || ' '}
             />
@@ -332,6 +361,8 @@ export const PostCard: React.FC<postCardI> = memo(
           </View>
         </View>
       </Pressable>
+      <ConfirmDialogComponent />
+      </>
     )
   })
 )
@@ -379,7 +410,12 @@ const styles = StyleSheet.create({
   },
   headerName: {
     flexDirection: 'row',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
+    alignItems: 'center'
+  },
+  headerNameLarge: {
+    flexDirection: 'column',
+    alignItems: 'flex-start'
   },
   lightText: {
     color: lightGray,

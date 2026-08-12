@@ -19,11 +19,11 @@ import * as yup from 'yup'
 
 import {
   AppContainer,
-  Button,
   Input,
   KeyboardContainer,
-  Loading,
-  Space
+  LoadingButton,
+  Space,
+  TextError
 } from '../../../components'
 import {
   H,
@@ -54,6 +54,7 @@ const SignUpUsername = ({
   navigation
 }: SignUpUsernameT): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string>('')
   const { t } = useTranslation()
 
   const schema = useMemo(
@@ -85,23 +86,28 @@ const SignUpUsername = ({
   useNoBackHandler()
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+    setError('')
     setLoading(true)
-    const { firstName, lastName } = data
-    const { email } = route.params
-    await auth().currentUser?.updateProfile({
-      displayName: `${firstName} ${lastName}`
-    })
-    await createProfile({
-      email,
-      // @ts-ignore
-      uid: getUid(),
-      firstName,
-      lastName
-    })
-    fetchBusinesses()
-    navigation.navigate('SIGN_UP_AVATAR')
-    actionsDice.setOnline(true)
-    actionsDice.setPlayers(1)
+    try {
+      const { firstName, lastName } = data
+      const { email } = route.params
+      await auth().currentUser?.updateProfile({
+        displayName: `${firstName} ${lastName}`
+      })
+      await createProfile({
+        email,
+        // @ts-ignore
+        uid: getUid(),
+        firstName,
+        lastName
+      })
+      fetchBusinesses()
+      navigation.navigate('SIGN_UP_AVATAR')
+      actionsDice.setOnline(true)
+      actionsDice.setPlayers(1)
+    } catch (err) {
+      setError(t('authUnknownError'))
+    }
     setLoading(false)
   }
   const onError: SubmitErrorHandler<FieldValues> = (errors) => {
@@ -119,40 +125,44 @@ const SignUpUsername = ({
       title=" "
       iconLeft={null}
     >
-      {loading ? (
-        <Loading />
-      ) : (
-        <KeyboardContainer>
-          <ScrollView
-            contentContainerStyle={styles.container}
-            showsVerticalScrollIndicator={false}
-          >
-            <Space height={H / 5} />
-            <FormProvider {...methods}>
-              <Input
-                name="firstName"
-                placeholder={t('auth.firstName')}
-                autoCapitalize="none"
-                color={color}
-                additionalStyle={{ width: W - ms(140, 0.9) }}
-              />
-              <Input
-                name="lastName"
-                placeholder={t('auth.lastName')}
-                autoCapitalize="none"
-                color={color}
-                additionalStyle={{ width: W - ms(140, 0.9) }}
-              />
-              <Space height={vs(30)} />
-              <Button
-                title={t('auth.signUp')}
-                onPress={methods.handleSubmit(onSubmit, onError)}
-              />
-              <Space height={vs(10)} />
-            </FormProvider>
-          </ScrollView>
-        </KeyboardContainer>
-      )}
+      <KeyboardContainer>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
+          <Space height={H / 5} />
+          <FormProvider {...methods}>
+            <Input
+              name="firstName"
+              placeholder={t('auth.firstName')}
+              autoCapitalize="none"
+              color={color}
+              additionalStyle={{ width: W - ms(140, 0.9) }}
+            />
+            <Input
+              name="lastName"
+              placeholder={t('auth.lastName')}
+              autoCapitalize="none"
+              color={color}
+              additionalStyle={{ width: W - ms(140, 0.9) }}
+            />
+            {error !== '' && (
+              <>
+                <Space height={vs(10)} />
+                <TextError title={error} textStyle={styles.errorText} />
+              </>
+            )}
+            <Space height={vs(30)} />
+            <LoadingButton
+              title={t('auth.signUp')}
+              loading={loading}
+              onPress={methods.handleSubmit(onSubmit, onError)}
+              haptic="impactMedium"
+            />
+            <Space height={vs(10)} />
+          </FormProvider>
+        </ScrollView>
+      </KeyboardContainer>
     </AppContainer>
   )
 }
@@ -160,6 +170,9 @@ const SignUpUsername = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center'
+  },
+  errorText: {
+    textAlign: 'center'
   }
 })
 

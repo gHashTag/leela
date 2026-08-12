@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next'
 
 import Navigation from './Navigation'
 import { RevenueCatProvider } from './providers/RevenueCatProvider'
+import { ErrorBoundary } from './components'
 import { markSessionCrashed, markSessionStarted } from './utils/sessionHealth'
 import { syncRTLDirection } from './utils/rtl'
 import { updateAndroidBadgeCount } from './utils/notifications/NotificationHelper'
@@ -103,7 +104,9 @@ function AppWithProviders() {
     <SafeAreaProvider>
       <GestureHandlerRootView style={styles.flexOne}>
         <RevenueCatProvider>
-          <Navigation />
+          <ErrorBoundary>
+            <Navigation />
+          </ErrorBoundary>
         </RevenueCatProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>

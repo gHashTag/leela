@@ -14,6 +14,7 @@ import {
   CommentCard,
   EmptyComments,
   Header,
+  InlineCommentInput,
   Loading,
   PostCard,
   Space
@@ -34,6 +35,7 @@ interface DetailPostI {
 
 export const DetailPostScreen: React.FC<DetailPostI> = observer(
   ({ navigation, route }) => {
+    const { t } = useTranslation()
     const { postId, comment, translatedText, hideTranslate } = route.params
 
     const curItem: PostT | undefined = PostStore.store.posts.find(
@@ -87,7 +89,6 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
       }
     }, [curItem, navigation, t])
 
-    const { t } = useTranslation()
     useFocusEffect(
       useCallback(() => {
         if (!curItem) return
@@ -124,48 +125,63 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
       return <Loading />
     }
     return (
-      <FlatList
-        removeClippedSubviews={false}
-        ListHeaderComponent={
-          <>
-            <Header
-              textAlign="center"
-              iconLeft=":back:"
-              iconRight={null}
-              title={t('online-part.report')}
-              onPress={navigation.goBack}
+      <View style={styles.container}>
+        <FlatList
+          removeClippedSubviews={false}
+          style={styles.list}
+          ListHeaderComponent={
+            <>
+              <Header
+                textAlign="center"
+                iconLeft=":back:"
+                iconRight={null}
+                title={t('online-part.report')}
+                onPress={navigation.goBack}
+              />
+              <PostCard
+                postId={postId}
+                isDetail
+                translatedText={translatedText}
+                isHideTranslate={hideTranslate}
+                onPressCom={newComment}
+              />
+            </>
+          }
+          ListFooterComponent={
+            <>
+              <View style={styles.line} />
+              <Space height={vs(30)} />
+            </>
+          }
+          keyExtractor={(a) => a.id}
+          ListEmptyComponent={<EmptyComments />}
+          data={commentData}
+          renderItem={({ item, index }) => (
+            <CommentCard
+              item={item}
+              index={index}
+              endIndex={commentData.length - 1}
             />
-            <PostCard
-              postId={postId}
-              isDetail
-              translatedText={translatedText}
-              isHideTranslate={hideTranslate}
-              onPressCom={newComment}
-            />
-          </>
-        }
-        ListFooterComponent={
-          <>
-            <View style={styles.line} />
-            <Space height={vs(30)} />
-          </>
-        }
-        keyExtractor={(a) => a.id}
-        ListEmptyComponent={<EmptyComments />}
-        data={commentData}
-        renderItem={({ item, index }) => (
-          <CommentCard
-            item={item}
-            index={index}
-            endIndex={commentData.length - 1}
+          )}
+        />
+        {curItem && (
+          <InlineCommentInput
+            postId={curItem.id}
+            postOwner={curItem.ownerId}
           />
         )}
-      />
+      </View>
     )
   }
 )
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1
+  },
+  list: {
+    flex: 1
+  },
   line: {
     width: '100%',
     borderBottomColor: lightGray,

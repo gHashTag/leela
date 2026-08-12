@@ -19,11 +19,10 @@ import * as yup from 'yup'
 
 import {
   AppContainer,
-  Button,
   CenterView,
   Input,
   KeyboardContainer,
-  Loading,
+  LoadingButton,
   Space,
   TextError
 } from '../../../components'
@@ -105,33 +104,31 @@ export const Forgot = ({ route, navigation }: ForgotT) => {
       message={errorMessage}
       colorLeft={color}
     >
-      {loading ? (
-        <Loading />
-      ) : (
-        <KeyboardContainer>
-          <CenterView>
-            <FormProvider {...methods}>
-              <Input
-                name="email"
-                placeholder="E-mail"
-                autoCapitalize="none"
-                color={color}
-                additionalStyle={{ width: W - ms(140, 0.9) }}
-              />
-              <Space height={vs(15)} />
-              {errorMessage !== '' && (
-                <TextError title={errorMessage} textStyle={styles.errorText} />
-              )}
-              <Space height={vs(10)} />
-              <Button
-                title={t('actions.confirm')}
-                onPress={methods.handleSubmit(onSubmit, onError)}
-              />
-            </FormProvider>
+      <KeyboardContainer>
+        <CenterView>
+          <FormProvider {...methods}>
+            <Input
+              name="email"
+              placeholder="E-mail"
+              autoCapitalize="none"
+              color={color}
+              additionalStyle={{ width: W - ms(140, 0.9) }}
+            />
+            <Space height={vs(15)} />
+            {errorMessage !== '' && (
+              <TextError title={errorMessage} textStyle={styles.errorText} />
+            )}
             <Space height={vs(10)} />
-          </CenterView>
-        </KeyboardContainer>
-      )}
+            <LoadingButton
+              title={t('actions.confirm')}
+              loading={loading}
+              onPress={methods.handleSubmit(onSubmit, onError)}
+              haptic="impactMedium"
+            />
+          </FormProvider>
+          <Space height={vs(10)} />
+        </CenterView>
+      </KeyboardContainer>
     </AppContainer>
   )
 }

@@ -10,7 +10,6 @@ import { dimGray, gray } from '../../../constants'
 import { Pressable } from '../../Pressable'
 import { Space } from '../../Space'
 import { minTouchTarget } from '../../../utils/hitTarget'
-
 interface ButtonVectorIconI {
   name: string
   size?: number
@@ -21,6 +20,9 @@ interface ButtonVectorIconI {
   count?: number
   ionicons?: boolean
   onPressIn?: () => void
+  accessibilityLabel?: string
+  accessibilityHint?: string
+  testID?: string
 }
 
 export function ButtonVectorIcon({
@@ -32,18 +34,27 @@ export function ButtonVectorIcon({
   viewStyle,
   count,
   ionicons,
-  onPressIn
+  onPressIn,
+  accessibilityLabel,
+  accessibilityHint,
+  testID
 }: ButtonVectorIconI) {
   const scheme = useColorScheme()
   const colorTheme = scheme === 'dark' ? dimGray : gray
   const summaryIconSize = iconSize ? iconSize : size
   const summaryIoniconsSize = iconSize ? iconSize + s(2) : size + s(2)
+  const label = accessibilityLabel || `${ionicons ? 'Ionicons' : 'FontAwesome'} ${name}`
+
   return (
     <Pressable
       style={[minTouchTarget, viewStyle]}
       onPress={onPress}
-      activeOpacity={0.7}
+      pressedStyle={{ opacity: 0.7 }}
       onPressIn={onPressIn}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={accessibilityHint}
+      testID={testID}
     >
       {ionicons ? (
         <Ionicons
@@ -65,6 +76,7 @@ export function ButtonVectorIcon({
             title={count.toString()}
             h={'h5'}
             textStyle={{ fontSize: size, color: colorTheme }}
+            accessibilityElementsHidden
           />
         </>
       )}

@@ -1,4 +1,4 @@
-import { computeStreak, getLocalDateString } from '../components/StreakJournal'
+import { computeStreak, getLocalDateString, JournalEntry } from '../components/StreakJournal'
 import { HistoryT } from '../types/types'
 
 /**
@@ -6,9 +6,10 @@ import { HistoryT } from '../types/types'
  * The game records timestamps in milliseconds, while the streak helpers
  * expect ISO calendar dates in the user's local timezone.
  */
-const historyToDateEntry = (history: HistoryT[]) =>
+const historyToDateEntry = (history: HistoryT[]): JournalEntry[] =>
   history.map((item) => ({
-    date: getLocalDateString(new Date(item.createDate))
+    date: getLocalDateString(new Date(item.createDate)),
+    text: ''
   }))
 
 /**

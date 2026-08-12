@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-import { s } from 'react-native-size-matters'
+import { s, vs } from 'react-native-size-matters'
 
 import { Text } from '../../'
 import { Pressable } from '../../Pressable'
@@ -34,12 +34,17 @@ const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
   const { t } = useTranslation()
 
   return (
-    <View>
-      <Text h={'h3'} title={`${t('selectPlayers')}`} />
-      <Space height={s(20)} />
+    <View testID="buttons-selector">
       <View style={styles.container}>
         {data.map((a) => (
-          <Pressable key={a} onPress={() => setSelected(a)}>
+          <Pressable
+            key={a}
+            onPress={() => setSelected(a)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: selected === a }}
+            accessibilityLabel={t('selectPlayers.playerCount', { count: a })}
+            testID={`player-count-${a}`}
+          >
             {selected === a ? (
               <Text
                 h={'h0'}
@@ -56,9 +61,11 @@ const ButtonsSelector = observer(({ onPress }: ButtonsSelectorT) => {
           </Pressable>
         ))}
       </View>
+      <Space height={vs(24)} />
       <Button
         title={t('actions.start')}
         onPress={() => onPress(selected - 1)}
+        testID="select-players-start-button"
       />
     </View>
   )

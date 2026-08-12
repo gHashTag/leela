@@ -8,6 +8,8 @@ import { Text } from '../'
 import { H, W } from '../../constants'
 import { DiceStore, OfflinePlayers, OnlinePlayer } from '../../store'
 import { playPlaneSound } from '../../utils/soundEffects'
+import { useAppTheme } from '../../utils/useAppTheme'
+import { useReducedMotion } from '../../utils/useReducedMotion'
 import { Gem } from '../Gem'
 import { ICONS } from './images'
 
@@ -34,14 +36,38 @@ const getPlaneNumber = (cell: number): number => {
   return cell
 }
 
+const SNAKE_HEADS = [12, 16, 24, 29, 44, 52, 55, 61, 63, 72]
+const ARROW_BASES = [10, 17, 20, 22, 27, 28, 37, 45, 46, 54]
+
+const getCellFeature = (
+  cell: number,
+  t: (key: string, options?: Record<string, any>) => string | any
+): string | undefined => {
+  if (SNAKE_HEADS.includes(cell)) {
+    return t('accessibility.snakeHead', { defaultValue: 'head of a snake' })
+  }
+  if (ARROW_BASES.includes(cell)) {
+    return t('accessibility.arrowBase', { defaultValue: 'foot of an arrow' })
+  }
+  if (cell === 68) {
+    return t('accessibility.finalCell', { defaultValue: 'final cell' })
+  }
+  return undefined
+}
+
 export const GameBoard = observer(() => {
   const scheme = useColorScheme()
+  const theme = useAppTheme()
+  const highContrast = theme === 'highContrast'
+  const reducedMotion = useReducedMotion()
   const { t } = useTranslation()
 
   const imgObj = useMemo(() => {
-    const image = ICONS.find((x) => {
-      return x.title === scheme
-    })?.path
+    const image = highContrast
+      ? undefined
+      : ICONS.find((x) => {
+          return x.title === scheme
+        })?.path
     if (image) {
       const { width, height } = Image.resolveAssetSource(image)
       const aspect = width / height
@@ -49,7 +75,7 @@ export const GameBoard = observer(() => {
     } else {
       return { image: '', aspect: 1 }
     }
-  }, [scheme])
+  }, [scheme, highContrast])
 
   const rows = [
     [72, 71, 70, 69, 68, 67, 66, 65, 64],
@@ -103,8 +129,12 @@ export const GameBoard = observer(() => {
       accessibilityRole="image"
       accessibilityLabel={`${boardLabel}: ${currentCellLabel}`}
       accessibilityLiveRegion="polite"
+      accessibilityHint={reducedMotion ? undefined : t('accessibility.gameBoardHint', { defaultValue: 'Swipe to explore cells from the bottom row to the top' })}
     >
-      <Image source={imgObj.image} style={styles.bgImage} resizeMode="cover" />
+      {!highContrast && (
+        <Image source={imgObj.image} style={styles.bgImage} resizeMode="cover" />
+      )}
+      {highContrast && <View style={styles.highContrastBackground} />}
       <View style={styles.gameBoardContainer}>
         <View style={styles.container}>
           {rows.map((a, i) => (
@@ -113,29 +143,39 @@ export const GameBoard = observer(() => {
                 const isCurrentCell = b === currentPlan
                 const isPreviousCell = previousPlan !== null && b === previousPlan
                 const isNextCell = nextPlan !== null && b === nextPlan
+                const cellTextColor = highContrast
+                  ? isCurrentCell || isNextCell
+                    ? '#000000'
+                    : '#FFFFFF'
+                  : undefined
                 const cellPlane = getPlaneNumber(b)
                 const cellPlaneNameKey = `accessibility.planeNames.${cellPlane}` as const
                 const cellPlaneName =
                   cellPlane <= 7
                     ? (t(cellPlaneNameKey, { defaultValue: t('liberation') }) as string)
                     : (t('liberation') as string)
+                const cellFeature = getCellFeature(b, t)
+                const cellLabel = cellFeature
+                  ? `${t('accessibility.cell', { cell: b, defaultValue: `Cell ${b}` })}, ${cellPlaneName}, ${cellFeature}`
+                  : `${t('accessibility.cell', { cell: b, defaultValue: `Cell ${b}` })}, ${cellPlaneName}`
                 return (
                   <View
                     key={index}
                     style={[
                       styles.box,
-                      isCurrentCell && styles.activeBox,
-                      isPreviousCell && styles.previousBox,
-                      isNextCell && styles.nextBox
+                      highContrast && styles.highContrastBox,
+                      isCurrentCell && (highContrast ? styles.highContrastActiveBox : styles.activeBox),
+                      isPreviousCell && (highContrast ? styles.highContrastPreviousBox : styles.previousBox),
+                      isNextCell && (highContrast ? styles.highContrastNextBox : styles.nextBox)
                     ]}
-                    accessible={isCurrentCell}
+                    accessible
                     accessibilityLabel={
                       isCurrentCell
                         ? t('accessibility.currentCell', {
                             cell: b,
                             plane: cellPlaneName
                           })
-                        : undefined
+                        : cellLabel
                     }
                   >
                     <View style={styles.numberStyle} key={index}>
@@ -149,6 +189,7 @@ export const GameBoard = observer(() => {
                         key={index}
                         h={'h11'}
                         title={b !== 68 ? b.toString() : ' '}
+                        oneColor={cellTextColor}
                       />
                     </View>
                   </View>
@@ -210,6 +251,33 @@ const styles = StyleSheet.create({
     height: '100%',
     position: 'absolute',
     top: mvs(26, 1.6) - imageTopMargin
+  },
+  highContrastBackground: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: mvs(26, 1.6) - imageTopMargin,
+    backgroundColor: '#000000'
+  },
+  highContrastBox: {
+    backgroundColor: '#000000',
+    borderWidth: 2,
+    borderColor: '#FFFFFF'
+  },
+  highContrastActiveBox: {
+    backgroundColor: '#FFEB3B',
+    borderWidth: 3,
+    borderColor: '#000000'
+  },
+  highContrastPreviousBox: {
+    backgroundColor: '#FF5252',
+    borderWidth: 3,
+    borderColor: '#000000'
+  },
+  highContrastNextBox: {
+    backgroundColor: '#69F0AE',
+    borderWidth: 3,
+    borderColor: '#000000'
   },
   numberStyle: { bottom: 3 }
 })

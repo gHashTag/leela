@@ -22,14 +22,15 @@ interface ButtonLinkT {
   viewStyle?: StyleProp<ViewStyle>
   onPress?: () => void
   textStyle?: StyleProp<TextStyle>
+  testID?: string
 }
 
 const ButtonLink = memo<ButtonLinkT>(
-  ({ title, viewStyle, textStyle, onPress }) => {
+  ({ title, viewStyle, textStyle, onPress, testID }) => {
     const { container, h } = styles
 
     return (
-      <Pressable onPress={onPress} style={[container, viewStyle]}>
+      <Pressable onPress={onPress} style={[container, viewStyle]} testID={testID}>
         <Text h={'h5'} title={title} textStyle={[h, textStyle]} />
       </Pressable>
     )

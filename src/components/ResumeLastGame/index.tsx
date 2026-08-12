@@ -44,6 +44,7 @@ export const ResumeLastGame = observer(({ onResume }: ResumeLastGameT) => {
       testID="resume-last-game"
       accessibilityRole="button"
       accessibilityLabel={t('resumeLastGame.accessibilityLabel')}
+      accessibilityHint={t('resumeLastGame.hint')}
     >
       <View style={styles.row}>
         <Text h="h11" title="🎲" />

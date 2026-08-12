@@ -6,6 +6,7 @@ import { s, vs } from 'react-native-size-matters'
 
 import { Text } from '../'
 import { lightGray, primary } from '../../constants'
+import { triggerHaptic } from '../../utils/haptics'
 import {
   loadReaction,
   ReactionType,
@@ -39,6 +40,7 @@ export const Reactions = memo(({ postId, commentId }: ReactionsProps) => {
   }, [postId, commentId])
 
   const handlePress = async (reaction: ReactionType) => {
+    triggerHaptic(selected === reaction ? 'impactLight' : 'impactMedium')
     const next = selected === reaction ? null : reaction
     setSelected(next)
     await saveReaction(postId, next, commentId)
