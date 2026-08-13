@@ -158,6 +158,15 @@ const board = createBoard(el.canvas);
  * could disagree with the engine it is loaded into.
  */
 let rolls: number[][] = [];
+
+/**
+ * Which seat threw last, or null before anyone has.
+ *
+ * Held here and written to storage rather than worked out on the way back:
+ * after a non-six the turn has already moved on, so the seat holding the turn
+ * is not the one whose number is on the die.
+ */
+let lastThrower: number | null = null;
 let session = createSession('device', [{ id: SEAT }], LEGACY_MOBILE);
 
 /** Seats a table of `count`, keeping whatever the seats already had. */
@@ -210,6 +219,7 @@ const companion = new Companion({ language });
 const keep = (): void =>
   write(store, {
     turnIndex: session.turnIndex,
+    lastThrower,
     seats: session.players.map((player, at) => ({
       id: player.id,
       deity: deities[at]?.id ?? deityForSeat(at).id,
@@ -783,9 +793,17 @@ el.bringFile.addEventListener('change', () => {
   });
 });
 
-const showFace = (value: number): void => {
+/**
+ * @param waiting true when the face is being restored rather than thrown.
+ *
+ * `data-thrown` is not "there is a face"; it is what the stylesheet uses to run
+ * the pulse that says the die is a control worth pressing. A returning player
+ * has a number to look at and still has to throw, so the two came apart the
+ * moment the face survived a reload: the pips come back, the invitation stays.
+ */
+const showFace = (value: number, waiting = false): void => {
   const cells = pipsFor(value);
-  el.die.dataset.thrown = String(isFace(value));
+  el.die.dataset.thrown = String(isFace(value) && !waiting);
   el.face.replaceChildren(
     ...Array.from({ length: 9 }, (_, at) =>
       document.createElement(cells.includes(at + 1) ? 'i' : 'span'),
@@ -977,6 +995,7 @@ const takeTurn = async (): Promise<void> => {
   if (visiting) stopVisiting();
 
   const threw = seatAt();
+  lastThrower = threw;
   const mover = seat().id;
   const turn = throwFor(session, rollDie());
   session = turn.session;
@@ -1121,7 +1140,10 @@ el.compose.addEventListener('submit', (event) => {
 
 // --- open -------------------------------------------------------------------
 
-showFace(0);
+// The throw the player last watched, from the seat that actually made it — not
+// from whoever holds the turn now, which after a non-six is somebody else. Zero
+// when nothing is known, and zero is no face at all.
+showFace(rolls[saved.lastThrower ?? -1]?.at(-1) ?? 0, true);
 showDetent('half');
 showStanding(null);
 

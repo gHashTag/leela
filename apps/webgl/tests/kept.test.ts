@@ -47,7 +47,7 @@ const refusing = (): Store => ({
   },
 });
 
-const NOTHING = { seats: [], turnIndex: 0, deity: null, why: null };
+const NOTHING = { seats: [], turnIndex: 0, lastThrower: null, deity: null, why: null };
 
 /** A game a few moves in, built by the engine rather than by hand. */
 const THROWS = [6, 3, 4, 2];
@@ -63,7 +63,7 @@ describe('coming back to a game', () => {
   it('returns the game that was saved', () => {
     const store = fakeStore();
     const state = played();
-    write(store, { turnIndex: 0, seats: [{ id: 'p1', deity: 'durga', state, rolls: THROWS }] });
+    write(store, { turnIndex: 0, lastThrower: null, seats: [{ id: 'p1', deity: 'durga', state, rolls: THROWS }] });
 
     const reading = read(store, LEGACY_MOBILE);
     expect(reading.why).toBeNull();
@@ -142,7 +142,7 @@ describe('coming back to a game', () => {
   /** A player who has not entered yet is a real game, and a resumable one. */
   it('keeps a game that has not begun', () => {
     const store = fakeStore();
-    write(store, { turnIndex: 0, seats: [{ id: 'p1', deity: 'vishnu', state: initialState(), rolls: [] }] });
+    write(store, { turnIndex: 0, lastThrower: null, seats: [{ id: 'p1', deity: 'vishnu', state: initialState(), rolls: [] }] });
     const reading = read(store, LEGACY_MOBILE);
     expect(reading.seats[0]?.state.loka).toBe(WIN_LOKA);
     expect(reading.seats[0]?.state.is_finished).toBe(true);
@@ -151,7 +151,7 @@ describe('coming back to a game', () => {
   /** Round trip: what the engine produces must survive being written and read. */
   it('returns a game the engine can go on playing', () => {
     const store = fakeStore();
-    write(store, { turnIndex: 0, seats: [{ id: 'p1', deity: 'indra', state: played(), rolls: [] }] });
+    write(store, { turnIndex: 0, lastThrower: null, seats: [{ id: 'p1', deity: 'indra', state: played(), rolls: [] }] });
     const resumed = read(store, LEGACY_MOBILE).seats[0]?.state ?? null;
     expect(resumed).not.toBeNull();
     const next = applyRoll(resumed as NonNullable<typeof resumed>, 3, LEGACY_MOBILE);
@@ -192,13 +192,13 @@ describe('a storage that refuses', () => {
   it('opens the game rather than throwing, in every direction', () => {
     expect(() => read(refusing(), LEGACY_MOBILE)).not.toThrow();
     expect(read(refusing(), LEGACY_MOBILE)).toEqual(NOTHING);
-    expect(() => write(refusing(), { turnIndex: 0, seats: [{ id: 'p1', deity: 'agni', state: played(), rolls: [] }] })).not.toThrow();
+    expect(() => write(refusing(), { turnIndex: 0, lastThrower: null, seats: [{ id: 'p1', deity: 'agni', state: played(), rolls: [] }] })).not.toThrow();
     expect(() => forget(refusing())).not.toThrow();
   });
 
   it('opens the game when there is no storage at all', () => {
     expect(read(null, LEGACY_MOBILE)).toEqual(NOTHING);
-    expect(() => write(null, { turnIndex: 0, seats: [{ id: 'p1', deity: 'agni', state: played(), rolls: [] }] })).not.toThrow();
+    expect(() => write(null, { turnIndex: 0, lastThrower: null, seats: [{ id: 'p1', deity: 'agni', state: played(), rolls: [] }] })).not.toThrow();
     expect(() => forget(null)).not.toThrow();
   });
 });
@@ -206,7 +206,7 @@ describe('a storage that refuses', () => {
 describe('forgetting', () => {
   it('leaves nothing to come back to', () => {
     const store = fakeStore();
-    write(store, { turnIndex: 0, seats: [{ id: 'p1', deity: 'indra', state: played(), rolls: [] }] });
+    write(store, { turnIndex: 0, lastThrower: null, seats: [{ id: 'p1', deity: 'indra', state: played(), rolls: [] }] });
     forget(store);
     expect(read(store, LEGACY_MOBILE)).toEqual(NOTHING);
   });
@@ -306,7 +306,7 @@ describe('a table of several', () => {
   });
 
   it('gives an unnamed seat a name rather than an empty one', () => {
-    const reading = read(stored({ turnIndex: 0, seats: [{ state: played(), rolls: [] }] }), LEGACY_MOBILE);
+    const reading = read(stored({ turnIndex: 0, lastThrower: null, seats: [{ state: played(), rolls: [] }] }), LEGACY_MOBILE);
     expect(reading.seats[0]?.id).toBe('p1');
   });
 });
@@ -347,7 +347,7 @@ describe('a saved history is checked under the rules it was played under', () =>
 
   const savedUnder = (rules: RuleSet) => {
     const state = stateAfter(SCRIPT, rules);
-    return stored({ turnIndex: 0, seats: [{ id: 'p1', deity: 'durga', state, rolls: SCRIPT }] });
+    return stored({ turnIndex: 0, lastThrower: null, seats: [{ id: 'p1', deity: 'durga', state, rolls: SCRIPT }] });
   };
 
   for (const [name, rules] of RULESETS) {
@@ -377,5 +377,73 @@ describe('a saved history is checked under the rules it was played under', () =>
       // losing the game as well is two.
       expect(reading.seats[0]?.state.loka).toBe(stateAfter(SCRIPT, LEGACY_MOBILE).loka);
     }
+  });
+});
+
+/**
+ * Who threw last, which is the one fact the die needs and the one the storage
+ * did not have.
+ *
+ * The tempting rule was "the die shows the last throw of the seat holding the
+ * turn". It is false five throws in six: `advance` rotates on anything but a
+ * six, so by the time the game is saved the holder is somebody who has not
+ * thrown yet. That is the same one-rotation-off defect this app already paid
+ * for once, in the one widget with no sentence beside it to say whose number it
+ * is. So it is stored, and what is stored is validated.
+ */
+describe('who threw last', () => {
+  const table = (lastThrower: unknown) =>
+    stored({
+      turnIndex: 0,
+      lastThrower,
+      seats: [
+        { id: 'p1', deity: 'durga', state: played(), rolls: THROWS },
+        { id: 'p2', deity: 'krishna', state: played(), rolls: THROWS },
+      ],
+    });
+
+  it('comes back as it went in', () => {
+    expect(read(table(1), LEGACY_MOBILE).lastThrower).toBe(1);
+    expect(read(table(0), LEGACY_MOBILE).lastThrower).toBe(0);
+  });
+
+  /**
+   * Refused to null, never clamped to zero. `turnIndex` clamps because somebody
+   * must hold the turn; a throw need not have happened at all, and seat one's
+   * number on the die would be a throw this surface invented.
+   */
+  it('refuses anything that is not a seat, and refuses it to nobody', () => {
+    for (const bad of [2, 7, -1, 1.5, '1', null, undefined, NaN, Infinity, {}, []]) {
+      expect(read(table(bad), LEGACY_MOBILE).lastThrower).toBeNull();
+    }
+  });
+
+  /** A record written before this field existed. */
+  it('reads a record that never had one as nobody', () => {
+    const before = stored({
+      turnIndex: 0,
+      seats: [{ id: 'p1', deity: 'durga', state: played(), rolls: THROWS }],
+    });
+    expect(read(before, LEGACY_MOBILE).lastThrower).toBeNull();
+  });
+
+  it('is nobody when there is no table at all', () => {
+    expect(read(fakeStore(), LEGACY_MOBILE).lastThrower).toBeNull();
+  });
+
+  /**
+   * The case that makes "blank" mean "no throw to show" rather than "never
+   * thrown": a seat named as last thrower whose history was refused keeps its
+   * square and loses its rolls, so there is no number to put on the die.
+   */
+  it('names a seat whose history was dropped, and that seat has no throws left', () => {
+    const wrong = stored({
+      turnIndex: 0,
+      lastThrower: 0,
+      seats: [{ id: 'p1', deity: 'durga', state: played(), rolls: [1, 1, 1] }],
+    });
+    const reading = read(wrong, LEGACY_MOBILE);
+    expect(reading.lastThrower).toBe(0);
+    expect(reading.seats[0]?.rolls).toEqual([]);
   });
 });

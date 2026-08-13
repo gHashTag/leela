@@ -42,6 +42,18 @@ export interface Kept {
   readonly seats: readonly KeptSeat[];
   /** Index into `seats` of whoever holds the turn. */
   readonly turnIndex: number;
+  /**
+   * Index into `seats` of whoever threw last, or null before anyone has.
+   *
+   * Stored rather than derived, and that is the point. The die shows the throw
+   * that just happened, so restoring its face needs to know whose throw it was
+   * — and after a non-six the turn has already moved on, so the seat holding
+   * the turn is *not* the one that threw. Deriving it from `turnIndex` and the
+   * tails of each seat's rolls would mean re-implementing `grantsExtraTurn` and
+   * `keepsTurn` in this surface, and would still be undecidable for a record
+   * this app did not write.
+   */
+  readonly lastThrower: number | null;
 }
 
 /**
@@ -80,6 +92,15 @@ export interface Reading {
   /** Whose turn, an index into `seats`. Zero when there is no table. */
   readonly turnIndex: number;
   /**
+   * Who threw last, or null when that is not known.
+   *
+   * Null rather than zero, unlike `turnIndex`. A turn has to belong to
+   * somebody, so falling back to the first seat is right there; a *throw* need
+   * not have happened at all, and falling back to seat one would put seat one's
+   * number on the die as though they had just thrown it.
+   */
+  readonly lastThrower: number | null;
+  /**
    * Who was playing, if the record named anyone — **even when the game itself
    * was refused**.
    *
@@ -101,7 +122,7 @@ export interface Reading {
   readonly why: string | null;
 }
 
-const NOTHING: Reading = { seats: [], turnIndex: 0, deity: null, why: null };
+const NOTHING: Reading = { seats: [], turnIndex: 0, lastThrower: null, deity: null, why: null };
 
 /** A deity id off a record, or null. Never validated here — `deityFor` does. */
 const deityOf = (record: { deity?: unknown }): string | null =>
@@ -207,14 +228,26 @@ export function read(store: Store | null, rules: RuleSet): Reading {
     if (read.seat) seats.push(read.seat);
   }
 
-  if (seats.length === 0) return { seats: [], turnIndex: 0, deity, why: trouble };
+  if (seats.length === 0) return { seats: [], turnIndex: 0, lastThrower: null, deity, why: trouble };
 
   const turn = Number.isInteger(record.turnIndex) ? (record.turnIndex as number) : 0;
+  // Refused rather than clamped, which is the opposite of `turnIndex` above and
+  // deliberately so: an unusable turn falls back to the first seat because
+  // somebody must hold it, while an unusable last-thrower falls back to nobody,
+  // because putting seat one's number on the die would be this surface claiming
+  // a throw that may never have happened.
+  const thrower = (record as { lastThrower?: unknown }).lastThrower;
+  const threw =
+    Number.isInteger(thrower) && (thrower as number) >= 0 && (thrower as number) < seats.length
+      ? (thrower as number)
+      : null;
+
   return {
     seats,
     // Clamped rather than trusted: a turn index past the end of the table is a
     // table nobody can play, and it is one arithmetic slip in another version.
     turnIndex: turn >= 0 && turn < seats.length ? turn : 0,
+    lastThrower: threw,
     deity,
     why: trouble,
   };
