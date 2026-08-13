@@ -1,4 +1,11 @@
-import { LEGACY_MOBILE, WIN_LOKA, type MoveEvent } from '@leela/engine';
+import {
+  LEGACY_MOBILE,
+  WIN_LOKA,
+  type MoveEvent,
+  createSession,
+  currentPlayer,
+  rollDie,
+} from '@leela/engine';
 
 import { directionOf, messageFor, planFor, resolveLanguage, titlesFor } from './canon';
 import { describeMove } from '@leela/content';
@@ -19,7 +26,7 @@ import {
   writeIntention,
 } from './written';
 import { isFace, pipsFor } from './die';
-import { Play, type Hop } from './play';
+import { entered, throwFor, type Hop } from './play';
 import { createBoard } from './scene';
 import { dragged, stepped, type Detent, type Heights } from './sheet';
 import { css } from './theme';
@@ -135,9 +142,28 @@ const store = browserStore();
 const saved = read(store);
 
 const board = createBoard(el.canvas);
-// `undefined` takes the default roller; the third argument is the resumed game,
-// and `Play` falls back to `initialState()` when there is none.
-const play = new Play(LEGACY_MOBILE, undefined, saved.state ?? undefined);
+
+/**
+ * The table.
+ *
+ * One seat for now, and the engine's `Session` rather than a wrapper of this
+ * app's own: it has held several seats, a turn index and the rotation between
+ * them all along. Resuming replaces the seat's state, which is the only part of
+ * a session that belongs in storage — a `RuleSet` is code, and a saved game
+ * carrying one would be a saved game that could disagree with the engine it is
+ * loaded into.
+ */
+let session = createSession('device', [{ id: SEAT }], LEGACY_MOBILE);
+if (saved.state) {
+  const resumed = saved.state;
+  session = {
+    ...session,
+    players: session.players.map((player) => ({ ...player, state: resumed })),
+  };
+}
+
+/** Whoever holds the turn. Read rather than kept, so it cannot go stale. */
+const seat = () => currentPlayer(session);
 
 /**
  * Every throw of this game, in order — the history, and the only copy of it.
@@ -149,7 +175,7 @@ const play = new Play(LEGACY_MOBILE, undefined, saved.state ?? undefined);
 const rolls: number[] = [...saved.rolls];
 const companion = new Companion({ language });
 
-const keep = (): void => write(store, { state: play.state, deity: deity.id, rolls });
+const keep = (): void => write(store, { state: seat().state, deity: deity.id, rolls });
 
 // --- who is playing ---------------------------------------------------------
 
@@ -591,7 +617,7 @@ const showFace = (value: number): void => {
 };
 
 const showStanding = (event: MoveEvent | null): void => {
-  const standing = screenFor(language, play.plan, play.entered, titleOf, event);
+  const standing = screenFor(language, seat().state.loka, entered(seat()), titleOf, event);
   el.planNumber.textContent = standing.number;
   el.planTitle.textContent = standing.title;
   el.progress.value = standing.progress;
@@ -621,7 +647,7 @@ const stopVisiting = (): void => {
   el.visiting.hidden = true;
   el.visitingPlan.hidden = true;
   el.thread.hidden = false;
-  board.focus(play.entered ? play.plan : null);
+  board.focus(entered(seat()) ? seat().state.loka : null);
   board.draw();
 };
 
@@ -640,16 +666,16 @@ el.canvas.addEventListener('pointerup', (event) => {
   if (travelled > 8) return;
   const plan = board.planAt(event.clientX, event.clientY);
   if (plan === null) return;
-  if (play.entered && plan === play.plan) stopVisiting();
+  if (entered(seat()) && plan === seat().state.loka) stopVisiting();
   else visit(plan);
 });
 
 // --- the throw --------------------------------------------------------------
 
 const settle = (): void => {
-  const { x, z } = planPosition(play.plan);
+  const { x, z } = planPosition(seat().state.loka);
   board.token(SEAT)?.position.set(x, PIECE_LIFT, z);
-  if (!visiting) board.focus(play.entered ? play.plan : null);
+  if (!visiting) board.focus(entered(seat()) ? seat().state.loka : null);
   board.draw();
 };
 
@@ -714,7 +740,8 @@ const takeTurn = async (): Promise<void> => {
   el.die.disabled = true;
   if (visiting) stopVisiting();
 
-  const turn = play.roll();
+  const turn = throwFor(session, rollDie());
+  session = turn.session;
   rolls.push(turn.roll);
   showFace(turn.roll);
   if (!reducedMotion.matches) {
@@ -725,18 +752,18 @@ const takeTurn = async (): Promise<void> => {
 
   for (const hop of turn.hops) await walk(hop);
 
-  board.focus(play.entered ? play.plan : null);
+  board.focus(entered(seat()) ? seat().state.loka : null);
   showStanding(turn.event);
 
   // The companion speaks on every landing, not on request. The game's own loop
   // puts a reflection between one throw and the next; a companion that waits to
   // be addressed turns that into a form nobody fills in.
-  if (play.entered) {
+  if (entered(seat())) {
     companion.arrived(
-      play.plan,
+      seat().state.loka,
       turn.event,
       el.say.textContent ?? '',
-      writingsOn(readAll(store), play.plan),
+      writingsOn(readAll(store), seat().state.loka),
     );
     showThread();
   }
@@ -748,7 +775,7 @@ const takeTurn = async (): Promise<void> => {
     // they are ready rather than resetting the board underneath them.
     el.say.textContent = messageFor(language, 'app.won');
     el.say.dataset.tone = 'win';
-    play.reset();
+    session = createSession('device', [{ id: SEAT }], LEGACY_MOBILE);
     companion.reset();
     rolls.length = 0;
   } else if (turn.rollsAgain) {
@@ -765,7 +792,7 @@ const takeTurn = async (): Promise<void> => {
 
   // Written after the turn has fully resolved, not after the roll: a game saved
   // mid-hop is a game that resumes having taken a snake it was still sliding
-  // down, and `play.state` is only the whole truth once the walk is over.
+  // down, and `seat().state` is only the whole truth once the walk is over.
   keep();
 
   board.draw();
@@ -819,7 +846,7 @@ el.compose.addEventListener('submit', (event) => {
    * gone when the tab was. Only while the player is on the board: a note about
    * a square nobody is standing on has no square to belong to.
    */
-  if (play.entered) keepWritten(store, { plan: play.plan, text: said, at: Date.now() });
+  if (entered(seat())) keepWritten(store, { plan: seat().state.loka, text: said, at: Date.now() });
 
   void companion.say(said).then(showThread);
   showThread();
@@ -841,12 +868,12 @@ showStanding(null);
  * restore that silently starts a new game is indistinguishable from never
  * having saved, which is how a broken save survives for months.
  */
-if (saved.state && play.entered) {
+if (saved.state && entered(seat())) {
   companion.arrived(
-    play.plan,
+    seat().state.loka,
     null,
-    messageFor(language, 'app.standing', { plan: play.plan, title: titleOf(play.plan) }),
-    writingsOn(readAll(store), play.plan),
+    messageFor(language, 'app.standing', { plan: seat().state.loka, title: titleOf(seat().state.loka) }),
+    writingsOn(readAll(store), seat().state.loka),
   );
 } else if (saved.why) {
   el.say.textContent = messageFor(language, 'app.gameNotRead');

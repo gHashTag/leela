@@ -1,12 +1,11 @@
 import {
-  DEFAULT_RULESET,
   type GameState,
   type MoveEvent,
-  type RuleSet,
-  applyRoll,
+  type SeatedPlayer,
+  type Session,
+  advance,
+  currentPlayer,
   hasWon,
-  initialState,
-  rollDie,
 } from '@leela/engine';
 
 /**
@@ -82,61 +81,66 @@ export const hopsFor = (
   return [{ from: before.loka, to: after.loka, kind }];
 };
 
-export class Play {
-  private current: GameState;
-
-  constructor(
-    private readonly rules: RuleSet = DEFAULT_RULESET,
-    private readonly roller: () => number = rollDie,
-    start: GameState = initialState(),
-  ) {
-    this.current = start;
-  }
-
-  get state(): GameState {
-    return this.current;
-  }
-
-  get plan(): number {
-    return this.current.loka;
-  }
-
-  get finished(): boolean {
-    return hasWon(this.current);
-  }
-
-  /**
-   * True once the player is on the board.
-   *
-   * Before the first six the piece sits on the winning plan with `is_finished`
-   * set - the engine's way of saying "not playing yet". Reading position alone
-   * cannot tell that apart from having won, which is why the caption used to
-   * pick the wrong sentence.
-   */
-  get entered(): boolean {
-    return !this.current.is_finished;
-  }
-
-  /** Rolls once and reports everything the renderer needs to show it. */
-  roll(): Turn {
-    const before = this.current;
-    const roll = this.roller();
-    const { state, event } = applyRoll(before, roll, this.rules);
-    this.current = state;
-
-    return {
-      roll,
-      hops: hopsFor(before, roll, state, event),
-      event,
-      state,
-      // A six earns another throw, but never after the game is over.
-      rollsAgain: roll === 6 && !hasWon(state),
-      won: hasWon(state),
-    };
-  }
-
-  /** Starts a fresh game on the same rules. */
-  reset(): void {
-    this.current = initialState();
-  }
+/**
+ * The table, and one throw of it.
+ *
+ * `Play` stood here: a wrapper holding one `GameState` and rolling it. It has
+ * been replaced by the engine's `Session`, which has held several seats, a turn
+ * index and the rotation between them since before this app existed —
+ * `apps/miniapp/src/seats.ts` says so outright when it explains that it ports
+ * the *seating* and lets `advance` rotate, because the published app wrote that
+ * rotation out longhand as five branches and the engine already had it.
+ *
+ * What stays here is the part the engine has no opinion about: splitting a move
+ * into the hops an animation walks. That is this surface's problem and it is
+ * `hopsFor`, above.
+ */
+export interface Thrown {
+  readonly roll: number;
+  readonly hops: readonly Hop[];
+  readonly event: MoveEvent;
+  readonly session: Session;
+  /** Whose throw it was. */
+  readonly seatId: string;
+  /** True when the same seat throws again — a six, under variants that allow it. */
+  readonly rollsAgain: boolean;
+  readonly won: boolean;
 }
+
+/**
+ * Rolls for whoever holds the turn.
+ *
+ * `advance` decides everything about the move and the rotation; this adds only
+ * the hops. `now` is passed in because `advance` is pure and takes it — a
+ * variant can measure a wait between throws, and a clock read inside the engine
+ * would be a clock no test could set.
+ */
+export function throwFor(
+  session: Session,
+  roll: number,
+  now: number = Date.now(),
+): Thrown {
+  const before = currentPlayer(session).state;
+  const move = advance(session, roll, now);
+  const after = currentPlayerById(move.session, move.playerId).state;
+
+  return {
+    roll,
+    hops: hopsFor(before, roll, after, move.event),
+    event: move.event,
+    session: move.session,
+    seatId: move.playerId,
+    rollsAgain: move.keepsTurn,
+    won: hasWon(after),
+  };
+}
+
+/** A seat by id, because after a turn the current player is the *next* one. */
+const currentPlayerById = (session: Session, id: string): SeatedPlayer => {
+  const found = session.players.find((player) => player.id === id);
+  if (!found) throw new Error(`no seat ${id} at this table`);
+  return found;
+};
+
+/** True once a seat is on the board. Before the first six it sits on 68. */
+export const entered = (player: SeatedPlayer): boolean => !player.state.is_finished;

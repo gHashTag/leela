@@ -122,12 +122,13 @@ yourself deleting one of these tests, you are re-introducing the defect.
       not in `@leela/journal`. Moving it into the package, where `REPORTS_KEY`
       and `isIntention` already are for exactly this reason, makes the sentence
       true here and deletes a copy. It is another app's file to move.
-- [ ] **Several tokens on the board: the model half.** The board holds a token
-      per seat now and plays one. What remains is not rendering — it is
-      `createSession`/`advance` replacing `Play`, which reaches `play.ts` and
-      its eleven tests, `kept.ts` and its seat record, and a control for how
-      many are playing. The engine already rotates turns correctly for the bot;
-      nothing about the rotation needs writing.
+- [ ] **Several tokens on the board: what is left.** The board holds a token
+      per seat and the model is the engine's `Session`, so seating more is now
+      `createSession` with more players. What remains is only the two things
+      that touch storage and chrome: `kept.ts` records one seat's state and
+      would need a seat list — with a migration, because records written before
+      today have `state` at the top — and there is no control for how many are
+      playing.
 - [ ] **A marking is a shade, not a second colour.** The tile is a `map` and a
       `map` multiplies `color`, so one tile per pattern serves all six skins —
       the cost is that a band is a darker version of the same hue. The painting
@@ -154,6 +155,34 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — eighteenth pass: the engine's session, not this app's wrapper
+
+`Play` is gone. It held one `GameState` and rolled it; the engine's `Session`
+has held several seats, a turn index and the rotation between them since before
+this app existed. `throwFor` is what is left in `play.ts`: `advance` decides the
+move and the rotation, and this adds only the hops — splitting a move into the
+steps an animation walks is the one part of a turn the engine has no opinion
+about, and the only part that was ever this surface's to get wrong.
+
+The board plays one seat still. Seating more is `createSession` with more
+players now, which is the whole point of doing this before the seating control
+rather than after.
+
+**The eleven tests moved rather than went.** Read closely, four of them were
+never about `Play` at all — *shows a snake as two hops, so the fall is legible*
+is about `hopsFor`, tested through a wrapper that happened to be in the way.
+They drive the session directly now and check the same thing. One did go with
+its subject: `Play.reset()` no longer exists, so *starts over cleanly* was
+re-expressed against what replaced it — a fresh `createSession` is a table
+nobody has entered, which is the loop this game is made of.
+
+Cost: 187 tests, the same number, and one of them is now about `createSession`
+rather than about a method that no longer exists.
+
+Verified by playing it: entered, walked to 62 through an arrow, and then ran on
+to Cosmic Consciousness and started a fresh table — which is the restart path
+through `createSession`, seen rather than asserted.
 
 ### 2026-08-13 — seventeenth pass: the board holds a table
 

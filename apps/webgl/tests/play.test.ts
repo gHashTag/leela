@@ -5,57 +5,75 @@ import {
   SNAKES,
   START_LOKA,
   WIN_LOKA,
-  initialState,
+  createSession,
+  rollDie,
 } from '@leela/engine';
 
-import { Play } from '../src/play';
+import { entered, throwFor, type Thrown } from '../src/play';
 import { hasPlan } from '../src/layout';
 
-/** A roller that hands out a fixed script, so a test can steer the game. */
-const scripted = (rolls: number[]) => {
-  let i = 0;
-  return () => {
-    const roll = rolls[i];
-    i += 1;
-    if (roll === undefined) throw new Error('the script ran out of rolls');
-    return roll;
-  };
+/**
+ * These used to drive a `Play` wrapper this app owned. `Play` is gone and the
+ * engine's `Session` is the model, so they drive that — and what they check is
+ * unchanged, because what they were always really checking is **the hops**.
+ *
+ * Splitting a move into the steps an animation walks is the one part of a turn
+ * the engine has no opinion about, and the only part of this file that is this
+ * surface's to get wrong: a snake shown as one teleport rather than a landing
+ * and a fall is a board that appears to have a bug in it.
+ */
+const table = () => createSession('t', [{ id: 'p1' }], LEGACY_MOBILE);
+
+/** Plays a script through, returning every throw. */
+const play = (rolls: number[]): Thrown[] => {
+  let session = table();
+  const thrown: Thrown[] = [];
+  for (const [at, roll] of rolls.entries()) {
+    const turn = throwFor(session, roll, at + 1);
+    session = turn.session;
+    thrown.push(turn);
+  }
+  return thrown;
+};
+
+/** Where the one seat stands after a script. */
+const after = (rolls: number[]) => {
+  const last = play(rolls).at(-1);
+  return last ? last.session.players[0]! : table().players[0]!;
 };
 
 describe('entering the game', () => {
   it('stays put until a six', () => {
-    const play = new Play(LEGACY_MOBILE, scripted([1, 2, 3, 4, 5]));
-    for (let i = 0; i < 5; i += 1) {
-      const turn = play.roll();
+    const thrown = play([1, 2, 3, 4, 5]);
+    for (const turn of thrown) {
       expect(turn.hops).toHaveLength(1);
       expect(turn.hops[0]?.kind).toBe('stay');
     }
-    expect(play.plan).toBe(WIN_LOKA);
+    const seat = after([1, 2, 3, 4, 5]);
+    expect(seat.state.loka).toBe(WIN_LOKA);
+    expect(entered(seat)).toBe(false);
   });
 
   it('enters on a six, onto the starting plan', () => {
-    const play = new Play(LEGACY_MOBILE, scripted([6]));
-    const turn = play.roll();
-    expect(play.plan).toBe(START_LOKA);
-    expect(turn.rollsAgain).toBe(true);
+    const [turn] = play([6]);
+    expect(after([6]).state.loka).toBe(START_LOKA);
+    expect(entered(after([6]))).toBe(true);
+    expect(turn?.rollsAgain).toBe(true);
   });
 });
 
 describe('a turn', () => {
+  const lastOf = (rolls: number[]) => play(rolls).at(-1)!;
+
   it('reports a plain step as one hop', () => {
-    const play = new Play(LEGACY_MOBILE, scripted([6, 1]));
-    play.roll();
-    const turn = play.roll();
+    const turn = lastOf([6, 1]);
     expect(turn.hops).toHaveLength(1);
     expect(turn.hops[0]).toEqual({ from: 6, to: 7, kind: 'step' });
   });
 
   it('shows a snake as two hops, so the fall is legible', () => {
-    // 6 enters, then 6 more lands on 12 - a snake head down to 8.
-    const play = new Play(LEGACY_MOBILE, scripted([6, 6]));
-    play.roll();
-    const turn = play.roll();
-
+    // 6 enters, then 6 more lands on 12 — a snake head down to 8.
+    const turn = lastOf([6, 6]);
     expect(turn.hops).toHaveLength(2);
     expect(turn.hops[0]).toEqual({ from: 6, to: 12, kind: 'step' });
     expect(turn.hops[1]?.kind).toBe('snake');
@@ -63,11 +81,8 @@ describe('a turn', () => {
   });
 
   it('shows an arrow as two hops as well', () => {
-    // 6 enters at 6, then 4 lands on 10 - an arrow up to 23.
-    const play = new Play(LEGACY_MOBILE, scripted([6, 4]));
-    play.roll();
-    const turn = play.roll();
-
+    // 6 enters at 6, then 4 lands on 10 — an arrow up to 23.
+    const turn = lastOf([6, 4]);
     expect(turn.hops).toHaveLength(2);
     expect(turn.hops[0]).toEqual({ from: 6, to: 10, kind: 'step' });
     expect(turn.hops[1]?.kind).toBe('arrow');
@@ -75,9 +90,8 @@ describe('a turn', () => {
   });
 
   it('never reports a hop to a cell the board cannot draw', () => {
-    const play = new Play(LEGACY_MOBILE, scripted([6, 6, 6, 5, 4, 3, 2, 1, 6, 6]));
-    for (let i = 0; i < 10; i += 1) {
-      for (const hop of play.roll().hops) {
+    for (const turn of play([6, 6, 6, 5, 4, 3, 2, 1, 6, 6])) {
+      for (const hop of turn.hops) {
         expect(hasPlan(hop.from)).toBe(true);
         expect(hasPlan(hop.to)).toBe(true);
       }
@@ -85,60 +99,64 @@ describe('a turn', () => {
   });
 
   it('grants another throw on a six', () => {
-    const play = new Play(LEGACY_MOBILE, scripted([6, 6]));
-    expect(play.roll().rollsAgain).toBe(true);
-    expect(play.roll().rollsAgain).toBe(true);
+    for (const turn of play([6, 6])) expect(turn.rollsAgain).toBe(true);
   });
 
   it('does not grant another throw on anything else', () => {
-    const play = new Play(LEGACY_MOBILE, scripted([6, 3]));
-    play.roll();
-    expect(play.roll().rollsAgain).toBe(false);
+    expect(lastOf([6, 3]).rollsAgain).toBe(false);
   });
 });
 
 describe('the end', () => {
   it('reports the win and stops offering another throw', () => {
-    // Walk to 62, then a 6 would overshoot 68; 63 + 5 = 68 exactly.
-    const play = new Play(
-      LEGACY_MOBILE,
-      scripted([6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]),
-    );
-    let turn = play.roll();
-    let guard = 0;
-    while (!turn.won && guard < 15) {
-      turn = play.roll();
-      guard += 1;
-    }
-    if (turn.won) {
-      expect(play.finished).toBe(true);
-      expect(turn.rollsAgain).toBe(false);
-    } else {
-      // The script did not reach 68; the point stands that nothing crashed.
-      expect(play.finished).toBe(false);
+    const script = [6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5];
+    const won = play(script).find((turn) => turn.won);
+    // The script may not reach 68 under this ruleset, and the assertion that
+    // matters either way is that a win is never offered another throw.
+    if (won) expect(won.rollsAgain).toBe(false);
+    for (const turn of play(script)) {
+      for (const hop of turn.hops) expect(hasPlan(hop.to)).toBe(true);
     }
   });
+});
 
-  it('starts over cleanly', () => {
-    const play = new Play(LEGACY_MOBILE, scripted([6, 3]));
-    play.roll();
-    play.roll();
-    play.reset();
-    expect(play.state).toEqual(initialState());
+describe('starting over', () => {
+  /**
+   * `Play.reset()` used to do this and the test went with it. What replaced it
+   * is a fresh `createSession`, so the assertion moves to what that has to be
+   * true of: a new table is one nobody has entered, wherever the last game got
+   * to. Winning on 68 and starting again is the loop this game is *made* of.
+   */
+  it('gives a table nobody has entered', () => {
+    const finished = play([6, 5, 3, 6, 2]).at(-1)!.session;
+    expect(finished.players[0]!.state).not.toEqual(table().players[0]!.state);
+
+    for (const player of table().players) {
+      expect(entered(player)).toBe(false);
+      expect(player.state.loka).toBe(WIN_LOKA);
+    }
   });
 });
 
 describe('rolling a real die', () => {
+  /**
+   * The invariant this file exists to hold: over a long game, every hop the
+   * animation is asked to walk is a square the board can draw. A hop to a
+   * square that is not there is a piece that flies off the edge.
+   */
   it('never leaves the board over a long game', () => {
-    const play = new Play(LEGACY_MOBILE);
-    for (let i = 0; i < 500; i += 1) {
-      const turn = play.roll();
-      expect(turn.roll).toBeGreaterThanOrEqual(1);
-      expect(turn.roll).toBeLessThanOrEqual(6);
+    let session = table();
+    for (let at = 0; at < 500; at += 1) {
+      const roll = rollDie();
+      expect(roll).toBeGreaterThanOrEqual(1);
+      expect(roll).toBeLessThanOrEqual(6);
+
+      const turn = throwFor(session, roll, at + 1);
       for (const hop of turn.hops) {
+        expect(hasPlan(hop.from)).toBe(true);
         expect(hasPlan(hop.to)).toBe(true);
       }
-      if (turn.won) play.reset();
+      session = turn.won ? table() : turn.session;
     }
   });
 });
