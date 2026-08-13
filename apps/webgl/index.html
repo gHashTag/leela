@@ -98,6 +98,19 @@
       -->
       <div class="who" id="who" role="radiogroup" aria-label="Play as" hidden></div>
 
+      <!--
+        What the player is playing for.
+
+        Above the conversation and never scrolled away, because it is the frame
+        every report below it is written inside — `apps/miniapp/src/state.ts`
+        argues that out: in Leela the intention is not a profile field, it is
+        the question the game answers.
+      -->
+      <button class="intention" id="intention" type="button">
+        <span class="intention-label" id="intention-label"></span>
+        <span class="intention-text" id="intention-text"></span>
+      </button>
+
       <div class="sheet-body" id="sheet-body">
         <!--
           One column, in the order things happened.
@@ -130,6 +143,14 @@
           <summary id="path-summary">My path</summary>
           <ol class="path-list" id="path-list"></ol>
         </details>
+
+        <!-- Out of the browser, and back into it. -->
+        <div class="carry">
+          <button type="button" id="save" class="ghost"></button>
+          <button type="button" id="bring" class="ghost"></button>
+          <input type="file" id="bring-file" accept="application/json,.json" hidden />
+          <p class="carry-said" id="carry-said" role="status" aria-live="polite"></p>
+        </div>
 
         <details class="rests" id="rests">
           <summary id="rests-summary">What this rests on</summary>

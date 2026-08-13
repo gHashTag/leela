@@ -14,7 +14,19 @@
  * refuses a blank one, a plan off the board, and a timestamp no clock produced.
  */
 
-import { MAX_REPORTS, REPORTS_KEY, type Report, isReport, order } from '@leela/journal';
+import {
+  INTENTION_KEY,
+  MAX_REPORTS,
+  type Merged,
+  REPORTS_KEY,
+  type Report,
+  asIntention,
+  isReport,
+  merged,
+  order,
+  parseDocument,
+  toDocument,
+} from '@leela/journal';
 
 import type { Store } from './kept';
 
@@ -64,4 +76,84 @@ export function add(store: Store | null, entry: Report): Report[] {
     /* Writing that cannot be saved is still writing that was done. */
   }
   return kept;
+}
+
+/**
+ * What the player is playing for.
+ *
+ * Not a profile field. `apps/miniapp/src/state.ts` argues this out and is
+ * right: in Leela the intention is *the question the game answers*, and the
+ * reports accumulating on the squares are the answer. A path exported without
+ * it is a year of answers with the question missing.
+ *
+ * `asIntention` is the rule and it lives in `@leela/journal` because there were
+ * three copies of it and a fourth about to be written. Nothing is re-checked
+ * here: it refuses what is too short to be meant and too long to be held, and
+ * it *drops* rather than shortens, because a question cut in half is a
+ * different question.
+ */
+export function readIntention(store: Store | null): string | null {
+  if (!store) return null;
+  try {
+    return asIntention(store.getItem(INTENTION_KEY));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Keeps it, and says whether it took.
+ *
+ * False both when the storage refused and when the question was not one the
+ * game holds — the caller has a player in front of it and can say which.
+ */
+export function writeIntention(store: Store | null, text: string): boolean {
+  const asked = asIntention(text);
+  if (asked === null) return false;
+  if (!store) return false;
+  try {
+    store.setItem(INTENTION_KEY, asked);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The whole path as a file, question included.
+ *
+ * `toDocument` applies the same rule to the intention that the reader will, so
+ * a file never carries a question that reads back as a different one.
+ */
+export const asFile = (store: Store | null): string =>
+  JSON.stringify(toDocument(readAll(store), readIntention(store) ?? undefined), null, 2);
+
+/**
+ * Brings a file back, and says what it cost.
+ *
+ * `merged` is `@leela/journal`'s, and its comment is worth the read: both
+ * surfaces that came before told the player how many entries *arrived* while
+ * the bound had just thrown that many of their oldest away. `added` is what is
+ * actually there and `dropped` is what it cost, so the caller can say both.
+ *
+ * A file with a question in it does not overwrite one already set: the player
+ * asked something here, and a file is not a reason to change what they are
+ * playing for. It fills an empty one, which is the case that helps.
+ */
+export function takeIn(store: Store | null, text: string): Merged | null {
+  const document = parseDocument(text);
+  if (!document) return null;
+
+  const outcome = merged(readAll(store), document.entries);
+  if (store) {
+    try {
+      store.setItem(REPORTS_KEY, JSON.stringify(outcome.entries));
+    } catch {
+      /* Nothing brought in, and the caller is told by `added` being what it is. */
+    }
+  }
+  if (document.intention && readIntention(store) === null) {
+    writeIntention(store, document.intention);
+  }
+  return outcome;
 }

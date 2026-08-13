@@ -60,6 +60,9 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | One bad stored report costs that report, not the path | `tests/written.test.ts` |
 | The oldest report is dropped at the bound, never the newest | `tests/written.test.ts` |
 | Your own earlier writing is never rendered as something you just said | `source: 'written'` |
+| A question the game cannot hold is never stored | `tests/written.test.ts` |
+| A file never overwrites a question already asked | `tests/written.test.ts` |
+| An import says what is *there*, and what the bound cost | `merged`, in `@leela/journal` |
 | No square is filled with a jump's colour | the published painting, `board-light.webp` |
 | The board has no grid drawn on it | the published board, `gameboard.png` |
 | A point on the board resolves to its own plan | `tests/layout.test.ts` |
@@ -107,10 +110,18 @@ yourself deleting one of these tests, you are re-introducing the defect.
       said back is not, and on resume it re-announces the square instead.
 - [ ] **The sheet's drag is not keyboard-reachable** beyond the handle's step.
 - [ ] **No haptics, no sound.**
-- [ ] **`app.gameNotRead` promises accounts this surface does not have.** Its
-      first half is exactly right for a refused save; the trailing clause is
-      about the mini app's journals. Wants a key of its own in
-      `packages/content`, not a string invented here.
+- [ ] **Two message keys promise things this surface does not do.**
+      `app.gameNotRead` ends with *your accounts are untouched* on a surface
+      with no accounts. `app.pathExported` says *a readable copy is on the
+      clipboard*, which is true on the mini app because it copies `toText(...)`
+      a line earlier — and `toText` lives in `apps/miniapp/src/journal-file.ts`,
+      not in `@leela/journal`. Moving it into the package, where `REPORTS_KEY`
+      and `isIntention` already are for exactly this reason, makes the sentence
+      true here and deletes a copy. It is another app's file to move.
+- [ ] **Several tokens on the board.** `apps/miniapp/src/seats.ts` has the seat
+      model — `SavedSeats`, `sessionFrom`, `resize` — tested. The board renders
+      one token and would need to render many, and turn-taking has to reach the
+      throw. This is a pass of its own, not a corner of another one.
 - [ ] **A marking is a shade, not a second colour.** The tile is a `map` and a
       `map` multiplies `color`, so one tile per pattern serves all six skins —
       the cost is that a band is a darker version of the same hue. The painting
@@ -137,6 +148,40 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — sixteenth pass: the question, and the path as a file
+
+Two of the three asked for. The third — several tokens on the board — changes
+the board's model from one player to many and gets its own pass rather than a
+corner of this one.
+
+**The intention.** `@leela/journal` has had `asIntention` and its two bounds all
+along, and this surface never asked. It sits above the conversation now, because
+that is what it is: the frame every report below it is written inside, and a
+path exported without it is a year of answers with the question missing. Asked
+rather than demanded — the published app blocks the board until there is one,
+with `blockGoBack: true`, and that is a gate in front of a game somebody opened
+to play. Here it is answerable at any point, including after forty squares,
+which is when most people know what they were actually asking.
+
+**The path as a file.** `toDocument`, `parseDocument` and `merged` were all
+there. An import says what is *there* and what the bound cost, which is
+`merged`'s own hard-won distinction: the two surfaces before this told the
+player how many entries arrived while the cut had just thrown that many of their
+oldest away. A file does not overwrite a question already asked — the player
+asked something here, and a file is not a reason to change what they are playing
+for — but it fills an empty one, which is the case that helps.
+
+Cost: 187 tests where there were 177.
+
+**A false sentence was caught one line before it shipped.** The export was about
+to announce `app.pathExported` — *saved, and a readable copy is on the
+clipboard* — and this surface copies nothing. That sentence is true on the mini
+app because it writes `toText(...)` to the clipboard immediately before saying
+it. The key was dropped rather than half-used: it is exactly how
+`app.gameNotRead` came to promise this app's players that accounts it does not
+have were untouched. The file name is shown instead, which is language-neutral
+and a fact.
 
 ### 2026-08-13 — fifteenth pass: what the player writes is kept
 

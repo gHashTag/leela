@@ -534,6 +534,64 @@ body {
   clip-path: inset(50%);
 }
 
+/* --- what you are playing for -------------------------------------------- */
+
+.intention {
+  flex: none;
+  display: grid;
+  gap: 1px;
+  margin: 0 var(--pad) 10px;
+  padding: 8px 12px;
+  font: inherit;
+  text-align: start;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  border: 1px solid var(--rule);
+  border-inline-start: 2px solid var(--golden);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.sheet[data-detent='peek'] .intention {
+  display: none;
+}
+
+.intention-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hint);
+}
+
+.intention-text {
+  font-size: var(--f-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Nothing asked yet reads as an invitation, not as an empty field. */
+.intention[data-asked='false'] .intention-text {
+  color: var(--hint);
+}
+
+/* --- carrying it out and back -------------------------------------------- */
+
+.carry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.carry-said {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: var(--f-2);
+  color: var(--hint);
+}
+
 /* --- what scrolls -------------------------------------------------------- */
 
 .sheet-body {

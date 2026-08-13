@@ -2,7 +2,7 @@ import { LEGACY_MOBILE, WIN_LOKA, type MoveEvent } from '@leela/engine';
 
 import { directionOf, messageFor, planFor, resolveLanguage, titlesFor } from './canon';
 import { describeMove } from '@leela/content';
-import { revisited, writingsOn, MAX_REPORT_CHARS } from '@leela/journal';
+import { fileName, revisited, writingsOn, MAX_REPORT_CHARS } from '@leela/journal';
 
 import { Companion, type Line, type Rests } from './companion';
 import { DEITIES, deityFor } from './deities';
@@ -10,7 +10,14 @@ import { screenFor, toneOf } from './hud';
 import { hopPoint, planPosition } from './layout';
 import { browserStore, read, write } from './kept';
 import { pathOf } from './path';
-import { add as keepWritten, readAll } from './written';
+import {
+  asFile,
+  add as keepWritten,
+  readAll,
+  readIntention,
+  takeIn,
+  writeIntention,
+} from './written';
 import { isFace, pipsFor } from './die';
 import { Play, type Hop } from './play';
 import { createBoard } from './scene';
@@ -73,6 +80,13 @@ const el = {
   planText: need<HTMLElement>('#plan-text'),
   thread: need<HTMLElement>('#thread'),
   visitingPlan: need<HTMLElement>('#visiting-plan'),
+  intention: need<HTMLButtonElement>('#intention'),
+  intentionLabel: need<HTMLElement>('#intention-label'),
+  intentionText: need<HTMLElement>('#intention-text'),
+  save: need<HTMLButtonElement>('#save'),
+  bring: need<HTMLButtonElement>('#bring'),
+  bringFile: need<HTMLInputElement>('#bring-file'),
+  carrySaid: need<HTMLElement>('#carry-said'),
   path: need<HTMLDetailsElement>('#path'),
   pathSummary: need<HTMLElement>('#path-summary'),
   pathList: need<HTMLElement>('#path-list'),
@@ -94,6 +108,9 @@ el.reply.placeholder = messageFor(language, 'app.reportPlaceholder');
 el.die.setAttribute('aria-label', messageFor(language, 'app.play'));
 el.visitingBack.textContent = messageFor(language, 'app.read');
 el.pathSummary.textContent = messageFor(language, 'app.path');
+el.intentionLabel.textContent = messageFor(language, 'app.intention');
+el.save.textContent = messageFor(language, 'app.pathExport');
+el.bring.textContent = messageFor(language, 'app.pathImport');
 el.planTitle.textContent = messageFor(language, 'app.waiting');
 el.say.textContent = messageFor(language, 'app.opening');
 
@@ -458,6 +475,93 @@ const showPath = (): void => {
   );
 };
 
+/**
+ * What the player is playing for, and the chance to say it.
+ *
+ * Asked rather than demanded. The published app blocks the board until there is
+ * one — `if (!prof.intention) navigate('CHANGE_INTENTION_SCREEN', { blockGoBack: true })`
+ * — and that is a gate in front of a game somebody opened to play. Here it sits
+ * above the conversation as an invitation, and it is answerable at any point,
+ * including after forty squares, which is when most people know what they were
+ * actually asking.
+ */
+const showIntention = (): void => {
+  const asked = readIntention(store);
+  el.intention.dataset.asked = String(asked !== null);
+  el.intentionText.textContent = asked ?? messageFor(language, 'app.reportPlaceholder');
+};
+
+el.intention.addEventListener('click', () => {
+  const asked = window.prompt(messageFor(language, 'app.intention'), readIntention(store) ?? '');
+  if (asked === null) return;
+  // `writeIntention` says no both for a question the game cannot hold and for a
+  // storage that refused. The player is in front of us, so they are told.
+  el.carrySaid.textContent = writeIntention(store, asked)
+    ? ''
+    : messageFor(language, 'app.reportEmpty');
+  showIntention();
+});
+
+// --- carrying the path out, and back ---------------------------------------
+
+el.save.addEventListener('click', () => {
+  const file = new Blob([asFile(store)], { type: 'application/json' });
+  const url = URL.createObjectURL(file);
+  const link = document.createElement('a');
+  link.href = url;
+  const named = fileName(new Date().toISOString().slice(0, 10));
+  link.download = named;
+  link.click();
+  // Revoked, or every save leaks the whole path for as long as the tab lives.
+  URL.revokeObjectURL(url);
+
+  /**
+   * The file name, not `app.pathExported`.
+   *
+   * That sentence says *saved, and a readable copy is on the clipboard*, and it
+   * is true on the mini app because it copies `toText(...)` — a prose rendering
+   * — a line before it announces. `toText` lives in `apps/miniapp/src/journal-file.ts`
+   * and not in `@leela/journal`, so this surface cannot make the second half of
+   * that sentence true, and a message key borrowed for its first half only is
+   * how `app.gameNotRead` came to promise this app's players that accounts it
+   * does not have were untouched.
+   *
+   * A file name is language-neutral and it is a fact. Moving `toText` into the
+   * package — where `REPORTS_KEY` and `isIntention` already are, for exactly
+   * this reason — is the fix, and it is another app's file to move.
+   */
+  el.carrySaid.textContent = named;
+});
+
+el.bring.addEventListener('click', () => el.bringFile.click());
+
+el.bringFile.addEventListener('change', () => {
+  const [chosen] = el.bringFile.files ?? [];
+  if (!chosen) return;
+  void chosen.text().then((text) => {
+    const outcome = takeIn(store, text);
+    // Reset, or choosing the same file twice does nothing the second time.
+    el.bringFile.value = '';
+    if (!outcome) {
+      el.carrySaid.textContent = messageFor(language, 'app.pathUnreadable');
+      return;
+    }
+    /**
+     * What is *there*, and what it cost.
+     *
+     * `merged`'s own comment is the reason both numbers are said: the two
+     * surfaces before this told the player how many entries arrived while the
+     * bound had just thrown that many of their oldest away.
+     */
+    el.carrySaid.textContent =
+      outcome.dropped > 0
+        ? `${messageFor(language, 'app.pathImported', { count: outcome.added })} · −${outcome.dropped}`
+        : messageFor(language, 'app.pathImported', { count: outcome.added });
+    showIntention();
+    showThread();
+  });
+});
+
 const showFace = (value: number): void => {
   const cells = pipsFor(value);
   el.die.dataset.thrown = String(isFace(value));
@@ -738,6 +842,7 @@ if (saved.state && play.entered) {
 
 showThread();
 showPath();
+showIntention();
 settle();
 grow();
 el.progress.max = 1;
