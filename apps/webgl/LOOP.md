@@ -92,15 +92,46 @@ yourself deleting one of these tests, you are re-introducing the defect.
       would cost a few more primitives.
 - [ ] **The board has no border.** The rules illustration carries feathers and
       crystals around the edge. A plain slab reads as a placeholder.
-- [ ] **The perspective is steep on a wide window.** The near edge renders much
-      wider than the far one, which reads as a ramp rather than a table. A
-      narrower field of view would flatten it.
+- [ ] **The board may sit a little left of centre.** Eyeballing corners off a
+      screenshot put the mobile board about 2% left of the band's middle. That
+      is not a measurement — antialiased edges in a downscaled capture cannot
+      support a 2% claim — and it was left alone rather than "fixed" on a
+      reading that weak. Measuring it properly means projecting the board's
+      corners with the real camera, which needs a hook the app does not have.
 - [ ] **The 72 texts are not searchable** from this surface; the mini app has
       `app.plans` for exactly that.
 - [ ] **`apps/mobile` cannot use any of this yet.** The scene is DOM-free apart
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — sixth pass: a longer lens
+
+One number. `camera.fov` 42° → 24°, and the far plane out to match the distance
+the framing loop now solves for.
+
+At 42° the near edge of the board rendered about 1.36 times the width of the far
+edge; measured off the screenshot again afterwards it is about 1.12. A rectangle
+that much wider at one end than the other does not read as a board on a table,
+it reads as a ramp — the same distortion that makes a room shot on a phone look
+like a corridor. Every product photograph of a board game avoids it the same
+way, by standing further back with a longer lens, and the framing loop absorbs
+the change without another number moving because it solves for distance by
+projecting the board rather than by trigonometry about it.
+
+No test. This is a visual constant, and the honest check for it is the one the
+contract already prescribes: look at it, in both viewports.
+
+Cost: nothing but the constant. 119 tests, unchanged.
+
+Two things worth not repeating. The gates were first run from the repository
+root instead of `apps/webgl`, which quietly ran the *whole repo* — 3777 tests,
+all green, and a `tsc` that could not find `tsconfig.src.json` and printed its
+own help instead of an error anyone would notice. A gate run in the wrong
+directory is not the gate. And a ~2% horizontal offset I thought I saw was left
+alone rather than corrected: corners eyeballed off an antialiased, downscaled
+capture cannot support a 2% claim, and acting on it would have been adjusting
+the board to fit a measurement error.
 
 ### 2026-08-13 — fifth pass: markings
 

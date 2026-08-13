@@ -435,7 +435,21 @@ export const createBoard = (
   scene.environment = room.texture;
 
   const { width, depth } = boardExtent();
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
+  /**
+   * A long lens.
+   *
+   * At 42° the near edge of the board rendered about 1.36 times the width of
+   * the far edge, and a rectangle that wide at one end and narrow at the other
+   * does not read as a board on a table — it reads as a ramp. It is the same
+   * distortion that makes a room photographed on a phone look like a corridor,
+   * and every product photograph of a board game avoids it the same way: stand
+   * further back and use a longer lens.
+   *
+   * The framing loop in `resize` solves for distance by projecting the board,
+   * so it absorbs this without any other number changing — the camera simply
+   * ends up further away.
+   */
+  const camera = new THREE.PerspectiveCamera(24, 1, 0.1, 400);
 
   const ambient = new THREE.AmbientLight(0xffffff, palette.ambient);
   const key = new THREE.DirectionalLight(0xffffff, palette.key);
