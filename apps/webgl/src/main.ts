@@ -5,6 +5,7 @@ import { Companion, type Line, type Rests } from './companion';
 import { DEITIES, deityFor } from './deities';
 import { screenFor } from './hud';
 import { hopPoint, planPosition } from './layout';
+import { browserStore, read, write } from './kept';
 import { isFace, pipsFor } from './pips';
 import { Play, type Hop } from './play';
 import { createBoard } from './scene';
@@ -27,7 +28,6 @@ import { css, schemeFor } from './theme';
  */
 
 const HOP_MS = 420;
-const DEITY_KEY = 'leela.webgl.deity';
 
 const need = <T extends Element>(selector: string): T => {
   const found = document.querySelector<T>(selector);
@@ -80,44 +80,31 @@ el.say.textContent = messageFor(language, 'app.opening');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
 
+// What the last visit left behind, read before anything is built from it.
+const store = browserStore();
+const saved = read(store);
+
 const board = createBoard(el.canvas);
-const play = new Play(LEGACY_MOBILE);
+// `undefined` takes the default roller; the third argument is the resumed game,
+// and `Play` falls back to `initialState()` when there is none.
+const play = new Play(LEGACY_MOBILE, undefined, saved.state ?? undefined);
 const companion = new Companion({ language });
+
+const keep = (): void => write(store, { state: play.state, deity: deity.id });
 
 board.setScheme(schemeFor(darkScheme.matches));
 darkScheme.addEventListener('change', (event) => board.setScheme(schemeFor(event.matches)));
 
 // --- who is playing ---------------------------------------------------------
 
-/**
- * The chosen deity outlives the tab.
- *
- * `localStorage` throws rather than returning null in a browser with storage
- * blocked — Safari's private mode did this for years — and a game that will not
- * open because it could not remember who you were last time is worse than a
- * game that forgets.
- */
-const remembered = (): string | null => {
-  try {
-    return localStorage.getItem(DEITY_KEY);
-  } catch {
-    return null;
-  }
-};
-
-const remember = (id: string): void => {
-  try {
-    localStorage.setItem(DEITY_KEY, id);
-  } catch {
-    /* A choice that cannot be saved is still a choice for this game. */
-  }
-};
-
-let deity = deityFor(remembered());
+// Who was playing last time. One record holds the deity and the game, because
+// two keys is two things to keep in step — and the deity outliving the board it
+// was standing on is exactly the state that reads as a bug.
+let deity = deityFor(saved.deity);
 
 const chooseDeity = (next: (typeof DEITIES)[number]): void => {
   deity = next;
-  remember(next.id);
+  keep();
   board.setDeity(next);
   for (const button of el.who.querySelectorAll<HTMLElement>('.deity')) {
     button.setAttribute('aria-checked', String(button.dataset.deity === next.id));
@@ -530,6 +517,11 @@ const takeTurn = async (): Promise<void> => {
     el.say.textContent = `${el.say.textContent} · ${messageFor(language, 'roll.again')}`;
   }
 
+  // Written after the turn has fully resolved, not after the roll: a game saved
+  // mid-hop is a game that resumes having taken a snake it was still sliding
+  // down, and `play.state` is only the whole truth once the walk is over.
+  keep();
+
   board.draw();
   el.die.disabled = false;
   busy = false;
@@ -579,6 +571,27 @@ el.compose.addEventListener('submit', (event) => {
 showFace(0);
 showDetent('half');
 showStanding(null);
+
+/**
+ * What the player is told about the game they have come back to.
+ *
+ * Three cases, and the third is the one worth having. A resumed game opens on
+ * the square it left off, with the companion naming it — otherwise the board
+ * shows a piece forty squares in and a conversation that has never happened. A
+ * *refused* save says so: `app.gameNotRead` exists for exactly this event, and a
+ * restore that silently starts a new game is indistinguishable from never
+ * having saved, which is how a broken save survives for months.
+ */
+if (saved.state && play.entered) {
+  companion.arrived(
+    play.plan,
+    null,
+    messageFor(language, 'app.standing', { plan: play.plan, title: titleOf(play.plan) }),
+  );
+} else if (saved.why) {
+  el.say.textContent = messageFor(language, 'app.gameNotRead');
+}
+
 showThread();
 settle();
 grow();
