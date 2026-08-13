@@ -636,9 +636,20 @@ body {
   color: var(--hint);
 }
 
-.line[data-source='player']::after,
 .line[data-source='']::after {
   content: none;
+}
+
+/*
+ * Your own writing, from before.
+ *
+ * The player's bubble, dimmed and dated. The same voice at a different time,
+ * and a thread that renders the two identically is one where a player reads
+ * something they wrote in March as something they just said.
+ */
+.line[data-who='player'][data-source]:not([data-source='']) {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  color: var(--text);
 }
 
 .line[data-source='unanswered'] {

@@ -40,8 +40,17 @@ export type Source =
   | 'model'
   /** A model was asked and could not answer; this is the stand-in. */
   | 'fallback'
-  /** The player. */
-  | 'player';
+  /** The player, now. */
+  | 'player'
+  /**
+   * The player, before.
+   *
+   * Their own writing from an earlier visit to this square. Marked apart from
+   * `player` because it is the same voice at a different time, and a thread
+   * that renders the two identically is one where a player reads something they
+   * wrote in March as something they just said.
+   */
+  | 'written';
 
 export interface Line {
   readonly who: 'companion' | 'player';
@@ -49,6 +58,8 @@ export interface Line {
   readonly source: Source;
   /** The plan this was said about, so the thread can be read back. */
   readonly plan: number;
+  /** When this was written, for a line that is not from now. */
+  readonly at?: number;
   /**
    * The rest of the plan's text, when `text` is an abridgement of it.
    *
@@ -165,7 +176,16 @@ export class Companion {
    * companion that waits to be addressed turns that into a form nobody fills
    * in. Two lines — what happened, and what the plan says — then the question.
    */
-  arrived(plan: number, event: MoveEvent | null, moveSentence: string): void {
+  /**
+   * @param before what this player wrote here on earlier visits, oldest first.
+   *        `writingsOn` in `@leela/journal` decides what belongs to a square.
+   */
+  arrived(
+    plan: number,
+    event: MoveEvent | null,
+    moveSentence: string,
+    before: ReadonlyArray<{ text: string; at: number }> = [],
+  ): void {
     this.journey.push(plan);
 
     const text = planFor(this.language, plan);
@@ -186,6 +206,18 @@ export class Companion {
     this.lines = [
       ...this.lines,
       { who: 'companion', text: moveSentence, source: 'canon', plan },
+      // What you said here last time, before what the text says — coming back
+      // to a square is the game, and the first thing worth knowing on arrival
+      // is that you have been here and what you made of it.
+      ...before.map(
+        (older): Line => ({
+          who: 'player',
+          text: older.text,
+          source: 'written',
+          plan,
+          at: older.at,
+        }),
+      ),
       {
         who: 'companion',
         text: short,

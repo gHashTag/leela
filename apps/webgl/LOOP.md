@@ -57,6 +57,9 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | A history that does not lead to the saved square is refused | `tests/kept.test.ts` |
 | Every throw is a step, refusals included | `tests/kept.test.ts` |
 | No surface writes its own move sentence | `describeMove`, in `@leela/content` |
+| One bad stored report costs that report, not the path | `tests/written.test.ts` |
+| The oldest report is dropped at the bound, never the newest | `tests/written.test.ts` |
+| Your own earlier writing is never rendered as something you just said | `source: 'written'` |
 | No square is filled with a jump's colour | the published painting, `board-light.webp` |
 | The board has no grid drawn on it | the published board, `gameboard.png` |
 | A point on the board resolves to its own plan | `tests/layout.test.ts` |
@@ -99,10 +102,9 @@ yourself deleting one of these tests, you are re-introducing the defect.
 - [ ] **Online is the only part that needs a server.** Shared presence and a
       group feed of reports cannot be done from a static page; `apps/bot` is
       where the corpus already puts a shared table.
-- [ ] **The conversation is not remembered**, only the game. `src/kept.ts` saves
-      the engine's state and the deity; the companion's thread starts empty on
-      every resume and it re-announces the square instead. `packages/journal` is
-      the shape a real path would take.
+- [ ] **The companion's own half of the thread is not remembered.** What the
+      *player* writes now is, under `@leela/journal`'s key; what the companion
+      said back is not, and on resume it re-announces the square instead.
 - [ ] **The sheet's drag is not keyboard-reachable** beyond the handle's step.
 - [ ] **No haptics, no sound.**
 - [ ] **`app.gameNotRead` promises accounts this surface does not have.** Its
@@ -135,6 +137,37 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — fifteenth pass: what the player writes is kept
+
+The compose box fed the companion and nothing else, so a reflection written on
+plan 34 was gone when the tab was. In this particular game that is the wrong
+thing to lose: the reports *are* the game, and the reason to come back to a
+square is to find out what you said the last time you stood on it.
+
+`src/written.ts` keeps them — in `@leela/journal`'s format, under
+`@leela/journal`'s key. `leela.reports.v1` is the same string the mini app and
+the phone write, so a player who opens two of these on one device has one path
+rather than two. That is the whole reason the key lives in a package none of
+them owns. Nothing here re-checks what a report is: `isReport` already refuses a
+blank one, a plan off the board and a timestamp no clock produced.
+
+On arrival, `writingsOn` puts your earlier writing about *this* square into the
+thread, dated, before the canonical text. `Source` gained `written` for it —
+the same voice at a different time, and a thread that renders the two
+identically is one where a player reads something from March as something they
+just said.
+
+Cost: 177 tests where there were 168.
+
+**And the screenshot lied, twice in one pass.** First the earlier writing
+appeared to be missing — it was above the fold, because `showThread` scrolls to
+the newest line. Querying the DOM found all of it present and correct, with the
+entry belonging to another square properly excluded. Then a `python .replace`
+that silently matches nothing was suspected and checked rather than assumed;
+that one *had* applied. Both times the answer came from asking the page, not
+from reading the picture. A screenshot shows what is on screen, which is not the
+same as what exists.
 
 ### 2026-08-13 — fourteenth pass: the path has a screen
 

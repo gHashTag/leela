@@ -2,7 +2,7 @@ import { LEGACY_MOBILE, WIN_LOKA, type MoveEvent } from '@leela/engine';
 
 import { directionOf, messageFor, planFor, resolveLanguage, titlesFor } from './canon';
 import { describeMove } from '@leela/content';
-import { revisited } from '@leela/journal';
+import { revisited, writingsOn, MAX_REPORT_CHARS } from '@leela/journal';
 
 import { Companion, type Line, type Rests } from './companion';
 import { DEITIES, deityFor } from './deities';
@@ -10,6 +10,7 @@ import { screenFor, toneOf } from './hud';
 import { hopPoint, planPosition } from './layout';
 import { browserStore, read, write } from './kept';
 import { pathOf } from './path';
+import { add as keepWritten, readAll } from './written';
 import { isFace, pipsFor } from './die';
 import { Play, type Hop } from './play';
 import { createBoard } from './scene';
@@ -317,7 +318,14 @@ const SOURCE_LABEL: Readonly<Record<Line['source'], string>> = {
   model: 'model',
   fallback: 'unanswered',
   player: '',
+  // Dated rather than labelled: what matters about your own earlier writing is
+  // *when*, and `bubble` fills this in from the line's own timestamp.
+  written: '',
 };
+
+/** A date a player can place, in their own language. */
+const on = (at: number): string =>
+  new Intl.DateTimeFormat(language, { dateStyle: 'medium' }).format(new Date(at));
 
 const bubble = (line: Line): HTMLElement => {
   const node = document.createElement('div');
@@ -327,7 +335,8 @@ const bubble = (line: Line): HTMLElement => {
   // sentence and the traditional text of a plan carry very different weight,
   // and a screen that renders them identically has quietly lent one the
   // authority of the other.
-  node.dataset.source = SOURCE_LABEL[line.source];
+  node.dataset.source =
+    line.source === 'written' && line.at !== undefined ? on(line.at) : SOURCE_LABEL[line.source];
 
   const said = document.createElement('span');
   said.textContent = line.text;
@@ -607,7 +616,12 @@ const takeTurn = async (): Promise<void> => {
   // puts a reflection between one throw and the next; a companion that waits to
   // be addressed turns that into a form nobody fills in.
   if (play.entered) {
-    companion.arrived(play.plan, turn.event, el.say.textContent ?? '');
+    companion.arrived(
+      play.plan,
+      turn.event,
+      el.say.textContent ?? '',
+      writingsOn(readAll(store), play.plan),
+    );
     showThread();
   }
   showPath();
@@ -675,9 +689,22 @@ el.reply.addEventListener('keydown', (event) => {
 
 el.compose.addEventListener('submit', (event) => {
   event.preventDefault();
-  const said = el.reply.value;
+  const said = el.reply.value.trim().slice(0, MAX_REPORT_CHARS);
   el.reply.value = '';
   grow();
+  if (said.length === 0) return;
+
+  /**
+   * Kept before it is answered.
+   *
+   * The reports *are* the game — the reason to come back to a square is to find
+   * out what you said the last time you stood on it — and until now this box
+   * fed the companion and nothing else, so a reflection written on plan 34 was
+   * gone when the tab was. Only while the player is on the board: a note about
+   * a square nobody is standing on has no square to belong to.
+   */
+  if (play.entered) keepWritten(store, { plan: play.plan, text: said, at: Date.now() });
+
   void companion.say(said).then(showThread);
   showThread();
 });
@@ -703,6 +730,7 @@ if (saved.state && play.entered) {
     play.plan,
     null,
     messageFor(language, 'app.standing', { plan: play.plan, title: titleOf(play.plan) }),
+    writingsOn(readAll(store), play.plan),
   );
 } else if (saved.why) {
   el.say.textContent = messageFor(language, 'app.gameNotRead');
