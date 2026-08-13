@@ -7,15 +7,16 @@
  * that goes wrong the first time a `RuleSet` changes. Six values a throw, and
  * the whole history of a game is shorter than one of its plan titles.
  *
- * Only what the storage needs is here. `pathOf` and `squaresOf` — turning the
- * throws into a readable history — were written in the same pass and deleted
- * unread, because `audit-unread` named them and an export with no caller is a
- * guess about what a screen will want. They come back with the screen.
+ * `pathOf` was written a pass before this and deleted unread, because
+ * `audit-unread` named it an export with no caller and that is a guess about
+ * what a screen will want. The screen exists now, so it is back — with the
+ * shape the screen actually asked for rather than the one guessed at.
  */
 
 import {
   DEFAULT_RULESET,
   type GameState,
+  type MoveEvent,
   type RuleSet,
   initialState,
   replay,
@@ -37,3 +38,38 @@ export const stateAfter = (
   rules: RuleSet = DEFAULT_RULESET,
   from: GameState = initialState(),
 ): GameState => replay(rolls, from, rules).at(-1)?.state ?? from;
+
+/** One landing: what was thrown, and where it put you. */
+export interface Step {
+  /** 1-based, so the first throw of a game is step 1. */
+  readonly ordinal: number;
+  readonly roll: number;
+  readonly from: number;
+  readonly to: number;
+  /** False when the throw was refused and the player stayed put. */
+  readonly moved: boolean;
+  readonly event: MoveEvent;
+}
+
+/**
+ * The path a list of throws produced.
+ *
+ * Every throw makes a step, including the ones that moved nobody: *you threw 4,
+ * it takes a six* is part of the history of a game, and a history that silently
+ * drops it tells the player they threw fewer times than they did. Whether it
+ * moved them is carried instead, so the screen can decide.
+ */
+export function pathOf(
+  rolls: readonly number[],
+  rules: RuleSet = DEFAULT_RULESET,
+  from: GameState = initialState(),
+): Step[] {
+  return replay(rolls, from, rules).map((result, at) => ({
+    ordinal: at + 1,
+    roll: rolls[at] as number,
+    from: result.event.from,
+    to: result.event.to,
+    moved: result.event.from !== result.event.to,
+    event: result.event,
+  }));
+}

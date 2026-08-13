@@ -55,6 +55,8 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | A saved game the engine refuses is never played | `tests/kept.test.ts` |
 | A refused game does not cost you your deity | `tests/kept.test.ts` |
 | A history that does not lead to the saved square is refused | `tests/kept.test.ts` |
+| Every throw is a step, refusals included | `tests/kept.test.ts` |
+| No surface writes its own move sentence | `describeMove`, in `@leela/content` |
 | No square is filled with a jump's colour | the published painting, `board-light.webp` |
 | The board has no grid drawn on it | the published board, `gameboard.png` |
 | A point on the board resolves to its own plan | `tests/layout.test.ts` |
@@ -84,10 +86,8 @@ yourself deleting one of these tests, you are re-introducing the defect.
       header after the first throw is the obvious move; it has not been made
       because the row is also the feature, and hiding a feature to save
       forty pixels is how features stop being used.
-- [ ] **The history has no screen.** The rolls are recorded, validated and
-      checked against the state; nothing reads them back. `replay` turns them
-      into every move, and `packages/journal` already has `revisited`,
-      `writingsOn` and `order` for what hangs off them. This is the next thing.
+- [ ] **The path does not scroll to where you are.** It opens at step one, and
+      a game forty throws long opens forty rows from the present.
 - [ ] **The intention is not asked for.** `packages/journal` has `asIntention`,
       `isIntention` and its bounds, and `apps/miniapp/src/state.ts` records why
       it is not a profile field but *the question the game answers*. This
@@ -135,6 +135,40 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — fourteenth pass: the path has a screen
+
+The rolls have been recorded since last pass and nothing read them back. Now
+`pathOf` replays them and *My path* lists every throw: its number, what it did,
+and the square it left you on, tappable to open that plan. `revisited` from
+`packages/journal` marks the squares this game has come back to — coming back is
+what Leela is about, and the corpus already had the function that finds it.
+
+`@leela/journal` is a dependency of this app for the first time. That is the
+point: the intention, the reports and the returns are all defined there and
+tested, and none of them should be written again here.
+
+**The screen found a defect in itself, and it is one the corpus had already
+made once.** The first version of a row picked `app.noRoom` for every throw that
+moved nobody — so a player still waiting for their six was told there was *not
+enough room*, a rule they were not under yet. `describeMove` exists precisely to
+stop that, and its own comment in `@leela/content` records the same mistake
+being made before. Every row is `describeMove` now, and the roll column went
+with it, because the sentence already says what was thrown.
+
+Two things this pass did not invent, and one it deleted last pass and got back:
+`pathOf` returned with the shape the screen actually asked for — a `moved` flag
+rather than the `squaresOf` guessed at a pass earlier — which is the argument
+for deleting an export with no caller rather than keeping it warm.
+
+Cost: 168 tests where there were 163.
+
+**The push was refused, and left refused.** `unified` has diverged: 16 commits
+here, 2 on the remote. They do not overlap in code — mine are all `apps/webgl`,
+theirs are `README.md`, `MIGRATION.md` and `packages/ai` — but `README.md` and
+`MIGRATION.md` are *locally modified by another session*, so any merge or rebase
+would mean resolving conflicts inside uncommitted work that is not mine. Stopped
+there. This is the tree's standing hazard, and it is the reason rule 5 exists.
 
 ### 2026-08-13 — thirteenth pass: the play line, and a history that is stored
 

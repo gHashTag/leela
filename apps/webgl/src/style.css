@@ -712,6 +712,88 @@ body {
   }
 }
 
+/* --- where you have been ------------------------------------------------- */
+
+.path {
+  margin: 0 0 12px;
+  font-size: var(--f-1);
+}
+
+.path summary {
+  cursor: pointer;
+  padding: 6px 0;
+  min-height: 32px;
+  color: var(--hint);
+}
+
+.path-list {
+  display: grid;
+  gap: 2px;
+  margin: 6px 0 0;
+  padding: 10px;
+  list-style: none;
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  border-radius: 10px;
+  max-height: 42dvh;
+  overflow-y: auto;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 2.4em minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 4px;
+  font: inherit;
+  color: var(--text);
+  text-align: start;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.step-ordinal {
+  font-family: var(--font-mono);
+  font-size: var(--f-2);
+  font-variant-numeric: tabular-nums;
+  color: var(--hint);
+}
+
+.step-where {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A throw that moved nobody is still a throw, and reads as one that did not. */
+.step[data-moved='false'] .step-where {
+  color: var(--hint);
+}
+
+/* The stripe the `.say` line uses, at the size a list row can carry. */
+.step[data-tone='snake'] .step-ordinal {
+  color: var(--snake);
+}
+
+.step[data-tone='arrow'] .step-ordinal {
+  color: var(--arrow);
+}
+
+.step[data-tone='win'] .step-ordinal {
+  color: var(--win);
+}
+
+/* Squares this game has come back to. `revisited` in `packages/journal` decides
+   which; coming back is the thing Leela is about, so it is marked. */
+.step-again {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--golden);
+}
+
 /* --- what it rests on ---------------------------------------------------- */
 
 .rests {

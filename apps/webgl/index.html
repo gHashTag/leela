@@ -119,6 +119,18 @@
           <div class="plan-text" id="plan-text"></div>
         </article>
 
+        <!--
+          Where you have been.
+
+          Derived from the throws by `pathOf`, never stored as squares — see
+          `path.ts`. Collapsed, because it grows without bound and the thread
+          above it is what a player is reading between throws.
+        -->
+        <details class="path" id="path">
+          <summary id="path-summary">My path</summary>
+          <ol class="path-list" id="path-list"></ol>
+        </details>
+
         <details class="rests" id="rests">
           <summary id="rests-summary">What this rests on</summary>
           <dl class="rests-list" id="rests-list"></dl>

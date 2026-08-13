@@ -15,6 +15,7 @@
   "dependencies": {
     "@leela/content": "workspace:*",
     "@leela/engine": "workspace:*",
+    "@leela/journal": "workspace:*",
     "three": "0.160.1"
   },
   "devDependencies": {

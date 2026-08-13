@@ -1,11 +1,15 @@
 import { LEGACY_MOBILE, WIN_LOKA, type MoveEvent } from '@leela/engine';
 
 import { directionOf, messageFor, planFor, resolveLanguage, titlesFor } from './canon';
+import { describeMove } from '@leela/content';
+import { revisited } from '@leela/journal';
+
 import { Companion, type Line, type Rests } from './companion';
 import { DEITIES, deityFor } from './deities';
-import { screenFor } from './hud';
+import { screenFor, toneOf } from './hud';
 import { hopPoint, planPosition } from './layout';
 import { browserStore, read, write } from './kept';
+import { pathOf } from './path';
 import { isFace, pipsFor } from './die';
 import { Play, type Hop } from './play';
 import { createBoard } from './scene';
@@ -68,6 +72,9 @@ const el = {
   planText: need<HTMLElement>('#plan-text'),
   thread: need<HTMLElement>('#thread'),
   visitingPlan: need<HTMLElement>('#visiting-plan'),
+  path: need<HTMLDetailsElement>('#path'),
+  pathSummary: need<HTMLElement>('#path-summary'),
+  pathList: need<HTMLElement>('#path-list'),
   rests: need<HTMLDetailsElement>('#rests'),
   restsList: need<HTMLElement>('#rests-list'),
   compose: need<HTMLFormElement>('#compose'),
@@ -85,6 +92,7 @@ document.documentElement.dir = directionOf(language);
 el.reply.placeholder = messageFor(language, 'app.reportPlaceholder');
 el.die.setAttribute('aria-label', messageFor(language, 'app.play'));
 el.visitingBack.textContent = messageFor(language, 'app.read');
+el.pathSummary.textContent = messageFor(language, 'app.path');
 el.planTitle.textContent = messageFor(language, 'app.waiting');
 el.say.textContent = messageFor(language, 'app.opening');
 
@@ -377,6 +385,70 @@ const showRests = (rests: Rests | null, status: string, note: string | null): vo
   row('answering', status);
 };
 
+/**
+ * Where the player has been, derived from the throws.
+ *
+ * Never stored as squares: `pathOf` replays the rolls through the engine, so
+ * this list cannot disagree with the rules that produced it. `revisited` is
+ * `packages/journal`'s, because coming back to a square is what Leela is about
+ * and the corpus already had the function that finds it.
+ */
+const showPath = (): void => {
+  const steps = pathOf(rolls, LEGACY_MOBILE);
+  el.path.hidden = steps.length === 0;
+  el.pathSummary.textContent = `${messageFor(language, 'app.path')} · ${steps.length}`;
+
+  const again = new Map(
+    revisited(steps.filter((step) => step.moved).map((step) => ({ plan: step.to }))).map(
+      (revisit) => [revisit.plan, revisit.times],
+    ),
+  );
+
+  el.pathList.replaceChildren(
+    ...steps.map((step) => {
+      const row = document.createElement('li');
+      const open = document.createElement('button');
+      open.type = 'button';
+      open.className = 'step';
+      open.dataset.moved = String(step.moved);
+      open.dataset.tone = toneOf(step.event.direction);
+
+      const ordinal = document.createElement('span');
+      ordinal.className = 'step-ordinal';
+      ordinal.textContent = `${step.ordinal}.`;
+
+      const where = document.createElement('span');
+      where.className = 'step-where';
+      /**
+       * `describeMove`, not a key picked here.
+       *
+       * The first version of this row chose `app.noRoom` for every throw that
+       * did not move anyone, so a player still waiting for their six was told
+       * there was *not enough room* — a rule they were not under yet. That is
+       * the exact mistake `describeMove` was extracted to stop, and its own
+       * comment records it having been made once already. Two surfaces building
+       * the sentence themselves is how they end up disagreeing.
+       */
+      where.textContent = describeMove(language, step.event, titleOf);
+
+      open.append(ordinal, where);
+
+      const times = again.get(step.to);
+      if (step.moved && times) {
+        const mark = document.createElement('span');
+        mark.className = 'step-again';
+        mark.textContent = `×${times}`;
+        mark.title = messageFor(language, 'app.cameBack');
+        where.append(' ', mark);
+      }
+
+      open.addEventListener('click', () => visit(step.to));
+      row.append(open);
+      return row;
+    }),
+  );
+};
+
 const showFace = (value: number): void => {
   const cells = pipsFor(value);
   el.die.dataset.thrown = String(isFace(value));
@@ -538,6 +610,7 @@ const takeTurn = async (): Promise<void> => {
     companion.arrived(play.plan, turn.event, el.say.textContent ?? '');
     showThread();
   }
+  showPath();
 
   if (turn.won) {
     // Won, and still standing on 68 until the next throw. Say so, keep the
@@ -636,6 +709,7 @@ if (saved.state && play.entered) {
 }
 
 showThread();
+showPath();
 settle();
 grow();
 el.progress.max = 1;

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { LEGACY_MOBILE, WIN_LOKA, applyRoll, initialState } from '@leela/engine';
 
 import { KEPT_KEY, forget, read, write, type Store } from '../src/kept';
+import { pathOf } from '../src/path';
 
 /**
  * A saved game is a thing another program wrote — an older build of this one,
@@ -196,5 +197,45 @@ describe('forgetting', () => {
     write(store, { state: played(), deity: 'indra', rolls: [] });
     forget(store);
     expect(read(store)).toEqual(NOTHING);
+  });
+});
+
+describe('the path a history describes', () => {
+  /**
+   * Every throw is a step, including the ones that moved nobody. Three refused
+   * throws in a row are three throws, and a history that silently drops them
+   * tells the player they threw fewer times than they did.
+   */
+  it('has one step per throw, refusals included', () => {
+    const refused = [1, 2, 3, 4, 5];
+    const steps = pathOf(refused, LEGACY_MOBILE);
+    expect(steps).toHaveLength(refused.length);
+    expect(steps.every((step) => !step.moved)).toBe(true);
+    expect(steps.map((step) => step.roll)).toEqual(refused);
+  });
+
+  it('numbers the steps from one, in the order thrown', () => {
+    const steps = pathOf(THROWS, LEGACY_MOBILE);
+    expect(steps.map((step) => step.ordinal)).toEqual([1, 2, 3, 4]);
+  });
+
+  /** The path is derived, so its last square is the engine's answer. */
+  it('ends where the engine says the game ended', () => {
+    const steps = pathOf(THROWS, LEGACY_MOBILE);
+    expect(steps.at(-1)?.to).toBe(played().loka);
+  });
+
+  it('joins up: each step starts where the last one left off', () => {
+    const steps = pathOf([6, 3, 4, 2, 5, 1, 6, 2], LEGACY_MOBILE);
+    for (const [at, step] of steps.entries()) {
+      if (at === 0) continue;
+      expect(step.from, `step ${step.ordinal} does not follow step ${at}`).toBe(
+        steps[at - 1]?.to,
+      );
+    }
+  });
+
+  it('is nothing at all before the first throw', () => {
+    expect(pathOf([], LEGACY_MOBILE)).toEqual([]);
   });
 });
