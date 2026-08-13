@@ -831,7 +831,15 @@ body {
   list-style: none;
   background: color-mix(in srgb, var(--surface-2) 70%, transparent);
   border-radius: 10px;
-  max-height: 42dvh;
+  /*
+   * The smaller of a share of the viewport and the panel actually over it.
+   * 42dvh alone is 341px against a 143px panel at the half detent, so the list
+   * scrolls inside a box whose bottom the player cannot see: aiming a row into
+   * view of the list put it nowhere on screen. `--path-max` is written by
+   * `fit()` from the panel's own measured height, so there is one source of
+   * truth and the fallback is exactly today's behaviour.
+   */
+  max-height: min(42dvh, var(--path-max, 42dvh));
   overflow-y: auto;
 }
 

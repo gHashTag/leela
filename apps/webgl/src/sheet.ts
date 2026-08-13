@@ -110,3 +110,17 @@ export const bringIntoView = (view: Scroller, box: Box, margin = 8): number | nu
   if (box.top - margin < view.scrollTop) return clamp(box.top - margin);
   return null;
 };
+
+/**
+ * Whether a scroller is resting at its end.
+ *
+ * Asked *before* a list is rebuilt, so that a list which is being followed
+ * keeps following and one the player has scrolled up to read is left alone.
+ * `replaceChildren` preserves `scrollTop`, so their place is not already lost —
+ * which makes taking it away a new loss rather than an unavoidable one.
+ *
+ * The slack is there because a scroller at its end reports fractional pixels on
+ * a scaled display, and an exact comparison is false at the end.
+ */
+export const atEnd = (view: Scroller, slack = 4): boolean =>
+  view.scrollHeight - view.scrollTop - view.clientHeight <= slack;

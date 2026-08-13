@@ -30,7 +30,7 @@ import { isFace, pipsFor } from './die';
 import { entered, throwFor, type Hop } from './play';
 import type { SeatedPlayer } from '@leela/engine';
 import { createBoard } from './scene';
-import { bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
+import { atEnd, bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
 import { css } from './theme';
 
 /**
@@ -246,6 +246,33 @@ const chooseDeity = (next: (typeof DEITIES)[number]): void => {
 
 el.lotus.addEventListener('click', () => showRoster(el.who.hidden));
 
+/**
+ * Opening the path puts the player where they are, not at step one.
+ *
+ * Three moves, and all three are needed — the first version did only the last
+ * and put nothing on screen. The list is capped to the panel, because a list
+ * taller than the window over it can be scrolled to a row nobody can see (341px
+ * of list inside a 143px panel, measured). The panel is then scrolled to the
+ * list, because the list sits below the conversation and the panel was left
+ * wherever the companion put it. Only then is the newest row aimed inside the
+ * list.
+ *
+ * Moving the panel here does not fight the thread: this runs when a player has
+ * *asked* to read their path, which is the one moment the panel belongs to the
+ * path rather than to the conversation. Nothing else in the path's code touches
+ * `#sheet-body`.
+ *
+ * On `toggle` rather than inside `showPath` because that is the moment of the
+ * asking — and because `showPath` is not called when the seat count changes,
+ * while `seatTable` rebuilds the throws underneath it.
+ */
+el.path.addEventListener('toggle', () => {
+  if (!el.path.open) return;
+  capPath();
+  follow(el.sheetBody, el.pathList);
+  follow(el.pathList, el.pathList.lastElementChild);
+});
+
 // Anywhere else shuts it, which is what every other menu on a phone does.
 document.addEventListener('pointerdown', (event) => {
   if (el.who.hidden) return;
@@ -400,6 +427,21 @@ el.handle.addEventListener('pointercancel', endDrag);
  * mid-transition for a quarter of a second after every change, and a board that
  * only agrees with it at the end of the animation looks like it is chasing it.
  */
+/**
+ * The path list may not be taller than the panel that shows it.
+ *
+ * A scroller inside a scroller: the list carried `max-height: 42dvh`, which is
+ * 341px against a 143px panel at the half detent, so scrolling a row to the
+ * bottom of the list put it 200px below anything visible. The panel measures
+ * itself rather than the stylesheet guessing the same number twice, and the
+ * stylesheet keeps 42dvh as the fallback, so an unset property is exactly
+ * today's behaviour.
+ */
+const capPath = (): void => {
+  const panel = el.sheetBody.clientHeight;
+  if (panel > 0) el.sheet.style.setProperty('--path-max', `${panel}px`);
+};
+
 const fit = (): void => {
   const sheet = el.sheet.getBoundingClientRect();
   // Which edge the sheet is on is a question the stylesheet answers and this
@@ -410,6 +452,8 @@ const fit = (): void => {
     bottom: alongTheBottom ? Math.max(0, window.innerHeight - sheet.top) : 0,
     right: alongTheBottom ? 0 : Math.max(0, window.innerWidth - sheet.left),
   });
+
+  capPath();
 };
 
 window.addEventListener('resize', fit);
@@ -438,7 +482,7 @@ const showPlanText = (plan: number): void => {
 };
 
 /**
- * Brings the newest line of the conversation into view.
+ * Brings something into view inside the scroller that actually holds it.
  *
  * This was `scrollIntoView({ block: 'nearest' })` and it did not arrive. On a
  * fresh load one throw left the companion's answer at 685–856 against a panel
@@ -446,14 +490,19 @@ const showPlanText = (plan: number): void => {
  * the page, both ways: the smooth variant leaves it at zero, the instant one
  * moves it. The proactive half of this game was being written below the fold.
  *
- * The scroller is `#sheet-body`, not `#thread`, which overflows visibly. Rects
- * rather than `offsetTop` because the offset parent is not the scroller, and a
- * position measured against the wrong box is the kind of wrong that looks like
- * a browser bug.
+ * There are two scrollers, which is why this takes one rather than naming it.
+ * The thread's is `#sheet-body`, because `.thread` has no overflow and spills
+ * into the panel. The path's is `#path-list` itself, which carries its own
+ * `overflow-y: auto`. Writing one never moves the other — measured — and that
+ * is the whole reason `scrollIntoView` is not used: it walks *every* ancestor
+ * scroller, so aiming a path row would drag the panel and undo the thread.
+ *
+ * Rects rather than `offsetTop` because the offset parent is not the scroller,
+ * and a position measured against the wrong box is the kind of wrong that looks
+ * like a browser bug.
  */
-const follow = (line: Element | null): void => {
+const follow = (view: HTMLElement, line: Element | null): void => {
   if (!line) return;
-  const view = el.sheetBody;
   const box = line.getBoundingClientRect();
   const around = view.getBoundingClientRect();
   const to = bringIntoView(view, {
@@ -477,7 +526,7 @@ const showThread = (): void => {
   }
 
   el.thread.replaceChildren(fragment);
-  follow(el.thread.lastElementChild);
+  follow(el.sheetBody, el.thread.lastElementChild);
 
   showRests(view.rests, view.status, view.note);
 };
@@ -578,6 +627,10 @@ const showRests = (rests: Rests | null, status: string, note: string | null): vo
  *        header narrating the mover's move.
  */
 const showPath = (at: number = seatAt()): void => {
+  // Asked before the rebuild: a list already at its end keeps following, and one
+  // the player scrolled up to read is left where they left it. `replaceChildren`
+  // keeps `scrollTop`, so their place is theirs to lose, not this function's.
+  const following = atEnd(el.pathList);
   const steps = pathOf(rolls[at] ?? [], LEGACY_MOBILE);
   el.path.hidden = steps.length === 0;
   el.pathSummary.textContent = `${messageFor(language, 'app.path')} · ${steps.length}`;
@@ -631,6 +684,8 @@ const showPath = (at: number = seatAt()): void => {
       return row;
     }),
   );
+
+  if (following) follow(el.pathList, el.pathList.lastElementChild);
 };
 
 /**

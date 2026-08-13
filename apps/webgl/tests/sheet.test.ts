@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { DETENTS, bringIntoView, dragged, nearest, stepped, type Heights } from '../src/sheet';
+import { DETENTS, atEnd, bringIntoView, dragged, nearest, stepped, type Heights } from '../src/sheet';
 
 /**
  * The sheet's arithmetic, which is all of it that can be wrong quietly.
@@ -100,5 +100,74 @@ describe('bringing a line into view', () => {
   /** Past the end of the content it scrolls as far as there is, and no further. */
   it('clamps to the end rather than chasing a box beyond the content', () => {
     expect(bringIntoView(view, { top: 980, height: 60 })).toBe(1000 - 140);
+  });
+});
+
+describe('resting at the end', () => {
+  const view = { scrollTop: 0, clientHeight: 140, scrollHeight: 1000 };
+
+  it('is true at the end and false anywhere above it', () => {
+    expect(atEnd({ ...view, scrollTop: 860 })).toBe(true);
+    expect(atEnd({ ...view, scrollTop: 400 })).toBe(false);
+    expect(atEnd({ ...view, scrollTop: 0 })).toBe(false);
+  });
+
+  /** A scroller at its end reports fractional pixels on a scaled display. */
+  it('tolerates the fraction a real scroller rests at', () => {
+    expect(atEnd({ ...view, scrollTop: 857.5 })).toBe(true);
+    expect(atEnd({ ...view, scrollTop: 855 })).toBe(false);
+  });
+
+  it('is true when there is nothing to scroll', () => {
+    expect(atEnd({ scrollTop: 0, clientHeight: 140, scrollHeight: 100 })).toBe(true);
+    expect(atEnd({ scrollTop: 0, clientHeight: 0, scrollHeight: 0 })).toBe(true);
+  });
+
+  /**
+   * The pair this is used as: asked before the rebuild, acted on after it. A
+   * list resting at its end was following and should keep following; one the
+   * player scrolled up to read was not, and must be left alone.
+   */
+  it('tells a list that was following from one that was being read', () => {
+    const atTheEnd = { scrollTop: 860, clientHeight: 140, scrollHeight: 1000 };
+    const beingRead = { scrollTop: 300, clientHeight: 140, scrollHeight: 1000 };
+    expect(atEnd(atTheEnd)).toBe(true);
+    expect(atEnd(beingRead)).toBe(false);
+  });
+});
+
+/**
+ * The property the path list rests on, and the one the first attempt got wrong.
+ *
+ * The path rows scroll inside `#path-list`, which itself sits inside the panel
+ * `#sheet-body`. Aiming a row into view *of the list* is worth nothing when the
+ * list's own box is taller than the panel over it: measured at the half detent,
+ * 341px of list inside a 143px panel, and the aimed row landed nowhere on
+ * screen. Capping the list to the panel is what makes in-view mean visible.
+ */
+describe('a scroller inside a scroller', () => {
+  const onScreen = (inner: number, outer: number, box: { top: number; height: number }, content: number) => {
+    const view = { scrollTop: 0, clientHeight: inner, scrollHeight: content };
+    const at = bringIntoView(view, box) ?? 0;
+    // Where the box sits inside the inner viewport once it has been aimed.
+    const withinInner = box.top - at;
+    return withinInner >= 0 && withinInner + box.height <= outer;
+  };
+
+  it('cannot put a row on screen while the inner box is taller than the panel', () => {
+    // The measured case: list 341, panel 143, the newest row at the end.
+    expect(onScreen(341, 143, { top: 1150, height: 24 }, 1338)).toBe(false);
+  });
+
+  it('puts every row on screen once the inner box is capped to the panel', () => {
+    for (const panel of [119, 143, 265, 525]) {
+      for (const rows of [3, 12, 40, 120]) {
+        const rowHeight = 24;
+        const content = rows * rowHeight;
+        const inner = Math.min(341, panel);
+        const last = { top: content - rowHeight, height: rowHeight };
+        expect(onScreen(inner, panel, last, content)).toBe(true);
+      }
+    }
   });
 });
