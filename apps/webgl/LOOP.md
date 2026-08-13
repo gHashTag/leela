@@ -18,10 +18,16 @@ Every iteration, in this order:
    and from the root, `node scripts/audit-unread.mjs` and
    `node scripts/audit-configs.mjs`. If any of them is red *before* you change
    anything, that is the iteration's work: fix it, record it, stop.
-3. **Look at it.** `bun run --cwd apps/webgl dev`, open it, take a screenshot.
-   Three defects in this app were found this way that no test would have caught —
-   a blank page, an arrow that flew off the board, and a token that resolved into
-   confetti. A change to the board that has not been looked at is not done.
+3. **Look at it, and zoom in on what you changed.** `bun run --cwd apps/webgl dev`,
+   open it, take a screenshot. Four defects in this app were found this way that
+   no test would have caught — a blank page, an arrow that flew off the board, a
+   token that resolved into confetti, and a scale texture that was applied at a
+   strength of nothing. That last one survived a full-board screenshot, because
+   at board distance a smooth snake and a scaled one are the same few pixels.
+   Dispatch wheel events at the canvas to zoom:
+   ```
+   c.dispatchEvent(new WheelEvent('wheel', { deltaY: -120, bubbles: true, cancelable: true }))
+   ```
 4. **One change per iteration.** Fifteen minutes is not a refactor.
 5. **Never** `git add -A` — this tree carries other sessions' uncommitted work.
    Stage named paths under `apps/webgl` only. Never push. Never `main`.
@@ -50,6 +56,8 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | No square is filled with a jump's colour | the published painting, `board-light.webp` |
 | The board has no grid drawn on it | the published board, `gameboard.png` |
 | A point on the board resolves to its own plan | `tests/layout.test.ts` |
+| Scale rows interlock rather than stacking | `tests/skin.test.ts` |
+| The scale tile has no bald seam | `tests/skin.test.ts` |
 
 ## Known open work, roughly in value order
 
@@ -72,11 +80,14 @@ yourself deleting one of these tests, you are re-introducing the defect.
       first half is exactly right for a refused save; the trailing clause is
       about the mini app's journals. Wants a key of its own in
       `packages/content`, not a string invented here.
-- [ ] **The snakes have no skin, and they are too small.** Naturalistic colours
-      now, but no scale pattern, and next to the published painting they are
-      worms: there the serpents are the dominant thing on the board, thick,
-      coiling over many squares, with modelled heads. `taperedTube` has no UVs
-      yet, which is the first thing a scale map needs.
+- [ ] **The snakes have scales but no markings.** The height field is on and
+      reads at close zoom; what is still missing is the *pattern* — the
+      published painting has banded reds and blotched vipers, and a colour map
+      per skin is what would carry that. The UVs are there now, so it is a
+      texture away.
+- [ ] **The snake heads are spheres.** At the zoom where the scales read, the
+      head is plainly a squashed ball with two beads on it. A jaw and a brow
+      would cost a few more primitives.
 - [ ] **The board has no border.** The rules illustration carries feathers and
       crystals around the edge. A plain slab reads as a placeholder.
 - [ ] **The perspective is steep on a wide window.** The near edge renders much
@@ -88,6 +99,34 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — fourth pass: scales
+
+`taperedTube` gained UVs — u around the body, v down its length, with the repeat
+baked in rather than set on the texture, because thirty snakes of different
+lengths cannot share one `texture.repeat` and still have scales the same size.
+`src/skin.ts` paints one height-field tile that every snake shares, so the six
+skins stay six colours and one texture. Girth 0.1 → 0.15.
+
+The lattice is tested because it has a wrong answer that hides: scales
+interlock, and rows that line up are a brick wall — which, wrapped round a tube
+at phone size, just looks like a slightly odd tube. That is the exact failure
+the texture exists to fix, so it would have passed every glance it ever got.
+Same for the seam: each scale is painted at three offsets, and without that
+every tile join shows as a bald ring around the body, thirty of them, evenly
+spaced, reading as a fault in the model rather than in the texture.
+
+Cost: 111 tests where there were 103.
+
+**And the tests were green while the feature did nothing.** `bumpScale` in
+three.js is a multiplier on the height gradient, not a distance; it was set to
+0.035 as though it were world units, which is a bump of nothing. The snakes
+rendered perfectly smooth and every assertion in `skin.test.ts` still passed,
+because those assertions are about the lattice and the painting calls and say
+nothing about whether the material ever received the map. Found by zooming the
+camera in and looking — at board distance a smooth snake and a scaled one are
+the same handful of pixels, so the normal screenshot could not have shown it
+either. **Zoom in on the thing you just changed.**
 
 ### 2026-08-13 — third pass: there is no grid
 

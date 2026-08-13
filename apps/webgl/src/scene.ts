@@ -15,6 +15,7 @@ import {
   paletteFor,
   type Scheme,
 } from './theme';
+import { paintScales } from './skin';
 import { arrowProfile, snakeProfile, wiggle, type Profile } from './tube';
 
 /**
@@ -64,7 +65,13 @@ const SNAKE_POINTS = 14;
  * arrowheads and the fletching were there and invisible, which is the same as
  * not being there.
  */
-const SNAKE_GIRTH = 0.1;
+const SNAKE_GIRTH = 0.15;
+
+/** The scale tile, and how the scales sit on it. See `skin`. */
+const SKIN_TILE = 256;
+const SKIN_LATTICE = { across: 9, along: 7 };
+/** World length of one row of scales. Smaller means finer scales. */
+const SCALE_PITCH = 0.38;
 /**
  * A shaft is slender.
  *
@@ -226,10 +233,20 @@ const taperedTube = (
   profile: Profile,
   along = 48,
   around = 10,
+  /**
+   * How many times the skin repeats down the length.
+   *
+   * Passed in and baked into the UVs rather than set with `texture.repeat`,
+   * because the snakes are different lengths and one shared texture cannot
+   * carry thirty different repeats. Baking it here keeps a scale the same size
+   * on a short snake as on a long one, which is the whole point of a scale.
+   */
+  vRepeat = 1,
 ): THREE.BufferGeometry => {
   const frames = curve.computeFrenetFrames(along, false);
   const position: number[] = [];
   const normal: number[] = [];
+  const uv: number[] = [];
   const index: number[] = [];
 
   for (let i = 0; i <= along; i += 1) {
@@ -246,6 +263,7 @@ const taperedTube = (
         .add(B.clone().multiplyScalar(Math.sin(angle)));
       position.push(centre.x + out.x * radius, centre.y + out.y * radius, centre.z + out.z * radius);
       normal.push(out.x, out.y, out.z);
+      uv.push(j / around, t * vRepeat);
     }
   }
 
@@ -262,6 +280,7 @@ const taperedTube = (
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
   geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normal, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   geometry.setIndex(index);
   return geometry;
 };
@@ -479,6 +498,22 @@ export const createBoard = (
   // to stay dark whatever colour the thing around it is.
   const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0x16191c, roughness: 0.4 });
 
+  /**
+   * One scale tile, shared by every snake.
+   *
+   * A height field rather than a colour, so the six skins stay six colours and
+   * one texture instead of six textures. `RepeatWrapping` on both axes: the
+   * body wraps around in u and the tile repeats down the length in v, and the
+   * UVs `taperedTube` bakes decide how many times.
+   */
+  const skinCanvas = surface(SKIN_TILE, SKIN_TILE);
+  const skinBrush = skinCanvas.getContext('2d');
+  if (skinBrush) paintScales(skinBrush, SKIN_TILE, SKIN_LATTICE);
+  const skinTexture = new THREE.CanvasTexture(skinCanvas as unknown as HTMLCanvasElement);
+  skinTexture.wrapS = THREE.RepeatWrapping;
+  skinTexture.wrapT = THREE.RepeatWrapping;
+  skinTexture.anisotropy = 4;
+
   const links = new THREE.Group();
   const linkOf = new Map<number, THREE.MeshStandardMaterial[]>();
 
@@ -547,10 +582,21 @@ export const createBoard = (
     const intoEnd = end.clone().sub(curve.getPointAt(0.96)).normalize();
 
     if (kind === 'snake') {
+      // Scales, and how many of them: one row every `SCALE_PITCH` of world
+      // length, so a scale is the same size on a short snake as on a long one.
+      // `bumpScale` is a multiplier on the height gradient, not a distance.
+      // Set to 0.035 first, as though it were world units, which is a bump of
+      // nothing — the snakes rendered perfectly smooth and the texture looked
+      // as if it had never been applied.
+      material.bumpMap = skinTexture;
+      material.bumpScale = 1.4;
+      material.roughnessMap = skinTexture;
+
       // Thick behind the head at `from` — the square you land on — tapering to
       // the tail at `to`, which is where it puts you down. The taper is the
       // rule, drawn.
-      group.add(new THREE.Mesh(taperedTube(curve, snakeProfile(SNAKE_GIRTH)), material));
+      const rows = Math.max(1, Math.round(curve.getLength() / SCALE_PITCH));
+      group.add(new THREE.Mesh(taperedTube(curve, snakeProfile(SNAKE_GIRTH), 64, 14, rows), material));
 
       const head = new THREE.Mesh(new THREE.SphereGeometry(SNAKE_GIRTH * 1.5, 16, 12), material);
       head.scale.set(1, 0.72, 1.35);
