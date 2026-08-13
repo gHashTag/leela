@@ -60,6 +60,8 @@ export interface Palette {
   readonly envIntensity: number;
   /** Film exposure. Tone mapping is ACES; this is the stop. */
   readonly exposure: number;
+  /** Whether the board hangs in space or sits on a table. */
+  readonly stars: boolean;
 }
 
 /**
@@ -98,6 +100,7 @@ export const PALETTES: Record<Scheme, Palette> = {
     key: 1.6,
     envIntensity: 1,
     exposure: 1.05,
+    stars: false,
   },
   /**
    * Dark is a dark *room*, not a dark board.
@@ -110,7 +113,8 @@ export const PALETTES: Record<Scheme, Palette> = {
    * reads as a lit object on a dark table, which is what it is.
    */
   dark: {
-    background: 0x121114,
+    // t27.ai's own `--bg`. In space there is nothing behind the stars.
+    background: 0x000000,
     cell: 0xcdc4ab,
     border: 0x6b6047,
     label: '#7b3d86',
@@ -123,6 +127,7 @@ export const PALETTES: Record<Scheme, Palette> = {
     key: 1.15,
     envIntensity: 0.42,
     exposure: 0.92,
+    stars: true,
   },
 };
 

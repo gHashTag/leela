@@ -65,6 +65,8 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | The board is centred in the band, not merely inside it | `tests/framing.test.ts` |
 | The board fills the band it was given | `tests/framing.test.ts` |
 | The framing fits the slab, margin and all | `tests/framing.test.ts` |
+| The stars cover the sphere evenly, pole to pole | `tests/stars.test.ts` |
+| The sky is the same sky on every load | `tests/stars.test.ts` |
 
 ## Known open work, roughly in value order
 
@@ -92,6 +94,16 @@ yourself deleting one of these tests, you are re-introducing the defect.
       the cost is that a band is a darker version of the same hue. The painting
       has red-on-black coral snakes, which this cannot draw. A second colour
       would mean a tile per skin, or a shader that mixes two.
+- [ ] **Nothing casts a shadow onto the board.** `castShadow` is set on the
+      snake *heads* and arrow *heads* only — never on the bodies or the shafts —
+      and the directional light still has three's default shadow camera, which
+      is a +/-5 box against a board that spans +/-5.3. So every snake and arrow
+      floats, unattached. This is now the biggest single realism gap and it is a
+      bug rather than a taste question.
+- [ ] **The font is named, not shipped.** t27.ai self-hosts `outfit-latin.woff2`
+      and `jetbrains-mono-*.woff2`. The stack here names both and falls through
+      to the system font, so the identity is right and the typeface is not.
+      Copying those files in is one download, and one that wants asking first.
 - [ ] **The snake heads are spheres.** At the zoom where the scales read, the
       head is plainly a squashed ball with two beads on it. A jaw and a brow
       would cost a few more primitives.
@@ -106,6 +118,50 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — ninth pass: space, and t27.ai's own system
+
+Two changes rather than one, both asked for directly.
+
+**The board hangs in space.** Leela is a cosmology before it is a game, so a
+board floating in a dark room was a weaker idea than a board floating in the
+vacuum. `src/stars.ts` places them. Two things there have a plausible wrong
+answer, so both are tested: sampling a sphere the obvious way bunches the stars
+at the poles — several times the equatorial density, and on screen it reads as a
+nebula rather than as a bug — and the sky is deterministic, for the same reason
+the snakes' markings are. The test does not only check the good sampling; it
+also builds the naive one and requires the measurement to *fail* it, because a
+check that has only ever seen a passing input has not been shown to detect
+anything.
+
+They do not drift. This app draws a frame when something changes and not
+otherwise, and a moving sky means rendering forever for a phone in a pocket.
+Orbiting parallaxes them, which is motion the player asked for.
+
+**The chrome is t27.ai's**, read off the running site rather than eyeballed:
+`--bg #000`, `--accent #00FF88`, `--muted #888`, `--golden #FFD700`, a type
+scale in powers of phi, Outfit with a system fallback, JetBrains Mono for the
+small uppercase labels. The black is also exactly what the vacuum wanted.
+
+Cost: 150 tests where there were 141.
+
+**The count was arithmetic, not taste, and it took a measurement to see it.**
+The first sky put 1,400 stars up and showed four. Enlarging them to fourteen
+pixels each still showed five — which is what ruled out size and pointed at the
+real cause: a 24-degree lens on a phone sees a cone of about 24 by 11 degrees,
+which is 0.64% of a sphere. 1,400 x 0.0064 is nine. Forty thousand shows a few
+hundred, and `Points` does not notice.
+
+Two smaller ones. The tests caught my own first fix for the dim sky — lifting
+the brightness floor — flattening the cubic falloff until a third of the sky was
+"bright"; additive blending was the right tool and the distribution stayed.
+And `audit-unread` reported `vertexColors` as written-never-read, which is the
+same multi-line-literal false positive as `roughness` two months of passes ago,
+fixed the same way.
+
+Also recorded rather than fixed: **nothing casts a shadow onto the board.**
+`castShadow` is on the heads only, never the bodies or shafts, and the light
+still has three's default +/-5 shadow camera against a board spanning +/-5.3.
 
 ### 2026-08-13 — eighth pass: an instrument for the framing
 

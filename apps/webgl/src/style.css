@@ -15,19 +15,46 @@
 :root {
   color-scheme: light dark;
 
-  --bg: #f4f6f8;
+  /*
+   * The tokens are t27.ai's own, read off the running site rather than
+   * eyeballed: `--bg #000`, `--accent #00FF88`, `--muted #888`,
+   * `--golden #FFD700`, `--border rgba(255,255,255,.08)`, and a type scale in
+   * powers of phi — 1, 1.272, 1.618, 2.058, 2.618 — which is the same constant
+   * the rest of that work is built on. Its typeface is Outfit, self-hosted
+   * there as a subset woff2; the stack below names it and falls through to the
+   * system font, which is also what carries the twenty-one scripts Outfit's
+   * latin subset does not.
+   */
+  --phi: 1.618;
+  --f-2: 0.8125rem;
+  --f-1: 0.875rem;
+  --f0: 1rem;
+  --f1: 1.272rem;
+  --f2: 1.618rem;
+  --f3: 2.058rem;
+  --sp-1: 0.382rem;
+  --sp0: 0.618rem;
+  --sp1: 1rem;
+  --sp2: 1.618rem;
+  --sp3: 2.618rem;
+
+  --font: 'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+
+  --bg: #f4f2ec;
   --surface: #ffffff;
-  --surface-2: #eef1f4;
+  --surface-2: #eceae3;
   --text: #16191c;
-  --hint: #5c666e;
-  --rule: #d9dee2;
+  --hint: #6b6b6b;
+  --rule: rgb(0 0 0 / 10%);
 
   --snake: #a3301c;
   --arrow: #1f6b39;
   --win: #7a5a12;
 
-  --accent: #1f6b39;
+  --accent: #00a75a;
   --on-accent: #ffffff;
+  --golden: #ffd700;
 
   --radius: 14px;
   --touch: 44px;
@@ -44,21 +71,22 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #14171a;
-    --surface: #1c2024;
-    --surface-2: #242a2f;
-    --text: #eef2f5;
-    --hint: #9aa5ad;
-    --rule: #333a40;
+    /* t27.ai is a black site. So is this, once the board is in space. */
+    --bg: #000000;
+    --surface: #0b0d0f;
+    --surface-2: #14171a;
+    --text: #ffffff;
+    --hint: #888888;
+    --rule: rgb(255 255 255 / 8%);
 
     --snake: #f08a72;
     --arrow: #5fc684;
     --win: #e0b544;
 
-    --accent: #5fc684;
-    --on-accent: #10151a;
+    --accent: #00ff88;
+    --on-accent: #000000;
 
-    --shadow: 0 -1px 0 var(--rule), 0 -12px 32px rgb(0 0 0 / 45%);
+    --shadow: 0 -1px 0 var(--rule), 0 -12px 40px rgb(0 0 0 / 70%);
   }
 }
 
@@ -89,12 +117,7 @@ body {
 body {
   background: var(--bg);
   color: var(--text);
-  font:
-    16px/1.5 -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    system-ui,
-    sans-serif;
+  font: var(--f0) / 1.5 var(--font);
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }
@@ -146,16 +169,17 @@ body {
 }
 
 .where-number {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: var(--f3);
+  font-weight: 500;
+  letter-spacing: -0.025em;
   font-variant-numeric: tabular-nums;
   line-height: 1;
   min-width: 1.6em;
 }
 
 .where-title {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: var(--f0);
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -217,8 +241,10 @@ body {
   min-height: 36px;
   padding: 0 12px;
   font: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--f-2);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--accent);
   background: transparent;
   border: 1px solid var(--rule);
@@ -456,7 +482,9 @@ body {
 
 .deity-latin {
   font-size: 11px;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
 }
 
 /* --- what scrolls -------------------------------------------------------- */
@@ -555,8 +583,9 @@ body {
   display: block;
   margin-top: 4px;
   font-size: 11px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-family: var(--font-mono);
   color: var(--hint);
 }
 
@@ -578,8 +607,10 @@ body {
   margin-top: 6px;
   padding: 0;
   font: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--f-2);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   text-align: start;
   color: var(--accent);
   background: none;

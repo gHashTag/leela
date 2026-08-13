@@ -17,6 +17,7 @@ import {
   type Scheme,
 } from './theme';
 import { paintBorder } from './border';
+import { starsFor } from './stars';
 import { frameBoard } from './framing';
 import { paintMarking, paintScales, type Marking } from './skin';
 import { arrowProfile, snakeProfile, wiggle, type Profile } from './tube';
@@ -41,6 +42,20 @@ import { arrowProfile, snakeProfile, wiggle, type Profile } from './tube';
  * through. Fitting the flat board alone crops the tallest jump.
  */
 const ARC_CEILING = 1.9;
+
+/**
+ * How many stars, and how far out.
+ *
+ * Forty thousand for a sky that shows a few hundred, because the lens is long.
+ * At 24 degrees vertical on a phone the horizontal field is about 11, and a
+ * cone that narrow is 0.64% of the sphere — so the first attempt at 1,400 put
+ * **nine** stars in frame, and the four or five that landed on screen read as
+ * dust on the lens rather than as a sky. Enlarging them did not help and was
+ * how the count was found: at fourteen pixels a piece there were still only
+ * five. `Points` does not care about forty thousand; the arithmetic did.
+ */
+const STAR_COUNT = 40_000;
+const STAR_RADIUS = 260;
 /** How many samples a snake's winding path is built from. */
 const SNAKE_POINTS = 14;
 /**
@@ -421,6 +436,61 @@ export const createBoard = (
   const pmrem = new THREE.PMREMGenerator(renderer);
   const room = pmrem.fromScene(new RoomEnvironment(), 0.04);
   scene.environment = room.texture;
+
+  /**
+   * The sky.
+   *
+   * Leela is a cosmology before it is a game — seventy-two planes from the
+   * physical up to Cosmic Consciousness — and a board floating in a dark room
+   * is a weaker idea than a board floating in space. `stars` places them; the
+   * awkward part is there, with a test, because a sphere sampled the obvious
+   * way bunches its stars at the poles and that reads as a nebula rather than
+   * as a bug.
+   *
+   * They do not drift. This app draws a frame when something changes and not
+   * otherwise — see `frames` — and a moving sky would mean rendering forever
+   * for a phone in somebody's pocket. Orbiting the board parallaxes them
+   * instead, which is motion the player asks for.
+   */
+  const sky = starsFor({ count: STAR_COUNT, radius: STAR_RADIUS });
+  const skyPositions = new Float32Array(sky.length * 3);
+  const skyColours = new Float32Array(sky.length * 3);
+  for (const [at, star] of sky.entries()) {
+    skyPositions[at * 3] = star.x;
+    skyPositions[at * 3 + 1] = star.y;
+    skyPositions[at * 3 + 2] = star.z;
+    // A touch of colour temperature, so it is not a field of identical dots.
+    const warm = 0.92 + 0.08 * Math.sin(at);
+    skyColours[at * 3] = star.brightness;
+    skyColours[at * 3 + 1] = star.brightness * warm;
+    skyColours[at * 3 + 2] = star.brightness * (2 - warm) * 0.98;
+  }
+  const skyGeometry = new THREE.BufferGeometry();
+  skyGeometry.setAttribute('position', new THREE.BufferAttribute(skyPositions, 3));
+  skyGeometry.setAttribute('color', new THREE.BufferAttribute(skyColours, 3));
+  // Properties after construction, not in a multi-line literal: `audit-unread`
+  // reads source with a regex and cannot tell one ending in `});` from an
+  // interface body, so it reported `vertexColors` as a field written and never
+  // read. Same shape as the `roughness` finding on the link materials.
+  const skyMaterial = new THREE.PointsMaterial({ vertexColors: true });
+  skyMaterial.sizeAttenuation = false;
+  skyMaterial.transparent = true;
+  skyMaterial.depthWrite = false;
+  // Additive, so a faint star adds light to black rather than being a dark grey
+  // square on it. Lifting the brightness floor instead was the first try, and
+  // the tests caught it flattening the distribution they exist to protect:
+  // nearly a third of the sky came out "bright", where the point of the cubic
+  // falloff is that most stars are faint and a few are not.
+  skyMaterial.blending = THREE.AdditiveBlending;
+  // Pixels, because `sizeAttenuation` is off: a star does not get bigger as you
+  // lean towards it.
+  skyMaterial.size = 2.4;
+
+  const stars = new THREE.Points(skyGeometry, skyMaterial);
+  // Never culled: its bounding sphere is the whole sky and the camera is inside
+  // it, which frustum culling does not handle the way you would hope.
+  stars.frustumCulled = false;
+  scene.add(stars);
 
   /**
    * A long lens.
@@ -943,6 +1013,9 @@ export const createBoard = (
 
   const applyPalette = (): void => {
     scene.background = new THREE.Color(palette.background);
+    // The stars are the surround in the dark scheme. In light the board is on a
+    // table, not in space, and a field of pale dots on paper is only noise.
+    stars.visible = palette.stars;
     ambient.intensity = palette.ambient;
     key.intensity = palette.key;
     renderer.toneMappingExposure = palette.exposure;
