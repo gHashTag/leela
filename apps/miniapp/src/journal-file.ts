@@ -14,6 +14,7 @@
 
 import {
   merged,
+  pathText,
   toDocument as toJournalDocument,
   type Report,
 } from '@leela/journal';
@@ -35,17 +36,14 @@ export type TitleOf = (plan: number) => string;
 /**
  * The path as something to read.
  *
- * Plain text rather than markdown: this is going into a notes app, a message,
- * or a printer, and a heading that reads `## 41.` in all of them is worse than
- * a blank line.
+ * The rendering moved to `@leela/journal` as `pathText`, because the web board
+ * needed the same text and could not reach this file — so it announced *a
+ * readable copy is on the clipboard* while copying nothing. This is the adapter
+ * from this app's `Journal` to the entries the package takes; `pathText` orders
+ * them itself, which is what `path` was doing here.
  */
 export function toText(journal: Journal, titleOf: TitleOf): string {
-  const written = path(journal);
-  if (written.length === 0) return '';
-
-  return written
-    .map((entry) => `${entry.plan}. ${titleOf(entry.plan)}\n\n${entry.text}`)
-    .join('\n\n---\n\n');
+  return pathText(journal.entries, titleOf);
 }
 
 /** The path as something to bring back, with the question it was written for. */

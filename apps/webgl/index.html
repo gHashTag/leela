@@ -96,7 +96,10 @@
         `deities.ts`. Opened from the lotus rather than always on screen, and
         still not a dialog: choosing mid-game should not take the board away.
       -->
-      <div class="who" id="who" role="radiogroup" aria-label="Play as" hidden></div>
+      <div class="who" id="who" hidden>
+        <div class="who-count" id="who-count" role="radiogroup"></div>
+        <div class="who-list" id="who-list" role="radiogroup" aria-label="Play as"></div>
+      </div>
 
       <!--
         What the player is playing for.

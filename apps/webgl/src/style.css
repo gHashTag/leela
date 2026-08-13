@@ -467,15 +467,43 @@ body {
 
 .who {
   flex: none;
-  display: flex;
+  display: grid;
   gap: 8px;
   padding: 0 var(--pad) 12px;
+}
+
+.who-count,
+.who-list {
+  display: flex;
+  gap: 8px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
 }
 
-.who::-webkit-scrollbar {
+/* How many are playing. The engine seats one to six — `MAX_SEATS`. */
+.seats {
+  flex: none;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0 10px;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--f-2);
+  color: var(--hint);
+  background: var(--surface-2);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.seats[aria-checked='true'] {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.who-count::-webkit-scrollbar,
+.who-list::-webkit-scrollbar {
   display: none;
 }
 

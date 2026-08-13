@@ -80,3 +80,32 @@ export const DEFAULT_DEITY = DEITIES[0] as Deity;
  */
 export const deityFor = (id: string | null | undefined): Deity =>
   DEITIES.find((deity) => deity.id === id) ?? DEFAULT_DEITY;
+
+/**
+ * Which deity a seat wears when nobody has chosen for it.
+ *
+ * Distinct per seat as far as the roster goes, and stable: two people at one
+ * table are never the same colour, and the board is the same board the next
+ * time it is opened. Wraps rather than throwing past the end — the roster is
+ * eight and the engine seats six, so it cannot happen today, and a token with
+ * no deity would be a token with no colour if it ever did.
+ */
+export const deityForSeat = (at: number): Deity =>
+  DEITIES[((at % DEITIES.length) + DEITIES.length) % DEITIES.length] as Deity;
+
+/**
+ * The seats of a table, as the board needs them: an id and a deity each.
+ *
+ * Here rather than in `main` because it is the part of seating that can be
+ * silently wrong — two seats sharing a colour, or an id that does not match the
+ * one the session rotates — and `createBoard` needs WebGL, so nothing about the
+ * board itself can be held by a test. This can.
+ */
+export const seatsOf = (
+  ids: ReadonlyArray<string>,
+  chosen: ReadonlyArray<string | undefined> = [],
+): Array<{ id: string; deity: Deity }> =>
+  ids.map((id, at) => ({
+    id,
+    deity: chosen[at] === undefined ? deityForSeat(at) : deityFor(chosen[at]),
+  }));

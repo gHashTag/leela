@@ -406,6 +406,36 @@ export function writerHint(kept: number, length: number): WriterHint | null {
 }
 
 /** A name a file can carry into a chat or a downloads folder. */
+/** Look up a plan's title. Injected so this package stays dependency-free. */
+export type TitleOf = (plan: number) => string;
+
+/**
+ * The path as something to read.
+ *
+ * Plain text rather than markdown: this is going into a notes app, a message,
+ * or a printer, and a heading that reads `## 41.` in all of them is worse than
+ * a blank line.
+ *
+ * Here rather than in one app for the reason `REPORTS_KEY` and `isIntention`
+ * are here. It lived in `apps/miniapp/src/journal-file.ts`, and the surface
+ * that could not reach it announced *saved, and a readable copy is on the
+ * clipboard* while copying nothing — a message key half-used, which is exactly
+ * how `app.gameNotRead` came to promise players accounts an app does not have.
+ * A sentence two surfaces say needs the thing that makes it true to be
+ * somewhere both of them can get at.
+ *
+ * Ordered here, so a caller cannot hand it entries in the order a store
+ * happened to return them.
+ */
+export function pathText(entries: ReadonlyArray<Report>, titleOf: TitleOf): string {
+  const written = order(entries);
+  if (written.length === 0) return '';
+
+  return written
+    .map((entry) => `${entry.plan}. ${titleOf(entry.plan)}\n\n${entry.text}`)
+    .join('\n\n---\n\n');
+}
+
 export function fileName(stamp: string): string {
   return `leela-path-${stamp}.json`;
 }

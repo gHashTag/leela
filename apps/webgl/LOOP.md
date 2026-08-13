@@ -779,3 +779,59 @@ already in the index. A commit meant to carry one file also carried another
 session's staged deletion of `scripts/audit-awaited.mjs`. Check
 `git diff --cached --name-only` **after** staging and **before** committing, every
 time — this tree always has someone else's work in it.
+
+## Pass — the table on the board, and the defect that hid behind one seat
+
+Three things that were left open, and one that was not known about.
+
+**A. Seating, finished.** `kept.ts` wrote the state of one seat and now writes a
+list, with a migration: a record in the old shape becomes a one-seat table
+rather than nothing. Verified against a hand-written pre-seating record in the
+browser — plan 23 and Durga both survived the read. `index.html` gained a
+seat-count radiogroup, one to `MAX_SEATS`.
+
+**B. A test for what the board is asked to draw.** `setSeats`/`token` had
+changed twice in two passes with nothing checking them, because `createBoard`
+needs WebGL and so nothing about the board can be held by a test. What *can* be
+held is the part that decides what it is asked to draw, and that is also the
+part that can be silently wrong. `deityForSeat` and `seatsOf` moved into
+`deities.ts` and `tests/seating.test.ts` holds them: distinct deities at a full
+table, ids in the order the session rotates them, the same table twice, a choice
+honoured and a default only where there is none, and a roster that no longer has
+the saved deity in it costing a preference rather than a token.
+
+**C. `toText` was half a promise.** `app.pathExported` says the path was
+exported; what left was a JSON file. `pathText` now lives in `@leela/journal`,
+`apps/miniapp`'s `toText` is an adapter over it, and this surface copies the
+readable path to the clipboard before it makes the claim — and only when the
+copy actually succeeded.
+
+**The one that was not known about.** With four seats made, the board showed two
+tokens: one on its square and one blob a square from the middle. Every placement
+in `main.ts` named the constant `SEAT`, because this surface used to play one
+seat — so `p2`, `p3` and `p4` were created by `setSeats` and never moved, and sat
+stacked on the origin. It does not read as three unplaced pieces. It reads as a
+piece on the wrong plan, which is a defect this repository has already shipped
+once. `placeSeats` now puts every seat on its own square and hides the seats that
+have not entered — `entered` is `!is_finished`, so it covers both the player
+waiting for a six and the winner who has left the board. `walk` takes whose
+piece, captured before the throw resolves rather than read back off the session
+afterwards.
+
+Verified by looking, three states: one seat in play (one token), two in play plus
+one waiting (two tokens on 23 and 51, nothing for the third), and the picker mark
+and the header both following the turn to seat two.
+
+What this cost: 199 tests where there were 192.
+
+**The lesson, and it is the same one.** The tests were green across both passes
+in which the board's seating surface changed, and green about nothing — there
+were no tests of it, only of things near it. A green suite is a claim about what
+is asserted, never about what is drawn. The seat count control existed, the
+model was right, storage was right, and the screen was still wrong.
+
+Still open, found this pass and not fixed:
+
+- Two seats on the same plan occupy the same point exactly. Nothing fans them.
+- The die restores its rolls but its face comes back blank — the last throw is
+  in storage and is not shown.

@@ -3,6 +3,7 @@ import { LEGACY_MOBILE, WIN_LOKA, applyRoll, initialState } from '@leela/engine'
 
 import { KEPT_KEY, forget, read, write, type Store } from '../src/kept';
 import { pathOf } from '../src/path';
+import { DEITIES } from '../src/deities';
 
 /**
  * A saved game is a thing another program wrote — an older build of this one,
@@ -37,7 +38,7 @@ const refusing = (): Store => ({
   },
 });
 
-const NOTHING = { state: null, deity: null, rolls: [], why: null };
+const NOTHING = { seats: [], turnIndex: 0, deity: null, why: null };
 
 /** A game a few moves in, built by the engine rather than by hand. */
 const THROWS = [6, 3, 4, 2];
@@ -53,13 +54,14 @@ describe('coming back to a game', () => {
   it('returns the game that was saved', () => {
     const store = fakeStore();
     const state = played();
-    write(store, { state, deity: 'durga', rolls: THROWS });
+    write(store, { turnIndex: 0, seats: [{ id: 'p1', deity: 'durga', state, rolls: THROWS }] });
 
     const reading = read(store);
     expect(reading.why).toBeNull();
-    expect(reading.state).toEqual(state);
-    expect(reading.deity).toBe('durga');
-    expect(reading.rolls).toEqual(THROWS);
+    expect(reading.seats).toHaveLength(1);
+    expect(reading.seats[0]?.state).toEqual(state);
+    expect(reading.seats[0]?.deity).toBe('durga');
+    expect(reading.seats[0]?.rolls).toEqual(THROWS);
   });
 
   /**
@@ -74,7 +76,7 @@ describe('coming back to a game', () => {
   it('gives a reason when there was something and it could not be used', () => {
     for (const bad of ['{', 'null', '"a string"', '{"state":null}', '[]']) {
       const reading = read(fakeStore({ [KEPT_KEY]: bad }));
-      expect(reading.state, `${bad} was accepted`).toBeNull();
+      expect(reading.seats, `${bad} was accepted`).toEqual([]);
       expect(reading.why, `${bad} was refused without saying why`).not.toBeNull();
     }
   });
@@ -86,13 +88,13 @@ describe('coming back to a game', () => {
    */
   it('refuses a state the engine would not have produced, and names it', () => {
     const offBoard = read(stored({ state: { ...played(), loka: 99 }, deity: 'shiva' }));
-    expect(offBoard.state).toBeNull();
+    expect(offBoard.seats).toEqual([]);
     expect(offBoard.why).toContain('99');
 
     const wrong = read(
       stored({ state: { ...played(), is_finished: true, loka: 41 }, deity: 'shiva' }),
     );
-    expect(wrong.state).toBeNull();
+    expect(wrong.seats).toEqual([]);
     expect(wrong.why).toContain('41');
   });
 
@@ -105,7 +107,7 @@ describe('coming back to a game', () => {
    */
   it('keeps who was playing even when the game itself is refused', () => {
     const reading = read(stored({ state: { ...played(), loka: 99 }, deity: 'agni' }));
-    expect(reading.state).toBeNull();
+    expect(reading.seats).toEqual([]);
     expect(reading.why).not.toBeNull();
     expect(reading.deity).toBe('agni');
   });
@@ -116,31 +118,31 @@ describe('coming back to a game', () => {
     const state = played();
     const reading = read(stored({ state, deity: 'ganesha' }));
     expect(reading.why).toBeNull();
-    expect(reading.state).toEqual(state);
-    expect(reading.deity).toBe('ganesha');
+    expect(reading.seats[0]?.state).toEqual(state);
+    expect(reading.seats[0]?.deity).toBe('ganesha');
   });
 
   it('survives a record with no deity at all', () => {
     const state = played();
     const reading = read(stored({ state }));
-    expect(reading.state).toEqual(state);
+    expect(reading.seats[0]?.state).toEqual(state);
     expect(reading.deity).toBeNull();
   });
 
   /** A player who has not entered yet is a real game, and a resumable one. */
   it('keeps a game that has not begun', () => {
     const store = fakeStore();
-    write(store, { state: initialState(), deity: 'vishnu', rolls: [] });
+    write(store, { turnIndex: 0, seats: [{ id: 'p1', deity: 'vishnu', state: initialState(), rolls: [] }] });
     const reading = read(store);
-    expect(reading.state?.loka).toBe(WIN_LOKA);
-    expect(reading.state?.is_finished).toBe(true);
+    expect(reading.seats[0]?.state.loka).toBe(WIN_LOKA);
+    expect(reading.seats[0]?.state.is_finished).toBe(true);
   });
 
   /** Round trip: what the engine produces must survive being written and read. */
   it('returns a game the engine can go on playing', () => {
     const store = fakeStore();
-    write(store, { state: played(), deity: 'indra', rolls: [] });
-    const resumed = read(store).state;
+    write(store, { turnIndex: 0, seats: [{ id: 'p1', deity: 'indra', state: played(), rolls: [] }] });
+    const resumed = read(store).seats[0]?.state ?? null;
     expect(resumed).not.toBeNull();
     const next = applyRoll(resumed as NonNullable<typeof resumed>, 3, LEGACY_MOBILE);
     expect(next.state.loka).toBeGreaterThan(0);
@@ -156,22 +158,22 @@ describe('the history', () => {
    */
   it('drops a history that does not lead to the saved square, and keeps the game', () => {
     const reading = read(stored({ state: played(), deity: 'agni', rolls: [1, 1, 1] }));
-    expect(reading.state).not.toBeNull();
-    expect(reading.rolls).toEqual([]);
+    expect(reading.seats).toHaveLength(1);
+    expect(reading.seats[0]?.rolls).toEqual([]);
     expect(reading.why).toContain('history');
   });
 
   it('drops a history that is not a list of throws, and keeps the game', () => {
     for (const bad of [[0], [7], ['3'], [1.5], 'nope', { a: 1 }]) {
       const reading = read(stored({ state: played(), deity: 'agni', rolls: bad }));
-      expect(reading.state, `${JSON.stringify(bad)} lost the game`).not.toBeNull();
-      expect(reading.rolls, `${JSON.stringify(bad)} was accepted`).toEqual([]);
+      expect(reading.seats, `${JSON.stringify(bad)} lost the game`).toHaveLength(1);
+      expect(reading.seats[0]?.rolls, `${JSON.stringify(bad)} was accepted`).toEqual([]);
     }
   });
 
   it('accepts a history that does lead there', () => {
     const reading = read(stored({ state: played(), deity: 'agni', rolls: THROWS }));
-    expect(reading.rolls).toEqual(THROWS);
+    expect(reading.seats[0]?.rolls).toEqual(THROWS);
     expect(reading.why).toBeNull();
   });
 });
@@ -180,13 +182,13 @@ describe('a storage that refuses', () => {
   it('opens the game rather than throwing, in every direction', () => {
     expect(() => read(refusing())).not.toThrow();
     expect(read(refusing())).toEqual(NOTHING);
-    expect(() => write(refusing(), { state: played(), deity: 'agni', rolls: [] })).not.toThrow();
+    expect(() => write(refusing(), { turnIndex: 0, seats: [{ id: 'p1', deity: 'agni', state: played(), rolls: [] }] })).not.toThrow();
     expect(() => forget(refusing())).not.toThrow();
   });
 
   it('opens the game when there is no storage at all', () => {
     expect(read(null)).toEqual(NOTHING);
-    expect(() => write(null, { state: played(), deity: 'agni', rolls: [] })).not.toThrow();
+    expect(() => write(null, { turnIndex: 0, seats: [{ id: 'p1', deity: 'agni', state: played(), rolls: [] }] })).not.toThrow();
     expect(() => forget(null)).not.toThrow();
   });
 });
@@ -194,7 +196,7 @@ describe('a storage that refuses', () => {
 describe('forgetting', () => {
   it('leaves nothing to come back to', () => {
     const store = fakeStore();
-    write(store, { state: played(), deity: 'indra', rolls: [] });
+    write(store, { turnIndex: 0, seats: [{ id: 'p1', deity: 'indra', state: played(), rolls: [] }] });
     forget(store);
     expect(read(store)).toEqual(NOTHING);
   });
@@ -237,5 +239,64 @@ describe('the path a history describes', () => {
 
   it('is nothing at all before the first throw', () => {
     expect(pathOf([], LEGACY_MOBILE)).toEqual([]);
+  });
+});
+
+describe('a table of several', () => {
+  const table = (count: number) => ({
+    turnIndex: 1,
+    seats: Array.from({ length: count }, (_, at) => ({
+      id: `p${at + 1}`,
+      deity: DEITIES[at]!.id,
+      state: played(),
+      rolls: THROWS,
+    })),
+  });
+
+  it('comes back with every seat, in order', () => {
+    const reading = read(stored(table(4)));
+    expect(reading.seats.map((s) => s.id)).toEqual(['p1', 'p2', 'p3', 'p4']);
+    expect(reading.turnIndex).toBe(1);
+  });
+
+  /**
+   * A turn index past the end is a table nobody can play, and it is one
+   * arithmetic slip in another version of this app away.
+   */
+  it('refuses to point the turn at a seat that is not there', () => {
+    for (const turnIndex of [4, -1, 1.5, 'two', null]) {
+      const reading = read(stored({ ...table(2), turnIndex }));
+      expect(reading.turnIndex, JSON.stringify(turnIndex)).toBe(0);
+    }
+  });
+
+  it('keeps the seats it can read and drops only the ones it cannot', () => {
+    const mixed = table(3);
+    const seats = [...mixed.seats];
+    seats[1] = { ...seats[1]!, state: { ...played(), loka: 99 } };
+    const reading = read(stored({ ...mixed, seats }));
+    expect(reading.seats).toHaveLength(2);
+    expect(reading.why).toContain('99');
+  });
+
+  /**
+   * The migration, and the reason it is a branch rather than a version bump:
+   * a record written before seating has one `state` at the top and no seats,
+   * and a player forty squares in should not lose them to a shape change.
+   */
+  it('reads a record written before seating as a table of one', () => {
+    const reading = read(stored({ state: played(), deity: 'durga', rolls: THROWS }));
+    expect(reading.seats).toHaveLength(1);
+    expect(reading.seats[0]?.id).toBe('p1');
+    expect(reading.seats[0]?.deity).toBe('durga');
+    expect(reading.seats[0]?.state).toEqual(played());
+    expect(reading.seats[0]?.rolls).toEqual(THROWS);
+    expect(reading.turnIndex).toBe(0);
+    expect(reading.why).toBeNull();
+  });
+
+  it('gives an unnamed seat a name rather than an empty one', () => {
+    const reading = read(stored({ turnIndex: 0, seats: [{ state: played(), rolls: [] }] }));
+    expect(reading.seats[0]?.id).toBe('p1');
   });
 });
