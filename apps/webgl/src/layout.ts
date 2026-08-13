@@ -106,6 +106,27 @@ export const planAtPoint = (x: number, z: number): number | null => {
   return typeof plan === 'number' ? plan : null;
 };
 
+/**
+ * Where a crossing of the web sits, by column and row.
+ *
+ * Half a pitch out from the plans, in both directions, so a plan falls in the
+ * *middle of an opening* rather than on a crossing. The first web put its knots
+ * on the plan centres, which is the tidier-sounding arrangement and the wrong
+ * one: every number then had two threads running through it.
+ *
+ * There is therefore one more corner than there are columns, and one more than
+ * there are rows — `CROSSINGS` says so rather than leaving each caller to
+ * remember the `+ 1`.
+ */
+export const cornerPosition = (column: number, row: number): Vec3 => ({
+  x: originX - PITCH / 2 + column * PITCH,
+  y: 0,
+  z: originZ + PITCH / 2 - row * PITCH,
+});
+
+/** How many crossings the web has, across and down. */
+export const CROSSINGS = { columns: COLUMNS + 1, rows: ROWS + 1 };
+
 /** Width and depth the board occupies, for framing the camera. */
 export const boardExtent = (): { width: number; depth: number } => ({
   width: (COLUMNS - 1) * PITCH + CELL,

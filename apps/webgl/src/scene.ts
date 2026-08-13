@@ -6,7 +6,15 @@ import { ARROWS, SNAKES, WIN_LOKA } from '@leela/engine';
 import { gridFor, paintLabels, patchFor, tileFor } from './atlas';
 import { DEFAULT_DEITY, type Deity } from './deities';
 import { animationClock, frames, type Clock, type Frames } from './frames';
-import { CELL, boardExtent, planAtPoint, planPosition, plans } from './layout';
+import {
+  CELL,
+  CROSSINGS,
+  boardExtent,
+  cornerPosition,
+  planAtPoint,
+  planPosition,
+  plans,
+} from './layout';
 import {
   ARROW_FEATHER,
   ARROW_STEEL,
@@ -18,6 +26,7 @@ import {
 } from './theme';
 import { paintBorder } from './border';
 import { starsFor } from './stars';
+import { sagAt, threadsFor } from './web';
 import { frameBoard } from './framing';
 import { paintMarking, paintScales, type Marking } from './skin';
 import { arrowProfile, snakeProfile, wiggle, type Profile } from './tube';
@@ -55,6 +64,10 @@ const ARC_CEILING = 1.9;
  * five. `Points` does not care about forty thousand; the arithmetic did.
  */
 const STAR_COUNT = 40_000;
+
+/** How finely a hanging thread is sampled, and how far it droops. */
+const THREAD_STEPS = 6;
+const THREAD_SAG = 0.045;
 const STAR_RADIUS = 260;
 /** How many samples a snake's winding path is built from. */
 const SNAKE_POINTS = 14;
@@ -113,8 +126,8 @@ const LABEL_TILE = 128;
  * children does with a number and what a board for reading does not.
  */
 const LABEL_SPAN = 0.55;
-/** Just clear of the board's face, which sits at 0.04. */
-const LABEL_Y = 0.043;
+/** Just clear of the web, which hangs at zero. */
+const LABEL_Y = 0.008;
 
 /**
  * The Flower of Life, on 68 and nowhere else.
@@ -212,13 +225,17 @@ const jumpCurve = (from: number, to: number, kind: 'snake' | 'arrow'): THREE.Cat
   const run = Math.hypot(b.x - a.x, b.z - a.z);
 
   if (kind === 'arrow') {
-    // Low enough to read the squares underneath, high enough to tell two
-    // crossing arcs apart. The board carries thirty of these.
+    // Below the web, not over it.
+    //
+    // The field is open thread now, so a layer underneath is visible through it
+    // — and the numbers stop being crossed out by thirty arcs. Deep enough to
+    // tell two crossing arcs apart, shallow enough to stay legible through the
+    // lattice.
     const lift = Math.max(0.55, run * 0.22);
     return new THREE.CatmullRomCurve3([
-      new THREE.Vector3(a.x, 0.1, a.z),
-      new THREE.Vector3((a.x + b.x) / 2, lift, (a.z + b.z) / 2),
-      new THREE.Vector3(b.x, 0.1, b.z),
+      new THREE.Vector3(a.x, -0.1, a.z),
+      new THREE.Vector3((a.x + b.x) / 2, -lift, (a.z + b.z) / 2),
+      new THREE.Vector3(b.x, -0.1, b.z),
     ]);
   }
 
@@ -235,7 +252,7 @@ const jumpCurve = (from: number, to: number, kind: 'snake' | 'arrow'): THREE.Cat
     points.push(
       new THREE.Vector3(
         a.x + (b.x - a.x) * t + side.x,
-        0.16 + Math.sin(t * Math.PI) * 0.1,
+        -0.16 - Math.sin(t * Math.PI) * 0.1,
         a.z + (b.z - a.z) * t + side.z,
       ),
     );
@@ -568,14 +585,80 @@ export const createBoard = (
   faceTexture.colorSpace = THREE.SRGBColorSpace;
   faceTexture.anisotropy = 4;
   groundMaterial.map = faceTexture;
-  // White, so the painted face carries the colour rather than being tinted by
-  // a second one. `map` multiplies `color`.
   groundMaterial.color.setHex(0xffffff);
+  // The slab is now only a target for taps. `planAt` raycasts one surface and
+  // turns the hit point into a square, and the raycaster skips an object whose
+  // `visible` is false — so it is transparent instead.
+  groundMaterial.transparent = true;
+  groundMaterial.opacity = 0;
+  groundMaterial.depthWrite = false;
 
   const board = new THREE.Mesh(new THREE.BoxGeometry(slabWidth, 0.1, slabDepth), groundMaterial);
   board.position.y = -0.01;
   board.receiveShadow = true;
   scene.add(board);
+
+  /**
+   * The field, as a web.
+   *
+   * White silk between seventy-two knots, hung in the vacuum. The painted slab
+   * above it is still there and no longer painted — it is kept only so a tap
+   * has something to hit, since `planAt` raycasts one surface and turns the
+   * point into a square. An invisible object is skipped by the raycaster, so it
+   * is transparent rather than hidden.
+   *
+   * `web` holds the lattice, with the counting a lattice needs: an edge emitted
+   * twice renders identically at twice the cost forever, and a missing last row
+   * reads as a design choice rather than as a bug.
+   */
+  const threadPoints: number[] = [];
+  const threadShade: number[] = [];
+  for (const thread of threadsFor(CROSSINGS.columns, CROSSINGS.rows)) {
+    const a = cornerPosition(thread.from.column, thread.from.row);
+    const b = cornerPosition(thread.to.column, thread.to.row);
+    const bright = thread.rim ? 1 : 0.62;
+
+    // Sampled rather than drawn as one segment, because a thread that hangs
+    // needs somewhere to hang: two points can only be straight.
+    for (let step = 0; step < THREAD_STEPS; step += 1) {
+      for (const t of [step / THREAD_STEPS, (step + 1) / THREAD_STEPS]) {
+        threadPoints.push(
+          a.x + (b.x - a.x) * t,
+          a.y + sagAt(t, THREAD_SAG),
+          a.z + (b.z - a.z) * t,
+        );
+        threadShade.push(bright, bright, bright);
+      }
+    }
+  }
+
+  const webGeometry = new THREE.BufferGeometry();
+  webGeometry.setAttribute('position', new THREE.Float32BufferAttribute(threadPoints, 3));
+  webGeometry.setAttribute('color', new THREE.Float32BufferAttribute(threadShade, 3));
+  const webMaterial = new THREE.LineBasicMaterial({ vertexColors: true });
+  // Tinted by the palette; the vertex colours only carry rim-versus-inner.
+  webMaterial.transparent = true;
+  webMaterial.opacity = 0.92;
+  webMaterial.depthWrite = false;
+  const webbing = new THREE.LineSegments(webGeometry, webMaterial);
+  scene.add(webbing);
+
+  // A knot where the threads cross, so the seventy-two places read as places.
+  const knotGeometry = new THREE.BufferGeometry();
+  const knotPoints: number[] = [];
+  for (let column = 0; column < CROSSINGS.columns; column += 1) {
+    for (let row = 0; row < CROSSINGS.rows; row += 1) {
+      const knot = cornerPosition(column, row);
+      knotPoints.push(knot.x, knot.y, knot.z);
+    }
+  }
+  knotGeometry.setAttribute('position', new THREE.Float32BufferAttribute(knotPoints, 3));
+  const knotMaterial = new THREE.PointsMaterial({});
+  knotMaterial.sizeAttenuation = false;
+  knotMaterial.size = 3.2;
+  knotMaterial.transparent = true;
+  knotMaterial.opacity = 0.9;
+  scene.add(new THREE.Points(knotGeometry, knotMaterial));
 
   // --- the numbers ---------------------------------------------------------
 
@@ -850,7 +933,7 @@ export const createBoard = (
   // Half again as large as a square is wide at the base. A token the size of
   // the number underneath it is a token nobody can see who they are playing as,
   // and who you are playing as is now the point.
-  piece.scale.setScalar(1.5);
+  piece.scale.setScalar(1.15);
   piece.position.set(0, 0.3, 0);
   scene.add(piece);
 
@@ -1016,6 +1099,8 @@ export const createBoard = (
     // The stars are the surround in the dark scheme. In light the board is on a
     // table, not in space, and a field of pale dots on paper is only noise.
     stars.visible = palette.stars;
+    webMaterial.color.setHex(palette.thread);
+    knotMaterial.color.setHex(palette.thread);
     ambient.intensity = palette.ambient;
     key.intensity = palette.key;
     renderer.toneMappingExposure = palette.exposure;
@@ -1105,7 +1190,7 @@ export const createBoard = (
       }
 
       const { x, z } = planPosition(plan);
-      halo.position.set(x, 0.075, z);
+      halo.position.set(x, 0.012, z);
       halo.visible = true;
 
       // The jumps this square is an end of, lit. On a board of thirty arcs,

@@ -31,8 +31,17 @@ export interface Palette {
    * contrast against the same ground.
    */
   readonly border: number;
-  /** The number painted on a plan. */
+  /**
+   * The number at a knot.
+   *
+   * Measured against whatever the field is *now*, which is the point: this was
+   * a violet chosen against paper, and when the board became a web hung in the
+   * vacuum the numbers went to near-black on black. The third time a palette
+   * entry has been carried onto a ground it was not measured for.
+   */
   readonly label: string;
+  /** The silk. Light on the void, dark on the table. */
+  readonly thread: number;
   /**
    * The inlay marking a square a snake begins at.
    *
@@ -90,7 +99,8 @@ export const PALETTES: Record<Scheme, Palette> = {
     // lighting clips to a flat sheet with no form in it.
     cell: 0xf0e9d8,
     border: 0x8a7a52,
-    label: '#7b3d86',
+    label: '#5c2d6b',
+    thread: 0x3a3a3a,
     snake: 0x8c3a2a,
     arrow: 0x35624a,
     win: 0xc9a13f,
@@ -117,7 +127,9 @@ export const PALETTES: Record<Scheme, Palette> = {
     background: 0x000000,
     cell: 0xcdc4ab,
     border: 0x6b6047,
-    label: '#7b3d86',
+    // Pale, not violet: on the void a number has to carry itself.
+    label: '#ffffff',
+    thread: 0xffffff,
     snake: 0x8c3a2a,
     arrow: 0x35624a,
     win: 0xb8912f,

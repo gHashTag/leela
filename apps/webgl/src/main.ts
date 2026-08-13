@@ -29,6 +29,17 @@ import { css, schemeFor } from './theme';
 
 const HOP_MS = 420;
 
+/**
+ * How high the token's anchor sits above the web.
+ *
+ * Its plinth reaches `0.16 * scale` below the anchor, so this puts the base on
+ * the thread rather than over it. At 0.3 the token floated, and floating is not
+ * a small thing when the camera looks down at seventy degrees: the eye reads
+ * the base against the knot, and a token a third of a cell up projects visibly
+ * off its own square. It looked like the piece was on the wrong plan.
+ */
+const PIECE_LIFT = 0.184;
+
 const need = <T extends Element>(selector: string): T => {
   const found = document.querySelector<T>(selector);
   if (!found) throw new Error(`the page is missing ${selector}`);
@@ -410,7 +421,7 @@ el.canvas.addEventListener('pointerup', (event) => {
 
 const settle = (): void => {
   const { x, z } = planPosition(play.plan);
-  board.piece.position.set(x, 0.3, z);
+  board.piece.position.set(x, PIECE_LIFT, z);
   if (!visiting) board.focus(play.entered ? play.plan : null);
   board.draw();
 };
@@ -421,7 +432,7 @@ const walk = (hop: Hop): Promise<void> => {
   const to = planPosition(hop.to);
 
   if (reducedMotion.matches || hop.from === hop.to) {
-    board.piece.position.set(to.x, 0.3, to.z);
+    board.piece.position.set(to.x, PIECE_LIFT, to.z);
     board.draw();
     return Promise.resolve();
   }
@@ -434,7 +445,7 @@ const walk = (hop: Hop): Promise<void> => {
       if (done) return;
       done = true;
       clearTimeout(backstop);
-      board.piece.position.set(to.x, 0.3, to.z);
+      board.piece.position.set(to.x, PIECE_LIFT, to.z);
       board.draw();
       resolve();
     };
@@ -459,7 +470,7 @@ const walk = (hop: Hop): Promise<void> => {
       if (done) return;
       const t = Math.min(1, (now - started) / HOP_MS);
       const point = hopPoint(from, to, t);
-      board.piece.position.set(point.x, point.y + 0.3, point.z);
+      board.piece.position.set(point.x, point.y + PIECE_LIFT, point.z);
       board.draw();
       if (t < 1) requestAnimationFrame(frame);
       else land();

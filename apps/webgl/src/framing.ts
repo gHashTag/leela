@@ -68,11 +68,19 @@ const LEAST = 0.35;
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
+/**
+ * The eight corners of the box, spanning *both* ways in y.
+ *
+ * It used to run from the board's plane upward, which was right while the arcs
+ * flew over the top. The snakes and arrows now hang below the web and the
+ * player's token still hops above it, so the box has to hold both or one of
+ * them is framed off the screen.
+ */
 const CORNERS: ReadonlyArray<readonly [number, number, number]> = [
-  [-1, 0, -1],
-  [1, 0, -1],
-  [-1, 0, 1],
-  [1, 0, 1],
+  [-1, -1, -1],
+  [1, -1, -1],
+  [-1, -1, 1],
+  [1, -1, 1],
   [-1, 1, -1],
   [1, 1, -1],
   [-1, 1, 1],

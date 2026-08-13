@@ -106,6 +106,14 @@ export interface LabelStyle {
   readonly fill?: number;
   /** Font stack, without a size. */
   readonly family?: string;
+  /**
+   * How heavy the digits are.
+   *
+   * Light. These sat at 600 while the field was paper and a heavy numeral on
+   * paper is merely dull; on a web of white thread in the vacuum it is a slab.
+   * The numbers belong to the same family as the silk they hang on.
+   */
+  readonly weight?: number;
 }
 
 /**
@@ -138,11 +146,12 @@ export function paintLabels(
 ): number {
   const grid = gridFor(labels.length);
   const fill = style.fill ?? 0.52;
-  const family = style.family ?? 'ui-rounded, -apple-system, system-ui, sans-serif';
+  const family = style.family ?? "'Outfit', system-ui, -apple-system, sans-serif";
+  const weight = style.weight ?? 300;
 
   painter.clearRect(0, 0, grid.columns * side, grid.rows * side);
   painter.fillStyle = style.colour;
-  painter.font = `600 ${Math.round(side * fill)}px ${family}`;
+  painter.font = `${weight} ${Math.round(side * fill)}px ${family}`;
   painter.textAlign = 'center';
   painter.textBaseline = 'middle';
 

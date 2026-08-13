@@ -66,6 +66,9 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | The board fills the band it was given | `tests/framing.test.ts` |
 | The framing fits the slab, margin and all | `tests/framing.test.ts` |
 | The stars cover the sphere evenly, pole to pole | `tests/stars.test.ts` |
+| Every thread of the web is drawn exactly once | `tests/web.test.ts` |
+| The web reaches every crossing, with no open side | `tests/web.test.ts` |
+| A number sits in an opening, never on a crossing | `cornerPosition`, offset half a pitch |
 | The sky is the same sky on every load | `tests/stars.test.ts` |
 
 ## Known open work, roughly in value order
@@ -107,6 +110,12 @@ yourself deleting one of these tests, you are re-introducing the defect.
 - [ ] **The snake heads are spheres.** At the zoom where the scales read, the
       head is plainly a squashed ball with two beads on it. A jaw and a brow
       would cost a few more primitives.
+- [ ] **The border is gone with the slab.** The diamonds and rules were painted
+      on the board's face, and the field is a web now. The rim threads are drawn
+      brighter, which is all the edge there currently is.
+- [ ] **Light mode is now a web on paper**, which has had far less looking at
+      than the dark one. The threads take `palette.thread` and go dark there,
+      but the whole composition was designed against the void.
 - [ ] **The border is geometry, not iconography.** Diamonds and rules, where the
       rules illustration carries feathers and crystals. A motif with a subject
       needs either art or a much better procedural draw; diamonds were chosen
@@ -118,6 +127,41 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — tenth pass: the field is a web
+
+Directed step by step, so this is several changes rather than one.
+
+The painted slab is gone and the field is a lattice of white silk hung in the
+vacuum: seventy-two openings, threads between them, and a small knot at each
+crossing. `src/web.ts` holds the lattice, tested for the failure a lattice hides
+— an edge emitted twice renders identically at twice the cost forever, and a
+missing last row reads as a design choice. The slab stays, transparent, purely
+so a tap has something to hit: `planAt` raycasts one surface, and the raycaster
+skips an object whose `visible` is false.
+
+The snakes and arrows moved **under** the web. With an open field a layer
+beneath shows through, and thirty arcs stopped crossing out the numbers. The
+framing box had to grow downward to match — it ran from the board's plane
+upward, which was right only while everything flew over the top.
+
+Three corrections, each caught by looking:
+
+- **The numbers went near-invisible** the moment the paper went away: they were
+  a violet measured against paper, now on a void. **Third time** a palette entry
+  has been carried onto a ground it was not measured for, after the winning
+  square and the border ink. They are white and light-weight now, which is also
+  what was asked for.
+- **The token looked like it was on the wrong plan.** It was not — it floated
+  0.3 above the plane, and at a seventy-degree camera the eye reads the base
+  against the knot, so a third of a cell of height projects visibly off the
+  square. Anchored so the plinth sits on the thread, and made smaller.
+- **The numbers sat on the crossings.** The first web put its knots on the plan
+  centres, which is the tidier-sounding arrangement and the wrong one: two
+  threads then run through every digit. The lattice is offset half a pitch, so a
+  plan falls in the middle of an opening.
+
+Cost: 160 tests where there were 150.
 
 ### 2026-08-13 — ninth pass: space, and t27.ai's own system
 
