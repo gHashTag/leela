@@ -17,6 +17,7 @@ import {
   type Scheme,
 } from './theme';
 import { paintBorder } from './border';
+import { frameBoard } from './framing';
 import { paintMarking, paintScales, type Marking } from './skin';
 import { arrowProfile, snakeProfile, wiggle, type Profile } from './tube';
 
@@ -40,23 +41,6 @@ import { arrowProfile, snakeProfile, wiggle, type Profile } from './tube';
  * through. Fitting the flat board alone crops the tallest jump.
  */
 const ARC_CEILING = 1.9;
-const CORNERS: ReadonlyArray<readonly [number, number, number]> = [
-  [-1, 0, -1],
-  [1, 0, -1],
-  [-1, 0, 1],
-  [1, 0, 1],
-  [-1, 1, -1],
-  [1, 1, -1],
-  [-1, 1, 1],
-  [1, 1, 1],
-];
-
-/** Bounds on how far over the board the camera stands. See `resize`. */
-const ELEVATION_MAX = (74 * Math.PI) / 180;
-const ELEVATION_MIN = (50 * Math.PI) / 180;
-
-const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
-
 /** How many samples a snake's winding path is built from. */
 const SNAKE_POINTS = 14;
 /**
@@ -438,7 +422,6 @@ export const createBoard = (
   const room = pmrem.fromScene(new RoomEnvironment(), 0.04);
   scene.environment = room.texture;
 
-  const { width, depth } = boardExtent();
   /**
    * A long lens.
    *
@@ -1084,120 +1067,22 @@ export const createBoard = (
     },
 
     resize(w, h, inset = {}) {
-      const height = Math.max(1, h);
-      const width2 = Math.max(1, w);
-      // Never let the sheet claim the whole canvas: on a short window at the
-      // full detent there would be no band left, and the board would be framed
-      // against a zero-height strip.
-      const visible = Math.max(height * 0.35, height - Math.max(0, inset.bottom ?? 0));
-      const visibleW = Math.max(width2 * 0.35, width2 - Math.max(0, inset.right ?? 0));
-      camera.aspect = width2 / height;
-      camera.updateProjectionMatrix();
+      // The framing itself lives in `framing`, with no WebGL in it, because it
+      // is the most-broken code in this app — three defects shipped from it and
+      // every one was caught by eye. See that file for the list.
+      const frame = frameBoard(
+        camera,
+        { width: slabWidth, depth: slabDepth, ceiling: ARC_CEILING },
+        { width: w, height: Math.max(1, h) },
+        inset,
+      );
 
-      // The band the board has to fit, in clip space. y = 1 is the top of the
-      // canvas and the sheet eats upwards from the bottom; x = -1 is the left
-      // edge and a side panel eats inwards from the right.
-      const bandBottom = 1 - (2 * visible) / height;
-      const bandHeight = 1 - bandBottom;
-      const bandRight = (2 * visibleW) / width2 - 1;
-      const bandWidth = bandRight + 1;
-
-      /**
-       * Fit by projecting the board, not by trusting trigonometry about it.
-       *
-       * The arithmetic version — fit `depth` to the vertical field of view —
-       * is what was here, and it is wrong for the same reason it looks right:
-       * the board is tilted away from the camera, so its depth on screen is
-       * foreshortened by an amount that depends on the very distance being
-       * solved for. It left the board at about half the size of the space it
-       * had. Projecting the corners asks the camera what it can actually see,
-       * and converges in three passes.
-       */
-      /**
-       * How far above the board to stand, given the shape of the space.
-       *
-       * A fixed 55° is right for a laptop and wasteful on a phone. The board is
-       * wider than it is deep, so on any portrait screen the width is what
-       * binds the distance — and the flatter the camera, the less of the
-       * leftover height the board's depth uses. Standing more nearly overhead
-       * maps that depth onto the screen instead. Not all the way overhead: a
-       * top-down board is a spreadsheet, and the arcs that make Leela legible
-       * stop reading as arcs.
-       */
-      const elevation =
-        ELEVATION_MAX - (ELEVATION_MAX - ELEVATION_MIN) * clamp01(visibleW / visible / 1.6);
-
-      const place = (at: number): void => {
-        camera.position.set(0, at * Math.sin(elevation), at * Math.cos(elevation));
-        controls.target.set(0, 0, 0);
-        camera.lookAt(0, 0, 0);
-        camera.updateMatrixWorld(true);
-      };
-
-      let distance = Math.max(width, depth);
-      let span = { x: 0, y: 0, midX: 0, midY: 0 };
-
-      for (let pass = 0; pass < 4; pass += 1) {
-        place(distance);
-
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-        for (const corner of CORNERS) {
-          // The slab, not the play field. The two were the same until the board
-          // grew a margin to carry its border, and framing the field alone put
-          // the new right-hand edge off the side of the screen — with the last
-          // column of numbers cut with it.
-          const point = new THREE.Vector3(
-            (corner[0] * slabWidth) / 2,
-            corner[1] * ARC_CEILING,
-            (corner[2] * slabDepth) / 2,
-          ).project(camera);
-          minX = Math.min(minX, point.x);
-          maxX = Math.max(maxX, point.x);
-          minY = Math.min(minY, point.y);
-          maxY = Math.max(maxY, point.y);
-        }
-
-        span = {
-          x: maxX - minX,
-          y: maxY - minY,
-          midX: (maxX + minX) / 2,
-          midY: (maxY + minY) / 2,
-        };
-        // 0.94 rather than 1: a board touching the edge of its band reads as
-        // cropped even when every square is on screen.
-        const overflow = Math.max(span.x / (bandWidth * 0.94), span.y / (bandHeight * 0.94));
-        if (Math.abs(overflow - 1) < 0.01) break;
-        distance *= overflow;
-      }
-
-      place(distance);
-
-      // Slide the board into the middle of the band, on both axes. The pan is
-      // along the camera's own up and right, because the camera is tilted over
-      // the board; a camera that pans up makes the world appear to move down,
-      // hence the negatives. Signed the other way first, which put the board
-      // underneath the sheet and left the page looking like nothing rendered.
-      const halfV = Math.tan((camera.fov * Math.PI) / 360);
-      const perNdcY = distance * halfV;
-      const pan = new THREE.Vector3()
-        .setFromMatrixColumn(camera.matrixWorld, 1)
-        .multiplyScalar(-(bandBottom + bandHeight / 2 - span.midY) * perNdcY)
-        .addScaledVector(
-          new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0),
-          -(bandRight - bandWidth / 2 - span.midX) * perNdcY * camera.aspect,
-        );
-      camera.position.add(pan);
-      controls.target.add(pan);
-      camera.lookAt(controls.target);
-
-      controls.minDistance = distance * 0.45;
-      controls.maxDistance = distance * 1.6;
+      controls.target.copy(frame.target);
+      controls.minDistance = frame.distance * 0.45;
+      controls.maxDistance = frame.distance * 1.6;
 
       renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-      renderer.setSize(w, height, false);
+      renderer.setSize(w, Math.max(1, h), false);
       clockFrames.draw();
     },
 

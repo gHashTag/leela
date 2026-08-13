@@ -61,7 +61,10 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | A marking tile starts white, so it tints no skin | `tests/skin.test.ts` |
 | The same snake is marked the same way every load | `tests/skin.test.ts` |
 | Every border edge carries a whole number of motifs | `tests/border.test.ts` |
-| The framing fits the slab, margin and all | looking at it |
+| The whole board lands inside the band | `tests/framing.test.ts` |
+| The board is centred in the band, not merely inside it | `tests/framing.test.ts` |
+| The board fills the band it was given | `tests/framing.test.ts` |
+| The framing fits the slab, margin and all | `tests/framing.test.ts` |
 
 ## Known open work, roughly in value order
 
@@ -97,18 +100,48 @@ yourself deleting one of these tests, you are re-introducing the defect.
       needs either art or a much better procedural draw; diamonds were chosen
       because they survive being thirty pixels wide on a phone, which anything
       more detailed does not.
-- [ ] **The board may sit a little left of centre.** Eyeballing corners off a
-      screenshot put the mobile board about 2% left of the band's middle. That
-      is not a measurement — antialiased edges in a downscaled capture cannot
-      support a 2% claim — and it was left alone rather than "fixed" on a
-      reading that weak. Measuring it properly means projecting the board's
-      corners with the real camera, which needs a hook the app does not have.
 - [ ] **The 72 texts are not searchable** from this surface; the mini app has
       `app.plans` for exactly that.
 - [ ] **`apps/mobile` cannot use any of this yet.** The scene is DOM-free apart
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — eighth pass: an instrument for the framing
+
+The framing had shipped three defects — a pan signed the wrong way, an inset
+read from the bottom only, a fit that measured the play field after the board
+had grown a margin — and **every one was caught by eye**. Three of a kind is a
+pattern, and the answer to a pattern is an instrument.
+
+`src/framing.ts` is the same code with no WebGL in it. That is the whole trick:
+a `PerspectiveCamera` and `Vector3.project` are arithmetic, and only
+`WebGLRenderer` wants a context, so a headless test can build a real camera,
+frame a real board over six viewports and four panel positions, and ask where
+the corners landed.
+
+**It found two defects in the hour it was born, both in shipped behaviour:**
+
+- **The elevation stopped depending on the viewport.** My own extraction did it:
+  the original read `visibleW / visible` in *pixels*, and I fed the new one the
+  clip-space band instead. A full band is 2 by 2 whatever the screen, so the
+  camera stood at the same angle on a phone as on a widescreen. Written and
+  caught inside the same change, by the test that did not exist an hour before.
+- **The pan overshot, systematically.** Distance is solved with the camera on
+  the board's axis; the pan then moves it off-axis, and a perspective projection
+  is not the same off-axis as on it. Measured across all twenty-four
+  combinations: every case with a tall bottom sheet under-filled its band —
+  0.873 where 0.94 was intended, worst on exactly the everyday phone layout. The
+  two steps now alternate until both settle, and the worst case is 0.938.
+
+That second one **answers the question left open two passes ago**, where a
+possible 2% offset was noticed by eye and deliberately not acted on because
+corners eyeballed off an antialiased capture cannot support a 2% claim. The
+offset was real, it was larger than 2%, and it took an instrument to say so.
+
+Cost: 141 tests where there were 131. `audit-configs` and the strict typecheck
+also earned their keep — the extraction left `CORNERS`, both elevation bounds
+and `clamp01` behind as dead code, and `noUnusedLocals` named all four.
 
 ### 2026-08-13 — seventh pass: an edge
 
