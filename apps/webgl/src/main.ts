@@ -42,6 +42,18 @@ import { css } from './theme';
 const HOP_MS = 420;
 
 /**
+ * The one seat this surface plays.
+ *
+ * The board holds a token per seat now, and the engine has had `createSession`,
+ * `advance` and turn rotation all along — so several people from one device is
+ * a model change, not a rendering one. This is the rendering half, landed on
+ * its own. The id is `p1` because that is what `seatId(0)` produces in
+ * `apps/miniapp/src/seats.ts`, and a journal kept per seat should find the same
+ * name on both surfaces when the rest arrives.
+ */
+const SEAT = 'p1';
+
+/**
  * How high the token's anchor sits above the web.
  *
  * Its plinth reaches `0.16 * scale` below the anchor, so this puts the base on
@@ -155,7 +167,7 @@ const showRoster = (open: boolean): void => {
 const chooseDeity = (next: (typeof DEITIES)[number]): void => {
   deity = next;
   keep();
-  board.setDeity(next);
+  board.setSeats([{ id: SEAT, deity: next }]);
   el.lotusMark.style.setProperty('--lotus', css(next.colour));
   el.lotus.setAttribute('aria-label', `${next.latin} — ${messageFor(language, 'app.play')}`);
   for (const button of el.who.querySelectorAll<HTMLElement>('.deity')) {
@@ -204,7 +216,7 @@ for (const each of DEITIES) {
   el.who.append(button);
 }
 
-board.setDeity(deity);
+board.setSeats([{ id: SEAT, deity }]);
 el.lotusMark.style.setProperty('--lotus', css(deity.colour));
 el.lotus.setAttribute('aria-label', `${deity.latin} — ${messageFor(language, 'app.play')}`);
 
@@ -636,7 +648,7 @@ el.canvas.addEventListener('pointerup', (event) => {
 
 const settle = (): void => {
   const { x, z } = planPosition(play.plan);
-  board.piece.position.set(x, PIECE_LIFT, z);
+  board.token(SEAT)?.position.set(x, PIECE_LIFT, z);
   if (!visiting) board.focus(play.entered ? play.plan : null);
   board.draw();
 };
@@ -647,7 +659,7 @@ const walk = (hop: Hop): Promise<void> => {
   const to = planPosition(hop.to);
 
   if (reducedMotion.matches || hop.from === hop.to) {
-    board.piece.position.set(to.x, PIECE_LIFT, to.z);
+    board.token(SEAT)?.position.set(to.x, PIECE_LIFT, to.z);
     board.draw();
     return Promise.resolve();
   }
@@ -660,7 +672,7 @@ const walk = (hop: Hop): Promise<void> => {
       if (done) return;
       done = true;
       clearTimeout(backstop);
-      board.piece.position.set(to.x, PIECE_LIFT, to.z);
+      board.token(SEAT)?.position.set(to.x, PIECE_LIFT, to.z);
       board.draw();
       resolve();
     };
@@ -685,7 +697,7 @@ const walk = (hop: Hop): Promise<void> => {
       if (done) return;
       const t = Math.min(1, (now - started) / HOP_MS);
       const point = hopPoint(from, to, t);
-      board.piece.position.set(point.x, point.y + PIECE_LIFT, point.z);
+      board.token(SEAT)?.position.set(point.x, point.y + PIECE_LIFT, point.z);
       board.draw();
       if (t < 1) requestAnimationFrame(frame);
       else land();

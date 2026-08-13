@@ -4,7 +4,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { ARROWS, SNAKES, WIN_LOKA } from '@leela/engine';
 
 import { gridFor, paintLabels, patchFor, tileFor } from './atlas';
-import { DEFAULT_DEITY, type Deity } from './deities';
+import type { Deity } from './deities';
 import { animationClock, frames, type Clock, type Frames } from './frames';
 import {
   CELL,
@@ -179,11 +179,24 @@ const flowerOfLife = (
   painter.restore();
 };
 
+/** One player at the table, as the board needs them. */
+export interface Seat {
+  readonly id: string;
+  readonly deity: Deity;
+}
+
 export interface Board {
   readonly scene: THREE.Scene;
   readonly camera: THREE.PerspectiveCamera;
   readonly renderer: THREE.WebGLRenderer;
-  readonly piece: THREE.Object3D;
+  /**
+   * The token for a seat, to be moved by whoever is animating the walk.
+   *
+   * Null for a seat the board does not have — a caller holding an id from a
+   * table that has since been resized, which the engine allows and this must
+   * not throw on.
+   */
+  token(seatId: string): THREE.Object3D | null;
   /** Highlights a plan, and the jump it is an end of; null clears. */
   focus(plan: number | null): void;
   /**
@@ -200,8 +213,8 @@ export interface Board {
   draw(): void;
   /** Which plan is under this point on the canvas, if any. */
   planAt(x: number, y: number): number | null;
-  /** Who the player is playing as. Rebuilds the token in place. */
-  setDeity(deity: Deity): void;
+  /** Who is at the table, and as whom. Rebuilds every token. */
+  setSeats(seats: ReadonlyArray<Seat>): void;
   dispose(): void;
 }
 
@@ -932,229 +945,262 @@ export const createBoard = (
   }
   scene.add(links);
 
-  // --- the player ----------------------------------------------------------
+  // --- the players ---------------------------------------------------------
 
-  const bodyMaterial = new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.25 });
-  const accentMaterial = new THREE.MeshStandardMaterial({ roughness: 0.2, metalness: 0.6 });
+    /**
+     * One token per seat, not one token.
+     *
+     * Everything below used to be a single figure and a pair of materials the
+     * whole scene shared, mutated in place whenever the player changed deity.
+     * With several people playing from one device that is the wrong shape: two
+     * seats wearing one material is two seats the same colour. So it is a factory,
+     * and each seat owns its own.
+     */
+    const makeToken = (deity: Deity): { group: THREE.Group; emblem: THREE.Group } => {
 
-  const piece = new THREE.Group();
-  /** Everything above the seat: replaced whenever the player changes deity. */
-  const emblemHolder = new THREE.Group();
-  emblemHolder.position.y = 0.06;
+    const bodyMaterial = new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.25 });
+    const accentMaterial = new THREE.MeshStandardMaterial({ roughness: 0.2, metalness: 0.6 });
 
-  /** The lean. Inside its own group so the billboard turn stays about Y. */
-  const emblemLean = new THREE.Group();
-  emblemLean.rotation.x = 0.62;
-  // Beside the figure rather than on top of it: an attribute is held.
-  emblemLean.position.set(0.24, 0.06, 0);
-  emblemLean.scale.setScalar(0.8);
-  emblemHolder.add(emblemLean);
+    const piece = new THREE.Group();
+    /** Everything above the seat: replaced whenever the player changes deity. */
+    const emblemHolder = new THREE.Group();
+    emblemHolder.position.y = 0.06;
 
-  /**
-   * The figure.
-   *
-   * Held to a silhouette rather than a likeness, and that is a size decision
-   * before it is a taste one: the board is framed so a square is about thirty
-   * pixels across on a phone, and the first token — three rings of lotus petals
-   * with a modelled attribute above them — resolved at that size into a smear
-   * of confetti. What survives thirty pixels is a shape, a colour and a halo.
-   *
-   * So: a plinth, a tapering body, a head, and the prabhamandala behind it in
-   * the deity's second colour. The attribute is still there, held at the side,
-   * for a player who pinches in.
-   */
-  /**
-   * A lotus, because a chakra is a lotus.
-   *
-   * The texts this game is made of describe each level as a lotus with a fixed
-   * number of petals — four at the base, six, ten, twelve at the heart — and
-   * the deities are depicted seated on one. A tapering pawn was a chess piece
-   * that happened to be here; this is the form the corpus itself keeps naming.
-   *
-   * Two whorls of petals around a seed cup, with the outer ring laid open and
-   * the inner ring cupped upward. Held to a silhouette rather than a botanical
-   * study: at the distance the board is played from, a token is a shape and a
-   * colour, and the first attempt at detail here resolved into confetti.
-   */
-  const seat = new THREE.Group();
+    /** The lean. Inside its own group so the billboard turn stays about Y. */
+    const emblemLean = new THREE.Group();
+    emblemLean.rotation.x = 0.62;
+    // Beside the figure rather than on top of it: an attribute is held.
+    emblemLean.position.set(0.24, 0.06, 0);
+    emblemLean.scale.setScalar(0.8);
+    emblemHolder.add(emblemLean);
 
-  const petal = (radius: number, tilt: number, lift: number, scale: number): THREE.Mesh => {
-    const shaped = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), bodyMaterial);
-    // Flattened and drawn to a point: a sphere squashed on two axes is a petal.
-    shaped.scale.set(0.42 * scale, 0.14 * scale, scale);
-    shaped.position.set(0, lift, radius);
-    shaped.rotation.x = tilt;
-    shaped.castShadow = true;
-    return shaped;
-  };
+    /**
+     * The figure.
+     *
+     * Held to a silhouette rather than a likeness, and that is a size decision
+     * before it is a taste one: the board is framed so a square is about thirty
+     * pixels across on a phone, and the first token — three rings of lotus petals
+     * with a modelled attribute above them — resolved at that size into a smear
+     * of confetti. What survives thirty pixels is a shape, a colour and a halo.
+     *
+     * So: a plinth, a tapering body, a head, and the prabhamandala behind it in
+     * the deity's second colour. The attribute is still there, held at the side,
+     * for a player who pinches in.
+     */
+    /**
+     * A lotus, because a chakra is a lotus.
+     *
+     * The texts this game is made of describe each level as a lotus with a fixed
+     * number of petals — four at the base, six, ten, twelve at the heart — and
+     * the deities are depicted seated on one. A tapering pawn was a chess piece
+     * that happened to be here; this is the form the corpus itself keeps naming.
+     *
+     * Two whorls of petals around a seed cup, with the outer ring laid open and
+     * the inner ring cupped upward. Held to a silhouette rather than a botanical
+     * study: at the distance the board is played from, a token is a shape and a
+     * colour, and the first attempt at detail here resolved into confetti.
+     */
+    const seat = new THREE.Group();
 
-  for (const [count, radius, tilt, lift, scale] of [
-    [8, 0.2, -0.42, 0.0, 1.0],
-    [6, 0.12, -0.95, 0.05, 0.78],
-  ] as ReadonlyArray<readonly [number, number, number, number, number]>) {
-    for (let at = 0; at < count; at += 1) {
-      const whorl = new THREE.Group();
-      whorl.add(petal(radius, tilt, lift, scale));
-      whorl.rotation.y = (at / count) * Math.PI * 2;
-      seat.add(whorl);
-    }
-  }
-
-  // The seed cup at the centre, and the stem the emblem rises from.
-  const cup = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8), accentMaterial);
-  cup.scale.set(1, 0.55, 1);
-  cup.position.y = 0.05;
-  cup.castShadow = true;
-  seat.add(cup);
-
-  // The halo, behind the head and turned to face the camera with the emblem.
-  const halo3d = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.022, 8, 20), accentMaterial);
-  halo3d.position.y = 0.3;
-  halo3d.castShadow = true;
-
-  seat.position.y = -0.02;
-  emblemHolder.add(halo3d);
-  piece.add(seat, emblemHolder);
-  // Half again as large as a square is wide at the base. A token the size of
-  // the number underneath it is a token nobody can see who they are playing as,
-  // and who you are playing as is now the point.
-  piece.scale.setScalar(1.15);
-  piece.position.set(0, 0.3, 0);
-  scene.add(piece);
-
-  /**
-   * The attribute the deity is known by, built from primitives.
-   *
-   * Emblems rather than figures. A recognisable object in brass is something
-   * this can build honestly at the size of a board square; a face is not, and a
-   * bad one would be worse than none.
-   */
-  const buildEmblem = (deity: Deity): THREE.Object3D => {
-    const made = new THREE.Group();
-    const add = (mesh: THREE.Mesh): THREE.Mesh => {
-      mesh.castShadow = true;
-      made.add(mesh);
-      return mesh;
+    const petal = (radius: number, tilt: number, lift: number, scale: number): THREE.Mesh => {
+      const shaped = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), bodyMaterial);
+      // Flattened and drawn to a point: a sphere squashed on two axes is a petal.
+      shaped.scale.set(0.42 * scale, 0.14 * scale, scale);
+      shaped.position.set(0, lift, radius);
+      shaped.rotation.x = tilt;
+      shaped.castShadow = true;
+      return shaped;
     };
 
-    switch (deity.emblem) {
-      case 'chakra': {
-        const disc = add(new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.032, 8, 24), accentMaterial));
-        disc.rotation.x = Math.PI / 2.4;
-        for (let spoke = 0; spoke < 6; spoke += 1) {
-          const bar = add(new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.012, 0.02), accentMaterial));
-          bar.rotation.set(Math.PI / 2.4, 0, 0);
-          bar.rotateZ((spoke * Math.PI) / 6);
-        }
-        break;
-      }
-      case 'trishula': {
-        add(new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.34, 8), accentMaterial)).position.y = 0.05;
-        for (const side of [-1, 0, 1]) {
-          const prong = add(new THREE.Mesh(new THREE.ConeGeometry(0.028, 0.16, 8), accentMaterial));
-          prong.position.set(side * 0.075, 0.28, 0);
-          prong.rotation.z = -side * 0.22;
-        }
-        break;
-      }
-      case 'padma': {
-        for (const [ring, [count, radius, tilt]] of [
-          [8, 0.13, 0.9],
-          [6, 0.07, 0.45],
-        ].entries()) {
-          for (let petal = 0; petal < (count as number); petal += 1) {
-            const leaf = add(new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), accentMaterial));
-            leaf.scale.set(0.5, 0.3, 1);
-            const angle = (petal / (count as number)) * Math.PI * 2 + ring * 0.35;
-            leaf.position.set(
-              Math.cos(angle) * (radius as number),
-              0.06 + ring * 0.05,
-              Math.sin(angle) * (radius as number),
-            );
-            leaf.rotation.y = -angle;
-            leaf.rotation.x = -(tilt as number) * 0.4;
-          }
-        }
-        break;
-      }
-      case 'bansuri': {
-        const flute = add(new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.42, 10), accentMaterial));
-        flute.rotation.set(0, 0.4, Math.PI / 2.6);
-        flute.position.y = 0.12;
-        for (let hole = 0; hole < 4; hole += 1) {
-          const dot = add(new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 4), eyeMaterial));
-          dot.position.set(-0.09 + hole * 0.06, 0.145 + hole * 0.024, 0.026);
-        }
-        break;
-      }
-      case 'veena': {
-        const gourd = add(new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), accentMaterial));
-        gourd.position.set(-0.06, 0.06, 0);
-        gourd.scale.set(1, 0.85, 1);
-        const neck = add(new THREE.Mesh(new THREE.CylinderGeometry(0.017, 0.023, 0.36, 8), accentMaterial));
-        neck.position.set(0.06, 0.17, 0);
-        neck.rotation.z = -0.5;
-        break;
-      }
-      case 'khanga': {
-        const blade = add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.32, 0.012), accentMaterial));
-        blade.position.y = 0.19;
-        const tip = add(new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.08, 4), accentMaterial));
-        tip.position.y = 0.39;
-        const guard = add(new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.02, 0.02), accentMaterial));
-        guard.position.y = 0.03;
-        break;
-      }
-      case 'vajra': {
-        add(new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.16, 8), accentMaterial)).position.y = 0.14;
-        for (const end of [0.05, 0.23]) {
-          const bulb = add(new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 8), accentMaterial));
-          bulb.position.y = end;
-          for (let prong = 0; prong < 4; prong += 1) {
-            const spike = add(new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.1, 6), accentMaterial));
-            const angle = (prong / 4) * Math.PI * 2;
-            spike.position.set(
-              Math.cos(angle) * 0.038,
-              end + (end > 0.14 ? 0.06 : -0.06),
-              Math.sin(angle) * 0.038,
-            );
-            spike.rotation.z = (end > 0.14 ? -1 : 1) * Math.cos(angle) * 0.3;
-            spike.rotation.x = (end > 0.14 ? 1 : -1) * Math.sin(angle) * 0.3;
-            if (end <= 0.14) spike.rotation.x += Math.PI;
-          }
-        }
-        break;
-      }
-      case 'jvala': {
-        for (const [at, [scale, lift, lean]] of [
-          [1, 0.1, 0],
-          [0.62, 0.26, 0.3],
-          [0.4, 0.36, -0.35],
-        ].entries()) {
-          const flame = add(new THREE.Mesh(new THREE.ConeGeometry(0.09 * (scale as number), 0.26 * (scale as number), 8), accentMaterial));
-          flame.position.set((lean as number) * 0.06, lift as number, at * 0.01);
-          flame.rotation.z = -(lean as number) * 0.5;
-        }
-        break;
+    for (const [count, radius, tilt, lift, scale] of [
+      [8, 0.2, -0.42, 0.0, 1.0],
+      [6, 0.12, -0.95, 0.05, 0.78],
+    ] as ReadonlyArray<readonly [number, number, number, number, number]>) {
+      for (let at = 0; at < count; at += 1) {
+        const whorl = new THREE.Group();
+        whorl.add(petal(radius, tilt, lift, scale));
+        whorl.rotation.y = (at / count) * Math.PI * 2;
+        seat.add(whorl);
       }
     }
-    return made;
-  };
 
-  let deity: Deity = DEFAULT_DEITY;
+    // The seed cup at the centre, and the stem the emblem rises from.
+    const cup = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8), accentMaterial);
+    cup.scale.set(1, 0.55, 1);
+    cup.position.y = 0.05;
+    cup.castShadow = true;
+    seat.add(cup);
 
-  const dressPiece = (): void => {
+    // The halo, behind the head and turned to face the camera with the emblem.
+    const halo3d = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.022, 8, 20), accentMaterial);
+    halo3d.position.y = 0.3;
+    halo3d.castShadow = true;
+
+    seat.position.y = -0.02;
+    emblemHolder.add(halo3d);
+    piece.add(seat, emblemHolder);
+    // Half again as large as a square is wide at the base. A token the size of
+    // the number underneath it is a token nobody can see who they are playing as,
+    // and who you are playing as is now the point.
+    piece.scale.setScalar(1.15);
+    piece.position.set(0, 0.3, 0);
+
+
+    /**
+     * The attribute the deity is known by, built from primitives.
+     *
+     * Emblems rather than figures. A recognisable object in brass is something
+     * this can build honestly at the size of a board square; a face is not, and a
+     * bad one would be worse than none.
+     */
+    const buildEmblem = (deity: Deity): THREE.Object3D => {
+      const made = new THREE.Group();
+      const add = (mesh: THREE.Mesh): THREE.Mesh => {
+        mesh.castShadow = true;
+        made.add(mesh);
+        return mesh;
+      };
+
+      switch (deity.emblem) {
+        case 'chakra': {
+          const disc = add(new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.032, 8, 24), accentMaterial));
+          disc.rotation.x = Math.PI / 2.4;
+          for (let spoke = 0; spoke < 6; spoke += 1) {
+            const bar = add(new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.012, 0.02), accentMaterial));
+            bar.rotation.set(Math.PI / 2.4, 0, 0);
+            bar.rotateZ((spoke * Math.PI) / 6);
+          }
+          break;
+        }
+        case 'trishula': {
+          add(new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.34, 8), accentMaterial)).position.y = 0.05;
+          for (const side of [-1, 0, 1]) {
+            const prong = add(new THREE.Mesh(new THREE.ConeGeometry(0.028, 0.16, 8), accentMaterial));
+            prong.position.set(side * 0.075, 0.28, 0);
+            prong.rotation.z = -side * 0.22;
+          }
+          break;
+        }
+        case 'padma': {
+          for (const [ring, [count, radius, tilt]] of [
+            [8, 0.13, 0.9],
+            [6, 0.07, 0.45],
+          ].entries()) {
+            for (let petal = 0; petal < (count as number); petal += 1) {
+              const leaf = add(new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), accentMaterial));
+              leaf.scale.set(0.5, 0.3, 1);
+              const angle = (petal / (count as number)) * Math.PI * 2 + ring * 0.35;
+              leaf.position.set(
+                Math.cos(angle) * (radius as number),
+                0.06 + ring * 0.05,
+                Math.sin(angle) * (radius as number),
+              );
+              leaf.rotation.y = -angle;
+              leaf.rotation.x = -(tilt as number) * 0.4;
+            }
+          }
+          break;
+        }
+        case 'bansuri': {
+          const flute = add(new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.42, 10), accentMaterial));
+          flute.rotation.set(0, 0.4, Math.PI / 2.6);
+          flute.position.y = 0.12;
+          for (let hole = 0; hole < 4; hole += 1) {
+            const dot = add(new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 4), eyeMaterial));
+            dot.position.set(-0.09 + hole * 0.06, 0.145 + hole * 0.024, 0.026);
+          }
+          break;
+        }
+        case 'veena': {
+          const gourd = add(new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), accentMaterial));
+          gourd.position.set(-0.06, 0.06, 0);
+          gourd.scale.set(1, 0.85, 1);
+          const neck = add(new THREE.Mesh(new THREE.CylinderGeometry(0.017, 0.023, 0.36, 8), accentMaterial));
+          neck.position.set(0.06, 0.17, 0);
+          neck.rotation.z = -0.5;
+          break;
+        }
+        case 'khanga': {
+          const blade = add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.32, 0.012), accentMaterial));
+          blade.position.y = 0.19;
+          const tip = add(new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.08, 4), accentMaterial));
+          tip.position.y = 0.39;
+          const guard = add(new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.02, 0.02), accentMaterial));
+          guard.position.y = 0.03;
+          break;
+        }
+        case 'vajra': {
+          add(new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.16, 8), accentMaterial)).position.y = 0.14;
+          for (const end of [0.05, 0.23]) {
+            const bulb = add(new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 8), accentMaterial));
+            bulb.position.y = end;
+            for (let prong = 0; prong < 4; prong += 1) {
+              const spike = add(new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.1, 6), accentMaterial));
+              const angle = (prong / 4) * Math.PI * 2;
+              spike.position.set(
+                Math.cos(angle) * 0.038,
+                end + (end > 0.14 ? 0.06 : -0.06),
+                Math.sin(angle) * 0.038,
+              );
+              spike.rotation.z = (end > 0.14 ? -1 : 1) * Math.cos(angle) * 0.3;
+              spike.rotation.x = (end > 0.14 ? 1 : -1) * Math.sin(angle) * 0.3;
+              if (end <= 0.14) spike.rotation.x += Math.PI;
+            }
+          }
+          break;
+        }
+        case 'jvala': {
+          for (const [at, [scale, lift, lean]] of [
+            [1, 0.1, 0],
+            [0.62, 0.26, 0.3],
+            [0.4, 0.36, -0.35],
+          ].entries()) {
+            const flame = add(new THREE.Mesh(new THREE.ConeGeometry(0.09 * (scale as number), 0.26 * (scale as number), 8), accentMaterial));
+            flame.position.set((lean as number) * 0.06, lift as number, at * 0.01);
+            flame.rotation.z = -(lean as number) * 0.5;
+          }
+          break;
+        }
+      }
+      return made;
+    };
+
     bodyMaterial.color.setHex(deity.colour);
     accentMaterial.color.setHex(deity.accent);
-    for (const old of [...emblemLean.children]) {
-      emblemLean.remove(old);
-      old.traverse((object) => {
-        if (object instanceof THREE.Mesh) object.geometry.dispose();
+    emblemLean.add(buildEmblem(deity));
+
+    return { group: piece, emblem: emblemHolder };
+  };
+
+  /**
+   * The tokens on the board, by seat.
+   *
+   * Rebuilt wholesale when the seating changes, because a seat that leaves
+   * takes its geometry with it and a seat that arrives needs its own — and
+   * both are rare enough that keeping a diff would be more code than it saves.
+   */
+  const tokens = new Map<string, { group: THREE.Group; emblem: THREE.Group }>();
+
+  const seatTokens = (seats: ReadonlyArray<Seat>): void => {
+    for (const token of tokens.values()) {
+      scene.remove(token.group);
+      token.group.traverse((object) => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry.dispose();
+          const material = object.material;
+          if (Array.isArray(material)) material.forEach((m) => m.dispose());
+          else material.dispose();
+        }
       });
     }
-    emblemLean.add(buildEmblem(deity));
+    tokens.clear();
+
+    for (const seat of seats) {
+      const token = makeToken(seat.deity);
+      scene.add(token.group);
+      tokens.set(seat.id, token);
+    }
   };
-  dressPiece();
 
   const haloMaterial = new THREE.MeshBasicMaterial({
     side: THREE.DoubleSide,
@@ -1240,10 +1286,12 @@ export const createBoard = (
      * far enough to be read from above, while the lotus seat underneath stays
      * put and keeps the token's footprint honest.
      */
-    emblemHolder.rotation.y = Math.atan2(
-      camera.position.x - piece.position.x,
-      camera.position.z - piece.position.z,
-    );
+    for (const token of tokens.values()) {
+      token.emblem.rotation.y = Math.atan2(
+        camera.position.x - token.group.position.x,
+        camera.position.z - token.group.position.z,
+      );
+    }
 
     renderer.render(scene, camera);
     return moving;
@@ -1262,7 +1310,7 @@ export const createBoard = (
     scene,
     camera,
     renderer,
-    piece,
+    token: (seatId) => tokens.get(seatId)?.group ?? null,
     draw: clockFrames.draw,
 
     focus(plan) {
@@ -1297,9 +1345,8 @@ export const createBoard = (
       return hit ? planAtPoint(hit.point.x, hit.point.z) : null;
     },
 
-    setDeity(next) {
-      deity = next;
-      dressPiece();
+    setSeats(seats) {
+      seatTokens(seats);
       clockFrames.draw();
     },
 

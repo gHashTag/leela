@@ -11,7 +11,11 @@ Every iteration, in this order:
 
 1. **Read this file, then `git status --short`.** Other sessions work in this
    tree. Uncommitted files you did not write are not yours.
-2. **Green before, green after.** From `apps/webgl`:
+2. **Green before, green after — and `cd apps/webgl` first, every time.** Run
+   from the repository root and `vitest` quietly runs the *whole monorepo*
+   (3,845 tests, all green, none of them this app's) while `tsc -p
+   tsconfig.src.json` cannot find the file and prints its own help instead of an
+   error anybody notices. This has now happened three times. From `apps/webgl`:
    ```
    npx vitest run && npx tsc --noEmit && npx tsc --noEmit -p tsconfig.src.json
    ```
@@ -118,10 +122,12 @@ yourself deleting one of these tests, you are re-introducing the defect.
       not in `@leela/journal`. Moving it into the package, where `REPORTS_KEY`
       and `isIntention` already are for exactly this reason, makes the sentence
       true here and deletes a copy. It is another app's file to move.
-- [ ] **Several tokens on the board.** `apps/miniapp/src/seats.ts` has the seat
-      model — `SavedSeats`, `sessionFrom`, `resize` — tested. The board renders
-      one token and would need to render many, and turn-taking has to reach the
-      throw. This is a pass of its own, not a corner of another one.
+- [ ] **Several tokens on the board: the model half.** The board holds a token
+      per seat now and plays one. What remains is not rendering — it is
+      `createSession`/`advance` replacing `Play`, which reaches `play.ts` and
+      its eleven tests, `kept.ts` and its seat record, and a control for how
+      many are playing. The engine already rotates turns correctly for the bot;
+      nothing about the rotation needs writing.
 - [ ] **A marking is a shade, not a second colour.** The tile is a `map` and a
       `map` multiplies `color`, so one tile per pattern serves all six skins —
       the cost is that a band is a darker version of the same hue. The painting
@@ -148,6 +154,36 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — seventeenth pass: the board holds a table
+
+The third of the three asked for, cut where it actually separates.
+
+`Board` no longer has a `piece`. It has `setSeats` and `token(seatId)`, and it
+builds one figure per seat: the materials that were shared singletons mutated in
+place are now owned per token, because two seats wearing one material is two
+seats the same colour. The app plays a single seat, `p1` — the id
+`seatId(0)` produces in `apps/miniapp/src/seats.ts`, so a journal kept per seat
+finds the same name on both surfaces when the rest lands.
+
+**Nothing a player can see has changed, and that is the point.** This is the
+rendering half of several-players-on-one-device, landed on its own so that the
+next pass is purely a model change.
+
+**Why it was cut there, found by trying the whole thing first.** The engine has
+had all of this since before this app existed: `createSession`, `advance`,
+`MAX_SEATS`, and turn rotation as `nextSeat` — `seats.ts` says so in as many
+words, that it ports the *seating* and lets the engine rotate. So the remaining
+work is not multiplayer logic, which is written and tested. It is `Session`
+replacing `Play`, and that reaches `play.ts`, its eleven tests, `kept.ts`'s
+record and a seating control. Pushing that through in the same pass as the
+scene surgery would have meant shipping a half-built core loop; the contract's
+own rule 4 is the reason it did not.
+
+Cost: 187 tests, unchanged. The scene's public surface changed and no test
+touches it — which is exactly the gap `frames.ts` exists to remember, and the
+reason this pass ends with a screenshot of a throw and a deity change rather
+than a green tick.
 
 ### 2026-08-13 — sixteenth pass: the question, and the path as a file
 
