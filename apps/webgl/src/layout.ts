@@ -1,0 +1,107 @@
+import { BOARD_ROWS, TOTAL_PLANS } from '@leela/engine';
+
+/**
+ * Where each plan sits in space.
+ *
+ * Kept apart from the renderer on purpose. Everything here is arithmetic over
+ * `BOARD_ROWS`, which is the same table the mobile app draws from, so the 3D
+ * board cannot drift from the 2D one - and it can be tested without a GPU,
+ * which is the only way this gets tested at all.
+ *
+ * The board is boustrophedon: plan 1 is bottom-left, the row runs right, the
+ * next row runs left, and so on up to 72. Reading the rows out of the engine
+ * rather than recomputing the serpentine means a change to the board is a
+ * change in one place.
+ */
+
+/** World-space size of one cell. */
+export const CELL = 1;
+
+/** Gap between cells, as a fraction of CELL. */
+export const GAP = 0.08;
+
+export interface Vec3 {
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+}
+
+export class UnknownPlanError extends Error {
+  constructor(plan: number) {
+    super(`plan ${plan} is not on the board`);
+    this.name = 'UnknownPlanError';
+  }
+}
+
+const PITCH = CELL * (1 + GAP);
+
+/** Rows as the engine declares them, bottom row first. */
+const ROWS_BOTTOM_UP = [...BOARD_ROWS].reverse();
+
+const COLUMNS = ROWS_BOTTOM_UP[0]?.length ?? 0;
+const ROWS = ROWS_BOTTOM_UP.length;
+
+/** Centres the board on the origin so the camera has nothing to compensate. */
+const originX = -((COLUMNS - 1) * PITCH) / 2;
+const originZ = ((ROWS - 1) * PITCH) / 2;
+
+const index = new Map<number, { row: number; column: number }>();
+for (let row = 0; row < ROWS_BOTTOM_UP.length; row += 1) {
+  const cells = ROWS_BOTTOM_UP[row] ?? [];
+  for (let column = 0; column < cells.length; column += 1) {
+    const plan = cells[column];
+    if (typeof plan === 'number') index.set(plan, { row, column });
+  }
+}
+
+/** Every plan the board declares, ascending. */
+export const plans = (): number[] => [...index.keys()].sort((a, b) => a - b);
+
+/** True when the board has a cell for this plan. */
+export const hasPlan = (plan: number): boolean => index.has(plan);
+
+/**
+ * The centre of a plan's cell, on the board plane (y = 0).
+ *
+ * Throws rather than returning a default: a piece silently parked at the
+ * origin is the kind of wrong that looks like a rendering bug for hours.
+ */
+export const planPosition = (plan: number): Vec3 => {
+  const cell = index.get(plan);
+  if (!cell) throw new UnknownPlanError(plan);
+
+  return {
+    x: originX + cell.column * PITCH,
+    y: 0,
+    z: originZ - cell.row * PITCH,
+  };
+};
+
+/** Width and depth the board occupies, for framing the camera. */
+export const boardExtent = (): { width: number; depth: number } => ({
+  width: (COLUMNS - 1) * PITCH + CELL,
+  depth: (ROWS - 1) * PITCH + CELL,
+});
+
+/**
+ * A piece hops rather than slides: the arc reads as a move even when the two
+ * cells are adjacent. `t` runs 0..1; the height is a parabola so both ends sit
+ * exactly on the board.
+ */
+export const hopHeight = (t: number, peak = 0.9): number => {
+  const clamped = Math.min(1, Math.max(0, t));
+  return peak * 4 * clamped * (1 - clamped);
+};
+
+/** Straight-line interpolation between two cells, with the hop applied. */
+export const hopPoint = (from: Vec3, to: Vec3, t: number, peak?: number): Vec3 => {
+  const clamped = Math.min(1, Math.max(0, t));
+  return {
+    x: from.x + (to.x - from.x) * clamped,
+    y: hopHeight(clamped, peak),
+    z: from.z + (to.z - from.z) * clamped,
+  };
+};
+
+/** Sanity check used by the tests and by the renderer on boot. */
+export const boardIsComplete = (): boolean => index.size === TOTAL_PLANS;

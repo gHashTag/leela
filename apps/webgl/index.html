@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Leela — the board in three dimensions</title>
+
+    <!--
+      The same words the mini app's head carries, for the same reason: this page
+      is a link people send each other, and a chat with nothing to build a
+      preview from renders it as a bare URL.
+    -->
+    <meta name="description" content="The game of self-knowledge — 72 plans, in 22 languages." />
+    <meta property="og:site_name" content="Leela" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Leela — the board in three dimensions" />
+    <meta
+      property="og:description"
+      content="The game of self-knowledge — 72 plans, in 22 languages."
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!--
+      One screen. The board is the page; everything else sits over it.
+
+      Not four screens with navigation between them, because the game is a loop
+      of throw → land → read → write → throw, and a loop that crosses a screen
+      boundary four times is a loop players leave. The reading is where the game
+      is, so it is not behind a button.
+    -->
+    <canvas id="board" aria-label="The board, 72 plans"></canvas>
+
+    <!-- Where you are. Over the board, never scrolled away. -->
+    <header class="where" id="where">
+      <span class="where-number" id="plan-number">—</span>
+      <span class="where-title" id="plan-title">Throw a six to enter the game</span>
+      <progress class="where-progress" id="progress" max="1" value="0"></progress>
+    </header>
+
+    <!--
+      A square that is not the one you are standing on, opened by tapping it.
+      A strip rather than a dialog: a dialog would take the board away, and
+      comparing a square with the board is the reason to tap one.
+    -->
+    <div class="visiting" id="visiting" hidden>
+      <span id="visiting-text"></span>
+      <button type="button" id="visiting-back" class="ghost">Back to my square</button>
+    </div>
+
+    <!--
+      The sheet. Three detents — enough to play, enough to read, all of it —
+      dragged or stepped with the handle. The pattern is the one every map app
+      uses for the same problem: a surface that must be both out of the way and
+      immediately to hand, on a screen with no room for two.
+    -->
+    <section class="sheet" id="sheet" data-detent="half" aria-label="This plan, and the companion">
+      <button
+        class="handle"
+        id="handle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="sheet-body"
+        aria-label="Expand"
+      ></button>
+
+      <!-- The throw. Above the scrolling part, so it never scrolls away. -->
+      <div class="play">
+        <button class="die" id="die" type="button" aria-label="Throw the die">
+          <span class="pips" id="pips" aria-hidden="true"></span>
+        </button>
+        <p class="say" id="say" role="status" aria-live="polite">A six puts you on the board.</p>
+      </div>
+
+      <!--
+        Who is playing.
+
+        Every name on this list is one the seventy-two texts use — see
+        `deities.ts`. A scrolling row rather than a dialog, because it is a
+        choice a player may want to change mid-game and the board should not go
+        away while they make it.
+      -->
+      <div class="who" id="who" role="radiogroup" aria-label="Play as"></div>
+
+      <div class="sheet-body" id="sheet-body">
+        <!--
+          One column, in the order things happened.
+
+          The plan you are standing on is not a panel above the conversation —
+          it is the companion's first remark about it, and it opens out to the
+          whole text in place. Two surfaces showing the same paragraph, one of
+          them scrolled permanently out of reach, is what the first pass had.
+        -->
+        <div class="thread" id="thread" aria-live="polite" aria-label="The companion"></div>
+
+        <!--
+          A square you tapped but are not standing on, read in place of the
+          thread rather than beside it. Looking at 68 from square 9 is a real
+          part of playing, and it is not a thing the companion said to you.
+        -->
+        <article class="visiting-plan" id="visiting-plan" hidden>
+          <h2 class="plan-heading" id="plan-heading"></h2>
+          <div class="plan-text" id="plan-text"></div>
+        </article>
+
+        <details class="rests" id="rests">
+          <summary id="rests-summary">What this rests on</summary>
+          <dl class="rests-list" id="rests-list"></dl>
+        </details>
+      </div>
+
+      <form class="compose" id="compose">
+        <label class="visually-hidden" for="reply">What does this plan bring up?</label>
+        <textarea
+          id="reply"
+          rows="1"
+          enterkeyhint="send"
+          placeholder="What does this plan bring up?"
+        ></textarea>
+        <button type="submit" id="send" class="send" aria-label="Send">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z" fill="currentColor" />
+          </svg>
+        </button>
+      </form>
+    </section>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
