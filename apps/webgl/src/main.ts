@@ -15,7 +15,7 @@ import { fileName, pathText, revisited, writingsOn, MAX_REPORT_CHARS } from '@le
 import { Companion, type Line, type Rests } from './companion';
 import { DEFAULT_DEITY, DEITIES, deityFor, deityForSeat, seatsOf } from './deities';
 import { screenFor, toneOf } from './hud';
-import { hopPoint, planPosition } from './layout';
+import { fanOffset, hopPoint, planPosition } from './layout';
 import { browserStore, read, write, type KeptSeat } from './kept';
 import { pathOf } from './path';
 import {
@@ -785,13 +785,29 @@ el.canvas.addEventListener('pointerup', (event) => {
  * question, and it is the same one the die and the companion ask.
  */
 const placeSeats = (): void => {
+  // How many stand on each square, before any of them is placed: a token's
+  // offset depends on how many it is sharing with, which is not known until
+  // every seat has been read.
+  const sharing = new Map<number, number>();
+  for (const player of session.players) {
+    if (!entered(player)) continue;
+    sharing.set(player.state.loka, (sharing.get(player.state.loka) ?? 0) + 1);
+  }
+
+  const placed = new Map<number, number>();
   for (const player of session.players) {
     const piece = board.token(player.id);
     if (!piece) continue;
     piece.visible = entered(player);
     if (!piece.visible) continue;
-    const { x, z } = planPosition(player.state.loka);
-    piece.position.set(x, PIECE_LIFT, z);
+
+    const plan = player.state.loka;
+    const at = placed.get(plan) ?? 0;
+    placed.set(plan, at + 1);
+
+    const centre = planPosition(plan);
+    const fan = fanOffset(at, sharing.get(plan) ?? 1);
+    piece.position.set(centre.x + fan.x, PIECE_LIFT, centre.z + fan.z);
   }
 };
 

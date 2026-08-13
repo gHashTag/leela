@@ -12,6 +12,8 @@ import {
   planAtPoint,
   plans,
   CELL,
+  FAN,
+  fanOffset,
 } from '../src/layout';
 
 describe('the board', () => {
@@ -194,5 +196,80 @@ describe('a point on the board', () => {
         if (plan !== null) expect(known.has(plan)).toBe(true);
       }
     }
+  });
+});
+
+/**
+ * Two players standing on one square used to occupy the same point exactly, so
+ * the board drew one token where there were two. Meeting on a square is not an
+ * edge case in Leela — the path is sixty-eight squares long and the arrows and
+ * snakes keep throwing players back onto the same few plans.
+ *
+ * What is checked here is what can be checked without a GPU, which is all of
+ * the part that can be silently wrong: whether the points are distinct, whether
+ * they stay in the cell they belong to, and whether the cluster is still on its
+ * square.
+ */
+describe('sharing a square', () => {
+  const spread = (sharing: number) =>
+    Array.from({ length: sharing }, (_, at) => fanOffset(at, sharing));
+
+  it('does not move a token that is standing alone', () => {
+    for (const sharing of [0, 1]) {
+      expect(fanOffset(0, sharing)).toEqual({ x: 0, y: 0, z: 0 });
+    }
+  });
+
+  it('gives every token sharing a square its own point', () => {
+    for (let sharing = 2; sharing <= 6; sharing += 1) {
+      const points = spread(sharing).map((point) => `${point.x.toFixed(6)},${point.z.toFixed(6)}`);
+      expect(new Set(points).size).toBe(sharing);
+    }
+  });
+
+  /** Otherwise a crowded square drags its pieces off itself. */
+  it('keeps the cluster centred on the square it is on', () => {
+    for (let sharing = 2; sharing <= 6; sharing += 1) {
+      const points = spread(sharing);
+      const sum = (pick: (point: { x: number; z: number }) => number) =>
+        points.reduce((total, point) => total + pick(point), 0);
+      expect(sum((point) => point.x)).toBeCloseTo(0, 10);
+      expect(sum((point) => point.z)).toBeCloseTo(0, 10);
+    }
+  });
+
+  /**
+   * The bound that matters, checked against the board rather than against the
+   * constant: `planAtPoint` decides which cell a point belongs to, and an
+   * anchor nudged past half a pitch answers with the neighbouring plan. A token
+   * that reports the wrong square when tapped is worse than two tokens in one
+   * place.
+   */
+  it('never fans a token out of its own cell, on any square', () => {
+    for (const plan of plans()) {
+      const centre = planPosition(plan);
+      for (let sharing = 2; sharing <= 6; sharing += 1) {
+        for (const point of spread(sharing)) {
+          expect(planAtPoint(centre.x + point.x, centre.z + point.z)).toBe(plan);
+        }
+      }
+    }
+  });
+
+  it('arranges the same table the same way every time', () => {
+    expect(spread(4)).toEqual(spread(4));
+  });
+
+  /** Two is the common case, and depth is the direction the camera flattens. */
+  it('sets two players across the board rather than one behind the other', () => {
+    const [left, right] = spread(2);
+    expect(Math.abs(left!.x - right!.x)).toBeCloseTo(FAN * 2, 10);
+    expect(left!.z).toBeCloseTo(0, 10);
+    expect(right!.z).toBeCloseTo(0, 10);
+  });
+
+  it('treats an index outside the ring as standing alone', () => {
+    expect(fanOffset(4, 4)).toEqual({ x: 0, y: 0, z: 0 });
+    expect(fanOffset(-1, 3)).toEqual({ x: 0, y: 0, z: 0 });
   });
 });

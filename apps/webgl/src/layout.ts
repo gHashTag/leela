@@ -107,6 +107,49 @@ export const planAtPoint = (x: number, z: number): number | null => {
 };
 
 /**
+ * How far from the centre of a cell a shared square fans its tokens.
+ *
+ * A quarter of the pitch. It is not enough to separate them: the lotus is about
+ * eight tenths of a cell across, and a cell is one and a bit, so two tokens on
+ * one square overlap however they are arranged. Separating them was never on
+ * offer — what was on offer is whether the board shows *one* token where two
+ * players stand, which is what it did.
+ *
+ * Bounded rather than chosen: `planAtPoint` answers for the cell a point falls
+ * in, and an anchor pushed past half a pitch belongs to the neighbouring plan.
+ * A token that reports itself on the wrong square when tapped is a worse defect
+ * than the one this fixes.
+ */
+export const FAN = PITCH / 4;
+
+/**
+ * The offset from a cell's centre for one of several tokens sharing it.
+ *
+ * Evenly spaced around a ring, which has three properties worth having and one
+ * worth stating. The offsets of a full ring sum to zero, so the cluster still
+ * reads as centred on its square rather than dragging off one edge. It depends
+ * on nothing but the two numbers given, so the same table arranges the same way
+ * on every load. And a token standing alone is not nudged off centre — the
+ * common case must not pay for the rare one.
+ *
+ * What it is not: an arrangement in which every token is wholly visible. The
+ * front one covers part of the back one at this camera. Each shows its own
+ * colour and its own outline, which is the difference between a square with two
+ * players on it and a square with one.
+ */
+export const fanOffset = (at: number, sharing: number): Vec3 => {
+  if (sharing <= 1 || at < 0 || at >= sharing) return { x: 0, y: 0, z: 0 };
+
+  // Starting at +x rather than at the top of the ring, so that the commonest
+  // case — two on a square — puts them left and right of each other. The camera
+  // looks down at seventy degrees, which foreshortens z into a couple of pixels
+  // of separation: two tokens fanned along depth read as one token with a
+  // shadow. Across is the direction an offset survives being looked at.
+  const angle = (at / sharing) * Math.PI * 2;
+  return { x: Math.cos(angle) * FAN, y: 0, z: Math.sin(angle) * FAN };
+};
+
+/**
  * Where a crossing of the web sits, by column and row.
  *
  * Half a pitch out from the plans, in both directions, so a plan falls in the

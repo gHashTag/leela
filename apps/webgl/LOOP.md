@@ -84,6 +84,12 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | The web reaches every crossing, with no open side | `tests/web.test.ts` |
 | A number sits in an opening, never on a crossing | `cornerPosition`, offset half a pitch |
 | The sky is the same sky on every load | `tests/stars.test.ts` |
+| Every seat's token stands on that seat's square | `placeSeats`, and looking |
+| A seat that has not entered has no token on the board | `placeSeats` |
+| Two players on one square are two visible tokens | `tests/layout.test.ts` |
+| A fanned token's anchor stays in its own cell | `tests/layout.test.ts` |
+| A token standing alone is not nudged off centre | `tests/layout.test.ts` |
+| A crowded square's tokens stay centred on it | `tests/layout.test.ts` |
 
 ## Known open work, roughly in value order
 
@@ -102,10 +108,12 @@ yourself deleting one of these tests, you are re-introducing the defect.
       `isIntention` and its bounds, and `apps/miniapp/src/state.ts` records why
       it is not a profile field but *the question the game answers*. This
       surface never asks it.
-- [ ] **Multi-seat play exists and is unused.** `apps/miniapp/src/seats.ts` has
-      `SavedSeats`, `sessionFrom`, `seatsFrom` and `resize` — several players on
-      one device, tested. Several tokens on this board is a rendering job, not a
-      protocol one.
+- [x] **Multi-seat play is wired.** Done: the model is the engine's `Session`,
+      `kept.ts` stores a seat list and migrates records written before it,
+      `index.html` has the seat-count control, and `placeSeats` puts every seat
+      on its own square. `apps/miniapp/src/seats.ts` still holds `SavedSeats`,
+      `sessionFrom`, `seatsFrom` and `resize`; this surface derives its seats in
+      `deities.ts` instead, and the two have never been reconciled.
 - [ ] **Online is the only part that needs a server.** Shared presence and a
       group feed of reports cannot be done from a static page; `apps/bot` is
       where the corpus already puts a shared table.
@@ -114,21 +122,16 @@ yourself deleting one of these tests, you are re-introducing the defect.
       said back is not, and on resume it re-announces the square instead.
 - [ ] **The sheet's drag is not keyboard-reachable** beyond the handle's step.
 - [ ] **No haptics, no sound.**
-- [ ] **Two message keys promise things this surface does not do.**
+- [ ] **One message key still promises what this surface has not got.**
       `app.gameNotRead` ends with *your accounts are untouched* on a surface
-      with no accounts. `app.pathExported` says *a readable copy is on the
-      clipboard*, which is true on the mini app because it copies `toText(...)`
-      a line earlier — and `toText` lives in `apps/miniapp/src/journal-file.ts`,
-      not in `@leela/journal`. Moving it into the package, where `REPORTS_KEY`
-      and `isIntention` already are for exactly this reason, makes the sentence
-      true here and deletes a copy. It is another app's file to move.
-- [ ] **Several tokens on the board: what is left.** The board holds a token
-      per seat and the model is the engine's `Session`, so seating more is now
-      `createSession` with more players. What remains is only the two things
-      that touch storage and chrome: `kept.ts` records one seat's state and
-      would need a seat list — with a migration, because records written before
-      today have `state` at the top — and there is no control for how many are
-      playing.
+      with no accounts. `app.pathExported` was the other one and is now true:
+      `pathText` moved into `@leela/journal`, `apps/miniapp`'s `toText` became
+      an adapter over it, and the export here copies the readable path to the
+      clipboard before it makes the claim — and only when the copy succeeded.
+- [ ] **A table has no turn order on screen.** Seating, tokens and rotation
+      all work, and nothing says whose throw it is except the colour of the
+      mark beside the die. Whatever says it must come out of `@leela/content`;
+      no surface writes its own sentences.
 - [ ] **A marking is a shade, not a second colour.** The tile is a `map` and a
       `map` multiplies `color`, so one tile per pattern serves all six skins —
       the cost is that a band is a darker version of the same hue. The painting
@@ -835,3 +838,43 @@ Still open, found this pass and not fixed:
 - Two seats on the same plan occupy the same point exactly. Nothing fans them.
 - The die restores its rolls but its face comes back blank — the last throw is
   in storage and is not shown.
+
+## 2026-08-13 — two players on one square are two tokens
+
+**Changed.** `fanOffset(at, sharing)` in `layout.ts`, and `placeSeats` counts who
+is standing where before it places anybody.
+
+Left over from last pass's own list, and it was the one state in which the board
+told a lie rather than merely looked plain: two seats on one plan stood at the
+same point, exactly, so a square with two players on it drew one token. In Leela
+that is not an edge case. The path is sixty-eight squares long, the arrows and
+the snakes keep returning players to the same few plans, and the whole social
+half of the game is who else is on your square.
+
+The tokens cannot be separated: a lotus is about eight tenths of a cell across
+and the pitch is 1.08, so any arrangement overlaps. Separation was never what was
+missing — *two* was. They fan on a ring of a quarter of a pitch, starting at +x
+so the common case of two sits left-and-right: the camera looks down at seventy
+degrees, and a pair fanned along z reads as one token with a shadow. Caught
+while writing it — the first version put the ring's start at the top, with a
+comment claiming it did the opposite of what the arithmetic did.
+
+The bound is not a taste: `planAtPoint` decides which cell a point belongs to,
+and an anchor pushed past half a pitch answers with the neighbouring plan. A
+token that reports the wrong square when tapped would be worse than the defect
+being fixed. The test checks that against the real board — every plan, every
+table size from two to six — rather than against the constant.
+
+**Cost.** 206 tests where there were 199. Seven new, all in `tests/layout.test.ts`.
+
+**Looked at it**, zoomed with the wheel trick above: two on 23 read as two, each
+with its own colour and halo; three on 51 overlap into a cluster but stay three.
+A single token is untouched, which the test also states, because the common case
+must not pay for the rare one.
+
+**Also corrected: this file.** Three entries in the open-work list had gone false
+and were still being read as true by every session that starts here — multi-seat
+play described as unused, `app.pathExported` described as a lie, and the seating
+work described as unstarted. All three were finished last pass. A ledger that
+lies is worse than no ledger: it is the one document a fresh session trusts
+without checking.
