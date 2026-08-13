@@ -52,7 +52,7 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | A snake is thickest at the head it is entered by | `tests/screen.test.ts` |
 | Every deity offered is named in the 72 texts | `tests/screen.test.ts` |
 | A model's words are never rendered as the canon's | `tests/screen.test.ts` |
-| An unthrown die shows no face | `tests/screen.test.ts` |
+| A die with no throw to show shows no face | `tests/screen.test.ts`, and looking |
 | `pipsFor` and `isFace` agree on what a face is | `tests/screen.test.ts` |
 | A six says so | `audit-unread`, via `rollsAgain` |
 | A turn always finishes, even with `rAF` paused | the backstop in `walk` |
@@ -96,6 +96,12 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | What the companion just said is on screen without scrolling | `tests/sheet.test.ts`, and looking |
 | A line too tall for the panel is shown from its top | `tests/sheet.test.ts` |
 | A scroll that would change nothing is not issued | `tests/sheet.test.ts` |
+| A saved history is replayed under the rules it was played under | `tests/kept.test.ts` |
+| The path opens on the newest throw, not on step one | `tests/sheet.test.ts`, and looking |
+| A list the player scrolled up to read is not yanked back | `atEnd`, `tests/sheet.test.ts` |
+| A turn that changed hands says so in words | `tests/screen.test.ts` |
+| The die shows the seat that threw, never the seat that is next | `tests/kept.test.ts` |
+| An unusable last-thrower is nobody, never seat one | `tests/kept.test.ts` |
 
 ## Known open work, roughly in value order
 
@@ -108,11 +114,11 @@ yourself deleting one of these tests, you are re-introducing the defect.
       header after the first throw is the obvious move; it has not been made
       because the row is also the feature, and hiding a feature to save
       forty pixels is how features stop being used.
-- [ ] **The path does not scroll to where you are.** It opens at step one, and
-      a game forty throws long opens forty rows from the present. The thread
-      does now follow the companion — `bringIntoView` in `sheet.ts` — and the
-      same function is what the path wants; it needs a row to aim at, which is
-      the only work left in it.
+- [x] **The path opens where you are.** Done, and it needed three things, not
+      one: the list capped to the panel over it (its box was 42dvh against a
+      143px panel, so an aimed row landed off screen), the panel scrolled to the
+      list on `toggle`, and only then the newest row aimed inside the list.
+      `atEnd` keeps a player who scrolled up to read from being yanked back.
 - [ ] **The intention is not asked for.** `packages/journal` has `asIntention`,
       `isIntention` and its bounds, and `apps/miniapp/src/state.ts` records why
       it is not a profile field but *the question the game answers*. This
@@ -137,13 +143,18 @@ yourself deleting one of these tests, you are re-introducing the defect.
       `pathText` moved into `@leela/journal`, `apps/miniapp`'s `toText` became
       an adapter over it, and the export here copies the readable path to the
       clipboard before it makes the claim — and only when the copy succeeded.
-- [ ] **A table says whose turn it is only in colour.** The mark beside the die
-      now follows the rotation, which it did not before, but nothing says it in
-      words. `roll.notYourTurn` is the sentence and it already exists in English
-      and Russian — *It is {name}'s turn.* / *Сейчас ходит {name}.* The key is
-      named for the refusal it was written for; the sentence itself is a plain
-      statement, which is why it is the right one to reuse rather than write a
-      tenth wording of.
+- [x] **A table says whose throw is next, in words.** Done, with `roll.next`
+      rather than the `roll.notYourTurn` this entry used to recommend: both are
+      true, but the sentence is said in the instant after a throw, where
+      *{name} is next* reads as a continuation and *It is {name}'s turn* reads
+      as a label — and `roll.next` is what `apps/bot` already sends in exactly
+      this position. It names the seat, not the deity: two seats can wear the
+      same deity, and a transliterated name inside a Russian sentence is two
+      scripts in one line.
+      Still open underneath it: the clause is transient. `showStanding` rewrites
+      `el.say` on every render, so a resumed multi-seat game opens with only the
+      coloured mark. A standing label would need a different condition — *more
+      than one seat still unfinished* — because at load there is no mover.
 - [ ] **A marking is a shade, not a second colour.** The tile is a `map` and a
       `map` multiplies `color`, so one tile per pattern serves all six skins —
       the cost is that a band is a darker version of the same hue. The painting
@@ -994,3 +1005,79 @@ loudly on a missing `LOOP.md`; the `cat >>` half did not, and created a stray
 commands here - use absolute paths for writes, the way the gates already do.
 
 Still open: the path list has the same problem and now has the function for it.
+
+## 2026-08-13 — three asked for, four shipped
+
+Four commits, gates between each. The contract says one change per iteration;
+the ask was for three, so it is one change per commit instead.
+
+**The one nobody asked for, and it was the biggest.** Going to restore the die's
+face meant reading how a saved history is validated, and `kept.ts` was replaying
+it under `DEFAULT_RULESET`. Every other replay in this app passes
+`LEGACY_MOBILE` explicitly; this was the one call site that let the default
+stand. The two differ in **nine** fields — `extraTurnOnSix` and `rerollOnRepeat`
+among them. It is not a near-miss between neighbouring variants; it is a replay
+of a different game.
+
+Measured, five thousand random forty-throw games: **46.9%** land on a different
+square under the two. Every one of those came back from a reload standing on its
+square with an empty path and nothing said, because a refused history is dropped
+while the seat is kept — indistinguishable from never having played. An
+adversarial agent found the mismatch and estimated 3.5%; the number was wrong by
+more than a decimal place, which is why it was measured here rather than quoted.
+`read` now takes the ruleset. The old fixture could not see it: four throws that
+land in the same place under both. The new test sweeps the rulesets, and the
+diverging script is found by search rather than chosen — `[6,6,6,6]` is 32 under
+`LEGACY_MOBILE` and 6 under `NEUROLEELA`.
+
+**The path opens where you are.** Three things, and the obvious one alone does
+nothing. Aiming the newest row into view of `#path-list` is worth zero while the
+list's own box is 42dvh — 341px inside a 143px panel — because the row lands at
+the bottom of a box whose bottom nobody can see. Measured after aiming and
+before capping: **no rows on screen at all**. Capped to the panel, panel scrolled
+to the list on `toggle`, row aimed inside the list: rows 37–40 of a forty-throw
+game, at the detent the app actually opens in. Moving the panel is confined to
+`toggle` — the one moment the player has asked for the path rather than the
+conversation — so the thread-following of the previous pass is untouched.
+
+**A table says whose throw is next.** `roll.next`, not the `roll.notYourTurn`
+this file recommended a pass ago. Both are true; the first reads as the
+continuation it is. Ids rather than seat numbers decide when to say it, because
+the comparison *is* the condition — `nextSeat` returns the same seat at a table
+of one, so a solo game never says it without being asked how many are playing.
+
+**The die comes back showing the throw that was made.** The rule this file
+proposed — the holder's last throw — is false five throws in six, because
+`advance` rotates on anything but a six. Two independent agents refused it, for
+the same reason: it is the one-rotation-off defect of the pass before last,
+re-introduced in the one widget with no sentence beside it. So the missing fact
+is stored. `lastThrower` is refused to **null**, never clamped to zero — the
+opposite of what `turnIndex` does one line above, because a turn must belong to
+somebody while a throw need not have happened at all. And `data-thrown` came
+apart from "there is a face": it drives the pulse that says the die is a control,
+and a returning player has a number to look at and still has to throw.
+
+**Cost.** 243 tests where there were 222. Twenty-one new, across `kept`, `sheet`
+and `screen`.
+
+**Three of my own instruments were wrong this pass**, all the same shape —
+reading a measurement taken in the same tick as the change that invalidates it:
+
+- The path measured as *zero rows visible* after the fix. It was read in the
+  same tick as the `toggle`, before layout and scroll had settled. Read again a
+  moment later: rows 37–40. I nearly rebuilt a working fix.
+- A probe of the ruleset divergence returned `NaN` for every game, because
+  `MIN_ROLL`/`MAX_ROLL` are not exported from the engine's index and undefined
+  arithmetic is quiet. A run whose every sample is `NaN` is not a measurement.
+- A test name containing an apostrophe inside single quotes broke the parse —
+  the exact mistake this file recorded against `audit-scripts.mjs` months ago,
+  made again in a different file.
+
+And one of my own tests asserted nothing: a conditional expression that always
+evaluated to the same operand. It passed. It was rewritten to say the thing it
+was pretending to check.
+
+**Also true and worth stating:** the disk filled to 117MB free mid-pass and a
+command died on `ENOSPC` *between* a file write and its verification, so an edit
+silently did not land. The next command failed on the unedited file, which is
+the only reason it was noticed.
