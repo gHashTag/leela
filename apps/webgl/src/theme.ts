@@ -14,9 +14,23 @@
  * drift the first time one of them is adjusted.
  */
 
-export type Scheme = 'light' | 'dark';
-
+/**
+ * One palette, and the reason there is only one.
+ *
+ * There used to be two, and the light one was a second design nobody had ever
+ * looked at. It produced the same defect on pass after pass: a colour measured
+ * against one ground carried onto another. The winning square filled with a
+ * value measured for text. The border drawn in a hairline colour. The numbers
+ * left violet when the paper went away. And then, in light, arrows of pale wood
+ * on pale beige — the same value, so they simply vanished. Four of one kind.
+ *
+ * The board now hangs in the vacuum, and **a light vacuum is a contradiction**.
+ * Keeping a scheme that the composition cannot be true in was carrying a
+ * generator of that defect for no one's benefit, so it is gone. If a light
+ * variant is ever wanted it is a design, not a second column of hex.
+ */
 export interface Palette {
+
   /** Behind the board. */
   readonly background: number;
   /** The board itself: painted ground, not a coloured tile. */
@@ -73,74 +87,25 @@ export interface Palette {
   readonly stars: boolean;
 }
 
-/**
- * Light and dark, sharing the mini app's three measured hues.
- *
- * The board's own surfaces are not shared: a face that reads as paper on white
- * reads as a lamp on black, and the two were tried side by side.
- */
-/**
- * Pigments, not UI colours.
- *
- * The board is a painted cloth from a tradition with a known palette — ochre
- * ground, madder red, indigo, verdigris, lamp black — and the previous set was
- * a phone app's accent colours borrowed wholesale. Two different things were
- * being asked of one number: the mini app's `--snake` is measured for *small
- * text on a surface*, and using it to paint a surface is a different
- * measurement of the same hue.
- */
-export const PALETTES: Record<Scheme, Palette> = {
-  light: {
-    // A shade the board can sit *on*. The first light background was within a
-    // few percent of the paper, so the two merged and the board had no edge —
-    // the thing that had been built as an object read as a texture on the page.
-    background: 0xcfc8b8,
-    // Aged paper, warm rather than white. A pure-white board under image-based
-    // lighting clips to a flat sheet with no form in it.
-    cell: 0xf0e9d8,
-    border: 0x8a7a52,
-    label: '#5c2d6b',
-    thread: 0x3a3a3a,
-    snake: 0x8c3a2a,
-    arrow: 0x35624a,
-    win: 0xc9a13f,
-    piece: 0xff06f4,
-    halo: 0x2a2418,
-    ambient: 0.5,
-    key: 1.6,
-    envIntensity: 1,
-    exposure: 1.05,
-    stars: false,
-  },
-  /**
-   * Dark is a dark *room*, not a dark board.
-   *
-   * The first attempt dyed the board itself brown, and it came out as
-   * cardboard: the numbers lost their contrast and the whole thing looked like
-   * a print-out. A painted cloth does not change colour when the lights go
-   * down — you change how much light falls on it. So the ground stays paper,
-   * one stop dimmer, and it is the surround that goes dark. The board then
-   * reads as a lit object on a dark table, which is what it is.
-   */
-  dark: {
-    // t27.ai's own `--bg`. In space there is nothing behind the stars.
-    background: 0x000000,
-    cell: 0xcdc4ab,
-    border: 0x6b6047,
-    // Pale, not violet: on the void a number has to carry itself.
-    label: '#ffffff',
-    thread: 0xffffff,
-    snake: 0x8c3a2a,
-    arrow: 0x35624a,
-    win: 0xb8912f,
-    piece: 0xff5cf7,
-    halo: 0x201b12,
-    ambient: 0.28,
-    key: 1.15,
-    envIntensity: 0.42,
-    exposure: 0.92,
-    stars: true,
-  },
+/** The void. */
+export const SPACE: Palette = {
+  // t27.ai's own `--bg`. In space there is nothing behind the stars.
+  background: 0x000000,
+  cell: 0xcdc4ab,
+  border: 0x6b6047,
+  // Pale, not violet: on the void a number has to carry itself.
+  label: '#ffffff',
+  thread: 0xffffff,
+  snake: 0x8c3a2a,
+  arrow: 0x35624a,
+  win: 0xb8912f,
+  piece: 0xff5cf7,
+  halo: 0x201b12,
+  ambient: 0.28,
+  key: 1.15,
+  envIntensity: 0.42,
+  exposure: 0.92,
+  stars: true,
 };
 
 /**
@@ -175,6 +140,4 @@ export const css = (colour: number): string => `#${colour.toString(16).padStart(
  * Takes the match rather than asking `matchMedia` itself, so the caller owns
  * the subscription and this stays testable.
  */
-export const schemeFor = (prefersDark: boolean): Scheme => (prefersDark ? 'dark' : 'light');
 
-export const paletteFor = (scheme: Scheme): Palette => PALETTES[scheme];

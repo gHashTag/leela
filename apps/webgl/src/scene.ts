@@ -20,9 +20,8 @@ import {
   ARROW_STEEL,
   ARROW_WOOD,
   SNAKE_SKINS,
+  SPACE,
   css,
-  paletteFor,
-  type Scheme,
 } from './theme';
 import { paintBorder } from './border';
 import { starsFor } from './stars';
@@ -64,6 +63,15 @@ const ARC_CEILING = 1.9;
  * five. `Points` does not care about forty thousand; the arithmetic did.
  */
 const STAR_COUNT = 40_000;
+
+/**
+ * How much of a cell the frosted pane fills, and how frosted it is.
+ *
+ * Under one, so the silk still shows between the panes — a pane that reaches
+ * its neighbour turns the web back into a single sheet.
+ */
+const PANE_INSET = 0.9;
+const PANE_FROST = 0.28;
 
 /** How finely a hanging thread is sampled, and how far it droops. */
 const THREAD_STEPS = 6;
@@ -192,7 +200,6 @@ export interface Board {
   draw(): void;
   /** Which plan is under this point on the canvas, if any. */
   planAt(x: number, y: number): number | null;
-  setScheme(scheme: Scheme): void;
   /** Who the player is playing as. Rebuilds the token in place. */
   setDeity(deity: Deity): void;
   dispose(): void;
@@ -427,7 +434,7 @@ export const createBoard = (
   surface: Surface = domSurface,
 ): Board => {
   const ordered = plans();
-  let palette = paletteFor('light');
+  const palette = SPACE;
 
   const scene = new THREE.Scene();
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -631,6 +638,52 @@ export const createBoard = (
       }
     }
   }
+
+  /**
+   * The cells themselves: frosted panes held in the web.
+   *
+   * `MeshPhysicalMaterial.transmission` is real refraction rather than a
+   * cheaper fake — three renders the scene once more into a buffer the glass
+   * samples, and `roughness` is what turns that sample into a blur. So the
+   * snakes and arrows lying under the web arrive through the panes as shapes
+   * and colour rather than as detail, which is what a frosted cell should do to
+   * what is behind it, and the numbers stay crisp because they sit on top.
+   *
+   * One mesh of seventy-two quads sharing one material. Inset from the pitch so
+   * the silk still shows between them: a pane that reaches its neighbour turns
+   * the web back into a single sheet.
+   */
+  const paneCorners: number[] = [];
+  const paneIndex: number[] = [];
+  const paneHalf = (CELL * PANE_INSET) / 2;
+  for (const [at, plan] of ordered.entries()) {
+    const { x, z } = planPosition(plan);
+    for (const [dx, dz] of [
+      [-1, 1],
+      [1, 1],
+      [1, -1],
+      [-1, -1],
+    ] as ReadonlyArray<readonly [number, number]>) {
+      paneCorners.push(x + dx * paneHalf, 0, z + dz * paneHalf);
+    }
+    const base = at * 4;
+    paneIndex.push(base, base + 1, base + 2, base, base + 2, base + 3);
+  }
+  const paneGeometry = new THREE.BufferGeometry();
+  paneGeometry.setAttribute('position', new THREE.Float32BufferAttribute(paneCorners, 3));
+  paneGeometry.setIndex(paneIndex);
+  paneGeometry.computeVertexNormals();
+
+  const paneMaterial = new THREE.MeshPhysicalMaterial({ transmission: 1 });
+  paneMaterial.roughness = PANE_FROST;
+  paneMaterial.thickness = 0.35;
+  paneMaterial.ior = 1.25;
+  paneMaterial.metalness = 0;
+  paneMaterial.transparent = true;
+  paneMaterial.opacity = 1;
+  paneMaterial.side = THREE.DoubleSide;
+  paneMaterial.depthWrite = false;
+  scene.add(new THREE.Mesh(paneGeometry, paneMaterial));
 
   const webGeometry = new THREE.BufferGeometry();
   webGeometry.setAttribute('position', new THREE.Float32BufferAttribute(threadPoints, 3));
@@ -1210,12 +1263,6 @@ export const createBoard = (
       // over every square and over the ground around them.
       const [hit] = raycaster.intersectObject(board, false);
       return hit ? planAtPoint(hit.point.x, hit.point.z) : null;
-    },
-
-    setScheme(scheme) {
-      palette = paletteFor(scheme);
-      applyPalette();
-      clockFrames.draw();
     },
 
     setDeity(next) {

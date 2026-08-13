@@ -10,7 +10,7 @@ import { isFace, pipsFor } from './pips';
 import { Play, type Hop } from './play';
 import { createBoard } from './scene';
 import { dragged, stepped, type Detent, type Heights } from './sheet';
-import { css, schemeFor } from './theme';
+import { css } from './theme';
 
 /**
  * Wiring: the board draws, `Play` decides, the companion talks, and this walks
@@ -89,7 +89,6 @@ el.say.textContent = messageFor(language, 'app.opening');
 // --- the pieces -------------------------------------------------------------
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
 
 // What the last visit left behind, read before anything is built from it.
 const store = browserStore();
@@ -102,9 +101,6 @@ const play = new Play(LEGACY_MOBILE, undefined, saved.state ?? undefined);
 const companion = new Companion({ language });
 
 const keep = (): void => write(store, { state: play.state, deity: deity.id });
-
-board.setScheme(schemeFor(darkScheme.matches));
-darkScheme.addEventListener('change', (event) => board.setScheme(schemeFor(event.matches)));
 
 // --- who is playing ---------------------------------------------------------
 

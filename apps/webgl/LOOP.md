@@ -97,12 +97,6 @@ yourself deleting one of these tests, you are re-introducing the defect.
       the cost is that a band is a darker version of the same hue. The painting
       has red-on-black coral snakes, which this cannot draw. A second colour
       would mean a tile per skin, or a shader that mixes two.
-- [ ] **Nothing casts a shadow onto the board.** `castShadow` is set on the
-      snake *heads* and arrow *heads* only — never on the bodies or the shafts —
-      and the directional light still has three's default shadow camera, which
-      is a +/-5 box against a board that spans +/-5.3. So every snake and arrow
-      floats, unattached. This is now the biggest single realism gap and it is a
-      bug rather than a taste question.
 - [ ] **The font is named, not shipped.** t27.ai self-hosts `outfit-latin.woff2`
       and `jetbrains-mono-*.woff2`. The stack here names both and falls through
       to the system font, so the identity is right and the typeface is not.
@@ -113,9 +107,6 @@ yourself deleting one of these tests, you are re-introducing the defect.
 - [ ] **The border is gone with the slab.** The diamonds and rules were painted
       on the board's face, and the field is a web now. The rim threads are drawn
       brighter, which is all the edge there currently is.
-- [ ] **Light mode is now a web on paper**, which has had far less looking at
-      than the dark one. The threads take `palette.thread` and go dark there,
-      but the whole composition was designed against the void.
 - [ ] **The border is geometry, not iconography.** Diamonds and rules, where the
       rules illustration carries feathers and crystals. A motif with a subject
       needs either art or a much better procedural draw; diamonds were chosen
@@ -127,6 +118,46 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — eleventh pass: one scheme, and glass
+
+**Two ledger entries of my own turned out to be stale, and checking them was
+most of the value.**
+
+*Nothing casts a shadow onto the board* was written while the field was a
+painted slab. The field is a web now and the slab is transparent, so there is
+nothing for a shadow to fall on: the entry described a defect that had been
+deleted by a later pass. Removed rather than fixed.
+
+*Light mode is untested* was true, and looking at it found the defect: the
+arrows are pale wood, the light ground is pale beige, and at the same value they
+simply vanished. That is the **fourth** time a colour measured against one
+ground has been carried onto another — after the winning square, the border ink
+and the numbers.
+
+So the fix is not a fifth patch. The board hangs in the vacuum and **a light
+vacuum is a contradiction**: the light scheme was a second design nobody had
+ever looked at, and it was a generator of that one defect. It is gone — one
+palette, in `theme.ts` and in the stylesheet both. If a light variant is ever
+wanted it is a design, not a second column of hex.
+
+Then, asked for directly: the cells are frosted glass.
+`MeshPhysicalMaterial.transmission` is real refraction — three renders the scene
+again into a buffer the glass samples, and `roughness` turns that sample into a
+blur — so the snakes and arrows lying under the web arrive through the panes as
+shape and colour rather than as detail, and the numbers stay crisp on top. The
+panes are inset from the pitch so the silk still shows between them; a pane that
+reaches its neighbour turns the web back into a single sheet.
+
+Cost: 160 tests, unchanged — this pass deleted a scheme and added a material,
+and neither is the kind of thing a headless test holds. What held it was looking.
+
+One process mistake, and a bad one: the stylesheet was edited by slicing it at
+string indices, and the slice cut a declaration in half. That left `:root`
+unterminated, so **every custom property failed** and the whole page collapsed —
+no header, no sheet, the board a thumbnail in the corner. Caught immediately by
+the screenshot the contract demands. A stylesheet is not a string; if it is
+going to be cut by index, count the braces afterwards.
 
 ### 2026-08-13 — tenth pass: the field is a web
 

@@ -13,7 +13,7 @@
  */
 
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
   /*
    * The tokens are t27.ai's own, read off the running site rather than
@@ -41,19 +41,19 @@
   --font: 'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
 
-  --bg: #f4f2ec;
-  --surface: #ffffff;
-  --surface-2: #eceae3;
-  --text: #16191c;
-  --hint: #6b6b6b;
-  --rule: rgb(0 0 0 / 10%);
+  --bg: #000000;
+  --surface: #0b0d0f;
+  --surface-2: #14171a;
+  --text: #ffffff;
+  --hint: #888888;
+  --rule: rgb(255 255 255 / 8%);
 
-  --snake: #a3301c;
-  --arrow: #1f6b39;
-  --win: #7a5a12;
+  --snake: #f08a72;
+  --arrow: #5fc684;
+  --win: #e0b544;
 
-  --accent: #00a75a;
-  --on-accent: #ffffff;
+  --accent: #00ff88;
+  --on-accent: #000000;
   --golden: #ffd700;
 
   --radius: 14px;
@@ -66,28 +66,7 @@
   --peek: 132px;
   --half: 46dvh;
 
-  --shadow: 0 -1px 0 var(--rule), 0 -12px 32px rgb(0 0 0 / 8%);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* t27.ai is a black site. So is this, once the board is in space. */
-    --bg: #000000;
-    --surface: #0b0d0f;
-    --surface-2: #14171a;
-    --text: #ffffff;
-    --hint: #888888;
-    --rule: rgb(255 255 255 / 8%);
-
-    --snake: #f08a72;
-    --arrow: #5fc684;
-    --win: #e0b544;
-
-    --accent: #00ff88;
-    --on-accent: #000000;
-
-    --shadow: 0 -1px 0 var(--rule), 0 -12px 40px rgb(0 0 0 / 70%);
-  }
+  --shadow: 0 -1px 0 var(--rule), 0 -12px 40px rgb(0 0 0 / 70%);
 }
 
 * {
