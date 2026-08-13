@@ -21,8 +21,16 @@ export interface Palette {
   readonly background: number;
   /** The board itself: painted ground, not a coloured tile. */
   readonly cell: number;
-  /** The line between plans. */
-  readonly edge: number;
+  /**
+   * The ink of the border: its rules and its diamonds.
+   *
+   * Its own value, not the hairline colour it started as. That first value was
+   * picked to separate two cells at one pixel, and used to draw a motif it came
+   * out invisible against the paper in light mode — the same mistake as filling
+   * a square with a colour measured for text. A line and a mark want different
+   * contrast against the same ground.
+   */
+  readonly border: number;
   /** The number painted on a plan. */
   readonly label: string;
   /**
@@ -79,7 +87,7 @@ export const PALETTES: Record<Scheme, Palette> = {
     // Aged paper, warm rather than white. A pure-white board under image-based
     // lighting clips to a flat sheet with no form in it.
     cell: 0xf0e9d8,
-    edge: 0xbdb29a,
+    border: 0x8a7a52,
     label: '#7b3d86',
     snake: 0x8c3a2a,
     arrow: 0x35624a,
@@ -104,7 +112,7 @@ export const PALETTES: Record<Scheme, Palette> = {
   dark: {
     background: 0x121114,
     cell: 0xcdc4ab,
-    edge: 0x8d8570,
+    border: 0x6b6047,
     label: '#7b3d86',
     snake: 0x8c3a2a,
     arrow: 0x35624a,

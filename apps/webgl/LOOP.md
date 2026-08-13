@@ -60,6 +60,8 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | The scale tile has no bald seam | `tests/skin.test.ts` |
 | A marking tile starts white, so it tints no skin | `tests/skin.test.ts` |
 | The same snake is marked the same way every load | `tests/skin.test.ts` |
+| Every border edge carries a whole number of motifs | `tests/border.test.ts` |
+| The framing fits the slab, margin and all | looking at it |
 
 ## Known open work, roughly in value order
 
@@ -90,8 +92,11 @@ yourself deleting one of these tests, you are re-introducing the defect.
 - [ ] **The snake heads are spheres.** At the zoom where the scales read, the
       head is plainly a squashed ball with two beads on it. A jaw and a brow
       would cost a few more primitives.
-- [ ] **The board has no border.** The rules illustration carries feathers and
-      crystals around the edge. A plain slab reads as a placeholder.
+- [ ] **The border is geometry, not iconography.** Diamonds and rules, where the
+      rules illustration carries feathers and crystals. A motif with a subject
+      needs either art or a much better procedural draw; diamonds were chosen
+      because they survive being thirty pixels wide on a phone, which anything
+      more detailed does not.
 - [ ] **The board may sit a little left of centre.** Eyeballing corners off a
       screenshot put the mobile board about 2% left of the band's middle. That
       is not a measurement — antialiased edges in a downscaled capture cannot
@@ -104,6 +109,37 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — seventh pass: an edge
+
+The board has been a bare slab through six passes, and with the perspective
+straightened the cut edge was the loudest thing left saying unfinished. It now
+carries a painted face: paper ground, two rules, and a run of diamonds with one
+on each corner.
+
+`src/border.ts` holds the fitting, and it is tested for one property — **a whole
+number of motifs on every edge**. A border whose last repeat is clipped by the
+corner is the clearest tell of a pattern applied rather than drawn, the
+arithmetic reads correctly either way, and the seam only shows in a corner
+nobody zoomed into. The texture is sized to the slab's own proportions rather
+than square, because a square texture on a 9-by-8 slab draws diamonds that are a
+different shape on the long edges than on the short ones.
+
+Cost: 131 tests where there were 119. Two defects, both found by looking and
+both mine:
+
+- The slab grew to carry the margin while the framing still fitted only the
+  **play field**, so the board's new right edge went off the side of the screen
+  and took the last column of numbers with it. `CORNERS` are now scaled by the
+  slab.
+- In light mode the border was nearly invisible, because I drew it in
+  `palette.edge` — a value picked to separate two cells at one pixel, used to
+  draw a motif. **This is the second time this exact mistake has been made
+  here**, after filling the winning square with a colour measured for text. A
+  line and a mark and a fill want different contrast against the same ground,
+  and a palette entry carries the measurement it was made for. The border has
+  its own ink now, and `edge` is gone rather than left to be misused a third
+  time.
 
 ### 2026-08-13 — sixth pass: a longer lens
 

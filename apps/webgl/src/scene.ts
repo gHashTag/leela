@@ -12,9 +12,11 @@ import {
   ARROW_STEEL,
   ARROW_WOOD,
   SNAKE_SKINS,
+  css,
   paletteFor,
   type Scheme,
 } from './theme';
+import { paintBorder } from './border';
 import { paintMarking, paintScales, type Marking } from './skin';
 import { arrowProfile, snakeProfile, wiggle, type Profile } from './tube';
 
@@ -81,6 +83,8 @@ const SCALE_PITCH = 0.38;
  * set instead of sharing the scales'.
  */
 const MARKING_TILE = 256;
+/** How many texels across the board's painted face. */
+const FACE_TEXELS = 1024;
 const MARKING_PITCH = 2.4;
 /** Which pattern each of the six skins wears, in the order `SNAKE_SKINS` gives. */
 const SKIN_MARKINGS: readonly Marking[] = [
@@ -495,10 +499,27 @@ export const createBoard = (
    */
   const groundMaterial = new THREE.MeshStandardMaterial({ roughness: 0.86, metalness: 0.0 });
   const { width: faceWidth, depth: faceDepth } = boardExtent();
-  const board = new THREE.Mesh(
-    new THREE.BoxGeometry(faceWidth + CELL * 0.5, 0.1, faceDepth + CELL * 0.5),
-    groundMaterial,
-  );
+  const slabWidth = faceWidth + CELL * 0.9;
+  const slabDepth = faceDepth + CELL * 0.9;
+
+  /**
+   * The face, painted rather than filled.
+   *
+   * Sized to the board's own proportions rather than square, because a square
+   * texture stretched onto a 9-by-8 slab draws stretched diamonds — the motif
+   * would be a different shape on the long edges than on the short ones, which
+   * is the kind of wrong that looks like carelessness rather than like a bug.
+   */
+  const faceCanvas = surface(FACE_TEXELS, Math.round((FACE_TEXELS * slabDepth) / slabWidth));
+  const faceTexture = new THREE.CanvasTexture(faceCanvas as unknown as HTMLCanvasElement);
+  faceTexture.colorSpace = THREE.SRGBColorSpace;
+  faceTexture.anisotropy = 4;
+  groundMaterial.map = faceTexture;
+  // White, so the painted face carries the colour rather than being tinted by
+  // a second one. `map` multiplies `color`.
+  groundMaterial.color.setHex(0xffffff);
+
+  const board = new THREE.Mesh(new THREE.BoxGeometry(slabWidth, 0.1, slabDepth), groundMaterial);
   board.position.y = -0.01;
   board.receiveShadow = true;
   scene.add(board);
@@ -926,6 +947,17 @@ export const createBoard = (
 
   // --- the theme -----------------------------------------------------------
 
+  const faceBrush = faceCanvas.getContext('2d');
+
+  const repaintFace = (): void => {
+    if (!faceBrush) return;
+    paintBorder(faceBrush, faceCanvas.width, faceCanvas.height, {
+      ground: css(palette.cell),
+      ink: css(palette.border),
+    });
+    faceTexture.needsUpdate = true;
+  };
+
   const applyPalette = (): void => {
     scene.background = new THREE.Color(palette.background);
     ambient.intensity = palette.ambient;
@@ -943,7 +975,7 @@ export const createBoard = (
         }
       }
     });
-    groundMaterial.color.setHex(palette.cell);
+    repaintFace();
     // Snakes and arrows keep their own materials across schemes: a python is
     // not a different colour at night, and the earlier version repainted every
     // one of them from two theme swatches, which is what made thirty distinct
@@ -1113,10 +1145,14 @@ export const createBoard = (
         let minY = Infinity;
         let maxY = -Infinity;
         for (const corner of CORNERS) {
+          // The slab, not the play field. The two were the same until the board
+          // grew a margin to carry its border, and framing the field alone put
+          // the new right-hand edge off the side of the screen — with the last
+          // column of numbers cut with it.
           const point = new THREE.Vector3(
-            (corner[0] * width) / 2,
+            (corner[0] * slabWidth) / 2,
             corner[1] * ARC_CEILING,
-            (corner[2] * depth) / 2,
+            (corner[2] * slabDepth) / 2,
           ).project(camera);
           minX = Math.min(minX, point.x);
           maxX = Math.max(maxX, point.x);
