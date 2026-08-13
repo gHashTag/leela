@@ -49,6 +49,7 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | Every deity offered is named in the 72 texts | `tests/screen.test.ts` |
 | A model's words are never rendered as the canon's | `tests/screen.test.ts` |
 | An unthrown die shows no face | `tests/screen.test.ts` |
+| `pipsFor` and `isFace` agree on what a face is | `tests/screen.test.ts` |
 | A six says so | `audit-unread`, via `rollsAgain` |
 | A turn always finishes, even with `rAF` paused | the backstop in `walk` |
 | A saved game the engine refuses is never played | `tests/kept.test.ts` |
@@ -118,6 +119,39 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — twelfth pass: glass chrome, a lotus, and a die that went away and came back
+
+All directed, so several changes rather than one.
+
+- **The sheet is frosted**, like the cells: `backdrop-filter` over a
+  `color-mix` of `--surface`, so the stars and the board show through it. The
+  strip for a tapped square gets the same treatment.
+- **The token is a lotus.** A chakra *is* a lotus — the texts describe each
+  level as one with a fixed number of petals, and the deities are shown seated
+  on it. The tapering pawn it replaced was a chess piece that happened to be
+  here. Two whorls around a seed cup, held to a silhouette, because the first
+  attempt at detail on this token resolved into confetti at board distance.
+- **The deity strip is one line.** Bead and Devanagari inline, the
+  transliteration moved to the `aria-label` where a reader of another script
+  still gets it. Stacked it stood about a hundred and thirty pixels — a third of
+  the sheet at its usual detent, for a choice most players make once. Now forty.
+- **The die became a numeral and then went back to pips**, asked for both ways.
+  The numeral had an argument — a moulded plastic die was the last skeuomorphic
+  object on a screen made of thread and glass — and the pips have a better one,
+  which is the mini app's: the published game makes you *watch the throw*, and a
+  digit in a box is the sentence about it, shorter. White pips, white rim.
+
+**The round trip paid for itself.** Restoring the pips came with a test one line
+longer than the one that shipped with them, and it failed: `pipsFor(1.5)` drew a
+one, because the original truncated, while `isFace(1.5)` said false — two
+functions in the same file disagreeing about what a face is. No roller produces
+a fraction, which is why it sat there unnoticed through every pass. `pipsFor`
+asks `isFace` now.
+
+Cost: 160 tests, unchanged in number and one stronger. Also renamed the `#pips`
+element to `#face`, which had been holding a numeral under a name that said
+otherwise.
 
 ### 2026-08-13 — eleventh pass: one scheme, and glass
 

@@ -200,7 +200,9 @@ body {
   align-items: center;
   gap: 10px;
   padding: 8px 8px 8px 14px;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   box-shadow: 0 6px 20px rgb(0 0 0 / 12%);
@@ -243,7 +245,12 @@ body {
   flex-direction: column;
   height: var(--half);
   max-height: calc(100dvh - env(safe-area-inset-top) - 56px);
-  background: var(--surface);
+  /* Frosted, like the cells. `color-mix` rather than a second hex, so the
+     translucency follows `--surface` if that ever moves. */
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border-top: 1px solid var(--rule);
   border-radius: 20px 20px 0 0;
   box-shadow: var(--shadow);
   transition: height 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -311,10 +318,14 @@ body {
   width: 60px;
   height: 60px;
   padding: 0;
-  background: var(--surface);
-  border: 2px solid var(--rule);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /* A white rim. `--rule` is white at 8% and reads as no border at all on a
+     surface this dark; the die is the one control a thumb aims at. */
+  border: 2px solid var(--text);
   border-radius: 16px;
-  box-shadow: 0 2px 0 var(--rule);
+  box-shadow: none;
   cursor: pointer;
   transition: transform 120ms ease;
 }
@@ -336,13 +347,12 @@ body {
  * comes from the border rather than from a face it does not have.
  */
 .die[data-thrown='false'] {
-  border-color: var(--accent);
   animation: invite 2.4s ease-in-out infinite;
 }
 
 @keyframes invite {
   50% {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 18%, transparent);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--text) 14%, transparent);
   }
 }
 
@@ -363,7 +373,8 @@ body {
   }
 }
 
-.pips {
+/* Nine cells; the filled ones carry a pip. `pipsFor` decides which. */
+.face {
   display: grid;
   grid-template: repeat(3, 1fr) / repeat(3, 1fr);
   gap: 3px;
@@ -372,7 +383,7 @@ body {
   padding: 9px;
 }
 
-.pips i {
+.face i {
   display: block;
   width: 100%;
   height: 100%;
@@ -427,11 +438,10 @@ body {
 
 .deity {
   flex: none;
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  width: 72px;
-  padding: 7px 4px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px 5px 8px;
   font: inherit;
   color: var(--hint);
   background: var(--surface-2);
@@ -448,22 +458,33 @@ body {
 /* The deity's own colour, as a bead — the same colour the token on the board
    is wearing, so the row and the board answer the same question. */
 .deity-mark {
-  width: 22px;
-  height: 22px;
+  flex: none;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   box-shadow: inset 0 -4px 6px rgb(0 0 0 / 25%);
 }
 
 .deity-sanskrit {
-  font-size: 15px;
+  font-size: var(--f-1);
   line-height: 1.2;
+  white-space: nowrap;
 }
 
+/*
+ * The transliteration is for a screen reader, not for the strip.
+ *
+ * Stacked bead, Devanagari and Latin, the row stood about a hundred and thirty
+ * pixels tall — a third of the sheet at its usual detent, for a choice most
+ * players make once. On one line it is forty, and the name a reader of any
+ * other script needs is on the button's `aria-label` either way.
+ */
 .deity-latin {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-family: var(--font-mono);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
 /* --- what scrolls -------------------------------------------------------- */
@@ -694,7 +715,7 @@ body {
   gap: 8px;
   padding: 10px var(--pad) calc(10px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--rule);
-  background: var(--surface);
+  background: transparent;
 }
 
 .compose textarea {

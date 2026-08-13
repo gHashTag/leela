@@ -6,7 +6,7 @@ import { Companion } from '../src/companion';
 import { trimmedDescription } from '../src/canon';
 import { DEITIES, deityFor, DEFAULT_DEITY } from '../src/deities';
 import { screenFor, toneOf } from '../src/hud';
-import { isFace, pipsFor } from '../src/pips';
+import { isFace, pipsFor } from '../src/die';
 import { DETENTS, dragged, nearest, stepped } from '../src/sheet';
 import { arrowProfile, snakeProfile, wiggle } from '../src/tube';
 
@@ -83,16 +83,13 @@ describe('the readout', () => {
 
 describe('the die', () => {
   it('shows the pips every real die shows', () => {
-    expect(pipsFor(1)).toHaveLength(1);
-    expect(pipsFor(2)).toHaveLength(2);
-    expect(pipsFor(6)).toHaveLength(6);
     for (let face = 1; face <= 6; face += 1) {
       expect(pipsFor(face)).toHaveLength(face);
+      expect(new Set(pipsFor(face)).size).toBe(face);
       for (const cell of pipsFor(face)) {
         expect(cell).toBeGreaterThanOrEqual(1);
         expect(cell).toBeLessThanOrEqual(9);
       }
-      expect(new Set(pipsFor(face)).size).toBe(face);
     }
   });
 
@@ -105,11 +102,10 @@ describe('the die', () => {
 
   /** A die showing a one before anyone has thrown is a lie a player acts on. */
   it('shows nothing at all for a value that is not a face', () => {
-    expect(pipsFor(0)).toEqual([]);
-    expect(pipsFor(7)).toEqual([]);
-    expect(pipsFor(-1)).toEqual([]);
-    expect(pipsFor(Number.NaN)).toEqual([]);
-    expect(isFace(0)).toBe(false);
+    for (const value of [0, 7, -1, 1.5, Number.NaN]) {
+      expect(pipsFor(value), `${value} produced a face`).toEqual([]);
+      expect(isFace(value)).toBe(false);
+    }
     expect(isFace(3)).toBe(true);
   });
 });

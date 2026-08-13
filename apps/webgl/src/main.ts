@@ -6,7 +6,7 @@ import { DEITIES, deityFor } from './deities';
 import { screenFor } from './hud';
 import { hopPoint, planPosition } from './layout';
 import { browserStore, read, write } from './kept';
-import { isFace, pipsFor } from './pips';
+import { isFace, pipsFor } from './die';
 import { Play, type Hop } from './play';
 import { createBoard } from './scene';
 import { dragged, stepped, type Detent, type Heights } from './sheet';
@@ -60,7 +60,7 @@ const el = {
   who: need<HTMLElement>('#who'),
   handle: need<HTMLButtonElement>('#handle'),
   die: need<HTMLButtonElement>('#die'),
-  pips: need<HTMLElement>('#pips'),
+  face: need<HTMLElement>('#face'),
   say: need<HTMLElement>('#say'),
   planHeading: need<HTMLElement>('#plan-heading'),
   planText: need<HTMLElement>('#plan-text'),
@@ -347,15 +347,16 @@ const showRests = (rests: Rests | null, status: string, note: string | null): vo
 const showFace = (value: number): void => {
   const cells = pipsFor(value);
   el.die.dataset.thrown = String(isFace(value));
-  el.pips.replaceChildren(
-    ...Array.from({ length: 9 }, (_, at) => {
-      const cell = document.createElement(cells.includes(at + 1) ? 'i' : 'span');
-      return cell;
-    }),
+  el.face.replaceChildren(
+    ...Array.from({ length: 9 }, (_, at) =>
+      document.createElement(cells.includes(at + 1) ? 'i' : 'span'),
+    ),
   );
   el.die.setAttribute(
     'aria-label',
-    isFace(value) ? `${messageFor(language, 'app.play')} · ${value}` : messageFor(language, 'app.play'),
+    isFace(value)
+      ? `${messageFor(language, 'app.play')} · ${value}`
+      : messageFor(language, 'app.play'),
   );
 };
 

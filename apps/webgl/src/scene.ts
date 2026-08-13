@@ -940,13 +940,13 @@ export const createBoard = (
   const piece = new THREE.Group();
   /** Everything above the seat: replaced whenever the player changes deity. */
   const emblemHolder = new THREE.Group();
-  emblemHolder.position.y = 0.16;
+  emblemHolder.position.y = 0.06;
 
   /** The lean. Inside its own group so the billboard turn stays about Y. */
   const emblemLean = new THREE.Group();
   emblemLean.rotation.x = 0.62;
   // Beside the figure rather than on top of it: an attribute is held.
-  emblemLean.position.set(0.3, 0.12, 0);
+  emblemLean.position.set(0.24, 0.06, 0);
   emblemLean.scale.setScalar(0.8);
   emblemHolder.add(emblemLean);
 
@@ -963,24 +963,56 @@ export const createBoard = (
    * the deity's second colour. The attribute is still there, held at the side,
    * for a player who pinches in.
    */
+  /**
+   * A lotus, because a chakra is a lotus.
+   *
+   * The texts this game is made of describe each level as a lotus with a fixed
+   * number of petals — four at the base, six, ten, twelve at the heart — and
+   * the deities are depicted seated on one. A tapering pawn was a chess piece
+   * that happened to be here; this is the form the corpus itself keeps naming.
+   *
+   * Two whorls of petals around a seed cup, with the outer ring laid open and
+   * the inner ring cupped upward. Held to a silhouette rather than a botanical
+   * study: at the distance the board is played from, a token is a shape and a
+   * colour, and the first attempt at detail here resolved into confetti.
+   */
   const seat = new THREE.Group();
 
-  const plinth = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 0.07, 20), bodyMaterial);
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.24, 0.42, 16), bodyMaterial);
-  trunk.position.y = 0.24;
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), bodyMaterial);
-  head.position.y = 0.55;
-  for (const part of [plinth, trunk, head]) {
-    part.castShadow = true;
-    seat.add(part);
+  const petal = (radius: number, tilt: number, lift: number, scale: number): THREE.Mesh => {
+    const shaped = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), bodyMaterial);
+    // Flattened and drawn to a point: a sphere squashed on two axes is a petal.
+    shaped.scale.set(0.42 * scale, 0.14 * scale, scale);
+    shaped.position.set(0, lift, radius);
+    shaped.rotation.x = tilt;
+    shaped.castShadow = true;
+    return shaped;
+  };
+
+  for (const [count, radius, tilt, lift, scale] of [
+    [8, 0.2, -0.42, 0.0, 1.0],
+    [6, 0.12, -0.95, 0.05, 0.78],
+  ] as ReadonlyArray<readonly [number, number, number, number, number]>) {
+    for (let at = 0; at < count; at += 1) {
+      const whorl = new THREE.Group();
+      whorl.add(petal(radius, tilt, lift, scale));
+      whorl.rotation.y = (at / count) * Math.PI * 2;
+      seat.add(whorl);
+    }
   }
+
+  // The seed cup at the centre, and the stem the emblem rises from.
+  const cup = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8), accentMaterial);
+  cup.scale.set(1, 0.55, 1);
+  cup.position.y = 0.05;
+  cup.castShadow = true;
+  seat.add(cup);
 
   // The halo, behind the head and turned to face the camera with the emblem.
   const halo3d = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.022, 8, 20), accentMaterial);
-  halo3d.position.y = 0.55;
+  halo3d.position.y = 0.3;
   halo3d.castShadow = true;
 
-  seat.position.y = -0.16;
+  seat.position.y = -0.02;
   emblemHolder.add(halo3d);
   piece.add(seat, emblemHolder);
   // Half again as large as a square is wide at the base. A token the size of
