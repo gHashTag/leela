@@ -44,6 +44,7 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | A model's words are never rendered as the canon's | `tests/screen.test.ts` |
 | An unthrown die shows no face | `tests/screen.test.ts` |
 | A six says so | `audit-unread`, via `rollsAgain` |
+| A turn always finishes, even with `rAF` paused | the backstop in `walk` |
 
 ## Known open work, roughly in value order
 
@@ -116,3 +117,16 @@ winning square was filled with the mini app's `--win`, which is measured as a
 and on a desktop the sheet becomes a side panel while `resize` still framed the
 board against a *bottom* inset, leaving it in a strip across the top with half
 the window empty beside it. `resize` now takes both edges.
+
+And one from a measurement that looked like a result: twenty-three throws in a
+row produced nothing, which is a 1.5% event and so was treated as an instrument
+problem before a luck problem. It was neither — `requestAnimationFrame` does not
+fire in a hidden tab, `walk` never settled, and the turn hung with the die
+disabled. It recovers the moment the tab is visible, which is what makes it
+invisible. `walk` now carries a `setTimeout` backstop.
+
+One process mistake worth not repeating: `git add <paths>` does not clear what is
+already in the index. A commit meant to carry one file also carried another
+session's staged deletion of `scripts/audit-awaited.mjs`. Check
+`git diff --cached --name-only` **after** staging and **before** committing, every
+time — this tree always has someone else's work in it.
