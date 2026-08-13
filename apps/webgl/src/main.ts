@@ -145,7 +145,7 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 // What the last visit left behind, read before anything is built from it.
 const store = browserStore();
-const saved = read(store);
+const saved = read(store, LEGACY_MOBILE);
 
 const board = createBoard(el.canvas);
 

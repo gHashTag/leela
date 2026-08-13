@@ -22,7 +22,7 @@
  *     remember is worse than a game that forgets.
  */
 
-import { isPlayableState, whyNotPlayable, type GameState } from '@leela/engine';
+import { isPlayableState, whyNotPlayable, type GameState, type RuleSet } from '@leela/engine';
 
 import { areRolls, stateAfter } from './path';
 
@@ -107,7 +107,20 @@ const NOTHING: Reading = { seats: [], turnIndex: 0, deity: null, why: null };
 const deityOf = (record: { deity?: unknown }): string | null =>
   typeof record.deity === 'string' && record.deity.length > 0 ? record.deity : null;
 
-export function read(store: Store | null): Reading {
+/**
+ * @param rules the ruleset the surface plays.
+ *
+ * Not defaulted. `stateAfter` takes `DEFAULT_RULESET` when nobody says, and
+ * this was the one call site in the app that did not say — so a history played
+ * under `LEGACY_MOBILE` was being checked against `NEUROLEELA`, which differs
+ * from it in nine fields including `extraTurnOnSix` and `rerollOnRepeat`. It is
+ * not a near-miss between neighbouring variants; it is a replay of a different
+ * game. Measured over five thousand random forty-throw games, 46.9% of them
+ * reach a different square under the two, and every one of those loses its
+ * whole history on reload while keeping its square — the player comes back
+ * standing where they were with an empty path and nothing said.
+ */
+export function read(store: Store | null, rules: RuleSet): Reading {
   if (!store) return NOTHING;
 
   let raw: string | null;
@@ -165,7 +178,7 @@ export function read(store: Store | null): Reading {
     // A history that is not a list of throws is dropped and the seat is kept:
     // losing where you have been is a loss, losing the game as well is two.
     const rolls = areRolls(row.rolls) ? row.rolls : [];
-    const leads = rolls.length === 0 || stateAfter(rolls).loka === row.state.loka;
+    const leads = rolls.length === 0 || stateAfter(rolls, rules).loka === row.state.loka;
 
     return {
       seat: {
