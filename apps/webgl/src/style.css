@@ -300,8 +300,55 @@ body {
   flex: none;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   padding: 0 var(--pad) 12px;
+}
+
+/*
+ * The lotus at the end of the line: who you are, and the way to change it.
+ *
+ * A petalled mark rather than a plain swatch, because the token on the board is
+ * a lotus and the control should be the same object. Drawn in CSS — a second
+ * three.js canvas for a 34-pixel button is not a trade worth making.
+ */
+.lotus {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.lotus-mark {
+  position: relative;
+  display: block;
+  width: 26px;
+  height: 26px;
+}
+
+/* Eight petals from two crossed squares, and a seed cup over them. */
+.lotus-mark::before,
+.lotus-mark::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--lotus, var(--accent));
+  clip-path: polygon(50% 0, 68% 32%, 100% 50%, 68% 68%, 50% 100%, 32% 68%, 0 50%, 32% 32%);
+}
+
+.lotus-mark::after {
+  transform: rotate(45deg) scale(0.82);
+  opacity: 0.8;
+}
+
+.lotus[aria-expanded='true'] .lotus-mark {
+  outline: 2px solid var(--text);
+  outline-offset: 4px;
+  border-radius: 50%;
 }
 
 /*

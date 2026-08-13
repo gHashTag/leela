@@ -24,12 +24,23 @@
 
 import { isPlayableState, whyNotPlayable, type GameState } from '@leela/engine';
 
+import { areRolls, stateAfter } from './path';
+
 export const KEPT_KEY = 'leela.webgl.game';
 
 export interface Kept {
   readonly state: GameState;
   /** Which deity was playing. Validated by `deityFor`, not here. */
   readonly deity: string;
+  /**
+   * Every throw of this game, in order.
+   *
+   * The history is the *rolls*, not the squares: `replay` turns them back into
+   * every move they produced, so the path is derived and cannot disagree with
+   * the rules. A stored list of squares would be a second account of the game,
+   * and a second account goes wrong the first time a `RuleSet` changes.
+   */
+  readonly rolls: readonly number[];
 }
 
 /**
@@ -68,6 +79,8 @@ export interface Reading {
    * forget who you are.
    */
   readonly deity: string | null;
+  /** Every throw of the resumed game, or empty. */
+  readonly rolls: readonly number[];
   /**
    * Why there is no game, when there was something stored and it was refused.
    *
@@ -79,7 +92,7 @@ export interface Reading {
   readonly why: string | null;
 }
 
-const NOTHING: Reading = { state: null, deity: null, why: null };
+const NOTHING: Reading = { state: null, deity: null, rolls: [], why: null };
 
 /** A deity id off a record, or null. Never validated here — `deityFor` does. */
 const deityOf = (record: { deity?: unknown }): string | null =>
@@ -101,22 +114,44 @@ export function read(store: Store | null): Reading {
   try {
     parsed = JSON.parse(raw);
   } catch {
-    return { state: null, deity: null, why: 'the saved game is not readable' };
+    return { state: null, deity: null, rolls: [], why: 'the saved game is not readable' };
   }
 
   if (typeof parsed !== 'object' || parsed === null) {
-    return { state: null, deity: null, why: 'the saved game is not readable' };
+    return { state: null, deity: null, rolls: [], why: 'the saved game is not readable' };
   }
 
-  const record = parsed as { state?: unknown; deity?: unknown };
+  const record = parsed as { state?: unknown; deity?: unknown; rolls?: unknown };
   const deity = deityOf(record);
 
   const why = whyNotPlayable(record.state);
   if (why !== null || !isPlayableState(record.state)) {
-    return { state: null, deity, why: why ?? 'the saved game is not a game' };
+    return { state: null, deity, rolls: [], why: why ?? 'the saved game is not a game' };
   }
 
-  return { state: record.state, deity, why: null };
+  // A history that is not a list of throws is dropped, and the game is kept.
+  // Losing where you have been is a loss; losing the game as well would be two.
+  const rolls = areRolls(record.rolls) ? record.rolls : [];
+
+  /**
+   * The two have to agree.
+   *
+   * The state is what the engine last produced and the rolls are what produced
+   * it, so replaying the rolls has to land on the stored square. When it does
+   * not, one of them is from a different game — a `RuleSet` that changed under
+   * a saved file, or a record edited by hand — and playing on from a state
+   * whose history says something else is how a path silently becomes fiction.
+   * The game is kept, because the state is the thing you are standing on; the
+   * history is dropped, because it is the part that is provably wrong.
+   */
+  const consistent = rolls.length === 0 || stateAfter(rolls).loka === record.state.loka;
+
+  return {
+    state: record.state,
+    deity,
+    rolls: consistent ? rolls : [],
+    why: consistent ? null : 'the saved history does not lead to the saved square',
+  };
 }
 
 export function write(store: Store | null, kept: Kept): void {

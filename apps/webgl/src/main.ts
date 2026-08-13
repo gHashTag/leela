@@ -58,6 +58,8 @@ const el = {
   sheet: need<HTMLElement>('#sheet'),
   sheetBody: need<HTMLElement>('#sheet-body'),
   who: need<HTMLElement>('#who'),
+  lotus: need<HTMLButtonElement>('#lotus'),
+  lotusMark: need<HTMLElement>('#lotus-mark'),
   handle: need<HTMLButtonElement>('#handle'),
   die: need<HTMLButtonElement>('#die'),
   face: need<HTMLElement>('#face'),
@@ -98,9 +100,18 @@ const board = createBoard(el.canvas);
 // `undefined` takes the default roller; the third argument is the resumed game,
 // and `Play` falls back to `initialState()` when there is none.
 const play = new Play(LEGACY_MOBILE, undefined, saved.state ?? undefined);
+
+/**
+ * Every throw of this game, in order — the history, and the only copy of it.
+ *
+ * The squares are not stored: replaying these through the engine is what says
+ * where the player has been, so the history cannot drift from the rules. The
+ * screen that reads them back does not exist yet; the record does.
+ */
+const rolls: number[] = [...saved.rolls];
 const companion = new Companion({ language });
 
-const keep = (): void => write(store, { state: play.state, deity: deity.id });
+const keep = (): void => write(store, { state: play.state, deity: deity.id, rolls });
 
 // --- who is playing ---------------------------------------------------------
 
@@ -109,14 +120,34 @@ const keep = (): void => write(store, { state: play.state, deity: deity.id });
 // was standing on is exactly the state that reads as a bug.
 let deity = deityFor(saved.deity);
 
+/** Open or shut the roster, and say which it is for a screen reader. */
+const showRoster = (open: boolean): void => {
+  el.who.hidden = !open;
+  el.lotus.setAttribute('aria-expanded', String(open));
+};
+
 const chooseDeity = (next: (typeof DEITIES)[number]): void => {
   deity = next;
   keep();
   board.setDeity(next);
+  el.lotusMark.style.setProperty('--lotus', css(next.colour));
+  el.lotus.setAttribute('aria-label', `${next.latin} — ${messageFor(language, 'app.play')}`);
   for (const button of el.who.querySelectorAll<HTMLElement>('.deity')) {
     button.setAttribute('aria-checked', String(button.dataset.deity === next.id));
   }
+  // Chosen is chosen: the roster is a menu, and a menu that stays open after a
+  // choice is a menu the player has to dismiss for no reason.
+  showRoster(false);
 };
+
+el.lotus.addEventListener('click', () => showRoster(el.who.hidden));
+
+// Anywhere else shuts it, which is what every other menu on a phone does.
+document.addEventListener('pointerdown', (event) => {
+  if (el.who.hidden) return;
+  const on = event.target as Node;
+  if (!el.who.contains(on) && !el.lotus.contains(on)) showRoster(false);
+});
 
 for (const each of DEITIES) {
   const button = document.createElement('button');
@@ -148,6 +179,8 @@ for (const each of DEITIES) {
 }
 
 board.setDeity(deity);
+el.lotusMark.style.setProperty('--lotus', css(deity.colour));
+el.lotus.setAttribute('aria-label', `${deity.latin} — ${messageFor(language, 'app.play')}`);
 
 // --- the sheet --------------------------------------------------------------
 
@@ -485,6 +518,7 @@ const takeTurn = async (): Promise<void> => {
   if (visiting) stopVisiting();
 
   const turn = play.roll();
+  rolls.push(turn.roll);
   showFace(turn.roll);
   if (!reducedMotion.matches) {
     el.die.classList.add('rolling');
@@ -513,6 +547,7 @@ const takeTurn = async (): Promise<void> => {
     el.say.dataset.tone = 'win';
     play.reset();
     companion.reset();
+    rolls.length = 0;
   } else if (turn.rollsAgain) {
     // A six keeps the turn, and the player has to be told — otherwise the only
     // sign is that the die still works, which reads as the app not having

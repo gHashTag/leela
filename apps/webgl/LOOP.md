@@ -54,6 +54,7 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | A turn always finishes, even with `rAF` paused | the backstop in `walk` |
 | A saved game the engine refuses is never played | `tests/kept.test.ts` |
 | A refused game does not cost you your deity | `tests/kept.test.ts` |
+| A history that does not lead to the saved square is refused | `tests/kept.test.ts` |
 | No square is filled with a jump's colour | the published painting, `board-light.webp` |
 | The board has no grid drawn on it | the published board, `gameboard.png` |
 | A point on the board resolves to its own plan | `tests/layout.test.ts` |
@@ -83,6 +84,21 @@ yourself deleting one of these tests, you are re-introducing the defect.
       header after the first throw is the obvious move; it has not been made
       because the row is also the feature, and hiding a feature to save
       forty pixels is how features stop being used.
+- [ ] **The history has no screen.** The rolls are recorded, validated and
+      checked against the state; nothing reads them back. `replay` turns them
+      into every move, and `packages/journal` already has `revisited`,
+      `writingsOn` and `order` for what hangs off them. This is the next thing.
+- [ ] **The intention is not asked for.** `packages/journal` has `asIntention`,
+      `isIntention` and its bounds, and `apps/miniapp/src/state.ts` records why
+      it is not a profile field but *the question the game answers*. This
+      surface never asks it.
+- [ ] **Multi-seat play exists and is unused.** `apps/miniapp/src/seats.ts` has
+      `SavedSeats`, `sessionFrom`, `seatsFrom` and `resize` — several players on
+      one device, tested. Several tokens on this board is a rendering job, not a
+      protocol one.
+- [ ] **Online is the only part that needs a server.** Shared presence and a
+      group feed of reports cannot be done from a static page; `apps/bot` is
+      where the corpus already puts a shared table.
 - [ ] **The conversation is not remembered**, only the game. `src/kept.ts` saves
       the engine's state and the deity; the companion's thread starts empty on
       every resume and it re-announces the square instead. `packages/journal` is
@@ -119,6 +135,39 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — thirteenth pass: the play line, and a history that is stored
+
+Asked for: the deity picker on the die's line, the roster behind a lotus, and
+the beginning of a move history.
+
+**The play line is one line.** Die at the left, where you are in the middle, a
+lotus at the right that opens the roster and shuts again on a choice. The strip
+that stood under it cost about a hundred and thirty pixels of sheet for a choice
+most players make once. The lotus is drawn in CSS from two crossed octagons — a
+second three.js canvas for a thirty-four-pixel button is not a trade worth
+making — and takes the deity's own colour.
+
+**The history is stored as the throws, not the squares.** `replay` turns a list
+of rolls back into every move it produced, so the path is derived and cannot
+disagree with the rules; a stored list of squares would be a second account of
+the game, and a second account goes wrong the first time a `RuleSet` changes.
+
+With two accounts available, they are checked against each other: replaying the
+rolls has to land on the stored square. When it does not, one of them is from a
+different game — a ruleset changed under a saved file, a record edited by hand —
+and the history is dropped while the game is kept, because the state is what you
+are standing on and the history is the part that is provably wrong.
+
+Cost: 163 tests where there were 160.
+
+**And a piece of this pass was deleted before it shipped.** `pathOf` and
+`squaresOf` were written in the same breath — the readable history the rolls are
+*for* — and `audit-unread` named `squaresOf` as an export with no caller. There
+is no screen for it yet, so it was a guess about what a screen would want. Both
+are gone until the screen exists. What survives is the record, which is the part
+that had to be right first: a history not written today cannot be recovered
+tomorrow, and a function not written today can.
 
 ### 2026-08-13 — twelfth pass: glass chrome, a lotus, and a die that went away and came back
 

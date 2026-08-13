@@ -36,12 +36,13 @@ const refusing = (): Store => ({
   },
 });
 
-const NOTHING = { state: null, deity: null, why: null };
+const NOTHING = { state: null, deity: null, rolls: [], why: null };
 
 /** A game a few moves in, built by the engine rather than by hand. */
+const THROWS = [6, 3, 4, 2];
 const played = () => {
   let state = initialState();
-  for (const roll of [6, 3, 4, 2]) state = applyRoll(state, roll, LEGACY_MOBILE).state;
+  for (const roll of THROWS) state = applyRoll(state, roll, LEGACY_MOBILE).state;
   return state;
 };
 
@@ -51,12 +52,13 @@ describe('coming back to a game', () => {
   it('returns the game that was saved', () => {
     const store = fakeStore();
     const state = played();
-    write(store, { state, deity: 'durga' });
+    write(store, { state, deity: 'durga', rolls: THROWS });
 
     const reading = read(store);
     expect(reading.why).toBeNull();
     expect(reading.state).toEqual(state);
     expect(reading.deity).toBe('durga');
+    expect(reading.rolls).toEqual(THROWS);
   });
 
   /**
@@ -127,7 +129,7 @@ describe('coming back to a game', () => {
   /** A player who has not entered yet is a real game, and a resumable one. */
   it('keeps a game that has not begun', () => {
     const store = fakeStore();
-    write(store, { state: initialState(), deity: 'vishnu' });
+    write(store, { state: initialState(), deity: 'vishnu', rolls: [] });
     const reading = read(store);
     expect(reading.state?.loka).toBe(WIN_LOKA);
     expect(reading.state?.is_finished).toBe(true);
@@ -136,7 +138,7 @@ describe('coming back to a game', () => {
   /** Round trip: what the engine produces must survive being written and read. */
   it('returns a game the engine can go on playing', () => {
     const store = fakeStore();
-    write(store, { state: played(), deity: 'indra' });
+    write(store, { state: played(), deity: 'indra', rolls: [] });
     const resumed = read(store).state;
     expect(resumed).not.toBeNull();
     const next = applyRoll(resumed as NonNullable<typeof resumed>, 3, LEGACY_MOBILE);
@@ -144,17 +146,46 @@ describe('coming back to a game', () => {
   });
 });
 
+describe('the history', () => {
+  /**
+   * The state is what the engine last produced and the rolls are what produced
+   * it. When replaying the rolls does not land on the stored square, one of
+   * them is from a different game, and playing on from a state whose history
+   * says something else is how a path silently becomes fiction.
+   */
+  it('drops a history that does not lead to the saved square, and keeps the game', () => {
+    const reading = read(stored({ state: played(), deity: 'agni', rolls: [1, 1, 1] }));
+    expect(reading.state).not.toBeNull();
+    expect(reading.rolls).toEqual([]);
+    expect(reading.why).toContain('history');
+  });
+
+  it('drops a history that is not a list of throws, and keeps the game', () => {
+    for (const bad of [[0], [7], ['3'], [1.5], 'nope', { a: 1 }]) {
+      const reading = read(stored({ state: played(), deity: 'agni', rolls: bad }));
+      expect(reading.state, `${JSON.stringify(bad)} lost the game`).not.toBeNull();
+      expect(reading.rolls, `${JSON.stringify(bad)} was accepted`).toEqual([]);
+    }
+  });
+
+  it('accepts a history that does lead there', () => {
+    const reading = read(stored({ state: played(), deity: 'agni', rolls: THROWS }));
+    expect(reading.rolls).toEqual(THROWS);
+    expect(reading.why).toBeNull();
+  });
+});
+
 describe('a storage that refuses', () => {
   it('opens the game rather than throwing, in every direction', () => {
     expect(() => read(refusing())).not.toThrow();
     expect(read(refusing())).toEqual(NOTHING);
-    expect(() => write(refusing(), { state: played(), deity: 'agni' })).not.toThrow();
+    expect(() => write(refusing(), { state: played(), deity: 'agni', rolls: [] })).not.toThrow();
     expect(() => forget(refusing())).not.toThrow();
   });
 
   it('opens the game when there is no storage at all', () => {
     expect(read(null)).toEqual(NOTHING);
-    expect(() => write(null, { state: played(), deity: 'agni' })).not.toThrow();
+    expect(() => write(null, { state: played(), deity: 'agni', rolls: [] })).not.toThrow();
     expect(() => forget(null)).not.toThrow();
   });
 });
@@ -162,7 +193,7 @@ describe('a storage that refuses', () => {
 describe('forgetting', () => {
   it('leaves nothing to come back to', () => {
     const store = fakeStore();
-    write(store, { state: played(), deity: 'indra' });
+    write(store, { state: played(), deity: 'indra', rolls: [] });
     forget(store);
     expect(read(store)).toEqual(NOTHING);
   });

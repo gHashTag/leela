@@ -65,23 +65,38 @@
         aria-label="Expand"
       ></button>
 
-      <!-- The throw. Above the scrolling part, so it never scrolls away. -->
+      <!--
+        One line: the throw, where you are, and who you are.
+
+        The deity strip used to stand under this as a row of its own, about a
+        hundred and thirty pixels of sheet for a choice most players make once.
+        It is a lotus at the end of this line now, and the roster opens from it.
+      -->
       <div class="play">
         <button class="die" id="die" type="button" aria-label="Throw the die">
           <span class="face" id="face" aria-hidden="true"></span>
         </button>
         <p class="say" id="say" role="status" aria-live="polite">A six puts you on the board.</p>
+        <button
+          class="lotus"
+          id="lotus"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="who"
+        >
+          <span class="lotus-mark" id="lotus-mark" aria-hidden="true"></span>
+        </button>
       </div>
 
       <!--
         Who is playing.
 
         Every name on this list is one the seventy-two texts use — see
-        `deities.ts`. A scrolling row rather than a dialog, because it is a
-        choice a player may want to change mid-game and the board should not go
-        away while they make it.
+        `deities.ts`. Opened from the lotus rather than always on screen, and
+        still not a dialog: choosing mid-game should not take the board away.
       -->
-      <div class="who" id="who" role="radiogroup" aria-label="Play as"></div>
+      <div class="who" id="who" role="radiogroup" aria-label="Play as" hidden></div>
 
       <div class="sheet-body" id="sheet-body">
         <!--
