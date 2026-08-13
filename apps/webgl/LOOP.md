@@ -58,6 +58,8 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | A point on the board resolves to its own plan | `tests/layout.test.ts` |
 | Scale rows interlock rather than stacking | `tests/skin.test.ts` |
 | The scale tile has no bald seam | `tests/skin.test.ts` |
+| A marking tile starts white, so it tints no skin | `tests/skin.test.ts` |
+| The same snake is marked the same way every load | `tests/skin.test.ts` |
 
 ## Known open work, roughly in value order
 
@@ -80,11 +82,11 @@ yourself deleting one of these tests, you are re-introducing the defect.
       first half is exactly right for a refused save; the trailing clause is
       about the mini app's journals. Wants a key of its own in
       `packages/content`, not a string invented here.
-- [ ] **The snakes have scales but no markings.** The height field is on and
-      reads at close zoom; what is still missing is the *pattern* — the
-      published painting has banded reds and blotched vipers, and a colour map
-      per skin is what would carry that. The UVs are there now, so it is a
-      texture away.
+- [ ] **A marking is a shade, not a second colour.** The tile is a `map` and a
+      `map` multiplies `color`, so one tile per pattern serves all six skins —
+      the cost is that a band is a darker version of the same hue. The painting
+      has red-on-black coral snakes, which this cannot draw. A second colour
+      would mean a tile per skin, or a shader that mixes two.
 - [ ] **The snake heads are spheres.** At the zoom where the scales read, the
       head is plainly a squashed ball with two beads on it. A jaw and a brow
       would cost a few more primitives.
@@ -99,6 +101,28 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — fifth pass: markings
+
+Bands and blotches, and unlike the scales these read **at the distance the board
+is played at** — which is what makes them worth more than the pass before them.
+Three tiles serve all thirty snakes, because a marking here is a value and the
+hue comes from the material.
+
+The two patterns cycle at rates an order apart — a scale every few centimetres,
+a band every couple of squares — so one UV attribute cannot carry both.
+`taperedTube` now writes `uv1` as well, counted in markings rather than in
+scales, and the marking texture reads it through `Texture.channel`, which this
+version of three honours via the `MAP_UV` define. Checked in
+`node_modules/three` before relying on it rather than after.
+
+Blotch placement is deterministic on purpose: a board whose snakes are marked
+differently on every load is a board a player cannot learn, and a pattern that
+changes under you reads as a rendering fault rather than as variety.
+
+Cost: 119 tests where there were 111. Zoomed in on the change before believing
+it, per the contract amended last pass — and this time the map really was
+reaching the material.
 
 ### 2026-08-13 — fourth pass: scales
 

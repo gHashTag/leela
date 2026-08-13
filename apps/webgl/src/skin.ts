@@ -59,6 +59,58 @@ export const scales = ({ across, along }: Lattice): Scale[] => {
   return made;
 };
 
+/**
+ * What is drawn *on* the scales.
+ *
+ * Scales are relief and read only close up; markings are value and read at the
+ * distance the board is actually played at, which is why they matter more. The
+ * published painting has all three of these — a banded red, blotched vipers, and
+ * plainer dark snakes with nothing but a darker back.
+ */
+export type Marking = 'banded' | 'blotched' | 'plain';
+
+/**
+ * Where the bands fall, in 0..1 along the tile.
+ *
+ * Evenly spaced and offset half a step from the ends, so the tile joins without
+ * two bands landing on top of each other at the seam.
+ */
+export const bandsOn = (count: number): number[] => {
+  if (!Number.isInteger(count) || count < 1) {
+    throw new RangeError(`a banded snake needs at least one band, got ${count}`);
+  }
+  return Array.from({ length: count }, (_, at) => (at + 0.5) / count);
+};
+
+export interface Blotch {
+  /** Along the tile, 0..1. */
+  readonly v: number;
+  /** Around the body, 0..1. A blotch sits off the spine, not on it. */
+  readonly u: number;
+  /** Half-width across the body, as a fraction of the tile. */
+  readonly spread: number;
+}
+
+/**
+ * Saddle blotches, alternating either side of the spine.
+ *
+ * Deterministic — no `Math.random`. A board whose snakes are marked differently
+ * on every load is a board a player cannot learn, and a pattern that changes
+ * under you is the kind of thing that reads as a rendering fault.
+ */
+export const blotchesOn = (count: number): Blotch[] => {
+  if (!Number.isInteger(count) || count < 1) {
+    throw new RangeError(`a blotched snake needs at least one blotch, got ${count}`);
+  }
+  return Array.from({ length: count }, (_, at) => ({
+    v: (at + 0.5) / count,
+    // Alternating about the spine at u = 0.5, by a fixed lean rather than a
+    // random one, so the pattern is the same board every time.
+    u: 0.5 + (at % 2 === 0 ? -0.09 : 0.09),
+    spread: at % 3 === 0 ? 0.3 : 0.24,
+  }));
+};
+
 /** Every drawing call a scale tile needs, so a test can be the canvas. */
 export interface Brush {
   fillStyle: string | unknown;
@@ -113,6 +165,63 @@ export function paintScales(brush: Brush, size: number, lattice: Lattice): void 
       brush.beginPath();
       brush.ellipse(x + wrap, y, halfWidth, halfHeight, 0, 0, Math.PI * 2);
       brush.stroke();
+    }
+  }
+}
+
+/** How many bands or blotches one marking tile carries. */
+export const BANDS = 5;
+export const BLOTCHES = 4;
+
+/**
+ * Paints the markings tile.
+ *
+ * White is the snake's own colour and grey is a marking, because this is a
+ * `map` and a `map` multiplies `color` — which is what lets one tile per
+ * pattern serve all six skins instead of one texture per snake. The cost is
+ * that a marking is a darker shade of the same hue rather than a second colour,
+ * so this cannot draw a red-on-black coral snake. It can draw every one of them
+ * as a snake with bands, which is the thing that was missing.
+ */
+export function paintMarking(brush: Brush, size: number, marking: Marking): void {
+  brush.fillStyle = '#ffffff';
+  brush.fillRect(0, 0, size, size);
+
+  if (marking === 'plain') {
+    // Not nothing: a darker back and a pale belly is the least a snake has.
+    // Drawn across u, which is the way the body wraps, so the dark lands along
+    // the spine.
+    brush.fillStyle = '#d0d0d0';
+    brush.fillRect(0, 0, size * 0.16, size);
+    brush.fillRect(size * 0.84, 0, size * 0.16, size);
+    return;
+  }
+
+  if (marking === 'banded') {
+    brush.fillStyle = '#6e6e6e';
+    const thickness = size / BANDS / 2.4;
+    for (const v of bandsOn(BANDS)) {
+      brush.fillRect(0, v * size - thickness / 2, size, thickness);
+    }
+    return;
+  }
+
+  brush.fillStyle = '#7a7a7a';
+  for (const blotch of blotchesOn(BLOTCHES)) {
+    // Three offsets, for the same reason the scales get three: a blotch that
+    // straddles the seam has to appear on both edges of the tile.
+    for (const wrap of [-size, 0, size]) {
+      brush.beginPath();
+      brush.ellipse(
+        blotch.u * size + wrap,
+        blotch.v * size,
+        blotch.spread * size,
+        (size / BLOTCHES) * 0.3,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      brush.fill();
     }
   }
 }

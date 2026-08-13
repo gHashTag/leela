@@ -15,7 +15,7 @@ import {
   paletteFor,
   type Scheme,
 } from './theme';
-import { paintScales } from './skin';
+import { paintMarking, paintScales, type Marking } from './skin';
 import { arrowProfile, snakeProfile, wiggle, type Profile } from './tube';
 
 /**
@@ -72,6 +72,25 @@ const SKIN_TILE = 256;
 const SKIN_LATTICE = { across: 9, along: 7 };
 /** World length of one row of scales. Smaller means finer scales. */
 const SCALE_PITCH = 0.38;
+
+/**
+ * The markings tile, and how far one run of it reaches.
+ *
+ * Far longer than the scale pitch — a band every couple of squares, not every
+ * few millimetres — which is the whole reason the markings ride their own UV
+ * set instead of sharing the scales'.
+ */
+const MARKING_TILE = 256;
+const MARKING_PITCH = 2.4;
+/** Which pattern each of the six skins wears, in the order `SNAKE_SKINS` gives. */
+const SKIN_MARKINGS: readonly Marking[] = [
+  'blotched', // olive python
+  'banded', // madder red
+  'blotched', // tan viper
+  'plain', // near-black green
+  'banded', // sand
+  'plain', // dark brown
+];
 /**
  * A shaft is slender.
  *
@@ -242,11 +261,21 @@ const taperedTube = (
    * on a short snake as on a long one, which is the whole point of a scale.
    */
   vRepeat = 1,
+  /**
+   * The same trip down the body, counted in markings rather than in scales.
+   *
+   * A second UV set, because the two patterns cycle at completely different
+   * rates — a scale every few centimetres, a band every couple of squares — and
+   * one attribute cannot carry both. `Texture.channel` picks which set a map
+   * reads, and the renderer honours it through `MAP_UV`.
+   */
+  markingRepeat = 1,
 ): THREE.BufferGeometry => {
   const frames = curve.computeFrenetFrames(along, false);
   const position: number[] = [];
   const normal: number[] = [];
   const uv: number[] = [];
+  const uv1: number[] = [];
   const index: number[] = [];
 
   for (let i = 0; i <= along; i += 1) {
@@ -264,6 +293,7 @@ const taperedTube = (
       position.push(centre.x + out.x * radius, centre.y + out.y * radius, centre.z + out.z * radius);
       normal.push(out.x, out.y, out.z);
       uv.push(j / around, t * vRepeat);
+      uv1.push(j / around, t * markingRepeat);
     }
   }
 
@@ -281,6 +311,7 @@ const taperedTube = (
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
   geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normal, 3));
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geometry.setAttribute('uv1', new THREE.Float32BufferAttribute(uv1, 2));
   geometry.setIndex(index);
   return geometry;
 };
@@ -514,6 +545,28 @@ export const createBoard = (
   skinTexture.wrapT = THREE.RepeatWrapping;
   skinTexture.anisotropy = 4;
 
+  /**
+   * One tile per pattern, not per snake.
+   *
+   * Three textures serve all thirty, because a marking here is a value and the
+   * hue comes from the material — the same economy the scale tile is built on.
+   * Read off UV set 1, which cycles at the marking pitch rather than the scale
+   * pitch, and in sRGB because unlike the height field this one is a colour.
+   */
+  const markings = new Map<Marking, THREE.Texture>();
+  for (const marking of ['banded', 'blotched', 'plain'] as const) {
+    const tile = surface(MARKING_TILE, MARKING_TILE);
+    const brush = tile.getContext('2d');
+    if (brush) paintMarking(brush, MARKING_TILE, marking);
+    const texture = new THREE.CanvasTexture(tile as unknown as HTMLCanvasElement);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.channel = 1;
+    texture.anisotropy = 4;
+    markings.set(marking, texture);
+  }
+
   const links = new THREE.Group();
   const linkOf = new Map<number, THREE.MeshStandardMaterial[]>();
 
@@ -591,12 +644,22 @@ export const createBoard = (
       material.bumpMap = skinTexture;
       material.bumpScale = 1.4;
       material.roughnessMap = skinTexture;
+      // Which pattern this skin wears. Fixed per skin rather than per snake, so
+      // the six colours are six recognisable creatures.
+      material.map = markings.get(SKIN_MARKINGS[at % SKIN_MARKINGS.length] as Marking) ?? null;
 
       // Thick behind the head at `from` — the square you land on — tapering to
       // the tail at `to`, which is where it puts you down. The taper is the
       // rule, drawn.
-      const rows = Math.max(1, Math.round(curve.getLength() / SCALE_PITCH));
-      group.add(new THREE.Mesh(taperedTube(curve, snakeProfile(SNAKE_GIRTH), 64, 14, rows), material));
+      const length = curve.getLength();
+      const rows = Math.max(1, Math.round(length / SCALE_PITCH));
+      const marks = Math.max(1, Math.round(length / MARKING_PITCH));
+      group.add(
+        new THREE.Mesh(
+          taperedTube(curve, snakeProfile(SNAKE_GIRTH), 64, 14, rows, marks),
+          material,
+        ),
+      );
 
       const head = new THREE.Mesh(new THREE.SphereGeometry(SNAKE_GIRTH * 1.5, 16, 12), material);
       head.scale.set(1, 0.72, 1.35);
