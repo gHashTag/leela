@@ -14,7 +14,7 @@ import { fileName, pathText, revisited, writingsOn, MAX_REPORT_CHARS } from '@le
 
 import { Companion, type Line, type Rests } from './companion';
 import { DEFAULT_DEITY, DEITIES, deityFor, deityForSeat, seatsOf } from './deities';
-import { screenFor, toneOf } from './hud';
+import { screenFor, toneOf, turnPassed } from './hud';
 import { fanOffset, hopPoint, planPosition } from './layout';
 import { browserStore, read, write, type KeptSeat } from './kept';
 import { pathOf } from './path';
@@ -1041,6 +1041,13 @@ const takeTurn = async (): Promise<void> => {
     // never read. `roll.again` is the catalogue's own wording, in English and
     // Russian, and the bot has been saying it since it was written.
     el.say.textContent = `${el.say.textContent} · ${messageFor(language, 'roll.again')}`;
+  } else {
+    // The turn has moved to somebody else, and until now only the colour of the
+    // mark said so. Last of the three arms because the winning one reseats the
+    // whole table, and a seat announced out of a session that has been thrown
+    // away is a seat nobody is sitting in.
+    const passed = turnPassed(language, turn.seatId, seat().id, seatAt());
+    if (passed !== null) el.say.textContent = `${el.say.textContent} · ${passed}`;
   }
 
   // Written after the turn has fully resolved, not after the roll: a game saved

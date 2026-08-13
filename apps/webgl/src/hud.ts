@@ -105,3 +105,41 @@ export const screenFor = (
   }
   return standingOn(language, plan, titleOf, event);
 };
+
+/**
+ * Who throws next, in the player's language, or null when nobody changed.
+ *
+ * At a table the only thing that followed the rotation was the colour of the
+ * mark beside the die. A colour is not a sentence, and this game is played by
+ * people passing one phone between them.
+ *
+ * Ids rather than seat numbers for the comparison, because the comparison *is*
+ * the condition: `nextSeat` returns the same seat at a table of one and stays
+ * put when everyone else has finished, so equal ids are exactly the cases where
+ * there is nobody to announce. A one-seat table therefore never says it,
+ * without needing to ask how many are playing.
+ *
+ * `roll.next` rather than `roll.notYourTurn`: both exist and both are true, but
+ * this is said in the instant after a throw, where *{name} is next* reads as
+ * the continuation it is and *It is {name}'s turn* reads as a label. It is also
+ * the sentence `apps/bot` already sends in this exact position. Neither is
+ * written here — no surface writes its own sentences.
+ *
+ * The name is the seat, not the deity: two seats may end up wearing the same
+ * deity, and a transliterated Sanskrit name inside a Russian sentence is two
+ * scripts in one line. `app.seatTurn` is the same wording the lotus mark
+ * already announces to a screen reader.
+ *
+ * @param holderSeat 0-based, as the engine counts. The +1 happens here, once.
+ */
+export const turnPassed = (
+  language: Language,
+  mover: string,
+  holder: string,
+  holderSeat: number,
+): string | null =>
+  mover === holder
+    ? null
+    : messageFor(language, 'roll.next', {
+        name: messageFor(language, 'app.seatTurn', { seat: holderSeat + 1 }),
+      });

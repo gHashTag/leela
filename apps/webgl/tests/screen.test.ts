@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { LANGUAGES, planFor } from '@leela/content';
+import { LANGUAGES, messageFor, planFor } from '@leela/content';
 import { LEGACY_MOBILE, TOTAL_PLANS, WIN_LOKA, applyRoll, initialState } from '@leela/engine';
 
 import { Companion } from '../src/companion';
 import { trimmedDescription } from '../src/canon';
 import { DEITIES, deityFor, DEFAULT_DEITY } from '../src/deities';
-import { screenFor, toneOf } from '../src/hud';
+import { screenFor, toneOf, turnPassed } from '../src/hud';
 import { isFace, pipsFor } from '../src/die';
 import { DETENTS, dragged, nearest, stepped } from '../src/sheet';
 import { arrowProfile, snakeProfile, wiggle } from '../src/tube';
@@ -376,5 +376,69 @@ describe('the companion', () => {
     companion.reset();
     expect(companion.view().lines).toHaveLength(0);
     expect(companion.view().rests).toBeNull();
+  });
+});
+
+/**
+ * Whose throw is next, said in words.
+ *
+ * The mark beside the die follows the rotation in colour; a colour is not a
+ * sentence, and this game is played by people passing one phone around. What is
+ * checkable here is that the surface writes none of it itself, that it names
+ * the seat taking over rather than the one that just went, and that a table of
+ * one never says anything at all.
+ */
+describe('saying whose throw is next', () => {
+  const SEATS = 6;
+
+  it('says nothing when the turn did not change hands', () => {
+    for (const language of LANGUAGES) {
+      for (let seat = 0; seat < SEATS; seat += 1) {
+        expect(turnPassed(language, 'p1', 'p1', seat)).toBeNull();
+      }
+    }
+  });
+
+  /** Assembled from the catalogue, never written here. */
+  it('is assembled from the catalogue, in every language', () => {
+    for (const language of LANGUAGES) {
+      for (let holder = 0; holder < SEATS; holder += 1) {
+        expect(turnPassed(language, 'p1', 'p2', holder)).toBe(
+          messageFor(language, 'roll.next', {
+            name: messageFor(language, 'app.seatTurn', { seat: holder + 1 }),
+          }),
+        );
+      }
+    }
+  });
+
+  it('names the seat taking over, not the one that just threw', () => {
+    const said = turnPassed('en', 'p1', 'p2', 1);
+    expect(said).toContain('2');
+    expect(said).not.toContain('1');
+  });
+
+  /** A language carrying one key and not the other would show its braces. */
+  it('never leaves a placeholder on screen', () => {
+    for (const language of LANGUAGES) {
+      const said = turnPassed(language, 'p1', 'p3', 2);
+      expect(said).not.toBeNull();
+      expect(said!).not.toMatch(/\{[a-z]/i);
+      expect(said!.length).toBeGreaterThan(0);
+    }
+  });
+
+  /** Seats are counted from one on screen and from zero in the engine. */
+  it('counts seats from one', () => {
+    for (const language of LANGUAGES) {
+      const first = turnPassed(language, 'p2', 'p1', 0);
+      expect(first).not.toBeNull();
+      expect(first!).toBe(
+        messageFor(language, 'roll.next', {
+          name: messageFor(language, 'app.seatTurn', { seat: 1 }),
+        }),
+      );
+      expect(first!).not.toMatch(/\b0\b/);
+    }
   });
 });
