@@ -48,6 +48,8 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | A saved game the engine refuses is never played | `tests/kept.test.ts` |
 | A refused game does not cost you your deity | `tests/kept.test.ts` |
 | No square is filled with a jump's colour | the published painting, `board-light.webp` |
+| The board has no grid drawn on it | the published board, `gameboard.png` |
+| A point on the board resolves to its own plan | `tests/layout.test.ts` |
 
 ## Known open work, roughly in value order
 
@@ -60,23 +62,64 @@ yourself deleting one of these tests, you are re-introducing the defect.
       header after the first throw is the obvious move; it has not been made
       because the row is also the feature, and hiding a feature to save
       forty pixels is how features stop being used.
-- [ ] **Nothing is remembered but the deity.** Reload and the game restarts. The
-      mini app persists a whole session; `packages/journal` is the shape.
+- [ ] **The conversation is not remembered**, only the game. `src/kept.ts` saves
+      the engine's state and the deity; the companion's thread starts empty on
+      every resume and it re-announces the square instead. `packages/journal` is
+      the shape a real path would take.
 - [ ] **The sheet's drag is not keyboard-reachable** beyond the handle's step.
 - [ ] **No haptics, no sound.**
 - [ ] **`app.gameNotRead` promises accounts this surface does not have.** Its
       first half is exactly right for a refused save; the trailing clause is
       about the mini app's journals. Wants a key of its own in
       `packages/content`, not a string invented here.
-- [ ] **The snakes have no skin.** Naturalistic colours now, but no scale
-      pattern — the published painting has markings, and a procedural normal or
-      colour map is the difference between a coloured tube and a snake.
+- [ ] **The snakes have no skin, and they are too small.** Naturalistic colours
+      now, but no scale pattern, and next to the published painting they are
+      worms: there the serpents are the dominant thing on the board, thick,
+      coiling over many squares, with modelled heads. `taperedTube` has no UVs
+      yet, which is the first thing a scale map needs.
+- [ ] **The board has no border.** The rules illustration carries feathers and
+      crystals around the edge. A plain slab reads as a placeholder.
+- [ ] **The perspective is steep on a wide window.** The near edge renders much
+      wider than the far one, which reads as a ramp rather than a table. A
+      narrower field of view would flatten it.
 - [ ] **The 72 texts are not searchable** from this surface; the mini app has
       `app.plans` for exactly that.
 - [ ] **`apps/mobile` cannot use any of this yet.** The scene is DOM-free apart
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — third pass: there is no grid
+
+Called kindergarten again, and the previous pass had treated it as a colour
+problem when it was a *shape* problem.
+
+`LeelaAiWeb3/assets/about/images/gameboard.png` is the board the rules screen
+shows — the file `apps/miniapp`'s own stylesheet names as the one it wrongly
+used first — and opening it settles it: **the board has no grid.** No cell
+borders, no squares, no separations, no frame. Seventy-two numbers on bare
+ground with the snakes and the arrows over them.
+
+Every version of this app had drawn a tray of seventy-two raised tiles with dark
+gaps between them. The grout was doing more visual work than the snakes were, and
+no amount of material or lighting work was going to rescue a shape that wrong.
+Two more things the same file settles: the numbers are small and violet, not
+large and dark — the mini app writes them at nine pixels in the corner of each
+circle — and 68 carries no number at all, because the Flower of Life is there.
+
+Done: one board surface instead of seventy-two tiles; `planAtPoint` in `layout`
+to turn a hit back into a square, since there is no longer a mesh per cell;
+numerals at 0.55 of a cell in the published violet; the Flower of Life drawn on
+68 and its number dropped.
+
+Cost: 103 tests where there were 99, four of them on the new inverse — checked
+over every square and over the ground around them, because an inverse off by one
+row is off by one row everywhere and the board still looks like a board.
+
+A claim of mine from the previous pass was re-checked rather than assumed:
+`.board.painted .cell { background: transparent }` does hold, so "no square is
+tinted" was right. It was right for the wrong reason — I had read it off an
+overlay image, and the overlay could not have shown me the grid either way.
 
 ### 2026-08-13 — second pass: the game remembers, and the board stops being a toy
 

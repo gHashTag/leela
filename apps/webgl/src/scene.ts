@@ -3,10 +3,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { ARROWS, SNAKES, WIN_LOKA } from '@leela/engine';
 
-import { gridFor, paintLabels, tileFor } from './atlas';
+import { gridFor, paintLabels, patchFor, tileFor } from './atlas';
 import { DEFAULT_DEITY, type Deity } from './deities';
 import { animationClock, frames, type Clock, type Frames } from './frames';
-import { CELL, boardExtent, planPosition, plans } from './layout';
+import { CELL, boardExtent, planAtPoint, planPosition, plans } from './layout';
 import {
   ARROW_FEATHER,
   ARROW_STEEL,
@@ -75,10 +75,59 @@ const SNAKE_GIRTH = 0.1;
 const ARROW_SHAFT = 0.035;
 
 const LABEL_TILE = 128;
-/** How much of a cell the number covers. */
-const LABEL_SPAN = 0.86;
-/** Clear of the cell's top face, which sits at 0.06. */
-const LABEL_Y = 0.063;
+/**
+ * How much of a cell the number covers.
+ *
+ * Small. The published app writes each number at nine pixels in the corner of
+ * its circle at 0.85 opacity — `.cell .mark` — and every version of this board
+ * had them filling the square in a heavy sans, which is what a game for
+ * children does with a number and what a board for reading does not.
+ */
+const LABEL_SPAN = 0.55;
+/** Just clear of the board's face, which sits at 0.04. */
+const LABEL_Y = 0.043;
+
+/**
+ * The Flower of Life, on 68 and nowhere else.
+ *
+ * Nineteen circles on a hexagonal lattice — the figure the published board
+ * carries on Cosmic Consciousness, and the reason that square has no number on
+ * it in any version of this game.
+ */
+const flowerOfLife = (
+  painter: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  patch: { x: number; y: number; width: number; height: number },
+  colour: string,
+): void => {
+  const centreX = patch.x + patch.width / 2;
+  const centreY = patch.y + patch.height / 2;
+  const radius = patch.width * 0.15;
+
+  painter.save();
+  painter.strokeStyle = colour;
+  painter.lineWidth = Math.max(1, patch.width * 0.012);
+  painter.globalAlpha = 0.85;
+  painter.beginPath();
+  for (let ring = 0; ring <= 2; ring += 1) {
+    if (ring === 0) {
+      painter.moveTo(centreX + radius, centreY);
+      painter.arc(centreX, centreY, radius, 0, Math.PI * 2);
+      continue;
+    }
+    // Six per ring at the inner radius, plus the six between them on the outer.
+    const count = ring * 6;
+    for (let at = 0; at < count; at += 1) {
+      const angle = (at / count) * Math.PI * 2 + (ring === 2 ? Math.PI / 6 : 0);
+      const reach = radius * ring * (ring === 2 ? Math.sqrt(3) / 2 : 1);
+      const x = centreX + Math.cos(angle) * reach;
+      const y = centreY + Math.sin(angle) * reach;
+      painter.moveTo(x + radius, y);
+      painter.arc(x, y, radius, 0, Math.PI * 2);
+    }
+  }
+  painter.stroke();
+  painter.restore();
+};
 
 export interface Board {
   readonly scene: THREE.Scene;
@@ -363,39 +412,32 @@ export const createBoard = (
    * a thin inlay around its edge — the same information, at the weight it
    * deserves.
    */
-  const groundMaterial = new THREE.MeshStandardMaterial({ roughness: 0.82, metalness: 0.0 });
-  const inlays = {
-    snake: new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.1 }),
-    arrow: new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.1 }),
-    win: new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.75 }),
-  };
-
-  const cells = new THREE.Group();
-  const cellGeometry = new THREE.BoxGeometry(CELL, 0.12, CELL);
-  const inlayGeometry = new THREE.RingGeometry(CELL * 0.4, CELL * 0.455, 4, 1, Math.PI / 4);
-
-  for (const plan of ordered) {
-    const mesh = new THREE.Mesh(cellGeometry, groundMaterial);
-    const { x, z } = planPosition(plan);
-    mesh.position.set(x, 0, z);
-    mesh.receiveShadow = true;
-    mesh.userData.plan = plan;
-    cells.add(mesh);
-
-    const kind = plan === WIN_LOKA ? 'win' : plan in SNAKES ? 'snake' : plan in ARROWS ? 'arrow' : null;
-    if (kind) {
-      // A square ring, rotated to sit square with the cell rather than as a
-      // diamond — `RingGeometry` with four segments starts a corner at zero.
-      const inlay = new THREE.Mesh(inlayGeometry, inlays[kind]);
-      inlay.rotation.x = -Math.PI / 2;
-      inlay.position.set(x, 0.062, z);
-      // The same square as the cell beneath it, so tapping the mark selects
-      // the plan rather than falling through to nothing.
-      inlay.userData.plan = plan;
-      cells.add(inlay);
-    }
-  }
-  scene.add(cells);
+  /**
+   * One surface. No tiles, no grout, no cell borders.
+   *
+   * `LeelaAiWeb3/assets/about/images/gameboard.png` is the board the rules
+   * screen shows, and it settles the question this app kept getting wrong:
+   * **there is no grid.** No squares are drawn, nothing is outlined, nothing is
+   * separated. Seventy-two numbers sit on bare ground with the snakes and the
+   * arrows over them, and that is the whole board.
+   *
+   * Every version before this drew a tray of seventy-two raised tiles with dark
+   * gaps between them. That is a children's boardgame — the grout was doing
+   * more visual work than the snakes were — and no amount of material or
+   * lighting work was going to fix a shape that wrong.
+   *
+   * Losing the tiles means losing seventy-two raycast targets, which is what
+   * `planAtPoint` is for.
+   */
+  const groundMaterial = new THREE.MeshStandardMaterial({ roughness: 0.86, metalness: 0.0 });
+  const { width: faceWidth, depth: faceDepth } = boardExtent();
+  const board = new THREE.Mesh(
+    new THREE.BoxGeometry(faceWidth + CELL * 0.5, 0.1, faceDepth + CELL * 0.5),
+    groundMaterial,
+  );
+  board.position.y = -0.01;
+  board.receiveShadow = true;
+  scene.add(board);
 
   // --- the numbers ---------------------------------------------------------
 
@@ -416,10 +458,15 @@ export const createBoard = (
     if (!labelPainter) return;
     paintLabels(
       labelPainter,
-      ordered.map((plan) => String(plan)),
+      // 68 carries no number. The Flower of Life is painted there, and the
+      // published app writes a space into that box for the same reason —
+      // `GameBoard/index.tsx` leaves it blank because the flower is already on
+      // the board. Drawn below rather than left empty.
+      ordered.map((plan) => (plan === WIN_LOKA ? '' : String(plan))),
       LABEL_TILE,
       { colour: palette.label },
     );
+    flowerOfLife(labelPainter, patchFor(ordered.indexOf(WIN_LOKA), grid, LABEL_TILE), palette.label);
     labelTexture.needsUpdate = true;
   };
 
@@ -774,9 +821,6 @@ export const createBoard = (
       }
     });
     groundMaterial.color.setHex(palette.cell);
-    inlays.snake.color.setHex(palette.snake);
-    inlays.arrow.color.setHex(palette.arrow);
-    inlays.win.color.setHex(palette.win);
     // Snakes and arrows keep their own materials across schemes: a python is
     // not a different colour at night, and the earlier version repainted every
     // one of them from two theme swatches, which is what made thirty distinct
@@ -865,9 +909,11 @@ export const createBoard = (
       if (rect.width === 0 || rect.height === 0) return null;
       pointer.set(((x - rect.left) / rect.width) * 2 - 1, -((y - rect.top) / rect.height) * 2 + 1);
       raycaster.setFromCamera(pointer, camera);
-      const [hit] = raycaster.intersectObjects(cells.children, false);
-      const plan = hit?.object.userData.plan;
-      return typeof plan === 'number' ? plan : null;
+      // One surface, so the square is arithmetic on the hit point rather than
+      // whichever of seventy-two meshes was struck. `planAtPoint` is tested
+      // over every square and over the ground around them.
+      const [hit] = raycaster.intersectObject(board, false);
+      return hit ? planAtPoint(hit.point.x, hit.point.z) : null;
     },
 
     setScheme(scheme) {

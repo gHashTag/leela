@@ -77,6 +77,35 @@ export const planPosition = (plan: number): Vec3 => {
   };
 };
 
+/**
+ * Which plan a point on the board plane falls in, or null for off the board.
+ *
+ * The inverse of `planPosition`, and it exists because the board stopped being
+ * seventy-two separate tiles. The published board — `assets/about/images/
+ * gameboard.png` in `LeelaAiWeb3`, the illustration the rules screen uses — has
+ * no grid on it at all: no cell borders, no squares, no separations. Just the
+ * numbers, the snakes and the arrows on bare ground. Drawing it as a tray of
+ * tiles with dark grout between them was the single thing that made it read as
+ * a children's boardgame rather than as a painted cloth.
+ *
+ * With one surface there is nothing to raycast per-square, so the hit point is
+ * turned back into a plan here.
+ */
+export const planAtPoint = (x: number, z: number): number | null => {
+  const column = Math.round((x - originX) / PITCH);
+  const row = Math.round((originZ - z) / PITCH);
+  if (column < 0 || column >= COLUMNS || row < 0 || row >= ROWS) return null;
+
+  // Inside the cell rather than merely nearest to it. Rounding alone answers
+  // for a point a metre off the edge, and a tap on the table would select the
+  // corner square.
+  if (Math.abs(x - (originX + column * PITCH)) > PITCH / 2) return null;
+  if (Math.abs(z - (originZ - row * PITCH)) > PITCH / 2) return null;
+
+  const plan = ROWS_BOTTOM_UP[row]?.[column];
+  return typeof plan === 'number' ? plan : null;
+};
+
 /** Width and depth the board occupies, for framing the camera. */
 export const boardExtent = (): { width: number; depth: number } => ({
   width: (COLUMNS - 1) * PITCH + CELL,

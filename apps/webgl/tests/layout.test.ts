@@ -9,7 +9,9 @@ import {
   hopHeight,
   hopPoint,
   planPosition,
+  planAtPoint,
   plans,
+  CELL,
 } from '../src/layout';
 
 describe('the board', () => {
@@ -147,5 +149,50 @@ describe('the hop', () => {
     const from = planPosition(1);
     const to = planPosition(2);
     expect(hopPoint(from, to, 0.5).y).toBeGreaterThan(0);
+  });
+});
+
+describe('a point on the board', () => {
+  /**
+   * The board is one surface now, so this is the only thing standing between a
+   * tap and the wrong plan's text. Checked over every square rather than at a
+   * few: an inverse that is off by one row is off by one row everywhere, and
+   * the board still looks like a board.
+   */
+  it('is the plan whose centre it is', () => {
+    for (const plan of plans()) {
+      const { x, z } = planPosition(plan);
+      expect(planAtPoint(x, z)).toBe(plan);
+    }
+  });
+
+  it('is the same plan anywhere inside that plan', () => {
+    for (const plan of plans()) {
+      const { x, z } = planPosition(plan);
+      for (const dx of [-0.4, 0, 0.4]) {
+        for (const dz of [-0.4, 0, 0.4]) {
+          expect(planAtPoint(x + dx * CELL, z + dz * CELL), `${plan} at ${dx},${dz}`).toBe(plan);
+        }
+      }
+    }
+  });
+
+  /** A tap on the table is not a tap on the corner square. */
+  it('is nothing off the board', () => {
+    const { width, depth } = boardExtent();
+    expect(planAtPoint(0, depth)).toBeNull();
+    expect(planAtPoint(width, 0)).toBeNull();
+    expect(planAtPoint(-width, 0)).toBeNull();
+    expect(planAtPoint(0, -depth)).toBeNull();
+  });
+
+  it('never answers with a plan the board does not carry', () => {
+    const known = new Set(plans());
+    for (let x = -8; x <= 8; x += 0.37) {
+      for (let z = -8; z <= 8; z += 0.37) {
+        const plan = planAtPoint(x, z);
+        if (plan !== null) expect(known.has(plan)).toBe(true);
+      }
+    }
   });
 });

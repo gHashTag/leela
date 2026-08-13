@@ -80,7 +80,7 @@ export const PALETTES: Record<Scheme, Palette> = {
     // lighting clips to a flat sheet with no form in it.
     cell: 0xf0e9d8,
     edge: 0xbdb29a,
-    label: '#3b3227',
+    label: '#7b3d86',
     snake: 0x8c3a2a,
     arrow: 0x35624a,
     win: 0xc9a13f,
@@ -105,7 +105,7 @@ export const PALETTES: Record<Scheme, Palette> = {
     background: 0x121114,
     cell: 0xcdc4ab,
     edge: 0x8d8570,
-    label: '#2b2419',
+    label: '#7b3d86',
     snake: 0x8c3a2a,
     arrow: 0x35624a,
     win: 0xb8912f,
