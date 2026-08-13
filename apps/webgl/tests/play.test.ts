@@ -6,6 +6,7 @@ import {
   START_LOKA,
   WIN_LOKA,
   createSession,
+  currentPlayer,
   rollDie,
 } from '@leela/engine';
 
@@ -157,6 +158,77 @@ describe('rolling a real die', () => {
         expect(hasPlan(hop.to)).toBe(true);
       }
       session = turn.won ? table() : turn.session;
+    }
+  });
+});
+
+/**
+ * The trap this file did not set, and a screen fell into.
+ *
+ * `advance` rotates the turn, so after a throw the session's current player is
+ * whoever throws *next*. Every readout on the 3D board was reading the board
+ * back through `currentPlayer` — the plan number, the progress bar, the square
+ * the camera framed, the text the companion announced — which meant that at a
+ * table of two the header showed one player's square under the other player's
+ * sentence: the number said 10 while the line beneath it said an arrow had
+ * carried them to 50.
+ *
+ * At a table of one the mover and the next player are the same seat, so it was
+ * invisible for as long as this surface seated one player. That is the whole
+ * lesson: the tests were green throughout, and green about a table that could
+ * not yet exist.
+ */
+describe('who a throw was about', () => {
+  const two = () =>
+    createSession('t', [{ id: 'p1' }, { id: 'p2' }], LEGACY_MOBILE);
+
+  /** Six enters and keeps the turn, so this is the one that hands it over. */
+  const untilHandedOver = () => {
+    let session = two();
+    for (let at = 0; at < 40; at += 1) {
+      const turn = throwFor(session, at % 6 === 0 ? 6 : 3, at + 1);
+      if (currentPlayer(turn.session).id !== turn.seatId) return turn;
+      session = turn.session;
+    }
+    throw new Error('the turn never passed to the second seat');
+  };
+
+  it('hands the turn to somebody else, so `currentPlayer` is not the mover', () => {
+    const turn = untilHandedOver();
+    expect(turn.seatId).toBe('p1');
+    expect(currentPlayer(turn.session).id).toBe('p2');
+  });
+
+  it('carries the seat that threw, not the one that throws next', () => {
+    const turn = untilHandedOver();
+    expect(turn.moved.id).toBe(turn.seatId);
+    expect(turn.moved.id).not.toBe(currentPlayer(turn.session).id);
+  });
+
+  it('carries that seat as it stands after the move, not before it', () => {
+    const turn = untilHandedOver();
+    const inSession = turn.session.players.find((player) => player.id === turn.seatId);
+    expect(turn.moved.state).toEqual(inSession?.state);
+    // And it is the square the hops arrived at, which is what the screen prints.
+    expect(turn.moved.state.loka).toBe(turn.hops.at(-1)?.to);
+  });
+
+  it('keeps the turn with the thrower on a six', () => {
+    const turn = throwFor(two(), 6, 1);
+    expect(turn.rollsAgain).toBe(true);
+    expect(currentPlayer(turn.session).id).toBe(turn.seatId);
+    expect(turn.moved.id).toBe(turn.seatId);
+  });
+
+  /** Whatever the script, the seat carried is always the seat that threw. */
+  it('never carries a seat that did not throw', () => {
+    let session = two();
+    for (let at = 0; at < 200; at += 1) {
+      const holder = currentPlayer(session).id;
+      const turn = throwFor(session, rollDie(), at + 1);
+      expect(turn.seatId).toBe(holder);
+      expect(turn.moved.id).toBe(holder);
+      session = turn.won ? two() : turn.session;
     }
   });
 });

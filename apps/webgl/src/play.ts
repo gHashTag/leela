@@ -102,6 +102,18 @@ export interface Thrown {
   readonly session: Session;
   /** Whose throw it was. */
   readonly seatId: string;
+  /**
+   * That seat, as it stands *after* the move.
+   *
+   * Carried rather than looked up, because looking it up is the thing that goes
+   * wrong: `advance` rotates the turn, so the session's current player after a
+   * throw is the *next* seat, and a caller that reads the board back through
+   * `currentPlayer` reports the wrong player's square. This surface did exactly
+   * that — the header showed the next player's plan under the mover's sentence,
+   * two different squares in one breath — and it was invisible for as long as
+   * there was only ever one seat.
+   */
+  readonly moved: SeatedPlayer;
   /** True when the same seat throws again — a six, under variants that allow it. */
   readonly rollsAgain: boolean;
   readonly won: boolean;
@@ -122,7 +134,8 @@ export function throwFor(
 ): Thrown {
   const before = currentPlayer(session).state;
   const move = advance(session, roll, now);
-  const after = currentPlayerById(move.session, move.playerId).state;
+  const moved = currentPlayerById(move.session, move.playerId);
+  const after = moved.state;
 
   return {
     roll,
@@ -130,6 +143,7 @@ export function throwFor(
     event: move.event,
     session: move.session,
     seatId: move.playerId,
+    moved,
     rollsAgain: move.keepsTurn,
     won: hasWon(after),
   };

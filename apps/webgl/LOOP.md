@@ -90,6 +90,9 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | A fanned token's anchor stays in its own cell | `tests/layout.test.ts` |
 | A token standing alone is not nudged off centre | `tests/layout.test.ts` |
 | A crowded square's tokens stay centred on it | `tests/layout.test.ts` |
+| A throw is reported about the seat that threw, not the next one | `tests/play.test.ts` |
+| `throwFor` carries the mover as it stands after the move | `tests/play.test.ts` |
+| A report is filed under the square it was asked about | the companion's `rests` |
 
 ## Known open work, roughly in value order
 
@@ -102,8 +105,11 @@ yourself deleting one of these tests, you are re-introducing the defect.
       header after the first throw is the obvious move; it has not been made
       because the row is also the feature, and hiding a feature to save
       forty pixels is how features stop being used.
-- [ ] **The path does not scroll to where you are.** It opens at step one, and
-      a game forty throws long opens forty rows from the present.
+- [ ] **Neither the path nor the thread scrolls to where you are.** The path
+      opens at step one, and a game forty throws long opens forty rows from the
+      present. The thread is worse: the companion speaks on every landing, and
+      what it just said sits below the fold, so the proactive half of the game
+      is invisible unless the player scrolls for it.
 - [ ] **The intention is not asked for.** `packages/journal` has `asIntention`,
       `isIntention` and its bounds, and `apps/miniapp/src/state.ts` records why
       it is not a profile field but *the question the game answers*. This
@@ -128,10 +134,13 @@ yourself deleting one of these tests, you are re-introducing the defect.
       `pathText` moved into `@leela/journal`, `apps/miniapp`'s `toText` became
       an adapter over it, and the export here copies the readable path to the
       clipboard before it makes the claim — and only when the copy succeeded.
-- [ ] **A table has no turn order on screen.** Seating, tokens and rotation
-      all work, and nothing says whose throw it is except the colour of the
-      mark beside the die. Whatever says it must come out of `@leela/content`;
-      no surface writes its own sentences.
+- [ ] **A table says whose turn it is only in colour.** The mark beside the die
+      now follows the rotation, which it did not before, but nothing says it in
+      words. `roll.notYourTurn` is the sentence and it already exists in English
+      and Russian — *It is {name}'s turn.* / *Сейчас ходит {name}.* The key is
+      named for the refusal it was written for; the sentence itself is a plain
+      statement, which is why it is the right one to reuse rather than write a
+      tenth wording of.
 - [ ] **A marking is a shade, not a second colour.** The tile is a `map` and a
       `map` multiplies `color`, so one tile per pattern serves all six skins —
       the cost is that a band is a darker version of the same hue. The painting
@@ -878,3 +887,57 @@ play described as unused, `app.pathExported` described as a lie, and the seating
 work described as unstarted. All three were finished last pass. A ledger that
 lies is worse than no ledger: it is the one document a fresh session trusts
 without checking.
+
+## 2026-08-13 — a throw is about the seat that threw
+
+**Changed.** `throwFor` carries the seat that moved; `takeTurn`, `showStanding`,
+`showPath` and the compose box read that instead of `currentPlayer`.
+
+I went looking for the turn-order sentence and found a defect underneath it.
+`advance` rotates the turn, so after a throw the session's current player is
+whoever throws **next** — and `play.ts` even says so, in the comment on
+`currentPlayerById`. `main.ts` did not. Every readout after a throw went through
+`seat()`.
+
+Measured, at a table of two, p1 riding an arrow from 28 to 50:
+
+```
+header 10 · "You threw 5. An arrow at 28 takes you to 50." · mark: Durga
+```
+
+The number was the *other* player's square, the sentence was the mover's, and
+the mark still showed the player who had just gone. Three readings of the same
+moment, no two of them agreeing. The progress bar, the camera's focus and the
+text the companion announced were all the next player's too.
+
+Then the same trap one layer over: a reflection typed after the turn had passed
+was filed under `seat().state.loka` — one player's writing against another
+player's square, in the journal, permanently. It now files under the plan the
+companion asked about, which is the thing the writing is actually about and is
+only set once somebody has landed.
+
+After:
+
+```
+header 50 · "You threw 5. An arrow at 28 takes you to 50." · mark: Krishna
+path: p1's three throws · report filed under 50, turn-holder on 10
+```
+
+**Cost.** 211 tests where there were 206. Five new in `tests/play.test.ts`, and
+what they assert is the trap itself: after a handover `currentPlayer` is *not*
+the mover, and `moved` is. That is the durable half. The wiring in `main.ts` is
+still held only by looking, because there is no DOM here to hold it.
+
+**Why it survived every gate.** At a table of one the mover and the next player
+are the same seat, so all of this was true until the moment seating landed —
+two passes ago. The tests went green through both. They were green about a
+table that could not yet exist, which is the third time this file has recorded
+that shape.
+
+**One measurement thrown away.** The first attempt to reproduce the handover
+clicked nothing: the stored turn was already `1`, so the loop's guard returned
+before its first throw, and I read an at-rest render as a post-throw one. It
+looked like a fix that worked. Seed the state, reload, *then* assert the
+starting condition — a run whose log has no rows is not a run.
+
+Found and not fixed: the thread does not scroll to what the companion just said.

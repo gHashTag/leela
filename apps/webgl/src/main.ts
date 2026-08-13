@@ -28,6 +28,7 @@ import {
 } from './written';
 import { isFace, pipsFor } from './die';
 import { entered, throwFor, type Hop } from './play';
+import type { SeatedPlayer } from '@leela/engine';
 import { createBoard } from './scene';
 import { dragged, stepped, type Detent, type Heights } from './sheet';
 import { css } from './theme';
@@ -547,8 +548,14 @@ const showRests = (rests: Rests | null, status: string, note: string | null): vo
  * `packages/journal`'s, because coming back to a square is what Leela is about
  * and the corpus already had the function that finds it.
  */
-const showPath = (): void => {
-  const steps = pathOf(rolls[seatAt()] ?? [], LEGACY_MOBILE);
+/**
+ * @param at whose path. Defaults to the seat holding the turn, which is right
+ *        at rest — but not straight after a throw, when the turn has already
+ *        passed and the panel would list the next player's throws underneath a
+ *        header narrating the mover's move.
+ */
+const showPath = (at: number = seatAt()): void => {
+  const steps = pathOf(rolls[at] ?? [], LEGACY_MOBILE);
   el.path.hidden = steps.length === 0;
   el.pathSummary.textContent = `${messageFor(language, 'app.path')} · ${steps.length}`;
 
@@ -714,8 +721,14 @@ const showFace = (value: number): void => {
   );
 };
 
-const showStanding = (event: MoveEvent | null): void => {
-  const standing = screenFor(language, seat().state.loka, entered(seat()), titleOf, event);
+/**
+ * @param of whose standing this is. Defaults to whoever holds the turn, which
+ *        is right everywhere except straight after a throw — `advance` rotates,
+ *        so by then the current player is the *next* seat and the mover has to
+ *        be named.
+ */
+const showStanding = (event: MoveEvent | null, of: SeatedPlayer = seat()): void => {
+  const standing = screenFor(language, of.state.loka, entered(of), titleOf, event);
   el.planNumber.textContent = standing.number;
   el.planTitle.textContent = standing.title;
   el.progress.value = standing.progress;
@@ -903,22 +916,34 @@ const takeTurn = async (): Promise<void> => {
   // not just where one of them is — so the table is re-placed once the walk is
   // over rather than only the piece that walked.
   placeSeats();
-  board.focus(entered(seat()) ? seat().state.loka : null);
-  showStanding(turn.event);
+
+  // Everything below reports the seat that *threw*. After `advance` the
+  // session's current player is whoever throws next, so reading the board back
+  // through `seat()` here told the player about somebody else's square: the
+  // number said 10 while the sentence under it said an arrow had carried them
+  // to 50. One seat at a table of one is always both, which is why this
+  // survived every pass before there was a table.
+  const { moved } = turn;
+  board.focus(entered(moved) ? moved.state.loka : null);
+  showStanding(turn.event, moved);
 
   // The companion speaks on every landing, not on request. The game's own loop
   // puts a reflection between one throw and the next; a companion that waits to
   // be addressed turns that into a form nobody fills in.
-  if (entered(seat())) {
+  if (entered(moved)) {
     companion.arrived(
-      seat().state.loka,
+      moved.state.loka,
       turn.event,
       el.say.textContent ?? '',
-      writingsOn(readAll(store), seat().state.loka),
+      writingsOn(readAll(store), moved.state.loka),
     );
     showThread();
   }
-  showPath();
+  showPath(threw);
+  // The mark beside the die is the only thing that says whose throw is next,
+  // and it was not being redrawn when the turn passed — so it showed the player
+  // who had just gone.
+  showLotus();
 
   if (turn.won) {
     // Won, and still standing on 68 until the next throw. Say so, keep the
@@ -996,7 +1021,14 @@ el.compose.addEventListener('submit', (event) => {
    * gone when the tab was. Only while the player is on the board: a note about
    * a square nobody is standing on has no square to belong to.
    */
-  if (entered(seat())) keepWritten(store, { plan: seat().state.loka, text: said, at: Date.now() });
+  // The square the companion asked about, not the seat holding the turn: by the
+  // time a reflection is typed the turn has usually passed, and filing it under
+  // `seat()` files one player's writing against another player's square. The
+  // companion's `rests` is the plan the thread is actually about, and it is
+  // only set once somebody has landed — which is the same guard the seat check
+  // was making, stated in terms of the thing being written about.
+  const about = companion.view().rests;
+  if (about) keepWritten(store, { plan: about.plan, text: said, at: Date.now() });
 
   void companion.say(said).then(showThread);
   showThread();
