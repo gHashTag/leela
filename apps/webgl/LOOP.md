@@ -45,6 +45,9 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | An unthrown die shows no face | `tests/screen.test.ts` |
 | A six says so | `audit-unread`, via `rollsAgain` |
 | A turn always finishes, even with `rAF` paused | the backstop in `walk` |
+| A saved game the engine refuses is never played | `tests/kept.test.ts` |
+| A refused game does not cost you your deity | `tests/kept.test.ts` |
+| No square is filled with a jump's colour | the published painting, `board-light.webp` |
 
 ## Known open work, roughly in value order
 
@@ -60,16 +63,65 @@ yourself deleting one of these tests, you are re-introducing the defect.
 - [ ] **Nothing is remembered but the deity.** Reload and the game restarts. The
       mini app persists a whole session; `packages/journal` is the shape.
 - [ ] **The sheet's drag is not keyboard-reachable** beyond the handle's step.
-- [ ] **`planAt` ignores the labels mesh**, so a tap that lands exactly on a
-      digit still hits the cell underneath. Verify this is true rather than
-      assuming it.
 - [ ] **No haptics, no sound.**
+- [ ] **`app.gameNotRead` promises accounts this surface does not have.** Its
+      first half is exactly right for a refused save; the trailing clause is
+      about the mini app's journals. Wants a key of its own in
+      `packages/content`, not a string invented here.
+- [ ] **The snakes have no skin.** Naturalistic colours now, but no scale
+      pattern — the published painting has markings, and a procedural normal or
+      colour map is the difference between a coloured tube and a snake.
 - [ ] **The 72 texts are not searchable** from this surface; the mini app has
       `app.plans` for exactly that.
 - [ ] **`apps/mobile` cannot use any of this yet.** The scene is DOM-free apart
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-13 — second pass: the game remembers, and the board stops being a toy
+
+**Persistence.** A journey that restarts every time a phone locks is not one.
+`src/kept.ts` saves the engine's `GameState` beside the deity and restores it,
+with `whyNotPlayable` — the engine's own validator — deciding what a game is, so
+nothing here re-checks a square number. A record that cannot be read is reported
+through `app.gameNotRead` rather than silently becoming a new game.
+
+Found by seeding a corrupt board and reloading: the deity went with it. The
+player was put back on Vishnu while the screen said nothing else had been
+touched. `read` now returns the deity even when it refuses the game.
+
+**The look.** The board was called primitive and childish, and it was. The cause
+was one imported convention: roughly a third of the squares were filled solid
+red or solid green, because this board had copied the mini app's *fallback*
+palette — the one its stylesheet only applies under `.board:not(.painted)`, when
+the artwork has failed to load. Opening `apps/miniapp/src/board-light.webp`, the
+painting the phone app actually ships, settles it: **no square is tinted at
+all.** It is snakes and arrows on bare ground. The strongest colour on screen was
+carrying the least meaning.
+
+So: painted ground for all seventy-two, and a thin inlay where a jump *starts*.
+Naturalistic snake skins assigned by position instead of two theme swatches
+repainting thirty creatures into two. Arrows given a wooden shaft, a steel head
+and a feather, and thinned from a snake's girth to an arrow's. `RoomEnvironment`
+through `PMREMGenerator` for image-based lighting, and ACES tone mapping — a
+`MeshStandardMaterial` with nothing to reflect has nothing to be made of, which
+is why every surface read as flat plastic.
+
+Dark mode was rebuilt on the way: dyeing the board brown made it cardboard. A
+painted cloth does not change colour when the lights go down, so the ground
+stays paper and the *room* goes dark.
+
+Cost: 99 tests where there were 87. Two of my own claims corrected — `planAt`
+was listed as open work on a guess, and tapping the digits of square 36 opens
+square 36, so the item was correct behaviour filed as a defect; and the die was
+briefly suspected of never rolling sixes, which measured 999 in 6000, the
+dropped throws being my own harness clicking faster than a throttled `setTimeout`
+would let a turn finish.
+
+Left undone: `app.gameNotRead` ends with *your accounts are untouched*, and this
+surface has no accounts. The sentence is the catalogue's own for this event and
+is right in its first half; the clause wants a key of its own rather than a new
+string invented here.
 
 ### 2026-08-13 — the first pass
 

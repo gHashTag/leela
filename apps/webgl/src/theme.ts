@@ -19,15 +19,24 @@ export type Scheme = 'light' | 'dark';
 export interface Palette {
   /** Behind the board. */
   readonly background: number;
-  /** A plain plan's face. */
+  /** The board itself: painted ground, not a coloured tile. */
   readonly cell: number;
   /** The line between plans. */
   readonly edge: number;
   /** The number painted on a plan. */
   readonly label: string;
-  /** A plan a snake starts from. */
+  /**
+   * The inlay marking a square a snake begins at.
+   *
+   * A *mark*, not a fill. The published board tints no square at all — its
+   * `board-light.webp` is snakes and arrows on bare ground, and the mini app's
+   * stylesheet only colours a cell in the fallback it draws when that painting
+   * has not loaded. Filling seventy-two squares with saturated red and green
+   * imported that fallback as if it were the board, and it is the single thing
+   * that made this read as a toy rather than as the painted cloth it is.
+   */
   readonly snake: number;
-  /** A plan an arrow starts from. */
+  /** The inlay marking a square an arrow begins at. */
   readonly arrow: number;
   /** Cosmic Consciousness. */
   readonly win: number;
@@ -39,6 +48,10 @@ export interface Palette {
   readonly ambient: number;
   /** Key light strength. */
   readonly key: number;
+  /** How strongly the room environment lights the materials. */
+  readonly envIntensity: number;
+  /** Film exposure. Tone mapping is ACES; this is the stop. */
+  readonly exposure: number;
 }
 
 /**
@@ -47,41 +60,86 @@ export interface Palette {
  * The board's own surfaces are not shared: a face that reads as paper on white
  * reads as a lamp on black, and the two were tried side by side.
  */
+/**
+ * Pigments, not UI colours.
+ *
+ * The board is a painted cloth from a tradition with a known palette — ochre
+ * ground, madder red, indigo, verdigris, lamp black — and the previous set was
+ * a phone app's accent colours borrowed wholesale. Two different things were
+ * being asked of one number: the mini app's `--snake` is measured for *small
+ * text on a surface*, and using it to paint a surface is a different
+ * measurement of the same hue.
+ */
 export const PALETTES: Record<Scheme, Palette> = {
   light: {
-    background: 0xf4f6f8,
-    cell: 0xfbfcfd,
-    edge: 0xd4dade,
-    label: '#33393d',
-    snake: 0xa3301c,
-    arrow: 0x1f6b39,
-    // Not the mini app's `--win`.
-    //
-    // That value is #7a5a12, and it is measured — for *text and a border*, at
-    // 4.5:1 against the surface behind it. Filling a whole square with it makes
-    // the end of the game the darkest thing on a light board, which is the
-    // opposite of what it means. A surface colour and a text colour are
-    // different measurements of the same hue, and this is the surface.
-    win: 0xe8c451,
+    // A shade the board can sit *on*. The first light background was within a
+    // few percent of the paper, so the two merged and the board had no edge —
+    // the thing that had been built as an object read as a texture on the page.
+    background: 0xcfc8b8,
+    // Aged paper, warm rather than white. A pure-white board under image-based
+    // lighting clips to a flat sheet with no form in it.
+    cell: 0xf0e9d8,
+    edge: 0xbdb29a,
+    label: '#3b3227',
+    snake: 0x8c3a2a,
+    arrow: 0x35624a,
+    win: 0xc9a13f,
     piece: 0xff06f4,
-    halo: 0x1c1c1c,
-    ambient: 1.15,
-    key: 2.1,
+    halo: 0x2a2418,
+    ambient: 0.5,
+    key: 1.6,
+    envIntensity: 1,
+    exposure: 1.05,
   },
+  /**
+   * Dark is a dark *room*, not a dark board.
+   *
+   * The first attempt dyed the board itself brown, and it came out as
+   * cardboard: the numbers lost their contrast and the whole thing looked like
+   * a print-out. A painted cloth does not change colour when the lights go
+   * down — you change how much light falls on it. So the ground stays paper,
+   * one stop dimmer, and it is the surround that goes dark. The board then
+   * reads as a lit object on a dark table, which is what it is.
+   */
   dark: {
-    background: 0x14171a,
-    cell: 0x272c31,
-    edge: 0x3d454c,
-    label: '#e6ebef',
-    snake: 0xf08a72,
-    arrow: 0x5fc684,
-    win: 0xe0b544,
+    background: 0x121114,
+    cell: 0xcdc4ab,
+    edge: 0x8d8570,
+    label: '#2b2419',
+    snake: 0x8c3a2a,
+    arrow: 0x35624a,
+    win: 0xb8912f,
     piece: 0xff5cf7,
-    halo: 0xffffff,
-    ambient: 1.5,
-    key: 1.7,
+    halo: 0x201b12,
+    ambient: 0.28,
+    key: 1.15,
+    envIntensity: 0.42,
+    exposure: 0.92,
   },
 };
+
+/**
+ * What the snakes are made of.
+ *
+ * The published painting carries several different snakes — a dark olive
+ * python, a red-and-black banded one, a tan viper — and drawing all thirty in
+ * one flat colour is most of why they read as identical rubber tubes. These are
+ * naturalistic skins, assigned by position so the board is the same board every
+ * time it loads.
+ */
+export const SNAKE_SKINS: readonly number[] = [
+  0x4c5240, // olive python
+  0x7d3a2c, // madder red
+  0x6d5c3c, // tan viper
+  0x2f3a35, // near-black green
+  0x8a6f4a, // sand
+  0x5a4038, // dark brown
+];
+
+/** Arrow furniture: a wooden shaft, a steel head, a pale feather. */
+export const ARROW_WOOD = 0x9a7648;
+export const ARROW_STEEL = 0xc2c7cb;
+export const ARROW_FEATHER = 0xded3bd;
 
 /** `#rrggbb`, for the places that take a string. */
 export const css = (colour: number): string => `#${colour.toString(16).padStart(6, '0')}`;

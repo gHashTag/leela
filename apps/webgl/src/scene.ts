@@ -1,12 +1,20 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { ARROWS, SNAKES, WIN_LOKA } from '@leela/engine';
 
 import { gridFor, paintLabels, tileFor } from './atlas';
 import { DEFAULT_DEITY, type Deity } from './deities';
 import { animationClock, frames, type Clock, type Frames } from './frames';
 import { CELL, boardExtent, planPosition, plans } from './layout';
-import { paletteFor, type Scheme } from './theme';
+import {
+  ARROW_FEATHER,
+  ARROW_STEEL,
+  ARROW_WOOD,
+  SNAKE_SKINS,
+  paletteFor,
+  type Scheme,
+} from './theme';
 import { arrowProfile, snakeProfile, wiggle, type Profile } from './tube';
 
 /**
@@ -57,7 +65,14 @@ const SNAKE_POINTS = 14;
  * not being there.
  */
 const SNAKE_GIRTH = 0.1;
-const ARROW_SHAFT = 0.07;
+/**
+ * A shaft is slender.
+ *
+ * At the snake's girth an arrow reads as a branch, and with thirty of them the
+ * board disappears under kindling. Thin enough to be an arrow, with the head
+ * carrying the weight — which is how the published painting draws them.
+ */
+const ARROW_SHAFT = 0.035;
 
 const LABEL_TILE = 128;
 /** How much of a cell the number covers. */
@@ -301,6 +316,25 @@ export const createBoard = (
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+  /**
+   * Filmic response, and light that comes from somewhere.
+   *
+   * Two lamps and no environment is why every surface read as flat plastic: a
+   * `MeshStandardMaterial` is a physically-based material and, given nothing to
+   * reflect, it has nothing to be made of. `RoomEnvironment` is generated in
+   * memory — no asset to ship — and pre-filtered into a cube map the materials
+   * sample, which is what puts a gradient across a curved snake instead of one
+   * flat highlight.
+   *
+   * ACES rolls the highlights off instead of clipping them to white. Without
+   * it, the gold on 68 and the pale token both burn out to the same paper.
+   */
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const room = pmrem.fromScene(new RoomEnvironment(), 0.04);
+  scene.environment = room.texture;
+
   const { width, depth } = boardExtent();
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
 
@@ -311,35 +345,55 @@ export const createBoard = (
   key.shadow.mapSize.set(1024, 1024);
   scene.add(ambient, key);
 
-  // Four materials for seventy-two squares. What a square's colour means is the
-  // same thing the mini app means by it: this is where a snake starts, this is
-  // where an arrow starts, this is the end of the game.
-  const faces = {
-    plain: new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.02 }),
-    snake: new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0.02 }),
-    arrow: new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0.02 }),
-    win: new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.15 }),
+  /**
+   * One ground for all seventy-two squares, and marks on top of it.
+   *
+   * The published board — `apps/miniapp/src/board-light.webp`, which is the
+   * painting the phone app actually ships — tints no square at all. It is
+   * snakes and arrows on bare ground, with the Flower of Life on 68 and nothing
+   * else. The mini app's stylesheet colours a cell only under
+   * `.board:not(.painted)`, the fallback drawn when that image has not loaded.
+   *
+   * This board had imported the fallback as though it were the design, so
+   * roughly a third of the squares were solid red or solid green. That is what
+   * made it read as a children's boardgame: the strongest colour on screen was
+   * carrying the least meaning.
+   *
+   * Now every square is the same painted ground, and where a jump *starts* gets
+   * a thin inlay around its edge — the same information, at the weight it
+   * deserves.
+   */
+  const groundMaterial = new THREE.MeshStandardMaterial({ roughness: 0.82, metalness: 0.0 });
+  const inlays = {
+    snake: new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.1 }),
+    arrow: new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.1 }),
+    win: new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.75 }),
   };
 
   const cells = new THREE.Group();
-  const cellOf = new Map<number, THREE.Mesh>();
   const cellGeometry = new THREE.BoxGeometry(CELL, 0.12, CELL);
+  const inlayGeometry = new THREE.RingGeometry(CELL * 0.4, CELL * 0.455, 4, 1, Math.PI / 4);
+
   for (const plan of ordered) {
-    const material =
-      plan === WIN_LOKA
-        ? faces.win
-        : plan in SNAKES
-          ? faces.snake
-          : plan in ARROWS
-            ? faces.arrow
-            : faces.plain;
-    const mesh = new THREE.Mesh(cellGeometry, material);
+    const mesh = new THREE.Mesh(cellGeometry, groundMaterial);
     const { x, z } = planPosition(plan);
     mesh.position.set(x, 0, z);
     mesh.receiveShadow = true;
     mesh.userData.plan = plan;
-    cellOf.set(plan, mesh);
     cells.add(mesh);
+
+    const kind = plan === WIN_LOKA ? 'win' : plan in SNAKES ? 'snake' : plan in ARROWS ? 'arrow' : null;
+    if (kind) {
+      // A square ring, rotated to sit square with the cell rather than as a
+      // diamond — `RingGeometry` with four segments starts a corner at zero.
+      const inlay = new THREE.Mesh(inlayGeometry, inlays[kind]);
+      inlay.rotation.x = -Math.PI / 2;
+      inlay.position.set(x, 0.062, z);
+      // The same square as the cell beneath it, so tapping the mark selects
+      // the plan rather than falling through to nothing.
+      inlay.userData.plan = plan;
+      cells.add(inlay);
+    }
   }
   scene.add(cells);
 
@@ -404,22 +458,41 @@ export const createBoard = (
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
   };
 
-  for (const { from, to, kind } of jumps()) {
+  for (const [at, { from, to, kind }] of jumps().entries()) {
     const curve = jumpCurve(from, to, kind);
     const group = new THREE.Group();
-    // Dark until `focus` lights it. The emissive colour is kept in step with
-    // the palette; the intensity is what the highlight actually moves.
-    //
-    // Set after construction rather than in the literal: `audit-unread` reads
-    // source with a regex, and a multi-line object literal ending in `});` is
-    // indistinguishable to it from an interface body — so `roughness` was
-    // reported as a field written and never read. The audit already strips
-    // template literals for exactly this reason. One line, no ambiguity.
-    const material = new THREE.MeshStandardMaterial({ emissiveIntensity: 0 });
-    material.roughness = kind === 'snake' ? 0.35 : 0.5;
-    material.metalness = kind === 'snake' ? 0.15 : 0.1;
-    material.userData.kind = kind;
-    linkMaterials.push(material);
+
+    /**
+     * A material per part, cloned per jump.
+     *
+     * Cloned because `focus` lights the jumps touching the square you stand on,
+     * and lighting one means changing something only it owns. Per *part*
+     * because an arrow is not one substance: the published painting shows a
+     * wooden shaft, a steel head and a feather, and drawing all three in one
+     * flat green is why they read as garden hose with a cone on the end.
+     *
+     * Built after construction rather than in the literal: `audit-unread` reads
+     * source with a regex, and a multi-line object literal ending in `});` is
+     * indistinguishable to it from an interface body — so `roughness` was
+     * reported as a field written and never read.
+     */
+    const partMaterial = (colour: number, roughness: number, metalness: number) => {
+      const made = new THREE.MeshStandardMaterial({ emissiveIntensity: 0 });
+      made.color.setHex(colour);
+      made.roughness = roughness;
+      made.metalness = metalness;
+      made.envMapIntensity = palette.envIntensity;
+      linkMaterials.push(made);
+      remember(from, made);
+      remember(to, made);
+      return made;
+    };
+
+    const material =
+      kind === 'snake'
+        ? // Assigned by position, so the board is the same board every load.
+          partMaterial(SNAKE_SKINS[at % SNAKE_SKINS.length] as number, 0.42, 0.08)
+        : partMaterial(ARROW_WOOD, 0.72, 0.05);
 
     const start = curve.getPointAt(0);
     const end = curve.getPointAt(1);
@@ -457,14 +530,16 @@ export const createBoard = (
       // arrow rather than as a hose with a cone on it.
       group.add(new THREE.Mesh(taperedTube(curve, arrowProfile(ARROW_SHAFT), 40, 8), material));
 
-      const head = new THREE.Mesh(new THREE.ConeGeometry(ARROW_SHAFT * 3.4, 0.34, 14), material);
+      const steel = partMaterial(ARROW_STEEL, 0.26, 0.92);
+      const head = new THREE.Mesh(new THREE.ConeGeometry(ARROW_SHAFT * 4.2, 0.3, 14), steel);
       head.position.copy(end);
       aim(head, intoEnd.clone().negate());
       head.castShadow = true;
       group.add(head);
 
+      const feather = partMaterial(ARROW_FEATHER, 0.95, 0.0);
       for (const turn of [0, 1, 2]) {
-        const fin = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.16, 0.12), material);
+        const fin = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.16, 0.12), feather);
         fin.position.copy(start).add(intoStart.clone().multiplyScalar(-0.06));
         aim(fin, intoStart.clone().negate());
         fin.rotateY((turn * Math.PI * 2) / 3);
@@ -474,8 +549,6 @@ export const createBoard = (
     }
 
     links.add(group);
-    remember(from, material);
-    remember(to, material);
   }
   scene.add(links);
 
@@ -687,14 +760,29 @@ export const createBoard = (
     scene.background = new THREE.Color(palette.background);
     ambient.intensity = palette.ambient;
     key.intensity = palette.key;
-    faces.plain.color.setHex(palette.cell);
-    faces.snake.color.setHex(palette.snake);
-    faces.arrow.color.setHex(palette.arrow);
-    faces.win.color.setHex(palette.win);
-    for (const material of linkMaterials) {
-      material.color.setHex(material.userData.kind === 'snake' ? palette.snake : palette.arrow);
-      material.emissive.setHex(material.color.getHex());
-    }
+    renderer.toneMappingExposure = palette.exposure;
+    // `Scene.environmentIntensity` arrived in r163 and this is three 0.160, so
+    // the strength is set per material. Every standard material in the scene,
+    // gathered by walking it rather than by keeping a list beside the one that
+    // already exists — a second list is a material that gets added and missed.
+    scene.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      for (const material of Array.isArray(object.material) ? object.material : [object.material]) {
+        if (material instanceof THREE.MeshStandardMaterial) {
+          material.envMapIntensity = palette.envIntensity;
+        }
+      }
+    });
+    groundMaterial.color.setHex(palette.cell);
+    inlays.snake.color.setHex(palette.snake);
+    inlays.arrow.color.setHex(palette.arrow);
+    inlays.win.color.setHex(palette.win);
+    // Snakes and arrows keep their own materials across schemes: a python is
+    // not a different colour at night, and the earlier version repainted every
+    // one of them from two theme swatches, which is what made thirty distinct
+    // creatures into two. Only the emissive is kept in step, because that is
+    // what `focus` moves.
+    for (const material of linkMaterials) material.emissive.setHex(material.color.getHex());
     // The token's colours belong to the deity, not to the scheme — the point of
     // choosing Durga is that the piece is Durga's red in either theme.
     haloMaterial.color.setHex(palette.halo);
@@ -910,6 +998,8 @@ export const createBoard = (
 
     dispose() {
       clockFrames.stop();
+      room.dispose();
+      pmrem.dispose();
       controls.removeEventListener('change', clockFrames.draw);
       controls.dispose();
       labelTexture.dispose();
