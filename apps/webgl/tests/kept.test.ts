@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   CLASSIC,
   LEGACY_MOBILE,
+  MAX_SEATS,
   NEUROLEELA,
+  createSession,
+  currentPlayer,
   ONLINE,
   WIN_LOKA,
   applyRoll,
@@ -445,5 +448,90 @@ describe('who threw last', () => {
     const reading = read(wrong, LEGACY_MOBILE);
     expect(reading.lastThrower).toBe(0);
     expect(reading.seats[0]?.rolls).toEqual([]);
+  });
+});
+
+/**
+ * A reading must describe a table the engine can actually seat.
+ *
+ * `read` clamped `turnIndex` against the seats it had *read*, and `seatTable`
+ * caps the table at `MAX_SEATS`. A record carrying more seats than that — from
+ * another version, or a hand edit — therefore produced a turn belonging to a
+ * seat nobody is sitting in. `currentPlayer` throws rather than returning
+ * undefined, so the page died before it drew a frame: not a wrong readout, a
+ * blank screen.
+ */
+describe('a table bigger than the game allows', () => {
+  const many = (count: number, turnIndex: number) =>
+    stored({
+      turnIndex,
+      lastThrower: null,
+      seats: Array.from({ length: count }, (_, at) => ({
+        id: `p${at + 1}`,
+        deity: 'durga',
+        state: played(),
+        rolls: THROWS,
+      })),
+    });
+
+  it('never reports more seats than the engine seats', () => {
+    for (const count of [MAX_SEATS + 1, MAX_SEATS + 2, 12, 40]) {
+      expect(read(many(count, 0), LEGACY_MOBILE).seats.length).toBe(MAX_SEATS);
+    }
+  });
+
+  it('never reports a turn that the table it reports cannot hold', () => {
+    for (const count of [1, 2, MAX_SEATS, MAX_SEATS + 1, 12, 40]) {
+      for (const turn of [0, 1, MAX_SEATS - 1, MAX_SEATS, count - 1, count, 99]) {
+        const reading = read(many(count, turn), LEGACY_MOBILE);
+        expect(reading.turnIndex).toBeGreaterThanOrEqual(0);
+        expect(reading.turnIndex).toBeLessThan(reading.seats.length);
+      }
+    }
+  });
+
+  /**
+   * Why this is a blank screen and not a wrong number: the engine refuses a
+   * turn its table cannot hold, and refuses it by throwing. A reading that
+   * reports eight seats when six will be seated hands exactly this session to
+   * the boot.
+   */
+  it('would crash the engine if a reading escaped with such a turn', () => {
+    const table = createSession(
+      'probe',
+      Array.from({ length: MAX_SEATS }, (_, at) => ({ id: `p${at + 1}` })),
+      LEGACY_MOBILE,
+    );
+    expect(() => currentPlayer({ ...table, turnIndex: MAX_SEATS + 1 })).toThrow();
+    // And the reading never produces one.
+    const reading = read(many(MAX_SEATS + 2, MAX_SEATS + 1), LEGACY_MOBILE);
+    expect(() =>
+      currentPlayer({ ...table, turnIndex: reading.turnIndex }),
+    ).not.toThrow();
+  });
+
+  it('says the reading cost something when seats were dropped', () => {
+    expect(read(many(MAX_SEATS + 1, 0), LEGACY_MOBILE).why).not.toBeNull();
+    expect(read(many(MAX_SEATS, 0), LEGACY_MOBILE).why).toBeNull();
+  });
+
+  /** The same bound applies to who threw last. */
+  it('never names a last thrower outside the table it reports', () => {
+    const reading = read(many(12, 0), LEGACY_MOBILE);
+    expect(reading.lastThrower).toBeNull();
+    const inside = read(
+      stored({
+        turnIndex: 0,
+        lastThrower: 7,
+        seats: Array.from({ length: 12 }, (_, at) => ({
+          id: `p${at + 1}`,
+          deity: 'durga',
+          state: played(),
+          rolls: THROWS,
+        })),
+      }),
+      LEGACY_MOBILE,
+    );
+    expect(inside.lastThrower).toBeNull();
   });
 });

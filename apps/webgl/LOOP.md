@@ -102,6 +102,8 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | A turn that changed hands says so in words | `tests/screen.test.ts` |
 | The die shows the seat that threw, never the seat that is next | `tests/kept.test.ts` |
 | An unusable last-thrower is nobody, never seat one | `tests/kept.test.ts` |
+| A reading never describes a table the engine cannot seat | `tests/kept.test.ts` |
+| A reading's turn always belongs to a seat it reports | `tests/kept.test.ts` |
 
 ## Known open work, roughly in value order
 
@@ -1081,3 +1083,40 @@ was pretending to check.
 command died on `ENOSPC` *between* a file write and its verification, so an edit
 silently did not land. The next command failed on the unedited file, which is
 the only reason it was noticed.
+
+## 2026-08-13 — a reading that could not be seated
+
+**Changed.** `read` caps the table it reports at `MAX_SEATS`, and says so.
+
+Found in the previous pass and left as an open item. `read` clamped `turnIndex`
+against the seats it had *read*, while `seatTable` caps the table it builds at
+`MAX_SEATS`. So a record carrying more seats than the engine allows produced a
+turn belonging to a seat nobody would be sitting in — and `currentPlayer`
+throws rather than returning undefined. Not a wrong readout. A blank page,
+before the first frame.
+
+Nothing this app writes can reach it: `seatTable` caps before saving. Another
+version of another surface, or a hand-edited record, can — and the mini app and
+the bot write to keys of their own, so a shared device is not far-fetched.
+
+**The test says why it is a crash rather than asserting that it is.** It builds
+a full table, shows that the engine throws on a turn one past its end, and then
+shows that no reading produces such a turn. That chain is the defect; asserting
+only the clamped number would pass just as well against a `read` that clamps to
+zero for the wrong reason.
+
+Verified by looking, with an eight-seat record and a stored turn of 7: the page
+opens on plan 23 with six lotuses fanned on the square, the mark reads
+*Durga — Player 1*, and the seat control shows six. Before, this record was a
+session the boot handed straight to `currentPlayer`.
+
+**Cost.** 248 tests where there were 243. Five new.
+
+**One thing I did wrong again**, and it is in the contract in bold: I ran the
+root audits from `apps/webgl` and got two Node stack traces. They are root
+scripts. The contract's rule 2 says `cd apps/webgl` for the gates *and the root
+for the audits*, and I have now read past that twice in three passes.
+
+Still open and now the sharpest thing left: the winning arm of `takeTurn`
+reseats the whole table, so at a table of three one player winning ends two
+other people's games.

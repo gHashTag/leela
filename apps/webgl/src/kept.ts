@@ -22,7 +22,13 @@
  *     remember is worse than a game that forgets.
  */
 
-import { isPlayableState, whyNotPlayable, type GameState, type RuleSet } from '@leela/engine';
+import {
+  MAX_SEATS,
+  isPlayableState,
+  whyNotPlayable,
+  type GameState,
+  type RuleSet,
+} from '@leela/engine';
 
 import { areRolls, stateAfter } from './path';
 
@@ -216,12 +222,29 @@ export function read(store: Store | null, rules: RuleSet): Reading {
   // A record from before seating: one `state` at the top and no seats. Read as
   // a table of one rather than refused, because a player forty squares in
   // should not lose them to a shape change.
-  const rows = Array.isArray(record.seats)
+  const stored = Array.isArray(record.seats)
     ? record.seats
     : [{ id: 'p1', deity: record.deity, state: record.state, rolls: record.rolls }];
 
+  /**
+   * No more seats than the engine will seat.
+   *
+   * `createSession` refuses a table outside 1..`MAX_SEATS`, and the caller caps
+   * the table it builds — but this used to report every seat it found and
+   * clamp the turn against *that*, so a record with more seats than the game
+   * allows produced a turn belonging to a seat nobody would be sitting in. The
+   * engine's `currentPlayer` throws rather than returning undefined, so the
+   * page died before it drew a frame. Not a wrong readout: a blank screen.
+   *
+   * Nothing this app writes can reach here — `seatTable` caps at `MAX_SEATS`
+   * before saving. Another version of another surface, or a hand-edited
+   * record, can.
+   */
+  const rows = stored.slice(0, MAX_SEATS);
+
   const seats: KeptSeat[] = [];
-  let trouble: string | null = null;
+  let trouble: string | null =
+    stored.length > MAX_SEATS ? `the saved table seats more than ${MAX_SEATS}` : null;
   for (const [at, row] of rows.entries()) {
     const read = seatFrom(row, `p${at + 1}`, deity);
     if (read.why !== null) trouble ??= read.why;
