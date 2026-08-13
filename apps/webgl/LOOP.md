@@ -93,6 +93,9 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | A throw is reported about the seat that threw, not the next one | `tests/play.test.ts` |
 | `throwFor` carries the mover as it stands after the move | `tests/play.test.ts` |
 | A report is filed under the square it was asked about | the companion's `rests` |
+| What the companion just said is on screen without scrolling | `tests/sheet.test.ts`, and looking |
+| A line too tall for the panel is shown from its top | `tests/sheet.test.ts` |
+| A scroll that would change nothing is not issued | `tests/sheet.test.ts` |
 
 ## Known open work, roughly in value order
 
@@ -105,11 +108,11 @@ yourself deleting one of these tests, you are re-introducing the defect.
       header after the first throw is the obvious move; it has not been made
       because the row is also the feature, and hiding a feature to save
       forty pixels is how features stop being used.
-- [ ] **Neither the path nor the thread scrolls to where you are.** The path
-      opens at step one, and a game forty throws long opens forty rows from the
-      present. The thread is worse: the companion speaks on every landing, and
-      what it just said sits below the fold, so the proactive half of the game
-      is invisible unless the player scrolls for it.
+- [ ] **The path does not scroll to where you are.** It opens at step one, and
+      a game forty throws long opens forty rows from the present. The thread
+      does now follow the companion — `bringIntoView` in `sheet.ts` — and the
+      same function is what the path wants; it needs a row to aim at, which is
+      the only work left in it.
 - [ ] **The intention is not asked for.** `packages/journal` has `asIntention`,
       `isIntention` and its bounds, and `apps/miniapp/src/state.ts` records why
       it is not a profile field but *the question the game answers*. This
@@ -941,3 +944,53 @@ looked like a fix that worked. Seed the state, reload, *then* assert the
 starting condition — a run whose log has no rows is not a run.
 
 Found and not fixed: the thread does not scroll to what the companion just said.
+
+## 2026-08-13 — what the companion just said is on the screen
+
+**Changed.** `bringIntoView` in `sheet.ts`, and `showThread` uses it instead of
+`scrollIntoView`.
+
+The ask for this surface was the game *and the agent's answer* on one screen.
+Measured on a fresh load, one throw put the companion's line at 685-856 against
+a panel whose visible box ends at 745 - sixty pixels below the fold at its
+nearest point, with the scroller still at zero. The proactive half of the game
+was being written where nobody would read it.
+
+It was not missing a scroll. `showThread` already called
+`scrollIntoView({ block: 'nearest' })`, and on the live page, measured both ways
+from the same state: `behavior: 'smooth'` leaves the scroller at zero, `'auto'`
+moves it at once. I did not chase why. Swapping one browser behaviour for
+another is a fix that cannot be tested here; the position is arithmetic now, and
+the arithmetic is in a module a test can hold.
+
+Two rules in it are judgement, so they are written down rather than assumed. A
+line taller than the panel is shown from its **top** - scrolling to the end of a
+long answer shows the player its last sentence first. And when the box is
+already in view the answer is `null`, not the number it is already at: assigning
+a scroll position cancels a scroll the *player* started, and being yanked while
+reading is worse than reaching for the scrollbar.
+
+**Cost.** 222 tests where there were 211. Eleven new in `tests/sheet.test.ts`,
+which did not exist - `nearest`, `stepped` and `dragged` had no test either, so
+they have one now.
+
+**A test that failed and was wrong.** The property check generated a box at
+980-1040 inside a thousand pixels of content and demanded it end up inside the
+window. No such box can exist in a scroller. The failure said nothing about the
+code; the generator now stays inside the content, and the clamping behaviour it
+was groping at is asserted on its own.
+
+**A result that looked like a failure and was not.** After the fix the check
+`fullyVisible` came back false: the line is 148 pixels tall and the panel at the
+half detent is 143. That is the taller-than-the-window rule doing exactly what
+it says. Before, the line began sixty pixels below the panel; after, its top is
+eight pixels inside it. The right assertion was never *fully visible* - it was
+*visible from the top*.
+
+**One process mistake.** The first attempt to write this entry ran with the
+shell sitting in `/Users/playra`, not in `apps/webgl`. The `python3` half failed
+loudly on a missing `LOOP.md`; the `cat >>` half did not, and created a stray
+44-line `LOOP.md` in the home directory. Removed. `cd` does not persist between
+commands here - use absolute paths for writes, the way the gates already do.
+
+Still open: the path list has the same problem and now has the function for it.

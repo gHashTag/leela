@@ -60,3 +60,53 @@ export const stepped = (from: Detent): Detent => {
  */
 export const dragged = (start: number, travel: number, heights: Heights): Detent =>
   nearest(start - travel, heights);
+
+/** A scrolling box, as much of it as this needs to know. */
+export interface Scroller {
+  readonly scrollTop: number;
+  readonly clientHeight: number;
+  readonly scrollHeight: number;
+}
+
+/** Something inside it, in the scroller's own content coordinates. */
+export interface Box {
+  readonly top: number;
+  readonly height: number;
+}
+
+/**
+ * Where to scroll so a box is in view, or null when it already is.
+ *
+ * The companion speaks on every landing, and what it says arrives at the bottom
+ * of a panel a hundred and forty pixels tall. Measured on a fresh load, one
+ * throw put the newest line at 685–856 against a visible box ending at 745: a
+ * hundred and eleven pixels of it below the fold, with the scroller still at
+ * zero. The proactive half of this game was there and unread.
+ *
+ * `scrollIntoView` was already being called and is not what arrives — measured
+ * both ways on the live page, `behavior: 'smooth'` leaves the scroller at zero
+ * and `'auto'` moves it at once. Rather than swap one browser behaviour for
+ * another, the position is arithmetic here, where a test can hold it.
+ *
+ * Null rather than a no-op number: a scroll assignment that changes nothing
+ * still cancels a scroll the *player* started, and being yanked back while
+ * reading is worse than reaching for the scrollbar.
+ */
+export const bringIntoView = (view: Scroller, box: Box, margin = 8): number | null => {
+  const furthest = Math.max(0, view.scrollHeight - view.clientHeight);
+  const clamp = (to: number): number | null => {
+    const held = Math.max(0, Math.min(furthest, to));
+    return held === view.scrollTop ? null : held;
+  };
+
+  // Taller than the window it has to fit in: show where it starts. Scrolling to
+  // the end of a long answer shows the player its last line first.
+  if (box.height + margin * 2 > view.clientHeight) return clamp(box.top - margin);
+
+  const bottom = box.top + box.height;
+  if (bottom + margin > view.scrollTop + view.clientHeight) {
+    return clamp(bottom + margin - view.clientHeight);
+  }
+  if (box.top - margin < view.scrollTop) return clamp(box.top - margin);
+  return null;
+};

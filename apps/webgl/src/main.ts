@@ -30,7 +30,7 @@ import { isFace, pipsFor } from './die';
 import { entered, throwFor, type Hop } from './play';
 import type { SeatedPlayer } from '@leela/engine';
 import { createBoard } from './scene';
-import { dragged, stepped, type Detent, type Heights } from './sheet';
+import { bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
 import { css } from './theme';
 
 /**
@@ -437,6 +437,32 @@ const showPlanText = (plan: number): void => {
   el.planText.replaceChildren(paragraphs(text.body || text.description || ''));
 };
 
+/**
+ * Brings the newest line of the conversation into view.
+ *
+ * This was `scrollIntoView({ block: 'nearest' })` and it did not arrive. On a
+ * fresh load one throw left the companion's answer at 685–856 against a panel
+ * whose visible box ends at 745, with the scroller still at zero — measured on
+ * the page, both ways: the smooth variant leaves it at zero, the instant one
+ * moves it. The proactive half of this game was being written below the fold.
+ *
+ * The scroller is `#sheet-body`, not `#thread`, which overflows visibly. Rects
+ * rather than `offsetTop` because the offset parent is not the scroller, and a
+ * position measured against the wrong box is the kind of wrong that looks like
+ * a browser bug.
+ */
+const follow = (line: Element | null): void => {
+  if (!line) return;
+  const view = el.sheetBody;
+  const box = line.getBoundingClientRect();
+  const around = view.getBoundingClientRect();
+  const to = bringIntoView(view, {
+    top: box.top - around.top + view.scrollTop,
+    height: box.height,
+  });
+  if (to !== null) view.scrollTop = to;
+};
+
 const showThread = (): void => {
   const view = companion.view();
   const fragment = document.createDocumentFragment();
@@ -451,10 +477,7 @@ const showThread = (): void => {
   }
 
   el.thread.replaceChildren(fragment);
-  el.thread.lastElementChild?.scrollIntoView({
-    block: 'nearest',
-    behavior: reducedMotion.matches ? 'auto' : 'smooth',
-  });
+  follow(el.thread.lastElementChild);
 
   showRests(view.rests, view.status, view.note);
 };
