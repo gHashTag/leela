@@ -441,13 +441,41 @@ const walk = (hop: Hop): Promise<void> => {
 
   return new Promise((resolve) => {
     const started = performance.now();
+    let done = false;
+
+    const land = (): void => {
+      if (done) return;
+      done = true;
+      clearTimeout(backstop);
+      board.piece.position.set(to.x, 0.3, to.z);
+      board.draw();
+      resolve();
+    };
+
+    /**
+     * A turn must not be able to hang on an animation.
+     *
+     * `requestAnimationFrame` does not fire in a hidden tab. Switch away
+     * mid-hop and this promise never settles, so `busy` stays true and the die
+     * stays disabled — for as long as the tab is in the background. It does
+     * recover on return, which is exactly what makes it easy to miss: it was
+     * found only because a headless pane kept the page hidden and twenty-three
+     * throws in a row appeared to produce nothing.
+     *
+     * `setTimeout` is throttled in the background but it still fires, so the
+     * turn finishes either way. The piece is put on its square rather than left
+     * wherever the last frame left it.
+     */
+    const backstop = setTimeout(land, HOP_MS * 4);
+
     const frame = (now: number): void => {
+      if (done) return;
       const t = Math.min(1, (now - started) / HOP_MS);
       const point = hopPoint(from, to, t);
       board.piece.position.set(point.x, point.y + 0.3, point.z);
       board.draw();
       if (t < 1) requestAnimationFrame(frame);
-      else resolve();
+      else land();
     };
     requestAnimationFrame(frame);
   });
