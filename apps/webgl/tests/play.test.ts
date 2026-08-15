@@ -5,6 +5,9 @@ import {
   SNAKES,
   START_LOKA,
   WIN_LOKA,
+  type SeatedPlayer,
+  type Session,
+  canCurrentPlayerRoll,
   createSession,
   currentPlayer,
   rollDie,
@@ -230,5 +233,113 @@ describe('who a throw was about', () => {
       expect(turn.moved.id).toBe(holder);
       session = turn.won ? two() : turn.session;
     }
+  });
+});
+
+/**
+ * One seat winning is not the table ending.
+ *
+ * The board read `won` and seated a fresh table on it — `seatTable` with no
+ * seats to keep, which is `createSession` — so at a table of three the first
+ * player to reach Cosmic Consciousness put the other two back on 68 waiting for
+ * a six, with their throws gone. Nobody had to touch anything: somebody else's
+ * win ended your game.
+ *
+ * The engine has never said otherwise. `nextSeat` skips a seat that has
+ * finished and keeps rotating, and `isSessionOver` is the question the board was
+ * actually asking — *is there anybody left who can still move* — which is only
+ * the same question as `won` at a table of one. Third time this file records
+ * that shape: a rule that was true while this surface seated one player, and
+ * false from the moment it seated two.
+ */
+describe('a table that outlives its winner', () => {
+  const three = () =>
+    createSession('device', [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }], LEGACY_MOBILE);
+
+  /**
+   * How far a throw would carry whoever holds the turn.
+   *
+   * A seat waiting to enter sits on `WIN_LOKA`, which is the highest number
+   * there is — so scoring by `loka` alone prefers *not* entering, and a driver
+   * built on it never starts the game. `entered` is what tells the two apart,
+   * the same distinction `standings` makes for the same reason.
+   */
+  const reach = (turn: Thrown): number => {
+    if (turn.won) return Number.POSITIVE_INFINITY;
+    return entered(turn.moved) ? turn.moved.state.loka : -1;
+  };
+
+  /** The roll that carries the seat holding the turn furthest. */
+  const bestRoll = (session: Session, now: number): number => {
+    let best = 1;
+    let far = -Infinity;
+    for (let roll = 1; roll <= 6; roll += 1) {
+      const value = reach(throwFor(session, roll, now));
+      if (value > far) {
+        far = value;
+        best = roll;
+      }
+    }
+    return best;
+  };
+
+  /** Plays a real table until somebody reaches 68. No hand-made states. */
+  const untilSomebodyWins = (): Thrown => {
+    let session = three();
+    for (let at = 0; at < 400; at += 1) {
+      const turn = throwFor(session, bestRoll(session, at + 1), at + 1);
+      if (turn.won) return turn;
+      session = turn.session;
+    }
+    throw new Error('nobody reached Cosmic Consciousness in 400 throws');
+  };
+
+  /** The seats that did not win, with the index they are seated at. */
+  const stillPlaying = (turn: Thrown): Array<[number, SeatedPlayer]> =>
+    turn.session.players
+      .map((player, at): [number, SeatedPlayer] => [at, player])
+      .filter(([, player]) => player.id !== turn.seatId);
+
+  it('says the game is won and the table is not over', () => {
+    const turn = untilSomebodyWins();
+    expect(turn.won).toBe(true);
+    expect(turn.tableOver).toBe(false);
+  });
+
+  it('leaves the other seats standing exactly where they stood', () => {
+    const turn = untilSomebodyWins();
+    const others = stillPlaying(turn);
+    expect(others).toHaveLength(2);
+
+    // The cost of reading `won` as *the table is over*: this is the state each
+    // of them would have been handed back — a seat nobody has entered.
+    const fresh = three();
+    for (const [at, player] of others) {
+      expect(entered(player)).toBe(true);
+      expect(player.state).not.toEqual(fresh.players[at]!.state);
+    }
+  });
+
+  it('hands the turn to a seat that can still throw', () => {
+    const turn = untilSomebodyWins();
+    const holder = currentPlayer(turn.session);
+    expect(holder.id).not.toBe(turn.seatId);
+    expect(canCurrentPlayerRoll(turn.session, Date.now()).allowed).toBe(true);
+  });
+
+  it('is over once the last seat has finished, and only then', () => {
+    // A table of one is where the two rules agree, and it is the case the board
+    // still has to get right: winning alone ends the table, and the fresh
+    // seating that follows is how a player starts again.
+    let session = createSession('device', [{ id: 'p1' }], LEGACY_MOBILE);
+    for (let at = 0; at < 400; at += 1) {
+      const turn = throwFor(session, bestRoll(session, at + 1), at + 1);
+      if (turn.won) {
+        expect(turn.tableOver).toBe(true);
+        return;
+      }
+      session = turn.session;
+    }
+    throw new Error('the one seat never reached Cosmic Consciousness');
   });
 });

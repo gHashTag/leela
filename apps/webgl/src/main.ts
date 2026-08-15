@@ -27,7 +27,7 @@ import {
   writeIntention,
 } from './written';
 import { isFace, pipsFor } from './die';
-import { entered, throwFor, type Hop } from './play';
+import { entered, throwFor, type Hop, type Thrown } from './play';
 import type { SeatedPlayer } from '@leela/engine';
 import { createBoard } from './scene';
 import { atEnd, bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
@@ -988,6 +988,19 @@ const walk = (hop: Hop, mover: string): Promise<void> => {
 
 let busy = false;
 
+/**
+ * Appends who throws next, when the throw actually changed hands.
+ *
+ * `turnPassed` answers null when the mover still holds the turn, so this is
+ * safe to call from every arm that leaves the table standing. It is read off
+ * the session as it is *now*, which is why it must not be called after a
+ * reseat: the seat it would name is one nobody is sitting in yet.
+ */
+const sayNext = (turn: Thrown): void => {
+  const passed = turnPassed(language, turn.seatId, seat().id, seatAt());
+  if (passed !== null) el.say.textContent = `${el.say.textContent} · ${passed}`;
+};
+
 const takeTurn = async (): Promise<void> => {
   if (busy) return;
   busy = true;
@@ -1048,8 +1061,19 @@ const takeTurn = async (): Promise<void> => {
     // they are ready rather than resetting the board underneath them.
     el.say.textContent = messageFor(language, 'app.won');
     el.say.dataset.tone = 'win';
-    seatTable(session.players.length);
-    companion.reset();
+    if (turn.tableOver) {
+      // Everybody has finished, so a fresh table is what the die is for next.
+      // This used to run on `won` alone: at a table of three, the first player
+      // to reach 68 seated a new session over two games in progress. The
+      // engine has always gone on rotating past a finished seat — `tableOver`
+      // is `isSessionOver`, and at a table of one it is still `won`.
+      seatTable(session.players.length);
+      companion.reset();
+    } else {
+      // The table carries on, so it has to say who carries it on. A win with
+      // nothing after it reads, on the winner's device, as the end of the game.
+      sayNext(turn);
+    }
   } else if (turn.rollsAgain) {
     // A six keeps the turn, and the player has to be told — otherwise the only
     // sign is that the die still works, which reads as the app not having
@@ -1062,11 +1086,8 @@ const takeTurn = async (): Promise<void> => {
     el.say.textContent = `${el.say.textContent} · ${messageFor(language, 'roll.again')}`;
   } else {
     // The turn has moved to somebody else, and until now only the colour of the
-    // mark said so. Last of the three arms because the winning one reseats the
-    // whole table, and a seat announced out of a session that has been thrown
-    // away is a seat nobody is sitting in.
-    const passed = turnPassed(language, turn.seatId, seat().id, seatAt());
-    if (passed !== null) el.say.textContent = `${el.say.textContent} · ${passed}`;
+    // mark said so.
+    sayNext(turn);
   }
 
   // Written after the turn has fully resolved, not after the roll: a game saved

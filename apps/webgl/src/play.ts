@@ -6,6 +6,7 @@ import {
   advance,
   currentPlayer,
   hasWon,
+  isSessionOver,
 } from '@leela/engine';
 
 /**
@@ -117,6 +118,21 @@ export interface Thrown {
   /** True when the same seat throws again — a six, under variants that allow it. */
   readonly rollsAgain: boolean;
   readonly won: boolean;
+  /**
+   * True when there is nobody left who can still move.
+   *
+   * Not the same fact as `won`, and the difference is a whole table: `nextSeat`
+   * skips a seat that has finished and goes on rotating, so one player reaching
+   * Cosmic Consciousness at a table of three leaves two games in progress. The
+   * board read `won` and seated a fresh table on it, which put those two back on
+   * 68 waiting for a six with their throws gone — somebody else's win ending
+   * your game, with nothing on screen to say why.
+   *
+   * At a table of one the two are the same answer, which is why it took a table
+   * to see. `isSessionOver` is the engine's own question and is asked here
+   * rather than in `main.ts`, because no rule lives in the wiring.
+   */
+  readonly tableOver: boolean;
 }
 
 /**
@@ -146,6 +162,7 @@ export function throwFor(
     moved,
     rollsAgain: move.keepsTurn,
     won: hasWon(after),
+    tableOver: isSessionOver(move.session),
   };
 }
 

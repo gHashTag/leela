@@ -104,6 +104,7 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | An unusable last-thrower is nobody, never seat one | `tests/kept.test.ts` |
 | A reading never describes a table the engine cannot seat | `tests/kept.test.ts` |
 | A reading's turn always belongs to a seat it reports | `tests/kept.test.ts` |
+| One seat winning does not end anybody else's game | `tests/play.test.ts` |
 
 ## Known open work, roughly in value order
 
@@ -183,6 +184,81 @@ yourself deleting one of these tests, you are re-introducing the defect.
       from the renderer's canvas and `domSurface`; `expo-gl` is the route.
 
 ## Log
+
+### 2026-08-15 — a table outlives its winner
+
+**Changed.** `Thrown` carries `tableOver`, and the winning arm of `takeTurn`
+reseats on that rather than on `won`.
+
+The sharpest thing left, named at the end of this file by the pass that found
+it. `won` and *the table is over* are one fact at a table of one and two facts
+at a table of three, and the board had only ever known the first: the winning
+arm called `seatTable(session.players.length)` with no seats to keep, which is
+`createSession`. So the first player to reach 68 handed the other two a fresh
+table — back on 68 waiting for a six, their throws gone. Nobody had to touch
+anything. Somebody else's win ended your game, and nothing on screen said why.
+
+**The engine never agreed with it.** `nextSeat` skips a seat that has finished
+and goes on rotating; `isSessionOver` is true only once nobody can move. The
+question the board meant to ask has been exported all along. It is asked in
+`play.ts` and not in `main.ts`, because that file's own first paragraph says no
+rule lives in the wiring.
+
+The `else` arm's *whose throw is next* moved into `sayNext` and the winning arm
+calls it too. Its old comment gave the reason it could not: *a seat announced out
+of a session that has been thrown away is a seat nobody is sitting in.* That
+reason is gone with the reseat, and without the sentence a winner's device shows
+`app.won` and stops, which reads as the end of the game rather than as the end of
+one seat's game.
+
+**Cost.** 252 tests where there were 248 — measured in a tree that then read 257,
+because another session added five to `kept.test.ts` while this pass was running.
+Four new in `tests/play.test.ts`.
+
+**The test was checked against the unfixed code, both ways.** Written first, it
+failed on `tableOver` being `undefined`. Then, with the fix in, `tableOver` was
+set back to `hasWon(after)` — the rule `main.ts` actually used — and the
+three-seat test went red on `true` where `false` is required, which is the
+assertion that discriminates the two rules rather than merely noticing a new
+field. Restored, green. The driver plays a real table with no hand-made states,
+and it scores a throw by `entered` rather than by `loka`: a seat waiting to enter
+sits on 68, the highest number there is, so a greedy driver built on position
+alone prefers never to enter and the game never starts.
+
+**Looked at it**, which is the half a headless test cannot reach. Seeded three
+seats — p1 on 53, one step from the arrow at 54 — pinned the die, and threw:
+
+```
+p1 → 54 → 68 · "You reach Cosmic Consciousness. 🕉 · Player 2 is next."
+stored: p1@68 finished, p2@23, p3@51 · turn 1 · die live · seats 3
+```
+
+Then Player 2 threw, took the snake at 24 down to 7, and the turn went on to
+Player 3. Zoomed in: two lotuses, on 7 and on 51, and no ghost at the origin.
+Reloaded: the table came back with its winner in it, on Player 3, die live.
+
+**Found by looking and not fixed.** After a win the header reads `—` and *Throw a
+six to enter the game* — `screenFor` is told `entered`, which is `!is_finished`,
+and a winner and a player waiting to enter are both finished on 68. That sentence
+was accidentally true before this pass, because the table it described was
+reseated a line later. It is false now, and it is the exact confusion the
+invariant table already names as held. The hud is not wrong; its caller passes a
+boolean that cannot tell the two apart.
+
+**Another session was writing this same app while this ran**, and it is worth
+knowing before the next one starts. `src/kept.ts`, `tests/kept.test.ts` and two
+hunks of `src/main.ts` — a `finishedTable` restore path for a *saved* table
+nobody can move in — appeared on disk mid-pass, uncommitted, ten minutes after
+this pass had read the file. An import of `isSessionOver` also appeared in
+`main.ts` unasked and was removed, having been caught by `noUnusedLocals`. Only
+this pass's hunks of `main.ts` were staged, as a blob built from `HEAD` plus
+them, which is exactly the content the gates were run against at 18:07. Rule 5
+says stage named paths; when two sessions are inside one file, named paths are
+not enough and the hunks have to be named too.
+
+**Next.** The header after a win, above. And `apps/miniapp/src/seats.ts` still
+holds `SavedSeats`, `sessionFrom`, `seatsFrom` and `resize` while this surface
+derives its seats in `deities.ts`; two accounts of seating, never reconciled.
 
 ### 2026-08-13 — eighteenth pass: the engine's session, not this app's wrapper
 
@@ -1119,4 +1195,81 @@ for the audits*, and I have now read past that twice in three passes.
 
 Still open and now the sharpest thing left: the winning arm of `takeTurn`
 reseats the whole table, so at a table of three one player winning ends two
-other people's games.
+other people's games. — Fixed 2026-08-15; see the entry at the top of the log.
+
+## 2026-08-15 — a win ends the winner's game, not the table
+
+Two halves, and only one of them is mine.
+
+**The won arm, which was the sharpest thing left.** Found already fixed — by a
+concurrent session, in this working tree, *while this iteration was reading the
+same files*. `Thrown` gained `tableOver`, which is the engine's `isSessionOver`
+asked in `play.ts` where a test can hold it, and the winning arm reseats on
+that instead of on `won`: one player reaching 68 at a table of three no longer
+puts the other two back on 68 with their throws gone. `sayNext` says whose
+throw it is from every arm that leaves the table standing. Four tests drive a
+real three-seat table to a win and check the other seats stand exactly where
+they stood. That work is not mine and is recorded here because its author's
+session ended without logging or committing it — an improvement the ledger
+does not carry is one the next iteration undoes.
+
+**The restore half, which is this iteration's change.** The won arm made
+winners-in-storage a normal state for the first time, and the boot had no
+answer for the record nothing live can produce: a table where *every* seat has
+finished. `read` hands it back without a word — every state is playable, a
+finished game is not a corrupt one — and the engine then refuses to roll at
+it, so the first tap of the die took `advance`'s throw inside `takeTurn` with
+`busy` held and the die disabled. Not a wrong readout: a dead die with the
+lights on, permanently, on a page that booted clean. `finishedTable` in
+`kept.ts` is the question — every seat `hasWon` — and the boot reseats a fresh
+table of the same count, which is the same answer the winning arm gives when
+the last seat finishes live.
+
+Two traps in the predicate, each with a test that fails without it: a seat
+still waiting to enter also sits on 68 with `is_finished` set, so a check on
+the flag alone calls a fresh multi-seat table finished and quietly reseats
+every one at boot — `hasWon` is the discriminator, the same 68-ambiguity this
+repository has now paid for three times. And `every` over an empty list is
+true, while a table with nobody at it is a fresh boot, not an ended game.
+
+**Verified by seeding the record the engine itself built** — a greedy driver
+walked a real state to 68, two copies seated, written to `leela.webgl.game`,
+reload. The boot kept the seat count (two, which is the tell that the record
+was read rather than refused) and the tap that used to be lethal played a
+turn: *You threw 4. It takes a six to enter the game. · Player 2 is next.*
+
+Cost: 257 tests where there were 248 — four the concurrent session's, five
+mine.
+
+**The collision is worth more than the fix.** Two sessions picked the same
+sharpest open item from this file and edited the same three files at the same
+time. It was caught only because an edit of mine landed on a file that had
+changed since it was read; the diff then showed my planned change already
+written, better, by somebody else. What survived scrutiny: their half and mine
+never touch the same lines, and every gate is green over the union. What this
+file should say to the next session: **re-read `git status` immediately before
+every edit, not once at the start** — this tree now demonstrably carries
+*concurrent* work, not just leftover work.
+
+Also measured rather than assumed, from a competitor sweep this pass: the
+dominant hotseat convention (Ludo King, Ludo Life) is exactly what the engine
+does — play continues for the rest, the finisher keeps a visible seat with a
+rank and is skipped. No 3D Leela exists in the EN or RU market, and no
+competitor ships multiplayer, an AI companion and a journal together; this
+surface is alone in all three. The gap the sweep names: our winner simply
+vanishes (`entered` hides the token), where the convention shows a finished
+seat with its placing — `standings` has existed in the engine all along and no
+surface reads it.
+
+Two process notes, both this file already carries in bold and both hit anyway:
+parallel shell calls share one working directory, so the root audits ran from
+`apps/webgl` and `tsc` ran from the root in the same minute — the fourth and
+fifth occurrences of the two traps rule 2 exists for. Absolute paths, one
+command per call, every time.
+
+Found and not fixed: a reseated table forgets its chosen deities (`seatTable`
+with no seats to keep falls back to the defaults — true of the winning arm
+before this pass and true of it now), and a foreign record whose `turnIndex`
+names a seat that has already won is seated as read, which under a ruleset
+that lets a winner re-enter may be a game and under any other is one throw
+from a refusal nobody has looked at.
