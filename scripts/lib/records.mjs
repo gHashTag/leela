@@ -55,6 +55,31 @@ import { codeIn } from './reachable.mjs';
  * Anchored to the start of a line and to an opening bracket, so `new Set(
  * ALLOWED.keys())` — a set built from another list rather than written out — is
  * not counted twice as a list of its own.
+ *
+ * Widened a fourth time, and the axis is not the shape of the list this time but
+ * the PLACE it is written. The first three widenings each asked *what else can a
+ * list look like*; none of them asked *where else can a list be*. `scripts/` and
+ * `scripts/lib/` were the whole world, because for as long as this rule has
+ * existed they were the whole of the tooling — and the rule was therefore true by
+ * accident rather than by construction.
+ *
+ * It was crossed by the first two configuration files ever written at the
+ * repository root. `knip.config.mjs` and `eslint.config.mjs` arrived on
+ * 2026-08-06, both of them carrying exactly what this rule polices:
+ * `ignoreDependencies` naming three packages knip must not report, and a list of
+ * the globs ESLint is pointed at. Records in the exact sense, outside the reach of
+ * the check on the day they were written — and the *fourth* time an excuse list
+ * has sat in the one place nothing looked.
+ *
+ * MEASURED, and it is why the widening is two halves rather than one. Reading the
+ * root directory alone catches neither of them: this regex is anchored to `const
+ * NAME =` at the start of a line, and both lists were written inline inside a
+ * default-exported object literal, where they have no name for a record to cite.
+ * Loosening the regex to match an object property would name every `files:`,
+ * `rules:` and `plugins:` in every config in the tree, which is the check that
+ * cries wolf on correct code and gets deleted rather than obeyed. So the lists are
+ * hoisted to top-level named constants instead — `IGNORED_DEPENDENCIES` and
+ * `LINTED_SOURCES` — and the rule stays exactly as tight as it was.
  */
 const LIST = /^(?:export )?const ([A-Z][A-Z0-9_]*)\s*=\s*(?:new (?:Set|Map)\()?[[{]/gm;
 
@@ -294,6 +319,13 @@ export const DECLARED = [
     because: 'the flags only the online ruleset sets, so a shared claim is not read twice',
   },
   {
+    module: 'audit-variants.mjs',
+    name: 'TELEGRAM_CLAIMS',
+    kind: 'vocabulary',
+    because:
+      'the telegram variant citations against leela-src/leela-chakra-bot, re-read on every run',
+  },
+  {
     module: 'audit-whose.mjs',
     name: 'ALLOWED',
     kind: 'permission',
@@ -323,6 +355,31 @@ export const DECLARED = [
     name: 'RULE_SLUGS',
     kind: 'vocabulary',
     because: 'the chapters that are rules rather than plans, the same slugs in every source',
+  },
+  // The two configuration files at the repository root, which is the fourth
+  // place this rule was widened to reach. Both are named without a `lib/` or
+  // `audit-` prefix because `module` is the path from the root of the scan, and
+  // for these two that root is the repository rather than `scripts/`.
+  {
+    module: 'eslint.config.mjs',
+    name: 'LINTED_SOURCES',
+    kind: 'vocabulary',
+    // Declared as vocabulary because it excuses nothing by its contents: every
+    // glob in it points ESLint AT something. What it can lose is a workspace,
+    // by omission — a package added tomorrow whose sources match no line here
+    // is unlinted and silent about it — and nothing in this repository asks
+    // that question today. Stated rather than hidden behind a `record` naming
+    // an asker that does not exist: closing it means a check that compares
+    // these globs with `workspacePackages`, which is a new audit and therefore
+    // a new CI step.
+    because: 'the globs ESLint is pointed at, which name where to look and excuse nothing',
+  },
+  {
+    module: 'knip.config.mjs',
+    name: 'IGNORED_DEPENDENCIES',
+    kind: 'permission',
+    namesIn: 'apps/mobile/package.json',
+    because: 'packages Detox resolves from the working directory, which no source of ours names',
   },
   {
     module: 'lib/arithmetic.mjs',
@@ -417,7 +474,11 @@ export const DECLARED = [
     name: 'RECORDED',
     kind: 'record',
     askedIn: 'scripts/build-content.mjs',
-    asks: 'missedSpillovers',
+    // Both directions, because `against` returns both and the build puts both.
+    // This said `missedSpillovers` — one scalar, naming a variable that no
+    // longer exists anywhere in the asker — while the build had already grown
+    // the second half of the question. See `directionsOf` below.
+    asks: ['rotted', 'fresh'],
     because: 'plans in the donor carrying the opening of the next one',
   },
   {
@@ -444,6 +505,29 @@ export const DECLARED = [
 
 /** A list as one line, which is how a declaration is matched to it. */
 export const keyOf = (module, name) => `${module}:${name}`;
+
+/**
+ * A module written at the repository root rather than under `scripts/`.
+ *
+ * The fourth widening needed a second answer to *where is this file*, and the
+ * cheap way to give it would have been a second path field on every declaration
+ * — forty-nine entries carrying a thing that is the same for forty-seven of
+ * them. `module` stays the key it has always been and this is the one place that
+ * turns it into a path, so the audit, its test and `stalePermissions` cannot
+ * disagree about where `knip.config.mjs` lives.
+ *
+ * A config at the root and a script under `scripts/` are told apart by the name,
+ * not by a list: `*.config.mjs` is the convention both root files were written
+ * with and the one a third would be written with. Nothing under `scripts/` is
+ * named that way today, and if something ever is, it collides loudly here rather
+ * than quietly — `entriesOf` would be handed a file that does not exist and
+ * `stalePermissions` reports *its entries could not be read*.
+ */
+const ROOT_CONFIG = /^[\w.-]+\.config\.mjs$/;
+
+/** Where a declared module is, as a path from the repository root. */
+export const sourcePathOf = (module) =>
+  ROOT_CONFIG.test(module) ? module : `scripts/${module}`;
 
 /**
  * Lists nobody has declared.
@@ -521,8 +605,8 @@ const namedIn = (source, entry) => {
  * declaration is there, and the question was deleted from the audit. Nothing
  * else would notice — the audit still runs, still passes, and no longer looks.
  *
- * Matched by name rather than as a call, because two of the askers are variables
- * holding the answer (`rotted`, `missedSpillovers`) rather than functions, and
+ * Matched by name rather than as a call, because several of the askers are
+ * variables holding the answer (`rotted`, `fresh`) rather than functions, and
  * outside the imports for the reason above.
  *
  * Asked of code and not of prose, and the hole that closes was measured rather
@@ -548,12 +632,53 @@ const namedIn = (source, entry) => {
  * The boundary matters as much as the comments. `.includes` is a substring test,
  * so an asker named `mended` was answered by the word `amended` and one named
  * `rotted` by `unrotted`; `namedIn` refuses a letter on either side.
+ *
+ * ## One record can name more than one question
+ *
+ * `asks` was a scalar in all thirteen entries, and a question is not always one
+ * word. `lib/spillover.mjs:against` returns TWO directions — `fresh`, findings
+ * nobody recorded, and `rotted`, records matching nothing — and
+ * `scripts/build-content.mjs` puts both of them, in two separate blocks with two
+ * separate exit codes. One scalar can only ever hold one of the two, so half the
+ * question was outside this check by construction: delete the `fresh` block from
+ * the build and, with `asks: 'rotted'`, nothing here would have said a word.
+ *
+ * MEASURED, and it is how the widening was found rather than an argument for it.
+ * The scalar on that entry read `missedSpillovers` — the name of a variable the
+ * build had held before the second direction arrived, and which
+ * `grep -c missedSpillovers scripts/build-content.mjs` now answers `0` for. So
+ * the entry was reported stale for the LOUD reason (an identifier that is simply
+ * gone) while the quiet reason sat underneath it: retyping one word would have
+ * turned the audit green with one of the two directions still unasked.
+ *
+ * `asks` therefore takes a string OR an array of strings, read through
+ * `directionsOf`, and EVERY named direction must be found in the asker by the
+ * same `namedIn` above. One line is still reported per record, naming only the
+ * directions that are missing — a record half-asked is one place to look, not
+ * two, and the reader needs to know which half.
  */
+
+/**
+ * The questions one record's asker must still put, as a list either way.
+ *
+ * A scalar stays legal because twelve of the thirteen entries genuinely have one
+ * question, and rewriting them as one-element arrays would be ceremony that
+ * hides which records really do have two.
+ */
+export const directionsOf = (one) => (Array.isArray(one.asks) ? one.asks : [one.asks]);
+
 export function unasked(declared, sourceOf) {
   return declared
     .filter((one) => one.kind === 'record')
-    .filter((one) => !namedIn(withoutImports(sourceOf(one.askedIn) ?? ''), one.asks))
-    .map((one) => `${keyOf(one.module, one.name)} — ${one.askedIn} no longer asks ${one.asks}`);
+    .flatMap((one) => {
+      const code = withoutImports(sourceOf(one.askedIn) ?? '');
+      const missing = directionsOf(one).filter((asks) => !namedIn(code, asks));
+
+      if (missing.length === 0) return [];
+      return [
+        `${keyOf(one.module, one.name)} — ${one.askedIn} no longer asks ${missing.join(' or ')}`,
+      ];
+    });
 }
 
 /**
@@ -681,9 +806,10 @@ export function entriesOf(source, name) {
  *
  * Injected the way `unasked` is, so the whole of it can be driven from a fixture:
  * `findIn(path)` answers with the text at a repository-relative path, or null.
- * Two kinds of path are asked for — `scripts/<module>` for the list itself, since
- * `module` is written relative to `scripts/` throughout `DECLARED`, and each of
- * `namesIn` for the places its entries must still be named in.
+ * Two kinds of path are asked for — `sourcePathOf(module)` for the list itself,
+ * which is `scripts/<module>` for everything under the scripts directory and the
+ * bare name for a config at the repository root, and each of `namesIn` for the
+ * places its entries must still be named in.
  *
  * Only the entries that are there are asked about, so a list that SHRANK cannot
  * fail this: removing an excuse is the outcome the whole file is arguing for.
@@ -720,9 +846,10 @@ export function stalePermissions(declared, findIn) {
       continue;
     }
 
-    const entries = entriesOf(findIn(`scripts/${one.module}`) ?? '', one.name);
+    const from = sourcePathOf(one.module);
+    const entries = entriesOf(findIn(from) ?? '', one.name);
     if (entries === null) {
-      rotted.push(`${which} — its entries could not be read out of scripts/${one.module}`);
+      rotted.push(`${which} — its entries could not be read out of ${from}`);
       continue;
     }
 

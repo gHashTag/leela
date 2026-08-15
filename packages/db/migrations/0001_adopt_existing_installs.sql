@@ -36,9 +36,17 @@ UPDATE players
 CREATE UNIQUE INDEX IF NOT EXISTS players_legacy_id_key
   ON players (legacy_id) WHERE legacy_id IS NOT NULL;
 
+-- The third copy of the same list, and it had gone stale in the same two
+-- steps: four variants named while `@leela/engine` declared six, missing
+-- `onchain` and `telegram`. This is the file an adoption dump runs, so it is
+-- the one where the refusal would have been met by real rows. Corrected in
+-- place on 2026-08-06 on the same footing as 0000: the exports have not
+-- happened, no connection string exists in this repository, and the file has
+-- never been applied. If it has been applied by the time you read this, add a
+-- forward migration rather than editing this line.
 ALTER TABLE players DROP CONSTRAINT IF EXISTS players_ruleset_known;
 ALTER TABLE players ADD CONSTRAINT players_ruleset_known
-  CHECK (ruleset IN ('classic', 'neuroleela', 'legacy-mobile', 'online'));
+  CHECK (ruleset IN ('classic', 'neuroleela', 'legacy-mobile', 'online', 'onchain', 'telegram'));
 
 -- Left as NOT VALID: existing rows are not checked, new writes are. A player
 -- sitting on a bad plan is a bug to investigate, not a reason to block the

@@ -132,9 +132,19 @@ export function compareConstants(board: ContractBoard): Divergence[] {
   return divergences;
 }
 
-/** A one-line summary, for a build log. */
-export function describeDivergences(divergences: Divergence[]): string {
-  if (divergences.length === 0) return 'the contract and the engine agree on the board';
+/**
+ * A one-line summary, for a build log.
+ *
+ * `subject` is what was compared, and it is an argument rather than the word
+ * *board* because this function had that word written into it. The sixes
+ * comparison prints through here too, and an empty result from it announced
+ * *the contract and the engine agree on the board* — a sentence about twenty
+ * jumps nobody had looked at, printed by a check that had looked at a rule
+ * about dice. Naming the subject at the call site is the whole repair; it is
+ * required, not defaulted, because a default is how the wrong word got here.
+ */
+export function describeDivergences(divergences: Divergence[], subject: string): string {
+  if (divergences.length === 0) return `the contract and the engine agree on ${subject}`;
 
   return divergences
     .map((d) => `${d.from}: engine → ${d.engine ?? 'nowhere'}, contract → ${d.contract ?? 'nowhere'} (${d.reason})`)
@@ -159,6 +169,42 @@ export function describeDivergences(divergences: Divergence[]): string {
  * The engine under `threeSixesReset` walks them back to where the run began —
  * from plan 14 to plan 6 in a run started on the entering six.
  */
+/**
+ * Which of the three things the reading rests on were actually found.
+ *
+ * The five answers below are spread across three places in the Solidity — the
+ * branch that enters the game with a six, the branch a six takes afterwards,
+ * and the `if` inside that one which fires the reset — and until this existed,
+ * *I could not find it* and *the contract does not do it* were the same
+ * sentence. `parseSixes` returned `resetsAt: null` and four `false`s for a
+ * source it had understood nothing of, which is exactly the record a lawful
+ * contract-without-the-rule produces, and `compareSixes` gates every branch
+ * after the first on `resetsAt !== null`. So a source the parser went blind on
+ * came back through `describeDivergences` as agreement.
+ *
+ * The sharp case is a rename that changes no Solidity behaviour at all.
+ * `roll == MAX_ROLL` written as `roll == 6` is the same comparison — the
+ * constant is 6 — and it took the `onSix` regex out, which silently deleted
+ * one of the two genuine divergences this module exists to report.
+ */
+export interface SixesBranchesRead {
+  /** `if (!player.isStart && rollResult == 6)`, the six that enters the game. */
+  entry: boolean;
+  /** `if (roll == MAX_ROLL) { … } else {`, the branch a six takes. */
+  six: boolean;
+  /**
+   * The `if` inside the six branch that fires the reset.
+   *
+   * True when it was read, and also true when the six branch compares the run
+   * length nowhere at all — that is a contract with no three-sixes rule, which
+   * is a lawful variant rather than a failure to read. False only for the
+   * middle case: the run length *is* compared, in a form this reader does not
+   * understand. `player.consecutiveSixes >= 3` is that case, and on a counter
+   * that only ever rises by one it is the same rule written differently.
+   */
+  reset: boolean;
+}
+
 export interface ContractSixes {
   /** The six that enters the game sets the run to this. Null if it sets none. */
   runAfterEntry: number | null;
@@ -170,6 +216,17 @@ export interface ContractSixes {
   resetReturnsToFallback: boolean;
   /** The reset returns without moving, so the throw is spent and nothing else. */
   resetSkipsTheMove: boolean;
+  /**
+   * What the parser could see, when this record came from a parser.
+   *
+   * Absent means the record was stated by hand: a test or a caller describing a
+   * contract it has already read is making a claim, not reporting a reading,
+   * and treating its silence as an unreadable source would turn every such
+   * record into a divergence. `parseSixes` always fills it in. A second reader
+   * of Solidity that did not would put the defect above straight back, so this
+   * is the one field a new parser must not forget.
+   */
+  branchesRead?: SixesBranchesRead;
 }
 
 /**
@@ -185,9 +242,14 @@ export function parseSixes(source: string): ContractSixes {
     : Number.NaN;
 
   // The branch a six takes, up to the `else` that clears the run.
-  const onSix = /if\s*\(\s*roll\s*==\s*MAX_ROLL\s*\)\s*\{([\s\S]*?)\n\s*\}\s*else\s*\{/.exec(source)?.[1] ?? '';
+  const sixBranch = /if\s*\(\s*roll\s*==\s*MAX_ROLL\s*\)\s*\{([\s\S]*?)\n\s*\}\s*else\s*\{/.exec(source);
+  const onSix = sixBranch?.[1] ?? '';
 
   const reset = /if\s*\(\s*player\.consecutiveSixes\s*==\s*(\d+)\s*\)\s*\{([\s\S]*?)\n\s*\}/.exec(onSix);
+
+  // Whether the six branch weighs the run length at all. `+= 1` and `= 0` are
+  // not comparisons and must not count, or every contract would look unread.
+  const comparesTheRun = /player\.consecutiveSixes\s*(?:==|!=|>=|<=|>|<)/.test(onSix);
 
   return {
     runAfterEntry: Number.isNaN(runAfterEntry) ? null : runAfterEntry,
@@ -199,6 +261,11 @@ export function parseSixes(source: string): ContractSixes {
     resetsAt: reset ? Number(reset[1]) : null,
     resetReturnsToFallback: /player\.plan\s*=\s*player\.positionBeforeThreeSixes\s*;/.test(reset?.[2] ?? ''),
     resetSkipsTheMove: /\breturn\s*;/.test(reset?.[2] ?? ''),
+    branchesRead: {
+      entry: entry !== undefined,
+      six: sixBranch !== null,
+      reset: reset !== null || !comparesTheRun,
+    },
   };
 }
 
@@ -210,6 +277,48 @@ export function parseSixes(source: string): ContractSixes {
  */
 export function compareSixes(sixes: ContractSixes): Divergence[] {
   const divergences: Divergence[] = [];
+
+  // What could not be read comes first, because everything below it is then a
+  // statement about a source that was never understood. `from` is 0 for these:
+  // the other entries carry the run length they are about, and a reading that
+  // did not happen is about no run length at all.
+  //
+  // Each of the three is reported separately rather than as one "unreadable",
+  // because they cost different amounts. Losing the six branch loses four of
+  // the five answers; losing the entry branch loses one; losing the reset `if`
+  // loses three of the four inside the six branch. A caller that has to decide
+  // whether to trust the rest needs to know which.
+  const read = sixes.branchesRead;
+
+  if (read !== undefined && !read.six) {
+    divergences.push({
+      from: 0,
+      engine: null,
+      contract: null,
+      reason:
+        "the contract's six branch could not be read, so nothing about the run of sixes was checked",
+    });
+  }
+
+  if (read !== undefined && !read.entry) {
+    divergences.push({
+      from: 0,
+      engine: null,
+      contract: null,
+      reason:
+        'the branch that enters the game with a six could not be read, so nothing about how a run begins was checked',
+    });
+  }
+
+  if (read !== undefined && !read.reset) {
+    divergences.push({
+      from: 0,
+      engine: null,
+      contract: null,
+      reason:
+        'the six branch weighs the run length in a form this reader does not understand, so nothing about the reset was checked',
+    });
+  }
 
   // The engine enters the game with no run: `initialState` starts at zero and
   // the entering six is the arrival, not the first of three.

@@ -10,6 +10,10 @@
  * towards silence, because a checker that cries wolf gets switched off.
  */
 
+// The one list of where a workspace's source and its tests live. A second
+// hand-kept copy of it is the sixth and seventh defect that file records.
+import { workspacePackages } from './claims.mjs';
+
 /**
  * A field declared on an interface or a Drizzle table.
  *
@@ -669,4 +673,75 @@ export function unusedInOwnPackage(declarations, files, sources, ignore = []) {
   }
 
   return found.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Every file under a directory that could hold a call, depth first.
+ *
+ * `.tsx` for the same reason `audit-unread.mjs`'s own walk takes it: a React
+ * screen's tests are `.tsx` as often as not, and a caller invisible because of
+ * a file extension is the blind spot that audit was widened for twice.
+ *
+ * Reader-injected rather than reaching for `node:fs`, so the rule below can be
+ * asserted against a made-up tree — the same arrangement `lib/claims.mjs` uses
+ * and for the same reason.
+ */
+function* filesUnder(read, dir) {
+  for (const entry of read.entries(dir).sort()) {
+    const path = `${dir}/${entry}`;
+    if (read.isDirectory(path)) yield* filesUnder(read, path);
+    else if (/\.(ts|tsx|mjs)$/.test(entry)) yield path;
+  }
+}
+
+/**
+ * The test files, which count as callers and as nothing else.
+ *
+ * MEASURED, and the finding that produced this was a false one. `audit-unread`
+ * reported `floatingAssertions (function, scripts/lib/awaited.mjs)` as an export
+ * with no caller anywhere, and it has thirteen live callers — every one of them
+ * in `apps/mobile/tests/awaited.test.ts`. The audit's corpus is
+ * `workspaceSources(...)` plus `scripts`, and `NOT_SOURCE` in `lib/claims.mjs`
+ * contains `'tests'`, so a caller inside a tests directory was outside the
+ * search BY CONSTRUCTION. That is a shape, not one export: any library function
+ * whose only caller is a test is reported uncalled, every time, and the remedy
+ * the audit prints — *add it to PUBLIC_API with a reason* — would write a
+ * falsehood into the permissions list permanently, where the rule in
+ * `lib/records.mjs` says an excuse outliving its reason is a licence issued for
+ * something else.
+ *
+ * ## Why this is a SEPARATE corpus and not a wider one
+ *
+ * `NOT_SOURCE` is right about everything else it is used for, and folding tests
+ * into `workspaceSources` would switch off three checks at once:
+ *
+ *   - `unreadFields` asks whether a field has a READER. `Reply.broadcast` was
+ *     read in its tests and nowhere else — a field the suite confirms and the
+ *     program ignores — which is precisely the state that audit exists to find.
+ *     Searching tests would have reported it as read.
+ *   - `unusedInOwnPackage` aligns `files` with `sources` by index and asks
+ *     whether an application uses its OWN export. Adding entries to one of the
+ *     two arrays and not the other would mis-attribute every file after the
+ *     first insertion.
+ *   - `staleAmong` and the waivers keyed on it are statements about the
+ *     shipped surface, not about the suite.
+ *
+ * Only `uncalledExports` gets this, because only its question — *does anything
+ * at all call this* — has an honest answer that includes a test. A test IS a
+ * caller: it compiles against the signature and breaks when the signature does.
+ * It is a weaker answer than *the game calls it*, which is why every OTHER
+ * question here still refuses to look at tests.
+ *
+ * @param read  `{ entries(dir), isDirectory(path), exists(path) }`, repo-relative,
+ *              injected exactly as `lib/claims.mjs` takes it.
+ */
+export function testCallerFiles(read, groups) {
+  const found = [];
+
+  for (const one of workspacePackages(read, groups)) {
+    if (one.tests === null) continue;
+    found.push(...filesUnder(read, one.tests));
+  }
+
+  return found;
 }

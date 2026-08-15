@@ -2,8 +2,26 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { blank } from '../../../scripts/lib/source.mjs';
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { boardFor, paintBoard, type ImageLoader } from '../src/paint';
+
+/**
+ * This package's root, taken from this file's own location rather than from the
+ * working directory.
+ *
+ * Seven suites in this directory used to read their fixtures through
+ * `process.cwd()`. That works while Vitest is started inside `apps/miniapp` and
+ * throws ENOENT the moment the same file is collected from anywhere else — a
+ * repository-root run, a coverage pass over all ten workspaces — and the
+ * measured symptom was `ENOENT /Users/playra/leela/src/state.ts`. This file
+ * threw on `src/style.css` and, because the read is at module scope, was
+ * reported as `paint.test.ts (0 test)` rather than as a failure. The long
+ * version is at the top of `partly-written.test.ts`, which is also where the
+ * guard against it lives.
+ */
+const PACKAGE = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
 
 /**
  * A board nobody can read is worse than a plain one.
@@ -76,12 +94,22 @@ describe('the stylesheet keeps its side of it', () => {
   // The class is only worth setting if the CSS reads it. These assert the two
   // rules that make the difference between a readable board and a blank one.
   //
-  // Read from the working directory rather than from `import.meta.url`: under
-  // happy-dom that is an http URL and `readFileSync` will not take it.
+  // RETRACTED, 2026-08-06. This read carried the note "Read from the working
+  // directory rather than from `import.meta.url`: under happy-dom that is an
+  // http URL and `readFileSync` will not take it." That is false, and was
+  // measured false rather than argued away: a throwaway suite with
+  // `// @vitest-environment happy-dom` at the top, run under vitest 2.1.9,
+  // printed `import.meta.url` as
+  // `file:///Users/playra/leela/apps/miniapp/tests/<name>` and `fileURLToPath`
+  // took it. Four happy-dom suites in this same directory already anchor that
+  // way — `a-copy-of-whose-path`, `the-end-of-a-game`, `which-square-is-mine`,
+  // `the-same-seat-asked-three-times`. The note is kept rather than deleted
+  // because it is the reason this file was the last to be anchored.
+  //
   // As a stylesheet. Commented out whole, `.cell.win { color: transparent }`
   // still satisfied the assertion below -- so the rule that keeps the Flower
   // of Life from having a number painted over it could be deleted in place.
-  const style = blank(readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8'), 'css');
+  const style = blank(readFileSync(resolve(PACKAGE, 'src/style.css'), 'utf8'), 'css');
 
   it('keeps the numbers on both boards, because the painting has none', () => {
     // The published app writes every number itself over art that carries only

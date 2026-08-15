@@ -68,6 +68,7 @@ export {
   ONCHAIN,
   ONLINE,
   RULESETS,
+  TELEGRAM,
   isRuleSetId,
   ruleSetById,
 } from './rulesets';

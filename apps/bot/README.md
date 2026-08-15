@@ -207,19 +207,68 @@ the square format both surfaces already read and write, so the bot files it —
 exactly as `/take` does, one account per arrival — and then answers it, which is
 the part only this side can do.
 
-**This needs setting up once, and it is not something the code can do.** The
-launch has to come from a *reply keyboard* button:
+**The bot sends the launch, and it is the one thing only the code can do.** This
+paragraph used to say the opposite — *this needs setting up once, and it is not
+something the code can do* — and it was backwards in the way that mattered: a
+reply keyboard is `reply_markup` on a message the bot sends, and BotFather has
+no reply-keyboard setting at all. So for as long as that sentence stood, the
+operator was told to go and do something impossible, and the bridge was never
+attached. Measured, by driving a real `createBot` through eighteen commands with
+an api-transformer over every outgoing call: 37 API calls, 4 carrying
+`reply_markup`, all four `inline_keyboard`, **zero reply keyboards, zero
+`web_app` buttons**. The handler for `message:web_app_data` had been unreachable
+since it was written.
+
+What is sent now, and from where:
 
 ```
-{ text: '📝 Leela', web_app: { url: 'https://t27.ai/leela/' } }
+{ keyboard: [[{ text: '🗺 Board', web_app: { url: 'https://t27.ai/leela/' } }]],
+  resize_keyboard: true }
 ```
 
-Not an inline button and not a link. `sendData` exists in every browser —
-`telegram-web-app.js` is served from telegram.org and defines it everywhere — so
-it cannot be feature-detected. The mini app therefore offers "Ask the companion"
-only when `initData` is non-empty, which is the one honest sign of being inside
-Telegram at all; whether the launch was from a keyboard button is not visible
-from the page, and is this file's business rather than the code's.
+- `/roll`, `/board`, and the same two as inline buttons — the step, which is
+  where the donor bot put its own `Gameboard` button.
+- After the companion's reflection on a report — the donor's other one.
+- **Into a private chat only**, because Telegram refuses a `web_app` keyboard
+  button anywhere else and a reply keyboard at a table is drawn for everybody.
+  At a table it goes to the player's own chat, the same route the report gate's
+  answers take; when the bot has never been able to write to them, nothing is
+  sent and the existing nudge stands.
+- **Once per chat per process.** A reply keyboard is not markup on a message:
+  Telegram keeps it under the input field until something replaces it, so
+  redrawing it every turn would be an extra message a turn for a button that is
+  already there. A restart forgets, and the cost of forgetting is one message.
+
+`LEELA_MINIAPP_URL` overrides the URL, for a staging copy of the app. It must be
+HTTPS: Telegram refuses a `web_app` button with anything else by failing the
+whole `sendMessage`, so a typo would stop the bot answering rather than produce
+a dead button — an environment variable that is not an HTTPS URL is refused, the
+default used, and the substitution logged.
+
+Not an inline button and not a link, and this is the trap. grammY has
+`.webApp()` on **both** `Keyboard` and `InlineKeyboard`, so nothing in the type
+system stops the wrong one; the difference is a sentence in `Keyboard.webApp`'s
+own doc-comment — *the Web App will be able to send a "web_app_data" service
+message* — that `InlineKeyboard.webApp`'s does not have. The donor bot fell in:
+`leela-chakra-bot/src/commands/step/index.ts` puts `{ text: 'Gameboard',
+web_app: … }` inside an `inline_keyboard`, which opens the board and can never
+answer with anything. `tests/a-launch-that-can-answer.test.ts` holds the shape —
+for every inbound update kind `bot.ts` registers that only the bot's own markup
+can produce, something the bot sends must be able to produce it — and refuses
+the inline form explicitly.
+
+`sendData` exists in every browser — `telegram-web-app.js` is served from
+telegram.org and defines it everywhere — so it cannot be feature-detected. The
+mini app therefore offers "Ask the companion" only when `initData` is non-empty,
+which is the one honest sign of being inside Telegram at all; whether the launch
+was from a keyboard button is not visible from the page.
+
+**Known, and deliberately not fixed here:** `initData` is non-empty for a Menu
+Button launch too, where `sendData` does nothing at all. So a player who opens
+the app from the menu instead of from this keyboard is still offered a control
+that silently does not work. That is `apps/miniapp/src/main.ts`'s to fix and it
+is left untouched, so that this change and that one do not have to be reviewed
+as one.
 
 ## What is missing
 

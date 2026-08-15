@@ -4,8 +4,10 @@
     "slug": "leela",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "updates": {
+      "enabled": false
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "xyz.ghashtag.dharma"

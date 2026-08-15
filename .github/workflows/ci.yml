@@ -20,7 +20,7 @@ jobs:
 
       - name: Typecheck
         run: |
-          for pkg in packages/engine packages/content packages/journal packages/db packages/ai packages/contracts apps/bot apps/miniapp apps/docs apps/mobile; do
+          for pkg in packages/engine packages/content packages/journal packages/db packages/storage packages/ai packages/contracts apps/bot apps/miniapp apps/docs apps/mobile apps/webgl; do
             echo "::group::typecheck $pkg"
             (cd "$pkg" && bunx tsc --noEmit)
             echo "::endgroup::"
@@ -34,7 +34,7 @@ jobs:
       # the test built two lines earlier.
       - name: Typecheck what ships
         run: |
-          for pkg in packages/engine packages/content packages/journal packages/db packages/ai packages/contracts apps/bot apps/miniapp apps/docs apps/mobile; do
+          for pkg in packages/engine packages/content packages/journal packages/db packages/storage packages/ai packages/contracts apps/bot apps/miniapp apps/docs apps/mobile apps/webgl; do
             echo "::group::strict $pkg"
             (cd "$pkg" && bunx tsc --noEmit -p tsconfig.src.json)
             echo "::endgroup::"
@@ -42,7 +42,7 @@ jobs:
 
       - name: Test
         run: |
-          for pkg in packages/engine packages/content packages/journal packages/db packages/ai packages/contracts apps/bot apps/miniapp apps/docs apps/mobile; do
+          for pkg in packages/engine packages/content packages/journal packages/db packages/storage packages/ai packages/contracts apps/bot apps/miniapp apps/docs apps/mobile apps/webgl; do
             echo "::group::test $pkg"
             (cd "$pkg" && bunx vitest run)
             echo "::endgroup::"
@@ -142,7 +142,52 @@ jobs:
       # warning that names them, and an exit code is what CI reads -- so the
       # suite said green for six malformed-input cases standing on a rescue
       # Vitest has announced it is removing.
-      - run: node scripts/audit-awaited.mjs
+      #
+      # This was scripts/audit-awaited.mjs, 125 lines walking the TypeScript AST
+      # by hand. It is deleted: typescript-eslint answers the same question with
+      # type analysis instead of shapes, so it also sees a promise the source
+      # does not spell -- one returned through a helper, or an async function
+      # handed to something that wanted a synchronous one. Both readers were run
+      # against the same planted fault first and both named it, which is why the
+      # bespoke one could be removed rather than merely doubted. The reasoning
+      # the sweep carried, including the six kept-game cases that motivated it,
+      # moved verbatim into the header of eslint.config.mjs.
+      #
+      # Enforces exactly three rules as errors: no-floating-promises,
+      # no-misused-promises, await-thenable. require-await is deliberately NOT
+      # enabled -- measured at 155 findings and 0 defects, all async test doubles
+      # or async wrappers over synchronous SQLite, which is a check people delete
+      # rather than obey. eslint.config.mjs says so at length.
+      - run: bunx eslint
+
+      # The workflows in this directory, read as GitHub Actions rather than as
+      # text. actionlint 1.7.12, through the `github-actionlint` wrapper.
+      #
+      # It found NOTHING on the day it went in - 0 findings over ci.yml and
+      # pages.yml, 2026-08-06 - and that is why it is here rather than why it is
+      # not. It is a standing guard over a class nothing else in this repository
+      # covers: an untrusted `${{ }}` interpolated straight into a `run:` block,
+      # which is a shell injection through a commit message; a `runs-on` label
+      # that does not exist, which is a job that queues forever; a `needs:`
+      # naming a job that is not there. Every one of those is a defect that
+      # ships green from a text editor.
+      #
+      # Proven to discriminate before it was trusted, and not by argument: with
+      # `run: echo ${{ github.event.head_commit.message }}` temporarily added to
+      # this file, it exits 1 naming the file, the line and the column, and says
+      # the expression is potentially untrusted and should go through an
+      # environment variable. That step was reverted.
+      #
+      # This is also the tool whose absence cost two passes of teaching bespoke
+      # code to read YAML. scripts/lib/runnable.mjs still reads this file, and
+      # keeps its own question - *is this audit run by CI* - which is about this
+      # repository and not about GitHub Actions. Neither answers the other's.
+      #
+      # `bun run actionlint`, one spelling, in the root manifest beside `knip`.
+      # KNOWN: the wrapper downloads the official binary from GitHub Releases on
+      # first run rather than at install, so this step needs the network and a
+      # release-page outage turns it red for a reason that is not a workflow.
+      - run: bun run actionlint
 
       # The per-package counts in README.md, against the suites that produce
       # them. Maintained by hand for forty passes, which is exactly how long a
@@ -201,12 +246,97 @@ jobs:
       # why nothing had gone wrong yet and exactly why it would.
       - run: node scripts/audit-doubles.mjs
 
+      # The steps above are also `bun run audit`, which the root manifest added
+      # so that `bun run verify` — the command README tells a person to run —
+      # can go red for the reasons this job goes red. It ran no audit at all
+      # until then, so a stale count was invisible locally and red on the push.
+      #
+      # Two spellings of "which audits run" is exactly the duplication this
+      # repository keeps finding, and they are NOT collapsed into one here, for
+      # a measured reason. `auditsRunByCi` in scripts/lib/runnable.mjs answers
+      # "is this audit run" by reading each live `run:` for `node scripts/x.mjs`
+      # — a step that says `bun run audit` names no script, so it sees none.
+      # MEASURED on 2026-08-06, in memory, without editing this file: replacing
+      # every `- run: node scripts/audit-*.mjs` line below with `bun run audit`
+      # takes `checkAuditsRun` from 0 problems to 14, each of the form "nothing
+      # runs it and it does not say what it needs". CI would go red for saying
+      # the same thing more briefly.
+      #
+      # So the single spelling is possible only once that reader follows a
+      # package script into the manifest, which is a change to
+      # scripts/lib/runnable.mjs and not to this file. Until then the two lists
+      # cannot drift silently in the direction that matters: an audit added to
+      # the directory and missed here fails `audit-scripts` below, and one
+      # missed by the gate fails
+      # packages/content/tests/a-gate-that-runs-no-audit.test.ts.
+
       # Every script starts under the runtime it names, and every audit is
       # either run here or says in its own header why it cannot be. audit-copies
       # - the check that reads eighteen copies of the board - sat broken under
       # `node` for passes, and nothing noticed, because a check nobody can run
       # reads exactly like a check that passes.
       - run: node scripts/audit-scripts.mjs
+
+      # Every dependency a manifest declares, against the code that uses it.
+      #
+      # It replaces nothing, and that is the finding: twenty-one audits read
+      # source, tests and workflows, and not one of them reads a package.json
+      # against the tree. `@eslint/js` was declared in the root manifest and was
+      # dead the day it arrived - one grep hit in the whole repository, its own
+      # declaration - and nothing here would ever have said so. Six workspaces
+      # declared @vitest/coverage-v8 with no coverage script to run it. And
+      # apps/mobile/app.json promised an appearance behaviour whose package was
+      # never installed, on the app published as com.leelagame.
+      #
+      # It OVERLAPS scripts/audit-unread.mjs and does not replace that either.
+      # knip resolves imports, so it finds 21 exports and 6 types with no caller
+      # where audit-unread - which counts a name mentioned anywhere, its own
+      # declaring file included, as a caller - finds none. Those classes are
+      # measured and deliberately NOT gated: 27 findings is not a number anybody
+      # triages in one sitting, and a gate over findings nobody has read is one
+      # somebody switches off. The field half of audit-unread has no substitute
+      # anywhere in this survey and keeps running.
+      #
+      # Three classes only - a package is installed or it is not, a manifest
+      # lists it or it does not, a binary is on the PATH or it is not. No
+      # judgement in any of them.
+      #
+      # `bun run knip`, not `bunx knip`: knip 6.32.0 does not discover a config
+      # file named knip.config.mjs, so the script names it with --config. The
+      # measurement, and everything above at length, is in knip.config.mjs.
+      - run: bun run knip
+
+      # The import graph, read as a graph. Twenty-one bespoke audits read
+      # source, tests, manifests and workflows, and not one asks whether a
+      # module depends on itself through its neighbours, or whether a library
+      # reaches into an application. No test asks either. dependency-cruiser
+      # 18.1.1 does, over the RUNTIME graph, and both rules were green the day
+      # they went in - which is the point: a direction that is correct today
+      # and that one convenient import would reverse.
+      #
+      # Proven to discriminate before it was trusted, and not by argument: with
+      # packages/engine/src/zz-cycle-probe.ts temporarily importing from
+      # apps/bot/src/store, this step exits 1 and names the module and the rule.
+      # That probe was deleted.
+      #
+      # THE FALSE GREEN, and the reason this step is not the whole gate.
+      # dependency-cruiser needs a resolvable `typescript` to parse TypeScript
+      # at all, and when it cannot find one it does not fail - it prints
+      # "no dependency violations found (11 modules, 5 dependencies cruised)",
+      # exits 0, and puts `missing-typescript-transpiler` on a LATER line. The
+      # real graph is 333 modules. MEASURED 2026-08-06 through
+      # `npx --yes dependency-cruiser` from a directory where typescript does
+      # not resolve. A human reads the tick, CI reads the exit code, and
+      # neither ever learns that the tool read nothing.
+      #
+      # So: `bun run depcruise`, never `bunx` and never `npx` - the script
+      # resolves the local binary in node_modules/.bin, beside the typescript
+      # this repository installs. And the count is guarded independently by
+      # packages/journal/tests/a-package-that-needs-an-app.test.ts, which
+      # re-runs the cruise as JSON and holds the module count against the
+      # TypeScript files it walks on disk. An exit code alone is not evidence
+      # that anything was read.
+      - run: bun run depcruise
 
   content-is-reproducible:
     # The dataset under packages/content/data is generated, and this job checks

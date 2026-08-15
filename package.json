@@ -13,10 +13,32 @@
     "typecheck": "bun run --filter '*' typecheck",
     "typecheck:strict": "bun run --filter '*' typecheck:strict",
     "content:build": "node scripts/build-content.mjs",
-    "verify": "bun run content:build && bun run typecheck && bun run typecheck:strict && bun run test"
+    "audit": "node -e \"const {readdirSync,readFileSync}=require('node:fs');const {execFileSync}=require('node:child_process');const excused=JSON.parse(readFileSync('package.json','utf8')).auditsThisGateCannotRun||{};const excuse=p=>String(excused[p]||'').trim();const onDisk=readdirSync('scripts').filter(n=>n.startsWith('audit-')&&n.endsWith('.mjs')).sort().map(n=>'scripts/'+n);const problems=[];for(const p of Object.keys(excused))if(!onDisk.includes(p))problems.push(p+': excused, and not on disk - an exemption for a file nobody has');for(const p of onDisk)if(excused[p]!==undefined&&excuse(p)==='')problems.push(p+': excused with no reason given');const toRun=onDisk.filter(p=>excuse(p)==='');if(toRun.length===0)problems.push('every audit on disk is excused, so this gate runs nothing');for(const p of onDisk)if(excuse(p)!=='')console.log('excused  '+p+': '+excuse(p));for(const p of toRun){const rt=(readFileSync(p,'utf8').match(/^#!\\s*\\/usr\\/bin\\/env\\s+(\\w+)/)||[])[1];if(!rt){problems.push(p+': no shebang, so nothing says how to run it');continue;}console.log('\\n--- '+rt+' '+p);try{execFileSync(rt,[p],{stdio:'inherit'});}catch(err){problems.push(p+': '+rt+' exited '+(err.status===undefined||err.status===null?String(err.message).split('\\n')[0]:err.status));}}if(problems.length){console.error('\\n'+problems.length+' audit(s) neither ran nor passed:');for(const t of problems)console.error('  '+t);process.exit(1);}console.log('\\n'+toRun.length+' audits ran and passed, and every other audit-*.mjs on disk is excused above with a reason.');\"",
+    "coverage": "vitest run --workspace coverage.workspace.ts --coverage",
+    "knip": "knip --config knip.config.mjs --include dependencies,unlisted,binaries",
+    "actionlint": "github-actionlint .github/workflows/*.yml",
+    "depcruise": "depcruise --config .dependency-cruiser.mjs --output-type err-long packages apps",
+    "mutate:engine": "stryker run stryker.conf.mjs",
+    "verify": "bun run content:build && bun run typecheck && bun run typecheck:strict && bun run audit && bun run test"
+  },
+  "auditsThisGateCannotRun": {
+    "scripts/audit-copies.mjs": "reads eighteen copies of the board in the donor clones at ../leela-src, which a clone of this repository does not carry. MEASURED 2026-08-06: it exits 0 on this machine only because those clones happen to be on this disk.",
+    "scripts/audit-variants.mjs": "holds what legacy-mobile and online claim against the apps they were taken from, and those apps live in ../leela-src, not here.",
+    "scripts/audit-podlock.mjs": "reads ../leela-src/leela/ios/Podfile.lock against that app's installed node_modules; the published app is a donor clone and the native side is never installed here.",
+    "scripts/audit-deployment.mjs": "asks four public chains where the contract is. MEASURED 2026-08-06: exit 2, because polygon did not answer - a gate that goes red when an RPC rate-limits is one people stop reading.",
+    "scripts/audit-mutants.mjs": "edits shipped source on purpose and runs a full suite per decision, minutes of it. A gate must not mutate the tree it is checking, and a run stopped halfway is already caught by content:build and by audit-scripts, both of which read scripts/.mutants-undo.json."
   },
   "devDependencies": {
+    "@stryker-mutator/api": "^9.6.1",
+    "@stryker-mutator/core": "^9.6.1",
+    "@stryker-mutator/vitest-runner": "^9.6.1",
+    "@vitest/coverage-v8": "^2.1.8",
+    "dependency-cruiser": "^18.1.1",
+    "eslint": "^10.8.0",
+    "github-actionlint": "^1.7.12",
+    "knip": "^6.32.0",
     "typescript": "^5.6.3",
+    "typescript-eslint": "^8.66.0",
     "vitest": "^2.1.8"
   },
   "license": "MIT"

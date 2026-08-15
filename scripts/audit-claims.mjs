@@ -40,33 +40,129 @@
  */
 
 /*
- * KNOWN AND UNRESOLVED, 2026-08-06: this audit cannot be green in two places at
- * once, and the numbers in README.md are the ones a STRANGER gets.
+ * RETRACTED, 2026-08-06, on the same day it was written. The paragraph that
+ * stood here said `packages/content` runs 705 cases on a machine holding the
+ * donor clones at `../leela-src` and 661 on a fresh clone, because
+ * `content.test.ts` parameterises over that tree; that README therefore
+ * publishes the stranger's numbers, content 661 and total 3499; and that
+ * `--write` must never be run on a donor machine because it would write 705.
  *
- * `packages/content` runs 705 cases on the machine the donor repositories are
- * cloned to (`/Users/playra/leela-src`) and 661 on a fresh clone, because
- * `content.test.ts` parameterises over what it finds in that tree. CI has no
- * donors, so CI is the stranger, and README states CI's numbers: content 661,
- * total 3499.
+ * Every clause of that was ASSUMED. None of it was measured. It is false, and
+ * it is left here rather than deleted because the way it was wrong matters more
+ * than the number it got wrong.
  *
- * The consequence, stated rather than hidden: run this on a machine holding the
- * donor clones and it reports `@leela/content: the table says 661, the suite
- * runs 705`, and it is right to. Do NOT "fix" that by writing 705 — README is
- * read by people who have just cloned, and 705 is false for every one of them,
- * and turns CI red besides. `--write` on a donor machine will do exactly that,
- * so do not run it there.
+ * What was MEASURED, and how. `git archive HEAD | tar -x -C /tmp/freshleela`
+ * puts the committed tree — and nothing else — in a directory whose `..` is
+ * `/tmp`, where no `leela-src` exists and never has. `node_modules` was
+ * symlinked in, since dependencies are not what is in question. That tree runs
+ * `Test Files 29 passed (29) / Tests 705 passed (705)`, under `bunx vitest run`
+ * and under `npx vitest run` alike. This working tree, on a machine that does
+ * hold the donor clones, runs the same 29 files and the same 705 cases. Same
+ * data, same count, donors present or absent. The donor clones are not the cause.
  *
- * The real repair is to make the count environment-independent: a suite whose
- * number of cases depends on a directory outside the repository cannot be held
- * to one published figure. Either the donor-driven cases collapse into a single
- * case asserting the tree is absent, or this audit learns to exclude them.
- * Until one of those lands, this paragraph is the whole of the guard, which is
- * exactly the kind of thing this repository normally refuses to accept.
+ * AND THE RETRACTION ITSELF CLOSED WRONG, which makes three wrong explanations
+ * of one gap and is why this paragraph keeps growing rather than being deleted.
+ * It used to close by calling 661 impossible — a figure it said nothing had ever
+ * run. CI ran it twice in one go: GitHub Actions run 31072659705, commit
+ * d0ad661, `Tests 661 passed (661)` in the `test` job's own vitest output, and
+ * `@leela/content … 661` printed by this very script's step in the same log. Two
+ * exact figures and a named cause again, about a number sitting in this
+ * repository's own CI log. The measurement that was skipped both times cost one
+ * command.
+ *
+ * The old sentence is paraphrased rather than quoted, and that is a deliberate
+ * and slightly uncomfortable choice. This repository's habit is to keep the
+ * exact wrong words, because the record of a defect is worth more than a tidy
+ * file — but the words in question are a claim about a number, and a claim about
+ * a number is the one kind of sentence somebody greps for. Left quoted, every
+ * search for the false statement lands on the retraction of it, which is how a
+ * check comes to cry wolf on the file that fixed the thing. What it said is
+ * above, in full, in different words.
+ *
+ * The cause, MEASURED on 2026-08-06 and needing no Linux runner to see:
+ * `packages/content/tests/undo.test.ts` generated one test case per byte of
+ * `JSON.stringify({ path, original })`, and `path` was a file under
+ * `mkdtempSync(join(tmpdir(), 'leela-undo-'))`. That note is 134 bytes when
+ * `tmpdir()` is macOS's `/var/folders/cm/2n1qdh892xldd1rc2ly1jv8r0000gn/T` and
+ * 90 bytes when it is Linux's `/tmp` — 44 cases of difference, which is the
+ * entire published gap, and per-file JSON put all 44 of it in that one file: 171
+ * cases here against CI's 127, every other file in the package agreeing with CI
+ * to the case. Running the package twice on this machine under two `TMPDIR`s of
+ * different lengths reproduced it directly, 739 against 754. That grid is built
+ * from a literal path now and asserts its own width, so the number this script
+ * measures here is the number it measures there.
+ *
+ * Why the `git archive` run above looked decisive and was not: it moved the
+ * repository into `/tmp/freshleela` and left `tmpdir()` alone. The count never
+ * depended on where the checkout sits. It depended on where the machine puts
+ * temporary files, which extracting a tree into `/tmp` does not change.
+ *
+ * What was ASSUMED and is false, specifically. `LANGUAGES` does not come from
+ * the filesystem: it is a literal array of 22 subtags in
+ * `packages/content/src/language.ts`, and the four `it.each(LANGUAGES)` blocks
+ * in `content.test.ts` are 22 cases each wherever they run. The dataset they
+ * read, `packages/content/data`, is fully tracked — 26 files on disk, the same
+ * 26 in `git ls-files`. The donor path does appear in `packages/content/tests`,
+ * which is presumably what the guess was built on, but only in
+ * `a-build-that-refuses.test.ts`, where `existsSync(DONOR)` chooses between two
+ * *labels* for a row of a fixed two-row grid. It changes what a case is called.
+ * It cannot change how many there are.
+ *
+ * Why this is the worst available mistake rather than an ordinary one: the
+ * retracted paragraph read as a measurement. It carried two exact figures, a
+ * named cause, and an operational warning, and it was written into the audit
+ * whose entire purpose is to stop this repository from publishing numbers
+ * nobody checked. A confident sentence about a count, never run — the same
+ * shape as the bot that "dies without a volume" and did not, and the contract
+ * "permanently deployed" to a dead network, both named at the top of this file.
+ * The check was not defeated from outside; the exemption was written into it.
+ *
+ * What remains true, and it is the only part that survives: a count kept by
+ * hand is a count that will be wrong. That is why this audit runs the suites.
+ * Recover the table with `node scripts/audit-claims.mjs --write` on any machine
+ * — there is no longer a machine on which that writes the wrong number, because
+ * there was never more than one number. The guard against the *shape* of the
+ * defect (a published count that could come to depend on something a stranger's
+ * clone does not carry) lives in
+ * `packages/content/tests/a-count-a-stranger-cannot-run.test.ts`.
+ */
+/*
+ * And it had the defect it was written to describe. MEASURED on 2026-08-06, on
+ * an ordinary working tree with one assertion red in `@leela/db`:
+ *
+ *     Measured from a suite that is failing. The counts stand; the tests do not:
+ *
+ *       @leela/db: 1 of 108 failing
+ *
+ *     Every number the README states is the number the suites run.
+ *
+ *     The numbers agree. The suites do not all pass.
+ *
+ * Three sentences, and the middle one is an unconditional all-clear standing
+ * between the alarm and the correction of itself. The chain that printed it
+ * asked only `problems.length === 0` — the arithmetic — while the decision to
+ * fail was taken forty lines below over `red`, the suites that ran and did not
+ * pass. The exit code was 1 and it was right. The sentence above it said the
+ * README was verified, and a reader who reads the last lines of a run rather
+ * than `$?` was told exactly that, on a run whose own next line contradicted it.
+ *
+ * That is the defect this repository has now found seven times, and this file is
+ * the one that carries the paragraph about it at the top of every sibling: the
+ * exit code is right and the sentence under it is wrong, and a human reads the
+ * sentence. `scripts/lib/report.mjs` exists so it cannot be written again — its
+ * guarantee 1 is that the all-clear is printed if and only if nothing failing
+ * has anything to say — and this audit was the one that had not been converted.
+ * Nothing here decides when to print any more: the three findings are handed
+ * over as sections, the closing sentence is the module's `allClear`, and the
+ * code is what the module returned. The two sentences that qualify a run rather
+ * than clearing it stay conditional, because they are not all-clears; see them
+ * below, where they are collected as a note that prints BESIDE a failure.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { checkCounts, checkTotal, claimedCounts, claimedTotal, rewriteClaims } from './lib/claims.mjs';
+import { finish } from './lib/report.mjs';
 import { UnreadableSuiteReport, capturedOutput, countsFrom } from './lib/suites.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -158,24 +254,6 @@ for (const { name, at } of packages()) {
 
 console.log(`\nChecked ${actual.size} packages against the table in README.md.\n`);
 
-if (red.size > 0) {
-  // Said before the comparison, and separately from it. A red suite is not
-  // this check's subject — but its counts are measured from a run that stopped
-  // short of nothing, so they are reported, and a reader is told which numbers
-  // came out of a failing run rather than being left to wonder.
-  console.log('Measured from a suite that is failing. The counts stand; the tests do not:\n');
-  for (const [name, counts] of red) {
-    console.log(`  ${name}: ${counts.failed} of ${counts.total} failing`);
-  }
-  console.log('');
-}
-
-if (unreadable.size > 0) {
-  console.log('No measurement at all for these — nothing to compare README against:\n');
-  for (const [name, error] of unreadable) console.log(`  ${name}: ${error.message}`);
-  console.log('');
-}
-
 if (write) {
   if (red.size > 0) {
     // Said, not enforced. A red assertion still counts its test, so the number
@@ -215,8 +293,8 @@ const stated = claimedCounts(current);
 // A package whose suite could not be read is held out of the comparison rather
 // than compared against nothing. `checkCounts` would otherwise say it "is in
 // the table and ran nothing", which is a different and untrue sentence: it ran,
-// and this script failed to read it. That failure is already reported above,
-// in its own words, and it sets its own exit code below.
+// and this script failed to read it. That failure is reported in its own words
+// by the `unmeasured` section below, and it is what raises the exit code to 2.
 const comparable = new Map([...stated].filter(([name]) => !unreadable.has(name)));
 
 const problems = [
@@ -226,43 +304,95 @@ const problems = [
   ...checkTotal(stated, claimedTotal(current)),
 ];
 
+/**
+ * The two sentences that qualify a run instead of clearing it.
+ *
+ * Collected as a note rather than handed over as the `allClear`, and the
+ * difference is the whole reason they still exist. `finish` suppresses the
+ * all-clear whenever anything failing has something to say — which is exactly
+ * what these two are for saying it BESIDE. 'some rows could not be measured'
+ * only ever prints on a run that already has an unreadable suite to report, so
+ * an `allClear` spelling of it would be a sentence that is suppressed in every
+ * case it was written for, which is a deletion wearing a repair's clothes.
+ *
+ * The first of them was found by breaking this on purpose: with every suite
+ * unreadable, `actual` is empty, `checkCounts` has nothing to disagree with, and
+ * the table still adds up to the total it states — so the check congratulated
+ * README on numbers it had not measured. A check that says "all clear" after
+ * failing to look is the exact failure this repository keeps finding elsewhere,
+ * arriving here. The second is the same care one step down: some rows were
+ * checked and some were not, and saying "every number" would quietly claim the
+ * unmeasured ones too.
+ *
+ * Both stay conditional on `problems.length === 0`, because both are claims
+ * about the arithmetic, and neither is true on a run that found a stale row.
+ */
+const qualified = { failing: false, lines: [] };
 if (problems.length === 0 && actual.size === 0) {
-  // Found by breaking this on purpose: with every suite unreadable, `actual` is
-  // empty, `checkCounts` has nothing to disagree with, and the table still adds
-  // up to the total it states — so the check congratulated README on numbers it
-  // had not measured. A check that says "all clear" after failing to look is
-  // the exact failure this repository keeps finding elsewhere, arriving here.
-  console.log('Nothing was measured, so nothing about README was checked.');
+  qualified.lines.push('Nothing was measured, so nothing about README was checked.');
 } else if (problems.length === 0 && unreadable.size > 0) {
-  // The same care one step down: some rows were checked and some were not, and
-  // saying "every number" would quietly claim the unmeasured ones too.
-  console.log(`Every number that could be measured is the number README states. ${unreadable.size} could not be.`);
-} else if (problems.length === 0) {
-  console.log('Every number the README states is the number the suites run.');
-} else {
-  for (const problem of problems) console.log(`  ${problem}`);
-  console.log(
-    write
-      ? '\nWhat is left is not arithmetic: a row added or removed says what a package is for.'
-      : '\nA number kept by hand is a number that will eventually be wrong. Fix it with --write.',
+  qualified.lines.push(
+    `Every number that could be measured is the number README states. ${unreadable.size} could not be.`,
   );
 }
+
+/**
+ * A red suite is not this check's subject — but its counts are measured from a
+ * run that stopped short of nothing, so they are reported, and a reader is told
+ * which numbers came out of a failing run rather than being left to wonder.
+ *
+ * Failing, and that word is the repair. `red` used to set the exit code and
+ * nothing else: it was consulted by the code chain and by no printed sentence,
+ * which is how a run with a failing suite and a correct table came to close on
+ * 'Every number the README states is the number the suites run.' Saying it once,
+ * here, at the place the finding is collected, is what makes the last line and
+ * the exit code agree without either of them being written twice.
+ */
+const failingSuites = {
+  failing: true,
+  heading: 'Measured from a suite that is failing. The counts stand; the tests do not:\n',
+  lines: [...red].map(([name, counts]) => `  ${name}: ${counts.failed} of ${counts.total} failing`),
+  epilogue: problems.length === 0 ? '\nThe numbers agree. The suites do not all pass.' : '',
+};
+
+/** A row of the table that is not the number its suite runs. */
+const stale = {
+  failing: true,
+  lines: problems.map((problem) => `  ${problem}`),
+  epilogue: write
+    ? '\nWhat is left is not arithmetic: a row added or removed says what a package is for.'
+    : '\nA number kept by hand is a number that will eventually be wrong. Fix it with --write.',
+};
+
+/** A package that ran and could not be read: the absence of a measurement. */
+const unmeasured = {
+  failing: true,
+  heading: 'No measurement at all for these — nothing to compare README against:\n',
+  lines: [...unreadable].map(([name, error]) => `  ${name}: ${error.message}`),
+  epilogue: `\n${unreadable.size} suite(s) produced no readable report. That is not a stale number; it is a missing measurement.`,
+};
+
+process.exitCode = finish({
+  sections: [qualified, failingSuites, stale, unmeasured],
+  // Withheld when one of the two qualifying sentences already spoke: those are
+  // the arms this one used to share a chain with, and a chain prints one arm.
+  // `finish` withholds it for the other reason — that something failing spoke —
+  // which is the half this file kept getting wrong on its own.
+  allClear: qualified.lines.length > 0 ? '' : 'Every number the README states is the number the suites run.',
+});
 
 // Three outcomes, three exit codes, because they ask for three different
 // things from whoever is reading. 1 says the check has an answer and the answer
 // is that something disagrees — retype the table, or fix the failing suite. 2
 // says the check has no answer for at least one package, which no amount of
-// editing README will settle. The distinction is the point of this pass: the
+// editing README will settle. The distinction is the point of that pass: the
 // old code reported both of them, and the ordinary case of a single red
 // assertion, as the same thing — a stack trace.
-if (unreadable.size > 0) {
-  console.log(
-    `\n${unreadable.size} suite(s) produced no readable report. That is not a stale number; it is a missing measurement.`,
-  );
-  process.exitCode = 2;
-} else if (problems.length > 0 || red.size > 0) {
-  if (problems.length === 0) {
-    console.log('\nThe numbers agree. The suites do not all pass.');
-  }
-  process.exitCode = 1;
-}
+//
+// The reporter returns 0 or 1, because those are the only two things a closing
+// sentence can be. 2 is not a third verdict on the same question, it is a
+// different question — was there anything to measure — so it is raised here,
+// after the sentence has been printed, over the section that reported it. This
+// cannot overwrite a decision to fail: `unmeasured` is a failing section, so
+// `finish` had already returned 1 on every run that reaches this line.
+if (unreadable.size > 0) process.exitCode = 2;

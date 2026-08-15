@@ -36,6 +36,7 @@ import {
   type SeatedPlayer,
   type Session,
 } from '@leela/engine';
+import { seatId } from '@leela/journal';
 import { loadState, type GameStorage } from './state';
 
 /** Where the seated game lives. A shape change starts a new key. */
@@ -54,10 +55,11 @@ export interface SavedSeats {
   players: SavedSeat[];
 }
 
-/** Seat ids, so a journal can be kept per player and survive a reload. */
-export function seatId(index: number): string {
-  return `p${index + 1}`;
-}
+// Seat ids, so a journal can be kept per player and survive a reload. The
+// naming moved to `@leela/journal`, because the phone and the web board need
+// the same names and neither can import an app: a journal written under `p1`
+// here has to be found under `p1` everywhere.
+export { seatId } from '@leela/journal';
 
 /**
  * Whether this is a table the engine could have produced.

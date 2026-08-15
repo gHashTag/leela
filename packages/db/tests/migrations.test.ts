@@ -3,16 +3,48 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { getTableConfig } from 'drizzle-orm/pg-core';
+import { RULESETS } from '@leela/engine';
 import { chatHistory, gameSteps, players, reports, sessionPlayers, sessions } from '../src';
 
 const MIGRATIONS = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations');
 
-function sql(): string {
+function migrationFiles(): string[] {
   return readdirSync(MIGRATIONS)
     .filter((f) => f.endsWith('.sql'))
-    .sort()
+    .sort();
+}
+
+function sql(): string {
+  return migrationFiles()
     .map((f) => readFileSync(join(MIGRATIONS, f), 'utf8'))
     .join('\n');
+}
+
+/**
+ * Every `ruleset IN (...)` list in the migrations, with the file and the
+ * constraint it belongs to so a failure names the line to open.
+ *
+ * Parsed rather than line-matched: the list is written across two lines in all
+ * three places, and a search for the literal four names would have gone quiet
+ * the moment somebody reformatted it.
+ */
+function rulesetChecks(): { where: string; accepts: string[] }[] {
+  const found: { where: string; accepts: string[] }[] = [];
+
+  for (const file of migrationFiles()) {
+    const text = readFileSync(join(MIGRATIONS, file), 'utf8');
+
+    for (const match of text.matchAll(/ruleset\s+IN\s*\(([^)]*)\)/gi)) {
+      // The constraint this list sits inside is the last one named above it.
+      const named = [...text.slice(0, match.index ?? 0).matchAll(/ADD CONSTRAINT\s+([a-z_]+)/gi)];
+      found.push({
+        where: `${file}: ${named.length ? named[named.length - 1][1] : 'an unnamed constraint'}`,
+        accepts: [...match[1].matchAll(/'([^']*)'/g)].map((m) => m[1]).sort(),
+      });
+    }
+  }
+
+  return found;
 }
 
 /** Column names declared for a table anywhere in the migration files. */
@@ -110,13 +142,77 @@ describe('constraints encode the rules', () => {
     expect(all).toMatch(/roll BETWEEN 1 AND 6/);
   });
 
-  it('accepts exactly the four known rule variants', () => {
-    const checks = [...all.matchAll(/ruleset IN \(([^)]+)\)/g)].map((m) => m[1]);
-    expect(checks.length).toBeGreaterThan(0);
+  /**
+   * A CHECK constraint is a list restated in a second language, and this
+   * repository's signature defect is a restated list. This one went stale
+   * twice without anybody noticing, and the test written to prevent exactly
+   * that could not see it happen.
+   *
+   * WHAT WAS MEASURED, on 2026-08-06. `@leela/engine` declares six rule sets
+   * in `RULESETS`. The three CHECK constraints in these migrations
+   * (`0000_initial.sql` on `players` and on `sessions`,
+   * `0001_adopt_existing_installs.sql` on `players` again) each named four:
+   * `onchain` was added to the engine and not here, then `telegram` was added
+   * to the engine and not here either. `isRuleSetId('telegram')` is true,
+   * `ruleSetById('telegram')` returns a rule set, and `roomToRows` writes
+   * `session.rules.id` into the column — so the schema an adoption dump would
+   * land in refuses two variants the engine considers shipped.
+   *
+   * WHY THE OLD GUARD COULD NOT SEE IT. The case here used to be called
+   * "accepts exactly the four known rule variants", hard-code those four
+   * names, and assert only `toContain`. Containment is blind in both
+   * directions that matter: it cannot see a variant the engine has and the
+   * SQL lacks (the four it looks for are all present, so it passes), and it
+   * cannot see a name in the SQL that the engine no longer declares (it never
+   * looks at the other direction at all). Run against the SQL as committed,
+   * against SQL with a nonsense variant inserted, and against SQL with
+   * `telegram` and `onchain` added, it passed all three. The word "exactly"
+   * in its own name was false.
+   *
+   * So the list is no longer retyped. It is taken from `RULESETS` and
+   * compared as a SET, in both directions, for every constraint found; and
+   * the count of constraints found is asserted, so renaming the SQL out from
+   * under the parser empties the loop into a red test rather than a green
+   * one.
+   *
+   * TWO THINGS MEASURED AND DELIBERATELY NOT CHANGED HERE:
+   *
+   *   - `apps/bot/src/sqlite.ts` has no CHECK constraint of any kind — zero
+   *     matches for `CHECK (` in the whole schema. So SQLite accepts a game
+   *     stored under `telegram` that Postgres would refuse, and the bot's own
+   *     variant was the one Postgres could not hold. The asymmetry is the
+   *     point: the surface that plays `telegram` is the surface with no guard,
+   *     and the guard that exists is on the side that never saw the name.
+   *   - `game_steps.ruleset` (`0000_initial.sql:59`) is a `text` column with
+   *     no CHECK at all, unlike `players.ruleset` and `sessions.ruleset`. The
+   *     move log will therefore accept any string. Recorded, not fixed: adding
+   *     a constraint to a table that never had one is a schema decision, not
+   *     the correction of a stale list.
+   */
+  it('accepts exactly the rule variants the engine declares, whatever they are', () => {
+    const declared = Object.keys(RULESETS).sort();
+    const checks = rulesetChecks();
+
+    expect(
+      checks.length,
+      'no `ruleset IN (...)` list was found in any migration — either the constraint ' +
+        'was renamed and this guard is now checking nothing, or it was dropped',
+    ).toBeGreaterThan(0);
+
+    // Parsed a second way, so a rename that hides a list from the parser above
+    // cannot pass by simply reducing the number of things it has to check.
+    const namedConstraints = [...all.matchAll(/ADD CONSTRAINT\s+[a-z_]*ruleset[a-z_]*/gi)];
+    expect(
+      checks.length,
+      `${namedConstraints.length} ruleset constraints are declared but ${checks.length} ` +
+        'carry a parsable `IN (...)` list',
+    ).toBe(namedConstraints.length);
+
     for (const check of checks) {
-      for (const variant of ['classic', 'neuroleela', 'legacy-mobile', 'online']) {
-        expect(check, `variant ${variant} is not accepted`).toContain(`'${variant}'`);
-      }
+      expect(
+        check.accepts,
+        `${check.where} accepts ${check.accepts.join(', ')}; the engine declares ${declared.join(', ')}`,
+      ).toEqual(declared);
     }
   });
 

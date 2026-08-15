@@ -1,7 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { ExpoConfig } from 'expo/config';
+// The suffix, from the file that applies it. Typing '.dev' here would be a
+// second definition of the one string this file exists to be sure about.
+import { DEV_SUFFIX } from '../app.config';
 
 /**
  * The published app's identity, which is two strings and not one.
@@ -103,12 +107,12 @@ describe('the app that installs, not the config that describes it', () => {
     // so the artifact carries `…dharma` or `…dharma.dev`, and a third value
     // means the project was built from something other than this config.
     const shipped = config.expo.ios.bundleIdentifier;
-    expect([shipped, `${shipped}.dev`]).toContain([...identifiers][0]);
+    expect([shipped, `${shipped}${DEV_SUFFIX}`]).toContain([...identifiers][0]);
 
     // The one that mattered: the Android identifier is not an iOS identity, and
     // the app installed under it for a day.
     expect([...identifiers][0], 'never the Android one').not.toBe(config.expo.android.package);
-    expect([...identifiers][0]).not.toBe(`${config.expo.android.package}.dev`);
+    expect([...identifiers][0]).not.toBe(`${config.expo.android.package}${DEV_SUFFIX}`);
   });
 
   it('says out loud whether it looked', () => {
@@ -134,44 +138,129 @@ describe('a debug build is not the published application', () => {
    * what every script that builds for a simulator sets. What is asserted is the
    * shape: the shipped identity is untouched, the development one differs on
    * both platforms, and the default is the safe one.
+   *
+   * **AND FOR TWO PASSES NONE OF THAT COULD FAIL**, which is worth more space
+   * than the rule itself, because it is the failure mode the page below this one
+   * spends itself naming and this block was an instance of it.
+   *
+   * The four cases ran against a `variant(development: boolean)` helper written
+   * *here*, in this file — a hand copy of `app.config.ts`'s eleven lines. It
+   * built `${name} (dev)` and appended `.dev` to both identifiers, and it was
+   * correct. It was also not the code that builds the app. Measured on the day
+   * this was rewritten:
+   *
+   * - `identity.test.ts` imported `vitest` and three node builtins, and nothing
+   *   else. Nothing in the repository imported `./app.config` at all.
+   * - `tsc --noEmit --listFiles` did not list `app.config.ts` in either mobile
+   *   program. Counted rather than eyeballed, over the committed configs and
+   *   the committed version of this file: `grep -c` answered 0 for
+   *   `tsconfig.json` and 0 for `tsconfig.src.json`. It answers 1 and 0 now,
+   *   and the 0 is deliberate — see the comment on the `include` entry.
+   * - `npx eslint apps/mobile/app.config.ts` answered *File ignored because no
+   *   matching configuration was supplied*, and exited 0.
+   *
+   * So deleting the `.dev` suffix from the real file left `bun run verify`,
+   * every audit, ESLint and knip green — and the next simulator build would
+   * install over the published app. The copies had already started to drift:
+   * this helper read `expo.ios.bundleIdentifier` where the real file reads
+   * `expo.ios?.bundleIdentifier`.
+   *
+   * The repair is not a better copy. The cases below `await import`
+   * `../app.config` with `APP_VARIANT` set and unset around a `vi.resetModules`,
+   * and call the default export — the same function Expo calls. What they assert
+   * is the *relationship* between the two identities rather than the strings a
+   * particular implementation produces, and `DEV_SUFFIX` is imported rather than
+   * typed, so the suffix has exactly one definition in the repository.
    */
-  const variant = (development: boolean) => {
-    const expo = config.expo;
-    if (!development) return expo;
-    return {
-      ...expo,
-      name: `${expo.name} (dev)`,
-      ios: { ...expo.ios, bundleIdentifier: `${expo.ios.bundleIdentifier}.dev` },
-      android: { ...expo.android, package: `${expo.android.package}.dev` },
-    };
+
+  /**
+   * The config Expo would be handed for a given `APP_VARIANT`.
+   *
+   * `app.config.ts` reads the variable at module scope — `const DEVELOPMENT =
+   * process.env.APP_VARIANT === 'development'` — so the variable has to be in
+   * place *before* the module is evaluated. Hence `vi.resetModules()` around a
+   * dynamic import rather than a static one: a static import would be evaluated
+   * once, at whatever the environment happened to be when this file loaded, and
+   * every case after the first would read a stale decision.
+   *
+   * The previous value is put back in a `finally`, because this mutates a real
+   * process global that the rest of the run shares.
+   */
+  const asBuilt = async (variant: string | undefined): Promise<ExpoConfig> => {
+    const before = process.env.APP_VARIANT;
+    if (variant === undefined) delete process.env.APP_VARIANT;
+    else process.env.APP_VARIANT = variant;
+
+    vi.resetModules();
+    try {
+      const { default: configure } = await import('../app.config');
+      return configure();
+    } finally {
+      if (before === undefined) delete process.env.APP_VARIANT;
+      else process.env.APP_VARIANT = before;
+      vi.resetModules();
+    }
   };
 
-  it('leaves the shipped identity exactly as app.json states it', () => {
+  it('leaves the shipped identity exactly as app.json states it', async () => {
     // The published app's own, on both platforms. A release build sets no
     // variable and must get this.
-    expect(variant(false).ios.bundleIdentifier).toBe('xyz.ghashtag.dharma');
-    expect(variant(false).android.package).toBe('com.leelagame');
-    expect(variant(false).name).toBe('Leela Chakra');
+    //
+    // Stated against `app.json` rather than against the three literals, which
+    // are pinned once at the top of this file: a second copy of them here would
+    // be the same mistake as the helper this replaced, one value smaller.
+    const release = await asBuilt(undefined);
+
+    expect(release.ios?.bundleIdentifier).toBe(config.expo.ios.bundleIdentifier);
+    expect(release.android?.package).toBe(config.expo.android.package);
+    expect(release.name).toBe(config.expo.name);
   });
 
-  it('gives a development build an identifier of its own, on both platforms', () => {
-    const dev = variant(true);
+  it('gives a development build an identifier of its own, on both platforms', async () => {
+    const dev = await asBuilt('development');
 
-    expect(dev.ios.bundleIdentifier).not.toBe(config.expo.ios.bundleIdentifier);
-    expect(dev.android.package).not.toBe(config.expo.android.package);
+    expect(dev.ios?.bundleIdentifier).not.toBe(config.expo.ios.bundleIdentifier);
+    expect(dev.android?.package).not.toBe(config.expo.android.package);
+
+    // And what separates them is the one suffix this repository declares, read
+    // from the file that applies it. The two lines above are the load-bearing
+    // ones — *different at all* is the property that keeps a debug build off a
+    // player's home screen — and these two say the difference is a deliberate
+    // suffix rather than any string that happens not to match.
+    expect(dev.ios?.bundleIdentifier).toBe(`${config.expo.ios.bundleIdentifier}${DEV_SUFFIX}`);
+    expect(dev.android?.package).toBe(`${config.expo.android.package}${DEV_SUFFIX}`);
   });
 
-  it('keeps the two apart on the home screen as well', () => {
+  it('keeps the two apart on the home screen as well', async () => {
     // Two icons with one name is a person launching the wrong one and reporting
     // a defect in the other.
-    expect(variant(true).name).not.toBe(variant(false).name);
+    const [dev, release] = [await asBuilt('development'), await asBuilt(undefined)];
+
+    expect(dev.name).not.toBe(release.name);
   });
 
-  it('is the safe way round', () => {
+  it('is the safe way round', async () => {
     // Forgetting the variable cannot make a release the wrong application —
     // only a debug build the right one, which is caught the moment somebody
     // looks at what installed.
-    expect(variant(false).ios.bundleIdentifier).toBe(config.expo.ios.bundleIdentifier);
+    //
+    // Asserted over the *absence* and over values that are not the one word the
+    // build scripts set, because the direction is the claim: only an exact
+    // `development` may move the identity. An implementation that opted out on
+    // `production` instead of in on `development` would pass the case above and
+    // fail here, which is the whole difference between a release that is the
+    // published app and one that is not.
+    for (const nothing of [undefined, '', 'Development', 'developement', 'production']) {
+      const built = await asBuilt(nothing);
+
+      expect(built.ios?.bundleIdentifier, `APP_VARIANT=${String(nothing)}`).toBe(
+        config.expo.ios.bundleIdentifier,
+      );
+      expect(built.android?.package, `APP_VARIANT=${String(nothing)}`).toBe(
+        config.expo.android.package,
+      );
+      expect(built.name, `APP_VARIANT=${String(nothing)}`).toBe(config.expo.name);
+    }
   });
 
   /**

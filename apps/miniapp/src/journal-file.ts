@@ -18,7 +18,7 @@ import {
   toDocument as toJournalDocument,
   type Report,
 } from '@leela/journal';
-import { path, type Journal } from './reports';
+import { type Journal } from './reports';
 
 export {
   fileName,

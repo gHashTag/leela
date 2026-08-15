@@ -20,10 +20,10 @@
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { checkRegression, dimensionsIn } from './lib/coverage.mjs';
-import { pendingMutation } from './lib/undo.mjs';
+import { RECOVERY, pendingMutation } from './lib/undo.mjs';
 import { corrected, unappliedIn } from './lib/corrections.mjs';
 import {
-  RECORDED as SPILLOVERS,
+  against as spilloversAgainst,
   nameOf as spilloverName,
   spilloversIn,
   withoutSpillover,
@@ -71,9 +71,60 @@ const OUT = join(REPO, 'packages/content/data');
  * behaviour on a ten-workspace Bun monorepo is untested here. Until somebody
  * has measured that, this is the cheap gate.
  */
+/**
+ * What a stopped tool leaves on disk, and the one command that clears each.
+ *
+ * Two tools edit or copy this tree and can be killed halfway, and the cost has
+ * been the same shape both times: a suite in a package nobody touched goes red,
+ * and the failure does not name the tool. The marker is the only thing that
+ * survives the kill, so the build reads both and refuses before it does
+ * anything else.
+ *
+ * A `*_MARKER` is a path relative to the repository root; its `*_RECOVERY` is
+ * the exact command that clears it. That pairing is the whole convention, and
+ * `packages/content/tests/a-build-that-refuses.test.ts` reads it out of this
+ * source — every `*_MARKER` declared here, and the `*_RECOVERY` beside it — so
+ * the test is driven by what this file declares rather than by two names
+ * somebody remembered. A marker declared without a recovery makes that test
+ * throw rather than skip it. It reads rather than imports, for the reason
+ * `packages/engine/tests/runnable.test.ts` gives about `audit-scripts.mjs`:
+ * this file does its work at import time.
+ *
+ * One command, one spelling — `scripts/lib/undo.mjs:90`'s rule applied to the
+ * second tool. The sentence a broken tree prints is typed by somebody who has
+ * just lost their bearings, and a command kept by hand in two places will be
+ * right in one of them. `MUTATION_RECOVERY` is `RECOVERY` from that module
+ * under the name this convention pairs on, not a copy of it; the message below
+ * prints `pending.recovery`, which is that same constant arriving from the
+ * module that owns the note, so the note's reader stays free to answer with a
+ * different command for a note it could not read.
+ *
+ * `rm -rf` and not a script, for the sandbox. There is nothing to restore — it
+ * is a *copy*, and the originals were never touched, which is the property
+ * `audit-mutants` lacks and the reason Stryker replaced it. A recovery somebody
+ * can perform without this repository's help is the one that still works when
+ * this repository's tooling is what broke.
+ *
+ * WRITTEN AS CONSTANTS RATHER THAN AS A TABLE, and that is a rule of this
+ * repository rather than a preference. `scripts/lib/records.mjs` declares every
+ * list under `scripts/` and `packages/content/tests/records.test.ts` fails on
+ * one that is not declared there. MEASURED on 2026-08-06: an
+ * `export const LEFTOVER_ARTIFACTS = [...]` here produced
+ * `expected [ "build-content.mjs:LEFTOVER_ARTIFACTS" ] to deeply equal []` from
+ * *the repository as it stands > has every list declared*. A row in that file
+ * is the right answer and this change does not own it — and constants are not
+ * a worse answer: what that rule polices is a list whose entries quietly stop
+ * describing anything, and a constant a guard below reads has nothing to rot.
+ */
+export const MUTATION_MARKER = 'scripts/.mutants-undo.json';
+export const MUTATION_RECOVERY = RECOVERY;
+
+export const STRYKER_MARKER = '.stryker-tmp';
+export const STRYKER_RECOVERY = `rm -rf ${STRYKER_MARKER}`;
+
 const noteFlag = process.argv.indexOf('--mutation-note');
 const MUTATION_NOTE =
-  noteFlag > -1 ? process.argv[noteFlag + 1] : join(HERE, '.mutants-undo.json');
+  noteFlag > -1 ? process.argv[noteFlag + 1] : join(REPO, MUTATION_MARKER);
 
 const pending = pendingMutation(MUTATION_NOTE);
 if (pending) {
@@ -87,6 +138,63 @@ if (pending) {
   console.error(`\n  Put it back with: ${pending.recovery}\n`);
   console.error('A test failing right now is a tool\'s doing and not the code\'s.');
   console.error('Nothing here is restored for you: that would repair your tree mid-commit.');
+  process.exit(1);
+}
+
+/**
+ * Refuse, second, while a Stryker sandbox is still on disk.
+ *
+ * The comment above ends by naming StrykerJS as the intended replacement for
+ * `audit-mutants`, on the grounds that it copies the tree and mutates the copy
+ * so a `SIGKILL` cannot leave anything behind. That is true of the *source
+ * files*, and it is the reason the swap was made — but it is not true of the
+ * tree. Stryker writes its copy to `.stryker-tmp/sandbox-<n>/`, and
+ * `cleanTempDir: 'always'` removes it only after a run that FINISHES. A run
+ * killed halfway leaves a whole second copy of this repository sitting at the
+ * root, and the guard the swap was supposed to make unnecessary is needed again
+ * one directory over.
+ *
+ * MEASURED on 2026-08-06, and it is the same hour twice:
+ *
+ *     $ mkdir -p .stryker-tmp/sandbox-VERIFY && cp README.md .stryker-tmp/sandbox-VERIFY/
+ *     $ npx vitest run --root packages/engine tests/runnable.test.ts
+ *     FAIL  tests/runnable.test.ts > ... > is every document in this repository
+ *           that names a script command
+ *
+ * — because that check walks the repository for markdown and the copies are
+ * markdown. So `bun run verify` goes red, in a package nobody has touched, over
+ * a file that is not source, for a tool that was not running. Nothing in the
+ * failure says the word Stryker.
+ *
+ * Two other costs, neither of which announces itself either: `.stryker-tmp` was
+ * not in `.gitignore` (it is now, one line above `scripts/.mutants-undo.json`'s
+ * neighbourhood), so a leftover sandbox showed up as untracked files in `git
+ * status` and as unused files to knip.
+ *
+ * `stryker.conf.mjs:197-199` names this hole and says it is not fixed there —
+ * *"KNOWN AND NOT FIXED HERE: `.stryker-tmp` is not in `.gitignore` … Adding
+ * that entry is a change to a file this pass does not own."* The guard lives
+ * here instead, for the same reason the mutation-note guard does: `content:build`
+ * is the first thing `verify` runs, so this is the earliest place a broken tree
+ * can say what is wrong with it. `stryker.conf.mjs` is not edited.
+ *
+ * After the mutation note and not before it, deliberately. A tree holding both
+ * has shipped source that is currently WRONG and a directory that is merely in
+ * the way; the file that is wrong is the one to say first, and
+ * `a-build-that-refuses.test.ts` asserts that order over a grid of argv rows.
+ * `--force` does not reach this, for the reason it does not reach that: a
+ * stopped tool is not a judgement call about the dataset.
+ */
+if (existsSync(join(REPO, STRYKER_MARKER))) {
+  console.error('\nRefusing to build: a mutation run was stopped before it cleaned up.\n');
+  console.error(`  Left behind:      ${STRYKER_MARKER}/ — a Stryker sandbox, a copy of this tree.`);
+  console.error('  What it costs:    the engine suite walks the repository and reads those');
+  console.error('                    copies as if they were source, so it reports files that');
+  console.error('                    are not source and `bun run verify` is red for a reason');
+  console.error('                    that has nothing to do with the code.');
+  console.error(`\n  Clear it with:    ${STRYKER_RECOVERY}\n`);
+  console.error('Nothing was mutated in place: the sandbox is a copy, so deleting it loses');
+  console.error('nothing. Only the run\'s own results, which a stopped run did not produce.');
   process.exit(1);
 }
 
@@ -675,7 +783,10 @@ for (const [lang, plans] of Object.entries(byLang)) {
   // after it is known, and only where the run is that plan's own opening word
   // for word — the words stay on the page they belong to.
   for (const finding of spilloversIn(complete, lang)) {
-    spilledOver.push(spilloverName(finding));
+    // The finding itself, not only its name: the name is what a record is
+    // matched on, but the fresh direction has to be able to say which language
+    // and which pair of plans a cut nobody authorised landed on.
+    spilledOver.push(finding);
     const here = complete[finding.plan - 1];
     const next = complete[finding.plan];
     if (here && next) here.body = withoutSpillover(here.body, next.body);
@@ -807,14 +918,32 @@ if (warnings.length) {
 // matching is a repair that has been undone, and it must not go quiet.
 if (spilledOver.length > 0) {
   console.log(`\nCut ${spilledOver.length} run(s) of one plan out of the one before it:`);
-  for (const line of spilledOver) console.log(`  - ${line}`);
+  for (const finding of spilledOver) console.log(`  - ${spilloverName(finding)}`);
 }
 
-const missedSpillovers = SPILLOVERS.filter((line) => !spilledOver.includes(line));
-if (missedSpillovers.length > 0) {
-  console.log(`\n${missedSpillovers.length} recorded spillover(s) matched nothing:`);
-  for (const line of missedSpillovers) console.log(`  - ${line}`);
+// Both directions from one pass, the way the two sibling modules do it. The
+// rotted half was the only one this build ever asked about, and the cut itself
+// is unconditional: `withoutSpillover` runs on every language on every build.
+// So an unrecorded finding is a plan's tail deleted from the shipped data with
+// nobody's signature on it, and it has to be as loud as a record gone stale.
+const spillovers = spilloversAgainst(spilledOver);
+if (spillovers.rotted.length > 0) {
+  console.log(`\n${spillovers.rotted.length} recorded spillover(s) matched nothing:`);
+  for (const line of spillovers.rotted) console.log(`  - ${line}`);
   console.log('\nThe donor was fixed, or the text moved. Both need the entry looked at.');
+  process.exitCode = 1;
+}
+
+if (spillovers.fresh.length > 0) {
+  console.log(`\n${spillovers.fresh.length} unrecorded spillover(s) were cut anyway:`);
+  for (const finding of spillovers.fresh) console.log(`  - ${spilloverName(finding)}`);
+  console.log(
+    '\nText was removed from the shipped book that no record accounts for. Read both plan',
+  );
+  console.log(
+    'bodies: if the run really is the next plan\'s opening word for word, record it in',
+  );
+  console.log('RECORDED; if it is not, the cut is wrong and must not ship.');
   process.exitCode = 1;
 }
 

@@ -1,8 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { blank } from '../../../scripts/lib/source.mjs';
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { BOARD_COLUMNS, BOARD_ROWS_COUNT } from '@leela/engine';
+
+/**
+ * This package's root, taken from this file's own location rather than from the
+ * working directory.
+ *
+ * Seven suites in this directory used to read their fixtures through
+ * `process.cwd()`. That works while Vitest is started inside `apps/miniapp` and
+ * throws ENOENT the moment the same file is collected from anywhere else — a
+ * repository-root run, a coverage pass over all ten workspaces — and the
+ * measured symptom was `ENOENT /Users/playra/leela/src/state.ts`. The long
+ * version, with the whole measurement, is at the top of
+ * `partly-written.test.ts`, which is also where the guard against it lives.
+ */
+const PACKAGE = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
  * Where the grid sits on the painting.
@@ -47,7 +62,7 @@ const APP: Record<string, number> = {
  * off a screenshot.
  */
 function webpSize(file: string): { width: number; height: number } {
-  const bytes = readFileSync(resolve(process.cwd(), file));
+  const bytes = readFileSync(resolve(PACKAGE, file));
   expect(bytes.subarray(0, 4).toString('ascii')).toBe('RIFF');
   expect(bytes.subarray(8, 12).toString('ascii')).toBe('WEBP');
   expect(bytes.subarray(12, 16).toString('ascii')).toBe('VP8X');
@@ -73,7 +88,7 @@ const EXPECTED = {
 // As a stylesheet. `declaration` reads the first match on a line, and a note
 // above a live declaration -- `/* was: aspect-ratio: 3 / 4; */` -- is a line
 // that matches: measured, it handed back the value somebody had replaced.
-const style = blank(readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8'), 'css');
+const style = blank(readFileSync(resolve(PACKAGE, 'src/style.css'), 'utf8'), 'css');
 
 /**
  * A declaration's value, from the first rule that carries it.

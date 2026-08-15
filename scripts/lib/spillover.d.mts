@@ -26,3 +26,8 @@ export function spilloversIn(
   language: string,
 ): Spillover[];
 export function nameOf(finding: Spillover): string;
+
+export function against(findings: readonly Spillover[]): {
+  fresh: Spillover[];
+  rotted: string[];
+};

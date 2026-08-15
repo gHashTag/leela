@@ -53,8 +53,41 @@ export function remember(notePath, filePath, original) {
  * and stopped it once the restore line printed was left with a NEW mutation in
  * a DIFFERENT file. The recovery a message prints has to be a recovery and
  * nothing else.
+ *
+ * **It named `bun` for a script whose shebang says node, and the runtime audit
+ * could not see it.** The point is not that `bun` fails. MEASURED on
+ * 2026-08-06: both runtimes execute `scripts/audit-mutants.mjs` today, and
+ * `--restore` is read before any decision is, so under either one the command
+ * puts the file back and exits — that was checked by running it. The point is
+ * that this is `audit-scripts.mjs`'s entire subject. Its recorded finding is
+ * `bun scripts/board-overlay.mjs` written in `CLAUDE.md` for a node-shebang
+ * script, and `checkRuntimes` calls a documented runtime that differs from the
+ * shebang a problem in both directions — because a command kept by hand goes
+ * stale both ways, and because the day this script grows a Node-only import is
+ * the day the sentence a broken tree prints stops working, with nothing having
+ * changed here.
+ *
+ * That audit built its list from markdown alone, and MEASURED the same day: no
+ * markdown in this repository names `audit-mutants.mjs` with a runtime at all.
+ * So the most consequential command in the repository — the one printed by
+ * three separate programs at the moment shipped source is wrong on disk — was
+ * outside the check by construction, and was spelled the one way the check
+ * exists to forbid. The doc-comment above argues for one constant so that
+ * changing the command changes every message; the constant it centralised was
+ * the one nothing checked. `audit-scripts.mjs` now feeds this string through
+ * `documentedRuntimes` beside the documents, and
+ * `packages/content/tests/undo.test.ts` holds every exported command in
+ * `scripts/lib` to its script's shebang.
+ *
+ * Falsified rather than assumed. Putting `bun` back here, on 2026-08-06, gave
+ * `node scripts/audit-scripts.mjs` exit 1 and the line
+ * ``scripts/audit-mutants.mjs: documented as `bun scripts/audit-mutants.mjs`,
+ * but it declares node``, and gave the guard in that test file
+ * `expected 'bun' to be 'node' // Object.is equality` under
+ * *scripts/lib/undo.mjs exports RECOVERY*. Both were observed failing before
+ * `node` went back in.
  */
-export const RECOVERY = 'bun scripts/audit-mutants.mjs --restore';
+export const RECOVERY = 'node scripts/audit-mutants.mjs --restore';
 
 /**
  * What puts the file back when the note cannot say which file it is.
@@ -69,6 +102,140 @@ export const RECOVERY = 'bun scripts/audit-mutants.mjs --restore';
  */
 export const UNREADABLE_RECOVERY =
   'git status --short  (the mutation is an uncommitted change), then: git restore <that file>';
+
+/** The only two flags `audit-mutants.mjs` has, spelled once so a parser and a message agree. */
+export const RESTORE_FLAG = '--restore';
+export const NOTE_FLAG = '--mutation-note';
+
+/**
+ * The sweep, as a command, derived rather than retyped.
+ *
+ * {@link RECOVERY} is the restore. Everything else this script does is that
+ * command without the flag, so it is written here as a subtraction. A second
+ * hand-typed `node scripts/audit-mutants.mjs` in a usage block is exactly the
+ * drift the doc-comment on `RECOVERY` above spends a page arguing against, and
+ * a usage block is the one place a stale command is read by somebody who has
+ * already lost their bearings.
+ */
+export const SWEEP = RECOVERY.replace(` ${RESTORE_FLAG}`, '');
+
+/**
+ * What to print when the arguments were not understood, or somebody asked.
+ *
+ * Built from {@link RECOVERY} and {@link SWEEP} for the reason those exist: the
+ * recovery command has exactly one spelling in this repository, and a usage
+ * text is a message like any other.
+ */
+export function usage() {
+  return [
+    'Break each decision in the table on purpose, run the suites that own it, and',
+    'report the ones nothing noticed. This edits shipped source in place.',
+    '',
+    'Usage:',
+    `  ${SWEEP} <decision>...`,
+    '      break only the decisions named. Names must be in the table.',
+    `  ${SWEEP}`,
+    '      no name at all: every decision, a full test run each, several minutes.',
+    `  ${RECOVERY}`,
+    '      put back what a stopped run left behind, and break nothing new.',
+    `  ${SWEEP} ${NOTE_FLAG} <path>`,
+    '      keep the note somewhere other than scripts/.mutants-undo.json.',
+    '',
+    `There are no other flags. ${RESTORE_FLAG} and ${NOTE_FLAG} are the whole list, so`,
+    'anything else is refused rather than ignored: an unrecognised flag used to be',
+    'discarded, which left the script looking at an empty list of names, which is',
+    'how it is told to break everything.',
+  ].join('\n');
+}
+
+/**
+ * The arguments, as a decision rather than as three expressions in a row.
+ *
+ * Names are separated from flags by hand rather than by a parser, and the value
+ * after `--mutation-note` is dropped explicitly — a path that survived into the
+ * names would silently select no decisions, which reads like a clean sweep of
+ * nothing.
+ *
+ * **Discarding what it did not recognise was the defect, and it was the worst
+ * shape it could have had.** The line was
+ * `args.filter((arg) => !arg.startsWith('--'))`: every unknown flag fell out of
+ * the list, an empty list of names means *the operator named no decisions*, and
+ * that means **all of them**. So `--help`, `-h`, `--dry-run`, `--list` and a
+ * typo'd `--restor` were each, exactly and silently, the bare command — the full
+ * destructive sweep, in the script whose stopped runs have twice cost this
+ * project an hour, and which the standing operator note tells people to invoke
+ * by name. Somebody reaching for `--help` on a tool they do not know is the
+ * likeliest first contact anybody has with it, and it was the one input that
+ * started breaking shipped source with no output to explain why.
+ *
+ * The shape of the fix is that the parser is now allowed to say *no*. Three
+ * answers, and the caller can act on none of them by accident:
+ *
+ *  - `{ kind: 'usage' }` — `--help` or `-h`. Print and stop.
+ *  - `{ kind: 'refused', unknown }` — any other token that begins with `-`, a
+ *    name that is not in the table, or `--mutation-note` with no path after it.
+ *    Print the offending tokens and the usage, and **select nothing**.
+ *  - `{ kind: 'run', restoreOnly, notePath, names }` — understood in full.
+ *
+ * `--restore` returns `names: []` whatever names were given, and that is a
+ * decision rather than an oversight: the flag exists so that the command a
+ * broken tree prints does the restore and nothing else, so it exits before a
+ * decision is selected and the names cannot reach anything. `undo.test.ts`
+ * drives the restore path with a name that matches nothing on purpose, as proof
+ * that the flag is honoured rather than that the name was harmless.
+ *
+ * @param args argv without the runtime and the script — `process.argv.slice(2)`.
+ * @param known every decision name in the caller's table. A name outside it is
+ *   refused rather than filtered away, because filtering it away is how an
+ *   empty list of names is reached, and an empty list means everything.
+ */
+export function readArgv(args, known = []) {
+  const unknown = [];
+  const names = [];
+  let restoreOnly = false;
+  let notePath = null;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const token = args[index];
+
+    if (token === '--help' || token === '-h') return { kind: 'usage' };
+
+    if (token === RESTORE_FLAG) {
+      restoreOnly = true;
+      continue;
+    }
+
+    if (token === NOTE_FLAG) {
+      const value = args[index + 1];
+      // A missing path, or a path that is itself flag-shaped, is somebody who
+      // meant to type one. Consuming the next flag as a filename would write
+      // the note to `--restore` and then look like it had done as it was told.
+      if (value === undefined || value.startsWith('-')) {
+        unknown.push(token);
+        continue;
+      }
+      notePath = value;
+      index += 1;
+      continue;
+    }
+
+    if (token.startsWith('-')) {
+      unknown.push(token);
+      continue;
+    }
+
+    names.push(token);
+  }
+
+  if (unknown.length > 0) return { kind: 'refused', unknown };
+
+  if (restoreOnly) return { kind: 'run', restoreOnly: true, notePath, names: [] };
+
+  const strangers = names.filter((name) => !known.includes(name));
+  if (strangers.length > 0) return { kind: 'refused', unknown: strangers };
+
+  return { kind: 'run', restoreOnly: false, notePath, names };
+}
 
 /**
  * Put back whatever the note describes, and forget it.
@@ -129,6 +296,82 @@ export function putItBack(notePath) {
   rmSync(notePath);
 
   return { restored: note.path, note: notePath, recovery: null };
+}
+
+/**
+ * Put the file back for a caller that is still holding the original text.
+ *
+ * {@link putItBack} is for the *next* process: the one that broke the file is
+ * gone, so the note on disk is the only copy. This is for the process that is
+ * still running — `audit-mutants`, in the `finally` after each mutation, with
+ * `original` sitting in a local variable one line above.
+ *
+ * **Its two failure arms used to be handled backwards, and the wrong one was
+ * silent.** The code read:
+ *
+ *     if (back === null || back.restored === null) {
+ *       console.error(`Could not put ${file} back — stopping before anything
+ *                      else is broken.`);
+ *       console.error(back === null ? '  The note is gone.' : recovery);
+ *       process.exit(1);
+ *     }
+ *
+ * When the note was merely unreadable the operator got a command, and the note
+ * itself still held the original text — the recoverable case. When the note was
+ * **gone** they got the sentence `The note is gone.`, no command, no write, and
+ * an exit — under *stopping before anything else is broken*, which reads as an
+ * all-clear at the exact moment the tree holds a mutation in shipped source
+ * with nothing on disk pointing at it. And the copy that would have fixed it
+ * was in scope, one line above, unused.
+ *
+ * So: when there is no note, this writes `original` back itself. That is not
+ * the same act as the repair `pendingMutation` refuses to perform during a
+ * build — there the process has no idea what happened, here the process is the
+ * one that did it, to a file it read seconds ago.
+ *
+ * Every arm either restores the file or hands the caller the text, and the
+ * caller can tell which without reading a message:
+ *
+ *  - `{ kind: 'restored', path }` — the note did it, and is forgotten.
+ *  - `{ kind: 'rewritten', path, check }` — no note; this wrote the copy back.
+ *    `check` is the command that shows whether the tree is clean again, because
+ *    a claim to have repaired something is worth what its check is worth.
+ *  - `{ kind: 'unrestored', path, original, recovery, why }` — the file is still
+ *    broken. `original` is the text, so nothing is lost even here, and `why` is
+ *    the write's own error when there was one.
+ */
+export function putItBackOrRewrite(notePath, broke) {
+  const { path, original } = broke;
+  const back = putItBack(notePath);
+
+  if (back !== null && back.restored !== null) return { kind: 'restored', path: back.restored };
+
+  if (back !== null) {
+    // The note is there and will not parse. It is deliberately left on disk —
+    // it may be the only copy of some *other* file's original text, and this
+    // one is carried back to the caller instead.
+    return {
+      kind: 'unrestored',
+      path,
+      original,
+      recovery: back.recovery,
+      why: null,
+    };
+  }
+
+  try {
+    writeFileSync(path, original);
+  } catch (error) {
+    return {
+      kind: 'unrestored',
+      path,
+      original,
+      recovery: UNREADABLE_RECOVERY,
+      why: error instanceof Error ? error.message : String(error),
+    };
+  }
+
+  return { kind: 'rewritten', path, check: `git diff --name-only ${path}` };
 }
 
 /**

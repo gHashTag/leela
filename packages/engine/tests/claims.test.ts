@@ -8,6 +8,15 @@ import { describe, expect, it } from 'vitest';
 import { checkCiPackages, checkCounts, checkDeployPaths, checkDeployTests, checkLockfiles, workspacesNeededBy, workspaceSources, checkManifests, checkTotal, claimedCounts, claimedTotal, copiedManifests, packagesCheckedByCi, packagesTestedByDeploy, rewriteClaims } from '../../../scripts/lib/claims.mjs';
 
 /**
+ * One `for pkg in …; do … done` loop, as `packagesCheckedByCi` returns it.
+ *
+ * The names alone answered "is every workspace listed"; the body answers "is
+ * this a loop that runs anything", which is the question a workflow with its
+ * test step deleted got away with because nobody asked it.
+ */
+type Loop = { names: Set<string>; body: string };
+
+/**
  * The numbers this repository says about itself.
  *
  * `README.md` carries a table of per-package test counts and a total, and both
@@ -337,9 +346,17 @@ describe('the packages CI actually runs', () => {
           done`);
 
   it('reads every loop, not just the first', () => {
-    const loops = packagesCheckedByCi(WORKFLOW);
+    const loops: Loop[] = packagesCheckedByCi(WORKFLOW);
     expect(loops).toHaveLength(2);
-    expect([...(loops[0] ?? [])].sort()).toEqual(['apps/bot', 'packages/engine']);
+    expect([...(loops[0]?.names ?? [])].sort()).toEqual(['apps/bot', 'packages/engine']);
+  });
+
+  it('carries each loop body, not only the names it iterates', () => {
+    // The names cannot say whether a loop runs anything. Every loop in this
+    // fixture is a real command, and one of them is the only one that tests.
+    const loops: Loop[] = packagesCheckedByCi(WORKFLOW);
+    expect(loops.filter((loop) => /vitest/.test(loop.body))).toHaveLength(1);
+    expect(loops.every((loop) => loop.body.includes('cd "$pkg"'))).toBe(true);
   });
 
   it('names a package that ships and is never run', () => {
@@ -374,6 +391,30 @@ describe('the packages CI actually runs', () => {
     // A refactor that replaces the loops with something else should be noticed
     // rather than silently reported as "everything is covered".
     expect(checkCiPackages(packagesCheckedByCi('jobs: {}'), new Set(['packages/engine']))).toHaveLength(1);
+  });
+
+  it('says so when every loop is perfect and none of them tests', () => {
+    // The whole list, twice over, and not one suite run: the per-loop questions
+    // are answered completely and the workflow is worthless. Measured in this
+    // shape on the real file — see the grid at the end of this suite.
+    const typechecksOnly = jobWith(`      - name: Typecheck
+        run: |
+          for pkg in packages/engine apps/bot; do
+            (cd "$pkg" && bunx tsc --noEmit)
+          done
+
+      - name: Typecheck what ships
+        run: |
+          for pkg in packages/engine apps/bot; do
+            (cd "$pkg" && bunx tsc --noEmit -p tsconfig.src.json)
+          done`);
+
+    const problems = checkCiPackages(
+      packagesCheckedByCi(typechecksOnly),
+      new Set(['packages/engine', 'apps/bot']),
+    );
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain('test runner');
   });
 
   it('is quiet when the list is the repository', () => {
@@ -767,11 +808,18 @@ describe('a loop inside a step that will not run', () => {
    * The naive twin is the old body, kept deliberately: it is both the baseline
    * the fixed reader must match on a workflow that disables nothing, and the
    * exact thing every cell of the grid must now distinguish itself from.
+   *
+   * `packagesCheckedByCi` returns `{ names, body }` per loop and its neighbour
+   * returns the names alone, so it is wrapped here down to the shape this grid
+   * compares. The wrapper drops the body and nothing else: what a cell asserts
+   * is which loops a reader still sees once a step cannot run, and the body is
+   * a different question — asked, on the real file, by the grid below.
    */
   const READERS = [
     {
       reader: 'packagesCheckedByCi',
-      read: packagesCheckedByCi,
+      read: (workflow: string): Set<string>[] =>
+        packagesCheckedByCi(workflow).map((loop: Loop) => loop.names),
       asText: (workflow: string) =>
         [...workflow.matchAll(/for pkg in ([^;\n]+); do/g)].map(([, list]) => list ?? ''),
     },
@@ -1022,5 +1070,163 @@ describe('a loop inside a step that will not run', () => {
         expect(signature(read(text))).toEqual(textSignature(asText(text)));
       }
     }
+  });
+
+  /**
+   * The other axis: not a step that will not run, but a step that is not there.
+   *
+   * The grid above is over the ways YAML has of switching a step off, and every
+   * one of them leaves the step on the page. Nothing asked what happens when
+   * the step is simply gone — and the answer, MEASURED on 2026-08-06 against a
+   * copy of the real `.github/workflows/ci.yml` with the whole `- name: Test`
+   * step deleted, was: `packagesCheckedByCi` returned 2 loops instead of 3,
+   * `checkCiPackages` returned `problems: []`, and `vitest` did not appear
+   * anywhere in the file. Two typecheck loops naming all ten workspaces
+   * answered both of the questions this checker asked, so a CI workflow that
+   * ran no test in the repository was reported as fully covered. Its neighbour
+   * `checkDeployTests` had refused a deploy job with no test loop for passes:
+   * `pages.yml` was guarded against publishing untested code and `ci.yml` was
+   * not guarded against testing nothing.
+   *
+   * So this is nested here rather than written beside the fixtures: it is the
+   * limit case of the same grid, and it wants the same walk over the real file.
+   * The variants are built from `ci.yml` as it is on disk — one per `for pkg in`
+   * loop it contains, with the step holding that loop removed — because the
+   * claim is about shape and not about the three step names this repository
+   * happens to have today. A fourth loop added tomorrow gets a row for free,
+   * and a run that disagrees with the last one should be read against
+   * `git diff .github/workflows/ci.yml` before it is read as a fault here.
+   *
+   * Steps that hold no loop cannot move it, and that is measured rather than
+   * assumed: on 2026-08-06, with `- run: node scripts/audit-unread.mjs`
+   * replaced by a lint step in a copy of the file, this walk produced the same
+   * four variants and the same four verdicts, byte for byte.
+   *
+   * `checkDeployTests` is not consulted for what the sentence should say. The
+   * two jobs fail for different reasons — one ships unchecked code to players,
+   * the other leaves every suite unrun on every push — and a person reading one
+   * red line has to be able to tell which job spoke, so that is asserted below
+   * rather than left to whoever edits the wording next.
+   *
+   * BROKEN ON PURPOSE, 2026-08-06: with the `RUNS_TESTS` condition dropped from
+   * `checkCiPackages`, three cases went red and seventy-three stayed green —
+   *   × ci.yml without '- name: Test'
+   *     → expected 0 to be greater than or equal to 1
+   *   × does not tell a workflow with no loops what it tells one that never tests
+   *     → expected [] to have a length of 1 but got +0
+   *   × the packages CI actually runs > says so when every loop is perfect and
+   *     none of them tests
+   *     → expected [] to have a length of 1 but got +0
+   * — which is the point: removing the only step that runs a suite left every
+   * other assertion in this file satisfied. Restored, and all seventy-six pass.
+   * Nothing here writes a workflow; every variant is a string in memory.
+   */
+  describe('the step that is not there', () => {
+    // `checkCiPackages` is only ever pointed at this one workflow, by
+    // `audit-configs.mjs`. `pages.yml` is `checkDeployTests`' subject and has
+    // its own suite above.
+    const CI = '.github/workflows/ci.yml';
+    const text = readFileSync(join(ROOT, CI), 'utf8');
+    const lines = text.split('\n');
+
+    /**
+     * Whether a workflow runs a package loop through a test runner, said again.
+     *
+     * A second, deliberately naive statement of the rule under test, in the
+     * register the readers above already established: asking the checker
+     * whether the checker thinks tests are run would be the suspect marking its
+     * own paper. It is only ever applied to variants in which nothing is
+     * disabled, so it has no need of the structural walk.
+     */
+    const runsTests = (workflow: string) =>
+      [...workflow.matchAll(/for pkg in [^;\n]+; do([\s\S]*?)\bdone\b/g)].some(([, body]) =>
+        /\b(vitest|jest|playwright|bun\s+test|run\s+test)\b/.test(body ?? ''),
+      );
+
+    /** Every step of the real file that holds a package loop, by plain text. */
+    const LOOP_STEPS = stepsIn(text).filter((step) =>
+      /for pkg in /.test(lines.slice(step.from, step.to).join('\n')),
+    );
+
+    const dropping = (steps: Step[]) =>
+      lines
+        .filter((_, at) => !steps.some((step) => at >= step.from && at < step.to))
+        .join('\n');
+
+    /**
+     * What the surviving loops name, used as the repository they are held to.
+     *
+     * Taking the workspace set from the variant itself silences the two
+     * questions this checker already asked — every name is listed and every
+     * listed name exists, by construction — so anything it says about a variant
+     * is the new question speaking. If the loops of `ci.yml` ever come to
+     * disagree with each other this control goes red, and that is the older
+     * finding rather than a fault in this grid.
+     */
+    const said = (workflow: string) => {
+      const loops: Loop[] = packagesCheckedByCi(workflow);
+      return checkCiPackages(
+        loops,
+        new Set(loops.flatMap((loop) => [...loop.names])),
+      ) as string[];
+    };
+
+    const VARIANTS = [
+      ...LOOP_STEPS.map((step) => ({
+        removed: (lines[step.from] ?? '').trim(),
+        workflow: dropping([step]),
+      })),
+      { removed: 'every step that holds a loop', workflow: dropping(LOOP_STEPS) },
+    ];
+
+    it.each(VARIANTS)('ci.yml without $removed', ({ workflow }) => {
+      const problems = said(workflow);
+
+      if (runsTests(workflow)) {
+        // Removing a loop that only typechecks leaves a workflow that still
+        // runs the suites. Quiet, or the check cries wolf on correct code.
+        expect(problems).toEqual([]);
+      } else {
+        // A workflow that runs no test is never silent. What it says is
+        // asserted below; that it says something is the shape.
+        expect(problems.length).toBeGreaterThanOrEqual(1);
+      }
+    });
+
+    it('has a variant on each side of the question', () => {
+      // Both branches above are reachable, or the row that matters is vacuous.
+      expect(VARIANTS.filter(({ workflow }) => runsTests(workflow)).length).toBeGreaterThan(0);
+      expect(VARIANTS.filter(({ workflow }) => !runsTests(workflow)).length).toBeGreaterThan(0);
+      // And the file on disk still runs tests, which is what makes the removals
+      // a removal of something.
+      expect(runsTests(text)).toBe(true);
+      expect(LOOP_STEPS.length).toBeGreaterThan(1);
+      expect(said(text)).toEqual([]);
+    });
+
+    it('does not tell a workflow with no loops what it tells one that never tests', () => {
+      const noLoops = said(dropping(LOOP_STEPS));
+      const neverTests = VARIANTS.filter(
+        ({ workflow }) => !runsTests(workflow) && packagesCheckedByCi(workflow).length > 0,
+      ).map(({ workflow }) => said(workflow));
+
+      expect(noLoops).toHaveLength(1);
+      expect(neverTests.length).toBeGreaterThan(0);
+      for (const problems of neverTests) {
+        expect(problems).toHaveLength(1);
+        expect(problems).not.toContain(noLoops[0]);
+      }
+    });
+
+    it('does not answer in the deploy job words', () => {
+      // Two jobs, two reasons, and one line each to say which. Reusing the
+      // neighbour's sentence would leave a reader of a red build guessing.
+      const deploy = checkDeployTests([], new Set(['packages/engine'])) as string[];
+      expect(deploy).toHaveLength(1);
+
+      for (const { workflow } of VARIANTS) {
+        for (const problem of said(workflow)) expect(deploy).not.toContain(problem);
+      }
+    });
   });
 });

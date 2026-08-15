@@ -30,7 +30,7 @@ import {
   needsOf,
   runtimeOf,
 } from './lib/runnable.mjs';
-import { pendingMutation } from './lib/undo.mjs';
+import { RECOVERY, UNREADABLE_RECOVERY, pendingMutation } from './lib/undo.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -146,6 +146,54 @@ if (stopped) {
  * that exist, so the next document to name a command is either audited or
  * named as unaudited. Adding a document here is cheap; being outside it is
  * invisible.
+ *
+ * **A command a program prints is more documented than a line of markdown, and
+ * it was the one command outside this list.** Documents are not the only place
+ * a reader is told to run a script. `lib/undo.mjs` exports {@link RECOVERY},
+ * which is what every message about a stopped mutation prints — the message in
+ * this file, the one `build-content.mjs` refuses with, and the one
+ * `audit-mutants.mjs` prints when it cannot read its own note. That sentence is
+ * read at the worst moment there is: shipped source is broken on purpose, every
+ * other check in the repository is failing for a reason that has nothing to do
+ * with the code, and the person reading has one command to type. A wrong
+ * runtime there costs more than a wrong runtime in a README, which is read
+ * calmly and by somebody who can look around.
+ *
+ * MEASURED on 2026-08-06, before this loop existed: no markdown file in this
+ * repository names `scripts/audit-mutants.mjs` with a runtime at all — five
+ * mentions in MIGRATION.md, every one of them prose. So the audit's own subject
+ * was outside its reach by construction, and the constant was spelled
+ * `bun scripts/audit-mutants.mjs --restore` for a script whose shebang and whose
+ * own header both say node. That is character for character the finding this
+ * audit records as closed for `bun scripts/board-overlay.mjs` in `CLAUDE.md`,
+ * and `checkRuntimes` treats a documented runtime that differs from the shebang
+ * as a problem in both directions, so it would have caught it on the day it was
+ * written had it ever been shown the string.
+ *
+ * The commands are read through `documentedRuntimes`, the same function the
+ * documents go through, so there is one rule about what a command looks like
+ * rather than a second one here. {@link UNREADABLE_RECOVERY} names no script and
+ * so contributes nothing today; it is fed in anyway, because the rule is *every
+ * command this code prints*, and the next constant somebody adds is the one
+ * this has to catch. `packages/content/tests/undo.test.ts` asserts that shape
+ * over every module in `scripts/lib`, so a constant added there is held to its
+ * script's shebang whether or not anybody remembers this loop.
+ */
+/**
+ * The documents held to the commands they name.
+ *
+ * Keep this array literal free of prose. `runnable.test.ts` reads the list back
+ * out of this file rather than keeping a second copy of it, and the expression
+ * it reads with stops at the first closing bracket and pairs quotes as it goes.
+ * A comment added between the entries cost two passes: an apostrophe in it
+ * swallowed the entry after it, and the bracket in the regex the replacement
+ * comment quoted truncated the list before it. Both times the gate went on
+ * reporting a real document as unaudited, which is the one thing it exists to
+ * notice. Explanations go here, above the brackets, where they parse as nothing.
+ *
+ * `apps/webgl/LOOP.md` is a scheduled session's only context: it tells that
+ * session which gates to run, so a command named wrongly in it is a gate
+ * silently not run.
  */
 const DOCS = [
   'README.md',
@@ -155,19 +203,29 @@ const DOCS = [
   '.specify/memory/constitution.md',
   'packages/contracts/README.md',
   'apps/bot/README.md',
+  'apps/webgl/LOOP.md',
 ];
 
 const documented = new Map();
-for (const doc of DOCS) {
-  const path = join(ROOT, doc);
-  if (!existsSync(path)) continue;
 
-  for (const [script, runtimes] of documentedRuntimes(read(path) ?? '')) {
+/** Merge whatever commands one piece of text names into the audited set. */
+const absorb = (text) => {
+  for (const [script, runtimes] of documentedRuntimes(text)) {
     const named = documented.get(script) ?? new Set();
     for (const runtime of runtimes) named.add(runtime);
     documented.set(script, named);
   }
+};
+
+for (const doc of DOCS) {
+  const path = join(ROOT, doc);
+  if (existsSync(path)) absorb(read(path) ?? '');
 }
+
+// And the commands this code prints, for the reason in the block above: the
+// sentence a program hands somebody whose tree it has just broken is the most
+// documented command in the repository, and it was the only one nothing read.
+for (const printed of [RECOVERY, UNREADABLE_RECOVERY]) absorb(printed);
 
 const problems = checkRuntimes(declared, documented);
 

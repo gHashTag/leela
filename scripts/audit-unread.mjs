@@ -9,9 +9,23 @@
  * criticised NeuroLeela for. All three were declared, set correctly everywhere,
  * documented — and consulted by nothing.
  *
- * Tests are deliberately not searched. `broadcast` was read in its tests and
- * nowhere else, which is exactly the state this is looking for: a field the
- * suite confirms and the program ignores.
+ * Tests are deliberately not searched for THREE of the four questions.
+ * `broadcast` was read in its tests and nowhere else, which is exactly the state
+ * the fields half is looking for: a field the suite confirms and the program
+ * ignores. `unreadFields`, `staleAmong` and `unusedInOwnPackage` therefore go on
+ * reading the shipped sources alone.
+ *
+ * The fourth asks *does anything at all call this export*, and that question has
+ * an honest answer that includes a test — a test compiles against the signature
+ * and breaks when the signature does. It did not get one: `NOT_SOURCE` in
+ * `lib/claims.mjs` holds `'tests'`, so a caller inside a tests directory was
+ * outside this search by construction, and the audit reported
+ * `floatingAssertions` in `scripts/lib/awaited.mjs` as uncalled while
+ * `apps/mobile/tests/awaited.test.ts` called it thirteen times. Any library
+ * function whose only caller is a test read the same way, and the remedy printed
+ * below — *add it to PUBLIC_API with a reason* — would have made that permanent.
+ * `testCallerFiles` in `lib/unread.mjs` is the second corpus, handed to the two
+ * `uncalledExports` calls and to nothing else.
  *
  * Run:  node scripts/audit-unread.mjs
  *
@@ -46,6 +60,7 @@ import {
   declaredExports,
   declaredFields,
   declaredMembers,
+  testCallerFiles,
   uncalledExports,
   unreadFields,
   unusedInOwnPackage,
@@ -53,6 +68,19 @@ import {
 import { workspaceSources } from './lib/claims.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+// The one reader both corpora below are built through. Lowercase deliberately:
+// it is an injected reader and not a list of excused things, and
+// `audit-records.mjs` reads every uppercase constant in this directory as a list
+// that must be declared as one — which it said, loudly, the first time this was
+// written `READ`.
+const readTree = {
+  exists: (path) => existsSync(join(ROOT, path)),
+  entries: (path) => readdirSync(join(ROOT, path)),
+  // A workspace's sources are not only its `src`: the post-deploy check and
+  // the phone's entry point live beside it, and both are readers.
+  isDirectory: (path) => statSync(join(ROOT, path)).isDirectory(),
+};
 
 /**
  * Where to look: every workspace that ships TypeScript, plus the scripts.
@@ -65,16 +93,24 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
  * The audit scripts are readers too: `detectRules`'s fields are consumed by
  * `audit-copies.mjs`, and omitting them reported those fields as unread.
  */
-const SEARCH = [
-  ...workspaceSources({
-    exists: (path) => existsSync(join(ROOT, path)),
-    entries: (path) => readdirSync(join(ROOT, path)),
-    // A workspace's sources are not only its `src`: the post-deploy check and
-    // the phone's entry point live beside it, and both are readers.
-    isDirectory: (path) => statSync(join(ROOT, path)).isDirectory(),
-  }),
-  'scripts',
-];
+const SEARCH = [...workspaceSources(readTree), 'scripts'];
+
+/**
+ * The tests, which answer one question here and no other.
+ *
+ * `NOT_SOURCE` in `lib/claims.mjs` contains `'tests'`, so `SEARCH` above cannot
+ * see a caller that lives in a tests directory — and this audit reported
+ * `floatingAssertions` in `scripts/lib/awaited.mjs` as having no caller anywhere
+ * while `apps/mobile/tests/awaited.test.ts` called it thirteen times. The
+ * printed remedy would have put a permanent falsehood in `PUBLIC_API`.
+ *
+ * Handed to `uncalledExports` alone. `testCallerFiles`'s own comment says at
+ * length why the other three questions must go on refusing to look at tests —
+ * `broadcast` was read in its tests and nowhere else, and that is the defect
+ * rather than the answer to it.
+ */
+const testFiles = testCallerFiles(readTree);
+const testSources = testFiles.map((file) => readFileSync(join(ROOT, file), 'utf8'));
 
 /**
  * Fields that are write-only on purpose.
@@ -328,11 +364,17 @@ const memberDeclarations = files.flatMap((file, index) =>
   /\.tsx?$/.test(file) ? declaredMembers(sources[index], relative(ROOT, file)) : [],
 );
 
-const uncalled = uncalledExports(exportDeclarations, sources, Object.keys(PUBLIC_API));
-const unusedMembers = uncalledExports(memberDeclarations, sources, Object.keys(PUBLIC_MEMBERS));
+// The two questions of the form *does anything at all call this*, and the only
+// two that get the tests. A test is a caller: it compiles against the signature
+// and breaks when the signature does. See `testCallerFiles`.
+const callers = [...sources, ...testSources];
+
+const uncalled = uncalledExports(exportDeclarations, callers, Object.keys(PUBLIC_API));
+const unusedMembers = uncalledExports(memberDeclarations, callers, Object.keys(PUBLIC_MEMBERS));
 
 console.log(
-  `\nChecked ${exportDeclarations.length} exports and ${memberDeclarations.length} class members.\n`,
+  `\nChecked ${exportDeclarations.length} exports and ${memberDeclarations.length} class members ` +
+    `for a caller in ${files.length} source file(s) and ${testFiles.length} test file(s).\n`,
 );
 
 console.log(

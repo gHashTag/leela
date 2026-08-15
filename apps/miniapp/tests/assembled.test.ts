@@ -1,7 +1,25 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { toDocument } from '@leela/journal';
+
+/**
+ * This package's root, taken from this file's own location rather than from the
+ * working directory.
+ *
+ * Seven suites in this directory used to read their fixtures through
+ * `process.cwd()`. That works while Vitest is started inside `apps/miniapp` and
+ * throws ENOENT the moment the same file is collected from anywhere else — a
+ * repository-root run, a coverage pass over all ten workspaces — and the
+ * measured symptom was `ENOENT /Users/playra/leela/src/state.ts`. This file's
+ * own read is inside the helper every case calls, so from the root all fourteen
+ * of its cases failed with `ENOENT ... open 'index.html'` before touching the
+ * app. The long version is at the top of `partly-written.test.ts`, which is
+ * also where the guard against it lives.
+ */
+const PACKAGE = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
  * The mini app as it is actually assembled, played.
@@ -90,7 +108,7 @@ async function play(storage: Storage, language = 'en', inTelegram = false): Prom
   }
   Object.defineProperty(window.navigator, 'language', { value: language, configurable: true });
 
-  const html = readFileSync('index.html', 'utf8');
+  const html = readFileSync(resolve(PACKAGE, 'index.html'), 'utf8');
   const body = html
     .slice(html.indexOf('<body>') + '<body>'.length, html.indexOf('</body>'))
     .replace(/<script[\s\S]*?<\/script>/g, '');

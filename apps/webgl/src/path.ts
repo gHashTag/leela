@@ -15,6 +15,7 @@
 
 import {
   DEFAULT_RULESET,
+  MAX_ROLL,
   type GameState,
   type MoveEvent,
   type RuleSet,
@@ -22,8 +23,9 @@ import {
   replay,
 } from '@leela/engine';
 
-export const MIN_ROLL = 1;
-export const MAX_ROLL = 6;
+// The engine owns what a throw can be; this surface only asks. `MAX_ROLL` was
+// written out here as a second `6` until `audit-doubles` named the copy.
+const MIN_ROLL = 1;
 
 /** Whether a stored list is one this game could have thrown. */
 export const areRolls = (value: unknown): value is number[] =>

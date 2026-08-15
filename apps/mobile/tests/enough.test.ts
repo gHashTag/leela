@@ -21,7 +21,12 @@ import { EMPTY_PATH, record, takeAccount, type Store } from '../src/journal';
  * state and once for the act. A rule that appears outside `@leela/engine` has
  * already drifted or will, and this one had drifted in the only direction that
  * looks like nothing: it was right for the variant being played and wrong for
- * two of the five the engine ships.
+ * two of the five the engine shipped then — three of the six it ships now,
+ * since `telegram` was read out of the bot donor with fifty characters on it.
+ *
+ * The grid below reads `RULESETS` rather than a list, which is why the sixth
+ * variant needed no edit here to be covered. That is the same shape defect
+ * this file is about, one level up.
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -56,6 +61,41 @@ describe('what counts is the variant\'s answer', () => {
     // asked for the same amount, every case above would be the same case.
     const bounds = new Set(shipped.map((rules) => rules.minReportChars));
     expect(bounds.size, 'variants that differ on this').toBeGreaterThan(1);
+  });
+
+  it('follows the number rather than checking it, which is measured and not obvious', () => {
+    /**
+     * **What this grid cannot fail on.** The obvious sentence — *change a
+     * variant's minimum and the boundary grid goes red* — is FALSE, and it was
+     * believed for long enough to be written into a work order. MEASURED:
+     * `telegram` was added with `minReportChars: 50`, the value was set to 0,
+     * and this file stayed green at fifteen tests. It has to: every case above
+     * derives its two lengths from the variant's own number, so it is
+     * self-consistent at any value and cannot disagree with one.
+     *
+     * That is the right shape for this file. What it asserts is that the
+     * surface asks the engine instead of answering for itself, which is the
+     * defect it was written for — three surfaces each spelling out
+     * `text.trim().length === 0`. The *number* is somebody else's job:
+     * `scripts/audit-variants.mjs` holds `telegram.minReportChars = 50` to
+     * `leela-chakra-bot/src/commands/report/index.ts:17` and `legacy-mobile`'s
+     * 100 to `CreatePost`, and it is the run that goes red for a changed
+     * number — measured too, on the same edit.
+     *
+     * Written as a test rather than as a paragraph so it stays true: if the
+     * grid ever does start checking the number, these two synthetic variants
+     * are what will fail.
+     */
+    for (const minReportChars of [0, 7, 4_000]) {
+      const invented = { ...LEGACY_MOBILE, minReportChars } as RuleSet;
+      const enough = 'x'.repeat(Math.max(minReportChars, 1));
+
+      expect(record(EMPTY_PATH, 30, enough, 1, invented).entries, `${minReportChars}`).toHaveLength(1);
+      if (minReportChars > 0) {
+        const short = 'x'.repeat(minReportChars - 1);
+        expect(record(EMPTY_PATH, 30, short, 1, invented).entries, `${minReportChars} short`).toHaveLength(0);
+      }
+    }
   });
 
   it('is never whitespace, whatever the variant says', () => {

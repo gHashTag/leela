@@ -185,8 +185,31 @@ export function checkManifests(copied, workspaces) {
  * touching that line is a package CI silently never runs: not a red build, an
  * absent one, which is the failure nobody notices.
  *
- * Returns one set per loop, so a package added to two of the three is caught as
- * readily as one added to none.
+ * Returns one entry per loop — the names it iterates and the body it runs them
+ * through — so a package added to two of the three is caught as readily as one
+ * added to none, and so its consumer can ask a question the names alone cannot
+ * answer: whether any of these loops runs a test runner at all.
+ *
+ * **That second question was missing, and its absence was the same shape as the
+ * defect above.** MEASURED on 2026-08-06, against a copy of the real
+ * `.github/workflows/ci.yml` with the whole `- name: Test` step deleted: this
+ * reader returned 2 loops instead of 3, `checkCiPackages` returned
+ * `problems: []`, and the word `vitest` did not appear anywhere in the file.
+ * Two typecheck loops, each naming all ten workspaces, satisfied the coverage
+ * checker completely — so a workflow that ran no test in the repository
+ * reported no problem at all. The gap was visible one screen down the same
+ * file: `RUNS_TESTS` existed, `packagesTestedByDeploy` used it, and
+ * `checkDeployTests` already refused a deploy job with no test loop. `pages.yml`
+ * was guarded against publishing untested code while `ci.yml` was not guarded
+ * against testing nothing.
+ *
+ * The body is carried here rather than re-read by the consumer for the reason
+ * this file keeps repeating: a second description of "which loop is the test
+ * loop" is the drift it exists to catch. It is the same `LOOP_HEADER` and the
+ * same `…done` block `packagesTestedByDeploy` matches, which does mean a loop
+ * written without its `done` is invisible to both. That failure is loud rather
+ * than quiet — an unterminated `for` is a shell syntax error and a red build —
+ * and it is the opposite of the failure this function guards.
  *
  * **It reads the workflow as YAML, and only inside a step that will run.** It
  * used to read it as text: one `matchAll` for the loop header anywhere in the
@@ -213,11 +236,12 @@ export function checkManifests(copied, workspaces) {
  */
 export const packagesCheckedByCi = (workflow) => {
   const loops = [];
+  const block = new RegExp(`${LOOP_HEADER}([\\s\\S]*?)\\bdone\\b`, 'g');
 
   for (const { run } of liveStepsOf(workflow)) {
     if (run === null) continue;
-    for (const [, list] of run.matchAll(new RegExp(LOOP_HEADER, 'g'))) {
-      loops.push(namesIn(list));
+    for (const [, list, body] of run.matchAll(block)) {
+      loops.push({ names: namesIn(list), body });
     }
   }
 
@@ -227,11 +251,13 @@ export const packagesCheckedByCi = (workflow) => {
 /**
  * One `for pkg in …; do` header, and the list it iterates.
  *
- * A source string rather than a literal because two readers here want it: the
- * one above, which wants only the list, and `packagesTestedByDeploy`, which
- * wants the list *and the body* so it can tell a loop that runs tests from a
- * loop that builds. Written twice they would drift, and this file's whole
- * subject is two descriptions of one thing drifting apart.
+ * A source string rather than a literal because two readers here want it, and
+ * both want the list *and the body*: `packagesTestedByDeploy`, so it can tell a
+ * loop that runs tests from a loop that builds, and the one above, so its
+ * consumer can ask whether any loop runs tests at all. The reader above wanted
+ * only the list until the pass that measured a CI workflow with its `- name:
+ * Test` step deleted reporting no problem. Written twice they would drift, and
+ * this file's whole subject is two descriptions of one thing drifting apart.
  */
 const LOOP_HEADER = String.raw`for pkg in ([^;\n]+); do`;
 
@@ -409,13 +435,40 @@ export function checkLockfiles(files) {
   );
 }
 
-/** Workspaces CI iterates, against the ones that exist. */
+/**
+ * Workspaces CI iterates, against the ones that exist — and whether any of
+ * those loops runs a test at all.
+ *
+ * The first two questions are per loop and have been here since the list was
+ * first held to the repository: every workspace named, and every name a real
+ * workspace. The third is about the loops together, and it was missing —
+ * MEASURED on 2026-08-06 with the `- name: Test` step deleted from a copy of
+ * the real workflow, two typecheck loops naming all ten workspaces answered
+ * both per-loop questions perfectly and this function returned `problems: []`
+ * for a CI run that executed no test in the repository. See
+ * `packagesCheckedByCi`.
+ *
+ * Its neighbour `checkDeployTests` had asked the third question of `pages.yml`
+ * for passes. The sentences are deliberately not the same one: a deploy job
+ * with no test loop ships unchecked code to players, a CI workflow with no test
+ * loop leaves every suite unrun on every push, and a person reading a red build
+ * has to be able to tell from the line alone which of the two spoke.
+ *
+ * @param loops      One `{ names, body }` per loop, from `packagesCheckedByCi`.
+ * @param workspaces Every workspace that ships code.
+ */
 export function checkCiPackages(loops, workspaces) {
   const problems = [];
 
   if (loops.length === 0) return ['the CI workflow iterates no packages at all'];
 
-  for (const [index, named] of loops.entries()) {
+  if (!loops.some(({ body }) => RUNS_TESTS.test(body))) {
+    problems.push(
+      `not one of the CI workflow's ${loops.length} package loops runs a test runner: every suite in the repository can be red and every push still goes green`,
+    );
+  }
+
+  for (const [index, { names: named }] of loops.entries()) {
     for (const workspace of workspaces) {
       if (!named.has(workspace)) {
         problems.push(`${workspace} exists and CI loop ${index + 1} does not run it`);

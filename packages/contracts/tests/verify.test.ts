@@ -5,7 +5,9 @@ import { describe, expect, it } from 'vitest';
 import {
   ARROWS,
   ONCHAIN,
+  RULESETS,
   SNAKES,
+  TELEGRAM,
   TOTAL_PLANS,
   WIN_LOKA,
   auditBoard,
@@ -33,7 +35,7 @@ describe('the contract and the engine agree on the board', () => {
 
   it('has no divergence at all', () => {
     const divergences = compareBoards(board);
-    expect(describeDivergences(divergences)).toBe(
+    expect(describeDivergences(divergences, 'the board')).toBe(
       'the contract and the engine agree on the board',
     );
   });
@@ -111,14 +113,35 @@ describe('compareBoards reports what it finds', () => {
   });
 
   it('reads as something a person can act on', () => {
-    const text = describeDivergences(compareBoards(parseContract('if (newPlan == 12) { newPlan = 9; }')));
+    const text = describeDivergences(compareBoards(parseContract('if (newPlan == 12) { newPlan = 9; }')), 'the board');
     expect(text).toContain('12: engine → 8, contract → 9');
   });
 });
 
 describe('the contract enforces the report gate', () => {
-  // The contract is the only implementation that ever did. That is the
-  // evidence the gate belongs to the game, not to one app's product decisions.
+  /**
+   * **RETRACTED: "The contract is the only implementation that ever did."**
+   * That comment stood here, and in `packages/contracts/README.md`, in
+   * `packages/engine/src/rulesets.ts` and in `MIGRATION.md`. It is false.
+   * MEASURED in the donor at `leela-src/leela-chakra-bot`: the shipped
+   * Telegram bot stated the gate too, per player, with a fifty-character
+   * minimum — `src/index.ts:78` discards the throw taken at `:64` and enters
+   * the report conversation, so `gameStep` at `:127` is unreachable while an
+   * account is owed, and `src/commands/report/index.ts:39` is the one place
+   * `isWrite` is ever cleared.
+   *
+   * The evidence is better for the correction, not worse. **Two** independent
+   * implementations stated the gate, in two languages, neither aware of the
+   * other — which is why `classic` has it. And the bot's is the stronger form:
+   * it gates per *player*, where this contract gates per *last writer* (the
+   * describe below, and `gate.test.ts`), a question a lone player answers yes
+   * to forever after writing once.
+   *
+   * The bot's rules are the `telegram` variant in `@leela/engine`, and
+   * `scripts/audit-variants.mjs` re-reads the citations on every run. The
+   * assertions here are unchanged: what they said about the Solidity was
+   * right, and only the claim of uniqueness was wrong.
+   */
 
   it('requires a report before a roll', () => {
     expect(CONTRACT).toMatch(/You must create a report before rolling the dice/);
@@ -127,6 +150,21 @@ describe('the contract enforces the report gate', () => {
   it('is described by a ruleset that says so', () => {
     expect(ONCHAIN.requireReportBeforeRoll).toBe(true);
     expect(ONCHAIN.id).toBe('onchain');
+  });
+
+  it('is not the only ruleset that says so, which is the retraction above', () => {
+    // Held rather than described. The retracted sentence was prose in four
+    // files and nothing tested it, which is how it survived six
+    // implementations. This fails the moment the engine stops shipping a
+    // second variant that states the gate.
+    const stated = Object.values(RULESETS).filter((rules) => rules.requireReportBeforeRoll);
+    const shipped = stated.filter((rules) => rules.id !== 'classic');
+
+    expect(shipped.map((rules) => rules.id)).toContain('onchain');
+    expect(shipped.length, 'shipped implementations that stated the gate').toBeGreaterThan(1);
+    expect(TELEGRAM.requireReportBeforeRoll).toBe(true);
+    // Per player, and with a length on it — both of which the contract lacks.
+    expect(TELEGRAM.minReportChars).toBe(50);
   });
 });
 
@@ -227,13 +265,13 @@ describe('the constant check can actually fail', () => {
 
 describe('the report reads for either kind of divergence', () => {
   it('says "nowhere" for a jump the contract does not have', () => {
-    const text = describeDivergences(compareBoards(parseContract('uint8 constant WIN_PLAN = 68;')));
+    const text = describeDivergences(compareBoards(parseContract('uint8 constant WIN_PLAN = 68;')), 'the board');
     expect(text).toMatch(/contract → nowhere/);
   });
 
   it('says "nowhere" for a jump the engine does not have', () => {
     // The other side of the same sentence, which had never been printed.
-    const text = describeDivergences(compareBoards(parseContract('if (newPlan == 5) { newPlan = 1; }')));
+    const text = describeDivergences(compareBoards(parseContract('if (newPlan == 5) { newPlan = 1; }')), 'the board');
     expect(text).toMatch(/5: engine → nowhere, contract → 1/);
   });
 });

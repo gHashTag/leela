@@ -17,7 +17,7 @@
 
 export interface RuleSet {
   /** Identifier persisted alongside a game so old games stay reproducible. */
-  readonly id: 'classic' | 'neuroleela' | 'legacy-mobile' | 'online' | 'onchain';
+  readonly id: 'classic' | 'neuroleela' | 'legacy-mobile' | 'online' | 'onchain' | 'telegram';
   /** A six lets the player throw again instead of passing the turn. */
   readonly extraTurnOnSix: boolean;
   /** Three sixes in a row return the player to where the run began. */
@@ -193,10 +193,27 @@ export const ONLINE: RuleSet = Object.freeze({
  * `0x2741CE9C9fA1c9B78b20cab7F07998d77846b7Af`.
  *
  * A deployed contract cannot be corrected, so its behaviour is described here
- * rather than treated as a bug to fix. It is the only implementation that ever
- * stated the report gate — `require(..., 'You must create a report before
- * rolling the dice.')` — which is the evidence that the gate belongs to the
- * game and not to one app's product decisions.
+ * rather than treated as a bug to fix. It states the report gate in so many
+ * words — `require(..., 'You must create a report before rolling the dice.')`.
+ *
+ * **RETRACTED: "It is the only implementation that ever stated the report
+ * gate."** That sentence stood here, and in `packages/contracts/README.md`, in
+ * `packages/contracts/tests/verify.test.ts` and in `MIGRATION.md`, and it is
+ * false. MEASURED: the shipped Telegram bot stated it too, per player and with
+ * a fifty-character minimum — its `make_step` handler discards the throw and
+ * enters the report conversation at lines 78-90 while an account is owed, and
+ * clears the flag at line 39 of its report conversation, after the row is
+ * written. `TELEGRAM` below carries the citations and `scripts/audit-variants.mjs`
+ * re-reads them. The sentence was repeated in four places and never checked
+ * against the sixth implementation, which is what the retraction is for.
+ *
+ * The argument it was making survives the retraction stronger than it went in.
+ * *Two independent implementations stated the gate* — one in Solidity, one in
+ * TypeScript, neither aware of the other — which is better evidence that the
+ * rule belongs to the game than one implementation was. And the bot's is the
+ * faithful one: it gates **per player**, where this contract gates **per last
+ * writer** (below), so what everybody reads the require to mean is what the
+ * bot actually does and not what the chain does.
  *
  * **What it asks is not what it says.** The condition is
  * `reports[reportIdCounter].reporter == msg.sender`, and that counter is the
@@ -237,12 +254,129 @@ export const ONCHAIN: RuleSet = Object.freeze({
   reportOnWinningSquare: false,
 });
 
+/**
+ * What the shipped Telegram bot plays.
+ *
+ * The sixth implementation and the one that had no variant. It is the reason
+ * the retraction above exists: the bot stated the report gate too, per player,
+ * with a length on it, and four files said the contract was the only one that
+ * ever did. Everything below is MEASURED at the donor, with line numbers,
+ * because the sentence it replaces was repeated on nobody's reading.
+ *
+ * **The gate, and it is stated.** `leela-chakra-bot/src/index.ts:64` throws the
+ * die at the top of the `make_step` handler. `:78` then asks
+ * `if (user.isWrite)` and, when the player owes an account, re-sends the plan
+ * they are standing on, enters the report conversation and returns — so the
+ * throw is discarded and `gameStep` at `:127` is never reached while a report
+ * is owed. The flag is cleared in exactly one place,
+ * `leela-chakra-bot/src/commands/report/index.ts:39`, after `updateHistory`
+ * has written the row.
+ *
+ * **It is per player, which is the stronger form.** `isWrite` is a column on
+ * the *user*, so the question the bot asks is *do you owe an account for the
+ * square you are standing on*. The contract's
+ * `reports[reportIdCounter].reporter == msg.sender` asks *were you the last
+ * person to write*, which a lone player satisfies once and then forever. Same
+ * rule, two implementations; only one of them means it.
+ *
+ * **Fifty characters is the bot's own bar.**
+ * `leela-chakra-bot/src/commands/report/index.ts:17-22` refuses on
+ * `report?.length < 50` and says so to the player. Two things measured while
+ * reading it, neither of which changes the flag:
+ *
+ *   - the sentence shown says *longer than 50 characters* and the condition
+ *     accepts exactly fifty, so the donor's own message is off by one;
+ *   - the length is taken from the raw text. `countsAsReport` trims first, so
+ *     fifty spaces are an account to the donor and are not one here. That is
+ *     a deliberate divergence: a gate opened by whitespace is the rule with
+ *     its point removed, and no variant in this file reproduces one.
+ *
+ * **MEASURED DEFECT OF THE DONOR — the gate is armed at one of the two
+ * paths.** `isWrite: true` is set at `leela-chakra-bot/src/index.ts:163`, and
+ * `:156-160` returns before it whenever the plan carries a picture: the photo
+ * goes out, the report conversation is entered, and the flag is never written.
+ * So a player standing on an illustrated square is told in bold that *the game
+ * will not continue* until they write, and may then throw again without
+ * writing — the next press finds `isWrite` unset and rolls. The bold sentence
+ * is true for pictureless squares only. `grep -rn isWrite src/` returns three
+ * sites in the donor and that is all of them: `:78` reads it, `:163` sets it,
+ * `commands/report/index.ts:39` clears it. Recorded as the donor's defect, not
+ * this repository's: the variant says what the rule *was*, and the surface
+ * that plays it is a separate decision.
+ *
+ * **The board rules are unrecoverable, and here is the proof rather than the
+ * excuse.** The donor computes no move.
+ * `leela-chakra-bot/src/core/supabase/game.ts:15-20` hands the roll to
+ * `supabase.functions.invoke("game-step")` and stores whatever comes back;
+ * `grep -rn game-step` over all fifteen donor clones returns four call sites
+ * and no definition anywhere. That is why `audit-copies` finds zero board
+ * copies in this donor. So every flag below is one of three things, and which
+ * one it is is stated rather than left to be guessed:
+ *
+ *   - **measured** in the bot's own code — `requireReportBeforeRoll`,
+ *     `minReportChars`, `turnCooldownMs`, `rerollOnRepeat`, `reportAfterSix`,
+ *     `mayReenterAfterWinning`, `reportOnWinningSquare`, `extraTurnOnSix`;
+ *   - **indirect** — `threeSixesReset`, on the donor storing the result of a
+ *     rule it does not itself compute;
+ *   - **inert** — `refusedThrowStartsCooldown` and `cooldownFrom`, which
+ *     decide nothing at all while `turnCooldownMs` is 0, and are marked as
+ *     such below rather than passed off as readings.
+ *
+ * Nothing here is filled in from `CLASSIC`. That is the exact failure recorded
+ * in `scripts/audit-variants.mjs`'s own header: `onchain` carried `classic`'s
+ * value for all five flags added after it was written, and one of them was
+ * wrong.
+ */
+export const TELEGRAM: RuleSet = Object.freeze({
+  id: 'telegram',
+  // MEASURED. `roll` appears at :64 (drawn), :127 (sent away) and twice inside
+  // display strings, and nowhere else: the bot never branches on the value of
+  // the throw. Whether the edge function grants another throw is unrecoverable,
+  // but no extra throw could reach the player through this surface anyway —
+  // the gate at :78 stands between every pair of presses.
+  extraTurnOnSix: false,
+  // INDIRECT, and the only flag here that is. `game.ts:35-36` writes
+  // `consecutive_sixes` and `position_before_three_sixes` out of the edge
+  // function's answer, so the rule exists upstream and this donor names it.
+  // Which throw it fires on, and which square it returns to, are not in any
+  // clone — `onchain` and `classic` disagree about exactly that, so this flag
+  // says *the variant has the rule* and nothing finer.
+  threeSixesReset: true,
+  // MEASURED. `const roll = Math.floor(Math.random() * 6) + 1` at :64 is the
+  // only die in the bot, and it is compared with nothing.
+  rerollOnRepeat: false,
+  // MEASURED, and the reason this variant exists: `if (user.isWrite)` at :78.
+  requireReportBeforeRoll: true,
+  // MEASURED. Nothing in the donor measures time between throws: no timer, no
+  // stored last-roll time read back, no wait shown to anybody.
+  turnCooldownMs: 0,
+  // MEASURED. `:163` arms the gate after the throw with no exemption for a six
+  // — there is no branch on the roll to hang one on.
+  reportAfterSix: true,
+  // INERT. There is no cooldown to start, so this flag decides nothing for
+  // this variant. Stated so nobody reads it as a reading of the donor.
+  refusedThrowStartsCooldown: true,
+  // MEASURED. `is_finished` is written to the table at `game.ts:36` and read
+  // by nothing, so the bot refuses nobody for having won. Whether the edge
+  // function refuses them is unrecoverable; this surface does not.
+  mayReenterAfterWinning: true,
+  // INERT for the same reason as `refusedThrowStartsCooldown`: with no wait,
+  // there is nothing to measure from.
+  cooldownFrom: 'roll',
+  // MEASURED. `report?.length < 50` at `commands/report/index.ts:17`.
+  minReportChars: 50,
+  // MEASURED. The gate exempts no square: the winning plan is not named
+  // anywhere in the bot, and `:163` does not look at where the player landed.
+  reportOnWinningSquare: true,
+});
+
 export const RULESETS = Object.freeze({
   classic: CLASSIC,
   neuroleela: NEUROLEELA,
   'legacy-mobile': LEGACY_MOBILE,
   online: ONLINE,
   onchain: ONCHAIN,
+  telegram: TELEGRAM,
 });
 
 /**

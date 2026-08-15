@@ -34,9 +34,16 @@ import {
   type RuleSet,
   type Session,
 } from '@leela/engine';
+import { seatId } from '@leela/journal';
 
-/** One player on one device. A shared table is the bot's business. */
-const SEAT = 'p1';
+/**
+ * One player on one device. A shared table is the bot's business.
+ *
+ * Derived, not copied: the journal names the seats, and a literal `'p1'` here
+ * was the same value written out a third time — true until the day it is not,
+ * with a player's path still on the disk under a name nothing asks for.
+ */
+const SEAT = seatId(0);
 
 export interface Game {
   session: Session;

@@ -591,9 +591,41 @@ ${steps}
 describe('the documents held to the commands they name', () => {
   const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 
-  /** Every markdown file in the repository, minus what nobody wrote by hand. */
+  /**
+   * Every markdown file in the repository, minus what nobody wrote by hand.
+   *
+   * `.stryker-tmp` is skipped, and it is the only entry here that is not a
+   * build output. Stryker copies the whole repository into
+   * `.stryker-tmp/sandbox-<n>/` and `cleanTempDir: 'always'` removes it only
+   * after a run that finishes, so a killed run leaves a second copy of every
+   * markdown file in this tree at a path this walker descends into. MEASURED on
+   * 2026-08-06:
+   *
+   *     $ mkdir -p .stryker-tmp/sandbox-VERIFY && cp README.md .stryker-tmp/sandbox-VERIFY/
+   *     $ npx vitest run --root packages/engine tests/runnable.test.ts
+   *     → `unaudited` held `.stryker-tmp/sandbox-VERIFY/README.md`
+   *
+   * A copy of README is not a document this repository maintains, and no list
+   * in `audit-scripts.mjs` could ever be right about it — the sandbox is named
+   * after a run number that does not exist yet. So the finding was phantom, and
+   * a check that names innocents is one somebody deletes rather than obeys.
+   *
+   * Skipping it here hides the sandbox from this suite and nothing more. Being
+   * told the sandbox is there is `scripts/build-content.mjs`'s job: it refuses
+   * at the first step of `bun run verify`, before any suite runs, and says what
+   * left the directory behind and the command that clears it.
+   */
   const documents = (dir: string, prefix = ''): string[] => {
-    const skip = new Set(['node_modules', '.git', 'dist', 'build', 'coverage', '.next', 'out']);
+    const skip = new Set([
+      'node_modules',
+      '.git',
+      'dist',
+      'build',
+      'coverage',
+      '.next',
+      'out',
+      '.stryker-tmp',
+    ]);
     const found: string[] = [];
 
     for (const entry of readdirSync(dir, { withFileTypes: true })) {

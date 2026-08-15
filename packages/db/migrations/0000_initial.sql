@@ -39,9 +39,20 @@ ALTER TABLE players DROP CONSTRAINT IF EXISTS players_plan_on_board;
 ALTER TABLE players ADD CONSTRAINT players_plan_on_board
   CHECK (plan BETWEEN 1 AND 72);
 
+-- The list must be the engine's `RULESETS`, all of it. It was not: this
+-- constraint named four variants while `@leela/engine` declared six, having
+-- gone stale once when `onchain` was added and again when `telegram` was.
+-- A row written by either of those surfaces would have been refused here.
+-- Corrected in place on 2026-08-06, adding `onchain` and `telegram`, because
+-- no database has ever run this file — the Firebase and Supabase exports have
+-- not happened and this repository holds no connection string (MIGRATION.md,
+-- "Remaining, in order", item 2). Once it has run somewhere, add a forward
+-- migration instead of editing this line.
+-- Held by packages/db/tests/migrations.test.ts, which now derives the set from
+-- the engine rather than restating it.
 ALTER TABLE players DROP CONSTRAINT IF EXISTS players_ruleset_known;
 ALTER TABLE players ADD CONSTRAINT players_ruleset_known
-  CHECK (ruleset IN ('classic', 'neuroleela', 'legacy-mobile', 'online'));
+  CHECK (ruleset IN ('classic', 'neuroleela', 'legacy-mobile', 'online', 'onchain', 'telegram'));
 
 -- Move log ------------------------------------------------------------------
 
@@ -81,9 +92,14 @@ CREATE TABLE IF NOT EXISTS sessions (
   updated_at  timestamp DEFAULT now()
 );
 
+-- Same correction as on `players` above, and the same reason. `roomToRows`
+-- writes `session.rules.id` straight into this column, so a Telegram-hosted
+-- room would have been the first thing to hit the refusal. `onchain` and
+-- `telegram` added 2026-08-06; these migrations have never been applied
+-- anywhere, so this is an edit rather than a forward migration.
 ALTER TABLE sessions DROP CONSTRAINT IF EXISTS sessions_ruleset_known;
 ALTER TABLE sessions ADD CONSTRAINT sessions_ruleset_known
-  CHECK (ruleset IN ('classic', 'neuroleela', 'legacy-mobile', 'online'));
+  CHECK (ruleset IN ('classic', 'neuroleela', 'legacy-mobile', 'online', 'onchain', 'telegram'));
 
 CREATE TABLE IF NOT EXISTS session_players (
   id                          serial PRIMARY KEY,

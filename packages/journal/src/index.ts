@@ -45,6 +45,21 @@ export const INTENTION_KEY = 'leela.intention.v1';
 export const MAX_REPORTS = 500;
 
 /**
+ * The name seat *n* carries, on every surface.
+ *
+ * A journal is kept per seat, and a journal that survives a surface — written
+ * on the mini app, read back on the board in glass — survives only if both
+ * asked for the same name. Three surfaces had the answer written out by hand:
+ * the mini app derived `p1` here, and the phone and the web board each held a
+ * literal `'p1'` whose comment said it was copying the mini app. A copy with a
+ * comment is still a copy; the day one of them changes, a player's path is
+ * still on the disk and nothing can find it.
+ */
+export function seatId(index: number): string {
+  return `p${index + 1}`;
+}
+
+/**
  * The largest board this format describes.
  *
  * A second count of one board, and it has to be: `@leela/engine` exports this

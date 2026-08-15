@@ -24,9 +24,6 @@ const FACES: Readonly<Record<number, readonly number[]>> = {
   6: [1, 3, 4, 6, 7, 9],
 };
 
-export const MIN_FACE = 1;
-export const MAX_FACE = 6;
-
 /**
  * Which cells a face fills.
  *
@@ -40,10 +37,15 @@ export const MAX_FACE = 6;
  * `isFace(1.5)` said false — two functions in the same file disagreeing about
  * what a face is. No roller produces a fraction, which is why it sat there; the
  * test that found it is one line longer than the test that did not.
+ *
+ * A face is a value `FACES` has pips for — the table above is the die, so it
+ * is also the answer. `MIN_FACE`/`MAX_FACE` restated the table's bounds as two
+ * more sixes for `audit-doubles` to find against the mini app's die; the table
+ * cannot disagree with itself.
  */
 /** Whether a value is a face this die can show. */
 export const isFace = (value: number): boolean =>
-  Number.isInteger(value) && value >= MIN_FACE && value <= MAX_FACE;
+  Number.isInteger(value) && FACES[value] !== undefined;
 
 export const pipsFor = (value: number): readonly number[] =>
   isFace(value) ? (FACES[value] ?? []) : [];

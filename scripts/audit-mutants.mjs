@@ -40,12 +40,17 @@
  * To only put back what a stopped run left behind, and break nothing new:
  *
  *       node scripts/audit-mutants.mjs --restore
+ *
+ * `--help` prints the same usage the script prints when it refuses an argument
+ * it does not know. It refuses rather than ignores, because an ignored flag left
+ * no names behind, and no names means every decision — see `readArgv` in
+ * `lib/undo.mjs`.
  */
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
-import { putItBack, remember } from './lib/undo.mjs';
+import { putItBack, putItBackOrRewrite, readArgv, remember, usage } from './lib/undo.mjs';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -107,6 +112,20 @@ const DECISIONS = [
   { package: 'packages/contracts', file: 'src/verify.ts', name: 'compareBoards', to: '[]' },
   { package: 'packages/contracts', file: 'src/verify.ts', name: 'compareConstants', to: '[]' },
   { package: 'packages/contracts', file: 'src/verify.ts', name: 'parseContract', to: '{ jumps: new Map(), constants: new Map() }' },
+  // Not a crude constant like the rest: this one is the record `parseSixes`
+  // used to return for a source it could read nothing of — `resetsAt: null` and
+  // four `false`s, with no `branchesRead` on it. That record is byte for byte
+  // what a lawful contract-without-the-rule produces, so `compareSixes` said
+  // nothing and `describeDivergences` printed agreement about a contract nobody
+  // had managed to read. Breaking it to the *old* value rather than to `null`
+  // is the point: `null` would throw and every test would go red for the wrong
+  // reason, while this is the exact silence the readability state exists to end.
+  {
+    package: 'packages/contracts',
+    file: 'src/verify.ts',
+    name: 'parseSixes',
+    to: '{ runAfterEntry: null, fallbackWrittenOnEverySix: false, resetsAt: null, resetReturnsToFallback: false, resetSkipsTheMove: false }',
+  },
   { package: 'packages/ai', file: 'src/prompts.ts', name: 'summariseReturns', to: "''" },
   { package: 'packages/ai', file: 'src/prompts.ts', name: 'summariseJourney', to: "''" },
   { package: 'packages/ai', file: 'src/prompts.ts', name: 'trimToParagraph', to: 'text' },
@@ -304,16 +323,50 @@ function mutate(source, name, to) {
  *
  * Names are filtered out of the flags by hand rather than by a parser, and the
  * value after `--mutation-note` is dropped explicitly — a path that survived
- * into `wanted` would silently select no decisions, which reads like a clean
+ * into the names would silently select no decisions, which reads like a clean
  * sweep of nothing.
+ *
+ * **That hand-filtering used to discard anything else it saw, and discarding is
+ * the one thing it must not do.** The expression was
+ * `args.filter((arg) => !arg.startsWith('--'))`, so an unknown flag left no
+ * trace; no names left means *the operator named no decisions*; and that means
+ * the whole table. `--help`, `--dry-run`, `--list`, a typo'd `--restor` were
+ * therefore each indistinguishable from the bare command, which edits shipped
+ * source in place for several minutes — in the script whose stopped runs have
+ * cost this project an hour twice, and which is the one command the standing
+ * operator note tells people to type by name. There was no `--help` handler in
+ * the file at all, so the first thing anybody tries on an unfamiliar tool was
+ * the destructive sweep with no output to say so.
+ *
+ * The reading now lives in `lib/undo.mjs` as `readArgv`, a pure function over
+ * argv, and it is allowed to refuse: `packages/content/tests/undo.test.ts`
+ * drives a generated grid of flag-shaped tokens through it and holds the one
+ * invariant that matters — an argv it does not understand in full never reaches
+ * the shape that mutates everything. The usage it prints is built from the same
+ * `RECOVERY` constant every other message in this repository prints, so there
+ * is still exactly one spelling of the way out.
  */
-const args = process.argv.slice(2);
-const restoreOnly = args.includes('--restore');
-const noteFlag = args.indexOf('--mutation-note');
-const wanted = args.filter(
-  (arg, index) => !arg.startsWith('--') && !(noteFlag > -1 && index === noteFlag + 1),
+const argv = readArgv(
+  process.argv.slice(2),
+  DECISIONS.map((decision) => decision.name),
 );
-const chosen = wanted.length > 0 ? DECISIONS.filter((d) => wanted.includes(d.name)) : DECISIONS;
+
+if (argv.kind === 'usage') {
+  console.log(usage());
+  // Not zero, and deliberately. This script's exit code answers *did a sweep
+  // run and was every decision defended*; printing a usage text is not that,
+  // and a caller that reads 0 as a clean sweep must not be told one happened.
+  process.exit(2);
+}
+
+if (argv.kind === 'refused') {
+  console.error(`\nThis does not know: ${argv.unknown.join(' ')}\n`);
+  console.error(usage());
+  process.exit(2);
+}
+
+const { restoreOnly, names } = argv;
+const chosen = names.length > 0 ? DECISIONS.filter((d) => names.includes(d.name)) : DECISIONS;
 
 const survived = [];
 let checked = 0;
@@ -331,7 +384,7 @@ let checked = 0;
  * The handlers are registered once and the state is one file, because only one
  * is ever broken at a time.
  */
-const UNDO = noteFlag > -1 ? args[noteFlag + 1] : join(HERE, '.mutants-undo.json');
+const UNDO = argv.notePath ?? join(HERE, '.mutants-undo.json');
 
 // Whatever the last run left behind, before this one reads a single file: the
 // mutation is *in* the source it is about to copy.
@@ -395,10 +448,29 @@ for (const decision of chosen) {
     // restore that did not happen has to stop the sweep explicitly. Carrying
     // on would break a second file on top of a first that is still broken,
     // and the note only ever describes one.
-    const back = putItBack(UNDO);
-    if (back === null || back.restored === null) {
-      console.error(`\nCould not put ${relative(ROOT, path)} back — stopping before anything else is broken.`);
-      console.error(back === null ? '  The note is gone.' : `  Put it back with: ${back.recovery}`);
+    //
+    // The two failure arms used to be handled backwards. The unreadable note —
+    // the recoverable one, since the note still holds the original — printed a
+    // command, and the note being GONE printed `The note is gone.`, no command
+    // and no write, while the only surviving copy of the original sat in
+    // `original` one line above. Under the sentence *stopping before anything
+    // else is broken*, which reads as an all-clear at the moment shipped source
+    // is wrong on disk with nothing pointing at it. `putItBackOrRewrite` now
+    // uses that copy, and neither remaining message says the tree is fine.
+    const outcome = putItBackOrRewrite(UNDO, { path, original });
+
+    if (outcome.kind === 'rewritten') {
+      console.error(`\n${relative(ROOT, path)} was broken on purpose by this run and the note that said so is gone.`);
+      console.error('  The original text was still in memory here, so it has been written back.');
+      console.error(`  Check that for yourself: ${outcome.check}`);
+      console.error('  Nothing further was mutated. The sweep stops here rather than trusting itself.');
+      process.exit(1);
+    }
+
+    if (outcome.kind === 'unrestored') {
+      console.error(`\n${relative(ROOT, path)} IS STILL BROKEN ON DISK. This run mutated it and could not put it back.`);
+      if (outcome.why !== null) console.error(`  The write failed: ${outcome.why}`);
+      console.error(`  Put it back with: ${outcome.recovery}`);
       process.exit(1);
     }
   }

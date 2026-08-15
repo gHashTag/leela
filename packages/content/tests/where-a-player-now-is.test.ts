@@ -22,6 +22,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 import { messageFor } from '../src/index';
 
 /** The two catalogues that are complete. The other twenty fall back to these. */
@@ -128,9 +130,19 @@ describe('the pairing this rests on', () => {
     // over it in silence — which is the failure they exist to prevent, one
     // level up. Read out of the catalogue rather than counted, because a count
     // of my own list is a fact about my own list.
-    const catalogue = readFileSync(
-      join(import.meta.dirname, '..', 'src', 'messages.ts'),
-      'utf8',
+    //
+    // Blanked before it is matched, like every other read of source here. This
+    // read the file raw for as long as it has existed, and the obvious sentence
+    // about that — *a comment could hide a key and the check would pass over
+    // it* — is **wrong**, which is the part worth writing down. The pattern
+    // looks for keys that are announced and NOT listed, so a key visible only
+    // inside a block comment is a key this check reports: a false failure
+    // somebody would have to debug, not a silent pass. `move.` written in
+    // prose, or an announcement commented out while it was being rewritten,
+    // would each have turned this red over nothing. The failure direction is
+    // the reason it never went off; the fix is the same one either way.
+    const catalogue = blank(
+      readFileSync(join(import.meta.dirname, '..', 'src', 'messages.ts'), 'utf8'),
     );
 
     const announced = [...new Set([...catalogue.matchAll(/^\s*'(move\.[\w.]+)':/gm)].map((m) => m[1]))];

@@ -300,20 +300,32 @@ export function read(store: Store | null, rules: RuleSet): Reading {
 export const finishedTable = (seats: readonly KeptSeat[]): boolean =>
   seats.length > 0 && seats.every((seat) => hasWon(seat.state));
 
-export function write(store: Store | null, kept: Kept): void {
-  if (!store) return;
+/**
+ * Whether the table is now on disk.
+ *
+ * A game that cannot be saved is still a game being played — but the caller is
+ * the only one who can say so, and it cannot say what it was never told. The
+ * mini app's `saveJournal` walked exactly this road: it swallowed the refusal,
+ * its test asserted it did not throw, and behind that assertion the app
+ * answered "Written." over writing that was gone.
+ */
+export function write(store: Store | null, kept: Kept): boolean {
+  if (!store) return false;
   try {
     store.setItem(KEPT_KEY, JSON.stringify(kept));
+    return true;
   } catch {
-    /* A game that cannot be saved is still a game being played. */
+    return false;
   }
 }
 
-export function forget(store: Store | null): void {
-  if (!store) return;
+/** Whether the record is now gone — false, and it will be back next load. */
+export function forget(store: Store | null): boolean {
+  if (!store) return true;
   try {
     store.removeItem(KEPT_KEY);
+    return true;
   } catch {
-    /* Nothing to do, and nothing worth stopping the game for. */
+    return false;
   }
 }

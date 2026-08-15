@@ -98,9 +98,59 @@ for (const group of WORKSPACES) {
       problems.push(`${where}: tsconfig.src.json covers tests, which are out of scope`);
     }
 
+    /**
+     * The three scripts `verify` fans out over, and why losing one is quiet.
+     *
+     * `bun run --filter '*' <name>` runs the workspaces that declare `<name>`
+     * and says NOTHING about the ones that do not. MEASURED 2026-08-06 in a
+     * scratch two-workspace monorepo outside this repository, `a` declaring the
+     * script and `b` not:
+     *
+     *   b declares no `test`      -> `a test: A-RAN`, nothing whatever about b,
+     *                                exit 0
+     *   b declares `test: exit 3` -> `b test: Exited with code 3`, exit 3
+     *   neither declares `test`   -> `error: No packages matched the filter`,
+     *                                exit 1
+     *
+     * Losing every workspace is loud. Losing ONE is silent — the asymmetry this
+     * repository keeps finding, and the only one of the three that a green
+     * `verify` cannot tell you about.
+     *
+     * Nothing else in the repository can see it, because every other reader
+     * bypasses the script rather than running it:
+     *
+     *   - `audit-claims` walks the filesystem for packages and runs
+     *     `npx vitest run` itself, so it would keep printing `@leela/docs … 239`
+     *     and confirming README's table for a suite `verify` no longer reaches;
+     *   - `.github/workflows/ci.yml` runs `(cd "$pkg" && bunx vitest run)` and
+     *     `bunx tsc --noEmit -p tsconfig.src.json` in hard-coded shell loops, so
+     *     CI stays green for the same reason;
+     *   - `packages/content/tests/a-gate-that-runs-no-audit.test.ts` asks
+     *     whether `verify` HAS a test step, never what that step reaches;
+     *   - `typecheck:strict` above is checked, and only that.
+     *
+     * Both legs run through the same filter, so both belong here. The values
+     * are pinned rather than merely required to exist: a `test` script that
+     * runs something other than the suite is the same silence one step along.
+     * `packages/engine/tests/a-suite-the-gate-never-reaches.test.ts` states the
+     * rule the other way round — derived from `verify` itself, so an eleventh
+     * fanned-out leg is covered the day it is added.
+     */
     const manifest = JSON.parse(readFileSync(join(pkg, 'package.json'), 'utf8'));
     if (manifest.scripts?.['typecheck:strict'] !== 'tsc --noEmit -p tsconfig.src.json') {
       problems.push(`${where}: package.json cannot run the strict typecheck`);
+    }
+    if (manifest.scripts?.test !== 'vitest run') {
+      problems.push(
+        `${where}: package.json declares no \`test: vitest run\`, so \`bun run --filter '*' test\` ` +
+          'skips this workspace in silence and `verify` still exits 0',
+      );
+    }
+    if (manifest.scripts?.typecheck !== 'tsc --noEmit') {
+      problems.push(
+        `${where}: package.json declares no \`typecheck: tsc --noEmit\`, so ` +
+          "`bun run --filter '*' typecheck` skips this workspace in silence and `verify` still exits 0",
+      );
     }
   }
 }

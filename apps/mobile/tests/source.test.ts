@@ -1,8 +1,9 @@
-import { readFileSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 // Shared with the audit scripts, which are plain JavaScript.
+import { workspacePackages } from '../../../scripts/lib/claims.mjs';
 import { blank, callsTo } from '../../../scripts/lib/source.mjs';
 
 /**
@@ -17,9 +18,26 @@ import { blank, callsTo } from '../../../scripts/lib/source.mjs';
  *
  * So the two operations they share live in one place. This is that place's own
  * test, and it matters more than most: everything else rests on it.
+ *
+ * **What is swept, and what used to be.** The claim above is about *this
+ * repository*, and the sweep under `one blanker, not five` walked
+ * `join(HERE, '..', '..')` — which is `apps/`. Half a repository: 120 test
+ * files seen, 79 in `packages/` not. Replaying its own two patterns over the
+ * half it could not see named three files, one of them a hand-rolled blanker
+ * that removes rather than blanks. A rule stated over a repository and run over
+ * a directory is the shape this file exists to close, written into the file
+ * that closes it.
+ *
+ * The set now comes from `workspacePackages` in `scripts/lib/claims.mjs`, which
+ * exists for exactly this: the paragraph above it records four hand-kept source
+ * lists that were wrong, two of them by *omission*, which is the kind that
+ * reads as a pass. Measured on the day it changed: the same 120 files as
+ * before, and 79 more.
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+/** The repository, which is what the sweeps below are stated over. */
+const REPO = join(HERE, '..', '..', '..');
 const APP = readFileSync(join(HERE, '..', 'src', 'App.tsx'), 'utf8');
 
 describe('blanking a comment', () => {
@@ -159,19 +177,73 @@ const EXCUSED: Array<{ file: string; because: 'runs' | 'built' }> = [
   { file: 'apps/docs/tests/build.test.ts', because: 'built' },
 ];
 
-/** The two grounds, as something a file either does or does not do. */
+/**
+ * And the files that blank for themselves, each on a ground the shared blanker
+ * cannot meet.
+ *
+ * A separate list rather than two more entries above, because these are excused
+ * from a different rule: they may write their own blanker, not read a source
+ * raw. Folding the two lists would hand each file the other's waiver.
+ *
+ * `records.test.ts` builds a *mutant* of a source file — it deletes the lines
+ * on which a name appears and asserts the deletion is noticed — and needs one
+ * array entry per line of the original to do it. Its own paragraph is the
+ * ground and states the reason `blank` will not serve: `codeIn` replaces a
+ * block comment with a single space, so a nine-line doc-comment becomes one
+ * character and every line number after it moves. It blanks a block comment
+ * **in place** instead, which is the very property this rule is about, arrived
+ * at for a different purpose. Its paragraph also says which way a disagreement
+ * with the shared reader falls: blank too much and the mutant loses an
+ * occurrence and the row fails; blank too little and a live line survives and
+ * the first assertion goes red. A copy that has thought about being a copy.
+ *
+ * And the other kind: a file that keeps the discredited reader as the *control*
+ * it is measured against. `one-set-of-flags.test.ts` used
+ * `.replace(/\/\*[\s\S]*?\*\//g, '')` to read a tsconfig for as long as it has
+ * existed — a strip that removes rather than blanks — and the pass that
+ * replaced it with the shared blanker put the old one back beside it, over a
+ * fixture, to show what the two answers are. That is this repository's own
+ * rule: an assertion nobody has seen fail is not evidence. It is the same
+ * exception this file takes for itself in the sweep below — `file !==
+ * join(HERE, 'source.test.ts')`, because the mistaken patterns are written out
+ * here to prove they are mistaken; the difference is that this one is named and
+ * grounded rather than spelled as a filename comparison.
+ */
+const HAND_ROLLED: Array<{ file: string; because: 'aligned' | 'measured' }> = [
+  { file: 'packages/content/tests/records.test.ts', because: 'aligned' },
+  { file: 'packages/engine/tests/one-set-of-flags.test.ts', because: 'measured' },
+];
+
+/** The four grounds, as something a file either does or does not do. */
 const GROUNDS = {
   runs: (source: string) => /document\.body\.innerHTML\s*=/.test(source),
   built: (source: string) => /mkdtempSync\(/.test(source),
+  // Not *it says it is careful* but *it is*: the replacement maps every
+  // character that is not a newline to a space, so the copy keeps the line
+  // count it was excused for keeping. A waiver written over a blanker that
+  // removes — which is the mistake — fails here.
+  aligned: (source: string) => /=>\s*\w+\.replace\(\/\[\^\\n\]\/g, ' '\)/.test(source),
+  // A control reads nothing. Every file this one opens goes through the shared
+  // blanker, so the copy it keeps is applied to a literal and cannot be what
+  // the file learns anything from. The day somebody points the old strip at a
+  // real file to save an import, this waiver stops holding.
+  measured: (source: string) => {
+    const reads = [...source.matchAll(/readFileSync\(/g)].length;
+    const through = [...source.matchAll(/blank\(\s*readFileSync\(/g)].length;
+
+    return reads > 0 && reads === through;
+  },
 };
 
-const excused = (file: string) => {
+const listed = (list: Array<{ file: string }>, file: string) => {
   // Absolute in one sweep and repo-relative in the other, so the entry is
   // matched as a whole path or as a tail of one — never as a bare name, which
   // is what let a single waiver cover three files.
   const path = file.replace(/\\/g, '/');
-  return EXCUSED.some((one) => path === one.file || path.endsWith(`/${one.file}`));
+  return list.some((one) => path === one.file || path.endsWith(`/${one.file}`));
 };
+
+const excused = (file: string) => listed(EXCUSED, file);
 
 describe('one blanker, not five', () => {
   /**
@@ -184,8 +256,19 @@ describe('one blanker, not five', () => {
    * replaced by a comment mentioning it, `starting-over.test.ts` **passes**
    * without blanking and **fails** with it. Nine checks were one comment away
    * from asserting nothing.
+   *
+   * Over every workspace the repository has, asked for rather than written
+   * down. `join(HERE, '..', '..')` is `apps/`, and a rule whose header says
+   * *this repository* ran over half of it for as long as it has existed —
+   * `packages/` holds 79 of the 199 test files and none of them were read.
+   * `workspacePackages` is the answer four hand-kept lists got wrong before it
+   * existed, and it is one import away from anything that needs it.
    */
-  const TESTS = join(HERE, '..', '..');
+  const WORKSPACES = workspacePackages({
+    exists: (path: string) => existsSync(join(REPO, path)),
+    entries: (path: string) => readdirSync(join(REPO, path)),
+    isDirectory: (path: string) => statSync(join(REPO, path)).isDirectory(),
+  }) as Array<{ path: string; src: string; tests: string | null }>;
 
   /** Every test file in the workspace, by walking rather than by listing. */
   function testFiles(from: string): string[] {
@@ -200,24 +283,52 @@ describe('one blanker, not five', () => {
     });
   }
 
-  const files = testFiles(TESTS);
+  const files = WORKSPACES.flatMap((workspace) =>
+    workspace.tests ? testFiles(join(REPO, workspace.tests)) : [],
+  );
+
+  /** What a failure prints: the path a reader can open, from the repository. */
+  const here = (file: string) => relative(REPO, file).replace(/\\/g, '/');
 
   it('finds the tests at all, or this proves nothing', () => {
     expect(files.length).toBeGreaterThan(20);
   });
 
+  it('reaches the workspaces that are not this one, which is the point', () => {
+    // The half that was missing, asserted as a shape rather than as a count:
+    // every workspace with tests contributes to the sweep, so a package added
+    // tomorrow is swept without anybody remembering this file. The old root
+    // could not have satisfied this — `packages/` was not under it.
+    const swept = new Set(files.map((file) => here(file).split('/').slice(0, 2).join('/')));
+
+    expect(
+      WORKSPACES.filter((workspace) => workspace.tests).map((workspace) => workspace.path).sort(),
+    ).toEqual([...swept].sort());
+    expect(swept.size).toBeGreaterThan(2);
+  });
+
   it('leaves nobody writing their own', () => {
     const own = files.filter((file) => {
-      const source = readFileSync(file, 'utf8');
+      // Blanked before it is matched, by the rule it is enforcing. A file that
+      // writes a paragraph about the strip it stopped using — which is what
+      // `one-set-of-flags.test.ts` now does, at length — is not a file that
+      // uses one, and a check that cannot tell the two apart is a check
+      // somebody deletes rather than obeys.
+      //
+      // MEASURED: over the tree today this changes no answer at all. Both
+      // readings name the same two files, and both of those are named in code.
+      // It is here for the accusation it will not make later.
+      const source = blank(readFileSync(file, 'utf8'));
       // A local blanker: a replace over the comment syntax, in a file that is
-      // not the shared module's own test.
+      // not the shared module's own test and is not excused for needing one.
       return (
         file !== join(HERE, 'source.test.ts') &&
+        !listed(HAND_ROLLED, here(file)) &&
         /replace\(\/\\\/\\\*/.test(source)
       );
     });
 
-    expect(own.map((file) => file.replace(TESTS, ''))).toEqual([]);
+    expect(own.map(here)).toEqual([]);
   });
 
   /**
@@ -251,7 +362,55 @@ describe('one blanker, not five', () => {
       return READS.test(source) && !source.includes('blank(') && !source.includes('blank as code');
     });
 
-    expect(unblanked.map((file) => file.replace(TESTS, ''))).toEqual([]);
+    expect(unblanked.map(here)).toEqual([]);
+  });
+
+  /**
+   * The second thing this sweep cannot see, found by widening it and measured
+   * before it was written down.
+   *
+   * The escape above is `source.includes('blank(')` over the **raw** file, so a
+   * file that only *mentions* the blanker in prose satisfies it. Read the same
+   * way the rule itself demands — blanked first — and the sweep names
+   * `packages/engine/tests/every-rule-is-asked.test.ts`, which reads
+   * `packages/engine/src/rulesets.ts` and every source under `apps/` and
+   * `packages/` raw, and whose only `blank(` is in its header.
+   *
+   * And it is **not** a defect there, which is the half worth writing down.
+   * That file hands its sources to `readsOf` from `scripts/lib/unread.mjs`,
+   * which skips comment lines itself, and its header says in so many words that
+   * blanking was tried and rejected — `blank` keeps what a string SAYS, so an
+   * audit citing a field name still reads as a program reading it. It delegates
+   * the comment question rather than ignoring it.
+   *
+   * So the sweep would be right about the letter and wrong about the file, and
+   * tightening it here would turn a suite this change does not own red over a
+   * decision that file argues for at length. Pinned at its measured size
+   * instead, over fixtures, so closing it is a deliberate act with a red test
+   * in front of it — the same treatment the gap above gets.
+   */
+  it('takes a mention of the blanker for a use of it, which is a gap', () => {
+    const raw = (source: string) =>
+      READS.test(source) && !source.includes('blank(') && !source.includes('blank as code');
+
+    // One file that reads a source and hands it to a reader of its own that
+    // handles comments; one that reads a source and matches over it. The escape
+    // cannot tell them apart, because both spell `blank(` in prose.
+    //
+    // Written as expressions rather than as `const text = readFileSync(…)`, and
+    // that is a measurement rather than a style: the first draft used the
+    // declaration form and the repo-wide sweep further down this file named
+    // **this file** for it. `blank` keeps what a string says — deliberately,
+    // for checks that forbid a sentence — so example code inside a fixture
+    // string reads to that sweep exactly like code. A third blind spot of the
+    // same family, found by tripping it.
+    const delegates = "/** blank() keeps what a string says, so readsOf is used instead. */\nreadsOf(field, [readFileSync(join(ROOT, 'src', 'rulesets.ts'), 'utf8')]);";
+    const pretends = "// blank( is what this ought to use\nawait check(readFileSync(join(ROOT, 'src', 'rulesets.ts'), 'utf8'));";
+
+    expect({ delegates: raw(delegates), pretends: raw(pretends) }).toEqual({
+      delegates: false,
+      pretends: false,
+    });
   });
 
   /**
@@ -293,12 +452,22 @@ describe('one blanker, not five', () => {
     });
   });
 
+  /**
+   * Both lists, held to the same two rules.
+   *
+   * Written over `[...EXCUSED, ...HAND_ROLLED]` rather than once per list,
+   * because a second copy of a waiver check is a second place for a list to be
+   * added and the check not to be — which is the omission this whole pass is
+   * about, one level up.
+   */
+  const WAIVERS = [...EXCUSED, ...HAND_ROLLED];
+
   it('names one file each, and only files that exist', () => {
     // A name that matches nothing is a waiver for a file somebody deleted, and
     // a name that matches two is a waiver somebody else inherited.
-    for (const one of EXCUSED) {
-      const named = files.filter((file) => file.replace(/\\/g, '/').endsWith(`/${one.file}`));
-      expect(named.length, one.file).toBe(1);
+    for (const one of WAIVERS) {
+      const matches = files.filter((file) => file.replace(/\\/g, '/').endsWith(`/${one.file}`));
+      expect(matches.length, one.file).toBe(1);
     }
   });
 
@@ -308,16 +477,27 @@ describe('one blanker, not five', () => {
     // the waiver-shaped defect this repository has now met twice.
     const wrong: string[] = [];
 
-    for (const one of EXCUSED) {
-      const named = files.find((file) => file.replace(/\\/g, '/').endsWith(`/${one.file}`));
-      if (!named) continue;
+    for (const one of WAIVERS) {
+      const match = files.find((file) => file.replace(/\\/g, '/').endsWith(`/${one.file}`));
+      if (!match) continue;
 
-      if (!GROUNDS[one.because](readFileSync(named, 'utf8'))) {
+      if (!GROUNDS[one.because](readFileSync(match, 'utf8'))) {
         wrong.push(`${one.file}: excused as ${one.because}, and does not`);
       }
     }
 
     expect(wrong).toEqual([]);
+  });
+
+  it('has a ground for each waiver that some file could fail', () => {
+    // A predicate that answers yes to anything is a waiver with no ground at
+    // all, and it would pass the check above in silence. Every ground is asked
+    // about a file that plainly does not have it.
+    const nothing = 'const x = 1;\n';
+
+    for (const [because, holds] of Object.entries(GROUNDS)) {
+      expect({ because, of: holds(nothing) }).toEqual({ because, of: false });
+    }
   });
 });
 
@@ -417,7 +597,6 @@ describe('a claim about source text', () => {
   }
 
   it('is made about code, in every test that makes one', () => {
-    const REPO = join(HERE, '..', '..', '..');
     const raw: string[] = [];
 
     for (const file of testFiles(REPO)) {
@@ -479,7 +658,6 @@ describe('a claim about source text', () => {
   // lists of the same files is two places for one of them to be forgotten.
 
   it('is made about a document with the document syntax', () => {
-    const REPO = join(HERE, '..', '..', '..');
     const wrong: string[] = [];
 
     for (const file of testFiles(REPO)) {
@@ -519,7 +697,6 @@ describe('a claim about source text', () => {
     // in total: with `html` alone reading, the `css` half of the check above
     // would pass over a question nobody asked, which is the state it was
     // written to end.
-    const REPO = join(HERE, '..', '..', '..');
 
     for (const extension of Object.keys(SYNTAX_OF)) {
       const reads = new RegExp(`readFileSync\\([^;]*?\\.${extension}['"]`);
@@ -532,7 +709,6 @@ describe('a claim about source text', () => {
   it('finds the reads it is looking for, so the sweep is about something', () => {
     // Zero source-reading tests would make the assertion above pass on a
     // repository that never reads a source file at all.
-    const REPO = join(HERE, '..', '..', '..');
     const reading = testFiles(REPO).filter((file) =>
       /blank\(readFileSync\(/.test(readFileSync(file, 'utf8')),
     );

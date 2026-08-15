@@ -6,7 +6,7 @@
  * `@leela/engine` — not here.
  */
 
-import { Bot, InlineKeyboard, InputFile, type Context } from 'grammy';
+import { Bot, InlineKeyboard, InputFile, Keyboard, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 import { type Language, bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
 import { isSessionOver, isWaitingToEnter } from '@leela/engine';
@@ -89,6 +89,41 @@ function sender(ctx: Context): { id: string; name: string } | null {
 
 function chatIdOf(ctx: Context): string | null {
   return ctx.chat ? String(ctx.chat.id) : null;
+}
+
+/** Where the mini app is published, when nothing says otherwise. */
+export const DEFAULT_MINI_APP_URL = 'https://t27.ai/leela/';
+
+/**
+ * How many chats to remember having offered the board to.
+ *
+ * The same bound and the same failure as `MAX_REFUSED` next door: forgetting
+ * costs one redrawn keyboard, which is a message the player has seen before and
+ * not a defect.
+ */
+const MAX_OFFERED = 10_000;
+
+/**
+ * The URL the launch button opens.
+ *
+ * An environment variable rather than a constant, because the same bot runs
+ * against a staging copy of the app and against the published one; a default so
+ * that a deployment which sets nothing still gets a working button rather than
+ * a silent absence of one.
+ *
+ * Anything that is not an HTTPS URL is refused and the default used instead.
+ * Telegram rejects a `web_app` button with an `http://` URL by failing the
+ * **whole `sendMessage` call**, not the button — so a typo in an environment
+ * variable would not produce a dead button, it would stop the bot answering at
+ * all. The caller says so in the log; taking the default is the behaviour that
+ * keeps the game playable while somebody fixes the deployment.
+ *
+ * Takes the environment as an argument so this is a pure function and can be
+ * asserted without writing to `process.env`.
+ */
+export function miniAppUrl(env: Record<string, string | undefined> = process.env): string {
+  const set = env.LEELA_MINIAPP_URL?.trim();
+  return set && set.startsWith('https://') ? set : DEFAULT_MINI_APP_URL;
 }
 
 /**
@@ -259,6 +294,30 @@ export function createBot({
   // twice, and it was being said once per reply that could not be delivered.
   const nudged = new WeakSet<object>();
 
+  // Where the launch button goes. Read once, so a deployment that changes the
+  // variable under a running process does not change it halfway through a game.
+  const launchUrl = miniAppUrl();
+  {
+    const asked = process.env.LEELA_MINIAPP_URL?.trim();
+    if (asked && asked !== launchUrl) {
+      log(`[bot] LEELA_MINIAPP_URL is not an https URL, opening ${launchUrl} instead`);
+    }
+  }
+
+  // The private chats the launch keyboard has already been sent to.
+  //
+  // A reply keyboard is not markup on a message: Telegram keeps it under the
+  // input field until something replaces it, so sending it on every throw would
+  // be an extra message each turn to redraw a button that is already there. The
+  // donor did put its board button on every step and every report reply — it
+  // could afford to, because it was inline and rode along on a message that was
+  // being sent anyway.
+  //
+  // Per process, not per deployment: a restart forgets, and the cost of
+  // forgetting is one extra message. The cost of remembering somewhere durable
+  // would be a schema.
+  const offered = new Set<string>();
+
   /**
    * The floor under everything below: an update never ends in silence.
    *
@@ -396,11 +455,38 @@ export function createBot({
     await next();
   });
 
-  /** Buttons as a Telegram keyboard. One row, which fits on a phone. */
-  function keyboard(buttons: Button[] | undefined): InlineKeyboard | undefined {
+  /**
+   * Buttons as a Telegram keyboard. One row, which fits on a phone.
+   *
+   * Two kinds of markup, because Telegram has two and they are not
+   * interchangeable. An `InlineKeyboard` sits under the message and sends a
+   * `callback_query` back; a reply `Keyboard` sits under the input field, is
+   * private-chat-only for this purpose, and is **the only launch from which a
+   * mini app may call `sendData`** — which is to say the only markup that can
+   * produce the `message:web_app_data` update this file has handled all along.
+   *
+   * A reply carries one kind or the other, never both: Telegram's
+   * `reply_markup` is a single field, so there is nothing to merge. When a list
+   * somehow holds both, the launch wins — an action button is a shortcut for a
+   * command the player can always type instead, and the launch is the only
+   * route to the app there is.
+   */
+  function keyboard(buttons: Button[] | undefined): InlineKeyboard | Keyboard | undefined {
     if (!buttons?.length) return undefined;
+
+    const launches = buttons.filter(commands.isLaunch);
+    if (launches.length) {
+      const markup = new Keyboard();
+      for (const button of launches) markup.webApp(button.label, button.webAppUrl);
+      // Without this the button is drawn at full keyboard height and takes up
+      // half a phone screen for one control.
+      return markup.resized();
+    }
+
     const markup = new InlineKeyboard();
-    for (const button of buttons) markup.text(button.label, button.action);
+    for (const button of buttons) {
+      if (button.action) markup.text(button.label, button.action);
+    }
     return markup;
   }
 
@@ -447,6 +533,76 @@ export function createBot({
     if (nudged.has(ctx)) return;
     nudged.add(ctx);
     await ctx.reply(nudgeToPrivate(languageOf(ctx), commandOf(ctx)), { parse_mode: 'HTML' });
+  }
+
+  /**
+   * Put the board within reach — and with it, the only bridge the mini app has
+   * back to this bot.
+   *
+   * Two things were missing and they are the same thing. `bot.on('message:
+   * web_app_data')` below files a square handed over from the app and answers
+   * it; that update arrives only from a Web App launched by a **reply-keyboard**
+   * button, and this bot sent nothing but inline keyboards, so the handler and
+   * everything behind it — decideSquare, square-keeping, intention adoption, the
+   * companion's reflection — could never run. Separately, the donor bot put a
+   * `Gameboard` button under every step and every report reply
+   * (`leela-chakra-bot/src/commands/step/index.ts`) and the rewrite kept
+   * neither, so a player in Telegram had no way to open the board at all.
+   *
+   * One reply keyboard is both: it opens the board, and what the board hands
+   * back can be answered.
+   *
+   * **Private chats only, and that is Telegram's rule rather than a preference.**
+   * A `web_app` reply-keyboard button is refused outside a private chat, and a
+   * reply keyboard in a group is drawn for everybody at the table. So the offer
+   * goes where the report gate's answers already go: the chat when it is
+   * private, the player's own chat when the table is a group and the bot has
+   * managed to write to them. When there is nowhere private, nothing is said —
+   * whatever asked for a private answer is already saying so, and a second
+   * sentence about a button would be noise on top of it.
+   *
+   * Sent at most once per chat per process; see `offered`.
+   */
+  async function offerTheBoard(ctx: Context, userId: string, language: Language): Promise<void> {
+    const destination = destinationOf(ctx, { broadcast: false }, userId);
+    if (destination.kind === 'chat-fallback') return;
+
+    const where = destination.kind === 'direct' ? destination.userId : chatIdOf(ctx);
+    if (!where || offered.has(where)) return;
+
+    // Marked before the send, not after: two throws in flight would otherwise
+    // both find it unsent and draw the keyboard twice.
+    offered.add(where);
+    while (offered.size > MAX_OFFERED) {
+      const oldest = offered.values().next();
+      if (oldest.done) break;
+      offered.delete(oldest.value);
+    }
+
+    try {
+      // No `parse_mode`, so nothing here is escaped: the text is one plain
+      // sentence out of `@leela/content` and the button beside it carries the
+      // meaning. The keyboard is the payload of this message, not decoration.
+      await ctx.api.sendMessage(where, messageFor(language, 'menu.board'), {
+        reply_markup: keyboard([commands.launchButton(language, launchUrl)]),
+        link_preview_options: { is_disabled: true },
+      });
+      if (destination.kind === 'direct') channels.allow(where);
+    } catch (error) {
+      // Unsent, so unremembered: the next throw tries again.
+      offered.delete(where);
+
+      if (isBlockedByUser(error)) {
+        channels.refuse(userId);
+        return;
+      }
+
+      // Not rethrown. The command that called this has already been answered,
+      // and a button that could not be drawn must not turn a completed throw
+      // into an error the player reads as a lost turn. Logged, because an
+      // operator whose LEELA_MINIAPP_URL is wrong learns it here.
+      log(`[bot] could not offer the board: ${String(error)}`);
+    }
   }
 
   /**
@@ -677,6 +833,14 @@ export function createBot({
         intention: (await reports.intention?.(effect.userId)) ?? undefined,
         direction: seat?.state.direction || undefined,
         previousPlan: seat?.state.previous_loka,
+        // What the companion has already said to this player, in order.
+        //
+        // This is the route every player is forced down — the gate after a
+        // throw — and it was the one route that told the companion nothing of
+        // its own. `/ask` is optional and had the memory; the compulsory path
+        // did not, so a player who never typed `/ask` was answered by
+        // something that had never heard itself. See `conversation.ts`.
+        history: conversations.of(effect.userId),
         journey,
       });
 
@@ -696,10 +860,22 @@ export function createBot({
         );
       }
 
+      // Kept, under the same rule `/ask` keeps an answer under: only a real
+      // answer, never the fallback sentence, which would teach the model that
+      // this is how it talks. Paired with the account that produced it, because
+      // an answer stored without what it answered is the shape this file's
+      // conversation store exists to refuse.
+      if (reflection.fromModel) conversations.add(effect.userId, effect.text, reflection.text);
+
       // Through `deliver`, not `ctx.reply`: a reflection on someone's own
       // report is as private as the report gate that asked for it. Going
       // straight to the chat would read it out to the whole table.
       await deliver(ctx, [{ text: reflection.text, broadcast: false }]);
+
+      // The donor's other `Gameboard` button was under the report reply, and
+      // this is where it belongs for a second reason: an answer has just been
+      // delivered privately, so a private chat demonstrably exists.
+      await offerTheBoard(ctx, effect.userId, room.language);
     }
   }
 
@@ -1035,7 +1211,19 @@ export function createBot({
   bot.command('roll', async (ctx) => {
     const who = sender(ctx);
     const asked = who ? await askedOf(who.id) : undefined;
-    await withRoom(ctx, (room, holder) => commands.roll(room, holder.id, now(), asked));
+
+    // The table's language, taken from inside `withRoom` rather than read a
+    // second time from the store: it is the one thing the offer below needs
+    // from the room, and it is only defined when there was a room at all —
+    // which is also exactly when a board is worth offering.
+    let language: Language | undefined;
+    await withRoom(ctx, (room, holder) => {
+      language = room.language;
+      return commands.roll(room, holder.id, now(), asked);
+    });
+
+    // Where the donor put its `Gameboard` button: under the step.
+    if (who && language) await offerTheBoard(ctx, who.id, language);
   });
 
   // The board and a plan are drawn here rather than in `commands.ts`, because
@@ -1195,10 +1383,21 @@ export function createBot({
       // answers somebody else's account as though it were where they live.
       arrival: 'received',
       intention: (await reports.intention?.(who.id)) ?? undefined,
+      // The running conversation, as the report gate and `/ask` both pass it.
+      // A square handed over from the app is answered in the same breath as
+      // everything else this player has been told, or the companion contradicts
+      // itself between two messages a minute apart.
+      history: conversations.of(who.id),
       journey,
     });
 
     if (!reflection.fromModel) log('[bot] the companion was unreachable for a handed-over square');
+
+    // Kept for the same reason and under the same condition as the report
+    // gate's: an answer the player was actually shown is part of what has been
+    // said to them, whichever surface said it.
+    if (reflection.fromModel) conversations.add(who.id, square.text, reflection.text);
+
     await deliver(ctx, [{ text: reflection.text, broadcast: false }]);
   });
 
@@ -1222,21 +1421,31 @@ export function createBot({
     await deliver(ctx, commands.returnsFor(language, entries));
   });
 
-  bot.command('board', (ctx) =>
-    withRoom(ctx, (room) => ({
-      room,
-      replies: [
-        {
-          text: renderBoardMessage(room),
-          broadcast: true,
-          html: true,
-          buttons: room.started
-            ? commands.buttonsFor(room).filter((b) => b.action !== 'board')
-            : [{ label: messageFor(room.language, 'button.join'), action: 'join' as const }],
-        },
-      ],
-    })),
-  );
+  bot.command('board', async (ctx) => {
+    let language: Language | undefined;
+
+    await withRoom(ctx, (room) => {
+      language = room.language;
+      return {
+        room,
+        replies: [
+          {
+            text: renderBoardMessage(room),
+            broadcast: true,
+            html: true,
+            buttons: room.started
+              ? commands.buttonsFor(room).filter((b) => b.action !== 'board')
+              : [{ label: messageFor(room.language, 'button.join'), action: 'join' as const }],
+          },
+        ],
+      };
+    });
+
+    // The command whose whole subject is the board is the one place a player
+    // asking to see it should be handed the way to open it properly.
+    const who = sender(ctx);
+    if (who && language) await offerTheBoard(ctx, who.id, language);
+  });
 
   bot.command('report', (ctx) =>
     withRoom(ctx, (room, who) => commands.report(room, who.id, ctx.match ?? '', now())),
@@ -1586,6 +1795,13 @@ export function createBot({
     if (result.room && !(await keepTheGame(result.room, ctx))) return;
     await applyEffects(result.effects, ctx);
     await deliver(ctx, result.replies);
+
+    // The same two acts as the typed commands, reached by tapping instead. A
+    // player who only ever presses buttons is exactly the player who will never
+    // find the mini app any other way.
+    if (action === 'roll' || action === 'board') {
+      await offerTheBoard(ctx, who.id, room.language);
+    }
   });
 
   /** A player's current plan, drawn. */

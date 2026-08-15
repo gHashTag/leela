@@ -343,7 +343,6 @@ describe('a dump with holes in it', () => {
   it('reports a non-Error thrown by idFor without losing it', () => {
     const report = migrateBatch([good], {
       idFor: () => {
-        // eslint-disable-next-line no-throw-literal
         throw 'a bare string';
       },
     });

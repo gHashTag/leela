@@ -31,9 +31,20 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error - untyped .mjs, shared with the scripts that use it
-import { workspaceSources } from '../../../scripts/lib/claims.mjs';
+import { workspacePackages, workspaceSources } from '../../../scripts/lib/claims.mjs';
+// The corpus `audit-unread.mjs` hands to `uncalledExports`, asked here as a
+// function rather than re-derived — a second copy of a rule is what the file
+// above it records going wrong twice.
+// @ts-expect-error - untyped .mjs, shared with the scripts that use it
+import { testCallerFiles } from '../../../scripts/lib/unread.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+
+const REAL = {
+  exists: (path: string) => existsSync(join(ROOT, path)),
+  entries: (path: string) => readdirSync(join(ROOT, path)),
+  isDirectory: (path: string) => statSync(join(ROOT, path)).isDirectory(),
+};
 
 const treeOf = (paths: string[]) => ({
   exists: (path: string) => paths.includes(path) || paths.some((p) => p.startsWith(`${path}/`)),
@@ -162,5 +173,87 @@ describe('this repository, asked directly', () => {
     });
 
     expect(looked.filter((where) => !where.endsWith('/src')).length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * And the other half: a caller that lives in a test.
+ *
+ * `NOT_SOURCE` above keeps `tests` out of `workspaceSources`, which is right for
+ * every question that asks whether the GAME uses something — the sibling case
+ * three describes above says why, and `broadcast` is why it says it. It was
+ * wrong for exactly one question. `audit-unread.mjs` asks *does anything at all
+ * call this export*, built its search from `workspaceSources` plus `scripts`,
+ * and therefore could not see a caller in a tests directory BY CONSTRUCTION.
+ *
+ * MEASURED before this was written: the audit reported
+ * `floatingAssertions (function, scripts/lib/awaited.mjs)` as an export with no
+ * caller anywhere, while `apps/mobile/tests/awaited.test.ts` called it thirteen
+ * times. That is a shape and not one export — any library function whose only
+ * caller is a test reads the same — and the remedy the audit prints, *add it to
+ * PUBLIC_API with a reason*, would have written a permanent falsehood into the
+ * permissions list.
+ *
+ * These ask the repository's own workspace list rather than a list of package
+ * names, so an eleventh workspace with tests is covered on the day it arrives.
+ */
+describe('the corpus that can see a caller in a test', () => {
+  type Workspace = { path: string; src: string; tests: string | null };
+
+  const packages = workspacePackages(REAL) as Workspace[];
+  const withTests = packages.filter((one) => one.tests !== null);
+  const corpus = testCallerFiles(REAL) as string[];
+
+  it('has workspaces with tests, or the assertions below prove nothing', () => {
+    expect(packages.length).toBeGreaterThan(0);
+    expect(withTests.length).toBeGreaterThan(0);
+  });
+
+  it('holds every workspace tests directory that exists, whatever the workspace list says', () => {
+    const missing = withTests
+      .map((one) => one.tests as string)
+      .filter((tests) => !corpus.some((file) => file.startsWith(`${tests}/`)));
+
+    expect(
+      missing,
+      `${missing.length} of ${withTests.length} workspace tests director(ies) are outside a ` +
+        `caller corpus of ${corpus.length} file(s)`,
+    ).toEqual([]);
+  });
+
+  it('holds every test file under them, not one apiece', () => {
+    // A corpus that reached one file per directory would satisfy the case above
+    // and still hide every caller in the other 189.
+    const walk = (dir: string): string[] => {
+      const found: string[] = [];
+      for (const entry of readdirSync(join(ROOT, dir))) {
+        const path = `${dir}/${entry}`;
+        if (statSync(join(ROOT, path)).isDirectory()) found.push(...walk(path));
+        else if (/\.(ts|tsx|mjs)$/.test(entry)) found.push(path);
+      }
+      return found;
+    };
+
+    const onDisk = withTests.flatMap((one) => walk(one.tests as string)).sort();
+
+    expect(onDisk.length).toBeGreaterThan(withTests.length);
+    expect([...corpus].sort(), `${corpus.length} in the corpus, ${onDisk.length} on disk`).toEqual(
+      onDisk,
+    );
+  });
+
+  it('is a separate corpus and not a wider one', () => {
+    // The whole reason this is a second list. Fold it into `workspaceSources`
+    // and `unreadFields` starts calling a field read because its test reads it —
+    // which is the state that audit exists to find — while
+    // `unusedInOwnPackage`, which aligns `files` with `sources` by index, is
+    // mis-attributed from the first insertion onwards.
+    const shipped: string[] = workspaceSources(REAL);
+
+    const overlap = corpus.filter((file) =>
+      shipped.some((where) => file === where || file.startsWith(`${where}/`)),
+    );
+
+    expect(overlap).toEqual([]);
   });
 });

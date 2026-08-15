@@ -55,15 +55,81 @@ export interface Room {
 }
 
 /**
- * A button under a message.
+ * A button under a message that stands for a command.
  *
  * Described as data, not as a Telegram keyboard, so the command layer stays
  * transport-free and a button can be asserted in a test.
  */
-export interface Button {
+export interface ActionButton {
   label: string;
   /** The command this button stands for, without its slash. */
   action: 'roll' | 'board' | 'plan' | 'join' | 'start' | 'help' | 'new';
+  /**
+   * Never set. Present so `Button` is a discriminated union that existing
+   * readers of `.action` still compile against: a member that simply omitted
+   * the field would make `button.action` an error on the union, and the
+   * question every one of those readers asks — *is this the roll button* — is
+   * still a fair question to ask of a launch button. The answer is `undefined`.
+   */
+  webAppUrl?: undefined;
+}
+
+/**
+ * A button that opens the mini app **and can be answered**.
+ *
+ * A second member rather than a `url` field on the first, because the two are
+ * not two labels on one control: the transport has to choose a different kind
+ * of markup for each, and the choice is the whole point of this type existing.
+ *
+ * Telegram sends `message:web_app_data` only for a Web App launched from a
+ * **reply-keyboard** button. `bot.ts` has handled that update since the mini
+ * app was written — decideSquare, square-keeping, intention adoption and the
+ * companion's reflection all hang off it — and nothing in this repository could
+ * cause one to arrive: every keyboard the bot has ever sent was an
+ * `InlineKeyboard`. Measured, on a real `createBot` driven through eighteen
+ * commands with an api-transformer: 37 API calls, 4 carrying `reply_markup`,
+ * all four `inline_keyboard`, zero reply keyboards, zero `web_app` buttons.
+ *
+ * Note what is *not* the distinction, because the obvious sentence about it is
+ * false and this repository would rather write that down than repeat it:
+ * grammY 1.45 has `.webApp()` on **both** `Keyboard` and `InlineKeyboard`, so a
+ * type checker will not stop anyone putting the launch in the wrong one. The
+ * difference is one sentence in `Keyboard.webApp`'s doc-comment — *the Web App
+ * will be able to send a "web_app_data" service message. Available in private
+ * chats only* — which `InlineKeyboard.webApp`'s doc-comment does not have. An
+ * inline launch opens the board and can never answer with anything.
+ */
+export interface LaunchButton {
+  label: string;
+  /**
+   * An HTTPS URL. Telegram refuses anything else, and refuses the send rather
+   * than the button, so a misconfigured URL would take the whole message down.
+   */
+  webAppUrl: string;
+  action?: undefined;
+}
+
+export type Button = ActionButton | LaunchButton;
+
+/** Whether this button opens the mini app rather than standing for a command. */
+export function isLaunch(button: Button): button is LaunchButton {
+  return button.webAppUrl !== undefined;
+}
+
+/**
+ * The button that opens the board in the mini app.
+ *
+ * The label is a sentence like any other, so it comes from `@leela/content` and
+ * not from here — a Russian table with an English launch under it is the defect
+ * `playingButtons` already names. `button.board` is reused deliberately: it is
+ * what this opens, it is already translated, and inventing a key would mean
+ * editing a package this change does not touch.
+ *
+ * The URL is passed in rather than read here, because a command is a pure
+ * function of its inputs and an environment variable is neither.
+ */
+export function launchButton(language: Language, url: string): LaunchButton {
+  return { label: messageFor(language, 'button.board'), webAppUrl: url };
 }
 
 export interface Reply {

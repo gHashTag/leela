@@ -51,8 +51,27 @@ so the same code is tested against a fake site with no network.
 
 ## Attaching it to the bot
 
-In [@BotFather](https://t.me/BotFather): `/mybots` → the bot → **Bot
-Settings** → **Menu Button** → set the URL to `https://t27.ai/leela/`.
+**The bridge back to the bot is not set up here.** It is a reply-keyboard
+button, `reply_markup` on a message, and the bot sends it itself — see
+[apps/bot/README.md](../bot/README.md). Nothing an operator does in BotFather
+can attach it, and this section used to say otherwise.
+
+What BotFather's Menu Button *is*: a second way in. In
+[@BotFather](https://t.me/BotFather): `/mybots` → the bot → **Bot Settings** →
+**Menu Button** → set the URL to `https://t27.ai/leela/`, and the app is one tap
+from the message box in every chat with the bot.
+
+It opens the board and **cannot answer with anything**. `sendData` works only
+for a Web App launched from a reply-keyboard button, so a square handed over
+from a Menu Button launch goes nowhere: no `message:web_app_data` arrives, the
+bot files nothing and the companion is never asked. Worth having anyway — most
+of this app is reading, not handing over — but it is a shortcut, not the bridge,
+and setting it does not make the bridge exist.
+
+Known and not fixed here: the page cannot tell which launch it got. `initData`
+is non-empty for both, so "Ask the companion" is drawn under a Menu Button
+launch too, where pressing it does nothing. `src/main.ts` says as much about
+itself at the `TelegramWebApp` declaration.
 
 That button is set in BotFather and **cannot be changed through the API** —
 `setChatMenuButton` returns `ok: true` and leaves the value alone. Worth

@@ -10,7 +10,7 @@ import {
 
 import { directionOf, messageFor, planFor, resolveLanguage, titlesFor } from './canon';
 import { describeMove } from '@leela/content';
-import { fileName, pathText, revisited, writingsOn, MAX_REPORT_CHARS } from '@leela/journal';
+import { fileName, pathText, revisited, seatId, writingsOn, MAX_REPORT_CHARS } from '@leela/journal';
 
 import { Companion, type Line, type Rests } from './companion';
 import { DEFAULT_DEITY, DEITIES, deityFor, deityForSeat, seatsOf } from './deities';
@@ -49,20 +49,6 @@ import { css } from './theme';
  */
 
 const HOP_MS = 420;
-
-/**
- * The first seat, which is the table until `seatTable` reads what was saved.
- *
- * Not "the one seat this surface plays" any more: the board holds a token per
- * seat, the engine has had `createSession`, `advance` and turn rotation all
- * along, and both halves are now wired to each other. What is left of this
- * constant is a name for the seat a fresh device sits down at.
- *
- * The id is `p1` because that is what `seatId(0)` produces in
- * `apps/miniapp/src/seats.ts`, and a journal kept per seat should find the same
- * name on both surfaces.
- */
-const SEAT = 'p1';
 
 /**
  * How high the token's anchor sits above the web.
@@ -167,7 +153,9 @@ let rolls: number[][] = [];
  * is not the one whose number is on the die.
  */
 let lastThrower: number | null = null;
-let session = createSession('device', [{ id: SEAT }], LEGACY_MOBILE);
+// The fresh device's one seat, named by the journal so what it writes here is
+// found under the same name on every other surface.
+let session = createSession('device', [{ id: seatId(0) }], LEGACY_MOBILE);
 
 /** Seats a table of `count`, keeping whatever the seats already had. */
 const seatTable = (count: number, from: readonly KeptSeat[] = []): void => {
@@ -216,8 +204,13 @@ const seatAt = (): number => session.turnIndex;
 
 const companion = new Companion({ language });
 
-const keep = (): void =>
-  write(store, {
+// Said once, not on every throw: the game plays on in a window that keeps
+// nothing, and a sentence repeated per move is noise over exactly the line a
+// player needs beside their throw. The mini app says it the same way.
+let saidUnkept = false;
+
+const keep = (): void => {
+  const kept = write(store, {
     turnIndex: session.turnIndex,
     lastThrower,
     seats: session.players.map((player, at) => ({
@@ -227,6 +220,11 @@ const keep = (): void =>
       rolls: rolls[at] ?? [],
     })),
   });
+  if (!kept && !saidUnkept) {
+    saidUnkept = true;
+    el.say.textContent = `${el.say.textContent ?? ''} ${messageFor(language, 'app.gameUnkept')}`.trim();
+  }
+};
 
 // --- who is playing ---------------------------------------------------------
 

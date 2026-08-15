@@ -30,20 +30,52 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Shared with the audit scripts, which are plain JavaScript.
+import { blank } from '../../../scripts/lib/source.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
-/** A tsconfig with comments in it, as JSON. */
+/**
+ * A tsconfig with comments in it, as JSON.
+ *
+ * This read its own comments out for as long as it has existed, with
+ * `.replace(/\/\*[\s\S]*?\*\//g, '')` — and that is two defects at once, both
+ * of them named elsewhere in this repository before they were noticed here.
+ *
+ * It **removed** rather than blanked. `apps/mobile/tests/source.test.ts:26-36`
+ * exists to say what that costs: an index into the stripped text is no longer
+ * an index into the file, so anything found in the copy and read back in the
+ * original lands off by every comment between. Nothing here reads back today,
+ * which is why it cost nothing — the shared `blank` replaces a comment with
+ * spaces, character for character, so it cannot begin to.
+ *
+ * And it was not quote-aware. `"src/**` + `/*"` in an `include` holds a `/*`
+ * and then a `*` + `/` two characters later, so the strip matched inside the
+ * string and rewrote the glob to `"src*"` before `JSON.parse` ever saw it — a
+ * silent wrong answer rather than a throw.
+ *
+ * MEASURED, and the obvious sentence about the fix is false: the shared blanker
+ * is **not quote-aware either**. It turns that same glob into `"src    *"`.
+ * What it buys is that the damage keeps its length, so an offset survives and
+ * the value is still visibly not what was written; it does not make reading a
+ * glob out of a tsconfig safe. `scripts/lib/runnable.mjs:213-233` is this
+ * problem solved properly for another language — `withoutHashComment` scans
+ * character by character carrying quote state, because a `#` inside
+ * `echo "::group::x"` is not a comment either — and that scanner is the pattern
+ * to copy the day a config here needs one.
+ *
+ * Latent rather than live: no tsconfig in this repository holds a `**`, and the
+ * check at the bottom of this file pins every `include` to exactly `['src']`,
+ * so a glob appearing would fail loudly there before it could be believed. The
+ * test below the imports keeps that measurement rather than this paragraph
+ * being the only record of it.
+ */
 function readConfig(path: string): {
   compilerOptions?: Record<string, unknown>;
   include?: string[];
   extends?: string;
 } {
-  const text = readFileSync(path, 'utf8')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/[^\n]*$/gm, '');
-
-  return JSON.parse(text) as ReturnType<typeof readConfig>;
+  return JSON.parse(blank(readFileSync(path, 'utf8'))) as ReturnType<typeof readConfig>;
 }
 
 /** Every workspace that ships code, and its strict configuration. */
@@ -65,6 +97,41 @@ function strictConfigs(): Array<{ where: string; config: ReturnType<typeof readC
 
   return found;
 }
+
+describe('reading a config that has comments in it', () => {
+  /**
+   * The two readers, over the one input that tells them apart.
+   *
+   * Kept as a measurement rather than as the paragraph above, because the
+   * paragraph is the part that goes stale. Both numbers below were run.
+   */
+  const withAGlob = '{\n  "include": ["src/**' + '/*"]\n}\n';
+
+  it('keeps an offset, where the strip this replaces moved every one after it', () => {
+    const stripped = withAGlob.replace(/\/\*[\s\S]*?\*\//g, '');
+
+    expect(blank(withAGlob)).toHaveLength(withAGlob.length);
+    expect(stripped.length, 'what the strip did').toBeLessThan(withAGlob.length);
+  });
+
+  it('does not make a glob safe, which is what the obvious sentence would say', () => {
+    // The honest half. Neither reader is quote-aware, so both damage the glob
+    // and neither throws — the difference is that one of them damages it
+    // without moving anything. Said out loud so nobody reads the fix above as
+    // more than it is.
+    const strip = (text: string) => JSON.parse(text.replace(/\/\*[\s\S]*?\*\//g, '')) as { include: string[] };
+
+    expect(strip(withAGlob).include).toEqual(['src*']);
+    expect((JSON.parse(blank(withAGlob)) as { include: string[] }).include).toEqual(['src    *']);
+  });
+
+  it('still reads the configs this file is about', () => {
+    // A blanker that ate a brace would fail every check below with a parse
+    // error rather than an answer, so the plain fact that ten configs come back
+    // is worth one line.
+    expect(strictConfigs().length).toBeGreaterThan(1);
+  });
+});
 
 describe('the configuration the shipped code is held to', () => {
   it('turns on in all of them whatever it turns on in one', () => {

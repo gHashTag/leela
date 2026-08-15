@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { blank } from '../../../scripts/lib/source.mjs';
 import { resize, saveSeats, sessionFrom } from '../src/seats';
 import { clearDraft, saveDraft, saveIntention, saveLastRoll } from '../src/state';
 import {
@@ -36,6 +38,20 @@ import {
   seatOwesReport,
 } from '../src/reports';
 import type { GameStorage } from '../src/state';
+
+/**
+ * This package's root, taken from this file's own location rather than from the
+ * working directory.
+ *
+ * Seven suites in this directory used to read their fixtures through
+ * `process.cwd()`. That works while Vitest is started inside `apps/miniapp` and
+ * throws ENOENT the moment the same file is collected from anywhere else — a
+ * repository-root run, a coverage pass over all ten workspaces — and the
+ * measured symptom was `ENOENT /Users/playra/leela/src/state.ts`, which is this
+ * file's read. The long version, with the whole measurement, is at the top of
+ * `partly-written.test.ts`, which is also where the guard against it lives.
+ */
+const PACKAGE = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** A fresh table of `count` seats, which is `resize` from none. */
 function seatsOf(count: number) {
@@ -520,9 +536,22 @@ describe('a write says it was kept only when something kept it', () => {
     // it describes is the fourth of those to go wrong in this repository. So it
     // is checked against the source: an eighth writer fails here on the day it
     // is added, which is the day the question is worth asking.
+    //
+    // Through the shared blanker, which this read did without for as long as it
+    // was spelled `resolve(process.cwd(), ...)`. `apps/mobile/tests/source.test.ts`
+    // recognises a source read with `/readFileSync\([^)]*['"`][^'"`]*(src|...)/`,
+    // and `[^)]*` cannot cross the `)` in `process.cwd()` — so the rule that
+    // every check asserting over source must blank it first was blind to this
+    // one by an accident of spelling. Anchoring the path to `import.meta.url`
+    // removed the blindfold and the sweep named this file on the first
+    // repository-wide run; that suite's own doc-comment predicted it would, and
+    // said the repair belonged to whoever held this file. It matters here for
+    // the reason it always did: `/^export function ((?:save|clear)\w*)\(/gm`
+    // over unblanked text reads a line inside a doc-comment as a declaration,
+    // and this list would then be held to a writer that does not exist.
     const declared = ['state.ts', 'reports.ts', 'seats.ts'].flatMap((file) =>
       [
-        ...readFileSync(resolve(process.cwd(), 'src', file), 'utf8').matchAll(
+        ...blank(readFileSync(resolve(PACKAGE, 'src', file), 'utf8')).matchAll(
           /^export function ((?:save|clear)\w*)\(/gm,
         ),
       ].map(([, name]) => name),

@@ -1,11 +1,49 @@
 /**
  * Assertions nothing waits on, read from source text.
  *
- * Separated from `scripts/audit-awaited.mjs` for the reason the other audit
- * libraries are: the judgement here is `isWaitedFor`, and a check that decides
- * what counts as waiting is one that can be wrong in both directions. It is
- * asked directly by `apps/mobile/tests/awaited.test.ts` over source it is
- * handed, so neither answer depends on what happens to be on disk.
+ * The judgement here is `isWaitedFor`, and a check that decides what counts as
+ * waiting is one that can be wrong in both directions. It is asked directly by
+ * `apps/mobile/tests/awaited.test.ts` over source it is handed, so neither
+ * answer depends on what happens to be on disk.
+ *
+ * This was split out of `scripts/audit-awaited.mjs`, and that script no longer
+ * exists: as of 2026-08-06 the repo-wide sweep is `bunx eslint`, configured in
+ * `eslint.config.mjs`, which asks the same question of every workspace with
+ * type analysis rather than shapes. Both readers were run against one planted
+ * unawaited assertion and both named it, at the same file and line, before the
+ * bespoke sweep was removed.
+ *
+ * So nothing calls this over the tree any more, and it is deliberately kept
+ * anyway. It is the unit-level statement of the rule: the test beside it runs
+ * `floatingAssertions` over a corpus of shapes — a `.catch` that reads as
+ * though somebody dealt with the promise but waits on nothing, an arrow with an
+ * expression body that correctly returns its assertion to a collector — and
+ * those cases are the argument for where the boundary sits. A lint rule
+ * enforces the boundary; it does not explain it. Deleting this would delete the
+ * explanation and the corpus that holds it in place.
+ *
+ * KNOWN, MEASURED, AND NOT FIXED HERE. Removing the sweep took away the only
+ * caller of `floatingAssertions` that `scripts/audit-unread.mjs` can see, and
+ * that audit goes red:
+ *
+ *     1 export(s) have no caller here:
+ *       floatingAssertions  (function, scripts/lib/awaited.mjs)
+ *
+ * The export is not actually uncalled — `apps/mobile/tests/awaited.test.ts`
+ * calls it four times. It is invisible because `audit-unread`'s SEARCH is each
+ * workspace's *sources* plus `scripts`, and never a `tests` directory, so a
+ * library whose only consumer is a test now looks dead. Proved by causation
+ * rather than inferred: restoring the deleted script put `audit-unread` back to
+ * exit 0, and removing it again returned the finding.
+ *
+ * The repair is one entry in that audit's `PUBLIC_API`, which already records
+ * exactly this case for other exports (`rollMany: 'used by tests and by anyone
+ * seeding a replay'`). It is left undone because `scripts/audit-unread.mjs`
+ * belongs to another change in flight and editing it here would collide:
+ *
+ *     floatingAssertions: 'the rule asked directly by apps/mobile/tests/awaited.test.ts',
+ *
+ * Until that lands, CI's audit-unread step is red for this reason and no other.
  */
 
 import ts from 'typescript';

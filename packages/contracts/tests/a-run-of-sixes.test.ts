@@ -26,7 +26,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { ONCHAIN, SIXES_TO_RESET, applyRoll, initialState, type GameState } from '@leela/engine';
-import { compareSixes, parseSixes } from '../src/verify';
+import {
+  compareSixes,
+  describeDivergences,
+  parseSixes,
+  type ContractSixes,
+  type SixesBranchesRead,
+} from '../src/verify';
 
 const CONTRACT = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '..', 'contracts', 'LeelaGame.sol'),
@@ -48,6 +54,7 @@ describe('what the contract does with a run of sixes', () => {
       resetsAt: SIXES_TO_RESET,
       resetReturnsToFallback: true,
       resetSkipsTheMove: true,
+      branchesRead: { entry: true, six: true, reset: true },
     });
   });
 
@@ -203,5 +210,162 @@ describe('a rule that is present and does nothing', () => {
 
     expect(reasons.some((one) => one.includes('present and inert'))).toBe(false);
     expect(reasons.some((one) => one.includes('spent twice'))).toBe(false);
+  });
+});
+
+describe('a contract this reader could not read', () => {
+  /**
+   * The half of this module that answered *nothing is wrong* about a source it
+   * had understood nothing of.
+   *
+   * `compareSixes(parseSixes('contract Empty {}'))` returned `[]`, and `[]`
+   * through `describeDivergences` was the sentence *the contract and the engine
+   * agree*. Every answer `parseSixes` gives is a regex over Solidity, and a
+   * regex that does not match returns the same record a lawful
+   * contract-without-the-rule produces: `resetsAt: null` and four `false`s. The
+   * other half of this same module fails loudly on the same absence — an empty
+   * source makes `compareBoards` name all twenty squares — so the two halves
+   * disagreed about what an absence means.
+   *
+   * The sharp case is a rename that changes no Solidity behaviour whatever.
+   * `MAX_ROLL` is 6, so `roll == MAX_ROLL` and `roll == 6` are one comparison,
+   * and writing the second took the `onSix` regex out and silently deleted the
+   * *fallback overwritten on every six* finding this module spends a paragraph
+   * on. `player.consecutiveSixes >= 3` is the same trick one level down: on a
+   * counter that only ever rises by one it is the same rule, and it takes the
+   * reset regex out.
+   *
+   * So the grid takes away each thing the parse rests on in turn — including
+   * two ways that are no-ops in Solidity — and asks the same question of every
+   * row. It is not a list of the three known blindings: the count of readings
+   * that did not happen is read off `branchesRead`, and the number of
+   * divergences the readability state adds is measured by running the same
+   * record twice, once with `branchesRead` and once without. Without it is
+   * precisely the old behaviour, so every row also states what used to be lost.
+   */
+  const withoutTheReading = (sixes: ContractSixes): ContractSixes => {
+    const stated = { ...sixes };
+    delete stated.branchesRead;
+    return stated;
+  };
+
+  const grid: Array<{ what: string; source: string; reads: SixesBranchesRead }> = [
+    {
+      what: 'nothing at all',
+      source: '',
+      reads: { entry: false, six: false, reset: true },
+    },
+    {
+      what: 'a contract with no body',
+      source: 'contract Empty {}',
+      reads: { entry: false, six: false, reset: true },
+    },
+    {
+      what: 'the entering six spelled with the constant, which is the same six',
+      source: CONTRACT.replace('rollResult == 6', 'rollResult == MAX_ROLL'),
+      reads: { entry: false, six: true, reset: true },
+    },
+    {
+      what: 'the entry branch gone',
+      source: CONTRACT.replace('if (!player.isStart && rollResult == 6) {', 'if (false) {'),
+      reads: { entry: false, six: true, reset: true },
+    },
+    {
+      what: 'the six branch spelled with the literal, which is the same six',
+      source: CONTRACT.replace('roll == MAX_ROLL', 'roll == 6'),
+      reads: { entry: true, six: false, reset: true },
+    },
+    {
+      what: 'the six branch gone',
+      source: CONTRACT.replace('if (roll == MAX_ROLL) {', 'if (false) {'),
+      reads: { entry: true, six: false, reset: true },
+    },
+    {
+      what: 'the reset written as a threshold, which on this counter is the same rule',
+      source: CONTRACT.replace('player.consecutiveSixes == 3', 'player.consecutiveSixes >= 3'),
+      reads: { entry: true, six: true, reset: false },
+    },
+    {
+      what: 'both branches spelled the other way at once',
+      source: CONTRACT.replace('rollResult == 6', 'rollResult == MAX_ROLL').replace(
+        'roll == MAX_ROLL',
+        'roll == 6',
+      ),
+      reads: { entry: false, six: false, reset: true },
+    },
+    {
+      // The one row where nothing went blind: the rule is genuinely absent.
+      // A check that called this unreadable would be crying wolf on a lawful
+      // variant, and a variant reported as a defect is a check people delete.
+      what: 'the three-sixes rule deleted outright, which is a variant and not a blindness',
+      source: CONTRACT.replace(
+        / {6}if \(player\.consecutiveSixes == 3\) \{[\s\S]*?\n {6}\}\n/,
+        '',
+      ),
+      reads: { entry: true, six: true, reset: true },
+    },
+  ];
+
+  for (const { what, source, reads } of grid) {
+    it(`is not agreement, given ${what}`, () => {
+      expect(source, 'the row has to actually change the source').not.toBe(CONTRACT);
+
+      const sixes = parseSixes(source);
+      expect(sixes.branchesRead, 'what the parser could see').toEqual(reads);
+
+      const unread = Object.values(reads).filter((could) => !could).length;
+      const divergences = compareSixes(sixes);
+
+      // Exactly one divergence per reading that did not happen, measured
+      // against the same record with the readability state taken away.
+      expect(divergences.length - compareSixes(withoutTheReading(sixes)).length).toBe(unread);
+
+      if (unread > 0) {
+        expect(divergences).not.toHaveLength(0);
+        expect(describeDivergences(divergences, 'the run of sixes')).not.toContain('agree');
+      }
+    });
+  }
+
+  it('loses no genuine finding to a rename that changes no Solidity at all', () => {
+    // Measured, and it is why the grid rows exist: the parse really does go
+    // blind here, and the two answers it then gives are the two a lawful
+    // contract without the rule would give.
+    const renamed = parseSixes(CONTRACT.replace('roll == MAX_ROLL', 'roll == 6'));
+    expect(renamed.fallbackWrittenOnEverySix).toBe(false);
+    expect(renamed.resetsAt).toBeNull();
+    expect(parseSixes(CONTRACT).fallbackWrittenOnEverySix).toBe(true);
+
+    // The finding is gone from the answers and the blindness is in its place,
+    // which is the difference between a deleted finding and a reported one.
+    const reasons = compareSixes(renamed).map((one) => one.reason);
+    expect(reasons.some((one) => one.includes('cannot move them'))).toBe(false);
+    expect(reasons.some((one) => one.includes('could not be read'))).toBe(true);
+  });
+
+  it('says nothing extra about the contract this repository vendors', () => {
+    // The point of every row above: this one means something. All three
+    // readings happen on the real source, so the readability state adds no
+    // divergence to it and the two recorded findings stand alone.
+    const sixes = parseSixes(CONTRACT);
+    expect(compareSixes(sixes)).toEqual(compareSixes(withoutTheReading(sixes)));
+  });
+});
+
+describe('what the summary claims agreement about', () => {
+  /**
+   * `describeDivergences` had *the board* written into it, and the sixes
+   * comparison prints through the same function. An empty sixes result
+   * therefore announced agreement about twenty jumps the comparison had not
+   * looked at — the right answer to a question nobody asked.
+   */
+  it('names what was compared, rather than always the board', () => {
+    expect(describeDivergences([], 'the run of sixes')).toBe(
+      'the contract and the engine agree on the run of sixes',
+    );
+    expect(describeDivergences([], 'the run of sixes')).not.toContain('board');
+    expect(describeDivergences([], 'the board')).toBe(
+      'the contract and the engine agree on the board',
+    );
   });
 });

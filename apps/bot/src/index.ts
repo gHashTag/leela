@@ -108,25 +108,65 @@ function configuredModel(): LanguageModel | undefined {
 const model = configuredModel();
 const guide = model ? new Guide({ model }) : undefined;
 
-const bot = createBot({
+/**
+ * What the bot is built with, named rather than written inline.
+ *
+ * Named because the startup line below reads this object, and not
+ * `storage.durable`. The two answer different questions and can disagree, and
+ * when they disagree the operator is the one who is lied to: `storage.durable`
+ * says the SQLite file opened, which stays true when the durable sinks never
+ * reach the bot at all.
+ *
+ * MEASURED, not supposed. With `reports:` deleted from this object every report
+ * went to `discardReports` while this process printed *"Games and reports are
+ * kept in /data/leela.db"*, `tsc` and the whole 681-case suite stayed green,
+ * and the container smoke test in CI — which greps for exactly that sentence —
+ * produced byte-identical output. The player typing `/path` was told the truth
+ * and the operator was not.
+ *
+ * So the line is derived from what was handed over, against what storage
+ * offered. A sink swapped for a memory one makes the comparison false and the
+ * sentence honest; a field deleted outright no longer compiles, because
+ * `built.reports` is then a property that is not there.
+ */
+const built = {
   token,
   store: storage.store,
   reports: storage.reports,
   steps: storage.steps,
   guide,
-});
+};
 
-// Rooms live in memory here. `DatabaseRoomStore` in persistence.ts is the
-// durable one — it needs a `RoomQueries` implementation and a database, so
-// wiring it is a deployment decision rather than a default. Say plainly what
-// this process does rather than losing games quietly.
+const bot = createBot(built);
+
+/**
+ * Whether this process keeps anything, as opposed to whether a file opened.
+ *
+ * Rooms live in memory unless a database was opened. `DatabaseRoomStore` in
+ * persistence.ts is the durable one — it needs a `RoomQueries` implementation
+ * and a database, so wiring it is a deployment decision rather than a default.
+ * Say plainly what this process does rather than losing games quietly.
+ */
+const keeping =
+  storage.durable &&
+  built.store === storage.store &&
+  built.reports === storage.reports &&
+  built.steps === storage.steps;
+
 console.log(
-  storage.durable
+  keeping
     ? `Leela bot starting. Games and reports are kept in ${databasePath}.`
     : storage.failure
       ? `Leela bot starting. ${storage.failure} — games are held in memory and will not survive a restart.`
-      : 'Leela bot starting. Games and reports are held in memory and will not survive a restart.\n' +
-        'Set LEELA_DB to a file path to keep them.',
+      : storage.durable
+        ? // The case the smoke job could not see, and the reason this line was
+          // rewritten: the file opened and the bot was built without it. Nothing
+          // reaches this today, and an operator who ever does read it is being
+          // told the one thing the old line hid from them.
+          `Leela bot starting. ${databasePath} was opened, but the bot was not built with it — ` +
+          'games and reports are held in memory and will not survive a restart.'
+        : 'Leela bot starting. Games and reports are held in memory and will not survive a restart.\n' +
+          'Set LEELA_DB to a file path to keep them.',
 );
 console.log(
   model

@@ -3,6 +3,7 @@ import {
   CLASSIC,
   LEGACY_MOBILE,
   NEUROLEELA,
+  RULESETS,
   WIN_LOKA,
   applyRoll,
   initialState,
@@ -72,9 +73,16 @@ describe('playerUpdateFromState', () => {
    *
    * So the assertion is no longer a list of cases. It is that the column
    * agrees with the engine, over every state a real game reaches.
+   *
+   * And the variants are no longer a list either. They were retyped here as
+   * four names, which is the same restated-list defect one layer up: the
+   * engine gained `onchain` and then `telegram`, and this loop went on
+   * exercising four rule sets while claiming to speak for the engine's. Taken
+   * from `RULESETS` now, so a seventh variant is covered the day it is
+   * declared.
    */
   it('writes what the engine says, on every state a real game reaches', () => {
-    for (const id of ['classic', 'neuroleela', 'legacy-mobile', 'online'] as const) {
+    for (const id of Object.keys(RULESETS) as (keyof typeof RULESETS)[]) {
       const rules = ruleSetById(id);
       let state = stateFromPlayer(row({ plan: 1, previous_plan: 0 }));
       const die = seededRoller(9);
@@ -184,10 +192,17 @@ describe('gameStepRow', () => {
 });
 
 describe('rulesForPlayer', () => {
+  /**
+   * Three of the six were named here by hand, so the case called "each stored
+   * variant" spoke for half of them. Derived from `RULESETS` for the same
+   * reason as everywhere else: a name the engine declares and this mapping
+   * cannot resolve is exactly the failure the case exists to catch, and a
+   * hand-kept list is guaranteed to stop containing it eventually.
+   */
   it('resolves each stored variant', () => {
-    expect(rulesForPlayer(row({ ruleset: 'classic' })).id).toBe('classic');
-    expect(rulesForPlayer(row({ ruleset: 'legacy-mobile' })).id).toBe('legacy-mobile');
-    expect(rulesForPlayer(row({ ruleset: 'neuroleela' })).id).toBe('neuroleela');
+    for (const id of Object.keys(RULESETS)) {
+      expect(rulesForPlayer(row({ ruleset: id })).id, `stored variant ${id}`).toBe(id);
+    }
   });
 
   it('defaults a row that predates the column', () => {

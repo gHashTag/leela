@@ -23,6 +23,7 @@ COPY packages/engine/package.json packages/engine/
 COPY packages/content/package.json packages/content/
 COPY packages/journal/package.json packages/journal/
 COPY packages/db/package.json packages/db/
+COPY packages/storage/package.json packages/storage/
 COPY packages/ai/package.json packages/ai/
 COPY packages/contracts/package.json packages/contracts/
 COPY apps/bot/package.json apps/bot/
@@ -32,6 +33,8 @@ COPY apps/miniapp/package.json apps/miniapp/
 # same: `bun install --frozen-lockfile` resolves the whole workspace, and a
 # member missing from it is a lockfile mismatch rather than a smaller image.
 COPY apps/mobile/package.json apps/mobile/
+# Same for the three-dimensional board, for the same reason.
+COPY apps/webgl/package.json apps/webgl/
 
 RUN bun install --frozen-lockfile --production
 

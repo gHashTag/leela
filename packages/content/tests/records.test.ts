@@ -14,8 +14,14 @@ import {
   staleAmong,
   entriesOf,
   stalePermissions,
+  directionsOf,
+  sourcePathOf,
   // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 } from '../../../scripts/lib/records.mjs';
+// Typed by `scripts/lib/spillover.d.mts`, so this needs no directive. The grid
+// at the foot of this file asks the module which directions it returns rather
+// than restating them.
+import { against } from '../../../scripts/lib/spillover.mjs';
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 const LIB = join(REPO, 'scripts/lib');
@@ -25,7 +31,9 @@ type Declaration = {
   name: string;
   kind: 'record' | 'permission' | 'vocabulary';
   askedIn?: string;
-  asks?: string;
+  // A string OR a list of them: `lib/spillover.mjs:against` returns two
+  // directions and the asker puts both, so one record can name two questions.
+  asks?: string | string[];
   namesIn?: string | string[] | null;
   namelessBecause?: string;
   because: string;
@@ -35,16 +43,32 @@ const declared = DECLARED as Declaration[];
 
 const SCRIPTS = join(REPO, 'scripts');
 
+/**
+ * The three places a list can be written, which is the audit's own scan.
+ *
+ * The root is the fourth widening of this rule and the first one that is about
+ * WHERE rather than about what a list looks like: `knip.config.mjs` and
+ * `eslint.config.mjs` were written at the repository root carrying exactly the
+ * kind of list this check polices, and neither the audit nor this test could see
+ * them. Mirrored here rather than left to the audit alone so that the two go on
+ * asking one question — a test that reads two of the three roots would pass over
+ * the list the audit fails on, and send whoever reads it to the wrong file.
+ */
 const listsOnDisk = (): string[] => {
   const found: string[] = [];
   const modules = [
-    ...readdirSync(SCRIPTS).filter((name) => name.endsWith('.mjs')),
+    ...readdirSync(SCRIPTS)
+      .filter((name) => name.endsWith('.mjs'))
+      .map((name) => ({ module: name, path: join(SCRIPTS, name) })),
     ...readdirSync(LIB)
       .filter((name) => name.endsWith('.mjs'))
-      .map((name) => `lib/${name}`),
+      .map((name) => ({ module: `lib/${name}`, path: join(LIB, name) })),
+    ...readdirSync(REPO)
+      .filter((name) => name.endsWith('.config.mjs'))
+      .map((name) => ({ module: name, path: join(REPO, name) })),
   ];
-  for (const module of modules) {
-    const source = readFileSync(join(SCRIPTS, module), 'utf8');
+  for (const { module, path } of modules) {
+    const source = readFileSync(path, 'utf8');
     for (const name of exportedLists(source) as string[]) found.push(keyOf(module, name));
   }
   return found;
@@ -624,48 +648,122 @@ describe('a record asked of code and not of prose, over every record on the tree
     expect(records.length).toBeGreaterThan(0);
   });
 
+  // A row per direction, not a row per record. A record that names two
+  // questions is half-asked as soon as EITHER of them is gone, so the grid has
+  // to delete them one at a time; deleting only the first would leave a record
+  // whose second half is untested by exactly the reasoning that let the second
+  // half go untested in the first place.
   for (const one of records) {
     const where = keyOf(one.module, one.name);
+    const directions: string[] = directionsOf(one);
 
-    it(`sees the question gone from ${one.askedIn} for ${where}, prose about it notwithstanding`, () => {
-      const source = readOr(one.askedIn!);
-      expect(source, one.askedIn).not.toBeNull();
+    for (const asks of directions) {
+      const also = directions.filter((other) => other !== asks);
+      const named = directions.length === 1 ? where : `${where} (${asks})`;
 
-      const word = wordFor(one.asks!);
-      const code = codeLines(source!);
-      const kept = source!
-        .split('\n')
-        .filter((_line, at) => !word.test(code[at]))
-        .join('\n');
+      it(`sees the question gone from ${one.askedIn} for ${named}, prose about it notwithstanding`, () => {
+        const source = readOr(one.askedIn!);
+        expect(source, one.askedIn).not.toBeNull();
 
-      // The mutant has to have removed something, or the row is asserting over an
-      // untouched file and would pass whatever `unasked` did.
-      expect(kept.split('\n').length, `${where} names ${one.asks} in no line of code`)
-        .toBeLessThan(source!.split('\n').length);
+        const word = wordFor(asks);
+        const code = codeLines(source!);
+        const kept = source!
+          .split('\n')
+          .filter((_line, at) => !word.test(code[at]))
+          .join('\n');
 
-      const gone: string[] = unasked([one], () => kept);
-      expect(gone, `${where}: the asker is deleted and nothing noticed`).toHaveLength(1);
-      expect(gone[0]).toContain(where);
+        // The mutant has to have removed something, or the row is asserting over an
+        // untouched file and would pass whatever `unasked` did.
+        expect(kept.split('\n').length, `${named} names ${asks} in no line of code`)
+          .toBeLessThan(source!.split('\n').length);
 
-      // The control: with the code left alone the same row says nothing, so the
-      // failure above is the deletion and not the row being unsatisfiable.
-      expect(unasked([one], () => source), where).toEqual([]);
-    });
+        const gone: string[] = unasked([one], () => kept);
+        expect(gone, `${named}: the asker is deleted and nothing noticed`).toHaveLength(1);
+        expect(gone[0]).toContain(where);
 
-    it(`is not answered for ${where} by a comment or by a longer name`, () => {
-      const asks = one.asks!;
-      const talkOnly = [
-        `/** ${asks} was asked here once, and this sentence is all that is left of it. */`,
-        `// ${asks} again, in a line comment about ${asks}.`,
-        `const un${asks}Yet = RECORDED.filter(byHand);`,
-        `report({ count: ${asks}Count });`,
-      ].join('\n');
+        // And the report says WHICH half is missing. A record with two questions
+        // reported as one unnamed failure sends the reader to the wrong half.
+        expect(gone[0], `${named}: the report does not name the missing direction`).toContain(asks);
 
-      expect(unasked([one], () => talkOnly), where).toHaveLength(1);
+        // The control: with the code left alone the same row says nothing, so the
+        // failure above is the deletion and not the row being unsatisfiable.
+        expect(unasked([one], () => source), named).toEqual([]);
+      });
 
-      // And the same source with one bare use of the word does ask, so the row
-      // above fails for the boundary rather than for anything else in the fixture.
-      expect(unasked([one], () => `${talkOnly}\nconst gone = ${asks};`), where).toEqual([]);
+      it(`is not answered for ${named} by a comment or by a longer name`, () => {
+        // Prose about the direction under test, and real code for every other
+        // direction this record names — so the row fails for THIS word rather
+        // than for a sibling the fixture happens not to mention.
+        const talkOnly = [
+          `/** ${asks} was asked here once, and this sentence is all that is left of it. */`,
+          `// ${asks} again, in a line comment about ${asks}.`,
+          `const un${asks}Yet = RECORDED.filter(byHand);`,
+          `report({ count: ${asks}Count });`,
+          ...also.map((other) => `const ${other}Gone = ${other};`),
+        ].join('\n');
+
+        expect(unasked([one], () => talkOnly), named).toHaveLength(1);
+
+        // And the same source with one bare use of the word does ask, so the row
+        // above fails for the boundary rather than for anything else in the fixture.
+        expect(unasked([one], () => `${talkOnly}\nconst gone = ${asks};`), named).toEqual([]);
+      });
+    }
+  }
+});
+
+/**
+ * A record that names two questions, over both directions the module returns.
+ *
+ * `lib/spillover.mjs:against` returns `fresh` and `rotted`, and
+ * `scripts/build-content.mjs` puts both, in two blocks with two exit codes. The
+ * declaration held ONE of them, so half of that question was outside the
+ * staleness check by construction: delete the block the scalar does not name and
+ * the audit stays green.
+ *
+ * The rows below are built from `Object.keys(against(...))` rather than from the
+ * words `fresh` and `rotted` typed here, so a third direction added to that
+ * module arrives in this grid on its own. What is asserted is the shape — every
+ * direction the module returns must be named by the record AND found in the
+ * asker — and not the one entry that was wrong.
+ */
+describe('a record whose asker puts more than one question', () => {
+  const spillover = declared.find(
+    (one) => one.module === 'lib/spillover.mjs' && one.name === 'RECORDED',
+  )!;
+
+  const build = readFileSync(join(REPO, 'scripts/build-content.mjs'), 'utf8');
+
+  it('names every direction the module actually returns', () => {
+    // Both halves come from the module rather than from this file.
+    const returned = Object.keys(against([]) as Record<string, unknown>).sort();
+    expect(returned.length).toBeGreaterThan(1);
+    expect(directionsOf(spillover).sort()).toEqual(returned);
+  });
+
+  it('is satisfied by the build as it stands, in every direction at once', () => {
+    expect(unasked([spillover], () => build)).toEqual([]);
+  });
+
+  for (const asks of Object.keys(against([]) as Record<string, unknown>)) {
+    it(`fails when the record names ${asks} and the asker does not put it`, () => {
+      // The asker asks the OTHER directions perfectly well. What is removed is
+      // this one, and the record still names it.
+      const others = Object.keys(against([]) as Record<string, unknown>).filter(
+        (other) => other !== asks,
+      );
+      const halfAsking = others.map((other) => `if (spillovers.${other}.length > 0) report();`).join(
+        '\n',
+      );
+
+      const gone: string[] = unasked([{ ...spillover, asks: [asks, ...others] }], () => halfAsking);
+      expect(gone).toHaveLength(1);
+      expect(gone[0]).toContain(asks);
+
+      // And a record that names only what is asked stays silent over the same
+      // source — so the failure above is the missing direction and not the
+      // fixture being unsatisfiable.
+      expect(unasked([{ ...spillover, asks: others }], () => halfAsking)).toEqual([]);
     });
   }
 });
@@ -723,7 +821,10 @@ describe('the repository as it stands', () => {
     expect(placed.length).toBeGreaterThan(0);
 
     for (const one of placed) {
-      const entries = entriesOf(readOr(`scripts/${one.module}`) ?? '', one.name);
+      // Through `sourcePathOf` rather than a `scripts/` prefix written here: one
+      // of the placed permissions is now a config at the repository root, and a
+      // second copy of the path rule is a second place for the two to disagree.
+      const entries = entriesOf(readOr(sourcePathOf(one.module) as string) ?? '', one.name);
       expect(entries, `${one.module}:${one.name}`).not.toBeNull();
       expect(entries.length, `${one.module}:${one.name}`).toBeGreaterThan(0);
     }

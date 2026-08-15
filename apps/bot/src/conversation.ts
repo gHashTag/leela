@@ -6,17 +6,62 @@
  * surface could reach it. A player could write a report and be answered; they
  * could not ask anything.
  *
- * The published app has that half — `ChatScreen` keeps the last five messages
- * from each side and replays them. It replays them **wrongly**: two lists, all
- * the questions and then all the answers, so the model sees five questions in a
- * row followed by five answers and no pairing between them. This keeps the
- * conversation in the order it happened, which costs nothing and is the whole
- * point of sending it.
+ * **What the published app actually does, measured — and it is worse than what
+ * this header used to claim.** The claim was that `ChatScreen` keeps the last
+ * five messages from each side and replays them as two lists, all the questions
+ * and then all the answers, unpaired. That cannot happen, and the file says so
+ * in one call site: in
+ * `leela-src/leela/src/screens/Tabs/ChatScreen/index.tsx`,
+ * `updateContextSummary` branches on `message.user._id === 1` and is called from
+ * exactly one place — line 78, on `newMessages[0]` out of GiftedChat's `onSend`,
+ * whose `user` prop is `{_id: 1}`. Every message that reaches it is the
+ * player's. The `else` branch that fills `contextSummary.assistant` is
+ * unreachable, so that array is empty for the life of the screen, and
+ * `...contextSummary.assistant.map(...)` in the request contributes nothing.
+ * The model is sent the system prompt, the player's last five utterances, and
+ * the new one: a monologue. It has never been shown a single reply of its own.
+ * The assistant's answers are appended to `messages` for the screen to draw and
+ * are never given to the summary.
+ *
+ * So the decision below — keep the conversation in the order it happened,
+ * paired — is unchanged and still right. Only the evidence for it was wrong,
+ * and in the direction that understated the defect: the app does not replay the
+ * companion's words badly, it does not replay them at all.
  *
  * In memory, per player, and lost on restart — as it is in the app, where the
  * context lives in component state. A conversation is not a report: the report
  * is the record the game exists to produce and is stored; a question asked in
  * passing is not.
+ *
+ * **Deliberately not persisted, and that is a decision rather than an
+ * oversight.** There is nowhere to put it that is not a new decision:
+ * `sqlite.ts` keeps `reports (id, user_id, plan, text, created_at)` with no
+ * column for an answer, and `Report` in `@leela/journal` has no field for one.
+ * The donor did keep it — `leela-chakra-bot/src/core/supabase/game.ts` inserts
+ * `ai_response` beside `content`, and NeuroLeelaExpo declares a whole
+ * `chat_history` table with five indexes which `ChatBot.tsx` reads on open and
+ * which **nothing anywhere writes**. That table came across into
+ * `packages/db` intact, still with no writer. Starting to write it from here
+ * would be inventing a schema decision inside a transport, so this store stays
+ * in memory and bounded, and the persistence question stays open and named.
+ *
+ * **Every route that produces an answer feeds this, not only `/ask`.** For a
+ * long time `conversations.add` had exactly one caller — `/ask`, which is
+ * optional — while the report gate, which every player is forced down, produced
+ * a model-written reflection and dropped it. A player who never typed `/ask`
+ * was answered, every single turn, by something that had never heard itself.
+ * The report gate and the handed-over square now keep theirs too, and
+ * `tests/conversation.test.ts` derives the routes that can reach the companion
+ * from `bot.ts` itself, so a fourth one that answers a player and forgets it
+ * fails rather than passing unnoticed.
+ *
+ * The cost of that, stated rather than hidden: a report now reaches the model
+ * twice on the next turn — once inside the journey summary the prompt builds
+ * from the stored reports, and once as the player half of the exchange it
+ * produced. Storing only the answer would avoid it and would reproduce the
+ * exact defect this file exists to refuse, an assistant turn with nothing
+ * saying what it answered. Both halves are clipped by `MAX_HISTORY_CHARS`, and
+ * only the last `KEEP_MESSAGES` survive.
  */
 
 import type { Message } from '@leela/ai';

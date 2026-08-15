@@ -6,6 +6,12 @@
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "--cwd", "apps/miniapp", "dev"],
       "port": 5173
+    },
+    {
+      "name": "webgl",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "apps/webgl", "dev", "--port", "5174", "--strictPort"],
+      "port": 5174
     }
   ]
 }

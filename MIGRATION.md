@@ -2543,12 +2543,33 @@ neither did the `history` every prompt builder takes. So half the companion
 existed: a player could write a report and be answered, and could not ask
 anything. `MAX_HISTORY = 6` had never carried a message.
 
+> **RETRACTED — the paragraph below is false, and was measured false later.**
+> Kept rather than deleted, because a claim this file made twice about a shipped
+> app is worth being able to find. What replaced it is under *the companion is
+> given nothing of its own* further down. In one line: the app does not replay
+> the companion's words badly, it never replays them at all, so the defect this
+> paragraph was written to condemn was the smaller of the two available.
+
 The published app has that half. `ChatScreen` is a conversation with the
 companion, and it keeps the last five messages from each side. **It replays
 them wrongly:** two lists, all the questions and then all the answers, so the
 model sees five questions in a row followed by five answers with nothing saying
 which answered which. That is not a detail — the pairing is the only reason to
 send a history at all.
+
+**What is actually there**, in
+`leela-src/leela/src/screens/Tabs/ChatScreen/index.tsx`:
+`updateContextSummary` branches on `message.user._id === 1` and has exactly one
+call site — line 78, on `newMessages[0]` out of GiftedChat's `onSend`, whose
+`user` prop is `{_id: 1}`. Every message that reaches it is the player's, so
+the `else` branch that fills `contextSummary.assistant` is unreachable and that
+array is empty for the life of the screen. `...contextSummary.assistant.map(...)`
+in the request therefore contributes nothing: the model gets the system prompt,
+the player's last five utterances and the new one. A monologue. The assistant's
+replies are appended to `messages` for the screen to draw and are never offered
+to the summary at all. The decision this pass took — keep the conversation
+paired and in order — is unchanged; only the evidence quoted for it was wrong,
+and in the direction that understated what was broken.
 
 `/ask <question>` is the missing end of the wire. The conversation is kept in
 memory and per player, as it is in the app, and **in the order it happened**.
@@ -5013,7 +5034,83 @@ repository named the wrong thing because it was the value nearest to hand.
 
 One gap left, the phone's: the companion.
 
-## Remaining, in order
+## Hundred-and-fifty-fourth pass: the companion is given nothing of its own
+
+`conversations.add` had **exactly one** call site: `apps/bot/src/bot.ts`, inside
+`/ask`, which is optional. The report gate — the route every player is forced
+down after every throw — produced a model-written reflection and dropped it.
+`guide.reflect` was handed the journey, the player's own accounts, and nothing
+the companion had ever said. So a player who never typed `/ask` was answered,
+turn after turn, by something that had never been shown a word of its own, free
+to contradict at 14:32 what it had told them at 14:31.
+
+Two more routes reach the same place and were found by parsing rather than by
+memory: plain words from a player who owes an account, and the same words
+carried as a photograph's caption, both through `answerInWords` ->
+`respondToReports`. A hand-written list would have said *the report route and
+the hand-over* and been wrong the day it was written. `tests/conversation.test.ts`
+now reads `bot.ts` as a syntax tree, follows the call graph from every
+`bot.command`/`bot.on` registration until it finds `guide.reflect` or
+`guide.answer`, and fails if the session does not drive one of them — so a
+fourth surface that answers a player and forgets it is red twice: once for not
+being driven, once at the *next* call, whichever route makes it.
+
+The property is over the shape rather than over the routes: **for every call
+after the first, every answer already given to that player that the store still
+holds is in the history it is handed.** Measured by removing the new
+`conversations.add` from the reflection route — the second call's history came
+back empty and the case named the missing sentence.
+
+**The claim about the published app that this correction came out of was false**,
+and the retraction is written at the seventy-first pass, beside the sentence it
+corrects rather than instead of it. `ChatScreen`'s assistant branch is unreachable; the model was sent the
+player's last five utterances and none of its own.
+
+**Not persisted, and that is a decision.** `sqlite.ts` keeps
+`reports (id, user_id, plan, text, created_at)` with no column for an answer and
+`Report` in `@leela/journal` has no field for one. The donor kept it —
+`leela-chakra-bot/src/core/supabase/game.ts` inserts `ai_response` beside
+`content`, and NeuroLeelaExpo declares a `chat_history` table with five indexes
+that `components/chat/ChatBot.tsx` reads on open and that **nothing anywhere
+writes**. That table came across into `packages/db` intact, migration and schema
+and barrel export, still with no writer, and this file had not mentioned it
+once. Writing it from a transport would be inventing a schema decision in the
+wrong place, so the store stays in memory and bounded and the question stays
+open and named.
+
+The cost, stated rather than hidden: an account now reaches the model twice on
+the next turn — once inside the journey summary, once as the player half of the
+exchange it produced. Storing only the answer would avoid it and would rebuild
+the exact defect the store exists to refuse.
+
+## Hundred-and-fifty-fifth pass: the instruments turned on the newest surface
+
+The web board was built in twenty-nine commits while the audits of the pass
+above were being written, and the first full `bun run verify` over both found
+three debts, each an instrument doing exactly what it was built for.
+
+**`audit-claims`**: the README's table had no row for a surface running 257
+tests, and `@leela/content` had drifted by one. Both written by `--write`,
+which is the point of having it.
+
+**`audit-doubles`**: the new surface had copied the vocabulary instead of
+importing it. `MAX_ROLL` was a second `6` beside the engine's; `MIN_FACE` and
+`MAX_FACE` restated the pip table's own bounds against the mini app's die; and
+`SEAT = 'p1'` was the third hand-written copy of the name seat zero carries,
+with a comment honestly saying it was copying `seatId(0)` — a copy with a
+citation is still a copy. `seatId` lives in `@leela/journal` now, because the
+name exists so a journal written on one surface is found on another, and the
+phone and both boards derive their seat from it. The die asks its own pip
+table, which cannot disagree with itself.
+
+**`audit-promises`**: `Store.getItem`, `setItem` and `removeItem` in the web
+board's `kept.ts` had never been handed an implementation that throws — and
+the reason the hostile tests could not be written honestly is that `write` and
+`forget` returned `void`. A browser with storage disabled played on with every
+snake described as though the board would be there tomorrow. `write` and
+`forget` answer now, and `main.ts` says `app.gameUnkept` once, off exactly
+that `false` — the mini app's sentence, at the mini app's moment, for the same
+defect it had already paid for.
 
 **1. Secrets — do this first, it is the only irreversible risk.**
 `~/Dropbox/KeyForMobileApp/leela/leela-my-release-key.keystore` is the single
@@ -6852,8 +6949,13 @@ UTF-8 locale. And neither donor builds under Xcode 26.6: `NeuroLeelaExpo`
 (RN 0.70.4, Firebase, `use_frameworks!`, `platform :ios, '12.4'`) has neither
 `node_modules` nor `Pods` and would need an upgrade before it could be tried.
 
-**4a. `apps/bot` — done.** Group play in a Telegram chat, 41 tests, no token
-needed to run them: `commands.ts` is pure functions from `(room, input)` to
+**4a. `apps/bot` — done.** Group play in a Telegram chat, no token needed to run
+the tests — the count is in README's per-package table, which
+`scripts/audit-claims.mjs` holds to what the suite actually reports. It read
+"41 tests" here for long enough that the real figure passed 670 without this
+line moving, which is this repository's named recurring defect sitting in the
+list that is supposed to be the real one; a restated count is the defect, not
+the value of the count. `commands.ts` is pure functions from `(room, input)` to
 `(room, replies)`, so a whole game plays out in a test. Each room's die comes
 from a seed derived from its chat id, and every roll is the *n*-th value from
 it, so a game replays from `(seed, rollsTaken)` — both stored — and nobody has
@@ -7708,11 +7810,49 @@ and `WIN_PLAN`/`TOTAL_PLANS` match. `verify.ts` reads the Solidity and asserts
 it, so an edit to either side fails a test instead of quietly making an
 on-chain game a different game.
 
-**The contract is where the report gate came from.** `require(...,
+**The contract is where the report gate came from.** ~~`require(...,
 'You must create a report before rolling the dice.')` is the only enforcement
-of that rule anywhere in the 25 repositories — the published app gated online
-play, and the Expo rewrite kept a `needs_report` column it never checked. That
-it survives in deployed bytecode is the evidence the gate belongs to the game.
+of that rule anywhere in the 25 repositories~~ — **RETRACTED**, see below — the
+published app gated online play, and the Expo rewrite kept a `needs_report`
+column it never checked. That it survives in deployed bytecode is evidence the
+gate belongs to the game.
+
+**RETRACTED: "the only enforcement of that rule anywhere in the 25
+repositories."** The same sentence stood in `packages/engine/src/rulesets.ts`,
+`packages/contracts/README.md` and `packages/contracts/tests/verify.test.ts`,
+and it is false. MEASURED in `leela-src/leela-chakra-bot`, which is one of the
+25: the shipped Telegram bot enforced it too, per player, with a length on the
+report.
+
+- `src/index.ts:64` throws the die at the top of the `make_step` handler, and
+  `:78` — `if (user.isWrite)` — re-sends the plan and enters the report
+  conversation when an account is owed, so the throw is discarded and
+  `gameStep` at `:127` is never reached.
+- `src/commands/report/index.ts:39` clears `isWrite` after `updateHistory`
+  wrote the row. It is the only place it is ever cleared.
+- `src/commands/report/index.ts:17-22` refuses `report?.length < 50`.
+
+Six shipped implementations; **two** of them stated the gate, and the argument
+is stronger for it: two independent implementations, in two languages, neither
+aware of the other. The bot's is also the stronger gate — `isWrite` is a column
+on the *player*, so it asks *do you owe an account for the square you are on*,
+where the contract's `reports[reportIdCounter].reporter == msg.sender` asks
+*were you the last person to write*, which a lone player satisfies once and
+forever.
+
+The bot's rules are now the sixth variant, `telegram`, in `@leela/engine`, and
+`scripts/audit-variants.mjs` re-reads all of the citations above on every run.
+Its board rules are **unrecoverable** and the variant says so: the donor
+computes no move, handing the roll to `supabase.functions.invoke("game-step")`
+at `src/core/supabase/game.ts:15-20`, and `grep -rn game-step` over all fifteen
+clones returns four call sites and no definition — which is also why
+`audit-copies` finds zero board copies there. One measured defect of the donor
+is recorded with it: `isWrite: true` is set at `src/index.ts:163`, and
+`:156-160` returns before that line whenever the plan carries a picture, so the
+bold sentence the player is shown — the game will not continue until you write
+— is true for pictureless squares only. `apps/bot` is untouched by this;
+choosing a variant for a live surface is a behaviour change and a separate
+decision.
 
 **Two divergences, described rather than fixed.** *(The forty-first pass
 asked four chains: the address holds no code on any of them, and Mumbai — the

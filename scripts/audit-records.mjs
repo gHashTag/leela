@@ -59,26 +59,40 @@ const readOr = (path) => {
 };
 
 /**
- * Both the readers and the audits that own them.
+ * Both the readers and the audits that own them, and the configs at the root.
  *
  * The first version read `scripts/lib` only and found eight lists where there
  * are thirty-one. `audit-numbers.mjs` had held its own `RECORDED` until the pass
  * before, which is to say the rule was written to look everywhere except the
  * place the defect had just been found.
+ *
+ * The third root is the fourth widening, and it is the same lesson on a new axis:
+ * the first three asked what a list can LOOK like and none asked where one can
+ * BE. `knip.config.mjs` and `eslint.config.mjs` were written at the repository
+ * root on 2026-08-06, each carrying a list this rule exists to police, and this
+ * scan could not see either of them on the day they arrived. Only `*.config.mjs`
+ * is read, not every `.mjs` at the root, so the boundary is a convention a third
+ * config will be written with rather than a directory listing that would pick up
+ * whatever else lands there.
  */
 const modules = [
   ...readdirSync(SCRIPTS)
     .filter((name) => name.endsWith('.mjs'))
-    .sort(),
+    .sort()
+    .map((name) => ({ module: name, path: join(SCRIPTS, name) })),
   ...readdirSync(LIB)
     .filter((name) => name.endsWith('.mjs'))
     .sort()
-    .map((name) => `lib/${name}`),
+    .map((name) => ({ module: `lib/${name}`, path: join(LIB, name) })),
+  ...readdirSync(REPO)
+    .filter((name) => name.endsWith('.config.mjs'))
+    .sort()
+    .map((name) => ({ module: name, path: join(REPO, name) })),
 ];
 
 const found = [];
-for (const module of modules) {
-  const source = readFileSync(join(SCRIPTS, module), 'utf8');
+for (const { module, path } of modules) {
+  const source = readFileSync(path, 'utf8');
   for (const name of exportedLists(source)) found.push(keyOf(module, name));
 }
 

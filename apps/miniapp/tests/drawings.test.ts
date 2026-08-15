@@ -6,6 +6,8 @@ import { LITERALS, drawings, inlineDrawings, namesItsDecision } from '../../../s
 // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 import { unnamedReaders } from '../../../scripts/lib/whose.mjs';
 import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   CLASSIC,
   applyRoll,
@@ -47,7 +49,23 @@ import { canRoll, mayAsk, mayExport, mayShare, mayStartOver, mayThrow, mayWrite 
 // that would ever be assigned to that control. The grid below is what now holds
 // it to its own words.
 const MECHANICAL = new Map([['roll.disabled', new Set(['true', 'false'])]]);
-const SOURCE = blank(readFileSync('src/main.ts', 'utf8'));
+
+/**
+ * This package's root, taken from this file's own location rather than from the
+ * working directory.
+ *
+ * Seven suites in this directory used to read their fixtures through
+ * `process.cwd()`. That works while Vitest is started inside `apps/miniapp` and
+ * throws ENOENT the moment the same file is collected from anywhere else — a
+ * repository-root run, a coverage pass over all ten workspaces — and the
+ * measured symptom was `ENOENT /Users/playra/leela/src/state.ts`. This file
+ * read a bare relative `'src/main.ts'`, which is the same defect with the
+ * working directory left implicit rather than named. The long version is at the
+ * top of `partly-written.test.ts`, which is also where the guard lives.
+ */
+const PACKAGE = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+const SOURCE = blank(readFileSync(resolve(PACKAGE, 'src/main.ts'), 'utf8'));
 
 /** A drawing as `drawings` reports it, with the span of the decision it read. */
 type Drawing = {

@@ -27,3 +27,8 @@ apps/mobile/ios/
 apps/mobile/android/
 apps/mobile/.expo/
 scripts/.mutants-undo.json
+
+# Stryker's sandbox: a whole copy of this tree. `cleanTempDir: 'always'` removes
+# it after a run that FINISHES, so what leaves it here is a run that was killed
+# before that ran.
+.stryker-tmp/

@@ -73,7 +73,19 @@ implemented one half of the traditional rule:
 | `neuroleela` | no | yes | no | — | NeuroLeela (Expo/Inngest) |
 | `online` | yes | no | yes | 24h | the published app's online mode |
 | `onchain` | no | yes | yes | — | `LeelaGame.sol`, deployed and unchangeable |
+| `telegram` | no | yes | yes | — | the shipped Telegram bot (`leela-chakra-bot`) |
 | `classic` | yes | yes | yes | — | the traditional rule — no app shipped it whole |
+
+`telegram` is the sixth variant and the one this table published last. It ships
+in the Telegram bot, which states the report gate per player and with a length
+on it — `report.length < 50` — and that gate is the reason the variant exists.
+Its flags are measured at the donor with line numbers in
+`packages/engine/src/rulesets.ts`, with one exception stated there: *three sixes
+reset* is **indirect**. The bot computes no move at all — it hands the roll to a
+Supabase edge function whose source is in no clone — so the flag records that
+the variant *has* the rule, taken from the bot storing `consecutive_sixes` and
+`position_before_three_sixes`, and says nothing finer about which throw fires it
+or which square it returns to.
 
 `neuroleela` is the default, so adopting the engine changes nothing for current
 players. Each game records its variant in `players.ruleset`, so history stays
@@ -191,8 +203,20 @@ instructions. `MIGRATION.md` is the record of how each principle was learned.
 
 ```bash
 bun install
-bun run verify     # rebuild content, then run every package's tests
+bun run verify     # rebuild content, typecheck twice, run the audits, then every package's tests
+bun run audit      # only the audits, without the suites after them
 ```
+
+`verify` ran no audit at all until this pass — it was `content:build`,
+`typecheck`, `typecheck:strict`, `test` — so the command this file tells a
+person to run said green while the push said red, and the difference was never
+about the code. `audit` is now a step of it, before `test`, because a stale
+number or a check nobody can run is cheaper to hear about than a test failure
+is to read.
+
+It costs about a minute, most of it `audit-claims.mjs`, which runs all ten
+suites to learn the counts and so runs them a second time inside `verify`. That
+is the price of the number in the table being measured rather than remembered.
 
 Per package:
 
@@ -204,19 +228,21 @@ cd packages/engine && bun test
 
 | Package | Tests | State |
 |---|---|---|
-| `@leela/engine` | 513 | rules, four variants, sessions, turn gating, seeded dice |
-| `@leela/content` | 661 | 22 languages of plans, 2 of the game's own voice |
-| `@leela/journal` | 88 | the path as a file, and what came back — shared by the bot and the mini app |
-| `@leela/db` | 108 | schema, mapping, SQL migrations, legacy import |
+| `@leela/engine` | 544 | rules, four variants, sessions, turn gating, seeded dice |
+| `@leela/content` | 700 | 22 languages of plans, 2 of the game's own voice |
+| `@leela/journal` | 90 | the path as a file, and what came back — shared by the bot and the mini app |
+| `@leela/db` | 116 | schema, mapping, SQL migrations, legacy import |
+| `@leela/storage` | 38 | addressing files in an S3-compatible bucket, after Firebase Storage |
 | `@leela/ai` | 217 | the companion — prompts built from the plan text |
-| `@leela/contracts` | 82 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
-| `@leela/bot` | 671 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
+| `@leela/contracts` | 95 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
+| `@leela/bot` | 687 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 239 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
-| `@leela/miniapp` | 527 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
-| `@leela/mobile` | 397 | the board on a phone (Expo), moved by the engine and by nothing else |
+| `@leela/miniapp` | 528 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
+| `@leela/mobile` | 408 | the board on a phone (Expo), moved by the engine and by nothing else |
+| `@leela/webgl` | 258 | the board in three dimensions, in a browser, on the same rules the apps play |
 | everything else | — | not yet ported |
 
-3503 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+3920 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
@@ -256,9 +282,69 @@ like a check that passes, so `audit-scripts.mjs` holds each script's shebang,
 these commands and the CI jobs to each other — and every audit either runs in
 CI or says in its own header why it cannot.
 
+That list above is prose, and prose is the thing that goes stale. `bun run
+audit` does not read it: it lists `scripts/audit-*.mjs` on disk, subtracts the
+table in `package.json` under `auditsThisGateCannotRun`, and starts each
+survivor under the runtime its own shebang names. An audit added to the
+directory is run by the next person who types `bun run verify`, whether or not
+anybody remembered to add it here — and if it needs something a laptop has not
+got, the gate stays red until somebody writes down what.
+
+Five are excused there today, each with the reason attached: `audit-copies`,
+`audit-variants` and `audit-podlock` read the donor clones at `../leela-src`,
+which a clone of this repository does not carry; `audit-deployment` asks four
+public chains where the contract is and exits 2 when one of them does not
+answer; `audit-mutants` edits shipped source on purpose and takes minutes,
+which is a tool rather than a gate. An excuse with no reason, an excuse for a
+file nobody has, and a table that covers every audit on disk are all failing
+states rather than quiet ones — the last because a gate that runs nothing
+reads exactly like a gate that passes.
+
+Recovering from a stopped mutation run is `node scripts/audit-mutants.mjs
+--restore`, and it is written here because it was written nowhere: no markdown
+file in this repository named that script with a runtime at all. It restores
+the file and stops. A plain re-run also restores, and then goes on to make new
+decisions for several minutes, which is not what somebody staring at ten red
+tests in a package they never touched wants next.
+
 The table is checked rather than trusted. It was kept by hand for forty passes,
 and a hand-kept number is one that will eventually be wrong — which is what the
-two passes before this one were both about.
+two passes before this one were both about. When it disagrees with the suites,
+`node scripts/audit-claims.mjs --write` puts what it measured into the table.
+
+**RETRACTED, 2026-08-06.** For part of that day this table published
+`@leela/content` 716 as 661 and the total as 3499, on the stated ground that
+this suite parameterises over the donor clones at `../leela-src`, runs fewer
+cases without them, and that CI is the machine without them — so `--write` was
+not to be trusted on a machine that has them. Every clause of that was assumed
+and none of it was measured, and the donor clones are not the cause: `git
+archive HEAD | tar -x` into a directory whose parent has never held `leela-src`
+runs the same 29 files and the same 705 cases that commit's working tree ran.
+
+**And that retraction closed wrong in turn** — three wrong explanations of one
+gap, so both are kept. It closed by calling 661 impossible, a figure it said
+nothing had ever run — and CI ran it twice in one go: run 31072659705, commit
+d0ad661, `Tests 661 passed (661)` in the `test` job's vitest output and
+`@leela/content … 661` from its `audit-claims` step, in the same log. (The old
+sentence is paraphrased, not quoted: a false claim about a number is what
+somebody greps for, and a verbatim copy would put every such search on the
+paragraph that corrects it.) The real cause was measured on this
+machine and needed no Linux runner. `packages/content/tests/undo.test.ts` built
+a grid of truncated notes, one case per byte of `JSON.stringify({ path,
+original })`, with `path` inside `mkdtempSync(join(tmpdir(), …))` — 134 bytes
+under macOS's `/var/folders/…/T`, 90 under Linux's `/tmp`, 44 cases of
+difference, which is the whole gap. Per-file counts put all 44 in that one file
+and nowhere else. So CI, the machine that gates the merge, was running a third
+fewer truncation offsets than the author saw. The grid is built from a literal
+path now and asserts its own width, and the package runs the same count under
+any `TMPDIR`. The `git archive` measurement looked decisive because it moved
+the repository and left `tmpdir()` alone.
+
+Both retractions are kept here rather than swapped out silently, because a
+wrong number published by the check whose whole purpose is unpublished numbers
+is worth more as a warning than as an absence. What holds the shape now, rather
+than the figure, is `packages/content/tests/a-count-a-stranger-cannot-run.test.ts`
+and the width assertion in `packages/content/tests/undo.test.ts`.
 
 The board art and the rules are two descriptions of the same thing. To compare
 them in one look — a ring where each jump starts, a dot where it lands:

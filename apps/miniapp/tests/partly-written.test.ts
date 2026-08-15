@@ -1,6 +1,54 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
+
+/**
+ * This package's root, taken from this file's own location rather than from the
+ * working directory. This is the long version; the other six anchored files
+ * point here.
+ *
+ * A test that reads its own package's files through `process.cwd()` passes
+ * while Vitest was started in that directory and throws ENOENT the moment the
+ * same suite is collected from anywhere else. Seven suites in this directory
+ * did that. It never showed in `bun run test`, because that runs each
+ * workspace's own script with that workspace as the working directory, and it
+ * never showed in CI for the same reason — so the reads looked correct for as
+ * long as nobody ran them from outside.
+ *
+ * MEASURED, 2026-08-06, `npx vitest run --root apps/miniapp` from
+ * `/Users/playra/leela` — `--root` moves Vitest's root and does *not* move
+ * `process.cwd()`, which is the whole of it:
+ *
+ *     Test Files  7 failed | 33 passed (40)
+ *          Tests  28 failed | 464 passed (492)
+ *
+ *     ENOENT: no such file or directory, open '/Users/playra/leela/src/state.ts'
+ *     ENOENT: no such file or directory, open '/Users/playra/leela/src/style.css'
+ *     ENOENT: no such file or directory, open '/Users/playra/leela/src/board-light.webp'
+ *     ENOENT: no such file or directory, open 'src/main.ts'
+ *     ENOENT: no such file or directory, open 'index.html'
+ *
+ * The important half is what that is *not*. Twenty-eight of those failures are
+ * this file's thirteen and `assembled.test.ts`'s fourteen, which read inside a
+ * helper and so at least became cases and then failed. The other five read at
+ * module scope, and a module that throws while it is being evaluated contributes
+ * no cases at all — the reporter's line for one of them was
+ * `tests/paint.test.ts (0 test)`. **They did not fail. They failed to be
+ * collected**, which from a summary line is indistinguishable from a suite that
+ * ran and was fine. That is a green suite with a hole in it, and it is the
+ * reason this is anchored rather than left alone: the repository now wants one
+ * Vitest instance over all ten workspaces, for coverage that per-package
+ * scoping reports wrongly, and every one of these seven would have gone quiet
+ * in it.
+ *
+ * The guard is at the bottom of the first case below rather than in a case of
+ * its own — a new `it` would move this package's count and `audit-claims`
+ * holds README's table to that number.
+ */
+const PACKAGE = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
  * What survives when a browser stops halfway.
@@ -47,7 +95,7 @@ function partial(refuse: RegExp, seed: Record<string, string> = {}) {
 async function play(storage: Storage): Promise<string[]> {
   vi.resetModules();
 
-  const html = readFileSync('index.html', 'utf8');
+  const html = readFileSync(resolve(PACKAGE, 'index.html'), 'utf8');
   document.body.innerHTML = html
     .slice(html.indexOf('<body>') + '<body>'.length, html.indexOf('</body>'))
     .replace(/<script[\s\S]*?<\/script>/g, '');
@@ -81,6 +129,99 @@ const seated = (reportSubmitted: boolean) =>
     players: [{ id: 'p1', state: onFortyOne, reportSubmitted }],
   });
 
+/**
+ * Every filesystem read in this directory, and whether it is anchored.
+ *
+ * Written as a parse rather than a line search, and that is not fastidiousness.
+ * The string `process.cwd()` appears in prose in three doc-comments in these
+ * suites — including the retracted note in `paint.test.ts` that argued for it —
+ * and a grep would name all three. A check that cries wolf on a comment is one
+ * somebody deletes rather than obeys, so this reads the syntax tree and looks
+ * only at the first argument of an actual call.
+ *
+ * A read is ANCHORED when its path starts from something this file cannot
+ * evaluate but can see is not the working directory: a variable, `__dirname`,
+ * or any call other than `process.cwd()` — `dirname(fileURLToPath(...))`,
+ * `tmpdir()`. It is UNANCHORED when the path is a bare string literal, or when
+ * it is a `resolve`/`join` whose first segment is one of those. Identifiers
+ * declared in the same file are followed to their initialiser, so
+ * `const HERE = resolve(process.cwd(), '..')` is caught one hop away; an
+ * identifier from outside the file is taken on trust, which is a stated hole
+ * and not a covered one.
+ *
+ * The question asked is the shape — *no unanchored read anywhere under
+ * `tests/`* — not the seven files that were wrong on the day it was written.
+ * The eighth suite to read `index.html` off the working directory fails here on
+ * the day it is added, which is the only day the answer is cheap.
+ */
+const TESTS = join(PACKAGE, 'tests');
+
+type Read = { file: string; line: number; text: string; unanchored: string | null };
+
+function readsIn(file: string): Read[] {
+  const text = readFileSync(join(TESTS, file), 'utf8');
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
+
+  /** Every `const x = ...` in the file, so an identifier can be followed once. */
+  const bound = new Map<string, ts.Expression>();
+  const bind = (node: ts.Node): void => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      bound.set(node.name.text, node.initializer);
+    }
+    ts.forEachChild(node, bind);
+  };
+  bind(source);
+
+  const called = (node: ts.CallExpression): string => {
+    if (ts.isIdentifier(node.expression)) return node.expression.text;
+    if (ts.isPropertyAccessExpression(node.expression)) return node.expression.name.text;
+    return '';
+  };
+
+  /** The reason a path is unanchored, or `null` if it is anchored. */
+  const why = (node: ts.Node, seen: Set<string>): string | null => {
+    if (ts.isParenthesizedExpression(node) || ts.isAwaitExpression(node)) {
+      return why(node.expression, seen);
+    }
+    if (ts.isAsExpression(node)) return why(node.expression, seen);
+    if (ts.isStringLiteralLike(node) || ts.isTemplateExpression(node)) {
+      return 'a bare string literal, so it means whatever the working directory is';
+    }
+    if (ts.isCallExpression(node)) {
+      const name = called(node);
+      if (name === 'cwd') return 'rooted at process.cwd()';
+      if (name === 'resolve' || name === 'join') {
+        const first = node.arguments[0];
+        return first ? why(first, seen) : 'a resolve() with nothing to resolve from';
+      }
+      return null;
+    }
+    if (ts.isIdentifier(node)) {
+      if (seen.has(node.text)) return null;
+      const init = bound.get(node.text);
+      return init ? why(init, new Set([...seen, node.text])) : null;
+    }
+    return null;
+  };
+
+  const found: Read[] = [];
+  const walk = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && ['readFileSync', 'readdirSync'].includes(called(node))) {
+      const first = node.arguments[0];
+      found.push({
+        file,
+        line: source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1,
+        text: node.getText(source).split('\n')[0] ?? '',
+        unanchored: first ? why(first, new Set()) : null,
+      });
+    }
+    ts.forEachChild(node, walk);
+  };
+  walk(source);
+
+  return found;
+}
+
 describe('a browser that keeps some of it', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
@@ -104,6 +245,27 @@ describe('a browser that keeps some of it', () => {
     expect(el('say').textContent).toMatch(/will not keep/i);
     expect(el('say').textContent).not.toMatch(/^Written\. You may throw\.$/);
     expect(storage.kept()['leela.reports.v1'], 'and it really was not kept').toBeUndefined();
+
+    // And, in the same case rather than a new one, the reason the read three
+    // lines into `play` is written the way it is. See `readsIn` above: this is
+    // the shape of the defect, over every suite in this directory, not a list
+    // of the seven that carried it.
+    const files = readdirSync(TESTS).filter((name) => name.endsWith('.test.ts'));
+    const reads = files.flatMap(readsIn);
+
+    // An empty loop is a passing loop, so say out loud what was looked at. The
+    // second one is the sharper of the two: it proves the walker descends into
+    // a file and recognises a call, rather than merely opening forty of them.
+    expect(files.length, 'there are suites in this directory to look at').toBeGreaterThan(0);
+    expect(
+      reads.filter(({ file }) => file === 'partly-written.test.ts').length,
+      "and this file's own read is one of the reads it found",
+    ).toBeGreaterThan(0);
+
+    expect(
+      reads.filter((read) => read.unanchored).map((read) => `${read.file}:${read.line} ${read.text}`),
+      'a suite that reads its own package through the working directory is collected only from that directory',
+    ).toEqual([]);
   }, 20_000);
 
   it('goes on with the game, because the account is in hand either way', async () => {

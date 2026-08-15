@@ -207,6 +207,36 @@ describe('a storage that refuses', () => {
     expect(() => write(null, { turnIndex: 0, lastThrower: null, seats: [{ id: 'p1', deity: 'agni', state: played(), rolls: [] }] })).not.toThrow();
     expect(() => forget(null)).not.toThrow();
   });
+
+  /**
+   * Not that it survives — it always survived, and behind that assertion this
+   * surface described every snake and arrow as though the board would still be
+   * there tomorrow. What each writer reports back is the thing the screen can
+   * act on: `main.ts` says `app.gameUnkept`, once, off exactly this `false`.
+   */
+  it('reports what it could not do, rather than surviving in silence', () => {
+    const broken: Store = {
+      getItem() {
+        throw new Error('storage is disabled');
+      },
+      setItem() {
+        throw new Error('storage is disabled');
+      },
+      removeItem() {
+        throw new Error('storage is disabled');
+      },
+    };
+    const kept = write(broken, { turnIndex: 0, lastThrower: null, seats: [{ id: 'p1', deity: 'agni', state: played(), rolls: [] }] });
+    expect(kept, 'a refusal is reported rather than swallowed').toBe(false);
+    const forgotten = forget(broken);
+    expect(forgotten, 'a record still on disk is reported, or "start again" lies').toBe(false);
+    // Reading answers with a fresh game, which is the only honest answer a
+    // reader has: nothing was found, as against nothing being there.
+    expect(read(broken, LEGACY_MOBILE)).toEqual(NOTHING);
+    // And having nowhere to write is said the same way as refusing to.
+    expect(write(null, { turnIndex: 0, lastThrower: null, seats: [] }), 'nowhere to keep it is reported too').toBe(false);
+    expect(forget(null), 'with no store there is nothing to come back').toBe(true);
+  });
 });
 
 describe('forgetting', () => {

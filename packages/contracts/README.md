@@ -69,10 +69,41 @@ require(
 );
 ```
 
-This is the only implementation that ever *stated* it. The published mobile app
-gated online play; the Expo rewrite kept a `needs_report` column and checked it
-nowhere. That the rule survives here is the evidence it belongs to the game
-rather than to one app's product decisions — and why `classic` has it.
+**RETRACTED: "This is the only implementation that ever *stated* it."** That
+sentence stood here, in `packages/engine/src/rulesets.ts`, in
+`tests/verify.test.ts` and in `MIGRATION.md`, and it is false. MEASURED in the
+donor at `leela-src/leela-chakra-bot`: the shipped Telegram bot stated the gate
+too, per player, with a fifty-character minimum on the report.
+
+- `src/index.ts:64` throws the die at the top of the `make_step` handler;
+  `:78` asks `if (user.isWrite)` and, when an account is owed, re-sends the
+  plan and enters the report conversation — so the throw is discarded and
+  `gameStep` at `:127` is never reached.
+- `src/commands/report/index.ts:39` clears `isWrite`, in the one place it is
+  ever cleared, after `updateHistory` has written the row.
+- `src/commands/report/index.ts:17-22` refuses `report?.length < 50`.
+
+The published mobile app gated online play; the Expo rewrite kept a
+`needs_report` column and checked it nowhere. Six shipped implementations, and
+**two** of them stated the gate.
+
+**The argument the sentence was making is stronger without it.** Two
+independent implementations — one in Solidity, one in TypeScript, neither aware
+of the other — arrived at the same rule, which is better evidence that the gate
+belongs to the game than one implementation was, and why `classic` has it.
+
+And the bot's gate is the stronger of the two. `isWrite` is a column on the
+*player*, so the bot asks *do you owe an account for the square you are
+standing on*. The require below asks *were you the last person to write* — see
+the next paragraph — which a lone player satisfies once and then forever. The
+engine records the bot's rules as the `telegram` variant, and
+`scripts/audit-variants.mjs` re-reads all three citations above on every run.
+
+*(The bot's own gate is armed at only one of its two paths: `src/index.ts:163`
+sets `isWrite: true`, and `:156-160` returns before it whenever the plan
+carries a picture. So the bold sentence its players are shown — the game will
+not continue until you write — is true for pictureless squares only. Recorded
+on the `telegram` variant as a defect of the donor.)*
 
 **The sentence is not the condition, and this README quoted the sentence.**
 `reportIdCounter` is the id of the last report filed by *anybody*, so what the

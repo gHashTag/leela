@@ -136,3 +136,49 @@ export const RECORDED = [
   'ms plan 12 carries the opening of plan 13',
   'uk plan 12 carries the opening of plan 13',
 ];
+
+/**
+ * The two ways this can be wrong, as two lists.
+ *
+ * `rotted` is a record matching nothing: the donor was fixed upstream, or the
+ * text moved and the entry now describes a join that is not there. A repair
+ * that has silently stopped matching is a repair that has been undone.
+ *
+ * `fresh` is a finding nobody recorded — and it is the half that changes what a
+ * player reads. `spilloversIn` runs over every language on every build, and
+ * `withoutSpillover` truncates the body wherever it fires, recorded or not. So
+ * a donor update that introduces a run-on in a fourth language has that plan's
+ * tail deleted from the shipped dataset by a cut nobody authorised, printed
+ * under a heading that reads as the tool working. Nothing downstream can catch
+ * it either: the built data has zero findings precisely because the cut already
+ * happened, so the fresh direction exists only here, at build time.
+ *
+ * This module shipped with `RECORDED` and no `against` for exactly that reason
+ * — the doc-comment above states only the rotted half, so the missing half was
+ * never written down as missing. Both siblings compute both halves and fail on
+ * both: `untranslated.mjs` and `copies.mjs`.
+ *
+ * Falsified rather than assumed. Making this return `fresh: []` unconditionally
+ * turned `packages/content/tests/spillover.test.ts` red — 3 failed, 14 passed
+ * of 17, the rotted direction still green throughout, which is exactly the
+ * half-built state this module shipped in:
+ *   - "an unrecorded finding comes back fresh, and never rotted"
+ *       ar plan 1 carries the opening of plan 2 was cut with nothing recording
+ *       it: expected [] to deep equally contain { language: 'ar', plan: 1, … }
+ *   - "both directions come back from the one pass"  expected [] to deeply
+ *       equal [ Array(1) ]
+ *   - "reports the same two lists as the sibling it was born half of"
+ *       fresh carries findings: expected [] to have a length of 21 but got +0
+ * Restoring the filter put all 17 back.
+ *
+ * @param findings Every spillover this build found, recorded or not.
+ */
+export function against(findings) {
+  const seen = new Set(findings.map(nameOf));
+  const recorded = new Set(RECORDED);
+
+  return {
+    fresh: findings.filter((finding) => !recorded.has(nameOf(finding))),
+    rotted: RECORDED.filter((line) => !seen.has(line)),
+  };
+}
