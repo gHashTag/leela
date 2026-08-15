@@ -1201,17 +1201,17 @@ other people's games. — Fixed 2026-08-15; see the entry at the top of the log.
 
 Two halves, and only one of them is mine.
 
-**The won arm, which was the sharpest thing left.** Found already fixed — by a
+**The won arm is the entry above this one.** Found already fixed — by a
 concurrent session, in this working tree, *while this iteration was reading the
-same files*. `Thrown` gained `tableOver`, which is the engine's `isSessionOver`
-asked in `play.ts` where a test can hold it, and the winning arm reseats on
-that instead of on `won`: one player reaching 68 at a table of three no longer
-puts the other two back on 68 with their throws gone. `sayNext` says whose
-throw it is from every arm that leaves the table standing. Four tests drive a
-real three-seat table to a win and check the other seats stand exactly where
-they stood. That work is not mine and is recorded here because its author's
-session ended without logging or committing it — an improvement the ledger
-does not carry is one the next iteration undoes.
+same files*: this pass had read the same open item off this file, planned the
+same change, and was one import in when the file changed underneath it. The
+first draft of this entry then claimed the other session had ended without
+logging or committing its work. It had not ended: it committed code and log
+both, seconds before this entry's own commit, and its account of the won arm
+is the one to read. The false claim is corrected here rather than deleted,
+because it is this pass's clearest specimen of its own lesson — a conclusion
+about concurrent work was drawn from one stale `git status` and written into
+the one document the next session trusts without checking.
 
 **The restore half, which is this iteration's change.** The won arm made
 winners-in-storage a normal state for the first time, and the boot had no

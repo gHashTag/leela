@@ -4,16 +4,19 @@ import {
   LEGACY_MOBILE,
   MAX_SEATS,
   NEUROLEELA,
+  advance,
   createSession,
   currentPlayer,
+  hasWon,
   ONLINE,
   WIN_LOKA,
   applyRoll,
   initialState,
+  type GameState,
   type RuleSet,
 } from '@leela/engine';
 
-import { KEPT_KEY, forget, read, write, type Store } from '../src/kept';
+import { KEPT_KEY, finishedTable, forget, read, write, type Store } from '../src/kept';
 import { pathOf, stateAfter } from '../src/path';
 import { DEITIES } from '../src/deities';
 
@@ -533,5 +536,97 @@ describe('a table bigger than the game allows', () => {
       LEGACY_MOBILE,
     );
     expect(inside.lastThrower).toBeNull();
+  });
+});
+
+/**
+ * A saved table where every seat has finished.
+ *
+ * Nothing this app writes can produce one — the winning arm reseats before
+ * `keep` runs — but a hand-edited record or another surface's build can, and
+ * what makes it dangerous is that it reads perfectly: every state is playable,
+ * so `read` hands it back without a word. The engine then refuses to roll at
+ * it, which on the live page is the first tap of the die throwing inside
+ * `takeTurn` with `busy` held — a dead die with the lights on. `finishedTable`
+ * is the question the boot asks to reseat instead, and these tests hold the
+ * two answers a lazier check gets wrong.
+ */
+describe('a table that has already ended', () => {
+  /**
+   * A won state the engine produced, not a hand-made one. Greedy: of the six
+   * rolls, keep the one that gets furthest, preferring a win, then the board,
+   * then waiting. Deterministic, and bounded so a ruleset change that breaks
+   * it names itself rather than hanging the suite.
+   */
+  const wonState = (): GameState => {
+    const worth = (state: GameState): number => {
+      if (hasWon(state)) return Number.POSITIVE_INFINITY;
+      return state.is_finished ? -1 : state.loka;
+    };
+    let state = initialState();
+    for (let turn = 0; turn < 400; turn += 1) {
+      for (let roll = 1; roll <= 6; roll += 1) {
+        const next = applyRoll(state, roll, LEGACY_MOBILE).state;
+        if (worth(next) > worth(state)) state = next;
+      }
+      if (hasWon(state)) return state;
+    }
+    throw new Error('the greedy driver never reached Cosmic Consciousness');
+  };
+
+  const seatOf = (state: GameState, at: number) => ({
+    id: `p${at + 1}`,
+    deity: 'durga',
+    state,
+    rolls: [] as number[],
+  });
+
+  it('is finished when every seat has won', () => {
+    const won = wonState();
+    expect(finishedTable([seatOf(won, 0), seatOf(won, 1)])).toBe(true);
+  });
+
+  it('is not finished while any seat is still on the board', () => {
+    expect(finishedTable([seatOf(wonState(), 0), seatOf(played(), 1)])).toBe(false);
+  });
+
+  /**
+   * The 68 trap, met before in `hasWon` itself: a seat that has never rolled
+   * also sits on WIN_LOKA with `is_finished` set. A check on the flag alone
+   * calls a table nobody has entered a table where everyone has won — and the
+   * boot would then quietly reseat every fresh multi-seat game.
+   */
+  it('is not finished by a seat still waiting to enter', () => {
+    expect(finishedTable([seatOf(wonState(), 0), seatOf(initialState(), 1)])).toBe(false);
+  });
+
+  /** `every` over nothing is true; a table with nobody at it is not an ended game. */
+  it('is not finished when there is no table at all', () => {
+    expect(finishedTable([])).toBe(false);
+  });
+
+  /**
+   * The chain that makes it a dead die rather than a wrong readout: the
+   * record reads without complaint, and the session built from what was read
+   * refuses the throw. Asserting only the predicate would pass just as well
+   * against a `finishedTable` that answered for the wrong reason.
+   */
+  it('reads cleanly and still cannot be played, which is why the boot reseats', () => {
+    const won = wonState();
+    const reading = read(
+      stored({ turnIndex: 0, lastThrower: null, seats: [seatOf(won, 0), seatOf(won, 1)] }),
+      LEGACY_MOBILE,
+    );
+    expect(reading.why).toBeNull();
+    expect(reading.seats).toHaveLength(2);
+    expect(finishedTable(reading.seats)).toBe(true);
+
+    // Seated as the boot would seat it, the engine refuses the first roll.
+    const fresh = createSession('t', [{ id: 'p1' }, { id: 'p2' }], LEGACY_MOBILE);
+    const table = {
+      ...fresh,
+      players: fresh.players.map((player, at) => ({ ...player, state: reading.seats[at]!.state })),
+    };
+    expect(() => advance(table, 1, 1)).toThrow(/finished/);
   });
 });

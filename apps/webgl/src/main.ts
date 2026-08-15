@@ -16,7 +16,7 @@ import { Companion, type Line, type Rests } from './companion';
 import { DEFAULT_DEITY, DEITIES, deityFor, deityForSeat, seatsOf } from './deities';
 import { screenFor, toneOf, turnPassed } from './hud';
 import { fanOffset, hopPoint, planPosition } from './layout';
-import { browserStore, read, write, type KeptSeat } from './kept';
+import { browserStore, finishedTable, read, write, type KeptSeat } from './kept';
 import { pathOf } from './path';
 import {
   asFile,
@@ -370,7 +370,19 @@ for (const each of DEITIES) {
 }
 
 seatTable(saved.seats.length || 1, saved.seats);
-session = { ...session, turnIndex: saved.turnIndex };
+if (finishedTable(saved.seats)) {
+  // A restored table nobody can move in is reseated — the same answer the
+  // winning arm gives when the last seat finishes live. Seated as-is it is a
+  // dead end with the lights on: `advance` throws at a session that is over,
+  // and the first tap of the die takes that throw inside `takeTurn` with
+  // `busy` held and the die disabled, so the game never answers again. The
+  // saved `turnIndex` goes with the table it belonged to; the die's face
+  // sorts itself out, because `showFace` reads the live `rolls`, which a
+  // fresh seating has already emptied.
+  seatTable(session.players.length);
+} else {
+  session = { ...session, turnIndex: saved.turnIndex };
+}
 showSeatCount();
 showLotus();
 

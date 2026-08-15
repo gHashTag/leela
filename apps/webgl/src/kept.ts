@@ -24,6 +24,7 @@
 
 import {
   MAX_SEATS,
+  hasWon,
   isPlayableState,
   whyNotPlayable,
   type GameState,
@@ -275,6 +276,29 @@ export function read(store: Store | null, rules: RuleSet): Reading {
     why: trouble,
   };
 }
+
+/**
+ * True of a table nobody can move in: every seat has won.
+ *
+ * `read` hands such a table back rather than refusing it — a finished game is
+ * not a corrupt one, and refusing it would cost the seats their count and the
+ * player a `gameNotRead` sentence about a game that read perfectly well. But
+ * the engine refuses to *play* it: `advance` throws at a session that is over,
+ * so a boot that seats this table as-is hands that throw to the first tap of
+ * the die. The caller reseats instead, which is the same answer the winning
+ * arm gives when the last seat finishes live. Nothing this app writes can
+ * reach it — the winning arm reseats before `keep` runs — but a hand-edited
+ * record or another surface's can.
+ *
+ * Two traps are load-bearing here, and each has a test that fails without it.
+ * A seat still waiting to enter also sits on 68 with `is_finished` set —
+ * `hasWon` is what tells a winner from a player who has never rolled, and a
+ * check on the flag alone calls a table nobody has entered finished. And
+ * `every` over an empty list is true, while a table with nobody at it is a
+ * fresh boot, not an ended game.
+ */
+export const finishedTable = (seats: readonly KeptSeat[]): boolean =>
+  seats.length > 0 && seats.every((seat) => hasWon(seat.state));
 
 export function write(store: Store | null, kept: Kept): void {
   if (!store) return;
