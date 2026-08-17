@@ -14,7 +14,7 @@ import { fileName, pathText, revisited, seatId, writingsOn, MAX_REPORT_CHARS } f
 
 import { Companion, type Line, type Rests } from './companion';
 import { DEFAULT_DEITY, DEITIES, deityFor, deityForSeat, seatsOf } from './deities';
-import { screenFor, toneOf, turnPassed } from './hud';
+import { standingFor, toneOf, turnPassed } from './hud';
 import { fanOffset, hopPoint, planPosition } from './layout';
 import { browserStore, finishedTable, read, write, type KeptSeat } from './kept';
 import { pathOf } from './path';
@@ -834,7 +834,7 @@ const showFace = (value: number, waiting = false): void => {
  *        be named.
  */
 const showStanding = (event: MoveEvent | null, of: SeatedPlayer = seat()): void => {
-  const standing = screenFor(language, of.state.loka, entered(of), titleOf, event);
+  const standing = standingFor(language, of.state, titleOf, event);
   el.planNumber.textContent = standing.number;
   el.planTitle.textContent = standing.title;
   el.progress.value = standing.progress;

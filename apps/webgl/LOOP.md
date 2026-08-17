@@ -48,6 +48,8 @@ yourself deleting one of these tests, you are re-introducing the defect.
 | The board renders at all on first paint | looking at it |
 | Tile *n* of the atlas carries plan *n*'s number | `tests/atlas.test.ts` |
 | Waiting to enter is not confused with having won | `tests/screen.test.ts` |
+| The readout is told a presence, never a boolean | `presenceOf`, `tests/screen.test.ts` |
+| A winner is stood on the square they reached | `tests/screen.test.ts` |
 | Progress is measured against 68, not 72 | `tests/screen.test.ts` |
 | A snake is thickest at the head it is entered by | `tests/screen.test.ts` |
 | Every deity offered is named in the 72 texts | `tests/screen.test.ts` |
@@ -256,7 +258,8 @@ them, which is exactly the content the gates were run against at 18:07. Rule 5
 says stage named paths; when two sessions are inside one file, named paths are
 not enough and the hunks have to be named too.
 
-**Next.** The header after a win, above. And `apps/miniapp/src/seats.ts` still
+**Next.** The header after a win, above — fixed 2026-08-17, see the entry at the
+end of this file. And `apps/miniapp/src/seats.ts` still
 holds `SavedSeats`, `sessionFrom`, `seatsFrom` and `resize` while this surface
 derives its seats in `deities.ts`; two accounts of seating, never reconciled.
 
@@ -1273,3 +1276,87 @@ before this pass and true of it now), and a foreign record whose `turnIndex`
 names a seat that has already won is seated as read, which under a ruleset
 that lets a winner re-enter may be a game and under any other is one throw
 from a refusal nobody has looked at.
+
+## 2026-08-17 — the winner was handed the invitation to throw for a six
+
+**Changed.** `Presence` and `presenceOf` in `hud.ts`; `screenFor` takes the
+presence instead of `entered`; `standingFor` composes the two and is what
+`showStanding` calls.
+
+The item the pass before last named as **Next**, and it was worse than the
+sentence it was filed under. `is_finished` is set both before the first six and
+after the win, so `entered` — its negation — is false for a winner, and
+`showStanding` passed exactly that. At the instant of victory the header went to
+`—`, the title to *Throw a six to enter the game*, and **the progress bar fell
+from a full board to zero**. Only `el.say` was then overwritten by the winning
+arm, which is why the defect read as a wording problem: the three readouts the
+win arm does not touch were all the waiting ones.
+
+**The invariant was held at the wrong end.** This file lists *waiting to enter is
+not confused with having won* as held by `tests/screen.test.ts`, and it was —
+that test passes `false` for waiting and `true` for arrived and checks
+`screenFor` honours what it is given. Nothing asserted that anybody could
+*derive* the argument, and the derivation was the defect. A test of a function's
+obedience is not a test of its caller's arithmetic; that is the fourth time this
+ledger records a green suite guarding the wrong end of a boundary.
+
+So the boolean is gone rather than joined by a second one. Three named states,
+read off the state by `presenceOf`, which asks the engine's `hasWon` rather than
+restating it — `game.ts` carries a comment recording that this same check lived
+in three places and the copy there was the wrong one, and a fourth copy with
+this app's name on it is that mistake volunteered.
+
+**Checked against the unfixed code.** `presenceOf` was reverted to the old rule
+and the three new tests went red for three different reasons — `expected
+'waiting' to be 'won'`, `expected null to be 68`, and the discriminating one,
+`expected '—' to be '68'`. The third reconstructs the old boolean inside the
+test and requires it to *disagree about the winner and agree everywhere else*,
+because a `standingFor` that returned the arrival readout unconditionally would
+have passed the other two.
+
+**Looked at it**, and the looking cost three false readings, all one mistake.
+Seeded a real state from the engine — no hand-written game — two seats, p1 on 50
+one throw from the arrow at 54, `Math.random` pinned to a 4, and threw:
+
+```
+68 · Cosmic Consciousness (Vaikuntha Loka) · bar 1.0 · tone win
+"You reach Cosmic Consciousness. 🕉 · Player 2 is next."
+stored: p1@68 finished (prev 50), p2@9, turn 1
+```
+
+Then cleared storage and threw a 4 at a fresh table, to prove the other two
+presences did not move: `—`, *Throw a six to enter the game*, bar 0, and *You
+threw 4. It takes a six to enter the game.* — the refused throw is still news.
+
+**Three instrument errors, one shape.** A single-seat winner was seeded first and
+the page showed a fresh table: correct, and not a refusal — `finishedTable` from
+the previous pass reseats a table where *every* seat has won, so a solo winner
+cannot persist as one. Then the post-throw header was read three seconds after
+the click, mid-walk at 50, and I nearly concluded the click had done nothing;
+the tell was `storedRolls` having grown. Then the refused-throw sentence read as
+the opening line, because that call had timed out mid-sequence and the page had
+re-rendered at rest. Every one is a measurement taken in the same breath as the
+change that invalidates it, which this file already records three times. Read
+the state in a call of its own, afterwards.
+
+**Cost.** 261 tests where there were 258 — and 258 where this file's last entry
+says 257, so one arrived from elsewhere between the passes. Three new, all in
+`tests/screen.test.ts`.
+
+**Found by looking, not fixed.** The progress element's `aria-label` is the
+literal string `0 / 68` in `index.html` and nothing ever rewrites it, so a screen
+reader is told nothing has happened for the whole game while the bar beside it
+fills. One change per iteration; this is the next one, and it is small.
+
+**Another session is in this tree right now.** `src/scene.ts` gained a framing
+change — `ARC_CEILING * 0.45`, with a comment about the camera fitting a phantom
+ceiling — some time during this pass, and it is not mine. It is not staged. It
+cannot affect what was measured here (a camera constant, and no test builds the
+scene), and the gates were green over the union as well as over my three files.
+
+**Next.** The winner's token. The header now says 68 and the board shows nothing
+there: `entered` hides a finished seat, and the competitor sweep recorded in the
+previous entry says the hotseat convention is the opposite — a finished seat
+stays visible with its placing. `standings` has been exported by the engine all
+along and no surface reads it. That is one change, and this file has now named it
+twice.

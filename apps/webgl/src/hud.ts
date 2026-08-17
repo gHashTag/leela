@@ -13,7 +13,7 @@
  * game that ships in twenty-two languages.
  */
 
-import { WIN_LOKA, type Direction, type MoveEvent } from '@leela/engine';
+import { WIN_LOKA, hasWon, type Direction, type GameState, type MoveEvent } from '@leela/engine';
 import { describeMove, messageFor, type Language, type TitleOf } from '@leela/content';
 
 /**
@@ -86,25 +86,69 @@ export const standingOn = (
 });
 
 /**
+ * Which of the three things a seat can be doing.
+ *
+ * Not a boolean, and that is the whole point. `is_finished` is set both before
+ * the first six and after the win, so *on the board* has one negation and two
+ * meanings — and every caller that reduced it to `entered` handed the winner
+ * the invitation to throw for a six.
+ */
+export type Presence = 'waiting' | 'playing' | 'won';
+
+/**
+ * Read a seat's presence off its state.
+ *
+ * `hasWon` rather than the condition it stands for: the engine's own comment
+ * records that this check lived in three places and the copy in `game.ts` was
+ * the wrong one. A fourth copy here would be the same mistake with this app's
+ * name on it.
+ */
+export const presenceOf = (state: GameState): Presence => {
+  if (hasWon(state)) return 'won';
+  return state.is_finished ? 'waiting' : 'playing';
+};
+
+/**
  * The whole readout for one moment of the game.
  *
- * @param entered false while the player is still throwing for a six.
+ * @param presence what the seat is doing. A winner stands on 68 having arrived;
+ *        a player waiting for a six stands on 68 having never left.
  */
 export const screenFor = (
   language: Language,
   plan: number,
-  entered: boolean,
+  presence: Presence,
   titleOf: TitleOf,
   event: MoveEvent | null,
 ): Standing => {
-  if (!entered) {
+  if (presence === 'waiting') {
     const waiting = opening(language);
     // A refused throw is still news: *you threw 4, it takes a six*. The opening
     // line is only for the moment before anybody has thrown at all.
     return event ? { ...waiting, say: describeMove(language, event, titleOf) } : waiting;
   }
-  return standingOn(language, plan, titleOf, event);
+  const standing = standingOn(language, plan, titleOf, event);
+  if (presence !== 'won') return standing;
+  // Arrived. The number, the name and a full bar are all `standingOn`'s already;
+  // what it cannot know is that this is the end rather than another landing, and
+  // a winner who reloads has no move to be described.
+  return { ...standing, say: messageFor(language, 'app.won'), tone: 'win' };
 };
+
+/**
+ * The readout for a seat, presence and all.
+ *
+ * This exists so that the deciding is not done at the call site. `showStanding`
+ * used to pass `entered(of)` — a boolean it derived itself — and that is where
+ * the winner's readout went wrong: the rule was in the wiring, where this app's
+ * own first paragraph says no rule lives, and no test could reach it.
+ */
+export const standingFor = (
+  language: Language,
+  state: GameState,
+  titleOf: TitleOf,
+  event: MoveEvent | null,
+): Standing => screenFor(language, state.loka, presenceOf(state), titleOf, event);
 
 /**
  * Who throws next, in the player's language, or null when nobody changed.

@@ -1,11 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { LANGUAGES, messageFor, planFor } from '@leela/content';
-import { LEGACY_MOBILE, TOTAL_PLANS, WIN_LOKA, applyRoll, initialState } from '@leela/engine';
+import {
+  LEGACY_MOBILE,
+  TOTAL_PLANS,
+  WIN_LOKA,
+  applyRoll,
+  hasWon,
+  initialState,
+  type GameState,
+} from '@leela/engine';
 
 import { Companion } from '../src/companion';
 import { trimmedDescription } from '../src/canon';
 import { DEITIES, deityFor, DEFAULT_DEITY } from '../src/deities';
-import { screenFor, toneOf, turnPassed } from '../src/hud';
+import { presenceOf, screenFor, standingFor, toneOf, turnPassed } from '../src/hud';
 import { isFace, pipsFor } from '../src/die';
 import { DETENTS, dragged, nearest, stepped } from '../src/sheet';
 import { arrowProfile, snakeProfile, wiggle } from '../src/tube';
@@ -16,7 +24,7 @@ const titleOf = (plan: number): string => planFor('en', plan).title;
 
 describe('the readout', () => {
   it('shows a dash and the invitation before anybody has thrown', () => {
-    const opening = screenFor('en', WIN_LOKA, false, titleOf, null);
+    const opening = screenFor('en', WIN_LOKA, 'waiting', titleOf, null);
     expect(opening.number).toBe('—');
     expect(opening.plan).toBeNull();
     expect(opening.progress).toBe(0);
@@ -29,26 +37,26 @@ describe('the readout', () => {
    * player who had not started that they had reached Cosmic Consciousness.
    */
   it('does not mistake waiting to enter for having arrived at 68', () => {
-    const waiting = screenFor('en', WIN_LOKA, false, titleOf, null);
-    const arrived = screenFor('en', WIN_LOKA, true, titleOf, null);
+    const waiting = screenFor('en', WIN_LOKA, 'waiting', titleOf, null);
+    const arrived = screenFor('en', WIN_LOKA, 'won', titleOf, null);
     expect(waiting.number).toBe('—');
     expect(arrived.number).toBe(String(WIN_LOKA));
     expect(arrived.progress).toBe(1);
   });
 
   it('measures progress against the winning square, not the last one', () => {
-    expect(screenFor('en', WIN_LOKA, true, titleOf, null).progress).toBe(1);
+    expect(screenFor('en', WIN_LOKA, 'won', titleOf, null).progress).toBe(1);
     // The four squares past 68 are the ones you walk back from. None of them
     // may read as less far along than 68 is.
     for (const beyond of [69, 70, 71, TOTAL_PLANS]) {
-      expect(screenFor('en', beyond, true, titleOf, null).progress).toBe(1);
+      expect(screenFor('en', beyond, 'playing', titleOf, null).progress).toBe(1);
     }
   });
 
   it('names every square it stands on, in every language, without blanking', () => {
     for (const language of LANGUAGES) {
       for (let plan = 1; plan <= TOTAL_PLANS; plan += 1) {
-        const standing = screenFor(language, plan, true, (p) => planFor(language, p).title, null);
+        const standing = screenFor(language, plan, 'playing', (p) => planFor(language, p).title, null);
         expect(standing.title.length).toBeGreaterThan(0);
         expect(standing.say.length).toBeGreaterThan(0);
       }
@@ -72,10 +80,85 @@ describe('the readout', () => {
   it('reports a refused throw rather than repeating the invitation', () => {
     const before = initialState();
     const { event } = applyRoll(before, 4, LEGACY_MOBILE);
-    const after = screenFor('en', WIN_LOKA, false, titleOf, event);
-    const opening = screenFor('en', WIN_LOKA, false, titleOf, null);
+    const after = screenFor('en', WIN_LOKA, 'waiting', titleOf, event);
+    const opening = screenFor('en', WIN_LOKA, 'waiting', titleOf, null);
     expect(after.say).not.toBe(opening.say);
     expect(after.say).toContain('4');
+  });
+});
+
+// --- a winner is not somebody waiting to enter -------------------------------
+
+/**
+ * `is_finished` is set both before the first six and after the win, so the
+ * board asked one boolean — `entered`, which is its negation — and handed the
+ * winner the invitation to throw for one. The header read `—`, the title read
+ * *waiting*, and the progress bar fell from a full board to zero at the exact
+ * moment the game was won.
+ */
+describe('the readout after a win', () => {
+  /**
+   * A real winner, reached by real rolls.
+   *
+   * A hand-written state is no use here: the state that would have to be
+   * written *is* the ambiguity under test, so writing one assumes the answer.
+   * The driver scores a throw by `is_finished` rather than by `loka`, because a
+   * seat waiting to enter sits on 68 — the highest number there is — and a
+   * greedy driver built on position alone prefers never to enter.
+   */
+  const untilWon = (): GameState => {
+    let state = initialState();
+    for (let at = 0; at < 2000; at += 1) {
+      if (hasWon(state)) return state;
+      let best = state;
+      let furthest = -Infinity;
+      for (let roll = 1; roll <= 6; roll += 1) {
+        const next = applyRoll(state, roll, LEGACY_MOBILE).state;
+        const score = hasWon(next) ? Infinity : next.is_finished ? -1 : next.loka;
+        if (score > furthest) {
+          furthest = score;
+          best = next;
+        }
+      }
+      state = best;
+    }
+    throw new Error('nobody reached Cosmic Consciousness in 2000 throws');
+  };
+
+  it('tells the three presences apart, on states the engine produced', () => {
+    expect(presenceOf(initialState())).toBe('waiting');
+    expect(presenceOf(applyRoll(initialState(), 6, LEGACY_MOBILE).state)).toBe('playing');
+    expect(presenceOf(untilWon())).toBe('won');
+  });
+
+  it('stands a winner on the square they reached', () => {
+    const standing = standingFor('en', untilWon(), titleOf, null);
+    expect(standing.plan).toBe(WIN_LOKA);
+    expect(standing.number).toBe(String(WIN_LOKA));
+    expect(standing.progress).toBe(1);
+    expect(standing.tone).toBe('win');
+    expect(standing.say).not.toBe(messageFor('en', 'app.opening'));
+  });
+
+  /**
+   * The assertion that discriminates the two rules rather than noticing a new
+   * field: the old rule is reconstructed here and required to disagree. Without
+   * it, a `standingFor` that returned the arrival readout for *every* state
+   * would pass the test above.
+   */
+  it('disagrees with the boolean it replaced, and only about the winner', () => {
+    const asEntered = (state: GameState) =>
+      screenFor('en', state.loka, state.is_finished ? 'waiting' : 'playing', titleOf, null);
+
+    const won = untilWon();
+    expect(asEntered(won).number).toBe('—');
+    expect(standingFor('en', won, titleOf, null).number).toBe(String(WIN_LOKA));
+
+    // And it must still agree everywhere else, or this is a regression wearing
+    // a fix's clothes.
+    for (const state of [initialState(), applyRoll(initialState(), 6, LEGACY_MOBILE).state]) {
+      expect(standingFor('en', state, titleOf, null).number).toBe(asEntered(state).number);
+    }
   });
 });
 
