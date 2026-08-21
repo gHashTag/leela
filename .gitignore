@@ -70,3 +70,7 @@ GoogleService-Info.plist
 # Jest cache
 .jest/
 
+
+# fastlane generated
+fastlane/report.xml
+fastlane/README.md
