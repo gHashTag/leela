@@ -34,11 +34,13 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>3</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>localhost</key>
@@ -116,7 +118,7 @@
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
+		<string>arm64</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>

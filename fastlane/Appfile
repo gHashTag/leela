@@ -1,0 +1,7 @@
+# Which app, and whose.
+#
+# The identifier and the team are the ones already in the Xcode project, not a
+# second opinion: a mismatch here is discovered by App Store Connect after an
+# upload, which is the most expensive moment to discover it.
+app_identifier("xyz.ghashtag.dharma")
+team_id("5EM4M85VSQ")

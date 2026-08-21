@@ -1,0 +1,146 @@
+# Getting a build to testers, repeatably.
+#
+# Every step here was done by hand at least once first, and each one is here
+# because doing it by hand went wrong in a way worth preventing:
+#
+#   - the board has to be rebuilt and copied into `ios/board` before the app is
+#     built, or the bundle ships the previous page. That happened: an afternoon
+#     was spent looking at a change that was on disk and not in the app. The
+#     Xcode build phase does the copy, and `board` below does the build that
+#     feeds it;
+#   - the build number is 1 in the repository. App Store Connect refuses a
+#     build number it has already seen, and refuses it *after* the upload, so
+#     `beta` raises it before building rather than after being rejected;
+#   - the upload needs credentials. An App Store Connect API key is used, never
+#     an Apple ID password: the key can be scoped and revoked, and nothing here
+#     ever has to hold a person's password.
+#
+# Set up once, on this machine:
+#
+#   ASC_KEY_ID, ASC_ISSUER_ID and a key file at
+#   ~/.appstoreconnect/private_keys/AuthKey_<ASC_KEY_ID>.p8
+#
+# Then:  fastlane beta
+
+default_platform(:ios)
+
+BOARD = File.expand_path("../../../leela/apps/webgl", __dir__)
+
+platform :ios do
+  desc "Rebuild the 3D board so the app bundles the current one"
+  lane :board do
+    unless File.directory?(BOARD)
+      UI.important("no board checkout at #{BOARD}; shipping ios/board as it stands")
+      next
+    end
+    sh("cd #{BOARD.shellescape} && npx vite build")
+    # The copy itself belongs to the Xcode build phase (`ios/sync_board.sh`),
+    # which also refuses a board built with absolute asset paths. Building it
+    # here and copying there keeps one owner for each half.
+  end
+
+  desc "Everything that must be true before a build leaves this machine"
+  lane :check do
+    sh("cd .. && npx jest --silent")
+    if File.directory?(BOARD)
+      sh("cd #{BOARD.shellescape} && npx vitest run")
+    end
+  end
+
+  desc "Ensure an Apple Distribution certificate exists in this keychain"
+  lane :certs do
+    # The keychain on this machine has only "Apple Development"; without an
+    # "Apple Distribution" identity `-exportArchive` has nothing to sign with.
+    # The API key can mint one without anyone typing an Apple ID password.
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: File.expand_path(
+        "~/.appstoreconnect/private_keys/AuthKey_#{ENV.fetch('ASC_KEY_ID')}.p8"
+      ),
+      in_house: false
+    )
+    get_certificates(api_key: api_key, output_path: "build/certs")
+  end
+
+  desc "Build and send to TestFlight"
+  lane :beta do
+    check
+    board
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: File.expand_path(
+        "~/.appstoreconnect/private_keys/AuthKey_#{ENV.fetch('ASC_KEY_ID')}.p8"
+      ),
+      in_house: false
+    )
+
+    # Asked of App Store Connect rather than counted locally: the last build
+    # this app actually has is the only number that can be safely followed.
+    latest = latest_testflight_build_number(
+      api_key: api_key,
+      app_identifier: "xyz.ghashtag.dharma",
+      initial_build_number: 0
+    )
+    increment_build_number(
+      build_number: latest + 1,
+      xcodeproj: "ios/leela.xcodeproj"
+    )
+
+    # Homebrew out of the way while the archive is packaged.
+    #
+    # `xcodebuild -exportArchive` runs `/usr/bin/rsync -8aPhhE`, and `-E` is
+    # Apple's flag for extended attributes. macOS's own rsync understands it;
+    # Homebrew's rsync 3.x, if it is earlier on PATH, becomes the far end of the
+    # transfer and rejects `--extended-attributes` as unknown. The export then
+    # fails with "exportArchive Copy failed" and names neither rsync nor the
+    # flag - it took reading Xcode's own distribution logs to find. Restored
+    # afterwards so nothing else in the lane is surprised.
+    original_path = ENV["PATH"]
+    ENV["PATH"] = "/usr/bin:/bin:/usr/sbin:/sbin"
+    begin
+      build_app(
+        workspace: "ios/leela.xcworkspace",
+        scheme: "leela",
+        configuration: "Release",
+        export_method: "app-store",
+        export_options: {
+          # False on purpose: with symbols on, the export looks for an Apple ID
+          # to send them with, finds none in a non-interactive shell, and dies
+          # with "Could not connect to the server". `upload_to_testflight`
+          # below carries the dSYMs instead.
+          uploadSymbols: false,
+          manageAppVersionAndBuildNumber: false,
+          destination: "export"
+        },
+        # Signing is automatic, so the export step asks App Store Connect for
+        # the app-store profile. Authenticate that ask with the same API key
+        # instead of an Xcode account: the previous attempt died on "No
+        # Accounts" precisely because the export ran in a shell with none.
+        export_xcargs: "-allowProvisioningUpdates" \
+          " -authenticationKeyPath #{File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV.fetch('ASC_KEY_ID')}.p8").shellescape}" \
+          " -authenticationKeyID #{ENV.fetch('ASC_KEY_ID')}" \
+          " -authenticationKeyIssuerID #{ENV.fetch('ASC_ISSUER_ID')}",
+        output_directory: "build",
+        # Raw xcodebuild output on purpose: the stripped PATH above also hides
+        # Homebrew's xcpretty, and a missing formatter kills the whole pipe
+        # with exit 127 after the archive has already succeeded.
+        xcodebuild_formatter: "",
+        clean: false
+      )
+    ensure
+      ENV["PATH"] = original_path
+    end
+
+    upload_to_testflight(
+      api_key: api_key,
+      # Testers get it when it finishes processing; no review wait for internal
+      # groups, and nothing is submitted to the store from this lane.
+      skip_waiting_for_build_processing: false,
+      distribute_external: false,
+      changelog: ENV["CHANGELOG"] || "Board bundled in the app, guide answers on device, three free moves."
+    )
+  end
+end

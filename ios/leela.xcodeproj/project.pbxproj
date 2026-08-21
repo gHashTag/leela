@@ -32,6 +32,7 @@
 		73453029F03548E680034E70 /* Montserrat-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 814324844165403FACC11765 /* Montserrat-Regular.ttf */; };
 		78DEEE48F0794A5CB6C3F8A5 /* etna-free-font.otf in Resources */ = {isa = PBXBuildFile; fileRef = EBF249E87B7B47DCB3E1226F /* etna-free-font.otf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		842B9CE0ECD25A1487344F1E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 9CB1725B416D406E009AEAA8 /* PrivacyInfo.xcprivacy */; };
 		9E142DF44FFF49E3A4D9A63C /* Montserrat-ThinItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 499F7D17E9B240DBA1E0FDEA /* Montserrat-ThinItalic.ttf */; };
 		B85B559E2BA443D2B93F722D /* Montserrat-ExtraBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 001616E3558544BD846444AC /* Montserrat-ExtraBoldItalic.ttf */; };
 		BB0D1E5A62644D0CBB15F2B0 /* TheDolbak-Brush.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AAF18D3D6FF44BB58572BDDF /* TheDolbak-Brush.ttf */; };
@@ -41,6 +42,7 @@
 		D4D6C5AC2C284BAAB4877B68 /* Montserrat-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E0FA868797F3467C88C2CEAC /* Montserrat-MediumItalic.ttf */; };
 		D75CD2424D4E44888E2A3A3F /* Montserrat-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 86D064745D074F92BC008670 /* Montserrat-ExtraBold.ttf */; };
 		DC7190FC61644D88B74A917E /* NeutraText-Book.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4704387C3B194E948CFEC39E /* NeutraText-Book.otf */; };
+		E217EA0C33D22EFBCFF2E846 /* board in Resources */ = {isa = PBXBuildFile; fileRef = EBDC2522E5DE18A10587AB47 /* board */; };
 		E3DF76F49FD749F6A743FB92 /* KLMN_Flash_Pix.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 40E03CB2DD0F41B2B53CE03D /* KLMN_Flash_Pix.ttf */; };
 		E84B6886AB864739B93A1B7D /* OxygenMono-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = B767D2D635F4485290C817E0 /* OxygenMono-Regular.otf */; };
 		EC96BFB956004EEEA548A1CB /* IBM-Logo.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F165857F76894F0D8AAB05FB /* IBM-Logo.ttf */; };
@@ -109,6 +111,7 @@
 		84A2B2118C884A248F5638D6 /* Montserrat-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Bold.ttf"; path = "../assets/fonts/Montserrat-Bold.ttf"; sourceTree = "<group>"; };
 		86D064745D074F92BC008670 /* Montserrat-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-ExtraBold.ttf"; path = "../assets/fonts/Montserrat-ExtraBold.ttf"; sourceTree = "<group>"; };
 		9017B4C91878412E923BCEA3 /* Montserrat-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Light.ttf"; path = "../assets/fonts/Montserrat-Light.ttf"; sourceTree = "<group>"; };
+		9CB1725B416D406E009AEAA8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = leela/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A6591BA8A6264D28852B911B /* 3270Narrow.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = 3270Narrow.ttf; path = ../assets/fonts/3270Narrow.ttf; sourceTree = "<group>"; };
 		A746FBA2112B4718B441F774 /* Montserrat-BlackItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-BlackItalic.ttf"; path = "../assets/fonts/Montserrat-BlackItalic.ttf"; sourceTree = "<group>"; };
 		AABBA18BB06040D99BAE8252 /* Montserrat-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Italic.ttf"; path = "../assets/fonts/Montserrat-Italic.ttf"; sourceTree = "<group>"; };
@@ -119,6 +122,7 @@
 		CEC99E490CB04B4DB3C5C868 /* Montserrat-Thin.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Thin.ttf"; path = "../assets/fonts/Montserrat-Thin.ttf"; sourceTree = "<group>"; };
 		DCBF314125AD467188A5B857 /* Montserrat-BoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-BoldItalic.ttf"; path = "../assets/fonts/Montserrat-BoldItalic.ttf"; sourceTree = "<group>"; };
 		E0FA868797F3467C88C2CEAC /* Montserrat-MediumItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-MediumItalic.ttf"; path = "../assets/fonts/Montserrat-MediumItalic.ttf"; sourceTree = "<group>"; };
+		EBDC2522E5DE18A10587AB47 /* board */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = board; path = board; sourceTree = "<group>"; };
 		EBF249E87B7B47DCB3E1226F /* etna-free-font.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "etna-free-font.otf"; path = "../assets/fonts/etna-free-font.otf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F165857F76894F0D8AAB05FB /* IBM-Logo.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "IBM-Logo.ttf"; path = "../assets/fonts/IBM-Logo.ttf"; sourceTree = "<group>"; };
@@ -175,6 +179,8 @@
 				13B07FB71A68108700A75B9A /* main.m */,
 				731A31392A2CDD7E00AC3C47 /* GoogleService-Info.plist */,
 				731A313A2A2CDD7E00AC3C47 /* RNBackgroundFetch+AppDelegate.m */,
+				EBDC2522E5DE18A10587AB47 /* board */,
+				9CB1725B416D406E009AEAA8 /* PrivacyInfo.xcprivacy */,
 			);
 			name = leela;
 			sourceTree = "<group>";
@@ -313,6 +319,7 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "leela" */;
 			buildPhases = (
 				DFCA4E0B6D4084300954ACEC /* [CP] Check Pods Manifest.lock */,
+				80F7FE2AD468CF90DBA57C4F /* Sync board into bundle */,
 				FD10A7F022414F080027D42C /* Start Packager */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
@@ -321,6 +328,7 @@
 				96A5600636CF5FC007AF6EE4 /* [CP] Embed Pods Frameworks */,
 				1561ECA0FCA0C6100EFF3E60 /* [CP] Copy Pods Resources */,
 				CF1C76385ABAC78FD908DD5C /* [CP-User] [RNFB] Core Configuration */,
+				C2A96F26DA2380A2CED3C32D /* Strip bitcode from embedded frameworks */,
 			);
 			buildRules = (
 			);
@@ -410,6 +418,8 @@
 				CADC2FF764F140AB96A9E7D2 /* Montserrat-Thin.ttf in Resources */,
 				9E142DF44FFF49E3A4D9A63C /* Montserrat-ThinItalic.ttf in Resources */,
 				BB0D1E5A62644D0CBB15F2B0 /* TheDolbak-Brush.ttf in Resources */,
+				E217EA0C33D22EFBCFF2E846 /* board in Resources */,
+				842B9CE0ECD25A1487344F1E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -483,6 +493,25 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-leela-leelaTests/Pods-leela-leelaTests-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		80F7FE2AD468CF90DBA57C4F /* Sync board into bundle */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Sync board into bundle";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/sync_board.sh\"";
+			showEnvVarsInLog = 0;
+		};
 		96A5600636CF5FC007AF6EE4 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -498,6 +527,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-leela/Pods-leela-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		C2A96F26DA2380A2CED3C32D /* Strip bitcode from embedded frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Strip bitcode from embedded frameworks";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/strip_bitcode.sh\"";
 			showEnvVarsInLog = 0;
 		};
 		CF1C76385ABAC78FD908DD5C /* [CP-User] [RNFB] Core Configuration */ = {
@@ -618,7 +666,7 @@
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = leelaTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -642,7 +690,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
 				INFOPLIST_FILE = leelaTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -666,18 +714,19 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = leela/leela.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 5EM4M85VSQ;
 				ENABLE_BITCODE = NO;
+				ENABLE_DEBUG_DYLIB = NO;
 				INFOPLIST_FILE = leela/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Leela Chakra";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 6.8;
+				MARKETING_VERSION = 6.11;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -702,17 +751,17 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = leela/leela.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 5EM4M85VSQ;
 				INFOPLIST_FILE = leela/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Leela Chakra";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 6.8;
+				MARKETING_VERSION = 6.11;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -778,7 +827,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
@@ -843,7 +892,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
