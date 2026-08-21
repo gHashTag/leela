@@ -11,10 +11,14 @@ describe('<FirstRollCoachMark />', () => {
 
   it('renders when the coach mark has not been shown before', async () => {
     ;(AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(null)
-    const { getByText, getByTestId } = render(<FirstRollCoachMark online={false} />)
+    const { getByText, getByTestId } = render(
+      <FirstRollCoachMark online={false} />
+    )
     await waitFor(() => {
       expect(getByText('Your turn')).toBeTruthy()
-      expect(getByText('Tap the dice to roll. A six places your piece on the board.')).toBeTruthy()
+      expect(
+        getByText('Tap the dice to roll. A six places your piece on the board.')
+      ).toBeTruthy()
       expect(getByTestId('first-roll-coach-got-it')).toBeTruthy()
     })
   })
@@ -29,11 +33,18 @@ describe('<FirstRollCoachMark />', () => {
 
   it('dismisses and persists the flag when Got it is pressed', async () => {
     ;(AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(null)
-    const { getByTestId, queryByText } = render(<FirstRollCoachMark online={false} />)
-    await waitFor(() => expect(getByTestId('first-roll-coach-got-it')).toBeTruthy())
+    const { getByTestId, queryByText } = render(
+      <FirstRollCoachMark online={false} />
+    )
+    await waitFor(() =>
+      expect(getByTestId('first-roll-coach-got-it')).toBeTruthy()
+    )
     fireEvent.press(getByTestId('first-roll-coach-got-it'))
     await waitFor(() => {
-      expect(AsyncStorage.setItem).toHaveBeenCalledWith('@leela:firstRollCoachShown', 'true')
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+        '@leela:firstRollCoachShown',
+        'true'
+      )
       expect(queryByText('Your turn')).toBeNull()
     })
   })

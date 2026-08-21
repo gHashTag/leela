@@ -41,7 +41,15 @@ interface ButtonSimpleT {
 }
 
 const ButtonSimple = memo<ButtonSimpleT>(
-  ({ title, onPress, h = 'h4', viewStyle, testID, accessibilityLabel, accessibilityHint }) => {
+  ({
+    title,
+    onPress,
+    h = 'h4',
+    viewStyle,
+    testID,
+    accessibilityLabel,
+    accessibilityHint
+  }) => {
     const { container, fontStyle } = styles
     return (
       <Pressable

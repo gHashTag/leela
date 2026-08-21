@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Why this app touches the APIs Apple asks about.
+
+  Required since 2024. Without it an upload is answered with ITMS-91053,
+  "Missing API declaration", after the build has gone up rather than before -
+  and the build is unusable until a new one is sent.
+
+  Fourteen privacy manifests already ship inside this app, all of them from
+  Google's pods. Nothing covered React Native itself, AsyncStorage, Sentry,
+  DeviceInfo or rn-fetch-blob, which are compiled into the app binary: those are
+  the app's to declare, and this is that declaration.
+
+  Each reason below is a code named by Apple, not free text.
+-->
+<plist version="1.0">
+<dict>
+	<!--
+	  The board keeps its game, the app keeps its settings.
+
+	  `CA92.1`: read and written only by this app, never sent anywhere and never
+	  used to identify a device. AsyncStorage is behind fifty-one files here and
+	  React Native itself uses it.
+	-->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+		<!--
+		  `C617.1`: timestamps of files inside the app's own container -
+		  attachments, caches, the log files the app rotates. Nothing outside it
+		  is inspected.
+		-->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+		<!--
+		  `E174.1`: free space, checked before writing. `react-native-device-info`
+		  exposes it and rn-fetch-blob asks the file system for it.
+		-->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>E174.1</string>
+			</array>
+		</dict>
+		<!--
+		  `35F9.1`: uptime, used to measure how long something took inside one
+		  run of the app. Sentry reads it to timestamp a crash relative to launch.
+		-->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>35F9.1</string>
+			</array>
+		</dict>
+	</array>
+
+	<!--
+	  ATTENTION - THIS ONE IS A STATEMENT ABOUT THE BUSINESS, NOT ABOUT THE CODE,
+	  AND IT NEEDS CONFIRMING BEFORE THE FIRST SUBMISSION.
+
+	  `false` is written here on this basis: the app links no advertising SDK,
+	  shows no ads, and the paywall says so. Branch is present, but the only
+	  calls in `AppDelegate.mm` are `application:openURL:` and
+	  `continueUserActivity:` - deep links, not cross-app attribution.
+
+	  If Branch is (or becomes) used for attribution, or if data from this app is
+	  ever joined with data from other companies' apps or sites, this must become
+	  `true` and `NSPrivacyTrackingDomains` must list the domains involved.
+	  `NSPrivacyCollectedDataTypes` is deliberately empty for the same reason:
+	  what Firebase Analytics and Sentry collect is declared in App Store
+	  Connect's own App Privacy section, and that is a statement only the
+	  publisher can make.
+	-->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+</dict>
+</plist>

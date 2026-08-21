@@ -7,7 +7,10 @@ import { s, vs } from 'react-native-size-matters'
 import { Space, Text } from '../../components'
 import { dimGray, primary } from '../../constants'
 import { setHapticEnabled } from '../../utils/haptics'
-import { loadHapticEnabled, saveHapticEnabled } from '../../utils/hapticSettings'
+import {
+  loadHapticEnabled,
+  saveHapticEnabled
+} from '../../utils/hapticSettings'
 
 export const HapticToggle = memo(() => {
   const { t } = useTranslation()

@@ -39,42 +39,44 @@ interface ButtonT {
   accessibilityHint?: string
 }
 
-const Button = memo<ButtonT>(({
-  title,
-  onPress,
-  textStyle,
-  testID,
-  accessibilityLabel,
-  accessibilityHint
-}) => {
-  const { container, h } = styles
-  const { dark } = useTheme()
-  const borderColor = dark ? white : black
-  const backgroundColor = dark ? black : white
-  return (
-    <Pressable
-      style={[container, { backgroundColor, borderColor }]}
-      onPress={onPress}
-      testID={testID}
-      accessibilityLabel={accessibilityLabel || title}
-      accessibilityHint={accessibilityHint}
-      accessibilityRole="button"
-    >
-      {/*
+const Button = memo<ButtonT>(
+  ({
+    title,
+    onPress,
+    textStyle,
+    testID,
+    accessibilityLabel,
+    accessibilityHint
+  }) => {
+    const { container, h } = styles
+    const { dark } = useTheme()
+    const borderColor = dark ? white : black
+    const backgroundColor = dark ? black : white
+    return (
+      <Pressable
+        style={[container, { backgroundColor, borderColor }]}
+        onPress={onPress}
+        testID={testID}
+        accessibilityLabel={accessibilityLabel || title}
+        accessibilityHint={accessibilityHint}
+        accessibilityRole="button"
+      >
+        {/*
         At default sizes one line shrinking-to-fit keeps the pill shape. At
         accessibility sizes we allow a second line so the button remains usable
         without clipping.
       */}
-      <Text
-        h="h1"
-        textStyle={[h, textStyle]}
-        title={title}
-        numberOfLines={2}
-        adjustsFontSizeToFit
-        minimumFontScale={0.75}
-      />
-    </Pressable>
-  )
-})
+        <Text
+          h="h1"
+          textStyle={[h, textStyle]}
+          title={title}
+          numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+        />
+      </Pressable>
+    )
+  }
+)
 
 export { Button }

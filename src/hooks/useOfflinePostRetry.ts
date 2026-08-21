@@ -2,10 +2,7 @@ import NetInfo from '@react-native-community/netinfo'
 import { useEffect } from 'react'
 
 import { captureException } from '../constants'
-import {
-  loadQueuedPosts,
-  replayQueuedPost
-} from '../utils/offlinePostQueue'
+import { loadQueuedPosts, replayQueuedPost } from '../utils/offlinePostQueue'
 
 export const useOfflinePostRetry = () => {
   useEffect(() => {

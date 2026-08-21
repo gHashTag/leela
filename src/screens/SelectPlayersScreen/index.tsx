@@ -47,11 +47,7 @@ const SelectPlayersScreen = observer(({ navigation }: SelectPlayersScreenT) => {
       <CenterView>
         <ResumeLastGame onResume={resumeGame} />
         <Space height={vs(24)} />
-        <Text
-          h="h3"
-          title={t('selectPlayers')}
-          testID="select-players-title"
-        />
+        <Text h="h3" title={t('selectPlayers')} testID="select-players-title" />
         <Space height={vs(8)} />
         <Text
           h="h6"

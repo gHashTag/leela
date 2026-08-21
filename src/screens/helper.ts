@@ -9,7 +9,6 @@ import { nanoid } from 'nanoid/non-secure'
 import ImagePicker from 'react-native-image-crop-picker'
 import semver from 'semver'
 import {
-  OpenPlanReportModal,
   OpenUpdateVersionModal,
   accountHasBanAlert,
   captureException,
@@ -315,10 +314,7 @@ const getIMG = async (fileName?: string) => {
 
   if (name.includes('images/') && AVATAR_BASE_URL !== '') {
     const key = name.replace(/^\/+/, '')
-    const path = key
-      .split('/')
-      .map(encodeURIComponent)
-      .join('/')
+    const path = key.split('/').map(encodeURIComponent).join('/')
     return `${AVATAR_BASE_URL.replace(/\/+$/, '')}/${path}`
   }
 
@@ -395,10 +391,21 @@ const onSignIn = async (
           title: i18next.t('online-part.createIntention')
         })
       } else {
+        // Always the front door, which is the board in three dimensions.
+        //
+        // A pass ago this sent a player owing an account to the flat board
+        // instead, to keep the modal below off the new screen. That answered
+        // the wrong question: it stopped the board being covered by never
+        // showing the board at all, and anyone mid-game — which is everyone
+        // who owes a report — met the old screen and nothing else.
         navigate('MAIN', { screen: 'TAB_BOTTOM_0' })
-        if (!prof.isReported) {
-          OpenPlanReportModal(prof.plan)
-        } else if (MessagingStore.path) {
+
+        // And the modal does not open here. It is the flat board's way of
+        // asking for the account, and the 3D board asks for it itself, on its
+        // own screen, holding its die until it is written — the same rule, said
+        // once. Opening both put an undismissable card over the game.
+        // The flat board opens it through its own screens.
+        if (MessagingStore.path) {
           linkTo(MessagingStore.path)
           MessagingStore.path = ''
         }

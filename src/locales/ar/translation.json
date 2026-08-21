@@ -505,7 +505,7 @@
   "manyCharacters": "الكثير من الرموز ، الحد الأقصى - ",
   "fewChars": "يجب أن يكون الحد الأدنى 100 حرف",
   "twoSymbolRequire": "يجب أن يحتوي الحقل على أحرف 2 على الأقل",
-  "descriptionSubscriptions": "نسخة تجريبية من لعبة Leela AI تتيح إنشاء 2 تقارير. لمتابعة، يرجى تفعيل الاشتراك.",
+  "descriptionSubscriptions": "أول {{count}} رميات مجانية. اشترك لمواصلة اللعب.",
   "buy": "يشتري",
   "alreadyBought": "اشترى بالفعل؟",
   "chooseSubscription": "اختر اشتراكًا:",
@@ -524,5 +524,38 @@
   },
   "free": "مجاني",
   "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
-  "authUnknownError": "Something went wrong. Please try again."
+  "authUnknownError": "Something went wrong. Please try again.",
+  "subscriptionHelper": {
+    "message": "يحصل كل لاعب على {{count}} رميات مجانية للتعرف على اللعبة قبل الدفع. يرفع الاشتراك هذا الحد ويبقي المرشد معك.",
+    "title": "لماذا أرى هذا؟",
+    "restore": "استعادة الشراء",
+    "close": "إغلاق"
+  },
+  "proFeatureExplainer": {
+    "title": "ما الذي يفتحه Pro",
+    "link": "ماذا يتضمن Pro؟",
+    "next": "التالي",
+    "gotIt": "فهمت",
+    "dismiss": "تخطٍ",
+    "features": {
+      "throws": {
+        "title": "تستمر اللعبة",
+        "body": "عند انتهاء رمياتك المجانية يستمر النرد في الدوران. العب ما شئت وابدأ ما شئت من الجولات."
+      },
+      "guide": {
+        "title": "المرشد الذكي",
+        "body": "اسأل عن المستوى الذي وصلت إليه بلغتك. تستند الإجابة إلى البهاغافاد غيتا والأوبانيشاد ويوغا سوترا، ويمكنك متابعة تفكير المرشد."
+      },
+      "noAds": {
+        "title": "بدون إعلانات",
+        "body": "لا تعرض ليلا أي إعلانات. الاشتراك هو ما يبقي اللعبة ومرشدها قائمين."
+      }
+    }
+  },
+  "subscription": {
+    "renewal": "يتجدد تلقائيًا حتى يتم الإلغاء. يمكنك الإلغاء في أي وقت من إعدادات معرف Apple.",
+    "terms": "شروط الاستخدام",
+    "privacy": "سياسة الخصوصية",
+    "pickPlanFirst": "اختر خطة أولاً"
+  }
 }

@@ -14,7 +14,9 @@ export default {
   getCustomerInfo: jest.fn().mockResolvedValue({
     entitlements: { all: {} }
   }),
-  addCustomerInfoUpdateListener: jest.fn().mockReturnValue({ remove: jest.fn() })
+  addCustomerInfoUpdateListener: jest
+    .fn()
+    .mockReturnValue({ remove: jest.fn() })
 }
 
 export const LOG_LEVEL = {

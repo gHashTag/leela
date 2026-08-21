@@ -7,15 +7,21 @@ const ZAI_CODING_BASE_URL = 'https://api.z.ai/api/coding/paas/v4'
 const ZAI_DEFAULT_BASE_URL = 'https://api.z.ai/api/paas/v4'
 const ZAI_DEFAULT_MODEL = 'glm-4.6'
 
-const SIMPLIFIED_STORAGE_KEY = (postId: string) => `@simplifiedAiAnswer_${postId}`
+const SIMPLIFIED_STORAGE_KEY = (postId: string) =>
+  `@simplifiedAiAnswer_${postId}`
 
 export const SIMPLIFY_MIN_LENGTH = 240
 
-export const loadSimplifiedAnswer = async (postId: string): Promise<string | null> => {
+export const loadSimplifiedAnswer = async (
+  postId: string
+): Promise<string | null> => {
   return AsyncStorage.getItem(SIMPLIFIED_STORAGE_KEY(postId))
 }
 
-export const saveSimplifiedAnswer = async (postId: string, text: string): Promise<void> => {
+export const saveSimplifiedAnswer = async (
+  postId: string,
+  text: string
+): Promise<void> => {
   await AsyncStorage.setItem(SIMPLIFIED_STORAGE_KEY(postId), text)
 }
 
@@ -26,7 +32,8 @@ export const clearSimplifiedAnswer = async (postId: string): Promise<void> => {
 export async function simplifyAnswer(text: string): Promise<string | null> {
   if (!text || text.length < SIMPLIFY_MIN_LENGTH) return null
 
-  const baseURL = ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : ZAI_DEFAULT_BASE_URL
+  const baseURL =
+    ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : ZAI_DEFAULT_BASE_URL
 
   try {
     const response = await axios.post(

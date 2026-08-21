@@ -16,15 +16,15 @@ describe('<ChatStarterPrompts />', () => {
       <ChatStarterPrompts onSelect={jest.fn()} />
     )
     expect(getByTestId('chat-starter-prompts')).toBeTruthy()
-    expect(getByText('Ask Leela about the board, your plane, or a daily step')).toBeTruthy()
+    expect(
+      getByText('Ask Leela about the board, your plane, or a daily step')
+    ).toBeTruthy()
     expect(getByTestId('chat-starter-prompt-0')).toBeTruthy()
   })
 
   it('calls onSelect with the prompt text when a chip is pressed', () => {
     const onSelect = jest.fn()
-    const { getByTestId } = render(
-      <ChatStarterPrompts onSelect={onSelect} />
-    )
+    const { getByTestId } = render(<ChatStarterPrompts onSelect={onSelect} />)
     fireEvent.press(getByTestId('chat-starter-prompt-0'))
     expect(onSelect).toHaveBeenCalledWith('Explain my current plane')
   })

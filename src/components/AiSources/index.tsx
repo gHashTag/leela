@@ -20,19 +20,11 @@ export const AiSources = memo(({ text }: AiSourcesProps) => {
 
   return (
     <View style={styles.container}>
-      <Text
-        h="h9"
-        title={t('aiSources.title')}
-        textStyle={styles.title}
-      />
+      <Text h="h9" title={t('aiSources.title')} textStyle={styles.title} />
       <Space height={vs(6)} />
       {sources.map((source, index) => (
         <View key={index} style={styles.sourceCard}>
-          <Text
-            h="h10"
-            title={source.reference}
-            textStyle={styles.reference}
-          />
+          <Text h="h10" title={source.reference} textStyle={styles.reference} />
           {source.quote && (
             <>
               <Space height={vs(4)} />

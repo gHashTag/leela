@@ -32,7 +32,10 @@ describe('computeHistoryStreak', () => {
     yesterday.setDate(yesterday.getDate() - 1)
     const dayBefore = new Date(today)
     dayBefore.setDate(dayBefore.getDate() - 2)
-    const history = makeHistory([yesterday.toISOString(), dayBefore.toISOString()])
+    const history = makeHistory([
+      yesterday.toISOString(),
+      dayBefore.toISOString()
+    ])
     expect(computeHistoryStreak(history)).toBe(2)
   })
 

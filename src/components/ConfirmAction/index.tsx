@@ -24,12 +24,23 @@ export interface DestructiveAction {
 
 interface UseConfirmActionsResult {
   /** Pass into an action-sheet item list to guard destructive presses. */
-  guardActions: (actions: ButtonsModalT[], overrides?: Partial<Record<ConfirmKey, string>>) => ButtonsModalT[]
+  guardActions: (
+    actions: ButtonsModalT[],
+    overrides?: Partial<Record<ConfirmKey, string>>
+  ) => ButtonsModalT[]
   /** Render this dialog inside the screen that uses the actions. */
   ConfirmDialogComponent: React.FC
 }
 
-const KEY_CONFIG: Record<ConfirmKey, { destructive: boolean; titleKey: string; messageKey: string; confirmKey: string }> = {
+const KEY_CONFIG: Record<
+  ConfirmKey,
+  {
+    destructive: boolean
+    titleKey: string
+    messageKey: string
+    confirmKey: string
+  }
+> = {
   DEL_POST: {
     destructive: true,
     titleKey: 'confirm.deletePostTitle',
@@ -80,16 +91,15 @@ const KEY_CONFIG: Record<ConfirmKey, { destructive: boolean; titleKey: string; m
   }
 }
 
-export function useConfirmActions(t: (key: string) => string): UseConfirmActionsResult {
+export function useConfirmActions(
+  t: (key: string) => string
+): UseConfirmActionsResult {
   const [pending, setPending] = useState<DestructiveAction | null>(null)
 
-  const requestConfirm = useCallback(
-    (action: DestructiveAction) => {
-      triggerHaptic('notificationWarning')
-      setPending(action)
-    },
-    []
-  )
+  const requestConfirm = useCallback((action: DestructiveAction) => {
+    triggerHaptic('notificationWarning')
+    setPending(action)
+  }, [])
 
   const clearPending = useCallback(() => {
     setPending(null)

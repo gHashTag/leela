@@ -12,8 +12,10 @@
 const { readFileSync, writeFileSync, existsSync } = require('node:fs')
 
 const podspec = 'node_modules/react-native/third-party-podspecs/boost.podspec'
-const gone = 'https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2'
-const alive = 'https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2'
+const gone =
+  'https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2'
+const alive =
+  'https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2'
 
 if (!existsSync(podspec)) process.exit(0)
 

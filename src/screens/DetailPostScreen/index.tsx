@@ -165,10 +165,7 @@ export const DetailPostScreen: React.FC<DetailPostI> = observer(
           )}
         />
         {curItem && (
-          <InlineCommentInput
-            postId={curItem.id}
-            postOwner={curItem.ownerId}
-          />
+          <InlineCommentInput postId={curItem.id} postOwner={curItem.ownerId} />
         )}
       </View>
     )

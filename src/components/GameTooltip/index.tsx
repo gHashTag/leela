@@ -87,7 +87,9 @@ export const GameTooltip = memo(({ tip, onLearnMore }: GameTooltipT) => {
       accessibilityLiveRegion="polite"
     >
       <View style={styles.row}>
-        <View style={[styles.bulb, isDark ? styles.bulbDark : styles.bulbLight]}>
+        <View
+          style={[styles.bulb, isDark ? styles.bulbDark : styles.bulbLight]}
+        >
           <Text h="h4" title="💡" />
         </View>
         <Space width={s(12)} />

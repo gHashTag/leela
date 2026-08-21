@@ -201,7 +201,11 @@ const AnimatedGem = observer(
           {
             zIndex: -index,
             borderWidth: highContrast ? 2 : 0,
-            borderColor: highContrast ? (id === 1 ? '#FFFFFF' : '#000000') : 'transparent'
+            borderColor: highContrast
+              ? id === 1
+                ? '#FFFFFF'
+                : '#000000'
+              : 'transparent'
           },
           id === 1 && online && styles.primaryGem,
           animatedStyle

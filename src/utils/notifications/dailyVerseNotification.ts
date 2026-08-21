@@ -14,14 +14,24 @@ const HOUR = 9
 const MINUTE = 0
 
 export function getNextDailyVerseTimestamp(date = new Date()): number {
-  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate(), HOUR, MINUTE, 0, 0)
+  const target = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    HOUR,
+    MINUTE,
+    0,
+    0
+  )
   if (target.getTime() <= date.getTime()) {
     target.setDate(target.getDate() + 1)
   }
   return target.getTime()
 }
 
-export async function scheduleDailyVerseNotification(t: TFunction): Promise<void> {
+export async function scheduleDailyVerseNotification(
+  t: TFunction
+): Promise<void> {
   try {
     await notifee.createChannel({
       id: CHANNEL_ID,

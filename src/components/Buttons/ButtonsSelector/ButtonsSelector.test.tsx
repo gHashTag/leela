@@ -19,6 +19,8 @@ describe('<ButtonsSelector />', () => {
 
     const selected = getByTestId('player-count-1')
     expect(selected.props.accessibilityState.selected).toBe(true)
-    expect(getByTestId('player-count-4').props.accessibilityState.selected).toBe(false)
+    expect(
+      getByTestId('player-count-4').props.accessibilityState.selected
+    ).toBe(false)
   })
 })

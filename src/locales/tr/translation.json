@@ -504,7 +504,7 @@
   "manyCharacters": "Çok fazla sembol, maksimum - ",
   "fewChars": "En az 100 karakter olmalıdır",
   "twoSymbolRequire": "Alan en az 2 karakter içermelidir",
-  "descriptionSubscriptions": "Leela AI oyununun deneme sürümü, 2 rapor oluşturmaya izin verir. Devam etmek için lütfen abone olun.",
+  "descriptionSubscriptions": "İlk {{count}} atışınız ücretsiz. Oyuna devam etmek için abone olun.",
   "buy": "Satın Al",
   "alreadyBought": "Zaten Satın Alındı mı?",
   "chooseSubscription": "Abonelik Seçin:",
@@ -526,5 +526,38 @@
   },
   "free": "Ücretsiz erişim",
   "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
-  "authUnknownError": "Something went wrong. Please try again."
+  "authUnknownError": "Something went wrong. Please try again.",
+  "subscriptionHelper": {
+    "message": "Her oyuncu {{count}} ücretsiz atış alır, böylece ödeme yapmadan önce oyunu tanırsınız. Abonelik sınırı kaldırır ve rehberi yanınızda tutar.",
+    "title": "Bunu neden görüyorum?",
+    "restore": "Satın alımı geri yükle",
+    "close": "Kapat"
+  },
+  "proFeatureExplainer": {
+    "title": "Pro'nun açtıkları",
+    "link": "Pro'ya neler dahil?",
+    "next": "İleri",
+    "gotIt": "Anladım",
+    "dismiss": "Atla",
+    "features": {
+      "throws": {
+        "title": "Oyun devam eder",
+        "body": "Ücretsiz atışlarınız bittiğinde zar dönmeye devam eder. İstediğiniz kadar oynayın, istediğiniz kadar oyun başlatın."
+      },
+      "guide": {
+        "title": "Yapay zeka rehberi",
+        "body": "Düştüğünüz düzlem hakkında kendi dilinizde sorun. Yanıt Bhagavad Gita, Upanişadlar ve Yoga Sutralarına dayanır ve rehberin nasıl düşündüğünü görürsünüz."
+      },
+      "noAds": {
+        "title": "Reklam yok",
+        "body": "Leela'da reklam gösterilmez. Oyunu ve rehberini ayakta tutan şey aboneliktir."
+      }
+    }
+  },
+  "subscription": {
+    "renewal": "İptal edilene kadar otomatik yenilenir. Apple Kimliği ayarlarınızdan istediğiniz zaman iptal edebilirsiniz.",
+    "terms": "Kullanım Koşulları",
+    "privacy": "Gizlilik Politikası",
+    "pickPlanFirst": "Önce bir plan seçin"
+  }
 }

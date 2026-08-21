@@ -207,7 +207,9 @@ export const PostCard: React.FC<postCardI> = memo(
                 ionicons
                 name="chatbubble-outline"
                 size={iconSize}
-                accessibilityLabel={t('accessibility.comments', { count: commCount })}
+                accessibilityLabel={t('accessibility.comments', {
+                  count: commCount
+                })}
                 testID="post-comment-button"
               />
               <ButtonVectorIcon
@@ -233,10 +235,7 @@ export const PostCard: React.FC<postCardI> = memo(
                 accessibilityLabel={t('accessibility.sharePost')}
                 testID="post-share-button"
               />
-              <BookmarkButton
-                bookmark={postBookmark}
-                size={iconSize + s(2)}
-              />
+              <BookmarkButton bookmark={postBookmark} size={iconSize + s(2)} />
               {isAdmin && (
                 <ButtonVectorIcon
                   viewStyle={mediumBtn}
@@ -262,106 +261,114 @@ export const PostCard: React.FC<postCardI> = memo(
     return (
       <>
         <Pressable onPress={goDetail} style={container}>
-        <View style={headerS}>
-          <View style={avaContainer}>
-            <PlanAvatar
-              avaUrl={avaUrl}
-              onPress={handleProfile}
-              size={'medium'}
-              plan={item.plan as number}
-              isAccept={item.accept}
-              aditionalStyle={img}
-            />
-          </View>
-          <View style={headerInfo}>
-            {/* name, create date/email */}
-            <Space height={vs(2)} />
-            <View style={[headerName, isAccessibilityScale && styles.headerNameLarge]}>
-              <Text
-                numberOfLines={isAccessibilityScale ? 2 : 1}
-                h={'h6'}
-                title={fullName as string}
+          <View style={headerS}>
+            <View style={avaContainer}>
+              <PlanAvatar
+                avaUrl={avaUrl}
+                onPress={handleProfile}
+                size={'medium'}
+                plan={item.plan as number}
+                isAccept={item.accept}
+                aditionalStyle={img}
               />
-              {isPostPro && (
-                <>
-                  <Space width={s(6)} />
-                  <ProBadge small />
-                </>
-              )}
-              <Text h={'h6'} textStyle={lightText} title={` · ${date}`} />
-              <View style={flex1} />
-              {/* <Pressable onPress={handleTranslate}>
+            </View>
+            <View style={headerInfo}>
+              {/* name, create date/email */}
+              <Space height={vs(2)} />
+              <View
+                style={[
+                  headerName,
+                  isAccessibilityScale && styles.headerNameLarge
+                ]}
+              >
+                <Text
+                  numberOfLines={isAccessibilityScale ? 2 : 1}
+                  h={'h6'}
+                  title={fullName as string}
+                />
+                {isPostPro && (
+                  <>
+                    <Space width={s(6)} />
+                    <ProBadge small />
+                  </>
+                )}
+                <Text h={'h6'} textStyle={lightText} title={` · ${date}`} />
+                <View style={flex1} />
+                {/* <Pressable onPress={handleTranslate}>
                 <Text title={flag} style={styles.flagEmoji} />
               </Pressable> */}
-            </View>
-            <Space height={vs(5)} />
-            {/* ellipsizeMode so a clipped report ends in an ellipsis instead
+              </View>
+              <Space height={vs(5)} />
+              {/* ellipsizeMode so a clipped report ends in an ellipsis instead
                 of stopping mid-word, which read as broken text rather than as
                 "there is more". */}
-            <HashtagFormat
-              textStyle={textStyle}
-              numberOfLines={8}
-              ellipsizeMode="tail"
-              h={'h5'}
-              title={text || ' '}
-            />
-            <Reactions postId={item.id} />
-            {!item.accept && (
-              <>
-                <Space height={vs(5)} />
-                <Text
-                  oneColor={orange}
-                  h={'h6'}
-                  title={t('online-part.review')}
-                />
-              </>
-            )}
-            {/* Preview Buttons */}
-
-            <View style={btnsContainer}>
-              {isAdmin && (
+              <HashtagFormat
+                textStyle={textStyle}
+                numberOfLines={8}
+                ellipsizeMode="tail"
+                h={'h5'}
+                title={text || ' '}
+              />
+              <Reactions postId={item.id} />
+              {!item.accept && (
                 <>
-                  <ButtonVectorIcon
-                    onPress={handleAdminMenu}
-                    viewStyle={[smallBtn, nonDetailAdminMenuButton]}
-                    ionicons
-                    name="md-ellipsis-vertical-circle"
-                    size={iconSize + s(3)}
+                  <Space height={vs(5)} />
+                  <Text
+                    oneColor={orange}
+                    h={'h6'}
+                    title={t('online-part.review')}
                   />
-                  <Space height={vs(12)} />
                 </>
               )}
-              <ButtonVectorIcon
-                onPress={handleComment}
-                count={commCount}
-                viewStyle={[smallBtn, nonDetailCommentButton]}
-                ionicons
-                name="chatbubble-outline"
-                size={iconSize}
-              />
-              <ButtonVectorIcon
-                count={likeCount}
-                onPress={handleLike}
-                color={heartColor}
-                ionicons
-                iconSize={iconSize + s(1.5)}
-                viewStyle={smallBtn}
-                name={heart}
-                size={iconSize}
-              />
-              <ButtonVectorIcon
-                viewStyle={[smallBtn, nonDetailLinkButton]}
-                name="md-link-outline"
-                ionicons
-                iconSize={iconSize + s(4)}
-                onPress={handleShareLink}
-              />
-              <BookmarkButton bookmark={postBookmark} size={iconSize + s(2)} />
+              {/* Preview Buttons */}
+
+              <View style={btnsContainer}>
+                {isAdmin && (
+                  <>
+                    <ButtonVectorIcon
+                      onPress={handleAdminMenu}
+                      viewStyle={[smallBtn, nonDetailAdminMenuButton]}
+                      ionicons
+                      name="md-ellipsis-vertical-circle"
+                      size={iconSize + s(3)}
+                    />
+                    <Space height={vs(12)} />
+                  </>
+                )}
+                <ButtonVectorIcon
+                  onPress={handleComment}
+                  count={commCount}
+                  viewStyle={[smallBtn, nonDetailCommentButton]}
+                  ionicons
+                  name="chatbubble-outline"
+                  size={iconSize}
+                />
+                <ButtonVectorIcon
+                  count={likeCount}
+                  onPress={handleLike}
+                  color={heartColor}
+                  ionicons
+                  iconSize={iconSize + s(1.5)}
+                  viewStyle={smallBtn}
+                  name={heart}
+                  size={iconSize}
+                />
+                <ButtonVectorIcon
+                  viewStyle={[smallBtn, nonDetailLinkButton]}
+                  name="md-link-outline"
+                  ionicons
+                  iconSize={iconSize + s(4)}
+                  onPress={handleShareLink}
+                />
+                <BookmarkButton
+                  bookmark={postBookmark}
+                  size={iconSize + s(2)}
+                />
+              </View>
             </View>
           </View>
-        </View>
-      </Pressable>
-      <ConfirmDialogComponent />
+        </Pressable>
+        <ConfirmDialogComponent />
       </>
     )
   })

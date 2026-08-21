@@ -5,7 +5,14 @@ import { StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
 import { EmojiText, Space, Text } from '../../components'
-import { black, brightTurquoise, dimGray, orange, primary, red } from '../../constants'
+import {
+  black,
+  brightTurquoise,
+  dimGray,
+  orange,
+  primary,
+  red
+} from '../../constants'
 import { OnlinePlayer } from '../../store'
 
 const getIconName = (status: string) => {
@@ -82,7 +89,11 @@ export const LastMoveReplay = memo(() => {
 
   return (
     <View style={styles.container}>
-      <Text h="h11" textStyle={styles.label} title={t('lastMoveReplay.title')} />
+      <Text
+        h="h11"
+        textStyle={styles.label}
+        title={t('lastMoveReplay.title')}
+      />
       <Space height={vs(4)} />
       {content}
     </View>

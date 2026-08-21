@@ -39,7 +39,10 @@ describe('<HapticToggle />', () => {
     })
     fireEvent(getByLabelText(/haptic/i), 'valueChange', false)
     await waitFor(() => {
-      expect(AsyncStorage.setItem).toHaveBeenCalledWith('@hapticEnabled', 'false')
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+        '@hapticEnabled',
+        'false'
+      )
     })
     expect(mockSetHapticEnabled).toHaveBeenLastCalledWith(false)
   })

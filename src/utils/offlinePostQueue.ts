@@ -54,7 +54,9 @@ export async function clearQueuedPosts(): Promise<void> {
   }
 }
 
-export async function buildQueuedPost(formPost: FormPostT): Promise<PostT | null> {
+export async function buildQueuedPost(
+  formPost: FormPostT
+): Promise<PostT | null> {
   const userUid = auth().currentUser?.uid
   const email = auth().currentUser?.email
   if (!userUid || !email) return null

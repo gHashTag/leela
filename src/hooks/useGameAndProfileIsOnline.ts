@@ -26,9 +26,8 @@ export const useGameAndProfileIsOnline = () => {
           firestore()
             .collection('Profiles')
             .where('owner', '==', curUid)
-            .onSnapshot(
-              (s) =>
-                s?.docs?.forEach((a) => a.data().status === 'ban' && banAlert())
+            .onSnapshot((s) =>
+              s?.docs?.forEach((a) => a.data().status === 'ban' && banAlert())
             )
       )
 

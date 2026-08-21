@@ -68,7 +68,12 @@ export const SecondaryTab = ({
             accessibilityState={{ selected: isFocused }}
           >
             <Ionicons name={iconForTab(key)} size={s(18)} color={color} />
-            <View style={[styles.labelSlot, isAccessibilityScale && styles.labelSlotLarge]}>
+            <View
+              style={[
+                styles.labelSlot,
+                isAccessibilityScale && styles.labelSlotLarge
+              ]}
+            >
               {/*
                 At default sizes one line keeps the bar compact. At accessibility
                 sizes labels may wrap so the tab stays readable and tappable.
@@ -77,15 +82,14 @@ export const SecondaryTab = ({
                 oneColor={color}
                 h="h6"
                 title={title}
-                textStyle={isAccessibilityScale ? styles.labelTextLarge : undefined}
+                textStyle={
+                  isAccessibilityScale ? styles.labelTextLarge : undefined
+                }
                 numberOfLines={isAccessibilityScale ? 2 : 1}
               />
             </View>
             <View
-              style={[
-                styles.line,
-                isFocused && { backgroundColor: primary }
-              ]}
+              style={[styles.line, isFocused && { backgroundColor: primary }]}
             />
           </Pressable>
         )

@@ -1,6 +1,8 @@
 export default {
   requestPermission: jest.fn().mockResolvedValue(true),
-  getNotificationSettings: jest.fn().mockResolvedValue({ authorizationStatus: 1 }),
+  getNotificationSettings: jest
+    .fn()
+    .mockResolvedValue({ authorizationStatus: 1 }),
   onForegroundEvent: jest.fn().mockReturnValue({ remove: jest.fn() }),
   onBackgroundEvent: jest.fn().mockReturnValue({ remove: jest.fn() }),
   createChannel: jest.fn().mockResolvedValue('mock-channel'),

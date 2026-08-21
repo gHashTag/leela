@@ -19,9 +19,7 @@ describe('<ResumeLastGame />', () => {
   })
 
   it('is hidden when there is no saved game', () => {
-    const { queryByTestId } = render(
-      <ResumeLastGame onResume={mockResume} />
-    )
+    const { queryByTestId } = render(<ResumeLastGame onResume={mockResume} />)
 
     expect(queryByTestId('resume-last-game')).toBeNull()
   })
@@ -57,9 +55,7 @@ describe('<ResumeLastGame />', () => {
     DiceStore.startGame = true
     DiceStore.finishArr = [true]
 
-    const { getByTestId } = render(
-      <ResumeLastGame onResume={mockResume} />
-    )
+    const { getByTestId } = render(<ResumeLastGame onResume={mockResume} />)
 
     fireEvent.press(getByTestId('resume-last-game'))
     expect(mockResume).toHaveBeenCalledTimes(1)

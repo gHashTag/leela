@@ -20,7 +20,13 @@ import { triggerHaptic } from '../../utils/haptics'
 export type SceneState =
   | { type: 'loading' }
   | { type: 'error'; message?: string; onRetry?: () => void }
-  | { type: 'empty'; title?: string; message?: string; icon?: string; action?: { title: string; onPress: () => void } }
+  | {
+      type: 'empty'
+      title?: string
+      message?: string
+      icon?: string
+      action?: { title: string; onPress: () => void }
+    }
   | { type: 'ready' }
 
 interface SceneStatesT {
@@ -50,7 +56,11 @@ export const SceneStates = memo(
         <View style={[styles.center, style]}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Space height={vs(12)} />
-          <Text h="h6" title={t('sceneStates.loading')} textStyle={{ color: textColor }} />
+          <Text
+            h="h6"
+            title={t('sceneStates.loading')}
+            textStyle={{ color: textColor }}
+          />
         </View>
       )
     }
@@ -78,7 +88,11 @@ export const SceneStates = memo(
                 accessibilityRole="button"
                 accessibilityLabel={t('sceneStates.retry')}
               >
-                <Text h="h5" title={t('sceneStates.retry')} textStyle={styles.retryText} />
+                <Text
+                  h="h5"
+                  title={t('sceneStates.retry')}
+                  textStyle={styles.retryText}
+                />
               </Pressable>
             </>
           )}

@@ -65,7 +65,11 @@ export const FollowUpQuestions = memo(({ postId }: FollowUpQuestionsI) => {
           style={[styles.chip, styles.freeformChip]}
           accessibilityLabel={t('followUpQuestions.askFreeform')}
         >
-          <Text h="h11" title={t('followUpQuestions.askFreeform')} oneColor={primary} />
+          <Text
+            h="h11"
+            title={t('followUpQuestions.askFreeform')}
+            oneColor={primary}
+          />
         </Pressable>
       </View>
     </View>

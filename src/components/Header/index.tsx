@@ -59,12 +59,18 @@ const Header = memo<HeaderT>(
         testID="header"
       >
         {iconLeft && (
-          <Pressable style={[minTouchTarget, { opacity: iconLeftOpacity }]} onPress={onPress}>
+          <Pressable
+            style={[minTouchTarget, { opacity: iconLeftOpacity }]}
+            onPress={onPress}
+          >
             <Emoji name={iconLeft} style={leftIconStyle} />
           </Pressable>
         )}
         {isBlockGame && online && (
-          <Pressable style={[minTouchTarget, { opacity: iconLeftOpacity }]} onPress={onPressSub}>
+          <Pressable
+            style={[minTouchTarget, { opacity: iconLeftOpacity }]}
+            onPress={onPressSub}
+          >
             <Emoji name="star" style={leftIconStyle} />
           </Pressable>
         )}
@@ -89,7 +95,11 @@ const Header = memo<HeaderT>(
         </View>
         {isBlockGame && online && (
           <Pressable
-            style={[minTouchTarget, styles.pressStyle, { opacity: iconLeftOpacity }]}
+            style={[
+              minTouchTarget,
+              styles.pressStyle,
+              { opacity: iconLeftOpacity }
+            ]}
             onPress={onPressSub}
           >
             <Emoji name="star" style={leftIconStyle} />

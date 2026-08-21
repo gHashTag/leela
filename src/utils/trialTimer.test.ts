@@ -55,7 +55,9 @@ describe('trialTimer', () => {
   it('creates a deadline 24h in the future when none is stored', async () => {
     const deadline = await getTrialDeadline()
     expect(deadline).toBeGreaterThan(Date.now())
-    expect(deadline).toBeLessThanOrEqual(Date.now() + 24 * 60 * 60 * 1000 + 1000)
+    expect(deadline).toBeLessThanOrEqual(
+      Date.now() + 24 * 60 * 60 * 1000 + 1000
+    )
   })
 
   it('returns the same stored deadline on subsequent calls', async () => {

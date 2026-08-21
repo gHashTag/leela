@@ -18,7 +18,9 @@ export function setAppTheme(theme: AppTheme): void {
   listeners.forEach((listener) => listener(theme))
 }
 
-export function subscribeToTheme(listener: (theme: AppTheme) => void): () => void {
+export function subscribeToTheme(
+  listener: (theme: AppTheme) => void
+): () => void {
   listeners.add(listener)
   return () => listeners.delete(listener)
 }

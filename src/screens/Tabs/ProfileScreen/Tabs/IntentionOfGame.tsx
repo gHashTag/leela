@@ -6,7 +6,13 @@ import { StyleSheet, View } from 'react-native'
 import { GestureDetector } from 'react-native-gesture-handler'
 import { s, vs } from 'react-native-size-matters'
 
-import { Button, ButtonEdit, EmptyComments, Space, Text } from '../../../../components'
+import {
+  Button,
+  ButtonEdit,
+  EmptyComments,
+  Space,
+  Text
+} from '../../../../components'
 import { useTypedNavigation } from '../../../../hooks'
 import { OnlinePlayer } from '../../../../store'
 import { TabContext } from '../TabContext'

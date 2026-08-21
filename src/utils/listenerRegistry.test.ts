@@ -18,7 +18,9 @@ describe('listenerRegistry', () => {
     registerListener('TestScreen', unsubscribe)
     expect(activeListenerCount()).toBe(1)
     expect(getActiveListeners()).toEqual(
-      expect.arrayContaining([expect.objectContaining({ screen: 'TestScreen' })])
+      expect.arrayContaining([
+        expect.objectContaining({ screen: 'TestScreen' })
+      ])
     )
   })
 

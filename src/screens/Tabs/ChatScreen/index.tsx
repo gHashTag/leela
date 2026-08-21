@@ -11,8 +11,20 @@ import {
 } from 'react-native'
 import { Bubble, GiftedChat, IMessage } from 'react-native-gifted-chat'
 import { s } from 'react-native-size-matters'
-import { ButtonVectorIcon, ButtonWithIcon, ChatStarterPrompts, Header, Space, Text } from '../../../components'
-import { brightTurquoise, captureException, onLeaveFeedback, trueBlue } from '../../../constants'
+import {
+  ButtonVectorIcon,
+  ButtonWithIcon,
+  ChatStarterPrompts,
+  Header,
+  Space,
+  Text
+} from '../../../components'
+import {
+  brightTurquoise,
+  captureException,
+  onLeaveFeedback,
+  trueBlue
+} from '../../../constants'
 import { DiceStore, actionsDice } from '../../../store'
 import { useRevenueCat } from '../../../providers/RevenueCatProvider'
 import { streamZaiChat } from '../../../utils/aiStream'
@@ -226,9 +238,7 @@ const ChatScreen: React.FC = () => {
           },
           onError: (error) => {
             setLoading(false)
-            setMessages((previousMessages) =>
-              removeLoading(previousMessages)
-            )
+            setMessages((previousMessages) => removeLoading(previousMessages))
             captureException(error, 'ChatScreen: streamZaiChat')
           }
         }
@@ -237,15 +247,12 @@ const ChatScreen: React.FC = () => {
       captureException(error as Error, 'ChatScreen: onSend')
       Alert.alert(
         t('error') || 'Error',
-        t('aiMessageFailed') ||
-          'Leela could not answer. Please try again.',
+        t('aiMessageFailed') || 'Leela could not answer. Please try again.',
         [{ text: 'OK' }]
       )
     } finally {
       setLoading(false)
-      setMessages((previousMessages) =>
-        removeLoading(previousMessages)
-      )
+      setMessages((previousMessages) => removeLoading(previousMessages))
     }
 
     if (finalAssistantContent) {
@@ -366,7 +373,10 @@ const ChatScreen: React.FC = () => {
   }, [])
 
   const scrollToBottom = useCallback(() => {
-    listRef.current?.scrollToOffset({ offset: contentHeightRef.current, animated: true })
+    listRef.current?.scrollToOffset({
+      offset: contentHeightRef.current,
+      animated: true
+    })
     setShowScrollToBottom(false)
   }, [])
 
@@ -377,15 +387,12 @@ const ChatScreen: React.FC = () => {
     setTimeout(() => setRefreshing(false), 1200)
   }, [])
 
-  const handleScroll = useCallback(
-    (event) => {
-      scrollOffsetRef.current = event.nativeEvent.contentOffset.y
-      layoutHeightRef.current = event.nativeEvent.layoutMeasurement.height
-      contentHeightRef.current = event.nativeEvent.contentSize.height
-      updateScrollButtonVisibility()
-    },
-    []
-  )
+  const handleScroll = useCallback((event) => {
+    scrollOffsetRef.current = event.nativeEvent.contentOffset.y
+    layoutHeightRef.current = event.nativeEvent.layoutMeasurement.height
+    contentHeightRef.current = event.nativeEvent.contentSize.height
+    updateScrollButtonVisibility()
+  }, [])
 
   const updateScrollButtonVisibility = useCallback(() => {
     const nearBottom =

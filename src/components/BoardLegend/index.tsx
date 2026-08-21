@@ -1,13 +1,7 @@
 import React, { memo, useState } from 'react'
 
 import { useTranslation } from 'react-i18next'
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View
-} from 'react-native'
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { s } from 'react-native-size-matters'
 
 import { Space, Text } from '../../components'
@@ -26,7 +20,7 @@ const SYMBOL_KEYS = [
   { key: 'snakes', color: red, bodyKey: 'boardLegend.snakesBody' }
 ] as const
 
-const getShapeStyle = (key: typeof SYMBOL_KEYS[number]['key']) => {
+const getShapeStyle = (key: (typeof SYMBOL_KEYS)[number]['key']) => {
   switch (key) {
     case 'planes':
       return styles.circle
@@ -112,7 +106,13 @@ export const BoardLegend = memo(({ visible, onClose }: BoardLegendT) => {
               })}
             </View>
             <Space height={s(16)} />
-            <View style={[styles.symbol, activeShape, { alignSelf: 'center', backgroundColor: active.color }]} />
+            <View
+              style={[
+                styles.symbol,
+                activeShape,
+                { alignSelf: 'center', backgroundColor: active.color }
+              ]}
+            />
             <Space height={s(10)} />
             <Text
               h="h3"

@@ -6,10 +6,7 @@ import { s, vs } from 'react-native-size-matters'
 
 import { Space, Text } from '../../components'
 import { dimGray, primary } from '../../constants'
-import {
-  getForceAiLanguage,
-  setForceAiLanguage
-} from '../../utils/aiLanguage'
+import { getForceAiLanguage, setForceAiLanguage } from '../../utils/aiLanguage'
 
 export const AiLanguageToggle = memo(() => {
   const { t } = useTranslation()

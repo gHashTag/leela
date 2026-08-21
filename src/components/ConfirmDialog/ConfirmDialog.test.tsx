@@ -38,11 +38,7 @@ describe('<ConfirmDialog />', () => {
 
   it('uses custom button titles', () => {
     const { getByText } = render(
-      <ConfirmDialog
-        {...baseProps}
-        confirmTitle="Delete"
-        cancelTitle="Keep"
-      />
+      <ConfirmDialog {...baseProps} confirmTitle="Delete" cancelTitle="Keep" />
     )
     expect(getByText('Delete')).toBeTruthy()
     expect(getByText('Keep')).toBeTruthy()

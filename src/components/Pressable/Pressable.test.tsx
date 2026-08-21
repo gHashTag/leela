@@ -54,7 +54,10 @@ describe('<Pressable />', () => {
     const pressable = getByTestId('small-pressable')
     expect(pressable.props.style).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ minWidth: expect.any(Number), minHeight: expect.any(Number) })
+        expect.objectContaining({
+          minWidth: expect.any(Number),
+          minHeight: expect.any(Number)
+        })
       ])
     )
   })

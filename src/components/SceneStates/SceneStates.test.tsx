@@ -13,9 +13,7 @@ jest.mock('react-native-haptic-feedback', () => ({
 
 describe('<SceneStates />', () => {
   it('renders loading state', () => {
-    const { getByText } = render(
-      <SceneStates state={{ type: 'loading' }} />
-    )
+    const { getByText } = render(<SceneStates state={{ type: 'loading' }} />)
     expect(getByText('Loading…')).toBeTruthy()
   })
 
@@ -31,7 +29,11 @@ describe('<SceneStates />', () => {
   it('renders empty state', () => {
     const { getByText } = render(
       <SceneStates
-        state={{ type: 'empty', title: 'Nothing here', message: 'Create your first post' }}
+        state={{
+          type: 'empty',
+          title: 'Nothing here',
+          message: 'Create your first post'
+        }}
       />
     )
     expect(getByText('Nothing here')).toBeTruthy()

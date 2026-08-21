@@ -57,11 +57,7 @@ const LoadingButton = memo<LoadingButtonT>(
         {loading ? (
           <ActivityIndicator color={white} />
         ) : (
-          <Text
-            h="h1"
-            title={title}
-            textStyle={[styles.h, textStyle]}
-          />
+          <Text h="h1" title={title} textStyle={[styles.h, textStyle]} />
         )}
       </Pressable>
     )

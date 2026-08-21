@@ -24,11 +24,7 @@ export function WhatsNewModal() {
   return (
     <View style={styles.container}>
       <View style={[styles.modalView, { backgroundColor: background }]}>
-        <Text
-          h="h2"
-          textStyle={styles.title}
-          title={t('whatsNew.title')}
-        />
+        <Text h="h2" textStyle={styles.title} title={t('whatsNew.title')} />
         <Space height={vs(8)} />
         <Text
           h="h5"
@@ -49,11 +45,7 @@ export function WhatsNewModal() {
           ))}
         </ScrollView>
         <Space height={vs(20)} />
-        <ButtonSimple
-          h="h3"
-          title={t('whatsNew.close')}
-          onPress={onClose}
-        />
+        <ButtonSimple h="h3" title={t('whatsNew.close')} onPress={onClose} />
       </View>
     </View>
   )

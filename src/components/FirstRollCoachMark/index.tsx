@@ -1,12 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Dimensions,
-  Pressable,
-  StyleSheet,
-  View
-} from 'react-native'
+import { Dimensions, Pressable, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
 import { Button, Space, Text } from '../../components'
@@ -63,7 +58,11 @@ export const FirstRollCoachMark: React.FC<FirstRollCoachMarkT> = ({
 
   return (
     <View style={styles.container} pointerEvents="box-none">
-      <Pressable style={styles.backdrop} pointerEvents="auto" onPress={dismiss} />
+      <Pressable
+        style={styles.backdrop}
+        pointerEvents="auto"
+        onPress={dismiss}
+      />
       <View style={styles.card} pointerEvents="auto">
         <Text
           h="h3"

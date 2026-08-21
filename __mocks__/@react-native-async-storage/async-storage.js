@@ -7,7 +7,9 @@ export default {
     storage.set(key, value)
     return null
   }),
-  getItem: jest.fn().mockImplementation(async (key) => storage.get(key) ?? null),
+  getItem: jest
+    .fn()
+    .mockImplementation(async (key) => storage.get(key) ?? null),
   removeItem: jest.fn().mockImplementation(async (key) => {
     storage.delete(key)
     return null
@@ -17,5 +19,7 @@ export default {
     storage.clear()
     return null
   }),
-  getAllKeys: jest.fn().mockImplementation(async () => Array.from(storage.keys()))
+  getAllKeys: jest
+    .fn()
+    .mockImplementation(async () => Array.from(storage.keys()))
 }

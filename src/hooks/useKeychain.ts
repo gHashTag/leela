@@ -34,13 +34,16 @@ export const useKeychain = () => {
    * linkTo)` — rather than in a second route that will drift from it.
    */
   const forTesting =
-    __DEV__ && EMAIL && PASSWORD ? { username: EMAIL, password: PASSWORD } : null
+    __DEV__ && EMAIL && PASSWORD
+      ? { username: EMAIL, password: PASSWORD }
+      : null
 
   const key = useCallback(async (): Promise<void> => {
     try {
       // What was kept from a previous sign-in first: a developer who has signed
       // in as somebody else is not asking to be swapped back on every reload.
-      const credentials = (await Keychain.getInternetCredentials('auth')) || forTesting
+      const credentials =
+        (await Keychain.getInternetCredentials('auth')) || forTesting
       if (credentials && isConnected) {
         const { username, password } = credentials
         await auth()

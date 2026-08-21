@@ -15,7 +15,13 @@ import { StyleSheet, View } from 'react-native'
 import { mvs, vs } from 'react-native-size-matters'
 import * as yup from 'yup'
 
-import { AppContainer, Input, LoadingButton, Space, TextError } from '../../components'
+import {
+  AppContainer,
+  Input,
+  LoadingButton,
+  Space,
+  TextError
+} from '../../components'
 import { black, captureException, lightGray } from '../../constants'
 import { updateIntention } from '../../screens/helper'
 import { RootStackParamList } from '../../types/types'

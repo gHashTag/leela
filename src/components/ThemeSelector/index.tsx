@@ -49,11 +49,7 @@ const ThemeChip = memo(
         accessibilityState={{ checked: selected }}
         accessibilityLabel={label}
       >
-        <Text
-          h="h10"
-          title={label}
-          oneColor={selected ? primary : dimGray}
-        />
+        <Text h="h10" title={label} oneColor={selected ? primary : dimGray} />
       </Pressable>
     )
   }
@@ -106,7 +102,9 @@ export const ThemeSelector = memo(() => {
     system: t('themeSelector.system', { defaultValue: 'System' }),
     light: t('themeSelector.light', { defaultValue: 'Light' }),
     dark: t('themeSelector.dark', { defaultValue: 'Dark' }),
-    highContrast: t('themeSelector.highContrast', { defaultValue: 'High contrast' })
+    highContrast: t('themeSelector.highContrast', {
+      defaultValue: 'High contrast'
+    })
   }
 
   return (

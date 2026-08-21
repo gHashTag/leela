@@ -1,4 +1,8 @@
-import { computeStreak, getLocalDateString, JournalEntry } from '../components/StreakJournal'
+import {
+  computeStreak,
+  getLocalDateString,
+  JournalEntry
+} from '../components/StreakJournal'
 import { HistoryT } from '../types/types'
 
 /**

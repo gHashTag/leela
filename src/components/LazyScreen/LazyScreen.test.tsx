@@ -9,10 +9,7 @@ describe('LazyScreen', () => {
   it('renders the fallback while the screen is loading', () => {
     const neverResolves = () => new Promise(() => null)
     const { getByTestId } = render(
-      <LazyScreen
-        loader={neverResolves}
-        testID="lazy-root"
-      />
+      <LazyScreen loader={neverResolves} testID="lazy-root" />
     )
     expect(getByTestId('lazy-root').children.length).toBeGreaterThan(0)
   })

@@ -10,7 +10,12 @@ import { DiceStore, OfflinePlayers, OnlinePlayer } from '../../store'
 
 const MAX_HISTORY = 7
 
-const getHistory = (): { count: number; plan: number; status: string; createDate: number }[] => {
+const getHistory = (): {
+  count: number
+  plan: number
+  status: string
+  createDate: number
+}[] => {
   if (DiceStore.online) {
     return OnlinePlayer.store.history || []
   }

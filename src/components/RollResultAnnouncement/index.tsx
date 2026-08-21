@@ -55,7 +55,10 @@ export const RollResultAnnouncement = observer(() => {
 
   return (
     <View
-      style={[styles.container, !visible && (reducedMotion ? styles.noMotionHidden : styles.hidden)]}
+      style={[
+        styles.container,
+        !visible && (reducedMotion ? styles.noMotionHidden : styles.hidden)
+      ]}
       accessible
       accessibilityRole="text"
       accessibilityLabel={message}

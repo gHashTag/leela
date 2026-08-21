@@ -1,12 +1,7 @@
 import * as Sentry from '@sentry/react-native'
 import React, { Component, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Pressable,
-  StyleSheet,
-  useColorScheme,
-  View
-} from 'react-native'
+import { Pressable, StyleSheet, useColorScheme, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
 import { Space, Text } from '../../components'
@@ -53,10 +48,7 @@ class ErrorBoundaryBase extends Component<
         return this.props.fallback
       }
       return (
-        <ErrorFallback
-          error={this.state.error}
-          onRetry={this.handleRetry}
-        />
+        <ErrorFallback error={this.state.error} onRetry={this.handleRetry} />
       )
     }
     return this.props.children

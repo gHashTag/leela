@@ -43,7 +43,8 @@ export function ButtonVectorIcon({
   const colorTheme = scheme === 'dark' ? dimGray : gray
   const summaryIconSize = iconSize ? iconSize : size
   const summaryIoniconsSize = iconSize ? iconSize + s(2) : size + s(2)
-  const label = accessibilityLabel || `${ionicons ? 'Ionicons' : 'FontAwesome'} ${name}`
+  const label =
+    accessibilityLabel || `${ionicons ? 'Ionicons' : 'FontAwesome'} ${name}`
 
   return (
     <Pressable

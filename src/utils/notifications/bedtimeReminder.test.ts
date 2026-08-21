@@ -46,13 +46,17 @@ describe('bedtimeReminder', () => {
 
   it('schedules a daily trigger notification when enabled', async () => {
     await scheduleBedtimeReminder(t, { enabled: true, hour: 21, minute: 0 })
-    expect(notifee.cancelTriggerNotification).toHaveBeenCalledWith('bedtime-reminder')
+    expect(notifee.cancelTriggerNotification).toHaveBeenCalledWith(
+      'bedtime-reminder'
+    )
     expect(notifee.createTriggerNotification).toHaveBeenCalled()
   })
 
   it('cancels the trigger when disabled', async () => {
     await scheduleBedtimeReminder(t, { enabled: false, hour: 21, minute: 0 })
-    expect(notifee.cancelTriggerNotification).toHaveBeenCalledWith('bedtime-reminder')
+    expect(notifee.cancelTriggerNotification).toHaveBeenCalledWith(
+      'bedtime-reminder'
+    )
     expect(notifee.createTriggerNotification).not.toHaveBeenCalled()
   })
 })

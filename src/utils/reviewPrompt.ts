@@ -10,10 +10,7 @@ export async function recordPositiveAiAnswer(): Promise<void> {
     const current = Number(
       (await AsyncStorage.getItem(AI_THUMBS_UP_COUNT_KEY)) || '0'
     )
-    await AsyncStorage.setItem(
-      AI_THUMBS_UP_COUNT_KEY,
-      String(current + 1)
-    )
+    await AsyncStorage.setItem(AI_THUMBS_UP_COUNT_KEY, String(current + 1))
   } catch (error) {
     captureException(error, 'recordPositiveAiAnswer')
   }
@@ -34,10 +31,7 @@ export async function recordPositiveEvent(): Promise<void> {
     const current = Number(
       (await AsyncStorage.getItem(POSITIVE_EVENT_COUNT_KEY)) || '0'
     )
-    await AsyncStorage.setItem(
-      POSITIVE_EVENT_COUNT_KEY,
-      String(current + 1)
-    )
+    await AsyncStorage.setItem(POSITIVE_EVENT_COUNT_KEY, String(current + 1))
   } catch (error) {
     captureException(error, 'recordPositiveEvent')
   }

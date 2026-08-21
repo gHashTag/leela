@@ -49,8 +49,18 @@ describe('aiAnswerCache', () => {
   })
 
   it('replaces an existing answer for the same post id', async () => {
-    await addCachedAiAnswer({ postId: 'p1', text: 'old', plan: 1, timestamp: 1 })
-    await addCachedAiAnswer({ postId: 'p1', text: 'new', plan: 1, timestamp: 2 })
+    await addCachedAiAnswer({
+      postId: 'p1',
+      text: 'old',
+      plan: 1,
+      timestamp: 1
+    })
+    await addCachedAiAnswer({
+      postId: 'p1',
+      text: 'new',
+      plan: 1,
+      timestamp: 2
+    })
 
     const loaded = await loadCachedAiAnswers()
     expect(loaded).toHaveLength(1)

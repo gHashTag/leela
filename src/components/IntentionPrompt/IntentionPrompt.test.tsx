@@ -47,10 +47,7 @@ describe('<IntentionPrompt />', () => {
     const { getByText, getByLabelText } = render(<IntentionPrompt />)
 
     await waitFor(() => getByText(/What is your intention for today's game?/))
-    fireEvent.changeText(
-      getByLabelText(/Your intention/i),
-      'Stay present'
-    )
+    fireEvent.changeText(getByLabelText(/Your intention/i), 'Stay present')
     fireEvent.press(getByText(/Done/i))
 
     await waitFor(() => {

@@ -110,9 +110,7 @@ export const ConfirmDialog = memo(
                   styles.button,
                   styles.confirmButton,
                   {
-                    backgroundColor: destructive
-                      ? red
-                      : secondary
+                    backgroundColor: destructive ? red : secondary
                   }
                 ]}
                 accessibilityRole="button"

@@ -1,15 +1,15 @@
 import { I18nManager } from 'react-native'
 
-import {
-  isDeviceRTL,
-  isRTLLanguage,
-  RTL_LANGS,
-  syncRTLDirection
-} from './rtl'
+import { isDeviceRTL, isRTLLanguage, RTL_LANGS, syncRTLDirection } from './rtl'
 
 jest.mock('react-native-localize', () => ({
   getLocales: jest.fn(() => [
-    { countryCode: 'US', languageTag: 'en-US', languageCode: 'en', isRTL: false }
+    {
+      countryCode: 'US',
+      languageTag: 'en-US',
+      languageCode: 'en',
+      isRTL: false
+    }
   ])
 }))
 
@@ -25,7 +25,12 @@ describe('rtl utilities', () => {
   beforeEach(() => {
     const RNLocalize = require('react-native-localize')
     RNLocalize.getLocales.mockReturnValue([
-      { countryCode: 'US', languageTag: 'en-US', languageCode: 'en', isRTL: false }
+      {
+        countryCode: 'US',
+        languageTag: 'en-US',
+        languageCode: 'en',
+        isRTL: false
+      }
     ])
     I18nManager.allowRTL.mockClear()
     I18nManager.forceRTL.mockClear()

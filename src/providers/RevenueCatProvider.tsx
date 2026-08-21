@@ -90,7 +90,9 @@ export const RevenueCatProvider = ({ children }: any) => {
         // Load all offerings and the user object with entitlements
         await loadOfferings()
       } else {
-        console.log('[leela] RevenueCat not configured — running without purchases')
+        console.log(
+          '[leela] RevenueCat not configured — running without purchases'
+        )
         // When no RevenueCat key is present (dev / revival build), unblock the
         // offline board so the dice and AI commentary can be tested.
         actionSubscribeStore.unBlock()
@@ -126,13 +128,22 @@ export const RevenueCatProvider = ({ children }: any) => {
       const hasProPlan =
         customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
 
-      if (hasProPlan || isAdmin || countPosts < 2) {
-        newUser.pro = true
-        actionSubscribeStore.unBlock()
-      } else if (countPosts === 10) {
+      /*
+       * The game is not stopped for money any more.
+       *
+       * This read: hold the plan, or be an admin, or have written fewer than
+       * two reports - otherwise `blockGame()`. So a game of self-knowledge
+       * asked for a card on the third square, with the die dimmed and the
+       * board still on screen behind the offer.
+       *
+       * Whether somebody holds the plan is still answered truthfully, because
+       * the rest of the app labels itself from it. What is gone is the gate.
+       */
+      newUser.pro = Boolean(hasProPlan || isAdmin)
+      actionSubscribeStore.unBlock()
+
+      if (countPosts === 10) {
         onLeaveFeedback((success) => actionsDice.setRate(success))
-      } else {
-        actionSubscribeStore.blockGame()
       }
     }
 

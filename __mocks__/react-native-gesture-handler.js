@@ -1,11 +1,19 @@
 export const Gesture = {
   Tap: jest.fn(() => ({
-    onBegin: jest.fn(function () { return this }),
-    onEnd: jest.fn(function () { return this })
+    onBegin: jest.fn(function () {
+      return this
+    }),
+    onEnd: jest.fn(function () {
+      return this
+    })
   })),
   Pan: jest.fn(() => ({
-    onUpdate: jest.fn(function () { return this }),
-    onEnd: jest.fn(function () { return this })
+    onUpdate: jest.fn(function () {
+      return this
+    }),
+    onEnd: jest.fn(function () {
+      return this
+    })
   })),
   Race: jest.fn(function () {
     const handlers = []

@@ -8,7 +8,9 @@ describe('<ButtonSimple />', () => {
     const { getByTestId } = render(
       <ButtonSimple title="Continue" testID="simple-button" />
     )
-    expect(getByTestId('simple-button').props.accessibilityLabel).toBe('Continue')
+    expect(getByTestId('simple-button').props.accessibilityLabel).toBe(
+      'Continue'
+    )
     expect(getByTestId('simple-button').props.accessibilityRole).toBe('button')
   })
 })

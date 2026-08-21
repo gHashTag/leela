@@ -8,7 +8,9 @@ describe('<Button />', () => {
     const { getByTestId } = render(
       <Button title="Start game" testID="start-button" />
     )
-    expect(getByTestId('start-button').props.accessibilityLabel).toBe('Start game')
+    expect(getByTestId('start-button').props.accessibilityLabel).toBe(
+      'Start game'
+    )
     expect(getByTestId('start-button').props.accessibilityRole).toBe('button')
   })
 

@@ -41,7 +41,8 @@ export const generateComment = async ({
   // Z.AI Coding Plan is the only key we ship with.
   // Coding Plan keys must hit /api/coding/paas/v4; the pay-as-you-go
   // host returns error 1113, which looks like an expired key.
-  const baseURL = ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : ZAI_DEFAULT_BASE_URL
+  const baseURL =
+    ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : ZAI_DEFAULT_BASE_URL
   const model = ZAI_DEFAULT_MODEL
 
   const fullSystemMessage = await buildAiSystemMessage(
@@ -95,10 +96,7 @@ export const generateComment = async ({
 
     const choice = response?.data?.choices?.[0]?.message
     return {
-      response:
-        choice?.content ||
-        choice?.reasoning_content ||
-        '',
+      response: choice?.content || choice?.reasoning_content || '',
       gpt: response?.data?.model ?? model
     }
   } catch (error) {

@@ -2,13 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react'
 
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
-import {
-  Animated,
-  Easing,
-  StyleSheet,
-  Vibration,
-  View
-} from 'react-native'
+import { Animated, Easing, StyleSheet, Vibration, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
 import { Text } from '../../components'
@@ -27,9 +21,7 @@ export const WinCelebration = observer(() => {
   const online = DiceStore.online
   const endGame = useMemo(
     () =>
-      online
-        ? OnlinePlayer.store.finish
-        : !DiceStore.finishArr.includes(true),
+      online ? OnlinePlayer.store.finish : !DiceStore.finishArr.includes(true),
     [online]
   )
 
@@ -67,11 +59,7 @@ export const WinCelebration = observer(() => {
       accessibilityLabel={t('accessibilityAnnouncements.win')}
       accessibilityLiveRegion="assertive"
     >
-      <Text
-        h="h1"
-        title={t('winCelebration.title')}
-        textStyle={styles.title}
-      />
+      <Text h="h1" title={t('winCelebration.title')} textStyle={styles.title} />
       {reducedMotion
         ? null
         : Array.from({ length: PARTICLE_COUNT }).map((_, index) => {

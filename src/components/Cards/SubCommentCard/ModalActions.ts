@@ -108,9 +108,7 @@ export const getActions: getActionsT = ({
     }
   ]
     .filter((a) =>
-      isOwner || isAdmin
-        ? true
-        : a.key !== 'EDIT' && a.key !== 'DEL'
+      isOwner || isAdmin ? true : a.key !== 'EDIT' && a.key !== 'DEL'
     )
     .filter((a) =>
       isAdmin ? true : a.key !== 'DEL_ALL_COM' && a.key !== 'BAN'

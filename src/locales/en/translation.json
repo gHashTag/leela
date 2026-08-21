@@ -490,26 +490,19 @@
   "snake": "snake",
   "liberation": "liberation",
   "accessibility": {
-    "rollDice": "Roll the dice",
-    "rollDiceValue": "Roll the dice, current value {{count}}",
-    "rollDiceHint": "Double tap to roll the dice and move your piece",
+    "arrowBase": "foot of an arrow",
+    "bookmark": "Save answer",
+    "cell": "Cell {{cell}}",
+    "commentInput": "Write a comment",
+    "commentMenu": "Open comment options",
+    "comments": "{{count}} comments",
+    "currentCell": "Current cell {{cell}}, {{plane}} chakra",
     "diceLocked": "Dice is locked",
     "diceLockedHint": "Write a report or wait for the step timer to roll again",
-    "gameBoard": "Leela board",
-    "cell": "Cell {{cell}}",
-    "currentCell": "Current cell {{cell}}, {{plane}} chakra",
-    "snakeHead": "head of a snake",
-    "arrowBase": "foot of an arrow",
     "finalCell": "final cell",
+    "gameBoard": "Leela board",
+    "gameBoardHint": "Swipe to explore cells from the bottom row to the top",
     "like": "Like",
-    "unlike": "Remove like",
-    "comments": "{{count}} comments",
-    "sharePost": "Share this report",
-    "bookmark": "Save answer",
-    "removeBookmark": "Remove saved answer",
-    "commentMenu": "Open comment options",
-    "commentInput": "Write a comment",
-    "sendComment": "Send comment",
     "planeNames": {
       "1": "Physical body",
       "2": "Prana",
@@ -518,7 +511,15 @@
       "5": "Causal",
       "6": "Consciousness",
       "7": "Liberation"
-    }
+    },
+    "removeBookmark": "Remove saved answer",
+    "rollDice": "Roll the dice",
+    "rollDiceHint": "Double tap to roll the dice and move your piece",
+    "rollDiceValue": "Roll the dice, current value {{count}}",
+    "sendComment": "Send comment",
+    "sharePost": "Share this report",
+    "snakeHead": "head of a snake",
+    "unlike": "Remove like"
   },
   "plan": "plan",
   "oneMoreThrow": "One More Throw",
@@ -869,7 +870,7 @@
   "manyCharacters": "Too many symbols, maximum - ",
   "fewChars": "The minimum must be 100 characters",
   "twoSymbolRequire": "The field must contain at least 2 characters",
-  "descriptionSubscriptions": "The trial version of Leela AI game allows creating 2 reports. To continue, please subscribe.",
+  "descriptionSubscriptions": "Your first {{count}} throws are free. Subscribe to keep the die turning.",
   "buy": "Buy Pro",
   "alreadyBought": "Bought already?",
   "chooseSubscription": "Choose Subscription:",
@@ -957,7 +958,7 @@
   },
   "subscriptionHelper": {
     "title": "Why am I seeing this?",
-    "message": "Leela AI gives every player 2 free reports so you can experience the game. After that, a subscription keeps the AI guide, daily verses, and community features available and supports ongoing development.",
+    "message": "Every player gets {{count}} free throws, so you can meet the game before paying for it. A subscription keeps the die turning and the guide answering.",
     "restore": "Restore purchase",
     "close": "Close"
   },
@@ -995,25 +996,17 @@
     "gotIt": "Got it",
     "dismiss": "Skip tour",
     "features": {
-      "aiGuide": {
-        "title": "AI guide",
-        "body": "Ask Leela anything about your roll, plane, or life question. The AI guide answers in the voice of a scholar, friend, or guru — your choice."
+      "throws": {
+        "title": "The game continues",
+        "body": "When your free throws run out, the die keeps turning. Play as long as you like, and start as many games as you like."
       },
-      "dailyVerse": {
-        "title": "Daily verse",
-        "body": "Start each day with a scripture chosen for your current path. Save verses, set reminders, and build a reflective daily habit."
+      "guide": {
+        "title": "The AI guide",
+        "body": "Ask about the plane you landed on, in your own language. The answer is grounded in the Bhagavad Gita, the Upanishads and the Yoga Sutras, and you can watch the guide reason its way there."
       },
-      "community": {
-        "title": "Community reports",
-        "body": "Share your reports, read others' journeys, add reactions, and reply to comments. The community keeps the game alive between rolls."
-      },
-      "offlineCache": {
-        "title": "Offline reading",
-        "body": "Your last five AI answers are cached automatically. Re-read guidance anywhere, even without a network connection."
-      },
-      "reports": {
-        "title": "Unlimited reports",
-        "body": "Create as many personal reports as you need. Track patterns over time and keep a private journal of your journey."
+      "noAds": {
+        "title": "No advertising",
+        "body": "Leela shows no ads. A subscription is what keeps the game and its guide running."
       }
     }
   },
@@ -1095,7 +1088,8 @@
     "poster": "Poster",
     "chat": "AI chat",
     "activeHint": "Active tab",
-    "inactiveHint": "Double tap to switch to this tab"
+    "inactiveHint": "Double tap to switch to this tab",
+    "board": "Board 3D"
   },
   "fontScale": {
     "title": "Text size",
@@ -1133,5 +1127,15 @@
       "title": "Write a report to continue",
       "body": "Every landing asks what the plane means for you today. The dice only choose the question."
     }
+  },
+  "board": {
+    "unreachable": "The 3D board could not be reached.",
+    "retry": "Try again"
+  },
+  "subscription": {
+    "renewal": "Renews automatically until cancelled. Cancel any time in your Apple ID settings.",
+    "terms": "Terms of Use",
+    "privacy": "Privacy Policy",
+    "pickPlanFirst": "Choose a plan first"
   }
 }

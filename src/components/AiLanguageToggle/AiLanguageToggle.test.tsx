@@ -10,10 +10,9 @@ jest.mock('../../utils/aiLanguage', () => ({
   setForceAiLanguage: jest.fn()
 }))
 
-const {
-  getForceAiLanguage,
-  setForceAiLanguage
-} = jest.requireMock('../../utils/aiLanguage')
+const { getForceAiLanguage, setForceAiLanguage } = jest.requireMock(
+  '../../utils/aiLanguage'
+)
 
 describe('AiLanguageToggle', () => {
   beforeEach(() => {

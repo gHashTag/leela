@@ -52,9 +52,7 @@ export const removeBookmark = async (id: string): Promise<void> => {
   await saveBookmarks(bookmarks.filter((b) => b.id !== id))
 }
 
-export const toggleBookmark = async (
-  bookmark: BookmarkT
-): Promise<boolean> => {
+export const toggleBookmark = async (bookmark: BookmarkT): Promise<boolean> => {
   const bookmarks = await loadBookmarks()
   const exists = bookmarks.some((b) => b.id === bookmark.id)
   if (exists) {

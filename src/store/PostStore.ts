@@ -122,7 +122,10 @@ export const PostStore = {
   savePostFromQueue: async (post: PostT) => {
     try {
       await firestore().collection('Posts').doc(post.id).set(post)
-      const docSnapshot = await firestore().collection('Posts').doc(post.id).get()
+      const docSnapshot = await firestore()
+        .collection('Posts')
+        .doc(post.id)
+        .get()
       return docSnapshot.exists ? docSnapshot.data() : null
     } catch (error) {
       captureException(error, 'savePostFromQueue')
@@ -178,7 +181,9 @@ export const PostStore = {
   },
 
   removeOptimisticComment: (id: string) => {
-    PostStore.store.comments = PostStore.store.comments.filter((a) => a.id !== id)
+    PostStore.store.comments = PostStore.store.comments.filter(
+      (a) => a.id !== id
+    )
   },
 
   updateCommentText: (id: string, text: string) => {
@@ -393,8 +398,9 @@ export const PostStore = {
     if (userUid === ownerId) {
       return OnlinePlayer.store.plan
     }
-    const plan = OtherPlayers.store.players.find((a) => a.owner === ownerId)
-      ?.plan
+    const plan = OtherPlayers.store.players.find(
+      (a) => a.owner === ownerId
+    )?.plan
     if (!plan) {
       return 0
     }
@@ -439,8 +445,9 @@ export const PostStore = {
     if (userUid === uid) {
       return OnlinePlayer.store.avatar
     }
-    const otherUserAva = OtherPlayers.store.players.find((a) => a.owner === uid)
-      ?.avatar
+    const otherUserAva = OtherPlayers.store.players.find(
+      (a) => a.owner === uid
+    )?.avatar
     return otherUserAva
       ? otherUserAva
       : 'https://bafkreiftrmfmimlvo26xaxfvt2ypnjjaavq5mgnkjljs6mczfekii4cmtq.ipfs.nftstorage.link/'

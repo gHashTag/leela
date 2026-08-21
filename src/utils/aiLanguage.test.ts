@@ -7,12 +7,13 @@ import {
   setForceAiLanguage
 } from './aiLanguage'
 
-
 jest.mock('i18next', () => ({
   language: 'en',
   t: jest.fn((key: string, options?: { lng?: string }) => {
     if (key === 'aiLanguage.instruction') {
-      return options?.lng === 'ru' ? 'Отвечай на русском языке.' : 'Answer in English.'
+      return options?.lng === 'ru'
+        ? 'Отвечай на русском языке.'
+        : 'Answer in English.'
     }
     return key
   })
@@ -91,7 +92,9 @@ describe('buildAiLanguageInstructionSync', () => {
 
   it('returns translated instruction when enabled', () => {
     const t = jest.fn(() => 'Отвечай на русском языке.')
-    expect(buildAiLanguageInstructionSync(t as any, true)).toBe('Отвечай на русском языке.')
+    expect(buildAiLanguageInstructionSync(t as any, true)).toBe(
+      'Отвечай на русском языке.'
+    )
     expect(t).toHaveBeenCalledWith('aiLanguage.instruction')
   })
 })

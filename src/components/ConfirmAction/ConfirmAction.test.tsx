@@ -57,7 +57,12 @@ describe('useConfirmActions', () => {
     const TestNonDestructive = () => {
       const { guardActions } = useConfirmActions((key: string) => key)
       const actions = guardActions([
-        { key: 'EDIT', title: 'Edit', onPress: mockPress, icon: 'create-outline' }
+        {
+          key: 'EDIT',
+          title: 'Edit',
+          onPress: mockPress,
+          icon: 'create-outline'
+        }
       ])
       return (
         <View>

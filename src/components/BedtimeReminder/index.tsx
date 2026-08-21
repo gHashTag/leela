@@ -87,7 +87,11 @@ export const BedtimeReminder = memo(() => {
         />
       </View>
       <Space height={vs(6)} />
-      <Text h="h10" title={t('bedtimeReminder.description')} oneColor="#E0E0E0" />
+      <Text
+        h="h10"
+        title={t('bedtimeReminder.description')}
+        oneColor="#E0E0E0"
+      />
       <Space height={vs(10)} />
       <View style={styles.controlRow}>
         <View style={styles.timeRow}>
@@ -114,7 +118,11 @@ export const BedtimeReminder = memo(() => {
           </TouchableOpacity>
         </View>
         <View style={styles.toggleRow}>
-          <Text h="h10" title={t('bedtimeReminder.enabled')} oneColor="#FFFFFF" />
+          <Text
+            h="h10"
+            title={t('bedtimeReminder.enabled')}
+            oneColor="#FFFFFF"
+          />
           <Space width={s(8)} />
           <Switch
             value={settings.enabled}

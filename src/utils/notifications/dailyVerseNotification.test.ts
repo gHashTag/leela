@@ -9,7 +9,11 @@ describe('dailyVerseNotification', () => {
   const mockT = ((key: string, options?: { returnObjects?: boolean }) => {
     if (key === 'dailyVerse.verses' && options?.returnObjects) {
       return [
-        { quote: 'Test quote', source: 'Test source', reflection: 'Test reflection' }
+        {
+          quote: 'Test quote',
+          source: 'Test source',
+          reflection: 'Test reflection'
+        }
       ]
     }
     if (key === 'dailyVerse.notificationTitle') return 'Daily Verse'
@@ -47,7 +51,8 @@ describe('dailyVerseNotification', () => {
     expect(notifee.cancelTriggerNotification).toHaveBeenCalledWith('dailyVerse')
     expect(notifee.createTriggerNotification).toHaveBeenCalled()
 
-    const [, trigger] = (notifee.createTriggerNotification as jest.Mock).mock.calls[0]
+    const [, trigger] = (notifee.createTriggerNotification as jest.Mock).mock
+      .calls[0]
     expect(trigger).toMatchObject({
       type: 0,
       repeatFrequency: 1

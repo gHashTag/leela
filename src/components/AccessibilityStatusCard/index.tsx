@@ -68,9 +68,12 @@ export const AccessibilityStatusCard = memo(() => {
       // Bold text changed event is iOS-only and may not exist in older RN.
       try {
         listeners.push(
-          AccessibilityInfo.addEventListener('boldTextChanged' as any, (v: boolean) => {
-            if (mounted) setBoldText(v)
-          })
+          AccessibilityInfo.addEventListener(
+            'boldTextChanged' as any,
+            (v: boolean) => {
+              if (mounted) setBoldText(v)
+            }
+          )
         )
       } catch {
         // Ignore if event is unsupported.
@@ -114,10 +117,7 @@ export const AccessibilityStatusCard = memo(() => {
         label={t('accessibilityStatus.reduceMotion')}
         active={reduceMotion}
       />
-      <StatusRow
-        label={t('accessibilityStatus.boldText')}
-        active={boldText}
-      />
+      <StatusRow label={t('accessibilityStatus.boldText')} active={boldText} />
       <StatusRow
         label={t('accessibilityStatus.highContrast')}
         active={highContrast}

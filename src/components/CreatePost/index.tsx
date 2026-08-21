@@ -30,10 +30,7 @@ import { useVoiceInput } from '../../hooks'
 import { startStepTimer } from '../../screens/helper'
 import { PostStore } from '../../store'
 import { useRevenueCat } from '../../providers/RevenueCatProvider'
-import {
-  buildQueuedPost,
-  enqueuePost
-} from '../../utils/offlinePostQueue'
+import { buildQueuedPost, enqueuePost } from '../../utils/offlinePostQueue'
 import { streamZaiChat } from '../../utils/aiStream'
 import { buildSystemMessage, loadAiPersona } from '../../utils/aiPersona'
 import { buildAiSystemMessage } from '../../utils/aiLanguage'

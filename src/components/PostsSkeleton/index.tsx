@@ -17,13 +17,25 @@ const SkeletonCard = memo(() => {
       <View style={styles.header}>
         <View style={[styles.avatar, { backgroundColor: bone }]} />
         <View style={styles.lines}>
-          <View style={[styles.line, styles.lineShort, { backgroundColor: bone }]} />
-          <View style={[styles.line, styles.lineLong, { backgroundColor: bone }]} />
+          <View
+            style={[styles.line, styles.lineShort, { backgroundColor: bone }]}
+          />
+          <View
+            style={[styles.line, styles.lineLong, { backgroundColor: bone }]}
+          />
         </View>
       </View>
       <View style={styles.body}>
-        <View style={[styles.line, styles.lineLong, { marginBottom: vs(6), backgroundColor: bone }]} />
-        <View style={[styles.line, styles.lineMedium, { backgroundColor: bone }]} />
+        <View
+          style={[
+            styles.line,
+            styles.lineLong,
+            { marginBottom: vs(6), backgroundColor: bone }
+          ]}
+        />
+        <View
+          style={[styles.line, styles.lineMedium, { backgroundColor: bone }]}
+        />
       </View>
       <View style={styles.actions}>
         <View style={[styles.chip, { backgroundColor: bone }]} />

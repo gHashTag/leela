@@ -53,4 +53,5 @@ export const applyFontScale = (
  * accessibility size. Use this to switch layouts (e.g. stack rows into columns)
  * when text becomes too large for the default design.
  */
-export const isAccessibilityFontScale = (scale: number): boolean => scale >= 1.35
+export const isAccessibilityFontScale = (scale: number): boolean =>
+  scale >= 1.35

@@ -1,7 +1,4 @@
-import {
-  HapticFeedbackTypes,
-  trigger
-} from 'react-native-haptic-feedback'
+import { HapticFeedbackTypes, trigger } from 'react-native-haptic-feedback'
 
 const DEFAULT_OPTIONS = {
   enableVibrateFallback: true,

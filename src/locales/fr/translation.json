@@ -505,7 +505,7 @@
   "manyCharacters": "Trop de symboles, maximum - ",
   "fewChars": "Le minimum doit être de 100 caractères",
   "twoSymbolRequire": "Le champ doit contenir au moins 2 caractères",
-  "descriptionSubscriptions": "La version d'essai du jeu Leela AI permet de créer 2 rapports. Pour continuer, veuillez vous abonner.",
+  "descriptionSubscriptions": "Vos {{count}} premiers lancers sont gratuits. Abonnez-vous pour continuer la partie.",
   "buy": "Acheter",
   "alreadyBought": "Déjà acheté ?",
   "chooseSubscription": "Choisissez l'abonnement :",
@@ -524,5 +524,38 @@
   },
   "free": "Accès gratuit",
   "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
-  "authUnknownError": "Something went wrong. Please try again."
+  "authUnknownError": "Something went wrong. Please try again.",
+  "subscriptionHelper": {
+    "message": "Chaque joueur reçoit {{count}} lancers gratuits, pour découvrir le jeu avant de payer. L'abonnement lève la limite et garde le guide à vos côtés.",
+    "title": "Pourquoi est-ce que je vois ceci ?",
+    "restore": "Restaurer l'achat",
+    "close": "Fermer"
+  },
+  "proFeatureExplainer": {
+    "title": "Ce que Pro apporte",
+    "link": "Que comprend Pro ?",
+    "next": "Suivant",
+    "gotIt": "J'ai compris",
+    "dismiss": "Passer",
+    "features": {
+      "throws": {
+        "title": "La partie continue",
+        "body": "Une fois vos lancers gratuits épuisés, le dé continue de tourner. Jouez aussi longtemps que vous le souhaitez, et commencez autant de parties que vous voulez."
+      },
+      "guide": {
+        "title": "Le guide IA",
+        "body": "Posez vos questions sur le plan où vous êtes tombé, dans votre langue. La réponse s'appuie sur la Bhagavad-Gita, les Upanishads et les Yoga-Sutras, et vous voyez le guide y parvenir."
+      },
+      "noAds": {
+        "title": "Aucune publicité",
+        "body": "Leela n'affiche aucune publicité. L'abonnement est ce qui fait vivre le jeu et son guide."
+      }
+    }
+  },
+  "subscription": {
+    "renewal": "Se renouvelle automatiquement jusqu'à résiliation. Résiliable à tout moment dans les réglages de votre identifiant Apple.",
+    "terms": "Conditions d'utilisation",
+    "privacy": "Politique de confidentialité",
+    "pickPlanFirst": "Choisissez d'abord une formule"
+  }
 }

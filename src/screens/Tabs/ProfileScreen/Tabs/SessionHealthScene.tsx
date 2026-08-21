@@ -37,8 +37,8 @@ export const SessionHealthScene = observer(() => {
     status === 'ok'
       ? t('sessionHealth.statusOk')
       : status === 'crashed'
-      ? t('sessionHealth.statusCrashed')
-      : t('sessionHealth.statusUnknown')
+        ? t('sessionHealth.statusCrashed')
+        : t('sessionHealth.statusUnknown')
 
   return (
     <View style={styles.container}>

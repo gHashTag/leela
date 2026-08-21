@@ -72,7 +72,7 @@ const ProfileScreen = observer(({ navigation }: ProfileScreenT) => {
       iconLeft={':information_source:'}
       title={t('profile')}
       textAlign="center"
-      iconRight=':gear:'
+      iconRight=":gear:"
       onPressRight={() => navigation.navigate('SETTINGS_SCENE')}
     >
       <TabContextProvider>

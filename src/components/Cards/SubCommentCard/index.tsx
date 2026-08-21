@@ -58,7 +58,10 @@ export function SubCommentCard({ item }: SubComT) {
 
   const handleProfile = () => {
     if (item?.ownerId) {
-      navigate('USER_PROFILE_SCREEN', { ownerId: item?.ownerId, editable: false })
+      navigate('USER_PROFILE_SCREEN', {
+        ownerId: item?.ownerId,
+        editable: false
+      })
     }
   }
   const text = hideTranslate ? item.text : transText
@@ -75,7 +78,12 @@ export function SubCommentCard({ item }: SubComT) {
         />
         <Space width={s(6)} />
         <View style={styles.infoContainer}>
-          <View style={[styles.infoLine, isAccessibilityScale && styles.infoLineLarge]}>
+          <View
+            style={[
+              styles.infoLine,
+              isAccessibilityScale && styles.infoLineLarge
+            ]}
+          >
             <Text
               numberOfLines={isAccessibilityScale ? 2 : 1}
               h={'h6'}

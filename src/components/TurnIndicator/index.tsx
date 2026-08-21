@@ -58,7 +58,12 @@ export const TurnIndicator = observer(() => {
       <Space width={s(8)} />
       <Text h="h8" title={label} oneColor={primary} textStyle={styles.label} />
       <Space width={s(6)} />
-      <Text h="h8" title={detail} oneColor={dimGray} textStyle={styles.detail} />
+      <Text
+        h="h8"
+        title={detail}
+        oneColor={dimGray}
+        textStyle={styles.detail}
+      />
     </View>
   )
 })

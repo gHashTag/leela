@@ -116,7 +116,8 @@ export const GameBoard = observer(() => {
     ? OnlinePlayer.store.history
     : OfflinePlayers.store.histories[DiceStore.players - 1]
   const lastMove = history && history.length > 0 ? history[0] : null
-  const previousPlan = lastMove && lastMove.plan !== currentPlan ? lastMove.plan : null
+  const previousPlan =
+    lastMove && lastMove.plan !== currentPlan ? lastMove.plan : null
   const nextPlan =
     currentPlan >= 1 && currentPlan < 68
       ? Math.min(68, currentPlan + (lastMove ? lastMove.count : 1))
@@ -129,10 +130,21 @@ export const GameBoard = observer(() => {
       accessibilityRole="image"
       accessibilityLabel={`${boardLabel}: ${currentCellLabel}`}
       accessibilityLiveRegion="polite"
-      accessibilityHint={reducedMotion ? undefined : t('accessibility.gameBoardHint', { defaultValue: 'Swipe to explore cells from the bottom row to the top' })}
+      accessibilityHint={
+        reducedMotion
+          ? undefined
+          : t('accessibility.gameBoardHint', {
+              defaultValue:
+                'Swipe to explore cells from the bottom row to the top'
+            })
+      }
     >
       {!highContrast && (
-        <Image source={imgObj.image} style={styles.bgImage} resizeMode="cover" />
+        <Image
+          source={imgObj.image}
+          style={styles.bgImage}
+          resizeMode="cover"
+        />
       )}
       {highContrast && <View style={styles.highContrastBackground} />}
       <View style={styles.gameBoardContainer}>
@@ -141,7 +153,8 @@ export const GameBoard = observer(() => {
             <View style={styles.row} key={i}>
               {a.map((b, index) => {
                 const isCurrentCell = b === currentPlan
-                const isPreviousCell = previousPlan !== null && b === previousPlan
+                const isPreviousCell =
+                  previousPlan !== null && b === previousPlan
                 const isNextCell = nextPlan !== null && b === nextPlan
                 const cellTextColor = highContrast
                   ? isCurrentCell || isNextCell
@@ -149,10 +162,13 @@ export const GameBoard = observer(() => {
                     : '#FFFFFF'
                   : undefined
                 const cellPlane = getPlaneNumber(b)
-                const cellPlaneNameKey = `accessibility.planeNames.${cellPlane}` as const
+                const cellPlaneNameKey =
+                  `accessibility.planeNames.${cellPlane}` as const
                 const cellPlaneName =
                   cellPlane <= 7
-                    ? (t(cellPlaneNameKey, { defaultValue: t('liberation') }) as string)
+                    ? (t(cellPlaneNameKey, {
+                        defaultValue: t('liberation')
+                      }) as string)
                     : (t('liberation') as string)
                 const cellFeature = getCellFeature(b, t)
                 const cellLabel = cellFeature
@@ -164,9 +180,18 @@ export const GameBoard = observer(() => {
                     style={[
                       styles.box,
                       highContrast && styles.highContrastBox,
-                      isCurrentCell && (highContrast ? styles.highContrastActiveBox : styles.activeBox),
-                      isPreviousCell && (highContrast ? styles.highContrastPreviousBox : styles.previousBox),
-                      isNextCell && (highContrast ? styles.highContrastNextBox : styles.nextBox)
+                      isCurrentCell &&
+                        (highContrast
+                          ? styles.highContrastActiveBox
+                          : styles.activeBox),
+                      isPreviousCell &&
+                        (highContrast
+                          ? styles.highContrastPreviousBox
+                          : styles.previousBox),
+                      isNextCell &&
+                        (highContrast
+                          ? styles.highContrastNextBox
+                          : styles.nextBox)
                     ]}
                     accessible
                     accessibilityLabel={

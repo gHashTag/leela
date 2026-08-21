@@ -6,7 +6,12 @@ import { PlanAvatar } from './index'
 describe('PlanAvatar', () => {
   it('renders with a plan number badge', () => {
     const { getByText } = render(
-      <PlanAvatar plan={5} size="medium" avaUrl="https://example.com/ava.png" isAccept />
+      <PlanAvatar
+        plan={5}
+        size="medium"
+        avaUrl="https://example.com/ava.png"
+        isAccept
+      />
     )
     expect(getByText('05')).toBeTruthy()
   })

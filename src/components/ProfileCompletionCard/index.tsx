@@ -18,99 +18,102 @@ type MissingStep = {
   label: string
 }
 
-export const ProfileCompletionCard = memo(({ onCompleteStep }: ProfileCompletionCardT) => {
-  const { t } = useTranslation()
-  const [dismissed, setDismissed] = useState(false)
+export const ProfileCompletionCard = memo(
+  ({ onCompleteStep }: ProfileCompletionCardT) => {
+    const { t } = useTranslation()
+    const [dismissed, setDismissed] = useState(false)
 
-  useEffect(() => {
-    if (!dismissed) {
+    useEffect(() => {
+      if (!dismissed) {
+        triggerHaptic('impactLight')
+      }
+    }, [dismissed])
+
+    const {
+      avatar,
+      profile: { firstName, lastName, intention },
+      history
+    } = OnlinePlayer.store
+
+    const missing = useMemo<MissingStep[]>(() => {
+      const steps: MissingStep[] = []
+      if (!avatar) {
+        steps.push({ key: 'avatar', label: t('profileCompletion.avatar') })
+      }
+      if (!firstName && !lastName) {
+        steps.push({ key: 'name', label: t('profileCompletion.name') })
+      }
+      if (!intention || intention.trim().length === 0) {
+        steps.push({
+          key: 'intention',
+          label: t('profileCompletion.intention')
+        })
+      }
+      if (!Array.isArray(history) || history.length === 0) {
+        steps.push({
+          key: 'firstReport',
+          label: t('profileCompletion.firstReport')
+        })
+      }
+      return steps
+    }, [avatar, firstName, intention, lastName, history, t])
+
+    const completedCount = 4 - missing.length
+    const progress = (completedCount / 4) * 100
+
+    if (missing.length === 0 || dismissed) {
+      return null
+    }
+
+    const nextStep = missing[0]
+
+    const handleComplete = () => {
+      triggerHaptic('impactMedium')
+      onCompleteStep(nextStep.key)
+    }
+
+    const handleDismiss = () => {
       triggerHaptic('impactLight')
+      setDismissed(true)
     }
-  }, [dismissed])
 
-  const {
-    avatar,
-    profile: { firstName, lastName, intention },
-    history
-  } = OnlinePlayer.store
-
-  const missing = useMemo<MissingStep[]>(() => {
-    const steps: MissingStep[] = []
-    if (!avatar) {
-      steps.push({ key: 'avatar', label: t('profileCompletion.avatar') })
-    }
-    if (!firstName && !lastName) {
-      steps.push({ key: 'name', label: t('profileCompletion.name') })
-    }
-    if (!intention || intention.trim().length === 0) {
-      steps.push({ key: 'intention', label: t('profileCompletion.intention') })
-    }
-    if (!Array.isArray(history) || history.length === 0) {
-      steps.push({ key: 'firstReport', label: t('profileCompletion.firstReport') })
-    }
-    return steps
-  }, [avatar, firstName, intention, lastName, history, t])
-
-  const completedCount = 4 - missing.length
-  const progress = (completedCount / 4) * 100
-
-  if (missing.length === 0 || dismissed) {
-    return null
-  }
-
-  const nextStep = missing[0]
-
-  const handleComplete = () => {
-    triggerHaptic('impactMedium')
-    onCompleteStep(nextStep.key)
-  }
-
-  const handleDismiss = () => {
-    triggerHaptic('impactLight')
-    setDismissed(true)
-  }
-
-  return (
-    <View style={styles.card} testID="profile-completion-card">
-      <View style={styles.row}>
-        <View style={styles.flex}>
+    return (
+      <View style={styles.card} testID="profile-completion-card">
+        <View style={styles.row}>
+          <View style={styles.flex}>
+            <Text
+              h="h5"
+              title={t('profileCompletion.title')}
+              textStyle={styles.title}
+            />
+            <Space height={vs(4)} />
+            <Text
+              h="h7"
+              title={t('profileCompletion.message', { step: nextStep.label })}
+              textStyle={styles.message}
+            />
+          </View>
           <Text
             h="h5"
-            title={t('profileCompletion.title')}
-            textStyle={styles.title}
-          />
-          <Space height={vs(4)} />
-          <Text
-            h="h7"
-            title={t('profileCompletion.message', { step: nextStep.label })}
-            textStyle={styles.message}
+            title="✕"
+            onPress={handleDismiss}
+            testID="profile-completion-dismiss"
           />
         </View>
-        <Text
-          h="h5"
-          title="✕"
-          onPress={handleDismiss}
-          testID="profile-completion-dismiss"
+        <Space height={vs(12)} />
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${progress}%` }]} />
+        </View>
+        <Space height={vs(12)} />
+        <Button
+          title={t('profileCompletion.action')}
+          onPress={handleComplete}
+          testID="profile-completion-action"
         />
       </View>
-      <Space height={vs(12)} />
-      <View style={styles.progressTrack}>
-        <View
-          style={[
-            styles.progressFill,
-            { width: `${progress}%` }
-          ]}
-        />
-      </View>
-      <Space height={vs(12)} />
-      <Button
-        title={t('profileCompletion.action')}
-        onPress={handleComplete}
-        testID="profile-completion-action"
-      />
-    </View>
-  )
-})
+    )
+  }
+)
 
 const styles = StyleSheet.create({
   card: {

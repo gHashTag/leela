@@ -8,12 +8,16 @@ describe('ProFeatureExplainer', () => {
   })
 
   it('renders without crashing when visible', () => {
-    const { toJSON } = render(<ProFeatureExplainer visible={true} onClose={jest.fn()} />)
+    const { toJSON } = render(
+      <ProFeatureExplainer visible={true} onClose={jest.fn()} />
+    )
     expect(toJSON()).not.toBeNull()
   })
 
   it('renders without crashing when not visible', () => {
-    const { toJSON } = render(<ProFeatureExplainer visible={false} onClose={jest.fn()} />)
+    const { toJSON } = render(
+      <ProFeatureExplainer visible={false} onClose={jest.fn()} />
+    )
     expect(toJSON()).toBeTruthy()
   })
 })

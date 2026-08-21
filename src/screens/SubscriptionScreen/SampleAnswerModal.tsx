@@ -1,16 +1,10 @@
 import React from 'react'
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View
-} from 'react-native'
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { ms } from 'react-native-size-matters'
 
 import { ButtonWithIcon, Space, Text } from '../../components'
-import { black, secondary, white } from '../../constants'
+import { RADIUS, SPACE, TOUCH, useTheme, type Palette } from '../../theme'
 
 interface SampleAnswerModalT {
   visible: boolean
@@ -24,6 +18,8 @@ export const SampleAnswerModal: React.FC<SampleAnswerModalT> = ({
   onContinue
 }) => {
   const { t } = useTranslation()
+  const palette = useTheme()
+  const styles = React.useMemo(() => stylesFor(palette), [palette])
   return (
     <Modal
       visible={visible}
@@ -49,7 +45,11 @@ export const SampleAnswerModal: React.FC<SampleAnswerModalT> = ({
               title={`“${t('sampleAnswer.question')}”`}
             />
             <Space height={16} />
-            <Text h="h5" textStyle={styles.answer} title={t('sampleAnswer.answer')} />
+            <Text
+              h="h5"
+              textStyle={styles.answer}
+              title={t('sampleAnswer.answer')}
+            />
           </ScrollView>
           <Space height={16} />
           <ButtonWithIcon
@@ -70,41 +70,57 @@ export const SampleAnswerModal: React.FC<SampleAnswerModalT> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end'
-  },
-  card: {
-    backgroundColor: white,
-    borderTopLeftRadius: ms(20, 0.6),
-    borderTopRightRadius: ms(20, 0.6),
-    paddingHorizontal: ms(20, 0.6),
-    paddingTop: ms(16, 0.6),
-    paddingBottom: ms(34, 0.6),
-    maxHeight: '88%'
-  },
-  closeRow: {
-    alignSelf: 'flex-end',
-    padding: ms(4, 0.6)
-  },
-  title: {
-    fontWeight: 'bold',
-    color: black,
-    textAlign: 'center'
-  },
-  question: {
-    color: secondary,
-    fontStyle: 'italic'
-  },
-  answer: {
-    lineHeight: ms(22, 0.6),
-    color: black
-  },
-  dismiss: {
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-    color: '#888'
-  }
-})
+/**
+ * The sample answer, in whichever light the phone is set to.
+ *
+ * This sheet knew nothing about the scheme: white paper, black type and a
+ * magenta question, opened from a paywall that had just drawn itself black. On
+ * a dark phone it arrived as a rectangle of daylight, and it is the one place a
+ * player reads a long passage before deciding to pay.
+ */
+const stylesFor = (palette: Palette) =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      // Shadow, not surface: the scrim stays black in both schemes.
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      justifyContent: 'flex-end'
+    },
+    card: {
+      backgroundColor: palette.surface,
+      borderTopLeftRadius: RADIUS,
+      borderTopRightRadius: RADIUS,
+      paddingHorizontal: SPACE.md,
+      paddingTop: SPACE.md,
+      paddingBottom: SPACE.xl,
+      maxHeight: '88%'
+    },
+    closeRow: {
+      alignSelf: 'flex-end',
+      // Four points of padding around a glyph is not a button.
+      minWidth: TOUCH,
+      minHeight: TOUCH,
+      alignItems: 'flex-end',
+      justifyContent: 'center'
+    },
+    title: {
+      fontWeight: 'bold',
+      color: palette.text,
+      textAlign: 'center'
+    },
+    question: {
+      // The player's own words, set apart by the accent rather than by a
+      // magenta that belongs to no scheme.
+      color: palette.accent,
+      fontStyle: 'italic'
+    },
+    answer: {
+      lineHeight: ms(22, 0.6),
+      color: palette.text
+    },
+    dismiss: {
+      textAlign: 'center',
+      textDecorationLine: 'underline',
+      color: palette.hint
+    }
+  })

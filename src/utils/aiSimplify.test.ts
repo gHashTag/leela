@@ -65,7 +65,9 @@ describe('simplifyAnswer', () => {
       mockedAsyncStorage.getItem.mockResolvedValueOnce('stored')
       const result = await loadSimplifiedAnswer('post-1')
       expect(result).toBe('stored')
-      expect(mockedAsyncStorage.getItem).toHaveBeenCalledWith('@simplifiedAiAnswer_post-1')
+      expect(mockedAsyncStorage.getItem).toHaveBeenCalledWith(
+        '@simplifiedAiAnswer_post-1'
+      )
     })
 
     it('saveSimplifiedAnswer writes to AsyncStorage', async () => {

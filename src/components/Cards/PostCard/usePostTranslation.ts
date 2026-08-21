@@ -37,7 +37,7 @@ export const usePostTranslation = ({
 
   const text = hideTranslate ? item?.text : transText
 
-  const flag = (hideTranslate ? flagEmoji : item?.flagEmoji ?? '🇷🇺') as string
+  const flag = (hideTranslate ? flagEmoji : (item?.flagEmoji ?? '🇷🇺')) as string
 
   return { transText, hideTranslate, handleTranslate, flag, text }
 }

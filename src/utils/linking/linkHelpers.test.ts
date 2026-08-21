@@ -18,7 +18,9 @@ describe('linkHelpers', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(Branch.createBranchUniversalObject as jest.Mock).mockResolvedValue(mockBuo)
+    ;(Branch.createBranchUniversalObject as jest.Mock).mockResolvedValue(
+      mockBuo
+    )
     mockBuo.generateShortUrl.mockResolvedValue({
       url: 'https://leelagame.app.link/abc123'
     })

@@ -1,10 +1,24 @@
-import { filterPosts, countPostsForFilter, PostFeedFilter } from './postFeedFilter'
+import {
+  filterPosts,
+  countPostsForFilter,
+  PostFeedFilter
+} from './postFeedFilter'
 
 const baseDate = Date.now()
 
 const posts = [
-  { id: 'p1', ownerId: 'u1', comments: ['c1', 'c2'], createTime: baseDate - 1000 },
-  { id: 'p2', ownerId: 'u2', comments: ['c1', 'c2', 'c3'], createTime: baseDate - 2000 },
+  {
+    id: 'p1',
+    ownerId: 'u1',
+    comments: ['c1', 'c2'],
+    createTime: baseDate - 1000
+  },
+  {
+    id: 'p2',
+    ownerId: 'u2',
+    comments: ['c1', 'c2', 'c3'],
+    createTime: baseDate - 2000
+  },
   { id: 'p3', ownerId: 'u1', comments: [], createTime: baseDate - 3000 },
   { id: 'p4', ownerId: 'u3', comments: ['c1'], createTime: baseDate - 4000 }
 ] as any[]

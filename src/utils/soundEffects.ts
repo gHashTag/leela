@@ -11,7 +11,10 @@ let planeSound: Sound | null = null
 const getDiceSound = (): Sound | null => diceSound
 const getPlaneSound = (): Sound | null => planeSound
 
-const playSound = async (soundGetter: () => Sound | null, fallback?: () => void) => {
+const playSound = async (
+  soundGetter: () => Sound | null,
+  fallback?: () => void
+) => {
   const enabled = await loadSoundEnabled()
   if (!enabled) return
 

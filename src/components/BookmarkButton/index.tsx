@@ -37,7 +37,9 @@ export const BookmarkButton = ({ bookmark, size = s(16) }: BookmarkButtonT) => {
       name={active ? 'bookmark' : 'bookmark-outline'}
       size={size}
       onPress={onPress}
-      accessibilityLabel={active ? t('accessibility.removeBookmark') : t('accessibility.bookmark')}
+      accessibilityLabel={
+        active ? t('accessibility.removeBookmark') : t('accessibility.bookmark')
+      }
       testID="bookmark-button"
     />
   )

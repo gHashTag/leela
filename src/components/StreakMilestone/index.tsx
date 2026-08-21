@@ -91,10 +91,7 @@ export const StreakMilestone = memo(() => {
     >
       <View style={styles.overlay}>
         <View style={[styles.card, isDark && styles.cardDark]}>
-          <Pressable
-            onPress={() => setVisible(false)}
-            style={styles.closeRow}
-          >
+          <Pressable onPress={() => setVisible(false)} style={styles.closeRow}>
             <Text h="h5" title="✕" />
           </Pressable>
           <Text

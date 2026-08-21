@@ -37,11 +37,8 @@ export const BookmarksScene = observer(() => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const {
-    panGesture0,
-    scrollViewGesture0,
-    blockScrollUntilAtTheTop0
-  } = useContext(TabContext) as any
+  const { panGesture0, scrollViewGesture0, blockScrollUntilAtTheTop0 } =
+    useContext(TabContext) as any
 
   const refresh = useCallback(() => {
     setError(null)
@@ -68,15 +65,15 @@ export const BookmarksScene = observer(() => {
   const state = loading
     ? ({ type: 'loading' } as const)
     : error
-    ? ({ type: 'error', message: error, onRetry: refresh } as const)
-    : bookmarks.length === 0
-    ? ({
-        type: 'empty',
-        title: t('profileEmpty.bookmarksTitle'),
-        message: t('profileEmpty.bookmarksMessage'),
-        icon: '🔖'
-      } as const)
-    : ({ type: 'ready' } as const)
+      ? ({ type: 'error', message: error, onRetry: refresh } as const)
+      : bookmarks.length === 0
+        ? ({
+            type: 'empty',
+            title: t('profileEmpty.bookmarksTitle'),
+            message: t('profileEmpty.bookmarksMessage'),
+            icon: '🔖'
+          } as const)
+        : ({ type: 'ready' } as const)
 
   return (
     <GestureDetector

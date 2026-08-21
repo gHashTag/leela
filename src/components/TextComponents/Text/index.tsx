@@ -115,10 +115,10 @@ export const Text = memo<TxtT>(
     const curColor = oneColor
       ? oneColor
       : colors
-      ? isDark
-        ? colors.light
-        : colors.dark
-      : text
+        ? isDark
+          ? colors.light
+          : colors.dark
+        : text
 
     // если добавлен шрифт и у к нему не нужна тень
     const noShadowFonts = ['h7', 'h1', 'h10', 'h12', 'h4']

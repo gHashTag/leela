@@ -29,7 +29,9 @@ describe('<WinCelebration />', () => {
     mockDiceStore.finishArr = [false, false, false]
 
     const { getByLabelText } = render(<WinCelebration />)
-    expect(getByLabelText('Game finished. Cosmic Consciousness reached.')).toBeTruthy()
+    expect(
+      getByLabelText('Game finished. Cosmic Consciousness reached.')
+    ).toBeTruthy()
   })
 
   it('renders celebration when online game finishes', () => {
@@ -37,6 +39,8 @@ describe('<WinCelebration />', () => {
     mockOnlinePlayer.store.finish = true
 
     const { getByLabelText } = render(<WinCelebration />)
-    expect(getByLabelText('Game finished. Cosmic Consciousness reached.')).toBeTruthy()
+    expect(
+      getByLabelText('Game finished. Cosmic Consciousness reached.')
+    ).toBeTruthy()
   })
 })

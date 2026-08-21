@@ -5,10 +5,25 @@ $RNFirebaseAsStaticFramework = true
 
 use_frameworks! :linkage => :static
 
-platform :ios, '12.4'
+platform :ios, '13.0'
 install! 'cocoapods', :deterministic_uuids => false
 
-pod 'Firebase', :modular_headers => true
+# The umbrella pod is gone, and with it Firebase Analytics.
+#
+# `pod 'Firebase'` brings `Firebase/Core`, which depends on FirebaseAnalytics,
+# which depends on `FirebaseAnalytics/AdIdSupport` - the advertising identifier.
+# Analytics then started on every launch ("Analytics collection enabled",
+# "screen reporting is enabled" in the device log) and **was never called from
+# the app**: not one import in `src/`.
+#
+# Three things follow from removing it. The app stops collecting what nobody
+# reads. The App Privacy declarations shrink to what the app actually does -
+# which matters now that `PrivacyInfo.xcprivacy` exists. And the paywall's
+# promise of no advertising stops sitting next to a linked ad-identifier
+# framework.
+#
+# The pods that are genuinely used stay, each named on its own line below;
+# nothing here depended on the umbrella except Analytics.
 pod 'FirebaseCoreInternal', :modular_headers => true
 pod 'GoogleUtilities', :modular_headers => true
 pod 'FirebaseStorage', :modular_headers => true

@@ -5,10 +5,12 @@ const mockAddEventListener = jest.fn()
 jest.mock('react-native', () => ({
   AccessibilityInfo: {
     isReduceMotionEnabled: jest.fn(() => mockGetReduceMotion()),
-    addEventListener: jest.fn((event: string, handler: (value: boolean) => void) => {
-      mockAddEventListener(event, handler)
-      return { remove: mockRemove }
-    })
+    addEventListener: jest.fn(
+      (event: string, handler: (value: boolean) => void) => {
+        mockAddEventListener(event, handler)
+        return { remove: mockRemove }
+      }
+    )
   },
   Platform: { OS: 'ios' },
   StyleSheet: { create: (s: any) => s }

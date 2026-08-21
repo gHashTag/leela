@@ -20,10 +20,13 @@ const FILTERS: PostFeedFilter[] = ['newest', 'mostDiscussed', 'myPosts']
 export const FeedFilter = memo(({ selected, onSelect }: FeedFilterI) => {
   const { t } = useTranslation()
 
-  const handleSelect = useCallback((filter: PostFeedFilter) => {
-    triggerHaptic('impactLight')
-    onSelect(filter)
-  }, [onSelect])
+  const handleSelect = useCallback(
+    (filter: PostFeedFilter) => {
+      triggerHaptic('impactLight')
+      onSelect(filter)
+    },
+    [onSelect]
+  )
 
   return (
     <View style={styles.container}>

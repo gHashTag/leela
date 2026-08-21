@@ -89,6 +89,20 @@ i18next.use(initReactI18next).init(
     compatibilityJSON: 'v3',
     resources,
     lng: isSupportedLang ? lang : ruOrEnLang,
+    /**
+     * English when a language has not been given the sentence yet.
+     *
+     * i18next's default is `dev`, a language that does not exist here, so a
+     * missing key fell through to nothing and `t()` returned **the key**. Eight
+     * of the ten translations carried no `proFeatureExplainer` block at all,
+     * which meant a French or Telugu player who asked what Pro includes was
+     * shown `proFeatureExplainer.features.aiGuide.title` in the middle of a
+     * purchase.
+     *
+     * The blocks are written now, so this changes nothing today. It is here so
+     * that the next key added in English is untranslated rather than broken.
+     */
+    fallbackLng: 'en',
     debug: __DEV__,
     interpolation: {
       escapeValue: true

@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 
-import { AppTheme, getAppTheme, loadThemePreference, subscribeToTheme } from './themeSettings'
+import {
+  AppTheme,
+  getAppTheme,
+  loadThemePreference,
+  subscribeToTheme
+} from './themeSettings'
 
 /**
  * Reactive hook for the user's chosen app theme.

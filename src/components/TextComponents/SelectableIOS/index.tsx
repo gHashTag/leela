@@ -25,10 +25,10 @@ export function SelectableIOS({
   const curColor = oneColor
     ? oneColor
     : colors
-    ? dark
-      ? colors.light
-      : colors.dark
-    : text
+      ? dark
+        ? colors.light
+        : colors.dark
+      : text
 
   const hStyle = h
     ? [

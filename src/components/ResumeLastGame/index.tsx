@@ -25,7 +25,8 @@ export const ResumeLastGame = observer(({ onResume }: ResumeLastGameT) => {
   const online = DiceStore.online
   const hasOfflineGame =
     !online && DiceStore.startGame && DiceStore.finishArr.includes(true)
-  const hasOnlineGame = online && OnlinePlayer.store.start && !OnlinePlayer.store.finish
+  const hasOnlineGame =
+    online && OnlinePlayer.store.start && !OnlinePlayer.store.finish
 
   if (!hasOfflineGame && !hasOnlineGame) {
     return null

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  How the archive becomes an .ipa. These exact values are the ones that work on
+  this machine; each of the two that look wrong is here for a reason.
+
+  `uploadSymbols` is FALSE, and that is not laziness. With it true the export
+  runs `IDEDistributionUploadAccountStep` - it looks for an Apple ID to send
+  dSYMs with, finds none in a non-interactive shell, and the whole export fails
+  with "Could not connect to the server". The symbols are not lost: the upload
+  lane sends them with the build, which is where they belong.
+
+  `destination` is `export`, so nothing is uploaded from here at all. Building a
+  package and sending it are separate acts, and the second one needs
+  credentials the first does not.
+
+  KNOWN TRAP, not fixable in this file: `xcodebuild -exportArchive` shells out
+  to `/usr/bin/rsync -8aPhhE`, where `-E` means *extended attributes* to Apple's
+  rsync. macOS ships openrsync, which understands it - but if Homebrew's rsync
+  is ahead on PATH it is picked as the other end of the transfer, and rsync 3.x
+  reads `--extended-attributes` as an unknown option. The export then dies with
+  the unhelpful "exportArchive Copy failed", naming neither rsync nor the flag.
+  Export with a PATH that has no Homebrew in it:
+
+      env PATH=/usr/bin:/bin:/usr/sbin:/sbin xcodebuild -exportArchive ...
+
+  `fastlane/Fastfile` does this for you.
+-->
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>teamID</key>
+	<string>5EM4M85VSQ</string>
+	<key>destination</key>
+	<string>export</string>
+	<key>uploadSymbols</key>
+	<false/>
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+	<key>signingStyle</key>
+	<string>automatic</string>
+</dict>
+</plist>

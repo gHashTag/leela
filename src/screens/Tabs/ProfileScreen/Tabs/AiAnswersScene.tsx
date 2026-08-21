@@ -2,12 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from 'react'
 
 import { observer } from 'mobx-react'
 import { useTranslation } from 'react-i18next'
-import {
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  View
-} from 'react-native'
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native'
 import { GestureDetector } from 'react-native-gesture-handler'
 import { s, vs } from 'react-native-size-matters'
 
@@ -57,19 +52,19 @@ export const AiAnswersScene = observer(() => {
   const state = loading
     ? ({ type: 'loading' } as const)
     : error
-    ? ({ type: 'error', message: error, onRetry: refresh } as const)
-    : answers.length === 0
-    ? ({
-        type: 'empty',
-        title: t('profileEmpty.aiAnswersTitle'),
-        message: t('profileEmpty.aiAnswersMessage'),
-        icon: '✨',
-        action: {
-          title: t('profileEmpty.aiAnswersAction'),
-          onPress: () => navigate('SELECT_PLAYERS_SCREEN')
-        }
-      } as const)
-    : ({ type: 'ready' } as const)
+      ? ({ type: 'error', message: error, onRetry: refresh } as const)
+      : answers.length === 0
+        ? ({
+            type: 'empty',
+            title: t('profileEmpty.aiAnswersTitle'),
+            message: t('profileEmpty.aiAnswersMessage'),
+            icon: '✨',
+            action: {
+              title: t('profileEmpty.aiAnswersAction'),
+              onPress: () => navigate('SELECT_PLAYERS_SCREEN')
+            }
+          } as const)
+        : ({ type: 'ready' } as const)
 
   return (
     <GestureDetector gesture={headerGesture}>

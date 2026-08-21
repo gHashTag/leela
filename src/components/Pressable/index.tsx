@@ -36,9 +36,11 @@ const Pressable: React.FC<PressableProps> = ({
     pressed
   }: PressableStateCallbackType): StyleProp<ViewStyle> => {
     if (pressed) {
-      return [touchTargetStyle, style, pressedStyle || defaultPressedStyle].filter(
-        Boolean
-      ) as StyleProp<ViewStyle>
+      return [
+        touchTargetStyle,
+        style,
+        pressedStyle || defaultPressedStyle
+      ].filter(Boolean) as StyleProp<ViewStyle>
     }
     return [touchTargetStyle, style].filter(Boolean) as StyleProp<ViewStyle>
   }
@@ -53,7 +55,6 @@ const Pressable: React.FC<PressableProps> = ({
       onPress()
     }
   }
-
 
   return (
     <RNPressable style={handlePressStyle} onPress={handlePress} {...props}>

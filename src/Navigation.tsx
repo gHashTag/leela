@@ -7,7 +7,6 @@ import React, { useEffect } from 'react'
 import { StatusBar, useColorScheme } from 'react-native'
 import Orientation from 'react-native-orientation-locker'
 import SystemNavigationBar from 'react-native-system-navigation-bar'
-import TabBar from './TabBar'
 import { RU_STORE } from '@env'
 import { Fallback, OfflineBanner } from './components'
 import {
@@ -27,12 +26,12 @@ import {
   useWhatsNewModal
 } from './hooks'
 import { lang } from './i18n'
-import { subscribeTracked } from './utils/listenerRegistry'
 import {
   ActionsModal,
   ChangeIntention,
   ExitPopup,
   GameScreen,
+  BoardScreen,
   InputTextModal,
   NetworkModal,
   OfflineProfileScreen, // OnlineGameScreen,
@@ -70,7 +69,8 @@ import {
   SignUpUsername,
   UserEdit
 } from './screens/Authenticator'
-import { checkVersion, getFireBaseRef } from './screens/helper'
+import { checkVersion } from './screens/helper'
+import { minVersion } from './minVersion.json'
 import { DiceStore, SubscribeStore } from './store'
 import { RootStackParamList, RootTabParamList } from './types/types'
 import { linking } from './utils'
@@ -110,17 +110,36 @@ const Tab = observer(() => {
   const isBlockGame = SubscribeStore.isBlockGame
   return (
     <TabNavigator.Navigator
-      tabBar={(props) => <TabBar {...props} />}
+      // No tab bar.
+      //
+      // The board in three dimensions is the app: the game, the report gate,
+      // the companion, the path and the question are all on that one screen,
+      // so a row of tabs under it was a strip of chrome over the board and
+      // nothing else.
+      //
+      // The screens below stay registered, so everything that navigates to a
+      // named tab still arrives. `TabBar.tsx` is kept too, with its tests: a
+      // bar that is one line from coming back is worth more than one that has
+      // to be written again.
+      tabBar={() => null}
       tabBarPosition="bottom"
       screenOptions={{
         swipeEnabled: false
       }}
       initialRouteName={'TAB_BOTTOM_0'}
     >
+      {/*
+        The game, in three dimensions, on the tab the app opens on.
+
+        The same page a browser runs at `BOARD_URL` — one board, one set of
+        rules, one engine — embedded rather than ported, because a board drawn
+        twice is two boards: they agree on the day they are written and drift
+        from the first change after it. See `screens/Tabs/BoardScreen`.
+      */}
       <TabNavigator.Screen
         name="TAB_BOTTOM_0"
-        component={GameScreen}
-        options={{ title: 'tabRoute.game' }}
+        component={BoardScreen}
+        options={{ title: 'tabRoute.board' }}
       />
       {DiceStore.online && (
         <TabNavigator.Screen
@@ -134,7 +153,18 @@ const Tab = observer(() => {
         component={DiceStore.online ? ProfileScreen : OfflineProfileScreen}
         options={{ title: 'tabRoute.profile' }}
       />
-      {/* <TabNavigator.Screen name="TAB_BOTTOM_3" component={OnlineGameScreen} /> */}
+      {/*
+        The flat board this app opened on until now, kept rather than deleted.
+
+        It is the same game underneath — the report gate, the plans, the
+        journal — drawn as a grid, and a player mid-game can still reach it
+        while the 3D board becomes the way in.
+      */}
+      <TabNavigator.Screen
+        name="TAB_BOTTOM_3"
+        component={GameScreen}
+        options={{ title: 'tabRoute.game' }}
+      />
       {lang === 'ru' && (
         <TabNavigator.Screen
           name="TAB_BOTTOM_4"
@@ -149,8 +179,8 @@ const Tab = observer(() => {
             RU_STORE
               ? LazyChatScreen
               : isBlockGame
-              ? SubscriptionScreen
-              : LazyChatScreen
+                ? SubscriptionScreen
+                : LazyChatScreen
           }
           options={{ title: 'tabRoute.chat' }}
         />
@@ -177,16 +207,26 @@ const App = () => {
     // check version
   }, [isDark])
 
+  /*
+   * The oldest version this build will run, read from the build itself.
+   *
+   * It used to be read from a Realtime Database node, and that read has been
+   * failing: every launch logged
+   * `[FirebaseDatabase] Listener at /minVersion failed: permission_denied`,
+   * so `checkVersion` was never once called with a real value. A check that
+   * cannot answer is not a check - it was a live subscription, kept open for
+   * the life of the app, that only ever produced a warning.
+   *
+   * `src/minVersion.json` was already in the tree, and nothing read it. Now it
+   * does, which is honest about what this is: a floor shipped with the app.
+   *
+   * What is lost is the ability to raise the floor on already-installed copies
+   * without a release. That was the point of the remote node, and if it is
+   * wanted again it needs a source that actually answers - the rules on that
+   * database deny us.
+   */
   useEffect(() => {
-    const dispose = subscribeTracked('Navigation', () => {
-      const ref = getFireBaseRef('/minVersion/')
-      const listener = ref.on('value', async (snap) => {
-        checkVersion(snap.val())
-      })
-      return () => ref.off('value', listener)
-    })
-    //https://console.firebase.google.com/u/0/project/leela-chakra/database/leela-chakra-default-rtdb/data/minVersion
-    return dispose
+    checkVersion(minVersion)
   }, [])
 
   return (
@@ -206,10 +246,7 @@ const App = () => {
         }}
         initialRouteName="ONBOARDING_SCREEN"
       >
-        <Stack.Screen
-          name="ONBOARDING_SCREEN"
-          component={OnboardingScreen}
-        />
+        <Stack.Screen name="ONBOARDING_SCREEN" component={OnboardingScreen} />
         <Stack.Screen name="HELLO" component={Hello} />
         <Stack.Screen name="WELCOME_SCREEN" component={WelcomeScreen} />
 
@@ -301,10 +338,7 @@ const App = () => {
             name="UPDATE_VERSION_MODAL"
             component={UpdateVersionModal}
           />
-          <Stack.Screen
-            name="WHATS_NEW_MODAL"
-            component={WhatsNewModal}
-          />
+          <Stack.Screen name="WHATS_NEW_MODAL" component={WhatsNewModal} />
           <Stack.Screen
             name="REPLY_MODAL"
             options={{
@@ -315,7 +349,10 @@ const App = () => {
           <Stack.Screen name="INPUT_TEXT_MODAL" component={InputTextModal} />
           <Stack.Screen name="EXIT_MODAL" component={ExitPopup} />
           <Stack.Screen name="NETWORK_MODAL" component={NetworkModal} />
-          <Stack.Screen name="PLAN_REPORT_MODAL" component={LazyPlanReportModal} />
+          <Stack.Screen
+            name="PLAN_REPORT_MODAL"
+            component={LazyPlanReportModal}
+          />
         </Stack.Group>
       </Stack.Navigator>
     </NavigationContainer>

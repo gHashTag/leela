@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, View, useColorScheme } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
 import { Space, Text } from '../'
-import { fuchsia, white } from '../../constants'
+import { RADIUS, SPACE, paletteFor } from '../../theme'
 import {
   formatCountdown,
   getTimeLeft,
@@ -41,10 +41,26 @@ export const TrialTimer = () => {
     return () => clearInterval(interval)
   }, [deadline])
 
+  /*
+   * The offer, in the app's own accent.
+   *
+   * It was `fuchsia` — a flat magenta with no counterpart in the other scheme,
+   * beside a board whose accent is green. A countdown does not need a colour
+   * nobody else uses to be noticed; it needs to be legible, and to belong.
+   *
+   * **Above the early return, and that is not a style choice.** This stood
+   * below it and the app crashed: while the deadline was still being read the
+   * component returned `null` and ran no hook here, and the moment the read
+   * came back it ran one — *rendered more hooks than during the previous
+   * render*. A hook may not sit behind a condition, and an early return is a
+   * condition.
+   */
+  const palette = paletteFor(useColorScheme() === 'dark')
+
   if (!left) return null
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: palette.accent }]}>
       <Text h="h5" title="🔥" />
       <Space width={s(6)} />
       <View>
@@ -52,12 +68,12 @@ export const TrialTimer = () => {
           h="h7"
           title={t('trialTimer.title')}
           textStyle={styles.title}
-          oneColor={white}
+          oneColor={palette.onAccent}
         />
         <Text
           h="h4"
           title={formatCountdown(left, t)}
-          oneColor={white}
+          oneColor={palette.onAccent}
         />
       </View>
     </View>
@@ -69,12 +85,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: fuchsia,
-    borderRadius: s(12),
-    paddingHorizontal: s(16),
-    paddingVertical: vs(10),
-    marginHorizontal: s(20),
-    marginBottom: vs(10)
+
+    borderRadius: s(RADIUS),
+    paddingHorizontal: s(SPACE.md),
+    paddingVertical: vs(SPACE.sm),
+    marginHorizontal: s(SPACE.md),
+    marginBottom: vs(SPACE.sm)
   },
   title: {
     opacity: 0.9

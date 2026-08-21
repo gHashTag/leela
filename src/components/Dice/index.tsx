@@ -125,7 +125,11 @@ export const Dice = observer(({ disabled }: DiceT) => {
         onPress={() => {
           canRoll && rollDice()
         }}
-        style={[minTouchTarget, styles.diceContainer, isOpacity && styles.opacityCube]}
+        style={[
+          minTouchTarget,
+          styles.diceContainer,
+          isOpacity && styles.opacityCube
+        ]}
         disabled={disabled}
         accessible
         accessibilityRole="button"
@@ -135,7 +139,9 @@ export const Dice = observer(({ disabled }: DiceT) => {
             ? t('accessibility.diceLocked')
             : t('accessibility.rollDiceValue', { count: DiceStore.count })
         }
-        accessibilityHint={isOpacity ? lockedHint : t('accessibility.rollDiceHint')}
+        accessibilityHint={
+          isOpacity ? lockedHint : t('accessibility.rollDiceHint')
+        }
         accessibilityState={{ disabled: isOpacity || disabled || !canRoll }}
         accessibilityActions={[
           { name: 'activate', label: t('accessibility.rollDice') }

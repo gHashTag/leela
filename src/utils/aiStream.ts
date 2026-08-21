@@ -129,7 +129,21 @@ export const streamZaiChat = (
     request.setRequestHeader('Authorization', `Bearer ${OPEN_AI_KEY}`)
     request.setRequestHeader('Content-Type', 'application/json')
     request.setRequestHeader('Accept', 'text/event-stream')
-    request.timeout = 120000
+    /*
+     * Three minutes, because this model thinks for a long time.
+     *
+     * It was two, and the board that asks through this client allows three -
+     * so a reasoning pass that ran past 120 seconds was aborted here while the
+     * page was still waiting, and the player saw the companion's offline
+     * sentence with nothing wrong at either end. Measured runs of this model
+     * have spent over twenty thousand characters reasoning before saying a
+     * word; two minutes is not a generous budget for that, it is a coin toss.
+     *
+     * Matched to `TIMEOUT_MS` in the board's `asked.ts`. Two timeouts on one
+     * request should not disagree: the shorter one silently wins and the longer
+     * one becomes a comment.
+     */
+    request.timeout = 180000
 
     request.onprogress = () => {
       const responseText = request.responseText

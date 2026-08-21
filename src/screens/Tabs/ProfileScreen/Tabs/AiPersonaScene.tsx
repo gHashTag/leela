@@ -6,7 +6,12 @@ import { StyleSheet, View } from 'react-native'
 import { GestureDetector } from 'react-native-gesture-handler'
 import { s, vs } from 'react-native-size-matters'
 
-import { AiLanguageToggle, AiPersonaSelector, Space, Text } from '../../../../components'
+import {
+  AiLanguageToggle,
+  AiPersonaSelector,
+  Space,
+  Text
+} from '../../../../components'
 import { TabContext } from '../TabContext'
 
 export const AiPersonaScene = observer(() => {

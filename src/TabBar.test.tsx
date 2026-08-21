@@ -41,10 +41,16 @@ describe('TabBar', () => {
   })
 
   it('labels tabs with localized route names', () => {
+    // Read 'Game board' until the app's front door became the board in three
+    // dimensions: `TAB_BOTTOM_0` is `BoardScreen` now and the flat grid moved
+    // to `TAB_BOTTOM_3`. What is under test is that a tab is *labelled from
+    // the catalogue* rather than showing its route name, not which screen
+    // happens to be first — but the label is read from the real map, so it
+    // moves with the app rather than describing a version of it.
     const { getByRole } = render(
       <TabBar state={baseState} navigation={baseNavigation as any} />
     )
-    const first = getByRole('tab', { name: 'Game board' })
+    const first = getByRole('tab', { name: 'Board 3D' })
     expect(first).toBeTruthy()
   })
 

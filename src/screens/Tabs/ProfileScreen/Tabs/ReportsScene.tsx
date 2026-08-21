@@ -69,17 +69,17 @@ export const ReportsScene = observer(() => {
   const state = error
     ? ({ type: 'error', message: error, onRetry: onRefresh } as const)
     : data.length === 0
-    ? ({
-        type: 'empty',
-        title: t('profileEmpty.reportsTitle'),
-        message: t('profileEmpty.reportsMessage'),
-        icon: '📜',
-        action: {
-          title: t('profileEmpty.reportsAction'),
-          onPress: () => navigate('SELECT_PLAYERS_SCREEN')
-        }
-      } as const)
-    : ({ type: 'ready' } as const)
+      ? ({
+          type: 'empty',
+          title: t('profileEmpty.reportsTitle'),
+          message: t('profileEmpty.reportsMessage'),
+          icon: '📜',
+          action: {
+            title: t('profileEmpty.reportsAction'),
+            onPress: () => navigate('SELECT_PLAYERS_SCREEN')
+          }
+        } as const)
+      : ({ type: 'ready' } as const)
 
   return (
     <GestureDetector

@@ -17,8 +17,7 @@ export function getVerseOfTheDay(
   date = new Date()
 ): Verse | null {
   const verses = (t('dailyVerse.verses', { returnObjects: true }) || []) as
-    | Verse[]
-    | null
+    Verse[] | null
 
   if (!Array.isArray(verses) || verses.length === 0) return null
   return verses[getDayOfYear(date) % verses.length]

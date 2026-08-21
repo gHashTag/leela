@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 
-
 import firestore from '@react-native-firebase/firestore'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { observer } from 'mobx-react'
@@ -209,10 +208,7 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
 
       <IntentionPrompt />
       <WinCelebration />
-      <BoardLegend
-        visible={showLegend}
-        onClose={() => setShowLegend(false)}
-      />
+      <BoardLegend visible={showLegend} onClose={() => setShowLegend(false)} />
     </Background>
   )
 })

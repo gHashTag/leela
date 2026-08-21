@@ -504,7 +504,7 @@
   "manyCharacters": "Terlalu banyak simbol, maksimum - ",
   "fewChars": "Minimum mestilah 100 aksara",
   "twoSymbolRequire": "Medan mesti mengandungi sekurang-kurangnya 2 aksara",
-  "descriptionSubscriptions": "Versi percubaan permainan Leela AI membolehkan membuat 2 laporan. Untuk meneruskan, sila langgan.",
+  "descriptionSubscriptions": "{{count}} lontaran pertama anda adalah percuma. Langgan untuk meneruskan permainan.",
   "buy": "Beli",
   "alreadyBought": "Sudah dibeli?",
   "chooseSubscription": "Pilih langganan:",
@@ -526,5 +526,38 @@
   },
   "free": "Akses percuma",
   "authNotConfigured": "Sign-in is unavailable in this build. Please contact support.",
-  "authUnknownError": "Something went wrong. Please try again."
+  "authUnknownError": "Something went wrong. Please try again.",
+  "subscriptionHelper": {
+    "message": "Setiap pemain mendapat {{count}} lontaran percuma, supaya anda dapat mengenali permainan sebelum membayar. Langganan menghapuskan had itu dan mengekalkan pemandu di sisi anda.",
+    "title": "Mengapa saya melihat ini?",
+    "restore": "Pulihkan pembelian",
+    "close": "Tutup"
+  },
+  "proFeatureExplainer": {
+    "title": "Apa yang dibuka oleh Pro",
+    "link": "Apa yang termasuk dalam Pro?",
+    "next": "Seterusnya",
+    "gotIt": "Faham",
+    "dismiss": "Langkau",
+    "features": {
+      "throws": {
+        "title": "Permainan diteruskan",
+        "body": "Apabila lontaran percuma anda habis, dadu terus berputar. Bermain seberapa lama yang anda mahu, dan mulakan seberapa banyak permainan yang anda mahu."
+      },
+      "guide": {
+        "title": "Pemandu AI",
+        "body": "Tanya tentang satah tempat anda mendarat, dalam bahasa anda sendiri. Jawapannya berasaskan Bhagavad Gita, Upanishad dan Yoga Sutra, dan anda dapat melihat pemandu itu berfikir."
+      },
+      "noAds": {
+        "title": "Tiada iklan",
+        "body": "Leela tidak memaparkan iklan. Langganan inilah yang menghidupkan permainan dan pemandunya."
+      }
+    }
+  },
+  "subscription": {
+    "renewal": "Diperbaharui secara automatik sehingga dibatalkan. Batalkan bila-bila masa dalam tetapan ID Apple anda.",
+    "terms": "Syarat Penggunaan",
+    "privacy": "Dasar Privasi",
+    "pickPlanFirst": "Pilih pelan dahulu"
+  }
 }

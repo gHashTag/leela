@@ -18,7 +18,10 @@ export const WeeklyStreak = memo(() => {
     loadEntries().then(setEntries)
   }, [])
 
-  const { streak, week } = useMemo(() => getWeekSummary(entries, t), [entries, t])
+  const { streak, week } = useMemo(
+    () => getWeekSummary(entries, t),
+    [entries, t]
+  )
   const label = `${t('weeklyStreak.title')} ${streak} ${
     streak === 1 ? t('weeklyStreak.daySingular') : t('weeklyStreak.dayPlural')
   }`
@@ -28,7 +31,12 @@ export const WeeklyStreak = memo(() => {
       <View style={styles.row}>
         <Text h="h11" title="🔥" />
         <Space width={s(8)} />
-        <Text h="h11" title={label} oneColor="#FFB74D" textStyle={styles.title} />
+        <Text
+          h="h11"
+          title={label}
+          oneColor="#FFB74D"
+          textStyle={styles.title}
+        />
       </View>
       <Space height={vs(8)} />
       <View style={styles.weekRow}>
@@ -36,10 +44,7 @@ export const WeeklyStreak = memo(() => {
           <View key={index} style={styles.dayCell}>
             <View
               testID="day-dot"
-              style={[
-                styles.dayDot,
-                day.active && styles.dayDotActive
-              ]}
+              style={[styles.dayDot, day.active && styles.dayDotActive]}
             />
             <Space height={vs(4)} />
             <Text h="h11" title={day.label} oneColor={dimGray} />

@@ -10,16 +10,16 @@ const QUOTE_DELIMITERS = [' — ', ' - ', '–', '—']
 export const extractSources = (text: string): AiSourceT[] => {
   if (!text) return []
 
-  const markerIndex = SOURCE_MARKERS
-    .map((marker) => ({ marker, index: text.indexOf(marker) }))
+  const markerIndex = SOURCE_MARKERS.map((marker) => ({
+    marker,
+    index: text.indexOf(marker)
+  }))
     .filter((a) => a.index !== -1)
     .sort((a, b) => a.index - b.index)[0]
 
   if (!markerIndex) return []
 
-  const raw = text
-    .slice(markerIndex.index + markerIndex.marker.length)
-    .trim()
+  const raw = text.slice(markerIndex.index + markerIndex.marker.length).trim()
 
   if (!raw) return []
 

@@ -50,7 +50,10 @@ export const WeeklyRecap = memo(() => {
   }, [])
 
   const rolls = useMemo(() => countRollsThisWeek(), [])
-  const reports = useMemo(() => countReportsThisWeek(), [PostStore.store.ownPosts])
+  const reports = useMemo(
+    () => countReportsThisWeek(),
+    [PostStore.store.ownPosts]
+  )
   const streak = useMemo(() => computeStreak(entries), [entries])
 
   return (
@@ -68,17 +71,32 @@ export const WeeklyRecap = memo(() => {
       <Space height={vs(12)} />
       <View style={styles.statsRow}>
         <View style={styles.stat}>
-          <Text h="h3" title={`${rolls}`} oneColor={brightTurquoise} textStyle={styles.statValue} />
+          <Text
+            h="h3"
+            title={`${rolls}`}
+            oneColor={brightTurquoise}
+            textStyle={styles.statValue}
+          />
           <Space height={vs(2)} />
           <Text h="h11" title={t('weeklyRecap.rolls')} oneColor={dimGray} />
         </View>
         <View style={styles.stat}>
-          <Text h="h3" title={`${reports}`} oneColor={brightTurquoise} textStyle={styles.statValue} />
+          <Text
+            h="h3"
+            title={`${reports}`}
+            oneColor={brightTurquoise}
+            textStyle={styles.statValue}
+          />
           <Space height={vs(2)} />
           <Text h="h11" title={t('weeklyRecap.reports')} oneColor={dimGray} />
         </View>
         <View style={styles.stat}>
-          <Text h="h3" title={`${streak}`} oneColor={brightTurquoise} textStyle={styles.statValue} />
+          <Text
+            h="h3"
+            title={`${streak}`}
+            oneColor={brightTurquoise}
+            textStyle={styles.statValue}
+          />
           <Space height={vs(2)} />
           <Text h="h11" title={t('weeklyRecap.streak')} oneColor={dimGray} />
         </View>

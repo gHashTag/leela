@@ -23,10 +23,7 @@ import { captureException, openUrl } from '../../../constants'
 import { lang } from '../../../i18n'
 import { DiceStore, OnlinePlayer, PostStore } from '../../../store'
 import { RootTabParamList } from '../../../types/types'
-import {
-  filterPosts,
-  PostFeedFilter
-} from '../../../utils/postFeedFilter'
+import { filterPosts, PostFeedFilter } from '../../../utils/postFeedFilter'
 import { subscribeTracked } from '../../../utils/listenerRegistry'
 import { getUid } from '../../helper'
 
@@ -68,7 +65,9 @@ export const PostScreen = observer(({ navigation }: Ipost) => {
     const body = encodeURIComponent(
       `${t('online-part.postsLoadError') || 'Feed error'}: ${loadError}`
     )
-    openUrl(`mailto:reactnativeinitru@gmail.com?subject=${subject}&body=${body}`)
+    openUrl(
+      `mailto:reactnativeinitru@gmail.com?subject=${subject}&body=${body}`
+    )
   }, [loadError, t])
 
   useEffect(() => {
@@ -169,15 +168,14 @@ export const PostScreen = observer(({ navigation }: Ipost) => {
         <View style={{ paddingHorizontal: s(20), alignItems: 'center' }}>
           {loadError ? (
             <>
-              <Text
-                textStyle={styles.noPostText}
-                h={'h4'}
-                title={loadError}
-              />
+              <Text textStyle={styles.noPostText} h={'h4'} title={loadError} />
               <Space height={vs(20)} />
               <Button onPress={onRetry} title={t('online-part.retry')} />
               <Space height={vs(12)} />
-              <Button onPress={onReportBug} title={t('online-part.reportBug')} />
+              <Button
+                onPress={onReportBug}
+                title={t('online-part.reportBug')}
+              />
             </>
           ) : (
             <>

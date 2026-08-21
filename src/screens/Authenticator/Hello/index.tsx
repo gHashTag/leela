@@ -83,11 +83,7 @@ const Hello = ({ navigation }: HelloT): ReactElement => {
         <CenterView>
           <IconLeela />
           <Space height={vs(40)} />
-          <Text
-            h="h5"
-            title={t('hello.subtitle')}
-            testID="hello-subtitle"
-          />
+          <Text h="h5" title={t('hello.subtitle')} testID="hello-subtitle" />
           <Space height={vs(30)} />
           <ResumeLastGame onResume={resumeGame} />
           <Space height={vs(16)} />

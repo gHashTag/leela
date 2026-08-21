@@ -23,7 +23,12 @@ import {
   SubCommentCard,
   Text
 } from '../../'
-import { OpenActionsModal, brightTurquoise, gray, lightGray } from '../../../constants'
+import {
+  OpenActionsModal,
+  brightTurquoise,
+  gray,
+  lightGray
+} from '../../../constants'
 import { getTimeStamp } from '../../../screens/helper'
 import { PostStore } from '../../../store'
 import { CommentT } from '../../../types/types'
@@ -140,7 +145,12 @@ export const CommentCard: React.FC<CommentCardI> = observer(
             )}
           </View>
           <View style={styles.content}>
-            <View style={[styles.commentHead, isAccessibilityScale && styles.commentHeadLarge]}>
+            <View
+              style={[
+                styles.commentHead,
+                isAccessibilityScale && styles.commentHeadLarge
+              ]}
+            >
               <Text
                 numberOfLines={isAccessibilityScale ? 2 : 1}
                 h={'h6'}

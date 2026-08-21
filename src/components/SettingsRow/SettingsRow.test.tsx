@@ -29,10 +29,7 @@ describe('<SettingsRow />', () => {
     )
     fireEvent(getByTestId('haptic-row'), 'press')
     expect(onPress).toHaveBeenCalled()
-    expect(mockTrigger).toHaveBeenCalledWith(
-      'impactLight',
-      expect.any(Object)
-    )
+    expect(mockTrigger).toHaveBeenCalledWith('impactLight', expect.any(Object))
   })
 
   it('renders a navigation row with a value label', () => {

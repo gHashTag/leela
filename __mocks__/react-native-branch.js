@@ -8,7 +8,9 @@ export default {
   getFirstReferringParams: jest.fn().mockResolvedValue({}),
   setRequestMetadata: jest.fn(),
   createBranchUniversalObject: jest.fn().mockResolvedValue({
-    generateShortUrl: jest.fn().mockResolvedValue({ url: 'https://mock.leela.app/link' }),
+    generateShortUrl: jest
+      .fn()
+      .mockResolvedValue({ url: 'https://mock.leela.app/link' }),
     showShareSheet: jest.fn().mockResolvedValue({ completed: true })
   })
 }

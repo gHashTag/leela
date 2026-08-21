@@ -89,7 +89,10 @@ export function disposeAll() {
  * Return a snapshot of currently active listeners for debugging / logging.
  */
 export function getActiveListeners(): Array<{ id: string; screen: string }> {
-  return Array.from(listeners.values()).map(({ id, screen }) => ({ id, screen }))
+  return Array.from(listeners.values()).map(({ id, screen }) => ({
+    id,
+    screen
+  }))
 }
 
 /**

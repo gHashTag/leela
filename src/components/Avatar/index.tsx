@@ -34,8 +34,8 @@ export const Avatar = memo<AvatarT>(
     const source: ImageSourcePropType = numericUri
       ? numericUri
       : stringUri
-      ? { uri: stringUri, priority: FastImage.priority.high }
-      : localImageSource || defaultAvatar
+        ? { uri: stringUri, priority: FastImage.priority.high }
+        : localImageSource || defaultAvatar
 
     return (
       <View style={[styles.container, viewStyle]} testID="avatar">

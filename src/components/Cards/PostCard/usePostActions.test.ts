@@ -65,7 +65,10 @@ jest.mock('@react-navigation/native', () => ({
 
 jest.mock('react-i18next', () => ({
   initReactI18next: { type: 'i18next' },
-  useTranslation: () => ({ t: (key: string, params?: Record<string, any>) => `${key}:${JSON.stringify(params || {})}` })
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, any>) =>
+      `${key}:${JSON.stringify(params || {})}`
+  })
 }))
 
 jest.mock('../../../hooks', () => ({
@@ -85,7 +88,9 @@ const mockedShare = Share.share as jest.Mock
 describe('usePostActions', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockedBuildReportLink.mockResolvedValue('https://leelagame.app.link/report-42')
+    mockedBuildReportLink.mockResolvedValue(
+      'https://leelagame.app.link/report-42'
+    )
   })
 
   it('handleShareLink shares a report link with localized message', async () => {
@@ -106,10 +111,14 @@ describe('usePostActions', () => {
 
     await result.current.handleShareLink()
 
-    expect(mockedBuildReportLink).toHaveBeenCalledWith('post-42', 'My report text')
+    expect(mockedBuildReportLink).toHaveBeenCalledWith(
+      'post-42',
+      'My report text'
+    )
     expect(mockedShare).toHaveBeenCalledWith({
       title: 'report.shareTitle:{}',
-      message: 'report.shareMessage:{"plan":12,"link":"https://leelagame.app.link/report-42"}'
+      message:
+        'report.shareMessage:{"plan":12,"link":"https://leelagame.app.link/report-42"}'
     })
   })
 

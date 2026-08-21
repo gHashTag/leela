@@ -77,20 +77,22 @@ describe('canRecoverStreak', () => {
   })
 
   it('returns false when there is no streak to recover', () => {
-    const entries: JournalEntry[] = [
-      { date: threeDaysAgo, text: 'entry' }
-    ]
+    const entries: JournalEntry[] = [{ date: threeDaysAgo, text: 'entry' }]
     expect(canRecoverStreak(entries, null)).toBe(false)
   })
 
   it('returns false when recovery was used within the last 7 days', () => {
-    const entries: JournalEntry[] = [{ date: dayBeforeYesterday, text: 'entry' }]
+    const entries: JournalEntry[] = [
+      { date: dayBeforeYesterday, text: 'entry' }
+    ]
     const lastRecovery = getLocalDateString(new Date())
     expect(canRecoverStreak(entries, lastRecovery)).toBe(false)
   })
 
   it('returns true when recovery was used 8 days ago', () => {
-    const entries: JournalEntry[] = [{ date: dayBeforeYesterday, text: 'entry' }]
+    const entries: JournalEntry[] = [
+      { date: dayBeforeYesterday, text: 'entry' }
+    ]
     expect(canRecoverStreak(entries, eightDaysAgo)).toBe(true)
   })
 })

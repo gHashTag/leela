@@ -32,19 +32,19 @@ export const HistoryScene = observer(() => {
   const state = loading
     ? ({ type: 'loading' } as const)
     : error
-    ? ({ type: 'error', message: error, onRetry: refresh } as const)
-    : data.length === 0
-    ? ({
-        type: 'empty',
-        title: t('profileEmpty.historyTitle'),
-        message: t('profileEmpty.historyMessage'),
-        icon: '🎲',
-        action: {
-          title: t('profileEmpty.historyAction'),
-          onPress: () => navigate('SELECT_PLAYERS_SCREEN')
-        }
-      } as const)
-    : ({ type: 'ready' } as const)
+      ? ({ type: 'error', message: error, onRetry: refresh } as const)
+      : data.length === 0
+        ? ({
+            type: 'empty',
+            title: t('profileEmpty.historyTitle'),
+            message: t('profileEmpty.historyMessage'),
+            icon: '🎲',
+            action: {
+              title: t('profileEmpty.historyAction'),
+              onPress: () => navigate('SELECT_PLAYERS_SCREEN')
+            }
+          } as const)
+        : ({ type: 'ready' } as const)
 
   return (
     <GestureDetector

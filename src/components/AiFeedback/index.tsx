@@ -4,8 +4,18 @@ import { Pressable, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
 import { Text } from '../'
-import { captureException, gray, lightGray, maybeRequestReview, recordPositiveAiAnswer } from '../../constants'
-import { AiFeedback, loadAiFeedback, saveAiFeedback } from '../../utils/aiFeedback'
+import {
+  captureException,
+  gray,
+  lightGray,
+  maybeRequestReview,
+  recordPositiveAiAnswer
+} from '../../constants'
+import {
+  AiFeedback,
+  loadAiFeedback,
+  saveAiFeedback
+} from '../../utils/aiFeedback'
 
 interface AiFeedbackI {
   postId: string

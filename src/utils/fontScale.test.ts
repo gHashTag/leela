@@ -1,4 +1,10 @@
-import { applyFontScale, clampFontScale, isAccessibilityFontScale, MAX_FONT_SCALE, MIN_FONT_SCALE } from './fontScale'
+import {
+  applyFontScale,
+  clampFontScale,
+  isAccessibilityFontScale,
+  MAX_FONT_SCALE,
+  MIN_FONT_SCALE
+} from './fontScale'
 
 describe('fontScale utilities', () => {
   it('exposes safe scale bounds', () => {
@@ -32,7 +38,10 @@ describe('fontScale utilities', () => {
   })
 
   it('ignores non-numeric font sizes', () => {
-    const scaled = applyFontScale({ fontSize: 'large', lineHeight: undefined }, 1.2)
+    const scaled = applyFontScale(
+      { fontSize: 'large', lineHeight: undefined },
+      1.2
+    )
     expect(scaled.fontSize).toBe('large')
     expect(scaled.lineHeight).toBeUndefined()
   })
