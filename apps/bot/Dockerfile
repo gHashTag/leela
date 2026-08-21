@@ -45,10 +45,10 @@ RUN bun install --frozen-lockfile --production
 COPY packages packages
 COPY apps/bot apps/bot
 
-# Where games and reports live. A volume is mounted here; without one the bot
-# still runs and says so on startup, and forgets everything on the next deploy.
+# Where games and reports live. The volume is mounted by the platform (Railway
+# rejects a Dockerfile VOLUME outright: "use Railway Volumes"); without one the
+# bot still runs and says so on startup, and forgets everything on next deploy.
 ENV LEELA_DB=/data/leela.db
-VOLUME /data
 
 # `supervise` in src/index.ts restarts the polling loop when a poll fails,
 # which is the failure a `bot.catch` does not cover.
