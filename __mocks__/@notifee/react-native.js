@@ -1,5 +1,5 @@
 export default {
-  requestPermission: jest.fn().mockResolvedValue(true),
+  requestPermission: jest.fn().mockResolvedValue({ authorizationStatus: 1 }),
   getNotificationSettings: jest
     .fn()
     .mockResolvedValue({ authorizationStatus: 1 }),
@@ -33,4 +33,11 @@ export const RepeatFrequency = {
   HOURLY: 0,
   DAILY: 1,
   WEEKLY: 2
+}
+
+export const AuthorizationStatus = {
+  NOT_DETERMINED: -1,
+  DENIED: 0,
+  AUTHORIZED: 1,
+  PROVISIONAL: 2
 }

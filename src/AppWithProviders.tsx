@@ -18,6 +18,7 @@ import { markSessionCrashed, markSessionStarted } from './utils/sessionHealth'
 import { syncRTLDirection } from './utils/rtl'
 import { updateAndroidBadgeCount } from './utils/notifications/NotificationHelper'
 import { scheduleDailyVerseNotification } from './utils/notifications'
+import { subscribeToDailyQuote } from './utils/notifications/dailyQuotePush'
 
 const routingInstrumentation = new Sentry.ReactNavigationInstrumentation()
 
@@ -84,12 +85,13 @@ LogBox.ignoreLogs([
 ])
 
 function AppWithProviders() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   useEffect(() => {
     SplashScreen.hide()
     markSessionStarted()
     scheduleDailyVerseNotification(t)
+    subscribeToDailyQuote(i18n.language)
 
     const unsub = AppState.addEventListener('change', async (state) => {
       if (state === 'active') {
@@ -98,7 +100,7 @@ function AppWithProviders() {
       }
     })
     return unsub.remove
-  }, [t])
+  }, [t, i18n.language])
 
   return (
     <SafeAreaProvider>
