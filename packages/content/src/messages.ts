@@ -515,6 +515,9 @@ const EN = {
   },
   'app.restart': 'Start over',
   'app.restarted': 'A new game. Throw a six to enter it.',
+  'app.noBoard':
+    'This browser will not draw the board — WebGL is off or blocked. The ' +
+    'plans and the companion still work; the board itself needs it.',
   'app.opening': 'A six puts you on the board.',
   'app.owed': 'Write what you meet on this plan. The die will not throw until you do.',
   'app.owedShort': 'Write your reflection first',
@@ -1000,6 +1003,9 @@ const RU: Partial<Record<MessageKey, Message>> = {
   },
   'app.restart': 'Начать заново',
   'app.restarted': 'Новая игра. Бросьте шестёрку, чтобы войти в неё.',
+  'app.noBoard':
+    'Этот браузер не рисует доску — WebGL выключен или заблокирован. ' +
+    'Планы и спутник работают; доска без него не строится.',
   'app.opening': 'Шестёрка выводит вас на доску.',
   'app.owed': 'Запишите, что вы переживаете на этом плане. Пока не запишете, кубик не бросится.',
   'app.owedShort': 'Сначала запишите отклик',

@@ -47,6 +47,7 @@ import {
 import { lookFor, other, paletteFor, preferred, remember, stored } from './look';
 import { entered, throwFor, type Hop, type Thrown } from './play';
 import type { SeatedPlayer } from '@leela/engine';
+import { canDraw } from './drawable';
 import { createBoard } from './scene';
 import { atEnd, bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
 import { meetTelegram, nameAskOrigin, telegramOf } from './telegram';
@@ -335,8 +336,26 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const store = browserStore();
 const saved = read(store, LEGACY_MOBILE);
 
-// The board is built in the light the reader chose; see `look.ts`.
-const board = createBoard(el.canvas, undefined, undefined, paletteFor(chosenLook));
+/*
+ * The board is built in the light the reader chose; see `look.ts` — but only
+ * where a browser will draw at all. Asked before `createBoard` rather than
+ * caught after it: three.js constructs a renderer and only then fails, and
+ * what it throws differs by version and by which blocker refused. The probe
+ * answers the one question this page needs, on a canvas nobody keeps.
+ *
+ * With no board the game still plays: the sheet holds the plan's text, the
+ * companion answers, the die is arithmetic. `board` is null and every caller
+ * that draws checks it — the alternative, a fake board object, would let a
+ * drawing bug reach a player as silence.
+ */
+const drawable = canDraw(() => document.createElement('canvas'));
+if (!drawable) {
+  el.canvas.hidden = true;
+  el.say.textContent = messageFor(language, 'app.noBoard');
+}
+const board = drawable
+  ? createBoard(el.canvas, undefined, undefined, paletteFor(chosenLook))
+  : null;
 
 /**
  * The table.
@@ -393,12 +412,12 @@ const seatTable = (count: number, from: readonly KeptSeat[] = []): void => {
     fresh.players.map((_, at) => from[at]?.deity || undefined),
   );
   deities = seated.map((row) => row.deity);
-  board.setSeats(seated);
+  board?.setSeats(seated);
 };
 
 /** Re-seats the board from the deities the seats now hold. */
 const seatBoard = (): void =>
-  board.setSeats(
+  board?.setSeats(
     seatsOf(
       session.players.map((player) => player.id),
       deities.map((held) => held.id),
@@ -706,7 +725,7 @@ const fit = (): void => {
   // on one phone. The top row of the board - 72, 71, 70 - was sitting under it.
   const header = el.where.getBoundingClientRect();
 
-  board.resize(window.innerWidth, window.innerHeight, {
+  board?.resize(window.innerWidth, window.innerHeight, {
     top: Math.max(0, header.bottom),
     bottom: alongTheBottom ? Math.max(0, window.innerHeight - sheet.top) : 0,
     right: alongTheBottom ? 0 : Math.max(0, window.innerWidth - sheet.left),
@@ -1249,8 +1268,8 @@ const visit = (plan: number): void => {
   el.visitingPlan.hidden = false;
   el.thread.hidden = true;
   el.sheetBody.scrollTop = 0;
-  board.focus(plan);
-  board.draw();
+  board?.focus(plan);
+  board?.draw();
   if (detent === 'peek') showDetent('half');
 };
 
@@ -1259,8 +1278,8 @@ const stopVisiting = (): void => {
   el.visiting.hidden = true;
   el.visitingPlan.hidden = true;
   el.thread.hidden = false;
-  board.focus(entered(seat()) ? seat().state.loka : null);
-  board.draw();
+  board?.focus(entered(seat()) ? seat().state.loka : null);
+  board?.draw();
 };
 
 el.visitingBack.addEventListener('click', stopVisiting);
@@ -1276,8 +1295,10 @@ el.canvas.addEventListener('pointerup', (event) => {
   const travelled = Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y);
   pressed = null;
   if (travelled > 8) return;
-  const plan = board.planAt(event.clientX, event.clientY);
-  if (plan === null) return;
+  // `undefined` where there is no board to pick from, `null` where the tap
+  // landed off the board: neither is a square, and both mean the same here.
+  const plan = board?.planAt(event.clientX, event.clientY);
+  if (plan === null || plan === undefined) return;
   if (entered(seat()) && plan === seat().state.loka) stopVisiting();
   else visit(plan);
 });
@@ -1310,7 +1331,7 @@ const placeSeats = (): void => {
 
   const placed = new Map<number, number>();
   for (const player of session.players) {
-    const piece = board.token(player.id);
+    const piece = board?.token(player.id);
     if (!piece) continue;
     piece.visible = entered(player);
     if (!piece.visible) continue;
@@ -1327,8 +1348,8 @@ const placeSeats = (): void => {
 
 const settle = (): void => {
   placeSeats();
-  if (!visiting) board.focus(entered(seat()) ? seat().state.loka : null);
-  board.draw();
+  if (!visiting) board?.focus(entered(seat()) ? seat().state.loka : null);
+  board?.draw();
 };
 
 /**
@@ -1344,8 +1365,8 @@ const walk = (hop: Hop, mover: string): Promise<void> => {
   const to = planPosition(hop.to);
 
   if (reducedMotion.matches || hop.from === hop.to) {
-    board.token(mover)?.position.set(to.x, PIECE_LIFT, to.z);
-    board.draw();
+    board?.token(mover)?.position.set(to.x, PIECE_LIFT, to.z);
+    board?.draw();
     return Promise.resolve();
   }
 
@@ -1357,8 +1378,8 @@ const walk = (hop: Hop, mover: string): Promise<void> => {
       if (done) return;
       done = true;
       clearTimeout(backstop);
-      board.token(mover)?.position.set(to.x, PIECE_LIFT, to.z);
-      board.draw();
+      board?.token(mover)?.position.set(to.x, PIECE_LIFT, to.z);
+      board?.draw();
       resolve();
     };
 
@@ -1382,8 +1403,8 @@ const walk = (hop: Hop, mover: string): Promise<void> => {
       if (done) return;
       const t = Math.min(1, (now - started) / HOP_MS);
       const point = hopPoint(from, to, t);
-      board.token(mover)?.position.set(point.x, point.y + PIECE_LIFT, point.z);
-      board.draw();
+      board?.token(mover)?.position.set(point.x, point.y + PIECE_LIFT, point.z);
+      board?.draw();
       if (t < 1) requestAnimationFrame(frame);
       else land();
     };
@@ -1427,7 +1448,7 @@ const takeTurn = async (): Promise<void> => {
     el.die.classList.add('rolling');
     el.die.addEventListener('animationend', () => el.die.classList.remove('rolling'), { once: true });
   }
-  board.focus(null);
+  board?.focus(null);
 
   for (const hop of turn.hops) await walk(hop, mover);
 
@@ -1443,7 +1464,7 @@ const takeTurn = async (): Promise<void> => {
   // to 50. One seat at a table of one is always both, which is why this
   // survived every pass before there was a table.
   const { moved } = turn;
-  board.focus(entered(moved) ? moved.state.loka : null);
+  board?.focus(entered(moved) ? moved.state.loka : null);
   showStanding(turn.event, moved);
 
   // The companion speaks on every landing, not on request. The game's own loop
@@ -1504,7 +1525,7 @@ const takeTurn = async (): Promise<void> => {
   // down, and `seat().state` is only the whole truth once the walk is over.
   keep();
 
-  board.draw();
+  board?.draw();
   // Through the gate, not directly: setting `disabled` here bypassed the one
   // place that also writes the label, and left a working die labelled as
   // waiting.
