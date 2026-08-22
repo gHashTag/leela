@@ -518,6 +518,22 @@ const EN = {
   'app.noBoard':
     'This browser will not draw the board — WebGL is off or blocked. The ' +
     'plans and the companion still work; the board itself needs it.',
+  /**
+   * The better voice, which costs a download and therefore has to ask.
+   *
+   * The size is in the label rather than behind it. Ninety-six megabytes is a
+   * real cost on a phone plan, and an offer that hides its price until after
+   * the tap is the kind of control people learn not to trust. `{size}` is
+   * measured from the files themselves, not typed here.
+   *
+   * `app.voiceGetting` names a percentage because the only alternative during a
+   * ninety-second wait is a control that looks broken.
+   */
+  'app.voiceOn': 'Better voice ({size} MB)',
+  'app.voiceGetting': 'Fetching the voice… {percent}%',
+  'app.voiceOff': 'Back to the plain voice',
+  'app.voiceFailed': 'The better voice would not come; the plain one still reads',
+
   'app.opening': 'A six puts you on the board.',
   'app.owed': 'Write what you meet on this plan. The die will not throw until you do.',
   'app.owedShort': 'Write your reflection first',
@@ -1006,6 +1022,11 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.noBoard':
     'Этот браузер не рисует доску — WebGL выключен или заблокирован. ' +
     'Планы и спутник работают; доска без него не строится.',
+  'app.voiceOn': 'Живой голос ({size} МБ)',
+  'app.voiceGetting': 'Загружаю голос… {percent}%',
+  'app.voiceOff': 'Вернуть обычный голос',
+  'app.voiceFailed': 'Живой голос не загрузился; читает обычный',
+
   'app.opening': 'Шестёрка выводит вас на доску.',
   'app.owed': 'Запишите, что вы переживаете на этом плане. Пока не запишете, кубик не бросится.',
   'app.owedShort': 'Сначала запишите отклик',

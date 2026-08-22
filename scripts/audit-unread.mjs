@@ -121,6 +121,12 @@ const testSources = testFiles.map((file) => readFileSync(join(ROOT, file), 'utf8
 const WRITE_ONLY = {
   // Read by three.js at renderer construction, not by any code of ours.
   antialias: 'a WebGLRenderer option, consumed inside three.js',
+  // The same shape as `antialias`, one library over: these are input names on
+  // Supertonic's ONNX graphs, and the thing that reads them is onnxruntime.
+  // Every other name in those feeds is read back out of a result somewhere —
+  // `text_emb`, `denoised_latent`, `wav_tts` — which is why only two are here.
+  noisy_latent: 'an ONNX graph input, consumed inside onnxruntime',
+  text_ids: 'an ONNX graph input, consumed inside onnxruntime',
   fullName: 'display only',
   email: 'part of the legacy document shape, not used here',
   firstGame: 'part of the legacy document shape, not used here',

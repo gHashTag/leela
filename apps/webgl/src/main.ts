@@ -55,13 +55,28 @@ import { css } from './theme';
 import {
   hearing,
   listen,
+  neuralChosen,
+  neuralSounding,
+  preferring,
   recognitionLangFor,
+  rememberNeural,
   rememberSpeaking,
   speakChosen,
+  speakers,
   speaking,
   speakingQueue,
   type Listening,
+  type Mouth,
 } from './voice';
+import {
+  LOAD_PATIENCE_MS,
+  PAYLOAD_BYTES,
+  WEIGHTS,
+  fetchWeights,
+  megabytes,
+  shelfOn,
+  speaksNeurally,
+} from './supertonic';
 
 /**
  * Wiring: the board draws, `Play` decides, the companion talks, and this walks
@@ -137,6 +152,7 @@ const el = {
   tongue: need<HTMLButtonElement>('#tongue'),
   look: need<HTMLButtonElement>('#look'),
   speak: need<HTMLButtonElement>('#speak'),
+  voice: need<HTMLButtonElement>('#voice'),
   gear: need<HTMLButtonElement>('#gear'),
   settings: need<HTMLElement>('#settings'),
   owed: need<HTMLElement>('#owed'),
@@ -1635,7 +1651,23 @@ const canHear = hearing(
 // tolerate-a-refusal contract. Never true where there is no mouth to honour
 // it, so the flag and the control cannot disagree.
 let speakAloud = mouth !== null && speakChosen(languageStore);
-const spoken = mouth ? speakingQueue((sentence) => mouth.say(sentence), () => mouth.hush()) : null;
+
+/**
+ * The mouth the queue actually speaks through.
+ *
+ * `mouth` is the platform's and never changes. This starts as the same object
+ * and is replaced by `preferring(...)` if the player takes the better voice —
+ * so the swap happens mid-session without the queue, the toggle or the
+ * microphone knowing anything about it. Read on every sentence rather than
+ * captured once, which is the whole reason the swap is possible.
+ */
+let speaks: Mouth | null = mouth;
+const spoken = mouth
+  ? speakingQueue(
+      (sentence) => speaks?.say(sentence),
+      () => speaks?.hush(),
+    )
+  : null;
 
 /** The toggle, labelled with what pressing it does — like the light switch. */
 const showSpeak = (): void => {
@@ -1655,6 +1687,134 @@ if (!mouth) {
     rememberSpeaking(languageStore, speakAloud);
     showSpeak();
   });
+}
+
+/**
+ * Emily, offered rather than switched on.
+ *
+ * The rule this control exists to keep is that **nobody downloads ninety-six
+ * megabytes without being asked**. So the offer states its own price in its
+ * label, the download starts on a tap and never on a page load, and the answer
+ * is kept — a player who said yes once is not asked again, and on the next
+ * visit the weights come off the shelf instead of the network.
+ *
+ * Taken out of the page entirely, not disabled, where there is nothing to
+ * offer: no `Worker`, no Web Audio, no plain mouth to fall back to, or a board
+ * in one of the twenty languages Supertonic does not speak. That is the same
+ * rule the speak toggle and the microphone follow, and the same reason —
+ * a control that can never do anything is worse than no control. It is why the
+ * iOS app's WKWebView, which has no `speechSynthesis` and therefore no `mouth`,
+ * shows nothing here.
+ */
+const canSpeakBetter =
+  mouth !== null &&
+  speaksNeurally(language) &&
+  typeof Worker === 'function' &&
+  typeof (globalThis as { AudioContext?: unknown }).AudioContext === 'function';
+
+if (!canSpeakBetter || mouth === null) {
+  el.voice.remove();
+} else {
+  const plain = mouth;
+  let state: 'plain' | 'getting' | 'better' | 'failed' = 'plain';
+  let percent = 0;
+
+  const showVoice = (): void => {
+    el.voice.textContent =
+      state === 'getting'
+        ? messageFor(language, 'app.voiceGetting', { percent })
+        : state === 'better'
+          ? messageFor(language, 'app.voiceOff')
+          : state === 'failed'
+            ? messageFor(language, 'app.voiceFailed')
+            : messageFor(language, 'app.voiceOn', { size: megabytes(PAYLOAD_BYTES) });
+    el.voice.setAttribute('aria-pressed', String(state === 'better'));
+    el.voice.disabled = state === 'getting';
+  };
+
+  /**
+   * Fetch the weights, stand the worker up, and put the better mouth in front.
+   *
+   * Every failure lands in one place and does one thing: the plain mouth stays
+   * where it is, the choice is un-kept so the next visit does not retry a
+   * download that did not work, and the label says so. The player never loses
+   * a voice — at worst they keep the one they arrived with.
+   */
+  const takeTheBetterVoice = async (): Promise<void> => {
+    if (state === 'getting' || state === 'better') return;
+    state = 'getting';
+    percent = 0;
+    showVoice();
+
+    try {
+      const Sound = (globalThis as unknown as { AudioContext: new () => AudioContext }).AudioContext;
+      const context = new Sound();
+      // A tap is the gesture browsers want before they will make a sound, and
+      // this runs inside one. Resuming later, at the first sentence, is a
+      // context that was created outside a gesture and stays suspended.
+      await context.resume().catch(() => undefined);
+
+      const weights = await fetchWeights(WEIGHTS, {
+        fetch: (url, init) => fetch(url, init),
+        shelf: shelfOn((globalThis as { caches?: unknown }).caches, Response),
+        onProgress: ({ done, total }) => {
+          percent = Math.round((done / total) * 100);
+          showVoice();
+        },
+      });
+
+      const worker = new Worker(new URL('./supertonic.worker.ts', import.meta.url));
+      await new Promise<void>((ready, broken) => {
+        const timer = setTimeout(
+          () => broken(new Error('the voice did not finish loading')),
+          LOAD_PATIENCE_MS,
+        );
+        worker.addEventListener('message', (event: MessageEvent) => {
+          const said = (event.data ?? {}) as { what?: unknown; error?: unknown };
+          if (said.what === 'ready') {
+            clearTimeout(timer);
+            ready();
+          } else if (said.what === 'broken') {
+            clearTimeout(timer);
+            broken(new Error(String(said.error)));
+          }
+        });
+        worker.postMessage({ what: 'load', weights });
+      });
+
+      speaks = preferring(
+        neuralSounding({ worker, player: speakers(context), language }),
+        plain,
+      );
+      state = 'better';
+      rememberNeural(languageStore, true);
+    } catch {
+      speaks = plain;
+      state = 'failed';
+      rememberNeural(languageStore, false);
+    }
+    showVoice();
+  };
+
+  showVoice();
+  el.voice.addEventListener('click', () => {
+    if (state === 'better') {
+      // Back to the platform's voice. The weights stay on the shelf: the
+      // player said no to Emily, not to the ninety megabytes they already
+      // spent, and asking for them again would be the rudeness this whole
+      // control is arranged to avoid.
+      speaks = plain;
+      state = 'plain';
+      rememberNeural(languageStore, false);
+      showVoice();
+      return;
+    }
+    void takeTheBetterVoice();
+  });
+
+  // Asked once. A player who took the better voice last time gets it again
+  // without a second offer, and off the shelf rather than off the network.
+  if (neuralChosen(languageStore)) void takeTheBetterVoice();
 }
 
 let listening: Listening | null = null;

@@ -438,28 +438,318 @@ export interface Store {
 }
 
 /**
- * Whether replies are read aloud, as last chosen. Off until asked for: a page
- * that starts talking unbidden is a page that gets muted at the tab, and
- * anything unreadable in storage is the same silence.
+ * A kept yes-or-no, and whether it was kept.
+ *
+ * Two preferences live in this file now and they had been written out twice,
+ * differing only in a key and a word — which is the shape a third copy grows
+ * from. Storage throws on its own: Safari's private mode refuses `setItem`
+ * outright, and a page that crashes on a toggle is worse than a page that
+ * forgets one, so a refusal is caught here and reported as *not kept*.
  */
-export const speakChosen = (store: Store | null): boolean => {
+const chosen = (store: Store | null, key: string, yes: string): boolean => {
   try {
-    return store?.getItem(SPEAK_KEY) === 'aloud';
+    return store?.getItem(key) === yes;
+  } catch {
+    return false;
+  }
+};
+
+const remember = (store: Store | null, key: string, value: string): boolean => {
+  try {
+    store?.setItem(key, value);
+    return store !== null;
   } catch {
     return false;
   }
 };
 
 /**
+ * Whether replies are read aloud, as last chosen. Off until asked for: a page
+ * that starts talking unbidden is a page that gets muted at the tab, and
+ * anything unreadable in storage is the same silence.
+ */
+export const speakChosen = (store: Store | null): boolean => chosen(store, SPEAK_KEY, 'aloud');
+
+/**
  * Keep the choice, and say whether it was kept — the same contract as
  * `remember` in `look.ts`, because a preference that did not survive the
  * reload is a control that did nothing.
  */
-export const rememberSpeaking = (store: Store | null, aloud: boolean): boolean => {
-  try {
-    store?.setItem(SPEAK_KEY, aloud ? 'aloud' : 'silent');
-    return store !== null;
-  } catch {
-    return false;
-  }
+export const rememberSpeaking = (store: Store | null, aloud: boolean): boolean =>
+  remember(store, SPEAK_KEY, aloud ? 'aloud' : 'silent');
+
+/** Where the better-voice choice is kept. */
+export const NEURAL_KEY = 'leela.voice.neural';
+
+/**
+ * Whether the player has asked for the better voice.
+ *
+ * The one thing this flag must never do is default to true. It is the gate in
+ * front of a ninety-six megabyte download, and a page that starts one because
+ * somebody opened a board is a page that costs a person on a phone plan real
+ * money without asking. Off until asked for, and — because it is kept —
+ * asked for exactly once.
+ */
+export const neuralChosen = (store: Store | null): boolean => chosen(store, NEURAL_KEY, 'better');
+
+/** Keep the better-voice choice, and say whether it was kept. */
+export const rememberNeural = (store: Store | null, better: boolean): boolean =>
+  remember(store, NEURAL_KEY, better ? 'better' : 'plain');
+
+// --- the better voice, and the plain one behind it -----------------------------
+
+/**
+ * Something that can play a sentence and be told to stop.
+ *
+ * Unlike `Mouth`, this one *finishes*: `play` resolves when the sentence has
+ * actually been heard. That is the whole difference and it is the reason there
+ * are two interfaces. `speechSynthesis` has an internal queue, so a `Mouth` can
+ * take four sentences in four synchronous calls and speak them in order without
+ * anybody waiting. A neural voice has no such queue — it has a worker that
+ * answers whenever it answers — so something has to hold the order, and it can
+ * only hold it if it can tell when a sentence is over.
+ */
+export interface Sounding {
+  /** Resolves when it has been heard. Rejects when it could not be said. */
+  play(sentence: string): Promise<void>;
+  stop(): void;
+}
+
+/**
+ * The better voice where it works, the platform's voice where it does not.
+ *
+ * A `Mouth`, so `speakingQueue` above is untouched: it goes on cutting the
+ * stream into sentences and calling `say` once per sentence, and never learns
+ * that anything changed.
+ *
+ * Three rules, and the third is the interesting one.
+ *
+ * **Sentences are spoken in the order they were written, and never over each
+ * other.** Every `say` is appended to one promise chain, and the chain waits
+ * for `play` to resolve — which is why `Sounding` resolves on *heard* rather
+ * than on *sent*.
+ *
+ * **A failure is never silence.** Any rejection at all — the weights are not
+ * downloaded, the worker threw, onnxruntime is not there, the sentence timed
+ * out — hands that sentence to the platform's own voice. The player hears the
+ * voice they had yesterday, which is the outcome this whole feature is an
+ * improvement on rather than a replacement for.
+ *
+ * **A failure hands over the rest of the answer too, and then forgets.** Once
+ * one sentence has fallen back, the remaining sentences of that answer go
+ * straight to the plain mouth. Two reasons. Whatever broke is almost never
+ * fixed by the next sentence, and re-trying it buys another wait before another
+ * fallback. And a paragraph read half in Emily and half in Milena is worse than
+ * a paragraph read in either — the voice changing mid-thought is a defect a
+ * player hears, where one plain paragraph is merely yesterday. The flag clears
+ * when the queue drains, so the next answer tries the better voice again and a
+ * moment's trouble does not cost the rest of the session.
+ */
+export const preferring = (better: Sounding, plain: Mouth): Mouth => {
+  let chain: Promise<void> = Promise.resolve();
+  let waiting = 0;
+  // Bumped by `hush`. A sentence queued before the hush and reached after it
+  // belongs to an answer nobody is listening to any more.
+  let run = 0;
+  let fallen = false;
+
+  return {
+    say(sentence) {
+      const mine = run;
+      waiting += 1;
+      chain = chain.then(async () => {
+        try {
+          if (mine !== run) return;
+          if (fallen) {
+            plain.say(sentence);
+            return;
+          }
+          try {
+            await better.play(sentence);
+          } catch {
+            if (mine !== run) return;
+            fallen = true;
+            plain.say(sentence);
+          }
+        } finally {
+          waiting = Math.max(0, waiting - 1);
+          if (waiting === 0) fallen = false;
+        }
+      });
+    },
+    hush() {
+      run += 1;
+      waiting = 0;
+      fallen = false;
+      // Both, always. The player asked for quiet, and quiet from one of two
+      // voices is the bug this line exists to not have.
+      better.stop();
+      plain.hush();
+    },
+  };
+};
+
+/**
+ * How long one sentence may be waited for before the plain voice takes it.
+ *
+ * A neural sentence is tens of milliseconds of arithmetic once the model is
+ * loaded, so this is not a latency budget — it is the answer to *the worker
+ * stopped answering*, which would otherwise stall the chain above forever and
+ * produce the one outcome that is not allowed. Twelve seconds is long enough
+ * that a first sentence on a slow phone still arrives and short enough that
+ * nobody sits through it twice.
+ */
+export const SAY_PATIENCE_MS = 12_000;
+
+/** The worker, as this file talks to one. */
+export interface VoiceWorker {
+  postMessage(message: unknown): void;
+  addEventListener(type: 'message', heard: (event: { data: unknown }) => void): void;
+  terminate(): void;
+}
+
+/** Somewhere to put samples. The speakers, or a recorder in a test. */
+export interface Player {
+  play(samples: Float32Array, rate: number): Promise<void>;
+  stop(): void;
+}
+
+/** What the worker says back, in the two shapes this cares about. */
+interface Answered {
+  what?: unknown;
+  id?: unknown;
+  samples?: unknown;
+  rate?: unknown;
+  error?: unknown;
+}
+
+/**
+ * The worker and the speakers, as one `Sounding`.
+ *
+ * One promise per sentence, kept by id, because the worker is free to answer
+ * out of order and a single pending slot would deliver the wrong audio into the
+ * wrong sentence — the same defect `asked.ts` describes about the phone app's
+ * question ids, and the same fix.
+ */
+export const neuralSounding = ({
+  worker,
+  player,
+  language,
+  patience = SAY_PATIENCE_MS,
+}: {
+  worker: VoiceWorker;
+  player: Player;
+  language: string;
+  patience?: number;
+}): Sounding => {
+  const pending = new Map<number, { ok: (heard: { samples: Float32Array; rate: number }) => void; no: (why: Error) => void }>();
+  let last = 0;
+
+  worker.addEventListener('message', (event) => {
+    const said = (event.data ?? {}) as Answered;
+    const id = typeof said.id === 'number' ? said.id : null;
+    if (id === null) return;
+    const held = pending.get(id);
+    if (!held) return;
+    pending.delete(id);
+
+    if (said.what === 'said' && said.samples instanceof Float32Array && typeof said.rate === 'number') {
+      held.ok({ samples: said.samples, rate: said.rate });
+    } else {
+      held.no(new Error(typeof said.error === 'string' ? said.error : 'the voice refused'));
+    }
+  });
+
+  return {
+    play: async (sentence) => {
+      last += 1;
+      const id = last;
+
+      const heard = await new Promise<{ samples: Float32Array; rate: number }>((ok, no) => {
+        const timer = setTimeout(() => {
+          pending.delete(id);
+          no(new Error('the voice did not answer'));
+        }, patience);
+
+        pending.set(id, {
+          ok: (said) => {
+            clearTimeout(timer);
+            ok(said);
+          },
+          no: (why) => {
+            clearTimeout(timer);
+            no(why);
+          },
+        });
+
+        worker.postMessage({ what: 'say', id, text: sentence, language });
+      });
+
+      await player.play(heard.samples, heard.rate);
+    },
+    stop: () => {
+      // Everything queued is abandoned rather than left hanging: `preferring`
+      // drops a rejection from a hushed run, and a promise nobody settles would
+      // stop its chain for good.
+      for (const [, held] of pending) held.no(new Error('hushed'));
+      pending.clear();
+      player.stop();
+    },
+  };
+};
+
+/** The narrow slice of Web Audio this uses. */
+export interface Sounds {
+  createBuffer(channels: number, length: number, rate: number): { getChannelData(at: number): Float32Array };
+  createBufferSource(): {
+    buffer: unknown;
+    // `never[]` rather than `()`: a real `AudioBufferSourceNode.onended` is
+    // declared as taking an `Event`, and a zero-argument type would refuse the
+    // browser's own object while accepting the test's.
+    onended: ((...args: never[]) => void) | null;
+    connect(to: unknown): void;
+    start(): void;
+    stop(): void;
+  };
+  readonly destination: unknown;
+}
+
+/**
+ * Samples, through the speakers.
+ *
+ * Web Audio rather than an `Audio` element with a blob URL: the samples are
+ * already `Float32Array` and this is the path that does not encode them to WAV,
+ * make a URL, decode them again and then leak the URL. `onended` is what
+ * resolves the promise, which is what makes the queue above a queue.
+ */
+export const speakers = (context: Sounds): Player => {
+  let playing: { stop(): void } | null = null;
+
+  return {
+    play: (samples, rate) =>
+      new Promise<void>((done) => {
+        const buffer = context.createBuffer(1, samples.length, rate);
+        buffer.getChannelData(0).set(samples);
+        const source = context.createBufferSource();
+        source.buffer = buffer;
+        source.connect(context.destination);
+        source.onended = () => {
+          if (playing === source) playing = null;
+          done();
+        };
+        playing = source;
+        source.start();
+      }),
+    stop: () => {
+      const source = playing;
+      playing = null;
+      // `stop` on a source that already ended throws in some engines, and the
+      // player asking for quiet must never be the thing that breaks the page.
+      try {
+        source?.stop();
+      } catch {
+        // Already finished; nothing to stop.
+      }
+    },
+  };
 };

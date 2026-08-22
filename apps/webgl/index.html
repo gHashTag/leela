@@ -141,6 +141,15 @@
             the design and not a gap.
           -->
           <button class="speak" id="speak" type="button" aria-pressed="false"></button>
+          <!--
+            The better voice, which is a download and so has to be offered
+            rather than switched on. Beside the speak toggle because it is the
+            same decision one step further in: whether to be read aloud, and
+            then by whom. Taken out of the page entirely where there is nothing
+            to offer - no Web Audio, no worker, or a board in one of the twenty
+            languages Supertonic does not speak. See `supertonic.ts`.
+          -->
+          <button class="speak" id="voice" type="button" aria-pressed="false"></button>
         </div>
       </div>
 
