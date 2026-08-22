@@ -34,10 +34,12 @@ import { escapeHtml, intoMessages, renderBoardMessage, renderChapter, renderPlan
 import { FILE_TIMEOUT_MS, MAX_FILE_BYTES, asReport, decide, decideSquare, keep, within } from './take-in';
 import { offer, serialise } from './take-out';
 import {
+  MemoryNudgeStore,
   MemoryRoomStore,
   discardReports,
   discardSteps,
   seedFor,
+  type NudgeStore,
   type ReportSink,
   type RoomStore,
   type StepSink,
@@ -85,6 +87,19 @@ export interface BotOptions {
    * a minute is right in production and unbearable in a test.
    */
   fileTimeoutMs?: number;
+  /**
+   * The initiative's per-player memory, which `/quiet` writes. Defaults to a
+   * memory store the way `store` does: the command must answer truthfully in
+   * every deployment, and a toggle that lasts the process is the truthful
+   * answer where nothing at all is kept.
+   */
+  nudges?: NudgeStore;
+  /**
+   * Who can be written to directly, shared with the initiative. One list, not
+   * two: a 403 met answering `/path` is a morning the daily word must not
+   * spend, and a refusal the morning earns is one `deliver` must not retry.
+   */
+  channels?: DirectChannels;
 }
 
 /** Who sent this update, as the commands layer wants them. */
@@ -317,12 +332,12 @@ export function createBot({
   // must never be left to depend on.
   readFile = async (url) => (await fetch(url)).text(),
   fileTimeoutMs = FILE_TIMEOUT_MS,
-}: BotOptions) {
-  const bot = new Bot(token, botInfo ? { botInfo } : undefined);
-
+  nudges = new MemoryNudgeStore(),
   // Who the bot has managed to message directly. Telegram refuses anyone who
   // has not started a chat, and there is no way to ask in advance.
-  const channels = new DirectChannels();
+  channels = new DirectChannels(),
+}: BotOptions) {
+  const bot = new Bot(token, botInfo ? { botInfo } : undefined);
 
   // What each player has asked the companion, in the order it was said.
   const conversations = new Conversations();
@@ -1618,6 +1633,27 @@ export function createBot({
 
     await reports.setIntention(who.id, said);
     await ctx.reply(messageFor(language, 'intention.set'));
+  });
+
+  /**
+   * `/quiet` — the daily word's opt-out, first-class.
+   *
+   * A toggle, both directions in one command, because coming back is part of
+   * it: the word that names `/quiet` as the way out must leave `/quiet` as the
+   * way back in, or the door only closes. The reply names which way it went —
+   * a toggle that answers the same sentence either way teaches nobody where
+   * they now stand.
+   *
+   * Answered in the asker's own language, not a room's: the daily word is
+   * private and so is the decision to stop it.
+   */
+  bot.command('quiet', async (ctx) => {
+    const who = sender(ctx);
+    if (!who) return;
+
+    const quieted = !(await nudges.of(who.id)).quieted;
+    await nudges.setQuieted(who.id, quieted);
+    await ctx.reply(messageFor(languageOf(ctx), quieted ? 'quiet.on' : 'quiet.off'));
   });
 
   bot.command('ask', async (ctx) => {

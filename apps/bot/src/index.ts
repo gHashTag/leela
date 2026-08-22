@@ -27,8 +27,10 @@ import {
   messageIssues,
   translatedLanguages,
 } from '@leela/content';
-import { createBot } from './bot';
+import { createBot, miniAppUrl } from './bot';
 import { menuFor } from './commands';
+import { DirectChannels } from './delivery';
+import { createInitiative, nudgeHour } from './initiative';
 import { serveAsk, type StreamAsk, type Streamed } from './serve';
 import { openStorage } from './storage';
 import { supervise } from './supervisor';
@@ -135,11 +137,17 @@ const guide = model ? new Guide({ model, completion: { maxTokens: 16_000 } }) : 
  * sentence honest; a field deleted outright no longer compiles, because
  * `built.reports` is then a property that is not there.
  */
+// One allow-list for the transport and the initiative both: a 403 either meets
+// is a send the other must not spend. See `BotOptions.channels`.
+const channels = new DirectChannels();
+
 const built = {
   token,
   store: storage.store,
   reports: storage.reports,
   steps: storage.steps,
+  nudges: storage.nudges,
+  channels,
   guide,
 };
 
@@ -157,7 +165,8 @@ const keeping =
   storage.durable &&
   built.store === storage.store &&
   built.reports === storage.reports &&
-  built.steps === storage.steps;
+  built.steps === storage.steps &&
+  built.nudges === storage.nudges;
 
 console.log(
   keeping
@@ -346,16 +355,48 @@ const asking = serveAsk({
   stream: process.env.ZAI_API_KEY ? zaiStream(process.env.ZAI_API_KEY) : undefined,
 });
 
+/**
+ * The companion's initiative: the daily word, on a fixed UTC hour.
+ *
+ * Built beside `serveAsk` and armed only once polling has actually begun —
+ * a bot that cannot receive `/quiet` must not be writing first. `start` is
+ * idempotent, because the supervisor restarts polling after a dropped socket
+ * and each restart says so. `LEELA_NUDGE_HOUR` moves the hour; the default is
+ * 6, which on Railway's UTC clock is 09:00 in Moscow.
+ */
+const initiative = createInitiative({
+  api: bot.api,
+  store: storage.store,
+  nudges: storage.nudges,
+  channels,
+  launchUrl: miniAppUrl(),
+  hour: nudgeHour(),
+  log: console.log,
+});
+
+/**
+ * Polling has begun: say so, and only now arm the daily word — a bot that
+ * cannot yet receive `/quiet` must not be writing first. Named because the
+ * supervisor may start polling more than once; `initiative.start` is
+ * idempotent and this is its one caller.
+ */
+function listening(username: string): void {
+  console.log(`Listening as @${username}.`);
+  initiative.start();
+}
+
 await supervise({
   start: async () => {
     if (stopping) return;
     await bot.start({
-      onStart: (info) => console.log(`Listening as @${info.username}.`),
+      onStart: (info) => listening(info.username),
     });
   },
 });
 
 // The poller has stopped — cleanly or by giving up — and a listener held open
 // would keep alive a process that can no longer play. Let it exit; the
-// platform's restart is the recovery.
+// platform's restart is the recovery. The initiative stops with it: a bot no
+// longer listening must not go on speaking first.
 asking.stop();
+initiative.stop();

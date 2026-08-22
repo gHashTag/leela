@@ -211,6 +211,10 @@ const DRIVERS: Record<string, (words: string) => Array<Record<string, unknown>>>
   report: (words) => [command(`/report ${words}`)],
   rules: () => [command('/rules')],
   intention: (words) => [command(`/intention to find out what ${words} is`)],
+  // The daily word's opt-out. It never reaches the companion; it is here
+  // because every registered surface is, so a model call added to it tomorrow
+  // is caught the day it is written.
+  quiet: () => [command('/quiet')],
   ask: (words) => [command(`/ask what does ${words} keep coming back to`)],
   plan: () => [command('/plan 5')],
   'callback_query:data': () => [

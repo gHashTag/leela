@@ -401,3 +401,44 @@ describe('a store that will not open', () => {
     expect(storage.failure).toBeTruthy();
   });
 });
+
+describe('the initiative’s memory', () => {
+  it('is there in every case, because one knock a day binds even a forgetful bot', async () => {
+    const directory = temporary();
+    const blocked = join(directory, 'occupied');
+    writeFileSync(blocked, 'not a directory');
+
+    try {
+      for (const path of [undefined, join(directory, 'leela.db'), join(blocked, 'leela.db')]) {
+        const storage = openStorage({ path, log: () => undefined });
+        await storage.nudges.record('u1', { at: 1_700_000_000_000, excerpt: 0 });
+        expect((await storage.nudges.of('u1')).sentAt, String(path)).toBe(1_700_000_000_000);
+        storage.stopPruning?.();
+      }
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('survives a restart exactly when the games do', async () => {
+    const directory = temporary();
+    const path = join(directory, 'leela.db');
+
+    try {
+      const first = openStorage({ path, log: () => undefined });
+      await first.nudges.setQuieted('u1', true);
+      first.stopPruning?.();
+
+      const second = openStorage({ path, log: () => undefined });
+      expect(second.durable).toBe(true);
+      expect((await second.nudges.of('u1')).quieted).toBe(true);
+      second.stopPruning?.();
+
+      // And in memory, a restart is a fresh memory — as the games are.
+      const forgetful = openStorage({ log: () => undefined });
+      expect((await forgetful.nudges.of('u1')).quieted).toBe(false);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+});

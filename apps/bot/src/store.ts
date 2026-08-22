@@ -50,6 +50,20 @@ export interface RoomStore {
    * rather than pretending.
    */
   roomOf?(playerId: string): Promise<Room | null>;
+  /**
+   * Every table held, in the order they were last played, oldest first.
+   *
+   * Every method above answers for one chat, because every command arrives in
+   * one. The companion's initiative is the first caller with no chat in hand —
+   * it visits every seated player once a day — and until it, no store could
+   * list what it holds. Optional under the file's own convention: a store that
+   * cannot enumerate says so by not having the method, and the initiative
+   * visits nobody rather than guessing.
+   *
+   * The order matters to a caller deduplicating seats: a player at two tables
+   * is taken from the one they last played, which is `roomOf`'s answer too.
+   */
+  allRooms?(): Promise<Room[]>;
 }
 
 /**
@@ -159,6 +173,56 @@ export const discardReports: ReportSink = {
 };
 
 /**
+ * What the companion remembers about its own initiative, per player.
+ *
+ * The daily word (`initiative.ts`) must know three things to knock politely:
+ * when it last knocked — so one day carries one message, whatever restarts a
+ * tick; which excerpt it read out — so the next is never the one just heard;
+ * and whether `/quiet` has closed the door. Kept in the same storage the games
+ * live in, in memory when the games are, because the companion's memory should
+ * not outlive the games it is a memory of — nor be lost while they survive.
+ */
+export interface NudgeRecord {
+  /** When the daily word was last sent, epoch ms. Null before the first. */
+  sentAt: number | null;
+  /** Index of the excerpt that send carried. Null before the first. */
+  excerpt: number | null;
+  /** Whether `/quiet` has turned the daily word off. */
+  quieted: boolean;
+}
+
+/** A record for a player never written to: the three "not yet" answers. */
+export const NEVER_NUDGED: NudgeRecord = { sentAt: null, excerpt: null, quieted: false };
+
+export interface NudgeStore {
+  /** What is remembered about this player. Never null: absence is `NEVER_NUDGED`. */
+  of(userId: string): Promise<NudgeRecord>;
+  /** Remember a send: the moment, and which excerpt it carried. */
+  record(userId: string, sent: { at: number; excerpt: number }): Promise<void>;
+  /** `/quiet` — both directions, because coming back is part of the command. */
+  setQuieted(userId: string, quieted: boolean): Promise<void>;
+}
+
+/** Nudge memory in memory. Enough for a single process and for tests. */
+export class MemoryNudgeStore implements NudgeStore {
+  private readonly records = new Map<string, NudgeRecord>();
+
+  async of(userId: string): Promise<NudgeRecord> {
+    return this.records.get(userId) ?? NEVER_NUDGED;
+  }
+
+  async record(userId: string, sent: { at: number; excerpt: number }): Promise<void> {
+    const held = await this.of(userId);
+    this.records.set(userId, { ...held, sentAt: sent.at, excerpt: sent.excerpt });
+  }
+
+  async setQuieted(userId: string, quieted: boolean): Promise<void> {
+    const held = await this.of(userId);
+    this.records.set(userId, { ...held, quieted });
+  }
+}
+
+/**
  * Rooms in memory.
  *
  * Fine for a single process and for tests. A restart loses every game in
@@ -194,6 +258,11 @@ export class MemoryRoomStore implements RoomStore {
       if (room.session.players.some((player) => player.id === playerId)) found = room;
     }
     return found;
+  }
+
+  /** Every table held, oldest-played first — the map's own insertion order. */
+  async allRooms(): Promise<Room[]> {
+    return [...this.rooms.values()];
   }
 
   /** Rooms currently held. Exposed for tests and for a health endpoint. */

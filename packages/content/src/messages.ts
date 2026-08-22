@@ -661,6 +661,25 @@ const EN = {
     'Sit with plan {plan} for now — the text is there to read, and ' +
     'the reflection is yours either way. The companion is unavailable.',
 
+  // --- the companion's initiative --------------------------------------------
+  //
+  // The daily word: once a day the bot writes first, privately, to a player
+  // standing on a plan — an excerpt of its text, one line naming where they
+  // stand, and one call back into the game. One message, one CTA, and the way
+  // out said plainly in the first message ever sent. The excerpt itself is the
+  // plan's own canon text, so no key here carries it.
+  'nudge.standing': 'You are standing on {plan}. {title}.',
+  // One call back into the game, and it has to stand on its own: the board
+  // button rides beneath it when Telegram takes the keyboard, and when the
+  // whole send is refused over the markup the retry goes out without it —
+  // /roll is then the only way back this line offers, so it is named here.
+  'nudge.cta': 'The game goes on from where you stand — /roll picks it back up.',
+  // The opt-out, first-class: the first daily word a player ever receives ends
+  // with this sentence, so the way out arrives before the second knock does.
+  'nudge.wayOut': 'This word arrives once a day. /quiet stops it whenever you wish.',
+  'quiet.on': 'Quiet, then. The daily word stops — /quiet brings it back whenever you wish.',
+  'quiet.off': 'The daily word returns tomorrow.',
+
   // --- help ------------------------------------------------------------------
   // The menu Telegram shows behind the `/` button. Short by necessity: it is a
   // list of one-liners in a popover, not documentation, and Telegram refuses a
@@ -680,6 +699,7 @@ const EN = {
   'menu.save': 'Your path, as a file to keep',
   'menu.board': 'Where everyone stands',
   'menu.end': 'Clear the table',
+  'menu.quiet': 'Stop the daily word, or bring it back',
   'menu.help': 'What this bot can do',
 
   help: [
@@ -700,6 +720,7 @@ const EN = {
     '/save — the same, as a file you can keep',
     '/board — where everyone stands',
     '/end — clear the table',
+    '/quiet — stop the daily word, or bring it back',
     '',
     'A six puts you on the board. Reaching 68 exactly wins.',
     'You cannot throw again until you have reported on where you are.',
@@ -1049,6 +1070,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
     'Побудьте пока с планом {plan} — текст можно прочесть, и отражение ' +
     'всё равно ваше. Спутник сейчас недоступен.',
 
+  'nudge.standing': 'Вы стоите на плане {plan}. {title}.',
+  'nudge.cta': 'Игра продолжается там, где вы стоите — /roll вернёт вас в неё.',
+  'nudge.wayOut': 'Это слово приходит раз в день. /quiet останавливает его в любой момент.',
+  'quiet.on': 'Тихо. Ежедневное слово больше не приходит — /quiet вернёт его, когда захотите.',
+  'quiet.off': 'Ежедневное слово вернётся завтра.',
+
   'menu.new': 'Открыть стол',
   'menu.join': 'Занять место',
   'menu.start': 'Начать игру (только ведущий)',
@@ -1064,6 +1091,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'menu.save': 'Ваш путь — файлом, который можно сохранить',
   'menu.board': 'Кто где стоит',
   'menu.end': 'Закрыть стол',
+  'menu.quiet': 'Остановить ежедневное слово или вернуть его',
   'menu.help': 'Что умеет этот бот',
 
   help: [
@@ -1084,6 +1112,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
     '/save — то же самое файлом, который можно забрать',
     '/board — где все стоят',
     '/end — убрать стол',
+    '/quiet — остановить ежедневное слово или вернуть его',
     '',
     'Шестёрка выводит на доску. Побеждает точное попадание на 68.',
     'Пока не написан отчёт о своём плане, бросать снова нельзя.',

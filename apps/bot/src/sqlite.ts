@@ -16,6 +16,7 @@ import { gameStepRow } from '@leela/db';
 import { hasWon } from '@leela/engine';
 import type { NewGameStepRow, SessionPlayerRow, SessionRow } from '@leela/db';
 import type { RoomQueries, StoredSeat, StoredSession } from './persistence';
+import { NEVER_NUDGED, type NudgeRecord, type NudgeStore } from './store';
 
 /**
  * `node:sqlite` is newer than Vite's list of Node builtins, so a static import
@@ -151,6 +152,21 @@ CREATE INDEX IF NOT EXISTS reports_user ON reports (user_id, created_at DESC);
 CREATE TABLE IF NOT EXISTS intentions (
   user_id    TEXT PRIMARY KEY,
   text       TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+-- The companion's memory of its own initiative: the daily word.
+--
+-- Keyed by player for the intentions' reason — the knock follows the person,
+-- not the table. A NULL sent_at means never written to, which is what makes
+-- the first message the one that names /quiet; excerpt is the index last
+-- read out, so the next is never the one just heard; quieted survives a
+-- restart because an opt-out forgotten is a promise broken.
+CREATE TABLE IF NOT EXISTS nudges (
+  user_id    TEXT PRIMARY KEY,
+  sent_at    INTEGER,
+  excerpt    INTEGER,
+  quieted    INTEGER NOT NULL DEFAULT 0,
   updated_at INTEGER NOT NULL
 );
 `;
@@ -459,6 +475,23 @@ export class SqliteRoomQueries implements RoomQueries {
     return row?.id ?? null;
   }
 
+  /**
+   * Every table's chat id, oldest-played first.
+   *
+   * Ascending where `sessionOfPlayer` is descending, and on purpose: the
+   * memory store enumerates in its map's insertion order — last save last —
+   * and a caller keeping the newest seat per player must read the same order
+   * from both, or the two stores answer "which of your tables did you mean"
+   * differently. `id` breaks the tie the way `reportsFor` breaks its own.
+   */
+  async allSessions(): Promise<string[]> {
+    const rows = this.db
+      .prepare('SELECT id FROM sessions ORDER BY COALESCE(updated_at, 0), id')
+      .all() as Array<{ id: string }>;
+
+    return rows.map((row) => row.id);
+  }
+
   async remove(chatId: string): Promise<void> {
     this.db.prepare('DELETE FROM sessions WHERE id = ?').run(chatId);
   }
@@ -549,6 +582,48 @@ export class SqliteRoomQueries implements RoomQueries {
       .run(userId, text, this.now());
   }
 
+  /** What the initiative remembers about this player, or nothing yet. */
+  nudgeOf(userId: string): { sentAt: number | null; excerpt: number | null; quieted: boolean } | null {
+    const row = this.db
+      .prepare('SELECT sent_at, excerpt, quieted FROM nudges WHERE user_id = ?')
+      .get(userId) as Record<string, unknown> | undefined;
+    if (!row) return null;
+
+    return {
+      sentAt: (row.sent_at as number | null) ?? null,
+      excerpt: (row.excerpt as number | null) ?? null,
+      quieted: asBoolean(row.quieted),
+    };
+  }
+
+  /**
+   * Remember a send. The upsert leaves `quieted` alone: a send never speaks
+   * for `/quiet`, and the two halves of one row are written by different acts.
+   */
+  recordNudge(userId: string, at: number, excerpt: number): void {
+    this.db
+      .prepare(
+        `INSERT INTO nudges (user_id, sent_at, excerpt, quieted, updated_at) VALUES (?, ?, ?, 0, ?)
+         ON CONFLICT(user_id) DO UPDATE SET
+           sent_at = excluded.sent_at,
+           excerpt = excluded.excerpt,
+           updated_at = excluded.updated_at`,
+      )
+      .run(userId, at, excerpt, this.now());
+  }
+
+  /** `/quiet`, either direction — and it must not invent a send that never was. */
+  setQuieted(userId: string, quieted: boolean): void {
+    this.db
+      .prepare(
+        `INSERT INTO nudges (user_id, sent_at, excerpt, quieted, updated_at) VALUES (?, NULL, NULL, ?, ?)
+         ON CONFLICT(user_id) DO UPDATE SET
+           quieted = excluded.quieted,
+           updated_at = excluded.updated_at`,
+      )
+      .run(userId, quieted ? 1 : 0, this.now());
+  }
+
   /** Every report a player has written, newest first. */
   reportsFor(userId: string): Array<{ plan: number; text: string; createdAt: Date }> {
     const rows = this.db
@@ -625,6 +700,30 @@ export function sqliteReportSink(queries: SqliteRoomQueries) {
 
     async setIntention(userId: string, text: string): Promise<void> {
       queries.setIntention(userId, text);
+    },
+  };
+}
+
+/**
+ * The initiative's memory, backed by the same database as everything else.
+ *
+ * One file holds a whole deployment, and this is the half of the initiative
+ * that must survive a restart: `/quiet` forgotten is a promise broken, and a
+ * `sent_at` forgotten is the same player knocked on twice in one morning by a
+ * bot that redeployed between.
+ */
+export function sqliteNudgeStore(queries: SqliteRoomQueries): NudgeStore {
+  return {
+    async of(userId: string): Promise<NudgeRecord> {
+      return queries.nudgeOf(userId) ?? NEVER_NUDGED;
+    },
+
+    async record(userId: string, sent: { at: number; excerpt: number }): Promise<void> {
+      queries.recordNudge(userId, sent.at, sent.excerpt);
+    },
+
+    async setQuieted(userId: string, quieted: boolean): Promise<void> {
+      queries.setQuieted(userId, quieted);
     },
   };
 }

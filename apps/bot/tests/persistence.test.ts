@@ -331,3 +331,53 @@ describe('a row the engine cannot be handed', () => {
     await expect(store.get('c1')).rejects.toThrow(/went away/);
   });
 });
+
+describe('every table held', () => {
+  /** The fake, able to list what it holds — in insertion order, like SQL by updated_at. */
+  class ListingQueries extends FakeQueries {
+    async allSessions(): Promise<string[]> {
+      return [...this.sessions.keys()];
+    }
+  }
+
+  /** The same table under another chat, so the walk has more than one stop. */
+  function elsewhere(room: Room): Room {
+    return { ...room, chatId: 'chat-8', session: { ...room.session, id: 'chat-8' } };
+  }
+
+  it('walks every id the queries hand it and returns whole rooms', async () => {
+    const queries = new ListingQueries();
+    const store = new DatabaseRoomStore(queries);
+    const played = playedRoom();
+    await store.save(played);
+    await store.save(elsewhere(played));
+
+    const rooms = await store.allRooms();
+    expect(rooms.map((room) => room.chatId)).toEqual(['chat-7', 'chat-8']);
+    expect(rooms[0]).toEqual(played);
+  });
+
+  it('skips a row that will not assemble rather than stopping the walk', async () => {
+    const said: string[] = [];
+    const queries = new ListingQueries();
+    const store = new DatabaseRoomStore(queries, (message) => said.push(message));
+    const played = playedRoom();
+    await store.save(played);
+    await store.save(elsewhere(played));
+    // A table with no seats: there is a row, and the engine will not take it.
+    queries.seats.set('chat-7', []);
+
+    const rooms = await store.allRooms();
+    expect(rooms.map((room) => room.chatId)).toEqual(['chat-8']);
+    // Logged through the same line every other refused row goes through.
+    expect(said.some((line) => line.includes('chat-7'))).toBe(true);
+  });
+
+  it('enumerates nothing when the queries cannot list, rather than guessing', async () => {
+    // `FakeQueries` has no `allSessions`, which is the convention for a
+    // queries object that cannot answer — the walk visits nobody.
+    const store = new DatabaseRoomStore(new FakeQueries());
+    await store.save(playedRoom());
+    expect(await store.allRooms()).toEqual([]);
+  });
+});

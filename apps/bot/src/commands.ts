@@ -273,6 +273,7 @@ export const BOT_COMMANDS: readonly BotCommand[] = [
   { command: 'save', describedBy: 'menu.save' },
   { command: 'board', describedBy: 'menu.board' },
   { command: 'end', describedBy: 'menu.end' },
+  { command: 'quiet', describedBy: 'menu.quiet' },
   { command: 'help', describedBy: 'menu.help' },
 ];
 

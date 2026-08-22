@@ -26,7 +26,7 @@ function playingAt(loka: number): GameState {
   };
 }
 import { gameStepRow } from '@leela/db';
-import { SCHEMA, SqliteRoomQueries, addMissingColumns, openDatabase, sqliteReportSink, sqliteStepSink } from '../src/sqlite';
+import { SCHEMA, SqliteRoomQueries, addMissingColumns, openDatabase, sqliteNudgeStore, sqliteReportSink, sqliteStepSink } from '../src/sqlite';
 
 const NOW = 1_700_000_000_000;
 const dir = mkdtempSync(join(tmpdir(), 'leela-sqlite-'));
@@ -750,5 +750,78 @@ describe('finding a table by the player at it', () => {
     await queries.remove('-500');
 
     expect(await queries.sessionOfPlayer('u1')).toBeNull();
+  });
+});
+
+describe('the initiative’s memory', () => {
+  it('answers nothing for a player never nudged', () => {
+    expect(database('nudge-unknown').nudgeOf('u1')).toBeNull();
+  });
+
+  it('round-trips a send', () => {
+    const queries = database('nudge-roundtrip');
+    queries.recordNudge('u1', NOW, 2);
+    expect(queries.nudgeOf('u1')).toEqual({ sentAt: NOW, excerpt: 2, quieted: false });
+  });
+
+  it('lets neither half of the row speak for the other', () => {
+    // A send must not undo /quiet, and /quiet must not invent a send: the two
+    // are written by different acts, and the first daily word hangs on
+    // `sent_at` still being NULL when the player has only ever said /quiet.
+    const queries = database('nudge-halves');
+
+    queries.setQuieted('u1', true);
+    expect(queries.nudgeOf('u1')).toEqual({ sentAt: null, excerpt: null, quieted: true });
+
+    queries.recordNudge('u1', NOW, 0);
+    expect(queries.nudgeOf('u1')).toEqual({ sentAt: NOW, excerpt: 0, quieted: true });
+
+    queries.setQuieted('u1', false);
+    expect(queries.nudgeOf('u1')).toEqual({ sentAt: NOW, excerpt: 0, quieted: false });
+  });
+
+  it('survives a restart, like everything else in the file', async () => {
+    const path = join(dir, 'nudge-restart.db');
+
+    const first = new SqliteRoomQueries({ path, now: () => NOW });
+    await sqliteNudgeStore(first).setQuieted('u1', true);
+    await sqliteNudgeStore(first).record('u2', { at: NOW, excerpt: 3 });
+    first.close();
+
+    const second = new SqliteRoomQueries({ path, now: () => NOW });
+    open.push(second);
+    const memory = sqliteNudgeStore(second);
+    expect(await memory.of('u1')).toEqual({ sentAt: null, excerpt: null, quieted: true });
+    expect(await memory.of('u2')).toEqual({ sentAt: NOW, excerpt: 3, quieted: false });
+    // And a player it has never met still gets the three not-yets, not null.
+    expect(await memory.of('u3')).toEqual({ sentAt: null, excerpt: null, quieted: false });
+  });
+});
+
+describe('every table, for the initiative to walk', () => {
+  it('lists them oldest-played first, so the newest wins a deduplication', async () => {
+    const queries = database('all-sessions');
+    const store = new DatabaseRoomStore(queries);
+
+    await store.save(playedRoom('chat-a'));
+    await store.save(playedRoom('chat-b'));
+    expect(await queries.allSessions()).toEqual(['chat-a', 'chat-b']);
+
+    // Playing at the first table again moves it to the end — the same answer
+    // the memory store's insertion order gives.
+    await store.save(playedRoom('chat-a'));
+    expect(await queries.allSessions()).toEqual(['chat-b', 'chat-a']);
+  });
+
+  it('hands back whole rooms through the store, and every one of them', async () => {
+    const queries = database('all-rooms');
+    const store = new DatabaseRoomStore(queries);
+    const played = playedRoom('chat-one');
+    await store.save(played);
+    await store.save(playedRoom('chat-two'));
+
+    const rooms = await store.allRooms();
+    expect(rooms.map((room) => room.chatId)).toEqual(['chat-one', 'chat-two']);
+    expect(rooms[0]).toEqual(played);
   });
 });

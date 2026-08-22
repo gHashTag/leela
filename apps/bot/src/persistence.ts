@@ -122,6 +122,14 @@ export interface RoomQueries {
    * and `DatabaseRoomStore` reports no room rather than inventing one.
    */
   sessionOfPlayer?(playerId: string): Promise<string | null>;
+  /**
+   * Every table's chat id, in the order they were last played, oldest first.
+   *
+   * Optional under `sessionOfPlayer`'s convention. The order mirrors the
+   * memory store's map — last save last — so a caller taking the newest seat
+   * per player gets the same answer from either store.
+   */
+  allSessions?(): Promise<string[]>;
 }
 
 /** A room store backed by the database. */
@@ -189,5 +197,24 @@ export class DatabaseRoomStore implements RoomStore {
   async roomOf(playerId: string): Promise<Room | null> {
     const chatId = await this.queries.sessionOfPlayer?.(playerId);
     return chatId ? this.get(chatId) : null;
+  }
+
+  /**
+   * Every table held, oldest-played first.
+   *
+   * Through `read` rather than `get`, so a row the engine refuses is logged by
+   * the same line every other refusal goes through — and then skipped: the
+   * initiative visiting every table must not be stopped by the one that will
+   * not assemble. A queries object without `allSessions` enumerates nothing,
+   * which is `roomOf`'s convention for a question it cannot answer.
+   */
+  async allRooms(): Promise<Room[]> {
+    const ids = (await this.queries.allSessions?.()) ?? [];
+    const rooms: Room[] = [];
+    for (const id of ids) {
+      const { room } = await this.read(id);
+      if (room) rooms.push(room);
+    }
+    return rooms;
   }
 }

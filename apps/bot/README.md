@@ -194,6 +194,23 @@ A game counts as over when every seat has finished *after* being on the board.
 A seat that never entered has `previous_plan = 0` — waiting, not done — and
 treating those as finished would delete a game before it started.
 
+## The daily word
+
+Once a day the bot writes first: privately, to each player who is standing on
+a plan, active within the last fourteen days, reachable, not already written
+to today and not quieted — a rotating excerpt of the plan's own text, one line
+naming where they stand, and one call back into the game. The first message a
+player ever receives ends by naming `/quiet`, which stops it; `/quiet` again
+brings it back. What was sent, when, and which excerpt live in the same
+storage the games do — in memory when the games are.
+
+`LEELA_NUDGE_HOUR` sets the hour it goes out, an integer 0–23 read as UTC
+because the deployment's clock is UTC; the default is 6, which on Railway is
+09:00 in Moscow. Anything else in the variable takes the default. The engine
+and its sleeping conditions are `src/initiative.ts`; every eligibility branch,
+the excerpt rotation and the once-per-day cap are held by
+`tests/initiative.test.ts` and `tests/the-daily-word.test.ts`.
+
 ## The mini app's companion
 
 The mini app has the plans, the returns, the arrival and the whole path —

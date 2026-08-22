@@ -13,10 +13,12 @@
  */
 
 import { DatabaseRoomStore } from './persistence';
-import { SqliteRoomQueries, sqliteReportSink, sqliteStepSink } from './sqlite';
+import { SqliteRoomQueries, sqliteNudgeStore, sqliteReportSink, sqliteStepSink } from './sqlite';
 import {
+  MemoryNudgeStore,
   MemoryReportSink,
   MemoryRoomStore,
+  type NudgeStore,
   type ReportSink,
   type RoomStore,
   type StepSink,
@@ -38,6 +40,12 @@ export interface Storage {
   store: RoomStore;
   reports: ReportSink;
   steps?: StepSink;
+  /**
+   * The initiative's per-player memory. Always present, unlike `steps`: the
+   * daily word must not knock twice in one morning even when nothing is kept,
+   * so the memory fallback is a working store rather than an absence.
+   */
+  nudges: NudgeStore;
   /** Whether games survive a restart. */
   durable: boolean;
   /**
@@ -85,7 +93,12 @@ export function openStorage({
   },
 }: StorageOptions): Storage {
   if (!path) {
-    return { store: new MemoryRoomStore(), reports: new MemoryReportSink(), durable: false };
+    return {
+      store: new MemoryRoomStore(),
+      reports: new MemoryReportSink(),
+      nudges: new MemoryNudgeStore(),
+      durable: false,
+    };
   }
 
   try {
@@ -112,6 +125,7 @@ export function openStorage({
       store: new DatabaseRoomStore(queries, log),
       reports: sqliteReportSink(queries),
       steps: sqliteStepSink(queries),
+      nudges: sqliteNudgeStore(queries),
       durable: true,
       stopPruning,
     };
@@ -125,6 +139,7 @@ export function openStorage({
     return {
       store: new MemoryRoomStore(),
       reports: new MemoryReportSink(),
+      nudges: new MemoryNudgeStore(),
       durable: false,
       failure,
     };
