@@ -822,6 +822,11 @@ const showThread = (): void => {
   if (spoken && speakAloud) {
     if (view.status === 'thinking' && view.streaming) spoken.feed(view.streaming.text);
     else spoken.flush();
+  } else if (view.status === 'thinking') {
+    // Said once per answer that nobody hears: the two reasons a board goes
+    // quiet - no mouth on this platform, or the toggle off - look identical
+    // from outside, and telling them apart from a screenshot cost an hour.
+    console.log(`[voice] not speaking: mouth=${spoken !== null}, aloud=${speakAloud}`);
   }
 
   const fragment = document.createDocumentFragment();

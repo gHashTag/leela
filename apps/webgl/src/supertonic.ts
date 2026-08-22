@@ -190,6 +190,14 @@ export const SHELF_NAME = 'leela-voice-v1';
  * optimisation that can throw is a way of turning a working feature off: a full
  * quota on `keep` returns false and the bytes are used anyway.
  */
+/**
+ * How long the shelf may take to answer before it is treated as empty.
+ *
+ * Ten seconds is far longer than reading ninety megabytes off disk, and short
+ * enough that a stuck cache costs one download rather than the whole voice.
+ */
+export const SHELF_PATIENCE_MS = 10_000;
+
 export const shelfOn = (caches: unknown, Res: typeof Response | undefined): Shelf | null => {
   if (typeof caches !== 'object' || caches === null) return null;
   const store = caches as Partial<CacheLike>;
@@ -199,7 +207,17 @@ export const shelfOn = (caches: unknown, Res: typeof Response | undefined): Shel
   return {
     got: async (url) => {
       try {
-        const found = await (await open()).match(url);
+        // Bounded, because a shelf read can simply never answer. Measured on
+        // the deployed board 2026-08-22: with every file present, `match` did
+        // not settle in seventy seconds and the arming behind it stalled at
+        // nought percent, which took the board's voice away entirely. A shelf
+        // that does not answer is a shelf that is empty as far as this is
+        // concerned - the bytes are a download away, and a download that
+        // happens is better than a wait that does not end.
+        const found = await Promise.race([
+          (async () => (await open()).match(url))(),
+          new Promise<undefined>((settle) => setTimeout(() => settle(undefined), SHELF_PATIENCE_MS)),
+        ]);
         return found ? await found.arrayBuffer() : null;
       } catch {
         return null;
