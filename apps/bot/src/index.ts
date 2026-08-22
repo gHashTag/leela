@@ -26,6 +26,7 @@ import {
 } from '@leela/content';
 import { createBot } from './bot';
 import { menuFor } from './commands';
+import { serveAsk } from './serve';
 import { openStorage } from './storage';
 import { supervise } from './supervisor';
 
@@ -106,7 +107,9 @@ function configuredModel(): LanguageModel | undefined {
 }
 
 const model = configuredModel();
-const guide = model ? new Guide({ model }) : undefined;
+// The same 16000-token ceiling the ask route pays, for the same reason: a
+// reasoning model spends the default 800 on thought and returns empty text.
+const guide = model ? new Guide({ model, completion: { maxTokens: 16_000 } }) : undefined;
 
 /**
  * What the bot is built with, named rather than written inline.
@@ -241,6 +244,13 @@ async function publishMenu(): Promise<void> {
 
 await publishMenu();
 
+// The 3D board asks its questions over HTTP while the bot polls Telegram: two
+// listeners, one process, one key. Beside the supervisor rather than inside
+// it — a dropped poll must not take the ask route down with it. The same
+// `model` the guide answers with is what answers the board, so one key in one
+// variable serves both surfaces or neither.
+const asking = serveAsk({ model });
+
 await supervise({
   start: async () => {
     if (stopping) return;
@@ -249,3 +259,8 @@ await supervise({
     });
   },
 });
+
+// The poller has stopped — cleanly or by giving up — and a listener held open
+// would keep alive a process that can no longer play. Let it exit; the
+// platform's restart is the recovery.
+asking.stop();

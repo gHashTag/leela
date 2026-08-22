@@ -31,8 +31,15 @@
  */
 export interface Palette {
 
-  /** Behind the board. */
-  readonly background: number;
+  /**
+   * Behind the board, or `null` to let the page show through.
+   *
+   * `null` is not "no colour": it makes the canvas transparent, so whatever the
+   * stylesheet puts on the page is the ground the board stands on. That is how
+   * the light theme carries the app's own watercolour paper rather than a flat
+   * cream rectangle painted over it.
+   */
+  readonly background: number | null;
   /** The board itself: painted ground, not a coloured tile. */
   readonly cell: number;
   /**
@@ -106,6 +113,43 @@ export const SPACE: Palette = {
   envIntensity: 0.42,
   exposure: 0.92,
   stars: true,
+};
+
+/**
+ * The table.
+ *
+ * The board on paper, under a lamp, which is what the published painting is: a
+ * cream field with the plans inked on it. The void's own values cannot simply
+ * be inverted — the comments above say why twice. `label` was a violet measured
+ * against paper and went to near-black on black; `border` was a hairline colour
+ * used to draw a motif and came out invisible against the paper. Each entry
+ * here is measured against *this* ground.
+ *
+ * `stars: false`, because a starfield over a lit table is the void showing
+ * through the tablecloth.
+ */
+export const PAPER: Palette = {
+  // The page, not a colour. See `background` on `Palette`.
+  background: null,
+  cell: 0xe8e0cd,
+  border: 0x7a6c4e,
+  // Dark, not pale: on paper a number has to carry itself the other way.
+  label: '#241f18',
+  // The silk, dark on the table - the comment on `thread` above says exactly
+  // this: light on the void, dark here.
+  thread: 0x3f3a30,
+  snake: 0x9c3722,
+  arrow: 0x2c5c42,
+  win: 0x9a7000,
+  piece: 0xc41fa8,
+  halo: 0xd8cfb8,
+  // Brighter room, softer key: a lit table has fill from every side, so the
+  // shadow that models a tube on the void would read as grime here.
+  ambient: 0.62,
+  key: 0.85,
+  envIntensity: 0.55,
+  exposure: 1.0,
+  stars: false,
 };
 
 /**

@@ -97,7 +97,13 @@ describe('a player who has not entered yet', () => {
   });
 
   it('is told what would let them in, in their own language', () => {
-    expect(headline(fresh, 'ru', titleOf).title).toMatch(/шестёрку/);
+    // The stem, not one ending. This read `/шестёрку/` and broke the day the
+    // sentence was rewritten to say the same thing in a different case —
+    // «войти в игру можно только с шестёрки» — which is the catalogue being
+    // edited, not the rule changing. What is asserted is that a Russian reader
+    // is told a six is what enters; the grammar around it belongs to the
+    // catalogue.
+    expect(headline(fresh, 'ru', titleOf).title).toMatch(/шестёрк/);
   });
 
   it('stays that way after a throw that is not a six', () => {

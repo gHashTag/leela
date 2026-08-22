@@ -422,6 +422,56 @@ const EN = {
   'app.rules': 'Rules of the game',
   'app.plans': 'All 72 plans',
   /**
+   * The model's working, folded under the answer it produced.
+   *
+   * Kept and openable rather than printed: reasoning runs many times the length
+   * of an answer. It is labelled as *reasoning* and not as *the companion says*,
+   * because it is neither the plan's text nor the reply - it is how the reply
+   * was arrived at, and a screen that renders the three alike has lent one the
+   * authority of another.
+   */
+  'app.thinking': 'How it thought',
+  /**
+   * Said while the model is still working, beside a mark that moves.
+   *
+   * The three waiting dots only ever showed before the first token: once
+   * reasoning began arriving they were replaced by it, and a page of grey
+   * italics with nothing moving on it reads as finished. This is the difference
+   * between *thinking* and *thought*.
+   */
+  'app.thinkingNow': 'Thinking',
+
+  /**
+   * Three throws free, then the game asks for a subscription.
+   *
+   * Two sentences, not one. The warning comes on the last free throw — before
+   * the die stops rather than after — and the ask comes when it has. A single
+   * message would have to be either a nag or a surprise.
+   */
+  'app.tollLast': 'One free throw left.',
+  'app.tollDue': 'The three free throws are used. A subscription opens the rest of the board.',
+  'app.tollOpen': 'Subscribe',
+
+  /**
+   * The same game, drawn in three dimensions.
+   *
+   * `apps/webgl` is the board with depth, snakes as tubes and a die that falls;
+   * the phone shows it in a `WebView` and hands it the player's position, so
+   * the two boards are one game. The sentences below are what that costs in
+   * words: a way in, a way out, and - because it needs a server - something
+   * honest to say when there is none.
+   */
+  'app.board3d': 'Board in 3D',
+  'app.board3dClose': 'Back to the board',
+  /**
+   * Named with its address, because "it does not work" is not a bug report and
+   * the usual cause is simply that nothing is serving the page.
+   */
+  'app.board3dUnreachable': 'The 3D board could not be reached at {url}.',
+  'app.board3dRetry': 'Try again',
+  /** Said when the 3D board hands a position back, so the move is not silent. */
+  'app.board3dMoved': 'You come back from the 3D board on plan {plan}.',
+  /**
    * The book's own chrome, which had none.
    *
    * `apps/docs` generates 1,784 pages in twenty-two languages and said **no
@@ -451,6 +501,8 @@ const EN = {
   'app.restart': 'Start over',
   'app.restarted': 'A new game. Throw a six to enter it.',
   'app.opening': 'A six puts you on the board.',
+  'app.owed': 'Write what you meet on this plan. The die will not throw until you do.',
+  'app.owedShort': 'Write your reflection first',
   // Coming back to a game already in progress. The opening line was written
   // into the page once and never revised, so a player standing on 30 with six
   // squares behind them was greeted with the instruction for somebody who has
@@ -843,7 +895,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
     'Это не читается как клетка. Пришлите её целиком после /take — вместе с заголовком.',
   'square.notKept': 'Этот бот не хранит отчёты, поэтому класть клетку некуда.',
 
-  'app.waiting': 'Бросьте шестёрку, чтобы войти в игру',
+  'app.waiting': 'Бросайте кубик: войти в игру можно только с шестёрки',
   'app.entered': 'Шестёрка. Вы входите в игру на {to}. {title}',
   'app.needSix': 'Выпало {value}. Войти в игру можно только с шестёрки.',
   'app.noRoom': 'Выпало {value}. Не хватает места — вы остаётесь на {to}.',
@@ -878,6 +930,16 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.boardLabel': 'Доска, 72 плана',
   'app.rules': 'Правила игры',
   'app.plans': 'Все 72 плана',
+  'app.thinking': 'Ход мысли',
+  'app.thinkingNow': 'Думает',
+  'app.tollLast': 'Остался один бесплатный бросок.',
+  'app.tollDue': 'Три бесплатных броска использованы. Подписка открывает остальную доску.',
+  'app.tollOpen': 'Оформить подписку',
+  'app.board3d': 'Доска в 3D',
+  'app.board3dClose': 'Вернуться к доске',
+  'app.board3dUnreachable': 'Доска в 3D недоступна по адресу {url}.',
+  'app.board3dRetry': 'Попробовать снова',
+  'app.board3dMoved': 'Вы возвращаетесь с доски в 3D на плане {plan}.',
   'app.play': 'Играть',
   'app.contents': 'Оглавление',
   'app.legal': 'Правовые документы',
@@ -893,6 +955,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.restart': 'Начать заново',
   'app.restarted': 'Новая игра. Бросьте шестёрку, чтобы войти в неё.',
   'app.opening': 'Шестёрка выводит вас на доску.',
+  'app.owed': 'Запишите, что вы переживаете на этом плане. Пока не запишете, кубик не бросится.',
+  'app.owedShort': 'Сначала запишите отклик',
   'app.standing': 'Вы на {plan}. {title}',
   'app.borrowed': 'по-английски — этой главы нет в вашей книге',
   'app.cameBack': 'Вернулось к вам',
@@ -918,7 +982,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
 
   'app.reportNeeded': 'Напишите, что поднимает этот план, прежде чем бросать снова.',
   'app.reportWrite': 'Написать отчёт',
-  'app.reportPlaceholder': 'Что поднимает этот план?',
+  'app.reportPlaceholder': 'Что вы переживаете на этом плане?',
   'app.reportSave': 'Сохранить',
   'app.reportSaved': 'Записано. Можно бросать.',
   'app.reportSavedDone': 'Записано. Игра завершена. 🕉',
@@ -1051,14 +1115,57 @@ export function placeholdersIn(message: Message): string[] {
 }
 
 /**
+ * Whether this runtime can choose a plural form for us.
+ *
+ * This file used to say *`Intl.PluralRules` is in every runtime this monorepo
+ * targets*, and the phone disproved it. Hermes on iOS ships a cut-down `Intl`
+ * without `PluralRules`, so `new Intl.PluralRules(...)` threw *Cannot read
+ * property 'prototype' of undefined* and took the whole screen down with a red
+ * box — the first time a player opened a path with anything written on it.
+ *
+ * The claim was checkable and nobody checked it. Read once: the runtime does
+ * not grow the constructor while somebody is reading a board.
+ */
+const CAN_COUNT =
+  typeof Intl !== 'undefined' &&
+  typeof (Intl as { PluralRules?: unknown }).PluralRules === 'function';
+
+/** Languages whose counting this file has to do itself when `Intl` cannot. */
+const SLAVIC = new Set(['ru', 'uk']);
+
+/**
+ * The plural category, without `Intl`.
+ *
+ * Only two shapes, deliberately. Russian and Ukrainian are the languages this
+ * app is actually read in besides English and they take three forms; everything
+ * else gets `one` at exactly one and `other` otherwise. A catalogue that has no
+ * entry for the category chosen falls back to `other` below, so a language with
+ * a single form — Chinese, Japanese, Korean, Vietnamese — is unaffected either
+ * way, and Arabic's six forms degrade to `other` rather than to a crash.
+ *
+ * A rough plural is a sentence that reads slightly wrong. No plural at all is a
+ * screen that does not render.
+ */
+function categoryFor(language: Language, count: number): keyof PluralForms {
+  if (!SLAVIC.has(language)) return count === 1 ? 'one' : 'other';
+
+  const mod10 = Math.abs(count) % 10;
+  const mod100 = Math.abs(count) % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'one';
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'few';
+  return 'many';
+}
+
+/**
  * Choose a plural form the way the language does.
  *
- * `Intl.PluralRules` is in every runtime this monorepo targets. A language
- * whose form is absent falls back to `other`, which is the one form every
- * catalogue must carry.
+ * A language whose form is absent falls back to `other`, which is the one form
+ * every catalogue must carry.
  */
 function pluralForm(forms: PluralForms, language: Language, count: number): string {
-  const category = new Intl.PluralRules(language).select(count);
+  const category = CAN_COUNT
+    ? (new Intl.PluralRules(language).select(count) as keyof PluralForms)
+    : categoryFor(language, count);
   return forms[category] ?? forms.other;
 }
 

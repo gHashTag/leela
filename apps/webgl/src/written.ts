@@ -14,20 +14,21 @@
  * refuses a blank one, a plan off the board, and a timestamp no clock produced.
  */
 
+// `Merged`, `merged`, `parseDocument` and `toDocument` were imported here for
+// carrying the path out and back. They stayed after that feature's two controls
+// were removed, which is the same shape one file down: machinery kept alive by
+// nothing but the line that names it. The format itself is still `@leela/journal`'s.
 import {
   INTENTION_KEY,
   MAX_REPORTS,
-  type Merged,
   REPORTS_KEY,
   type Report,
   asIntention,
   isReport,
-  merged,
   order,
-  parseDocument,
-  toDocument,
 } from '@leela/journal';
 
+import { announcePath } from './hosted';
 import type { Store } from './kept';
 
 /**
@@ -68,6 +69,18 @@ export function readAll(store: Store | null): Report[] {
  */
 export function add(store: Store | null, entry: Report): Report[] {
   const kept = [...readAll(store), entry].slice(-MAX_REPORTS);
+
+  // Here rather than at the call sites, for the reason `kept.write` announces
+  // the board here: this is the one funnel every account passes through, and a
+  // rule kept by remembering to call something is a rule the next handler is
+  // written without.
+  //
+  // Before the store and outside its `try`, because the two are independent. An
+  // account the disk refuses is still an account the player wrote, and the app
+  // embedding this page is the other place it can live. In a browser there is
+  // no host and this costs nothing.
+  announcePath(kept);
+
   if (!store) return kept;
 
   try {
@@ -119,41 +132,15 @@ export function writeIntention(store: Store | null, text: string): boolean {
   }
 }
 
-/**
- * The whole path as a file, question included.
+/*
+ * Carrying the path out and back used to live here - `asFile` wrote the whole
+ * path as a document and `takeIn` read one in, merging without duplicating and
+ * refusing to overwrite a question already asked.
  *
- * `toDocument` applies the same rule to the intention that the reader will, so
- * a file never carries a question that reads back as a different one.
+ * Both went when the two controls that reached them were removed. The
+ * machinery outlived its buttons for a pass, exported and covered by tests and
+ * callable from nothing: `audit-unread` names that shape - a promise to a test
+ * that the screen does not keep. `@leela/journal` still holds the format, so
+ * the day the board carries a path again it is read from there rather than
+ * from a copy that has been sitting unused.
  */
-export const asFile = (store: Store | null): string =>
-  JSON.stringify(toDocument(readAll(store), readIntention(store) ?? undefined), null, 2);
-
-/**
- * Brings a file back, and says what it cost.
- *
- * `merged` is `@leela/journal`'s, and its comment is worth the read: both
- * surfaces that came before told the player how many entries *arrived* while
- * the bound had just thrown that many of their oldest away. `added` is what is
- * actually there and `dropped` is what it cost, so the caller can say both.
- *
- * A file with a question in it does not overwrite one already set: the player
- * asked something here, and a file is not a reason to change what they are
- * playing for. It fills an empty one, which is the case that helps.
- */
-export function takeIn(store: Store | null, text: string): Merged | null {
-  const document = parseDocument(text);
-  if (!document) return null;
-
-  const outcome = merged(readAll(store), document.entries);
-  if (store) {
-    try {
-      store.setItem(REPORTS_KEY, JSON.stringify(outcome.entries));
-    } catch {
-      /* Nothing brought in, and the caller is told by `added` being what it is. */
-    }
-  }
-  if (document.intention && readIntention(store) === null) {
-    writeIntention(store, document.intention);
-  }
-  return outcome;
-}

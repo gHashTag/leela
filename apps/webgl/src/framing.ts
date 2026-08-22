@@ -26,6 +26,16 @@ import * as THREE from 'three';
 export interface Inset {
   readonly bottom?: number;
   readonly right?: number;
+  /**
+   * The header, which stands on the board from above.
+   *
+   * Added after the top row of the board — 72, 71, 70 — was found sitting
+   * under the plan's number and title. The sheet was accounted for from the
+   * first pass and the header never was, so the board was fitted into a band
+   * whose top edge was the top of the canvas and then partly covered by
+   * something drawn over it.
+   */
+  readonly top?: number;
 }
 
 /** The box the framing has to fit: the slab, and the air the arcs travel through. */
@@ -108,6 +118,9 @@ export const cornersOf = (extent: Extent): THREE.Vector3[] =>
  * derived from the band is the same on a phone as on a widescreen — which is
  * exactly the regression the tests caught the moment they existed.
  */
+const eatenAbove = (inset: Inset): number => Math.max(0, inset.top ?? 0);
+const eatenBelow = (inset: Inset): number => Math.max(0, inset.bottom ?? 0);
+
 export const visibleFor = (
   viewport: { width: number; height: number },
   inset: Inset,
@@ -115,7 +128,7 @@ export const visibleFor = (
   const height = Math.max(1, viewport.height);
   const width = Math.max(1, viewport.width);
   return {
-    height: Math.max(height * LEAST, height - Math.max(0, inset.bottom ?? 0)),
+    height: Math.max(height * LEAST, height - eatenAbove(inset) - eatenBelow(inset)),
     width: Math.max(width * LEAST, width - Math.max(0, inset.right ?? 0)),
   };
 };
@@ -128,11 +141,21 @@ export const bandFor = (
   const width = Math.max(1, viewport.width);
   const visible = visibleFor(viewport, inset);
 
-  // y = 1 is the top of the canvas and a bottom sheet eats upwards; x = -1 is
-  // the left edge and a side panel eats inwards from the right.
-  const bottom = 1 - (2 * visible.height) / height;
+  // y = -1 is the bottom of the canvas and a bottom sheet eats upwards from
+  // there; the header eats downwards from y = 1; x = -1 is the left edge and a
+  // side panel eats inwards from the right.
+  //
+  // The two vertical insets share whatever room `LEAST` leaves them, in the
+  // ratio they asked for. Without that, a sheet and a header that together
+  // covered the screen would each be honoured in full and the band would end up
+  // upside down. With no header — every caller until now — `share` is 1 and
+  // this is arithmetically the line it replaces.
+  const asked = eatenAbove(inset) + eatenBelow(inset);
+  const share = asked === 0 ? 0 : (height - visible.height) / asked;
+
+  const bottom = -1 + (2 * eatenBelow(inset) * share) / height;
   const right = (2 * visible.width) / width - 1;
-  return { bottom, right, height: 1 - bottom, width: right + 1 };
+  return { bottom, right, height: (2 * visible.height) / height, width: right + 1 };
 };
 
 /** Where the projected board sits, in clip space. */

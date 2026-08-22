@@ -8,29 +8,48 @@ import {
   rollDie,
 } from '@leela/engine';
 
-import { directionOf, messageFor, planFor, resolveLanguage, titlesFor } from './canon';
+// `resolveLanguage` used to be called here. The choice moved to `tongue.ts`,
+// which weighs a stored preference against the browser's list, and the import
+// stayed behind - a reader would take it for the language still being decided
+// on this line.
+import { directionOf, messageFor, planFor, titlesFor } from './canon';
 import { describeMove } from '@leela/content';
-import { fileName, pathText, revisited, seatId, writingsOn, MAX_REPORT_CHARS } from '@leela/journal';
+import { revisited, seatId, writingsOn, MAX_REPORT_CHARS } from '@leela/journal';
 
 import { Companion, type Line, type Rests } from './companion';
 import { DEFAULT_DEITY, DEITIES, deityFor, deityForSeat, seatsOf } from './deities';
 import { standingFor, toneOf, turnPassed } from './hud';
 import { fanOffset, hopPoint, planPosition } from './layout';
 import { browserStore, finishedTable, read, write, type KeptSeat } from './kept';
+import { ENTITLEMENT_CHANGED, askToSubscribe, entitled, hostOf } from './hosted';
 import { pathOf } from './path';
 import {
-  asFile,
   add as keepWritten,
   readAll,
   readIntention,
-  takeIn,
   writeIntention,
 } from './written';
-import { isFace, pipsFor } from './die';
+import { RESTING_FACE, isFace, pipsFor } from './die';
+import { shouldFollow } from './follow';
+import { coveredBy } from './keyboard';
+import { blocksOf } from './marked';
+import { holdsTheDie } from './owed';
+import { isLastFree, movesTaken, tollFor } from './toll';
+import { askOverHttp } from './ask';
+import { askOverHost, hostCanAnswer } from './asked';
+import {
+  LABELS,
+  nextLanguage,
+  openingLanguage,
+  readLanguage,
+  writeLanguage,
+} from './tongue';
+import { lookFor, other, paletteFor, preferred, remember, stored } from './look';
 import { entered, throwFor, type Hop, type Thrown } from './play';
 import type { SeatedPlayer } from '@leela/engine';
 import { createBoard } from './scene';
 import { atEnd, bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
+import { meetTelegram, nameAskOrigin, telegramOf } from './telegram';
 import { css } from './theme';
 
 /**
@@ -48,7 +67,24 @@ import { css } from './theme';
  *     every step, so nothing is lost but the motion.
  */
 
-const HOP_MS = 420;
+/**
+ * How long the piece takes to cross one square.
+ *
+ * 420 made a six take two and a half seconds — every step legible and the whole
+ * throw sluggish. The steps are the point (`walk` reports each one, and a
+ * reader who asked for no motion still gets them), so this is not zero; it is
+ * as short as a step can be and still be seen.
+ */
+// --- the hosts --------------------------------------------------------------
+
+// First, before anything could ask or paint: the build's word on where the
+// companion's route lives goes onto the page, and Telegram - when it is the
+// host - gets its greeting and lends the chrome its colours. Theme tokens
+// swapped after first paint are a flash of the wrong room.
+nameAskOrigin(globalThis as { __leelaAsk?: string }, import.meta.env.VITE_ASK_ORIGIN);
+meetTelegram(telegramOf(), document.documentElement.style);
+
+const HOP_MS = 260;
 
 /**
  * How high the token's anchor sits above the web.
@@ -87,6 +123,13 @@ const el = {
   die: need<HTMLButtonElement>('#die'),
   face: need<HTMLElement>('#face'),
   say: need<HTMLElement>('#say'),
+  tongue: need<HTMLButtonElement>('#tongue'),
+  look: need<HTMLButtonElement>('#look'),
+  gear: need<HTMLButtonElement>('#gear'),
+  settings: need<HTMLElement>('#settings'),
+  owed: need<HTMLElement>('#owed'),
+  toll: need<HTMLElement>('#toll'),
+  tollOpen: need<HTMLButtonElement>('#toll-open'),
   planHeading: need<HTMLElement>('#plan-heading'),
   planText: need<HTMLElement>('#plan-text'),
   thread: need<HTMLElement>('#thread'),
@@ -94,9 +137,6 @@ const el = {
   intention: need<HTMLButtonElement>('#intention'),
   intentionLabel: need<HTMLElement>('#intention-label'),
   intentionText: need<HTMLElement>('#intention-text'),
-  save: need<HTMLButtonElement>('#save'),
-  bring: need<HTMLButtonElement>('#bring'),
-  bringFile: need<HTMLInputElement>('#bring-file'),
   carrySaid: need<HTMLElement>('#carry-said'),
   path: need<HTMLDetailsElement>('#path'),
   pathSummary: need<HTMLElement>('#path-summary'),
@@ -110,7 +150,23 @@ const el = {
 
 // --- who is reading ---------------------------------------------------------
 
-const language = resolveLanguage(navigator.language);
+/**
+ * The stored choice outranks the browser's setting; see `tongue` for why and
+ * for the rule, which is tested there.
+ *
+ * Read from `localStorage` directly rather than through `browserStore()`: that
+ * is built a few lines below and the whole screen is labelled from `language`
+ * before it exists.
+ */
+const languageStore = ((): { getItem(k: string): string | null; setItem(k: string, v: string): void } | null => {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+})();
+
+const language = openingLanguage(readLanguage(languageStore), navigator.language);
 const titleOf = titlesFor(language);
 
 document.documentElement.lang = language;
@@ -120,10 +176,144 @@ el.die.setAttribute('aria-label', messageFor(language, 'app.play'));
 el.visitingBack.textContent = messageFor(language, 'app.read');
 el.pathSummary.textContent = messageFor(language, 'app.path');
 el.intentionLabel.textContent = messageFor(language, 'app.intention');
-el.save.textContent = messageFor(language, 'app.pathExport');
-el.bring.textContent = messageFor(language, 'app.pathImport');
 el.planTitle.textContent = messageFor(language, 'app.waiting');
 el.say.textContent = messageFor(language, 'app.opening');
+
+/**
+ * The language switch.
+ *
+ * Labelled with the language it moves *to*, so the button says what pressing it
+ * does rather than where you already are.
+ *
+ * It reloads rather than re-rendering. Every string on this screen — the board's
+ * plan titles, the companion's sentences, the die's label, the model's system
+ * prompt — is read from `language` once at startup and handed to objects built
+ * from it. Re-translating them in place would mean threading a language change
+ * through all of that, and the first one missed is a screen that is half in
+ * each. A reload is a tenth of a second and cannot be half-done; the game is in
+ * storage and comes back exactly where it was.
+ */
+const nextTongue = nextLanguage(language);
+el.tongue.textContent = LABELS[nextTongue] ?? nextTongue.toUpperCase();
+el.tongue.setAttribute('aria-label', `Language: ${LABELS[nextTongue] ?? nextTongue}`);
+el.tongue.addEventListener('click', () => {
+  writeLanguage(languageStore, nextTongue);
+  window.location.reload();
+});
+
+// --- the light it is drawn in ------------------------------------------------
+
+/**
+ * Light or dark, decided before anything is drawn.
+ *
+ * Same order as the language, same reason: a stored choice outranks the
+ * system's, and the system is only asked of a reader who has not said. The rule
+ * itself is `look.ts`, where it is tested.
+ *
+ * `data-look` on the root is what the stylesheet reads; `paletteFor` is what
+ * the board is built from. Both from one value, so the page and the scene
+ * cannot end up in different lights - which is what a light page around a black
+ * starfield would be.
+ */
+const chosenLook = lookFor(
+  stored(languageStore),
+  preferred((query) => window.matchMedia(query).matches),
+);
+document.documentElement.dataset.look = chosenLook;
+
+/**
+ * The switch, labelled with the light it moves *to* - so the button says what
+ * pressing it does rather than where you already are.
+ *
+ * It reloads, for the reason the language switch reloads: the palette is baked
+ * into geometry, materials, lights and the painted numbers when the board is
+ * built. Repainting all of that in place means threading a change through every
+ * one of them, and the first one missed is a board half in each light. A reload
+ * cannot be half-done, and the game is in storage and comes back where it was.
+ */
+const nextLook = other(chosenLook);
+el.look.textContent = nextLook === 'light' ? 'Light' : 'Dark';
+el.look.setAttribute('aria-label', `Theme: ${nextLook}`);
+el.look.addEventListener('click', () => {
+  remember(languageStore, nextLook);
+  window.location.reload();
+});
+
+/**
+ * The settings menu, opened from the one mark in the header.
+ *
+ * Closed by pressing the mark again, by Escape, and by touching anything else -
+ * the three ways a person expects a small menu to close. Without the last one
+ * it stays open over the board until the mark is found again, which on a phone
+ * means it is simply in the way.
+ *
+ * `aria-expanded` on the button and `hidden` on the panel, so it is one state
+ * said in the two places that read it.
+ */
+const showSettings = (open: boolean): void => {
+  el.settings.hidden = !open;
+  el.gear.setAttribute('aria-expanded', String(open));
+};
+
+el.gear.addEventListener('click', (event) => {
+  event.stopPropagation();
+  showSettings(el.settings.hidden);
+});
+
+// Inside the menu is not outside it: a click on the language button reaches
+// its own handler and must not be read as "somewhere else".
+el.settings.addEventListener('click', (event) => event.stopPropagation());
+
+document.addEventListener('click', () => showSettings(false));
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !el.settings.hidden) showSettings(false);
+});
+
+/**
+ * The keyboard, followed.
+ *
+ * A page inside a `WebView` is never told the keyboard exists: the layout
+ * viewport keeps the full height of the screen and the keyboard is drawn over
+ * it, so the writing box — anchored to the bottom, which is where a writing box
+ * belongs — is covered by the thing the player is typing with.
+ *
+ * The visual viewport is the one that moves. `coveredBy` turns it into pixels
+ * and `--keyboard` is what the stylesheet lifts the sheet by; the arithmetic is
+ * `keyboard.ts`, where it is tested.
+ *
+ * `fit()` runs too: the board is framed against the part of the canvas nobody
+ * is standing on, and the keyboard is now standing on some of it.
+ */
+const followKeyboard = (): void => {
+  const covered = coveredBy(window.visualViewport, window.innerHeight);
+  document.documentElement.style.setProperty('--keyboard', `${covered}px`);
+  fit();
+};
+
+if (window.visualViewport) {
+  // Both, and both are needed: `resize` is the keyboard opening and closing,
+  // `scroll` is iOS pushing the page up to keep a focused field in view — which
+  // moves the box without changing the height of anything.
+  window.visualViewport.addEventListener('resize', followKeyboard);
+  window.visualViewport.addEventListener('scroll', followKeyboard);
+}
+
+/**
+ * The paywall's two ends.
+ *
+ * The board cannot sell anything — a receipt is native, and a page in a web
+ * view has no store to talk to. So it asks, and the app owns the screen and the
+ * transaction. See `askToSubscribe` in `hosted.ts`.
+ *
+ * And when the app comes back entitled it fires an event rather than reloading:
+ * a reload in the middle of a purchase would take the board away at the moment
+ * the player has just paid for it.
+ */
+el.tollOpen.addEventListener('click', () => {
+  askToSubscribe();
+});
+
+window.addEventListener(ENTITLEMENT_CHANGED, () => showGate());
 
 // --- the pieces -------------------------------------------------------------
 
@@ -133,7 +323,8 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const store = browserStore();
 const saved = read(store, LEGACY_MOBILE);
 
-const board = createBoard(el.canvas);
+// The board is built in the light the reader chose; see `look.ts`.
+const board = createBoard(el.canvas, undefined, undefined, paletteFor(chosenLook));
 
 /**
  * The table.
@@ -152,6 +343,14 @@ let rolls: number[][] = [];
  * after a non-six the turn has already moved on, so the seat holding the turn
  * is not the one whose number is on the die.
  */
+/**
+ * Whether the throw just watched earned another.
+ *
+ * The report gate reads this: a six keeps the turn, and asking for a reflection
+ * between the throws of that chain made the screen contradict itself — the
+ * sentence said throw again while the die said write first.
+ */
+let stillMoving = false;
 let lastThrower: number | null = null;
 // The fresh device's one seat, named by the journal so what it writes here is
 // found under the same name on every other surface.
@@ -202,7 +401,29 @@ const seat = () => currentPlayer(session);
 /** That seat's index, which is what the per-seat arrays are keyed by. */
 const seatAt = (): number => session.turnIndex;
 
-const companion = new Companion({ language });
+// The model, if the deployment put one behind `/api/ask`. Absent is a
+// supported way to run: the companion says the text is there to read and the
+// reflection is the player's either way.
+const companion = new Companion({
+  language,
+  // Redraws as the answer arrives; the companion does not own the DOM.
+  onProgress: () => showThread(),
+  /*
+   * Ask whoever can answer.
+   *
+   * Inside the app there is no route beside the page - the board is loaded
+   * from the phone's own filesystem - so it asks the host, which holds the key
+   * and makes the call itself. In a browser the route is served alongside and
+   * the http path is used, unchanged.
+   *
+   * Both build the same prompt; only the delivery differs.
+   */
+  ask: (hostCanAnswer() ? askOverHost : askOverHttp)(language, (plan) => {
+    const text = planFor(language, plan);
+    return text.body || text.description || '';
+  }),
+  modelName: 'Z.AI',
+});
 
 // Said once, not on every throw: the game plays on in a window that keeps
 // nothing, and a sentence repeated per move is noise over exactly the line a
@@ -468,7 +689,13 @@ const fit = (): void => {
   // reads back, rather than a breakpoint written out twice. Below 760px it is a
   // bottom sheet spanning the width; above, a panel floated against the right.
   const alongTheBottom = sheet.left <= 1;
+  // Measured, not guessed: the header's height is its safe-area padding plus a
+  // plan title that wraps or does not, and a number written here would be right
+  // on one phone. The top row of the board - 72, 71, 70 - was sitting under it.
+  const header = el.where.getBoundingClientRect();
+
   board.resize(window.innerWidth, window.innerHeight, {
+    top: Math.max(0, header.bottom),
     bottom: alongTheBottom ? Math.max(0, window.innerHeight - sheet.top) : 0,
     right: alongTheBottom ? 0 : Math.max(0, window.innerWidth - sheet.left),
   });
@@ -539,16 +766,162 @@ const showThread = (): void => {
   for (const line of view.lines) fragment.append(bubble(line));
 
   if (view.status === 'thinking') {
-    const waiting = document.createElement('div');
-    waiting.className = 'thinking';
-    waiting.append(...['', '', ''].map(() => document.createElement('i')));
-    fragment.append(waiting);
+    const live = view.streaming;
+    // Three dots only until there is something to show. Once the model starts
+    // speaking, the dots are worse than nothing: they say "waiting" over text
+    // that is already arriving.
+    if (live && (live.text || live.thinking)) {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble companion streaming';
+
+      /*
+       * A mark that moves, for as long as it is still moving.
+       *
+       * The three dots below only ever showed before the first token: once
+       * reasoning began arriving they were replaced by it, and a page of grey
+       * italics with nothing animating on it reads as finished. This says
+       * *thinking* rather than *thought*, and it is the first thing in the
+       * bubble so it is not scrolled away by the reasoning under it.
+       */
+      const working = document.createElement('p');
+      working.className = 'working';
+      working.append(document.createElement('i'));
+      const label = document.createElement('span');
+      label.textContent = messageFor(language, 'app.thinkingNow');
+      working.append(label);
+      bubble.append(working);
+
+      if (live.thinking) {
+        const thought = document.createElement('div');
+        thought.className = 'thinking-text';
+        // Marked so the pass below can find it after the fragment is in the
+        // document — `scrollHeight` is 0 on a node that has not been laid out.
+        thought.dataset.live = 'true';
+        // The tail, not the head: the newest thought is the one worth reading,
+        // and reasoning runs long.
+        //
+        // It stays once the answer starts, shorter. It used to be dropped at
+        // the first word of the answer - `live.thinking && !live.text` - so the
+        // one thing a player had been watching vanished at the moment it became
+        // possible to compare it with what was said. Above the answer and
+        // dimmed: still there, no longer the thing being read.
+        // Every step, not a tail, and read rather than printed: the asterisks
+        // a model writes are bullets and emphasis, and the screen used to show
+        // them as punctuation. The box scrolls and pins itself to the bottom in
+        // `style.css`, so a long reasoning stays readable without pushing the
+        // answer off the screen.
+        thought.replaceChildren(reasoned(live.thinking));
+        bubble.append(thought);
+      }
+
+      if (live.text) {
+        const said = document.createElement('p');
+        said.textContent = live.text;
+        bubble.append(said);
+      }
+
+      fragment.append(bubble);
+    } else {
+      const waiting = document.createElement('div');
+      waiting.className = 'thinking';
+      waiting.append(...['', '', ''].map(() => document.createElement('i')));
+      fragment.append(waiting);
+    }
   }
 
+  /*
+   * The reasoning box keeps its own place, and keeps the reader's.
+   *
+   * Measured before the swap and applied after: `scrollHeight` is 0 on a node
+   * that has not been laid out, so the question has to be asked of the box that
+   * is on screen now and answered on the one that replaces it.
+   *
+   * `shouldFollow` is the rule and it is tested in `follow.ts`: follow only
+   * while the reader is already at the bottom, because scrolling up is what
+   * says *I am reading this*.
+   */
+  const living = el.thread.querySelector<HTMLElement>('.thinking-text[data-live]');
+  const wasFollowing = living === null || shouldFollow(living);
+  const wasScrolled = living?.scrollTop ?? 0;
+
   el.thread.replaceChildren(fragment);
+
+  const nowLive = el.thread.querySelector<HTMLElement>('.thinking-text[data-live]');
+  if (nowLive) {
+    nowLive.scrollTop = wasFollowing ? nowLive.scrollHeight : wasScrolled;
+  }
+
   follow(el.sheetBody, el.thread.lastElementChild);
 
   showRests(view.rests, view.status, view.note);
+  showGate();
+};
+
+/**
+ * Closes the die until the square has been written about, and says so.
+ *
+ * The rule is in `owed`, tested there; this only reflects it. Three surfaces
+ * carry it because a disabled control with no explanation is the worst of both
+ * — the die itself, its label for a screen reader, and a line in the sheet
+ * where the player is already reading.
+ */
+const showGate = (): void => {
+  const rests = companion.view().rests;
+  const standing = {
+    plan: rests ? rests.plan : null,
+    written: rests ? writingsOn(readAll(store), rests.plan).length : 0,
+    rollsAgain: stillMoving,
+  };
+  const held = holdsTheDie(standing);
+
+  /*
+   * Two gates, and they are different in kind.
+   *
+   * `held` is the game's own rule: write about the square you are standing on
+   * and the die opens. `toll` is the app asking to be paid. Both can shut the
+   * die and only one of them can be answered by writing, so the sentence has to
+   * say which — a player told to write, who writes, and finds the die still
+   * shut, has been lied to.
+   *
+   * The account comes first when both are due: it is the thing they can do
+   * something about without a card.
+   */
+  const toll = tollFor({
+    // Moves, not throws. A six is what puts you on the board, and charging for
+    // the throws that failed to find one meant 58% of new players met the
+    // paywall having never stood on a plane.
+    taken: movesTaken(rolls),
+    entitled: entitled(),
+    hosted: hostOf() !== null,
+  });
+
+  const shut = held || !toll.mayThrow;
+  el.die.disabled = shut || busy;
+  el.die.classList.toggle('waiting', shut);
+  el.die.setAttribute(
+    'aria-label',
+    held
+      ? messageFor(language, 'app.owedShort')
+      : toll.mayThrow
+        ? messageFor(language, 'app.play')
+        : messageFor(language, 'app.tollDue'),
+  );
+
+  el.owed.textContent = held ? messageFor(language, 'app.owed') : '';
+  el.owed.hidden = !held;
+
+  // Said on the last free throw and when they have run out; silent otherwise,
+  // and silent for anybody who will never be asked - `left` is null for them.
+  const say = !toll.mayThrow
+    ? messageFor(language, 'app.tollDue')
+    : isLastFree(toll)
+      ? messageFor(language, 'app.tollLast')
+      : '';
+  el.toll.textContent = say;
+  el.toll.hidden = say === '';
+
+  el.tollOpen.textContent = messageFor(language, 'app.tollOpen');
+  el.tollOpen.hidden = toll.mayThrow;
 };
 
 const SOURCE_LABEL: Readonly<Record<Line['source'], string>> = {
@@ -565,6 +938,35 @@ const SOURCE_LABEL: Readonly<Record<Line['source'], string>> = {
 const on = (at: number): string =>
   new Intl.DateTimeFormat(language, { dateStyle: 'medium' }).format(new Date(at));
 
+/**
+ * The companion's working, as nodes.
+ *
+ * Built rather than assigned: this is text a model wrote, and `innerHTML` on it
+ * is handing a stranger the page. `blocksOf` returns structure and every string
+ * below lands in `textContent`, so the worst a malformed line can do is come
+ * out as itself.
+ */
+const reasoned = (text: string): DocumentFragment => {
+  const fragment = document.createDocumentFragment();
+
+  for (const block of blocksOf(text)) {
+    const node = document.createElement(block.kind === 'item' ? 'li' : 'p');
+    if (block.kind === 'item' && block.depth > 0) {
+      node.dataset.depth = String(block.depth);
+    }
+
+    for (const run of block.runs) {
+      const part = document.createElement(run.strong ? 'strong' : run.emphasis ? 'em' : 'span');
+      part.textContent = run.text;
+      node.append(part);
+    }
+
+    fragment.append(node);
+  }
+
+  return fragment;
+};
+
 const bubble = (line: Line): HTMLElement => {
   const node = document.createElement('div');
   node.className = 'line';
@@ -575,6 +977,31 @@ const bubble = (line: Line): HTMLElement => {
   // authority of the other.
   node.dataset.source =
     line.source === 'written' && line.at !== undefined ? on(line.at) : SOURCE_LABEL[line.source];
+
+  /*
+   * How it got there, kept and openable.
+   *
+   * Folded rather than printed: reasoning runs many times the length of the
+   * answer, and a thread where every reply is preceded by a page of working is
+   * a thread nobody reads. Closed by default, in place, and it holds every step
+   * rather than the tail — the tail is what the live view shows while there is
+   * nothing else to look at; this is the record.
+   */
+  if (line.thinking) {
+    const shown = document.createElement('details');
+    shown.className = 'reasoning';
+
+    const label = document.createElement('summary');
+    label.textContent = messageFor(language, 'app.thinking');
+    shown.append(label);
+
+    const steps = document.createElement('div');
+    steps.className = 'reasoning-steps';
+    steps.append(reasoned(line.thinking));
+    shown.append(steps);
+
+    node.append(shown);
+  }
 
   const said = document.createElement('span');
   said.textContent = line.text;
@@ -735,74 +1162,6 @@ el.intention.addEventListener('click', () => {
   showIntention();
 });
 
-// --- carrying the path out, and back ---------------------------------------
-
-el.save.addEventListener('click', () => {
-  const file = new Blob([asFile(store)], { type: 'application/json' });
-  const url = URL.createObjectURL(file);
-  const link = document.createElement('a');
-  link.href = url;
-  const named = fileName(new Date().toISOString().slice(0, 10));
-  link.download = named;
-  link.click();
-  // Revoked, or every save leaks the whole path for as long as the tab lives.
-  URL.revokeObjectURL(url);
-
-  /**
-   * The sentence, now that it is true.
-   *
-   * `app.pathExported` says *saved, and a readable copy is on the clipboard*.
-   * This surface used to show a file name instead, because the prose rendering
-   * lived in `apps/miniapp/src/journal-file.ts` and could not be reached from
-   * here — a key half-used is how `app.gameNotRead` came to promise players
-   * accounts this app does not have. `pathText` is in `@leela/journal` now, so
-   * the clipboard really does get the readable copy and the sentence says what
-   * happened.
-   *
-   * Announced only once the clipboard has actually taken it. A browser that
-   * refuses still downloaded the file, which is the part that matters, and the
-   * file name is the honest thing to say in that case.
-   */
-  void navigator.clipboard
-    ?.writeText(pathText(readAll(store), titleOf))
-    .then(() => {
-      el.carrySaid.textContent = messageFor(language, 'app.pathExported');
-    })
-    .catch(() => {
-      el.carrySaid.textContent = named;
-    });
-  el.carrySaid.textContent = named;
-});
-
-el.bring.addEventListener('click', () => el.bringFile.click());
-
-el.bringFile.addEventListener('change', () => {
-  const [chosen] = el.bringFile.files ?? [];
-  if (!chosen) return;
-  void chosen.text().then((text) => {
-    const outcome = takeIn(store, text);
-    // Reset, or choosing the same file twice does nothing the second time.
-    el.bringFile.value = '';
-    if (!outcome) {
-      el.carrySaid.textContent = messageFor(language, 'app.pathUnreadable');
-      return;
-    }
-    /**
-     * What is *there*, and what it cost.
-     *
-     * `merged`'s own comment is the reason both numbers are said: the two
-     * surfaces before this told the player how many entries arrived while the
-     * bound had just thrown that many of their oldest away.
-     */
-    el.carrySaid.textContent =
-      outcome.dropped > 0
-        ? `${messageFor(language, 'app.pathImported', { count: outcome.added })} · −${outcome.dropped}`
-        : messageFor(language, 'app.pathImported', { count: outcome.added });
-    showIntention();
-    showThread();
-  });
-});
-
 /**
  * @param waiting true when the face is being restored rather than thrown.
  *
@@ -811,7 +1170,7 @@ el.bringFile.addEventListener('change', () => {
  * has a number to look at and still has to throw, so the two came apart the
  * moment the face survived a reload: the pips come back, the invitation stays.
  */
-const showFace = (value: number, waiting = false): void => {
+const showFace = (value: number, waiting = false, thrown = true): void => {
   const cells = pipsFor(value);
   el.die.dataset.thrown = String(isFace(value) && !waiting);
   el.face.replaceChildren(
@@ -819,9 +1178,12 @@ const showFace = (value: number, waiting = false): void => {
       document.createElement(cells.includes(at + 1) ? 'i' : 'span'),
     ),
   );
+  // The number is said only when it was actually thrown. The resting six is a
+  // face on a control, not a result, and reading it out as one would tell
+  // somebody who cannot see the screen that they had thrown a six.
   el.die.setAttribute(
     'aria-label',
-    isFace(value)
+    isFace(value) && thrown
       ? `${messageFor(language, 'app.play')} · ${value}`
       : messageFor(language, 'app.play'),
   );
@@ -1021,6 +1383,10 @@ const takeTurn = async (): Promise<void> => {
   lastThrower = threw;
   const mover = seat().id;
   const turn = throwFor(session, rollDie());
+  // Set before anything draws. Setting it after meant the gate ran on the
+  // previous throw's answer, so a six re-enabled the die while the labels
+  // beside it still read 'waiting for your reflection'.
+  stillMoving = turn.rollsAgain;
   session = turn.session;
   rolls[threw]?.push(turn.roll);
   showFace(turn.roll);
@@ -1106,8 +1472,11 @@ const takeTurn = async (): Promise<void> => {
   keep();
 
   board.draw();
-  el.die.disabled = false;
+  // Through the gate, not directly: setting `disabled` here bypassed the one
+  // place that also writes the label, and left a working die labelled as
+  // waiting.
   busy = false;
+  showGate();
 };
 
 el.die.addEventListener('click', () => void takeTurn());
@@ -1125,8 +1494,26 @@ window.addEventListener('keydown', (event) => {
 // --- writing back -----------------------------------------------------------
 
 const grow = (): void => {
-  el.reply.style.height = 'auto';
-  el.reply.style.height = `${el.reply.scrollHeight}px`;
+  /*
+   * An empty field carries no inline height at all.
+   *
+   * This measured `scrollHeight` unconditionally, and it is called once at
+   * startup - while the sheet is still animating into its detent, so the
+   * measurement is taken against a box that is not yet the box. It read 598px
+   * on an empty field, the stylesheet clamped that to `max-height: 30dvh`, and
+   * the writing box stood 244 pixels tall over the board with nothing in it,
+   * every launch, until somebody typed.
+   *
+   * Nothing to fit means nothing to set: the stylesheet's own `min-height`
+   * is the answer, and it cannot be measured wrong.
+   */
+  if (el.reply.value === '') {
+    el.reply.style.height = '';
+  } else {
+    el.reply.style.height = 'auto';
+    el.reply.style.height = `${el.reply.scrollHeight}px`;
+  }
+
   el.send.disabled = el.reply.value.trim().length === 0;
 };
 
@@ -1174,7 +1561,9 @@ el.compose.addEventListener('submit', (event) => {
 // The throw the player last watched, from the seat that actually made it — not
 // from whoever holds the turn now, which after a non-six is somebody else. Zero
 // when nothing is known, and zero is no face at all.
-showFace(rolls[saved.lastThrower ?? -1]?.at(-1) ?? 0, true);
+// The last throw if there was one, and a die at rest otherwise.
+const lastThrown = rolls[saved.lastThrower ?? -1]?.at(-1);
+showFace(lastThrown ?? RESTING_FACE, true, lastThrown !== undefined);
 showDetent('half');
 showStanding(null);
 

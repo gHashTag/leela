@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { MAX_REPORTS, REPORTS_KEY, writingsOn } from '@leela/journal';
 
 import type { Store } from '../src/kept';
-import { add, asFile, readAll, readIntention, takeIn, writeIntention } from '../src/written';
+import { add, readAll, readIntention, writeIntention } from '../src/written';
 
 /**
  * What comes back out of storage was put there by another program — an older
@@ -157,57 +157,5 @@ describe('what the player is playing for', () => {
     expect(writeIntention(refusing(), 'a real question')).toBe(false);
     expect(readIntention(refusing())).toBeNull();
     expect(writeIntention(null, 'a real question')).toBe(false);
-  });
-});
-
-describe('carrying the path out and back', () => {
-  const withPath = () => {
-    const store = fakeStore();
-    add(store, entry(34, 'first', 100));
-    add(store, entry(9, 'second', 200));
-    writeIntention(store, 'what am I circling');
-    return store;
-  };
-
-  it('writes a file that carries the question with the answers', () => {
-    const document = JSON.parse(asFile(withPath()));
-    expect(document.app).toBe('leela');
-    expect(document.entries).toHaveLength(2);
-    expect(document.intention).toBe('what am I circling');
-  });
-
-  it('reads its own file back', () => {
-    const text = asFile(withPath());
-    const fresh = fakeStore();
-    const outcome = takeIn(fresh, text);
-    expect(outcome?.added).toBe(2);
-    expect(readAll(fresh).map((r) => r.text)).toEqual(['first', 'second']);
-    expect(readIntention(fresh)).toBe('what am I circling');
-  });
-
-  /** A file is not a reason to change what somebody is playing for. */
-  it('does not overwrite a question already asked', () => {
-    const text = asFile(withPath());
-    const mine = fakeStore();
-    writeIntention(mine, 'my own question');
-    takeIn(mine, text);
-    expect(readIntention(mine)).toBe('my own question');
-  });
-
-  it('brings nothing in twice', () => {
-    const text = asFile(withPath());
-    const fresh = fakeStore();
-    takeIn(fresh, text);
-    const again = takeIn(fresh, text);
-    expect(again?.added).toBe(0);
-    expect(readAll(fresh)).toHaveLength(2);
-  });
-
-  it('refuses a file it cannot vouch for, and keeps what was there', () => {
-    const mine = withPath();
-    for (const bad of ['', 'not json', '{}', '{"app":"something else"}', '[]']) {
-      expect(takeIn(mine, bad), bad).toBeNull();
-    }
-    expect(readAll(mine)).toHaveLength(2);
   });
 });

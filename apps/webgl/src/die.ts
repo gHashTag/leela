@@ -44,6 +44,19 @@ const FACES: Readonly<Record<number, readonly number[]>> = {
  * cannot disagree with itself.
  */
 /** Whether a value is a face this die can show. */
+/**
+ * The face a die shows when it is not showing a throw.
+ *
+ * A die drawn from nothing was drawn *as* nothing: the first load passed 0,
+ * `isFace(0)` is false, and the control came up as an empty rounded square
+ * beside a sentence reading *A six puts you on the board*. A die at rest on a
+ * table has a number facing up.
+ *
+ * Six, because that is the number the sentence beside it names and the only
+ * throw that starts a game.
+ */
+export const RESTING_FACE = 6;
+
 export const isFace = (value: number): boolean =>
   Number.isInteger(value) && FACES[value] !== undefined;
 

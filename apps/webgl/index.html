@@ -2,8 +2,26 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="color-scheme" content="dark" />
+    <!--
+      `interactive-widget` is the declarative half of keeping the writing box
+      above the keyboard: it asks the engine to resize the page when one comes
+      up, rather than drawing it over the top. Engines that do not know the key
+      ignore it, and iOS is currently among them - which is why `keyboard.ts`
+      measures the visual viewport and lifts the sheet itself. Both, because the
+      declarative one is where this is going and the measured one is what works
+      on the phone in hand.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <!--
+      Both, or the browser paints the canvas black before a single rule is read.
+      This said `dark`, which is a promise about the page: the user agent fills
+      the viewport with its dark background on the very first frame, and a light
+      reader saw that flash on every load.
+    -->
+    <meta name="color-scheme" content="light dark" />
     <title>Leela — the board in three dimensions</title>
 
     <!--
@@ -19,7 +37,44 @@
       property="og:description"
       content="The game of self-knowledge — 72 plans, in 22 languages."
     />
+    <!--
+      Telegram's bridge, the same tag the mini app carries. The webview does
+      not put `window.Telegram` on a page by itself; this script is what
+      defines it - and it defines it in any browser, which is why
+      `telegram.ts` treats the object as a host to greet rather than proof of
+      one. Outside Telegram the greeting reaches nobody and changes nothing.
+    -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="/src/style.css" />
+
+    <!--
+      The light, before the first paint.
+
+      The stylesheet's default tokens are the dark ones and `main.ts` sets
+      `data-look` when it runs - so a light reader met a black page for as long
+      as the bundle took to parse, then a cream one. On a phone, coming off nine
+      white onboarding screens, that reads as a fault rather than as loading.
+
+      Inline and in the head, because anything deferred is by definition after
+      the paint this exists to fix. Five lines, no imports: it cannot wait for
+      the module graph.
+
+      `look.ts` is the tested source of this rule and this is deliberately its
+      smallest possible restatement - the same key, the same order: a stored
+      choice, then the system, then dark. `settings.test.ts` holds the key in
+      step; the order is short enough to read.
+    -->
+    <script>
+      try {
+        var asked = window.localStorage.getItem('leela.look');
+        document.documentElement.dataset.look =
+          asked === 'light' || asked === 'dark'
+            ? asked
+            : window.matchMedia('(prefers-color-scheme: light)').matches
+              ? 'light'
+              : 'dark';
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <!--
@@ -36,6 +91,51 @@
     <header class="where" id="where">
       <span class="where-number" id="plan-number">—</span>
       <span class="where-title" id="plan-title">Throw a six to enter the game</span>
+
+      <!--
+        Settings: one button, at the top.
+
+        They stood in the row with the die - three controls a player touches
+        once, in the middle of the two they touch every turn - then across the
+        header as three pills, competing with the plan's own name for a line
+        that is already truncated on a phone. One mark, and the rest behind it.
+      -->
+      <div class="where-settings">
+        <button
+          class="gear"
+          id="gear"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="settings"
+        >
+          <span class="gear-mark" aria-hidden="true">⋮</span>
+        </button>
+
+        <!--
+          One button, and everything behind it.
+
+          Three pills across the top were three decisions competing with the
+          plan's own name for the same line, on a phone where that name is
+          already truncated. They are settings: reached when wanted, out of the
+          way otherwise.
+        -->
+        <div class="settings" id="settings" hidden>
+          <button
+            class="lotus"
+            id="lotus"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="who"
+          >
+            <span class="lotus-mark" id="lotus-mark" aria-hidden="true"></span>
+          </button>
+          <button class="tongue" id="tongue" type="button"></button>
+          <button class="look" id="look" type="button"></button>
+        </div>
+      </div>
+
       <progress class="where-progress" id="progress" max="1" value="0"></progress>
     </header>
 
@@ -77,16 +177,18 @@
           <span class="face" id="face" aria-hidden="true"></span>
         </button>
         <p class="say" id="say" role="status" aria-live="polite">A six puts you on the board.</p>
-        <button
-          class="lotus"
-          id="lotus"
-          type="button"
-          aria-haspopup="true"
-          aria-expanded="false"
-          aria-controls="who"
-        >
-          <span class="lotus-mark" id="lotus-mark" aria-hidden="true"></span>
-        </button>
+        <p class="owed" id="owed" role="status" aria-live="polite" hidden></p>
+
+        <!--
+          Three throws free, then the game asks.
+
+          Beside the die rather than over the board: this is a fact about the
+          control the player is reaching for, and a dialog would take the board
+          away to say it. The button is only shown when there is an app to ask —
+          `toll.ts` never charges a page that cannot be paid on.
+        -->
+        <p class="toll" id="toll" role="status" aria-live="polite" hidden></p>
+        <button class="toll-open" id="toll-open" type="button" hidden></button>
       </div>
 
       <!--
@@ -149,9 +251,6 @@
 
         <!-- Out of the browser, and back into it. -->
         <div class="carry">
-          <button type="button" id="save" class="ghost"></button>
-          <button type="button" id="bring" class="ghost"></button>
-          <input type="file" id="bring-file" accept="application/json,.json" hidden />
           <p class="carry-said" id="carry-said" role="status" aria-live="polite"></p>
         </div>
 

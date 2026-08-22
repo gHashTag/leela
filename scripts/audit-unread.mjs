@@ -119,6 +119,8 @@ const testSources = testFiles.map((file) => readFileSync(join(ROOT, file), 'utf8
  * fields go to be forgotten.
  */
 const WRITE_ONLY = {
+  // Read by three.js at renderer construction, not by any code of ours.
+  antialias: 'a WebGLRenderer option, consumed inside three.js',
   fullName: 'display only',
   email: 'part of the legacy document shape, not used here',
   firstGame: 'part of the legacy document shape, not used here',

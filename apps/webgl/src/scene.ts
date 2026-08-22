@@ -21,6 +21,7 @@ import {
   ARROW_WOOD,
   SNAKE_SKINS,
   SPACE,
+  type Palette,
   css,
 } from './theme';
 import { paintBorder } from './border';
@@ -208,7 +209,11 @@ export interface Board {
    *        though the panel were still along the bottom left the board in a
    *        strip across the top with half the window empty beside it.
    */
-  resize(width: number, height: number, inset?: { bottom?: number; right?: number }): void;
+  resize(
+    width: number,
+    height: number,
+    inset?: { top?: number; bottom?: number; right?: number },
+  ): void;
   /** Draws one frame. Nothing renders unless someone asks. */
   draw(): void;
   /** Which plan is under this point on the canvas, if any. */
@@ -287,6 +292,28 @@ const jumpCurve = (from: number, to: number, kind: 'snake' | 'arrow'): THREE.Cat
  * `tube` where they can be tested. This is the sweep: a ring of vertices at
  * each sample, oriented by the curve's own frames so the body does not twist.
  */
+/**
+ * A geometry the snake material can actually be worn on.
+ *
+ * The skin's markings sit on UV channel 1 — a second set, because scales and
+ * bands cycle at completely different rates down a body and one attribute
+ * cannot carry both. `taperedTube` builds that set; `SphereGeometry` does not
+ * have one, and the snake's head is a sphere wearing the same material.
+ *
+ * The result was a shader that would not compile — *'uv1' : undeclared
+ * identifier* — once per snake, thirty times a load, with the heads left to
+ * whatever the renderer falls back to. Found in the console rather than by eye,
+ * which is how it survived: the board still draws.
+ *
+ * The head borrows the sphere's own coordinates, so the marking wraps it once.
+ * A head is short; a band that repeated down it would read as stripes on a face.
+ */
+const wearsMarkings = (geometry: THREE.BufferGeometry): THREE.BufferGeometry => {
+  const uv = geometry.getAttribute('uv');
+  if (uv && !geometry.getAttribute('uv1')) geometry.setAttribute('uv1', uv);
+  return geometry;
+};
+
 const taperedTube = (
   curve: THREE.Curve<THREE.Vector3>,
   profile: Profile,
@@ -445,12 +472,31 @@ export const createBoard = (
   canvas: HTMLCanvasElement,
   clock: Clock = animationClock(),
   surface: Surface = domSurface,
+  /**
+   * The light the board is built in.
+   *
+   * A parameter rather than the constant it was, because the reader can now
+   * choose - see `look.ts`. Defaulted to the void, so every caller and every
+   * test that does not care about the light reads exactly as it did.
+   *
+   * Taken once, at build: the palette is baked into geometry, materials, lights
+   * and the painted labels, and repainting all of it in place is the change
+   * this page answers the same way it answers a language switch - by reloading,
+   * which cannot be half-done.
+   */
+  palette: Palette = SPACE,
 ): Board => {
   const ordered = plans();
-  const palette = SPACE;
 
   const scene = new THREE.Scene();
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  // Transparent when the palette hands the ground to the page: alpha has to be
+  // decided when the context is made, which is why the palette is a parameter
+  // rather than something set afterwards.
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: palette.background === null,
+  });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -898,7 +944,10 @@ export const createBoard = (
         ),
       );
 
-      const head = new THREE.Mesh(new THREE.SphereGeometry(SNAKE_GIRTH * 1.5, 16, 12), material);
+      const head = new THREE.Mesh(
+        wearsMarkings(new THREE.SphereGeometry(SNAKE_GIRTH * 1.5, 16, 12)),
+        material,
+      );
       head.scale.set(1, 0.72, 1.35);
       head.position.copy(start);
       aim(head, intoStart);
@@ -1226,7 +1275,8 @@ export const createBoard = (
   };
 
   const applyPalette = (): void => {
-    scene.background = new THREE.Color(palette.background);
+    scene.background =
+      palette.background === null ? null : new THREE.Color(palette.background);
     // The stars are the surround in the dark scheme. In light the board is on a
     // table, not in space, and a field of pale dots on paper is only noise.
     stars.visible = palette.stars;
@@ -1356,7 +1406,13 @@ export const createBoard = (
       // every one was caught by eye. See that file for the list.
       const frame = frameBoard(
         camera,
-        { width: slabWidth, depth: slabDepth, ceiling: ARC_CEILING },
+        // Not the full arc ceiling. `cornersOf` raises the ceiling at all four
+        // corners, but the arcs peak over the middle of the board and are low
+        // at the rim, so the box it fits is taller than anything that is
+        // actually there. Fitting that phantom pushed the camera back until the
+        // board filled barely half the band with empty sky above it. This is
+        // the height the corners really carry.
+        { width: slabWidth, depth: slabDepth, ceiling: ARC_CEILING * 0.45 },
         { width: w, height: Math.max(1, h) },
         inset,
       );

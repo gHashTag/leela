@@ -32,6 +32,8 @@ import {
 } from './canon';
 import type { Direction, MoveEvent } from '@leela/engine';
 
+import { answerIn } from './heard';
+
 /** Who said a line, and on whose authority. */
 export type Source =
   /** The canonical text of the plan, or a sentence from the catalogue. */
@@ -60,6 +62,15 @@ export interface Line {
   readonly plan: number;
   /** When this was written, for a line that is not from now. */
   readonly at?: number;
+  /**
+   * How the model got there, when it showed its work.
+   *
+   * Kept on the line rather than only in `streaming`, which is cleared the
+   * moment the answer lands. A player watched the reasoning arrive and then had
+   * nothing to compare the answer against: the one thing that made the answer
+   * checkable vanished at the moment it became worth checking.
+   */
+  readonly thinking?: string;
   /**
    * The rest of the plan's text, when `text` is an abridgement of it.
    *
@@ -108,6 +119,14 @@ export interface CompanionView {
   readonly status: Status;
   readonly note: string | null;
   readonly rests: Rests | null;
+  /**
+   * The answer forming, and the reasoning behind it, while one is arriving.
+   *
+   * Kept out of `lines` on purpose: a half-written answer is not a line of the
+   * thread yet, and putting it there meant every redraw had to remember to take
+   * it back out again.
+   */
+  readonly streaming?: { readonly text: string; readonly thinking: string } | null;
 }
 
 /**
@@ -117,7 +136,24 @@ export interface CompanionView {
  * builds prompts; this takes whatever a deployment puts in front of it — a
  * proxy, a bot endpoint, a local runtime — and the browser never holds the key.
  */
-export type Ask = (question: string, rests: Rests) => Promise<string>;
+export type Ask = (
+  question: string,
+  rests: Rests,
+  /**
+   * What has already been said in this thread, oldest first.
+   *
+   * Passed because a companion without it answers every message as if it were
+   * the first: the player writes "and what about that?" and gets a reply about
+   * nothing. The caller decides how much of it to send.
+   */
+  said: readonly Line[],
+  /**
+   * Called as the answer arrives, so the page can show it forming rather than
+   * a spinner. Optional: a deployment that cannot stream simply never calls it
+   * and the answer appears whole, which is the old behaviour.
+   */
+  onChunk?: (part: { text?: string; thinking?: string }) => void,
+) => Promise<string>;
 
 export interface CompanionOptions {
   language: Language;
@@ -125,6 +161,11 @@ export interface CompanionOptions {
   ask?: Ask;
   /** What to call the model on screen. */
   modelName?: string;
+  /**
+   * Called whenever the streamed answer grows, so the caller can redraw. The
+   * companion does not own the DOM and cannot redraw itself.
+   */
+  onProgress?: () => void;
 }
 
 /** How much of a plan's text the opening remark quotes. */
@@ -134,6 +175,9 @@ export class Companion {
   private readonly language: Language;
   private readonly ask: Ask | null;
   private readonly modelName: string | null;
+  private readonly onProgress: (() => void) | null;
+  /** The answer as it arrives, and the reasoning behind it. */
+  private streaming: { text: string; thinking: string } | null = null;
 
   private lines: Line[] = [];
   private thinking = false;
@@ -142,7 +186,8 @@ export class Companion {
   private rests: Rests | null = null;
   private journey: number[] = [];
 
-  constructor({ language, ask, modelName }: CompanionOptions) {
+  constructor({ language, ask, modelName, onProgress }: CompanionOptions) {
+    this.onProgress = onProgress ?? null;
     this.language = language;
     this.ask = ask ?? null;
     this.modelName = ask ? (modelName ?? 'model') : null;
@@ -160,6 +205,8 @@ export class Companion {
             : 'ready',
       note: this.note,
       rests: this.rests,
+      // The answer as it stands right now. Null unless one is arriving.
+      streaming: this.streaming ? { ...this.streaming } : null,
     };
   }
 
@@ -240,6 +287,15 @@ export class Companion {
    * have called a report. It is simply not answered by anything but the canon.
    */
   async say(what: string): Promise<void> {
+    /*
+     * The language to answer in, asked of the message.
+     *
+     * The board's language is what it is *labelled* in; it is not necessarily
+     * what somebody is writing to the companion in. A player typing «Как
+     * играть?» on an English phone was told, in English, that the companion was
+     * unavailable. The rule is `heard.ts`, where it is tested.
+     */
+    const answering = answerIn(what, this.language);
     const said = what.trim();
     if (said.length === 0) return;
     const rests = this.rests;
@@ -254,7 +310,7 @@ export class Companion {
         ...this.lines,
         {
           who: 'companion',
-          text: messageFor(this.language, 'companion.unavailable', { plan: rests.plan }),
+          text: messageFor(answering, 'companion.unavailable', { plan: rests.plan }),
           source: 'fallback',
           plan: rests.plan,
         },
@@ -265,22 +321,51 @@ export class Companion {
     this.thinking = true;
     this.note = null;
     try {
-      const answer = (await this.ask(said, rests)).trim();
+      this.streaming = { text: '', thinking: '' };
+      const answer = (
+        await this.ask(said, rests, this.lines, (part) => {
+          if (!this.streaming) return;
+          if (part.thinking) this.streaming.thinking += part.thinking;
+          if (part.text) this.streaming.text += part.text;
+          // Guarded, because this is the screen's callback and it is called
+          // inside the try that catches a failed answer. Without this, a
+          // repaint that throws on the first token is indistinguishable from
+          // the model refusing: the answer arrives, the catch swallows it, and
+          // the player is told nothing could be reached. A surface that will
+          // not redraw is not an answer lost.
+          try {
+            this.onProgress?.();
+          } catch {
+            /* The stream continues; what it is painted onto is not its business. */
+          }
+        })
+      ).trim();
+      const reasoned = this.streaming?.thinking ?? '';
+      this.streaming = null;
       // Nothing is not an answer. `@leela/ai` learned this from a provider
       // returning 200 with an empty choice, and the fix belongs on both sides.
       if (answer.length === 0) throw new Error('the model answered with nothing');
       this.lines = [
         ...this.lines,
-        { who: 'companion', text: answer, source: 'model', plan: rests.plan },
+        {
+          who: 'companion',
+          text: answer,
+          source: 'model',
+          plan: rests.plan,
+          // Only when there is some: an empty string on every line would put an
+          // empty disclosure under answers that never showed their work.
+          ...(reasoned.trim() ? { thinking: reasoned } : {}),
+        },
       ];
     } catch (error) {
+      this.streaming = null;
       this.silenced = true;
       this.note = error instanceof Error ? error.message : String(error);
       this.lines = [
         ...this.lines,
         {
           who: 'companion',
-          text: messageFor(this.language, 'companion.unavailable', { plan: rests.plan }),
+          text: messageFor(answering, 'companion.unavailable', { plan: rests.plan }),
           source: 'fallback',
           plan: rests.plan,
         },

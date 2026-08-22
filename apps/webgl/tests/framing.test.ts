@@ -176,3 +176,51 @@ describe('framing the board', () => {
     expect(once.span).toEqual(twice.span);
   });
 });
+
+describe('the header, which stands on the board from above', () => {
+  const VIEWPORT = { width: 400, height: 800 };
+
+  it('takes its pixels off the top of the band', () => {
+    // Found by eye on a phone: the top row — 72, 71, 70 — sat under the plan's
+    // number and title. The sheet had been accounted for since the first pass
+    // and the header never was, so the board was fitted to a band whose top
+    // edge was the top of the canvas and then partly covered by something drawn
+    // over it.
+    const without = bandFor(VIEWPORT, {});
+    const withHeader = bandFor(VIEWPORT, { top: 80 });
+
+    expect(withHeader.height).toBeLessThan(without.height);
+    // 80 of 800 is a tenth of the canvas, which is a fifth of clip space.
+    expect(withHeader.height).toBeCloseTo(without.height - 0.2, 6);
+    // And it eats downwards, so the floor of the band does not move.
+    expect(withHeader.bottom).toBeCloseTo(without.bottom, 6);
+  });
+
+  it('leaves every caller that has no header exactly where it was', () => {
+    // The change has to be arithmetically the line it replaced when `top` is
+    // absent, or every framing this app has ever done moves a little.
+    // Stated as the identity the old line encoded — `height: 1 - bottom`, a
+    // band whose ceiling is the top of the canvas — rather than by copying the
+    // clamp's constant into the expectation, which is the shape this repository
+    // keeps catching: a test that restates the code instead of the claim.
+    for (const bottom of [0, 132, 320, 600, 790]) {
+      const before = bandFor(VIEWPORT, { bottom });
+      expect(before.bottom + before.height, `sheet of ${bottom}`).toBeCloseTo(1, 6);
+    }
+  });
+
+  it('shares the room with the sheet rather than each taking it all', () => {
+    // A header and a sheet that together cover the screen: honoured in full,
+    // the band would come out upside down. It stays a band, right way up, with
+    // the floor below the ceiling.
+    const squeezed = bandFor(VIEWPORT, { top: 700, bottom: 700 });
+    expect(squeezed.height).toBeGreaterThan(0);
+    expect(squeezed.bottom + squeezed.height).toBeLessThanOrEqual(1 + 1e-9);
+    expect(squeezed.bottom).toBeGreaterThanOrEqual(-1 - 1e-9);
+  });
+
+  it('is ignored when it is nonsense', () => {
+    // A measurement from the DOM can arrive negative mid-transition.
+    expect(bandFor(VIEWPORT, { top: -50 }).height).toBeCloseTo(bandFor(VIEWPORT, {}).height, 6);
+  });
+});

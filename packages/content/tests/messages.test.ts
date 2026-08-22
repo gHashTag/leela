@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   LANGUAGES,
   englishCatalogue,
@@ -121,6 +121,40 @@ describe('plurals belong to the language, not to English', () => {
     expect(messageFor('ru', 'path.heading', { count: 2 })).toContain('2 плана.');
     expect(messageFor('ru', 'path.heading', { count: 5 })).toContain('5 планов.');
     expect(messageFor('ru', 'path.heading', { count: 21 })).toContain('21 план.');
+  });
+
+  it('still counts on a runtime with no Intl.PluralRules', async () => {
+    // Hermes on iOS, which is what the phone runs. This file used to claim
+    // `Intl.PluralRules` was in every runtime the monorepo targets; the app
+    // opened a path with one account on it and went to a red box - *Cannot read
+    // property 'prototype' of undefined* - and the whole screen with it.
+    //
+    // Imported fresh with the constructor removed, because the check is read
+    // once at module load: a runtime does not grow it while somebody is reading
+    // a board.
+    const had = Intl.PluralRules;
+    try {
+      // @ts-expect-error - standing in for a runtime that never had it.
+      delete Intl.PluralRules;
+      vi.resetModules();
+      const hermes = await import('../src/messages');
+
+      expect(hermes.messageFor('en', 'path.heading', { count: 1 })).toContain('1 plan.');
+      expect(hermes.messageFor('en', 'path.heading', { count: 2 })).toContain('2 plans.');
+
+      // And the three Russian forms, done by hand rather than lost: a rough
+      // plural reads slightly wrong, no plural at all does not render.
+      expect(hermes.messageFor('ru', 'path.heading', { count: 1 })).toContain('1 план.');
+      expect(hermes.messageFor('ru', 'path.heading', { count: 2 })).toContain('2 плана.');
+      expect(hermes.messageFor('ru', 'path.heading', { count: 5 })).toContain('5 планов.');
+      expect(hermes.messageFor('ru', 'path.heading', { count: 11 })).toContain('11 планов.');
+      expect(hermes.messageFor('ru', 'path.heading', { count: 21 })).toContain('21 план.');
+    } finally {
+      // @ts-expect-error - the same doorway the delete above went through:
+      // the declaration is readonly, the runtime property is not.
+      Intl.PluralRules = had;
+      vi.resetModules();
+    }
   });
 
   it('gives every language every form it declares it needs', () => {

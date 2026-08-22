@@ -31,6 +31,7 @@ import {
   type RuleSet,
 } from '@leela/engine';
 
+import { announce } from './hosted';
 import { areRolls, stateAfter } from './path';
 
 export const KEPT_KEY = 'leela.webgl.game';
@@ -310,6 +311,16 @@ export const finishedTable = (seats: readonly KeptSeat[]): boolean =>
  * answered "Written." over writing that was gone.
  */
 export function write(store: Store | null, kept: Kept): boolean {
+  // Here rather than at the call sites, because this is the one funnel every
+  // saved change passes through: a board embedded in the phone app has to tell
+  // it where the player now stands, and a rule kept by remembering to call
+  // something is a rule the next handler is written without.
+  //
+  // Before the store and outside its `try`, because the two are independent.
+  // The app is told what happened even when the disk refuses, and a browser
+  // with no host - the ordinary case - is told nothing and saves as always.
+  announce(kept);
+
   if (!store) return false;
   try {
     store.setItem(KEPT_KEY, JSON.stringify(kept));

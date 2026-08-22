@@ -215,8 +215,12 @@ export const MAX_ASKERS = 10_000;
  * conversations, and persistence here would be a database write on the path of
  * every question in order to defend against somebody who can restart the
  * process.
+ *
+ * Exported for the ask route: `serve.ts` bounds the board's HTTP questions by
+ * address with this same guard, rather than growing a second sliding window
+ * that would drift from this one at the first fix.
  */
-class Allowance {
+export class Allowance {
   private readonly byPlayer = new Map<string, number[]>();
 
   constructor(

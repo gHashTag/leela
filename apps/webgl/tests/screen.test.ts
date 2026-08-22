@@ -14,7 +14,7 @@ import { Companion } from '../src/companion';
 import { trimmedDescription } from '../src/canon';
 import { DEITIES, deityFor, DEFAULT_DEITY } from '../src/deities';
 import { presenceOf, screenFor, standingFor, toneOf, turnPassed } from '../src/hud';
-import { isFace, pipsFor } from '../src/die';
+import { RESTING_FACE, isFace, pipsFor } from '../src/die';
 import { DETENTS, dragged, nearest, stepped } from '../src/sheet';
 import { arrowProfile, snakeProfile, wiggle } from '../src/tube';
 
@@ -174,6 +174,17 @@ describe('the die', () => {
         expect(cell).toBeLessThanOrEqual(9);
       }
     }
+  });
+
+  it('has a face to show before anything has been thrown', () => {
+    // The first load drew the die from 0. `isFace(0)` is false, so the control
+    // came up as an empty rounded square - next to a sentence reading *A six
+    // puts you on the board*. A die at rest on a table has a number facing up.
+    expect(isFace(RESTING_FACE)).toBe(true);
+    expect(pipsFor(RESTING_FACE)).toHaveLength(RESTING_FACE);
+    // Six, because it is the number that sentence names and the only throw that
+    // starts a game.
+    expect(RESTING_FACE).toBe(6);
   });
 
   it('is symmetric about the centre, as a die is', () => {
@@ -383,6 +394,38 @@ describe('the companion', () => {
     landing(companion, 34);
     expect(companion.view().status).toBe('offline');
     for (const line of companion.view().lines) expect(line.source).toBe('canon');
+  });
+
+  it('answers even when the screen it is painting onto throws', async () => {
+    // `onProgress` is the screen's own redraw, called on every token *inside*
+    // the try that catches a failed answer. Unguarded, a repaint that throws on
+    // the first token was indistinguishable from the model refusing: the answer
+    // arrived in full, the catch swallowed it, and the player was told nothing
+    // could be reached. Found by `audit-promises`, which asks of every injected
+    // dependency whether anything tries it broken.
+    let painted = 0;
+    const companion = new Companion({
+      language: 'en',
+      modelName: 'test',
+      ask: async (_question, _rests, _said, onChunk) => {
+        onChunk?.({ text: 'Attachment is what keeps you here.' });
+        return 'Attachment is what keeps you here.';
+      },
+      onProgress: () => {
+        painted += 1;
+        throw new Error('the surface is gone');
+      },
+    });
+
+    landing(companion, 8);
+    await companion.say('what does this plan ask of me');
+
+    expect(painted).toBeGreaterThan(0);
+    expect(companion.view().status).toBe('ready');
+    const last = companion.view().lines.at(-1);
+    expect(last?.who).toBe('companion');
+    expect(last?.source).toBe('model');
+    expect(last?.text).toContain('Attachment');
   });
 
   it('reports what it is working from, including the fields it has nothing in', () => {
