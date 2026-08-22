@@ -370,7 +370,9 @@ describe.skipIf(!hasBun)('what `--filter \'*\'` does when a workspace stops decl
   it('is loud when every workspace loses it, which is why losing one is the dangerous case', () => {
     const none = ran(null, null);
 
-    expect(none.output).toContain('No packages matched the filter');
+    // Bun 1.1 says "No packages matched the filter"; 1.2 inserts "workspace".
+    // The assertion is about the loudness, not the edition's phrasing.
+    expect(none.output).toMatch(/No (?:workspace )?packages matched the filter/);
     expect(none.status).not.toBe(0);
   });
 });
