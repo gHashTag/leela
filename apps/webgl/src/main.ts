@@ -1814,7 +1814,14 @@ if (!canSpeakBetter || mouth === null) {
 
   // Asked once. A player who took the better voice last time gets it again
   // without a second offer, and off the shelf rather than off the network.
-  if (neuralChosen(languageStore)) void takeTheBetterVoice();
+  // A kept yes re-arms on load — the weights come off the shelf, so this is
+  // usually instant. Said out loud either way: silence here was the thing that
+  // made a live check impossible to read.
+  if (neuralChosen(languageStore)) {
+    void takeTheBetterVoice().then(() => {
+      console.log(`[voice] re-armed from the shelf: ${state}`);
+    });
+  }
 }
 
 let listening: Listening | null = null;

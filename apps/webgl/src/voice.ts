@@ -566,9 +566,14 @@ export const preferring = (better: Sounding, plain: Mouth): Mouth => {
           }
           try {
             await better.play(sentence);
-          } catch {
+          } catch (why) {
             if (mine !== run) return;
             fallen = true;
+            // Said out loud, once per answer: a voice that quietly becomes a
+            // different voice is a bug nobody can report. The console is where
+            // a player who noticed can tell us what it said, and where the next
+            // session reads what actually happened rather than guessing.
+            console.log(`[voice] the better voice stepped aside: ${String(why)}`);
             plain.say(sentence);
           }
         } finally {
