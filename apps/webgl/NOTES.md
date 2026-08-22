@@ -6,19 +6,29 @@ cannot drift from the apps.
 
 ## Why a browser at all
 
-Measured against the field on 2026-08-11:
+Measured against the field on 2026-08-11 and re-measured 2026-08-22 (three
+sourced research passes; full findings in the loop journal, workflow
+wf_2ce27002-d19). The first measurement's closing claim — a link that opens a
+playable board is ours alone — was falsified by the second: Leela Quest has
+played in a browser since 2025-07, and quantumgame.love ships link + AI guide
+(solo, 1490 ₽ one-shot). The wedge, restated to what held:
 
-| Competitor | Shape | What it costs a first-time player |
+| Competitor | Shape (2026-08-22) | Has of ours |
 |---|---|---|
-| Leela Chakra Ai (iOS/Android) | app + AI guru | install, account |
-| Leela: The Game of Knowledge (iOS) | app, secularised | install, subscription trial |
-| com.vtm.lila (Android) | app, virtual board | install |
-| LeelaRoom | facilitator platform | a booked session, a host |
-| Leela Quest | web adaptation | — |
+| Leela Quest (web/iOS/Android) | browser board, credits $4.99/game, updated Aug 2026 | link, board |
+| quantumgame.love | browser + AI guide, solo by design, 1490 ₽ once | link, AI |
+| Leela The Queen (iOS) | 'first AI Leela', $19.99/mo, dormant 18 mo, 7 ratings | AI |
+| Leela: Game of Knowledge (iOS) | 154 ratings, reminders, dormant 24 mo | retention |
+| com.vtm.lila (Android) | 10K+ installs, ads, 'Leela Chakra' in its title | distribution |
+| LeelaRoom / OMKARA / MAGICLEELA | facilitator businesses, some via Telegram | group (hosted) |
+| ChatGPT-prompt Leela (viral, vc.ru 08-2026) | free text-only game master | AI (free) |
 
-The gap is the middle: **self-serve in a browser, with reflection, nothing to
-install**. Everything above is either an app you must install or a session you
-must book. A link that opens a playable board is the one thing none of them is.
+What no one else has, singly or combined: **group play in a chat with no
+human host**, a companion whose answers stream with visible reasoning and
+rest on the vedic texts, and a daily plan-word that respects the channel —
+all behind one link. The wedge is the combination, not any one part; the
+2026-08-11 sentence above it was retired by measurement, which is the way
+sentences should go.
 
 ## Weak points, named honestly
 
