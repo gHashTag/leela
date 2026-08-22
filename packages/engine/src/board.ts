@@ -16,6 +16,15 @@ export const WIN_LOKA = 68;
 /** A die has six faces; six is also the value that starts a new game. */
 export const MAX_ROLL = 6;
 
+/**
+ * The face a die shows before anyone throws it.
+ *
+ * Presentation rather than a rule — but presentation two surfaces must agree
+ * on, and each had written its own six. The entry throw is the face worth
+ * resting on: the die waits showing the throw the game is waiting for.
+ */
+export const RESTING_FACE = MAX_ROLL;
+
 /** Where a player lands on the first six that starts the game. */
 export const START_LOKA = 6;
 

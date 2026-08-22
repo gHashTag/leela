@@ -18,7 +18,9 @@ export {
   MAX_RETURN_CHARS,
   MAX_RETURN_ENTRIES,
   MAX_PLAN_CHARS,
+  MAX_RULES_CHARS,
   PromptError,
+  aboutPrompt,
   questionPrompt,
   reportPrompt,
   summariseJourney,
@@ -26,7 +28,7 @@ export {
   systemPrompt,
   trimToParagraph,
 } from './prompts';
-export type { JourneyEntry, Message, PlanContext } from './prompts';
+export type { AboutContext, JourneyEntry, Message, PlanContext } from './prompts';
 
 export {
   DEFAULT_BASE_URL,
@@ -57,5 +59,11 @@ export type {
   ProviderOptions,
 } from './model';
 
-export { DEFAULT_SILENCE_MS, DEFAULT_TIMEOUT_MS, Guide, fallbackText } from './guide';
-export type { AskOptions, GuideOptions, GuideStatus, Reflection } from './guide';
+export {
+  DEFAULT_SILENCE_MS,
+  DEFAULT_TIMEOUT_MS,
+  Guide,
+  aboutFallbackText,
+  fallbackText,
+} from './guide';
+export type { AboutOptions, AskOptions, GuideOptions, GuideStatus, Reflection } from './guide';

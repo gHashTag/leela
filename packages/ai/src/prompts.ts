@@ -411,6 +411,22 @@ function boardHoldsJump(direction: Direction, previousPlan: number, plan: number
 }
 
 /**
+ * How the companion speaks, wherever it is speaking from.
+ *
+ * Shared by the plan prompt and the about prompt below rather than written
+ * into each, because the voice is one decision: whoever tunes it — shorter,
+ * warmer, fewer questions — must not have to find every prompt that carries a
+ * copy, and the copy they miss is the one a player meets.
+ */
+const HOW_TO_SPEAK = [
+  'Be brief — a few sentences, not an essay. Ask at most one question, and',
+  'only when it opens something up. Do not congratulate, do not predict the',
+  'future, and do not tell the player what their life means. You are not a',
+  'therapist; if they describe real distress, say plainly that talking to',
+  'someone qualified would serve them better than a game will.',
+];
+
+/**
  * The instruction that defines the voice.
  *
  * Written in English regardless of the player's language: the model follows
@@ -554,11 +570,7 @@ export function systemPrompt(context: PlanContext): string {
     '---',
     '',
     `Answer in ${languageName}.`,
-    'Be brief — a few sentences, not an essay. Ask at most one question, and',
-    'only when it opens something up. Do not congratulate, do not predict the',
-    'future, and do not tell the player what their life means. You are not a',
-    'therapist; if they describe real distress, say plainly that talking to',
-    'someone qualified would serve them better than a game will.',
+    ...HOW_TO_SPEAK,
   );
 
   return lines.join('\n');
@@ -634,6 +646,96 @@ export function questionPrompt(
 
   return [
     { role: 'system', content: systemPrompt(context) },
+    ...recentHistory(history),
+    { role: 'user', content: asTyped(text) },
+  ];
+}
+
+/**
+ * How much of the caller's rules text a prompt will carry.
+ *
+ * Measured before it was chosen: the engine's board renders at 607 characters
+ * today. Twice that, so a variant with more jumps does not meet a silent cut —
+ * and a bound all the same, because the rules are an input a caller holds, and
+ * `nothing-a-caller-holds.test.ts` names what this file promises about those:
+ * every one of them is one the package clips.
+ */
+export const MAX_RULES_CHARS = 1200;
+
+/**
+ * What a question is answered from when the player stands on no square.
+ *
+ * No plan and no journey, on purpose: this is the "no table yet" case, where
+ * there is nothing of the player's own to read back. What there is instead is
+ * `rules` — supplied by the caller, because the board's numbers live in
+ * `@leela/engine` and whoever holds the engine renders them. A second copy
+ * written here would be the restated list this repository has met six times,
+ * waiting for a variant to move a snake out from under it.
+ */
+export interface AboutContext {
+  /** Language to answer in. */
+  language: Language;
+  /** The rules of the board, rendered by whoever holds the engine. */
+  rules: string;
+}
+
+/**
+ * The instruction for a question about the game itself.
+ *
+ * The same voice as `systemPrompt`, resting on the rules where that one rests
+ * on the plan's text. The pointer at `/new` lives in here rather than being
+ * appended by a caller, so the model says it when the question calls for a
+ * table — how do I start, can we play — and not as a footer under every
+ * answer, including the ones where it would read as a refusal to engage.
+ */
+function aboutSystemPrompt(context: AboutContext): string {
+  const language = resolveLanguage(context.language);
+  const languageName = LANGUAGE_NAMES[language];
+
+  const lines = [
+    'You are a companion in Leela, the game of self-knowledge.',
+    '',
+    'The player has no table open and is standing on no plan: they are asking',
+    'about the game itself, before or between games.',
+    '',
+    'These are the rules of this board. They are the source; you are not. Draw',
+    'on them, and do not contradict them. If the player asks something they do',
+    'not answer, say so plainly rather than inventing a rule.',
+    '',
+    '---',
+    trimToParagraph(context.rules.trim(), MAX_RULES_CHARS),
+    '---',
+    '',
+    'When playing would serve them — they ask how to begin, or their question',
+    'needs a square under it — tell them that /new opens a table.',
+    '',
+    `Answer in ${languageName}.`,
+    ...HOW_TO_SPEAK,
+  ];
+
+  return lines.join('\n');
+}
+
+/** A question about the game, asked with no square under it. */
+export function aboutPrompt(
+  context: AboutContext,
+  question: string,
+  history: ReadonlyArray<Message> = [],
+): Message[] {
+  const text = question.trim();
+  if (text.length === 0) {
+    throw new PromptError('a question cannot be empty');
+  }
+
+  // A caller bug, not the world failing: with nothing for the answer to rest
+  // on, what came back would be the model's own idea of Leela — the exact
+  // thing this package's header says the model never supplies.
+  if (context.rules.trim().length === 0) {
+    throw new PromptError('an answer about the game must rest on its rules');
+  }
+
+  return [
+    { role: 'system', content: aboutSystemPrompt(context) },
     ...recentHistory(history),
     { role: 'user', content: asTyped(text) },
   ];

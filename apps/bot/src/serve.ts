@@ -15,12 +15,18 @@
  * hold this file to the client's parsing loop, ported line for line, rather
  * than to an SSE library's idea of the format.
  *
- * Every failure here is refused *before* the stream starts. The client's frame
- * loop swallows its own in-stream `{error}` throw — the catch that forgives a
- * half-delivered frame catches the refusal too — so anything said mid-stream
- * reads as an empty answer, the offline fallback, and the reason is lost. A
- * status and a JSON body is the one shape the client reliably reports, and the
- * model is asked to finish before a single byte of the 200 is written.
+ * Every failure that can be known early is refused *before* the stream starts
+ * — bounds, origin, the allowance, and the upstream connection itself. The
+ * client's frame loop swallows its own in-stream `{error}` throw — the catch
+ * that forgives a half-delivered frame catches the refusal too — so a status
+ * and a JSON body is the one shape it reliably reports. What cannot be known
+ * early is how the model's answer ends, and hiding the whole stream behind
+ * `complete()` cost the page its thinking: the phone app shows the reasoning
+ * while the model works, and this route showed a spinner. So a streamer, when
+ * one is configured, forwards `{thinking}` and `{text}` deltas as they arrive
+ * — the dev route's wire, `apps/webgl/server/ask.ts` — and accepts that a
+ * failure after the first byte can only be said in-stream, where the client
+ * keeps what it has already shown.
  */
 
 import {
@@ -94,11 +100,34 @@ export const MODEL_DEADLINE_MS = 170_000;
 /** Railway injects `PORT`; a laptop gets this. */
 export const DEFAULT_PORT = 8788;
 
+/** One delta of a streaming answer, in the client's own vocabulary. */
+export interface Streamed {
+  text?: string;
+  thinking?: string;
+}
+
+/**
+ * A connected stream of deltas.
+ *
+ * A factory rather than an iterable, and awaited before the 200 is written:
+ * the connection to the provider is the last failure that can still be a
+ * proper status, so the factory makes it and throws it, and only what it
+ * returns is pumped into the response.
+ */
+export type StreamAsk = (ask: {
+  system: string;
+  question: string;
+  maxTokens: number;
+  signal: AbortSignal;
+}) => Promise<AsyncIterable<Streamed>>;
+
 export interface AskRouteOptions {
   /** Absent is honest: no key means 503, and the board falls back to reading the plan. */
   model?: LanguageModel;
   /** Injected so the allowance can be tested without waiting out a minute. */
   now?: () => number;
+  /** When set, answers stream as deltas; `model` stays the fallback. */
+  stream?: StreamAsk;
 }
 
 export type AskRoute = (request: Request, address?: string) => Promise<Response>;
@@ -134,7 +163,7 @@ const corsFor = (origin: string): Record<string, string> => ({
  * without Bun: everything this file decides is decided here, and the server
  * below only supplies the port and the peer address.
  */
-export function askRoute({ model, now = Date.now }: AskRouteOptions = {}): AskRoute {
+export function askRoute({ model, stream, now = Date.now }: AskRouteOptions = {}): AskRoute {
   // The same guard `/ask` in the chat stands behind, with the address where
   // the player id would be. See `Allowance` in bot.ts for why checking is
   // spending, and `MAX_ASKERS` for why the map is capped.
@@ -196,7 +225,7 @@ export function askRoute({ model, now = Date.now }: AskRouteOptions = {}): AskRo
 
     // 503, not 500: the service is simply not configured here, and the board
     // falls back to reading the plan rather than blaming a model it never had.
-    if (!model) return refuse(503, 'no model configured');
+    if (!model && !stream) return refuse(503, 'no model configured');
 
     const messages: Message[] = [
       { role: 'system', content: system },
@@ -212,6 +241,77 @@ export function askRoute({ model, now = Date.now }: AskRouteOptions = {}): AskRo
       }, MODEL_DEADLINE_MS);
     });
 
+    // The streaming path first: the connection is made inside the try so a
+    // refused upstream is still a status, and only a connected stream is
+    // pumped into a 200.
+    if (stream) {
+      try {
+        const parts = await Promise.race([
+          stream({ system, question, maxTokens: 16_000, signal: controller.signal }),
+          deadline,
+        ]);
+
+        const headers = {
+          ...cors,
+          'content-type': 'text/event-stream; charset=utf-8',
+          'cache-control': 'no-cache, no-transform',
+        };
+
+        const encoder = new TextEncoder();
+        const body = new ReadableStream<Uint8Array>({
+          start: async (sink) => {
+            const say = (event: Record<string, unknown>): void =>
+              sink.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+
+            // Reasoning alone is not an answer: the model spends one budget on
+            // both, and a long think can leave nothing for the reply. The two
+            // empty endings are told apart because an operator acts on them
+            // differently - the dev route's rule, kept.
+            let sawAnything = false;
+            let saidAnyText = false;
+            try {
+              for await (const part of parts) {
+                if (part.thinking) {
+                  sawAnything = true;
+                  say({ thinking: part.thinking });
+                }
+                if (part.text) {
+                  sawAnything = true;
+                  saidAnyText = true;
+                  say({ text: part.text });
+                }
+              }
+              if (!sawAnything) {
+                say({ error: 'empty completion' });
+              } else if (!saidAnyText) {
+                say({ error: 'the model spent the whole budget thinking and never answered' });
+              }
+            } catch (error) {
+              // Past the first byte a status is no longer possible; the frame
+              // is what remains, and the client keeps what it already shows.
+              say({ error: error instanceof Error ? error.message : String(error) });
+            } finally {
+              say({ done: true });
+              clearTimeout(timer);
+              sink.close();
+            }
+          },
+          cancel: () => {
+            // The reader hung up; stop paying for tokens nobody will see.
+            controller.abort();
+            clearTimeout(timer);
+          },
+        });
+
+        return new Response(body, { status: 200, headers });
+      } catch (error) {
+        clearTimeout(timer);
+        if (error instanceof ModelTimeout) return refuse(504, error.message);
+        if (error instanceof ModelError) return refuse(502, error.message);
+        return refuse(502, String(error));
+      }
+    }
+
     try {
       // The default token ceiling stands: the prompt asks for a short
       // paragraph — but glm-4.6 reasons before it speaks whether or not anyone
@@ -219,6 +319,7 @@ export function askRoute({ model, now = Date.now }: AskRouteOptions = {}): AskRo
       // reasoning: the live probe of 2026-08-22 got back an empty `content`
       // and nothing else. 16000 is the dev route's measured price for a model
       // that thinks first; the answer itself still ends within a paragraph.
+      if (!model) return refuse(503, 'no model configured');
       const answer = await Promise.race([
         model.complete(messages, { maxTokens: 16_000, signal: controller.signal }),
         deadline,

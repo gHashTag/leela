@@ -16,10 +16,12 @@ import type { Direction } from '@leela/engine';
 import type { CompletionOptions, LanguageModel } from './model';
 import { ModelError, ModelTimeout } from './model';
 import {
+  type AboutContext,
   type JourneyEntry,
   type Message,
   type PlanContext,
   PromptError,
+  aboutPrompt,
   questionPrompt,
   reportPrompt,
   type Arrival,
@@ -95,6 +97,19 @@ export function fallbackText(context: PlanContext): string {
   return messageFor(context.language, 'companion.unavailable', { plan: context.plan });
 }
 
+/**
+ * The same moment, for a question asked off the board.
+ *
+ * `fallbackText` names the plan the player can sit with in the meantime, and
+ * there is no plan here to name. The catalogue already has the sentence for a
+ * companion that is not answering — `/ask` with no guide configured says it —
+ * so it is reused rather than becoming a twenty-third translation job for a
+ * new key that would say the same thing.
+ */
+export function aboutFallbackText(language: Language): string {
+  return messageFor(language, 'ask.silent');
+}
+
 export interface AskOptions {
   language: Language;
   plan: number;
@@ -117,6 +132,19 @@ export interface AskOptions {
    * Summarised into the prompt rather than quoted whole.
    */
   journey?: ReadonlyArray<JourneyEntry>;
+}
+
+/**
+ * What `about` needs: no plan and no journey, because the player is standing
+ * on no square. See `AboutContext` in `prompts.ts` for why the rules arrive
+ * from the caller rather than living here.
+ */
+export interface AboutOptions {
+  language: Language;
+  /** The rules of the board, rendered by whoever holds the engine. */
+  rules: string;
+  /** Earlier turns of this conversation, oldest first. */
+  history?: ReadonlyArray<Message>;
 }
 
 export class Guide {
@@ -166,12 +194,36 @@ export class Guide {
 
   /** Respond to a player's report on the plan they are standing on. */
   async reflect(report: string, options: AskOptions): Promise<Reflection> {
-    return this.ask(() => reportPrompt(contextOf(options), report, options.history), options);
+    return this.ask(
+      () => reportPrompt(contextOf(options), report, options.history),
+      () => fallbackText(contextOf(options)),
+    );
   }
 
   /** Answer a question about a plan. */
   async answer(question: string, options: AskOptions): Promise<Reflection> {
-    return this.ask(() => questionPrompt(contextOf(options), question, options.history), options);
+    return this.ask(
+      () => questionPrompt(contextOf(options), question, options.history),
+      () => fallbackText(contextOf(options)),
+    );
+  }
+
+  /**
+   * Answer a question about the game from a player standing on no square.
+   *
+   * `reflect` and `answer` rest on a plan's text; there is no plan here, so
+   * the answer rests on the rules the caller renders from the engine. The
+   * machinery behind it is the same on purpose — the deadline, the silence,
+   * the fallback — because a refused key silences the companion as a whole,
+   * and a route that kept calling around the silence would spend the round
+   * trips the cool-down exists to save.
+   */
+  async about(question: string, options: AboutOptions): Promise<Reflection> {
+    const context: AboutContext = { language: options.language, rules: options.rules };
+    return this.ask(
+      () => aboutPrompt(context, question, options.history),
+      () => aboutFallbackText(options.language),
+    );
   }
 
   /**
@@ -180,10 +232,15 @@ export class Guide {
    * A malformed request — an empty report, a plan off the board — is a caller
    * bug and is rethrown. Everything else is the world being unreliable, and
    * the player should not be shown a stack trace for it.
+   *
+   * The fallback arrives as a function rather than being built from the
+   * options, because the options no longer agree on a shape: a plan prompt
+   * falls back to a sentence that names the plan, and `about` has no plan to
+   * name. Deferred so the sentence is only rendered on the paths that show it.
    */
   private async ask(
     build: () => Message[],
-    options: AskOptions,
+    fallback: () => string,
   ): Promise<Reflection> {
     const messages = build(); // PromptError propagates: that is a caller bug.
 
@@ -191,7 +248,7 @@ export class Guide {
     // it again: the fallback was decided the moment the key was refused.
     if (this.silentUntil > this.now()) {
       this.skipped += 1;
-      return { text: fallbackText(contextOf(options)), fromModel: false };
+      return { text: fallback(), fromModel: false };
     }
 
     // The deadline is kept by this package, not asked of the model.
@@ -246,7 +303,7 @@ export class Guide {
       const said = text.trim();
       if (said.length === 0) {
         this.log('the model answered with nothing', new Error('empty completion'));
-        return { text: fallbackText(contextOf(options)), fromModel: false };
+        return { text: fallback(), fromModel: false };
       }
 
       return { text: said, fromModel: true };
@@ -266,7 +323,7 @@ export class Guide {
         this.log(`model failed${status ? ` (${status})` : ''}`, error);
       }
 
-      return { text: fallbackText(contextOf(options)), fromModel: false };
+      return { text: fallback(), fromModel: false };
     } finally {
       clearTimeout(timer);
     }

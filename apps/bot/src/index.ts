@@ -9,7 +9,10 @@
  */
 
 import {
+  DEFAULT_ZAI_BASE_URL,
+  DEFAULT_ZAI_MODEL,
   Guide,
+  ModelError,
   ZAI_CODING_BASE_URL,
   deepSeek,
   openAI,
@@ -26,7 +29,7 @@ import {
 } from '@leela/content';
 import { createBot } from './bot';
 import { menuFor } from './commands';
-import { serveAsk } from './serve';
+import { serveAsk, type StreamAsk, type Streamed } from './serve';
 import { openStorage } from './storage';
 import { supervise } from './supervisor';
 
@@ -249,7 +252,99 @@ await publishMenu();
 // it — a dropped poll must not take the ask route down with it. The same
 // `model` the guide answers with is what answers the board, so one key in one
 // variable serves both surfaces or neither.
-const asking = serveAsk({ model });
+/**
+ * The board's answers as deltas, when the key is Z.AI's.
+ *
+ * `LanguageModel.complete` waits for the whole reply, and with a model that
+ * reasons before it speaks the page watched a spinner for half a minute while
+ * the phone app showed the thinking. This speaks to the same host the zAI
+ * factory does, with `stream: true` and `thinking` enabled — the dev route's
+ * request (`apps/webgl/server/ask.ts`), whose wire the board is built against
+ * — and hands the deltas to the route to forward. Providers other than Z.AI
+ * keep the whole-answer path: their reasoning fields differ, and a guess about
+ * them belongs next to a measurement, not here.
+ */
+function zaiStream(apiKey: string): StreamAsk {
+  const baseUrl = process.env.ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : DEFAULT_ZAI_BASE_URL;
+  const model = process.env.ZAI_MODEL ?? DEFAULT_ZAI_MODEL;
+
+  return async ({ system, question, maxTokens, signal }) => {
+    const upstream = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: question },
+        ],
+        // One budget pays for the thinking and the answer both; the dev
+        // route's measured price.
+        max_tokens: maxTokens,
+        temperature: 0.6,
+        stream: true,
+        thinking: { type: 'enabled' },
+      }),
+      signal,
+    });
+
+    if (!upstream.ok || !upstream.body) {
+      const detail = upstream.ok ? 'no body' : await upstream.text().catch(() => '');
+      throw new ModelError(
+        `the model refused the request (${upstream.status})${detail ? `: ${detail.slice(0, 200)}` : ''}`,
+        upstream.status,
+      );
+    }
+
+    return deltasOf(upstream.body);
+  };
+}
+
+/** The provider's SSE, reduced to the two fields the board shows. */
+async function* deltasOf(body: ReadableStream<Uint8Array>): AsyncIterable<Streamed> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let cut = buffer.indexOf('\n\n');
+      while (cut !== -1) {
+        const frame = buffer.slice(0, cut);
+        buffer = buffer.slice(cut + 2);
+        cut = buffer.indexOf('\n\n');
+
+        const data = frame
+          .split('\n')
+          .filter((row) => row.startsWith('data:'))
+          .map((row) => row.slice(5).trim())
+          .join('');
+        if (!data || data === '[DONE]') continue;
+
+        try {
+          const parsed = JSON.parse(data) as {
+            choices?: Array<{ delta?: { content?: string; reasoning_content?: string } }>;
+          };
+          const delta = parsed.choices?.[0]?.delta;
+          if (delta?.reasoning_content) yield { thinking: delta.reasoning_content };
+          if (delta?.content) yield { text: delta.content };
+        } catch {
+          // A half-delivered frame is not an error; the next read completes it.
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+const asking = serveAsk({
+  model,
+  stream: process.env.ZAI_API_KEY ? zaiStream(process.env.ZAI_API_KEY) : undefined,
+});
 
 await supervise({
   start: async () => {

@@ -17,6 +17,7 @@
  * history cannot be trusted.
  */
 
+import { RESTING_FACE } from '@leela/engine';
 import { isPlayableState, initialState, type GameState } from '@leela/engine';
 
 /** Where a saved game lives. Versioned: a shape change starts a new key. */
@@ -82,11 +83,11 @@ export const DIE_KEY = 'leela.die.v1';
 /**
  * The face to show when nothing has been thrown yet.
  *
- * Six, because that is `DiceStore.count`'s initial value in the published app,
- * and because a six is what a player needs to begin: the die at rest shows the
- * throw the game is waiting for.
+ * The engine's, because two surfaces each wrote their own six and
+ * `audit-doubles` called it — and it matches `DiceStore.count`'s initial
+ * value in the published app, which is where the convention came from.
  */
-export const RESTING_FACE = 6;
+export { RESTING_FACE } from '@leela/engine';
 
 /**
  * The last throw, as the die should show it.

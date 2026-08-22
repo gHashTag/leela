@@ -9,7 +9,15 @@
 import { Bot, InlineKeyboard, InputFile, Keyboard, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 import { type Language, bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
-import { isSessionOver, isWaitingToEnter } from '@leela/engine';
+import {
+  ARROWS,
+  SNAKES,
+  START_LOKA,
+  TOTAL_PLANS,
+  WIN_LOKA,
+  isSessionOver,
+  isWaitingToEnter,
+} from '@leela/engine';
 import { MAX_INTENTION_CHARS, isIntention, withoutOne } from '@leela/journal';
 import type { Guide } from '@leela/ai';
 import { Conversations } from './conversation';
@@ -143,6 +151,42 @@ function behind<T extends { plan: number }>(
 
   const at = history.findIndex((entry) => entry.plan === plan);
   return at === -1 ? [...history] : [...history.slice(0, at), ...history.slice(at + 1)];
+}
+
+/** One board's jumps, written the way the model reads them. */
+const listOf = (jumps: Readonly<Record<number, number>>): string =>
+  Object.entries(jumps)
+    .map(([from, to]) => `${from}->${to}`)
+    .join(', ');
+
+/**
+ * The board this bot's tables are played on, read from the engine.
+ *
+ * For the companion's no-table answers. `@leela/ai` deliberately holds no copy
+ * of the board — its `AboutContext` takes the rules from the caller — and this
+ * is the same rendering the board's own ask route builds in
+ * `apps/webgl/src/ask.ts`, from the same engine exports, so the two surfaces
+ * cannot describe two different games. Every number comes from `@leela/engine`
+ * rather than being written out here: a variant that moves a snake moves this
+ * sentence with it.
+ */
+export function rulesText(): string {
+  // The one arrow that ends the game, found on the board rather than written
+  // as a number: naming its square by hand would leave this sentence
+  // describing an old board the day a variant moves it.
+  const straightIn = Object.entries(ARROWS).find(([, to]) => to === WIN_LOKA)?.[0];
+
+  return [
+    `The board has ${TOTAL_PLANS} plans.`,
+    `A player is off the board until they throw a six, which places them on plan ${START_LOKA}.`,
+    'A six earns another throw; three sixes in a row send the player back to where that run began.',
+    `Arrows lift: ${listOf(ARROWS)}.`,
+    `Snakes drop: ${listOf(SNAKES)}.`,
+    `A throw that would pass plan ${TOTAL_PLANS} does not move the player at all.`,
+    `Reaching plan ${WIN_LOKA} completes the game` +
+      (straightIn ? `; plan ${straightIn} leads straight to it.` : '.'),
+    'After every landing the player writes what they meet there, and the die stays closed until they do.',
+  ].join(' ');
 }
 
 /**
@@ -1615,11 +1659,68 @@ export function createBot({
       return;
     }
 
+    await answerAboutTheSquare(ctx, guide, who, seat, question);
+  });
+
+  /**
+   * One question's worth of the shared allowance, refused in as many words.
+   *
+   * One player's share of a balance that belongs to everybody. See
+   * `ASK_ALLOWANCE` for what it protects and why the number is what it is —
+   * and one function for the two surfaces that spend from it, because a
+   * question in plain words costs the same model call as one behind `/ask`,
+   * and a bound only the command paid would be a bound with a way around it.
+   *
+   * Reports, rolls and the report gate are deliberately not bounded here.
+   * They are bounded already, by the turn and by one account per arrival, and
+   * a bound on them would be a change to what the game asks of a player —
+   * which belongs in a `RuleSet` and not in a transport.
+   *
+   * @returns true when the caller should stop — the player has been told.
+   */
+  async function outOfQuestions(ctx: Context, playerId: string): Promise<boolean> {
+    const wait = asks.take(playerId, now());
+    if (wait === 0) return false;
+
+    await ctx.reply(
+      messageFor(languageOf(ctx), 'ask.tooSoon', {
+        // Rounded up and never zero: *ask again in 0 minutes* is an answer
+        // that sends somebody straight back into the same refusal.
+        count: Math.max(1, Math.ceil(wait / 60_000)),
+        allowed: ASK_ALLOWANCE,
+      }),
+    );
+    return true;
+  }
+
+  /**
+   * Answer a question about the square this player stands on.
+   *
+   * The body of `/ask`, taken out so that plain words in a private chat can be
+   * answered through it too — one gate rather than two that drift, which is
+   * the rule `answerInWords` already states about the report. Everything the
+   * command promises holds for the words because it is the same code: the
+   * refusals that cost nothing come first, the allowance is taken only below
+   * them, and only a real answer is remembered.
+   *
+   * The caller has already checked what only it can know — that there is a
+   * question, a companion, a seat, and a square under it. What is shared is
+   * everything from there to the delivered answer.
+   */
+  async function answerAboutTheSquare(
+    ctx: Context,
+    guide: Guide,
+    who: { id: string; name: string },
+    seat: Room['session']['players'][number],
+    question: string,
+  ): Promise<void> {
+    const language = languageOf(ctx);
+
     /**
      * The last refusal that costs nothing: an answer with nowhere to go.
      *
-     * An answer to `/ask` is private, so at a table it goes to the player — and
-     * a player who has never opened a private chat with the bot cannot be sent
+     * The answer is private, so at a table it goes to the player — and a
+     * player who has never opened a private chat with the bot cannot be sent
      * one. That is not a guess: `DirectChannels` remembers the 403 the first
      * attempt earned, so from the second command onwards the outcome is known
      * before anything is spent. `deliver` asked the same question at the end,
@@ -1634,13 +1735,10 @@ export function createBot({
     if (await nowhereToPutIt(ctx, who.id)) return;
 
     /**
-     * One player's share of a balance that belongs to everybody. See
-     * `ASK_ALLOWANCE` for what it protects and why the number is what it is.
-     *
-     * Taken **here** rather than at the top of the handler. Everything above
-     * refuses without touching the model — no question, no companion, no seat,
-     * not on the board yet, nowhere for the answer to go — and an allowance
-     * spent on those would let a player lock themselves out of the companion by
+     * Taken **here** rather than in the handlers. Everything above refuses
+     * without touching the model — no question, no companion, no seat, not on
+     * the board yet, nowhere for the answer to go — and an allowance spent on
+     * those would let a player lock themselves out of the companion by
      * mistyping. Everything below this line reaches it.
      *
      * That claim used to be written here and was false below the line, for
@@ -1651,24 +1749,8 @@ export function createBot({
      * property that keeps it true is in
      * `tests/nowhere-to-put-the-answer.test.ts`: once a refusal is recorded, no
      * route in this file calls the companion again.
-     *
-     * Reports, rolls and the report gate are deliberately not bounded here.
-     * They are bounded already, by the turn and by one account per arrival, and
-     * a bound on them would be a change to what the game asks of a player —
-     * which belongs in a `RuleSet` and not in a transport.
      */
-    const wait = asks.take(who.id, now());
-    if (wait > 0) {
-      await ctx.reply(
-        messageFor(language, 'ask.tooSoon', {
-          // Rounded up and never zero: *ask again in 0 minutes* is an answer
-          // that sends somebody straight back into the same refusal.
-          count: Math.max(1, Math.ceil(wait / 60_000)),
-          allowed: ASK_ALLOWANCE,
-        }),
-      );
-      return;
-    }
+    if (await outOfQuestions(ctx, who.id)) return;
 
     /**
      * The path, as the report gate already passes it — **minus the account
@@ -1685,9 +1767,9 @@ export function createBot({
      *
      * The report gate and the handed-over square both take out the words they
      * are about to answer, and say so in as many words. This is the same rule,
-     * asked a different way: `/ask` has no text to filter by, so what comes out
-     * is the newest account on this square, and only once the gate says this
-     * arrival has been written about.
+     * asked a different way: a question has no text to filter by, so what
+     * comes out is the newest account on this square, and only once the gate
+     * says this arrival has been written about.
      */
     const journey =
       reports.history && guide.status().available
@@ -1711,7 +1793,7 @@ export function createBot({
     if (reflection.fromModel) conversations.add(who.id, question, reflection.text);
 
     await deliver(ctx, [{ text: reflection.text, broadcast: false }]);
-  });
+  }
 
   bot.command('plan', (ctx) =>
     withRoom(ctx, (room, who) => {
@@ -1917,12 +1999,53 @@ export function createBot({
     const chatId = chatIdOf(ctx);
     const room = chatId ? await store.get(chatId) : null;
 
+    // Only where the words are already a conversation with the bot. In a group
+    // the same sentence is table talk between the people at it, and a
+    // companion that answered every remark would talk over the game — so both
+    // canned answers below stand unchanged there. The same reading of
+    // `ctx.chat.type` that `deliver` trusts to know a chat is the player's own.
+    const alone = ctx.chat?.type === 'private';
+    const who = sender(ctx);
+
     if (!room) {
+      /**
+       * No table, and somebody talking to the companion anyway.
+       *
+       * These words used to dead-end in `chat.noTableHelp`, which reads as a
+       * refusal to somebody who just asked the companion a question. There is
+       * no square to rest an answer on, so the model is handed the board's
+       * rules instead — rendered here from the engine, because `@leela/ai`
+       * deliberately keeps no copy of the board — and the prompt, not this
+       * code, tells the player `/new` opens a table when that is what their
+       * question is really asking for.
+       *
+       * The silence check is free and comes first, so a silenced companion
+       * costs no allowance token; the allowance is taken before the model is,
+       * for the reason `outOfQuestions` gives — these words spend the same
+       * shared balance a `/ask` does. And when there is no real answer — no
+       * guide, silenced between the check and the call, the weather — the
+       * player reads exactly the sentence they read today, not a new one.
+       */
+      if (alone && who && guide && guide.status().available) {
+        if (await outOfQuestions(ctx, who.id)) return;
+
+        const reflection = await guide.about(words, {
+          language: languageOf(ctx),
+          rules: rulesText(),
+          history: conversations.of(who.id),
+        });
+
+        if (reflection.fromModel) {
+          conversations.add(who.id, words, reflection.text);
+          await deliver(ctx, [{ text: reflection.text, broadcast: false }]);
+          return;
+        }
+      }
+
       await ctx.reply(messageFor(languageOf(ctx), 'chat.noTableHelp'));
       return;
     }
 
-    const who = sender(ctx);
     const seated = who && room.session.players.find((p) => p.id === who.id);
 
     // A player who owes a report is almost certainly writing it, so take plain
@@ -1933,6 +2056,17 @@ export function createBot({
       await applyEffects(result.effects, ctx);
       await deliver(ctx, result.replies);
       await respondToReports(ctx, result.room ?? room, result.effects);
+      return;
+    }
+
+    // Seated, standing on a square, and the account already filed: the words
+    // are a question about where they stand, and they are answered exactly as
+    // `/ask` answers one — the same function, so the two cannot drift. A
+    // player still waiting to enter stands on no square (`/ask` refuses them
+    // for the same reason), and for them the hint below — throw the die — is
+    // the right answer already.
+    if (alone && who && seated && !isWaitingToEnter(seated.state) && guide) {
+      await answerAboutTheSquare(ctx, guide, who, seated, words);
       return;
     }
 

@@ -182,8 +182,9 @@ describe('what a long-running process holds on to', () => {
  * The routes are not a hand-written list either. `companionRoutes` reads
  * `src/bot.ts` as a syntax tree, finds every `bot.command`/`bot.on`
  * registration, and follows the functions each handler calls until it finds
- * `guide.reflect` or `guide.answer` — which matters, because the reflection is
- * three calls deep (`bot.command('report')` -> `withRoom` -> `respondToReports`)
+ * `guide.reflect`, `guide.answer` or `guide.about` — which matters, because
+ * the reflection is three calls deep
+ * (`bot.command('report')` -> `withRoom` -> `respondToReports`)
  * and two other surfaces reach the same place: plain words from a player who
  * owes an account, and the same words carried as a caption. A list written by
  * hand would have said *the report route and the hand-over*, and been wrong
@@ -201,8 +202,8 @@ const BOT_SOURCE = fileURLToPath(new URL('../src/bot.ts', import.meta.url));
  * Every route registered in `bot.ts`, and whether it can reach the companion.
  *
  * Reachability is computed over the call graph inside `createBot`: a function
- * reaches the companion if it calls `guide.reflect`/`guide.answer` itself or
- * mentions the name of another function in the file that does. Mentioning is a
+ * reaches the companion if it calls `guide.reflect`/`guide.answer`/`guide.about`
+ * itself or mentions the name of another function in the file that does. Mentioning is a
  * coarse over-approximation of calling — it counts a name passed as a value,
  * which is what `bot.on('message:document', takeInDocument)` does — and coarse
  * in the safe direction: it can only ever claim a route needs driving, never
@@ -231,7 +232,13 @@ function companionRoutes(): { registered: Route[]; reaching: Route[] } {
   };
   collect(tree);
 
-  /** `guide.reflect(...)` or `guide.answer(...)`, anywhere under this node. */
+  /**
+   * `guide.reflect(...)`, `guide.answer(...)` or `guide.about(...)`, anywhere
+   * under this node. The whole surface of `Guide` that answers a player, so a
+   * fourth verb added to the class without being added here would silently
+   * shrink what this file forces — kept in step by the assertion below that
+   * the scan still finds routes at all.
+   */
   const asksTheCompanion = (node: ts.Node): boolean => {
     let found = false;
     const walk = (inner: ts.Node): void => {
@@ -240,7 +247,7 @@ function companionRoutes(): { registered: Route[]; reaching: Route[] } {
         ts.isPropertyAccessExpression(inner.expression) &&
         ts.isIdentifier(inner.expression.expression) &&
         inner.expression.expression.text === 'guide' &&
-        (inner.expression.name.text === 'reflect' || inner.expression.name.text === 'answer')
+        ['reflect', 'answer', 'about'].includes(inner.expression.name.text)
       ) {
         found = true;
       }

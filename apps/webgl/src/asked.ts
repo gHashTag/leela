@@ -1,7 +1,7 @@
 import type { Language } from '@leela/content';
 
 import type { Ask, Line, Rests } from './companion';
-import { historyFor, Refused, systemFor } from './ask';
+import { TIMEOUT_MS, historyFor, Refused, systemFor } from './ask';
 import { answerIn } from './heard';
 
 /**
@@ -85,17 +85,6 @@ const nextId = (): string => {
   counter += 1;
   return `ask-${counter}`;
 };
-
-/**
- * How long to wait before giving up on the host.
- *
- * The same budget the http path allows, and for the same reason: a companion
- * that never answers leaves its thinking dots on screen for as long as the
- * board is open. Three minutes is long because this model thinks at length -
- * measured runs have spent over twenty thousand characters reasoning before
- * saying a word.
- */
-const TIMEOUT_MS = 180_000;
 
 /**
  * @param textFor the plan's canonical text, so the answer rests on the board

@@ -82,7 +82,7 @@ export const askUrl = (): string => {
     : '/api/ask';
 };
 
-const TIMEOUT_MS = 180_000;
+export const TIMEOUT_MS = 180_000;
 
 /** How much of the plan's own text the model is given to rest on. */
 const CANON_CHARS = 1200;

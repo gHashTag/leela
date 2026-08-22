@@ -149,6 +149,102 @@ describe('the wire the board reads', () => {
   });
 });
 
+describe('a streaming answerer', () => {
+  /** Deltas as the Z.AI streamer yields them, from a list. */
+  const streamOf =
+    (parts: ReadonlyArray<{ text?: string; thinking?: string }>) => async () =>
+      (async function* () {
+        yield* parts;
+      })();
+
+  it('forwards thinking and text deltas in order, then done', async () => {
+    const handle = askRoute({
+      stream: streamOf([{ thinking: 'weigh ' }, { thinking: 'the plan' }, { text: 'Sit. ' }, { text: 'Throw.' }]),
+    });
+    const response = await handle(asked({ system: 's', question: 'q' }));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('text/event-stream; charset=utf-8');
+    expect(response.headers.get('access-control-allow-origin')).toBe(HOME);
+    expect(response.headers.get('cache-control')).toContain('no-transform');
+
+    expect(await response.text()).toBe(
+      `data: ${JSON.stringify({ thinking: 'weigh ' })}\n\n` +
+        `data: ${JSON.stringify({ thinking: 'the plan' })}\n\n` +
+        `data: ${JSON.stringify({ text: 'Sit. ' })}\n\n` +
+        `data: ${JSON.stringify({ text: 'Throw.' })}\n\n` +
+        `data: ${JSON.stringify({ done: true })}\n\n`,
+    );
+  });
+
+  it('is read back by the client algorithm: text accumulated, thinking shown', async () => {
+    const handle = askRoute({
+      stream: streamOf([{ thinking: 'hm' }, { text: 'A. ' }, { text: 'B.' }]),
+    });
+    const response = await handle(asked({ system: 's', question: 'q' }));
+    const { answer, thinking } = boardReads([new Uint8Array(await response.arrayBuffer())]);
+    expect(answer).toBe('A. B.');
+    expect(thinking).toEqual(['hm']);
+  });
+
+  it('refuses a connection that never opened with a status, not a stream', async () => {
+    const handle = askRoute({
+      stream: async () => {
+        throw new ModelError('the model refused the request (429): out of balance', 429);
+      },
+    });
+    const response = await handle(asked({ system: 's', question: 'q' }));
+    expect(response.status).toBe(502);
+    expect(await refusal(response)).toContain('429');
+  });
+
+  it('says which empty it was: a whole budget of thinking and no answer', async () => {
+    const handle = askRoute({ stream: streamOf([{ thinking: 'only thought' }]) });
+    const response = await handle(asked({ system: 's', question: 'q' }));
+    const text = await response.text();
+    expect(text).toContain('spent the whole budget thinking');
+    expect(text.endsWith(`data: ${JSON.stringify({ done: true })}\n\n`)).toBe(true);
+  });
+
+  it('says which empty it was: nothing at all', async () => {
+    const handle = askRoute({ stream: streamOf([]) });
+    const response = await handle(asked({ system: 's', question: 'q' }));
+    expect(await response.text()).toContain('empty completion');
+  });
+
+  it('a failure past the first byte is said in-stream and the stream still ends', async () => {
+    const handle = askRoute({
+      stream: async () =>
+        (async function* () {
+          yield { text: 'half an ans' };
+          throw new Error('the socket went away');
+        })(),
+    });
+    const response = await handle(asked({ system: 's', question: 'q' }));
+    const text = await response.text();
+    expect(text).toContain('half an ans');
+    expect(text).toContain('the socket went away');
+    expect(text.endsWith(`data: ${JSON.stringify({ done: true })}\n\n`)).toBe(true);
+  });
+
+  it('still refuses bounds and origins before any stream is opened', async () => {
+    let opened = 0;
+    const handle = askRoute({
+      stream: async () => {
+        opened += 1;
+        return (async function* () {
+          yield { text: 'x' };
+        })();
+      },
+    });
+    const wrong = await handle(asked({ system: 's', question: 'q' }, { origin: 'https://evil.example' }));
+    expect(wrong.status).toBe(403);
+    const over = await handle(asked({ system: 's', question: 'q'.repeat(MAX_QUESTION_CHARS + 1) }));
+    expect(over.status).toBe(413);
+    expect(opened).toBe(0);
+  });
+});
+
 describe('a question from the wrong origin', () => {
   it('answers the preflight for each allowed origin', async () => {
     const handle = askRoute({ model: fixedModel('yes') });

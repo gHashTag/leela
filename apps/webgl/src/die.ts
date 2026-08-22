@@ -52,10 +52,10 @@ const FACES: Readonly<Record<number, readonly number[]>> = {
  * beside a sentence reading *A six puts you on the board*. A die at rest on a
  * table has a number facing up.
  *
- * Six, because that is the number the sentence beside it names and the only
- * throw that starts a game.
+ * The engine's, because two surfaces each wrote their own six and
+ * `audit-doubles` called it: one name, one home.
  */
-export const RESTING_FACE = 6;
+export { RESTING_FACE } from '@leela/engine';
 
 export const isFace = (value: number): boolean =>
   Number.isInteger(value) && FACES[value] !== undefined;
