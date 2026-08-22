@@ -854,6 +854,11 @@ const showThread = (): void => {
   follow(el.sheetBody, el.thread.lastElementChild);
 
   showRests(view.rests, view.status, view.note);
+  // Before the board the rests panel is hidden, so a doorstep note - the
+  // answer to a question typed before the first six - would be set in the
+  // model and shown nowhere. It borrows the opening sentence's place, and the
+  // next throw or arrival rewrites that place in the ordinary way.
+  if (view.note && !view.rests) el.say.textContent = view.note;
   showGate();
 };
 
