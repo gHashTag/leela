@@ -133,6 +133,14 @@
           </button>
           <button class="tongue" id="tongue" type="button"></button>
           <button class="look" id="look" type="button"></button>
+          <!--
+            Whether the companion's answers are read aloud. In the menu with
+            the other once-per-visit choices, and taken out of the page - not
+            disabled - where `speechSynthesis` does not exist, which includes
+            the WKWebView inside the iOS app. See `voice.ts` for why that is
+            the design and not a gap.
+          -->
+          <button class="speak" id="speak" type="button" aria-pressed="false"></button>
         </div>
       </div>
 
@@ -268,6 +276,23 @@
           enterkeyhint="send"
           placeholder="What does this plan bring up?"
         ></textarea>
+        <!--
+          The reply, spoken instead of typed. `type="button"`, because inside a
+          form the default is submit and a mic that sends the box on the way to
+          opening the microphone is a control that does the opposite of itself.
+          `main.ts` removes it - not hides it - on a platform with no
+          `SpeechRecognition`, which includes the WKWebView inside the iOS app;
+          the app's own keyboard already carries native dictation, and a second
+          microphone here would be a broken copy of it. See `voice.ts`.
+        -->
+        <button type="button" id="mic" class="mic" aria-pressed="false" aria-label="Speak your reply">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M12 14.5a3 3 0 0 0 3-3v-5a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5.5-3a5.5 5.5 0 0 1-11 0H4.5a7.5 7.5 0 0 0 6.5 7.43V22h2v-3.07a7.5 7.5 0 0 0 6.5-7.43z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
         <button type="submit" id="send" class="send" aria-label="Send">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z" fill="currentColor" />

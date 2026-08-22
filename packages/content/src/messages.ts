@@ -442,6 +442,21 @@ const EN = {
   'app.thinkingNow': 'Thinking',
 
   /**
+   * The voice, on the surfaces that have one.
+   *
+   * Two halves that fail apart: recognition is the microphone and synthesis is
+   * the reading aloud, and a browser may carry either without the other — so
+   * each control speaks for itself rather than the pair. The microphone is
+   * labelled with what pressing it does *now*, the way the language and light
+   * switches are labelled with where they go: a control that names the state
+   * you are already in reads backwards.
+   */
+  'app.micStart': 'Speak your reply',
+  'app.micStop': 'Stop listening',
+  'app.speakOn': 'Read replies aloud',
+  'app.speakOff': 'Stop reading aloud',
+
+  /**
    * Three throws free, then the game asks for a subscription.
    *
    * Two sentences, not one. The warning comes on the last free throw — before
@@ -959,6 +974,10 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.plans': 'Все 72 плана',
   'app.thinking': 'Ход мысли',
   'app.thinkingNow': 'Думает',
+  'app.micStart': 'Сказать ответ голосом',
+  'app.micStop': 'Перестать слушать',
+  'app.speakOn': 'Читать ответы вслух',
+  'app.speakOff': 'Не читать вслух',
   'app.tollLast': 'Остался один бесплатный бросок.',
   'app.tollDue': 'Три бесплатных броска использованы. Подписка открывает остальную доску.',
   'app.tollOpen': 'Оформить подписку',

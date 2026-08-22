@@ -51,6 +51,16 @@ import { createBoard } from './scene';
 import { atEnd, bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
 import { meetTelegram, nameAskOrigin, telegramOf } from './telegram';
 import { css } from './theme';
+import {
+  hearing,
+  listen,
+  recognitionLangFor,
+  rememberSpeaking,
+  speakChosen,
+  speaking,
+  speakingQueue,
+  type Listening,
+} from './voice';
 
 /**
  * Wiring: the board draws, `Play` decides, the companion talks, and this walks
@@ -125,6 +135,7 @@ const el = {
   say: need<HTMLElement>('#say'),
   tongue: need<HTMLButtonElement>('#tongue'),
   look: need<HTMLButtonElement>('#look'),
+  speak: need<HTMLButtonElement>('#speak'),
   gear: need<HTMLButtonElement>('#gear'),
   settings: need<HTMLElement>('#settings'),
   owed: need<HTMLElement>('#owed'),
@@ -145,6 +156,7 @@ const el = {
   restsList: need<HTMLElement>('#rests-list'),
   compose: need<HTMLFormElement>('#compose'),
   reply: need<HTMLTextAreaElement>('#reply'),
+  mic: need<HTMLButtonElement>('#mic'),
   send: need<HTMLButtonElement>('#send'),
 };
 
@@ -761,6 +773,22 @@ const follow = (view: HTMLElement, line: Element | null): void => {
 
 const showThread = (): void => {
   const view = companion.view();
+
+  /*
+   * The spoken half rides the repaint.
+   *
+   * `onProgress` fires this on every chunk and `say(...).then(showThread)`
+   * fires it once more when the answer resolves, so this one spot sees the
+   * streamed text grow and then sees it gone — which is exactly a feed and a
+   * flush. Tapping the stream here rather than in a second callback keeps one
+   * consumer of `view.streaming`; `flush` is idempotent, so every repaint
+   * that is not streaming — arrivals, throws, visits — costs nothing.
+   */
+  if (spoken && speakAloud) {
+    if (view.status === 'thinking' && view.streaming) spoken.feed(view.streaming.text);
+    else spoken.flush();
+  }
+
   const fragment = document.createDocumentFragment();
 
   for (const line of view.lines) fragment.append(bubble(line));
@@ -1560,6 +1588,113 @@ el.compose.addEventListener('submit', (event) => {
   void companion.say(said).then(showThread);
   showThread();
 });
+
+// --- the voice ---------------------------------------------------------------
+
+/**
+ * Speaking to the companion, and hearing it answer — live, where the platform
+ * allows.
+ *
+ * The rules live in `voice.ts` and this only wires them: the microphone fills
+ * the same box the keyboard fills and sends through the same submit the Send
+ * button fires, so there is exactly one path a reflection takes into the game
+ * whichever way it arrived. The spoken half taps the stream inside
+ * `showThread`, where the repaint already holds `view.streaming.text`.
+ *
+ * Detection is per half, and a missing half takes its control out of the DOM
+ * rather than disabling it — a WKWebView (the iOS app) has neither, by design;
+ * see `voice.ts` for why nobody should "fix" that.
+ */
+const mouth = speaking(window, language);
+const canHear = hearing(
+  globalThis as { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown },
+);
+
+// Off until asked for, and kept the way the look is kept: same store, same
+// tolerate-a-refusal contract. Never true where there is no mouth to honour
+// it, so the flag and the control cannot disagree.
+let speakAloud = mouth !== null && speakChosen(languageStore);
+const spoken = mouth ? speakingQueue((sentence) => mouth.say(sentence), () => mouth.hush()) : null;
+
+/** The toggle, labelled with what pressing it does — like the light switch. */
+const showSpeak = (): void => {
+  el.speak.textContent = messageFor(language, speakAloud ? 'app.speakOff' : 'app.speakOn');
+  el.speak.setAttribute('aria-pressed', String(speakAloud));
+};
+
+if (!mouth) {
+  el.speak.remove();
+} else {
+  showSpeak();
+  el.speak.addEventListener('click', () => {
+    speakAloud = !speakAloud;
+    // Off means now: a voice that finishes its paragraph after being told to
+    // stop is a control that did not do what it said.
+    if (!speakAloud) spoken?.stop();
+    rememberSpeaking(languageStore, speakAloud);
+    showSpeak();
+  });
+}
+
+let listening: Listening | null = null;
+
+const showMic = (): void => {
+  el.mic.classList.toggle('listening', listening !== null);
+  el.mic.setAttribute('aria-pressed', String(listening !== null));
+  el.mic.setAttribute(
+    'aria-label',
+    messageFor(language, listening ? 'app.micStop' : 'app.micStart'),
+  );
+};
+
+if (!canHear) {
+  el.mic.remove();
+} else {
+  showMic();
+  el.mic.addEventListener('click', () => {
+    if (listening) {
+      // Pressed again is "done": the engine answers with its end event, which
+      // is the one place the button's state is put back.
+      listening.stop();
+      return;
+    }
+
+    // No talking over the player: their words are what the microphone is for.
+    spoken?.stop();
+
+    // Whatever was already typed stays and the transcript grows after it —
+    // interim results repaint live, so the player watches their words arrive.
+    const held = el.reply.value.trim();
+    const opened = held.length > 0 ? `${held} ` : '';
+
+    try {
+      listening = listen(canHear, recognitionLangFor(language), {
+        interim: (words) => {
+          el.reply.value = `${opened}${words}`;
+          grow();
+        },
+        final: (words) => {
+          el.reply.value = `${opened}${words}`;
+          grow();
+          // The exact same path the Send button takes — `requestSubmit` fires
+          // the one submit handler above, which trims, caps, keeps and asks.
+          // A second call to `companion.say` here would be a second wording of
+          // that handler, and the first one missed is how they disagree.
+          el.compose.requestSubmit();
+        },
+        ended: () => {
+          listening = null;
+          showMic();
+        },
+      });
+    } catch {
+      // A constructor that lied about being one. The box keeps whatever is in
+      // it, and the button simply never lights.
+      listening = null;
+    }
+    showMic();
+  });
+}
 
 // --- open -------------------------------------------------------------------
 

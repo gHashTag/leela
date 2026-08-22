@@ -1064,6 +1064,41 @@ body {
   resize: none;
 }
 
+/*
+ * The microphone, beside the send button it feeds.
+ *
+ * Quieter than send while idle - the field's own surface, not the accent -
+ * because two accent circles side by side read as two ways to send, and only
+ * one of them is. Listening borrows send's colours: while the page is taking
+ * the player's words down, this *is* the control the moment belongs to.
+ * `main.ts` removes the element outright on a platform with no recognition,
+ * so there is no rule here for a disabled state on purpose.
+ */
+.mic {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.mic svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mic.listening {
+  color: var(--on-accent);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
 .send {
   flex: none;
   display: grid;
@@ -1204,6 +1239,31 @@ body {
   border: 1px solid var(--rule);
   border-radius: 16px;
   cursor: pointer;
+}
+
+/*
+ * The speak-replies toggle, the same pill as the two settings beside it -
+ * a control that looks different reads as a different sort of thing. Marked
+ * when it is on, because unlike the language and the light this one's label
+ * says what pressing it does next, so the label alone cannot say where it is.
+ */
+.speak {
+  display: grid;
+  place-items: center;
+  min-width: var(--touch);
+  height: 32px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: var(--f-2);
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.speak[aria-pressed='true'] {
+  background: var(--surface-2);
 }
 
 /*
