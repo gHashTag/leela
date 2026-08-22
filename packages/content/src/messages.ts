@@ -661,6 +661,10 @@ const EN = {
     'Sit with plan {plan} for now — the text is there to read, and ' +
     'the reflection is yours either way. The companion is unavailable.',
 
+  'companion.beforeTheBoard':
+    'The companion answers from a plan underfoot — throw a six to enter ' +
+    'the game, then ask again.',
+
   // --- the companion's initiative --------------------------------------------
   //
   // The daily word: once a day the bot writes first, privately, to a player
@@ -1069,6 +1073,10 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'companion.unavailable':
     'Побудьте пока с планом {plan} — текст можно прочесть, и отражение ' +
     'всё равно ваше. Спутник сейчас недоступен.',
+
+  'companion.beforeTheBoard':
+    'Спутник отвечает с плана под ногами — бросьте шестёрку, войдите ' +
+    'в игру и спросите снова.',
 
   'nudge.standing': 'Вы стоите на плане {plan}. {title}.',
   'nudge.cta': 'Игра продолжается там, где вы стоите — /roll вернёт вас в неё.',

@@ -247,6 +247,11 @@ export class Companion {
       model: this.modelName,
     };
 
+    // A note asked-for before the board ("throw a six to enter") has been
+    // answered by the arrival itself; leaving it up would explain a refusal
+    // that is no longer happening.
+    this.note = null;
+
     const short = opening(text);
     const whole = (text.body ?? '').trim();
 
@@ -299,7 +304,15 @@ export class Companion {
     const said = what.trim();
     if (said.length === 0) return;
     const rests = this.rests;
-    if (!rests) return;
+    if (!rests) {
+      // Not an apology and not a silent drop — the rule the no-model branch
+      // below already keeps, and this branch broke for a year of one day:
+      // words typed before the first six vanished without a sound. Before the
+      // board there is no plan to anchor a line to, so the answer goes where
+      // a refusal's reason goes — the note — in the language of the question.
+      this.note = messageFor(answering, 'companion.beforeTheBoard');
+      return;
+    }
 
     this.lines = [...this.lines, { who: 'player', text: said, source: 'player', plan: rests.plan }];
 
