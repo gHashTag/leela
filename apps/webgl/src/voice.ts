@@ -705,6 +705,8 @@ export const neuralSounding = ({
 
 /** The narrow slice of Web Audio this uses. */
 export interface Sounds {
+  /** `suspended` until a gesture wakes it; playing into it makes no sound. */
+  readonly state: string;
   createBuffer(channels: number, length: number, rate: number): { getChannelData(at: number): Float32Array };
   createBufferSource(): {
     buffer: unknown;
@@ -732,7 +734,16 @@ export const speakers = (context: Sounds): Player => {
 
   return {
     play: (samples, rate) =>
-      new Promise<void>((done) => {
+      new Promise<void>((done, fail) => {
+        // A context the browser never woke plays nothing and reports nothing:
+        // `onended` would not fire, this promise would not settle, and the
+        // chain behind it would stop for the rest of the answer. Refusing is
+        // what lets `preferring` hand the sentence to the plain voice, which
+        // is the whole contract - never silence, only a different voice.
+        if (context.state === 'suspended') {
+          fail(new Error('the sound is asleep'));
+          return;
+        }
         const buffer = context.createBuffer(1, samples.length, rate);
         buffer.getChannelData(0).set(samples);
         const source = context.createBufferSource();

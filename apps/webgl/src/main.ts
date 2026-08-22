@@ -1754,10 +1754,22 @@ if (!canSpeakBetter || mouth === null) {
     try {
       const Sound = (globalThis as unknown as { AudioContext: new () => AudioContext }).AudioContext;
       const context = new Sound();
-      // A tap is the gesture browsers want before they will make a sound, and
-      // this runs inside one. Resuming later, at the first sentence, is a
-      // context that was created outside a gesture and stays suspended.
-      await context.resume().catch(() => undefined);
+      /*
+       * Resume, but never wait on it.
+       *
+       * A tap is the gesture browsers want before they will make a sound, and
+       * the click path runs inside one. The re-arm on load does not — and a
+       * `resume()` called without a gesture returns a promise that never
+       * settles at all, so awaiting it stopped the arming dead: measured on
+       * the deployed board, nought percent for seventy seconds, no worker, no
+       * request. Bounded, so a context that will not wake costs a second
+       * rather than the voice; a suspended context then simply cannot play,
+       * `preferring` hears the failure, and the plain mouth takes the answer.
+       */
+      await Promise.race([
+        context.resume().catch(() => undefined),
+        new Promise((wake) => setTimeout(wake, 1_000)),
+      ]);
 
       const weights = await fetchWeights(WEIGHTS, {
         fetch: (url, init) => fetch(url, init),

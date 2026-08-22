@@ -828,6 +828,7 @@ describe('the speakers', () => {
     return {
       sources,
       sounds: {
+        state: 'running',
         destination: {},
         createBuffer: (_channels: number, length: number) => ({
           getChannelData: () => new Float32Array(length),
@@ -874,6 +875,7 @@ describe('the speakers', () => {
     // Some engines throw here, and the player asking for quiet must never be
     // the thing that breaks the page.
     const out = speakers({
+      state: 'running',
       destination: {},
       createBuffer: (_c: number, length: number) => ({ getChannelData: () => new Float32Array(length) }),
       createBufferSource: () => ({
@@ -890,3 +892,27 @@ describe('the speakers', () => {
     expect(() => out.stop()).not.toThrow();
   });
 });
+
+describe('a sound the browser never woke', () => {
+  it('refuses the sentence instead of hanging on it', async () => {
+    // Measured on the deployed board: `resume()` without a gesture never
+    // settles, so a suspended context reached playback, `onended` never fired
+    // and the promise never resolved - which stops the chain for the rest of
+    // the answer. Refusing is what lets the plain voice take it.
+    const asleep = {
+      state: 'suspended',
+      destination: {},
+      createBuffer: (_c: number, length: number) => ({
+        getChannelData: () => new Float32Array(length),
+      }),
+      createBufferSource: () => {
+        throw new Error('a suspended context must never be asked for a source');
+      },
+    };
+
+    await expect(speakers(asleep as never).play(new Float32Array(8), 24_000)).rejects.toThrow(
+      /asleep/,
+    );
+  });
+});
+
