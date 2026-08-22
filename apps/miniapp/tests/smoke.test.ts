@@ -20,21 +20,28 @@ function siteServing(pages: Record<string, string>): Fetcher {
 /**
  * A whole site where every check passes.
  *
- * The game's page names `./assets/index-ok.js`, and it did not always. It was
- * a title, a board and the Telegram script — a page that loads no code of its
- * own — and every check in this file passed on it, because the run expands the
- * game's page into one check per asset and a page with no assets expands into
- * nothing. So the fixture for *healthy* was a blank screen, and the assertion
- * that the healthy site passes was also, silently, an assertion that a page
- * naming none of its own files is acceptable. The asset is here so that
- * `allPassed` on this fixture means what its name says.
+ * Both boards' pages name an asset of their own, and the root's did not
+ * always. It was a title, a board and the Telegram script — a page that loads
+ * no code of its own — and every check in this file passed on it, because the
+ * run expands an app's page into one check per asset and a page with no
+ * assets expands into nothing. So the fixture for *healthy* was a blank
+ * screen, and the assertion that the healthy site passes was also, silently,
+ * an assertion that a page naming none of its own files is acceptable. The
+ * assets are here so that `allPassed` on this fixture means what its name
+ * says — for the 3D board at the root and for the 2D board under `classic/`
+ * alike.
  */
 const PAGES: Record<string, string> = {
   '': (
+    '<title>Leela — the board in three dimensions</title><canvas id="board"></canvas>' +
+    '<script type="module" src="./assets/index-3d.js"></script>'
+  ).padEnd(600, ' '),
+  'assets/index-3d.js': 'console.log(1)'.padEnd(2000, ' '),
+  'classic/': (
     '<title>Leela</title><div id="board"></div><script src="telegram-web-app.js"></script>' +
     '<script type="module" src="./assets/index-ok.js"></script>'
   ).padEnd(600, ' '),
-  'assets/index-ok.js': 'console.log(1)'.padEnd(2000, ' '),
+  'classic/assets/index-ok.js': 'console.log(1)'.padEnd(2000, ' '),
   'docs/': 'Leela <a href="ru/">Русский</a>'.padEnd(600, ' '),
   'docs/ru/plans/1.html': '<h1>1. Рождение (джанма)</h1>'.padEnd(2000, ' '),
   'docs/style.css': ':root { --measure: 34rem; }'.padEnd(600, ' '),
@@ -90,9 +97,44 @@ describe('each way a deployment can be broken is caught', () => {
   });
 
   it('the app HTML without its board, which is a build that emitted a shell', async () => {
-    const shell = siteServing({ ...pagesOf(healthy), '': '<title>Leela</title>'.padEnd(600, ' ') });
+    const shell = siteServing({
+      ...pagesOf(healthy),
+      '': '<title>Leela — the board in three dimensions</title>'.padEnd(600, ' '),
+    });
     const results = await runChecks('https://example.test', shell);
     expect(describeResults(results)).toMatch(/missing: id="board"/);
+  });
+
+  it('the 2D app still at the root, which is the old layout deployed over the new', async () => {
+    // Everything the root check used to ask for is on this page — a title, the
+    // board, the Telegram script — so only a fragment unique to the 3D entry
+    // can tell a stale deployment from a live one.
+    const stale = siteServing({ ...pagesOf(healthy), '': pagesOf(healthy)['classic/'] as string });
+    const results = await runChecks('https://example.test', stale);
+    expect(allPassed(results)).toBe(false);
+    expect(describeResults(results)).toMatch(
+      /missing: <title>Leela — the board in three dimensions<\/title>/,
+    );
+  });
+
+  it('the classic board gone, which is a copy step that did not run', async () => {
+    const pages = pagesOf(healthy);
+    delete pages['classic/'];
+    delete pages['classic/assets/index-ok.js'];
+    const results = await runChecks('https://example.test', siteServing(pages));
+    expect(allPassed(results)).toBe(false);
+    expect(describeResults(results)).toMatch(/FAIL\s+the classic 2D board/);
+  });
+
+  it("the classic page whose bundle did not survive the copy", async () => {
+    // `classic/` is a directory copied into the artifact, so its page can
+    // arrive intact while `classic/assets/` does not — and the page alone
+    // passes every fragment the hand-written check asks for.
+    const pages = pagesOf(healthy);
+    delete pages['classic/assets/index-ok.js'];
+    const results = await runChecks('https://example.test', siteServing(pages));
+    expect(allPassed(results)).toBe(false);
+    expect(describeResults(results)).toMatch(/\/classic\/assets\/index-ok\.js/);
   });
 });
 
@@ -117,13 +159,21 @@ describe('the report', () => {
 });
 
 describe('the checks themselves', () => {
-  it('covers the game, the book, a plan, the stylesheet and the legal page', () => {
+  it('covers both boards, the book, a plan, the stylesheet and the legal page', () => {
     const paths = DEPLOYMENT_CHECKS.map((check) => check.path);
     expect(paths).toContain('');
+    expect(paths).toContain('classic/');
     expect(paths).toContain('docs/');
     expect(paths.some((p) => p.includes('plans/'))).toBe(true);
     expect(paths.some((p) => p.endsWith('.css'))).toBe(true);
     expect(paths.some((p) => p.includes('legal/'))).toBe(true);
+  });
+
+  it('expands both boards into checks on their own assets, not just the root', () => {
+    // The classic board is the page whose bundle a bad copy step loses; an
+    // expansion wired to `path === ''` would never look.
+    const expanded = DEPLOYMENT_CHECKS.filter((check) => check.ownAssets).map((check) => check.path);
+    expect(expanded).toEqual(['', 'classic/']);
   });
 
   it('gives every check something to assert beyond a 200', () => {

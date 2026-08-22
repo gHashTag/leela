@@ -27,6 +27,15 @@ export interface Check {
   mustNotContain?: string[];
   /** Smallest response that could be the real thing, in bytes. */
   minBytes?: number;
+  /**
+   * The path is an app's page, and its build names its assets with a content
+   * hash. Expand it: one generated check per asset the page references, read
+   * from the page's own directory — {@link assetsIn} says why they cannot be
+   * listed by hand. There are two such pages now, the 3D board at the root and
+   * the 2D board under `classic/`, which is why this is a fact on the check
+   * rather than `path === ''` hard-coded in {@link runChecks}.
+   */
+  ownAssets?: boolean;
 }
 
 export interface CheckResult {
@@ -53,17 +62,30 @@ export interface CheckResult {
 /**
  * What has to be true of a deployment.
  *
- * Chosen so that each one fails for a different reason: the app's HTML, the
- * asset it references, a page deep in the book, the stylesheet the book needs,
- * and a legal document — the one thing whose absence is a store rejection
- * rather than a broken page.
+ * Chosen so that each one fails for a different reason: the 3D board's HTML,
+ * the 2D board that must survive its move to `classic/`, a page deep in the
+ * book, the stylesheet the book needs, and a legal document — the one thing
+ * whose absence is a store rejection rather than a broken page.
  */
 export const DEPLOYMENT_CHECKS: Check[] = [
   {
     path: '',
-    what: 'the game',
+    what: 'the 3D board',
+    // The title is the one fragment the 2D page does not carry, so the old
+    // layout still deployed — the 2D app at the root — reads as a named
+    // missing fragment rather than as a healthy 200 about the wrong app.
+    mustContain: ['<title>Leela — the board in three dimensions</title>', 'id="board"'],
+    minBytes: 500,
+    ownAssets: true,
+  },
+  {
+    path: 'classic/',
+    what: 'the classic 2D board',
+    // The fragments the root passed before the 3D board took its place: the
+    // 2D app is not deleted, it moves, and these prove it survived the move.
     mustContain: ['<title>Leela</title>', 'id="board"', 'telegram-web-app.js'],
     minBytes: 500,
+    ownAssets: true,
   },
   {
     path: 'docs/',
@@ -202,17 +224,20 @@ export function assetProblems(html: string): string[] {
 /**
  * A check for one of them.
  *
- * Weaker than the five written by hand, and deliberately: nobody can say what
+ * Weaker than the ones written by hand, and deliberately: nobody can say what
  * a bundle contains from one build to the next. What can be said is that it
  * answers, that it is not a few bytes of nothing, and that it is not the
  * index page handed back by a host that could not find it.
+ *
+ * Named after the page that asked for it, because with two boards in one
+ * artifact "the game's code" no longer says which game the report is about.
  */
-export function assetCheck(path: string): Check {
+export function assetCheck(path: string, of: Check): Check {
   const isStyle = path.endsWith('.css');
 
   return {
     path,
-    what: isStyle ? "the game's stylesheet" : "the game's code",
+    what: `${of.what}'s ${isStyle ? 'stylesheet' : 'code'}`,
     minBytes: isStyle ? 200 : 1000,
     mustNotContain: ['<!doctype html', '<!DOCTYPE html'],
   };
@@ -245,12 +270,13 @@ export function rootAssetVerdict(reference: string): CheckResult {
  *
  * The hand-written checks read a title, an element id and a byte count, and an
  * empty shell has all three. Everything below them is generated per asset, so
- * a page with no assets generates no checks and the run passes on five green
- * lines about a page that loads nothing.
+ * a page with no assets generates no checks and the run passes on green lines
+ * about a page that loads nothing. Named after the page it indicts, because
+ * either board can be the shell while the other is whole.
  */
-export function noAssetsVerdict(): CheckResult {
+export function noAssetsVerdict(of: Check): CheckResult {
   return verdict(
-    { path: '', what: "the game's own code, which its page never names" },
+    { path: of.path, what: `${of.what}'s own code, which its page never names` },
     'the page names no asset of its own: no ./assets/... script or stylesheet. A shell with a ' +
       'title and an empty board passes every other check and loads nothing',
   );
@@ -259,10 +285,12 @@ export function noAssetsVerdict(): CheckResult {
 /**
  * Run every check. All of them, so one failure does not hide the rest.
  *
- * The game's own assets are added from its HTML once that has been fetched:
- * a build that emits a broken asset path is the first failure this module
- * names, and the page it emits still contains `id="board"` and passes every
- * hand-written check while the game is a blank screen.
+ * Each board's own assets are added from its page's HTML once that has been
+ * fetched: a build that emits a broken asset path is the first failure this
+ * module names, and the page it emits still contains `id="board"` and passes
+ * every hand-written check while the board is a blank screen. The 2D board is
+ * a directory *copied* into the artifact besides, so a copy that missed its
+ * `assets/` serves an intact page whose bundle is gone.
  *
  * Expanding a page into per-asset checks has no floor of its own, so the two
  * ways of naming nothing — naming no asset, and naming one the browser cannot
@@ -280,22 +308,26 @@ export async function runChecks(
     const result = await runCheck(base, check, fetcher);
     results.push(result);
 
-    // The game's page, and only if it came back: there is nothing to read the
+    // An app's page, and only if it came back: there is nothing to read the
     // asset names out of otherwise, and its own failure is already reported.
-    if (check.path !== '' || !result.ok) continue;
+    if (!check.ownAssets || !result.ok) continue;
 
-    const { text } = await fetcher(`${base.replace(/\/$/, '')}/`);
+    const { text } = await fetcher(`${base.replace(/\/$/, '')}/${check.path}`);
     const assets = assetsIn(text);
 
     for (const asset of assets) {
-      results.push(await runCheck(base, assetCheck(asset), fetcher));
+      // Resolved against the page that named it: `assets/…` in the classic
+      // page is `classic/assets/…` at the site, and re-rooting it under the
+      // base would fetch a URL the browser never asks for — the exact mistake
+      // {@link assetsIn} recounts.
+      results.push(await runCheck(base, assetCheck(`${check.path}${asset}`, check), fetcher));
     }
 
     for (const reference of assetProblems(text)) {
       results.push(rootAssetVerdict(reference));
     }
 
-    if (assets.length === 0) results.push(noAssetsVerdict());
+    if (assets.length === 0) results.push(noAssetsVerdict(check));
   }
 
   return results;

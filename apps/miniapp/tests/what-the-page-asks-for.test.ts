@@ -35,8 +35,9 @@ import {
   type Fetcher,
 } from '../src/smoke';
 
+// The root page is the 3D board now; what varies below is what it names.
 const GAME = (assets: string[]) =>
-  `<!doctype html><html lang="en"><head><title>Leela</title>` +
+  `<!doctype html><html lang="en"><head><title>Leela — the board in three dimensions</title>` +
   `<script src="https://telegram.org/js/telegram-web-app.js"></script>` +
   assets
     .map((asset) =>
@@ -45,13 +46,25 @@ const GAME = (assets: string[]) =>
         : `<script type="module" src="${asset}"></script>`,
     )
     .join('') +
-  `</head><body><div id="board"></div>` +
-  // Long enough to be a page rather than a stub: the game's own check asks for
-  // at least 500 bytes, and a fixture under that never reaches the assets.
+  `</head><body><canvas id="board"></canvas>` +
+  // Long enough to be a page rather than a stub: the board's own check asks
+  // for at least 500 bytes, and a fixture under that never reaches the assets.
   `<!--${'p'.repeat(600)}--></body></html>`;
 
-/** Just enough of a site for the five hand-written checks to pass. */
+/**
+ * Just enough of a site for the other hand-written checks to pass.
+ *
+ * The classic board is healthy and constant — its page names one asset and
+ * that asset answers — so every verdict below is about the root page, whose
+ * references are what each test varies.
+ */
 const SITE: Record<string, string> = {
+  'classic/': (
+    `<title>Leela</title><script src="https://telegram.org/js/telegram-web-app.js"></script>` +
+    `<script type="module" src="./assets/classic-ok.js"></script>` +
+    `<div id="board"></div>${'x'.repeat(600)}`
+  ),
+  'classic/assets/classic-ok.js': `console.log(1)${'y'.repeat(2000)}`,
   'docs/': `<html>Leela <a href="ru/">ru</a>${'x'.repeat(600)}</html>`,
   'docs/ru/plans/1.html': `<h1>Рождение</h1>${'x'.repeat(1600)}`,
   'docs/style.css': `--measure: 60ch;${'x'.repeat(600)}`,
@@ -172,7 +185,9 @@ describe('the assets the deployed page asks for', () => {
     const results = await runChecks('https://site/', fetcher);
 
     expect(allPassed(results)).toBe(true);
-    expect(results).toHaveLength(7);
+    // Six hand-written, two generated from the root page, one generated from
+    // the classic board's.
+    expect(results).toHaveLength(9);
   });
 
   it('fail a page that names none of its own files', async () => {
@@ -212,7 +227,7 @@ describe('the assets the deployed page asks for', () => {
     };
 
     const results = await runChecks('https://site/', fetcher, [
-      { path: '', what: 'the game', mustContain: ['id="board"'] } as Check,
+      { path: '', what: 'the game', mustContain: ['id="board"'], ownAssets: true } as Check,
     ]);
 
     expect(results).toHaveLength(1);
