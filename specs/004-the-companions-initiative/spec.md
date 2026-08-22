@@ -30,6 +30,16 @@ skill, NOT built now). Its *experience* is per-player memory: what was sent,
 when, which excerpt — kept in the same storage the games live in, in memory
 when the games are (and saying so, as storage already does).
 
+## Skill 2, shipped: the fresh-start comeback
+
+The second sleeping arm: a player lapsed past the daily word's fourteen days
+gets a Monday knock — the fresh-start landmark — opening with 'begin again',
+nothing counted or lost. The window closes itself: only lapses of 14 to 35
+days qualify, so at most three Mondays can knock and no counter, column or
+migration is needed; past the window, silence is read as an answer. The arms
+are disjoint by construction — one activity age selects exactly one word —
+and the daily cap and /quiet govern both.
+
 ## Rejected, with reasons
 
 - **Consecutive-day streaks** — the field's own teardowns document play-to-

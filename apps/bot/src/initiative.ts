@@ -41,6 +41,17 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const LAPSED_AFTER_MS = 14 * DAY_MS;
 
 /**
+ * How long the fresh-start door stays open.
+ *
+ * A comeback word goes only to players lapsed past the daily word's fourteen
+ * days and not yet past thirty-five: at most three Mondays fall in that
+ * window, so the weekly knock bounds itself and needs no counter, no new
+ * column, no migration. Past the window, silence is read as an answer and
+ * respected - the research's own line between a landmark and a nag.
+ */
+export const FRESH_START_UNTIL_MS = 35 * DAY_MS;
+
+/**
  * The default hour the daily word goes out, in UTC because the clock that
  * fires it is UTC: Railway runs its containers on UTC, so 6 here is 09:00 in
  * Moscow — morning where the players are, which is the honest v1 of send-time
@@ -109,7 +120,10 @@ export interface Candidate {
   lastNudgedAt: number | null;
 }
 
-export type Verdict = { send: true } | { send: false; because: SkipReason };
+/** Which of the companion's words a tick sends. */
+export type Word = 'daily' | 'freshStart';
+
+export type Verdict = { send: true; word: Word } | { send: false; because: SkipReason };
 
 /**
  * The daily word's sleeping condition, one clause per line of the spec:
@@ -123,14 +137,23 @@ export function eligible(candidate: Candidate, now: number): Verdict {
   if (candidate.standing === null) return { send: false, because: 'not-standing' };
   if (candidate.finished) return { send: false, because: 'finished' };
   if (!candidate.reachable) return { send: false, because: 'no-channel' };
-  if (candidate.lastActiveAt === null || now - candidate.lastActiveAt > LAPSED_AFTER_MS) {
-    return { send: false, because: 'lapsed' };
-  }
   if (candidate.quieted) return { send: false, because: 'quieted' };
   if (candidate.lastNudgedAt !== null && utcDayOf(candidate.lastNudgedAt) === utcDayOf(now)) {
     return { send: false, because: 'nudged-today' };
   }
-  return { send: true };
+  if (candidate.lastActiveAt === null || now - candidate.lastActiveAt > LAPSED_AFTER_MS) {
+    // The second arm: past the daily word's reach, a Monday - the fresh-start
+    // landmark - may knock, inside its window. The arms are disjoint by
+    // construction: one activity age selects exactly one word or none.
+    const gone =
+      candidate.lastActiveAt === null ||
+      now - candidate.lastActiveAt > FRESH_START_UNTIL_MS;
+    if (!gone && new Date(now).getUTCDay() === 1) {
+      return { send: true, word: 'freshStart' };
+    }
+    return { send: false, because: 'lapsed' };
+  }
+  return { send: true, word: 'daily' };
 }
 
 /**
@@ -215,13 +238,16 @@ export function compose(
   language: Language,
   plan: Plan,
   lastExcerpt: number | null,
-  said: { firstNudge: boolean },
+  said: { firstNudge: boolean; word?: Word },
 ): Composed {
   const pieces = excerptsOf(plan.body);
   const index = nextExcerpt(pieces.length, lastExcerpt);
   const excerpt = pieces[index];
 
   const lines = [
+    // A comeback opens with the landmark, not the lesson: the research's
+    // fresh-start framing - a clean slate offered, nothing counted or lost.
+    ...(said.word === 'freshStart' ? [messageFor(language, 'nudge.freshStart'), ''] : []),
     ...(excerpt ? [excerpt, ''] : []),
     messageFor(language, 'nudge.standing', { plan: plan.plan, title: plan.title }),
     messageFor(language, 'nudge.cta'),
@@ -406,6 +432,7 @@ export function createInitiative({
       const plan = planFor(room.language, seat.state.loka);
       const word = compose(room.language, plan, memory.excerpt, {
         firstNudge: memory.sentAt === null,
+        word: verdict.word,
       });
 
       const outcome = await deliver(userId, room.language, word.text);

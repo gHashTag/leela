@@ -672,6 +672,8 @@ const EN = {
   // stand, and one call back into the game. One message, one CTA, and the way
   // out said plainly in the first message ever sent. The excerpt itself is the
   // plan's own canon text, so no key here carries it.
+  'nudge.freshStart':
+    'Monday is a good day to begin again — the board kept your place.',
   'nudge.standing': 'You are standing on {plan}. {title}.',
   // One call back into the game, and it has to stand on its own: the board
   // button rides beneath it when Telegram takes the keyboard, and when the
@@ -1078,6 +1080,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
     'Спутник отвечает с плана под ногами — бросьте шестёрку, войдите ' +
     'в игру и спросите снова.',
 
+  'nudge.freshStart':
+    'Понедельник — хороший день, чтобы начать заново. Доска сохранила ваше место.',
   'nudge.standing': 'Вы стоите на плане {plan}. {title}.',
   'nudge.cta': 'Игра продолжается там, где вы стоите — /roll вернёт вас в неё.',
   'nudge.wayOut': 'Это слово приходит раз в день. /quiet останавливает его в любой момент.',

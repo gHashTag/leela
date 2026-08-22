@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { messageFor, planFor, type Plan } from '@leela/content';
 import {
+  FRESH_START_UNTIL_MS,
   DEFAULT_NUDGE_HOUR,
   EXCERPT_CHARS,
   LAPSED_AFTER_MS,
@@ -40,7 +41,7 @@ function reachable(overrides: Partial<Candidate> = {}): Candidate {
 
 describe('the sleeping condition', () => {
   it('sends to a player standing, reachable, fresh, loud and unknocked', () => {
-    expect(eligible(reachable(), NOW)).toEqual({ send: true });
+    expect(eligible(reachable(), NOW)).toEqual({ send: true, word: 'daily' });
   });
 
   it('sleeps for a player standing on no plan', () => {
@@ -74,6 +75,7 @@ describe('the sleeping condition', () => {
   it('still sends on the fourteenth day itself — the bound is inclusive', () => {
     expect(eligible(reachable({ lastActiveAt: NOW - LAPSED_AFTER_MS }), NOW)).toEqual({
       send: true,
+      word: 'daily',
     });
   });
 
@@ -106,6 +108,7 @@ describe('the sleeping condition', () => {
     const justAfterMidnight = Date.UTC(2026, 7, 21, 0, 5, 0);
     expect(eligible(reachable({ lastNudgedAt: lateYesterday }), justAfterMidnight)).toEqual({
       send: true,
+      word: 'daily',
     });
     // And the same moment re-asked inside the day stays silent.
     expect(
@@ -342,5 +345,68 @@ describe('the memory fallback', () => {
     const memory = new MemoryNudgeStore();
     await memory.record('u1', { at: NOW, excerpt: 1 });
     expect(await memory.of('u2')).toEqual(NEVER_NUDGED);
+  });
+});
+
+describe('the fresh-start arm', () => {
+  /** 2026-08-24T12:00Z is a Monday — the landmark the arm sleeps for. */
+  const MONDAY = Date.UTC(2026, 7, 24, 12, 0, 0);
+  const TUESDAY = MONDAY + DAY;
+
+  it('knocks on a Monday inside the window, with the fresh-start word', () => {
+    expect(eligible(reachable({ lastActiveAt: MONDAY - 20 * DAY }), MONDAY)).toEqual({
+      send: true,
+      word: 'freshStart',
+    });
+  });
+
+  it('stays silent on any other day of the week', () => {
+    expect(eligible(reachable({ lastActiveAt: TUESDAY - 20 * DAY }), TUESDAY)).toEqual({
+      send: false,
+      because: 'lapsed',
+    });
+  });
+
+  it('holds the far edge of the window: thirty-five days knocks, thirty-six does not', () => {
+    expect(eligible(reachable({ lastActiveAt: MONDAY - FRESH_START_UNTIL_MS }), MONDAY)).toEqual({
+      send: true,
+      word: 'freshStart',
+    });
+    expect(
+      eligible(reachable({ lastActiveAt: MONDAY - FRESH_START_UNTIL_MS - DAY }), MONDAY),
+    ).toEqual({ send: false, because: 'lapsed' });
+  });
+
+  it('never speaks to a seat that has no timestamp at all, Monday or not', () => {
+    // An absence is not a lapse with a date on it: nobody knows when they
+    // left, so no window can be said to hold them.
+    expect(eligible(reachable({ lastActiveAt: null }), MONDAY)).toEqual({
+      send: false,
+      because: 'lapsed',
+    });
+  });
+
+  it('still respects the quiet door and the daily cap', () => {
+    expect(
+      eligible(reachable({ lastActiveAt: MONDAY - 20 * DAY, quieted: true }), MONDAY),
+    ).toEqual({ send: false, because: 'quieted' });
+    expect(
+      eligible(reachable({ lastActiveAt: MONDAY - 20 * DAY, lastNudgedAt: MONDAY - 1 }), MONDAY),
+    ).toEqual({ send: false, because: 'nudged-today' });
+  });
+
+  it('opens the comeback with the landmark, in the language of the board', () => {
+    const plan = planFor('en', 12);
+    const said = compose('en', plan, null, { firstNudge: false, word: 'freshStart' });
+    expect(said.text.startsWith('Monday is a good day to begin again')).toBe(true);
+    expect(said.text).toContain('You are standing on 12');
+
+    const ru = compose('ru', planFor('ru', 12), null, { firstNudge: false, word: 'freshStart' });
+    expect(ru.text).toContain('начать заново');
+  });
+
+  it('the daily word carries no comeback line', () => {
+    const said = compose('en', planFor('en', 12), null, { firstNudge: false, word: 'daily' });
+    expect(said.text).not.toContain('begin again');
   });
 });
