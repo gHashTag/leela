@@ -277,9 +277,34 @@ export const BOT_COMMANDS: readonly BotCommand[] = [
   { command: 'help', describedBy: 'menu.help' },
 ];
 
-/** The menu as Telegram wants it, in one language. */
-export function menuFor(language: Language): Array<{ command: string; description: string }> {
-  return BOT_COMMANDS.map((one) => ({
+/**
+ * Commands that exist only where a deployment has priced them.
+ *
+ * Kept out of `BOT_COMMANDS` rather than filtered out of it, because the
+ * default has to be the dark one: a list that holds `/pro` and is filtered
+ * somewhere else is a list that offers `/pro` the first time somebody forgets
+ * to filter. Whether these are registered at all is `stars.ts`'s answer, and
+ * `bot.ts` asks it once.
+ *
+ * `/refund` is deliberately not here. It is an operator's command, gated on
+ * `LEELA_STARS_OPERATORS`, and a menu entry for it would be an invitation to
+ * every player to try it.
+ */
+export const PAID_COMMANDS: readonly BotCommand[] = [{ command: 'pro', describedBy: 'menu.pro' }];
+
+/**
+ * The menu as Telegram wants it, in one language.
+ *
+ * @param also Commands this deployment has switched on — `PAID_COMMANDS` where
+ *             a price is set, and nothing at all where none is. Defaulting to
+ *             nothing is the point: a caller that does not know about the
+ *             Stars rail publishes the menu that existed before it.
+ */
+export function menuFor(
+  language: Language,
+  also: readonly BotCommand[] = [],
+): Array<{ command: string; description: string }> {
+  return [...BOT_COMMANDS, ...also].map((one) => ({
     command: one.command,
     // Telegram refuses a description over 256 characters, and refuses the whole
     // call rather than the one entry — so a sentence that grows in translation
@@ -1170,6 +1195,25 @@ function describeStandings(room: Room): string {
  * not yet understand the game, which is the worst moment to be handed a
  * language they do not read.
  */
-export function help(language: Language = 'en'): CommandResult {
-  return { room: null, replies: [say(messageFor(language, 'help'), false)] };
+export function help(
+  language: Language = 'en',
+  /**
+   * Commands this deployment has switched on, listed under the rest.
+   *
+   * Derived from the menu description rather than given a second sentence of
+   * its own: two descriptions of one command are the fourth hand-kept copy
+   * this repository has watched go wrong. Empty by default, so a deployment
+   * that has priced nothing prints the help it printed before the Stars rail
+   * was written — byte for byte, which `dark-until-a-price-is-named.test.ts`
+   * asserts rather than assumes.
+   */
+  also: readonly BotCommand[] = [],
+): CommandResult {
+  const lines = also.map((one) => `/${one.command} — ${messageFor(language, one.describedBy)}`);
+  const text =
+    lines.length === 0
+      ? messageFor(language, 'help')
+      : `${messageFor(language, 'help')}\n\n${lines.join('\n')}`;
+
+  return { room: null, replies: [say(text, false)] };
 }

@@ -13,11 +13,19 @@
  */
 
 import { DatabaseRoomStore } from './persistence';
-import { SqliteRoomQueries, sqliteNudgeStore, sqliteReportSink, sqliteStepSink } from './sqlite';
 import {
+  SqliteRoomQueries,
+  sqliteEntitlements,
+  sqliteNudgeStore,
+  sqliteReportSink,
+  sqliteStepSink,
+} from './sqlite';
+import {
+  MemoryEntitlementStore,
   MemoryNudgeStore,
   MemoryReportSink,
   MemoryRoomStore,
+  type EntitlementStore,
   type NudgeStore,
   type ReportSink,
   type RoomStore,
@@ -46,6 +54,14 @@ export interface Storage {
    * so the memory fallback is a working store rather than an absence.
    */
   nudges: NudgeStore;
+  /**
+   * What players have paid for in Telegram Stars. Always present, like
+   * `nudges` and for a sharper version of the same reason: a payment that
+   * cannot be recorded must not be a payment that is silently taken, so the
+   * fallback is a working store rather than an absence — and the startup line
+   * says which of the two this deployment has.
+   */
+  entitlements: EntitlementStore;
   /** Whether games survive a restart. */
   durable: boolean;
   /**
@@ -97,6 +113,7 @@ export function openStorage({
       store: new MemoryRoomStore(),
       reports: new MemoryReportSink(),
       nudges: new MemoryNudgeStore(),
+      entitlements: new MemoryEntitlementStore(),
       durable: false,
     };
   }
@@ -126,6 +143,7 @@ export function openStorage({
       reports: sqliteReportSink(queries),
       steps: sqliteStepSink(queries),
       nudges: sqliteNudgeStore(queries),
+      entitlements: sqliteEntitlements(queries),
       durable: true,
       stopPruning,
     };
@@ -140,6 +158,7 @@ export function openStorage({
       store: new MemoryRoomStore(),
       reports: new MemoryReportSink(),
       nudges: new MemoryNudgeStore(),
+      entitlements: new MemoryEntitlementStore(),
       durable: false,
       failure,
     };

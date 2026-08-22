@@ -28,10 +28,11 @@ import {
   translatedLanguages,
 } from '@leela/content';
 import { createBot, miniAppUrl } from './bot';
-import { menuFor } from './commands';
+import { PAID_COMMANDS, menuFor } from './commands';
 import { DirectChannels } from './delivery';
 import { createInitiative, nudgeHour } from './initiative';
 import { serveAsk, type StreamAsk, type Streamed } from './serve';
+import { offering, operatorIds, whyNoOperators, whyNothingIsSold } from './stars';
 import { openStorage } from './storage';
 import { supervise } from './supervisor';
 
@@ -141,14 +142,27 @@ const guide = model ? new Guide({ model, completion: { maxTokens: 16_000 } }) : 
 // is a send the other must not spend. See `BotOptions.channels`.
 const channels = new DirectChannels();
 
+/**
+ * Whether anything is sold here, decided once and in one place.
+ *
+ * `offering` answers `null` unless a price is named, and `null` is the whole
+ * feature off — no `/pro`, no menu entry, no invoice, nothing said about
+ * money. Read here rather than inside `createBot` so that the startup line
+ * below and the bot itself cannot disagree about which deployment this is.
+ */
+const stars = offering(process.env);
+
 const built = {
   token,
   store: storage.store,
   reports: storage.reports,
   steps: storage.steps,
   nudges: storage.nudges,
+  entitlements: storage.entitlements,
   channels,
   guide,
+  stars,
+  operators: operatorIds(process.env),
 };
 
 const bot = createBot(built);
@@ -166,7 +180,8 @@ const keeping =
   built.store === storage.store &&
   built.reports === storage.reports &&
   built.steps === storage.steps &&
-  built.nudges === storage.nudges;
+  built.nudges === storage.nudges &&
+  built.entitlements === storage.entitlements;
 
 console.log(
   keeping
@@ -190,6 +205,28 @@ console.log(
       `A companion is configured (${model.id}) and will respond to reports.`
     : `No ${PROVIDERS.map((p) => p.key).join(', ')}: ` +
       'reports are kept, but nothing responds to them.',
+);
+
+/**
+ * Whether this deployment sells anything, said out loud.
+ *
+ * The dark case is the ordinary one and is still worth a line: a price with a
+ * typo in it is otherwise invisible — the bot runs, `/pro` is absent, and the
+ * person who set the variable has no way to tell that from the rail being off
+ * on purpose. `whyNothingIsSold` is the reason, from the same reader the gate
+ * itself uses, so the sentence cannot describe a different decision from the
+ * one that was made.
+ */
+console.log(
+  stars
+    ? `Telegram Stars: ${stars.map((tier) => `${tier.id} ${tier.stars}XTR`).join(', ')}. ` +
+      'A subscription buys a date and unlocks nothing; the game stays free.'
+    : `Telegram Stars: nothing is sold — ${whyNothingIsSold(process.env) ?? ''}.`,
+);
+console.log(
+  built.operators.length > 0
+    ? `${built.operators.length} operator(s) may /refund a payment.`
+    : `Refunds: ${whyNoOperators(process.env) ?? ''}.`,
 );
 
 /**
@@ -242,7 +279,11 @@ process.once('SIGTERM', stop);
 async function publishMenu(): Promise<void> {
   for (const language of translatedLanguages()) {
     try {
-      await bot.api.setMyCommands(menuFor(language), {
+      // `alsoOffered` in `bot.ts` is the same question asked of the same
+      // `stars`, so the menu and the help cannot describe two different bots:
+      // a deployment with no price publishes exactly the menu it published
+      // before the Stars rail was written.
+      await bot.api.setMyCommands(menuFor(language, stars ? PAID_COMMANDS : []), {
         // English is also the default: Telegram falls back to the scopeless
         // list for a client whose language nothing was registered for, and
         // without it the menu is empty for twenty of the twenty-two.

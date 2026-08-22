@@ -7,6 +7,7 @@
  */
 
 import type { Room } from './commands';
+import { extendedTo } from './stars';
 
 /** A table read back, and whether one was refused to give the answer. */
 export interface ReadRoom {
@@ -219,6 +220,150 @@ export class MemoryNudgeStore implements NudgeStore {
   async setQuieted(userId: string, quieted: boolean): Promise<void> {
     const held = await this.of(userId);
     this.records.set(userId, { ...held, quieted });
+  }
+}
+
+/**
+ * A payment in Telegram Stars, and the stretch of time it bought.
+ *
+ * One row per payment rather than one per player, unlike `nudges` and
+ * `intentions` next door. The reason is the refund: Telegram gives money back
+ * per `telegram_payment_charge_id`, so a store that kept only a player's
+ * current expiry could not tell which payment a refund was undoing — and a
+ * player who has paid twice would lose both stretches for one refund, or
+ * neither. Keyed by the charge, this is the same append-and-read shape
+ * `reports` and `game_steps` already have, and the player's expiry is derived
+ * from it rather than kept beside it, so the two cannot disagree.
+ */
+export interface Entitlement {
+  /** Telegram's own id for the payment, and the only handle a refund has. */
+  chargeId: string;
+  userId: string;
+  /** Which tier was bought, as `stars.ts` names them. */
+  tier: string;
+  /** What was paid, in whole Stars. */
+  stars: number;
+  paidAt: number;
+  /** When this payment's stretch runs out, epoch ms. */
+  until: number;
+  /** When it was given back, or null while it stands. */
+  refundedAt: number | null;
+}
+
+/** A live entitlement: what `subscribed` answers when there is one. */
+export interface Subscription {
+  /** When it runs out, epoch ms. */
+  until: number;
+}
+
+/**
+ * Where entitlements live.
+ *
+ * Three methods, so a fake is cheap and so that nothing else in this bot can
+ * write one: an entitlement is created by a payment Telegram has confirmed and
+ * by nothing else.
+ *
+ * **Nothing in the game asks `subscribed`.** There is no toll in this bot
+ * today and this store does not add one — it records what was paid and exposes
+ * it, and every square, report and answer stays exactly as free as it was.
+ */
+export interface EntitlementStore {
+  /**
+   * Keep a payment, and say what it bought.
+   *
+   * The expiry is computed here rather than by the caller because it depends
+   * on what the player already holds — see `extendedTo` in `stars.ts`, which
+   * both implementations share so the two cannot answer differently.
+   */
+  record(payment: {
+    userId: string;
+    chargeId: string;
+    tier: string;
+    stars: number;
+    days: number;
+    at: number;
+  }): Promise<Entitlement>;
+  /** Whether this player holds one at `now`, and until when. Null for none. */
+  subscribed(userId: string, now: number): Promise<Subscription | null>;
+  /**
+   * One payment, by the charge Telegram knows it as.
+   *
+   * Read before a refund rather than folded into it: a refund is two acts in
+   * two systems, and the payer has to be known *before* Telegram is asked, so
+   * that a refusal from Telegram leaves this bot's record untouched.
+   */
+  of(chargeId: string): Promise<Entitlement | null>;
+  /**
+   * Give a payment back: mark it refunded, so it stops counting.
+   *
+   * @returns what was refunded, or null when this bot has never heard of that
+   *          charge — which an operator must be told rather than shown a
+   *          success for a payment nobody here has a record of.
+   */
+  refund(chargeId: string, at: number): Promise<Entitlement | null>;
+}
+
+/** Entitlements in memory. Enough for a single process and for tests. */
+export class MemoryEntitlementStore implements EntitlementStore {
+  private readonly paid = new Map<string, Entitlement>();
+
+  async record(payment: {
+    userId: string;
+    chargeId: string;
+    tier: string;
+    stars: number;
+    days: number;
+    at: number;
+  }): Promise<Entitlement> {
+    // A charge already kept is a payment already counted.
+    //
+    // MEASURED, and it is why this line is here rather than a comment about
+    // keys: an update is retried until the bot answers it, so the same
+    // `successful_payment` can arrive twice — and writing it twice was not
+    // caught by keying the map on the charge. The row was replaced, and the
+    // *arithmetic* had already read the first stretch as something to extend,
+    // so one payment bought sixty days. The store must be idempotent in what
+    // it computes, not only in what it holds.
+    const already = this.paid.get(payment.chargeId);
+    if (already) return already;
+
+    const live = await this.subscribed(payment.userId, payment.at);
+    const entitlement: Entitlement = {
+      chargeId: payment.chargeId,
+      userId: payment.userId,
+      tier: payment.tier,
+      stars: payment.stars,
+      paidAt: payment.at,
+      until: extendedTo(live?.until ?? null, payment.at, payment.days),
+      refundedAt: null,
+    };
+
+    this.paid.set(entitlement.chargeId, entitlement);
+    return entitlement;
+  }
+
+  async subscribed(userId: string, now: number): Promise<Subscription | null> {
+    let until: number | null = null;
+    for (const entitlement of this.paid.values()) {
+      if (entitlement.userId !== userId) continue;
+      if (entitlement.refundedAt !== null) continue;
+      if (entitlement.until <= now) continue;
+      if (until === null || entitlement.until > until) until = entitlement.until;
+    }
+    return until === null ? null : { until };
+  }
+
+  async of(chargeId: string): Promise<Entitlement | null> {
+    return this.paid.get(chargeId) ?? null;
+  }
+
+  async refund(chargeId: string, at: number): Promise<Entitlement | null> {
+    const held = this.paid.get(chargeId);
+    if (!held) return null;
+
+    const refunded = { ...held, refundedAt: at };
+    this.paid.set(chargeId, refunded);
+    return refunded;
   }
 }
 

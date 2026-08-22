@@ -211,6 +211,79 @@ and its sleeping conditions are `src/initiative.ts`; every eligibility branch,
 the excerpt rotation and the once-per-day cap are held by
 `tests/initiative.test.ts` and `tests/the-daily-word.test.ts`.
 
+## Telegram Stars, dark until somebody names a price
+
+Telegram Stars (`XTR`) are the only sanctioned way for a bot to sell a digital
+good, and this bot has the rail for them. It is **off**.
+
+Whether this game charges for anything, and what for, is the owner's decision
+and it has not been made. So the rail is written, tested, and gated on one
+thing — a price in the environment:
+
+```
+LEELA_STARS_MONTH=150          # optional: Stars for 30 days
+LEELA_STARS_HALFYEAR=700       # optional: Stars for 182 days
+LEELA_STARS_YEAR=1200          # optional: Stars for 365 days
+LEELA_STARS_OPERATORS=11,22    # optional: who may /refund a payment
+```
+
+With **none** of the three set, `offering(process.env)` in `src/stars.ts`
+answers `null` and that is the whole feature off: no `/pro` is registered, it is
+in no menu and no help text, no invoice can be assembled — `invoiceFor` refuses
+one and says why — and a `pre_checkout_query` or a `successful_payment` falls
+off the end of the chain unanswered. A deployment with no price behaves exactly
+as it did before the rail was written, and `/pro` typed into one is answered
+byte for byte as any other word this bot does not know.
+
+**One bad price darkens all of them.** A deployment with a good
+`LEELA_STARS_YEAR` and a mistyped `LEELA_STARS_MONTH` is one somebody meant to
+price twice; selling the half that parsed would be charging for an offer nobody
+wrote. The startup line says which of the two states this process is in, and
+names the variable when it is a typo — otherwise a mistyped price is invisible,
+because the bot runs either way.
+
+**What a subscription buys, said plainly.** A date, and nothing else. Nothing in
+this game is behind a payment — not a square, not a report, not the companion —
+and `subscribed(userId, now)` is recorded and exposed and read by no gate. The
+copy in `@leela/content` says exactly that (*it unlocks nothing: everything in
+the game is free*), because the alternative is selling a benefit that no code
+delivers. It says it in the present tense: *stays free* would be a promise about
+a decision nobody has made, enforced by nothing. If a benefit is ever decided
+on, the entitlements are already on the disk to honour it from.
+
+**Refunds.** Telegram requires that a bot taking Stars can give them back.
+`/refund <charge id>` calls `refundStarPayment` and then clears this bot's own
+record — Telegram first, so a refusal from Telegram leaves the record untouched
+and nobody is told they have been paid back when they have not. It is an
+operator's command: registered only where `LEELA_STARS_OPERATORS` names
+somebody, answered only for them, and to everybody else it does not exist — a
+player who types it reads the ordinary *I do not know that one*. The charge id
+comes from the log line written the moment a payment arrives, before anything
+else that could fail.
+
+**Payments are kept one row each**, in `entitlements`, keyed by Telegram's
+charge id rather than by player — the one place `sqlite.ts` departs from the
+tables beside it. A refund is granted against a charge, so a store holding only
+a player's current expiry could not say which payment a refund undid. The
+player's expiry is derived from those rows and never stored, so the two cannot
+drift. A second payment **extends** rather than replaces: somebody who buys a
+second year in month eleven has bought two years, and replacing would take
+eleven months from them for paying again.
+
+**One-off, not recurring.** Telegram's `subscription_period` — a Stars
+subscription that renews — is on `createInvoiceLink` only and must be exactly
+2592000 seconds, and nothing here sends one. So no recurring charge can arrive.
+If subscriptions are turned on later, `SuccessfulPayment.subscription_expiration_date`
+is Telegram's own answer to when the entitlement ends, and it is the number to
+record.
+
+The pre-checkout answer has a deadline: Telegram must receive it **within ten
+seconds**, and past that the payment fails for the player with no reason given.
+So nothing awaited stands between the update arriving and the answer going out
+— `tests/a-payment-answered-in-ten-seconds.test.ts` proves it by handing the bot
+stores whose promises never settle, and by asserting that the path touches no
+store at all.
+
 ## The mini app's companion
 
 The mini app has the plans, the returns, the arrival and the whole path —

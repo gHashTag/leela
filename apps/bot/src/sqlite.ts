@@ -16,7 +16,15 @@ import { gameStepRow } from '@leela/db';
 import { hasWon } from '@leela/engine';
 import type { NewGameStepRow, SessionPlayerRow, SessionRow } from '@leela/db';
 import type { RoomQueries, StoredSeat, StoredSession } from './persistence';
-import { NEVER_NUDGED, type NudgeRecord, type NudgeStore } from './store';
+import { extendedTo } from './stars';
+import {
+  NEVER_NUDGED,
+  type Entitlement,
+  type EntitlementStore,
+  type NudgeRecord,
+  type NudgeStore,
+  type Subscription,
+} from './store';
 
 /**
  * `node:sqlite` is newer than Vite's list of Node builtins, so a static import
@@ -169,6 +177,30 @@ CREATE TABLE IF NOT EXISTS nudges (
   quieted    INTEGER NOT NULL DEFAULT 0,
   updated_at INTEGER NOT NULL
 );
+
+-- What a player has paid for in Telegram Stars, and until when.
+--
+-- Keyed by Telegram's charge id rather than by player, which is the one place
+-- this file departs from the nudges and intentions tables beside it: a refund
+-- is granted against a charge, so a store holding only a player's current
+-- expiry could not say which payment a refund undid. The player's expiry is
+-- derived from these rows and never stored, so the two cannot drift apart.
+--
+-- refunded_at is NULL while the payment stands. Nothing is ever deleted: a
+-- refunded payment is a fact about what happened, and an operator asked to
+-- explain a refund a month later has only this to read.
+CREATE TABLE IF NOT EXISTS entitlements (
+  charge_id   TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL,
+  tier        TEXT NOT NULL,
+  stars       INTEGER NOT NULL,
+  paid_at     INTEGER NOT NULL,
+  until       INTEGER NOT NULL,
+  refunded_at INTEGER,
+  updated_at  INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS entitlements_user ON entitlements (user_id, until DESC);
 `;
 
 /**
@@ -624,6 +656,95 @@ export class SqliteRoomQueries implements RoomQueries {
       .run(userId, quieted ? 1 : 0, this.now());
   }
 
+  /**
+   * When this player's entitlement runs out, or nothing.
+   *
+   * The largest `until` among the payments they have made that are neither
+   * refunded nor already over. Asked of the database rather than assembled
+   * here so that a player with a hundred payments costs one row.
+   */
+  entitlementUntil(userId: string, now: number): number | null {
+    const row = this.db
+      .prepare(
+        `SELECT MAX(until) AS until FROM entitlements
+          WHERE user_id = ? AND refunded_at IS NULL AND until > ?`,
+      )
+      .get(userId, now) as Record<string, unknown> | undefined;
+
+    // `MAX` over no rows is one row holding NULL, not no rows at all.
+    const until = (row?.until as number | null) ?? null;
+    return typeof until === 'number' ? until : null;
+  }
+
+  /** Keep a payment. Written by a confirmed payment and by nothing else. */
+  recordEntitlement(entitlement: {
+    chargeId: string;
+    userId: string;
+    tier: string;
+    stars: number;
+    paidAt: number;
+    until: number;
+  }): void {
+    this.db
+      .prepare(
+        // DO NOTHING rather than an update: a charge already here is a payment
+        // already counted, and the caller returns it rather than reaching this
+        // statement at all. Two guards agreeing, because the one that fails is
+        // the one taking money twice.
+        `INSERT INTO entitlements (charge_id, user_id, tier, stars, paid_at, until, refunded_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, NULL, ?)
+         ON CONFLICT(charge_id) DO NOTHING`,
+      )
+      .run(
+        entitlement.chargeId,
+        entitlement.userId,
+        entitlement.tier,
+        entitlement.stars,
+        entitlement.paidAt,
+        entitlement.until,
+        this.now(),
+      );
+  }
+
+  /** One payment, whoever made it, or nothing. */
+  entitlementOf(chargeId: string): {
+    chargeId: string;
+    userId: string;
+    tier: string;
+    stars: number;
+    paidAt: number;
+    until: number;
+    refundedAt: number | null;
+  } | null {
+    const row = this.db
+      .prepare('SELECT * FROM entitlements WHERE charge_id = ?')
+      .get(chargeId) as Record<string, unknown> | undefined;
+    if (!row) return null;
+
+    return {
+      chargeId: row.charge_id as string,
+      userId: row.user_id as string,
+      tier: row.tier as string,
+      stars: row.stars as number,
+      paidAt: row.paid_at as number,
+      until: row.until as number,
+      refundedAt: (row.refunded_at as number | null) ?? null,
+    };
+  }
+
+  /**
+   * Mark a payment given back.
+   *
+   * The row stays: a refunded payment is a fact about what happened, and the
+   * derived expiry stops counting it because `entitlementUntil` asks for
+   * `refunded_at IS NULL`.
+   */
+  refundEntitlement(chargeId: string, at: number): void {
+    this.db
+      .prepare('UPDATE entitlements SET refunded_at = ?, updated_at = ? WHERE charge_id = ?')
+      .run(at, this.now(), chargeId);
+  }
+
   /** Every report a player has written, newest first. */
   reportsFor(userId: string): Array<{ plan: number; text: string; createdAt: Date }> {
     const rows = this.db
@@ -712,6 +833,72 @@ export function sqliteReportSink(queries: SqliteRoomQueries) {
  * `sent_at` forgotten is the same player knocked on twice in one morning by a
  * bot that redeployed between.
  */
+/**
+ * Entitlements, backed by the same database as everything else.
+ *
+ * The half that must survive a restart most of all: a player has paid, and a
+ * bot that forgets on the next deploy has taken money for nothing. In memory
+ * when the games are — a deployment that keeps nothing keeps no payments
+ * either, and `openStorage` says which of the two it is doing on startup.
+ */
+export function sqliteEntitlements(queries: SqliteRoomQueries): EntitlementStore {
+  return {
+    async record(payment): Promise<Entitlement> {
+      // A charge already kept is a payment already counted — the same rule the
+      // memory store states, and it has to be here too because the failure is
+      // in the *arithmetic*: a retried update would otherwise read the first
+      // stretch as something to extend and buy sixty days for one payment.
+      const already = queries.entitlementOf(payment.chargeId);
+      if (already) return already;
+
+      // The same arithmetic the memory store uses, from the same function:
+      // two implementations of "does a second payment extend or replace" is
+      // two answers, and the one that is wrong is the one taking money.
+      const until = extendedTo(
+        queries.entitlementUntil(payment.userId, payment.at),
+        payment.at,
+        payment.days,
+      );
+
+      queries.recordEntitlement({
+        chargeId: payment.chargeId,
+        userId: payment.userId,
+        tier: payment.tier,
+        stars: payment.stars,
+        paidAt: payment.at,
+        until,
+      });
+
+      return {
+        chargeId: payment.chargeId,
+        userId: payment.userId,
+        tier: payment.tier,
+        stars: payment.stars,
+        paidAt: payment.at,
+        until,
+        refundedAt: null,
+      };
+    },
+
+    async subscribed(userId: string, now: number): Promise<Subscription | null> {
+      const until = queries.entitlementUntil(userId, now);
+      return until === null ? null : { until };
+    },
+
+    async of(chargeId: string): Promise<Entitlement | null> {
+      return queries.entitlementOf(chargeId);
+    },
+
+    async refund(chargeId: string, at: number): Promise<Entitlement | null> {
+      const held = queries.entitlementOf(chargeId);
+      if (!held) return null;
+
+      queries.refundEntitlement(chargeId, at);
+      return { ...held, refundedAt: at };
+    },
+  };
+}
+
 export function sqliteNudgeStore(queries: SqliteRoomQueries): NudgeStore {
   return {
     async of(userId: string): Promise<NudgeRecord> {

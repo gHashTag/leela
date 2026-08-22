@@ -8,7 +8,14 @@
 
 import { Bot, InlineKeyboard, InputFile, Keyboard, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
-import { type Language, bookFor, messageFor, planFor, resolveLanguage } from '@leela/content';
+import {
+  FALLBACK_LANGUAGE,
+  type Language,
+  bookFor,
+  messageFor,
+  planFor,
+  resolveLanguage,
+} from '@leela/content';
 import {
   ARROWS,
   SNAKES,
@@ -34,11 +41,24 @@ import { escapeHtml, intoMessages, renderBoardMessage, renderChapter, renderPlan
 import { FILE_TIMEOUT_MS, MAX_FILE_BYTES, asReport, decide, decideSquare, keep, within } from './take-in';
 import { offer, serialise } from './take-out';
 import {
+  STARS_CURRENCY,
+  asDay,
+  invoiceFor,
+  offerFor,
+  offering,
+  operatorIds,
+  tierOf,
+  tierOfPayload,
+  type PricedTier,
+} from './stars';
+import {
+  MemoryEntitlementStore,
   MemoryNudgeStore,
   MemoryRoomStore,
   discardReports,
   discardSteps,
   seedFor,
+  type EntitlementStore,
   type NudgeStore,
   type ReportSink,
   type RoomStore,
@@ -100,6 +120,33 @@ export interface BotOptions {
    * spend, and a refusal the morning earns is one `deliver` must not retry.
    */
   channels?: DirectChannels;
+  /**
+   * The priced tiers, or `null` when nothing is sold — which is the default,
+   * because the default environment has no prices in it.
+   *
+   * Read from `process.env` once, here, for the reason `miniAppUrl` is read
+   * once: a variable changed under a running process must not arm the rail
+   * halfway through somebody's game. Passed in by a test so that neither case
+   * needs the environment mutated to be asserted.
+   *
+   * `null` is not a degraded mode. It is the whole feature off: no `/pro` is
+   * registered, no payment surface is registered, nothing about money is ever
+   * said, and this bot behaves exactly as it did before the rail existed.
+   */
+  stars?: readonly PricedTier[] | null;
+  /**
+   * Where payments are kept. Defaults to memory the way `nudges` does — a
+   * process that keeps nothing must still answer truthfully about what it has
+   * been told in the meantime, rather than pretend a payment never happened.
+   */
+  entitlements?: EntitlementStore;
+  /**
+   * Telegram ids of whoever may hand money back, from
+   * `LEELA_STARS_OPERATORS`. Empty by default and empty in most deployments:
+   * `/refund` is registered only where somebody is named, and to everybody
+   * else the command does not exist.
+   */
+  operators?: readonly string[];
 }
 
 /** Who sent this update, as the commands layer wants them. */
@@ -336,6 +383,11 @@ export function createBot({
   // Who the bot has managed to message directly. Telegram refuses anyone who
   // has not started a chat, and there is no way to ask in advance.
   channels = new DirectChannels(),
+  // The environment decides whether anything is sold, and the default
+  // environment sells nothing. See `stars.ts`.
+  stars = offering(process.env),
+  entitlements = new MemoryEntitlementStore(),
+  operators = operatorIds(process.env),
 }: BotOptions) {
   const bot = new Bot(token, botInfo ? { botInfo } : undefined);
 
@@ -356,6 +408,16 @@ export function createBot({
   // them. See `nudgeOnce`: the sentence is worth saying and is not worth saying
   // twice, and it was being said once per reply that could not be delivered.
   const nudged = new WeakSet<object>();
+
+  /**
+   * The commands this deployment has switched on beyond the standing list.
+   *
+   * One answer to *is there a Stars rail here*, read once and handed to both
+   * places that describe the surface — the help text and, through `index.ts`,
+   * Telegram's own menu. Two readings of one variable is how a menu comes to
+   * offer a command that is not registered.
+   */
+  const alsoOffered = stars ? commands.PAID_COMMANDS : [];
 
   // Where the launch button goes. Read once, so a deployment that changes the
   // variable under a running process does not change it halfway through a game.
@@ -1004,7 +1066,7 @@ export function createBot({
 
     const room = await store.get(chatId);
     if (!room) {
-      await deliver(ctx, commands.help(languageOf(ctx)).replies);
+      await deliver(ctx, commands.help(languageOf(ctx), alsoOffered).replies);
       return;
     }
 
@@ -1013,7 +1075,7 @@ export function createBot({
     await deliver(ctx, result.replies);
   });
 
-  bot.command('help', async (ctx) => deliver(ctx, commands.help(languageOf(ctx)).replies));
+  bot.command('help', async (ctx) => deliver(ctx, commands.help(languageOf(ctx), alsoOffered).replies));
 
   /**
    * Let go of what belonged to a game that is over.
@@ -1656,6 +1718,298 @@ export function createBot({
     await ctx.reply(messageFor(languageOf(ctx), quieted ? 'quiet.on' : 'quiet.off'));
   });
 
+  /**
+   * The Telegram Stars rail — and everything about it is inside this `if`.
+   *
+   * Whether this game charges for anything, and what for, is the owner's
+   * decision and has not been made. So the rail is written, tested and dark:
+   * with no price in the environment, `stars` is `null`, none of the four
+   * registrations below happens, `/pro` is not in the menu or the help, no
+   * invoice can be assembled — `invoiceFor` refuses one and says why — and a
+   * deployment answers exactly what it answered before this block existed.
+   *
+   * *Exactly* is measured rather than asserted, in
+   * `tests/dark-until-a-price-is-named.test.ts`, and the obvious phrasing of it
+   * is false: a dark bot answering `/pro` with **nothing** would be a change,
+   * because an unknown command has been answered with *I do not know that one*
+   * since long before this rail. So what that file holds is that `/pro` is
+   * answered byte for byte as any unknown word is, that a `pre_checkout_query`
+   * or a `successful_payment` produces zero calls, and that nothing said
+   * anywhere carries a word from the Stars catalogue.
+   *
+   * **The rail gates nothing.** There is no toll in this bot today and this
+   * does not add one: a payment is recorded and exposed through
+   * `entitlements.subscribed`, and every square, report, throw and answer is
+   * as free as it was. What the copy in `@leela/content` says about that is
+   * the whole of what is true — see the note above `pro.free`.
+   */
+  if (stars) {
+    /**
+     * `/pro` — the tiers, and then one invoice.
+     *
+     * Two shapes in one command, as `/plan` and `/rules` already have: bare,
+     * it lists what is on offer and what this player already holds; with a
+     * tier's name, it sends the invoice for that tier. A tier nobody sells
+     * falls back to the list rather than to a refusal, because the list is the
+     * answer to *what can I ask for*.
+     *
+     * **Answered privately**, through the same decision every private reply
+     * goes through. A payment is between a player and the bot: at a table, the
+     * offer and the invoice both go to the player's own chat, and where there
+     * is no private chat to send them to the group is told only that there is
+     * something to read — never what it was.
+     */
+    bot.command('pro', async (ctx) => {
+      const who = sender(ctx);
+      if (!who) return;
+
+      const language = languageOf(ctx);
+      const destination = destinationOf(ctx, { broadcast: false }, who.id);
+
+      if (destination.kind === 'chat-fallback') {
+        await nudgeOnce(ctx);
+        return;
+      }
+
+      const asked = (ctx.match ?? '').trim();
+      const tier = tierOf(stars, asked === '' ? null : asked);
+
+      if (!tier) {
+        // What they already hold, said back to them. The one place this bot
+        // reads an entitlement out loud — and it changes nothing about the
+        // game, which is what the sentence beside it says.
+        const held = await entitlements.subscribed(who.id, now());
+        await deliver(ctx, [
+          { text: offerFor(language, stars, held?.until ?? null), broadcast: false },
+        ]);
+        return;
+      }
+
+      // Assembled by `stars.ts`, which refuses to build one for a tier that is
+      // not sold — so an invoice for nothing cannot leave this file even if
+      // the guard above is one day edited away.
+      const invoice = invoiceFor(language, stars, tier.id);
+      const to = destination.kind === 'chat' ? String(ctx.chat?.id ?? '') : destination.userId;
+
+      try {
+        await ctx.api.sendInvoice(
+          to,
+          invoice.title,
+          invoice.description,
+          invoice.payload,
+          invoice.currency,
+          invoice.prices,
+          // Empty for Stars. A provider token is BotFather's answer for the
+          // other currencies, and sending one here is how a Stars invoice is
+          // refused by Telegram.
+          { provider_token: '' },
+        );
+        if (destination.kind === 'direct') channels.allow(destination.userId);
+      } catch (error) {
+        // The same 403 memory `/save` keeps, and the same fallback: a player
+        // who has never opened a private chat cannot be sent an invoice.
+        if (!isBlockedByUser(error)) throw error;
+        if (destination.kind === 'direct') channels.refuse(destination.userId);
+        await nudgeOnce(ctx);
+      }
+    });
+
+    /**
+     * The pre-checkout answer, which has ten seconds and spends none of them.
+     *
+     * Telegram's own words, in `answerPreCheckoutQuery`'s doc: *the Bot API
+     * must receive an answer within 10 seconds after the pre-checkout query
+     * was sent*. Past that the payment fails for the player with no reason
+     * given, so nothing between the update arriving and the answer going out
+     * may touch a database, a model or a network — and nothing below does:
+     * every line above the answer is pure and synchronous, and the validation
+     * happens there rather than after.
+     *
+     * `tests/a-payment-answered-in-ten-seconds.test.ts` holds that shape by
+     * handing this a store whose promises never settle, and requiring the
+     * answer to go out anyway.
+     */
+    bot.on('pre_checkout_query', async (ctx) => {
+      const query = ctx.preCheckoutQuery;
+      const tier = tierOf(stars, tierOfPayload(query.invoice_payload));
+
+      // Three things, all of them already in hand: this rail wrote the
+      // payload, that tier is still sold, and the amount is the one it is sold
+      // for. A price changed between the invoice and the tap is a payment this
+      // bot must not take — the player would be charged what the old invoice
+      // said for what the new price buys.
+      const taking =
+        tier !== null && query.currency === STARS_CURRENCY && query.total_amount === tier.stars;
+
+      await ctx.answerPreCheckoutQuery(
+        taking,
+        taking ? undefined : messageFor(languageOf(ctx), 'pro.cannotTake'),
+      );
+
+      if (!taking) {
+        log(
+          `[bot] refused a pre-checkout from ${query.from.id}: ` +
+            `${query.total_amount} ${query.currency} against "${query.invoice_payload}"`,
+        );
+      }
+    });
+
+    /**
+     * The money has moved, so the date is written down.
+     *
+     * The charge id goes to the log before anything else can fail, because it
+     * is the only handle a refund has: a payment whose id is nowhere is a
+     * payment nobody can give back, which is the one state Telegram's rules
+     * and this repository's own honesty both refuse.
+     */
+    bot.on('message:successful_payment', async (ctx) => {
+      const who = sender(ctx);
+      if (!who) return;
+
+      const payment = ctx.message.successful_payment;
+      const language = languageOf(ctx);
+
+      log(
+        `[bot] ${who.id} paid ${payment.total_amount} ${payment.currency} ` +
+          `for "${payment.invoice_payload}" — charge ${payment.telegram_payment_charge_id}`,
+      );
+
+      const tier = tierOf(stars, tierOfPayload(payment.invoice_payload));
+      if (!tier) {
+        // A payload this rail did not write, or a tier no longer sold. The
+        // money is real either way, so the player is told plainly rather than
+        // thanked for something nothing here can honour.
+        await ctx.reply(messageFor(language, 'pro.unmatched'));
+        return;
+      }
+
+      try {
+        const kept = await entitlements.record({
+          userId: who.id,
+          chargeId: payment.telegram_payment_charge_id,
+          tier: tier.id,
+          // What Telegram says was paid, not what this bot's price says it
+          // should have been: the second is a guess about the first.
+          stars: payment.total_amount,
+          days: tier.days,
+          at: now(),
+        });
+
+        await ctx.reply(messageFor(language, 'pro.thanks', { until: asDay(kept.until) }));
+      } catch (error) {
+        // The report gate's rule, one surface over: they have paid, and being
+        // told nothing while the money is gone is the worst of the three
+        // things that could happen here.
+        log(
+          `[bot] could not keep the payment ${payment.telegram_payment_charge_id}: ${String(error)}`,
+        );
+        await ctx.reply(messageFor(language, 'pro.notKept'));
+      }
+    });
+
+    /**
+     * `/refund <charge id>` — the operator's path, and only theirs.
+     *
+     * Telegram requires that a bot taking Stars can give them back, and
+     * `refundStarPayment` is the method that does it. It is not a player's
+     * command: it moves money, it needs a charge id nobody but an operator has
+     * seen, and a player who tries it must not learn that it exists. So it is
+     * registered only where `LEELA_STARS_OPERATORS` names somebody, and to
+     * everybody else `next()` hands the update on to be answered with the
+     * ordinary *I do not know that one* — which is exactly what they would
+     * read if this block were not here at all.
+     *
+     * Telegram first, this bot's record second. A record cleared for a refund
+     * Telegram refused would be a player told they have been paid back when
+     * they have not.
+     */
+    if (operators.length > 0) {
+      bot.command('refund', async (ctx, next) => {
+        const who = sender(ctx);
+        if (!who || !operators.includes(who.id)) {
+          await next();
+          return;
+        }
+
+        const language = languageOf(ctx);
+        const chargeId = (ctx.match ?? '').trim();
+        if (chargeId === '') {
+          await ctx.reply(messageFor(language, 'pro.refundWhich'));
+          return;
+        }
+
+        const paid = await entitlements.of(chargeId);
+        if (!paid) {
+          await ctx.reply(messageFor(language, 'pro.refundUnknown', { charge: chargeId }));
+          return;
+        }
+
+        // Telegram wants the payer as a number; every id this bot stores came
+        // from Telegram as one, and a row that somehow holds anything else is
+        // a refund that must not be attempted against a stranger's account.
+        const payer = Number(paid.userId);
+        if (!Number.isSafeInteger(payer)) {
+          await ctx.reply(messageFor(language, 'pro.refundFailed', { why: paid.userId }));
+          return;
+        }
+
+        try {
+          await ctx.api.refundStarPayment(payer, chargeId);
+        } catch (error) {
+          await ctx.reply(messageFor(language, 'pro.refundFailed', { why: String(error) }));
+          return;
+        }
+
+        try {
+          await entitlements.refund(chargeId, now());
+        } catch (error) {
+          // The money is already back and this bot's own record is not. The
+          // floor's *something went wrong* would be the wrong sentence for
+          // that — it reads as *nothing happened*, and what happened is a
+          // refund — so the operator is told which half succeeded.
+          log(`[bot] refunded ${chargeId} and could not clear the record: ${String(error)}`);
+          await ctx.reply(messageFor(language, 'pro.refundNotCleared', { charge: chargeId }));
+          return;
+        }
+
+        await ctx.reply(
+          messageFor(language, 'pro.refundDone', { stars: paid.stars, user: paid.userId }),
+        );
+        await tellThemAboutTheRefund(ctx, paid.userId, paid.stars);
+      });
+    }
+  }
+
+  /**
+   * Tell the player their Stars came back.
+   *
+   * Best effort, and after the operator has already been answered: a refund
+   * that went through is not undone by a player who has blocked the bot, and
+   * the operator must not be shown a failure for it. In their own language
+   * where the bot knows one — the table they sit at is where it is written
+   * down — and in English otherwise.
+   *
+   * **Nothing here is rethrown**, which is deliberate and is not this file's
+   * habit: every other send lets an unexpected error reach the floor. The floor
+   * would answer the operator *something went wrong* over a refund that has
+   * already happened, which reads as *nothing happened*. The refund is the
+   * fact; failing to mention it to the player is a line in the log.
+   */
+  async function tellThemAboutTheRefund(
+    ctx: Context,
+    userId: string,
+    stars: number,
+  ): Promise<void> {
+    try {
+      const language = (await store.roomOf?.(userId))?.language ?? FALLBACK_LANGUAGE;
+      await ctx.api.sendMessage(userId, messageFor(language, 'pro.refunded', { stars }));
+      channels.allow(userId);
+    } catch (error) {
+      if (isBlockedByUser(error)) channels.refuse(userId);
+      log(`[bot] refunded ${userId} and could not tell them: ${String(error)}`);
+    }
+  }
+
   bot.command('ask', async (ctx) => {
     const who = sender(ctx);
     if (!who) return;
@@ -1880,7 +2234,7 @@ export function createBot({
     if (!who || !chatId) return;
 
     if (action === 'help') {
-      await deliver(ctx, commands.help(languageOf(ctx)).replies);
+      await deliver(ctx, commands.help(languageOf(ctx), alsoOffered).replies);
       return;
     }
 

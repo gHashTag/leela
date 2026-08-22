@@ -191,7 +191,24 @@ describe('the help message is the whole surface', () => {
    * answers must be there — the bot tells people to "send /end" in another
    * message while never mentioning it here.
    */
-  const EXEMPT = ['/help'];
+  /**
+   * And two more, which are not exemptions of the same kind.
+   *
+   * `/help` is left out of its own list because a line telling a reader how to
+   * read the message they are reading is noise. The other two are left out
+   * because **the message this reads is the one a bot with no Stars prices
+   * prints**, and neither command exists in that deployment:
+   *
+   *   - `/pro` is registered only where a price is set, and the help it belongs
+   *     in is `help(language, PAID_COMMANDS)` — held to the handlers by
+   *     `menu.test.ts`, in both directions and in every translated language;
+   *   - `/refund` is an operator's command, gated on `LEELA_STARS_OPERATORS`,
+   *     and belongs in no help at all: to a player it must not exist.
+   *
+   * A command registered tomorrow and classified as none of the three still
+   * fails below, which is what this list is for.
+   */
+  const EXEMPT = ['/help', '/pro', '/refund'];
 
   it('names every command the bot answers', () => {
     const missing = registered()

@@ -78,7 +78,7 @@ import { currentPlayer, isWaitingToEnter, owesReport } from '@leela/engine';
 import { ASK_ALLOWANCE, createBot } from '../src/bot';
 import { openRoom, roll, start, type Room } from '../src/commands';
 import { nudgeToPrivate } from '../src/delivery';
-import { MemoryReportSink, MemoryRoomStore } from '../src/store';
+import { MemoryEntitlementStore, MemoryReportSink, MemoryRoomStore } from '../src/store';
 
 const SOURCE = readFileSync(resolve(__dirname, '../src/bot.ts'), 'utf8');
 
@@ -215,6 +215,45 @@ const DRIVERS: Record<string, (words: string) => Array<Record<string, unknown>>>
   // because every registered surface is, so a model call added to it tomorrow
   // is caught the day it is written.
   quiet: () => [command('/quiet')],
+  /**
+   * The four surfaces of the Telegram Stars rail.
+   *
+   * None of them reaches the companion and none of them may: a payment must
+   * not cost a model call, and an answer to a pre-checkout query has ten
+   * seconds to leave. They are here for the reason `/quiet` is — every
+   * registered surface is driven, so the day one of them grows a model call it
+   * is caught — and because a bot that could be made to pay for a reflection
+   * by *sending it an invoice update* would be a surface nobody was watching.
+   *
+   * The bot under this harness is built with prices, so all four are really
+   * registered; a dark bot registers none of them and this table would be
+   * driving nothing. See `dark-until-a-price-is-named.test.ts` for that half.
+   */
+  pro: () => [command('/pro')],
+  refund: () => [command('/refund no-such-charge')],
+  pre_checkout_query: () => [
+    {
+      update_id: (update += 1),
+      pre_checkout_query: {
+        id: String(update),
+        from: ADA,
+        currency: 'XTR',
+        total_amount: 150,
+        invoice_payload: 'leela:pro:month:v1',
+      },
+    },
+  ],
+  'message:successful_payment': () => [
+    message({
+      successful_payment: {
+        currency: 'XTR',
+        total_amount: 150,
+        invoice_payload: 'leela:pro:month:v1',
+        telegram_payment_charge_id: 'charge-in-the-drive',
+        provider_payment_charge_id: 'provider-charge',
+      },
+    }),
+  ],
   ask: (words) => [command(`/ask what does ${words} keep coming back to`)],
   plan: () => [command('/plan 5')],
   'callback_query:data': () => [
@@ -332,6 +371,13 @@ async function driveEverything({ blocked, times }: { blocked: boolean; times: nu
     // are kept and the "nothing of hers is lost" assertion has something to see.
     readFile: async () =>
       JSON.stringify(toDocument([{ plan: 9, text: `${HERS} in a file ${carried}`, at: NOW }])),
+    // Priced, so the Stars rail's four surfaces are registered and this file
+    // really drives them. Ada is named an operator for the same reason: an
+    // unnamed sender falls through `/refund` to the ordinary unknown-command
+    // answer, which would drive the guard rather than the command.
+    stars: [{ id: 'month', stars: 150, days: 30 }],
+    operators: [String(ADA.id)],
+    entitlements: new MemoryEntitlementStore(),
   });
 
   bot.api.config.use(async (_next, method, payload) => {

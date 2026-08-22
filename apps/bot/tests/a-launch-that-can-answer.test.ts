@@ -47,7 +47,14 @@ import { describe, expect, it } from 'vitest';
 import ts from 'typescript';
 import type { Chat, Update, UserFromGetMe } from 'grammy/types';
 import { DEFAULT_MINI_APP_URL, createBot, miniAppUrl } from '../src/bot';
+import type { PricedTier } from '../src/stars';
 import { MemoryReportSink } from '../src/store';
+
+/** One outgoing call, as the api-transformer sees it. */
+interface Sent {
+  method: string;
+  payload: Record<string, unknown>;
+}
 
 const BOT_SOURCE = fileURLToPath(new URL('../src/bot.ts', import.meta.url));
 
@@ -80,6 +87,32 @@ const MARKUP_BORNE: Record<string, { needs: string; sent(markup: Markup): boolea
   'message:web_app_data': {
     needs: 'a reply keyboard button carrying web_app — an inline one cannot sendData',
     sent: (markup) => (markup.keyboard ?? []).flat().some((button) => 'web_app' in button),
+  },
+};
+
+/**
+ * The inbound kinds that only an **invoice this bot sent** can produce.
+ *
+ * A third category, and it needed one: `MARKUP_BORNE` asks what `reply_markup`
+ * was sent, and neither of these arrives from markup. A `pre_checkout_query`
+ * and a `successful_payment` arrive because the bot called `sendInvoice`, and
+ * the evidence for them is therefore the call itself rather than a keyboard.
+ *
+ * The same rule as the other table, and it cuts the same way: registering a
+ * payment handler in a bot that can never send an invoice would be a surface
+ * nothing could reach — which is the defect this whole file was written for,
+ * one currency along. The invoice is only sent where a price is set, so the
+ * drive that proves it is the priced one; `sends nothing that could produce a
+ * payment when no price is set` is the other half of the same claim.
+ */
+const INVOICE_BORNE: Record<string, { needs: string; sent(call: Sent): boolean }> = {
+  pre_checkout_query: {
+    needs: 'a sendInvoice in XTR — Telegram sends one only for an invoice the bot issued',
+    sent: (call) => call.method === 'sendInvoice' && call.payload.currency === 'XTR',
+  },
+  'message:successful_payment': {
+    needs: 'a sendInvoice in XTR, which is the only thing a payment can follow',
+    sent: (call) => call.method === 'sendInvoice' && call.payload.currency === 'XTR',
   },
 };
 
@@ -165,12 +198,23 @@ const PRIVATE: Chat = { id: 777, type: 'private', first_name: 'P' };
  * the last thing before the network, so what it sees is what Telegram would
  * have seen.
  */
-async function surfaceOffered(): Promise<{
+async function surfaceOffered(
+  /**
+   * What this deployment sells, if anything.
+   *
+   * `undefined` is the ordinary bot: `createBot` reads the environment, which
+   * in a test holds no prices, so the Stars rail is dark and the script below
+   * drives exactly the surface that existed before it. A tier priced here
+   * arms the rail, and `/pro month` in the script then has something to send.
+   */
+  stars?: readonly PricedTier[],
+): Promise<{
   markups: Markup[];
+  sent: Sent[];
   calls: number;
   unhandled: string[];
 }> {
-  const sent: Array<{ method: string; payload: Record<string, unknown> }> = [];
+  const sent: Sent[] = [];
   const unhandled: string[] = [];
 
   const bot = createBot({
@@ -182,6 +226,7 @@ async function surfaceOffered(): Promise<{
     log: (message) => {
       if (message.startsWith('[bot] unhandled:')) unhandled.push(message);
     },
+    ...(stars ? { stars } : {}),
   });
 
   bot.api.config.use(async (_prev, method, payload) => {
@@ -225,6 +270,11 @@ async function surfaceOffered(): Promise<{
     '/save',
     '/rules',
     '/take',
+    // The Stars rail's one outbound act. Unregistered and unanswered where no
+    // price is set, which is what the dark half of this file asserts; where one
+    // is, this is the call every payment update descends from.
+    '/pro',
+    '/pro month',
     '/end',
   ];
 
@@ -244,7 +294,7 @@ async function surfaceOffered(): Promise<{
     .map((call) => call.payload.reply_markup as Markup | undefined)
     .filter((markup): markup is Markup => Boolean(markup));
 
-  return { markups, calls: sent.length, unhandled };
+  return { markups, sent, calls: sent.length, unhandled };
 }
 
 describe('a launch that can answer', () => {
@@ -294,12 +344,47 @@ describe('a launch that can answer', () => {
   it('has an answer for every inbound kind it registers', () => {
     for (const kind of registeredUpdateKinds()) {
       expect(
-        PLAYER_BORNE.has(kind) || kind in MARKUP_BORNE,
+        PLAYER_BORNE.has(kind) || kind in MARKUP_BORNE || kind in INVOICE_BORNE,
         `bot.ts registers ${kind} and nothing here says what makes one arrive — ` +
-          'add it to PLAYER_BORNE if a player can send it unaided, or to MARKUP_BORNE ' +
-          'with the markup that produces it',
+          'add it to PLAYER_BORNE if a player can send it unaided, to MARKUP_BORNE ' +
+          'with the markup that produces it, or to INVOICE_BORNE if it follows an invoice',
       ).toBe(true);
     }
+  });
+
+  it('sends an invoice that can produce every inbound kind only an invoice can produce', async () => {
+    const kinds = registeredUpdateKinds();
+    const borne = kinds.filter((kind) => kind in INVOICE_BORNE);
+    expect(borne, 'there is a payment surface to check').not.toHaveLength(0);
+
+    // Priced, because the invoice is the thing being looked for and a bot with
+    // no price does not send one — deliberately, and the case below.
+    const { sent, unhandled } = await surfaceOffered([{ id: 'month', stars: 150, days: 30 }]);
+    expect(unhandled, 'nothing failed on the way through').toEqual([]);
+
+    for (const kind of borne) {
+      const { needs, sent: predicate } = INVOICE_BORNE[kind];
+      expect(
+        sent.some(predicate),
+        `${kind} can only follow an invoice this bot sent, and it sent none — it needs ${needs}`,
+      ).toBe(true);
+    }
+  });
+
+  it('sends nothing that could produce a payment when no price is set', async () => {
+    // The other direction, and the reason the rail is built this way: a
+    // deployment whose owner has named no price must not have a payment
+    // surface at all. The same eighteen commands, twice, in two chats.
+    const { sent } = await surfaceOffered();
+
+    expect(
+      sent.filter((call) => call.method === 'sendInvoice'),
+      'an invoice from a bot nobody has priced',
+    ).toEqual([]);
+    expect(
+      registeredUpdateKinds().filter((kind) => kind in INVOICE_BORNE).length,
+      'the payment surfaces are registered in source and armed by a price',
+    ).toBeGreaterThan(0);
   });
 
   it('offers the launch as a resized reply keyboard, over https', async () => {

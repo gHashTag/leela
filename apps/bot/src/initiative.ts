@@ -25,10 +25,17 @@ import { lastSentenceEnd, messageFor, planFor, type Language, type Plan } from '
 import { hasWon } from '@leela/engine';
 import { launchButton, standingSquare, type Room } from './commands';
 import { DirectChannels, isBlockedByUser } from './delivery';
+/**
+ * One day, the unit everything here is counted in — declared in `stars.ts`.
+ *
+ * Imported rather than declared: the Stars rail needs the same number for the
+ * length of an entitlement, and two constants called `DAY_MS` are one idea with
+ * two homes, which is what `audit-doubles` exists to refuse. It lives there
+ * because it can: that module imports nothing from this app, and a day declared
+ * here would reach it only through a cycle.
+ */
+import { DAY_MS } from './stars';
 import type { NudgeStore, RoomStore } from './store';
-
-/** One day, the unit everything here is counted in. */
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * How long a player may be silent and still be written to: fourteen days.
