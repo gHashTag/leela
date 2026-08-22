@@ -1,0 +1,1190 @@
+[
+  {
+    "id": "plan-01",
+    "ru": {
+      "title": "1. Рождение (джанма)",
+      "body": "Если у человека нет желания играть, он и не станет этого делать."
+    },
+    "en": {
+      "title": "1. Genesis (janma)",
+      "body": "If one has no desire to play, one will not be attracted toward the game."
+    },
+    "source": {
+      "plan": "plan_1",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-02",
+    "ru": {
+      "title": "2. Майя",
+      "body": "Один превращается в множество, чтобы играть в космическую игру, в прятки с самим собой."
+    },
+    "en": {
+      "title": "2. Illusion (maya)",
+      "body": "The One becomes many, to play a game of cosmic hide-and-seek with itself."
+    },
+    "source": {
+      "plan": "plan_2",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-03",
+    "ru": {
+      "title": "3. Гнев (кродха)",
+      "body": "Для понимания природы гнева существенно важно понять природу эго."
+    },
+    "en": {
+      "title": "3. Anger (krodh)",
+      "body": "An understanding of the nature of ego is essential to the comprehension of anger."
+    },
+    "source": {
+      "plan": "plan_3",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-04",
+    "ru": {
+      "title": "4. Жадность (лобха)",
+      "body": "Даже получив все необходимое для жизни, он все равно чувствует пустоту."
+    },
+    "en": {
+      "title": "4. Greed (lobh)",
+      "body": "Having attained the basic necessities of life, he still feels empty."
+    },
+    "source": {
+      "plan": "plan_4",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-05",
+    "ru": {
+      "title": "5. Физический план (бху-лока)",
+      "body": "Через эти планы сознание может реализовать свою истинную природу."
+    },
+    "en": {
+      "title": "5. Physical plane (bhu-loka)",
+      "body": "Through these planes the consciousness is able to realize its true nature."
+    },
+    "source": {
+      "plan": "plan_5",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-06",
+    "ru": {
+      "title": "6. Заблуждение (моха)",
+      "body": "Заблуждение затуманивает ум, делая невозможным постижение истины."
+    },
+    "en": {
+      "title": "6. Delusion (moha)",
+      "body": "Delusion beclouds the mind, rendering it unfit to perceive truth."
+    },
+    "source": {
+      "plan": "plan_6",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-07",
+    "ru": {
+      "title": "7. Тщеславие (мада)",
+      "body": "Тщеславие - это самообман, ложная гордость, возведение воздушных замков."
+    },
+    "en": {
+      "title": "7. Conceit (mada)",
+      "body": "Conceit is self-deception, false pride, building castles in the air."
+    },
+    "source": {
+      "plan": "plan_7",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-08",
+    "ru": {
+      "title": "8. Алчность (матсара или матсаръя)",
+      "body": "Тщеславие приводит игрока к тому, что он начинает всем завидовать."
+    },
+    "en": {
+      "title": "8. Avarice (matsar or matsarya)",
+      "body": "Conceit leads the player to feel envious of others."
+    },
+    "source": {
+      "plan": "plan_8",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-09",
+    "ru": {
+      "title": "9. Чувственный план (кама-лока)",
+      "body": "Если бы не было желания, не было бы и никакого мироздания."
+    },
+    "en": {
+      "title": "9. Sensual plane (kama-loka)",
+      "body": "If there were no desire there would not be any creation."
+    },
+    "source": {
+      "plan": "plan_9",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-10",
+    "ru": {
+      "title": "10. Очищение (тапа)",
+      "body": "Очищение всегда сопровождается повышением уровня вибраций, и энергия начинает течь вверх."
+    },
+    "en": {
+      "title": "10. Purification (tapa)",
+      "body": "Purification always refers to an increase in the vibrational level of the being, which causes energy to flow in an upward direction."
+    },
+    "source": {
+      "plan": "plan_10",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-11",
+    "ru": {
+      "title": "11. Развлечения (гандхарвы)",
+      "body": "Слово гандхарва переводится как «небесный музыкант»."
+    },
+    "en": {
+      "title": "11. Entertainment (Gandharvas)",
+      "body": "The word gandharvas in English can be translated as celestial musicians."
+    },
+    "source": {
+      "plan": "plan_11",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-12",
+    "ru": {
+      "title": "12. Зависть (ирасъя)",
+      "body": "В игре жизни энергия движется в направлении снизу вверх."
+    },
+    "en": {
+      "title": "12. Envy (eirsha)",
+      "body": "In the game of life, energy moves from below to above."
+    },
+    "source": {
+      "plan": "plan_12",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-13",
+    "ru": {
+      "title": "13. Ничтожность (антарикша)",
+      "body": "Ничтожность является состоянием, непосредственно связанным с нестабильным негативным интеллектом."
+    },
+    "en": {
+      "title": "13. Nullity (Antariksha)",
+      "body": "Nullity is a state directly linked with the unstable negative intellect."
+    },
+    "source": {
+      "plan": "plan_13",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-14",
+    "ru": {
+      "title": "14. Астральный план (бхувар-лока)",
+      "body": "Это план снов, фантазий и парящего воображения."
+    },
+    "en": {
+      "title": "14. Astral plane (bhuvar-loka)",
+      "body": "This is the plane of dreams and fantasy, where the human imagination begins to soar."
+    },
+    "source": {
+      "plan": "plan_14",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-15",
+    "ru": {
+      "title": "15. План фантазии (нага-лока)",
+      "body": "Существует семь планов над земным планом и семь планов под ним."
+    },
+    "en": {
+      "title": "15. Plane of fantasy (naga-loka)",
+      "body": "As there are seven lokas above, so are there seven below."
+    },
+    "source": {
+      "plan": "plan_15",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-16",
+    "ru": {
+      "title": "16. Ревность (двеша)",
+      "body": "В любовных взаимоотношениях он становится ревнивым и боится неверности."
+    },
+    "en": {
+      "title": "16. Jealousy (dvesha)",
+      "body": "Jealousy is a condition of mental imbalance resulting from suspicion and the fear of rivalry and unfaithfulness."
+    },
+    "source": {
+      "plan": "plan_16",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-17",
+    "ru": {
+      "title": "17. Сострадание (дайя)",
+      "body": "Сострадание является одним из наиболее позитивных проявлений способности видеть воображаемые возможности, характерной для второй чакры."
+    },
+    "en": {
+      "title": "17. Mercy (daya)",
+      "body": "Mercy is the most positive face of the second-chakra ability to imagine possibilities."
+    },
+    "source": {
+      "plan": "plan_17",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-18",
+    "ru": {
+      "title": "18. План радости (харша-лока)",
+      "body": "Здесь, в конце второго ряда, второго плана, второй чакры, к игроку приходит чувство глубокого удовлетворения."
+    },
+    "en": {
+      "title": "18. Plane of joy (Harsha Loka)",
+      "body": "Here at the end of the second row, the second plane, the second chakra, comes a feeling of deep satisfaction."
+    },
+    "source": {
+      "plan": "plan_18",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-19",
+    "ru": {
+      "title": "19. План кармы (карма-лока)",
+      "body": "Лишь одно желание остается с нами повсюду и во все времена — это желание удовлетворения."
+    },
+    "en": {
+      "title": "19. Plane of action (karma-loka)",
+      "body": "The only desire that remains true for all times and places is the desire for fulfillment."
+    },
+    "source": {
+      "plan": "plan_19",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-20",
+    "ru": {
+      "title": "20. Благотворительность (дана)",
+      "body": "Кармы-действия, ведущие к возвышению уровня вибраций, известны как добродетели; те же, что снижают частоту вибраций, —как пороки."
+    },
+    "en": {
+      "title": "20. Charity (given)",
+      "body": "Those karmas that raise the vibrational level are known as virtues; those that lower it are vices."
+    },
+    "source": {
+      "plan": "plan_20",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-21",
+    "ru": {
+      "title": "21. Искупление (самана папа)",
+      "body": "Стремясь к удовлетворению, он действовал слепо, не думая о последствиях."
+    },
+    "en": {
+      "title": "21. Atonement (Samana Pope)",
+      "body": "He has acted blindly in his search for fulfillment, without awareness of the consequences of his actions."
+    },
+    "source": {
+      "plan": "plan_21",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-22",
+    "ru": {
+      "title": "22. План Дхармы (Дхарма-лока)",
+      "body": "Дхарма — это сознательное действие, действие, соответствующее реальности момента."
+    },
+    "en": {
+      "title": "22. Plane of dharma  (Dharma-loka)",
+      "body": "Conscious action is dharma—conscious action in accord with the reality of the moment."
+    },
+    "source": {
+      "plan": "plan_22",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-23",
+    "ru": {
+      "title": "23. Небесный план (сварга-лока)",
+      "body": "Описания сверкающих ангелов и божеств можно найти в мифологиях всех народов."
+    },
+    "en": {
+      "title": "23. Celestial plane  (svarga-loka)",
+      "body": "Shining angels and gods are mentioned everywhere in all mythologies."
+    },
+    "source": {
+      "plan": "plan_23",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-24",
+    "ru": {
+      "title": "24. Плохая компания (ку-санг-лока)",
+      "body": "В таком обществе дурные черты характера игрока либо игнорируются, либо, что еще хуже, превозносятся."
+    },
+    "en": {
+      "title": "24. Bad company (ku-sang-loka)",
+      "body": "In bad company his wrong character traits are either ignored or extolled."
+    },
+    "source": {
+      "plan": "plan_24",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-25",
+    "ru": {
+      "title": "25. Хорошая компания (су-санг-лока)",
+      "body": "Это позитивное сообщество и называется су-санг."
+    },
+    "en": {
+      "title": "25. Good company (su-sang-loka)",
+      "body": "This positive association, this good company, is su-sang."
+    },
+    "source": {
+      "plan": "plan_25",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-26",
+    "ru": {
+      "title": "26. Печаль (дукха)",
+      "body": "Печаль и радость представляют собой два полюса эмоционального континуума."
+    },
+    "en": {
+      "title": "26. Sorrow (dukkha)",
+      "body": "Sorrow and joy represent two ends of the emotional continuum."
+    },
+    "source": {
+      "plan": "plan_26",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-27",
+    "ru": {
+      "title": "27. Самоотверженное служение (парамартха)",
+      "body": "Все, что делается ради высшей цели, и есть парамартха."
+    },
+    "en": {
+      "title": "27. Selfless Service (Paramartha)",
+      "body": "That which is done for the supreme is parmarth."
+    },
+    "source": {
+      "plan": "plan_27",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-28",
+    "ru": {
+      "title": "28. Истинная религиозность (судхарма)",
+      "body": "Судхарма — это жизнь в гармонии с законами игры."
+    },
+    "en": {
+      "title": "28. Apt religion (sudharma)",
+      "body": "Sudharma is living in harmony with the laws of the game."
+    },
+    "source": {
+      "plan": "plan_28",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-29",
+    "ru": {
+      "title": "29. Отсутствие религиозности (адхарма)",
+      "body": "Он знает, что, пока он прислушивается к голосу, звучащему внутри, ему нечего бояться."
+    },
+    "en": {
+      "title": "29. Irreligiosity (adharma)",
+      "body": "He knows that as long as he listens to the voice of his own inner nature he need fear nothing."
+    },
+    "source": {
+      "plan": "plan_29",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-30",
+    "ru": {
+      "title": "30. Хорошие тенденции (уттама гати)",
+      "body": "Благие тенденции проявляются у игрока спонтанно, если он движется в гармонии с законами макрокосма."
+    },
+    "en": {
+      "title": "30. Good tendencies (uttama gati)",
+      "body": "Good tendencies flow spontaneously when the player moves in harmony with the laws of the macrocosm."
+    },
+    "source": {
+      "plan": "plan_30",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-31",
+    "ru": {
+      "title": "31. План святости (якша-лока)",
+      "body": "Святость является прямым результатом хороших тенденций."
+    },
+    "en": {
+      "title": "31. Plane of sanctity (yaksha-loka)",
+      "body": "Sanctity is a direct result of good tendencies."
+    },
+    "source": {
+      "plan": "plan_31",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-32",
+    "ru": {
+      "title": "32. План равновесия (махар-лока)",
+      "body": "Здесь игрок поднимается над физическим уровнем, желаниями и мыслями."
+    },
+    "en": {
+      "title": "32. Plane of balance (mahar-loka)",
+      "body": "Here the player is above the physical, desire, and thought levels."
+    },
+    "source": {
+      "plan": "plan_32",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-33",
+    "ru": {
+      "title": "33. План ароматов (гандха-лока)",
+      "body": "Гандха означает «запах», а чувство обоняния связано с элементом земли и физическим планом."
+    },
+    "en": {
+      "title": "33. Plane of fragrance (gandha-loka)",
+      "body": "Gandha means smell, and the sense of smell is linked with the earth and the physical plane."
+    },
+    "source": {
+      "plan": "plan_33",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-34",
+    "ru": {
+      "title": "34. План вкуса (раса-лока)",
+      "body": "Раса — это вода в ее чистейшей форме, сила, связывающая воедино все творение."
+    },
+    "en": {
+      "title": "34. Plane of taste (rasa-loka)",
+      "body": "Rasa is water in its purest form, the force that binds all creation together."
+    },
+    "source": {
+      "plan": "plan_34",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-35",
+    "ru": {
+      "title": "35. Чистилище (нарака-лока)",
+      "body": "Но как только игрок приобретает свободу действий, он становится ответственным за их последствия."
+    },
+    "en": {
+      "title": "35. Purgatory (naraka-loka)",
+      "body": "As the player attains freedom of action he becomes responsible for the fruits of his actions."
+    },
+    "source": {
+      "plan": "plan_35",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-36",
+    "ru": {
+      "title": "36. Ясность сознания (сваччха)",
+      "body": "Прозрачность означает отсутствие препятствий для света."
+    },
+    "en": {
+      "title": "36. Clarity of consciousness (svachcha)",
+      "body": "Transparency offers no resistance to the passage of light."
+    },
+    "source": {
+      "plan": "plan_36",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-37",
+    "ru": {
+      "title": "37 Джняна (гьяна)",
+      "body": "Игрок может реализовать свою мудрость, только получив опыт ясности сознания."
+    },
+    "en": {
+      "title": "37. True awareness (jnana)",
+      "body": "The player realizes this wisdom only after the experience of clarity of consciousness."
+    },
+    "source": {
+      "plan": "plan_37",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-38",
+    "ru": {
+      "title": "38. Прана-лока",
+      "body": "Благодаря пране мы можем двигаться, думать, видеть и слышать."
+    },
+    "en": {
+      "title": "38. Plane of life energy (prana-loka)",
+      "body": "With the help of prana we are able to move, think, see, and hear."
+    },
+    "source": {
+      "plan": "plan_38",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-41",
+    "ru": {
+      "title": "41. Человеческий план (джана-лока)",
+      "body": "Это лока божественной мудрости, и все ее обитатели отмечены этим возвышенным качеством."
+    },
+    "en": {
+      "title": "41. Human plane (jana-loka)",
+      "body": "This is the loka of divine wisdom, and those who dwell here are beings of divine wisdom."
+    },
+    "source": {
+      "plan": "plan_41",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-43",
+    "ru": {
+      "title": "43. Рождение человека (манушъя-джанма)",
+      "body": "Это рождение не регистрируется ни в родильном доме, ни в канцелярии."
+    },
+    "en": {
+      "title": "43. Birth of man (manushya janma) ",
+      "body": "This birth is never registered in courthouses and hospitals."
+    },
+    "source": {
+      "plan": "plan_43",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-44",
+    "ru": {
+      "title": "44. Неведение (авидья)",
+      "body": "Знание — это понимание игроком своей роли в игре, где бы он ни находился в данный момент."
+    },
+    "en": {
+      "title": "44. Ignorance (avidya)",
+      "body": "Knowledge is understanding one's role in the game from wherever one is at the moment."
+    },
+    "source": {
+      "plan": "plan_44",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-45",
+    "ru": {
+      "title": "45. Правильное знание (сувидъя)",
+      "body": "Он осознает себя как макрокосм в микрокосме, океан, заключенный в капле."
+    },
+    "en": {
+      "title": "45. Right knowledge (suvidya)",
+      "body": "He attains the realization that he is a microcosm of the universe, an ocean in the form of a drop."
+    },
+    "source": {
+      "plan": "plan_45",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-46",
+    "ru": {
+      "title": "46 Различение (вивека)",
+      "body": "Это голос внутренней мудрости игрока, который позволяет ему отличать тонкое от грубого, видеть ноумен в каждом феномене."
+    },
+    "en": {
+      "title": "46. Conscience (vivek)",
+      "body": "It is the player's own voice of inner wisdom that enables him to differentiate the subtle from the gross, to perceive noumenon in phenomenon."
+    },
+    "source": {
+      "plan": "plan_46",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-47",
+    "ru": {
+      "title": "47.План нейтральности (сарасвати)",
+      "body": "Конечная цель йоги — поднять эту энергию к седьмой чакре, расположенной на макушке головы."
+    },
+    "en": {
+      "title": "47. Plane of neutrality (Saraswati)",
+      "body": "The ultimate goal of yoga is the raising of this energy to the seventh chakra, the crown of the head."
+    },
+    "source": {
+      "plan": "plan_47",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-48",
+    "ru": {
+      "title": "48. Солнечный план (ямуна)",
+      "body": "В шестой чакре игрок устанавливает равновесие между мужским, солнечным принципом и женским, лунным."
+    },
+    "en": {
+      "title": "48. Solar Plane (Yamuna)",
+      "body": "In the sixth chakra the player establishes a harmony between the male, solar principle and the female, lunar principle."
+    },
+    "source": {
+      "plan": "plan_48",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-49",
+    "ru": {
+      "title": "49. Лунный план (ганга)",
+      "body": "Женщина всегда магнетична, притягательна, мужчина же наэлектризован и полон силы."
+    },
+    "en": {
+      "title": "49. Lunar plane (Ganges or Ganga)",
+      "body": "The female is magnetic, attractive; the male is electric, forceful."
+    },
+    "source": {
+      "plan": "plan_49",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-50",
+    "ru": {
+      "title": "50. План аскетизма (тапа-лока)",
+      "body": "Тапа-лока — шестой из семи главных планов бытия."
+    },
+    "en": {
+      "title": "50. Plane of austerity (tapa loka)",
+      "body": "Tapa-loka is the sixth of the seven major lokas."
+    },
+    "source": {
+      "plan": "plan_50",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-51",
+    "ru": {
+      "title": "51. Земля (притхиви)",
+      "body": "Это сцена, на которой сознание ведет свою вечную игру, известную как Лила."
+    },
+    "en": {
+      "title": "51. Earth (prithvi)",
+      "body": "Earth is the great mother principle, the stage on which consciousness enacts its eternal play, Leela."
+    },
+    "source": {
+      "plan": "plan_51",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-52",
+    "ru": {
+      "title": "52. План насилия (химса-лока)",
+      "body": "Игрок знает, что смерть —всего лишь смена жизненного сценария."
+    },
+    "en": {
+      "title": "52. Plane of violence (himsa-loka)",
+      "body": "The player knows that death is just a change in the life scenario."
+    },
+    "source": {
+      "plan": "plan_52",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-53",
+    "ru": {
+      "title": "53. План жидкостей (джала-лока)",
+      "body": "Вода — один из пяти элементов — является связующим веществом бытия."
+    },
+    "en": {
+      "title": "53. Liquid plane (jala-loka)",
+      "body": "Water, one of the five elements, is the binding material of existence."
+    },
+    "source": {
+      "plan": "plan_53",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-54",
+    "ru": {
+      "title": "54. План духовной преданности (бхакти-лока)",
+      "body": "Божество —возлюбленный, а преданный — влюбленный."
+    },
+    "en": {
+      "title": "54. Spiritual devotion (bhakti-loka)",
+      "body": "The Deity is the beloved, and the devotee is the lover."
+    },
+    "source": {
+      "plan": "plan_54",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-55",
+    "ru": {
+      "title": "55. Эгоизм (ахамкара)",
+      "body": "Хороши все средства —неважно, честные или нечестные, — которые приближают его к цели."
+    },
+    "en": {
+      "title": "55. Egotism (ahamkara)",
+      "body": "The only good means are those, fair or foul, that hasten him to his goal."
+    },
+    "source": {
+      "plan": "plan_55",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-56",
+    "ru": {
+      "title": "56. План изначальных вибраций (Омкара)",
+      "body": "Ом — единый звук, присутствующий повсюду во Вселенной, проявленной и непроявленной."
+    },
+    "en": {
+      "title": "56. Plane of primal vibrations (Omkar)",
+      "body": "Om is the one sound present throughout the universe, manifest and unmanifest."
+    },
+    "source": {
+      "plan": "plan_56",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-59",
+    "ru": {
+      "title": "59. План реальности (сатья-лока)",
+      "body": "Шабда —это слово Ом, которое есть сам Брахман (Абсолютная Реальность, Космическое Сознание)."
+    },
+    "en": {
+      "title": "59. Plane of reality (satya-loka)",
+      "body": "Shabda is the word, the aum, which is itself Brahman (Absolute Reality, Cosmic Consciousness)."
+    },
+    "source": {
+      "plan": "plan_59",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-60",
+    "ru": {
+      "title": "60. Позитивный интеллект (субуддхи)",
+      "body": "Субуддхи — это правильное понимание, которое приходит только с достижением плана реальности."
+    },
+    "en": {
+      "title": "60. Positive intellect (subuddhi)",
+      "body": "Subuddhi is right understanding, which comes only after reaching the plane of reality."
+    },
+    "source": {
+      "plan": "plan_60",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-61",
+    "ru": {
+      "title": "61. Негативный интеллект (дурбуддхи)",
+      "body": "Буддхи, интеллект, является одновременно и большой ловушкой, и великим средством освобождения."
+    },
+    "en": {
+      "title": "61. Negative intellect (durbuddhi)",
+      "body": "Buddhi is at once a great trap and a great tool for liberation."
+    },
+    "source": {
+      "plan": "plan_61",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-62",
+    "ru": {
+      "title": "62. Счастье (сукха)",
+      "body": "Равновесие химии тела и психики — это и есть счастье."
+    },
+    "en": {
+      "title": "62. Happiness (sukh)",
+      "body": "A balance in body chemistry and psychic phenomena: that is happiness."
+    },
+    "source": {
+      "plan": "plan_62",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-63",
+    "ru": {
+      "title": "63. Тамас",
+      "body": "Свет — это знание, тьма — неведение; неведение — это низший ум."
+    },
+    "en": {
+      "title": "63. Darkness (tamas)",
+      "body": "Light is knowledge; dark is ignorance; ignorance is mind."
+    },
+    "source": {
+      "plan": "plan_63",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-64",
+    "ru": {
+      "title": "64. Феноменальный план (пракрити-лока)",
+      "body": "Эта пракрити находится за пределами семи лок, за пределами акаши."
+    },
+    "en": {
+      "title": "64. Phenomenal plane (prakriti-loka)",
+      "body": "This prakriti is beyond the seven lokas, beyond akash."
+    },
+    "source": {
+      "plan": "plan_64",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-65",
+    "ru": {
+      "title": "65. План внутреннего пространства (уранта-лока)",
+      "body": "В течение одного дыхания он видит рождение, развитие и последующее разрушение всего творения."
+    },
+    "en": {
+      "title": "65.  Plane of inner space (uranta-loka)",
+      "body": "He finds the evolution and dissolution of all creation within the space of a single breath."
+    },
+    "source": {
+      "plan": "plan_65",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-66",
+    "ru": {
+      "title": "66. План блаженства (ананда-лока)",
+      "body": "Сознание описывается как истина, бытие и блаженство — Сатчитананда."
+    },
+    "en": {
+      "title": "66. Plane of bliss (ananda-loka)",
+      "body": "Consciousness is truth, being, and bliss—satchitananda."
+    },
+    "source": {
+      "plan": "plan_66",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-67",
+    "ru": {
+      "title": "67. План космического блага (Рудра-лока)",
+      "body": "Из его воли были рождены Творец (Брахма), Охранитель (Вишну) и Разрушитель (Шива)."
+    },
+    "en": {
+      "title": "67. Plane of cosmic good (Rudra-loka)",
+      "body": "He creates from his will the Creator (Brahma), the Preserver (Vishnu), and the Destroyer (Shiva)."
+    },
+    "source": {
+      "plan": "plan_67",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-68",
+    "ru": {
+      "title": "68. Космическое Сознание (Вайкунтха-лока)",
+      "body": "Какие бы желания ни соблазняли его сойти со своего пути, его высшим желанием всегда остается мокша — освобождение."
+    },
+    "en": {
+      "title": "68. Cosmic Consciousness (Vaikuntha-loka)",
+      "body": "Whatever desires lure him away from his path, this is always his highest desire—to attain moksha, liberation."
+    },
+    "source": {
+      "plan": "plan_68",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-70",
+    "ru": {
+      "title": "70. Саттвагуна",
+      "body": "Истина не может существовать сама по себе, она немедленно поглощается Космическим Сознанием."
+    },
+    "en": {
+      "title": "70. True nature (satoguna)",
+      "body": "Truth cannot exist of itself; it would then merge into Cosmic Consciousness."
+    },
+    "source": {
+      "plan": "plan_70",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-71",
+    "ru": {
+      "title": "71. Раджогуна",
+      "body": "Раджогуна — это активность в сознании, или активное сознание."
+    },
+    "en": {
+      "title": "71. Activity (rajoguna)",
+      "body": "Rajoguna is the activity in consciousness, or consciousness in activity."
+    },
+    "source": {
+      "plan": "plan_71",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-72",
+    "ru": {
+      "title": "72. Тамогуна",
+      "body": "После захода солнца и до утренних сумерек преобладает тамогуна, и весь мир погружается в сон."
+    },
+    "en": {
+      "title": "72. Inertia (tamoguna)",
+      "body": "After sunset tamoguna predominates until twilight and puts the whole world to sleep."
+    },
+    "source": {
+      "plan": "plan_72",
+      "files": [
+        "src/locales/ru/translation.json",
+        "src/locales/en/translation.json"
+      ]
+    }
+  }
+]

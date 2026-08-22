@@ -27,7 +27,8 @@ module.exports = {
         }
       }
     ],
-    '^.+\\.jsx?$': [
+    // scripts/*.mjs hold the cron's decision logic; the tests import them.
+    '^.+\\.m?jsx?$': [
       'babel-jest',
       {
         presets: ['module:metro-react-native-babel-preset'],
