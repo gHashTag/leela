@@ -229,20 +229,20 @@ cd packages/engine && bun test
 | Package | Tests | State |
 |---|---|---|
 | `@leela/engine` | 544 | rules, four variants, sessions, turn gating, seeded dice |
-| `@leela/content` | 700 | 22 languages of plans, 2 of the game's own voice |
+| `@leela/content` | 701 | 22 languages of plans, 2 of the game's own voice |
 | `@leela/journal` | 90 | the path as a file, and what came back — shared by the bot and the mini app |
 | `@leela/db` | 116 | schema, mapping, SQL migrations, legacy import |
 | `@leela/storage` | 38 | addressing files in an S3-compatible bucket, after Firebase Storage |
 | `@leela/ai` | 217 | the companion — prompts built from the plan text |
 | `@leela/contracts` | 95 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
-| `@leela/bot` | 687 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
+| `@leela/bot` | 711 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 239 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
-| `@leela/miniapp` | 528 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
+| `@leela/miniapp` | 532 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | `@leela/mobile` | 408 | the board on a phone (Expo), moved by the engine and by nothing else |
-| `@leela/webgl` | 258 | the board in three dimensions, in a browser, on the same rules the apps play |
+| `@leela/webgl` | 429 | the board in three dimensions, in a browser, on the same rules the apps play |
 | everything else | — | not yet ported |
 
-3920 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+4120 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 

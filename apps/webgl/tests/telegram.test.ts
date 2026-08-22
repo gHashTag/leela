@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 
+import { blank } from '../../../scripts/lib/source.mjs';
+
 import { meetTelegram, nameAskOrigin, telegramOf, themeVars } from '../src/telegram';
 
 /**
@@ -58,7 +60,7 @@ describe('themeVars', () => {
    * mapping produces must be one it declares.
    */
   it('writes only tokens the stylesheet declares', () => {
-    const sheet = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
+    const sheet = blank(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), 'css');
     for (const [token] of themeVars('dark', DARK)) {
       expect(sheet, `${token} is not declared in style.css`).toContain(`${token}:`);
     }
