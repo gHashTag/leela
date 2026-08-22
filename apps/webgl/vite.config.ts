@@ -33,4 +33,22 @@ export default defineConfig({
    */
   base: './',
   plugins: [askRoute()],
+  build: {
+    rollupOptions: {
+      output: {
+        /*
+         * three.js in its own chunk - 474 kB of a 4.4 MB entry, measured on
+         * the day of the split. NOTES.md guessed the library dominated; the
+         * measurement says otherwise: the mass is @leela/content's plan
+         * texts in twenty-two languages, and slimming THAT means loading
+         * languages on demand - a bigger cut, left named rather than done.
+         * This split still pays twice: the library's hash survives app-only
+         * deploys so the browser keeps it, and the two files fetch in
+         * parallel. Relative imports between chunks ride the same
+         * `base: './'` that lets this build run from inside the phone.
+         */
+        manualChunks: { three: ['three'] },
+      },
+    },
+  },
 });
