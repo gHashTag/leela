@@ -58,7 +58,7 @@ export {
 } from './audit';
 export type { BoardFinding, BoardProblem, DetectedRules, Jumps } from './audit';
 
-export { declaresBoard, extractBoards } from './extract';
+export { declaresBoard, extractBoards, extractOrigins } from './extract';
 export type { ExtractedBoard } from './extract';
 
 export {

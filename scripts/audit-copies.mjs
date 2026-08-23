@@ -30,6 +30,9 @@ import {
   describeProblems,
   detectRules,
   extractBoards,
+  extractOrigins,
+  ARROWS,
+  SNAKES,
 } from '../packages/engine/src/index.ts';
 import {
   RECORDED,
@@ -131,6 +134,24 @@ results.sort((a, b) => a.file.localeCompare(b.file));
  * read is worse than no scanner, because it reads as coverage.
  */
 const unparsed = [];
+
+/**
+ * Copies that name where jumps begin and not where they end.
+ *
+ * Kept apart from `unparsed` because they are a different answer: one is "I
+ * could not read this", the other is "I read half of it and here is whether
+ * that half is right". Collapsing them lost the second for as long as this
+ * file has existed.
+ */
+const halves = [];
+
+/** Two sets of squares, compared as sets — order is not a fact about a board. */
+const sameSquares = (mine, theirs) => {
+  if (mine.length !== theirs.length) return false;
+  const sorted = [...mine].sort((a, b) => a - b);
+  const against = [...theirs].sort((a, b) => a - b);
+  return sorted.every((square, at) => square === against[at]);
+};
 for (const file of walk(SRC)) {
   const relativePath = relative(SRC, file);
   if (results.some((r) => r.file === relativePath)) continue;
@@ -138,7 +159,29 @@ for (const file of walk(SRC)) {
   const source = readFileSync(file, 'utf8');
   // Only files that actually declare a board: a test asserting about one
   // mentions every square and carries none, and reporting it would be noise.
-  if (declaresBoard(source)) unparsed.push(relativePath);
+  if (!declaresBoard(source)) continue;
+
+  /**
+   * Half a board is not an unreadable one.
+   *
+   * The published app names where every jump begins and never where it ends —
+   * `SNAKE_HEADS`, `ARROW_BASES` — to label a square for a screen reader. That
+   * is a copy of ten facts, and ten facts can be compared; calling it
+   * unreadable was true and told nobody anything. Compared against the
+   * engine's own keys, which are the same ten origins.
+   */
+  const origins = extractOrigins(source);
+  if (origins.snakeHeads.length > 0 || origins.arrowBases.length > 0) {
+    halves.push({
+      file: relativePath,
+      snakes: sameSquares(origins.snakeHeads, Object.keys(SNAKES).map(Number)),
+      arrows: sameSquares(origins.arrowBases, Object.keys(ARROWS).map(Number)),
+      counted: origins.snakeHeads.length + origins.arrowBases.length,
+    });
+    continue;
+  }
+
+  unparsed.push(relativePath);
 }
 
 console.log(`Found ${results.length} copies of the board under ${SRC}\n`);
@@ -203,6 +246,14 @@ for (const result of results) {
   console.log(`${name.padEnd(52)}${marks}`);
 }
 
+if (halves.length > 0) {
+  console.log(`\n${halves.length} file(s) name where jumps begin and not where they end:`);
+  for (const half of halves) {
+    const verdict = half.snakes && half.arrows ? 'agrees with the engine' : 'DISAGREES with the engine';
+    console.log(`  ${half.file}  —  ${half.counted} origins, ${verdict}`);
+  }
+}
+
 if (unparsed.length > 0) {
   console.log(`\n${unparsed.length} file(s) look like a board but could not be read:`);
   for (const file of unparsed) console.log(`  ${file}`);
@@ -253,7 +304,21 @@ if (rotted.length > 0) {
   console.log('A donor was fixed, a file moved, or a disagreement changed shape. Check, then drop it.');
 }
 
-if (fresh.length === 0 && rotted.length === 0 && unparsed.length === 0) {
+/**
+ * A half-board that disagrees is an ordinary disagreement, not an absence.
+ *
+ * It takes exit 1 beside `fresh` rather than the 2 reserved for what nobody
+ * could read: somebody can open the file and fix the ten numbers, which is
+ * exactly the distinction the block above draws between a copy that disagrees
+ * and a copy nobody measured.
+ *
+ * And it joins the all-clear's condition, because a closing sentence that says
+ * every copy agrees while one of them does not is the failure this file's own
+ * comments were written about.
+ */
+const halvesDisagree = halves.filter((half) => !(half.snakes && half.arrows));
+
+if (fresh.length === 0 && rotted.length === 0 && unparsed.length === 0 && halvesDisagree.length === 0) {
   // The closing line is the one a reader quotes, so it carries the coverage.
   // "12 of 18 copies agree" was true and read as a statement about the game
   // rather than about the fifteen repositories anybody had on disk.
@@ -288,4 +353,4 @@ if (unreadable) {
   process.exit(2);
 }
 
-process.exit(fresh.length + rotted.length > 0 ? 1 : 0);
+process.exit(fresh.length + rotted.length + halvesDisagree.length > 0 ? 1 : 0);

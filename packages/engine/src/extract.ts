@@ -130,6 +130,53 @@ export function extractBoards(source: string): ExtractedBoard {
 }
 
 /**
+ * The squares a copy names as jump origins, when that is all it names.
+ *
+ * A third kind of copy, found on 2026-08-23 in the published app: two bare
+ * lists, `SNAKE_HEADS = [12, 16, …]` and `ARROW_BASES = [10, 17, …]`, used to
+ * label a square for a screen reader. {@link extractBoards} finds nothing in
+ * them — every one of its six shapes needs a destination — so the file was
+ * reported as "looks like a board but could not be read", which is true and
+ * unhelpful: it is not unreadable, it is half a board, and the half it has can
+ * be checked.
+ *
+ * Origins only, deliberately. Inventing destinations for them would be the
+ * kind of guess this repository refuses; a copy that states ten heads and no
+ * tails has said ten things, and ten things is what gets compared.
+ *
+ * The names are matched, not the values: `SNAKE_HEADS`, `snakeHeads`,
+ * `ARROW_BASES`, `arrowStarts` — a plural of the direction with a word for
+ * where a jump begins, assigned to a list of bare numbers. A list holding
+ * anything else is not this shape and is left to the caller as unreadable.
+ */
+export function extractOrigins(source: string): { snakeHeads: number[]; arrowBases: number[] } {
+  const listed = (direction: 'snake' | 'arrow', where: string): number[] => {
+    const pattern = new RegExp(
+      `\\b${direction}s?_?(?:${where})\\b\\s*(?::[^=]*)?=\\s*(?:Object\\.freeze\\()?\\[([^\\]]*)\\]`,
+      'i',
+    );
+    const found = pattern.exec(source);
+    if (found === null) return [];
+
+    const inside = (found[1] ?? '').trim();
+    if (inside === '') return [];
+    // Bare numbers only: `[12, 16]` is a list of squares, `[{ from: 12 }]` is
+    // something else and must not be read as one.
+    if (!/^[\d\s,]+$/.test(inside)) return [];
+
+    return inside
+      .split(',')
+      .map((piece) => Number(piece.trim()))
+      .filter((square) => Number.isInteger(square) && square > 0);
+  };
+
+  return {
+    snakeHeads: listed('snake', 'heads|tops|starts'),
+    arrowBases: listed('arrow', 'bases|bottoms|starts|feet'),
+  };
+}
+
+/**
  * True when a source *declares* a board rather than merely referring to one.
  *
  * A test file full of `expect(getDirectionAndPosition(72, …)).toBe(51)` mentions

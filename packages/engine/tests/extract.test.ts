@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ARROWS, SNAKES, compareToReference, declaresBoard, extractBoards } from '../src';
+import { ARROWS, SNAKES, compareToReference, declaresBoard, extractBoards, extractOrigins } from '../src';
 
 /** The five shapes the board is written in across the 25 repositories. */
 const SHAPES = {
@@ -141,5 +141,60 @@ describe('the sixth shape, and a false alarm', () => {
   it('still recognises a real collection whose name has a prefix or suffix', () => {
     expect(declaresBoard('const snakePositions = { 12: 8 }')).toBe(true);
     expect(declaresBoard('const arrowConnections: [number, number][] = [[10, 23]]')).toBe(true);
+  });
+});
+
+/**
+ * Half a board: the origins named without their destinations.
+ *
+ * Found in the published app on 2026-08-23 — `SNAKE_HEADS = [12, 16, …]` and
+ * `ARROW_BASES = [10, 17, …]`, used to tell a screen reader what a square is.
+ * `extractBoards` reads nothing there, because every shape it knows needs a
+ * destination, so the file was reported as "looks like a board but could not
+ * be read". True, and unhelpful: it is not unreadable, it is half a board,
+ * and the half it has agrees with the engine's own tables.
+ */
+describe('a board that names where jumps begin and not where they end', () => {
+  it('reads two bare lists of squares', () => {
+    const source = [
+      "const SNAKE_HEADS = [12, 16, 24, 29, 44, 52, 55, 61, 63, 72]",
+      "const ARROW_BASES = [10, 17, 20, 22, 27, 28, 37, 45, 46, 54]",
+    ].join('\n');
+
+    expect(extractOrigins(source)).toEqual({
+      snakeHeads: [12, 16, 24, 29, 44, 52, 55, 61, 63, 72],
+      arrowBases: [10, 17, 20, 22, 27, 28, 37, 45, 46, 54],
+    });
+  });
+
+  it('reads the spellings a copy is likely to use', () => {
+    expect(extractOrigins('const snakeTops = [12, 16]').snakeHeads).toEqual([12, 16]);
+    expect(extractOrigins('const arrowFeet = [10]').arrowBases).toEqual([10]);
+    expect(extractOrigins('const snakes_starts = [24]').snakeHeads).toEqual([24]);
+  });
+
+  it('refuses a list that is not a list of squares', () => {
+    // The whole risk of this function: a shape it half-understands reported as
+    // if it were understood. A list of objects has destinations in it
+    // somewhere, and reading only the first number of each would invent a
+    // board that nobody wrote.
+    expect(extractOrigins('const SNAKE_HEADS = [{ from: 12, to: 8 }]')).toEqual({
+      snakeHeads: [],
+      arrowBases: [],
+    });
+    expect(extractOrigins('const SNAKE_HEADS = squaresFor(board)')).toEqual({
+      snakeHeads: [],
+      arrowBases: [],
+    });
+  });
+
+  it('finds nothing in a file that has nothing', () => {
+    expect(extractOrigins('const cell = 12')).toEqual({ snakeHeads: [], arrowBases: [] });
+    // And is not fooled by a mention: `snakeHead` singular, in a translation
+    // key, is what sent the last hand-check down the wrong path.
+    expect(extractOrigins("t('accessibility.snakeHead', { defaultValue: 'x' })")).toEqual({
+      snakeHeads: [],
+      arrowBases: [],
+    });
   });
 });
