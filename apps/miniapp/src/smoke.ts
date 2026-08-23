@@ -34,6 +34,26 @@ export interface Check {
    */
   minBytes?: number;
   /**
+   * Largest it may be before somebody has to look, in bytes.
+   *
+   * The floor catches a build that shipped nothing; this catches the opposite,
+   * which is the failure this project actually has. The 3D board's entry is
+   * 6.6 MB decoded and 93.7 per cent of the JavaScript a phone downloads,
+   * almost all of it plan text in twenty-one languages the reader cannot read
+   * (specs/006). Without a ceiling that number grew for months and was noticed
+   * by measurement rather than by the build, and the next language added would
+   * grow it again in silence.
+   */
+  maxBytes?: number;
+  /**
+   * The ceiling this page's own code files inherit. See {@link assetCheck}.
+   *
+   * On the page rather than on the generated check because the assets are
+   * named by a content hash and cannot be listed by hand — the page is the
+   * only place a ceiling can be attached to.
+   */
+  maxAssetBytes?: number;
+  /**
    * The path is an app's page, and its build names its assets with a content
    * hash. Expand it: one generated check per asset the page references, read
    * from the page's own directory — {@link assetsIn} says why they cannot be
@@ -85,6 +105,19 @@ export const DEPLOYMENT_CHECKS: Check[] = [
     // missing fragment rather than as a healthy 200 about the wrong app.
     mustContain: ['<title>Leela — the board in three dimensions</title>', 'id="board"'],
     minBytes: 500,
+    /**
+     * Seven million bytes, which is today's size and a little.
+     *
+     * The entry measured 6,624,622 bytes decoded on 2026-08-23, so this locks
+     * in "no worse than the day the ceiling was written" rather than any
+     * target. **It comes down to about 2,000,000 when specs/006 lands** — the
+     * per-language cut — and the number here is the one line that has to
+     * change for that gain to be permanent instead of a thing that drifted
+     * back. A ceiling set at a target nobody has reached yet is a red build
+     * that gets deleted; a ceiling set at today is one that only ever moves
+     * down.
+     */
+    maxAssetBytes: 7_000_000,
     ownAssets: true,
   },
   {
@@ -186,7 +219,8 @@ export async function runCheck(
         status === 200 &&
         missing.length === 0 &&
         present.length === 0 &&
-        bytes >= (check.minBytes ?? 0),
+        bytes >= (check.minBytes ?? 0) &&
+        bytes <= (check.maxBytes ?? Number.POSITIVE_INFINITY),
     };
   } catch (error) {
     return {
@@ -285,6 +319,10 @@ export function assetCheck(path: string, of: Check): Check {
     path,
     what: `${of.what}'s ${isStyle ? 'stylesheet' : 'code'}`,
     minBytes: isStyle ? 200 : 1000,
+    // Code only: a stylesheet has never been this project's weight problem,
+    // and a ceiling nobody has a reason for is a ceiling somebody raises
+    // without reading it.
+    ...(isStyle || of.maxAssetBytes === undefined ? {} : { maxBytes: of.maxAssetBytes }),
     mustNotContain: ['<!doctype html', '<!DOCTYPE html'],
   };
 }
@@ -398,6 +436,10 @@ export function describeResults(results: CheckResult[]): string {
             result.why ? result.why : result.error ? `error: ${result.error}` : `status ${result.status}`,
             result.bytes < (result.check.minBytes ?? 0)
               ? `only ${result.bytes}b, expected at least ${result.check.minBytes}`
+              : '',
+            result.bytes > (result.check.maxBytes ?? Number.POSITIVE_INFINITY)
+              ? `${result.bytes}b, which is over the ${result.check.maxBytes} ceiling — ` +
+                'something got heavier; see specs/006'
               : '',
             result.missing.length > 0 ? `missing: ${result.missing.join(', ')}` : '',
             result.instead.length > 0 ? `served instead: ${result.instead.join(', ')}` : '',

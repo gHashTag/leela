@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   DEPLOYMENT_CHECKS,
   allPassed,
+  assetCheck,
   describeResults,
   runCheck,
   runChecks,
+  type Check,
   type Fetcher,
 } from '../src/smoke';
 
@@ -269,5 +271,56 @@ describe('the size a check reports', () => {
     expect(describeResults([await sizeOf('бросьте', 14)])).toContain('14b');
     expect(describeResults([await sizeOf('бросьте', 14)])).not.toContain('on the wire');
     expect(describeResults([await sizeOf('бросьте')])).not.toContain('on the wire');
+  });
+});
+
+/**
+ * The ceiling, which is the guard this project actually needed.
+ *
+ * A floor catches a build that shipped nothing. Nothing caught the opposite,
+ * and the opposite is what happened: the 3D board's entry grew to 6.6 MB of
+ * which almost all is plan text in languages the reader cannot read, and it
+ * was found by measuring rather than by the build going red.
+ */
+describe('the size a check refuses', () => {
+  const under = { path: 'a', what: 'a thing', maxBytes: 10 };
+
+  it('fails a response over the ceiling and says by how much', async () => {
+    const fat = await runCheck('https://example.test', under, async () => ({
+      status: 200,
+      text: 'ерунда лишняя',
+    }));
+
+    expect(fat.ok).toBe(false);
+    expect(describeResults([fat])).toContain('over the 10 ceiling');
+  });
+
+  it('passes a response at the ceiling exactly', async () => {
+    const exact = await runCheck('https://example.test', under, async () => ({
+      status: 200,
+      text: 'абвгд',
+    }));
+
+    expect(exact.bytes).toBe(10);
+    expect(exact.ok).toBe(true);
+  });
+
+  it('gives the page’s code files its ceiling, and its stylesheets none', async () => {
+    const page = { path: '', what: 'the board', maxAssetBytes: 42 };
+
+    expect(assetCheck('assets/index-abc.js', page).maxBytes).toBe(42);
+    expect(assetCheck('assets/index-abc.css', page).maxBytes).toBeUndefined();
+    // A page that names no ceiling hands none down, so nothing gains a limit
+    // by accident.
+    expect(assetCheck('assets/index-abc.js', { path: '', what: 'x' }).maxBytes).toBeUndefined();
+  });
+
+  it('holds the live board to the ceiling it ships with', () => {
+    // The number that has to come down when specs/006 lands, asserted here so
+    // that lowering it is a deliberate edit with a test beside it.
+    const board = DEPLOYMENT_CHECKS.find((check) => check.what === 'the 3D board');
+
+    expect(board?.maxAssetBytes).toBe(7_000_000);
+    expect(assetCheck('assets/index-x.js', board as Check).maxBytes).toBe(7_000_000);
   });
 });
