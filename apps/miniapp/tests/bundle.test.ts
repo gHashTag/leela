@@ -148,7 +148,13 @@ describe('the mini app ships one language, not twenty-two', { timeout: 120_000 }
       : '';
 
     expect(text).not.toContain('Рождение');
-    expect(text, 'the rules book is 1.5 MB of every language').not.toContain('Vaikuntha');
+    // `Johari` — Harish Johari, whose edition the rules chapters come from —
+    // and not `Vaikuntha`, which this line used to name. `Vaikuntha` is in
+    // plan 68's English text and in no rules chapter at all, so the assertion
+    // passed on a bundle carrying English plans and would have passed on one
+    // carrying the whole rules book. A guard whose message names something it
+    // does not test is a guard that reads as coverage.
+    expect(text, 'the rules book is 1.5 MB of every language').not.toContain('Johari');
   });
 });
 

@@ -86,6 +86,37 @@ them rather than rediscovering them. Each says how it was measured.
    *Measured in `supertonic.ts`; the progress bar that made it look hung was
    fixed 2026-08-23.*
 
+## What must not regress
+
+Every row below was a defect that shipped. A test holds it now; deleting one
+of those tests re-introduces the defect it was written for.
+
+Carried here from `apps/webgl/LOOP.md` — a second, unreferenced improvement-
+loop file that sat in this directory six days stale, with its own competing
+contract, where any agent opening the repo would find it before finding the
+live one. Every row was re-checked on 2026-08-23: the three test files exist,
+the four named helpers exist, and each invariant is named by a test that
+mentions it.
+
+| Invariant | Held by |
+| --- | --- |
+| Drawing a frame from inside a frame does not recurse | `tests/frames.test.ts` |
+| Tile *n* of the atlas carries plan *n*'s number | `tests/atlas.test.ts` |
+| Waiting to enter is not confused with having won | `tests/screen.test.ts` |
+| The readout is told a presence, never a boolean | `presenceOf` in `hud.ts`, `tests/screen.test.ts` |
+| A winner is stood on the square they reached | `tests/screen.test.ts` |
+| Progress is measured against 68, not 72 | `tests/screen.test.ts` |
+| A snake is thickest at the head it is entered by | `tests/screen.test.ts` |
+| Every deity offered is named in the 72 texts | `tests/screen.test.ts` |
+| A model's words are never rendered as the canon's | `tests/screen.test.ts` |
+| A die with no throw to show shows no face | `tests/screen.test.ts` |
+| `pipsFor` and `isFace` agree on what a face is | `die.ts`, `tests/screen.test.ts` |
+| A six says so | `audit-unread`, via `rollsAgain` in `main.ts` |
+| The board renders at all on first paint | looking at it — nothing else can |
+
+The last row is weak point 4 restated: it is the one invariant with no test,
+and it is why the render smoke test is the top item below.
+
 ## What is verified, and by what
 
 - Rules, geometry, text, storage and voice: the suite. Its size is in the
