@@ -481,6 +481,18 @@ const EN = {
    */
   'app.tollLast': 'One free throw left.',
   'app.tollDue': 'The three free throws are used. A subscription opens the rest of the board.',
+  /**
+   * Where a line came from, printed beside it.
+   *
+   * These were four English strings in `main.ts`, written past the catalogue
+   * on the line above the one that used it — so a Russian board said FROM THE
+   * TEXT and MODEL, and the App Store's Russian screenshots carried English
+   * chrome. A label the reader cannot read is not a label.
+   */
+  'app.fromText': 'from the text',
+  'app.fromModel': 'model',
+  'app.unanswered': 'unanswered',
+  'app.restsOn': 'What this rests on',
   'app.tollOpen': 'Subscribe',
 
   /**
@@ -1075,6 +1087,10 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.voiceFailed': 'Живой голос не загрузился; читает обычный',
   'app.tollLast': 'Остался один бесплатный бросок.',
   'app.tollDue': 'Три бесплатных броска использованы. Подписка открывает остальную доску.',
+  'app.fromText': 'из текста',
+  'app.fromModel': 'модель',
+  'app.unanswered': 'без ответа',
+  'app.restsOn': 'На чём это стоит',
   'app.tollOpen': 'Оформить подписку',
   'app.board3d': 'Доска в 3D',
   'app.board3dClose': 'Вернуться к доске',

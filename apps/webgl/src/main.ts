@@ -170,6 +170,7 @@ const el = {
   pathSummary: need<HTMLElement>('#path-summary'),
   pathList: need<HTMLElement>('#path-list'),
   rests: need<HTMLDetailsElement>('#rests'),
+  restsSummary: need<HTMLElement>('#rests-summary'),
   restsList: need<HTMLElement>('#rests-list'),
   compose: need<HTMLFormElement>('#compose'),
   reply: need<HTMLTextAreaElement>('#reply'),
@@ -206,6 +207,7 @@ el.visitingBack.textContent = messageFor(language, 'app.read');
 el.pathSummary.textContent = messageFor(language, 'app.path');
 el.intentionLabel.textContent = messageFor(language, 'app.intention');
 el.planTitle.textContent = messageFor(language, 'app.waiting');
+el.restsSummary.textContent = messageFor(language, 'app.restsOn');
 el.say.textContent = messageFor(language, 'app.opening');
 
 /**
@@ -997,10 +999,19 @@ const showGate = (): void => {
   el.tollOpen.hidden = toll.mayThrow;
 };
 
+/*
+ * Where a line came from, in the reader's language.
+ *
+ * These were four English strings written straight into this file, one line
+ * above the `messageFor` that renders everything else — so a Russian board
+ * printed FROM THE TEXT and MODEL beside Russian sentences, and the App
+ * Store's Russian screenshots carried English chrome. Read from the catalogue
+ * now, like every other word on the screen.
+ */
 const SOURCE_LABEL: Readonly<Record<Line['source'], string>> = {
-  canon: 'from the text',
-  model: 'model',
-  fallback: 'unanswered',
+  canon: messageFor(language, 'app.fromText'),
+  model: messageFor(language, 'app.fromModel'),
+  fallback: messageFor(language, 'app.unanswered'),
   player: '',
   // Dated rather than labelled: what matters about your own earlier writing is
   // *when*, and `bubble` fills this in from the line's own timestamp.
