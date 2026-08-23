@@ -41,6 +41,16 @@ import { promisify } from 'node:util';
  * silently failed under `node` for as long as anybody had run it.
  */
 import { chunksIn, readerCost } from '../apps/miniapp/src/smoke.ts';
+import {
+  deployFrom,
+  describe,
+  entryFrom,
+  listeningIn,
+  releaseFrom,
+  stagedFrom,
+  testFlightFrom,
+  verdict,
+} from './lib/status.mjs';
 
 const run = promisify(execFile);
 
@@ -96,7 +106,7 @@ const page = await reach(site);
 if (!page.ok || page.status !== 200) {
   say('web', 'the 3D board', 'UNREACHABLE', page.ok ? `status ${page.status}` : page.why, 'wrong');
 } else {
-  const entryName = /src="\.\/(assets\/[A-Za-z0-9._-]+\.js)"/.exec(page.text)?.[1];
+  const entryName = entryFrom(page.text) ?? undefined;
   say('web', 'the 3D board', 'live', `${page.ms} ms`);
 
   if (entryName === undefined) {
@@ -152,9 +162,8 @@ const railway = await run('railway', ['deployment', 'list'], { cwd: process.cwd(
 if (railway === null) {
   say('bot', 'the last deploy', 'not asked', 'the railway CLI did not answer here', 'unasked');
 } else {
-  const newest = railway.stdout.split('\n').find((line) => line.includes('|'));
-  const [id, state, when] = (newest ?? '').split('|').map((part) => part.trim());
-  say('bot', 'the last deploy', `${state ?? '?'} ${when ?? ''}`.trim(), (id ?? '').slice(0, 8));
+  const deploy = deployFrom(railway.stdout);
+  say('bot', 'the last deploy', deploy === null ? 'NO ROW' : `${deploy.state} ${deploy.when}`.trim(), deploy?.id ?? '', deploy === null ? 'wrong' : 'fine');
 }
 
 /**
@@ -170,18 +179,18 @@ const logs = await run('railway', ['logs', '--service', 'leela'], { timeout: 90_
 if (logs === null) {
   say('bot', 'the running release', 'not asked', 'the railway CLI did not answer here', 'unasked');
 } else {
-  const banner = /Plan text: ([^\n]*)/.exec(logs.stdout)?.[1];
-  const alive = logs.stdout.includes('Listening as @leela_chakra_ai_bot');
+  const banner = releaseFrom(logs.stdout);
+  const alive = listeningIn(logs.stdout);
   say(
     'bot',
     'the running release',
-    banner === undefined ? 'BEFORE 2026-08-23' : banner.replace(/\.$/, ''),
-    banner === undefined
+    banner === null ? 'BEFORE 2026-08-23' : banner,
+    banner === null
       ? 'no plan-text line in the log — the release predates it'
       : alive
         ? 'and listening'
         : 'but no "Listening as" line in this window',
-    banner === undefined ? 'wrong' : 'fine',
+    banner === null ? 'wrong' : 'fine',
   );
 }
 
@@ -221,14 +230,14 @@ if (asc === null) {
   say('ios', 'TestFlight', 'not asked', 'no App Store Connect key on this machine', 'unasked');
   say('ios', 'waiting for a press', 'not asked', 'the same key would answer it', 'unasked');
 } else {
-  const build = /build (\d+): (\w+)/.exec(asc.stdout);
-  say('ios', 'TestFlight', build ? `build ${build[1]}, ${build[2]}` : 'NO BUILD LISTED', '', build ? 'fine' : 'wrong');
+  const build = testFlightFrom(asc.stdout);
+  say('ios', 'TestFlight', build ? `build ${build.build}, ${build.state}` : 'NO BUILD LISTED', '', build ? 'fine' : 'wrong');
 
-  const waiting = /^\s+([\d.]+): PREPARE_FOR_SUBMISSION/m.exec(asc.stdout);
+  const waiting = stagedFrom(asc.stdout);
   say(
     'ios',
     'waiting for a press',
-    waiting ? `${waiting[1]} is staged` : 'nothing staged',
+    waiting ? `${waiting} is staged` : 'nothing staged',
     waiting ? 'Add for Review is the owner\'s, not this loop\'s' : '',
   );
 }
@@ -236,29 +245,9 @@ if (asc === null) {
 // --- the report --------------------------------------------------------------
 
 const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
-console.log(`Leela, measured ${stamp} UTC\n`);
+console.log(describe(findings, stamp));
 
-let surface = '';
-for (const line of findings) {
-  if (line.surface !== surface) {
-    surface = line.surface;
-    console.log(`  ${surface}`);
-  }
-  console.log(`    ${line.name.padEnd(26)} ${line.value}${line.note ? `   (${line.note})` : ''}`);
-}
-
-const wrong = findings.filter((line) => line.kind === 'wrong');
-const unasked = findings.filter((line) => line.kind === 'unasked');
-console.log(
-  wrong.length === 0
-    ? '\nEverything asked is well.'
-    : `\n${wrong.length} wrong: ${wrong.map((one) => one.name).join(', ')}`,
-);
-if (unasked.length > 0) {
-  // Said separately and on purpose: what was not measured is not a verdict,
-  // and the reader deserves to know which of the lines above are silence.
-  console.log(`Not asked here: ${unasked.map((one) => one.name).join(', ')}`);
-}
+const { wrong, unasked } = verdict(findings);
 
 if (process.argv.includes('--html')) {
   const rows = findings
@@ -281,4 +270,4 @@ p{opacity:.6}</style>
   console.log('\nWrote status.html');
 }
 
-process.exit(wrong.length === 0 ? 0 : 1);
+process.exit(verdict(findings).code);
