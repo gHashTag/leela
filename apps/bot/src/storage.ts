@@ -91,6 +91,32 @@ export interface Storage {
   stopPruning?: () => void;
 }
 
+/**
+ * The tick's record, as the initiative's `remember` wants it.
+ *
+ * Extracted from `index.ts` because it was three lines of wiring inline in a
+ * top-level module, which is a place no test can reach. Each end was held by
+ * a test of its own — `recordTick` round-trips through SQLite, the tick calls
+ * `remember`, `lastWordSaid` renders a record — and **nothing joined them**,
+ * so an argument in the wrong order would have passed every one of them and
+ * printed a banner that quietly said the wrong thing.
+ *
+ * Answers `undefined` when nothing durable is open, which is what the
+ * initiative wants: a deployment holding its games in memory forgets the tick
+ * when it forgets them, and a banner sentence the next restart makes a lie is
+ * worse than none.
+ */
+export function remembering(
+  storage: Pick<Storage, 'rememberTick'>,
+): ((at: number, summary: { sent: number; skipped: Record<string, number> }) => Promise<void>) | undefined {
+  const keep = storage.rememberTick;
+  if (keep === undefined) return undefined;
+
+  return async (at, summary) => {
+    keep(at, summary.sent, summary.skipped);
+  };
+}
+
 export interface StorageOptions {
   /** `LEELA_DB`. Undefined means games are held in memory on purpose. */
   path?: string;

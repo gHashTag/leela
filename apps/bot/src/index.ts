@@ -35,7 +35,7 @@ import { DirectChannels } from './delivery';
 import { createInitiative, lastWordSaid, nudgeHour } from './initiative';
 import { serveAsk, type StreamAsk, type Streamed } from './serve';
 import { offering, operatorIds, whyNoOperators, whyNothingIsSold } from './stars';
-import { openStorage } from './storage';
+import { openStorage, remembering } from './storage';
 import { supervise } from './supervisor';
 
 const token = process.env.BOT_TOKEN;
@@ -458,10 +458,9 @@ const initiative = createInitiative({
   hour: nudgeHour(),
   log: console.log,
   // Kept only where keeping means something: an in-memory deployment would
-  // forget it at the same moment it forgets the games.
-  remember: storage.rememberTick
-    ? async (at, summary) => storage.rememberTick?.(at, summary.sent, summary.skipped)
-    : undefined,
+  // forget it at the same moment it forgets the games. The adapter lives in
+  // storage.ts so a test can reach it — inline here, nothing could.
+  remember: remembering(storage),
 });
 
 /**
