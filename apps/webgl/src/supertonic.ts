@@ -256,6 +256,15 @@ export interface Fetching {
     ok: boolean;
     status: number;
     arrayBuffer(): Promise<ArrayBuffer>;
+    /**
+     * The response as it arrives, when the transport offers it.
+     *
+     * Optional, and read through a feature test rather than assumed: a test's
+     * fake response has no body, and neither does a browser old enough to
+     * lack streams. {@link readStreaming} falls back to `arrayBuffer` for
+     * both, which costs only the finer progress.
+     */
+    body?: { getReader(): { read(): Promise<{ done: boolean; value?: Uint8Array }> } } | null;
   }>;
   shelf?: Shelf | null;
   onProgress?: (progress: Progress) => void;
@@ -284,6 +293,58 @@ export interface Fetching {
  * failure early — the small files are first — instead of after four connections
  * have each spent a minute.
  */
+/**
+ * A response's bytes, reporting how many have arrived on the way.
+ *
+ * The whole reason this is not `response.arrayBuffer()`: progress used to be
+ * counted per completed weight, and the weights are 8 kB, 278 kB, 291 kB,
+ * 3.7 MB, 101 MB, 36 MB and 256 MB. So the bar went 0, 0, 0, 1, 27, 36 — and
+ * then stopped at 36 per cent for the 256 MB that is nearly two thirds of the
+ * download. Watched on the live board on 2026-08-23: it sits at "Fetching the
+ * voice… 36%" long enough that the honest reading is that it has hung, and
+ * the player who gives up there never hears the voice at all.
+ *
+ * `onChunk` is called with the bytes received **for this response so far**,
+ * not with a delta and not with a total: the caller knows what came before it
+ * and this function does not.
+ */
+export const readStreaming = async (
+  response: { arrayBuffer(): Promise<ArrayBuffer>; body?: { getReader(): { read(): Promise<{ done: boolean; value?: Uint8Array }> } } | null },
+  onChunk: (received: number) => void,
+): Promise<ArrayBuffer> => {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    // No stream to read: one report of the whole thing, which is exactly the
+    // old behaviour and still better than none.
+    const whole = await response.arrayBuffer();
+    onChunk(whole.byteLength);
+    return whole;
+  }
+
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    chunks.push(value);
+    received += value.byteLength;
+    onChunk(received);
+  }
+
+  // Joined once at the end rather than grown per chunk: a 256 MB buffer
+  // reallocated per 64 kB read is a quarter of a million copies.
+  const all = new Uint8Array(received);
+  let at = 0;
+  for (const chunk of chunks) {
+    all.set(chunk, at);
+    at += chunk.byteLength;
+  }
+
+  return all.buffer;
+};
+
 export const fetchWeights = async (
   weights: readonly Weight[],
   { fetch, shelf, onProgress, signal }: Fetching,
@@ -292,25 +353,51 @@ export const fetchWeights = async (
   const total = weights.reduce((all, weight) => all + weight.bytes, 0);
   let done = 0;
 
+  /**
+   * One report, clamped and never repeated.
+   *
+   * Clamped because `total` is the declared sum and a served file can be a few
+   * kilobytes larger than its entry here — a bar that reads 101% is a bar
+   * nobody trusts again. Never repeated because the last chunk of a download
+   * and the settling report after it are the same number, and a progress
+   * stream that says 36, 36 is a progress stream that has to be read twice to
+   * be believed.
+   */
+  let last = -1;
+  const report = (at: number): void => {
+    const clamped = Math.min(at, total);
+    if (clamped === last) return;
+    last = clamped;
+    onProgress?.({ done: clamped, total });
+  };
+
   for (const weight of weights) {
     const kept = shelf ? await shelf.got(weight.url) : null;
     if (kept) {
       got[weight.key] = kept;
+      done += kept.byteLength;
     } else {
       const response = await fetch(weight.url, signal ? { signal } : {});
       if (!response.ok) {
         throw new Error(`${weight.key} answered ${response.status}`);
       }
-      const bytes = await response.arrayBuffer();
+      // The running total, so the bar moves while the biggest file arrives
+      // rather than only after it.
+      const bytes = await readStreaming(response, (received) => report(done + received));
       got[weight.key] = bytes;
       // Deliberately not awaited for its answer's sake — the answer is only
       // ever "it was kept" or "it was not", and neither changes what happens
       // next. Awaited at all so a slow write does not race the next fetch.
       if (shelf) await shelf.keep(weight.url, bytes);
+      done += bytes.byteLength;
     }
 
-    done += weight.bytes;
-    onProgress?.({ done, total });
+    // The bytes that actually arrived, not the bytes this file says it
+    // expects: the two differ by tens of kilobytes per model, and a running
+    // total mixing both would step backwards when a served file is larger
+    // than its entry. `total` stays the declared sum because it is the only
+    // number available before anything has been fetched.
+    report(done);
   }
 
   return got;

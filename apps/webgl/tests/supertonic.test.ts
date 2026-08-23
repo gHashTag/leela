@@ -190,13 +190,54 @@ const someWeights: readonly Weight[] = [
   { key: 'b', url: 'https://host/b', bytes: 90 },
 ];
 
-/** A network that answers with the bytes it was told to, and counts its calls. */
-const network = (answer: (url: string) => { ok: boolean; status: number } = () => ({ ok: true, status: 200 })) => {
+/** How many bytes each fixture url is worth, from the weights themselves. */
+const sizeOf = (url: string): number => someWeights.find((one) => one.url === url)?.bytes ?? 1;
+
+/**
+ * A network that answers with the bytes it was told to, and counts its calls.
+ *
+ * It serves `sizeOf(url)` bytes, which sounds obvious and was not: it used to
+ * answer every url with a single byte while the weights beside it declared ten
+ * and ninety, and the progress test asserting `done: 10` passed anyway —
+ * because progress was counted from the declared numbers and never looked at
+ * what arrived. A fixture that need not agree with what it claims cannot
+ * catch a counter that does not either.
+ *
+ * `chunks` splits the body so a caller reading the stream sees it arrive in
+ * pieces; zero means no `body` at all, which is what an old browser and a
+ * plainer fake both look like.
+ */
+const network = (
+  answer: (url: string) => { ok: boolean; status: number } = () => ({ ok: true, status: 200 }),
+  { chunks = 0, serve }: { chunks?: number; serve?: (url: string) => number } = {},
+) => {
   const asked: string[] = [];
   const fetch = vi.fn(async (url: string) => {
     asked.push(url);
     const said = answer(url);
-    return { ...said, arrayBuffer: async () => new Uint8Array([url.length]).buffer };
+    const size = serve ? serve(url) : sizeOf(url);
+    const whole = new Uint8Array(size).fill(7);
+
+    if (chunks <= 0) {
+      return { ...said, arrayBuffer: async () => whole.buffer };
+    }
+
+    const each = Math.ceil(size / chunks);
+    let at = 0;
+    return {
+      ...said,
+      arrayBuffer: async () => whole.buffer,
+      body: {
+        getReader: () => ({
+          read: async () => {
+            if (at >= size) return { done: true as const, value: undefined };
+            const piece = whole.slice(at, Math.min(at + each, size));
+            at += piece.byteLength;
+            return { done: false as const, value: piece };
+          },
+        }),
+      },
+    };
   });
   return { asked, fetch };
 };
@@ -221,6 +262,49 @@ describe('fetching the weights', () => {
     ]);
   });
 
+  it('moves the bar while one file arrives, not only after it', async () => {
+    // The defect this is here for, watched on the live board on 2026-08-23:
+    // progress was counted per completed weight, and the weights are 8 kB,
+    // 278 kB, 291 kB, 3.7 MB, 101 MB, 36 MB and 256 MB. The bar went
+    // 0, 0, 0, 1, 27, 36 — and then sat at 36 per cent for the 256 MB that is
+    // nearly two thirds of the download. Long enough that the honest reading
+    // is that it has hung.
+    const { fetch } = network(undefined, { chunks: 5 });
+    const seen: number[] = [];
+
+    await fetchWeights(someWeights, { fetch, onProgress: ({ done }) => seen.push(done) });
+
+    // Ten reports, not two: five chunks of the ten-byte file and five of the
+    // ninety-byte one, each one a number the bar can move to.
+    expect(seen).toEqual([2, 4, 6, 8, 10, 28, 46, 64, 82, 100]);
+  });
+
+  it('never says the same number twice, and never says more than the whole', async () => {
+    // A served file larger than its declared size is the normal case here —
+    // the three big models are each tens of kilobytes off — so the clamp is
+    // not defensive coding, it is the arithmetic of the actual files.
+    const { fetch } = network(undefined, { chunks: 2, serve: (url) => sizeOf(url) * 2 });
+    const seen: number[] = [];
+
+    await fetchWeights(someWeights, { fetch, onProgress: ({ done }) => seen.push(done) });
+
+    expect(Math.max(...seen)).toBe(100);
+    expect(seen).toEqual([...new Set(seen)]);
+    expect([...seen].sort((a, b) => a - b)).toEqual(seen);
+  });
+
+  it('still reports once when the transport offers no stream to read', async () => {
+    // An old browser, and every fake response in this file that predates the
+    // streaming read: the whole arrives at once and is reported at once,
+    // which is exactly what it used to do everywhere.
+    const { fetch } = network(undefined, { chunks: 0 });
+    const seen: number[] = [];
+
+    await fetchWeights(someWeights, { fetch, onProgress: ({ done }) => seen.push(done) });
+
+    expect(seen).toEqual([10, 100]);
+  });
+
   it('takes what is on the shelf and does not ask the network for it', async () => {
     // This is what makes a second visit instant, and it is the whole reason
     // the player is only ever asked once.
@@ -238,7 +322,8 @@ describe('fetching the weights', () => {
   });
 
   it('runs the bar to the end from the shelf, not from zero', async () => {
-    const shelf: Shelf = { got: async () => new ArrayBuffer(1), keep: async () => true };
+    // The shelf serves the real files, so it serves their real sizes.
+    const shelf: Shelf = { got: async (url) => new ArrayBuffer(sizeOf(url)), keep: async () => true };
     const { asked, fetch } = network();
     const seen: number[] = [];
 
