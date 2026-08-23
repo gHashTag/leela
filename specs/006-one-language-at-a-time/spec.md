@@ -16,10 +16,20 @@ entry, and the entry is almost entirely text the reader cannot read.**
 
 `packages/content/data` is 8,089,297 bytes across 24 files: `rules.json` at
 1,514,788 and twenty-two `plans.<lang>.json` from 534,084 (Tamil) down. Every
-one of them is a static `import` in `packages/content/src/index.ts`, so every
-one is in the entry, so a Russian player downloads Tamil, Telugu, Marathi,
-Hindi, Japanese, Korean, Javanese, Punjabi, Urdu and thirteen more to read
-Russian.
+one of them is a static `import` in `packages/content/src/index.ts`.
+
+**Which of them actually ship was measured, not assumed**, by probing the live
+entry for a distinctive string from each file on 2026-08-23:
+
+- all twenty-two plan files are in it — `ta`, `te`, `hi`, `mr`, `ru`, `en`,
+  `zh` and `ur` were each found by a fifty-character excerpt of plan 10;
+- **`rules.json` is not.** Rollup already drops it: no consumer of the board
+  calls `rulesFor`. The 1.5 MB is a docs-generator cost, not a board cost, and
+  the earlier version of this spec was wrong to leave it as "the same question
+  asked of a different file" — there is no question to ask.
+
+So a Russian player downloads Tamil, Telugu, Marathi, Hindi, Japanese, Korean,
+Javanese, Punjabi, Urdu and thirteen more to read Russian.
 
 **This measurement is younger than the instrument that took it.** Until
 2026-08-23 the deployment check reported `text.length` — characters — as
@@ -34,11 +44,34 @@ text — Telegram hands it over, or `navigator.language` does — so the plans f
 that language can be a chunk fetched on demand, and the other twenty-one need
 never be fetched at all.
 
-Expected after the cut, if the code and one language are all that remains:
-roughly 1.5 MB decoded for a Latin-script language and under 2 MB for
-Devanagari or Tamil, against 6.6 MB — and on the wire, something near 400 kB
-against 1.79 MB. Those are estimates and the acceptance below is what makes
-them numbers.
+**This is no longer an estimate.** The experiment was run on 2026-08-23: the
+twenty-one non-English static imports were replaced with a map of
+`() => import('../data/plans.xx.json')` thunks, English kept static because it
+is the fallback and must always be present, and `apps/webgl` was built.
+
+| | decoded | gzip |
+|---|---|---|
+| the entry today | 6,624,622 | 1,790,216 |
+| the entry with only English | **334,820** | **112,100** |
+
+A 95 per cent cut. `plans.en.json` is 208,374 bytes of that, so the board's own
+code is about 126 kB. The experiment was then reverted — see below for why —
+and both suites are green again at 702 and 907.
+
+Two things the experiment established that no reading of the source would
+have:
+
+1. **The chunks were not emitted at all**, because nothing called the loader:
+   Rollup treated the whole map as dead. The 334,820 figure is therefore the
+   floor — the true post-cut entry is that plus one language, fetched
+   separately, so about 430 kB decoded for English or Russian and about 700 kB
+   for Tamil.
+2. **The blast radius is exactly twenty-four tests**: seventeen in
+   `@leela/content` across eight files (`languages-script`, `languages`,
+   `corrections`, `numbers`, `arithmetic`, `a-mark-that-closes-nothing`,
+   `nowhere-to-rest`) and seven in `@leela/bot` across two (`language`,
+   `commands`). Every one of them reads a non-English language through the
+   synchronous accessor, which is precisely the set that must await a load.
 
 ## The trap, and why it is not the blocker it looks like
 
@@ -58,13 +91,40 @@ same three flags a chunk fetch needs.
 simulator, because a flag being present in the source is not a chunk arriving
 in a WebView.
 
+## What the implementation must decide, with the reasons found
+
+**The language switch reloads the page** (`main.ts`, and its own comment says
+why: every string is read from `language` once at startup, so re-translating
+in place would leave a screen half in each). That is a gift — there is exactly
+one place a language has to be loaded, before the first read, and no in-place
+swap to thread anywhere.
+
+**A silent English fallback for an unloaded language is the bug this project
+keeps having.** `planFor` falling back without a word is how the truncating
+header and the falling-back voice both survived for weeks. The loader must
+make the absence speak — one line naming the language and that English was
+served in its place — so a forgotten `await` in some future entry point is
+found in a log rather than by a Russian player reading English.
+
+**Node and Metro must load everything.** The bot serves twenty-two languages
+from one process and cannot await per request, so it awaits once at startup;
+the same for anything else that is not the board. The web board is the only
+consumer that wants one.
+
+**One unknown is left, and it is small:** whether the load point can be a
+top-level `await` in `main.ts` under Vite's configured target, or whether it
+has to be a `.then()` before the rest of the module runs. Try the first; the
+second always works.
+
 ## Acceptance
 
 - The deployment check reports the entry under 2,000,000 bytes decoded, and
   the number is read from the report rather than asserted here.
-- A regression floor exists in CI: a `maxBytes` on the entry's check, so a
-  later change that puts all twenty-two languages back is a red build and not
-  a discovery six weeks later.
+- ~~A regression floor exists in CI~~ — **shipped 2026-08-23 (31f3e85)**:
+  `maxAssetBytes` on the 3D board's check, inherited by the code files it
+  names, set at 7,000,000 which is today and a little. Lowering it to about
+  2,000,000 is one line and a test asserts the current value, so the lowering
+  is deliberate rather than a drift.
 - The board still renders and still speaks its language on the web — smoke-run
   green against the live deployment.
 - **The iOS board, built from this bundle and run in the simulator, still
@@ -77,6 +137,14 @@ in a WebView.
 ## What this is not
 
 Not a change to what the board says, not a change to the twenty-two languages
-it offers, and not a font or asset change. The `rules.json` at 1.5 MB is the
-same question asked of a different file and is deliberately left for after
-this: one cut, measured, before the next.
+it offers, and not a font or asset change. `rules.json` needs nothing done to
+it: it is already absent from the board's entry, measured above.
+
+## Why the experiment was reverted rather than finished
+
+Twenty-four tests, three packages and two runtimes is more than fitted in the
+window left in the iteration that measured it, and the loop's contract prefers
+a thing finished to a thing half-done — especially with a cron that may start
+the next iteration on top of a working tree. What shipped instead was the
+ceiling this spec asks for (`maxAssetBytes`, 7,000,000, one line to lower),
+and this section, which turns the remaining work into transcription.
