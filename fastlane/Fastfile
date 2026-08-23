@@ -24,7 +24,22 @@
 
 default_platform(:ios)
 
-BOARD = File.expand_path("../../../leela/apps/webgl", __dir__)
+# Where the board's own checkout is, and why it is a variable.
+#
+# The default is the monorepo beside this one — which several agents share, and
+# which is therefore not always installed, not always current, and not always
+# the checkout holding the work being released. On 2026-08-23 this lane failed
+# exactly there: `npx vitest` in an uninstalled tree fetched a fresh vitest and
+# could not find `vite`, and a release built from that path would have carried
+# a board four days older than the one being shipped.
+#
+# `LEELA_BOARD_DIST` already lets `ios/sync_board.sh` take its built output
+# from elsewhere; this is the same escape for the checkout the tests run in, so
+# the two halves can be pointed at one place:
+#
+#   LEELA_BOARD_REPO=/tmp/leela-tma/apps/webgl \
+#   LEELA_BOARD_DIST=/tmp/leela-tma/apps/webgl/dist fastlane beta
+BOARD = ENV.fetch("LEELA_BOARD_REPO") { File.expand_path("../../../leela/apps/webgl", __dir__) }
 
 platform :ios do
   desc "Rebuild the 3D board so the app bundles the current one"
