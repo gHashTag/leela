@@ -72,14 +72,16 @@ describe('the payload', () => {
   it('is the sum of its files, never a number typed twice', () => {
     const summed = WEIGHTS.reduce((all, weight) => all + weight.bytes, 0);
     expect(PAYLOAD_BYTES).toBe(summed);
-    // Measured with HEAD against the pinned commits on 2026-08-22. A change
+    // Measured with HEAD against the pinned commit on 2026-08-23. A change
     // here means the pinned files changed, which is a thing to look at rather
-    // than a number to update.
-    expect(PAYLOAD_BYTES).toBe(96_194_041);
+    // than a number to update. It grew from 96 MB when the int8 graphs were
+    // dropped: they were quantised from an older release whose character
+    // table has no Cyrillic, so every Russian sentence died inside the model.
+    expect(PAYLOAD_BYTES).toBe(398_610_308);
   });
 
   it('quotes itself in the units a person reads', () => {
-    expect(megabytes(PAYLOAD_BYTES)).toBe(96.2);
+    expect(megabytes(PAYLOAD_BYTES)).toBe(398.6);
     expect(megabytes(0)).toBe(0);
     expect(megabytes(1_500_000)).toBe(15 / 10);
   });

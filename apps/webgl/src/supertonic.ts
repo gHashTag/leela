@@ -92,17 +92,26 @@ export const speaksNeurally = (language: Language): boolean =>
 // --- what would be downloaded --------------------------------------------------
 
 /**
- * Both repositories, pinned to a commit rather than to `main`.
+ * One repository, pinned to a commit rather than to `main`.
  *
- * `resolve/main` is whatever was pushed last. These are ninety megabytes that
- * run in the player's browser, and a URL that can change under us is a URL that
- * can change into something else; a commit hash is the cheapest thing that
+ * `resolve/main` is whatever was pushed last. These are hundreds of megabytes
+ * that run in the player's browser, and a URL that can change under us is a URL
+ * that can change into something else; a commit hash is the cheapest thing that
  * makes the bytes the same bytes tomorrow.
+ *
+ * **The graphs and the tables must come from the same release, and this cost a
+ * live session to learn.** A third party's int8 repackaging (dated March 2026)
+ * was used for the graphs while the character table came from Supertonic 3
+ * (May 2026), and every Russian sentence died inside onnxruntime with
+ * `indices element out of data bounds, idx=217 must be within [-163,162]`:
+ * the older graphs carry a 163-character vocabulary — Latin and little else —
+ * while the newer table indexes Cyrillic far above it. The fallback caught it
+ * and the player heard the plain voice, which is why it took a console line to
+ * find at all. Quantised weights are welcome here, but only quantised from
+ * *this* release.
  */
 const SUPERTONE =
   'https://huggingface.co/Supertone/supertonic-3/resolve/3cadd1ee6394adea1bd021217a0e650ede09a323';
-const QUANTISED =
-  'https://huggingface.co/csukuangfj2/sherpa-onnx-supertonic-tts-int8-2026-03-06/resolve/5dec5897b86e2b293790eedb5e1f561a3295651f';
 
 /** One file the voice needs, and how big it is. */
 export interface Weight {
@@ -128,10 +137,10 @@ export const WEIGHTS: readonly Weight[] = [
   { key: 'cfgs', url: `${SUPERTONE}/onnx/tts.json`, bytes: 8_253 },
   { key: 'indexer', url: `${SUPERTONE}/onnx/unicode_indexer.json`, bytes: 277_676 },
   { key: 'style', url: `${SUPERTONE}/voice_styles/${VOICE_STYLE}.json`, bytes: 291_479 },
-  { key: 'duration', url: `${QUANTISED}/duration_predictor.int8.onnx`, bytes: 1_521_526 },
-  { key: 'vocoder', url: `${QUANTISED}/vocoder.int8.onnx`, bytes: 25_977_132 },
-  { key: 'encoder', url: `${QUANTISED}/text_encoder.int8.onnx`, bytes: 27_431_318 },
-  { key: 'estimator', url: `${QUANTISED}/vector_estimator.int8.onnx`, bytes: 40_686_657 },
+  { key: 'duration', url: `${SUPERTONE}/onnx/duration_predictor.onnx`, bytes: 3_672_580 },
+  { key: 'vocoder', url: `${SUPERTONE}/onnx/vocoder.onnx`, bytes: 101_412_352 },
+  { key: 'encoder', url: `${SUPERTONE}/onnx/text_encoder.onnx`, bytes: 36_374_528 },
+  { key: 'estimator', url: `${SUPERTONE}/onnx/vector_estimator.onnx`, bytes: 256_573_440 },
 ];
 
 /** What the offer has to admit to. Summed, never typed twice. */
