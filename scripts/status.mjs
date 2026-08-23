@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * Where everything stands, in one command.
  *
