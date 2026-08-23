@@ -3,10 +3,13 @@ import {
   DEPLOYMENT_CHECKS,
   allPassed,
   assetCheck,
+  chunksIn,
   describeResults,
+  readerCost,
   runCheck,
   runChecks,
   type Check,
+  type CheckResult,
   type Fetcher,
 } from '../src/smoke';
 
@@ -323,5 +326,154 @@ describe('the size a check refuses', () => {
 
     expect(board?.maxAssetBytes).toBe(400_000);
     expect(assetCheck('assets/index-x.js', board as Check).maxBytes).toBe(400_000);
+  });
+});
+
+/**
+ * What a reader downloads, which is not what the page names.
+ *
+ * After the per-language split the 3D board's page names exactly one file —
+ * the entry, 209,779 bytes — and the million bytes behind it are chunks the
+ * entry names instead. A ceiling on the page's own assets would have passed a
+ * board that put all twenty-two languages back, as long as it put them behind
+ * a dynamic import.
+ */
+describe('what a reader downloads', () => {
+  it('reads every chunk an entry names, including the ones only its dep map holds', () => {
+    // Both shapes Vite writes: the `import()` call for a chunk fetched on
+    // demand, and the `__vite__mapDeps` array holding that chunk's own static
+    // dependencies — which is how three.js is reachable from an entry that
+    // never mentions it.
+    const entry = [
+      'const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./main-DHaLAJb4.js","./three-DAiD5YwZ.js"])))=>i.map(i=>d[i]);',
+      'ru:()=>a(()=>import("./plans.ru-BWyLN3Rz.js"),[],import.meta.url)',
+      'ta:()=>a(()=>import("./plans.ta-CC6xpm4e.js"),[],import.meta.url)',
+      "const style='./nothing.css'",
+    ].join('\n');
+
+    expect(chunksIn(entry)).toEqual([
+      'main-DHaLAJb4.js',
+      'three-DAiD5YwZ.js',
+      'plans.ru-BWyLN3Rz.js',
+      'plans.ta-CC6xpm4e.js',
+    ]);
+  });
+
+  it('names each chunk once, however many times the entry does', () => {
+    expect(chunksIn('import("./main-a.js");import("./main-a.js")')).toEqual(['main-a.js']);
+  });
+
+  it('counts the heaviest of the alternatives, not all of them and not the first', () => {
+    const files = [
+      { name: 'index-a.js', bytes: 209_779 },
+      { name: 'main-b.js', bytes: 140_217 },
+      { name: 'plans.jv-c.js', bytes: 181_710 },
+      { name: 'plans.ta-d.js', bytes: 530_005 },
+      { name: 'plans.en-e.js', bytes: 208_374 },
+    ];
+
+    const cost = readerCost(files, 'plans.');
+
+    // Everything always fetched, plus Tamil — the reader with the most text.
+    expect(cost.bytes).toBe(209_779 + 140_217 + 530_005);
+    expect(cost.took).toBe('plans.ta-d.js');
+  });
+
+  it('counts everything when nothing is an alternative', () => {
+    const cost = readerCost([
+      { name: 'a.js', bytes: 10 },
+      { name: 'b.js', bytes: 90 },
+    ]);
+
+    expect(cost.bytes).toBe(100);
+    expect(cost.took).toBeNull();
+  });
+
+  it('refuses a wire total when any part of it went unmeasured', () => {
+    // A sum missing three of its terms is not a smaller number, it is a wrong
+    // one — and a wrong one that looks like an improvement.
+    const partly = readerCost([
+      { name: 'a.js', bytes: 10, transferred: 4 },
+      { name: 'b.js', bytes: 90 },
+    ]);
+    expect(partly.transferred).toBeUndefined();
+
+    const whole = readerCost([
+      { name: 'a.js', bytes: 10, transferred: 4 },
+      { name: 'b.js', bytes: 90, transferred: 30 },
+    ]);
+    expect(whole.transferred).toBe(34);
+  });
+
+  it('weighs a whole board and fails it over the ceiling', async () => {
+    const chunks: Record<string, string> = {
+      'assets/index-a.js': 'import("./plans.ru-c.js");import("./main-b.js")',
+      'assets/main-b.js': 'x'.repeat(300),
+      'assets/plans.ru-c.js': 'x'.repeat(400),
+    };
+    const page = '<html><body><script src="./assets/index-a.js"></script></body></html>';
+
+    const fetcher: Fetcher = async (url) => {
+      const path = url.replace('https://example.test/', '');
+      if (path === '') return { status: 200, text: page };
+      const text = chunks[path];
+      return text === undefined ? { status: 404, text: '' } : { status: 200, text };
+    };
+
+    const check: Check = {
+      path: '',
+      what: 'the board',
+      ownAssets: true,
+      alternatives: 'plans.',
+      maxReaderBytes: 600,
+    };
+
+    const results = await runChecks('https://example.test', fetcher, [check]);
+    const weighed = results.find((one) => one.check.what.startsWith('what a reader downloads'));
+
+    // 47 of entry + 300 of code + 400 of Russian is over six hundred.
+    expect(weighed?.bytes).toBe(47 + 300 + 400);
+    expect(weighed?.ok).toBe(false);
+    expect(describeResults([weighed as CheckResult])).toContain('over the 600 ceiling');
+  });
+
+  it('refuses to call a total a total when a chunk did not answer', async () => {
+    const page = '<html><body><script src="./assets/index-a.js"></script></body></html>';
+    const fetcher: Fetcher = async (url) => {
+      const path = url.replace('https://example.test/', '');
+      if (path === '') return { status: 200, text: page };
+      if (path === 'assets/index-a.js') return { status: 200, text: 'import("./gone-b.js")' };
+      return { status: 404, text: '' };
+    };
+
+    const results = await runChecks('https://example.test', fetcher, [
+      { path: '', what: 'the board', ownAssets: true, maxReaderBytes: 9_000_000 },
+    ]);
+    const weighed = results.find((one) => one.check.what.startsWith('what a reader downloads'));
+
+    expect(weighed?.ok).toBe(false);
+    expect(describeResults([weighed as CheckResult])).toContain('gone-b.js');
+  });
+});
+
+/**
+ * The live board's own ceilings, asserted so that raising one is deliberate.
+ *
+ * Both have moved once already, and both moved *down*: the asset ceiling from
+ * 7,000,000 to 400,000 when the per-language cut landed, and this reader
+ * ceiling exists because that cut made the first one nearly blind.
+ */
+describe('the ceilings the 3D board ships with', () => {
+  const board = DEPLOYMENT_CHECKS.find((check) => check.what === 'the 3D board') as Check;
+
+  it('holds the entry to four hundred thousand bytes', () => {
+    expect(board.maxAssetBytes).toBe(400_000);
+  });
+
+  it('holds a whole reader to a million and a half, over twenty-one alternatives', () => {
+    expect(board.maxReaderBytes).toBe(1_500_000);
+    // Without this the guard would sum twenty-one languages nobody downloads
+    // and fail a board that is exactly right.
+    expect(board.alternatives).toBe('plans.');
   });
 });

@@ -186,8 +186,10 @@ describe('the assets the deployed page asks for', () => {
 
     expect(allPassed(results)).toBe(true);
     // Six hand-written, two generated from the root page, one generated from
-    // the classic board's.
-    expect(results).toHaveLength(9);
+    // the classic board's, and one weighing what a reader of the root page
+    // downloads — the last because the 3D board carries a `maxReaderBytes`
+    // and the page's own assets stopped being its whole cost.
+    expect(results).toHaveLength(10);
   });
 
   it('fail a page that names none of its own files', async () => {

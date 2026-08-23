@@ -54,6 +54,25 @@ export interface Check {
    */
   maxAssetBytes?: number;
   /**
+   * The ceiling on what one reader downloads, in bytes. See {@link readerCost}.
+   *
+   * `maxAssetBytes` watches the files the *page* names, and after the
+   * per-language split the page names one: the entry. Everything heavy — the
+   * board's own code, three.js, the reader's language — is a chunk the entry
+   * names instead, so the ceiling above would have guarded 209 kB and missed
+   * the other million. This is the number that matters to a phone.
+   */
+  maxReaderBytes?: number;
+  /**
+   * The prefix of chunks a reader takes **at most one of**, e.g. `plans.`.
+   *
+   * Twenty-one language chunks are built and exactly one is fetched, so
+   * summing them would report a cost nobody pays. Named per page rather than
+   * hard-coded because it is a fact about how that page splits its data, and
+   * the 2D board next door splits its own differently.
+   */
+  alternatives?: string;
+  /**
    * The path is an app's page, and its build names its assets with a content
    * hash. Expand it: one generated check per asset the page references, read
    * from the page's own directory — {@link assetsIn} says why they cannot be
@@ -122,6 +141,33 @@ export const DEPLOYMENT_CHECKS: Check[] = [
      * and this ceiling is honest about being smaller than that one.
      */
     maxAssetBytes: 400_000,
+    /**
+     * The chunks a reader takes at most one of: the twenty-one languages.
+     *
+     * `plans.` is the prefix Rollup gives them, from the source filenames
+     * `plans.<lang>.json`. Named here rather than assumed by {@link readerCost}
+     * because it is a fact about how this page splits its data.
+     */
+    alternatives: 'plans.',
+    /**
+     * One and a half million bytes: what the worst reader pays today, and a
+     * little.
+     *
+     * Measured against the live deployment on 2026-08-23 with this very
+     * check: 1,353,972 decoded and 340,683 on the wire, which is the Tamil
+     * reader — the one whose language has the most text. Before the
+     * per-language cut the same reader paid 7,098,593 and 1,910,736.
+     *
+     * This is the number that would have caught a board putting all
+     * twenty-two languages back behind a dynamic import, which
+     * `maxAssetBytes` above cannot see: after the cut the page names only the
+     * entry, and everything heavy hangs off it.
+     *
+     * Set at today rather than at a target, for the reason the other ceiling
+     * says: one set at a number nobody has reached is a red build that gets
+     * deleted, one set at today only ever moves down.
+     */
+    maxReaderBytes: 1_500_000,
     ownAssets: true,
   },
   {
@@ -331,6 +377,68 @@ export function assetCheck(path: string, of: Check): Check {
   };
 }
 
+/**
+ * Every chunk an entry names, as the build wrote them.
+ *
+ * Vite writes them as plain relative string literals — `import("./plans.ru-….js")`
+ * for the ones fetched on demand, and a `__vite__mapDeps` array holding the
+ * static dependencies of each of those, which is how `three.js` appears here
+ * without the entry importing it directly. So one scan of the entry is the
+ * whole graph a reader can reach through it, and no second hop is needed.
+ *
+ * What it does **not** see: a worker created at runtime from a chunk further
+ * down, which on this board is 4,990 bytes. {@link readerCost} says so rather
+ * than pretending to a completeness it has not got.
+ */
+export function chunksIn(code: string): string[] {
+  return [...new Set([...code.matchAll(/["'`]\.\/([A-Za-z0-9._-]+\.js)["'`]/g)].map((found) => found[1] as string))];
+}
+
+export interface Weighed {
+  name: string;
+  bytes: number;
+  transferred?: number;
+}
+
+export interface ReaderCost {
+  bytes: number;
+  /** Undefined when any part of it went unmeasured — never a partial sum. */
+  transferred?: number;
+  /** Which of the alternatives was counted, for the report. */
+  took: string | null;
+}
+
+/**
+ * What one reader downloads: everything, plus the largest of the alternatives.
+ *
+ * The largest rather than the average or the typical, because a ceiling is a
+ * promise about the worst reader, and the worst reader here is the one whose
+ * language has the most text — Tamil, at 530,005 bytes against Javanese's
+ * 181,710. A guard written around English would pass while a Tamil player
+ * downloaded twice what it allowed.
+ *
+ * The wire total is undefined unless every part reported one: a sum missing
+ * three of its terms is not a smaller number, it is a wrong one.
+ */
+export function readerCost(files: Weighed[], alternatives?: string): ReaderCost {
+  const optional = alternatives === undefined ? [] : files.filter((file) => file.name.startsWith(alternatives));
+  const always = alternatives === undefined ? files : files.filter((file) => !file.name.startsWith(alternatives));
+
+  const heaviest = optional.reduce<Weighed | null>(
+    (worst, file) => (worst === null || file.bytes > worst.bytes ? file : worst),
+    null,
+  );
+
+  const counted = heaviest === null ? always : [...always, heaviest];
+  const measured = counted.every((file) => file.transferred !== undefined);
+
+  return {
+    bytes: counted.reduce((all, file) => all + file.bytes, 0),
+    transferred: measured ? counted.reduce((all, file) => all + (file.transferred ?? 0), 0) : undefined,
+    took: heaviest?.name ?? null,
+  };
+}
+
 /** A failure reached by reading the page, with nothing fetched. */
 function verdict(check: Check, why: string): CheckResult {
   return { check, ok: false, status: 0, bytes: 0, missing: [], instead: [], why };
@@ -416,9 +524,70 @@ export async function runChecks(
     }
 
     if (assets.length === 0) results.push(noAssetsVerdict(check));
+
+    if (check.maxReaderBytes !== undefined) {
+      results.push(await weighTheReader(base, check, assets, fetcher));
+    }
   }
 
   return results;
+}
+
+/**
+ * What one reader of this page downloads, weighed.
+ *
+ * The entry is fetched, every chunk it names is fetched once, and
+ * {@link readerCost} takes all of them plus the largest of the alternatives.
+ * A chunk that does not answer is counted at zero and named in the report,
+ * because a total that silently drops a missing file reads as an improvement.
+ */
+async function weighTheReader(
+  base: string,
+  check: Check,
+  assets: string[],
+  fetcher: Fetcher,
+): Promise<CheckResult> {
+  const root = base.replace(/\/$/, '');
+  const entry = assets.find((asset) => asset.endsWith('.js'));
+  const what = `what a reader downloads for ${check.what}`;
+
+  if (entry === undefined) {
+    return verdict({ path: check.path, what }, 'the page names no code of its own to weigh');
+  }
+
+  const weigh = async (name: string): Promise<Weighed> => {
+    // Chunks sit beside the entry, so they resolve against its directory.
+    const beside = `${check.path}${entry.slice(0, entry.lastIndexOf('/') + 1)}${name}`;
+    const { status, text, transferred } = await fetcher(`${root}/${beside}`);
+    return status === 200
+      ? { name, bytes: byteLength(text), transferred }
+      : { name, bytes: 0, transferred: undefined };
+  };
+
+  const first = await weigh(entry.slice(entry.lastIndexOf('/') + 1));
+  const named = chunksIn(
+    (await fetcher(`${root}/${check.path}${entry}`)).text,
+  );
+  const rest = [];
+  for (const name of named) rest.push(await weigh(name));
+
+  const missing = [first, ...rest].filter((file) => file.bytes === 0).map((file) => file.name);
+  const cost = readerCost([first, ...rest], check.alternatives);
+  const ceiling = check.maxReaderBytes ?? Number.POSITIVE_INFINITY;
+
+  return {
+    check: { path: check.path, what, maxBytes: check.maxReaderBytes },
+    status: 200,
+    bytes: cost.bytes,
+    transferred: cost.transferred,
+    missing,
+    instead: [],
+    ok: cost.bytes <= ceiling && missing.length === 0,
+    why:
+      missing.length > 0
+        ? `these chunks did not answer, so the total is not a total: ${missing.join(', ')}`
+        : undefined,
+  };
 }
 
 /** A report a person can read in a CI log. */
