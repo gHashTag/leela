@@ -753,6 +753,54 @@ describe('finding a table by the player at it', () => {
   });
 });
 
+describe('the last tick, kept', () => {
+  it('answers nothing before a tick has ever run', () => {
+    expect(database('tick-none').lastTick()).toBeNull();
+  });
+
+  it('survives a restart, which is the whole point of it', async () => {
+    // The `[initiative]` line lives in a stream that resets: in six attempts to
+    // read the 06:00 tick the container had restarted past it five times. This
+    // is the assertion that makes the record worth having. specs/008.
+    const path = join(dir, 'tick-restart.db');
+
+    const first = new SqliteRoomQueries({ path, now: () => NOW });
+    first.recordTick(NOW, 1, { quieted: 1, 'doorstep-spent': 2 });
+    first.close();
+
+    const second = new SqliteRoomQueries({ path, now: () => NOW });
+    open.push(second);
+
+    expect(second.lastTick()).toEqual({
+      at: NOW,
+      sent: 1,
+      skipped: { quieted: 1, 'doorstep-spent': 2 },
+    });
+  });
+
+  it('keeps one row, overwritten, not a history to prune', () => {
+    const queries = database('tick-one-row');
+
+    queries.recordTick(NOW, 0, { lapsed: 1 });
+    queries.recordTick(NOW + 86_400_000, 2, {});
+
+    expect(queries.lastTick()).toEqual({ at: NOW + 86_400_000, sent: 2, skipped: {} });
+  });
+
+  it('reads a malformed record as no reasons rather than refusing to start', () => {
+    // Read at boot to print one sentence. A bot that will not start because a
+    // stored summary is unreadable has traded the product for a note about it.
+    const queries = database('tick-malformed');
+    queries.recordTick(NOW, 1, { quieted: 1 });
+    // Whatever a future version, or a hand, might leave there.
+    (queries as unknown as { db: { exec(sql: string): void } }).db.exec(
+      "UPDATE last_tick SET skipped = 'not json at all' WHERE id = 1",
+    );
+
+    expect(queries.lastTick()).toEqual({ at: NOW, sent: 1, skipped: {} });
+  });
+});
+
 describe('the initiative’s memory', () => {
   it('answers nothing for a player never nudged', () => {
     expect(database('nudge-unknown').nudgeOf('u1')).toBeNull();

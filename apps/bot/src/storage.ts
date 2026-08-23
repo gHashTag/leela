@@ -65,6 +65,17 @@ export interface Storage {
   /** Whether games survive a restart. */
   durable: boolean;
   /**
+   * The last daily word, and where to keep the next one.
+   *
+   * Two functions rather than a store, because there is exactly one row and
+   * two things anybody does with it. Absent when nothing durable is open: an
+   * in-memory deployment forgets its tick at the same moment it forgets its
+   * games, and pretending otherwise would put a sentence in the banner that
+   * the next restart makes a lie.
+   */
+  lastTick?: () => { at: number; sent: number; skipped: Record<string, number> } | null;
+  rememberTick?: (at: number, sent: number, skipped: Record<string, number>) => void;
+  /**
    * Why they do not, when a path was given and could not be used.
    *
    * Absent when no path was asked for: choosing not to keep games is not a
@@ -144,6 +155,8 @@ export function openStorage({
       steps: sqliteStepSink(queries),
       nudges: sqliteNudgeStore(queries),
       entitlements: sqliteEntitlements(queries),
+      lastTick: () => queries.lastTick(),
+      rememberTick: (at, sent, skipped) => queries.recordTick(at, sent, skipped),
       durable: true,
       stopPruning,
     };

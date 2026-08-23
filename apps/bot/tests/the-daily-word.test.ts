@@ -122,13 +122,15 @@ function fakeApi({
 
 interface HarnessOptions {
   rooms: Room[];
+  /** Where the tick's summary is kept, when a test is asking about that. */
+  remember?: (at: number, summary: { sent: number; skipped: Record<string, number> }) => Promise<void>;
   blocked?: Set<string>;
   keyboardRefused?: Set<string>;
   hour?: number;
   nudges?: MemoryNudgeStore;
 }
 
-async function harness({ rooms, blocked, keyboardRefused, hour, nudges: memory }: HarnessOptions) {
+async function harness({ rooms, blocked, keyboardRefused, hour, nudges: memory, remember }: HarnessOptions) {
   const store = new MemoryRoomStore();
   for (const room of rooms) await store.save(room);
 
@@ -146,6 +148,7 @@ async function harness({ rooms, blocked, keyboardRefused, hour, nudges: memory }
     channels,
     launchUrl: 'https://t27.ai/leela/',
     hour,
+    remember,
     now: () => MORNING,
     schedule: (run, inMs) => {
       armed.push({ run, inMs });
@@ -300,6 +303,32 @@ describe('one tick, one morning', () => {
     // The allowance stopped where it stopped: two spent, and the third is not
     // owed to somebody who is playing.
     expect(await table.nudges.of('u-waiting')).toMatchObject({ doorsteps: 2 });
+  });
+
+  it('hands the tick to whoever is keeping it, exactly once', async () => {
+    // The line the tick logs is read by whoever is watching; this is read by
+    // whoever is not, which has been everybody. specs/008.
+    const kept: Array<{ at: number; sent: number; skipped: Record<string, number> }> = [];
+    const table = await harness({
+      rooms: [tableOf('chat-1', [{ id: 'u-waiting', state: waiting(), lastRollAt: null }])],
+      remember: async (at, summary) => {
+        kept.push({ at, sent: summary.sent, skipped: { ...summary.skipped } });
+      },
+    });
+
+    await table.initiative.runTick(MORNING);
+
+    expect(kept).toEqual([{ at: MORNING, sent: 1, skipped: {} }]);
+  });
+
+  it('runs the tick anyway when nothing is keeping it', async () => {
+    // The daily word is the product; the record is a note about it. A
+    // deployment with nowhere to write must still write to the player.
+    const table = await harness({
+      rooms: [tableOf('chat-1', [{ id: 'u-waiting', state: waiting(), lastRollAt: null }])],
+    });
+
+    expect(await table.initiative.runTick(MORNING)).toEqual({ sent: 1, skipped: {} });
   });
 
   it('says the summary even when there was nobody to write to', async () => {

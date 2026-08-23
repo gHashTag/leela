@@ -12,6 +12,7 @@ import {
   nextExcerpt,
   nudgeHour,
   type Candidate,
+  lastWordSaid,
 } from '../src/initiative';
 import { MemoryNudgeStore, NEVER_NUDGED } from '../src/store';
 
@@ -409,5 +410,40 @@ describe('the fresh-start arm', () => {
   it('the daily word carries no comeback line', () => {
     const said = compose('en', planFor('en', 12), null, { firstNudge: false, word: 'daily' });
     expect(said.text).not.toContain('begin again');
+  });
+});
+
+/**
+ * The last daily word, said at startup so it outlives the log.
+ *
+ * The `[initiative]` line fires at 06:00 UTC and is the only thing anybody
+ * knows about whether the daily word works. In six attempts to read it the
+ * container had restarted past it five times: `railway logs` shows the current
+ * container, and a fact worth checking that lives only in a stream that resets
+ * is a fact nobody checks. specs/008.
+ */
+describe('the last daily word, said at startup', () => {
+  it('says so plainly when this database has never ticked', () => {
+    // Not a sentence with a hole in it: "none yet" is an answer, and a blank
+    // where a date belongs reads as a bug in the printing.
+    expect(lastWordSaid(null)).toBe('Last daily word: none yet on this database.');
+  });
+
+  it('names the moment, the count and every reason', () => {
+    const said = lastWordSaid({
+      at: Date.UTC(2026, 7, 24, 6, 0, 0),
+      sent: 1,
+      skipped: { quieted: 1, 'doorstep-spent': 2 },
+    });
+
+    expect(said).toBe(
+      'Last daily word: 2026-08-24 06:00 UTC — sent 1; skipped: quieted 1, doorstep-spent 2.',
+    );
+  });
+
+  it('says none rather than trailing off when nothing was skipped', () => {
+    expect(lastWordSaid({ at: Date.UTC(2026, 7, 24, 6, 0, 0), sent: 3, skipped: {} })).toContain(
+      'sent 3; skipped: none.',
+    );
   });
 });

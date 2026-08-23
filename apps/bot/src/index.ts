@@ -32,7 +32,7 @@ import {
 import { createBot, miniAppUrl } from './bot';
 import { PAID_COMMANDS, menuFor } from './commands';
 import { DirectChannels } from './delivery';
-import { createInitiative, nudgeHour } from './initiative';
+import { createInitiative, lastWordSaid, nudgeHour } from './initiative';
 import { serveAsk, type StreamAsk, type Streamed } from './serve';
 import { offering, operatorIds, whyNoOperators, whyNothingIsSold } from './stars';
 import { openStorage } from './storage';
@@ -268,6 +268,16 @@ console.log(
  * `railway logs` can tell which release is deployed: a bot that predates the
  * loading prints no such line at all.
  */
+/**
+ * What the last daily word did, said at startup.
+ *
+ * The tick logs its own line at 06:00 UTC and that line is unchanged — but it
+ * lives in a stream that resets, and in six attempts to read it the container
+ * had restarted past it five times. This is the same fact, kept, for the
+ * reader who arrived after.
+ */
+console.log(lastWordSaid(storage.lastTick?.() ?? null));
+
 const withText = loadedLanguages();
 console.log(
   withText.length === LANGUAGES.length
@@ -447,6 +457,11 @@ const initiative = createInitiative({
   launchUrl: miniAppUrl(),
   hour: nudgeHour(),
   log: console.log,
+  // Kept only where keeping means something: an in-memory deployment would
+  // forget it at the same moment it forgets the games.
+  remember: storage.rememberTick
+    ? async (at, summary) => storage.rememberTick?.(at, summary.sent, summary.skipped)
+    : undefined,
 });
 
 /**

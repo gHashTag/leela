@@ -170,6 +170,28 @@ CREATE TABLE IF NOT EXISTS intentions (
 -- the first message the one that names /quiet; excerpt is the index last
 -- read out, so the next is never the one just heard; quieted survives a
 -- restart because an opt-out forgotten is a promise broken.
+-- The last daily word, so it outlives the log it was printed to.
+--
+-- One row, id 1, overwritten each morning. The [initiative] line an operator
+-- reads live is unchanged; this is for the operator who arrived after the
+-- container restarted, which is every reader the tick has ever had — it fires
+-- at 06:00 UTC and was readable once in six attempts, because railway logs
+-- shows the current container and the container had restarted since.
+--
+-- No backticks in here: this whole schema is a template literal, and one in a
+-- comment ends the string. Cost a compile the first time.
+--
+-- The skipped column is the summary's own object as JSON: the reasons are a union that
+-- grows, and a column per reason would need a migration every time the engine
+-- learns a new way to stay quiet.
+CREATE TABLE IF NOT EXISTS last_tick (
+  id         INTEGER PRIMARY KEY CHECK (id = 1),
+  at         INTEGER NOT NULL,
+  sent       INTEGER NOT NULL,
+  skipped    TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS nudges (
   user_id    TEXT PRIMARY KEY,
   sent_at    INTEGER,
@@ -247,6 +269,29 @@ export function addMissingColumns(db: Database, schema: string = SCHEMA): string
   }
 
   return added;
+}
+
+/**
+ * The skip reasons, back from the JSON they were stored as.
+ *
+ * Answers an empty object for anything it cannot read, rather than throwing:
+ * this is read at boot to print one sentence, and a bot that will not start
+ * because a stored summary is malformed has traded the product for a note
+ * about the product.
+ */
+function parseSkipped(stored: unknown): Record<string, number> {
+  if (typeof stored !== 'string') return {};
+  try {
+    const found: unknown = JSON.parse(stored);
+    if (typeof found !== 'object' || found === null || Array.isArray(found)) return {};
+    return Object.fromEntries(
+      Object.entries(found as Record<string, unknown>).filter(
+        ([, count]) => typeof count === 'number' && Number.isFinite(count),
+      ),
+    ) as Record<string, number>;
+  } catch {
+    return {};
+  }
 }
 
 /** SQLite has no boolean; 1 and 0 have to be read back as one. */
@@ -661,6 +706,37 @@ export class SqliteRoomQueries implements RoomQueries {
            updated_at = excluded.updated_at`,
       )
       .run(userId, at, excerpt, doorstep ? 1 : 0, this.now());
+  }
+
+  /** What the last tick did, or null when this deployment has never ticked. */
+  lastTick(): { at: number; sent: number; skipped: Record<string, number> } | null {
+    const row = this.db.prepare('SELECT at, sent, skipped FROM last_tick WHERE id = 1').get() as
+      | Record<string, unknown>
+      | undefined;
+    if (!row) return null;
+
+    return {
+      at: row.at as number,
+      sent: row.sent as number,
+      // A row written by a future version with a shape this one cannot read is
+      // not a reason to take the bot down at boot: the sentence is a
+      // convenience and the tick is the product.
+      skipped: parseSkipped(row.skipped),
+    };
+  }
+
+  /** Remember a tick. One row: the question is whether the last one worked. */
+  recordTick(at: number, sent: number, skipped: Record<string, number>): void {
+    this.db
+      .prepare(
+        `INSERT INTO last_tick (id, at, sent, skipped, updated_at) VALUES (1, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET
+           at = excluded.at,
+           sent = excluded.sent,
+           skipped = excluded.skipped,
+           updated_at = excluded.updated_at`,
+      )
+      .run(at, sent, JSON.stringify(skipped), this.now());
   }
 
   /** `/quiet`, either direction — and it must not invent a send that never was. */

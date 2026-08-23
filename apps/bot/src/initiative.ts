@@ -319,6 +319,32 @@ export function compose(
   return { text: lines.join('\n'), excerpt: index };
 }
 
+/**
+ * The last tick, said as one sentence a person reads at startup.
+ *
+ * Pure over its input so a test holds it without a process — and separate from
+ * the `[initiative]` line the tick itself logs, which is unchanged. That line
+ * is for an operator watching live; this is for the one who arrived after the
+ * container restarted, which is every reader the tick has ever had. It fires
+ * at 06:00 UTC, and in six attempts to read it the log window had rolled past
+ * it five times.
+ *
+ * `null` is a deployment that has never ticked, and it says so rather than
+ * printing a sentence with a hole in it.
+ */
+export function lastWordSaid(
+  record: { at: number; sent: number; skipped: Record<string, number> } | null,
+): string {
+  if (record === null) return 'Last daily word: none yet on this database.';
+
+  const when = new Date(record.at).toISOString().slice(0, 16).replace('T', ' ');
+  const reasons = Object.entries(record.skipped)
+    .map(([because, count]) => `${because} ${count}`)
+    .join(', ');
+
+  return `Last daily word: ${when} UTC — sent ${record.sent}; skipped: ${reasons || 'none'}.`;
+}
+
 /** What one tick did, for the summary line and for tests. */
 export interface TickSummary {
   sent: number;
@@ -357,6 +383,14 @@ export interface InitiativeOptions {
   /** The UTC hour the word goes out. `nudgeHour()`'s answer. */
   hour?: number;
   now?: () => number;
+  /**
+   * Where the summary is kept so it outlives the log.
+   *
+   * Optional, and a tick that cannot store one still runs: the daily word is
+   * the product and the record is a note about it. Injected rather than
+   * reached for, like everything else this engine touches.
+   */
+  remember?: (at: number, summary: TickSummary) => Promise<void>;
   /** Injected so a test never waits for morning, as storage.ts injects its own. */
   schedule?: (run: () => void, inMs: number) => () => void;
   log?: (message: string) => void;
@@ -391,6 +425,7 @@ export function createInitiative({
   launchUrl,
   hour = DEFAULT_NUDGE_HOUR,
   now = Date.now,
+  remember,
   schedule = (run, inMs) => {
     const timer = setTimeout(run, inMs);
     // A morning word is not a reason to keep the process alive.
@@ -519,6 +554,10 @@ export function createInitiative({
       .map(([because, count]) => `${because} ${count}`)
       .join(', ');
     log(`[initiative] sent ${summary.sent}; skipped: ${reasons || 'none'}`);
+
+    // Kept as well as said. The line above is read by whoever is watching;
+    // this is read by whoever is not, which has been everybody.
+    await remember?.(at, summary);
 
     return summary;
   }
