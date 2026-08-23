@@ -229,7 +229,7 @@ cd packages/engine && bun test
 | Package | Tests | State |
 |---|---|---|
 | `@leela/engine` | 544 | rules, four variants, sessions, turn gating, seeded dice |
-| `@leela/content` | 701 | 22 languages of plans, 2 of the game's own voice |
+| `@leela/content` | 702 | 22 languages of plans, 2 of the game's own voice |
 | `@leela/journal` | 90 | the path as a file, and what came back — shared by the bot and the mini app |
 | `@leela/db` | 116 | schema, mapping, SQL migrations, legacy import |
 | `@leela/storage` | 38 | addressing files in an S3-compatible bucket, after Firebase Storage |
@@ -242,7 +242,7 @@ cd packages/engine && bun test
 | `@leela/webgl` | 535 | the board in three dimensions, in a browser, on the same rules the apps play |
 | everything else | — | not yet ported |
 
-4428 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+4429 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 

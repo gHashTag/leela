@@ -350,6 +350,15 @@ const EN = {
   // Phrased in the second person and without a name: the mini app is one
   // player alone, where the bot is a table. The same sentence would be wrong
   // in both, so these are their own keys rather than shared ones.
+  /**
+   * The header while nobody is on the board yet.
+   *
+   * One line, in a header that does not wrap: the Russian sentence was
+   * fifty-two characters and the phone cut it to "Бросайте кубик: войти в
+   * игру можн…" — visible in the App Store screenshots, where a truncated
+   * sentence is the shopfront. A header is a place with a width, so the
+   * translations are held to it by a test.
+   */
   'app.waiting': 'Throw a six to enter the game',
   'app.entered': 'A six. You enter the game on {to}. {title}',
   'app.needSix': 'You threw {value}. It takes a six to enter the game.',
@@ -1040,7 +1049,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
     'Это не читается как клетка. Пришлите её целиком после /take — вместе с заголовком.',
   'square.notKept': 'Этот бот не хранит отчёты, поэтому класть клетку некуда.',
 
-  'app.waiting': 'Бросайте кубик: войти в игру можно только с шестёрки',
+  'app.waiting': 'Бросьте шестёрку, чтобы войти',
   'app.entered': 'Шестёрка. Вы входите в игру на {to}. {title}',
   'app.needSix': 'Выпало {value}. Войти в игру можно только с шестёрки.',
   'app.noRoom': 'Выпало {value}. Не хватает места — вы остаётесь на {to}.',
