@@ -175,6 +175,7 @@ CREATE TABLE IF NOT EXISTS nudges (
   sent_at    INTEGER,
   excerpt    INTEGER,
   quieted    INTEGER NOT NULL DEFAULT 0,
+  doorsteps  INTEGER NOT NULL DEFAULT 0,
   updated_at INTEGER NOT NULL
 );
 
@@ -615,9 +616,11 @@ export class SqliteRoomQueries implements RoomQueries {
   }
 
   /** What the initiative remembers about this player, or nothing yet. */
-  nudgeOf(userId: string): { sentAt: number | null; excerpt: number | null; quieted: boolean } | null {
+  nudgeOf(
+    userId: string,
+  ): { sentAt: number | null; excerpt: number | null; quieted: boolean; doorsteps: number } | null {
     const row = this.db
-      .prepare('SELECT sent_at, excerpt, quieted FROM nudges WHERE user_id = ?')
+      .prepare('SELECT sent_at, excerpt, quieted, doorsteps FROM nudges WHERE user_id = ?')
       .get(userId) as Record<string, unknown> | undefined;
     if (!row) return null;
 
@@ -625,6 +628,10 @@ export class SqliteRoomQueries implements RoomQueries {
       sentAt: (row.sent_at as number | null) ?? null,
       excerpt: (row.excerpt as number | null) ?? null,
       quieted: asBoolean(row.quieted),
+      // A row written before the column existed reads NULL through the
+      // migration's default, and a player who has heard no doorstep word has
+      // heard none: both are zero.
+      doorsteps: (row.doorsteps as number | null) ?? 0,
     };
   }
 
@@ -632,16 +639,18 @@ export class SqliteRoomQueries implements RoomQueries {
    * Remember a send. The upsert leaves `quieted` alone: a send never speaks
    * for `/quiet`, and the two halves of one row are written by different acts.
    */
-  recordNudge(userId: string, at: number, excerpt: number): void {
+  recordNudge(userId: string, at: number, excerpt: number, doorstep = false): void {
     this.db
       .prepare(
-        `INSERT INTO nudges (user_id, sent_at, excerpt, quieted, updated_at) VALUES (?, ?, ?, 0, ?)
+        `INSERT INTO nudges (user_id, sent_at, excerpt, quieted, doorsteps, updated_at)
+         VALUES (?, ?, ?, 0, ?, ?)
          ON CONFLICT(user_id) DO UPDATE SET
            sent_at = excluded.sent_at,
            excerpt = excluded.excerpt,
+           doorsteps = nudges.doorsteps + excluded.doorsteps,
            updated_at = excluded.updated_at`,
       )
-      .run(userId, at, excerpt, this.now());
+      .run(userId, at, excerpt, doorstep ? 1 : 0, this.now());
   }
 
   /** `/quiet`, either direction — and it must not invent a send that never was. */
@@ -905,8 +914,11 @@ export function sqliteNudgeStore(queries: SqliteRoomQueries): NudgeStore {
       return queries.nudgeOf(userId) ?? NEVER_NUDGED;
     },
 
-    async record(userId: string, sent: { at: number; excerpt: number }): Promise<void> {
-      queries.recordNudge(userId, sent.at, sent.excerpt);
+    async record(
+      userId: string,
+      sent: { at: number; excerpt: number; doorstep?: boolean },
+    ): Promise<void> {
+      queries.recordNudge(userId, sent.at, sent.excerpt, sent.doorstep === true);
     },
 
     async setQuieted(userId: string, quieted: boolean): Promise<void> {

@@ -729,6 +729,16 @@ const EN = {
   // plan's own canon text, so no key here carries it.
   'nudge.freshStart':
     'Monday is a good day to begin again — the board kept your place.',
+  // The doorstep word, for a player who took a seat and never threw a six.
+  // It carries no plan text because they stand on no plan — that is the whole
+  // point of it — and it must not count what has not happened: a doorstep is
+  // not a failure, it is the position before the first move.
+  'nudge.doorstep':
+    'A six opens the board. Until it falls you are at the doorstep — nothing ' +
+    'is lost there, and nothing has begun.',
+  // Its own call, because `nudge.cta` says "from where you stand" and this
+  // player stands nowhere yet.
+  'nudge.doorstepCta': 'One throw is the whole of it — /roll casts the die.',
   'nudge.standing': 'You are standing on {plan}. {title}.',
   // One call back into the game, and it has to stand on its own: the board
   // button rides beneath it when Telegram takes the keyboard, and when the
@@ -1224,6 +1234,10 @@ const RU: Partial<Record<MessageKey, Message>> = {
 
   'nudge.freshStart':
     'Понедельник — хороший день, чтобы начать заново. Доска сохранила ваше место.',
+  'nudge.doorstep':
+    'Доску открывает шестёрка. Пока она не выпала, вы у порога — там ничего ' +
+    'не потеряно и ничего ещё не начато.',
+  'nudge.doorstepCta': 'Всё дело в одном броске — /roll бросает кубик.',
   'nudge.standing': 'Вы стоите на плане {plan}. {title}.',
   'nudge.cta': 'Игра продолжается там, где вы стоите — /roll вернёт вас в неё.',
   'nudge.wayOut': 'Это слово приходит раз в день. /quiet останавливает его в любой момент.',

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CLASSIC } from '@leela/engine';
 import type { GameState } from '@leela/engine';
-import { planFor, type Language } from '@leela/content';
+import { messageFor, planFor, type Language } from '@leela/content';
 import type { Room } from '../src/commands';
 import { DirectChannels } from '../src/delivery';
 import { createInitiative, excerptsOf, type NudgeApi } from '../src/initiative';
@@ -158,6 +158,10 @@ async function harness({ rooms, blocked, keyboardRefused, hour, nudges: memory }
 
   return {
     initiative,
+    // Returned so a test can move a player mid-run: the doorstep arm's last
+    // case is somebody who throws their six between two mornings, and the
+    // room they sit in has to change for that to be tested at all.
+    store,
     sent,
     nudges,
     channels,
@@ -187,7 +191,12 @@ describe('one tick, one morning', () => {
     // The first message ever sent ends with the way out.
     expect(word.text.trim().endsWith('/quiet stops it whenever you wish.')).toBe(true);
 
-    expect(await table.nudges.of('u1')).toEqual({ sentAt: MORNING, excerpt: 0, quieted: false });
+    expect(await table.nudges.of('u1')).toEqual({
+      sentAt: MORNING,
+      excerpt: 0,
+      quieted: false,
+      doorsteps: 0,
+    });
   });
 
   it('skips every sleeping kind, each under its own name in the one summary line', async () => {
@@ -205,12 +214,22 @@ describe('one tick, one morning', () => {
     });
     await table.nudges.setQuieted('u-quiet', true);
     table.channels.refuse('u-closed');
+    // The waiting player is here to be skipped, so their three doorstep words
+    // are spent first — through the real path, three recorded sends on days
+    // that are not this one, rather than a counter set by hand.
+    for (const day of [9, 8, 7]) {
+      await table.nudges.record('u-waiting', {
+        at: MORNING - day * DAY,
+        excerpt: 0,
+        doorstep: true,
+      });
+    }
 
     const summary = await table.initiative.runTick(MORNING);
 
     expect(summary.sent).toBe(1);
     expect(summary.skipped).toEqual({
-      'not-standing': 1,
+      'doorstep-spent': 1,
       finished: 1,
       lapsed: 1,
       quieted: 1,
@@ -222,9 +241,65 @@ describe('one tick, one morning', () => {
     const lines = table.summaryLines();
     expect(lines).toHaveLength(1);
     expect(lines[0]).toContain('sent 1');
-    for (const reason of ['not-standing 1', 'finished 1', 'lapsed 1', 'quieted 1', 'no-channel 1']) {
+    for (const reason of [
+      'doorstep-spent 1',
+      'finished 1',
+      'lapsed 1',
+      'quieted 1',
+      'no-channel 1',
+    ]) {
       expect(lines[0]).toContain(reason);
     }
+  });
+
+  it('knocks three times on a player who never entered, and then not again', async () => {
+    const table = await harness({
+      rooms: [tableOf('chat-1', [{ id: 'u-waiting', state: waiting(), lastRollAt: null }])],
+    });
+
+    const days = [0, 1, 2, 3, 4].map((day) => MORNING + day * DAY);
+    const summaries = [];
+    for (const at of days) summaries.push(await table.initiative.runTick(at));
+
+    expect(summaries.map((one) => one.sent)).toEqual([1, 1, 1, 0, 0]);
+    expect(summaries.slice(3).map((one) => one.skipped)).toEqual([
+      { 'doorstep-spent': 1 },
+      { 'doorstep-spent': 1 },
+    ]);
+
+    // Three words, and the first of them carried the way out.
+    expect(table.sent).toHaveLength(3);
+    expect(table.sent[0].text).toContain('/quiet');
+    expect(table.sent[1].text).not.toContain('/quiet');
+    for (const word of table.sent) {
+      expect(word.text).toContain(messageFor('en', 'nudge.doorstep'));
+      expect(word.text).not.toContain('standing on');
+    }
+    expect(await table.nudges.of('u-waiting')).toMatchObject({ doorsteps: 3 });
+  });
+
+  it('stops the doorstep word the morning after the six falls', async () => {
+    const table = await harness({
+      rooms: [tableOf('chat-1', [{ id: 'u-waiting', state: waiting(), lastRollAt: null }])],
+    });
+
+    await table.initiative.runTick(MORNING);
+    await table.initiative.runTick(MORNING + DAY);
+
+    // The six falls: the player enters and stands on a plan.
+    await table.store.save(
+      tableOf('chat-1', [
+        { id: 'u-waiting', state: standing(6), lastRollAt: MORNING + DAY + 60_000 },
+      ]),
+    );
+
+    const summary = await table.initiative.runTick(MORNING + 2 * DAY);
+
+    expect(summary).toEqual({ sent: 1, skipped: {} });
+    expect(table.sent[2].text).toContain('You are standing on 6');
+    // The allowance stopped where it stopped: two spent, and the third is not
+    // owed to somebody who is playing.
+    expect(await table.nudges.of('u-waiting')).toMatchObject({ doorsteps: 2 });
   });
 
   it('says the summary even when there was nobody to write to', async () => {

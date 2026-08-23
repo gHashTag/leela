@@ -59,6 +59,17 @@ export const LAPSED_AFTER_MS = 14 * DAY_MS;
 export const FRESH_START_UNTIL_MS = 35 * DAY_MS;
 
 /**
+ * How many doorstep words a player who never entered may be sent: three.
+ *
+ * The third arm's whole bound, and a count rather than a window because the
+ * player it speaks to carries no timestamp: a seat stamps `lastRollAt` on a
+ * throw and `lastReportAt` on a report, and somebody who has done neither has
+ * neither. Three invitations and then silence for ever is what a fortnight
+ * meant, said in the one unit this player's row actually has.
+ */
+export const DOORSTEP_WORDS = 3;
+
+/**
  * The default hour the daily word goes out, in UTC because the clock that
  * fires it is UTC: Railway runs its containers on UTC, so 6 here is 09:00 in
  * Moscow — morning where the players are, which is the honest v1 of send-time
@@ -100,9 +111,15 @@ function utcDayOf(at: number): number {
  * The first six are `eligible`'s sleeping conditions; the last two are what a
  * send itself can answer — a 403 that closes the channel, and a failure that
  * is nobody's refusal.
+ *
+ * `not-standing` was the first of them and is gone, which is the point of the
+ * doorstep arm: it named a state a player could never leave, so the one
+ * player in the first production tick was skipped for ever. What replaces it
+ * is `doorstep-spent` — the same silence, but only after three invitations
+ * were actually sent.
  */
 export type SkipReason =
-  | 'not-standing'
+  | 'doorstep-spent'
   | 'finished'
   | 'no-channel'
   | 'lapsed'
@@ -125,28 +142,47 @@ export interface Candidate {
   quieted: boolean;
   /** When the daily word last reached them, epoch ms. Null if never. */
   lastNudgedAt: number | null;
+  /** How many doorstep words they have already been sent. */
+  doorstepsSent: number;
 }
 
 /** Which of the companion's words a tick sends. */
-export type Word = 'daily' | 'freshStart';
+export type Word = 'daily' | 'freshStart' | 'doorstep';
 
 export type Verdict = { send: true; word: Word } | { send: false; because: SkipReason };
 
 /**
- * The daily word's sleeping condition, one clause per line of the spec:
- * standing on a real plan, reachable in private, active within fourteen days,
- * not quieted, and not already nudged today — the hard cap that protects the
- * channel. A player whose seat has never rolled or reported carries no
- * timestamp at all, and an absence is not recent activity: they are lapsed,
- * not fresh.
+ * The sleeping condition, one clause per line of the spec — and the fork that
+ * picks which of the three words a morning carries.
+ *
+ * The arms are disjoint by construction rather than by care: the board state
+ * splits them first (standing on no plan selects the doorstep word and can
+ * select nothing else), and inside the standing half one activity age selects
+ * exactly one word or none. A player whose seat has rolled or reported but is
+ * silent carries a timestamp; a player who never has carries none, and an
+ * absence is not recent activity: they are lapsed, not fresh.
  */
 export function eligible(candidate: Candidate, now: number): Verdict {
-  if (candidate.standing === null) return { send: false, because: 'not-standing' };
+  // The four clauses every word obeys, asked first: a game over, a channel
+  // closed, a player who said /quiet, and the one-a-day cap. They come before
+  // the board state because they are about the person rather than the square —
+  // and because the arms below must each be reached with the channel already
+  // known good, or every one of them would have to ask again.
   if (candidate.finished) return { send: false, because: 'finished' };
   if (!candidate.reachable) return { send: false, because: 'no-channel' };
   if (candidate.quieted) return { send: false, because: 'quieted' };
   if (candidate.lastNudgedAt !== null && utcDayOf(candidate.lastNudgedAt) === utcDayOf(now)) {
     return { send: false, because: 'nudged-today' };
+  }
+  if (candidate.standing === null) {
+    // The third arm, and the one the first live tick asked for: a player who
+    // took a seat and never threw a six stands on no plan, so a word made of
+    // the plan's text has nothing to say to them. This one is not made of it.
+    // Bounded by a count, spent only when a doorstep word actually arrives.
+    if (candidate.doorstepsSent >= DOORSTEP_WORDS) {
+      return { send: false, because: 'doorstep-spent' };
+    }
+    return { send: true, word: 'doorstep' };
   }
   if (candidate.lastActiveAt === null || now - candidate.lastActiveAt > LAPSED_AFTER_MS) {
     // The second arm: past the daily word's reach, a Monday - the fresh-start
@@ -234,6 +270,10 @@ export interface Composed {
  * stands, one call back into the game — and, the first time only, the way
  * out, at the end, naming `/quiet`.
  *
+ * The doorstep word is the exception it has to be: a player waiting to enter
+ * stands on no plan, so it carries neither the excerpt nor the standing line,
+ * and its call names the die rather than the square.
+ *
  * Takes the `Plan` rather than fetching it, exactly as `commands.ts` uses
  * `planFor` at the call site and hands the found plan on. That keeps this
  * pure over its inputs — a body with no text at all (a language a rebuild
@@ -247,6 +287,21 @@ export function compose(
   lastExcerpt: number | null,
   said: { firstNudge: boolean; word?: Word },
 ): Composed {
+  if (said.word === 'doorstep') {
+    // No excerpt and no standing line: this player stands on no plan, and a
+    // word that told them which plan they were on would be the one untrue
+    // thing the engine could say. The cursor is returned unmoved — a doorstep
+    // word carries no excerpt, so it must not spend one.
+    return {
+      text: [
+        messageFor(language, 'nudge.doorstep'),
+        messageFor(language, 'nudge.doorstepCta'),
+        ...(said.firstNudge ? ['', messageFor(language, 'nudge.wayOut')] : []),
+      ].join('\n'),
+      excerpt: lastExcerpt ?? 0,
+    };
+  }
+
   const pieces = excerptsOf(plan.body);
   const index = nextExcerpt(pieces.length, lastExcerpt);
   const excerpt = pieces[index];
@@ -427,6 +482,7 @@ export function createInitiative({
           lastActiveAt: lastActivityOf(seat),
           quieted: memory.quieted,
           lastNudgedAt: memory.sentAt,
+          doorstepsSent: memory.doorsteps,
         },
         at,
       );
@@ -446,7 +502,11 @@ export function createInitiative({
       if (outcome === 'sent') {
         // Remembered only when it arrived: a failed send has not spent the
         // day, and tomorrow's tick owes this player another knock.
-        await nudges.record(userId, { at, excerpt: word.excerpt });
+        await nudges.record(userId, {
+          at,
+          excerpt: word.excerpt,
+          doorstep: verdict.word === 'doorstep',
+        });
         summary.sent += 1;
       } else {
         skip(outcome);

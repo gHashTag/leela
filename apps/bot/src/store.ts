@@ -190,16 +190,35 @@ export interface NudgeRecord {
   excerpt: number | null;
   /** Whether `/quiet` has turned the daily word off. */
   quieted: boolean;
+  /**
+   * How many doorstep words this player has been sent — the third arm's whole
+   * bound.
+   *
+   * A count rather than a date, and that is the shape the data forced: the arm
+   * speaks to a player who has never thrown, whose seat therefore carries no
+   * timestamp at all, and the session's `updated_at` moves whenever anyone
+   * else at the table does anything. Three and then silence for ever says what
+   * "not after a fortnight" meant, without a clock that lies on a busy table.
+   */
+  doorsteps: number;
 }
 
-/** A record for a player never written to: the three "not yet" answers. */
-export const NEVER_NUDGED: NudgeRecord = { sentAt: null, excerpt: null, quieted: false };
+/** A record for a player never written to: the four "not yet" answers. */
+export const NEVER_NUDGED: NudgeRecord = {
+  sentAt: null,
+  excerpt: null,
+  quieted: false,
+  doorsteps: 0,
+};
 
 export interface NudgeStore {
   /** What is remembered about this player. Never null: absence is `NEVER_NUDGED`. */
   of(userId: string): Promise<NudgeRecord>;
-  /** Remember a send: the moment, and which excerpt it carried. */
-  record(userId: string, sent: { at: number; excerpt: number }): Promise<void>;
+  /**
+   * Remember a send: the moment, which excerpt it carried, and whether it was
+   * a doorstep word — the one kind that spends a counted allowance.
+   */
+  record(userId: string, sent: { at: number; excerpt: number; doorstep?: boolean }): Promise<void>;
   /** `/quiet` — both directions, because coming back is part of the command. */
   setQuieted(userId: string, quieted: boolean): Promise<void>;
 }
@@ -212,9 +231,14 @@ export class MemoryNudgeStore implements NudgeStore {
     return this.records.get(userId) ?? NEVER_NUDGED;
   }
 
-  async record(userId: string, sent: { at: number; excerpt: number }): Promise<void> {
+  async record(userId: string, sent: { at: number; excerpt: number; doorstep?: boolean }): Promise<void> {
     const held = await this.of(userId);
-    this.records.set(userId, { ...held, sentAt: sent.at, excerpt: sent.excerpt });
+    this.records.set(userId, {
+      ...held,
+      sentAt: sent.at,
+      excerpt: sent.excerpt,
+      doorsteps: held.doorsteps + (sent.doorstep ? 1 : 0),
+    });
   }
 
   async setQuieted(userId: string, quieted: boolean): Promise<void> {

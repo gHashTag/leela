@@ -35,6 +35,7 @@ function reachable(overrides: Partial<Candidate> = {}): Candidate {
     lastActiveAt: NOW - DAY,
     quieted: false,
     lastNudgedAt: null,
+    doorstepsSent: 0,
     ...overrides,
   };
 }
@@ -44,10 +45,10 @@ describe('the sleeping condition', () => {
     expect(eligible(reachable(), NOW)).toEqual({ send: true, word: 'daily' });
   });
 
-  it('sleeps for a player standing on no plan', () => {
+  it('sends the doorstep word to a player standing on no plan', () => {
     expect(eligible(reachable({ standing: null }), NOW)).toEqual({
-      send: false,
-      because: 'not-standing',
+      send: true,
+      word: 'doorstep',
     });
   });
 
@@ -322,23 +323,23 @@ describe('the memory fallback', () => {
   it('answers the three not-yets for a player never seen', async () => {
     const memory = new MemoryNudgeStore();
     expect(await memory.of('u1')).toEqual(NEVER_NUDGED);
-    expect(NEVER_NUDGED).toEqual({ sentAt: null, excerpt: null, quieted: false });
+    expect(NEVER_NUDGED).toEqual({ sentAt: null, excerpt: null, quieted: false, doorsteps: 0 });
   });
 
   it('remembers a send', async () => {
     const memory = new MemoryNudgeStore();
     await memory.record('u1', { at: NOW, excerpt: 2 });
-    expect(await memory.of('u1')).toEqual({ sentAt: NOW, excerpt: 2, quieted: false });
+    expect(await memory.of('u1')).toEqual({ sentAt: NOW, excerpt: 2, quieted: false, doorsteps: 0 });
   });
 
   it('keeps a send and /quiet apart: neither write speaks for the other', async () => {
     const memory = new MemoryNudgeStore();
     await memory.setQuieted('u1', true);
     await memory.record('u1', { at: NOW, excerpt: 0 });
-    expect(await memory.of('u1')).toEqual({ sentAt: NOW, excerpt: 0, quieted: true });
+    expect(await memory.of('u1')).toEqual({ sentAt: NOW, excerpt: 0, quieted: true, doorsteps: 0 });
 
     await memory.setQuieted('u1', false);
-    expect(await memory.of('u1')).toEqual({ sentAt: NOW, excerpt: 0, quieted: false });
+    expect(await memory.of('u1')).toEqual({ sentAt: NOW, excerpt: 0, quieted: false, doorsteps: 0 });
   });
 
   it('keeps players apart', async () => {

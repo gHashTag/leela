@@ -761,7 +761,7 @@ describe('the initiative’s memory', () => {
   it('round-trips a send', () => {
     const queries = database('nudge-roundtrip');
     queries.recordNudge('u1', NOW, 2);
-    expect(queries.nudgeOf('u1')).toEqual({ sentAt: NOW, excerpt: 2, quieted: false });
+    expect(queries.nudgeOf('u1')).toEqual({ sentAt: NOW, excerpt: 2, quieted: false, doorsteps: 0 });
   });
 
   it('lets neither half of the row speak for the other', () => {
@@ -771,13 +771,13 @@ describe('the initiative’s memory', () => {
     const queries = database('nudge-halves');
 
     queries.setQuieted('u1', true);
-    expect(queries.nudgeOf('u1')).toEqual({ sentAt: null, excerpt: null, quieted: true });
+    expect(queries.nudgeOf('u1')).toEqual({ sentAt: null, excerpt: null, quieted: true, doorsteps: 0 });
 
     queries.recordNudge('u1', NOW, 0);
-    expect(queries.nudgeOf('u1')).toEqual({ sentAt: NOW, excerpt: 0, quieted: true });
+    expect(queries.nudgeOf('u1')).toEqual({ sentAt: NOW, excerpt: 0, quieted: true, doorsteps: 0 });
 
     queries.setQuieted('u1', false);
-    expect(queries.nudgeOf('u1')).toEqual({ sentAt: NOW, excerpt: 0, quieted: false });
+    expect(queries.nudgeOf('u1')).toEqual({ sentAt: NOW, excerpt: 0, quieted: false, doorsteps: 0 });
   });
 
   it('survives a restart, like everything else in the file', async () => {
@@ -791,10 +791,58 @@ describe('the initiative’s memory', () => {
     const second = new SqliteRoomQueries({ path, now: () => NOW });
     open.push(second);
     const memory = sqliteNudgeStore(second);
-    expect(await memory.of('u1')).toEqual({ sentAt: null, excerpt: null, quieted: true });
-    expect(await memory.of('u2')).toEqual({ sentAt: NOW, excerpt: 3, quieted: false });
-    // And a player it has never met still gets the three not-yets, not null.
-    expect(await memory.of('u3')).toEqual({ sentAt: null, excerpt: null, quieted: false });
+    expect(await memory.of('u1')).toEqual({ sentAt: null, excerpt: null, quieted: true, doorsteps: 0 });
+    expect(await memory.of('u2')).toEqual({ sentAt: NOW, excerpt: 3, quieted: false, doorsteps: 0 });
+    // And a player it has never met still gets the four not-yets, not null.
+    expect(await memory.of('u3')).toEqual({ sentAt: null, excerpt: null, quieted: false, doorsteps: 0 });
+  });
+
+  it('counts doorstep words and counts nothing else', () => {
+    // The third arm's whole bound lives in this column, and it is spent by a
+    // doorstep word only: a daily word writing the same row must leave it be,
+    // or a player who enters would carry a number they never earned.
+    const queries = database('nudge-doorsteps');
+
+    queries.recordNudge('u1', NOW, 0, true);
+    queries.recordNudge('u1', NOW + 1000, 0, true);
+    expect(queries.nudgeOf('u1')?.doorsteps).toBe(2);
+
+    queries.recordNudge('u1', NOW + 2000, 1);
+    expect(queries.nudgeOf('u1')).toEqual({
+      sentAt: NOW + 2000,
+      excerpt: 1,
+      quieted: false,
+      doorsteps: 2,
+    });
+  });
+
+  it('reads a database written before the column existed as zero, not as null', () => {
+    // The deployed volume outlives every release: the live `nudges` table was
+    // created without `doorsteps`, so the migration adds it and every row
+    // already there answers with the default. A null here would be read as
+    // `undefined` by the arm and compared against three.
+    const path = join(dir, 'nudge-old-shape.db');
+
+    const older = openDatabase(path);
+    older.exec(
+      `CREATE TABLE IF NOT EXISTS nudges (
+  user_id    TEXT PRIMARY KEY,
+  sent_at    INTEGER,
+  excerpt    INTEGER,
+  quieted    INTEGER NOT NULL DEFAULT 0,
+  updated_at INTEGER NOT NULL
+);`,
+    );
+    older.prepare('INSERT INTO nudges VALUES (?, ?, ?, 0, ?)').run('u1', NOW, 1, NOW);
+    older.close();
+
+    const queries = new SqliteRoomQueries({ path, now: () => NOW });
+    open.push(queries);
+
+    expect(queries.nudgeOf('u1')).toEqual({ sentAt: NOW, excerpt: 1, quieted: false, doorsteps: 0 });
+    // And the counter works on the migrated row, rather than throwing on it.
+    queries.recordNudge('u1', NOW + 1000, 1, true);
+    expect(queries.nudgeOf('u1')?.doorsteps).toBe(1);
   });
 });
 

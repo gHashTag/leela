@@ -24,13 +24,20 @@ one activity age and one board state select exactly one word or none.
 |---|---|---|
 | daily | standing, active within 14 days | the plan's own text |
 | fresh start | standing, lapsed 14–35 days, Monday | begin again |
-| **doorstep** | **seated, never entered, joined within 14 days** | **what a six opens** |
+| **doorstep** | **seated, never entered, fewer than three words sent** | **what a six opens** |
 
 Bounds, so it cannot become a nag: at most **three** doorstep words ever, one
-per day at most (the existing cap governs it), and nothing after the
-fourteenth day — a player who did not throw in two weeks with three
-invitations has answered. `/quiet` governs it like everything else, and the
-first one carries the way out as the first word always does.
+per day at most (the existing cap governs it). `/quiet` governs it like
+everything else, and the first one carries the way out as the first word
+always does.
+
+**The bound is a count, not a date, and that is a correction made while
+building.** The spec first said "nothing after the fourteenth day", which
+needs to know when a player sat down — and no such timestamp exists: a seat
+carries `lastRollAt` and `lastReportAt`, both null for exactly the player
+this arm is about, and the session's `updated_at` moves whenever anyone at
+the table does anything. Three words and then silence for ever says the same
+thing without a migration and without a proxy that lies on a busy table.
 
 ## What it must not say
 
