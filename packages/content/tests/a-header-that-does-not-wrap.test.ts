@@ -18,7 +18,19 @@ import { messageFor, translatedLanguages } from '../src/messages';
  * than the sentence the layout was built around.
  */
 describe('a header that does not wrap', () => {
-  /** Keys rendered into a single fixed line, and what English spends there. */
+  /**
+   * Keys rendered into a single fixed line.
+   *
+   * One, and that is a measurement rather than a shortcut: the stylesheet
+   * declares exactly two truncating elements — `.where-title` (the header)
+   * and `.visiting > span` — and of the catalogue's words only `app.waiting`
+   * reaches either. Everything else in the visiting bar and the header is a
+   * plan title, which is data, not a message. Those were measured too on
+   * 2026-08-23: the longest Russian title is 43 characters against English's
+   * 40, so the header cuts long titles equally in both languages and no
+   * translation is the reason. Add a key here when a new `messageFor` lands
+   * in an element with `text-overflow: ellipsis`.
+   */
   const NARROW = ['app.waiting'] as const;
 
   /**
