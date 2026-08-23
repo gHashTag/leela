@@ -87,3 +87,29 @@ export const LABELS: Readonly<Record<Language, string>> = {
   en: 'EN',
   ru: 'RU',
 } as Readonly<Record<Language, string>>;
+
+/**
+ * The store the opening choice is read from, and the choice itself.
+ *
+ * Both were inline at the top of `main.ts` and had to move here for one
+ * reason: the board now waits for its language's plan text before it renders,
+ * the wait cannot be a top-level `await` (Vite's target is es2020, and the iOS
+ * app deploys to iOS 13, where there is no top-level await at all), so the
+ * wait happens in `boot.ts` — which needs the same answer `main.ts` needs, and
+ * two modules computing a language separately is how a board ends up half in
+ * each.
+ *
+ * Read from `localStorage` directly rather than through `browserStore()`: the
+ * whole screen is labelled from this before that exists.
+ */
+export const openingStore = (): Store | null => {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+};
+
+/** The language this visit opens in: the stored choice, else the browser's. */
+export const boardLanguage = (): string =>
+  openingLanguage(readLanguage(openingStore()), navigator.language);

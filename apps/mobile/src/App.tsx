@@ -22,7 +22,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { BOARD_ROWS, countsAsReport } from '@leela/engine';
-import { bookFor, describeMove, messageFor, planFor, resolveLanguage,
+import { bookFor, describeMove, loadEveryLanguage, messageFor, planFor, resolveLanguage,
   directionOf,
   piecesOf,
 } from '@leela/content';
@@ -113,7 +113,41 @@ const draftKeeper = deviceKeeper(DRAFT_KEY);
 /** A game's die is seeded once, and the seed is what a player carries away. */
 const startingSeed = () => Math.floor(Math.random() * 1_000_000);
 
+/**
+ * Every language's plan text, started the moment this module is evaluated.
+ *
+ * Twenty-one of the twenty-two are loaded on demand now, because the web board
+ * was carrying all of them to a reader of one. A phone is the opposite case:
+ * Metro puts every module in the app's own bundle, so there is no download to
+ * save and no reason to fetch one language rather than all of them — the only
+ * thing that changed here is that the text arrives on a microtask instead of
+ * being there already.
+ */
+const everyLanguage = loadEveryLanguage();
+
+/**
+ * Whether the text has arrived, which the first render has to wait for.
+ *
+ * Without the wait the opening frame reads a plan title in English on a
+ * Russian phone and then corrects itself, which is the flicker `plansFor`
+ * warns about in the console rather than a thing a player should see.
+ */
+function useEveryLanguage(): boolean {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let watching = true;
+    void everyLanguage.then(() => {
+      if (watching) setReady(true);
+    });
+    return () => {
+      watching = false;
+    };
+  }, []);
+  return ready;
+}
+
 export default function App() {
+  const textReady = useEveryLanguage();
   const [game, setGame] = useState<Game>(() => newGame(startingSeed()));
   const [store] = useState<Store>(forTheSession);
   const [journal, setJournal] = useState<Journal>(EMPTY_PATH);
@@ -455,6 +489,16 @@ export default function App() {
       );
     });
   };
+
+  /*
+   * Nothing until the plan text is here.
+   *
+   * One microtask on a phone, because Metro puts the text in the app's own
+   * bundle and there is no network in it. Rendering through it would paint a
+   * Russian board with English plan titles and then correct itself, and a
+   * player who sees that once does not know it was a frame.
+   */
+  if (!textReady) return null;
 
   return (
     /*

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import {
   LANGUAGES,
   couldBe,
@@ -259,3 +259,16 @@ describe('the script of a language is declared, never guessed', () => {
     expect(couldBe('zh', plansFor('zh')[0]?.body ?? ''), 'the same plan, whole').toBe(true);
   });
 });
+import { loadEveryLanguage } from '../src/index';
+
+/**
+ * Every language's text, in memory, before anything asks for it.
+ *
+ * Twenty-one of the twenty-two are loaded on demand now — the board's entry
+ * carried 6.6 MB of plan text to a reader of one language, and only English is
+ * static because it is the fallback. A suite that reads other languages has to
+ * say so, and this is that saying: without it these tests would quietly
+ * measure English twenty-two times and pass.
+ */
+beforeAll(loadEveryLanguage);
+

@@ -1,12 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import {
   LANGUAGES,
   LANGUAGE_NAMES,
   directionOf,
   messageFor,
   plansFor,
-  rulesFor,
-} from '@leela/content';
+  rulesFor, loadEveryLanguage } from '@leela/content';
 import { TOTAL_PLANS } from '@leela/engine';
 import {
   DOCS_URL,
@@ -753,3 +752,13 @@ describe('a chapter the reader\'s own book has not got', () => {
     expect(html).not.toContain(chakras!.body.slice(0, 60));
   });
 });
+
+/**
+ * The Russian text, in memory, before a Russian page is rendered.
+ *
+ * The plans are loaded on demand now; the book's own generator awaits every
+ * language before it writes a page, and a suite that renders one has to do the
+ * same or it renders English and asserts English about it.
+ */
+beforeAll(loadEveryLanguage);
+

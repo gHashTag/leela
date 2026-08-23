@@ -12,6 +12,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   LANGUAGES,
+  loadEveryLanguage,
   messageFor,
   plansFor,
   FALLBACK_LANGUAGE,
@@ -195,6 +196,11 @@ export function build(outDir: string): BuildResult {
 
 // Run directly: `bun run src/build.ts [outDir]`
 if (import.meta.main) {
+  // Every language, because the book is every language: the plans are loaded
+  // on demand now, and a generator that skipped this would write twenty-two
+  // copies of the English book and say it built them all.
+  await loadEveryLanguage();
+
   const outDir = process.argv[2] ?? join(APP, 'dist');
   const result = build(outDir);
   console.log(

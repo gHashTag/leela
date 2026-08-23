@@ -193,7 +193,22 @@ but it is newly *misleading*, because the entry stops being the cost. Lowering
 reader pays — the entry, plus every chunk the entry names that is not a
 language, plus the largest language — is its own piece of work.
 
-### The one thing that stopped it, and it is not timing
+### It shipped — 2026-08-23, iteration 16
+
+The blocker below was in the test harness, not in the content package, and the
+diagnosis recorded here was wrong. `play()` imported the app and slept 60 ms;
+the file passes on its own and fails inside the full run, where twenty other
+files compete for the same cores. Waiting for `#board .squares` — created by
+`buildBoard`, which runs in the `then` of the 2D board's own `loadPlans` —
+removed the timing from it. Fixed and pushed on its own first (bdf81f6), then
+the cut landed on top of it with every suite green.
+
+**Why the bisect lied:** reverting `packages/content/src/index.ts` also made
+the module graph one hop shallower, so it changed the timing. A bisect whose
+steps change the timing cannot separate a timing bug from a real one — the
+step that "fixed" it was the step that made the sleep long enough.
+
+### The one thing that stopped it, and it is not timing — WRONG, see above
 
 `apps/miniapp/tests/assembled.test.ts` — "loads a language whose plans are
 translated" — fails with the split in place: a Russian seat restored on plan

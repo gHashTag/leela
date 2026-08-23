@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 // Shared with the audit scripts, which are plain JavaScript.
 import { blank } from '../../../scripts/lib/source.mjs';
-import { LANGUAGES, describeMove, messageFor, planFor } from '@leela/content';
+import { LANGUAGES, describeMove, messageFor, planFor, loadEveryLanguage } from '@leela/content';
 import { type MoveEvent } from '@leela/engine';
 import { fileReport, mayThrow, newGame, owesAnAccount, throwDie } from '../src/game';
 
@@ -116,3 +116,13 @@ describe('the screen asks rather than formats', () => {
     expect(APP, 'the fields of an event, joined').not.toMatch(/game\.event\.(roll|from|to|direction)/);
   });
 });
+
+/**
+ * The phone's own languages, in memory, before a sentence is built.
+ *
+ * The app awaits the same call before its first render — `App.tsx` — because
+ * the plans are loaded on demand now. Without it this suite would assert that
+ * a Russian sentence is Russian while the plan title inside it was English.
+ */
+beforeAll(loadEveryLanguage);
+

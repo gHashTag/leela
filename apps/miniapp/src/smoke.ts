@@ -106,25 +106,22 @@ export const DEPLOYMENT_CHECKS: Check[] = [
     mustContain: ['<title>Leela — the board in three dimensions</title>', 'id="board"'],
     minBytes: 500,
     /**
-     * Seven million bytes, which is today's size and a little.
+     * Four hundred thousand bytes: the entry after specs/006, and a little.
      *
-     * The entry measured 6,624,622 bytes decoded on 2026-08-23, so this locks
-     * in "no worse than the day the ceiling was written" rather than any
-     * target. It comes down to about 400,000 when specs/006 lands — the
-     * per-language cut, which builds and measures at 209,696 — and the number
-     * here is the one line that has to change for that gain to be permanent
-     * instead of a thing that drifted back. A ceiling set at a target nobody
-     * has reached yet is a red build that gets deleted; a ceiling set at today
-     * is one that only ever moves down.
+     * It was 7,000,000 for two days — the entry's own size when the ceiling
+     * was written — and the per-language cut took the entry from 6,624,622
+     * bytes to 209,696, so this comes down with it. That is what a ceiling set
+     * at today is for: it only ever moves down, and moving it is a deliberate
+     * edit with a test beside it.
      *
-     * **When it does come down, it will be watching less than it looks like.**
-     * After the cut the page names only the entry: the board's code, three.js
-     * and the reader's one language are chunks nothing here sees — exactly as
-     * nothing here has ever seen the 2D board's twenty-four dataset chunks. A
-     * guard on what a whole reader pays is a separate piece of work, written
-     * up in specs/006.
+     * **It watches less than it looks like, and that is not new.** The page
+     * now names only the entry: the board's code, three.js and the reader's
+     * one language are chunks nothing here sees — exactly as nothing here has
+     * ever seen the 2D board's twenty-four dataset chunks. A guard on what a
+     * whole reader pays is a separate piece of work, written up in specs/006,
+     * and this ceiling is honest about being smaller than that one.
      */
-    maxAssetBytes: 7_000_000,
+    maxAssetBytes: 400_000,
     ownAssets: true,
   },
   {

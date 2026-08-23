@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { CLASSIC, ONLINE } from '@leela/engine';
-import { messageCoverage, messageFor } from '@leela/content';
+import { messageCoverage, messageFor, loadEveryLanguage } from '@leela/content';
 import {
   board,
   help,
@@ -400,3 +400,14 @@ describe('a throw that moves nobody', () => {
     }
   });
 });
+
+/**
+ * The table's own language, in memory, before a command is answered.
+ *
+ * The bot loads every language at startup — `src/index.ts` — because a server
+ * cannot await inside a command. A suite that plays a Russian table has to do
+ * the same, or it would quietly assert that Russian looks exactly like
+ * English and pass.
+ */
+beforeAll(loadEveryLanguage);
+

@@ -23,6 +23,7 @@ import {
 import {
   FALLBACK_LANGUAGE,
   LANGUAGES,
+  loadEveryLanguage,
   messageCoverage,
   messageIssues,
   translatedLanguages,
@@ -53,6 +54,19 @@ if (!token) {
  * because the path could not be opened. The third used to be a crash into a
  * restart loop — a bot pointed at `/data/leela.db` with no volume mounted.
  */
+/**
+ * Every language's plan text, before the bot answers anything.
+ *
+ * Twenty-one of the twenty-two are loaded on demand now, because the web board
+ * was carrying all of them to a reader of one. A server is the opposite case:
+ * it serves whichever language the table is played in, cannot await inside a
+ * command, and has no download to save — so it takes them all, once, here,
+ * before a single update is polled. `plansFor` says so in a log if this is
+ * ever missed, but a Russian table reading English is not a thing to find out
+ * from a log.
+ */
+await loadEveryLanguage();
+
 const databasePath = process.env.LEELA_DB;
 const storage = openStorage({ path: databasePath, log: console.error });
 

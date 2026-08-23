@@ -50,42 +50,128 @@ export {
 } from './language';
 import { FALLBACK_LANGUAGE, resolveLanguage, type Language } from './language';
 
-// The dataset is bundled as JSON so every runtime — Metro, Node, the browser —
-// can load it without a filesystem.
-import ar from '../data/plans.ar.json';
-import bn from '../data/plans.bn.json';
-import de from '../data/plans.de.json';
+// The dataset is JSON so every runtime — Metro, Node, the browser — can load it
+// without a filesystem. English is imported; the other twenty-one are not, and
+// {@link LOADERS} below says why.
 import en from '../data/plans.en.json';
-import es from '../data/plans.es.json';
-import fr from '../data/plans.fr.json';
-import hi from '../data/plans.hi.json';
-import ja from '../data/plans.ja.json';
-import jv from '../data/plans.jv.json';
-import ko from '../data/plans.ko.json';
-import mr from '../data/plans.mr.json';
-import ms from '../data/plans.ms.json';
-import pa from '../data/plans.pa.json';
-import pt from '../data/plans.pt.json';
-import ru from '../data/plans.ru.json';
-import ta from '../data/plans.ta.json';
-import te from '../data/plans.te.json';
-import tr from '../data/plans.tr.json';
-import uk from '../data/plans.uk.json';
-import ur from '../data/plans.ur.json';
-import vi from '../data/plans.vi.json';
-import zh from '../data/plans.zh.json';
 import rulesData from '../data/rules.json';
 
-const PLANS: Record<Language, Plan[]> = {
-  ar, bn, de, en, es, fr, hi, ja, jv, ko, mr,
-  ms, pa, pt, ru, ta, te, tr, uk, ur, vi, zh,
-} as Record<Language, Plan[]>;
+/**
+ * The twenty-one languages that are not English, each behind a thunk.
+ *
+ * They used to be twenty-one more `import` lines, and the cost was paid by
+ * every reader of one language: the 3D board's entry weighed 6,624,622 bytes
+ * decoded and 1,790,216 on the wire, of which almost all was plan text in
+ * languages that reader cannot read. Measured against the live deployment on
+ * 2026-08-23; with only English static the same entry builds at 334,820.
+ *
+ * English is **not** here and must never be: it is {@link FALLBACK_LANGUAGE},
+ * the answer when a language has no text, and a fallback that has to be
+ * fetched is not a fallback.
+ *
+ * Written as twenty-one literal `import()` calls rather than one built from a
+ * template, because a bundler can only emit a chunk for a specifier it can
+ * see. A template would make Vite emit all twenty-one for every build and
+ * Metro resolve none of them.
+ */
+const LOADERS: Partial<Record<Language, () => Promise<{ default: unknown }>>> = {
+  ar: () => import('../data/plans.ar.json'),
+  bn: () => import('../data/plans.bn.json'),
+  de: () => import('../data/plans.de.json'),
+  es: () => import('../data/plans.es.json'),
+  fr: () => import('../data/plans.fr.json'),
+  hi: () => import('../data/plans.hi.json'),
+  ja: () => import('../data/plans.ja.json'),
+  jv: () => import('../data/plans.jv.json'),
+  ko: () => import('../data/plans.ko.json'),
+  mr: () => import('../data/plans.mr.json'),
+  ms: () => import('../data/plans.ms.json'),
+  pa: () => import('../data/plans.pa.json'),
+  pt: () => import('../data/plans.pt.json'),
+  ru: () => import('../data/plans.ru.json'),
+  ta: () => import('../data/plans.ta.json'),
+  te: () => import('../data/plans.te.json'),
+  tr: () => import('../data/plans.tr.json'),
+  uk: () => import('../data/plans.uk.json'),
+  ur: () => import('../data/plans.ur.json'),
+  vi: () => import('../data/plans.vi.json'),
+  zh: () => import('../data/plans.zh.json'),
+};
+
+/** What has been loaded. English is here from the first line of the module. */
+const PLANS: Partial<Record<Language, Plan[]>> = { en: en as unknown as Plan[] };
+
+/**
+ * Bring one language's plans into memory. Idempotent, and safe to call twice.
+ *
+ * The board calls this once, for the language it is about to render in, before
+ * anything reads a plan. Everything that is not the board calls
+ * {@link loadEveryLanguage} instead: the bot serves twenty-two languages from
+ * one process and cannot await inside a command.
+ */
+export async function loadLanguage(locale: string): Promise<void> {
+  const language = resolveLanguage(locale);
+  if (PLANS[language]) return;
+
+  const loader = LOADERS[language];
+  // A language with no loader and no text is not an error here: `resolveLanguage`
+  // already answers with something this module knows, and the fallback below
+  // is what a caller gets.
+  if (!loader) return;
+
+  PLANS[language] = (await loader()).default as Plan[];
+}
+
+/** Every language, for a runtime that serves all of them. */
+export async function loadEveryLanguage(): Promise<void> {
+  await Promise.all((Object.keys(LOADERS) as Language[]).map((one) => loadLanguage(one)));
+}
+
+/**
+ * The languages already complained about, so the complaint is made once.
+ *
+ * Serving English where Russian was asked for is the failure this project
+ * keeps having quietly — a truncating header and a voice falling back both
+ * lived for weeks because nothing said so. A caller that forgot to await is
+ * told, in a log, on the first plan it asks for; a caller that is legitimately
+ * on a language with no text is told once and then left alone.
+ */
+const complained = new Set<Language>();
+
+/**
+ * Say something, wherever there is somewhere to say it.
+ *
+ * This package is compiled without the DOM or Node libraries on purpose — it
+ * is the one thing every runtime here shares, and naming `console` outright
+ * does not typecheck under `tsconfig.src.json`. Reached through `globalThis`
+ * and called only if it is there: a runtime with no console is a runtime that
+ * hears nothing, which is worse than a warning and much better than a crash.
+ */
+function warn(message: string): void {
+  const sink = (globalThis as { console?: { warn?: (said: string) => void } }).console;
+  sink?.warn?.(message);
+}
+
+function textFor(language: Language): Plan[] {
+  const held = PLANS[language];
+  if (held) return held;
+
+  if (LOADERS[language] && !complained.has(language)) {
+    complained.add(language);
+    warn(
+      `[content] plans for '${language}' were not loaded; serving ${FALLBACK_LANGUAGE}. ` +
+        'Await loadLanguage() for a board, or loadEveryLanguage() for a server.',
+    );
+  }
+
+  return PLANS[FALLBACK_LANGUAGE] as Plan[];
+}
 
 const RULES = rulesData as Record<string, RuleChapter[]>;
 
 /** Every plan for a language, ordered 1..72. */
 export function plansFor(locale: string): Plan[] {
-  return PLANS[resolveLanguage(locale)];
+  return textFor(resolveLanguage(locale));
 }
 
 /**
@@ -97,11 +183,10 @@ export function planFor(locale: string, plan: number): Plan {
   if (!Number.isInteger(plan) || plan < 1 || plan > TOTAL_PLANS) {
     throw new RangeError(`plan must be an integer in 1..${TOTAL_PLANS}, got ${plan}`);
   }
-  const language = resolveLanguage(locale);
-  const found = PLANS[language].find((p) => p.plan === plan);
+  const found = textFor(resolveLanguage(locale)).find((p) => p.plan === plan);
   // Every language is complete, but fall back rather than throw if a future
   // rebuild ever drops one.
-  return found ?? (PLANS[FALLBACK_LANGUAGE].find((p) => p.plan === plan) as Plan);
+  return found ?? ((PLANS[FALLBACK_LANGUAGE] as Plan[]).find((p) => p.plan === plan) as Plan);
 }
 
 /** Rules chapters for a language, empty when none were translated. */

@@ -20,10 +20,10 @@
  * clean today; the check is what a donor update would have to get past.
  */
 
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 import { FUNCTION_WORDS, unseeableIn, wrongLanguageIn } from '../../../scripts/lib/untranslated.mjs';
-import { LANGUAGES, plansFor, scriptOf, type Language } from '../src/index';
+import { LANGUAGES, plansFor, scriptOf, type Language, loadEveryLanguage } from '../src/index';
 
 const words = FUNCTION_WORDS as Record<string, RegExp>;
 const covered = Object.keys(words);
@@ -146,3 +146,15 @@ describe('the words a language cannot do without', () => {
     ]);
   });
 });
+
+/**
+ * Every language's text, in memory, before anything asks for it.
+ *
+ * Twenty-one of the twenty-two are loaded on demand now — the board's entry
+ * carried 6.6 MB of plan text to a reader of one language, and only English is
+ * static because it is the fallback. A suite that reads other languages has to
+ * say so, and this is that saying: without it these tests would quietly
+ * measure English twenty-two times and pass.
+ */
+beforeAll(loadEveryLanguage);
+

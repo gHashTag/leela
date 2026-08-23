@@ -13,7 +13,7 @@ import {
 // stayed behind - a reader would take it for the language still being decided
 // on this line.
 import { directionOf, messageFor, planFor, titlesFor } from './canon';
-import { describeMove } from '@leela/content';
+import { describeMove, type Language } from '@leela/content';
 import { revisited, seatId, writingsOn, MAX_REPORT_CHARS } from '@leela/journal';
 
 import { Companion, type Line, type Rests } from './companion';
@@ -39,9 +39,9 @@ import { askOverHttp } from './ask';
 import { askOverHost, hostCanAnswer } from './asked';
 import {
   LABELS,
+  boardLanguage,
   nextLanguage,
-  openingLanguage,
-  readLanguage,
+  openingStore,
   writeLanguage,
 } from './tongue';
 import { lookFor, other, paletteFor, preferred, remember, stored } from './look';
@@ -184,19 +184,12 @@ const el = {
  * The stored choice outranks the browser's setting; see `tongue` for why and
  * for the rule, which is tested there.
  *
- * Read from `localStorage` directly rather than through `browserStore()`: that
- * is built a few lines below and the whole screen is labelled from `language`
- * before it exists.
+ * The same two calls `boot.ts` made before it imported this module — and it
+ * has already awaited this language's plan text, which is the whole reason
+ * this module is imported rather than loaded directly.
  */
-const languageStore = ((): { getItem(k: string): string | null; setItem(k: string, v: string): void } | null => {
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-})();
-
-const language = openingLanguage(readLanguage(languageStore), navigator.language);
+const languageStore = openingStore();
+const language = boardLanguage() as Language;
 const titleOf = titlesFor(language);
 
 document.documentElement.lang = language;
