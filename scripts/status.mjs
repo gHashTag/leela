@@ -26,10 +26,26 @@ import { promisify } from 'node:util';
 
 const run = promisify(execFile);
 
-/** Every surface, as {name, what} rows the report and the page share. */
+/** Every surface, as rows the report and the page share. */
 const findings = [];
 
-const say = (surface, name, value, note = '') => findings.push({ surface, name, value, note });
+/**
+ * One line, and what kind of line it is — stated, never inferred.
+ *
+ * The first version of this file decided that a line was a failure by testing
+ * its text against `/^[A-Z ]+$/`, which caught `UNREACHABLE` and also caught
+ * `NOT ASKED`. So on any machine without the railway CLI — which is most of
+ * them — this tool reported a failure where there was none, and a status tool
+ * that cries wolf is a status tool nobody runs. It lasted about an hour.
+ *
+ * `kind` is now a fact each probe states about itself:
+ *   fine    — measured, and the answer is what it should be
+ *   wrong   — measured, and something is broken
+ *   unasked — not measured here, because the credentials or the tool are
+ *             elsewhere. Not a failure, and never counted as one.
+ */
+const say = (surface, name, value, note = '', kind = 'fine') =>
+  findings.push({ surface, name, value, note, kind });
 const bytes = (n) => n.toLocaleString('en-US');
 
 /**
@@ -60,13 +76,13 @@ const site = 'https://t27.ai/leela/';
 const page = await reach(site);
 
 if (!page.ok || page.status !== 200) {
-  say('web', 'the 3D board', 'UNREACHABLE', page.ok ? `status ${page.status}` : page.why);
+  say('web', 'the 3D board', 'UNREACHABLE', page.ok ? `status ${page.status}` : page.why, 'wrong');
 } else {
   const entryName = /src="\.\/(assets\/[A-Za-z0-9._-]+\.js)"/.exec(page.text)?.[1];
   say('web', 'the 3D board', 'live', `${page.ms} ms`);
 
   if (entryName === undefined) {
-    say('web', 'the entry', 'NOT NAMED BY THE PAGE', 'the page loads no code of its own');
+    say('web', 'the entry', 'NOT NAMED BY THE PAGE', 'the page loads no code of its own', 'wrong');
   } else {
     const entry = await reach(site + entryName);
     const declared = entry.headers?.get('content-length');
@@ -103,7 +119,7 @@ const ask = await reach('https://leela-production-e9a0.up.railway.app/api/ask', 
 });
 
 if (!ask.ok || ask.status !== 200) {
-  say('bot', 'the companion route', 'UNREACHABLE', ask.ok ? `status ${ask.status}` : ask.why);
+  say('bot', 'the companion route', 'UNREACHABLE', ask.ok ? `status ${ask.status}` : ask.why, 'wrong');
 } else {
   const answered = /"text":"([^"]*)"/.exec(ask.text)?.[1] ?? '';
   const thought = (ask.text.match(/"thinking"/g) ?? []).length;
@@ -114,18 +130,46 @@ if (!ask.ok || ask.status !== 200) {
 
 const railway = await run('railway', ['deployment', 'list'], { cwd: process.cwd() }).catch(() => null);
 if (railway === null) {
-  say('bot', 'the last deploy', 'NOT ASKED', 'the railway CLI did not answer here');
+  say('bot', 'the last deploy', 'not asked', 'the railway CLI did not answer here', 'unasked');
 } else {
   const newest = railway.stdout.split('\n').find((line) => line.includes('|'));
   const [id, state, when] = (newest ?? '').split('|').map((part) => part.trim());
   say('bot', 'the last deploy', `${state ?? '?'} ${when ?? ''}`.trim(), (id ?? '').slice(0, 8));
 }
 
+/**
+ * Which release the bot is running, from the one line only new code prints.
+ *
+ * `railway logs` is the only way to see inside a container this loop does not
+ * hold a shell in, and the banner was made a measurement on 2026-08-23 for
+ * exactly this: `Plan text: all 22 languages are in memory.` is printed by
+ * releases from that day onward and by none before, so its presence dates the
+ * running code and its number says the startup load finished.
+ */
+const logs = await run('railway', ['logs', '--service', 'leela'], { timeout: 90_000 }).catch(() => null);
+if (logs === null) {
+  say('bot', 'the running release', 'not asked', 'the railway CLI did not answer here', 'unasked');
+} else {
+  const banner = /Plan text: ([^\n]*)/.exec(logs.stdout)?.[1];
+  const alive = logs.stdout.includes('Listening as @leela_chakra_ai_bot');
+  say(
+    'bot',
+    'the running release',
+    banner === undefined ? 'BEFORE 2026-08-23' : banner.replace(/\.$/, ''),
+    banner === undefined
+      ? 'no plan-text line in the log — the release predates it'
+      : alive
+        ? 'and listening'
+        : 'but no "Listening as" line in this window',
+    banner === undefined ? 'wrong' : 'fine',
+  );
+}
+
 // --- iOS, whose public half needs no key at all ------------------------------
 
 const store = await reach('https://itunes.apple.com/lookup?bundleId=xyz.ghashtag.dharma');
 if (!store.ok) {
-  say('ios', 'the shopfront', 'UNREACHABLE', store.why);
+  say('ios', 'the shopfront', 'UNREACHABLE', store.why, 'wrong');
 } else {
   const found = JSON.parse(store.text).results?.[0];
   say(
@@ -133,6 +177,39 @@ if (!store.ok) {
     'the shopfront',
     found ? `${found.version}, updated ${String(found.currentVersionReleaseDate).slice(0, 10)}` : 'NOT LISTED',
     found ? `${found.userRatingCount ?? 0} ratings, ${found.formattedPrice}` : '',
+    found ? 'fine' : 'wrong',
+  );
+}
+
+/**
+ * And the half of iOS that needs a key, asked through the script that holds it.
+ *
+ * `leela-src/leela/scripts/asc-state.mjs` signs its own token and is read-only.
+ * Shelled out to rather than reimplemented here: the signing is fifteen fiddly
+ * lines, and two copies of it would disagree within a fortnight.
+ *
+ * The line worth having is the last one — a version in PREPARE_FOR_SUBMISSION
+ * is a version waiting for a human, and no other surface can tell that apart
+ * from a version that shipped.
+ */
+const ascScript = `${process.env.HOME}/leela-src/leela/scripts/asc-state.mjs`;
+const asc = await run('node', [ascScript], { timeout: 120_000 }).catch(() => null);
+if (asc === null) {
+  // Both rows, not one. A row that disappears when a probe cannot run is a row
+  // the reader does not notice is missing, and "nothing staged" and "I could
+  // not look" are the two answers this report must never conflate.
+  say('ios', 'TestFlight', 'not asked', 'no App Store Connect key on this machine', 'unasked');
+  say('ios', 'waiting for a press', 'not asked', 'the same key would answer it', 'unasked');
+} else {
+  const build = /build (\d+): (\w+)/.exec(asc.stdout);
+  say('ios', 'TestFlight', build ? `build ${build[1]}, ${build[2]}` : 'NO BUILD LISTED', '', build ? 'fine' : 'wrong');
+
+  const waiting = /^\s+([\d.]+): PREPARE_FOR_SUBMISSION/m.exec(asc.stdout);
+  say(
+    'ios',
+    'waiting for a press',
+    waiting ? `${waiting[1]} is staged` : 'nothing staged',
+    waiting ? 'Add for Review is the owner\'s, not this loop\'s' : '',
   );
 }
 
@@ -150,12 +227,18 @@ for (const line of findings) {
   console.log(`    ${line.name.padEnd(26)} ${line.value}${line.note ? `   (${line.note})` : ''}`);
 }
 
-const wrong = findings.filter((line) => /^[A-Z ]+$/.test(line.value));
+const wrong = findings.filter((line) => line.kind === 'wrong');
+const unasked = findings.filter((line) => line.kind === 'unasked');
 console.log(
   wrong.length === 0
-    ? '\nEvery surface answered.'
-    : `\n${wrong.length} did not answer: ${wrong.map((one) => one.name).join(', ')}`,
+    ? '\nEverything asked is well.'
+    : `\n${wrong.length} wrong: ${wrong.map((one) => one.name).join(', ')}`,
 );
+if (unasked.length > 0) {
+  // Said separately and on purpose: what was not measured is not a verdict,
+  // and the reader deserves to know which of the lines above are silence.
+  console.log(`Not asked here: ${unasked.map((one) => one.name).join(', ')}`);
+}
 
 if (process.argv.includes('--html')) {
   const rows = findings
