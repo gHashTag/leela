@@ -331,6 +331,35 @@ describe('one tick, one morning', () => {
     expect(await table.initiative.runTick(MORNING)).toEqual({ sent: 1, skipped: {} });
   });
 
+  it('says when the next word is due, at the moment it arms', async () => {
+    // The sentence is tested where it is built; this is the other half — that
+    // it is actually said. Commenting the log call out passed every test in
+    // this repository until this one existed, which is the same shape as a
+    // report that governs nothing.
+    const table = await harness({ rooms: [] });
+
+    table.initiative.start();
+
+    expect(table.said.some((line) => line.startsWith('The daily word is armed: next at'))).toBe(
+      true,
+    );
+  });
+
+  it('says it again after a tick, so a log carries the next morning too', async () => {
+    const table = await harness({ rooms: [] });
+
+    table.initiative.start();
+    const armedOnce = table.said.filter((line) => line.startsWith('The daily word is armed')).length;
+    // The chain re-arms in the tick's `finally`; the harness's schedule hands
+    // the run back, so firing it is how a second morning is reached.
+    table.armed[0]?.run();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(
+      table.said.filter((line) => line.startsWith('The daily word is armed')).length,
+    ).toBeGreaterThan(armedOnce);
+  });
+
   it('says the summary even when there was nobody to write to', async () => {
     const table = await harness({ rooms: [] });
     await table.initiative.runTick(MORNING);

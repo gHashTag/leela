@@ -90,6 +90,24 @@ export function nudgeHour(env: Record<string, string | undefined> = process.env)
   return Number.isInteger(hour) && hour >= 0 && hour <= 23 ? hour : DEFAULT_NUDGE_HOUR;
 }
 
+/**
+ * When the next daily word is due, as one sentence.
+ *
+ * Pure over its inputs so a test holds it, and printed at the moment the chain
+ * is armed rather than at startup — because those are two different facts and
+ * the banner had only the first.
+ *
+ * "Last daily word: none yet on this database." is true on the first morning
+ * of a deployment AND true of a bot whose scheduler was never armed, and an
+ * operator reading it cannot tell which. Said beside this line the pair is
+ * unambiguous: none yet, and the next one is at a named hour. Absent this
+ * line, none yet and nothing coming.
+ */
+export function nextWordDue(now: number, hour: number): string {
+  const at = new Date(now + msUntilHour(now, hour));
+  return `The daily word is armed: next at ${at.toISOString().slice(0, 16).replace('T', ' ')} UTC.`;
+}
+
 /** Milliseconds until the next strike of `hour`:00 UTC, always in the future. */
 export function msUntilHour(now: number, hour: number): number {
   const at = new Date(now);
@@ -572,6 +590,10 @@ export function createInitiative({
 
   function arm(): void {
     if (stopped) return;
+    // Said each time the chain is armed: once at startup, and once more after
+    // every tick, so a log carries the proof that the next morning is coming
+    // rather than only that the last one went.
+    log(nextWordDue(now(), hour));
     cancel = schedule(() => {
       void runTick(now())
         .catch((error) => log(`[initiative] the tick failed: ${String(error)}`))

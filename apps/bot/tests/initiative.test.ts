@@ -13,6 +13,7 @@ import {
   nudgeHour,
   type Candidate,
   lastWordSaid,
+  nextWordDue,
 } from '../src/initiative';
 import { MemoryNudgeStore, NEVER_NUDGED } from '../src/store';
 
@@ -445,5 +446,40 @@ describe('the last daily word, said at startup', () => {
     expect(lastWordSaid({ at: Date.UTC(2026, 7, 24, 6, 0, 0), sent: 3, skipped: {} })).toContain(
       'sent 3; skipped: none.',
     );
+  });
+});
+
+/**
+ * When the next word is due, said where it is armed.
+ *
+ * The startup banner says whether the last one happened. It could not say
+ * whether the next one is coming, and "none yet on this database" is true both
+ * of a deployment on its first morning and of one whose scheduler was never
+ * armed. Two states one sentence could not tell apart, which is the failure
+ * this project keeps finding.
+ */
+describe('the next daily word, said when the chain is armed', () => {
+  it('names the coming hour in UTC', () => {
+    // Half past midnight: the six o'clock is later the same day.
+    expect(nextWordDue(Date.UTC(2026, 7, 24, 0, 30, 0), 6)).toBe(
+      'The daily word is armed: next at 2026-08-24 06:00 UTC.',
+    );
+  });
+
+  it("names tomorrow once today's hour has passed", () => {
+    expect(nextWordDue(Date.UTC(2026, 7, 24, 6, 0, 1), 6)).toBe(
+      'The daily word is armed: next at 2026-08-25 06:00 UTC.',
+    );
+  });
+
+  it('names tomorrow when armed exactly on the hour', () => {
+    // `msUntilHour` is strictly future — a tick that runs on the hour arms
+    // tomorrow's rather than another copy of its own — and this sentence has
+    // to agree with it or the log contradicts the schedule.
+    expect(nextWordDue(Date.UTC(2026, 7, 24, 6, 0, 0), 6)).toContain('2026-08-25 06:00');
+  });
+
+  it('follows the configured hour, not the default', () => {
+    expect(nextWordDue(Date.UTC(2026, 7, 24, 0, 0, 0), 23)).toContain('2026-08-24 23:00');
   });
 });
