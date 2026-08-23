@@ -120,10 +120,36 @@ async function play(storage: Storage, language = 'en', inTelegram = false): Prom
   window.addEventListener('error', (event) => broke.push(String((event as ErrorEvent).message)));
 
   await import('../src/main');
-  // The plans arrive as a dynamic import; nothing is drawn before they do.
-  await new Promise((resolve) => setTimeout(resolve, 60));
+  await drawn();
 
   return broke;
+}
+
+/**
+ * Wait until the board has been built, rather than for a number of
+ * milliseconds.
+ *
+ * This was `setTimeout(60)` with a comment saying the plans arrive as a
+ * dynamic import — true, and the sixty was a guess. A guess about how long
+ * another machine takes: the suite passes this file on its own and fails it
+ * inside the full run, where twenty other files are competing for the same
+ * cores, and it fails as «Бросьте шестёрку, чтобы войти» where a plan title
+ * belongs — a board caught mid-load, reported as a board that renders the
+ * wrong thing. That cost a whole iteration of the improvement loop, which
+ * bisected it to the wrong file and reverted a change that was fine.
+ *
+ * `#board .squares` is the deterministic answer: `buildBoard` creates it, and
+ * `buildBoard` runs in the `then` of `loadPlans` — so the node exists exactly
+ * when the plans have arrived, and `draw()` has run in the same microtask.
+ *
+ * Bounded, so a board that genuinely never loads fails as a wrong assertion
+ * rather than hanging until the runner gives up.
+ */
+async function drawn(): Promise<void> {
+  for (let look = 0; look < 600; look += 1) {
+    if (document.querySelector('#board .squares')) return;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
 }
 
 const el = (id: string) =>
