@@ -65,8 +65,21 @@ not pick one on its own because it is a standing dependency:
    it works, an ongoing tax when it does not.
 3. **A stubbed context handed to `THREE.WebGLRenderer`.** No dependency, and
    it answers a different question: that the renderer was *asked* to draw, not
-   that anything appeared. Worth having as a unit test regardless, and it is
-   not a substitute.
+   that anything appeared.
+
+   **Measured 2026-08-23, and it is dearer than this spec first said.** The
+   file already injects `clock` and `surface` for testability, so injecting a
+   renderer alongside them looked like the cheap idiomatic path — and the
+   eleven direct uses of `renderer.` are all stubbable. But two lines below the
+   constructor sits `new THREE.PMREMGenerator(renderer)` followed by
+   `pmrem.fromScene(new RoomEnvironment(), 0.04)`, which **renders** into a
+   render target: a stub would have to satisfy PMREM's internals as well, and
+   `OrbitControls` wants a real event target beside it. Not one parameter but
+   three, two of them inside code that decides how the board is lit.
+
+   So option 3 is not the free consolation prize it reads as. It is a
+   refactor of the lighting path to buy an assertion that the renderer was
+   called — which is worth less than option 1 and costs more than it looks.
 
 The recommendation, if the owner wants one: **(1), against the deployed URL,
 as a step in the deploy workflow rather than in the unit suite.** The

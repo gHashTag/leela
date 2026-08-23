@@ -102,6 +102,20 @@ const LOADERS: Partial<Record<Language, () => Promise<{ default: unknown }>>> = 
 const PLANS: Partial<Record<Language, Plan[]>> = { en: en as unknown as Plan[] };
 
 /**
+ * Which languages have their plan text in memory right now.
+ *
+ * For a server to say out loud at startup what it actually holds. The bot's
+ * banner used to *assert* that twenty languages get the plans in their own
+ * language; since the text is loaded on demand that sentence is only true if
+ * `loadEveryLanguage` finished, and an assertion that depends on an await
+ * somewhere else is a sentence waiting to be wrong. This makes it a
+ * measurement.
+ */
+export function loadedLanguages(): Language[] {
+  return Object.keys(PLANS) as Language[];
+}
+
+/**
  * Bring one language's plans into memory. Idempotent, and safe to call twice.
  *
  * The board calls this once, for the language it is about to render in, before

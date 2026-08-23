@@ -24,6 +24,7 @@ import {
   FALLBACK_LANGUAGE,
   LANGUAGES,
   loadEveryLanguage,
+  loadedLanguages,
   messageCoverage,
   messageIssues,
   translatedLanguages,
@@ -254,6 +255,25 @@ const spoken = translatedLanguages();
 console.log(
   `Speaking ${spoken.join(', ')}; the other ${LANGUAGES.length - spoken.length} ` +
     'languages get the plans in their own language and the rest in English.',
+);
+
+/**
+ * And whether that sentence is true, which is now a question worth asking.
+ *
+ * The plan text is loaded on demand since the web board stopped carrying
+ * twenty-two languages to a reader of one, so the line above is only true if
+ * `loadEveryLanguage` above finished. An assertion that depends on an await
+ * somewhere else is a sentence waiting to be wrong, so this measures instead
+ * of asserting — and, as a side effect, it is how an operator reading
+ * `railway logs` can tell which release is deployed: a bot that predates the
+ * loading prints no such line at all.
+ */
+const withText = loadedLanguages();
+console.log(
+  withText.length === LANGUAGES.length
+    ? `Plan text: all ${withText.length} languages are in memory.`
+    : `Plan text: only ${withText.length} of ${LANGUAGES.length} languages are in memory. ` +
+      `The rest will be served ${FALLBACK_LANGUAGE} — the startup load did not finish.`,
 );
 for (const { language, translated, total } of messageCoverage()) {
   if (translated < total) {
