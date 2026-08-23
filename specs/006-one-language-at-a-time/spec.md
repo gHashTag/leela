@@ -140,11 +140,96 @@ Not a change to what the board says, not a change to the twenty-two languages
 it offers, and not a font or asset change. `rules.json` needs nothing done to
 it: it is already absent from the board's entry, measured above.
 
+## Built, measured, and reverted a second time — 2026-08-23
+
+The whole thing was written this time: the loaders and `loadLanguage` /
+`loadEveryLanguage` in `@leela/content`, `loadEveryLanguage()` at the bot's
+startup and the book generator's, a `boot.ts` for the 3D board, a first-render
+gate on the phone, and `beforeAll(loadEveryLanguage)` on the eleven suites
+that read a language other than English. Every one of those suites went green:
+content 702, bot 907, webgl 538, docs 239, mobile 407.
+
+**What a reader actually pays, built and measured rather than estimated:**
+
+| reader | decoded | gzip |
+|---|---|---|
+| before, everyone | 7,098,593 | 1,910,736 |
+| English | 823,795 | 233,972 |
+| Russian | 1,183,742 | 316,519 |
+| Tamil | 1,353,800 | 314,349 |
+
+An 81–88 per cent cut, and 1.91 MB on the wire becomes 0.23–0.32 MB. The entry
+alone is 209,696 (English is in it because English is the fallback and a
+fallback that has to be fetched is not one), the board's code is a 140,128
+chunk, three.js is unchanged at 473,971, and each language is its own chunk
+from 181,710 (Javanese) to 530,005 (Tamil).
+
+### Three things this attempt established
+
+**1. Top-level `await` is not available and cannot be made available.** Vite's
+target is es2020 and the build fails outright. Raising it is not on offer
+either: the iOS app's deployment target is **iOS 13**, whose WebView has no
+top-level await at all, so a board built that way would be blank on every
+phone the app still supports. The answer is a `boot.ts` that does
+`loadLanguage(...).then(() => import('./main'))`, which works everywhere
+`import()` does. `main.ts` becomes a chunk by being imported that way, which
+is why the entry is small.
+
+**2. The 2D board solved this two years of commits ago, and better.**
+`apps/miniapp/src/content.ts` already loads one language as its own chunk,
+through `import.meta.glob`, and **throws** rather than falling back — its own
+header says why: "importing it whole produced a 6.5 MB bundle, 1.6 MB gzipped,
+to show one language". The 2D board was never part of the problem: it is
+119,868 bytes. Adding the package-level loader to it made it *worse* (an extra
+208 kB of English plus a 1.5 MB rules chunk), and that change was backed out.
+**Read the sibling before writing the spec.**
+
+**3. The ceiling shipped last iteration will watch less than it looks like.**
+After the cut the page names exactly one file, so `assetsIn` sees the entry
+and nothing else — not the board's code, not three.js, not the language. That
+is not new (nothing has ever seen the 2D board's twenty-four dataset chunks)
+but it is newly *misleading*, because the entry stops being the cost. Lowering
+`maxAssetBytes` to 400,000 is right and is not enough; a guard on what a whole
+reader pays — the entry, plus every chunk the entry names that is not a
+language, plus the largest language — is its own piece of work.
+
+### The one thing that stopped it, and it is not timing
+
+`apps/miniapp/tests/assembled.test.ts` — "loads a language whose plans are
+translated" — fails with the split in place: a Russian seat restored on plan
+41 renders the waiting header instead of «Человеческий план (джана-лока)».
+Bisected to `packages/content/src/index.ts` alone; the 2D board's own loader
+and entry were untouched and restored before the check.
+
+The first hypothesis was the harness's fixed `setTimeout(60)` with its comment
+"the plans arrive as a dynamic import". Replacing it with a wait for the board
+to stop drawing did **not** fix it, so the board really is rendering a waiting
+player rather than being caught mid-load. Until that is understood the split
+cannot land: it would be shipping an unexplained change in what the 2D board
+draws for a restored Russian game, and that board is live at
+`t27.ai/leela/classic/`.
+
+**Where to start next time:** the 2D board imports only `messageFor`,
+`piecesOf`, `resolveLanguage` from the package, all pure and all untouched —
+so the reach is through the module graph, not the API. Suspect the shared
+JSON modules: the package's `import('../data/plans.ru.json')` and the board's
+`import.meta.glob('.../data/plans.*.json')` name the same files by different
+specifiers, and how vitest resolves the pair is the first thing to measure.
+
 ## Why the experiment was reverted rather than finished
 
-Twenty-four tests, three packages and two runtimes is more than fitted in the
-window left in the iteration that measured it, and the loop's contract prefers
-a thing finished to a thing half-done — especially with a cron that may start
-the next iteration on top of a working tree. What shipped instead was the
-ceiling this spec asks for (`maxAssetBytes`, 7,000,000, one line to lower),
-and this section, which turns the remaining work into transcription.
+**The first time (iteration 14):** twenty-four tests, three packages and two
+runtimes was more than fitted in the window left, and the loop's contract
+prefers a thing finished to a thing half-done — especially with a cron that
+may start the next iteration on top of a working tree. What shipped instead
+was the ceiling this spec asks for (`maxAssetBytes`, 7,000,000, one line to
+lower).
+
+**The second time (iteration 15):** the work was finished and eleven suites
+were green, and one was not — a live board drawing something different for a
+restored Russian game, for a reason not yet understood. A change nobody can
+explain is not a change to push, however good its numbers are. What shipped
+that round was this section: the real per-reader measurements, the iOS 13
+finding that decides the load point for good, the sibling implementation that
+should have been read first, and the single failing assertion with the place
+to start looking.

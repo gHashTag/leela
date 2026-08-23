@@ -316,8 +316,8 @@ describe('the size a check refuses', () => {
   });
 
   it('holds the live board to the ceiling it ships with', () => {
-    // The number that has to come down when specs/006 lands, asserted here so
-    // that lowering it is a deliberate edit with a test beside it.
+    // Asserted so that moving the ceiling is a deliberate edit with a test
+    // beside it. The measured target for after specs/006 is 400,000.
     const board = DEPLOYMENT_CHECKS.find((check) => check.what === 'the 3D board');
 
     expect(board?.maxAssetBytes).toBe(7_000_000);
