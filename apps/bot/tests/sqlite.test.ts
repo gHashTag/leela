@@ -816,6 +816,32 @@ describe('the initiative’s memory', () => {
     });
   });
 
+  it('says out loud which columns an older database gained', () => {
+    // The deployed volume is the one database nobody can read. If the process
+    // that opens it does not say what it changed, a migration that silently
+    // did not run is discovered later, inside a tick, as a missing column.
+    const path = join(dir, 'nudge-migration-says.db');
+
+    const older = openDatabase(path);
+    older.exec(
+      'CREATE TABLE IF NOT EXISTS nudges (\n  user_id TEXT PRIMARY KEY,\n  updated_at INTEGER NOT NULL\n);',
+    );
+    older.close();
+
+    const said: string[] = [];
+    const queries = new SqliteRoomQueries({ path, now: () => NOW, log: (line) => said.push(line) });
+    open.push(queries);
+
+    expect(said.join(' ')).toContain('nudges.doorsteps');
+
+    // And it holds its tongue when there was nothing to do: a line every
+    // restart would train an operator to skip the one that matters.
+    const quiet: string[] = [];
+    const again = new SqliteRoomQueries({ path, now: () => NOW, log: (line) => quiet.push(line) });
+    open.push(again);
+    expect(quiet).toEqual([]);
+  });
+
   it('reads a database written before the column existed as zero, not as null', () => {
     // The deployed volume outlives every release: the live `nudges` table was
     // created without `doorsteps`, so the migration adds it and every row

@@ -263,6 +263,15 @@ export interface SqliteOptions {
   path: string;
   /** Injected so a test can control time. */
   now?: () => number;
+  /**
+   * Where the migration says what it did. Silent when it did nothing.
+   *
+   * It exists because the deployed volume is the one database nobody can
+   * read: a release that adds a column can only be believed if the process
+   * that opened the file says so out loud, and a migration that quietly did
+   * not run fails later, inside a tick, as a missing column.
+   */
+  log?: (message: string) => void;
 }
 
 export class SqliteRoomQueries implements RoomQueries {
@@ -285,7 +294,7 @@ export class SqliteRoomQueries implements RoomQueries {
    */
   private stamped = 0;
 
-  constructor({ path, now = Date.now }: SqliteOptions) {
+  constructor({ path, now = Date.now, log = console.log }: SqliteOptions) {
     this.db = openDatabase(path);
     this.clock = now;
 
@@ -296,7 +305,8 @@ export class SqliteRoomQueries implements RoomQueries {
     this.db.exec('PRAGMA journal_mode = WAL');
     this.db.exec(SCHEMA);
     // A volume older than this release has the tables and not the columns.
-    addMissingColumns(this.db);
+    const added = addMissingColumns(this.db);
+    if (added.length > 0) log(`Storage: added ${added.join(', ')} to an older database.`);
   }
 
   async loadSession(chatId: string): Promise<SessionRow | null> {
