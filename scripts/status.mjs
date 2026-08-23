@@ -1,9 +1,9 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * Where everything stands, in one command.
  *
- *     node scripts/status.mjs            # print it
- *     node scripts/status.mjs --html     # and write status.html beside it
+ *     bun scripts/status.mjs             # print it
+ *     bun scripts/status.mjs --html      # and write status.html beside it
  *
  * Written 2026-08-23, because the honest answer to "what is the status?" had
  * been a person asking an agent, and an agent reading four places and
@@ -24,6 +24,23 @@
 import { execFile } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { promisify } from 'node:util';
+
+/**
+ * The deployment check's own arithmetic, imported rather than repeated.
+ *
+ * This file computed what a reader downloads itself for its first day, with a
+ * comment saying it was "derived here rather than imported because this script
+ * must run against a deployment without the repository's test setup around
+ * it". That was a reimplementation, and duplication is the one thing this
+ * repository has reliably shown to rot: two answers to "what does a reader
+ * pay" would have drifted, and the drift would have shown up as a dashboard
+ * disagreeing with a CI gate about the same live site.
+ *
+ * It costs a shebang. `bun` resolves TypeScript and `node` does not, which is
+ * why `audit-dataset.mjs` is invoked the same way — and why `audit-copies.mjs`
+ * silently failed under `node` for as long as anybody had run it.
+ */
+import { chunksIn, readerCost } from '../apps/miniapp/src/smoke.ts';
 
 const run = promisify(execFile);
 
@@ -94,20 +111,22 @@ if (!page.ok || page.status !== 200) {
       declared === null || declared === undefined ? 'wire size not declared' : `${bytes(Number(declared))} b on the wire`,
     );
 
-    // What a reader actually pays: every chunk the entry names, plus the
-    // largest language — the same arithmetic the deployment check makes.
-    const named = [...new Set([...entry.text.matchAll(/["'`]\.\/([A-Za-z0-9._-]+\.js)["'`]/g)].map((m) => m[1]))];
-    const weighed = [];
-    for (const chunk of named) {
+    // What a reader actually pays, by the deployment check's own reckoning:
+    // everything the entry names, plus the largest of the languages, because
+    // twenty-one are built and one is fetched.
+    const weighed = [{ name: 'entry', bytes: new TextEncoder().encode(entry.text).length }];
+    for (const chunk of chunksIn(entry.text)) {
       const got = await reach(`${site}assets/${chunk}`);
-      weighed.push({ chunk, size: got.ok && got.status === 200 ? new TextEncoder().encode(got.text).length : 0 });
+      weighed.push({
+        name: chunk,
+        bytes: got.ok && got.status === 200 ? new TextEncoder().encode(got.text).length : 0,
+      });
     }
-    const languages = weighed.filter((one) => one.chunk.startsWith('plans.'));
-    const always = weighed.filter((one) => !one.chunk.startsWith('plans.'));
-    const heaviest = languages.reduce((worst, one) => (one.size > (worst?.size ?? 0) ? one : worst), null);
-    const cost = new TextEncoder().encode(entry.text).length + always.reduce((all, one) => all + one.size, 0) + (heaviest?.size ?? 0);
 
-    say('web', 'what a reader downloads', `${bytes(cost)} b`, `${languages.length} languages built, one fetched`);
+    const cost = readerCost(weighed, 'plans.');
+    const languages = weighed.filter((one) => one.name.startsWith('plans.')).length;
+
+    say('web', 'what a reader downloads', `${bytes(cost.bytes)} b`, `${languages} languages built, one fetched`);
   }
 }
 
