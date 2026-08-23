@@ -112,10 +112,23 @@ mentions it.
 | A die with no throw to show shows no face | `tests/screen.test.ts` |
 | `pipsFor` and `isFace` agree on what a face is | `die.ts`, `tests/screen.test.ts` |
 | A six says so | `audit-unread`, via `rollsAgain` in `main.ts` |
-| The board renders at all on first paint | looking at it — nothing else can |
+| The board renders at all on first paint | measured live, not yet guarded — see below |
 
-The last row is weak point 4 restated: it is the one invariant with no test,
-and it is why the render smoke test is the top item below.
+**The last row was "looking at it" until 2026-08-23, when it was looked at
+with an instrument instead of an eye.** The live board's own drawing buffer,
+read through `gl.readPixels` over a 320×320 sample, holds **133 distinct
+colours**; a canvas never drawn into holds 1. So the board does draw, and now
+there is a number for it.
+
+The calibration is the part worth keeping. The obvious metric — how much of
+the canvas is lit — reads **1.0 for a canvas cleared to a solid colour**,
+which is *higher than the real board's 0.124*. A guard built on it would have
+passed the exact failure it exists to catch and failed the healthy case. The
+count of distinct colours separates them cleanly: 1 against 133.
+
+Turning that into something CI runs needs a GL context, and that is a standing
+dependency rather than a line of code — the options and their costs are in
+[`specs/007`](../../specs/007-a-board-that-drew-something/spec.md).
 
 ## What is verified, and by what
 
@@ -143,9 +156,11 @@ took a reader from 7,098,593 bytes to 1,353,972 — 340,683 on the wire.
 
 Ordered by what unblocks the most:
 
-1. A render smoke test: draw one frame headless, hash the pixels, fail on
-   drift (weak point 4). Needs a GPU-less renderer in CI, and it is the only
-   class of regression nothing here can see.
+1. The render guard — [`specs/007`](../../specs/007-a-board-that-drew-something/spec.md).
+   Not a pixel hash: a hash fails on every legitimate change and gets deleted
+   the first week. The question is whether anything drew, and the answer is a
+   count of distinct colours. Needs a browser in CI, which is the owner's
+   call to make and the spec's whole subject.
 2. A shared table (2) — the one thing a competitor sells that this cannot do.
    Needs a server holding sessions, which the `/api/ask` deployment already
    proves is affordable.
