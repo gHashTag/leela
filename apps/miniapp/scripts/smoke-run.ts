@@ -25,7 +25,17 @@ const fetcher: Fetcher = async (url) => {
   const timer = setTimeout(() => controller.abort(), 15_000);
   try {
     const response = await fetch(url, { signal: controller.signal });
-    return { status: response.status, text: await response.text() };
+    // `content-length` is what the server sent, before `fetch` decompressed
+    // it: on a gzipping host that is the number a phone pays. Read before the
+    // body, because reading the body is what consumes the response.
+    const declared = response.headers.get('content-length');
+    const transferred = declared === null ? undefined : Number(declared);
+
+    return {
+      status: response.status,
+      text: await response.text(),
+      transferred: transferred !== undefined && Number.isFinite(transferred) ? transferred : undefined,
+    };
   } finally {
     clearTimeout(timer);
   }

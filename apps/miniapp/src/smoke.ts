@@ -25,7 +25,13 @@ export interface Check {
    * status and a size reads that as the bundle.
    */
   mustNotContain?: string[];
-  /** Smallest response that could be the real thing, in bytes. */
+  /**
+   * Smallest response that could be the real thing, in bytes.
+   *
+   * Real bytes since {@link byteLength} — these floors were written against
+   * character counts, which are never larger, so each of them got stricter and
+   * none of them needed moving.
+   */
   minBytes?: number;
   /**
    * The path is an app's page, and its build names its assets with a content
@@ -42,7 +48,10 @@ export interface CheckResult {
   check: Check;
   ok: boolean;
   status: number;
+  /** The decoded response, in real bytes. {@link byteLength}. */
   bytes: number;
+  /** What crossed the wire, when the response said. Undefined is unmeasured. */
+  transferred?: number;
   missing: string[];
   /** Fragments that were there and should not have been. */
   instead: string[];
@@ -114,7 +123,43 @@ export const DEPLOYMENT_CHECKS: Check[] = [
   },
 ];
 
-export type Fetcher = (url: string) => Promise<{ status: number; text: string }>;
+export type Fetcher = (
+  url: string,
+) => Promise<{
+  status: number;
+  text: string;
+  /**
+   * What crossed the wire, when the response said so — the compressed length
+   * from `content-length`, which a static host sets to the gzipped size.
+   *
+   * Optional because it is a fact about a transport a fake does not have, and
+   * because a host is free not to send the header. Absent means unmeasured
+   * here, never zero.
+   */
+  transferred?: number;
+}>;
+
+/**
+ * The size of a response, in bytes.
+ *
+ * This file called `text.length` "bytes" and printed it as `b` for as long as
+ * it has existed, and `text.length` counts UTF-16 code units — characters. On
+ * the one asset the number is quoted about, the 3D board's entry, it
+ * understated the file by 41 per cent: 3,907,316 characters against 6,624,207
+ * bytes, measured against the live deployment on 2026-08-23. The board carries
+ * plan texts in Devanagari, Cyrillic, Arabic, Tamil and Chinese, and each of
+ * those characters is two or three bytes.
+ *
+ * The direction of the old error is worth stating, because it decides whether
+ * anything shipped broken: characters are never more than bytes, so every
+ * `minBytes` floor was compared against a number that could only be too small.
+ * No check ever passed that should have failed. What was wrong was every size
+ * this loop has *reported* — including the one the bundle-weight work is
+ * aimed at.
+ */
+export function byteLength(text: string): number {
+  return new TextEncoder().encode(text).length;
+}
 
 /** Run one check. Never throws: a failure is a result, not an exception. */
 export async function runCheck(
@@ -125,15 +170,16 @@ export async function runCheck(
   const url = `${base.replace(/\/$/, '')}/${check.path}`;
 
   try {
-    const { status, text } = await fetcher(url);
+    const { status, text, transferred } = await fetcher(url);
     const missing = (check.mustContain ?? []).filter((fragment) => !text.includes(fragment));
     const present = (check.mustNotContain ?? []).filter((fragment) => text.includes(fragment));
-    const bytes = text.length;
+    const bytes = byteLength(text);
 
     return {
       check,
       status,
       bytes,
+      transferred,
       missing,
       instead: present,
       ok:
@@ -339,7 +385,13 @@ export function describeResults(results: CheckResult[]): string {
     .map((result) => {
       const mark = result.ok ? 'ok  ' : 'FAIL';
       const detail = result.ok
-        ? `${result.bytes}b`
+        ? // Both numbers when the wire cost is known and differs: a reader
+          // deciding whether an asset is too heavy is deciding about what a
+          // phone downloads, and the decoded size alone answers a different
+          // question than the one being asked.
+          result.transferred !== undefined && result.transferred !== result.bytes
+          ? `${result.bytes}b (${result.transferred}b on the wire)`
+          : `${result.bytes}b`
         : [
             // A verdict read off the page has no status to report, and
             // `status 0` reads as a network failure that never happened.

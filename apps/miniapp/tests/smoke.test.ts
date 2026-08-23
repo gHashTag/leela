@@ -206,3 +206,68 @@ describe('runCheck', () => {
 function pagesOf(_fetcher: Fetcher): Record<string, string> {
   return { ...PAGES };
 }
+
+/**
+ * The size the report prints, and the unit it is printed in.
+ *
+ * `text.length` counts UTF-16 code units, this file called the number `bytes`
+ * and printed it as `b`, and nothing ever noticed — because the fixtures were
+ * ASCII, where the two agree exactly. The live board is not ASCII: its 22
+ * languages include Devanagari, Cyrillic, Arabic, Tamil and Chinese, and the
+ * one number the bundle-weight work is aimed at was understated by 41 per
+ * cent. A test with an ASCII fixture cannot catch this, which is why the
+ * fixtures below are deliberately not ASCII.
+ */
+describe('the size a check reports', () => {
+  const check = { path: 'sized', what: 'a sized thing' };
+
+  async function sizeOf(text: string, transferred?: number) {
+    const fetcher: Fetcher = async () => ({ status: 200, text, transferred });
+    return runCheck('https://example.test', check, fetcher);
+  }
+
+  it('counts bytes, not characters, in every script the board speaks', async () => {
+    const cases: Array<[string, string, number]> = [
+      ['ascii', 'roll', 4],
+      ['cyrillic', 'бросьте', 14],
+      ['devanagari', 'योजना', 15],
+      ['arabic', 'خطة', 6],
+      // Outside the basic plane: one character, two UTF-16 units, four bytes.
+      ['beyond the plane', '𑀔', 4],
+    ];
+
+    const said = [];
+    for (const [what, text, bytes] of cases) {
+      const result = await sizeOf(text);
+      said.push([what, result.bytes, bytes]);
+    }
+
+    expect(said.map(([what, got]) => `${what}: ${got}`)).toEqual(
+      said.map(([what, , want]) => `${what}: ${want}`),
+    );
+  });
+
+  it('holds the floor against real bytes, so a threshold can only get stricter', async () => {
+    // Seven characters of Cyrillic are fourteen bytes: a floor of ten passes
+    // now and failed when the count was characters.
+    const result = await runCheck(
+      'https://example.test',
+      { ...check, minBytes: 10 },
+      async () => ({ status: 200, text: 'бросьте' }),
+    );
+
+    expect(result.bytes).toBe(14);
+    expect(result.ok).toBe(true);
+  });
+
+  it('says what crossed the wire beside what arrived, when the two differ', async () => {
+    const compressed = await sizeOf('бросьте', 9);
+    expect(describeResults([compressed])).toContain('14b (9b on the wire)');
+
+    // And says it once when there is nothing to compare: a host that does not
+    // compress, or does not say, must not print the same number twice.
+    expect(describeResults([await sizeOf('бросьте', 14)])).toContain('14b');
+    expect(describeResults([await sizeOf('бросьте', 14)])).not.toContain('on the wire');
+    expect(describeResults([await sizeOf('бросьте')])).not.toContain('on the wire');
+  });
+});
