@@ -316,6 +316,7 @@ export default tseslint.config(
       '**/.vscode/**',
       '**/.idea/**',
       '**/.stryker-tmp/**',
+      '**/.mimosa/**',
       'apps/mobile/ios/**',
       'apps/mobile/android/**',
       'apps/mobile/.expo/**',
