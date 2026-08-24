@@ -32,3 +32,6 @@ scripts/.mutants-undo.json
 # it after a run that FINISHES, so what leaves it here is a run that was killed
 # before that ran.
 .stryker-tmp/
+
+# Mimosa scanner state, not a fact about the game.
+.mimosa/
