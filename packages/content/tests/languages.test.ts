@@ -100,7 +100,8 @@ describe('a diagram is not a sentence', () => {
     expect(isolated.indexOf('⁦')).toBeLessThan(isolated.indexOf('⁩'));
   });
 });
-import { loadEveryLanguage } from '../src/index';
+import { EVERY_LANGUAGE_MS,
+  loadEveryLanguage } from '../src/index';
 
 /**
  * Every language's text, in memory, before anything asks for it.
@@ -111,5 +112,5 @@ import { loadEveryLanguage } from '../src/index';
  * say so, and this is that saying: without it these tests would quietly
  * measure English twenty-two times and pass.
  */
-beforeAll(loadEveryLanguage);
+beforeAll(loadEveryLanguage, EVERY_LANGUAGE_MS);
 

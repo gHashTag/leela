@@ -5,7 +5,8 @@ import {
   directionOf,
   messageFor,
   plansFor,
-  rulesFor, loadEveryLanguage } from '@leela/content';
+  rulesFor, EVERY_LANGUAGE_MS,
+  loadEveryLanguage } from '@leela/content';
 import { TOTAL_PLANS } from '@leela/engine';
 import {
   DOCS_URL,
@@ -760,5 +761,5 @@ describe('a chapter the reader\'s own book has not got', () => {
  * language before it writes a page, and a suite that renders one has to do the
  * same or it renders English and asserts English about it.
  */
-beforeAll(loadEveryLanguage);
+beforeAll(loadEveryLanguage, EVERY_LANGUAGE_MS);
 

@@ -23,7 +23,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 // @ts-expect-error - the audit's logic is plain JavaScript, shared with the script
 import { FUNCTION_WORDS, unseeableIn, wrongLanguageIn } from '../../../scripts/lib/untranslated.mjs';
-import { LANGUAGES, plansFor, scriptOf, type Language, loadEveryLanguage } from '../src/index';
+import { LANGUAGES, plansFor, scriptOf, type Language, EVERY_LANGUAGE_MS,
+  loadEveryLanguage } from '../src/index';
 
 const words = FUNCTION_WORDS as Record<string, RegExp>;
 const covered = Object.keys(words);
@@ -156,5 +157,5 @@ describe('the words a language cannot do without', () => {
  * say so, and this is that saying: without it these tests would quietly
  * measure English twenty-two times and pass.
  */
-beforeAll(loadEveryLanguage);
+beforeAll(loadEveryLanguage, EVERY_LANGUAGE_MS);
 

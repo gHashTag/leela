@@ -142,6 +142,32 @@ export async function loadEveryLanguage(): Promise<void> {
 }
 
 /**
+ * How long a test hook may spend on the line above — measured, and one number
+ * rather than twelve.
+ *
+ * `beforeAll(loadEveryLanguage)` appears TWELVE TIMES across five workspaces,
+ * and every one of them was betting on vitest's 10-second default. On
+ * 2026-08-28 one lost: `apps/docs/tests/render.test.ts` timed out in its hook
+ * and took 167 tests with it, at a clean checkout with nothing changed. Alone
+ * that whole file takes 2.56 seconds.
+ *
+ * It is not slow, it is starved. `bun run test` runs twelve workspaces at once,
+ * each with its own vitest worker pool, and this hook reads twenty-two
+ * languages of plan text off the disk — so the twelve heaviest hooks in the
+ * repository all contend for the same disk and cores at the same moment. It was
+ * the second failure of that exact shape in two days; the first was a test
+ * deadline in `packages/content/tests/undo.test.ts`, and fixing that one alone
+ * left eleven more bets outstanding.
+ *
+ * A minute, because the number that matters is not the honest duration but the
+ * one that still fails a genuine hang while never failing a machine under load.
+ * Exported so the reason lives once and the twelve call sites point at it: a
+ * deadline copied twelve times is twelve things to change when the next one
+ * loses.
+ */
+export const EVERY_LANGUAGE_MS = 60_000;
+
+/**
  * The languages already complained about, so the complaint is made once.
  *
  * Serving English where Russian was asked for is the failure this project

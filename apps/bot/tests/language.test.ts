@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { CLASSIC, ONLINE } from '@leela/engine';
-import { messageCoverage, messageFor, loadEveryLanguage } from '@leela/content';
+import { messageCoverage, messageFor, EVERY_LANGUAGE_MS,
+  loadEveryLanguage } from '@leela/content';
 import {
   board,
   help,
@@ -409,5 +410,5 @@ describe('a throw that moves nobody', () => {
  * the same, or it would quietly assert that Russian looks exactly like
  * English and pass.
  */
-beforeAll(loadEveryLanguage);
+beforeAll(loadEveryLanguage, EVERY_LANGUAGE_MS);
 

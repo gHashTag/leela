@@ -26,7 +26,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { LANGUAGES, plansFor, rulesFor, loadEveryLanguage } from '../src/index';
+import { LANGUAGES, plansFor, rulesFor, EVERY_LANGUAGE_MS,
+  loadEveryLanguage } from '../src/index';
 
 const manifest = JSON.parse(
   readFileSync(join(import.meta.dirname, '..', 'data', 'manifest.json'), 'utf8'),
@@ -123,5 +124,5 @@ describe('a text with nowhere for the eye to rest', () => {
  * say so, and this is that saying: without it these tests would quietly
  * measure English twenty-two times and pass.
  */
-beforeAll(loadEveryLanguage);
+beforeAll(loadEveryLanguage, EVERY_LANGUAGE_MS);
 

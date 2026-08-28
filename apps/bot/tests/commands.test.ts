@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { LANGUAGES, rulesFor, type Language, loadEveryLanguage } from '@leela/content';
+import { LANGUAGES, rulesFor, type Language, EVERY_LANGUAGE_MS,
+  loadEveryLanguage } from '@leela/content';
 import { MAX_SEATS, ONCHAIN } from '@leela/engine';
 import { planFor } from '@leela/content';
 import {
@@ -1023,5 +1024,5 @@ describe('the table of standings', () => {
  * the same, or it would quietly assert that Russian looks exactly like
  * English and pass.
  */
-beforeAll(loadEveryLanguage);
+beforeAll(loadEveryLanguage, EVERY_LANGUAGE_MS);
 

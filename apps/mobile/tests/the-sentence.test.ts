@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
 // Shared with the audit scripts, which are plain JavaScript.
 import { blank } from '../../../scripts/lib/source.mjs';
-import { LANGUAGES, describeMove, messageFor, planFor, loadEveryLanguage } from '@leela/content';
+import { LANGUAGES, describeMove, messageFor, planFor, EVERY_LANGUAGE_MS,
+  loadEveryLanguage } from '@leela/content';
 import { type MoveEvent } from '@leela/engine';
 import { fileReport, mayThrow, newGame, owesAnAccount, throwDie } from '../src/game';
 
@@ -124,5 +125,5 @@ describe('the screen asks rather than formats', () => {
  * the plans are loaded on demand now. Without it this suite would assert that
  * a Russian sentence is Russian while the plan title inside it was English.
  */
-beforeAll(loadEveryLanguage);
+beforeAll(loadEveryLanguage, EVERY_LANGUAGE_MS);
 
