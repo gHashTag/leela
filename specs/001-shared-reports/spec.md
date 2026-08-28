@@ -4,7 +4,12 @@
 
 **Created**: 2026-07-30
 
-**Status**: Draft — blocked on a decision, see Assumptions
+**Status**: Draft — **the blocker is gone as of 2026-08-28.** It said "blocked
+on a decision" for four weeks, and the decision it was waiting for has since
+been taken and built for a different spec. See Assumptions, which have been
+corrected rather than left standing: they described as undecided a thing that
+is now deployed, and a document that says the tree does not do something it
+does is read as true by whoever opens it next.
 
 **Input**: "добавить отчёты и социальные профили и сеть — изучи как раньше было и всю логику перенеси"
 
@@ -111,9 +116,20 @@ flow for exactly this reason.
   MUST be able to delete it. *(The first half exists.)*
 - **FR-006**: Sharing a report with other players MUST be a choice made per
   report, not a default. The published app posted everything.
-- **FR-007**: The system MUST NOT [NEEDS CLARIFICATION: what identity? Telegram
-  `initData` verified against the bot token is the obvious candidate and needs
-  no accounts, but it ties the mini app to Telegram and excludes the web.]
+- **FR-007**: The system MUST identify a player by **Telegram `initData`,
+  verified against the bot token**, and MUST NOT accept an identity the client
+  asserts. *(Clarified 2026-08-28. It was the obvious candidate here from the
+  start; what stopped it being written down was the objection that it "ties the
+  mini app to Telegram and excludes the web". **Measured, it does not.** The
+  board asks only when `initData` is non-empty, which outside Telegram it is —
+  `telegram-web-app.js` defines `WebApp` in any browser but leaves that field
+  blank. On the deployed board in a plain browser: nothing is asked, the line
+  stays hidden, no console errors, all eleven deployment checks pass. Identity
+  adds nothing for a web player and takes nothing away, so the objection was to
+  a cost that is not paid. The verifier is `apps/bot/src/vouched.ts`, and the
+  half NOT to copy is in the prior art on this disk: `leela-chakra-nextjs`
+  parsed `initData` in the browser and looked the player up by the id it found
+  there, so anyone could ask for anyone's game.)*
 - **FR-008**: Shared reports MUST be moderatable [NEEDS CLARIFICATION: by whom?
   The published app had `accept` and a ban list, which is a person's job.]
 
@@ -135,14 +151,32 @@ flow for exactly this reason.
 
 ## Assumptions
 
-- **This needs a server, and that is a decision rather than code.** Two halves
-  cannot see each other without something in the middle: a shared identity and
-  somewhere to put a report that is not one device. The mini app is static files
-  on GitHub Pages and the bot is a process with a SQLite file.
-- The cheapest honest shape is probably: the bot grows a small HTTP surface,
-  the mini app authenticates with Telegram `initData`, and the bot's existing
-  SQLite stays the store. That is a deployment — a host, a URL, a backup — and
-  under this repository's boundaries it is not something to start unasked.
+- ~~**This needs a server, and that is a decision rather than code.**~~
+  **SUPERSEDED 2026-08-28 — the server exists.** The paragraph below guessed at
+  "the cheapest honest shape"; every part of that guess is now deployed, and it
+  was built for `specs/009` rather than for this one:
+
+  > the bot grows a small HTTP surface, the mini app authenticates with Telegram
+  > `initData`, and the bot's existing SQLite stays the store. That is a
+  > deployment — a host, a URL, a backup — and under this repository's
+  > boundaries it is not something to start unasked.
+
+  It was asked. The owner settled `specs/009` with «да 3D поле везде!», and what
+  now runs is exactly that shape: the bot serves `/api/ask` and `/api/game` on
+  Railway, `vouched.ts` checks `initData` against the token, and the games are
+  in the SQLite file on the volume. **The host, the URL and the backup are no
+  longer a decision to take — they are a thing to point at.**
+
+  The struck sentence is kept rather than deleted, because deleting it would
+  hide that this spec sat still for four weeks waiting for a decision that had
+  already been taken elsewhere. Nothing here re-derives that architecture; it
+  reads `specs/009`.
+
+- **What this spec still needs, and it is smaller than it was.** Identity and a
+  server are answered. What is not: a route that accepts a *report* (only games
+  are served today, and read-only), the union rule applied across two stores
+  rather than two files, and FR-008's moderator, which is a person's job and
+  the owner's to name.
 - Until that decision: the file in the mini app *is* the bridge. A player can
   save their path and carry it, and the merge rules that make a sync safe are
   already written and tested.
