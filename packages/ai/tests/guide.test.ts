@@ -487,7 +487,7 @@ describe('the deadline', () => {
       expect(answered, 'a player is never left with nothing').not.toBe('nothing at all');
       expect((answered as Reflection).fromModel).toBe(false);
       expect((answered as Reflection).text).toContain('41');
-    }, 5_000);
+    });
   }
 
   it('says a deadline passed rather than that something failed', async () => {
@@ -503,7 +503,7 @@ describe('the deadline', () => {
     await guide.answer('what does 41 ask of me', { language: 'en', plan: 41 });
 
     expect(logged.join(' ')).toMatch(/timed out/i);
-  }, 5_000);
+  });
 
   it('is not a reason to go quiet, because the next one may be answered', async () => {
     // Unlike a refused key. A slow minute is weather, and half an hour of
@@ -525,7 +525,7 @@ describe('the deadline', () => {
     const second = await guide.answer('and now', { language: 'en', plan: 41 });
     expect(second.fromModel).toBe(true);
     expect(guide.status().skipped, 'nothing was skipped unasked').toBe(0);
-  }, 5_000);
+  });
 });
 
 describe('every option a caller gives reaches the prompt', () => {

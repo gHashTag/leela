@@ -870,7 +870,7 @@ describe('a path leaving and arriving as a file', () => {
 
     await bot.handleUpdate(document(64));
     expect(texts(sent).join(' ')).toMatch(/could not fetch/i);
-  }, 5_000);
+  });
 
   it('does not blame the file for a download that failed', async () => {
     // Found by writing the test above: both causes shared one sentence, and

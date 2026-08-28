@@ -191,7 +191,7 @@ describe('the mini app as it is assembled', () => {
     expect(broke).toEqual([]);
     expect(document.querySelectorAll('#board .cell')).toHaveLength(72);
     expect(openDialogs()).toEqual(['intention']);
-  }, 20_000);
+  });
 
   it('plays in a private window, which is what the code has always claimed', async () => {
     // The defect this file was written for. Every function involved was tested
@@ -209,7 +209,7 @@ describe('the mini app as it is assembled', () => {
 
     // A throw was taken and described. Which throw it was is the die's business.
     expect(el('say').textContent).toMatch(/\d/);
-  }, 20_000);
+  });
 
   it('keeps what was just written even where nothing can be stored', async () => {
     // The same shape one function along: the report is filed, and the app must
@@ -222,7 +222,7 @@ describe('the mini app as it is assembled', () => {
     // Nothing is owed yet, so the writing box is not on offer — which is itself
     // the rule from an earlier pass, and worth seeing hold here.
     expect(el('report').disabled).toBe(true);
-  }, 20_000);
+  });
 
   it('comes back to a game it stored', async () => {
     // The other half: a storage that does remember must be believed.
@@ -253,7 +253,7 @@ describe('the mini app as it is assembled', () => {
     expect(openDialogs(), 'the question has an answer already').toEqual([]);
     expect(el('plan-number').textContent).toBe('41');
     expect(el('roll').disabled).toBe(false);
-  }, 20_000);
+  });
 
   it('keeps a game in progress when somebody else sits down', async () => {
     // The ninety-sixth pass fixed this in `resize`; here it is through the
@@ -276,7 +276,7 @@ describe('the mini app as it is assembled', () => {
     };
 
     expect(seats.players.map((seat) => seat.state.loka)).toEqual([41, 68, 68]);
-  }, 20_000);
+  });
 
   it('writes an account and shows it as a square that came back', async () => {
     const storage = remembering({
@@ -315,7 +315,7 @@ describe('the mini app as it is assembled', () => {
       [...document.querySelectorAll('.came-back .chip')].map((node) => node.textContent),
     ).toEqual(['41 · The human plane (jana-loka) ×2']);
     dialog('reader').close();
-  }, 20_000);
+  });
 
   it('takes a path back from a file', async () => {
     const storage = remembering({
@@ -340,7 +340,7 @@ describe('the mini app as it is assembled', () => {
     };
 
     expect(kept.entries.map((entry) => entry.text)).toEqual(['From another device.']);
-  }, 20_000);
+  });
 
   it('draws no way out of the question until there is one to come back to', async () => {
     /**
@@ -370,7 +370,7 @@ describe('the mini app as it is assembled', () => {
     if (dialog('intention').open) {
       expect(el('intention-close').hidden, 'a question already given may be left alone').toBe(false);
     }
-  }, 20_000);
+  });
 
   it('ends a game and begins another without burning the writing', async () => {
     const storage = remembering({
@@ -418,7 +418,7 @@ describe('the mini app as it is assembled', () => {
 
     expect(seats.players[0]?.state.loka).toBe(68);
     expect(kept.entries, 'starting again is not a reason to burn what was written').toHaveLength(1);
-  }, 20_000);
+  });
 
   it('carries the question out with the answers, and takes one in only where there is none', async () => {
     // The frame every report was written inside. A player who changed phone
@@ -470,7 +470,7 @@ describe('the mini app as it is assembled', () => {
     await new Promise((resolve) => setTimeout(resolve, 80));
 
     expect(asked.getItem('leela.intention.v1')).toBe('to say it out loud');
-  }, 20_000);
+  });
 
   it('loads a language whose plans are translated, and one that is not a language', async () => {
     // The dataset is fetched per language as its own chunk, which only the
@@ -490,7 +490,7 @@ describe('the mini app as it is assembled', () => {
 
     expect(await play(remembering({ 'leela.intention.v1': 'x', 'leela.seats.v1': seats }), 'zz')).toEqual([]);
     expect(el('plan-title').textContent).toBe('The human plane (jana-loka)');
-  }, 20_000);
+  });
 
   it('hands over the square the box is about, not the one whose turn it is', async () => {
     /**
@@ -559,7 +559,7 @@ describe('the mini app as it is assembled', () => {
     // holder's, and a phone three people play on has no business telling it
     // what any of them is playing for.
     expect(sent).not.toContain('question');
-  }, 20_000);
+  });
 
   it('sends the question when the device is one person', async () => {
     const storage = remembering({
@@ -577,7 +577,7 @@ describe('the mini app as it is assembled', () => {
     await new Promise((resolve) => setTimeout(resolve, 40));
 
     expect(handedOver[0] ?? '').toContain('to stop hurrying');
-  }, 20_000);
+  });
 
   it('opens one seat’s own accounts from one seat’s own chip', async () => {
     /**
@@ -654,5 +654,5 @@ describe('the mini app as it is assembled', () => {
       [...document.querySelectorAll('#reader-body blockquote p')].map((node) => node.textContent),
     ).toEqual(['Player one, in February.', 'Player one, in June.']);
     dialog('reader').close();
-  }, 20_000);
+  });
 });

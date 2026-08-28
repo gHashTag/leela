@@ -52,16 +52,31 @@ group('waiting for the app', () => {
     expect(asked).toBe(0);
   });
 
-  it('is a clock, not a count of attempts', async () => {
-    // `for (let i = 0; i < 600; i++)` with a 10ms sleep is six seconds only on
-    // an idle machine: each await costs the sleep plus however long the loop
-    // takes to come back. The old bound stretched exactly when it mattered.
+  it('waits at least as long as it was given', async () => {
     const began = Date.now();
     await expect(until(() => false, 'never', undefined, 120)).rejects.toThrow();
-    const took = Date.now() - began;
 
-    expect(took).toBeGreaterThanOrEqual(120);
-    expect(took, 'and not a multiple of the poll interval away from it').toBeLessThan(400);
+    expect(Date.now() - began).toBeGreaterThanOrEqual(120);
+  });
+
+  it('is a clock, not a count of attempts', async () => {
+    /*
+     * Asked with NO patience at all, because that is the one case where the two
+     * implementations are far apart: a clock gives up at once, and the count
+     * this replaced would poll six hundred times at 10 ms — about six seconds —
+     * whatever it was told.
+     *
+     * The first version of this test asserted `took < 400` after a 120 ms
+     * patience, and **it went red at a clean checkout the next morning**: an
+     * upper bound on wall-clock is exactly what a loaded machine breaks, which
+     * is the whole subject of the file it was testing. One second against six
+     * is a margin load cannot close, and the lower bound above is what proves
+     * the patience is honoured.
+     */
+    const began = Date.now();
+    await expect(until(() => false, 'never', undefined, 0)).rejects.toThrow();
+
+    expect(Date.now() - began).toBeLessThan(1_000);
   });
 
   it('loses the race to vitest on purpose', () => {

@@ -266,7 +266,7 @@ describe('a browser that keeps some of it', () => {
       reads.filter((read) => read.unanchored).map((read) => `${read.file}:${read.line} ${read.text}`),
       'a suite that reads its own package through the working directory is collected only from that directory',
     ).toEqual([]);
-  }, 20_000);
+  });
 
   it('goes on with the game, because the account is in hand either way', async () => {
     // Refusing to open the gate would be the other lie: the player has written
@@ -286,7 +286,7 @@ describe('a browser that keeps some of it', () => {
 
     expect(el('roll').disabled, 'the die opens').toBe(false);
     expect(el('report').disabled, 'and nothing more is owed').toBe(true);
-  }, 20_000);
+  });
 
   it('says it plainly when the writing did land', async () => {
     const storage = partial(/^never$/, {
@@ -303,7 +303,7 @@ describe('a browser that keeps some of it', () => {
 
     expect(el('say').textContent).not.toMatch(/will not keep/i);
     expect(storage.kept()['leela.reports.v1']).toContain('Something worth writing.');
-  }, 20_000);
+  });
 
   it('opens on a journal whose table was lost', async () => {
     // The other half of a half-written storage: the writing survived and the
@@ -324,7 +324,7 @@ describe('a browser that keeps some of it', () => {
     expect(document.getElementById('reader-body')?.textContent).toContain(
       'From a table that is gone.',
     );
-  }, 20_000);
+  });
 
   it('starts again on a table that was written halfway', async () => {
     // A tab closed mid-write leaves the first half of a JSON document. It is
@@ -343,7 +343,7 @@ describe('a browser that keeps some of it', () => {
     el('path').click();
     await new Promise((resolve) => setTimeout(resolve, 60));
     expect(document.getElementById('reader-body')?.textContent).toContain('Older than the broken');
-  }, 20_000);
+  });
 });
 
 describe('a browser that keeps none of the game', () => {
@@ -396,7 +396,7 @@ describe('a browser that keeps none of the game', () => {
     expect(game.said(), 'the throw is still described').toMatch(/threw/i);
     expect(game.said(), 'and so is the fact that it is going nowhere').toMatch(/will not keep/i);
     expect(game.stored(), 'which is true: the board is as it was').toContain('"loka":41');
-  }, 20_000);
+  });
 
   it('says it once, and not again under the next thing said', async () => {
     // A throw, then the account it asks for — two different lines, and a
@@ -418,7 +418,7 @@ describe('a browser that keeps none of the game', () => {
 
     expect(game.said(), 'the writing is confirmed').toMatch(/written/i);
     expect(game.said(), 'and not re-announced').not.toMatch(/will not keep/i);
-  }, 20_000);
+  });
 
   it('says nothing at all when the browser is keeping it', async () => {
     // The case that must stay quiet, and the one a notice bolted to `announce`
@@ -435,7 +435,7 @@ describe('a browser that keeps none of the game', () => {
     expect(game.said()).toMatch(/threw/i);
     expect(game.said()).not.toMatch(/will not keep/i);
     expect(game.stored(), 'and the board moved').not.toContain('"loka":41');
-  }, 20_000);
+  });
 });
 
 describe('a question the browser will not keep', () => {
@@ -471,14 +471,14 @@ describe('a question the browser will not keep', () => {
 
     expect(hint, 'nothing wrong with what they wrote').not.toMatch(/two characters/i);
     expect(said, 'and the browser is what is wrong').toMatch(/will not keep/i);
-  }, 20_000);
+  });
 
   it('still calls a short one short', async () => {
     // The message has a cause of its own, and it has to keep it.
     const { hint } = await answering('x', /^never$/);
 
     expect(hint).toMatch(/two characters/i);
-  }, 20_000);
+  });
 
   it('plays on with the question held for the session', async () => {
     const storage = partial(/^leela\.intention/);
@@ -490,7 +490,7 @@ describe('a question the browser will not keep', () => {
 
     expect((el('intention') as HTMLDialogElement).open, 'the dialog lets them through').toBe(false);
     expect(el('roll').disabled, 'and the die turns').toBe(false);
-  }, 20_000);
+  });
 });
 
 describe('half an account, in a browser keeping nothing', () => {
@@ -527,7 +527,7 @@ describe('half an account, in a browser keeping nothing', () => {
     expect(el('say').textContent, 'before anything else has been written').toMatch(
       /will not keep/i,
     );
-  }, 20_000);
+  });
 
   it('says nothing when the draft is being kept', async () => {
     const storage = partial(/^never$/, {
@@ -544,5 +544,5 @@ describe('half an account, in a browser keeping nothing', () => {
 
     expect(el('say').textContent).not.toMatch(/will not keep/i);
     expect(storage.kept()['leela.draft.v1'], 'and it really is kept').toContain('got so far');
-  }, 20_000);
+  });
 });

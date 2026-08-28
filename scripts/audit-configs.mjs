@@ -163,6 +163,65 @@ for (const group of WORKSPACES) {
           "so `bun run --filter '*' test` skips this workspace in silence and `verify` still exits 0",
       );
     }
+
+    /*
+     * And no test may set itself a SHORTER deadline than the workspace's.
+     *
+     * The flags above were added on 2026-08-28 after three suites went red at a
+     * clean checkout in three days, measured against a twelve-workspace
+     * parallel run. Two days later three more went red, and the reason is the
+     * one this check now enforces: **the innermost deadline binds.** Thirty-two
+     * `it(..., 20_000)` and `it(..., 5_000)` tails were sitting under a 30-second
+     * setting, so the setting was decorative wherever they appeared — and one of
+     * them was the test that failed, at 22 seconds.
+     *
+     * Longer is left alone, deliberately: `}, 180_000)` on a model call is a
+     * reason, not an oversight. It is only the *shorter* ones that quietly
+     * undo a bound somebody measured.
+     */
+    const flagged = test.find((arg) => arg.startsWith('--testTimeout='));
+    const bound = Number((flagged ?? '').split('=')[1] ?? 0);
+
+    /*
+     * Which call a `}, N);` closes, decided by indentation rather than guessed.
+     *
+     * The first version of this check matched `^\s*\}, (\d+)\);$` and reported
+     * `}, 30);` in `waiting.test.ts` — the tail of a `setTimeout(() => {…}, 30)`
+     * inside a test, which is an ARGUMENT and not a deadline. A number-shaped
+     * thing at the end of a call is not a timeout because it looks like one.
+     *
+     * So the closing line's indentation is walked back to the line that opens a
+     * call at the same depth, and only `it`, `test` and the hooks take a
+     * deadline there. Falsified both ways below: a real `it(..., 5_000)` is
+     * still reported, and a `setTimeout(…, 30)` is not.
+     */
+    const takesADeadline = /\b(it|test|beforeAll|beforeEach|afterAll|afterEach)\s*(\.\w+)?\s*\(/;
+
+    for (const file of readdirSync(join(pkg, 'tests'), { withFileTypes: true })) {
+      if (!file.isFile() || !file.name.endsWith('.ts')) continue;
+
+      const lines = readFileSync(join(pkg, 'tests', file.name), 'utf8').split('\n');
+
+      lines.forEach((line, at) => {
+        const closing = /^(\s*)\}, (\d[\d_]*)\);\s*$/.exec(line);
+        if (closing === null) return;
+
+        const deadline = Number(closing[2].replaceAll('_', ''));
+        if (deadline >= bound) return;
+
+        const opener = lines.slice(0, at).reverse().find((earlier) => {
+          const indent = /^(\s*)\S/.exec(earlier);
+          return indent !== null && indent[1] === closing[1];
+        });
+
+        if (opener === undefined || !takesADeadline.test(opener)) return;
+
+        problems.push(
+          `${where}/tests/${file.name}:${at + 1}: a test gives itself ${deadline}ms, under the ` +
+            `workspace's ${bound}ms — the innermost deadline binds, so this undoes the flag`,
+        );
+      });
+    }
     if (manifest.scripts?.typecheck !== 'tsc --noEmit') {
       problems.push(
         `${where}: package.json declares no \`typecheck: tsc --noEmit\`, so ` +

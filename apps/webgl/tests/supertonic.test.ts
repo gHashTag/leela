@@ -404,7 +404,7 @@ describe('a player who has not asked for the better voice', () => {
     } finally {
       globalThis.fetch = had;
     }
-  }, 20_000);
+  });
 });
 
 // --- the text ------------------------------------------------------------------
