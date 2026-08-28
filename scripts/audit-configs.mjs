@@ -140,10 +140,27 @@ for (const group of WORKSPACES) {
     if (manifest.scripts?.['typecheck:strict'] !== 'tsc --noEmit -p tsconfig.src.json') {
       problems.push(`${where}: package.json cannot run the strict typecheck`);
     }
-    if (manifest.scripts?.test !== 'vitest run') {
+    /*
+     * `vitest run`, plus flags and NOTHING ELSE.
+     *
+     * Pinned to the exact string until 2026-08-28, when every workspace gained
+     * `--testTimeout=30000 --hookTimeout=60000` — see the README section on why
+     * the defaults were losing at a clean checkout three days running.
+     *
+     * Loosened to a shape rather than to `startsWith`, because `startsWith`
+     * would admit `vitest run tests/one.test.ts`: a script that begins with the
+     * right words, exits 0, and reaches ONE FILE. That is exactly the silence
+     * this check exists to catch, one step along again. A positional argument
+     * narrows the suite; a `--flag` cannot.
+     */
+    const test = String(manifest.scripts?.test ?? '').split(/\s+/).filter(Boolean);
+    const runsTheSuite =
+      test[0] === 'vitest' && test[1] === 'run' && test.slice(2).every((arg) => arg.startsWith('--'));
+
+    if (!runsTheSuite) {
       problems.push(
-        `${where}: package.json declares no \`test: vitest run\`, so \`bun run --filter '*' test\` ` +
-          'skips this workspace in silence and `verify` still exits 0',
+        `${where}: package.json declares no \`test: vitest run\` (flags allowed, a filename is not), ` +
+          "so `bun run --filter '*' test` skips this workspace in silence and `verify` still exits 0",
       );
     }
     if (manifest.scripts?.typecheck !== 'tsc --noEmit') {

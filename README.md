@@ -199,6 +199,38 @@ branch per feature. The principles the work is held to are in
 [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) are the working
 instructions. `MIGRATION.md` is the record of how each principle was learned.
 
+### Why every workspace runs `vitest --testTimeout=30000 --hookTimeout=60000`
+
+Because the defaults are 5 and 10 seconds, and **`bun run test` runs twelve
+workspaces at once**, each with its own worker pool. Measured over three days in
+August 2026, three different suites went red at a clean checkout with nothing
+changed:
+
+| what failed | contended | alone |
+|---|---|---|
+| `packages/content/tests/undo.test.ts`, a test | 5104 ms | 480 ms |
+| `apps/docs/tests/render.test.ts`, a hook | over 10 s | 2.56 s for the file |
+| `apps/miniapp/tests/the-same-seat-asked-three-times.test.ts`, a test | 6461 ms | 250 ms for the file |
+
+Every one of them is **starvation, not slowness**: fast work waiting on busy
+cores. The first two were fixed where they stood, which left every other suite
+holding the same bet — hence a setting rather than a third patch.
+
+**One number in that table was nearly wrong, and the correction is the useful
+part.** The third row first measured 6127 ms alone, and that reading is what
+justified writing this section in the first place: *a test that slow was never
+going to be reliable*. Re-run three times it took 250 ms for the whole file. The
+first "alone" run had been started while the workers of a failed full run were
+still winding down, so it was not alone at all. **A measurement taken to explain
+a load problem is itself subject to the load**, which is easy to write into a
+document and hard to notice afterwards.
+
+Raising a deadline cannot make a passing test fail; it can only stop a false
+red. Thirty seconds is still far beyond anything measured here, so a genuine
+hang is still caught. **A default deadline is one nobody chose**, and a suite
+that goes red for reasons a reader cannot act on is a suite people learn to
+re-run instead of read.
+
 ## Развитие
 
 ```bash

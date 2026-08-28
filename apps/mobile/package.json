@@ -8,7 +8,7 @@
     "start": "expo start",
     "ios": "APP_VARIANT=development expo run:ios",
     "android": "APP_VARIANT=development expo run:android",
-    "test": "vitest run",
+    "test": "vitest run --testTimeout=30000 --hookTimeout=60000",
     "typecheck": "tsc --noEmit",
     "typecheck:strict": "tsc --noEmit -p tsconfig.src.json",
     "e2e:build": "APP_VARIANT=development detox build --configuration ios.debug",
