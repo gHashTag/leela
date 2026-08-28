@@ -36,6 +36,8 @@ import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { messageFor } from '@leela/content';
 
+import { until } from './waiting';
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 const HERS = 'what I wrote here the last time, and did not want to read again';
@@ -91,14 +93,6 @@ const twoSeats = JSON.stringify({
 const el = (id: string) => document.getElementById(id) as HTMLElement & { value?: string };
 const dialog = (id: string) => document.getElementById(id) as HTMLDialogElement;
 
-async function until(ready: () => boolean, what: string): Promise<void> {
-  for (let attempt = 0; attempt < 600; attempt += 1) {
-    if (ready()) return;
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-
-  throw new Error(`waited for ${what}`);
-}
 
 /** The app, opened on a table already seated, with both seats' writing kept. */
 async function seated(): Promise<Storage & { all: Map<string, string> }> {

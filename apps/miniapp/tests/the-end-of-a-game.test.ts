@@ -28,6 +28,8 @@ import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { messageFor } from '@leela/content';
 
+import { until as waitUntil } from './waiting';
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 function held(): Storage {
@@ -67,17 +69,17 @@ const el = (id: string) => document.getElementById(id) as HTMLElement & { disabl
 const dialog = (id: string) => document.getElementById(id) as HTMLDialogElement;
 const board = () => document.querySelectorAll('#board .cell');
 
-async function until(ready: () => boolean, what: string): Promise<void> {
-  for (let attempt = 0; attempt < 900; attempt += 1) {
-    if (ready()) return;
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-
-  throw new Error(
-    `waited for ${what}: on ${el('plan-number')?.textContent}, "${el('say')?.textContent}", ` +
+const until = (ready: () => boolean, what: string): Promise<void> =>
+  waitUntil(
+    ready,
+    what,
+    // The state that explains the failure, kept from this file's own copy when
+    // the four became one: a bare "waited for the die" says nothing an operator
+    // can act on.
+    () =>
+      `on ${el('plan-number')?.textContent}, "${el('say')?.textContent}", ` +
       `die ${el('roll')?.disabled ? 'shut' : 'open'}`,
   );
-}
 
 async function play(storage: Storage): Promise<void> {
   vi.resetModules();

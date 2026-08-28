@@ -30,6 +30,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 
+import { until } from './waiting';
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 const HERS = 'the salt marsh at low tide, and what I would not look at';
@@ -72,14 +74,6 @@ const twoSeats = JSON.stringify({
 const written = (plan: number, text: string) =>
   JSON.stringify({ reported: true, entries: [{ plan, text, at: 1_700_000_000_000 }] });
 
-async function until(ready: () => boolean, what: string): Promise<void> {
-  for (let attempt = 0; attempt < 600; attempt += 1) {
-    if (ready()) return;
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-
-  throw new Error(`waited for ${what}`);
-}
 
 /**
  * The app on a seated table, with the path view open and what the clipboard

@@ -29,6 +29,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 
+import { until as waitUntil } from './waiting';
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 /** A store the app can keep a game in, held in memory. */
@@ -67,14 +69,7 @@ async function play(storage: Storage): Promise<void> {
 }
 
 /** Wait for something to become true, or give up with a reason. */
-async function until(ready: () => boolean, what = 'the board to be drawn'): Promise<void> {
-  for (let attempt = 0; attempt < 400; attempt += 1) {
-    if (ready()) return;
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-
-  throw new Error(`waited for ${what} and it never came`);
-}
+const until = (ready: () => boolean, what = 'the board to be drawn') => waitUntil(ready, what);
 
 const board = () => [...document.querySelectorAll('#board .cell')];
 const mine = () => board().filter((cell) => cell.getAttribute('aria-current') === 'true');
