@@ -253,6 +253,27 @@ export const RECORDED = [
   // same term rendered into the language beside it.
   'ja plan 37 title: Jnana（ジナナ）',
   'ur plan 37 title: Jnana (jnana)',
+  /*
+   * The fifteenth, and it had been there all along — HIDDEN BY A FULL STOP.
+   *
+   * This check reads a title by SCRIPT: Latin letters where an Urdu title
+   * belongs is text left in the language it was translated from. Until
+   * 2026-08-29 the shipped title was `۔ Astral Plane (Bhuvar Loka)`, because
+   * `stripNumbering` matched the ASCII numeral in the donor's *«منصوبہ 14۔»*
+   * and left the Urdu full stop behind. One Arabic-script character at the
+   * front was enough: the string was no longer all-Latin, and the reader that
+   * looks for English in Urdu let it pass on 49 of that edition's titles.
+   *
+   * Fixing the numbering did not create this. It uncovered it — which is the
+   * argument for fixing residue that looks merely untidy: a stray character in
+   * front of a string is a stray character in front of every check that reads
+   * the string.
+   *
+   * RECORDED, not repaired, on the bar `corrections.mjs` states: what the
+   * fourteenth plane of this board should be called in Urdu is a judgement,
+   * and this repository does not translate.
+   */
+  'ur plan 14 title: Astral Plane (Bhuvar Loka)',
   // A loka name kept in transliteration where every neighbouring title in the
   // same language translates it and keeps the Sanskrit in parentheses —
   // Japanese has plan 40 as ヴィアナ・ロカ, so the convention is the language's

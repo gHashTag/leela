@@ -22,6 +22,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { checkRegression, dimensionsIn } from './lib/coverage.mjs';
 import { RECOVERY, pendingMutation } from './lib/undo.mjs';
 import { corrected, unappliedIn } from './lib/corrections.mjs';
+import { stripNumbering } from './lib/numbering.mjs';
 import {
   against as spilloversAgainst,
   nameOf as spilloverName,
@@ -248,36 +249,6 @@ function parseMarkdown(raw) {
     .trim();
 
   return { title, description: fm.description ?? null, body: text };
-}
-
-/**
- * Strip the leading plan number from a title.
- *
- * Every language writes the word for "plan" in its own script — योजना, 计划,
- * 計画, 플랜, Kế hoạch, திட்டம் — so matching a list of words does not scale
- * and silently left the number in place for 15 of the 22 languages. Instead:
- * find the plan number near the start of the title and drop everything up to
- * and including it, along with any separator that follows.
- *
- * Only the leading run is considered, and only when the number appears within
- * the first few characters, so a title that legitimately contains its own
- * number ("The 3 gunas") is left alone.
- */
-function stripNumbering(title, plan) {
-  if (!title) return null;
-
-  const index = title.indexOf(String(plan));
-  // The label before the number is a word or two at most; beyond that we are
-  // no longer looking at numbering.
-  if (index === -1 || index > 12) return title.trim();
-
-  // Refuse to cut when the digits are part of a longer number: "12" in "120".
-  const after = title.slice(index + String(plan).length);
-  if (/^\d/.test(after)) return title.trim();
-
-  const remainder = after.replace(/^[\s.:)\-–—、。]+/, '').trim();
-  // If cutting would leave nothing, the number was the whole title — keep it.
-  return remainder.length > 0 ? remainder : title.trim();
 }
 
 /**
