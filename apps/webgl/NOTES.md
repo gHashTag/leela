@@ -112,6 +112,7 @@ mentions it.
 | A die with no throw to show shows no face | `tests/screen.test.ts` |
 | `pipsFor` and `isFace` agree on what a face is | `die.ts`, `tests/screen.test.ts` |
 | A six says so | `audit-unread`, via `rollsAgain` in `main.ts` |
+| A head points away from its own body, at both ends of a jump | `tests/pointing.test.ts` |
 | The board renders at all on first paint | measured live, not yet guarded — see below |
 
 **The last row was "looking at it" until 2026-08-23, when it was looked at

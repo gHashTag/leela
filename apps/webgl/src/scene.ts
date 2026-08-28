@@ -28,6 +28,7 @@ import { paintBorder } from './border';
 import { starsFor } from './stars';
 import { sagAt, threadsFor } from './web';
 import { frameBoard } from './framing';
+import { faceOutward } from './pointing';
 import { paintMarking, paintScales, type Marking } from './skin';
 import { arrowProfile, snakeProfile, wiggle, type Profile } from './tube';
 
@@ -949,8 +950,7 @@ export const createBoard = (
         material,
       );
       head.scale.set(1, 0.72, 1.35);
-      head.position.copy(start);
-      aim(head, intoStart);
+      faceOutward(head, start, intoStart);
       head.castShadow = true;
       group.add(head);
 
@@ -974,8 +974,10 @@ export const createBoard = (
 
       const steel = partMaterial(ARROW_STEEL, 0.26, 0.92);
       const head = new THREE.Mesh(new THREE.ConeGeometry(ARROW_SHAFT * 4.2, 0.3, 14), steel);
-      head.position.copy(end);
-      aim(head, intoEnd.clone().negate());
+      // Outward, like the snake's — this read `intoEnd.clone().negate()` and
+      // turned every arrowhead on the board back down its own shaft. See
+      // `pointing.ts`; the rule now has one spelling and a test.
+      faceOutward(head, end, intoEnd);
       head.castShadow = true;
       group.add(head);
 
