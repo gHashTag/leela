@@ -172,11 +172,28 @@ flow for exactly this reason.
   already been taken elsewhere. Nothing here re-derives that architecture; it
   reads `specs/009`.
 
-- **What this spec still needs, and it is smaller than it was.** Identity and a
-  server are answered. What is not: a route that accepts a *report* (only games
-  are served today, and read-only), the union rule applied across two stores
-  rather than two files, and FR-008's moderator, which is a person's job and
-  the owner's to name.
+- **P1 IS WHOLE as of 2026-08-28.** Both halves are built, live and deployed:
+  `POST /api/reports` in the bot (d498060), which merges a document into the
+  player's path behind a checked signature, and `sending.ts` in the board
+  (45466fd), which offers this surface's writings on launch. The merge is the
+  one `take-in.ts` already used for the file, so the two ways in cannot
+  disagree. Proved against production: a first send answered `{"added":1}` and
+  the same document again `{"added":0}` — SC-002 on the real database.
+
+  It needed none of the decision `specs/009` step 4 is waiting on, and that is
+  worth writing down because it was assumed to. **A path cannot disagree with a
+  path**: the union is keyed on when each report was written, so nothing is
+  replaced and nothing is chosen between. Step 4 is about the GAME, where a
+  browser position and a chat position could genuinely conflict.
+
+- **FR-008 is not waiting on a name.** It reads *[NEEDS CLARIFICATION: by whom?]*
+  and has been read as a question for the owner. Measured 2026-08-28: **there is
+  nothing to moderate.** Sharing a report with other players — FR-006, P2 — does
+  not exist: the bot's schema holds eight tables (sessions, session_players,
+  game_steps, reports, intentions, last_tick, nudges, entitlements) and not one
+  of them is a shared or published report. Naming a moderator today names one
+  for an empty set. FR-008 is blocked on FR-006, which is blocked on nothing but
+  being built.
 - Until that decision: the file in the mini app *is* the bridge. A player can
   save their path and carry it, and the merge rules that make a sync safe are
   already written and tested.
