@@ -36,6 +36,7 @@ import {
   type Message,
 } from '@leela/ai';
 import { Allowance, MAX_ASKERS } from './bot';
+import { whoSent } from './vouched';
 
 /**
  * Who may ask from a browser.
@@ -121,6 +122,23 @@ export type StreamAsk = (ask: {
   signal: AbortSignal;
 }) => Promise<AsyncIterable<Streamed>>;
 
+/**
+ * What the board is told about the player's own game, and nothing more.
+ *
+ * Three fields because three are what a board needs to draw somebody: where
+ * they stand, whether they are still outside waiting for a six, and whether
+ * they have finished. Deliberately not the whole `Room`: the chat's table holds
+ * other people's names and other people's positions, and a route that answers
+ * "your game" must not answer with theirs.
+ */
+export interface Standing {
+  /** The plan they are on, 1..72. */
+  plan: number;
+  /** True before the six that puts them on the board. */
+  waiting: boolean;
+  won: boolean;
+}
+
 export interface AskRouteOptions {
   /** Absent is honest: no key means 503, and the board falls back to reading the plan. */
   model?: LanguageModel;
@@ -128,6 +146,22 @@ export interface AskRouteOptions {
   now?: () => number;
   /** When set, answers stream as deltas; `model` stays the fallback. */
   stream?: StreamAsk;
+  /**
+   * The bot token, which is the key `initData` is signed with.
+   *
+   * Absent means this deployment cannot check who is asking, and `/api/game`
+   * answers 401 to everybody rather than serving a game to a caller it cannot
+   * name. Passed in, never read from the environment here: see `vouched.ts`.
+   */
+  token?: string;
+  /**
+   * One player's own game, by the id Telegram vouched for.
+   *
+   * Injected as a function rather than handing this file a `Storage`, so the
+   * route stays a thing a test can drive with no database and no bot — which is
+   * what the file's own header says it is for.
+   */
+  gameOf?: (userId: string) => Promise<Standing | null>;
 }
 
 export type AskRoute = (request: Request, address?: string) => Promise<Response>;
@@ -163,7 +197,7 @@ const corsFor = (origin: string): Record<string, string> => ({
  * without Bun: everything this file decides is decided here, and the server
  * below only supplies the port and the peer address.
  */
-export function askRoute({ model, stream, now = Date.now }: AskRouteOptions = {}): AskRoute {
+export function askRoute({ model, stream, now = Date.now, token, gameOf }: AskRouteOptions = {}): AskRoute {
   // The same guard `/ask` in the chat stands behind, with the address where
   // the player id would be. See `Allowance` in bot.ts for why checking is
   // spending, and `MAX_ASKERS` for why the map is capped.
@@ -183,7 +217,8 @@ export function askRoute({ model, stream, now = Date.now }: AskRouteOptions = {}
         headers: { 'content-type': 'application/json', ...cors },
       });
 
-    if (new URL(request.url).pathname !== '/api/ask') return refuse(404, 'no such route');
+    const path = new URL(request.url).pathname;
+    if (path !== '/api/ask' && path !== '/api/game') return refuse(404, 'no such route');
 
     // The permission question, answered before the real one is refused. A 204
     // without the allow header is how a disallowed origin hears no at the
@@ -193,6 +228,46 @@ export function askRoute({ model, stream, now = Date.now }: AskRouteOptions = {}
     if (!allowed) {
       return refuse(403, origin ? `${origin} may not ask here` : 'an origin is required to ask here');
     }
+
+    /*
+     * The player's own game, to whoever Telegram will vouch is that player.
+     *
+     * `specs/009`: the board and the chat were two stores with no key in
+     * common, and the owner chose to make them one game — «да 3D поле везде!».
+     * This is the door. Its whole security is `whoSent`, and the prior art on
+     * this disk is why that is said out loud: the donor board read the user id
+     * out of `initData` **in the browser** and looked the player up with it, so
+     * anybody could ask for anybody's game.
+     *
+     * Nothing here is cached and nothing is answered to an origin that is not
+     * ours, which is the same door the ask route stands behind.
+     */
+    if (path === '/api/game') {
+      if (request.method !== 'GET') return refuse(405, 'GET only');
+
+      const carried = request.headers.get('authorization') ?? '';
+      // `tma <initData>` is Telegram's own convention for this header, and the
+      // scheme name is checked so a bare token cannot be mistaken for one.
+      const initData = carried.startsWith('tma ') ? carried.slice(4) : '';
+
+      const vouched = whoSent(initData, token ?? '', { now: now() });
+      // The reason travels, because a board that cannot say why it was refused
+      // shows a player a blank square and no way to act.
+      if (!vouched.ok) return refuse(401, vouched.why);
+
+      if (gameOf === undefined) {
+        return refuse(503, 'this deployment keeps no games to serve');
+      }
+
+      const standing = await gameOf(vouched.who.id).catch(() => null);
+      if (standing === null) return refuse(404, 'no game of yours here yet');
+
+      return new Response(JSON.stringify(standing), {
+        status: 200,
+        headers: { 'content-type': 'application/json', ...cors },
+      });
+    }
+
     if (request.method !== 'POST') return refuse(405, 'POST only');
 
     // Spent at the door, before the body is read: the bound is on questions

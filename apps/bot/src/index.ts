@@ -29,6 +29,7 @@ import {
   messageIssues,
   translatedLanguages,
 } from '@leela/content';
+import { hasWon, isWaitingToEnter } from '@leela/engine';
 import { createBot, miniAppUrl } from './bot';
 import { PAID_COMMANDS, menuFor } from './commands';
 import { DirectChannels } from './delivery';
@@ -438,6 +439,34 @@ async function* deltasOf(body: ReadableStream<Uint8Array>): AsyncIterable<Stream
 const asking = serveAsk({
   model,
   stream: process.env.ZAI_API_KEY ? zaiStream(process.env.ZAI_API_KEY) : undefined,
+  token,
+  /**
+   * One player's own game, for `/api/game` — `specs/009`, which the owner
+   * settled on 2026-08-28 with «да 3D поле везде!».
+   *
+   * The id is the one `vouched.ts` got out of a signature, and it is used as a
+   * CHAT id: in a private chat Telegram makes the two the same number, so a
+   * player who opened the board from their own chat with the bot is asking for
+   * that chat's table. A group's table is not reachable this way and should not
+   * be — the id in a signed launch is a person, never a room.
+   *
+   * `hasWon` and `isWaitingToEnter` rather than a comparison written here. The
+   * first principle names this exact square: 68 means *waiting to enter* or
+   * *has won* depending on how you arrived, and every place that re-derived the
+   * difference instead of asking got it wrong — the leaderboard, `/new`, the
+   * mini app's header, the trail marker.
+   */
+  gameOf: async (userId) => {
+    const room = await storage.store.get(userId);
+    const seat = room?.session.players.find((player) => player.id === userId);
+    if (seat === undefined) return null;
+
+    return {
+      plan: seat.state.loka,
+      waiting: isWaitingToEnter(seat.state),
+      won: hasWon(seat.state),
+    };
+  },
 });
 
 /**

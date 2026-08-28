@@ -136,14 +136,33 @@ The recommendation, if the owner wants one: **(3) now, (1) next**, and never
 and is a route, an HMAC and a migration question, which is a spec's worth of
 work and not an afternoon's.
 
-## The decision this needs
-
-One sentence from the owner, and everything else follows from it:
+## The decision this needed — ANSWERED 2026-08-28
 
 > **Should a Telegram player's board be the same game as the chat's?**
 
-If yes, option 1, and the `localStorage` question above needs an answer with
-it. If no, option 3 and the two surfaces stay two games on purpose.
+The owner, verbatim: **«да 3D поле везде!»** — *yes, the 3D board everywhere.*
+
+So **option 1**, and option 2 is refused by the same sentence: the board that
+plays everywhere is `apps/webgl`, not the 2D one. Both halves of his answer
+matter, and the second closes a question this spec had left open in its
+recommendation.
+
+What that commits to, in order, each piece complete on its own:
+
+1. **`initData` verified, in the bot.** HMAC-SHA256 against the bot token, per
+   Telegram's scheme. This is the piece the prior art on this disk did not have
+   at all, and the fourth principle refuses to accept an identity the client
+   asserts. *Done — see below.*
+2. **A route that serves the caller their own game.** Needs (1), because
+   without it "their own" is whatever they typed. *Done — see below.*
+3. **The board asking for it**, and rendering what comes back.
+4. **What happens to a game already in `localStorage`** when a player who has
+   been playing in a browser opens the same board from the chat. Adopt, ignore
+   or ask — a product question, and the one piece his sentence does not settle.
+
+Steps 1 and 2 shipped together on 2026-08-28 because a verifier with no caller
+is code nobody has disagreed with. Steps 3 and 4 are the next iterations, and 4
+needs one more word from him.
 
 ## Acceptance
 
