@@ -23,6 +23,7 @@ import { fanOffset, hopPoint, planPosition } from './layout';
 import { browserStore, finishedTable, read, write, type KeptSeat } from './kept';
 import { ENTITLEMENT_CHANGED, askToSubscribe, entitled, hostOf } from './hosted';
 import { pathOf } from './path';
+import { roomFor } from './room';
 import {
   add as keepWritten,
   readAll,
@@ -1644,22 +1645,35 @@ window.addEventListener('keydown', (event) => {
 
 const grow = (): void => {
   /*
-   * An empty field carries no inline height at all.
+   * An empty field is measured too, and its reading is believed only if it is
+   * the size a sentence could be.
    *
-   * This measured `scrollHeight` unconditionally, and it is called once at
+   * This measured `scrollHeight` unconditionally once, and it is called at
    * startup - while the sheet is still animating into its detent, so the
    * measurement is taken against a box that is not yet the box. It read 598px
    * on an empty field, the stylesheet clamped that to `max-height: 30dvh`, and
    * the writing box stood 244 pixels tall over the board with nothing in it,
    * every launch, until somebody typed.
    *
-   * Nothing to fit means nothing to set: the stylesheet's own `min-height`
-   * is the answer, and it cannot be measured wrong.
+   * The answer then was to stop measuring an empty field at all, and THAT COST
+   * THE PLACEHOLDER: at 375 CSS pixels the box is 46px and *"What does this
+   * plan bring up?"* needs 70, so on a phone the game's own question was cut
+   * off half way through, on the one control the die waits for. `roomFor` is
+   * the rule that keeps both - it takes a plausible reading and drops an
+   * implausible one, which leaves the stylesheet's `min-height` standing
+   * exactly as it did before.
    */
+  el.reply.style.height = 'auto';
+
   if (el.reply.value === '') {
-    el.reply.style.height = '';
+    const room = roomFor({
+      measured: el.reply.scrollHeight,
+      floor: Number.parseFloat(getComputedStyle(el.reply).minHeight) || 0,
+      lineHeight: Number.parseFloat(getComputedStyle(el.reply).lineHeight) || 0,
+    });
+
+    el.reply.style.height = room === null ? '' : `${room}px`;
   } else {
-    el.reply.style.height = 'auto';
     el.reply.style.height = `${el.reply.scrollHeight}px`;
   }
 
