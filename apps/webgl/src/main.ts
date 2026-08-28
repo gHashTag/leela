@@ -50,7 +50,8 @@ import type { SeatedPlayer } from '@leela/engine';
 import { canDraw } from './drawable';
 import { createBoard } from './scene';
 import { atEnd, bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
-import { meetTelegram, nameAskOrigin, telegramOf } from './telegram';
+import { myGame } from './mine';
+import { launchOf, meetTelegram, nameAskOrigin, telegramOf } from './telegram';
 import { css } from './theme';
 import {
   hearing,
@@ -110,6 +111,32 @@ import {
 nameAskOrigin(globalThis as { __leelaAsk?: string }, import.meta.env.VITE_ASK_ORIGIN);
 meetTelegram(telegramOf(), document.documentElement.style);
 
+/**
+ * What the chat says, asked once and shown if it answers.
+ *
+ * `specs/009` step 3, and the owner's «да 3D поле везде!». The bot serves this
+ * player their own position behind a signature it checks; the board asks with
+ * the launch Telegram signed and shows what comes back.
+ *
+ * **Not awaited, and nothing here can stop the board drawing.** This is the
+ * boot path, on a phone, inside somebody else's webview: a board that waits on
+ * a network is a black screen. `myGame` answers a shape and never throws, the
+ * request gives up after eight seconds, and every outcome except a real
+ * standing leaves this line hidden — including a refusal, which is the bot
+ * declining to say rather than the player having no game.
+ *
+ * It does not adopt the game. The route serves a position, not a table, so
+ * writing it into storage would make a board that claims to be the chat's game
+ * and diverges from it the moment anybody rolls here. Step 4 of the spec — what
+ * should happen to a game already in this browser — is the owner's to answer.
+ */
+void myGame({ initData: launchOf(telegramOf()), fetch: (...args) => fetch(...args) }).then((mine) => {
+  if (mine.kind !== 'standing') return;
+
+  el.inTheChat.textContent = messageFor(language, 'app.inTheChat', { plan: mine.standing.plan });
+  el.inTheChat.hidden = false;
+});
+
 const HOP_MS = 260;
 
 /**
@@ -156,6 +183,7 @@ const el = {
   gear: need<HTMLButtonElement>('#gear'),
   settings: need<HTMLElement>('#settings'),
   owed: need<HTMLElement>('#owed'),
+  inTheChat: need<HTMLElement>('#in-the-chat'),
   toll: need<HTMLElement>('#toll'),
   tollOpen: need<HTMLButtonElement>('#toll-open'),
   planHeading: need<HTMLElement>('#plan-heading'),

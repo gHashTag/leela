@@ -552,6 +552,15 @@ const EN = {
    * The switch is labelled with the light it moves *to*, so these are read as
    * "press for dark", not as a report of where you are.
    */
+  /**
+   * What the chat says, on a board opened from Telegram.
+   *
+   * `specs/009` step 3: the board asks the bot where the player stands and
+   * SHOWS it. It does not adopt it — the route serves a position, not a table,
+   * and writing it here would make a game that claims to be the chat's and
+   * diverges from it the moment anybody rolls. Step 4 is the owner's to answer.
+   */
+  'app.inTheChat': 'In the chat you are on plan {plan}.',
   'app.theme': 'Theme',
   'app.light': 'Light',
   'app.dark': 'Dark',
@@ -1139,6 +1148,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.policy': 'Политика конфиденциальности',
   'app.terms': 'Условия использования',
   'app.language': 'Язык',
+  'app.inTheChat': 'В чате вы стоите на плане {plan}.',
   'app.theme': 'Тема',
   'app.light': 'Светлая',
   'app.dark': 'Тёмная',

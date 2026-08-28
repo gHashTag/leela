@@ -21,6 +21,16 @@ interface TelegramWebApp {
   readonly colorScheme?: unknown;
   /** `#rrggbb` strings when Telegram wrote them; unknown until checked. */
   readonly themeParams?: unknown;
+  /**
+   * The signed launch, when this really is Telegram.
+   *
+   * `unknown` like its neighbours, and for a sharper reason: this string is the
+   * one thing on the page that decides *whose game* the bot will serve, so it
+   * is the last value here that should be taken on trust. It is never read for
+   * its contents by this app — only handed back to the bot, which checks the
+   * signature it carries against the token (`apps/bot/src/vouched.ts`).
+   */
+  readonly initData?: unknown;
 }
 
 /**
@@ -45,6 +55,23 @@ export const telegramOf = (): TelegramWebApp | null => {
     ? (found as TelegramWebApp)
     : null;
 };
+
+/**
+ * The signed launch, or the empty string.
+ *
+ * Empty for a plain browser, and empty for the trap this file's header already
+ * names: `telegram-web-app.js` is served from telegram.org and defines
+ * `WebApp` in *any* browser, so `telegramOf()` answering non-null is not proof
+ * of Telegram. **`initData` is the thing that is proof** — outside Telegram the
+ * script leaves it empty, and inside it carries a signature only Telegram could
+ * have made. The mini app tests the same field for the same reason
+ * (`insideTelegram`, `apps/miniapp/src/main.ts`).
+ *
+ * Not parsed here. What is inside it is the bot's business, because only the
+ * bot holds the token that says whether any of it is true.
+ */
+export const launchOf = (app: TelegramWebApp | null): string =>
+  typeof app?.initData === 'string' ? app.initData : '';
 
 /**
  * Which of Telegram's colours lands on which of the page's own tokens.
