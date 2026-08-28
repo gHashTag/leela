@@ -166,8 +166,23 @@ describe('finding a call', () => {
  * reads pages a build has just produced into a directory of its own — an
  * artefact rather than source, and a comment in one is not a developer's note
  * that could pass for markup.
+ *
+ * `served` is the third, added 2026-08-29 with the deployment check that a
+ * wrong address answers with this repository's own 404 page. Those two files
+ * read `apps/webgl/public/404.html` and hand it back as a RESPONSE BODY: the
+ * fixture stands for a static host, and a host sends the file it has, comments
+ * and all. Blanking it would make the fixture serve something no host serves,
+ * which is the opposite of what every other waiver here protects. The document
+ * is data on its way through, not a text anything asserts over.
+ *
+ * ONE OF THE TWO WAS NOT BEING CAUGHT AT ALL. `smoke.test.ts` read the same
+ * file with the path in a variable, so `readFileSync\([^;]*?\.html['"]` never
+ * matched it and it needed no waiver — not because it was compliant but
+ * because the sweep could not see it. The read was rewritten as one expression
+ * so that it is seen and this list is doing the work, rather than the detector
+ * missing a file and the list looking complete.
  */
-const EXCUSED: Array<{ file: string; because: 'runs' | 'built' }> = [
+const EXCUSED: Array<{ file: string; because: 'runs' | 'built' | 'served' }> = [
   { file: 'apps/miniapp/tests/assembled.test.ts', because: 'runs' },
   { file: 'apps/miniapp/tests/partly-written.test.ts', because: 'runs' },
   { file: 'apps/miniapp/tests/which-square-is-mine.test.ts', because: 'runs' },
@@ -175,6 +190,8 @@ const EXCUSED: Array<{ file: string; because: 'runs' | 'built' }> = [
   { file: 'apps/miniapp/tests/the-same-seat-asked-three-times.test.ts', because: 'runs' },
   { file: 'apps/miniapp/tests/a-copy-of-whose-path.test.ts', because: 'runs' },
   { file: 'apps/docs/tests/build.test.ts', because: 'built' },
+  { file: 'apps/miniapp/tests/smoke.test.ts', because: 'served' },
+  { file: 'apps/miniapp/tests/what-the-page-asks-for.test.ts', because: 'served' },
 ];
 
 /**
@@ -223,6 +240,11 @@ const GROUNDS = {
   // count it was excused for keeping. A waiver written over a blanker that
   // removes — which is the mistake — fails here.
   aligned: (source: string) => /=>\s*\w+\.replace\(\/\[\^\\n\]\/g, ' '\)/.test(source),
+  // Not *it says it serves the document* but *it does*: the text it read is
+  // handed back inside a response, which is the one use blanking would break.
+  // A file that merely asserts over the markup has no such line and cannot
+  // take this waiver.
+  served: (source: string) => /\btext:\s*(NOT_HERE|notFound)\b/.test(source),
   // A control reads nothing. Every file this one opens goes through the shared
   // blanker, so the copy it keeps is applied to a literal and cannot be what
   // the file learns anything from. The day somebody points the old strip at a

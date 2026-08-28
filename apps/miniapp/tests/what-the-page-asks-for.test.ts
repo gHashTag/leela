@@ -24,6 +24,9 @@
  * build names its assets, every one of them is fetched and judged.
  */
 
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   allPassed,
@@ -72,6 +75,17 @@ const SITE: Record<string, string> = {
 };
 
 /** A site whose game page names `assets`, each served by `serve`. */
+/**
+ * The address `DEPLOYMENT_CHECKS` asks about to see what a wrong one answers,
+ * and the document this repository answers it with. Read from the file rather
+ * than written out here, for the reason `smoke.test.ts` gives.
+ */
+const WRONG_ADDRESS = 'this-address-is-not-in-the-site';
+const NOT_HERE = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'webgl', 'public', '404.html'),
+  'utf8',
+);
+
 function siteWith(assets: string[], serve: (path: string) => { status: number; text: string }) {
   const asked: string[] = [];
 
@@ -81,6 +95,10 @@ function siteWith(assets: string[], serve: (path: string) => { status: number; t
 
     if (path === '') return { status: 200, text: GAME(assets) };
     if (path in SITE) return { status: 200, text: SITE[path] as string };
+    // The wrong-address check asks for a path no fixture defines, and a host
+    // answers that with its 404 document. Served here so these sites model a
+    // correctly configured host rather than the one this repository had.
+    if (path === WRONG_ADDRESS) return { status: 404, text: NOT_HERE };
     return serve(path);
   };
 
@@ -185,11 +203,12 @@ describe('the assets the deployed page asks for', () => {
     const results = await runChecks('https://site/', fetcher);
 
     expect(allPassed(results)).toBe(true);
-    // Six hand-written, two generated from the root page, one generated from
+    // Seven hand-written, two generated from the root page, one generated from
     // the classic board's, and one weighing what a reader of the root page
     // downloads — the last because the 3D board carries a `maxReaderBytes`
-    // and the page's own assets stopped being its whole cost.
-    expect(results).toHaveLength(10);
+    // and the page's own assets stopped being its whole cost. The seventh
+    // hand-written one is the wrong address, added 2026-08-29.
+    expect(results).toHaveLength(11);
   });
 
   it('fail a page that names none of its own files', async () => {

@@ -73,6 +73,16 @@ export interface Check {
    */
   alternatives?: string;
   /**
+   * The status this address should answer with. 200 unless it says otherwise.
+   *
+   * Every check here was a check that something is *served*, and the status
+   * was `200` written into {@link runCheck} itself. One of them is now the
+   * opposite question — what a WRONG address answers — and it has to be able
+   * to require a 404, because a 404 page that answers 200 is worse than no
+   * 404 page at all: every crawler then indexes an apology as a real page.
+   */
+  expectStatus?: number;
+  /**
    * The path is an app's page, and its build names its assets with a content
    * hash. Expand it: one generated check per asset the page references, read
    * from the page's own directory — {@link assetsIn} says why they cannot be
@@ -204,6 +214,43 @@ export const DEPLOYMENT_CHECKS: Check[] = [
     mustContain: ['Privacy'],
     minBytes: 800,
   },
+  {
+    /**
+     * What a WRONG address answers — the only check here that asks about a
+     * page nobody put on the site.
+     *
+     * `apps/webgl/public/404.html` had been written, tested and deployed since
+     * 2026-08-02 and served for NOTHING for twenty-seven days: it was written
+     * when the mini app was the artifact root, `f7490b1` moved the root to the
+     * 3D board, and the page went down to `/leela/classic/404.html` — where a
+     * host looking for one document at the root of what it publishes never
+     * reads. Measured 2026-08-29: this address answered *Page not found ·
+     * GitHub Pages*, 9,379 bytes about matching filename case and file
+     * permissions, in English, to a reader who had mistyped a plan number.
+     *
+     * `not-here.test.ts` now holds the page's ADDRESS against `pages.yml`, and
+     * that is as far as a file on disk can go. WHETHER THE HOST ACTUALLY
+     * SERVES IT IS A FACT ABOUT A RUNNING SITE, and this is the only place in
+     * the repository that can ask. It is the half that was missing: the page's
+     * words had six tests and its delivery had none.
+     *
+     * The address is deliberately one nobody would ever add. A check on a path
+     * that might one day become real would turn green by being built, which is
+     * the quietest way for a guard to stop guarding.
+     */
+    path: 'this-address-is-not-in-the-site',
+    what: 'a wrong address',
+    expectStatus: 404,
+    // Our words, and the way back. Both, because a host that serves *some*
+    // custom page still fails this if it is somebody else's.
+    mustContain: ['not here', 'href="/leela/"', 'href="/leela/docs/"'],
+    // GitHub's own, quoted from the page it actually served. Not the words
+    // "GitHub Pages" alone — the point is this exact document, and a check
+    // written loosely enough to catch a mention would fail the day the page
+    // credits its host.
+    mustNotContain: ['the filename case matches the URL', 'For root URLs'],
+    minBytes: 400,
+  },
 ];
 
 export type Fetcher = (
@@ -266,7 +313,7 @@ export async function runCheck(
       missing,
       instead: present,
       ok:
-        status === 200 &&
+        status === (check.expectStatus ?? 200) &&
         missing.length === 0 &&
         present.length === 0 &&
         bytes >= (check.minBytes ?? 0) &&

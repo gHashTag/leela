@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   DEPLOYMENT_CHECKS,
@@ -13,12 +16,33 @@ import {
   type Fetcher,
 } from '../src/smoke';
 
-/** A site that serves whatever it is given, by path. */
-function siteServing(pages: Record<string, string>): Fetcher {
+/**
+ * The 404 document this repository ships, read rather than invented.
+ *
+ * A fixture 404 written by hand here would prove that the check matches the
+ * fixture. What has to be true is that it matches THE PAGE — so a rewrite of
+ * the page that stopped saying "not here", or dropped a way back, fails in
+ * this suite instead of in production, where the only symptom is a stranger
+ * reading GitHub's advice about file permissions.
+ */
+const HERE = dirname(fileURLToPath(import.meta.url));
+const NOT_HERE = readFileSync(join(HERE, '..', '..', 'webgl', 'public', '404.html'), 'utf8');
+
+/**
+ * A site that serves whatever it is given, by path.
+ *
+ * A MISSING PATH ANSWERS WITH THE 404 DOCUMENT, because that is what a static
+ * host does and the old fixture said `text: ''`. That difference is not
+ * cosmetic: the empty body is what a host with no 404 page configured would
+ * send, so every fixture site here modelled the misconfiguration this
+ * iteration exists to fix, and no check written against them could have seen
+ * it.
+ */
+function siteServing(pages: Record<string, string>, notFound = NOT_HERE): Fetcher {
   return async (url: string) => {
     const path = url.replace('https://example.test/', '');
     const text = pages[path];
-    return text === undefined ? { status: 404, text: '' } : { status: 200, text };
+    return text === undefined ? { status: 404, text: notFound } : { status: 200, text };
   };
 }
 
@@ -140,6 +164,57 @@ describe('each way a deployment can be broken is caught', () => {
     const results = await runChecks('https://example.test', siteServing(pages));
     expect(allPassed(results)).toBe(false);
     expect(describeResults(results)).toMatch(/\/classic\/assets\/index-ok\.js/);
+  });
+
+  it('the host answering a wrong address with its own page instead of ours', async () => {
+    /*
+     * THE DEFECT THIS CHECK WAS WRITTEN FOR, exactly as it stood in production
+     * for twenty-seven days: every real page 200s, the deploy is otherwise
+     * perfect, and a mistyped address hands the reader nine kilobytes of
+     * GitHub's advice about matching filename case and file permissions.
+     *
+     * Nothing else here can see it. Every other check asks about a page that
+     * IS in the site, and this is the one address that is not.
+     */
+    const github =
+      '<title>Page not found &middot; GitHub Pages</title>' +
+      '<p>The site configured at this address does not contain the requested file.</p>' +
+      '<p>If this is your site, make sure that the filename case matches the URL as well ' +
+      'as any file permissions. For root URLs (like http://example.com/) you must provide ' +
+      'an index.html file.</p>';
+
+    const results = await runChecks('https://example.test', siteServing(pagesOf(healthy), github));
+
+    expect(allPassed(results)).toBe(false);
+    expect(describeResults(results)).toMatch(/a wrong address/);
+  });
+
+  it('the 404 page served with a 200, which is worse than not having one', async () => {
+    /*
+     * A soft 404. The reader is looked after and every crawler is told the
+     * apology is a real page, so a site of 1,784 plans acquires an unbounded
+     * number of indexable duplicates of one sentence. Caught by `expectStatus`
+     * rather than by anything about the body — the body is correct here, which
+     * is the whole trap.
+     */
+    const softly: Fetcher = async (url) => {
+      const path = url.replace('https://example.test/', '');
+      const text = pagesOf(healthy)[path];
+      return text === undefined
+        ? { status: 200, text: NOT_HERE }
+        : { status: 200, text };
+    };
+
+    const results = await runChecks('https://example.test', softly);
+
+    expect(allPassed(results)).toBe(false);
+    // NAMED, not merely counted. Every other page in this fixture is served
+    // correctly, so a bare `allPassed === false` would pass just as well if
+    // the run had broken for some unrelated reason — and the body here is the
+    // right body, so the only honest evidence is that this check, on this
+    // address, is the one that failed.
+    expect(describeResults(results)).toMatch(/FAIL\s+a wrong address/);
+    expect(describeResults(results)).toMatch(/status 200/);
   });
 });
 
