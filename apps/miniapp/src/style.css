@@ -39,6 +39,19 @@
 
   --gap: 3px;
   --radius: 7px;
+
+  /*
+   * The inset a sheet holds its contents at.
+   *
+   * ONE declaration because two rules need the same number and they were two
+   * numbers, one of which was missing. `.reader article` was padded by 18 and
+   * `.sheet-controls` — its sibling, outside that padding — by nothing, so in
+   * EVERY ONE OF THE FIVE DIALOGS the buttons stood 18 pixels to the left of
+   * the words above them, flush against the sheet's edge. Measured on the live
+   * classic board at 375 CSS pixels on 2026-08-29: content at 37, buttons at
+   * 19, in all five.
+   */
+  --sheet-pad: 18px;
 }
 
 /*
@@ -237,6 +250,35 @@ progress::-webkit-progress-value {
   gap: var(--gap);
   align-items: center;
   margin-top: 12px;
+  /* Held at the sheet's own inset. It is a SIBLING of the scrolling article
+     rather than inside it — that is what keeps the buttons still while the
+     text scrolls — and it therefore has to be told the inset itself. Without
+     this the buttons were flush to the sheet's edges: a `border-radius` pill
+     with a gap above it, touching the corner, which no drawing intends. */
+  padding: 0 var(--sheet-pad) var(--sheet-pad);
+}
+
+/*
+ * A form that carries nothing but a button is a way to submit, not a box.
+ *
+ * `<form method="dialog"><button>Close</button></form>` is how a sheet closes
+ * itself without script. As a flex item that wrapper took a share of the row
+ * the button never asked for, with three measured consequences: in `paste` the
+ * two buttons came out unequal because only the unwrapped one got `flex: 1`;
+ * in every sheet the row's spacing was computed for a box nobody can see; and
+ * in `intention` — where `main.ts` sets `hidden` on the BUTTON, so that a
+ * player who has not yet said what they are playing for cannot leave without
+ * answering — THE EMPTY FORM WENT ON HOLDING 28 PIXELS, so Save was 28 short
+ * and a gap sat to its right. `hidden` hides the button; it does not hide the
+ * element wrapping it.
+ *
+ * `display: contents` removes the wrapper's box and leaves its semantics: the
+ * button becomes the flex item, `flex: 1` reaches it, and a hidden button
+ * takes no room. The form still submits, because this is a property about
+ * boxes and not about forms.
+ */
+.sheet-controls form {
+  display: contents;
 }
 
 #writer-text {
@@ -571,7 +613,7 @@ textarea {
 
 .reader article {
   max-height: calc(82vh - 70px);
-  padding: 18px;
+  padding: var(--sheet-pad);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
