@@ -271,6 +271,14 @@ jobs:
       # repaired: choosing what plan 8 is called is a translator's decision.
       - run: node scripts/audit-namesakes.mjs
 
+      # Nothing a reader is shown is markup, and no plan stops mid-sentence.
+      # The Malay sixth plan carried a paragraph reading `& Nbsp; & nbsp; &
+      # nbsp; & nbsp;` — four broken entities standing between a sentence and
+      # the list it introduces. A sweep for `&nbsp;` over 1,584 bodies found
+      # NOTHING, because a translator that mangles an entity does not leave it
+      # canonical; what found it was that `&` occurs in exactly one plan.
+      - run: node scripts/audit-prose.mjs
+
       # The steps above are also `bun run audit`, which the root manifest added
       # so that `bun run verify` — the command README tells a person to run —
       # can go red for the reasons this job goes red. It ran no audit at all

@@ -80,6 +80,40 @@ export const CORRECTIONS = [
     from: '8 9 = 72',
     to: '8х9 = 72',
   },
+  {
+    where: 'the sixth plan in Malay carries a paragraph of mangled non-breaking spaces',
+    // The whole paragraph is `& Nbsp; & nbsp; & nbsp; & nbsp;` — four HTML
+    // entities for a non-breaking space, each broken by a space after the
+    // ampersand and the first capitalised, standing alone between *"Keempat-
+    // empat ini dipanggil"* and the list it introduces. A reader of the Malay
+    // edition sees exactly that, on the page.
+    //
+    // BOTH donors carrying the Malay text have it — `leela-game/translations/
+    // ms/plans.json` and `leela/src/locales/ms/translation.json` — so the
+    // machine translation broke the markup, not this repository.
+    //
+    // Checkable, on the terms this file draws its line. An HTML entity is
+    // MARKUP, not words, in every language at once, so nothing here is a
+    // judgement about Malay. And REMOVING IT REMOVES NO WORDS: the paragraph
+    // holds no letters of any language, only four broken entities, so no
+    // translator is overruled and nothing anybody wrote is lost.
+    //
+    // FOUND BY THE COUNT, NOT BY THE PATTERN. A sweep for `&nbsp;` over all
+    // 1,584 bodies found nothing, because the corpus does not hold the
+    // canonical spelling. What found it was that `&` occurs in exactly ONE
+    // plan of 1,584 — the probe had looked for how the defect is spelled when
+    // it is written correctly, and a mangled thing is mangled.
+    languages: ['ms'],
+    plan: 6,
+    // A paragraph that is nothing but entities, however spelled and spaced.
+    // Anchored on the blank lines either side so it cannot eat the text around
+    // it, and it must not touch a paragraph that has words in it as well.
+    repair: (body) => body.replace(/\n\n(?:\s*&\s*[A-Za-z]+\s*;\s*)+\n\n/g, '\n\n'),
+    // The property, read out of the data without reference to the repair.
+    // Asking whether running the repair again changes anything is a check that
+    // cannot fail — a repair that has stopped firing changes nothing either.
+    holds: (body) => !/&\s*[A-Za-z]+\s*;/.test(body),
+  },
 ];
 
 /**

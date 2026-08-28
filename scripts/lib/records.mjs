@@ -464,6 +464,16 @@ export const DECLARED = [
     because: 'this list itself, which excuses every other from being reported as undeclared',
   },
   {
+    module: 'lib/prose.mjs',
+    name: 'MARKUP',
+    kind: 'vocabulary',
+    because:
+      'the shapes markup takes when it survives into prose — an entity, a tag, a heading, ' +
+      'emphasis, a link, an image, a fence. It excuses nothing: each is a class rather than ' +
+      'a spelling, because the defect that motivated it was `& Nbsp;` and a sweep for the ' +
+      'canonical `&nbsp;` over 1,584 bodies found nothing at all',
+  },
+  {
     module: 'lib/namesakes.mjs',
     name: 'RECORDED',
     kind: 'record',
