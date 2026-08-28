@@ -204,6 +204,11 @@ const DOCS = [
   'packages/contracts/README.md',
   'apps/bot/README.md',
   'apps/webgl/LOOP.md',
+  // Added 2026-08-28, when it stopped restating the field and started naming
+  // `node scripts/rivals.mjs` instead. `tests/runnable.test.ts` required it the
+  // same minute — the guard that keeps this list from being five documents
+  // somebody once thought of.
+  'apps/webgl/NOTES.md',
 ];
 
 const documented = new Map();

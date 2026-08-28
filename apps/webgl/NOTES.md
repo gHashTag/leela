@@ -16,39 +16,65 @@ deployment check's ceilings, and this file points at them.
 
 ## Why a browser at all
 
-Measured 2026-08-11, re-measured 2026-08-22, and the App Store half
-re-measured **2026-08-23 through Apple's own lookup API**, which is worth more
-than any of the prose: anyone can rerun it and get the same answer.
+**Do not read a figure out of this section. Run the sweep.**
 
-    curl -s "https://itunes.apple.com/lookup?id=6504097981,1574737998,1296604457"
+    node scripts/rivals.mjs
 
-| first released | app | live version | last updated | ratings | genre |
-|---|---|---|---|---|---|
-| **2017-10-15** | **Leela Chakra Ai — ours** | 6.10 | 2024-08-12 | 1 | Education |
-| 2021-11-16 | Leela: The Game of Knowledge | 2.2.0 | 2024-08-27 | 154 | Lifestyle |
-| 2024-09-03 | Leela the Queen: Inner Journey | 1.0.6 | 2025-02-05 | 7 | Games |
+It fetches every rival named below, states what it was looking for, and says
+`NOT REACHED` rather than guessing when a page does not answer. The roster and
+its calibration are in `scripts/lib/rivals.mjs`; the judgement has twelve tests.
 
-Two things fall straight out of it.
+That command exists because of what this section was. It held two tables — one
+recording a `curl`, one recording prose — and on 2026-08-28 the prose half had
+read "carried from 08-22" for six days while the `curl` half was still true.
+The cause was smaller than it looked: **the table named five rivals and gave an
+address for none of them.** A claim whose subject has no locator cannot be
+re-checked by anybody. The addresses now live in the roster, where the sweep
+can reach them.
 
-**The "first Leela in the store, first AI Leela" claim is true and now has a
+And the durable half was not safe either. Its numbers were right on the day and
+the row for *our own app* said `6.10 | 2024-08-12` on a morning Apple was
+serving **7.0, updated 2026-08-27**. A command beside a stale copy of its own
+output is still a stale figure — so the copy is gone and the command stays.
+
+| first released | app | what it is |
+|---|---|---|
+| **2017-10-15** | **Leela Chakra Ai — ours** | the first Leela in the store |
+| 2021-11-16 | Leela: The Game of Knowledge | the one with the ratings |
+| 2024-09-03 | Leela the Queen: Inner Journey | markets itself as the first AI Leela |
+
+**The "first Leela in the store, first AI Leela" claim is true and has a
 citation.** Ours predates *Leela: The Game of Knowledge* by four years and one
-month, and *Leela the Queen* — which markets itself as the first AI Leela — by
-six years and ten months. That is Apple's record, not ours.
+month, and *Leela the Queen* by six years and ten months. Release dates do not
+move, which is why they are the only figures kept here. That is Apple's record,
+not ours.
 
-**The whole iOS field is asleep.** Dormant 24, 24 and 19 months respectively,
-by last-update date on 2026-08-23. Nobody is shipping there. Which means iOS
-is not where this is won or lost, and the browser and the chat are.
+**Both rivals on iOS are dormant and we no longer are.** Measured 2026-08-28:
+theirs last shipped 2024-08-27 and 2025-02-05, ours the day before. The older
+version of this paragraph said "the whole iOS field is asleep, dormant 24, 24
+and 19 months" and counted us among the sleepers — a sentence that aged into a
+falsehood the moment 7.0 went out. Run the command for the dates.
 
-The web and chat field, from the 2026-08-22 sweep, with today's re-checks
-marked:
+The web and chat field, all of it re-measured 2026-08-28 by the sweep above:
 
-| Competitor | Shape | Has of ours | Re-checked |
+| Competitor | Shape | Has of ours | Address |
 |---|---|---|---|
-| Leela Quest (web/iOS/Android) | browser board, credits ~$4.99/game | link, board | live 200 today; the price is carried from 08-22, not re-confirmed |
-| quantumgame.love | browser + AI guide, solo by design | link, AI | **live today, 1490 ₽ still on the page** |
-| com.vtm.lila (Android) | 10K+ installs, ads, "Leela Chakra" in its title | distribution | carried from 08-22 |
-| LeelaRoom / OMKARA / MAGICLEELA | facilitator businesses, some via Telegram | group (hosted) | carried from 08-22 |
-| ChatGPT-prompt Leela (viral, vc.ru 08-2026) | free text-only game master | AI (free) | carried from 08-22 |
+| Leela Quest | browser board, credits | link, board | `leelaquest.com` |
+| quantumgame.love | browser + AI guide, solo by design | link, AI | `quantumgame.love` |
+| com.vtm.lila | Android, ads, "Leela Chakra" in its title | distribution | Play, `com.vtm.lila` |
+| LeelaRoom | facilitator business, via Telegram | group (hosted) | `leelaroom.com` |
+| MAGICLEELA | facilitator business, via Telegram | group (hosted) | `magicleela.com` |
+
+Every claim the sweep can check still held on 2026-08-28. Two it cannot, and
+they are named in the roster rather than quietly dropped: **OMKARA** has no
+address on record and five plausible domains do not resolve, and the viral
+**vc.ru ChatGPT-prompt Leela** never had its article URL written down. One line
+from the owner makes the first checkable.
+
+One price is deliberately not asserted. Leela Quest's landing page shows no
+figure and links nothing matching `pric|plan|buy|credit|subscri`, so the sweep
+reports `not shown here` rather than `GONE` — a price behind a login is not a
+price that was withdrawn.
 
 The 2026-08-11 claim — *a link that opens a playable board is ours alone* — was
 falsified by the second sweep and stays retired: Leela Quest has played in a

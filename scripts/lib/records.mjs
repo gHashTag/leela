@@ -464,6 +464,31 @@ export const DECLARED = [
     because: 'this list itself, which excuses every other from being reported as undeclared',
   },
   {
+    module: 'lib/rivals.mjs',
+    name: 'ABSENCE',
+    kind: 'vocabulary',
+    because: 'the two things a missing needle is allowed to mean, refuted or unknown',
+  },
+  {
+    module: 'lib/rivals.mjs',
+    name: 'RIVALS',
+    kind: 'vocabulary',
+    because:
+      'the competitors this repository makes claims about, each with the address its ' +
+      'claims can be re-checked at. It excuses nothing: it is the subject list, and the ' +
+      'addresses are the half NOTES.md never had, which is why five of its rows sat unchecked',
+  },
+  {
+    module: 'lib/rivals.mjs',
+    name: 'WITHOUT_AN_ADDRESS',
+    kind: 'vocabulary',
+    because:
+      'the rivals nothing locates, and it excuses none of them: `describeRivals` prints ' +
+      'every entry under "not checkable from here" on every run, so an unreachable rival ' +
+      'stays in the report instead of being quietly dropped from it. Each carries what ' +
+      'was probed, and the entry goes when an address is found',
+  },
+  {
     module: 'lib/runnable.mjs',
     name: 'FALSEY',
     kind: 'vocabulary',
