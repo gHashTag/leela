@@ -464,6 +464,17 @@ export const DECLARED = [
     because: 'this list itself, which excuses every other from being reported as undeclared',
   },
   {
+    module: 'lib/namesakes.mjs',
+    name: 'RECORDED',
+    kind: 'record',
+    askedIn: 'scripts/audit-namesakes.mjs',
+    asks: 'rotted',
+    because:
+      'the thirty places a language calls two plans by one name, grouped by the pair ' +
+      'because the cause is shared — repairing means choosing what a plan is called in ' +
+      'that language, which is a translator’s decision',
+  },
+  {
     module: 'audit-preview.mjs',
     name: 'PAGES',
     kind: 'vocabulary',

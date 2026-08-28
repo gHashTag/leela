@@ -263,6 +263,14 @@ jobs:
       # favicon and three of four carry an og:image.
       - run: node scripts/audit-preview.mjs
 
+      # No two squares of the board are told to a player by one name. Found by
+      # reading the Urdu book: plan 4 and plan 8 are both لالچ. Thirty findings
+      # in seventeen of the twenty-two languages, five pairs — and the root is
+      # in the English, which renders Russian's «Алчность (матсара)» as bare
+      # "Greed", the word it already uses for plan 4. Recorded rather than
+      # repaired: choosing what plan 8 is called is a translator's decision.
+      - run: node scripts/audit-namesakes.mjs
+
       # The steps above are also `bun run audit`, which the root manifest added
       # so that `bun run verify` — the command README tells a person to run —
       # can go red for the reasons this job goes red. It ran no audit at all
