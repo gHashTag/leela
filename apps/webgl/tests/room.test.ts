@@ -1,6 +1,6 @@
 import { describe as group, expect, it } from 'vitest';
 
-import { MOST_ROWS, roomFor } from '../src/room';
+import { MOST_ROWS, boxFor, roomFor } from '../src/room';
 
 /**
  * How tall the writing box has to be before anything is written in it.
@@ -14,13 +14,13 @@ import { MOST_ROWS, roomFor } from '../src/room';
  */
 
 /** The live figures, taken from t27.ai/leela/ at 375 CSS pixels on 2026-08-29. */
-const ON_A_PHONE = { floor: 44, lineHeight: 24 };
+const ON_A_PHONE = { floor: 44, lineHeight: 24, borderY: 2 };
 
 group('the room an empty writing box needs', () => {
   it('gives the placeholder its second line, which is the defect this fixes', () => {
     // MEASURED: clientHeight 46, scrollHeight 70, placeholder "What does this
     // plan bring up?". The player saw "What does this plan bring" and a sliver.
-    expect(roomFor({ measured: 70, ...ON_A_PHONE })).toBe(70);
+    expect(roomFor({ measured: 70, ...ON_A_PHONE })).toBe(72);
   });
 
   it('adds nothing when the placeholder already fits, so the box can still grow', () => {
@@ -53,14 +53,14 @@ group('the room an empty writing box needs', () => {
     // Exactly at the ceiling is still a sentence; one pixel past it is not.
     const ceiling = ON_A_PHONE.lineHeight * MOST_ROWS;
 
-    expect(roomFor({ measured: ceiling, ...ON_A_PHONE })).toBe(ceiling);
+    expect(roomFor({ measured: ceiling, ...ON_A_PHONE })).toBe(ceiling + ON_A_PHONE.borderY);
     expect(roomFor({ measured: ceiling + 1, ...ON_A_PHONE })).toBeNull();
   });
 
   it('leaves room for languages that wrap further than English', () => {
     // Three lines is a long sentence in a wide script, and the game is played
     // in twenty-two languages. It must not be mistaken for the bad reading.
-    expect(roomFor({ measured: 3 * ON_A_PHONE.lineHeight, ...ON_A_PHONE })).toBe(72);
+    expect(roomFor({ measured: 3 * ON_A_PHONE.lineHeight, ...ON_A_PHONE })).toBe(74);
   });
 
   it('reads a box that has not been laid out as nothing, not as a fit', () => {
@@ -84,7 +84,35 @@ group('the room an empty writing box needs', () => {
      * everything: the placeholder gets its second line, and the implausible
      * reading is caught by the stylesheet's own `max-height` as it was before.
      */
-    expect(roomFor({ measured: 70, floor: 44, lineHeight: Number.NaN })).toBe(70);
-    expect(roomFor({ measured: 40, floor: 44, lineHeight: Number.NaN })).toBeNull();
+    expect(roomFor({ measured: 70, floor: 44, lineHeight: Number.NaN, borderY: 2 })).toBe(72);
+    expect(roomFor({ measured: 40, floor: 44, lineHeight: Number.NaN, borderY: 2 })).toBeNull();
+  });
+});
+
+group('the height to set, given the height the content wants', () => {
+  it('adds the border, because the box being sized counts it and scrollHeight does not', () => {
+    /*
+     * MEASURED ON THE LIVE SITE, after the placeholder fix had already shipped:
+     * the box grew from 46 to 68 and `scrollHeight` was still 70. `box-sizing`
+     * is `border-box`, so a height set from `scrollHeight` — content plus
+     * padding, no border — leaves the content two pixels short and the last
+     * line loses its descenders.
+     *
+     * The typed path had the same shortfall from the day it was written, 92
+     * against 94. One arithmetic error in two branches.
+     */
+    expect(boxFor(70, 2)).toBe(72);
+    expect(boxFor(94, 2)).toBe(96);
+  });
+
+  it('adds nothing when there is no border to add', () => {
+    expect(boxFor(70, 0)).toBe(70);
+    expect(boxFor(70, Number.NaN)).toBe(70);
+  });
+
+  it('is what roomFor returns, so the two cannot drift apart', () => {
+    // The empty path and the typed path do the same arithmetic or they do not
+    // agree about where the bottom of the box is.
+    expect(roomFor({ measured: 70, ...ON_A_PHONE })).toBe(boxFor(70, ON_A_PHONE.borderY));
   });
 });

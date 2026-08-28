@@ -59,6 +59,27 @@ export interface Room {
   floor: number;
   /** One line, from the computed style — the unit the ceiling is counted in. */
   lineHeight: number;
+  /** Top plus bottom border. See {@link boxFor}: under `border-box` it is not
+   *  included in `scrollHeight` but IS included in the height being set. */
+  borderY: number;
+}
+
+/**
+ * The height to SET, given the height the content WANTS.
+ *
+ * `scrollHeight` is content plus padding and excludes the border; the field is
+ * `box-sizing: border-box`, so a height set from it makes the border box that
+ * tall and the content two pixels shorter than it asked for. The last line of
+ * whatever the player is reading or writing loses its descenders.
+ *
+ * FOUND ON THE LIVE SITE, AFTER THE PLACEHOLDER FIX WAS ALREADY DEPLOYED: the
+ * box grew from 46 to 68 and `scrollHeight` was still 70. It is not new — the
+ * typed path has had the same shortfall since it was written, 92 against 94 —
+ * so this is one arithmetic error in two branches, and it is written once here
+ * rather than twice at the call site.
+ */
+export function boxFor(measured: number, borderY: number): number {
+  return measured + (Number.isFinite(borderY) && borderY > 0 ? borderY : 0);
 }
 
 /**
@@ -70,7 +91,7 @@ export interface Room {
  * pin the box at it, and the box has to be free to grow the moment the player
  * types.
  */
-export function roomFor({ measured, floor, lineHeight }: Room): number | null {
+export function roomFor({ measured, floor, lineHeight, borderY }: Room): number | null {
   // Nothing measurable. A box that has not been laid out reports 0, and 0 is
   // not "the placeholder fits" — it is "there is nothing to read here yet".
   if (!Number.isFinite(measured) || measured <= 0) return null;
@@ -82,7 +103,11 @@ export function roomFor({ measured, floor, lineHeight }: Room): number | null {
   }
 
   // It fits as it is. The stylesheet is right and cannot be measured wrong.
+  // Compared against the CONTENT height, not the box height: the floor is a
+  // `min-height` and under `border-box` that bounds the same box the border is
+  // counted in, so adding the border first would make a fitting placeholder
+  // look two pixels too tall and pin the box for no reason.
   if (measured <= floor) return null;
 
-  return measured;
+  return boxFor(measured, borderY);
 }

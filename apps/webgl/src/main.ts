@@ -23,7 +23,7 @@ import { fanOffset, hopPoint, planPosition } from './layout';
 import { browserStore, finishedTable, read, write, type KeptSeat } from './kept';
 import { ENTITLEMENT_CHANGED, askToSubscribe, entitled, hostOf } from './hosted';
 import { pathOf } from './path';
-import { roomFor } from './room';
+import { boxFor, roomFor } from './room';
 import {
   add as keepWritten,
   readAll,
@@ -1664,17 +1664,25 @@ const grow = (): void => {
    * exactly as it did before.
    */
   el.reply.style.height = 'auto';
+  const style = getComputedStyle(el.reply);
+  // `scrollHeight` excludes the border and the height being set includes it.
+  // See `boxFor` — the typed path was two pixels short of its own content from
+  // the day it was written, and both branches go through the same arithmetic.
+  const borderY =
+    (Number.parseFloat(style.borderTopWidth) || 0) +
+    (Number.parseFloat(style.borderBottomWidth) || 0);
 
   if (el.reply.value === '') {
     const room = roomFor({
       measured: el.reply.scrollHeight,
-      floor: Number.parseFloat(getComputedStyle(el.reply).minHeight) || 0,
-      lineHeight: Number.parseFloat(getComputedStyle(el.reply).lineHeight) || 0,
+      floor: Number.parseFloat(style.minHeight) || 0,
+      lineHeight: Number.parseFloat(style.lineHeight) || 0,
+      borderY,
     });
 
     el.reply.style.height = room === null ? '' : `${room}px`;
   } else {
-    el.reply.style.height = `${el.reply.scrollHeight}px`;
+    el.reply.style.height = `${boxFor(el.reply.scrollHeight, borderY)}px`;
   }
 
   el.send.disabled = el.reply.value.trim().length === 0;
