@@ -22,7 +22,9 @@ import { describe, expect, it } from 'vitest';
 import { Guide, ModelError, type LanguageModel, type Message } from '@leela/ai';
 import { messageFor } from '@leela/content';
 import { isWaitingToEnter } from '@leela/engine';
-import { ASK_ALLOWANCE, ASK_WINDOW_MS, createBot, rulesText } from '../src/bot';
+import { rulesText } from '@leela/engine';
+
+import { ASK_ALLOWANCE, ASK_WINDOW_MS, createBot } from '../src/bot';
 import { openRoom, report, roll, start, type Room } from '../src/commands';
 import { MemoryReportSink, MemoryRoomStore } from '../src/store';
 

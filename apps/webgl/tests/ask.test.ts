@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { ARROWS, SNAKES, START_LOKA, WIN_LOKA } from '@leela/engine';
+import { ARROWS, SNAKES, START_LOKA, WIN_LOKA, rulesText } from '@leela/engine';
 import { messageFor } from '@leela/content';
 
-import { askOverHttp, askUrl, historyFor, rulesText, systemFor } from '../src/ask';
+import { askOverHttp, askUrl, historyFor, systemFor } from '../src/ask';
 import type { Line, Rests } from '../src/companion';
 
 /**

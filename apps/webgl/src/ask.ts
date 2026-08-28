@@ -1,4 +1,4 @@
-import { ARROWS, SNAKES, START_LOKA, TOTAL_PLANS, WIN_LOKA } from '@leela/engine';
+import { rulesText } from '@leela/engine';
 import { LANGUAGE_NAMES, type Language } from '@leela/content';
 
 import { messageFor } from './canon';
@@ -93,23 +93,17 @@ const HISTORY_LINES = 10;
 /** How much of any one earlier line, so a long plan text cannot crowd the rest. */
 const HISTORY_CHARS = 400;
 
-const listOf = (jumps: Readonly<Record<number, number>>): string =>
-  Object.entries(jumps)
-    .map(([from, to]) => `${from}->${to}`)
-    .join(', ');
-
-/** The board this game is actually played on, read from the engine. */
-export const rulesText = (): string =>
-  [
-    `The board has ${TOTAL_PLANS} plans.`,
-    `A player is off the board until they throw a six, which places them on plan ${START_LOKA}.`,
-    'A six earns another throw; three sixes in a row send the player back to where that run began.',
-    `Arrows lift: ${listOf(ARROWS)}.`,
-    `Snakes drop: ${listOf(SNAKES)}.`,
-    `A throw that would pass plan ${TOTAL_PLANS} does not move the player at all.`,
-    `Reaching plan ${WIN_LOKA} completes the game; plan 54 leads straight to it.`,
-    'After every landing the player writes what they meet there, and the die stays closed until they do.',
-  ].join(' ');
+/*
+ * The board in words now comes from `@leela/engine`, and this is why.
+ *
+ * These eight sentences were written here AND in `apps/bot/src/bot.ts`, word
+ * for word. The bot's copy carried a comment saying the two could not describe
+ * two different games because every number came from the engine — true of that
+ * copy, and false of this one, which ended `plan 54 leads straight to it` with
+ * the number typed in. Right today, and right by luck: nothing re-derived it.
+ * This copy also promised a straight-in arrow unconditionally, so a board with
+ * none would have been described as having one.
+ */
 
 /** What the model is told it is doing, before the player's words. */
 /**

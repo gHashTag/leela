@@ -61,6 +61,11 @@ export type { BoardFinding, BoardProblem, DetectedRules, Jumps } from './audit';
 export { declaresBoard, extractBoards, extractOrigins } from './extract';
 export type { ExtractedBoard } from './extract';
 
+// The board in words, once. It was written out twice — in the bot and in the
+// board's ask route — and one of the two typed a number in by hand.
+export { THIS_BOARD, rulesText } from './describe';
+export type { BoardInWords } from './describe';
+
 export {
   CLASSIC,
   DEFAULT_RULESET,

@@ -16,15 +16,7 @@ import {
   planFor,
   resolveLanguage,
 } from '@leela/content';
-import {
-  ARROWS,
-  SNAKES,
-  START_LOKA,
-  TOTAL_PLANS,
-  WIN_LOKA,
-  isSessionOver,
-  isWaitingToEnter,
-} from '@leela/engine';
+import { isSessionOver, isWaitingToEnter, rulesText } from '@leela/engine';
 import { MAX_INTENTION_CHARS, isIntention, withoutOne } from '@leela/journal';
 import type { Guide } from '@leela/ai';
 import { Conversations } from './conversation';
@@ -216,40 +208,15 @@ function behind<T extends { plan: number }>(
 }
 
 /** One board's jumps, written the way the model reads them. */
-const listOf = (jumps: Readonly<Record<number, number>>): string =>
-  Object.entries(jumps)
-    .map(([from, to]) => `${from}->${to}`)
-    .join(', ');
-
-/**
- * The board this bot's tables are played on, read from the engine.
+/*
+ * The board in words comes from `@leela/engine` now.
  *
- * For the companion's no-table answers. `@leela/ai` deliberately holds no copy
- * of the board — its `AboutContext` takes the rules from the caller — and this
- * is the same rendering the board's own ask route builds in
- * `apps/webgl/src/ask.ts`, from the same engine exports, so the two surfaces
- * cannot describe two different games. Every number comes from `@leela/engine`
- * rather than being written out here: a variant that moves a snake moves this
- * sentence with it.
+ * This function was here and, word for word, in `apps/webgl/src/ask.ts`. The
+ * comment above this one used to say the two could not describe two different
+ * games because every number came from the engine. It was true here and false
+ * there: the board's copy typed `plan 54` in by hand. One description, in the
+ * package that owns the rules.
  */
-export function rulesText(): string {
-  // The one arrow that ends the game, found on the board rather than written
-  // as a number: naming its square by hand would leave this sentence
-  // describing an old board the day a variant moves it.
-  const straightIn = Object.entries(ARROWS).find(([, to]) => to === WIN_LOKA)?.[0];
-
-  return [
-    `The board has ${TOTAL_PLANS} plans.`,
-    `A player is off the board until they throw a six, which places them on plan ${START_LOKA}.`,
-    'A six earns another throw; three sixes in a row send the player back to where that run began.',
-    `Arrows lift: ${listOf(ARROWS)}.`,
-    `Snakes drop: ${listOf(SNAKES)}.`,
-    `A throw that would pass plan ${TOTAL_PLANS} does not move the player at all.`,
-    `Reaching plan ${WIN_LOKA} completes the game` +
-      (straightIn ? `; plan ${straightIn} leads straight to it.` : '.'),
-    'After every landing the player writes what they meet there, and the die stays closed until they do.',
-  ].join(' ');
-}
 
 /**
  * How many questions one player may put to the companion inside `ASK_WINDOW_MS`.
