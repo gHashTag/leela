@@ -186,14 +186,37 @@ flow for exactly this reason.
   replaced and nothing is chosen between. Step 4 is about the GAME, where a
   browser position and a chat position could genuinely conflict.
 
-- **FR-008 is not waiting on a name.** It reads *[NEEDS CLARIFICATION: by whom?]*
-  and has been read as a question for the owner. Measured 2026-08-28: **there is
-  nothing to moderate.** Sharing a report with other players — FR-006, P2 — does
-  not exist: the bot's schema holds eight tables (sessions, session_players,
-  game_steps, reports, intentions, last_tick, nudges, entitlements) and not one
-  of them is a shared or published report. Naming a moderator today names one
-  for an empty set. FR-008 is blocked on FR-006, which is blocked on nothing but
-  being built.
+- **FR-008, corrected the same day it was written.** This paragraph said
+  *there is nothing to moderate — sharing does not exist*, on the evidence that
+  the bot's schema holds eight tables and none of them is a shared report. That
+  evidence is true and the conclusion was wrong: **it measured the bot and spoke
+  about the product.**
+
+  Sharing exists, is shipped, and has users. `leela-src/leela`, branch
+  `leela-ai-streaming-vedic`, at the commit that built 7.0: `Navigation.tsx`
+  registers `TAB_BOTTOM_1` as `LazyPostScreen` titled `tabRoute.feed`;
+  `src/store/PostStore.ts` is `@react-native-firebase/firestore` with `posts`,
+  `ownPosts`, `comments`, `replyComments` and `myCountPosts`; `CreatePost`
+  writes through `PostStore.createComment`; and `PostT` in `types/types.ts`
+  carries `liked[]`, `comments[]`, `language`, `flagEmoji`, `ownerId` and
+  **`accept?: boolean`** — the moderation flag this spec's own Background
+  describes.
+
+  So FR-008 is not premature and not waiting on a name in the abstract. The
+  honest question for the owner is narrower and answerable: **who accepts posts
+  in the iOS app today, and does that person carry over to a shared path?**
+
+- **The fourth surface, which this spec never counted.** Four surfaces, THREE
+  stores, measured 2026-08-28:
+
+  | surface | where a report lives |
+  |---|---|
+  | iOS, published, real users | **Firebase Firestore**, with a feed and `accept` |
+  | the bot | SQLite on a Railway volume |
+  | the 3D board and the 2D board | `localStorage`, and since 45466fd also the bot's SQLite |
+
+  P1 joined the bot and the two boards. **It did not touch the surface that has
+  the users**, and no line of this spec said so until now.
 - Until that decision: the file in the mini app *is* the bridge. A player can
   save their path and carry it, and the merge rules that make a sync safe are
   already written and tested.
