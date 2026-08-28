@@ -51,6 +51,7 @@ import { canDraw } from './drawable';
 import { createBoard } from './scene';
 import { atEnd, bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
 import { myGame } from './mine';
+import { sendMyPath } from './sending';
 import { launchOf, meetTelegram, nameAskOrigin, telegramOf } from './telegram';
 import { css } from './theme';
 import {
@@ -130,12 +131,15 @@ meetTelegram(telegramOf(), document.documentElement.style);
  * and diverges from it the moment anybody rolls here. Step 4 of the spec — what
  * should happen to a game already in this browser — is the owner's to answer.
  */
-void myGame({ initData: launchOf(telegramOf()), fetch: (...args) => fetch(...args) }).then((mine) => {
+const launch = launchOf(telegramOf());
+
+void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine) => {
   if (mine.kind !== 'standing') return;
 
   el.inTheChat.textContent = messageFor(language, 'app.inTheChat', { plan: mine.standing.plan });
   el.inTheChat.hidden = false;
 });
+
 
 const HOP_MS = 260;
 
@@ -387,6 +391,30 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 // What the last visit left behind, read before anything is built from it.
 const store = browserStore();
+
+/**
+ * And this board's own path, offered to the chat.
+ *
+ * `specs/001-shared-reports` P1 — *what I wrote should be one path, wherever I
+ * wrote it.* The other half of the wire the line above reads from.
+ *
+ * **This needs none of the decision `specs/009` step 4 is waiting on.** That
+ * question is about the GAME, where a browser game and a chat game could
+ * disagree and one has to win. A path cannot disagree with a path: the bot
+ * merges by the moment each report was written, so nothing is replaced and
+ * sending twice adds nothing the second time. There is no conflict to have an
+ * opinion about, which is why this could be built while that waits.
+ *
+ * Not awaited, silent whatever happens, and it says nothing to the player: a
+ * sync that worked is not news, and one that failed will be tried again the
+ * next time the board opens. The reading above is the surface that speaks.
+ */
+void sendMyPath({
+  initData: launch,
+  entries: readAll(store),
+  fetch: (...args) => fetch(...args),
+});
+
 const saved = read(store, LEGACY_MOBILE);
 
 /*
