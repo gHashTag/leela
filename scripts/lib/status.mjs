@@ -106,6 +106,38 @@ export function stagedFrom(ascText) {
   return /^\s+([\d.]+): PREPARE_FOR_SUBMISSION/m.exec(ascText)?.[1] ?? null;
 }
 
+/**
+ * Whether a door that should be shut to strangers is shut.
+ *
+ * `/api/game` and `/api/reports` serve and accept one player's own writing, and
+ * the only thing between them and anybody on the internet is `vouched.ts`
+ * checking a signature. **Nothing measured that.** Every other row in this
+ * report asks whether a surface still works; this asks whether one still
+ * refuses, which is the failure that would cost the most and show the least —
+ * a route that started answering 200 to unsigned callers would look, from
+ * outside, exactly like a route that was working.
+ *
+ * It needs no secret, which is why it can live here: the *refusal* is the
+ * observable. A dashboard holding a bot token to prove a door opens would be a
+ * worse trade than not proving it.
+ *
+ * `401` is the door shut. Anything else is a finding, and they are told apart:
+ * a `404` means the route is not there at all — a deployment behind the code —
+ * and a `2xx` means it answered a stranger, which is the alarm this exists for.
+ */
+export function shutToStrangers(status) {
+  if (status === 401) return { kind: 'fine', value: 'shut to strangers', note: '401 without a signature' };
+  if (status === null) return { kind: 'unasked', value: 'not asked', note: 'the route did not answer here' };
+  if (status === 404) return { kind: 'wrong', value: 'NOT THERE', note: '404 — this deployment predates it' };
+  if (status >= 200 && status < 300) {
+    return { kind: 'wrong', value: 'ANSWERED A STRANGER', note: `${status} to a request carrying no signature` };
+  }
+
+  // A 403 from the origin check, a 405, a 500: not the alarm, but not the
+  // shape either, and a reader should see which.
+  return { kind: 'wrong', value: `REFUSED WITH ${status}`, note: 'expected 401 from the signature check' };
+}
+
 /** The newest deployment, from `railway deployment list`'s table. */
 export function deployFrom(listText) {
   const row = listText.split('\n').find((line) => line.includes('|'));

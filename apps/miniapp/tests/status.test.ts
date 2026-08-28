@@ -7,6 +7,7 @@ import {
   entryFrom,
   listeningIn,
   releaseFrom,
+  shutToStrangers,
   stagedFrom,
   testFlightFrom,
   verdict,
@@ -164,5 +165,42 @@ group('the parsers, which fail quietly or not at all', () => {
       when: '2026-08-23 14:12:44 +07:00',
     });
     expect(deployFrom('Recent Deployments\n')).toBeNull();
+  });
+});
+
+group('a door that should be shut to strangers', () => {
+  it('calls a 401 shut, which is the whole of the check', () => {
+    expect(shutToStrangers(401)).toMatchObject({ kind: 'fine', value: 'shut to strangers' });
+  });
+
+  it('RAISES THE ALARM on a 2xx, which is what it exists for', () => {
+    // A route that started answering unsigned callers looks, from outside,
+    // exactly like a route that works — every other row in this report would
+    // stay green while a player's own writing was served to anybody.
+    for (const status of [200, 201, 204]) {
+      const said = shutToStrangers(status);
+      expect(said.kind, String(status)).toBe('wrong');
+      expect(said.value).toBe('ANSWERED A STRANGER');
+    }
+  });
+
+  it('tells a route that is not there from one that let somebody in', () => {
+    // A 404 is a deployment behind the code — worth saying, and not the alarm.
+    expect(shutToStrangers(404)).toMatchObject({ kind: 'wrong', value: 'NOT THERE' });
+    expect(shutToStrangers(404).note).toContain('predates');
+  });
+
+  it('does not call a refusal of the wrong shape fine', () => {
+    // 403 is the origin check, 405 the method, 500 the process. None of them is
+    // the signature refusing, and a reader should see which door answered.
+    for (const status of [403, 405, 500]) {
+      expect(shutToStrangers(status).kind, String(status)).toBe('wrong');
+      expect(shutToStrangers(status).value).toContain(String(status));
+    }
+  });
+
+  it('says it could not ask when nothing answered', () => {
+    // Never `wrong`: a dropped connection has not found an open door.
+    expect(shutToStrangers(null)).toMatchObject({ kind: 'unasked' });
   });
 });

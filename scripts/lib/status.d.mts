@@ -51,3 +51,15 @@ export function testFlightFrom(ascText: string): { build: string; state: string 
 export function stagedFrom(ascText: string): string | null;
 
 export function deployFrom(listText: string): { id: string; state: string; when: string } | null;
+
+/**
+ * Whether a route that should refuse an unsigned caller did.
+ *
+ * `null` for a request that never answered. The alarm is a 2xx: a door that
+ * opened to a stranger looks, from outside, exactly like one that works.
+ */
+export function shutToStrangers(status: number | null): {
+  kind: Finding['kind'];
+  value: string;
+  note: string;
+};

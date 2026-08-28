@@ -49,6 +49,7 @@ import {
   entryFrom,
   listeningIn,
   releaseFrom,
+  shutToStrangers,
   stagedFrom,
   testFlightFrom,
   verdict,
@@ -156,6 +157,35 @@ if (!ask.ok || ask.status !== 200) {
   const answered = /"text":"([^"]*)"/.exec(ask.text)?.[1] ?? '';
   const thought = (ask.text.match(/"thinking"/g) ?? []).length;
   say('bot', 'the companion route', answered === '' ? 'ANSWERED NOTHING' : `answers "${answered}"`, `${ask.ms} ms, ${thought} reasoning deltas`);
+}
+
+/*
+ * The two doors that carry a player's own writing, asked whether they are shut.
+ *
+ * `/api/game` serves one player their position and `/api/reports` takes their
+ * path; both stand behind a signature checked against the bot token. Every
+ * other row here asks whether a surface still WORKS. These ask whether one
+ * still REFUSES — the failure that would cost the most and show the least,
+ * because a route answering 200 to unsigned callers looks from outside exactly
+ * like a route that is working.
+ *
+ * No secret is needed and none is held: the refusal is the observable. Proving
+ * the door OPENS would need the bot token in this script, which is a worse
+ * trade than leaving that half to the suites — where it is asserted, and to a
+ * hand-signed probe on the day the route shipped.
+ */
+for (const [name, path, method] of [
+  ['the game route', '/api/game', 'GET'],
+  ['the path route', '/api/reports', 'POST'],
+]) {
+  const knocked = await reach(`https://leela-production-e9a0.up.railway.app${path}`, {
+    method,
+    headers: { Origin: 'https://t27.ai' },
+    ...(method === 'POST' ? { body: '{}' } : {}),
+  });
+
+  const verdict = shutToStrangers(knocked.ok ? knocked.status : null);
+  say('bot', name, verdict.value, verdict.note, verdict.kind);
 }
 
 // --- what is deployed, which needs the tools that hold the credentials -------
