@@ -219,7 +219,10 @@ el.say.textContent = messageFor(language, 'app.opening');
  */
 const nextTongue = nextLanguage(language);
 el.tongue.textContent = LABELS[nextTongue] ?? nextTongue.toUpperCase();
-el.tongue.setAttribute('aria-label', `Language: ${LABELS[nextTongue] ?? nextTongue}`);
+el.tongue.setAttribute(
+  'aria-label',
+  `${messageFor(language, 'app.language')}: ${LABELS[nextTongue] ?? nextTongue}`,
+);
 el.tongue.addEventListener('click', () => {
   writeLanguage(languageStore, nextTongue);
   window.location.reload();
@@ -256,8 +259,19 @@ document.documentElement.dataset.look = chosenLook;
  * cannot be half-done, and the game is in storage and comes back where it was.
  */
 const nextLook = other(chosenLook);
-el.look.textContent = nextLook === 'light' ? 'Light' : 'Dark';
-el.look.setAttribute('aria-label', `Theme: ${nextLook}`);
+/*
+ * From the catalogue, not from here.
+ *
+ * This read `nextLook === 'light' ? 'Light' : 'Dark'`, which put an English
+ * word on the face of a button on all twenty-two boards — and the two
+ * aria-labels beside it said `Language:` and `Theme:` in English as well. The
+ * comment two hundred lines below already records four strings found this way
+ * and moved to `@leela/content`; these were the survivors, and nothing was
+ * watching for them. `scripts/audit-spoken.mjs` is now.
+ */
+const lookWord = messageFor(language, nextLook === 'light' ? 'app.light' : 'app.dark');
+el.look.textContent = lookWord;
+el.look.setAttribute('aria-label', `${messageFor(language, 'app.theme')}: ${lookWord}`);
 el.look.addEventListener('click', () => {
   remember(languageStore, nextLook);
   window.location.reload();

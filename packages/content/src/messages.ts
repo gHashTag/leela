@@ -539,6 +539,23 @@ const EN = {
   /** The language picker's name, for a screen reader. */
   'app.language': 'Language',
   /**
+   * The light switch, and the two lights it moves between.
+   *
+   * Here rather than written into `apps/webgl/src/main.ts`, where they were:
+   * `el.look.textContent = nextLook === 'light' ? 'Light' : 'Dark'` put an
+   * English word on the face of a button on all twenty-two boards, and the
+   * aria-labels beside it read `Language:` and `Theme:` in English too. That
+   * file's own comment already records four strings found the same way and
+   * moved here; these three were two hundred lines above it, and nothing was
+   * watching, which is why `audit-spoken.mjs` now is.
+   *
+   * The switch is labelled with the light it moves *to*, so these are read as
+   * "press for dark", not as a report of where you are.
+   */
+  'app.theme': 'Theme',
+  'app.light': 'Light',
+  'app.dark': 'Dark',
+  /**
    * The book's subtitle, and the description a search result shows.
    *
    * `{count}` rather than a second 72 written down, and a **plural**, because
@@ -1122,6 +1139,9 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.policy': 'Политика конфиденциальности',
   'app.terms': 'Условия использования',
   'app.language': 'Язык',
+  'app.theme': 'Тема',
+  'app.light': 'Светлая',
+  'app.dark': 'Тёмная',
   'app.book': {
     one: 'Игра самопознания — {count} план',
     few: 'Игра самопознания — {count} плана',

@@ -246,6 +246,13 @@ jobs:
       # why nothing had gone wrong yet and exactly why it would.
       - run: node scripts/audit-doubles.mjs
 
+      # Every sentence the game says about itself comes from `@leela/content`.
+      # main.ts records four English strings found written into it and moved
+      # out; nothing was added to stop the next, and three more had appeared by
+      # 2026-08-28 — including `'Light' : 'Dark'` on the face of a button, on
+      # all twenty-two boards.
+      - run: node scripts/audit-spoken.mjs
+
       # The steps above are also `bun run audit`, which the root manifest added
       # so that `bun run verify` — the command README tells a person to run —
       # can go red for the reasons this job goes red. It ran no audit at all

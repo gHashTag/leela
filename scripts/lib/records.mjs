@@ -464,6 +464,21 @@ export const DECLARED = [
     because: 'this list itself, which excuses every other from being reported as undeclared',
   },
   {
+    module: 'audit-spoken.mjs',
+    name: 'SURFACES',
+    kind: 'vocabulary',
+    because:
+      'the two apps that hand sentences to a DOM. It excuses nothing: apps/bot has no ' +
+      'DOM and apps/docs renders HTML from strings, and both are named in that file as a ' +
+      'stated gap rather than being quietly absent from a list',
+  },
+  {
+    module: 'lib/spoken.mjs',
+    name: 'SPOKEN',
+    kind: 'vocabulary',
+    because: 'the two ways this codebase hands a sentence to the page, textContent and aria-label',
+  },
+  {
     module: 'lib/rivals.mjs',
     name: 'ABSENCE',
     kind: 'vocabulary',
