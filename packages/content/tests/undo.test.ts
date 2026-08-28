@@ -815,7 +815,28 @@ describe('a command the code itself prints', () => {
       found,
       `no exported string in ${LIB} names a script with a runtime — the sweep compared nothing`,
     ).not.toEqual([]);
-  });
+
+    /*
+     * Thirty seconds, and the number is measured rather than picked.
+     *
+     * This test IMPORTS every `.mjs` in `scripts/lib` — thirty modules and
+     * about 350 KB on 2026-08-28 — because the commands it checks live in
+     * exported *values*, so a text scan would miss them. That cost is real and
+     * it grows: every module added to `scripts/lib` adds another compile.
+     *
+     * On 2026-08-28 it went red at `origin/unified` with nothing changed:
+     * **5104 ms against the 5000 ms default.** Run on its own the same minute
+     * it took 480 ms. It is not slow — it is starved, competing with eleven
+     * other workspaces' vitest processes for the same cores, which is the
+     * shape this repository has recorded before and mistaken for a real defect
+     * twice.
+     *
+     * So the deadline is the one thing that was wrong, and it is set here with
+     * headroom for the growth rather than trimmed to today's worst: six times
+     * the observed contended figure still fails a genuine hang, and does not
+     * fail the next module somebody adds.
+     */
+  }, 30_000);
 });
 
 /**
