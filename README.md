@@ -261,7 +261,7 @@ cd packages/engine && bun test
 | Package | Tests | State |
 |---|---|---|
 | `@leela/engine` | 553 | rules, four variants, sessions, turn gating, seeded dice |
-| `@leela/content` | 703 | 22 languages of plans, 2 of the game's own voice |
+| `@leela/content` | 705 | 22 languages of plans, 2 of the game's own voice |
 | `@leela/journal` | 90 | the path as a file, and what came back — shared by the bot and the mini app |
 | `@leela/db` | 116 | schema, mapping, SQL migrations, legacy import |
 | `@leela/storage` | 38 | addressing files in an S3-compatible bucket, after Firebase Storage |
@@ -269,12 +269,12 @@ cd packages/engine && bun test
 | `@leela/contracts` | 95 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
 | `@leela/bot` | 964 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 239 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
-| `@leela/miniapp` | 621 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
+| `@leela/miniapp` | 642 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | `@leela/mobile` | 408 | the board on a phone (Expo), moved by the engine and by nothing else |
 | `@leela/webgl` | 570 | the board in three dimensions, in a browser, on the same rules the apps play |
 | everything else | — | not yet ported |
 
-4634 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+4657 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
@@ -305,7 +305,25 @@ bun  scripts/audit-dataset.mjs      # the data, against the languages declared
                                     # and against the corrections the generator states
 bun  scripts/audit-variants.mjs     # what legacy-mobile and online claim, against the app
 node scripts/audit-deployment.mjs   # asks four chains where the contract is
+node scripts/audit-preview.mjs      # both pages ready to be shared, and agreeing on every
+                                    # file and address they name
 ```
+
+The picture a shared link shows is drawn, not hand-made:
+
+```bash
+node scripts/make-card.mjs          # redraws og.png and icon.png from the game's own art
+node scripts/make-card.mjs --check  # writes nothing; exits 1 if the committed pair is stale
+```
+
+It needs ImageMagick, which this repository does not depend on and CI does not
+have — which is why both files are committed. The script is how they are
+derived, and `--check` is what keeps that claim true: it redraws into a
+temporary directory and compares byte for byte, so repainting
+`board-dark.webp` and forgetting the card is a thing somebody is told about.
+That comparison only works because the output is deterministic, and it was not
+at first: ImageMagick stamps a `tIME` chunk into every PNG, so the first
+`--check` called a file it had written one second earlier stale.
 
 Two of them take a runtime other than `node`, and that is checked rather than
 remembered: `audit-copies.mjs` spent some time documented here as a `node`

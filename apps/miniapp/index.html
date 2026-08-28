@@ -33,6 +33,32 @@
       content="The game of self-knowledge — 72 plans, in 22 languages."
     />
     <meta property="og:url" content="https://t27.ai/leela/" />
+
+    <!--
+      The picture, and the mark in the tab. The reasoning is written out once,
+      on the 3D board's head, because that page is what `https://t27.ai/leela/`
+      serves and it is the one the bot's buttons open. In short: measured
+      against the five rivals, four of four carry a favicon and three of four
+      carry an `og:image`, and this game carried neither on either page.
+
+      These lines are character-for-character what that head carries, and
+      `audit-preview.mjs` requires it. They are absolute rather than relative
+      precisely BECAUSE this page sits one level deeper, at `/leela/classic/`:
+      a relative path would have to differ between the two heads, and a rule
+      that says "the same, but written differently here" is not a rule anything
+      can check.
+    -->
+    <meta property="og:image" content="https://t27.ai/leela/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="The board's snakes and arrows, and the words: Leela, the game of self-knowledge."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="https://t27.ai/leela/icon.png" />
+    <link rel="apple-touch-icon" href="https://t27.ai/leela/icon.png" />
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="/src/style.css" />
   </head>

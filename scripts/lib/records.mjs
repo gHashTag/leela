@@ -464,6 +464,37 @@ export const DECLARED = [
     because: 'this list itself, which excuses every other from being reported as undeclared',
   },
   {
+    module: 'audit-preview.mjs',
+    name: 'PAGES',
+    kind: 'vocabulary',
+    because:
+      'the two pages of the game and where each is served from. It excuses nothing — it is ' +
+      'the set the audit holds to a standard, and a page removed from it would be a page ' +
+      'nothing checks, which is the defect that audit was written for',
+  },
+  {
+    module: 'make-card.mjs',
+    name: 'ART',
+    kind: 'vocabulary',
+    because:
+      "the painting's width and height, which the card's layout is measured against. " +
+      'preview.test.ts reads the file and fails if it is ever repainted at another size',
+  },
+  {
+    module: 'make-card.mjs',
+    name: 'REPEATABLE',
+    kind: 'vocabulary',
+    because:
+      'the two flags that stop ImageMagick stamping a timestamp into a PNG. Nothing is ' +
+      'excused: without them two runs of one command differ and `--check` is a liar',
+  },
+  {
+    module: 'make-card.mjs',
+    name: 'SAYS',
+    kind: 'vocabulary',
+    because: "the book's sentence about the game, split across the two lines the card sets it in",
+  },
+  {
     module: 'audit-spoken.mjs',
     name: 'SURFACES',
     kind: 'vocabulary',

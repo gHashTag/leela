@@ -98,7 +98,21 @@ describe('the keeper is handed the worst its type allows', () => {
 
     expect(await keep(silent, path, 20), 'not kept, and said so').toBe(false);
     expect((await loadKept(silent, 20)).journal, 'and an empty path rather than a spinner').toEqual(EMPTY_PATH);
-    expect(Date.now() - started, 'both inside the deadline').toBeLessThan(1_000);
+    /*
+     * MEASURED AT 1283 ms AND FAILING, on 2026-08-28, when a dozen workspaces
+     * ran at once — the bound was 1_000. The two calls above are given 20 ms
+     * each, so a 1-second bound reads generous and is not: it is 25× nominal,
+     * and a loaded machine spends more than that on scheduling alone.
+     *
+     * The real proof that a deadline fired is the two assertions above. `silent`
+     * NEVER answers, so an implementation that waited for the device would not
+     * reach this line at all — it would sit until vitest gave up, and vitest's
+     * message would say nothing about a disk. What this line adds is only that
+     * the deadline is a deadline rather than some enormous number, and 5 s
+     * says that with a margin load cannot close while still being six times
+     * clear of the suite's own 30 s.
+     */
+    expect(Date.now() - started, 'both inside the deadline').toBeLessThan(5_000);
   });
 
   it('waits for a device that is merely slow', async () => {

@@ -28,8 +28,18 @@
       The same words the mini app's head carries, for the same reason: this page
       is a link people send each other, and a chat with nothing to build a
       preview from renders it as a bare URL.
+
+      "The same words" WAS NOT TRUE WHEN IT WAS WRITTEN, and this comment is why
+      it went unnoticed for weeks: the mini app's head carries `og:url` and a
+      canonical and this one carried neither, while the guard that would have
+      said so - `shared-link.test.ts` - reads the mini app's head and only ever
+      that one. THE PAGE WITH THE COMMENT WAS THE TESTED PAGE, and this is the
+      one every button in the bot actually opens. `audit-preview.mjs` now reads
+      both and requires them to agree, which is the only version of "the same
+      words" that stays true.
     -->
     <meta name="description" content="The game of self-knowledge — 72 plans, in 22 languages." />
+    <link rel="canonical" href="https://t27.ai/leela/" />
     <meta property="og:site_name" content="Leela" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Leela — the board in three dimensions" />
@@ -37,6 +47,40 @@
       property="og:description"
       content="The game of self-knowledge — 72 plans, in 22 languages."
     />
+    <meta property="og:url" content="https://t27.ai/leela/" />
+
+    <!--
+      The picture, and the mark in the tab. Measured 2026-08-28 against the five
+      rivals `scripts/rivals.mjs` tracks: FOUR OF FOUR carry a favicon and THREE
+      OF FOUR carry an `og:image`. Both pages here carried the words of a
+      preview and nothing to show, and `t27.ai/favicon.ico` was a 404 - so in
+      Telegram, where two of those rivals do all their reaching and where every
+      button in our own bot points, a link to this game rendered as a line of
+      grey text beside a blank page icon.
+
+      ABSOLUTE, AND CHARACTER-FOR-CHARACTER THE SAME IN BOTH HEADS. Open Graph
+      wants an absolute URL and scrapers differ on whether they will resolve a
+      relative one; more to the point, the two pages sit at different depths -
+      `/leela/` and `/leela/classic/` - so a relative path would have to be
+      written two different ways, which is how the two heads drifted apart the
+      first time. One string, one file, checked by `audit-preview.mjs`.
+
+      The file is `apps/webgl/public/og.png`, drawn by `scripts/make-card.mjs`
+      from this repository's own art. The dimensions are stated because a
+      scraper that lays out the card before fetching the image needs them, and
+      the audit checks them against the file on disk rather than trusting them.
+    -->
+    <meta property="og:image" content="https://t27.ai/leela/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="The board's snakes and arrows, and the words: Leela, the game of self-knowledge."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="https://t27.ai/leela/icon.png" />
+    <link rel="apple-touch-icon" href="https://t27.ai/leela/icon.png" />
+
     <!--
       Telegram's bridge, the same tag the mini app carries. The webview does
       not put `window.Telegram` on a page by itself; this script is what

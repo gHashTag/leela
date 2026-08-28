@@ -12,10 +12,28 @@ import { PATIENCE_MS, until } from './waiting';
  */
 group('waiting for the app', () => {
   it('returns at once when the thing is already true', async () => {
-    const began = Date.now();
-    await until(() => true, 'nothing at all');
+    /*
+     * COUNTED, NOT TIMED. This asked for `Date.now() - began` under 50 ms until
+     * 2026-08-28 — a TIGHTER wall-clock upper bound than the 400 ms one removed
+     * from this same file the day before for being load-fragile. Both were
+     * written by the same hand in the same week; one was called a defect and
+     * the other was left, which is what makes it worth writing down.
+     *
+     * A count says the thing better anyway. "Returns at once" means it does not
+     * sleep before looking, and an implementation that slept first would ask
+     * twice. One call is the whole claim, and no amount of load can make it
+     * two.
+     */
+    let asked = 0;
+    await until(
+      () => {
+        asked += 1;
+        return true;
+      },
+      'nothing at all',
+    );
 
-    expect(Date.now() - began).toBeLessThan(50);
+    expect(asked).toBe(1);
   });
 
   it('returns as soon as it becomes true, without waiting out the bound', async () => {

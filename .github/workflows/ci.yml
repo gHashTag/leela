@@ -253,6 +253,16 @@ jobs:
       # all twenty-two boards.
       - run: node scripts/audit-spoken.mjs
 
+      # Both pages of the game are ready to be shared and say the same thing.
+      # `shared-link.test.ts` had held the mini app's head to a standard for
+      # weeks and NOTHING HELD THE 3D BOARD'S — the page t27.ai/leela/ actually
+      # serves, and the page every button in the bot opens. It had no og:url
+      # and no canonical, under a comment saying it carried "the same words the
+      # mini app's head carries". Neither page had a picture at all: measured
+      # 2026-08-28 against the five rivals in rivals.mjs, four of four carry a
+      # favicon and three of four carry an og:image.
+      - run: node scripts/audit-preview.mjs
+
       # The steps above are also `bun run audit`, which the root manifest added
       # so that `bun run verify` — the command README tells a person to run —
       # can go red for the reasons this job goes red. It ran no audit at all
