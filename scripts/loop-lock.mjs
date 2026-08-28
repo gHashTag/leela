@@ -26,15 +26,22 @@
  *     the journal before this existed; the dashboard now reads that mark and
  *     goes red when it is a day old.
  *
- * Exit codes, because this is meant to be run from a script: `take` exits 0
- * when the lock is yours and 1 when somebody living has it. `state` always
- * exits 0 — it reports, it does not judge.
+ * **Exit codes, and the one that matters is not 1.** `take` exits 0 when the
+ * lock is yours and **75** when somebody living has it. It is 75 because node
+ * exits 1 for a module it cannot find, so a `1` here would mean this file's own
+ * deletion read as "somebody else is working" — and the caller's instruction on
+ * that code is to exit without a word. The worktree this lives in has vanished
+ * once already. See `HELD` in `lib/loop.mjs`.
+ *
+ * So: 0 is yours, 75 is somebody's, and **anything else means the protocol is
+ * broken and the run must say so**. `state` always exits 0 — it reports, it
+ * does not judge.
  */
 
 import { hostname } from 'node:os';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 
-import { holderFrom, lockState } from './lib/loop.mjs';
+import { holderFrom, lockState, takeVerdict } from './lib/loop.mjs';
 
 const HOME = process.env.HOME ?? '';
 const LOCK = process.env.LEELA_LOOP_LOCK ?? `${HOME}/.leela/LOOP.lock`;
@@ -84,15 +91,16 @@ if (command === 'state') {
 }
 
 if (command === 'take') {
-  if (state.state === 'held') {
-    console.error(`refused: ${state.why}`);
-    process.exit(1);
+  const verdict = takeVerdict(state);
+
+  if (!verdict.taken) {
+    console.error(verdict.say);
+    // Not 1. See `HELD` in lib/loop.mjs: node exits 1 for a module it cannot
+    // find, so 1 here would make this script's own absence read as a refusal.
+    process.exit(verdict.code);
   }
 
-  // Said out loud rather than done quietly: stepping over a lock somebody else
-  // wrote is the one action here that can lose another agent's work, and an
-  // operator reading a log should see which of the two rules cleared it.
-  if (state.state === 'abandoned') console.log(`clearing an abandoned lock — ${state.why}`);
+  if (verdict.say !== '') console.log(verdict.say);
 
   writeFileSync(
     LOCK,

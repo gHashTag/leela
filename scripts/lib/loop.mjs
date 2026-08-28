@@ -52,6 +52,52 @@ export const STALE_AFTER_MS = 60 * 60 * 1000;
 export const SILENT_AFTER_MS = 24 * 60 * 60 * 1000;
 
 /**
+ * The exit code that means "somebody else is working" — and why it is not 1.
+ *
+ * The lock protocol replaced a 112-hour silent outage, and three days later it
+ * had reintroduced one in a worse form. The contract read:
+ *
+ *     node scripts/loop-lock.mjs take    # exit 1 means EXIT SILENTLY
+ *
+ * and **node exits 1 when it cannot find the module you asked it to run.**
+ * Measured 2026-08-28: `node scripts/does-not-exist.mjs` exits 1, the same code
+ * as a refusal. So if this worktree were ever deleted — and the previous one
+ * was, it lived in /tmp and the disk took it — every scheduled run would read
+ * "held" and exit without a word, for ever. Nothing would ever get far enough
+ * to look at the lock, so the staleness rule that eventually rescued the first
+ * outage could not rescue this one. A fix that makes its own absence look like
+ * success is worse than the bug it fixed.
+ *
+ * 75 is `EX_TEMPFAIL` from sysexits — "try again later", which is exactly what
+ * a held lock means. What matters is only that node cannot produce it by
+ * accident: an uncaught throw, a missing module and a bad flag are 1, 1 and 9.
+ * **Exit 1 from this script now means the protocol is broken, and the run must
+ * say so rather than assume it is somebody else's turn.**
+ */
+export const HELD = 75;
+
+/**
+ * What `take` should do about a lock in this state.
+ *
+ * Pure, so the exit-code contract above is a thing a test can hold rather than
+ * a sentence in a document. The document was the problem.
+ */
+export function takeVerdict(state) {
+  if (state.state === 'held') {
+    return { code: HELD, taken: false, say: `refused: ${state.why}` };
+  }
+
+  return {
+    code: 0,
+    taken: true,
+    // Said out loud rather than done quietly: stepping over somebody else's
+    // lock is the one act here that can lose another agent's work, and an
+    // operator reading a log should see which rule cleared it.
+    say: state.state === 'abandoned' ? `clearing an abandoned lock — ${state.why}` : '',
+  };
+}
+
+/**
  * Who holds the lock, out of whatever the lock file happens to contain.
  *
  * Two shapes are parsed and the older one is not going away: the lock found on

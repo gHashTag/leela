@@ -12,6 +12,16 @@ import type { Finding } from './status.d.mts';
 /** An hour: how long a lock may be held before age alone condemns it. */
 export const STALE_AFTER_MS: number;
 
+/**
+ * The exit code for "somebody living has it" — deliberately not 1, because
+ * node exits 1 for a module it cannot find and this script's own absence must
+ * not read as a refusal.
+ */
+export const HELD: number;
+
+/** What `take` should do about a lock in this state. */
+export function takeVerdict(state: LockState): { code: number; taken: boolean; say: string };
+
 /** A day: how long the loop may be silent before silence is a finding. */
 export const SILENT_AFTER_MS: number;
 

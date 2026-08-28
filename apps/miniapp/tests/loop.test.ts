@@ -1,7 +1,8 @@
 import { describe as group, expect, it } from 'vitest';
 
-import type { Holder } from '../../../scripts/lib/loop.d.mts';
+import type { Holder, LockState } from '../../../scripts/lib/loop.d.mts';
 import {
+  HELD,
   SILENT_AFTER_MS,
   STALE_AFTER_MS,
   cronFrom,
@@ -9,6 +10,7 @@ import {
   holderFrom,
   lockState,
   loopFindings,
+  takeVerdict,
 } from '../../../scripts/lib/loop.mjs';
 
 /**
@@ -162,6 +164,48 @@ group('whether the holder is working or gone', () => {
 
     expect(lockState(bare(STALE_AFTER_MS), { now: NOW, alive: gone }).state).toBe('held');
     expect(lockState(bare(STALE_AFTER_MS + 1), { now: NOW, alive: gone }).state).toBe('abandoned');
+  });
+});
+
+group('what take does about it, and the code it says it with', () => {
+  const state = (over: Partial<LockState> = {}): LockState => ({
+    state: 'free',
+    ageMs: null,
+    why: 'x',
+    ...over,
+  });
+
+  it('never answers a refusal with 1, because node uses 1 for a missing file', () => {
+    // The assertion this group exists for. `node scripts/does-not-exist.mjs`
+    // exits 1 — measured 2026-08-28 — and the contract's instruction on the
+    // refusal code is to exit without a word. With 1 as the refusal, deleting
+    // this worktree would stop the loop for ever and say nothing, which is a
+    // worse version of the 112-hour outage the lock was built to end.
+    expect(HELD).not.toBe(1);
+    expect(HELD).not.toBe(0);
+    // Nor 2, 8 or 9, which node uses for its own argument failures.
+    expect([2, 8, 9]).not.toContain(HELD);
+  });
+
+  it('refuses a live holder with that code and takes nothing', () => {
+    const answer = takeVerdict(state({ state: 'held', why: 'pid 43877 is running' }));
+
+    expect(answer).toMatchObject({ code: HELD, taken: false });
+    expect(answer.say).toContain('43877');
+  });
+
+  it('takes a free lock quietly', () => {
+    expect(takeVerdict(state())).toEqual({ code: 0, taken: true, say: '' });
+  });
+
+  it('takes an abandoned lock and says which rule cleared it', () => {
+    const answer = takeVerdict(state({ state: 'abandoned', why: 'the process that took it (pid 9) is gone' }));
+
+    expect(answer).toMatchObject({ code: 0, taken: true });
+    // Stepping over somebody's lock is the one act here that can lose another
+    // agent's work; doing it silently is how that becomes invisible.
+    expect(answer.say).toContain('clearing an abandoned lock');
+    expect(answer.say).toContain('pid 9');
   });
 });
 
