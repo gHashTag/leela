@@ -35,7 +35,10 @@ import {
   type LanguageModel,
   type Message,
 } from '@leela/ai';
+import type { Report } from '@leela/journal';
+
 import { Allowance, MAX_ASKERS } from './bot';
+import { decide } from './take-in';
 import { whoSent } from './vouched';
 
 /**
@@ -162,6 +165,24 @@ export interface AskRouteOptions {
    * what the file's own header says it is for.
    */
   gameOf?: (userId: string) => Promise<Standing | null>;
+  /**
+   * A player's own path, read and added to.
+   *
+   * `specs/001-shared-reports` P1: *what I wrote should be one path, wherever I
+   * wrote it.* The bot has kept reports per player since it was written and the
+   * mini app has kept them in `localStorage`; a player who used both had half a
+   * path in each. The file in the mini app has been the bridge, carried by
+   * hand. This is the same bridge without the carrying.
+   *
+   * Two functions in one object because they are one capability and a route
+   * holding only half of it could read a path it cannot add to. `of` answers
+   * null for a deployment that keeps nothing, which is a different thing from a
+   * player with an empty path.
+   */
+  reports?: {
+    of: (userId: string) => Promise<Report[] | null>;
+    keep: (userId: string, added: readonly Report[]) => Promise<void>;
+  };
 }
 
 export type AskRoute = (request: Request, address?: string) => Promise<Response>;
@@ -197,7 +218,7 @@ const corsFor = (origin: string): Record<string, string> => ({
  * without Bun: everything this file decides is decided here, and the server
  * below only supplies the port and the peer address.
  */
-export function askRoute({ model, stream, now = Date.now, token, gameOf }: AskRouteOptions = {}): AskRoute {
+export function askRoute({ model, stream, now = Date.now, token, gameOf, reports }: AskRouteOptions = {}): AskRoute {
   // The same guard `/ask` in the chat stands behind, with the address where
   // the player id would be. See `Allowance` in bot.ts for why checking is
   // spending, and `MAX_ASKERS` for why the map is capped.
@@ -218,7 +239,9 @@ export function askRoute({ model, stream, now = Date.now, token, gameOf }: AskRo
       });
 
     const path = new URL(request.url).pathname;
-    if (path !== '/api/ask' && path !== '/api/game') return refuse(404, 'no such route');
+    if (path !== '/api/ask' && path !== '/api/game' && path !== '/api/reports') {
+      return refuse(404, 'no such route');
+    }
 
     // The permission question, answered before the real one is refused. A 204
     // without the allow header is how a disallowed origin hears no at the
@@ -263,6 +286,66 @@ export function askRoute({ model, stream, now = Date.now, token, gameOf }: AskRo
       if (standing === null) return refuse(404, 'no game of yours here yet');
 
       return new Response(JSON.stringify(standing), {
+        status: 200,
+        headers: { 'content-type': 'application/json', ...cors },
+      });
+    }
+
+    /*
+     * A player's path, arriving from the other surface.
+     *
+     * `specs/001-shared-reports` P1, and the last piece of it that needed no
+     * decision from anybody: *what I wrote should be one path, wherever I wrote
+     * it.* The mini app has been able to save a path to a file and this bot to
+     * read one back since `take-in.ts`; that file was the bridge, and a player
+     * had to carry it. This is the same bridge with the carrying removed.
+     *
+     * **The merge is not written here.** `decide` and `keep` are the same two
+     * functions the file path uses, so a report arriving over HTTP and a report
+     * arriving as a document are merged by one rule — the first principle, and
+     * the defect this repository found two days ago when one paragraph had been
+     * written out twice. In particular the union and the timestamps come free:
+     * `newEntries` compares by the moment each report was WRITTEN, so sending
+     * the same path twice adds nothing the second time, which is FR-002.
+     *
+     * FR-003 — an arriving report must not open the report gate — holds
+     * structurally rather than by care taken here: the gate is
+     * `reportSubmitted` on a seat in the session, and `ReportSink.record`
+     * writes a report row and touches no seat.
+     */
+    if (path === '/api/reports') {
+      if (request.method !== 'POST') return refuse(405, 'POST only');
+
+      const carried = request.headers.get('authorization') ?? '';
+      const initData = carried.startsWith('tma ') ? carried.slice(4) : '';
+
+      const vouched = whoSent(initData, token ?? '', { now: now() });
+      if (!vouched.ok) return refuse(401, vouched.why);
+
+      if (reports === undefined) return refuse(503, 'this deployment keeps no reports');
+
+      const document = await request.text().catch(() => null);
+      if (document === null) return refuse(400, 'the body could not be read');
+
+      // Bytes, not characters, and the same bound the file path uses: a path in
+      // Devanagari costs three bytes a character, and a limit measured in
+      // characters would be a different limit for every language.
+      const bytes = new TextEncoder().encode(document).length;
+
+      const existing = await reports.of(vouched.who.id).catch(() => null);
+      const outcome = decide(document, bytes, existing);
+
+      if (outcome.kind === 'too-big') return refuse(413, `${outcome.bytes} bytes is more than a path`);
+      if (outcome.kind === 'unreadable') return refuse(400, 'this is not a path this bot can read');
+      if (outcome.kind === 'not-kept') return refuse(503, 'this deployment keeps no reports');
+
+      // `nothing-new` is a success and says so with a zero. Sending the same
+      // path twice must be safe and boring, not an error the client has to
+      // learn to ignore.
+      const added = outcome.kind === 'took' ? outcome.added : [];
+      if (added.length > 0) await reports.keep(vouched.who.id, added);
+
+      return new Response(JSON.stringify({ added: added.length }), {
         status: 200,
         headers: { 'content-type': 'application/json', ...cors },
       });

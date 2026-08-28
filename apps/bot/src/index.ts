@@ -37,6 +37,7 @@ import { createInitiative, lastWordSaid, nudgeHour } from './initiative';
 import { serveAsk, type StreamAsk, type Streamed } from './serve';
 import { offering, operatorIds, whyNoOperators, whyNothingIsSold } from './stars';
 import { openStorage, remembering } from './storage';
+import { asReport, keep } from './take-in';
 import { supervise } from './supervisor';
 
 const token = process.env.BOT_TOKEN;
@@ -466,6 +467,29 @@ const asking = serveAsk({
       waiting: isWaitingToEnter(seat.state),
       won: hasWon(seat.state),
     };
+  },
+  /**
+   * A player's path, for `/api/reports` — `specs/001-shared-reports` P1.
+   *
+   * `asReport` and `keep` are `take-in.ts`'s, which is the point: a path
+   * arriving over HTTP and a path arriving as a file are merged and stored by
+   * one rule, not two that agree today.
+   *
+   * `of` answers null when nothing is kept, which the route turns into a 503 —
+   * a deployment that discards reports must not accept a path and forget it,
+   * while telling the player it took it.
+   *
+   * Asked of the SINK rather than of `storage.durable`: `history` is optional
+   * on `ReportSink` precisely because a sink that discards has nothing to
+   * return, and its own doc-comment says the caller must say so rather than
+   * show an empty history that looks like the player never wrote anything.
+   * `durable` answers a different question — whether a file opened — and the
+   * two have disagreed here before.
+   */
+  reports: {
+    of: async (userId) =>
+      storage.reports.history ? (await storage.reports.history(userId)).map(asReport) : null,
+    keep: async (userId, added) => keep(storage.reports, userId, added),
   },
 });
 
