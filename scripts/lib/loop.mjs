@@ -35,9 +35,10 @@
 /**
  * How long a lock may be held before it is treated as abandoned on age alone.
  *
- * An hour, which is the figure the loop's own contract has always used. It is a
- * fallback and not the primary test: when the holder names a live process on
- * this host, that process answers the question far better than a clock does.
+ * An hour, which is the figure the loop's own contract has always used, and —
+ * since the pid rule was retracted below — the ONLY test there is. An
+ * iteration takes minutes; an hour is generous, and the 112-hour outage was
+ * never caused by the hour being too long but by nothing applying it at all.
  */
 export const STALE_AFTER_MS = 60 * 60 * 1000;
 
@@ -152,58 +153,53 @@ function milliseconds(at) {
 }
 
 /**
- * Whether that holder is working, gone, or absent.
+ * Whether that holder is still working, or has been there too long.
  *
- * The rule, and each half of it is there to fix a different failure:
+ * **Age, and only age — and the pid rule that used to be here was worse than
+ * useless. Retracted 2026-08-28, six hours after it was written.**
  *
- *   - **A dead process releases the lock immediately, however young it is.**
- *     The lock this was written for was five days old under an hour-long
- *     timeout, which would have cleared it — but for the first hour after any
- *     crash the old rule made every scheduled run exit silently for nothing.
- *   - **A live process still loses it once it is stale.** Process ids are
- *     reused, and after a reboot the id an old lock names may belong to
- *     something else entirely; a run that has genuinely been going for hours
- *     has hung. Age settles both, and the pid can therefore only ever make
- *     recovery *faster*, never let a stale lock hold on longer.
- *   - **A pid from another host is not asked about.** `process.kill(pid, 0)`
- *     answers about this machine, and a lock written elsewhere would get a
- *     confident wrong answer instead of the honest fallback to age.
+ * Iteration 32 added: *a dead process releases the lock immediately, however
+ * young it is*, to spare every scheduled run an hour of waiting on a corpse.
+ * The reasoning was right and the premise was false. The process that takes
+ * this lock is `loop-lock.mjs`, which **exits the instant it returns** — the
+ * work is done afterwards by a session it cannot see. So the pid in the file
+ * is dead within milliseconds of being written, and the rule read every live
+ * iteration as abandoned.
  *
- * `alive` is passed in rather than called here, because asking whether a
- * process exists is the world, and this file is the part that can be held
- * still.
+ * That is not a missed optimisation. It is the mutual exclusion gone: a second
+ * cron firing partway through an iteration would have found a dead pid, called
+ * the lock abandoned, and started work on top of a running one — the exact
+ * outcome the whole file exists to prevent, and the second time this loop has
+ * introduced it while fixing something else.
+ *
+ * Caught by the dashboard reporting `ABANDONED` for a lock that was being held
+ * at that moment, which is what a surface that measures its own author is for.
+ *
+ * **A pid can only be trusted by a reader who knows the writer outlives the
+ * write.** Nothing here does: the taker is a command, not a daemon, and it has
+ * no way to name the session that will do the work. So the pid is kept in the
+ * file, where a person debugging can see who wrote it, and it decides nothing.
+ * An hour is the bound, as it always was; the 112-hour outage was never caused
+ * by that hour being too long, but by nothing applying it at all.
  */
-export function lockState(holder, { now, alive, here = null, staleAfterMs = STALE_AFTER_MS }) {
+export function lockState(holder, { now, staleAfterMs = STALE_AFTER_MS }) {
   if (holder === null) return { state: 'free', ageMs: null, why: 'there is no lock file' };
 
   const ageMs = holder.at === null ? null : now - holder.at;
-  const stale = ageMs === null || ageMs > staleAfterMs;
-  // Trusted only where same-host can be *established*. "We do not know our own
-  // name" is not agreement, and the first draft of this line read it as one:
-  // with `here` unknown it asked about a pid on `laptop.local` and condemned a
-  // live lock. Its own doc comment above already said not to.
-  const mine = holder.pid !== null && (holder.host === null || (here !== null && holder.host === here));
 
-  if (mine && !alive(holder.pid)) {
-    return { state: 'abandoned', ageMs, why: `the process that took it (pid ${holder.pid}) is gone` };
+  if (ageMs === null) {
+    return { state: 'abandoned', ageMs, why: 'it does not say when it was taken' };
   }
 
-  if (stale) {
+  if (ageMs > staleAfterMs) {
     return {
       state: 'abandoned',
       ageMs,
-      why:
-        ageMs === null
-          ? 'it does not say when it was taken'
-          : `it has been held for ${hours(ageMs)}, past the hour an iteration may have`,
+      why: `it has been held for ${hours(ageMs)}, past the hour an iteration may have`,
     };
   }
 
-  return {
-    state: 'held',
-    ageMs,
-    why: mine ? `pid ${holder.pid} is running` : `taken ${hours(ageMs)} ago`,
-  };
+  return { state: 'held', ageMs, why: `taken ${hours(ageMs)} ago` };
 }
 
 /**
@@ -279,7 +275,7 @@ function when(ms) {
  * loop cannot fake: the lock can be free because nothing has ever taken it, and
  * the cron can look freshly fired because reading it is firing it.
  */
-export function loopFindings({ holder, heartbeat, cron, now, alive, here = null, silentAfterMs = SILENT_AFTER_MS }) {
+export function loopFindings({ holder, heartbeat, cron, now, silentAfterMs = SILENT_AFTER_MS }) {
   const rows = [];
 
   if (heartbeat === null) {
@@ -302,7 +298,7 @@ export function loopFindings({ holder, heartbeat, cron, now, alive, here = null,
     });
   }
 
-  const lock = lockState(holder, { now, alive, here });
+  const lock = lockState(holder, { now });
   rows.push({
     surface: 'loop',
     name: 'the lock',

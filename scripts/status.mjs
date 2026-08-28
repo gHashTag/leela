@@ -23,7 +23,7 @@
 
 import { execFile } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { hostname } from 'node:os';
+
 import { promisify } from 'node:util';
 
 /**
@@ -279,17 +279,6 @@ if (loopHome === '' || !existsSync(loopHome)) {
     heartbeat: heartbeatFrom(read(`${loopHome}/heartbeat.json`)),
     cron: cronFrom(read(`${home}/.claude/scheduled_tasks.json`), 'LOOP.md'),
     now: Date.now(),
-    // Signal 0 asks whether a process exists without delivering anything;
-    // `EPERM` is somebody else's process, which is still a running one.
-    alive: (pid) => {
-      try {
-        process.kill(pid, 0);
-        return true;
-      } catch (error) {
-        return error.code === 'EPERM';
-      }
-    },
-    here: hostname(),
   })) {
     say(row.surface, row.name, row.value, row.note, row.kind);
   }

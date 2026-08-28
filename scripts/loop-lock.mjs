@@ -16,10 +16,11 @@
  *
  * Two properties this has and a paragraph cannot:
  *
- *   - **`take` refuses only to a holder it can show is alive.** A crashed
- *     iteration is stepped over at once, a live one is never trampled, and
- *     neither judgement is a guess about the clock — see `lib/loop.mjs` for the
- *     rule and the four cases it is tested against.
+ *   - **`take` refuses a lock younger than an hour and clears an older one.**
+ *     The rule is `lockState`, which also carries the retraction of the pid
+ *     check that briefly stood here: THIS PROCESS EXITS BEFORE THE ITERATION
+ *     BEGINS, so the pid it writes is dead within milliseconds and a reader
+ *     trusting it called every live lock abandoned.
  *   - **`release` writes the heartbeat.** Recording that an iteration finished
  *     is not a step somebody can forget, because it is the same act as letting
  *     the next one start. Three iterations reached `origin` with no entry in
@@ -56,29 +57,13 @@ const slurp = (path) => {
   }
 };
 
-/**
- * Whether a process id is running on this machine.
- *
- * Signal 0 checks for existence without delivering anything. `EPERM` means the
- * process is there and owned by somebody else, which is still there — reading
- * it as gone would hand the lock to a second iteration.
- */
-const alive = (pid) => {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return error.code === 'EPERM';
-  }
-};
-
 const flag = (name) => {
   const at = process.argv.indexOf(`--${name}`);
   return at === -1 ? null : (process.argv[at + 1] ?? null);
 };
 
 const holder = holderFrom(slurp(LOCK));
-const state = lockState(holder, { now: Date.now(), alive, here: hostname() });
+const state = lockState(holder, { now: Date.now() });
 const command = process.argv[2] ?? 'state';
 
 if (command === 'state') {
@@ -104,6 +89,8 @@ if (command === 'take') {
 
   writeFileSync(
     LOCK,
+    // The pid is written for a person reading the file, and decides NOTHING:
+    // this process exits before the iteration begins. See `lockState`.
     `${JSON.stringify({ at: Date.now(), iso: new Date().toISOString(), pid: process.pid, host: hostname() })}\n`,
   );
   console.log(`taken by pid ${process.pid} on ${hostname()}`);

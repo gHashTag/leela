@@ -61,15 +61,13 @@ export interface Schedule {
 /** Null when there is no lock at all; never throws on a lock it cannot parse. */
 export function holderFrom(text: string | null | undefined): Holder | null;
 
+/**
+ * Age, and only age. The pid a lock names is written by a command that exits
+ * before the work starts, so it can never say whether the holder is working.
+ */
 export function lockState(
   holder: Holder | null,
-  options: {
-    now: number;
-    /** Whether a process id is running here. Injected: it is the world. */
-    alive: (pid: number) => boolean;
-    here?: string | null;
-    staleAfterMs?: number;
-  },
+  options: { now: number; staleAfterMs?: number },
 ): LockState;
 
 /** Null for absent, malformed, or undated — all of which mean "no mark". */
@@ -83,7 +81,5 @@ export function loopFindings(options: {
   heartbeat: Heartbeat | null;
   cron: Schedule | null;
   now: number;
-  alive: (pid: number) => boolean;
-  here?: string | null;
   silentAfterMs?: number;
 }): Finding[];

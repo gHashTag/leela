@@ -30,9 +30,6 @@ import {
 const HOUR = 60 * 60 * 1000;
 const NOW = Date.UTC(2026, 7, 28, 7, 0, 0);
 
-const running = () => true;
-const gone = () => false;
-
 group('reading a lock that was written by somebody else', () => {
   it('reads the shape that was actually on disk, an epoch and nothing else', () => {
     // The literal contents of ~/.leela/LOOP.lock on the morning this was
@@ -83,87 +80,60 @@ group('reading a lock that was written by somebody else', () => {
   });
 });
 
-group('whether the holder is working or gone', () => {
-  const named = (over: Partial<Holder> = {}): Holder => ({
-    at: NOW - 5 * 60 * 1000,
+group('whether the holder has been there too long', () => {
+  const bare = (age: number): Holder => ({ at: NOW - age, pid: null, host: null, shape: 'bare' });
+  const named = (age: number): Holder => ({
+    at: NOW - age,
     pid: 43877,
     host: 'studio.local',
     shape: 'named',
-    ...over,
   });
 
   it('is free when nothing holds it', () => {
-    expect(lockState(null, { now: NOW, alive: gone }).state).toBe('free');
+    expect(lockState(null, { now: NOW }).state).toBe('free');
   });
 
-  it('holds for a live process, however long an iteration is taking', () => {
-    const answer = lockState(named(), { now: NOW, alive: running, here: 'studio.local' });
-
-    expect(answer.state).toBe('held');
-    expect(answer.why).toContain('43877');
+  it('HOLDS a young lock whose process is long gone, which is every lock', () => {
+    // THE RETRACTION, as a test. A dead pid used to clear the lock at once, and
+    // the process that writes it — `loop-lock.mjs` — exits before the iteration
+    // begins, so every live lock names a dead process. That rule read every
+    // working iteration as abandoned and would have let a second cron start on
+    // top of it, which is the one outcome this file exists to prevent.
+    expect(lockState(named(5 * 60 * 1000), { now: NOW }).state).toBe('held');
   });
 
-  it('releases immediately when the process that took it is gone', () => {
-    // The half the hour-long timeout could not do. A crash a minute ago used to
-    // cost every scheduled run for the next hour, each of them exiting silently
-    // on a corpse.
-    const answer = lockState(named(), { now: NOW, alive: gone, here: 'studio.local' });
-
-    expect(answer.state).toBe('abandoned');
-    expect(answer.why).toContain('gone');
-  });
-
-  it('releases a stale lock even when something is running under that id', () => {
-    // Process ids are reused, so a live pid is never allowed to hold a stale
-    // lock: the id an old lock names may belong to anything after a reboot.
-    const answer = lockState(named({ at: NOW - 3 * HOUR }), {
-      now: NOW,
-      alive: running,
-      here: 'studio.local',
-    });
+  it('clears one that has been held past the hour', () => {
+    const answer = lockState(named(3 * HOUR), { now: NOW });
 
     expect(answer.state).toBe('abandoned');
     expect(answer.why).toContain('3 h');
   });
 
-  it('does not ask about a process id from another machine', () => {
-    // `process.kill(pid, 0)` answers about this host. A confident wrong answer
-    // about a lock taken elsewhere is worse than falling back to the clock.
-    const elsewhere = named({ host: 'laptop.local' });
-
-    expect(lockState(elsewhere, { now: NOW, alive: gone, here: 'studio.local' }).state).toBe('held');
-    expect(lockState(elsewhere, { now: NOW - 0, alive: gone, here: null }).state).toBe('held');
-  });
-
-  it('condemns the bare lock on age alone, because it names no process', () => {
-    expect(
-      lockState({ at: NOW - 2 * HOUR, pid: null, host: null, shape: 'bare' }, { now: NOW, alive: running }).state,
-    ).toBe('abandoned');
+  it('reads the bare lock the same way, because the shape decides nothing', () => {
+    expect(lockState(bare(10 * 60 * 1000), { now: NOW }).state).toBe('held');
+    expect(lockState(bare(2 * HOUR), { now: NOW }).state).toBe('abandoned');
   });
 
   it('does not clear a bare lock somebody took ten minutes ago', () => {
     // Through the parser and against a clock, which is the only arrangement
-    // that can see a unit error. Read as seconds against `Date.now()` this
-    // holder is half a million hours old and gets cleared — so a live
-    // iteration, the one thing the lock exists to protect, is stepped on.
+    // that can see a unit error: read as seconds against `Date.now()` this
+    // holder is half a million hours old and gets cleared.
     const tenMinutesAgo = String(Math.floor((NOW - 10 * 60 * 1000) / 1000));
 
-    expect(lockState(holderFrom(tenMinutesAgo), { now: NOW, alive: gone }).state).toBe('held');
-    expect(lockState(holderFrom(String(NOW - 10 * 60 * 1000)), { now: NOW, alive: gone }).state).toBe('held');
+    expect(lockState(holderFrom(tenMinutesAgo), { now: NOW }).state).toBe('held');
+    expect(lockState(holderFrom(String(NOW - 10 * 60 * 1000)), { now: NOW }).state).toBe('held');
   });
 
   it('treats a lock that will not say when as abandoned', () => {
-    const answer = lockState({ at: null, pid: null, host: null, shape: 'unreadable' }, { now: NOW, alive: gone });
+    const answer = lockState({ at: null, pid: null, host: null, shape: 'unreadable' }, { now: NOW });
 
     expect(answer.state).toBe('abandoned');
     expect(answer.why).toContain('when');
   });
 
   it('turns over exactly at the hour it documents', () => {
-    const bare = (age: number): Holder => ({ at: NOW - age, pid: null, host: null, shape: 'bare' });
-
-    expect(lockState(bare(STALE_AFTER_MS), { now: NOW, alive: gone }).state).toBe('held');
-    expect(lockState(bare(STALE_AFTER_MS + 1), { now: NOW, alive: gone }).state).toBe('abandoned');
+    expect(lockState(bare(STALE_AFTER_MS), { now: NOW }).state).toBe('held');
+    expect(lockState(bare(STALE_AFTER_MS + 1), { now: NOW }).state).toBe('abandoned');
   });
 });
 
@@ -257,8 +227,6 @@ group('the three rows, on the morning they were needed', () => {
       heartbeat: { at: NOW - HOUR, iteration: '32', commit: 'abc1234', note: '' },
       cron: { cron: '4,19,34,49 * * * *', lastFiredAt: NOW - 5 * 60 * 1000 },
       now: NOW,
-      alive: running,
-      here: 'studio.local',
       ...over,
     });
 
@@ -275,7 +243,6 @@ group('the three rows, on the morning they were needed', () => {
       holder: holderFrom('1787497537'),
       heartbeat: null,
       cron: { cron: '4,19,34,49 * * * *', lastFiredAt: NOW - 2 * 60 * 1000 },
-      alive: gone,
     });
 
     expect(found.filter((row) => row.kind === 'wrong').map((row) => row.name)).toEqual([
