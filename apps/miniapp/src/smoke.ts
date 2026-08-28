@@ -73,6 +73,23 @@ export interface Check {
    */
   alternatives?: string;
   /**
+   * The prefix of chunks this page fetches only when a reader asks for them.
+   *
+   * **A FACT A PERSON HAS TO STATE, because no reader of the bundle can find
+   * it.** {@link eagerChunksIn} tells eager from lazy on the 3D board by
+   * Vite's `__vite__mapDeps` table; the classic board has no such table, and
+   * in its bundle `plans.en` — which the browser fetches on load — and
+   * `rules-…` — which it does not — are written IDENTICALLY, both as
+   * `import("./x.js")` with an empty dependency list inside an
+   * `import.meta.glob` map. The difference is which of them the running code
+   * calls, and that is not in the text.
+   *
+   * So `rules-` is named here. It is 1.5 MB of every language's chapters,
+   * `content.ts` fetches it only when somebody opens the book, and counting it
+   * put the classic board's cost at 2,176,906 when a browser measured 459,501.
+   */
+  lazy?: string;
+  /**
    * The status this address should answer with. 200 unless it says otherwise.
    *
    * Every check here was a check that something is *served*, and the status
@@ -177,7 +194,23 @@ export const DEPLOYMENT_CHECKS: Check[] = [
      * says: one set at a number nobody has reached is a red build that gets
      * deleted, one set at today only ever moves down.
      */
-    maxReaderBytes: 1_500_000,
+    /*
+     * CORRECTED 2026-08-29, from 1,500,000. That figure was set from a
+     * measurement that counted a language chunk the browser never fetches on
+     * load: this board's titles come from the entry, and a plan's text is
+     * pulled when the reader opens it. `eagerChunksIn` reads Vite's own
+     * `__vite__mapDeps` table now, and what it reports — 827,544 decoded,
+     * 238,617 on the wire — agrees TO THE BYTE with what the browser fetched
+     * (473,971 + 209,779 + 143,794), verified against
+     * `performance.getEntriesByType('resource')` on the live site.
+     *
+     * The browser also fetched 16,947 bytes of stylesheet that this does not
+     * count — 209,779 + 473,971 + 143,794 is the whole of it — so the true
+     * first load is 844,491 / 243,095. The number below is a ceiling on the
+     * JAVASCRIPT, which is what this can see, set at today so it only moves
+     * down.
+     */
+    maxReaderBytes: 850_000,
     ownAssets: true,
   },
   {
@@ -187,6 +220,25 @@ export const DEPLOYMENT_CHECKS: Check[] = [
     // 2D app is not deleted, it moves, and these prove it survived the move.
     mustContain: ['<title>Leela</title>', 'id="board"', 'telegram-web-app.js'],
     minBytes: 500,
+    /*
+     * NOTHING WATCHED THIS BOARD'S PAYLOAD AT ALL until 2026-08-29, and the
+     * 3D board's own comment said so: *"exactly as nothing here has ever seen
+     * the 2D board's twenty-four dataset chunks"*. A stated gap that nobody
+     * closed is a gap.
+     *
+     * 700,000 bytes: the entry and the heaviest of the twenty-two languages —
+     * 652,461 measured today, which is 120,130 + 532,331 exactly — and a
+     * little. It leaves out the stylesheet and the 124 kB of images every
+     * reader also fetches, the board painting and the gem, because what this
+     * follows is the entry and the chunks the entry names. The browser
+     * measured the whole first load at 459,501 decoded for an ENGLISH reader,
+     * against this figure's Tamil one.
+     */
+    maxReaderBytes: 700_000,
+    /** One of twenty-two, exactly as the 3D board splits them. */
+    alternatives: 'plans.',
+    /** The rules book, fetched only when somebody opens it. See `Check.lazy`. */
+    lazy: 'rules-',
     ownAssets: true,
   },
   {
@@ -441,6 +493,50 @@ export function chunksIn(code: string): string[] {
   return [...new Set([...code.matchAll(/["'`]\.\/([A-Za-z0-9._-]+\.js)["'`]/g)].map((found) => found[1] as string))];
 }
 
+/**
+ * The chunks a first load really fetches, out of all the entry NAMES.
+ *
+ * {@link chunksIn} finds every `"./x.js"` string in the bundle, and a bundle
+ * names two different kinds: the chunks it pulls immediately, and the ones it
+ * will fetch later `import("./plans.ta-….js")` if the reader ever asks. Summing
+ * both is a cost nobody pays, and it was wrong in both directions —
+ * **MEASURED against the live site on 2026-08-29, from the browser's own
+ * `performance.getEntriesByType('resource')`:**
+ *
+ *     3D board      really fetches 4 files, 844,491 decoded / 243,095 wire
+ *                   `readerCost` said 1,357,549 / 341,872 — it added the
+ *                   heaviest language chunk, and the browser fetches NONE of
+ *                   them on load: the titles come from the entry and a plan's
+ *                   text is fetched when the reader opens it.
+ *     classic       really fetches 5 files, 459,501 decoded / 241,193 wire
+ *                   the 1.5 MB `rules-….js` is lazy — `content.ts` says so at
+ *                   length — and it was being counted whole.
+ *
+ * Vite writes the eager set into `__vite__mapDeps`, which is its own statement
+ * of what must be preloaded, so that is what this reads. **When there is no
+ * such table it returns every chunk, which is exactly the old behaviour** — the
+ * worst case of this change is the number it replaces.
+ *
+ * It cannot see what is not JavaScript, and that is the other half of the
+ * error: the classic board fetches 133 kB of images on every load — the board
+ * painting and the gem — that nothing here counts. Said out loud rather than
+ * silently ignored, because a ceiling on part of a load is not a ceiling on a
+ * load, and the number this returns is smaller than what a phone pays.
+ */
+export function eagerChunksIn(code: string): string[] {
+  const table = /__vite__mapDeps\s*=\s*\([^)]*m\.f\s*=\s*\[([^\]]*)\]/.exec(code);
+  if (table === null) return chunksIn(code);
+
+  const named = [...(table[1] ?? '').matchAll(/["'`]\.\/([A-Za-z0-9._-]+\.js)["'`]/g)].map(
+    (found) => found[1] as string,
+  );
+
+  // A table that names nothing is not a statement that nothing is fetched — it
+  // is a shape this reader does not understand, and the honest answer there is
+  // the one it gave before.
+  return named.length > 0 ? [...new Set(named)] : chunksIn(code);
+}
+
 export interface Weighed {
   name: string;
   bytes: number;
@@ -612,14 +708,25 @@ async function weighTheReader(
   };
 
   const first = await weigh(entry.slice(entry.lastIndexOf('/') + 1));
-  const named = chunksIn(
+  // The chunks a first load really fetches, not every chunk the bundle names.
+  // See `eagerChunksIn`: this counted the lazy ones too, which on the 3D board
+  // added a language chunk the browser never asks for and on the classic board
+  // added 1.5 MB of rules that `content.ts` fetches only when somebody opens
+  // the book.
+  const named = eagerChunksIn(
     (await fetcher(`${root}/${check.path}${entry}`)).text,
   );
   const rest = [];
   for (const name of named) rest.push(await weigh(name));
 
   const missing = [first, ...rest].filter((file) => file.bytes === 0).map((file) => file.name);
-  const cost = readerCost([first, ...rest], check.alternatives);
+  // Chunks nobody fetches on a first load are dropped before the sum. See
+  // `Check.lazy`: on the classic board this is a fact a person states, because
+  // its bundle writes the eager and the lazy import the same way.
+  const paid = [first, ...rest].filter(
+    (file) => check.lazy === undefined || !file.name.startsWith(check.lazy),
+  );
+  const cost = readerCost(paid, check.alternatives);
   const ceiling = check.maxReaderBytes ?? Number.POSITIVE_INFINITY;
 
   return {

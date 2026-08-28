@@ -204,11 +204,12 @@ describe('the assets the deployed page asks for', () => {
 
     expect(allPassed(results)).toBe(true);
     // Seven hand-written, two generated from the root page, one generated from
-    // the classic board's, and one weighing what a reader of the root page
-    // downloads — the last because the 3D board carries a `maxReaderBytes`
-    // and the page's own assets stopped being its whole cost. The seventh
-    // hand-written one is the wrong address, added 2026-08-29.
-    expect(results).toHaveLength(11);
+    // the classic board's, and TWO weighing what a reader downloads — one per
+    // board, because the page's own assets stopped being its whole cost. The
+    // seventh hand-written one is the wrong address, and the classic board's
+    // reader cost is the twelfth, both added 2026-08-29: until then NOTHING
+    // watched what the 2D board makes a phone download.
+    expect(results).toHaveLength(12);
   });
 
   it('fail a page that names none of its own files', async () => {

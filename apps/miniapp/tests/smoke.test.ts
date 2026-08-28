@@ -7,6 +7,7 @@ import {
   allPassed,
   assetCheck,
   chunksIn,
+  eagerChunksIn,
   describeResults,
   readerCost,
   runCheck,
@@ -545,10 +546,161 @@ describe('the ceilings the 3D board ships with', () => {
     expect(board.maxAssetBytes).toBe(400_000);
   });
 
-  it('holds a whole reader to a million and a half, over twenty-one alternatives', () => {
-    expect(board.maxReaderBytes).toBe(1_500_000);
+  it('holds a whole reader to what a reader really fetches', () => {
+    /*
+     * 850,000, down from 1,500,000 on 2026-08-29 — the third time a ceiling
+     * here has moved and the third time it moved DOWN.
+     *
+     * The old figure was set from a measurement that counted a language chunk
+     * the browser never asks for on load: this board's titles come from the
+     * entry, and a plan's text is fetched when the reader opens it.
+     * `eagerChunksIn` reads Vite's own dependency table now, and what it
+     * reports agrees to the byte with what the browser fetched.
+     */
+    expect(board.maxReaderBytes).toBe(850_000);
     // Without this the guard would sum twenty-one languages nobody downloads
     // and fail a board that is exactly right.
     expect(board.alternatives).toBe('plans.');
+  });
+});
+
+/**
+ * The classic board's ceilings, which did not exist until 2026-08-29.
+ *
+ * The 3D board's own comment had said so for weeks — *"exactly as nothing here
+ * has ever seen the 2D board's twenty-four dataset chunks"* — and a stated gap
+ * nobody closes is a gap.
+ */
+describe('the ceilings the classic board ships with', () => {
+  const board = DEPLOYMENT_CHECKS.find((check) => check.what === 'the classic 2D board') as Check;
+
+  it('holds a whole reader to the entry and one language', () => {
+    // 652,461 measured live, which is 120,130 + 532,331 exactly.
+    expect(board.maxReaderBytes).toBe(700_000);
+    expect(board.alternatives).toBe('plans.');
+  });
+
+  it('does not count the rules book, which nobody fetches until they open it', () => {
+    /*
+     * A FACT A PERSON HAS TO STATE. This bundle has no `__vite__mapDeps`, and
+     * in it `plans.en` — fetched on load — and `rules-…` — not — are written
+     * identically. Counting the book put this board's cost at 2,176,906 when a
+     * browser measured 459,501.
+     */
+    expect(board.lazy).toBe('rules-');
+  });
+});
+
+describe('which chunks a first load really fetches', () => {
+  /*
+   * `chunksIn` finds every `"./x.js"` in a bundle, and a bundle names two
+   * kinds: what it pulls immediately and what it will fetch if the reader ever
+   * asks. Summing both reported a cost nobody pays — MEASURED against the live
+   * site from the browser's own resource timings on 2026-08-29:
+   *
+   *     3D board   really fetches 4 files, 844,491 decoded
+   *                `readerCost` said 1,357,549 — it added a language chunk the
+   *                browser never asks for on load
+   *     classic    really fetches 5 files, 459,501 decoded
+   *                the 1.5 MB rules book is lazy and was counted whole
+   */
+
+  /** The 3D entry's own opening line, taken from the deployed bundle. */
+  const WITH_TABLE =
+    'const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./main-zcLKYe1y.js","./three-DAiD5YwZ.js"])))=>i.map(i=>d[i]);' +
+    'ta:()=>a(()=>import("./plans.ta-CC6xpm4e.js"),[],import.meta.url)';
+
+  it('takes the eager set from the table the bundle writes', () => {
+    // main and three are fetched on load; the language chunk is not.
+    expect(eagerChunksIn(WITH_TABLE)).toEqual(['main-zcLKYe1y.js', 'three-DAiD5YwZ.js']);
+    expect(eagerChunksIn(WITH_TABLE)).not.toContain('plans.ta-CC6xpm4e.js');
+  });
+
+  it('still names everything when there is no table, which is the old answer', () => {
+    /*
+     * THE PROPERTY THAT MADE THIS SAFE TO SHIP. The classic bundle has no
+     * `__vite__mapDeps` at all, and in it `plans.en` — which the browser
+     * fetches — and `rules-…` — which it does not — are written IDENTICALLY.
+     * No reader of that text can tell them apart, so the honest answer there
+     * is the one it gave before, and `Check.lazy` is where a person says the
+     * part the bundle cannot.
+     */
+    const noTable = 'w(()=>import("./plans.en-A.js"),[],import.meta.url), w(()=>import("./rules-B.js"),[],import.meta.url)';
+
+    expect(eagerChunksIn(noTable)).toEqual(chunksIn(noTable));
+    expect(eagerChunksIn(noTable)).toEqual(['plans.en-A.js', 'rules-B.js']);
+  });
+
+  it('falls back when the table is there but empty, rather than claiming nothing loads', () => {
+    // An empty table is a shape this reader does not understand, not a
+    // statement that a page fetches no code at all.
+    const empty = 'const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=[])))=>i.map(i=>d[i]); import("./a-1.js")';
+
+    expect(eagerChunksIn(empty)).toEqual(['a-1.js']);
+  });
+
+  it('DROPS THE LAZY CHUNK ON THE WHOLE PATH, not just in the sum', async () => {
+    /*
+     * Through `runChecks` and a fetcher, because the filter lives in
+     * `weighTheReader` and the test below only exercised `readerCost` with a
+     * list somebody had already filtered. FOUND BY FALSIFICATION: removing the
+     * filter left this file green, which is a guard that does not guard.
+     */
+    const page =
+      '<title>T</title><div id="board"></div><script type="module" src="./assets/index-x.js"></script>'.padEnd(600, ' ');
+    const entry = 'import("./plans.en-a.js"); import("./rules-b.js");'.padEnd(2000, ' ');
+    const files: Record<string, string> = {
+      '': page,
+      'assets/index-x.js': entry,
+      'assets/plans.en-a.js': 'e'.repeat(1000),
+      'assets/rules-b.js': 'r'.repeat(900_000),
+    };
+    const fetcher: Fetcher = async (url) => {
+      const path = url.replace('https://site/', '');
+      const text = files[path];
+      return text === undefined ? { status: 404, text: '' } : { status: 200, text };
+    };
+
+    const check: Check = {
+      path: '',
+      what: 'a board with a book it does not open',
+      mustContain: ['id="board"'],
+      minBytes: 500,
+      maxReaderBytes: 100_000,
+      alternatives: 'plans.',
+      lazy: 'rules-',
+      ownAssets: true,
+    };
+
+    const withLazy = await runChecks('https://site/', fetcher, [check]);
+    const cost = withLazy.find((one) => one.check.what.startsWith('what a reader downloads'));
+
+    // The 900 kB book is not counted, so the ceiling of 100 kB holds.
+    expect(cost?.ok, 'the book is not part of a first load').toBe(true);
+    expect(cost?.bytes).toBeLessThan(100_000);
+
+    // And with nothing declared lazy, the same site blows the same ceiling —
+    // which is what makes the assertion above about the filter and not about
+    // the fixture being small.
+    const notDeclared = await runChecks('https://site/', fetcher, [{ ...check, lazy: undefined }]);
+    const bigger = notDeclared.find((one) => one.check.what.startsWith('what a reader downloads'));
+
+    expect(bigger?.ok).toBe(false);
+    expect(bigger?.bytes).toBeGreaterThan(900_000);
+  });
+
+  it('drops the chunks a check declares lazy, and keeps the rest', () => {
+    const files = [
+      { name: 'index.js', bytes: 120_130 },
+      { name: 'plans.ta.js', bytes: 532_331 },
+      { name: 'plans.en.js', bytes: 206_633 },
+      { name: 'rules-x.js', bytes: 1_516_069 },
+    ];
+    const paid = files.filter((f) => !f.name.startsWith('rules-'));
+
+    // Entry plus ONE language, and no rules book: 652,461, which is what the
+    // live classic board reports.
+    expect(readerCost(paid, 'plans.').bytes).toBe(652_461);
+    expect(readerCost(files, 'plans.').bytes).toBe(2_168_530);
   });
 });
