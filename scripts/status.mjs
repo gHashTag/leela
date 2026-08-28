@@ -22,7 +22,8 @@
  */
 
 import { execFile } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { hostname } from 'node:os';
 import { promisify } from 'node:util';
 
 /**
@@ -41,6 +42,7 @@ import { promisify } from 'node:util';
  * silently failed under `node` for as long as anybody had run it.
  */
 import { chunksIn, readerCost } from '../apps/miniapp/src/smoke.ts';
+import { cronFrom, heartbeatFrom, holderFrom, loopFindings } from './lib/loop.mjs';
 import {
   deployFrom,
   describe,
@@ -242,12 +244,61 @@ if (asc === null) {
   );
 }
 
+/**
+ * And the loop that maintains all of the above, which nothing measured.
+ *
+ * Added 2026-08-28, the morning the improvement loop was found stopped after a
+ * hundred and twelve hours. Every row above had read well for all five days —
+ * the board was up, the bot was listening, the store listing was fine — because
+ * the surfaces were all healthy and the thing that repairs them was dead. A
+ * dashboard that covers everything except its own author is the shape of gap
+ * this repository keeps finding, and this was the last one left.
+ *
+ * `~/.leela` is where the loop keeps its lock, its heartbeat and its contract.
+ * A machine without that directory is not running the loop and is not failing:
+ * three `unasked` rows, exactly as with the railway CLI and the App Store key,
+ * which is also what keeps this green in CI.
+ */
+const home = process.env.HOME ?? '';
+const loopHome = home === '' ? '' : `${home}/.leela`;
+if (loopHome === '' || !existsSync(loopHome)) {
+  say('loop', 'the last iteration', 'not asked', 'this machine does not run the improvement loop', 'unasked');
+  say('loop', 'the lock', 'not asked', 'the same directory would answer it', 'unasked');
+  say('loop', 'the schedule', 'not asked', 'the same directory would answer it', 'unasked');
+} else {
+  const read = (path) => {
+    try {
+      return readFileSync(path, 'utf8');
+    } catch {
+      return '';
+    }
+  };
+
+  for (const row of loopFindings({
+    holder: holderFrom(read(`${loopHome}/LOOP.lock`)),
+    heartbeat: heartbeatFrom(read(`${loopHome}/heartbeat.json`)),
+    cron: cronFrom(read(`${home}/.claude/scheduled_tasks.json`), 'LOOP.md'),
+    now: Date.now(),
+    // Signal 0 asks whether a process exists without delivering anything;
+    // `EPERM` is somebody else's process, which is still a running one.
+    alive: (pid) => {
+      try {
+        process.kill(pid, 0);
+        return true;
+      } catch (error) {
+        return error.code === 'EPERM';
+      }
+    },
+    here: hostname(),
+  })) {
+    say(row.surface, row.name, row.value, row.note, row.kind);
+  }
+}
+
 // --- the report --------------------------------------------------------------
 
 const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
 console.log(describe(findings, stamp));
-
-const { wrong, unasked } = verdict(findings);
 
 if (process.argv.includes('--html')) {
   const rows = findings
