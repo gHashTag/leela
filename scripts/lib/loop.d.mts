@@ -9,8 +9,11 @@
 
 import type { Finding } from './status.d.mts';
 
-/** An hour: how long a lock may be held before age alone condemns it. */
+/** An hour: how long a lock may go without a sign of life before it is stale. */
 export const STALE_AFTER_MS: number;
+
+/** Six hours: the longest one iteration may hold the lock even while speaking. */
+export const HELD_AT_MOST_MS: number;
 
 /**
  * The exit code for "somebody living has it" — deliberately not 1, because
@@ -34,6 +37,14 @@ export const SILENT_AFTER_MS: number;
  */
 export interface Holder {
   at: number | null;
+  /**
+   * The last time the holder said it was still there, or null.
+   *
+   * Null on every lock written before 2026-08-29 and on any iteration that
+   * never marks one — and null is not zero: the reader falls back to `at`.
+   */
+  beat: number | null;
+  marks: number;
   pid: number | null;
   host: string | null;
   shape: 'named' | 'bare' | 'unreadable';
@@ -42,6 +53,8 @@ export interface Holder {
 export interface LockState {
   state: 'free' | 'held' | 'abandoned';
   ageMs: number | null;
+  /** How long since the last sign of life, which is what the hour bounds. */
+  silentMs: number | null;
   /** The sentence the report prints, naming which half of the rule decided. */
   why: string;
 }
@@ -61,13 +74,23 @@ export interface Schedule {
 /** Null when there is no lock at all; never throws on a lock it cannot parse. */
 export function holderFrom(text: string | null | undefined): Holder | null;
 
+/** The lock a holder writes to say it is still there. `at` is carried, never restamped. */
+export function markedFrom(
+  holder: Holder,
+  options: { now: number; step?: string; pid?: number | null; host?: string | null },
+): { at: number; iso: string; beat: number; marks: number; pid: number | null; host: string | null; step: string };
+
+/** The last sign of life: the mark if there is one, otherwise the taking. */
+export function lastSignFrom(holder: Holder | null): number | null;
+
 /**
- * Age, and only age. The pid a lock names is written by a command that exits
- * before the work starts, so it can never say whether the holder is working.
+ * Silence, and a cap. The pid a lock names is written by a command that exits
+ * before the work starts, so it can never say whether the holder is working —
+ * but the holder itself can, and `mark` is how it does.
  */
 export function lockState(
   holder: Holder | null,
-  options: { now: number; staleAfterMs?: number },
+  options: { now: number; staleAfterMs?: number; heldAtMostMs?: number },
 ): LockState;
 
 /** Null for absent, malformed, or undated — all of which mean "no mark". */

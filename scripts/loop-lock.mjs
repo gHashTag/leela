@@ -5,6 +5,7 @@
  *
  *     node scripts/loop-lock.mjs state
  *     node scripts/loop-lock.mjs take
+ *     node scripts/loop-lock.mjs mark --step "gates"
  *     node scripts/loop-lock.mjs release --iteration 32 --commit abc1234 --note "..."
  *
  * Written 2026-08-28. The protocol this replaces was three sentences in a
@@ -16,11 +17,19 @@
  *
  * Two properties this has and a paragraph cannot:
  *
- *   - **`take` refuses a lock younger than an hour and clears an older one.**
- *     The rule is `lockState`, which also carries the retraction of the pid
- *     check that briefly stood here: THIS PROCESS EXITS BEFORE THE ITERATION
- *     BEGINS, so the pid it writes is dead within milliseconds and a reader
- *     trusting it called every live lock abandoned.
+ *   - **`take` refuses a lock that has spoken within the hour and clears one
+ *     that has not.** The rule is `lockState`, which carries the retraction of
+ *     the pid check that briefly stood here — THIS PROCESS EXITS BEFORE THE
+ *     ITERATION BEGINS, so the pid it writes is dead within milliseconds and a
+ *     reader trusting it called every live lock abandoned — and, since
+ *     2026-08-29, the correction to the hour itself. It used to be measured
+ *     from the TAKING, under a comment saying an iteration takes minutes.
+ *     Iterations #50 and #51 each ran an hour and a half doing nothing unusual,
+ *     and the dashboard called both of their live locks ABANDONED, which is an
+ *     invitation for the next cron to work on top of a running one. `mark` is
+ *     how a holder says it is still there; the hour now bounds SILENCE, and
+ *     `HELD_AT_MOST_MS` bounds the whole hold so that marking cannot become a
+ *     way to keep the lock for ever.
  *   - **`release` writes the heartbeat.** Recording that an iteration finished
  *     is not a step somebody can forget, because it is the same act as letting
  *     the next one start. Three iterations reached `origin` with no entry in
@@ -42,7 +51,7 @@
 import { hostname } from 'node:os';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 
-import { holderFrom, lockState, takeVerdict } from './lib/loop.mjs';
+import { holderFrom, lockState, markedFrom, takeVerdict } from './lib/loop.mjs';
 
 const HOME = process.env.HOME ?? '';
 const LOCK = process.env.LEELA_LOOP_LOCK ?? `${HOME}/.leela/LOOP.lock`;
@@ -97,6 +106,56 @@ if (command === 'take') {
   process.exit(0);
 }
 
+if (command === 'mark') {
+  /*
+   * "I am still here." Written by the holder as it passes each step of the
+   * contract, and read by `lockState` in place of the taking time.
+   *
+   * WHY THIS EXISTS. The staleness rule used to measure from the moment the
+   * lock was taken, under a comment saying an iteration takes minutes. It does
+   * not: #50 and #51 each ran an hour and a half doing nothing unusual, and the
+   * dashboard called both of their LIVE locks abandoned — which is an
+   * invitation for the next cron to start work on top of a running iteration.
+   *
+   * WHY IT IS A COMMAND SOMEBODY CAN FORGET, which this file's own header
+   * argues against. Two alternatives were considered and rejected:
+   *
+   *   - A DAEMON that marks on a timer. It needs no discipline, and an orphan
+   *     of it holds the lock for ever — the 112-hour outage with a motor
+   *     attached, and the one failure here that cannot be recovered by waiting.
+   *   - A LONGER HOUR. It does not distinguish a live iteration from a dead
+   *     one; it only chooses which of the two mistakes to make.
+   *
+   * Forgetting to mark leaves the lock judged from its taking time, which is
+   * precisely how every lock was judged before this existed. So the worst case
+   * of the new mechanism is the old mechanism, and `HELD_AT_MOST_MS` bounds the
+   * best case so that marking cannot become a way to hold the lock for ever.
+   *
+   * It does NOT create a lock. A mark on a missing lock means the lock was
+   * released or cleared underneath the holder, and inventing one there would be
+   * a second iteration silently taking a lock nobody gave it.
+   */
+  if (holder === null) {
+    console.error('there is no lock to mark — it was released or cleared while you were working');
+    // Not 75: nobody is holding it. This is the protocol broken, which the
+    // contract says must be reported rather than treated as somebody's turn.
+    process.exit(2);
+  }
+
+  // `at` is CARRIED, never restamped — see `markedFrom`, where that rule lives
+  // beside the test that breaks when it is broken.
+  const marked = markedFrom(holder, {
+    now: Date.now(),
+    step: flag('step') ?? '',
+    pid: process.pid,
+    host: hostname(),
+  });
+
+  writeFileSync(LOCK, `${JSON.stringify(marked)}\n`);
+  console.log(`marked (${marked.marks})${marked.step === '' ? '' : ` at ${marked.step}`}`);
+  process.exit(0);
+}
+
 if (command === 'release') {
   writeFileSync(
     BEAT,
@@ -121,5 +180,5 @@ if (command === 'release') {
   process.exit(0);
 }
 
-console.error(`unknown command "${command}" — expected state, take or release`);
+console.error(`unknown command "${command}" — expected state, take, mark or release`);
 process.exit(2);

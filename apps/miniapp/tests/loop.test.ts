@@ -8,7 +8,9 @@ import {
   cronFrom,
   heartbeatFrom,
   holderFrom,
+  lastSignFrom,
   lockState,
+  markedFrom,
   loopFindings,
   takeVerdict,
 } from '../../../scripts/lib/loop.mjs';
@@ -41,7 +43,17 @@ group('reading a lock that was written by somebody else', () => {
     // seconds; everything downstream compares against `Date.now()`. The first
     // draft of this test asserted the raw number back, which is the shape of
     // fixture that agrees with any unit at all.
-    expect(holder).toEqual({ at: 1787497537 * 1000, pid: null, host: null, shape: 'bare' });
+    expect(holder).toEqual({
+      at: 1787497537 * 1000,
+      // No mark, because nothing wrote marks when this was the shape on disk.
+      // `lastSignFrom` falls back to `at`, so this lock is judged exactly as it
+      // was before marking existed.
+      beat: null,
+      marks: 0,
+      pid: null,
+      host: null,
+      shape: 'bare',
+    });
   });
 
   it('reads a hand-written epoch in either unit, because both are plausible', () => {
@@ -55,7 +67,14 @@ group('reading a lock that was written by somebody else', () => {
     // lock either way, which is exactly how the error got in.
     const holder = holderFrom(JSON.stringify({ at: 1787900782000, pid: 43877, host: 'studio.local' }));
 
-    expect(holder).toEqual({ at: 1787900782000, pid: 43877, host: 'studio.local', shape: 'named' });
+    expect(holder).toEqual({
+      at: 1787900782000,
+      beat: null,
+      marks: 0,
+      pid: 43877,
+      host: 'studio.local',
+      shape: 'named',
+    });
   });
 
   it('calls no lock free, and an unreadable one held rather than absent', () => {
@@ -72,6 +91,8 @@ group('reading a lock that was written by somebody else', () => {
   it('refuses a shape that parses but says nothing useful', () => {
     expect(holderFrom(JSON.stringify({ at: 'yesterday', pid: '43877' }))).toEqual({
       at: null,
+      beat: null,
+      marks: 0,
       pid: null,
       host: null,
       shape: 'named',
@@ -81,12 +102,27 @@ group('reading a lock that was written by somebody else', () => {
 });
 
 group('whether the holder has been there too long', () => {
-  const bare = (age: number): Holder => ({ at: NOW - age, pid: null, host: null, shape: 'bare' });
+  const bare = (age: number): Holder => ({
+    at: NOW - age,
+    beat: null,
+    marks: 0,
+    pid: null,
+    host: null,
+    shape: 'bare',
+  });
   const named = (age: number): Holder => ({
     at: NOW - age,
+    beat: null,
+    marks: 0,
     pid: 43877,
     host: 'studio.local',
     shape: 'named',
+  });
+  /** Taken `age` ago and last heard from `silence` ago. */
+  const marked = (age: number, silence: number): Holder => ({
+    ...named(age),
+    beat: NOW - silence,
+    marks: 7,
   });
 
   it('is free when nothing holds it', () => {
@@ -124,8 +160,108 @@ group('whether the holder has been there too long', () => {
     expect(lockState(holderFrom(String(NOW - 10 * 60 * 1000)), { now: NOW }).state).toBe('held');
   });
 
+  it('KEEPS a lock held three hours by an iteration that keeps speaking', () => {
+    /*
+     * THE DEFECT, and it has cost twice. #50 and #51 each ran an hour and a
+     * half — a competitor probe, three full suites, five falsifications — and
+     * the rule measured from the TAKING, so the dashboard called each live lock
+     * ABANDONED while its holder was still writing. An abandoned lock is an
+     * invitation: the next cron is cleared to start work on top of the running
+     * one, which is the single outcome this file exists to prevent.
+     *
+     * Three hours here, well past the old bound, and the answer is `held`
+     * because something said so a minute ago.
+     */
+    const answer = lockState(marked(3 * HOUR, 60 * 1000), { now: NOW });
+
+    expect(answer.state).toBe('held');
+    expect(answer.why).toContain('heard from');
+  });
+
+  it('clears one that stopped speaking, however recently it was taken', () => {
+    // The other direction, and the one the hour is really for: a session that
+    // died. Taken ten minutes ago is irrelevant if nothing has been heard since
+    // — though in practice a lock cannot be marked before it is taken, so this
+    // is the shape of a holder that marked once and then went.
+    const answer = lockState(marked(90 * 60 * 1000, 2 * HOUR), { now: NOW });
+
+    expect(answer.state).toBe('abandoned');
+    expect(answer.why).toContain('nothing has been heard');
+  });
+
+  it('clears an iteration that is alive and going nowhere', () => {
+    /*
+     * Marking must not become a way to hold the lock for ever — that would be
+     * the 112-hour outage with a motor attached. Eight hours, still speaking,
+     * and the cap takes it.
+     */
+    const answer = lockState(marked(8 * HOUR, 60 * 1000), { now: NOW });
+
+    expect(answer.state).toBe('abandoned');
+    expect(answer.why).toContain('still speaking');
+  });
+
+  it('tells the two abandonments apart, because they are different diagnoses', () => {
+    // Silence is a session that died; the cap is one that did not. A reader
+    // who cannot tell them apart will debug the wrong thing.
+    expect(lockState(marked(2 * HOUR, 2 * HOUR), { now: NOW }).why).toMatch(/heard/);
+    expect(lockState(marked(8 * HOUR, 1000), { now: NOW }).why).toMatch(/six/);
+    // And a lock that never spoke at all says so, rather than blaming silence
+    // on a mark it never made.
+    expect(lockState(named(3 * HOUR), { now: NOW }).why).toMatch(/without ever saying/);
+  });
+
+  it('falls back to the taking time for every lock written before marks existed', () => {
+    /*
+     * The compatibility claim, stated as a test: an iteration that never marks
+     * is judged exactly as every iteration was before this existed, so the
+     * change cannot make anything worse than it already was. `lastSignFrom` is
+     * the whole of it.
+     */
+    expect(lastSignFrom(named(10 * 60 * 1000))).toBe(NOW - 10 * 60 * 1000);
+    expect(lastSignFrom(bare(10 * 60 * 1000))).toBe(NOW - 10 * 60 * 1000);
+    expect(lastSignFrom(marked(3 * HOUR, 60 * 1000))).toBe(NOW - 60 * 1000);
+    expect(lastSignFrom(null)).toBeNull();
+  });
+
+  it('CARRIES the taking time through a mark, so the cap cannot be reset', () => {
+    /*
+     * The single most dangerous line in this change. If `mark` restamped `at`,
+     * every mark would reset the age the six-hour cap measures and a holder
+     * could keep the lock for ever by saying "still here" — the 112-hour outage
+     * with a motor attached, reached while fixing the opposite problem.
+     *
+     * Ten marks, an hour apart, and the taking time has not moved.
+     */
+    let holder: Holder = named(0);
+    const taken = holder.at;
+
+    for (let i = 1; i <= 10; i += 1) {
+      const written = markedFrom(holder, { now: NOW + i * HOUR, step: `step ${i}` });
+      expect(written.at, `after ${i} marks`).toBe(taken);
+      expect(written.marks).toBe(i);
+      holder = { ...holder, at: written.at, beat: written.beat, marks: written.marks };
+    }
+
+    // And it is still caught by the cap, marking or not.
+    expect(lockState(holder, { now: NOW + 10 * HOUR }).state).toBe('abandoned');
+  });
+
+  it('dates a mark on an undated lock rather than writing a second undated one', () => {
+    const written = markedFrom(
+      { at: null, beat: null, marks: 0, pid: null, host: null, shape: 'unreadable' },
+      { now: NOW },
+    );
+
+    expect(written.at).toBe(NOW);
+    expect(written.marks).toBe(1);
+  });
+
   it('treats a lock that will not say when as abandoned', () => {
-    const answer = lockState({ at: null, pid: null, host: null, shape: 'unreadable' }, { now: NOW });
+    const answer = lockState(
+      { at: null, beat: null, marks: 0, pid: null, host: null, shape: 'unreadable' },
+      { now: NOW },
+    );
 
     expect(answer.state).toBe('abandoned');
     expect(answer.why).toContain('when');
@@ -141,6 +277,7 @@ group('what take does about it, and the code it says it with', () => {
   const state = (over: Partial<LockState> = {}): LockState => ({
     state: 'free',
     ageMs: null,
+    silentMs: null,
     why: 'x',
     ...over,
   });
