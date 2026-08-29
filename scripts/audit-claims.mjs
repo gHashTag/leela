@@ -163,7 +163,14 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { checkCounts, checkTotal, claimedCounts, claimedTotal, rewriteClaims } from './lib/claims.mjs';
 import { finish } from './lib/report.mjs';
-import { UnreadableSuiteReport, capturedOutput, countsFrom, failureLines, failuresFrom } from './lib/suites.mjs';
+import {
+  UnreadableSuiteReport,
+  capturedOutput,
+  countsFrom,
+  failureLines,
+  failuresFrom,
+  suiteCommand,
+} from './lib/suites.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -180,7 +187,7 @@ function packages() {
       if (!existsSync(join(at, 'tests'))) continue;
 
       const manifest = JSON.parse(readFileSync(join(at, 'package.json'), 'utf8'));
-      found.push({ name: manifest.name, at });
+      found.push({ name: manifest.name, at, manifest });
     }
   }
   return found;
@@ -206,10 +213,17 @@ function packages() {
  * "the suite is red, and here are its counts" is a measurement, "the suite
  * could not be run" is the absence of one.
  */
-function run(at) {
+function run(at, manifest) {
+  // The workspace's OWN command, not a hand-written one. See `suiteCommand`:
+  // every package declares `--testTimeout=30000 --hookTimeout=60000` and the
+  // invocation here declared neither, so this measured all twelve at vitest's
+  // 5s default — the very defaults #46–#49 went and fixed, enforced by
+  // `audit-configs.mjs` on the scripts that this went around.
+  const { command, args } = suiteCommand(manifest);
+
   let output;
   try {
-    output = execFileSync('npx', ['vitest', 'run', '--reporter=json'], {
+    output = execFileSync(command, args, {
       cwd: at,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
@@ -239,10 +253,10 @@ const actual = new Map();
 const red = new Map();
 const unreadable = new Map();
 
-for (const { name, at } of packages()) {
+for (const { name, at, manifest } of packages()) {
   process.stdout.write(`  ${name} … `);
   try {
-    const counts = run(at);
+    const counts = run(at, manifest);
     actual.set(name, counts.total);
     if (counts.red) red.set(name, counts);
     console.log(counts.red ? `${counts.total} (${counts.failed} failing)` : `${counts.total}`);

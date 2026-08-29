@@ -377,10 +377,23 @@ describe('fetching the weights', () => {
 });
 
 describe('a player who has not asked for the better voice', () => {
-  // Twenty seconds, not the default five: this test compiles two modules
-  // from source through a cache-busting query, and under a full parallel run
-  // that has taken long enough to trip the default once. A slow compile is
-  // not the defect being asserted; the shut gate is.
+  /*
+   * This test compiles two modules from source through a cache-busting query,
+   * and under a full parallel run that is slow enough to matter. A slow
+   * compile is not the defect being asserted; the shut gate is.
+   *
+   * **The comment here used to say "Twenty seconds, not the default five", and
+   * twenty seconds appears nowhere** — not as an argument to `it`, not in this
+   * workspace's `test` script, which declares thirty. The headroom is real and
+   * the number naming it was invented, so the sentence described a protection
+   * nobody had written.
+   *
+   * It also named the wrong danger. On 2026-08-29 this test failed with *Test
+   * timed out in 5000ms* — the default it says it is not on — because
+   * `audit-claims.mjs` ran every workspace with a hand-written `npx vitest
+   * run` that declared no timeout at all. The suite was never at five seconds;
+   * one reader of it was. See `lib/suites.mjs:suiteCommand`.
+   */
   it('costs the network nothing at all', async () => {
     // The rule the whole feature is built around. Nothing in this module
     // fetches on import, and the only function that reaches the network is

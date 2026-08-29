@@ -295,3 +295,49 @@ export function failureLines(failures, shorten = (path) => path) {
 
   return shown;
 }
+
+/**
+ * How to run a workspace's suite — the workspace's OWN command, plus a reporter.
+ *
+ * `audit-claims` used to run `npx vitest run --reporter=json` in each package
+ * directory. That reads the same files and it is not the same run. Every one of
+ * the twelve workspaces declares
+ *
+ *     vitest run --testTimeout=30000 --hookTimeout=60000
+ *
+ * and the audit's hand-written invocation declared neither, so it measured all
+ * of them at vitest's defaults — 5s and 10s. **Those defaults are the exact
+ * defect #46–#49 went and fixed**, three suites red in three days from twelve
+ * workspaces sitting on them; `audit-configs.mjs` was written to enforce the
+ * flags and it enforces them on the SCRIPTS, which this went around.
+ *
+ * MEASURED, not reasoned: a deliberate seven-second test added to
+ * `@leela/storage` — longer than the default, shorter than the declared 30s —
+ * fails under `npx vitest run --reporter=json` with *Test timed out in 5000ms*
+ * and passes under the package's own script. That is the whole of the flake
+ * this repository had been re-running until green: the audit's reds were the
+ * audit's own conditions, and they named a real test that is not broken.
+ *
+ * So the command comes from the manifest. A workspace that changes how it runs
+ * its tests changes how this measures them, with nothing to keep in step.
+ *
+ * @param manifest the parsed `package.json`
+ * @param reporter appended after `--`, which is how `bun run` forwards an
+ *   argument to the script rather than eating it
+ * @returns `{ command, args }` for `execFileSync`
+ * @throws {UnreadableSuiteReport} when the workspace declares no test script —
+ *   *no way to run it* is not *no tests*, and returning zero here would let
+ *   `--write` put that zero into README as a fact.
+ */
+export function suiteCommand(manifest, reporter = '--reporter=json') {
+  const script = manifest?.scripts?.test;
+
+  if (typeof script !== 'string' || script.trim() === '') {
+    throw new UnreadableSuiteReport(
+      'no-script',
+      `${manifest?.name ?? 'the workspace'} declares no test script, so there is no run to measure`,
+    );
+  }
+
+  return { command: 'bun', args: ['run', 'test', '--', reporter] };
+}

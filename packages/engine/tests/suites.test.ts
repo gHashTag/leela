@@ -1,4 +1,9 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// Typed by `scripts/lib/source.d.mts`, unlike `suites.mjs` below.
+import { blank } from '../../../scripts/lib/source.mjs';
 // A plain module, shared with the script that runs the suites. One suppressed
 // line rather than a `.d.ts`, which would be a second description of it.
 // One line, and it has to stay one line: `@ts-expect-error` suppresses the
@@ -7,7 +12,7 @@ import { describe, expect, it } from 'vitest';
 // directive itself unused AND the error surface, both at once.
 // @ts-expect-error - untyped .mjs
 // prettier-ignore
-import { MOST_FAILURES_SHOWN, UnreadableSuiteReport, capturedOutput, countsFrom, failureLines, failuresFrom } from '../../../scripts/lib/suites.mjs';
+import { MOST_FAILURES_SHOWN, UnreadableSuiteReport, capturedOutput, countsFrom, failureLines, failuresFrom, suiteCommand } from '../../../scripts/lib/suites.mjs';
 
 /**
  * Reading a suite's own count of itself, out of a run that failed.
@@ -331,5 +336,150 @@ describe('printing those failures without burying the rest of the report', () =>
 
     expect(lines[0]).toContain('never ran');
     expect(lines[0]).not.toContain('\u203a');
+  });
+});
+
+/**
+ * A suite is measured the way this repository RUNS it, or the measurement is
+ * of something else.
+ *
+ * `audit-claims` ran `npx vitest run --reporter=json` in each package
+ * directory for months. That reads the same files and it is not the same run:
+ * all twelve workspaces declare `--testTimeout=30000 --hookTimeout=60000`, the
+ * hand-written invocation declared neither, and so the audit measured every
+ * suite at vitest's 5s default — **the exact defaults #46–#49 went and fixed.**
+ * `audit-configs.mjs` enforces those flags, and it enforces them on the
+ * SCRIPTS, which this walked around. Check the copy the guard is not on.
+ *
+ * MEASURED: a deliberate seven-second test in `@leela/storage` — longer than
+ * the default, shorter than the declared thirty — fails under the old
+ * invocation with *Test timed out in 5000ms* and passes under the package's
+ * own script. The flake that had been re-run until green was the reader's
+ * conditions, not the code.
+ */
+describe('a suite is measured the way the repository runs it', () => {
+  const manifest = (test?: string) => ({ name: '@leela/example', scripts: test === undefined ? {} : { test } });
+
+  it('RUNS THE WORKSPACE\u2019S OWN SCRIPT rather than a command written here', () => {
+    /*
+     * The assertion the whole repair rests on. A hand-written `vitest` call is
+     * a second description of how a suite runs, and the two drifted for months
+     * without anything noticing — because both of them worked.
+     */
+    const { command, args } = suiteCommand(manifest('vitest run --testTimeout=30000 --hookTimeout=60000'));
+
+    expect(command).toBe('bun');
+    expect(args.slice(0, 2)).toEqual(['run', 'test']);
+    expect(args).not.toContain('vitest');
+  });
+
+  it('appends the reporter after `--`, which is how the script receives it', () => {
+    // Without the separator `bun run` eats the argument as one of its own and
+    // the script never sees it, so the report never arrives and every package
+    // reads as unmeasurable.
+    const { args } = suiteCommand(manifest('vitest run'));
+
+    expect(args).toEqual(['run', 'test', '--', '--reporter=json']);
+    expect(args.indexOf('--')).toBeLessThan(args.indexOf('--reporter=json'));
+  });
+
+  it('takes the reporter it is given, so a caller can ask for another', () => {
+    expect(suiteCommand(manifest('vitest run'), '--reporter=verbose').args).toContain('--reporter=verbose');
+  });
+
+  it('REFUSES A WORKSPACE WITH NO TEST SCRIPT rather than returning zero', () => {
+    /*
+     * *No way to run it* is not *no tests*. A zero here would be written into
+     * README by `--write` as a fact, and the table would then agree with a
+     * measurement nobody made — which is the failure this whole audit exists
+     * to prevent.
+     */
+    expect(() => suiteCommand(manifest())).toThrow(UnreadableSuiteReport);
+    expect(() => suiteCommand(manifest(''))).toThrow(UnreadableSuiteReport);
+    expect(() => suiteCommand(manifest('   '))).toThrow(UnreadableSuiteReport);
+
+    try {
+      suiteCommand(manifest());
+    } catch (error) {
+      expect((error as { kind: string }).kind).toBe('no-script');
+      expect((error as Error).message).toContain('@leela/example');
+    }
+  });
+
+  it('survives a manifest that is not one, without inventing a command', () => {
+    expect(() => suiteCommand(null)).toThrow(UnreadableSuiteReport);
+    expect(() => suiteCommand({})).toThrow(UnreadableSuiteReport);
+  });
+});
+
+/**
+ * And the audit actually uses it.
+ *
+ * Everything above tests a pure function. The defect it repairs was in the
+ * GLUE — a hand-written `npx vitest run` sitting in `audit-claims.mjs` while
+ * every workspace declared its own flags a directory away — and the four
+ * iterations before this one each found their hole in exactly that seam.
+ *
+ * So this reads the script, with its COMMENTS blanked — `audit-claims.mjs`
+ * explains the old invocation at length, and a naive grep would find `vitest`
+ * in the prose that exists to warn about it, failing the check for quoting its
+ * own reason.
+ *
+ * String contents are deliberately NOT blanked, and `source.mjs` says why: a
+ * check that forbids a sentence in the source has to be able to see the
+ * sentence. That is the stronger rule here anyway — a runner named in a string
+ * is still a runner named in this file. **I assumed the opposite and the
+ * calibration case below caught me**, which is the only reason it is written
+ * out rather than trusted.
+ */
+describe('the audit does not name a test runner of its own', () => {
+  const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+  const audit = readFileSync(join(ROOT, 'scripts', 'audit-claims.mjs'), 'utf8');
+  const code = blank(audit);
+
+  it('has the file it is reading, and it is not empty', () => {
+    // Every check that walks a tree can walk an empty one and pass over
+    // nothing. This one reads a single named file, so the floor is one line.
+    expect(audit.length).toBeGreaterThan(1000);
+    expect(code).toContain('suiteCommand');
+  });
+
+  it('NAMES NO RUNNER IN ITS CODE — the workspace declares that', () => {
+    /*
+     * `vitest`, `npx` and `jest` blanked of comments and strings. A literal
+     * runner here is a second description of how a suite runs, and the last
+     * two survived side by side for months because both of them worked.
+     */
+    expect(code).not.toMatch(/\bvitest\b/);
+    expect(code).not.toMatch(/\bnpx\b/);
+    expect(code).not.toMatch(/\bjest\b/);
+  });
+
+  it('is calibrated: the blanker removes comments and KEEPS strings', () => {
+    /*
+     * Written because I had it backwards. I assumed `blank` emptied string
+     * contents too, and asserted that a `"vitest"` literal would survive
+     * blanking as harmless — it does survive, and it is not harmless: a runner
+     * named in a string is a runner named in this file, which is exactly what
+     * the check above must forbid. The assumption was wrong and the conclusion
+     * would have been a weaker guard.
+     *
+     * It also fails if `blank` ever returns nothing, which would make the
+     * assertion above pass over an empty string and prove nothing.
+     */
+    // The comment markers are built rather than written, and that is not
+     // fussiness: `blank` blanks a line comment to the end of its line WITHOUT
+     // knowing it is inside a string, so a literal `// vitest` here swallows
+     // the closing brackets of this very call — and `callsTo`, which
+     // `apps/mobile/tests/source.test.ts` runs over every test file, then
+     // refuses the whole file with `blank( is never closed`. It caught this
+     // exact line. Measured, and recorded in the backlog as its own item.
+    const line = `${'/'}${'/'} vitest`;
+    const block = `${'/'}* vitest *${'/'}`;
+
+    expect(blank(`const a = 1; ${line}`).trim().length).toBeGreaterThan(0);
+    expect(blank(`const a = 1; ${line}`)).not.toMatch(/\bvitest\b/);
+    expect(blank(`${block} const a = 1;`)).not.toMatch(/\bvitest\b/);
+    expect(blank('const runner = "vitest";')).toMatch(/\bvitest\b/);
   });
 });
