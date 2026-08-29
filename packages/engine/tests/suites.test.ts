@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 // A plain module, shared with the script that runs the suites. One suppressed
 // line rather than a `.d.ts`, which would be a second description of it.
+// One line, and it has to stay one line: `@ts-expect-error` suppresses the
+// line that follows it, and a wrapped import puts the `from` clause — which is
+// where the error is reported — six lines further down. Splitting this made the
+// directive itself unused AND the error surface, both at once.
 // @ts-expect-error - untyped .mjs
-import { UnreadableSuiteReport, capturedOutput, countsFrom } from '../../../scripts/lib/suites.mjs';
+// prettier-ignore
+import { MOST_FAILURES_SHOWN, UnreadableSuiteReport, capturedOutput, countsFrom, failureLines, failuresFrom } from '../../../scripts/lib/suites.mjs';
 
 /**
  * Reading a suite's own count of itself, out of a run that failed.
@@ -187,5 +192,144 @@ describe('what cannot be read is named, never guessed', () => {
       }
       expect.fail(`${what} returned ${JSON.stringify(returned)} instead of raising`);
     }
+  });
+});
+
+/**
+ * WHICH tests failed, not only how many.
+ *
+ * `countsFrom` above answers *how many*, and for four months that was the whole
+ * of what a red suite got said about it: `@leela/engine: 1 of 553 failing`. A
+ * reader cannot act on that. It names no test, no file and no reason — and the
+ * report it came out of carried all three. `audit-claims.mjs` opens by saying
+ * that `> /dev/null` is how a red becomes unexplainable; throwing the names
+ * away was the same thing one layer in.
+ *
+ * **The fixtures below are real vitest output**, not a shape invented here. A
+ * suite was built to fail on purpose — one wrong assertion, one file importing
+ * a module that does not exist — and run. That matters because the second case
+ * is the one an invented fixture would have missed: a file that fails to
+ * COLLECT has an empty `assertionResults`, contributes zero to `numTotalTests`
+ * AND zero to `numFailedTests`, and is red only by `success: false`. A reader
+ * walking assertions alone returns nothing for it.
+ */
+
+/** Straight out of `vitest run --reporter=json` on a deliberately red suite. */
+const REAL_RED = JSON.stringify({
+  numTotalTests: 2,
+  numPassedTests: 1,
+  numFailedTests: 1,
+  success: false,
+  testResults: [
+    {
+      name: '/private/tmp/redsuite/tests/a.test.ts',
+      status: 'failed',
+      message: '',
+      assertionResults: [
+        { fullName: 'a group passes', status: 'passed', failureMessages: [] },
+        {
+          fullName: 'a group fails on purpose',
+          status: 'failed',
+          failureMessages: [
+            'AssertionError: expected 1 to be 2 // Object.is equality\n    at /private/tmp/redsuite/tests/a.test.ts:4:44',
+          ],
+        },
+      ],
+    },
+    {
+      name: '/private/tmp/redsuite/tests/broken.test.ts',
+      status: 'failed',
+      message:
+        'Failed to load url ./does-not-exist (resolved id: ./does-not-exist) in /private/tmp/redsuite/tests/broken.test.ts. Does the file exist?',
+      assertionResults: [],
+    },
+  ],
+});
+
+describe('which tests failed, out of the same report the counts came from', () => {
+  it('names the failing test, its file and its reason', () => {
+    const found = failuresFrom(REAL_RED);
+
+    expect(found[0]).toEqual({
+      file: '/private/tmp/redsuite/tests/a.test.ts',
+      name: 'a group fails on purpose',
+      why: 'AssertionError: expected 1 to be 2 // Object.is equality',
+    });
+  });
+
+  it('REPORTS A FILE THAT NEVER RAN, which has no failing assertion to find', () => {
+    /*
+     * The case that makes this more than a convenience. `broken.test.ts` is
+     * `status: "failed"` with an EMPTY `assertionResults` — it counts as zero
+     * total and zero failed — so a reader that walked assertions would answer
+     * "nothing failed" about a suite that plainly did.
+     */
+    const found = failuresFrom(REAL_RED);
+    const never = found.find((one: { name: string | null }) => one.name === null);
+
+    expect(never).toBeDefined();
+    expect(never.file).toContain('broken.test.ts');
+    expect(never.why).toContain('Failed to load url');
+    expect(found).toHaveLength(2);
+  });
+
+  it('says nothing about a green run', () => {
+    expect(failuresFrom(reportFor(12, 0))).toEqual([]);
+  });
+
+  it('refuses to guess when the report cannot be read, exactly as the counts do', () => {
+    // Two readers of one format disagreeing about whether it is readable would
+    // be worse than either being wrong, so this asks the other one.
+    expect(() => failuresFrom('Command failed')).toThrow(UnreadableSuiteReport);
+    expect(() => failuresFrom('')).toThrow(UnreadableSuiteReport);
+  });
+
+  it('survives a report whose entries are missing the fields it wants', () => {
+    const odd = JSON.stringify({
+      numTotalTests: 1,
+      numFailedTests: 1,
+      success: false,
+      testResults: [{ status: 'failed' }, { assertionResults: [{ status: 'failed' }] }],
+    });
+
+    const found = failuresFrom(odd);
+    expect(found).toHaveLength(2);
+    expect(found[1].name).toBe('(an unnamed test)');
+  });
+});
+
+describe('printing those failures without burying the rest of the report', () => {
+  const many = (count: number) =>
+    Array.from({ length: count }, (_, i) => ({ file: `/a/b/t${i}.test.ts`, name: `test ${i}`, why: 'boom' }));
+
+  it('shortens the path, because an absolute one is most of a terminal', () => {
+    expect(failureLines(many(1), (path: string) => path.split('/').slice(-2).join('/'))[0]).toContain(
+      'b/t0.test.ts \u203a test 0',
+    );
+  });
+
+  it('CAPS THE LIST AND SAYS IT CAPPED IT', () => {
+    /*
+     * A suite with two hundred red tests has one cause, and two hundred lines
+     * scroll the alarm off the top of the terminal — the way of hiding a
+     * finding that `report.mjs` exists to stop. A list silently cut at eight
+     * reads as a list of eight, so what was dropped is said.
+     */
+    const lines = failureLines(many(MOST_FAILURES_SHOWN + 5));
+
+    expect(lines).toHaveLength(MOST_FAILURES_SHOWN + 1);
+    expect(lines[lines.length - 1]).toContain('5 more not shown');
+  });
+
+  it('does not add a note when nothing was dropped', () => {
+    expect(failureLines(many(MOST_FAILURES_SHOWN)).join('\n')).not.toContain('not shown');
+    expect(failureLines([])).toEqual([]);
+  });
+
+  it('marks a file that never ran as such rather than naming a test', () => {
+    const lines = failureLines([{ file: '/a/broken.test.ts', name: null, why: 'Failed to load url' }]);
+
+    expect(lines[0]).toContain('never ran');
+    expect(lines[0]).not.toContain('\u203a');
   });
 });

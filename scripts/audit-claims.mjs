@@ -163,7 +163,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { checkCounts, checkTotal, claimedCounts, claimedTotal, rewriteClaims } from './lib/claims.mjs';
 import { finish } from './lib/report.mjs';
-import { UnreadableSuiteReport, capturedOutput, countsFrom } from './lib/suites.mjs';
+import { UnreadableSuiteReport, capturedOutput, countsFrom, failureLines, failuresFrom } from './lib/suites.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -221,7 +221,12 @@ function run(at) {
     output = capturedOutput(error);
   }
 
-  return countsFrom(output);
+  // Counts first: it is the one that classifies an unreadable capture, and two
+  // readers of one format disagreeing about whether it is readable would be a
+  // worse failure than either being wrong. `failuresFrom` cannot throw once
+  // this has returned, because both read the same object.
+  const counts = countsFrom(output);
+  return { ...counts, failures: counts.red ? failuresFrom(output) : [] };
 }
 
 const write = process.argv.slice(2).includes('--write');
@@ -351,7 +356,22 @@ if (problems.length === 0 && actual.size === 0) {
 const failingSuites = {
   failing: true,
   heading: 'Measured from a suite that is failing. The counts stand; the tests do not:\n',
-  lines: [...red].map(([name, counts]) => `  ${name}: ${counts.failed} of ${counts.total} failing`),
+  /*
+   * The count, and then WHICH tests — because the count alone cannot be acted
+   * on. `@leela/engine: 1 of 553 failing` was all this said for four months,
+   * and the report it was read out of carried the test's name, its file and
+   * its assertion the whole time. This file's own header says `> /dev/null` is
+   * how a red becomes unexplainable; discarding the names was the same thing
+   * one layer in.
+   *
+   * A file that failed to COLLECT has no failing assertion to name — zero of
+   * `numTotalTests`, zero of `numFailedTests` — so it is listed as *never ran*
+   * rather than omitted, which is the shape a reader of assertions alone loses.
+   */
+  lines: [...red].flatMap(([name, counts]) => [
+    `  ${name}: ${counts.failed} of ${counts.total} failing`,
+    ...failureLines(counts.failures ?? [], (path) => path.split('/').slice(-2).join('/')),
+  ]),
   epilogue: problems.length === 0 ? '\nThe numbers agree. The suites do not all pass.' : '',
 };
 

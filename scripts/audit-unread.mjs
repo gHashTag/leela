@@ -127,7 +127,14 @@ const WRITE_ONLY = {
   // `text_emb`, `denoised_latent`, `wav_tts` — which is why only two are here.
   noisy_latent: 'an ONNX graph input, consumed inside onnxruntime',
   text_ids: 'an ONNX graph input, consumed inside onnxruntime',
-  fullName: 'display only',
+  // `fullName` was here beside these two, for the same reason, until
+  // 2026-08-29. It left because this check counts uses BY NAME across every
+  // source — its own closing note says so — and `lib/suites.mjs` began reading
+  // `fullName` off vitest's report, which is a different field entirely. The
+  // excuse then described nothing and this audit said so, correctly by its own
+  // rule. Worth writing down rather than deleting silently: the legacy column
+  // in `packages/db` is no better read than it was, and if that unrelated
+  // reader ever goes away this list will need the entry back.
   email: 'part of the legacy document shape, not used here',
   firstGame: 'part of the legacy document shape, not used here',
   // Read by string key in audit-copies.mjs, which no static search can see.

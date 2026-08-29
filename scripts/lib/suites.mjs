@@ -186,3 +186,112 @@ export function capturedOutput(error) {
   if (candidate === null || candidate === undefined) return '';
   return typeof candidate === 'string' ? candidate : candidate.toString('utf8');
 }
+
+/**
+ * How many failures are worth printing before the list stops helping.
+ *
+ * A suite with two hundred red tests has one cause, and two hundred lines
+ * scroll the rest of the report off the terminal — which is the same way a
+ * finding gets hidden that `report.mjs` was written to stop. What is dropped is
+ * always SAID (see `failureLines`), because a list silently cut at eight reads
+ * as a list of eight.
+ */
+export const MOST_FAILURES_SHOWN = 8;
+
+/** The first line of a message, which is the part that names the defect. */
+const firstLine = (message) =>
+  String(message ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .find((line) => line !== '') ?? '';
+
+/**
+ * WHICH tests failed, out of the same report the counts came from.
+ *
+ * `countsFrom` answers *how many*, and for four months that was all this
+ * repository could say about a red suite: `@leela/engine: 1 of 553 failing`.
+ * That sentence cannot be acted on. It names no test, no file and no reason,
+ * and the report it was read out of carried all three — so the audit whose own
+ * documentation says *`> /dev/null` is how a red becomes unexplainable* was
+ * discarding the explanation itself, one layer in.
+ *
+ * **Two shapes of red, and the second is the one a naive reader misses.**
+ * Measured against a suite built to fail on purpose:
+ *
+ *   - A failing assertion has `status: "failed"` on the entry in
+ *     `assertionResults`, with the reason in `failureMessages`.
+ *   - **A file that fails to COLLECT has no assertionResults at all.** Its
+ *     entry is `status: "failed"`, `message: "Failed to load url …"`, and an
+ *     empty array — so it contributes zero to `numTotalTests` and zero to
+ *     `numFailedTests` alike. A reader that only walked assertions would return
+ *     an empty list for a suite that is unmistakably red, which is the same
+ *     unexplainable red in a new place. It is why `countsFrom` reads
+ *     `success === false` rather than trusting `numFailedTests`.
+ *
+ * @param text Raw stdout, same as {@link countsFrom} takes.
+ * @returns `[{ file, name, why }]`, in the order the report gives.
+ *   `name` is `null` for a file that never ran — there is no test to name.
+ * @throws {UnreadableSuiteReport} When no vitest report can be read out.
+ */
+export function failuresFrom(text) {
+  const source = typeof text === 'string' ? text : String(text ?? '');
+  const report = reportIn(source);
+
+  if (report === null) {
+    // Deliberately the same diagnosis as `countsFrom`, by asking it: two
+    // readers of one format disagreeing about whether it is readable is a
+    // worse failure than either of them being wrong.
+    countsFrom(source);
+    return [];
+  }
+
+  const files = Array.isArray(report.testResults) ? report.testResults : [];
+  const found = [];
+
+  for (const file of files) {
+    const assertions = Array.isArray(file?.assertionResults) ? file.assertionResults : [];
+    const failed = assertions.filter((one) => one?.status === 'failed');
+
+    for (const one of failed) {
+      found.push({
+        file: String(file?.name ?? ''),
+        name: String(one?.fullName ?? '').trim() || '(an unnamed test)',
+        why: firstLine(one?.failureMessages?.[0]),
+      });
+    }
+
+    // The file failed and named no test: it did not get far enough to have
+    // one. `message` is where vitest puts the import error.
+    if (failed.length === 0 && file?.status === 'failed') {
+      found.push({
+        file: String(file?.name ?? ''),
+        name: null,
+        why: firstLine(file?.message) || 'the file failed and said nothing about why',
+      });
+    }
+  }
+
+  return found;
+}
+
+/**
+ * Those failures as lines to print, capped, and saying what was capped.
+ *
+ * @param failures what {@link failuresFrom} returned
+ * @param shorten a path shortener — the caller knows what the paths are
+ *   relative to, and an absolute path per line is most of a terminal's width
+ */
+export function failureLines(failures, shorten = (path) => path) {
+  const shown = failures.slice(0, MOST_FAILURES_SHOWN).map((one) => {
+    const where = shorten(one.file);
+    const what = one.name === null ? `${where} — never ran` : `${where} › ${one.name}`;
+    return one.why ? `    ${what}\n      ${one.why}` : `    ${what}`;
+  });
+
+  const dropped = failures.length - shown.length;
+  // Said, not silent. A list cut at eight with no note reads as a list of
+  // eight, and the reader stops looking for the ninth.
+  if (dropped > 0) shown.push(`    … and ${dropped} more not shown`);
+
+  return shown;
+}
