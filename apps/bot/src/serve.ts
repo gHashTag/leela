@@ -38,6 +38,7 @@ import {
 import type { Report } from '@leela/journal';
 
 import { Allowance, MAX_ASKERS } from './bot';
+import { SERVING_HEADER, servingFingerprint } from './serving';
 import { decide } from './take-in';
 import { whoSent } from './vouched';
 
@@ -145,6 +146,18 @@ export interface Standing {
 export interface AskRouteOptions {
   /** Absent is honest: no key means 503, and the board falls back to reading the plan. */
   model?: LanguageModel;
+  /**
+   * Which texts this process is serving, for the header on every answer.
+   *
+   * A function and not a string, and injected rather than read straight from
+   * `./serving`, for one reason: **`null` is a state and it has to be
+   * reachable from a test.** The whole value of the guard reading this header
+   * is that its absence means *cannot tell* — and a branch nothing can drive
+   * is a branch nothing has shown to work. `servingFingerprint` reads a fixed
+   * directory and memoises, so with no seam here the only way to exercise the
+   * absence would be to delete the dataset.
+   */
+  serving?: () => string | null;
   /** Injected so the allowance can be tested without waiting out a minute. */
   now?: () => number;
   /** When set, answers stream as deltas; `model` stays the fallback. */
@@ -218,7 +231,7 @@ const corsFor = (origin: string): Record<string, string> => ({
  * without Bun: everything this file decides is decided here, and the server
  * below only supplies the port and the peer address.
  */
-export function askRoute({ model, stream, now = Date.now, token, gameOf, reports }: AskRouteOptions = {}): AskRoute {
+function answering({ model, stream, now = Date.now, token, gameOf, reports }: AskRouteOptions = {}): AskRoute {
   // The same guard `/ask` in the chat stands behind, with the address where
   // the player id would be. See `Allowance` in bot.ts for why checking is
   // spending, and `MAX_ASKERS` for why the map is capped.
@@ -514,6 +527,48 @@ export function askRoute({ model, stream, now = Date.now, token, gameOf, reports
     } finally {
       clearTimeout(timer);
     }
+  };
+}
+
+/**
+ * The route, saying on the way out which texts this process is serving.
+ *
+ * A wrapper rather than a line in each of the fourteen places a response is
+ * built. The rule *put the header on every answer* is the kind that gets
+ * remembered eleven times out of fourteen, and the three it does not are the
+ * three a guard then reads as **cannot tell** — which is exactly the answer
+ * that stops anybody looking. One place, so there is nothing to forget.
+ *
+ * A refusal carries it too, and that is the point rather than an oversight:
+ * the guard asks with an `OPTIONS` preflight, which is answered `204` before
+ * any question is read, costs the model nothing and sends nobody a message.
+ * A fingerprint only a successful answer carried could not be read without
+ * spending a question.
+ */
+export function askRoute({ serving = servingFingerprint, ...options }: AskRouteOptions = {}): AskRoute {
+  const answer = answering(options);
+
+  return async (request, address) => {
+    const response = await answer(request, address);
+
+    // A throw here is the same fact as a `null`: this process cannot say what
+    // it is serving. It must not be the same fact as *the bot is down*. The
+    // header is a diagnostic, and a diagnostic that can fail the answer it is
+    // attached to has made the deployment less reliable than not measuring it
+    // — which is what `audit-promises.mjs` asks of every injected dependency,
+    // and it asked of this one before any player did.
+    let fingerprint: string | null = null;
+    try {
+      fingerprint = serving();
+    } catch {
+      fingerprint = null;
+    }
+
+    // Absent when the bot cannot read its own texts: a missing header is a
+    // third state, and writing "unknown" into it would turn that state into a
+    // string somebody compares.
+    if (fingerprint !== null) response.headers.set(SERVING_HEADER, fingerprint);
+    return response;
   };
 }
 

@@ -1050,6 +1050,13 @@ const NOT_CONNECTED: Readonly<Record<string, string>> = {
   'audit-mutants.mjs': VACUOUS,
   'audit-podlock.mjs': VACUOUS,
   'audit-reachable.mjs': VACUOUS,
+  // Not `process.exitCode = finish(...)`, and deliberately: it reports on a
+  // remote process, so it has a state a file-reading audit has not got —
+  // *nothing was established*. `finish` knows 0 and 1; this splits the 1 into
+  // *the answer is no* (1) and *there was no answer* (2). The two cannot drift
+  // apart unnoticed, because the script throws if `finish` printed an
+  // all-clear for a verdict that was not `serving`.
+  'audit-serving.mjs': NOT_HELD.noEmptiness,
   'audit-variants.mjs': VACUOUS,
   'audit-whose.mjs': NOT_HELD.furtherArms,
 };
