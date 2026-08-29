@@ -1049,6 +1049,13 @@ const NOT_CONNECTED: Readonly<Record<string, string>> = {
   'audit-drawings.mjs': VACUOUS,
   'audit-mutants.mjs': VACUOUS,
   'audit-podlock.mjs': VACUOUS,
+  // Like `audit-serving.mjs`, and for a related reason: its exit is not `0` or
+  // `1` from a count of findings. The donor clone may be absent, and *nothing
+  // was checked* is a third state that takes exit 2 — the absence of the data
+  // is not the absence of a defect. Written as two `if`s rather than an
+  // `if`/`else` because **a top-level `} else {` sends this very file into an
+  // infinite loop**, measured by truncating that script line by line.
+  'audit-quotes.mjs': NOT_HELD.noEmptiness,
   'audit-reachable.mjs': VACUOUS,
   // Not `process.exitCode = finish(...)`, and deliberately: it reports on a
   // remote process, so it has a state a file-reading audit has not got —

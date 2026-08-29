@@ -474,6 +474,20 @@ export const DECLARED = [
       'canonical `&nbsp;` over 1,584 bodies found nothing at all',
   },
   {
+    module: 'lib/quotes.mjs',
+    name: 'UNSPOKEN_PLANS',
+    kind: 'record',
+    askedIn: 'scripts/audit-quotes.mjs',
+    asks: 'unspokenIn',
+    because:
+      'the six plans of seventy-two that no daily quote speaks for, and which the push therefore ' +
+      'never sends. It excuses a real gap — sixty-six quotes for seventy-two plans — recorded ' +
+      'rather than repaired because writing one is a judgement and it is the owner\'s, the same ' +
+      'bar the untranslated titles of #56 and #57 are held at. `audit-quotes.mjs` re-derives the ' +
+      'list with `unspokenIn` on every run and compares it entry by entry, so a gap that was ' +
+      'filled and a seventh that appeared cannot look the same in a count',
+  },
+  {
     module: 'lib/timing.mjs',
     name: 'DECLARED',
     kind: 'record',
