@@ -297,6 +297,36 @@ const hasBun = (() => {
 })();
 
 describe.skipIf(!hasBun)('what `--filter \'*\'` does when a workspace stops declaring the script', () => {
+  /**
+   * The marker `a`'s script leaves behind, and why it is a file.
+   *
+   * This case needs a control: *something ran*, so that "bun said nothing
+   * about `b`" is not vacuously true of a command that did nothing at all.
+   * That control used to be `echo A-RAN` and an assertion on the captured
+   * stdout, and **it went red at a clean checkout on 2026-08-29** with
+   *
+   *     expected '$ bun run --filter \'*\' test\na test…' to contain 'A-RAN'
+   *
+   * `bun run --filter` does not let a workspace write to the terminal; it
+   * captures each one and relays it under a prefix. The capture above is that
+   * relay having delivered `a test: Exited with code 0` and not the line the
+   * script printed — MEASURED, because a script writing to a file instead of
+   * stdout produces that exact output, banner and all. **The script ran. Its
+   * stdout did not arrive.**
+   *
+   * Quiet runs did not reproduce it: 10 alone, 48 at six-way concurrency, and
+   * 12 through a nested `--filter` all passed. It wants the load of the whole
+   * repository's suites, which is the one place the control was never worth
+   * being fragile in.
+   *
+   * A file is written by the script itself and read after the process has
+   * exited. Nothing relays it, so nothing can drop it — and it is a STRICTLY
+   * BETTER control, because it proves the script ran rather than that its
+   * output was successfully forwarded, which was never the subject here.
+   */
+  const MARKER = 'a-ran.txt';
+  const LEAVES_A_MARKER = `echo A-RAN > ${MARKER}`;
+
   /** A two-workspace monorepo, `a` and `b`, with the scripts given. */
   function scratch(a: string | null, b: string | null): string {
     const dir = mkdtempSync(join(tmpdir(), 'leela-gate-'));
@@ -343,25 +373,35 @@ describe.skipIf(!hasBun)('what `--filter \'*\'` does when a workspace stops decl
    * it is skipping, so a scratch monorepo built out here would be built — and
    * `bun` run — on the very machine the skip exists for.
    */
-  function ran(a: string | null, b: string | null): { status: number; output: string } {
+  function ran(
+    a: string | null,
+    b: string | null,
+  ): { status: number; output: string; aRan: boolean } {
     const dir = scratch(a, b);
     try {
-      return run(dir);
+      const outcome = run(dir);
+      // Read before the tree goes: the marker is the whole control, and a
+      // `finally` that deletes the directory runs before any assertion does.
+      return { ...outcome, aRan: existsSync(join(dir, 'packages', 'a', MARKER)) };
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
   }
 
   it('says nothing whatever about the workspace that lost it, and exits 0', () => {
-    const one = ran('echo A-RAN', null);
+    const one = ran(LEAVES_A_MARKER, null);
 
-    expect(one.output).toContain('A-RAN');
-    expect(one.output).not.toContain('b test');
+    // The control, off disk rather than out of a relayed stream. See MARKER.
+    expect(one.aRan, `the run was vacuous. bun said:\n${one.output}`).toBe(true);
+
+    // And the property itself: nothing whatever about the workspace that lost
+    // the script. This one IS about what bun says, so it reads what bun said.
+    expect(one.output, 'bun named the workspace that has no test script').not.toContain('b test');
     expect(one.status).toBe(0);
   });
 
   it('is loud when the script is there and fails', () => {
-    const failing = ran('echo A-RAN', 'exit 3');
+    const failing = ran(LEAVES_A_MARKER, 'exit 3');
 
     expect(failing.output).toContain('b test: Exited with code 3');
     expect(failing.status).not.toBe(0);
