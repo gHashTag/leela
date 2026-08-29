@@ -114,15 +114,22 @@ describe('reading a config that has comments in it', () => {
     expect(stripped.length, 'what the strip did').toBeLessThan(withAGlob.length);
   });
 
-  it('does not make a glob safe, which is what the obvious sentence would say', () => {
-    // The honest half. Neither reader is quote-aware, so both damage the glob
-    // and neither throws — the difference is that one of them damages it
-    // without moving anything. Said out loud so nobody reads the fix above as
-    // more than it is.
+  it('LEAVES THE GLOB ALONE, which it did not until the reader knew about quotes', () => {
+    /*
+     * This assertion used to read `['src    *']`, and the comment above it said
+     * *neither reader is quote-aware, so both damage the glob* — an honest
+     * description of a real limitation, written down so nobody would read the
+     * offset fix above as more than it was.
+     *
+     * It is no longer true of `blank`. The reader tracks strings now, so a
+     * `/*` inside a JSON string is not a comment and the glob survives whole.
+     * The strip it replaced still eats it, which is the difference this case
+     * exists to show — and the difference is bigger than it was.
+     */
     const strip = (text: string) => JSON.parse(text.replace(/\/\*[\s\S]*?\*\//g, '')) as { include: string[] };
 
-    expect(strip(withAGlob).include).toEqual(['src*']);
-    expect((JSON.parse(blank(withAGlob)) as { include: string[] }).include).toEqual(['src    *']);
+    expect(strip(withAGlob).include, 'what the strip does').toEqual(['src*']);
+    expect((JSON.parse(blank(withAGlob)) as { include: string[] }).include).toEqual(['src/**' + '/*']);
   });
 
   it('still reads the configs this file is about', () => {

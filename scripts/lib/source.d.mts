@@ -21,6 +21,21 @@ export interface Call {
  *   and read a stylesheet as code.
  */
 export function blank(source: string, syntax?: 'js' | 'html' | 'css'): string;
+
+/**
+ * Whether {@link blank} read the source, or fell back to the cruder reader.
+ *
+ * `false` means the scan ended inside a string, a template or a pattern — it
+ * lost its place, so its answer is discarded and the two regular expressions
+ * this replaced are used instead. The fallback is otherwise silent, and a
+ * silent fallback is the shape this repository keeps finding at the bottom of
+ * its own defects; this is how it can be asked about.
+ *
+ * MEASURED over 478 files: one declines, `apps/mobile/src/App.tsx`, because
+ * JSX is a different grammar. Always `true` for `html` and `css`, which are
+ * matched rather than scanned.
+ */
+export function blankIsTrusted(source: string, syntax?: 'js' | 'html' | 'css'): boolean;
 export function callsTo(source: string, name: string): Call[];
 
 /**

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 // Shared with the audit scripts, which are plain JavaScript.
 import { workspacePackages } from '../../../scripts/lib/claims.mjs';
-import { blank, callsTo } from '../../../scripts/lib/source.mjs';
+import { blank, blankIsTrusted, callsTo, sourceFilesUnder } from '../../../scripts/lib/source.mjs';
 
 /**
  * Reading a source file in a check.
@@ -560,12 +560,24 @@ describe('a document has comments too', () => {
   });
 
   it('leaves a double slash alone in a stylesheet, because it is not a comment there', () => {
-    // The reason `css` is its own mode rather than the module blanker reused:
-    // `//` starts a comment in a module and nothing in a stylesheet.
-    const sheet = '.a { content: "before // after" }';
+    /*
+     * The reason `css` is its own mode rather than the module blanker reused:
+     * `//` starts a comment in a module and nothing in a stylesheet.
+     *
+     * The example used to be `.a { content: "before // after" }`, chosen when
+     * the module blanker took a `//` wherever it found one — inside a string as
+     * readily as outside. It knows about strings now, so that sheet comes back
+     * whole from BOTH modes and demonstrates nothing. **A case that stops
+     * discriminating is a case that has to be replaced, not deleted**: the
+     * property is still true and still worth holding, so the `//` is moved to
+     * where a stylesheet really does keep one — outside any string, in a
+     * selector's own text.
+     */
+    const sheet = '.a { color: red } // not a comment in css\n.b { color: blue }';
 
-    expect(blank(sheet, 'css')).toBe(sheet);
-    expect(blank(sheet), 'the module blanker does take it').not.toBe(sheet);
+    expect(blank(sheet, 'css'), 'css leaves it').toBe(sheet);
+    expect(blank(sheet), 'the module blanker takes it').not.toBe(sheet);
+    expect(blank(sheet), 'and takes only the rest of that line').toContain('.b { color: blue }');
   });
 
   it('keeps every offset, as the module blanker does', () => {
@@ -736,5 +748,134 @@ describe('a claim about source text', () => {
     );
 
     expect(reading.length).toBeGreaterThan(5);
+  });
+});
+
+/**
+ * The blanker reads the file rather than matching it — and says when it could
+ * not.
+ *
+ * Until 2026-08-29 `blank` was two regular expressions with one concession to
+ * strings: an `[^:]` guard so that `https://example.com` was not read as a
+ * comment. Everything else went. `const a = "x // y"` came back blanked from
+ * the `//` onward, which meant every check reading blanked source was blind to
+ * the rest of that line.
+ *
+ * **The first repair was worse than the defect, and that is why the fallback
+ * exists.** A scanner that tracks quotes and not patterns meets `/['"]/`,
+ * takes the `'` for a string, never finds its close, and stops blanking
+ * comments for the whole rest of the file — silently. So the reader returns
+ * nothing at all rather than a wrong answer, and `blank` falls back to the two
+ * regular expressions. The worst case is what was there before, never worse.
+ */
+describe('the blanker knows a string from a comment', () => {
+  it('KEEPS A COMMENT MARKER THAT IS INSIDE A STRING', () => {
+    // The defect, as an assertion. Measured before the repair: this came back
+    // as `const a = "x ` and nine spaces.
+    expect(blank('const a = "x // y"; const b = 2;')).toBe('const a = "x // y"; const b = 2;');
+    expect(blank('const s = "/* a"; const t = "b */"; const u = 3;')).toBe(
+      'const s = "/* a"; const t = "b */"; const u = 3;',
+    );
+  });
+
+  it('still blanks a comment that is a comment', () => {
+    expect(blank('const a = 1; // gone')).toBe('const a = 1;        ');
+    expect(blank('/* gone */ const a = 1;')).toBe('           const a = 1;');
+  });
+
+  it('TELLS A PATTERN FROM A DIVISION, which is where the naive fix died', () => {
+    /*
+     * `/['"]/` is the case that killed the first attempt: a reader tracking
+     * quotes but not patterns takes the `'` inside the character class for a
+     * string opening, never finds its close, and every comment after it in the
+     * file stays unblanked.
+     */
+    const withPattern = `const re = /['"]/; /* gone */ const after = 1;`;
+
+    expect(blank(withPattern)).toHaveLength(withPattern.length);
+    expect(blank(withPattern)).toContain(`/['"]/`);
+    expect(blank(withPattern)).not.toContain('gone');
+    expect(blank(withPattern)).toContain('const after = 1;');
+    /*
+     * A slash INSIDE a character class closes nothing — `/[/]/` is one
+     * pattern, not two. Added because falsification found the branch untested,
+     * and then the FIRST case I wrote for it was still green: with the class
+     * tracking disabled, `/[/]/; /* gone *​/` mis-parses into a shorter pattern
+     * and a division, and the comment after it gets blanked anyway. Same
+     * output, nothing proved.
+     *
+     * This one differs. The class holds a quote as well as a slash, so a
+     * reader that ends the pattern early takes the `"` for a string opening
+     * and eats the real string that follows.
+     */
+    const withClass = 'const re = /[/"]/; const s = "a // b";';
+
+    expect(blank(withClass)).toBe(withClass);
+
+    // Division, where the slash must NOT open a pattern.
+    expect(blank('const half = total / 2; // gone')).toBe('const half = total / 2;        ');
+    // And the keywords after which it must, though a word precedes the slash.
+    expect(blank('const f = () => { return /a/; }; /* gone */')).toBe(
+      'const f = () => { return /a/; };           ',
+    );
+  });
+
+  it('reads a template, and the code inside its holes', () => {
+    expect(blank('const t = `a ${x} // not a comment`; const b = 2;')).toBe(
+      'const t = `a ${x} // not a comment`; const b = 2;',
+    );
+    // A comment inside `${}` IS code, and is blanked.
+    expect(blank('const t = `a ${x /* gone */} b`;')).toBe('const t = `a ${x           } b`;');
+  });
+
+  it('skips a shebang, which is not JavaScript', () => {
+    /*
+     * `#!/usr/bin/env node` offers a `/` where nothing has ended a value, so it
+     * reads as a pattern — `/usr/` with `bin` for flags. MEASURED: without this,
+     * 32 of 478 files could not be read and every `scripts/audit-*.mjs` was
+     * among them. They all fell back silently, so the repair looked like it
+     * worked.
+     */
+    expect(blankIsTrusted('#!/usr/bin/env node\nconst a = "x // y";')).toBe(true);
+    expect(blank('#!/usr/bin/env node\nconst a = 1; // gone')).toBe('#!/usr/bin/env node\nconst a = 1;        ');
+  });
+
+  it('KEEPS EVERY OFFSET, which is the promise the whole thing rests on', () => {
+    // A check that finds something in the blanked text and reads around it in
+    // the original is reading a different place unless these line up.
+    const cases = [
+      'const a = "x // y"; // gone',
+      '#!/usr/bin/env node\nconst re = /a/g; /* gone */',
+      'const t = `a ${b /* gone */} c`;',
+    ];
+    for (const source of cases) expect(blank(source)).toHaveLength(source.length);
+  });
+
+  it('SAYS WHEN IT COULD NOT READ, rather than answering anyway', () => {
+    // The bail-out. An unterminated string means the reader lost its place
+    // somewhere back there, and everything since was read as the wrong kind of
+    // text — so it declines, and `blank` uses the older, cruder reader.
+    expect(blankIsTrusted('const a = "never closed')).toBe(false);
+    expect(blankIsTrusted('const a = 1;')).toBe(true);
+    // And the fallback still blanks: declining is not doing nothing.
+    expect(blank('const a = "never closed\nconst b = 1; // gone')).toContain('const b = 1;');
+    expect(blank('const a = "never closed\nconst b = 1; // gone')).not.toContain('gone');
+  });
+
+  it('can read every source file in this repository but one, and names it', () => {
+    /*
+     * The sweep, as a standing assertion rather than a run I did once. One file
+     * declines: `apps/mobile/src/App.tsx`, because JSX puts a `/` in `</Text>`
+     * where nothing has ended a value and this is a JavaScript reader, not a
+     * JSX one. It gets the older answer — which is what every file got before.
+     *
+     * Named rather than counted, so a second one cannot hide inside a number.
+     */
+    const declines = [...sourceFilesUnder(join(REPO, 'apps')), ...sourceFilesUnder(join(REPO, 'packages'))]
+      .filter((file: string) => !file.includes('node_modules'))
+      .filter((file: string) => !blankIsTrusted(readFileSync(file, 'utf8')))
+      .map((file: string) => relative(REPO, file));
+
+    expect(declines).toEqual(['apps/mobile/src/App.tsx']);
   });
 });

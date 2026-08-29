@@ -474,6 +474,18 @@ export const DECLARED = [
       'canonical `&nbsp;` over 1,584 bodies found nothing at all',
   },
   {
+    module: 'lib/source.mjs',
+    name: 'BEFORE_A_REGEX',
+    kind: 'vocabulary',
+    because:
+      'the keywords after which a slash opens a pattern rather than dividing — `return /x/` and ' +
+      '`typeof /x/` both end in a word character, which the ordinary heuristic reads as the end of ' +
+      'a value. It excuses nothing: every one is asked on every slash the reader meets. It is a ' +
+      'list because getting it wrong is not a wrong answer but a lost place — the reader takes the ' +
+      'pattern body for code, meets a quote inside a character class, and stops blanking comments ' +
+      'for the rest of the file. That is the failure `blankIsTrusted` exists to make askable',
+  },
+  {
     module: 'lib/serving.mjs',
     name: 'HALVES',
     kind: 'vocabulary',
