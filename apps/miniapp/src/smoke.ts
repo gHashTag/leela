@@ -71,7 +71,7 @@ export interface Check {
    * hard-coded because it is a fact about how that page splits its data, and
    * the 2D board next door splits its own differently.
    */
-  alternatives?: string;
+  alternatives?: string | string[];
   /**
    * The prefix of chunks this page fetches only when a reader asks for them.
    *
@@ -204,13 +204,14 @@ export const DEPLOYMENT_CHECKS: Check[] = [
      * (473,971 + 209,779 + 143,794), verified against
      * `performance.getEntriesByType('resource')` on the live site.
      *
-     * The browser also fetched 16,947 bytes of stylesheet that this does not
-     * count — 209,779 + 473,971 + 143,794 is the whole of it — so the true
-     * first load is 844,491 / 243,095. The number below is a ceiling on the
-     * JAVASCRIPT, which is what this can see, set at today so it only moves
-     * down.
+     * 880,000 SINCE 2026-08-29, when the stylesheet joined the sum and the
+     * figure became 844,491 / 243,095 — **exactly what the browser fetched**,
+     * file for file: 473,971 + 209,779 + 143,794 + 16,947. It is no longer a
+     * ceiling on the JavaScript; it is a ceiling on the load, and it is the
+     * first number here that has been checked against a browser rather than
+     * against another reading of the same bundle.
      */
-    maxReaderBytes: 850_000,
+    maxReaderBytes: 880_000,
     ownAssets: true,
   },
   {
@@ -226,17 +227,23 @@ export const DEPLOYMENT_CHECKS: Check[] = [
      * the 2D board's twenty-four dataset chunks"*. A stated gap that nobody
      * closed is a gap.
      *
-     * 700,000 bytes: the entry and the heaviest of the twenty-two languages —
-     * 652,461 measured today, which is 120,130 + 532,331 exactly — and a
-     * little. It leaves out the stylesheet and the 124 kB of images every
-     * reader also fetches, the board painting and the gem, because what this
-     * follows is the entry and the chunks the entry names. The browser
-     * measured the whole first load at 459,501 decoded for an ENGLISH reader,
-     * against this figure's Tamil one.
+     * 820,000 bytes against 785,199 measured, and that figure is now the WHOLE
+     * load rather than the JavaScript: 120,130 entry + 8,376 stylesheet +
+     * 4,816 gem + 532,331 Tamil + 119,546 painting. It was 700,000 for a day,
+     * against a sum that left out the stylesheet and 124 kB of pictures.
+     *
+     * A browser fetching this board in English and a light theme downloads
+     * 459,501 — the same five kinds of file with the cheaper choice in each of
+     * the two groups. This bounds the worst reader, which is the one a ceiling
+     * is for.
      */
-    maxReaderBytes: 700_000,
-    /** One of twenty-two, exactly as the 3D board splits them. */
-    alternatives: 'plans.',
+    maxReaderBytes: 820_000,
+    /**
+     * Two choices a reader makes, not one: which of twenty-two languages, and
+     * which of two paintings. `board-light` is 119,546 bytes and `board-dark`
+     * 40,294, and a browser fetches exactly one of them.
+     */
+    alternatives: ['plans.', 'board-'],
     /** The rules book, fetched only when somebody opens it. See `Check.lazy`. */
     lazy: 'rules-',
     ownAssets: true,
@@ -494,6 +501,29 @@ export function chunksIn(code: string): string[] {
 }
 
 /**
+ * The pictures a bundle names, as siblings of itself.
+ *
+ * A browser fetching a board painting and a gem is a browser downloading
+ * 164,656 bytes, and nothing here counted them: this followed JavaScript, and
+ * the page's own HTML names neither — the code does, because that is where the
+ * bundler puts an imported image.
+ *
+ * Written WITHOUT the `assets/` prefix on purpose. Inside a file that already
+ * lives in `assets/`, a sibling is `./gem-CJcj1JLD.webp`, and a first search
+ * requiring the prefix found nothing at all and read as "there are no
+ * pictures" — the query, not the world.
+ */
+export function picturesIn(code: string): string[] {
+  return [
+    ...new Set(
+      [...code.matchAll(/["'(]\.?\/?([A-Za-z0-9._-]+\.(?:webp|png|jpe?g|svg|avif|gif))["')]/g)].map(
+        (found) => found[1] as string,
+      ),
+    ),
+  ];
+}
+
+/**
  * The chunks a first load really fetches, out of all the entry NAMES.
  *
  * {@link chunksIn} finds every `"./x.js"` string in the bundle, and a bundle
@@ -563,16 +593,30 @@ export interface ReaderCost {
  * The wire total is undefined unless every part reported one: a sum missing
  * three of its terms is not a smaller number, it is a wrong one.
  */
-export function readerCost(files: Weighed[], alternatives?: string): ReaderCost {
-  const optional = alternatives === undefined ? [] : files.filter((file) => file.name.startsWith(alternatives));
-  const always = alternatives === undefined ? files : files.filter((file) => !file.name.startsWith(alternatives));
+export function readerCost(files: Weighed[], alternatives?: string | string[]): ReaderCost {
+  /*
+   * A LIST OF GROUPS, not one prefix. It was one, and one was enough while the
+   * only choice a reader made was which language to read. The classic board
+   * makes two: the twenty-two languages, and the board painting, which is
+   * drawn light or dark and ships as `board-light` and `board-dark` — 119,546
+   * and 40,294 bytes of which a browser fetches exactly one.
+   */
+  const groups = alternatives === undefined ? [] : [alternatives].flat();
+  const inAGroup = (file: Weighed) => groups.some((prefix) => file.name.startsWith(prefix));
 
-  const heaviest = optional.reduce<Weighed | null>(
-    (worst, file) => (worst === null || file.bytes > worst.bytes ? file : worst),
+  const always = files.filter((file) => !inAGroup(file));
+  const heaviestOf = (prefix: string) =>
+    files
+      .filter((file) => file.name.startsWith(prefix))
+      .reduce<Weighed | null>((worst, file) => (worst === null || file.bytes > worst.bytes ? file : worst), null);
+
+  const worst = groups.map(heaviestOf).filter((file): file is Weighed => file !== null);
+  const heaviest = worst.reduce<Weighed | null>(
+    (all, file) => (all === null || file.bytes > all.bytes ? file : all),
     null,
   );
 
-  const counted = heaviest === null ? always : [...always, heaviest];
+  const counted = [...always, ...worst];
   const measured = counted.every((file) => file.transferred !== undefined);
 
   return {
@@ -702,28 +746,74 @@ async function weighTheReader(
     // Chunks sit beside the entry, so they resolve against its directory.
     const beside = `${check.path}${entry.slice(0, entry.lastIndexOf('/') + 1)}${name}`;
     const { status, text, transferred } = await fetcher(`${root}/${beside}`);
-    return status === 200
-      ? { name, bytes: byteLength(text), transferred }
-      : { name, bytes: 0, transferred: undefined };
+    if (status !== 200) return { name, bytes: 0, transferred: undefined };
+
+    /*
+     * A PICTURE IS NOT TEXT, and weighing one as text inflates it.
+     *
+     * `byteLength(await response.text())` decodes the body as UTF-8 and
+     * re-encodes it, so every byte a WebP holds that is not valid UTF-8 comes
+     * back as the replacement character — three bytes where there was one.
+     * MEASURED: the gem read 8,832 against its true 4,816, and the board
+     * painting 216,369 against 119,546. Both nearly doubled.
+     *
+     * A compressed image is not compressed again on the wire, so what the
+     * server says it sent IS its size. Where the server says nothing the
+     * honest answer is that this one is unmeasured, which `readerCost` already
+     * carries through to the whole total rather than quietly dropping.
+     *
+     * Found because a number could not be explained: the classic board came to
+     * 886,038 where the parts added to 785,199, and 100,839 of daylight is not
+     * a rounding.
+     */
+    const picture = /\.(webp|png|jpe?g|svg|avif|gif)$/i.test(name);
+
+    return picture
+      ? { name, bytes: transferred ?? 0, transferred }
+      : { name, bytes: byteLength(text), transferred };
   };
 
   const first = await weigh(entry.slice(entry.lastIndexOf('/') + 1));
+
+  /*
+   * Everything else the page itself names — in practice the stylesheet.
+   *
+   * This weighed the JavaScript and nothing else, so the number it reported
+   * was 16,947 bytes short of what the browser fetched for the 3D board and
+   * 132,738 short for the classic one. A ceiling on part of a load is not a
+   * ceiling on a load.
+   */
+  const alsoNamed = assets.filter((asset) => asset !== entry);
+  const beside = [];
+  for (const asset of alsoNamed) beside.push(await weigh(asset.slice(asset.lastIndexOf('/') + 1)));
   // The chunks a first load really fetches, not every chunk the bundle names.
   // See `eagerChunksIn`: this counted the lazy ones too, which on the 3D board
   // added a language chunk the browser never asks for and on the classic board
   // added 1.5 MB of rules that `content.ts` fetches only when somebody opens
   // the book.
-  const named = eagerChunksIn(
-    (await fetcher(`${root}/${check.path}${entry}`)).text,
-  );
+  const entryCode = (await fetcher(`${root}/${check.path}${entry}`)).text;
+  const named = eagerChunksIn(entryCode);
   const rest = [];
   for (const name of named) rest.push(await weigh(name));
 
-  const missing = [first, ...rest].filter((file) => file.bytes === 0).map((file) => file.name);
+  /*
+   * The pictures, which a browser fetches and this could not see.
+   *
+   * The classic board draws a painted board and a gem — 164,656 bytes of
+   * WebP — and NONE of them are named in the page: they are named by the code,
+   * as siblings of the entry, because that is where the bundler puts them.
+   * A first search for `assets/…` in the page, the stylesheet and the bundle
+   * found only the stylesheet, and the reason was the question: inside a file
+   * that already lives in `assets/`, a sibling is written without the prefix.
+   */
+  const pictures = picturesIn(entryCode);
+  for (const name of pictures) rest.push(await weigh(name));
+
+  const missing = [first, ...beside, ...rest].filter((file) => file.bytes === 0).map((file) => file.name);
   // Chunks nobody fetches on a first load are dropped before the sum. See
   // `Check.lazy`: on the classic board this is a fact a person states, because
   // its bundle writes the eager and the lazy import the same way.
-  const paid = [first, ...rest].filter(
+  const paid = [first, ...beside, ...rest].filter(
     (file) => check.lazy === undefined || !file.name.startsWith(check.lazy),
   );
   const cost = readerCost(paid, check.alternatives);

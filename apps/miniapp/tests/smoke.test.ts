@@ -8,6 +8,7 @@ import {
   assetCheck,
   chunksIn,
   eagerChunksIn,
+  picturesIn,
   describeResults,
   readerCost,
   runCheck,
@@ -557,7 +558,7 @@ describe('the ceilings the 3D board ships with', () => {
      * `eagerChunksIn` reads Vite's own dependency table now, and what it
      * reports agrees to the byte with what the browser fetched.
      */
-    expect(board.maxReaderBytes).toBe(850_000);
+    expect(board.maxReaderBytes).toBe(880_000);
     // Without this the guard would sum twenty-one languages nobody downloads
     // and fail a board that is exactly right.
     expect(board.alternatives).toBe('plans.');
@@ -575,9 +576,12 @@ describe('the ceilings the classic board ships with', () => {
   const board = DEPLOYMENT_CHECKS.find((check) => check.what === 'the classic 2D board') as Check;
 
   it('holds a whole reader to the entry and one language', () => {
-    // 652,461 measured live, which is 120,130 + 532,331 exactly.
-    expect(board.maxReaderBytes).toBe(700_000);
-    expect(board.alternatives).toBe('plans.');
+    // 785,199 measured live: 120,130 entry + 8,376 stylesheet + 4,816 gem +
+    // 532,331 Tamil + 119,546 painting.
+    expect(board.maxReaderBytes).toBe(820_000);
+    // TWO groups, not one: which of twenty-two languages, and which of two
+    // paintings. A browser fetches exactly one from each.
+    expect(board.alternatives).toEqual(['plans.', 'board-']);
   });
 
   it('does not count the rules book, which nobody fetches until they open it', () => {
@@ -702,5 +706,90 @@ describe('which chunks a first load really fetches', () => {
     // live classic board reports.
     expect(readerCost(paid, 'plans.').bytes).toBe(652_461);
     expect(readerCost(files, 'plans.').bytes).toBe(2_168_530);
+  });
+});
+
+describe('the pictures a reader downloads', () => {
+  it('finds them as siblings, which is how a bundle names them', () => {
+    /*
+     * The board painting and the gem are named by the CODE, not by the page —
+     * that is where a bundler puts an imported image — and WITHOUT the
+     * `assets/` prefix, because the file naming them already lives there.
+     * A first search that required the prefix found nothing and read as
+     * "there are no pictures": the query, not the world.
+     */
+    const code = 'i("./board-light-CYIpH25r.webp"),u("./gem-CJcj1JLD.webp"),x("./board-dark-7shU10ig.webp")';
+
+    expect(picturesIn(code)).toEqual([
+      'board-light-CYIpH25r.webp',
+      'gem-CJcj1JLD.webp',
+      'board-dark-7shU10ig.webp',
+    ]);
+  });
+
+  it('is not fooled by the chunks beside them', () => {
+    expect(picturesIn('import("./plans.ta-CC6xpm4e.js")')).toEqual([]);
+    expect(picturesIn('')).toEqual([]);
+  });
+
+  it('COUNTS THE STYLESHEET AND THE PICTURE ON THE WHOLE PATH', async () => {
+    /*
+     * Through `runChecks` and a fetcher, because both live in
+     * `weighTheReader` and the tests around them only exercise pure
+     * functions. FOUND BY FALSIFICATION, twice: dropping the page's non-JS
+     * assets and weighing pictures as text both left this file green.
+     *
+     * The picture is deliberately BINARY-SHAPED — its text is one character
+     * and its `content-length` says 9,000. Weighed as text it counts 1; weighed
+     * as the server sent it, 9,000. That is the whole of the second defect:
+     * `byteLength(await response.text())` re-encodes a WebP through UTF-8 and
+     * the gem came out at 8,832 against its true 4,816.
+     */
+    const files: Record<string, { text: string; transferred: number }> = {
+      '': {
+        text: ('<title>T</title><div id="board"></div>' +
+          '<script type="module" src="./assets/index-x.js"></script>' +
+          '<link rel="stylesheet" href="./assets/style-y.css">').padEnd(600, ' '),
+        transferred: 600,
+      },
+      'assets/index-x.js': { text: 'u("./pic-z.webp")'.padEnd(2000, ' '), transferred: 2000 },
+      'assets/style-y.css': { text: 'a'.repeat(5_000), transferred: 5_000 },
+      'assets/pic-z.webp': { text: '\uFFFD', transferred: 9_000 },
+    };
+    const fetcher: Fetcher = async (url) => {
+      const found = files[url.replace('https://site/', '')];
+      return found === undefined ? { status: 404, text: '' } : { status: 200, ...found };
+    };
+
+    const results = await runChecks('https://site/', fetcher, [
+      { path: '', what: 'a board', mustContain: ['id="board"'], minBytes: 500, maxReaderBytes: 999_999, ownAssets: true },
+    ]);
+    const cost = results.find((one) => one.check.what.startsWith('what a reader downloads'));
+
+    // 2,000 entry + 5,000 stylesheet + 9,000 picture. Miss either and it is
+    // 11,000 or 7,001 — both of which this refuses.
+    expect(cost?.bytes).toBe(16_000);
+  });
+
+  it('takes the heavier of a pair a reader chooses between', () => {
+    /*
+     * `board-light` is 119,546 and `board-dark` 40,294, and a browser fetches
+     * exactly one — the same shape as the twenty-two languages, which is why
+     * `alternatives` became a list of groups rather than one prefix.
+     */
+    const files = [
+      { name: 'index.js', bytes: 120_130 },
+      { name: 'index.css', bytes: 8_376 },
+      { name: 'gem.webp', bytes: 4_816 },
+      { name: 'plans.ta.js', bytes: 532_331 },
+      { name: 'plans.en.js', bytes: 206_633 },
+      { name: 'board-light.webp', bytes: 119_546 },
+      { name: 'board-dark.webp', bytes: 40_294 },
+    ];
+
+    // 785,199 — the number the live classic board reports.
+    expect(readerCost(files, ['plans.', 'board-']).bytes).toBe(785_199);
+    // One group only, and the paintings are both counted: 705,947.
+    expect(readerCost(files, 'plans.').bytes).toBe(785_199 + 40_294);
   });
 });
