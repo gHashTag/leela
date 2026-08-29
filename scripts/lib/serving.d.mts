@@ -7,11 +7,28 @@
  * file that imports it, and unlike a directive it says what the shapes are.
  */
 
-/** Must match `SERVING_HEADER` in `apps/bot/src/serving.ts`. */
+/** Must match `SERVING_HEADER` and `CODE_HEADER` in `apps/bot/src/serving.ts`. */
 export const SERVING_HEADER: string;
+export const CODE_HEADER: string;
 
 /** Twelve lowercase hex characters, and nothing else. */
 export const FINGERPRINT: RegExp;
+
+/**
+ * The two halves of the question, named once.
+ *
+ * A `Pair` has both because a pass needs both: the first version of this guard
+ * asked only about the texts while its sentence claimed the whole deployment,
+ * and an edit to the bot's own source went unnoticed by it entirely.
+ */
+export interface Pair {
+  /** The dataset the bot serves — `packages/content/data`. */
+  texts: string | null;
+  /** The TypeScript it runs — `apps/bot/src` and every `packages/<name>/src`. */
+  code: string | null;
+}
+
+export const HALVES: ReadonlyArray<{ key: keyof Pair; header: string; what: string }>;
 
 /**
  * The three states a guard over a remote process can be in.
@@ -29,20 +46,24 @@ export interface Verdict {
   why: string;
 }
 
-/**
- * The fingerprint a response carries, or null.
- *
- * @param headers anything with a `get` — a `Headers`, or a map in a test.
- *   Null for a header that is absent, and null too for one whose value is not
- *   a fingerprint: an unrecognised string is *cannot tell*, never *stale*.
- */
-export function fingerprintFrom(headers: { get?: (name: string) => string | null | undefined } | null | undefined): string | null;
+type HeaderBag = { get?: (name: string) => string | null | undefined } | null | undefined;
 
 /**
- * @param expected the repository's fingerprint, or null if it could not be computed
- * @param served what the live bot said, or null if it said nothing usable
+ * One fingerprint a response carries, or null.
+ *
+ * Null for a header that is absent, and null too for one whose value is not a
+ * fingerprint: an unrecognised string is *cannot tell*, never *stale*.
  */
-export function verdict(expected: string | null, served: string | null): Verdict;
+export function fingerprintFrom(headers: HeaderBag, name?: string): string | null;
+
+/** Both of them, by the names {@link HALVES} gives. */
+export function fingerprintsFrom(headers: HeaderBag): Pair;
+
+/**
+ * @param expected this checkout's pair; a null half means unreadable
+ * @param served what the live bot said; a null half means it did not say
+ */
+export function verdict(expected: Pair | null, served: Pair | null): Verdict;
 
 /** 0 serving, **1 stale, 2 unknown** — *no* and *no answer* are different. */
 export function exitCodeFor(state: ServingState): 0 | 1 | 2;

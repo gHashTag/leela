@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Is the live bot serving the texts this repository holds?
+ * Is the live bot running the code and the texts this repository holds?
  *
  *     bun scripts/audit-serving.mjs [url]
  *
@@ -28,16 +28,24 @@
  * origin header is required by the route and `https://t27.ai` is the board's
  * own, which is the one this is checking on behalf of.
  *
- * Three exits, because there are three states: **0** the bot serves what this
+ * Three exits, because there are three states: **0** the bot runs what this
  * checkout holds, **1** it does not, **2** nothing could be established. See
  * `lib/serving.mjs` for why the third is not folded into either of the others.
+ *
+ * **It asks two questions, and that is a correction made one day later.** The
+ * first version fingerprinted the texts alone, and `LOOP.md` then told every
+ * iteration that exit 0 meant *the bot is current* — a claim about the whole
+ * deployment that this had never measured. An edit anywhere in `apps/bot/src`
+ * left the texts fingerprint identical, so a green run would have certified a
+ * bot running code from any number of commits ago. Both halves are asked now,
+ * and a pass needs both.
  */
 
 import { execFileSync } from 'node:child_process';
 
-import { fingerprintOf, DATA_DIR } from '../apps/bot/src/serving.ts';
+import { fingerprintOf, codeFingerprint, DATA_DIR } from '../apps/bot/src/serving.ts';
 import { finish } from './lib/report.mjs';
-import { exitCodeFor, fingerprintFrom, verdict } from './lib/serving.mjs';
+import { exitCodeFor, fingerprintsFrom, verdict } from './lib/serving.mjs';
 
 const URL_TO_ASK = process.argv[2] ?? 'https://leela-production-e9a0.up.railway.app/api/ask';
 const ORIGIN = 'https://t27.ai';
@@ -77,9 +85,9 @@ function recentlyChanged() {
   }
 }
 
-const expected = fingerprintOf(DATA_DIR);
+const expected = { texts: fingerprintOf(DATA_DIR), code: codeFingerprint() };
 const live = await askLive(URL_TO_ASK);
-const served = live.headers === null ? null : fingerprintFrom(live.headers);
+const served = live.headers === null ? { texts: null, code: null } : fingerprintsFrom(live.headers);
 const answer = verdict(expected, served);
 
 const reached =
@@ -110,7 +118,7 @@ const deploy =
  */
 const alarm = {
   stale: {
-    heading: `\nThe live bot is not serving this checkout's texts:\n`,
+    heading: `\nThe live bot is not running this checkout:\n`,
     epilogue: deploy,
   },
   unknown: {
@@ -120,7 +128,7 @@ const alarm = {
 }[answer.state];
 
 const code = finish({
-  allClear: `The live bot is serving ${served} — the texts in this checkout, exactly.`,
+  allClear: `The live bot is running ${served.code} over ${served.texts} — this checkout, exactly.`,
   sections: [
     {
       failing: false,
@@ -128,7 +136,8 @@ const code = finish({
         `\nAsked ${URL_TO_ASK} as ${ORIGIN}, with an OPTIONS preflight: no question,`,
         'no tokens, no message to anybody.',
         reached,
-        `  this checkout fingerprints ${DATA_DIR.replace(`${process.cwd()}/`, '')} as ${expected ?? '(unreadable)'}`,
+        `  this checkout holds  texts ${expected.texts ?? '(unreadable)'}, code ${expected.code ?? '(unreadable)'}`,
+        `  the live bot said    texts ${served.texts ?? '(none)'}, code ${served.code ?? '(none)'}`,
       ],
     },
     {

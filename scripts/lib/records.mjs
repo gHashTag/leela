@@ -474,6 +474,18 @@ export const DECLARED = [
       'canonical `&nbsp;` over 1,584 bodies found nothing at all',
   },
   {
+    module: 'lib/serving.mjs',
+    name: 'HALVES',
+    kind: 'vocabulary',
+    because:
+      'the two questions asked of the live bot — the texts it serves and the code it runs. It ' +
+      'excuses nothing: every half is compared on every run and a pass needs all of them. It is ' +
+      'a list rather than two constants because the first version of that guard asked ONE of ' +
+      'these while its sentence claimed both, so a bot running eleven-hour-old code read as a ' +
+      'pass; naming the set in one place is what makes adding a third question a change to a ' +
+      'list rather than to four call sites, one of which gets missed',
+  },
+  {
     module: 'lib/namesakes.mjs',
     name: 'RECORDED',
     kind: 'record',

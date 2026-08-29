@@ -38,7 +38,7 @@ import {
 import type { Report } from '@leela/journal';
 
 import { Allowance, MAX_ASKERS } from './bot';
-import { SERVING_HEADER, servingFingerprint } from './serving';
+import { CODE_HEADER, SERVING_HEADER, runningFingerprint, servingFingerprint } from './serving';
 import { decide } from './take-in';
 import { whoSent } from './vouched';
 
@@ -158,6 +158,14 @@ export interface AskRouteOptions {
    * absence would be to delete the dataset.
    */
   serving?: () => string | null;
+  /**
+   * And which code, for the header beside it.
+   *
+   * Separate from `serving` because the two fail separately: a container can
+   * hold its texts and not its source, or the reverse, and one option covering
+   * both would make the guard unable to say which.
+   */
+  running?: () => string | null;
   /** Injected so the allowance can be tested without waiting out a minute. */
   now?: () => number;
   /** When set, answers stream as deltas; `model` stays the fallback. */
@@ -545,29 +553,49 @@ function answering({ model, stream, now = Date.now, token, gameOf, reports }: As
  * A fingerprint only a successful answer carried could not be read without
  * spending a question.
  */
-export function askRoute({ serving = servingFingerprint, ...options }: AskRouteOptions = {}): AskRoute {
+export function askRoute({
+  serving = servingFingerprint,
+  running = runningFingerprint,
+  ...options
+}: AskRouteOptions = {}): AskRoute {
   const answer = answering(options);
+
+  /**
+   * A reader's answer, or `null` however it failed.
+   *
+   * A throw is the same fact as a `null`: this process cannot say. It must not
+   * be the same fact as *the bot is down*. The header is a diagnostic, and a
+   * diagnostic that can fail the answer it is attached to has made the
+   * deployment less reliable than not measuring it — which is what
+   * `audit-promises.mjs` asks of every injected dependency, and it asked of
+   * the first of these before any player did.
+   *
+   * One helper for both, so the second reader cannot be added without the
+   * protection the first has. That is not hypothetical care: the second reader
+   * exists *because* the first one measured less than the sentence about it
+   * claimed, and the way that happened was one being written after the other.
+   */
+  const said = (reader: () => string | null): string | null => {
+    try {
+      return reader();
+    } catch {
+      return null;
+    }
+  };
 
   return async (request, address) => {
     const response = await answer(request, address);
 
-    // A throw here is the same fact as a `null`: this process cannot say what
-    // it is serving. It must not be the same fact as *the bot is down*. The
-    // header is a diagnostic, and a diagnostic that can fail the answer it is
-    // attached to has made the deployment less reliable than not measuring it
-    // — which is what `audit-promises.mjs` asks of every injected dependency,
-    // and it asked of this one before any player did.
-    let fingerprint: string | null = null;
-    try {
-      fingerprint = serving();
-    } catch {
-      fingerprint = null;
-    }
-
-    // Absent when the bot cannot read its own texts: a missing header is a
+    // Absent when the bot cannot read its own files: a missing header is a
     // third state, and writing "unknown" into it would turn that state into a
-    // string somebody compares.
-    if (fingerprint !== null) response.headers.set(SERVING_HEADER, fingerprint);
+    // string somebody compares. Each is absent on its own, so a guard can say
+    // which half it could not establish.
+    const texts = said(serving);
+    if (texts !== null) response.headers.set(SERVING_HEADER, texts);
+
+    const code = said(running);
+    if (code !== null) response.headers.set(CODE_HEADER, code);
+
     return response;
   };
 }

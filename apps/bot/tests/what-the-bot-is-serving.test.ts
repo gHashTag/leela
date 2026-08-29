@@ -1,15 +1,37 @@
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, describe as group, expect, it } from 'vitest';
 
 import { askRoute } from '../src/serve';
-import { DATA_DIR, SERVING_HEADER, fingerprintOf, servingFingerprint } from '../src/serving';
-import { FINGERPRINT, exitCodeFor, fingerprintFrom, verdict } from '../../../scripts/lib/serving.mjs';
+import {
+  CODE_HEADER,
+  DATA_DIR,
+  SERVING_HEADER,
+  codeFingerprint,
+  fingerprintOf,
+  runningFingerprint,
+  servingFingerprint,
+} from '../src/serving';
+import {
+  FINGERPRINT,
+  exitCodeFor,
+  fingerprintFrom,
+  fingerprintsFrom,
+  verdict,
+} from '../../../scripts/lib/serving.mjs';
 
 /**
- * The bot says which texts it is serving, and a guard can tell three states
- * apart.
+ * The bot says which texts it serves AND which code it runs, and a guard can
+ * tell three states apart.
+ *
+ * **The code half was added a day after the texts half, and the reason is the
+ * lesson.** The first guard measured the dataset alone — which was true, and
+ * narrower than the sentence `LOOP.md` then wrote about it: *0 it is current*.
+ * An edit anywhere in `apps/bot/src` left the texts fingerprint identical, so a
+ * green run certified a bot that could have been running code from any number
+ * of commits ago. Measured, not supposed: `4ca98283558f` before the edit and
+ * `4ca98283558f` after it.
  *
  * Written for a defect that had already happened. `pages.yml` rebuilds the web
  * on every push; the bot is shipped by hand with `railway up`. Three
@@ -36,6 +58,20 @@ const dirWith = (files: Record<string, string>): string => {
   for (const [name, body] of Object.entries(files)) writeFileSync(join(dir, name), body);
   return dir;
 };
+
+/** A whole repository shape, so the code fingerprint can be asked about it. */
+const treeWith = (files: Record<string, string>): string => {
+  const root = mkdtempSync(join(tmpdir(), 'leela-tree-'));
+  made.push(root);
+  for (const [path, body] of Object.entries(files)) {
+    const full = join(root, path);
+    mkdirSync(dirname(full), { recursive: true });
+    writeFileSync(full, body);
+  }
+  return root;
+};
+
+const codeIn = (root: string) => codeFingerprint(root);
 
 afterEach(() => {
   while (made.length > 0) rmSync(made.pop() as string, { recursive: true, force: true });
@@ -112,6 +148,80 @@ group('the fingerprint of a set of texts', () => {
   });
 });
 
+group('the fingerprint of the code the container runs', () => {
+  it('names the shipped source, stably, and is not the texts fingerprint', () => {
+    const said = codeFingerprint();
+
+    expect(said).toMatch(FINGERPRINT);
+    expect(codeFingerprint()).toBe(said);
+    expect(runningFingerprint()).toBe(said);
+    // Two questions, two answers. One value standing for both would make the
+    // guard unable to say which half moved, which is the whole repair here.
+    expect(said).not.toBe(fingerprintOf(DATA_DIR));
+  });
+
+  it('MOVES for the bot\u2019s own source, WHERE THE TEXTS FINGERPRINT DOES NOT', () => {
+    /*
+     * The defect, as an assertion. Measured before this was written: editing
+     * `apps/bot/src/commands.ts` left the texts fingerprint at 4ca98283558f
+     * exactly, so the guard reported *serving* for a bot that could have been
+     * running code from any number of commits ago.
+     *
+     * Driven over a temporary tree rather than by editing the repository,
+     * because a test that mutates the source it is checking is a test that
+     * leaves the checkout dirty when it fails.
+     */
+    const before = treeWith({ 'apps/bot/src/commands.ts': 'export const a = 1;\n' });
+    const after = treeWith({ 'apps/bot/src/commands.ts': 'export const a = 2;\n' });
+
+    expect(codeIn(before)).not.toBe(codeIn(after));
+    // and the texts, which neither tree has, are not what changed
+    expect(fingerprintOf(join(before, 'packages/content/data'))).toBeNull();
+  });
+
+  it('MOVES for a package the bot imports', () => {
+    const before = treeWith({ 'packages/engine/src/index.ts': 'export const TOTAL = 72;\n' });
+    const after = treeWith({ 'packages/engine/src/index.ts': 'export const TOTAL = 73;\n' });
+
+    expect(codeIn(before)).not.toBe(codeIn(after));
+  });
+
+  it('DOES NOT MOVE for a test, or for anything installed', () => {
+    /*
+     * The Dockerfile copies `apps/bot` whole, tests included, so the image does
+     * differ — but the question this answers is *would deploying now change
+     * anything for anybody*, and a test cannot. `node_modules` is installed in
+     * the image from the lockfile rather than copied, so hashing this machine's
+     * copy would compare two different things.
+     */
+    const plain = treeWith({ 'apps/bot/src/main.ts': 'export const a = 1;\n' });
+    const noisy = treeWith({
+      'apps/bot/src/main.ts': 'export const a = 1;\n',
+      'apps/bot/tests/main.test.ts': 'it("x", () => {});\n',
+      'apps/bot/src/main.test.ts': 'it("beside it", () => {});\n',
+      'packages/engine/node_modules/dep/index.ts': 'export const installed = true;\n',
+      'apps/bot/dist/main.ts': 'export const built = true;\n',
+      'apps/bot/src/notes.md': 'not code\n',
+    });
+
+    expect(codeIn(noisy)).toBe(codeIn(plain));
+  });
+
+  it('names a file by its path, so moving one between packages is a change', () => {
+    // Two workspaces have an `index.ts`; a basename would call those the same
+    // file, and a file that moved would leave the fingerprint still.
+    const here = treeWith({ 'packages/engine/src/index.ts': 'export const a = 1;\n' });
+    const there = treeWith({ 'packages/journal/src/index.ts': 'export const a = 1;\n' });
+
+    expect(codeIn(here)).not.toBe(codeIn(there));
+  });
+
+  it('answers null when there is no code to read', () => {
+    expect(codeIn(treeWith({}))).toBeNull();
+    expect(codeIn(treeWith({ 'apps/bot/src/notes.md': 'words\n' }))).toBeNull();
+  });
+});
+
 group('every answer says what it is serving', () => {
   const preflight = () =>
     new Request('https://bot.example/api/ask', {
@@ -173,19 +283,101 @@ group('every answer says what it is serving', () => {
     expect(response.headers.has(SERVING_HEADER)).toBe(false);
   });
 
+  it('carries BOTH headers, and they are independent', async () => {
+    /*
+     * Two headers rather than two fields in one, so each can go missing on its
+     * own. A bot deployed on the day between the two halves carried the texts
+     * header and not the code one, and a guard has to be able to say *which*
+     * half it could not establish rather than only that something was wrong.
+     */
+    const both = await askRoute({ serving: () => 'aaaaaaaaaaaa', running: () => 'bbbbbbbbbbbb' })(preflight());
+
+    expect(both.headers.get(SERVING_HEADER)).toBe('aaaaaaaaaaaa');
+    expect(both.headers.get(CODE_HEADER)).toBe('bbbbbbbbbbbb');
+  });
+
+  it('DROPS ONLY THE HALF THAT COULD NOT BE READ', async () => {
+    const noCode = await askRoute({ serving: () => 'aaaaaaaaaaaa', running: () => null })(preflight());
+
+    expect(noCode.headers.get(SERVING_HEADER)).toBe('aaaaaaaaaaaa');
+    expect(noCode.headers.has(CODE_HEADER)).toBe(false);
+
+    const noTexts = await askRoute({ serving: () => null, running: () => 'bbbbbbbbbbbb' })(preflight());
+
+    expect(noTexts.headers.has(SERVING_HEADER)).toBe(false);
+    expect(noTexts.headers.get(CODE_HEADER)).toBe('bbbbbbbbbbbb');
+  });
+
+  it('ANSWERS ANYWAY when the CODE reader throws, as when the texts one does', async () => {
+    /*
+     * The second reader gets the same protection as the first, and this is the
+     * assertion that says so. The first got it because `audit-promises.mjs`
+     * demanded it; a second reader added later is exactly the shape of change
+     * that arrives without the protection the first one earned.
+     */
+    const response = await askRoute({
+      serving: () => 'aaaaaaaaaaaa',
+      running: () => {
+        throw new Error('the source is gone');
+      },
+    })(preflight());
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get(SERVING_HEADER)).toBe('aaaaaaaaaaaa');
+    expect(response.headers.has(CODE_HEADER)).toBe(false);
+  });
+
   it('serves the real dataset by default, with nothing injected', async () => {
     // The seam above is for tests; the deployed bot passes no `serving`, and
     // an option that only ever works when a test sets it is not a feature.
     const response = await askRoute()(preflight());
 
     expect(response.headers.get(SERVING_HEADER)).toBe(fingerprintOf(DATA_DIR));
+    expect(response.headers.get(CODE_HEADER)).toBe(codeFingerprint());
+  });
+
+  it('reads both out of a real response the way the guard does', async () => {
+    // The guard's own reader, over the route's own headers — the two ends of
+    // the wire, met in one assertion rather than each tested against a fixture
+    // the other never sees.
+    const response = await askRoute({ serving: () => 'aaaaaaaaaaaa', running: () => 'bbbbbbbbbbbb' })(preflight());
+
+    expect(fingerprintsFrom(response.headers)).toEqual({ texts: 'aaaaaaaaaaaa', code: 'bbbbbbbbbbbb' });
   });
 });
 
 group('the verdict a guard reaches, and the code it exits', () => {
-  it('agrees only when both sides said the same thing', () => {
-    expect(verdict('4ca98283558f', '4ca98283558f')).toMatchObject({ state: 'serving' });
-    expect(verdict('4ca98283558f', 'ffffffffffff')).toMatchObject({ state: 'stale' });
+  const pair = (texts: string | null, code: string | null) => ({ texts, code });
+
+  it('agrees only when BOTH halves said the same thing', () => {
+    expect(verdict(pair('aaaaaaaaaaaa', 'bbbbbbbbbbbb'), pair('aaaaaaaaaaaa', 'bbbbbbbbbbbb'))).toMatchObject({
+      state: 'serving',
+    });
+    expect(verdict(pair('aaaaaaaaaaaa', 'bbbbbbbbbbbb'), pair('ffffffffffff', 'bbbbbbbbbbbb'))).toMatchObject({
+      state: 'stale',
+    });
+  });
+
+  it('CALLS A BOT WITH THE RIGHT TEXTS AND THE WRONG CODE STALE', () => {
+    /*
+     * The defect this file was rewritten for. The first guard measured the
+     * texts alone, and `LOOP.md` told every iteration exit 0 meant *the bot is
+     * current* — so a bot running any amount of old code, over a dataset that
+     * happened not to have moved, read as a pass. That is a guard certifying
+     * the thing it was written to catch.
+     */
+    const answer = verdict(pair('aaaaaaaaaaaa', 'bbbbbbbbbbbb'), pair('aaaaaaaaaaaa', 'cccccccccccc'));
+
+    expect(answer.state).toBe('stale');
+    expect(answer.why).toContain('the code it runs');
+    expect(answer.why).not.toContain('the texts it serves');
+  });
+
+  it('names both halves when both moved', () => {
+    const answer = verdict(pair('aaaaaaaaaaaa', 'bbbbbbbbbbbb'), pair('111111111111', '222222222222'));
+
+    expect(answer.why).toContain('the texts it serves');
+    expect(answer.why).toContain('the code it runs');
   });
 
   it('CALLS A MISSING ANSWER UNKNOWN, NOT AGREEMENT', () => {
@@ -195,9 +387,22 @@ group('the verdict a guard reaches, and the code it exits', () => {
      * what a genuinely stale bot looked like — reading it as a pass would have
      * certified the defect.
      */
-    expect(verdict('4ca98283558f', null)).toMatchObject({ state: 'unknown' });
-    expect(verdict(null, '4ca98283558f')).toMatchObject({ state: 'unknown' });
+    expect(verdict(pair('aaaaaaaaaaaa', 'bbbbbbbbbbbb'), pair(null, null))).toMatchObject({ state: 'unknown' });
+    expect(verdict(pair(null, null), pair('aaaaaaaaaaaa', 'bbbbbbbbbbbb'))).toMatchObject({ state: 'unknown' });
     expect(verdict(null, null)).toMatchObject({ state: 'unknown' });
+  });
+
+  it('IS UNKNOWN WHEN ONLY ONE HALF CAME BACK, even if that half matches', () => {
+    /*
+     * Exactly what a bot deployed one day earlier looks like: it carries the
+     * texts header and not the code one. *Half the question was answered* is
+     * not *the answer is yes*, and the half that goes missing is precisely the
+     * half a deployment predating the guard would drop.
+     */
+    const answer = verdict(pair('aaaaaaaaaaaa', 'bbbbbbbbbbbb'), pair('aaaaaaaaaaaa', null));
+
+    expect(answer.state).toBe('unknown');
+    expect(answer.why).toContain(CODE_HEADER);
   });
 
   it('keeps "no" and "no answer" apart in the exit code', () => {
