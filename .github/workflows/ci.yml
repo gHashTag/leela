@@ -279,6 +279,14 @@ jobs:
       # canonical; what found it was that `&` occurs in exactly one plan.
       - run: node scripts/audit-prose.mjs
 
+      # No test puts a CEILING on elapsed wall-clock time without saying why.
+      # Three flakes here were one shape — `kept.test.ts` failed at 1283 ms
+      # against a bound of 1_000 when a dozen workspaces ran at once — and each
+      # was repaired by raising the number, which is the move #46-49 already
+      # recorded as wrong. A FLOOR is not counted: a slow machine only makes it
+      # more true.
+      - run: node scripts/audit-timing.mjs
+
       # The steps above are also `bun run audit`, which the root manifest added
       # so that `bun run verify` — the command README tells a person to run —
       # can go red for the reasons this job goes red. It ran no audit at all

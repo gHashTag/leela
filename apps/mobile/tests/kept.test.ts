@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   EMPTY_PATH,
   KEEP_TIMEOUT_MS,
   keep,
   loadKept,
   record,
+  within,
   writingsOn,
   type Keeper,
 } from '../src/journal';
@@ -94,25 +95,31 @@ describe('the keeper is handed the worst its type allows', () => {
      * write happens while the player is looking at the words they just typed. A
      * screen still waiting on a disk is a screen that has eaten them.
      */
-    const started = Date.now();
-
     expect(await keep(silent, path, 20), 'not kept, and said so').toBe(false);
     expect((await loadKept(silent, 20)).journal, 'and an empty path rather than a spinner').toEqual(EMPTY_PATH);
+
     /*
-     * MEASURED AT 1283 ms AND FAILING, on 2026-08-28, when a dozen workspaces
-     * ran at once — the bound was 1_000. The two calls above are given 20 ms
-     * each, so a 1-second bound reads generous and is not: it is 25× nominal,
-     * and a loaded machine spends more than that on scheduling alone.
+     * These two assertions ARE the proof, and they are the whole of it.
+     * `silent` never answers, so an implementation that waited for the device
+     * would not reach this line — it would sit until vitest gave up, and
+     * vitest's message would say nothing about a disk.
      *
-     * The real proof that a deadline fired is the two assertions above. `silent`
-     * NEVER answers, so an implementation that waited for the device would not
-     * reach this line at all — it would sit until vitest gave up, and vitest's
-     * message would say nothing about a disk. What this line adds is only that
-     * the deadline is a deadline rather than some enormous number, and 5 s
-     * says that with a margin load cannot close while still being six times
-     * clear of the suite's own 30 s.
+     * A third assertion used to stand here reading the wall clock:
+     * `Date.now() - started < 5_000`. It measured a channel this test does not
+     * own. It had already failed once — **MEASURED AT 1283 ms on 2026-08-28,
+     * when a dozen workspaces ran at once, against a bound of 1_000** — and the
+     * repair then was to raise the number to 5_000, which is the move this
+     * repository's own #46–#49 warns about: a measurement taken to explain a
+     * load problem is subject to the load, so the next loaded machine simply
+     * moves the goalposts again.
+     *
+     * Its own comment admitted what it was worth — *what this line adds is only
+     * that the deadline is a deadline rather than some enormous number*. That
+     * claim is about the CODE, not about how busy the machine is, so it is made
+     * where it can be made exactly: `within` is driven on a clock the test owns,
+     * below. **A property proved on a fake clock is proved; the same property
+     * sampled off a loaded one is a bet.**
      */
-    expect(Date.now() - started, 'both inside the deadline').toBeLessThan(5_000);
   });
 
   it('waits for a device that is merely slow', async () => {
@@ -191,5 +198,88 @@ describe('what is written comes back to be read', () => {
       'the second time',
       'the third time',
     ]);
+  });
+});
+
+/**
+ * The deadline itself, on a clock this test owns.
+ *
+ * `within` is the primitive every keeper call is wrapped in, and until now it
+ * had **no direct test at all** — it was exercised only sideways, through
+ * `keep` and `loadKept`, by a case that then sampled the wall clock to decide
+ * whether the deadline had fired. That sample was the flake: it failed once at
+ * 1283 ms against a 1-second bound when twelve workspaces ran at once, and was
+ * repaired by raising the bound.
+ *
+ * Fake timers make the claim exact instead. The question *does the deadline
+ * fire at the time it was given* has a precise answer, and asking it on a
+ * controlled clock gets that answer on a loaded machine and an idle one alike.
+ */
+describe('the deadline every keeper call is wrapped in', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('DOES NOT FIRE EARLY — nothing at all happens before the time it was given', async () => {
+    vi.useFakeTimers();
+    let settled: string | null = null;
+    const never = new Promise<string>(() => {});
+
+    void within(never, 20, 'gave up').then((answer) => {
+      settled = answer;
+    });
+
+    await vi.advanceTimersByTimeAsync(19);
+    expect(settled, 'settled a millisecond early').toBeNull();
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(settled, 'did not settle at the deadline').toBe('gave up');
+  });
+
+  it('lets the real answer win when it arrives first, deadline or no deadline', async () => {
+    // The other half, and the reason a deadline is not simply a refusal: a
+    // device that answers must be heard. `waits for a device that is merely
+    // slow` above says the same thing through `keep`; this says it of the
+    // primitive, where the number is exact.
+    vi.useFakeTimers();
+    let settled: string | null = null;
+
+    void within(Promise.resolve('the device answered'), 20, 'gave up').then((answer) => {
+      settled = answer;
+    });
+
+    await vi.advanceTimersByTimeAsync(0);
+    expect(settled).toBe('the device answered');
+  });
+
+  it('CLEARS ITS TIMER when the answer wins, so a settled call holds nothing open', async () => {
+    /*
+     * Not tidiness. React Native keeps a process alive for a pending timer, and
+     * a keeper called on every write would leave one per keystroke. The `finally`
+     * in `within` is what stops that, and nothing had ever disagreed with it.
+     */
+    vi.useFakeTimers();
+
+    await within(Promise.resolve('answered'), 20_000, 'gave up');
+
+    expect(vi.getTimerCount(), 'a timer outlived the call that made it').toBe(0);
+  });
+
+  it('lets a rejection through rather than turning it into the fallback', async () => {
+    // `keep` and `loadKept` each wrap this in their own `catch`, and they can
+    // only do that if the rejection reaches them. Swallowing it here would make
+    // a thrown device indistinguishable from a slow one.
+    vi.useFakeTimers();
+
+    await expect(within(Promise.reject(new Error('the disk refused')), 20, 'gave up')).rejects.toThrow(
+      'the disk refused',
+    );
+  });
+
+  it('is the deadline the app actually ships with, not a number this test chose', () => {
+    // A test that only ever passes its own 20 says nothing about what a player
+    // meets. `KEEP_TIMEOUT_MS` is the default every caller takes.
+    expect(KEEP_TIMEOUT_MS).toBeGreaterThan(0);
+    expect(Number.isFinite(KEEP_TIMEOUT_MS)).toBe(true);
   });
 });

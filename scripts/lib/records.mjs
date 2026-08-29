@@ -474,6 +474,20 @@ export const DECLARED = [
       'canonical `&nbsp;` over 1,584 bodies found nothing at all',
   },
   {
+    module: 'lib/timing.mjs',
+    name: 'DECLARED',
+    kind: 'record',
+    askedIn: 'scripts/audit-timing.mjs',
+    asks: 'gone',
+    because:
+      'the tests still allowed to put a CEILING on elapsed wall-clock time, each with the margin ' +
+      'it was measured against. It excuses something real — a ceiling is falsified by a busy ' +
+      'machine and says nothing about the code, which is how three flakes in this repository were ' +
+      'each repaired by raising a number. `audit-timing.mjs` re-derives every entry: `gone` fails ' +
+      'an entry naming a file that no longer has one, and `miscounted` fails one whose count has ' +
+      'moved, so an excuse cannot outlive the thing it excuses',
+  },
+  {
     module: 'lib/source.mjs',
     name: 'BEFORE_A_REGEX',
     kind: 'vocabulary',
