@@ -107,8 +107,12 @@ for (const fix of CORRECTIONS) {
     // that cannot fail — a repair that has stopped firing changes nothing
     // either — and it passed eighteen broken translations before this line was
     // written the second time.
+    // The field the entry names — `body` when it names none, which every entry
+    // written before titles were reachable does.
+    const carries = (fix.field ?? 'body') === 'title' ? plan.title : plan.body;
+
     if (named && fix.holds) {
-      if (!fix.holds(plan.body)) {
+      if (!fix.holds(carries)) {
         problems.push(
           `${language}/${fix.plan}: the correction is stated and the data does not carry it — ${fix.where}`,
         );
@@ -116,7 +120,7 @@ for (const fix of CORRECTIONS) {
       continue;
     }
 
-    if (named && plan.body.includes(fix.from)) {
+    if (named && carries.includes(fix.from)) {
       problems.push(
         `${language}/${fix.plan}: still says \`${fix.from}\` — ${fix.where}`,
       );

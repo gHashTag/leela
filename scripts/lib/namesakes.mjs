@@ -76,19 +76,25 @@ export const lineOf = (language, finding) =>
 export const RECORDED = [
   {
     plans: [4, 8],
-    languages: ['bn', 'de', 'en', 'fr', 'hi', 'ko', 'mr', 'pa', 'pt', 'ta', 'te', 'tr', 'uk', 'ur', 'vi', 'zh'],
-    // THE ROOT, AND IT IS IN THE ENGLISH. Russian has plan 4 as «Жадность
-    // (лобха)» and plan 8 as «Алчность (матсара или матсаръя)» — two words for
-    // two vices, with the Sanskrit term on each. The English donor renders the
-    // second as bare *"Greed"*: the distinct word gone and the term with it.
-    // Sixteen editions were machine-translated from that English and inherited
-    // a collision the original does not have.
+    languages: ['bn', 'de', 'fr', 'hi', 'ko', 'mr', 'pa', 'pt', 'ta', 'te', 'tr', 'uk', 'ur', 'vi', 'zh'],
+    // THE ROOT WAS IN THE ENGLISH, AND IT IS REPAIRED — 2026-08-29, on the
+    // owner's «все три». Russian has plan 4 as «Жадность (лобха)» and plan 8 as
+    // «Алчность (матсара или матсаръя)» — two words for two vices, with the
+    // Sanskrit term on each. The English donor rendered the second as bare
+    // *"Greed"*: the distinct word gone and the term with it.
     //
-    // Repairing it means choosing an English word — *Avarice*? *Covetousness*?
-    // *Matsara*? — and that is a translator's decision, which is the line this
-    // repository does not cross. It is the one entry here that is unambiguously
-    // an error rather than possibly a limit of a language.
-    because: 'the English lost the word AND the term; ru distinguishes them, 16 editions inherited it',
+    // This entry used to say that repairing it meant choosing an English word —
+    // *Avarice*? *Covetousness*? *Matsara*? — and that the decision was a
+    // translator's, which this repository does not make. **It was his to make
+    // and he made it.** `lib/corrections.mjs` now renders plan 8 as *Avarice
+    // (matsara)*, restoring the distinction the Russian carries rather than
+    // inventing one, and `en` has left the list above.
+    //
+    // FIFTEEN REMAIN, and they are a different question. Each was
+    // machine-translated from the English that had already lost the word, so
+    // each would need a word chosen in ITS language — fifteen translators
+    // overruled instead of one author heeded. They stay recorded.
+    because: 'the English lost the word AND the term; repaired 2026-08-29, 15 editions still carry what they inherited',
   },
   {
     plans: [12, 16],

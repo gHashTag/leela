@@ -59,16 +59,23 @@ group('finding two plans with one name', () => {
 
   it('COMPARES NAMES, NOT TITLES, which was the first version’s mistake', () => {
     /*
-     * `"Greed (lobha)"` and `"Greed"` are different strings and the same name.
+     * `"Gier (Lobha)"` and `"Gier"` are different strings and the same name.
      * Asking about whole titles found ZERO collisions in twenty-two languages
      * and reported the data clean — a null result that indicted the query, not
      * the world.
+     *
+     * **This read `en` until 2026-08-29, when the English pair was repaired.**
+     * The property did not change and the example stopped showing it, so the
+     * example moved to German, which still carries exactly the shape: plan 4
+     * `Gier (Lobha)`, plan 8 `Gier`. A case that has stopped discriminating is
+     * replaced, not deleted — deleting it would leave the reader's one real
+     * mistake unguarded.
      */
-    const titles = plansOf('en').map((plan) => plan.title);
+    const titles = plansOf('de').map((plan) => plan.title);
     const distinctTitles = new Set(titles).size;
 
     expect(distinctTitles, 'no two titles are identical strings').toBe(titles.length);
-    expect(namesakesIn(plansOf('en')).map((one: Namesake) => one.plans)).toContainEqual([4, 8]);
+    expect(namesakesIn(plansOf('de')).map((one: Namesake) => one.plans)).toContainEqual([4, 8]);
   });
 
   it('says nothing about a board whose names are all its own', () => {
@@ -123,7 +130,7 @@ group('the record of what is left alone', () => {
      * how a record turns into a lie it is still passing.
      */
     expect(against([]).rotted.length).toBe(recordedLines().length);
-    expect(against([]).rotted).toContain('en plans 4 and 8');
+    expect(against([]).rotted).toContain('de plans 4 and 8');
   });
 
   it('says why each is left alone, in a sentence', () => {

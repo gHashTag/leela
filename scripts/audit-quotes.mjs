@@ -77,8 +77,9 @@ if (existsSync(QUOTES)) {
         lines: [
           `\nRead ${quotes.length} quotes — ${quotes.length * 2} texts, two languages — as ` +
             `${QUOTES.replace(`${process.cwd()}/`, '')} holds them.`,
-          `\n  ${unspoken.length} of 72 plans have no quote and are never sent: ${found}.`,
-          '  Recorded rather than repaired: writing one is a judgement, and it is the owner’s.',
+          unspoken.length === 0
+            ? '\n  Every one of the 72 plans has a quote. The gap of six closed on 2026-08-29.'
+            : `\n  ${unspoken.length} of 72 plans have no quote and are never sent: ${found}.`,
         ],
       },
       {

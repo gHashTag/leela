@@ -20,9 +20,64 @@
  * every language at once. Everything else the translation audits find is
  * recorded and left alone precisely because repairing it would mean deciding
  * what a sentence should say, and this repository does not translate.
+ *
+ * **The one exception, and it is not a loophole: the owner may rule.** The bar
+ * exists so that THIS repository does not overrule a translator — not so that
+ * the author of the corpus cannot correct his own book. An entry resting on his
+ * decision says so in its `where`, carries the date, and is held to exactly the
+ * same rot-detection as the arithmetic ones: it must still fire, and the
+ * property it claims must still be readable out of the shipped data. There is
+ * one such entry, added 2026-08-29 on «все три».
+ *
+ * **Titles as well as bodies, since 2026-08-29.** An entry may name a `field`.
+ * It defaults to `body`, which is what every earlier entry repairs, and the
+ * generator now runs the same pass over the title — because the defect that
+ * needed the owner's ruling was in a title, and a mechanism that reaches only
+ * half the text would have sent that repair back into a generated file with a
+ * countdown on it, which is the thing this module exists to stop.
  */
 
 export const CORRECTIONS = [
+  {
+    where: "the eighth plan has no English name of its own — the owner's ruling, 2026-08-29",
+    // NOT arithmetic, and the only entry here that is not. It rests on the
+    // owner's answer of 2026-08-29 to the three variants — «все три» — which is
+    // the word `audit-namesakes` had been recording and waiting for since #57.
+    //
+    // The defect, measured rather than argued. `audit-namesakes` finds thirty
+    // pairs of plans sharing a name across seventeen editions, and EIGHTEEN of
+    // them are plans 4 and 8: `Greed` in English, `Gier`, `贪婪`, `लोभ`, and so
+    // on down the list. The root is one asymmetry in the English edition —
+    // plan 4 reads `Greed (lobha)` and plan 8 reads bare `Greed`, so the two
+    // collapse to one name and every edition translated from the English
+    // inherited the collision.
+    //
+    // **This restores a distinction the source makes; it does not invent one.**
+    // The Russian edition is written rather than translated — the entry below
+    // about the quotation mark already leans on that — and it uses two
+    // different words: «Жадность (лобха)» for plan 4 and «Алчность (матсара
+    // или матсаръя)» for plan 8. The English rendering collapsed both to
+    // `Greed`, and every edition translated from the English inherited one
+    // name for two plans. `Avarice` is the standard English for «Алчность»,
+    // and French already keeps the pair apart the same way, rendering plan 4
+    // as `Cupidité`.
+    //
+    // The transliteration comes from the Russian too, in the `Name (word)`
+    // form 63 of the other 71 English titles already use. MEASURED FIRST: an
+    // earlier version of this entry added only the transliteration, and
+    // `audit-namesakes` still reported the pair — `nameOf` strips a
+    // parenthetical, so `Greed (matsara)` and `Greed (lobha)` are one name to
+    // it. A repair has to move the thing the check reads.
+    field: 'title',
+    languages: ['en'],
+    plan: 8,
+    from: 'Greed',
+    to: 'Avarice (matsara)',
+    // Stated over the shipped title rather than by re-running the repair: a
+    // repair that has stopped firing changes nothing either, which is how
+    // eighteen broken translations once passed.
+    holds: (title) => title.trim() === 'Avarice (matsara)',
+  },
   {
     where: 'the eighth plan ends with a quotation mark that opens nothing',
     // The donor has it: `translate-leela/docs/8-greed.md` holds exactly one `"`
@@ -124,12 +179,15 @@ export const CORRECTIONS = [
  * the sentence moved and the entry now describes text that is not there. The
  * two look identical to a build that stays quiet, so the build does not.
  */
-export function corrected(body, language, plan) {
+export function corrected(body, language, plan, field = 'body') {
   let out = body;
   const applied = [];
 
   for (const fix of CORRECTIONS) {
     if (fix.plan !== plan || !fix.languages.includes(language)) continue;
+    // `body` when unstated, so every entry written before titles were reachable
+    // keeps its meaning exactly.
+    if ((fix.field ?? 'body') !== field) continue;
 
     // Some of what a donor gets wrong is structural rather than textual. The
     // eighth plan ends with a quotation mark that opens nothing, and the words

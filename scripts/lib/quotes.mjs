@@ -78,16 +78,25 @@ export function quoteProblems(quote) {
 /**
  * The plans no daily quote speaks for, and the count is the finding.
  *
- * Sixty-six quotes for seventy-two plans. These six are simply never sent, and
- * nobody had noticed because the sender walks its own list and never asks the
- * board what it is missing. Recorded rather than repaired: writing a quote is a
- * judgement, like the translations of #56 and #57, and it is the owner's.
+ * **EMPTY SINCE 2026-08-29, and the empty list is the point.** It held six —
+ * 39, 40, 42, 57, 58, 69 — for as long as there were sixty-six quotes for
+ * seventy-two plans, and the sender never noticed because it walks its own list
+ * and never asks the board what it is missing. The owner's answer to the three
+ * variants was «все три», so the six were written and the gap closed.
  *
- * `audit-quotes.mjs` re-derives this from the file on every run, so an entry
- * that stops being true fails rather than quietly covering for a gap that was
- * filled — or hiding a seventh that appeared.
+ * They were not composed. Every one is the plan's own title and a sentence
+ * lifted VERBATIM from the plan's own body, in Russian and in English, checked
+ * against `packages/content/data` before being written — so no word in them is
+ * new, and this repository still does not translate. That is a firmer footing
+ * than the sixty-six already there: **their English sides appear nowhere in the
+ * English book at all** (0 of 66, measured), having been translated for the
+ * quote file rather than taken from the edition a reader can open.
+ *
+ * The list stays as a list rather than becoming a count, and `audit-quotes.mjs`
+ * re-derives it every run: a gap that was filled and a seventh that appeared
+ * read the same way in a number.
  */
-export const UNSPOKEN_PLANS = [39, 40, 42, 57, 58, 69];
+export const UNSPOKEN_PLANS = [];
 
 /** Which of 1..72 no quote carries, from the quotes as they are. */
 export function unspokenIn(quotes, total = 72) {

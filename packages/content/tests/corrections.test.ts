@@ -58,11 +58,24 @@ const stated = CORRECTIONS as Correction[];
 /** The ones that name a string, which is what a textual assertion can read. */
 const textual = stated.filter((fix) => fix.from !== undefined);
 
+/**
+ * Which field an entry repairs — `body` unless it says otherwise.
+ *
+ * Titles became reachable on 2026-08-29, when the eighth plan's English name
+ * needed one. Everything written before that names no field and means `body`,
+ * so the default is what keeps those entries meaning what they meant.
+ */
+const fieldOf = (fix: Correction) => (fix as { field?: string }).field ?? 'body';
+
 /** The ones that state a change instead, which is asserted by making one. */
 const structural = stated.filter((fix) => fix.repair !== undefined);
 
 describe('a correction is stated once and applied by the generator', () => {
-  const fix = textual[0]!;
+  // The first entry that repairs a BODY. Taking `textual[0]` outright stopped
+  // working the day a title entry was added at the top of the list, and the
+  // failure read as the correction not applying rather than as this line
+  // handing a title repair a body to work on.
+  const fix = textual.find((one) => fieldOf(one) === 'body')!;
 
   it('rewrites the text it names', () => {
     const applied = corrected(`nine keeps itself: 9х280=${fix.from}=9.`, fix.languages[0], fix.plan);
@@ -108,10 +121,40 @@ describe('the shipped data carries every correction', () => {
   it('has the corrected form in the languages named, and not the donor’s', () => {
     for (const fix of textual) {
       for (const language of fix.languages) {
-        const body = plansFor(language).find((plan) => plan.plan === fix.plan)?.body ?? '';
+        const plan = plansFor(language).find((one) => one.plan === fix.plan);
+        // The field the entry names. Reading the body for a title repair is how
+        // this first failed: it reported the eighth plan's English body as
+        // missing `Avarice (matsara)`, which is true and is not the claim.
+        const text = String((fieldOf(fix) === 'title' ? plan?.title : plan?.body) ?? '');
 
-        expect(body, `${language}/${fix.plan}`).toContain(fix.to);
-        expect(body, `${language}/${fix.plan}`).not.toContain(fix.from);
+        expect(text, `${language}/${fix.plan} ${fieldOf(fix)}`).toContain(fix.to);
+        expect(text, `${language}/${fix.plan} ${fieldOf(fix)}`).not.toContain(fix.from);
+      }
+    }
+  });
+
+  it('REACHES A TITLE, and leaves the body of that same plan alone', () => {
+    /*
+     * The mechanism the eighth plan's English name needed. A repair that can
+     * only reach a body would have sent that one back into a generated file
+     * with a countdown on it — `build-content.mjs` rewrites the data, and a fix
+     * living only there is undone by the next rebuild, which is the defect this
+     * whole module exists to prevent.
+     *
+     * Both halves matter. The title must carry it, and the body must NOT: the
+     * English body of plan 8 uses the ordinary word "greed" throughout, and a
+     * repair that reached in there would be rewriting a sentence rather than a
+     * name.
+     */
+    const titled = stated.filter((fix) => fieldOf(fix) === 'title');
+    expect(titled.length, 'no entry repairs a title, so this proves nothing').toBeGreaterThan(0);
+
+    for (const fix of titled) {
+      for (const language of fix.languages) {
+        const plan = plansFor(language).find((one) => one.plan === fix.plan);
+
+        expect(String(plan?.title), `${language}/${fix.plan} title`).toBe(fix.to);
+        expect(String(plan?.body), `${language}/${fix.plan} body`).not.toContain(fix.to);
       }
     }
   });

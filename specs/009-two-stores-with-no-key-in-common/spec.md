@@ -159,10 +159,47 @@ What that commits to, in order, each piece complete on its own:
 4. **What happens to a game already in `localStorage`** when a player who has
    been playing in a browser opens the same board from the chat. Adopt, ignore
    or ask — a product question, and the one piece his sentence does not settle.
+   **ANSWERED 2026-08-29 — ADOPT.** See below.
 
 Steps 1 and 2 shipped together on 2026-08-28 because a verifier with no caller
-is code nobody has disagreed with. Steps 3 and 4 are the next iterations, and 4
-needs one more word from him.
+is code nobody has disagreed with. Step 3 shipped after them.
+
+## Step 4, answered 2026-08-29 — ADOPT
+
+He asked, with a screenshot of both surfaces open at once: **«почему бот в боте
+не синхронизирован с планом игры в мини аппе»**. The screenshot is the
+measurement, and it is unambiguous — the chat reads *«Вы стоите на плане 6.
+Заблуждение (моха)»* and the board, in the same session, reads **41. The human
+plane (jana-loka)**. Two positions, one player, one moment.
+
+So: **adopt**, not ignore and not ask. The board a player opens from the chat
+must be the game the chat holds.
+
+**What that costs, stated before it is built, because the code already names
+the obstacle.** `main.ts` says it today: *the route serves a position, not a
+table, so writing it into storage would make a board that claims to be the
+chat's game and diverges from it the moment anybody rolls here.* That is still
+true. Adopting a position into a board that keeps a whole journal gives one
+correct frame and a lie immediately after it.
+
+Adoption therefore means all three of these, and any two without the third is
+worse than what exists now:
+
+1. `GET /api/game` serves the **game**, not only `{plan, waiting, won}` — the
+   path the player has walked, which is what a board draws and what
+   `@leela/engine` needs to accept or refuse it.
+2. The board **writes its rolls back**, so the two surfaces do not diverge one
+   move after adoption. Without this, adoption is a prettier desynchronisation.
+3. A local game that is NOT the chat's is not silently destroyed. A player who
+   has been playing in a browser has a path in there, and the acceptance rule
+   at the top of this section — the engine must be able to have produced it —
+   is what decides whether the two can be reconciled or one must be kept.
+
+The screenshot carries a second finding, unrelated to step 4 and recorded here
+because it was seen in the same frame: **the chat was speaking Russian and the
+board English, for one player in one session.** The board resolves its language
+from the Telegram launch and the chat from the room; nothing makes them agree.
+That is its own item.
 
 ## Acceptance
 

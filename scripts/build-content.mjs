@@ -741,8 +741,12 @@ for (const [lang, plans] of Object.entries(byLang)) {
     // from — the three languages this touches are read by two different readers.
     if (plan) {
       const fixed = corrected(plan.body, lang, n);
-      applied.push(...fixed.applied);
-      complete.push({ ...plan, body: fixed.body });
+      // And the title, through the same pass. A repair that can only reach a
+      // body is a repair that sends the other half back into a generated file
+      // with a countdown on it — which is the whole reason this module exists.
+      const named = corrected(plan.title, lang, n, 'title');
+      applied.push(...fixed.applied, ...named.applied);
+      complete.push({ ...plan, title: named.body, body: fixed.body });
     }
     else gaps.push(n);
   }
