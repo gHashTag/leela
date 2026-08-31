@@ -38,6 +38,32 @@ export function quoteProblems(quote) {
   const id = String(quote?.id ?? '(a quote with no id)');
   const number = Number(String(id).replace('plan-', ''));
 
+  /*
+   * **The field this checker did not know about, and the sender does.**
+   *
+   * On 2026-08-31 six quotes were added and this function passed all 72. The
+   * sender then refused the whole file — *not fit to send from: entry 38
+   * (plan-39): missing source* — because `daily-quote-select.mjs` reads
+   * `quote.source.plan` and every one of the original 66 carries a `source`
+   * recording which files the words came from. **A push that would have failed
+   * for everybody, cleared by a guard that had checked what its author thought
+   * mattered.**
+   *
+   * The lesson is not "add a field". It is that a checker written beside a
+   * consumer must be held to the CONSUMER's contract, not to a reading of the
+   * data — and the way to find that contract is to run the consumer, which is
+   * what `--dry` is for and what should have happened before the guard was
+   * called green.
+   */
+  const source = quote?.source;
+  if (source === undefined || source === null) {
+    problems.push(`${id}: no source — the sender refuses a file with one missing`);
+  } else if (typeof source.plan !== 'string' || source.plan.trim() === '') {
+    problems.push(`${id}: a source with no plan — the sender reads source.plan and would print undefined`);
+  } else if (!Array.isArray(source.files) || source.files.length === 0) {
+    problems.push(`${id}: a source naming no files — provenance that says nothing`);
+  }
+
   for (const lang of ['ru', 'en']) {
     const said = quote?.[lang];
     if (said === undefined || said === null) {
