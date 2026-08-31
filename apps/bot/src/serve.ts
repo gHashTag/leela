@@ -35,6 +35,7 @@ import {
   type LanguageModel,
   type Message,
 } from '@leela/ai';
+import type { GameState } from '@leela/engine';
 import type { Report } from '@leela/journal';
 
 import { Allowance, MAX_ASKERS } from './bot';
@@ -105,6 +106,17 @@ export const MODEL_DEADLINE_MS = 170_000;
 /** Railway injects `PORT`; a laptop gets this. */
 export const DEFAULT_PORT = 8788;
 
+/**
+ * A throw the rules would not allow, with the reason in the player's language.
+ *
+ * Distinct from a null so the board can say *it is not your turn* rather than
+ * *there is no game*: the two look identical to a caller that only checks for
+ * absence, and one of them is a dead end while the other is a wait.
+ */
+export interface Refused {
+  refused: string;
+}
+
 /** One delta of a streaming answer, in the client's own vocabulary. */
 export interface Streamed {
   text?: string;
@@ -141,6 +153,57 @@ export interface Standing {
   /** True before the six that puts them on the board. */
   waiting: boolean;
   won: boolean;
+  /**
+   * The whole state the rules run on, so the board can BE this game rather
+   * than describe it.
+   *
+   * `specs/009` step 4, answered 2026-08-31 with a screenshot of both surfaces
+   * open at once: the chat reading *«Вы стоите на плане 6»* and the board, same
+   * session, reading *41. The human plane*. The decision was **adopt**, and
+   * this field is what makes adopting possible.
+   *
+   * Three fields were not enough and the code said so: *the route serves a
+   * position, not a table, so writing it into storage would make a board that
+   * claims to be the chat's game and diverges from it the moment anybody rolls
+   * here.* A position cannot be played on — `consecutive_sixes` decides whether
+   * a third six sends the player back, `is_finished` decides whether a six is
+   * an entry or a win, and a board without them would compute a different game
+   * from the same square.
+   *
+   * `GameState` is **the same shape both surfaces already persist** — the bot's
+   * seat and the board's `KeptSeat` both hold one, field for field. That is the
+   * key `specs/009` was named for not existing, and it existed at this level
+   * the whole time.
+   *
+   * Optional so that a deployment serving the older three fields is still read
+   * by a newer board rather than refused: absent means *this bot cannot give
+   * you the game*, which is a different fact from *you have no game*.
+   */
+  state?: GameState;
+  /** Whether the die is theirs to throw right now, by the session's own rule. */
+  yourTurn?: boolean;
+}
+
+/**
+ * One throw of the chat's die, taken on the board's behalf.
+ *
+ * **The board does not roll.** It asks, and the bot rolls — because the value
+ * is the one thing a client must not choose. The bot's die is seeded per room
+ * and advanced by `rollsTaken`, so a board that invented its own number would
+ * be playing a different game from the one the chat replays.
+ *
+ * `roll` is the value the die showed. The board applies it with the same
+ * `@leela/engine` the bot just did, over the same `GameState`, and gets the
+ * same answer — which is what lets it animate the walk without a second
+ * implementation of the rules deciding anything.
+ */
+export interface Rolled {
+  /** 1..6, the face the bot's die showed. */
+  roll: number;
+  /** Where the player stands now, after the roll was applied and stored. */
+  standing: Standing;
+  /** True when this seat throws again — a six, by the session's rules. */
+  rollsAgain: boolean;
 }
 
 export interface AskRouteOptions {
@@ -186,6 +249,20 @@ export interface AskRouteOptions {
    * what the file's own header says it is for.
    */
   gameOf?: (userId: string) => Promise<Standing | null>;
+  /**
+   * Throw the chat's die for this player, apply it, and store the result.
+   *
+   * Injected exactly as `gameOf` is, and for the same reason: this file decides
+   * who is asking and what a refusal says, and it owns no storage. The caller
+   * wires it to the same `commands.roll` the `/roll` message runs, so the rules
+   * have ONE implementation and the two surfaces cannot drift apart on a third
+   * six.
+   *
+   * `null` for a player with no game here. A rule that forbids the throw — not
+   * their turn, a report owed first — is a `Refused`, because *you may not*
+   * carries a reason a player can act on and *nothing happened* does not.
+   */
+  rollFor?: (userId: string) => Promise<Rolled | Refused | null>;
   /**
    * A player's own path, read and added to.
    *
@@ -239,7 +316,7 @@ const corsFor = (origin: string): Record<string, string> => ({
  * without Bun: everything this file decides is decided here, and the server
  * below only supplies the port and the peer address.
  */
-function answering({ model, stream, now = Date.now, token, gameOf, reports }: AskRouteOptions = {}): AskRoute {
+function answering({ model, stream, now = Date.now, token, gameOf, rollFor, reports }: AskRouteOptions = {}): AskRoute {
   // The same guard `/ask` in the chat stands behind, with the address where
   // the player id would be. See `Allowance` in bot.ts for why checking is
   // spending, and `MAX_ASKERS` for why the map is capped.
@@ -260,7 +337,7 @@ function answering({ model, stream, now = Date.now, token, gameOf, reports }: As
       });
 
     const path = new URL(request.url).pathname;
-    if (path !== '/api/ask' && path !== '/api/game' && path !== '/api/reports') {
+    if (path !== '/api/ask' && path !== '/api/game' && path !== '/api/reports' && path !== '/api/roll') {
       return refuse(404, 'no such route');
     }
 
@@ -307,6 +384,54 @@ function answering({ model, stream, now = Date.now, token, gameOf, reports }: As
       if (standing === null) return refuse(404, 'no game of yours here yet');
 
       return new Response(JSON.stringify(standing), {
+        status: 200,
+        headers: { 'content-type': 'application/json', ...cors },
+      });
+    }
+
+    /*
+     * One throw of the chat's die, taken on the board's behalf.
+     *
+     * `specs/009` step 4 — **adopt** — and this is the half that makes adoption
+     * more than a prettier desynchronisation. A board that reads the chat's
+     * game and then rolls its own die has two games again one throw later; the
+     * only way the two stay one is for the same die to serve both.
+     *
+     * **The board does not send a number, it asks for one.** A roll arriving in
+     * a request body is a roll the caller chose, and this route is reachable by
+     * anything that can sign a launch — which is every player, for their own
+     * game. So the value is the bot's: seeded per room, advanced by
+     * `rollsTaken`, exactly as `/roll` in the chat advances it.
+     *
+     * The rules are not re-implemented here either. `rollFor` is wired in
+     * `index.ts` to the same `commands.roll` the chat message runs, so a third
+     * six sends a player back on both surfaces or on neither.
+     *
+     * POST, because it changes the game. A GET that rolls a die is a die thrown
+     * by a link preview, a prefetch, or a browser restoring a tab.
+     */
+    if (path === '/api/roll') {
+      if (request.method !== 'POST') return refuse(405, 'POST only');
+
+      const carried = request.headers.get('authorization') ?? '';
+      const initData = carried.startsWith('tma ') ? carried.slice(4) : '';
+
+      const vouched = whoSent(initData, token ?? '', { now: now() });
+      if (!vouched.ok) return refuse(401, vouched.why);
+
+      if (rollFor === undefined) {
+        return refuse(503, 'this deployment keeps no games to roll in');
+      }
+
+      const outcome = await rollFor(vouched.who.id).catch(() => null);
+      if (outcome === null) return refuse(404, 'no game of yours here yet');
+
+      // *You may not throw yet* is not *you have no game*. A board told 404 for
+      // a turn that is simply somebody else's would offer the player a new game
+      // instead of the wait they are actually in.
+      if ('refused' in outcome) return refuse(409, outcome.refused);
+
+      return new Response(JSON.stringify(outcome), {
         status: 200,
         headers: { 'content-type': 'application/json', ...cors },
       });

@@ -1,6 +1,6 @@
 import { describe as group, expect, it } from 'vitest';
 
-import { ASK_TIMEOUT_MS, gameUrl, myGame } from '../src/mine';
+import { ASK_TIMEOUT_MS, gameUrl, myGame, askForARoll } from '../src/mine';
 
 /**
  * Asking the bot where the chat says this player stands.
@@ -144,5 +144,116 @@ group('where it asks', () => {
     } finally {
       page.__leelaAsk = before;
     }
+  });
+});
+
+/**
+ * Asking the chat's die to turn — `specs/009` step 4, ADOPT.
+ *
+ * The board reads the game and then must not throw its own die, or there are
+ * two games again one roll later. These hold the asking half to the three
+ * answers it has to keep apart, and to the one thing it must never send.
+ */
+group('asking the chat to throw', () => {
+  const ROLLED = {
+    roll: 4,
+    rollsAgain: false,
+    standing: {
+      plan: 12,
+      waiting: false,
+      won: false,
+      state: {
+        loka: 12,
+        previous_loka: 8,
+        direction: 'step 🚶🏼',
+        consecutive_sixes: 0,
+        position_before_three_sixes: 8,
+        is_finished: false,
+      },
+      yourTurn: false,
+    },
+  };
+
+  const answering = (status: number, body: unknown, seen?: { init?: RequestInit }) =>
+    (async (_url: string, init?: RequestInit) => {
+      if (seen) seen.init = init;
+      return {
+        status,
+        json: async () => body,
+      } as unknown as Response;
+    }) as unknown as typeof globalThis.fetch;
+
+  it('SENDS NOTHING BUT THE SIGNATURE — the value is the bot’s to choose', async () => {
+    /*
+     * The whole reason this is a bare POST. Every player can sign a launch for
+     * their own game, so a board that sent `{roll: 6}` would be a board that
+     * always threw sixes.
+     */
+    const seen: { init?: RequestInit } = {};
+    await askForARoll({ initData: 'x', fetch: answering(200, ROLLED, seen) });
+
+    expect(seen.init?.method).toBe('POST');
+    expect(seen.init?.body, 'the board sent a body, and a body can carry a roll').toBeUndefined();
+  });
+
+  it('reads a throw the route documents', async () => {
+    const answer = await askForARoll({ initData: 'x', fetch: answering(200, ROLLED) });
+
+    expect(answer).toEqual({ kind: 'rolled', rolled: ROLLED });
+  });
+
+  it('KEEPS “not yet” APART FROM “could not ask”, and carries the bot’s own words', async () => {
+    /*
+     * A waiting player told *the bot could not be reached* is told the wrong
+     * thing about a working game. The sentence comes from the bot because the
+     * bot has it in the player's language.
+     */
+    const refused = await askForARoll({
+      initData: 'x',
+      fetch: answering(409, { error: 'write what this plan brings up first' }),
+    });
+
+    expect(refused).toEqual({ kind: 'refused', why: 'write what this plan brings up first' });
+
+    const down = await askForARoll({ initData: 'x', fetch: answering(503, {}) });
+    expect(down.kind).toBe('unasked');
+  });
+
+  it('REFUSES A FACE IT CANNOT DRAW, rather than walking on it', async () => {
+    /*
+     * `0` is what the route answers when it found no move event — a shape that
+     * means something went wrong, not that the die showed nothing. Seven is a
+     * die this game does not have. Either walked would move a token to a square
+     * the engine never chose.
+     */
+    for (const roll of [0, 7, 2.5, -1]) {
+      const answer = await askForARoll({ initData: 'x', fetch: answering(200, { ...ROLLED, roll }) });
+      expect(answer.kind, `roll ${roll} was accepted`).toBe('unasked');
+    }
+  });
+
+  it('refuses a throw whose standing is not one', async () => {
+    const answer = await askForARoll({
+      initData: 'x',
+      fetch: answering(200, { ...ROLLED, standing: { plan: 'twelve' } }),
+    });
+
+    expect(answer.kind).toBe('unasked');
+  });
+
+  it('asks nothing at all outside Telegram', async () => {
+    // A plain browser has nobody to roll for, and a request without a signature
+    // is a 401 the player cannot act on.
+    let called = false;
+    const answer = await askForARoll({
+      initData: '',
+      fetch: (() => {
+        called = true;
+        return Promise.reject(new Error('should not be called'));
+      }) as unknown as typeof globalThis.fetch,
+    });
+
+    expect(called).toBe(false);
+    expect(answer.kind).toBe('unasked');
   });
 });

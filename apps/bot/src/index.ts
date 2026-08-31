@@ -29,9 +29,9 @@ import {
   messageIssues,
   translatedLanguages,
 } from '@leela/content';
-import { hasWon, isWaitingToEnter } from '@leela/engine';
+import { currentPlayer, hasWon, isWaitingToEnter } from '@leela/engine';
 import { createBot, miniAppUrl } from './bot';
-import { PAID_COMMANDS, menuFor } from './commands';
+import { PAID_COMMANDS, menuFor, roll as rollCommand } from './commands';
 import { DirectChannels } from './delivery';
 import { createInitiative, lastWordSaid, nudgeHour } from './initiative';
 import { serveAsk, type StreamAsk, type Streamed } from './serve';
@@ -460,12 +460,72 @@ const asking = serveAsk({
   gameOf: async (userId) => {
     const room = await storage.store.get(userId);
     const seat = room?.session.players.find((player) => player.id === userId);
-    if (seat === undefined) return null;
+    if (seat === undefined || room === null || room === undefined) return null;
 
     return {
       plan: seat.state.loka,
       waiting: isWaitingToEnter(seat.state),
       won: hasWon(seat.state),
+      // The whole state, so the board can BE this game rather than describe it
+      // — `specs/009` step 4, adopt. See `Standing` in serve.ts for why three
+      // fields could not be played on.
+      state: seat.state,
+      // Asked of the session rather than compared here. `/roll` in the chat and
+      // the die on the board must agree about whose throw it is, and the only
+      // way they agree is by asking the same function.
+      yourTurn: currentPlayer(room.session).id === userId,
+    };
+  },
+  /**
+   * One throw of the chat's die, on the board's behalf — `specs/009` step 4.
+   *
+   * **`rollCommand` is the function `/roll` runs.** Not a copy of it: the die
+   * is seeded per room and advanced by `rollsTaken`, a third six sends the
+   * player back, a report may be owed first, and every one of those rules lives
+   * in `commands.ts`. A second implementation here would agree on the day it
+   * was written and drift on the first rule that changed — which is the defect
+   * this repository was assembled out of twenty-five repositories to end.
+   *
+   * The result is STORED before it is answered. A board told it rolled a six,
+   * on a game the bot then forgot, is the two surfaces disagreeing again with
+   * an extra step.
+   */
+  rollFor: async (userId) => {
+    const room = await storage.store.get(userId);
+    if (room === null || room === undefined) return null;
+    if (room.session.players.find((player) => player.id === userId) === undefined) return null;
+
+    const before = room.rollsTaken;
+    const outcome = rollCommand(room, userId, Date.now());
+    const after = outcome.room;
+
+    // `roll` answers a refusal as a reply on an UNCHANGED room — not started,
+    // not your turn, a report owed. The roll count is what says the die turned,
+    // and it is read rather than the reply text, which is a sentence in
+    // twenty-two languages and would make this a translation check.
+    if (after === null || after.rollsTaken === before) {
+      return { refused: outcome.replies[0]?.text ?? 'the die did not turn' };
+    }
+
+    // Stored BEFORE it is answered. A board told it rolled a six, on a game the
+    // bot then forgot, is the two surfaces disagreeing again with an extra step.
+    await storage.store.save(after);
+
+    const seat = after.session.players.find((player) => player.id === userId);
+    if (seat === undefined) return null;
+
+    const moved = (outcome.effects ?? []).find((effect) => effect.kind === 'move');
+
+    return {
+      roll: moved?.event.roll ?? 0,
+      rollsAgain: currentPlayer(after.session).id === userId,
+      standing: {
+        plan: seat.state.loka,
+        waiting: isWaitingToEnter(seat.state),
+        won: hasWon(seat.state),
+        state: seat.state,
+        yourTurn: currentPlayer(after.session).id === userId,
+      },
     };
   },
   /**

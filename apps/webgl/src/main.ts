@@ -51,7 +51,7 @@ import type { SeatedPlayer } from '@leela/engine';
 import { canDraw } from './drawable';
 import { createBoard } from './scene';
 import { atEnd, bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
-import { myGame } from './mine';
+import { askForARoll, myGame } from './mine';
 import { sendMyPath } from './sending';
 import { launchOf, meetTelegram, nameAskOrigin, telegramOf } from './telegram';
 import { css } from './theme';
@@ -134,11 +134,54 @@ meetTelegram(telegramOf(), document.documentElement.style);
  */
 const launch = launchOf(telegramOf());
 
+/**
+ * Whether this board IS the chat's game, and therefore whose die it throws.
+ *
+ * Null in a plain browser, and null when the bot could not be asked or answered
+ * without a state — in which case everything below behaves exactly as it did
+ * before step 4 was answered, which is the floor this must never fall through.
+ */
+let chatGame: string | null = null;
+
 void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine) => {
   if (mine.kind !== 'standing') return;
 
   el.inTheChat.textContent = messageFor(language, 'app.inTheChat', { plan: mine.standing.plan });
   el.inTheChat.hidden = false;
+
+  /*
+   * **ADOPT — `specs/009` step 4, answered 2026-08-31.**
+   *
+   * Settled by a screenshot of both surfaces at once: the chat reading *«Вы
+   * стоите на плане 6»* and this board, same session, *41. The human plane*.
+   *
+   * Three conditions, and each is a way this could be wrong rather than
+   * fussiness. The bot must have sent a STATE — a position cannot be played on,
+   * and a deployment a few minutes behind sends only the old three fields.
+   * There must be exactly ONE seat, because the chat serves this player's own
+   * game and adopting it into a table of three would put somebody else's token
+   * on their square. And the board must not have been played yet in this
+   * session — `busy` is held while a walk is in flight, and replacing the state
+   * under a walking token is how a piece ends up on a square nothing chose.
+   *
+   * The browser's own saved game is NOT destroyed. `leela.webgl.game` is left
+   * exactly as it was; this replaces the state in memory only, so a player who
+   * opens the board outside Telegram afterwards still finds the game they were
+   * playing here. That was the third piece the spec demanded and the one with
+   * a player's path on the other side of it.
+   */
+  const state = mine.standing.state;
+  if (state === undefined || session.players.length !== 1 || busy) return;
+
+  chatGame = launch;
+  session = { ...session, players: [{ ...session.players[0]!, state }] };
+  // The board's own roll history belongs to the game it just stopped playing.
+  // Kept, it would draw a die face and a trail from a different game.
+  rolls = [[]];
+  lastThrower = null;
+  placeSeats();
+  showLotus();
+  showPlanText(state.loka);
 });
 
 
@@ -1532,7 +1575,41 @@ const takeTurn = async (): Promise<void> => {
   const threw = seatAt();
   lastThrower = threw;
   const mover = seat().id;
-  const turn = throwFor(session, rollDie());
+
+  /*
+   * **The die is the chat's when the game is the chat's.**
+   *
+   * `specs/009` step 4. Reading the chat's game and then throwing a local die
+   * gives two games again one roll later — the bot's die is seeded per room and
+   * advanced by `rollsTaken`, so a value invented here would replay a different
+   * game from the one the chat shows.
+   *
+   * The board still WALKS it. `throwFor` applies the value with the same
+   * `@leela/engine` the bot just applied it with, over the same `GameState`, so
+   * the answer is the one already stored — the animation is a re-derivation,
+   * not a second opinion.
+   *
+   * A refusal is the player's to read: *not your turn*, *write what this plan
+   * brings up first*. It arrives in their own language because the bot composed
+   * it, and it leaves the game untouched.
+   */
+  let value: number;
+  if (chatGame !== null) {
+    const asked = await askForARoll({ initData: chatGame, fetch: (...args) => fetch(...args) });
+
+    if (asked.kind !== 'rolled') {
+      el.say.textContent = asked.why;
+      el.say.dataset.tone = 'step';
+      el.die.disabled = false;
+      busy = false;
+      return;
+    }
+    value = asked.rolled.roll;
+  } else {
+    value = rollDie();
+  }
+
+  const turn = throwFor(session, value);
   // Set before anything draws. Setting it after meant the gate ran on the
   // previous throw's answer, so a six re-enabled the die while the labels
   // beside it still read 'waiting for your reflection'.
