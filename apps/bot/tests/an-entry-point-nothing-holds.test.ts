@@ -480,3 +480,56 @@ describe('an entry point nothing holds', () => {
     expect(wiring.map((field) => field.name).filter((name) => !passed.includes(name))).toEqual([]);
   });
 });
+
+/**
+ * The board asks for a PLAYER's game; a room is keyed by a CHAT.
+ *
+ * `/ask` learned this first. `roomOf` exists because of it, and its own
+ * doc-comment says why: *a room is keyed by the chat it lives in… a player
+ * seated in a group was told "take a seat first" while holding one.*
+ *
+ * `specs/009`'s routes are the second caller with a player in hand and no chat,
+ * and they made the identical mistake — `store.get(userId)`, which is right in
+ * exactly one place: a private chat with the bot, where the chat id and the
+ * user id are the same number. That is the chat a developer tests in, so the
+ * defect looks correct until somebody plays at a table in a group and is told
+ * they have no game.
+ *
+ * Asserted over the source because `index.ts` is the wiring itself — the file
+ * this whole suite exists to hold — and the lookup is a fact about how it wires
+ * the two routes, not about what any function returns.
+ */
+describe('the board is answered about a player, not a chat', () => {
+  const wiring = read('../src/index.ts');
+
+  it('is reading the file it means to', () => {
+    // Every check that reads a tree can read an empty one and pass over
+    // nothing, which has happened twice in this repository.
+    expect(wiring.length).toBeGreaterThan(2000);
+    expect(wiring).toContain('gameOf');
+    expect(wiring).toContain('rollFor');
+  });
+
+  it('ASKS `roomOf` FOR BOTH ROUTES, not the chat-keyed `get`', () => {
+    /*
+     * Both, and the same way. A board that can READ a game it cannot ROLL in is
+     * worse than one that can do neither: the player sees their real position
+     * and then the die refuses, with no sentence that explains the difference.
+     */
+    const lookups = wiring.match(/storage\.store\.roomOf\?\.\(userId\)/g) ?? [];
+
+    expect(lookups.length, 'one of the two routes still looks a player up by chat').toBe(2);
+  });
+
+  it('keeps `get` only as the fallback, never as the first question', () => {
+    /*
+     * `roomOf` is optional on the interface — a store that cannot answer says so
+     * by not having the method, which is that file's own convention. So `get`
+     * must still be reachable, and must not be what is asked first.
+     */
+    const bare = wiring.match(/const room = await storage\.store\.get\(userId\)/g) ?? [];
+
+    expect(bare, 'a route asks the chat-keyed store first').toEqual([]);
+    expect(wiring).toContain('?? (await storage.store.get(userId))');
+  });
+});

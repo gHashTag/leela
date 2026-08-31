@@ -458,7 +458,21 @@ const asking = serveAsk({
    * mini app's header, the trail marker.
    */
   gameOf: async (userId) => {
-    const room = await storage.store.get(userId);
+    /*
+     * **`roomOf`, not `get`.** A room is keyed by the CHAT it lives in, and this
+     * is handed a PLAYER — the two are the same number only in a private chat
+     * with the bot, and nowhere else. A player seated at a table in a group
+     * asked this route for their game and was told there is none.
+     *
+     * `/ask` learned this first and `roomOf` was written for it: *the table this
+     * player is seated at, wherever it is.* The board is the second caller with
+     * a player in hand and no chat, and it made the same mistake — because the
+     * mistake looks correct in the one chat a developer tests in.
+     *
+     * `get(userId)` stays as the fallback for a store that has no `roomOf`,
+     * which is the convention the interface already documents.
+     */
+    const room = (await storage.store.roomOf?.(userId)) ?? (await storage.store.get(userId));
     const seat = room?.session.players.find((player) => player.id === userId);
     if (seat === undefined || room === null || room === undefined) return null;
 
@@ -491,7 +505,9 @@ const asking = serveAsk({
    * an extra step.
    */
   rollFor: async (userId) => {
-    const room = await storage.store.get(userId);
+    // The same lookup as `gameOf`, and it must stay the same: a board that can
+    // READ a game it cannot ROLL in is worse than one that can do neither.
+    const room = (await storage.store.roomOf?.(userId)) ?? (await storage.store.get(userId));
     if (room === null || room === undefined) return null;
     if (room.session.players.find((player) => player.id === userId) === undefined) return null;
 
