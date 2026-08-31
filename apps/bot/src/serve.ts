@@ -299,13 +299,45 @@ const askedBy = (request: Request, address?: string): string => {
   return first || address || 'everyone';
 };
 
+/**
+ * What a browser is allowed to send here.
+ *
+ * **These two lines silently forbade `/api/game` and `/api/roll` from the day
+ * each was written.** They were composed for `/api/ask` — a POST carrying JSON
+ * — and were correct for it. Then `/api/game` arrived as a GET carrying
+ * `authorization`, and `/api/roll` as a POST carrying the same, and neither
+ * method nor header was ever added here.
+ *
+ * A browser answers that by refusing before it asks. `authorization` is not a
+ * CORS-safelisted header, so every call preflights; the preflight came back
+ * allowing `content-type` and `POST, OPTIONS`; and the board saw
+ * `TypeError: Failed to fetch` — the shape that its own code reports as *the
+ * bot could not be reached*. MEASURED 2026-08-31 in a real browser, with a
+ * validly signed launch: the request never left.
+ *
+ * **Nothing in the repository could see it.** Every test drives `askRoute` as a
+ * function, where there is no browser to enforce a preflight, so all of them
+ * passed on a route no page could call. The route was right, the client was
+ * right, and the permission between them was for a different route.
+ *
+ * The old comment here said *nothing here is answered to a GET*. It was true
+ * when written and became false one commit later, and it is exactly the kind of
+ * sentence that keeps a defect invisible: a reader checking whether GET matters
+ * finds a note saying it does not.
+ */
 const corsFor = (origin: string): Record<string, string> => ({
   'access-control-allow-origin': origin,
-  'access-control-allow-methods': 'POST, OPTIONS',
-  'access-control-allow-headers': 'content-type',
-  // A day, so a board is not asking permission before every question. The
-  // preflight cache this feeds is the browser's own, which is keyed by origin
-  // already; nothing here is answered to a GET, so no shared cache holds it.
+  // `/api/ask` and `/api/roll` are POSTs; `/api/game` is a GET. Listing what
+  // the routes actually are, rather than what the first of them was.
+  'access-control-allow-methods': 'GET, POST, OPTIONS',
+  // `authorization` carries the signed launch — `tma <initData>` — which is how
+  // every route but `/api/ask` knows whose game it is answering about. Without
+  // it here, the browser never sends it.
+  'access-control-allow-headers': 'authorization, content-type',
+  // A day, so a board is not asking permission before every question. The cache
+  // is the browser's own and keyed by origin. A FAILED preflight is not cached,
+  // which is why this fix reaches a player who met the broken one without their
+  // having to wait the day out.
   'access-control-max-age': '86400',
 });
 
