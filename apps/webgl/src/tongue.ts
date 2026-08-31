@@ -1,4 +1,5 @@
 import { type Language, resolveLanguage } from './canon';
+import { telegramLanguage, telegramOf } from './telegram';
 
 /** English, when nothing else can be honoured. Not imported: `canon` does not
  * re-export it, and a fallback that is `undefined` fails silently. */
@@ -41,8 +42,25 @@ export const isSpoken = (value: string): value is Language =>
 export const openingLanguage = (
   stored: string | null,
   fromBrowser: string,
+  fromTelegram = '',
 ): Language => {
+  // An explicit choice outranks everything, including Telegram. A player who
+  // pressed the language button meant it, and a chat that disagrees with them
+  // is not a reason to overrule them on their next visit.
   if (stored && isSpoken(stored)) return stored;
+
+  /*
+   * **Telegram before the browser, and a screenshot of 2026-08-31 is why.** The
+   * chat wrote «Вы стоите на плане 6» while this board, same session same
+   * player, read *41. The human plane* in English. Inside a webview
+   * `navigator.language` is the PHONE's setting; `language_code` is the
+   * ACCOUNT's, which is what the bot composes its sentences in. Asking the
+   * phone gave one player two languages.
+   *
+   * Empty outside Telegram, so a plain browser behaves exactly as before.
+   */
+  const said = resolveLanguage(fromTelegram);
+  if (fromTelegram !== '' && isSpoken(said)) return said;
 
   // The browser may say `ru-RU`, `ru_RU` or `ru`; resolveLanguage handles the
   // shapes. It may also resolve onto a language the interface does not speak,
@@ -112,4 +130,4 @@ export const openingStore = (): Store | null => {
 
 /** The language this visit opens in: the stored choice, else the browser's. */
 export const boardLanguage = (): string =>
-  openingLanguage(readLanguage(openingStore()), navigator.language);
+  openingLanguage(readLanguage(openingStore()), navigator.language, telegramLanguage(telegramOf()));

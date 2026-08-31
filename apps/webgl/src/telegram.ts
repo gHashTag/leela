@@ -47,6 +47,29 @@ interface TelegramWebApp {
  * harmless either way: outside Telegram `ready()` and `expand()` reach nobody,
  * and an empty `themeParams` maps to nothing.
  */
+/**
+ * The language Telegram says this player reads, or the empty string.
+ *
+ * **The board never asked, and a screenshot of 2026-08-31 is what that cost:**
+ * the chat writing «Вы стоите на плане 6» in Russian and this board, in the
+ * same session for the same player, reading *41. The human plane* in English.
+ * The bot takes `language_code` from the launch and the classic mini app takes
+ * it too; only the 3D board went to `navigator.language`, which inside a
+ * webview is the phone's setting and not the account's.
+ *
+ * Read off `initDataUnsafe`, which is Telegram's UNSIGNED copy — and that is
+ * right here and would not be for anything else. Nothing is granted on the
+ * strength of it: at worst a player who forged it reads the board in a language
+ * they chose, which is what the language button does anyway. The signed
+ * `initData` is what `myGame` and `askForARoll` are vouched by.
+ */
+export const telegramLanguage = (app: TelegramWebApp | null): string => {
+  const said = (app as { initDataUnsafe?: { user?: { language_code?: unknown } } } | null)
+    ?.initDataUnsafe?.user?.language_code;
+
+  return typeof said === 'string' ? said : '';
+};
+
 export const telegramOf = (): TelegramWebApp | null => {
   const found = (globalThis as { Telegram?: { WebApp?: unknown } }).Telegram?.WebApp;
   if (typeof found !== 'object' || found === null) return null;

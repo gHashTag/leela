@@ -1055,6 +1055,13 @@ const NOT_CONNECTED: Readonly<Record<string, string>> = {
   // is not the absence of a defect. Written as two `if`s rather than an
   // `if`/`else` because **a top-level `} else {` sends this very file into an
   // infinite loop**, measured by truncating that script line by line.
+  // Same shape and same reason as `audit-quotes.mjs` and `audit-serving.mjs`:
+  // its exit is not 0-or-1 from a count of findings. The log may be absent —
+  // this may not be the sending machine — and *nothing was checked* is a third
+  // state taking exit 2, because the absence of the log is not the absence of a
+  // push. Written as two `if`s for backlog 18: a top-level `} else {` sends
+  // THIS FILE into an infinite loop.
+  'audit-pushed.mjs': NOT_HELD.noEmptiness,
   'audit-quotes.mjs': NOT_HELD.noEmptiness,
   'audit-reachable.mjs': VACUOUS,
   // Not `process.exitCode = finish(...)`, and deliberately: it reports on a
