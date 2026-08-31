@@ -561,6 +561,21 @@ const EN = {
    * diverges from it the moment anybody rolls. Step 4 is the owner's to answer.
    */
   'app.inTheChat': 'In the chat you are on plan {plan}.',
+  /*
+   * Why this board is NOT the chat's game, said rather than left blank.
+   *
+   * Adoption has five outcomes and until 2026-08-31 every one of them that was
+   * not success drew nothing at all — so a player looking at two different
+   * plans on two screens had no way to learn which, and neither had anybody
+   * trying to fix it. A silence covering four facts is the defect this
+   * repository has recorded a dozen times under other names.
+   */
+  'app.chatAdopted': 'This is your chat game. Plan {plan}.',
+  'app.chatNotOpened': 'Opened outside Telegram, so this board keeps its own game.',
+  'app.chatNoGame': 'No game of yours in the chat yet — /roll there to begin one.',
+  'app.chatUnreachable': 'The chat could not be reached ({why}), so this board keeps its own game.',
+  'app.chatOldBot': 'The chat answered without a game state, so this board keeps its own. The bot needs deploying.',
+  'app.chatBusyTable': 'This board has {seats} seats, so the chat’s single game was not adopted.',
   'app.theme': 'Theme',
   'app.light': 'Light',
   'app.dark': 'Dark',
@@ -1149,6 +1164,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.terms': 'Условия использования',
   'app.language': 'Язык',
   'app.inTheChat': 'В чате вы стоите на плане {plan}.',
+  'app.chatAdopted': 'Это ваша игра из чата. План {plan}.',
+  'app.chatNotOpened': 'Открыто вне Telegram — доска ведёт свою игру.',
+  'app.chatNoGame': 'В чате у вас пока нет игры — начните её командой /roll.',
+  'app.chatUnreachable': 'Чат недоступен ({why}) — доска ведёт свою игру.',
+  'app.chatOldBot': 'Чат ответил без состояния игры — доска ведёт свою. Бот требует деплоя.',
+  'app.chatBusyTable': 'На доске {seats} мест — игра из чата не принята.',
   'app.theme': 'Тема',
   'app.light': 'Светлая',
   'app.dark': 'Тёмная',

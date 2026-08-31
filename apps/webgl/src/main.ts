@@ -143,8 +143,39 @@ const launch = launchOf(telegramOf());
  */
 let chatGame: string | null = null;
 
+/**
+ * Say which of the five things happened, always.
+ *
+ * **Every outcome but success used to draw nothing**, and on 2026-08-31 that
+ * cost an evening: a player looking at plan 6 in the chat and plan 41 on this
+ * board had no way to learn why, and neither did anybody trying to fix it. The
+ * bundle carried the code, the route answered, the guards were sound — and the
+ * one thing nobody could see was WHICH branch had returned early.
+ *
+ * A silence covering four facts is not a small thing. `myGame` already composes
+ * the reason — *not opened from Telegram*, *the bot answered 503*, *did not
+ * answer in time* — and it was being thrown away one line after it arrived.
+ */
+const sayAboutTheChat = (key: Parameters<typeof messageFor>[1], params: Record<string, string | number> = {}): void => {
+  el.inTheChat.textContent = messageFor(language, key, params);
+  el.inTheChat.hidden = false;
+};
+
 void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine) => {
-  if (mine.kind !== 'standing') return;
+  if (mine.kind === 'unasked') {
+    // Two facts, and they read differently to a player: nobody signed this
+    // launch, or the bot could not be reached. The first is not a fault.
+    sayAboutTheChat(
+      mine.why.includes('not opened from Telegram') ? 'app.chatNotOpened' : 'app.chatUnreachable',
+      { why: mine.why },
+    );
+    return;
+  }
+
+  if (mine.kind === 'none') {
+    sayAboutTheChat('app.chatNoGame');
+    return;
+  }
 
   el.inTheChat.textContent = messageFor(language, 'app.inTheChat', { plan: mine.standing.plan });
   el.inTheChat.hidden = false;
@@ -171,7 +202,22 @@ void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine
    * a player's path on the other side of it.
    */
   const state = mine.standing.state;
-  if (state === undefined || session.players.length !== 1 || busy) return;
+
+  // A bot too old to send a state is a bot that needs deploying, and the board
+  // says so rather than quietly showing a different game.
+  if (state === undefined) {
+    sayAboutTheChat('app.chatOldBot');
+    return;
+  }
+
+  // A table of several is not this player's single chat game, and adopting into
+  // one would put somebody else's token on their square.
+  if (session.players.length !== 1) {
+    sayAboutTheChat('app.chatBusyTable', { seats: session.players.length });
+    return;
+  }
+
+  if (busy) return;
 
   chatGame = launch;
   session = { ...session, players: [{ ...session.players[0]!, state }] };
@@ -182,6 +228,9 @@ void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine
   placeSeats();
   showLotus();
   showPlanText(state.loka);
+  // Said on success too, so the line means *this is the chat's game* rather
+  // than *here is a number from somewhere else*.
+  sayAboutTheChat('app.chatAdopted', { plan: state.loka });
 });
 
 
