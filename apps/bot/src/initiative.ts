@@ -10,9 +10,9 @@
  * The engine is a set of *skills* — message templates with sleeping
  * conditions. `eligible` chooses the word and `compose` shapes it, both pure
  * so every branch is a test rather than a hope. A configured companion adds
- * one brief bridge from the canonical plan, intention and path to the next
- * action the report gate actually accepts; the canonical bridge survives any
- * model failure.
+ * one brief bridge from the canonical plan to the next action the engine
+ * actually accepts; the canonical bridge survives any model failure. Private
+ * writing is never sent on a proactive call.
  *
  * What is deliberately absent, with the spec's reasons: streaks (play to
  * protect a number is the opposite of a reflection game), guessed per-user
@@ -28,9 +28,16 @@ import {
   type Guide,
   type Reflection,
 } from '@leela/ai';
-import { lastSentenceEnd, messageFor, planFor, type Language, type Plan } from '@leela/content';
-import { hasWon } from '@leela/engine';
-import { launchButton, standingSquare, type Room } from './commands';
+import {
+  formatWait,
+  lastSentenceEnd,
+  messageFor,
+  planFor,
+  type Language,
+  type Plan,
+} from '@leela/content';
+import { hasWon, owesReport } from '@leela/engine';
+import { afterReport, launchButton, standingSquare, type Room } from './commands';
 import { DirectChannels, isBlockedByUser } from './delivery';
 /**
  * One day, the unit everything here is counted in — declared in `stars.ts`.
@@ -42,7 +49,7 @@ import { DirectChannels, isBlockedByUser } from './delivery';
  * here would reach it only through a cycle.
  */
 import { DAY_MS } from './stars';
-import type { NudgeStore, ReportSink, RoomStore } from './store';
+import type { NudgeStore, RoomStore } from './store';
 
 /**
  * How long a player may be silent and still be written to: fourteen days.
@@ -315,6 +322,7 @@ export function compose(
     word?: Word;
     bridge?: string;
     reportOwed?: boolean;
+    cta?: string;
   },
 ): Composed {
   if (said.word === 'doorstep') {
@@ -343,9 +351,10 @@ export function compose(
     ...(excerpt ? [excerpt, ''] : []),
     messageFor(language, 'nudge.standing', { plan: plan.plan, title: plan.title }),
     ...(said.bridge ? ['', said.bridge] : []),
-    said.reportOwed
-      ? messageFor(language, 'nudge.reportCta')
-      : messageFor(language, 'nudge.cta'),
+    said.cta ??
+      (said.reportOwed
+        ? messageFor(language, 'nudge.reportCta')
+        : messageFor(language, 'nudge.cta')),
     ...(said.firstNudge ? ['', messageFor(language, 'nudge.wayOut')] : []),
   ];
 
@@ -423,8 +432,6 @@ export interface InitiativeOptions {
   nudges: NudgeStore;
   /** The same companion the reactive chat uses, narrowed to proactive work. */
   companion?: Pick<Guide, 'engage' | 'status'>;
-  /** The intention and path that make the bridge personal rather than generic. */
-  reports?: Pick<ReportSink, 'history' | 'intention'>;
   /**
    * The same allow-list the transport keeps, shared rather than copied: a 403
    * the bot met answering `/path` is a morning this must not spend, and a
@@ -475,7 +482,6 @@ export function createInitiative({
   store,
   nudges,
   companion,
-  reports,
   channels,
   launchUrl,
   hour = DEFAULT_NUDGE_HOUR,
@@ -565,6 +571,11 @@ export function createInitiative({
       for (const seat of room.session.players) seats.set(seat.id, { room, seat });
     }
 
+    // Undefined means the first standing candidate has not asked yet. A
+    // fallback from that first call opens the circuit for the rest of this
+    // tick: one provider timeout may delay the morning, N timeouts may not.
+    let companionAwake: boolean | undefined;
+
     for (const [userId, { room, seat }] of seats) {
       const memory = await nudges.of(userId);
 
@@ -589,37 +600,67 @@ export function createInitiative({
       const plan = planFor(room.language, seat.state.loka);
       let bridge: Reflection | null = null;
       let reportOwed: boolean | undefined;
+      let cta: string | undefined;
 
       if (verdict.word !== 'doorstep') {
-        reportOwed = !seat.reportSubmitted;
+        reportOwed = owesReport(seat.state, room.session.rules) && !seat.reportSubmitted;
+        if (reportOwed) {
+          cta = messageFor(room.language, 'nudge.reportCta');
+          if (room.session.rules.minReportChars > 0) {
+            cta += ` ${messageFor(room.language, 'report.tooShort', {
+              count: room.session.rules.minReportChars,
+            })}`;
+          }
+        } else {
+          const next = afterReport(room.session, userId, at);
+          cta =
+            next.say === 'not-your-turn'
+              ? messageFor(room.language, 'roll.notYourTurn', {
+                  name: room.names[next.holder] ?? next.holder,
+                })
+              : next.say === 'wait'
+                ? messageFor(room.language, 'roll.cooldown', {
+                    wait: formatWait(room.language, next.waitMs),
+                  })
+                : next.say === 'finished'
+                  ? messageFor(room.language, 'roll.over')
+                  : messageFor(room.language, 'nudge.cta');
+        }
+
         const base: EngagementOptions = {
           language: room.language,
           plan: plan.plan,
           reportOwed,
-          direction: seat.state.direction || undefined,
-          previousPlan: seat.state.previous_loka,
         };
         bridge = { text: engagementFallbackText(base), fromModel: false };
 
-        // A sleeping/cooling companion costs no history read and no model
-        // call. When it is awake, intention and history are independent reads
-        // and arrive together; stores return newest first, while prompts read
-        // a walked path oldest first.
-        if (companion?.status().available) {
+        // Status is read lazily, so skipped/doorstep candidates do not even
+        // wake the companion. Proactive calls receive canonical plan context
+        // only — never intention, reports, conversation, or a user id.
+        if (companionAwake === undefined) {
           try {
-            const [intention, history] = await Promise.all([
-              reports?.intention?.(userId),
-              reports?.history?.(userId),
-            ]);
-            bridge = await companion.engage({
-              ...base,
-              intention: intention ?? undefined,
-              journey: history
-                ? [...history]
-                    .reverse()
-                    .map((entry) => ({ plan: entry.plan, text: entry.text }))
-                : undefined,
-            });
+            companionAwake = companion?.status().available ?? false;
+          } catch (error) {
+            // A custom adapter can fail before the model call itself. Treat
+            // that exactly like a provider failure: keep the word canonical
+            // and open the tick circuit instead of aborting every delivery.
+            log(
+              '[initiative] companion status failed; using canonical bridges ' +
+                `for this tick: ${String(error)}`,
+            );
+            companionAwake = false;
+          }
+        }
+        if (companion && companionAwake) {
+          try {
+            bridge = await companion.engage(base);
+            if (!bridge.fromModel) {
+              companionAwake = false;
+              log(
+                `[initiative] companion fell back on plan ${plan.plan}; ` +
+                  'using canonical bridges for the rest of this tick.',
+              );
+            }
           } catch (error) {
             // `Guide` already falls back on world failures. This catches a
             // malformed injected implementation or a store read failure: the
@@ -628,6 +669,7 @@ export function createInitiative({
               `[initiative] companion failed for plan ${plan.plan}; ` +
                 `using the canonical bridge: ${String(error)}`,
             );
+            companionAwake = false;
           }
         }
       }
@@ -637,6 +679,7 @@ export function createInitiative({
         word: verdict.word,
         bridge: bridge?.text,
         reportOwed,
+        cta,
       });
 
       const outcome = await deliver(userId, room.language, word.text);

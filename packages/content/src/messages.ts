@@ -781,7 +781,7 @@ const EN = {
   'nudge.agentReport': 'What does this plan ask you to notice honestly, right now?',
   'nudge.agentRoll': 'Carry one honest observation from this plan into your next throw.',
   'nudge.reportCta':
-    'Reply in one sentence — it becomes your reflection and opens the next throw.',
+    'Reply here with what you are experiencing on this plan — the game will save it as your reflection.',
   // One call back into the game, and it has to stand on its own: the board
   // button rides beneath it when Telegram takes the keyboard, and when the
   // whole send is refused over the markup the retry goes out without it —
@@ -1277,7 +1277,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'nudge.agentReport': 'Что этот план просит вас честно заметить прямо сейчас?',
   'nudge.agentRoll': 'Возьмите одно честное наблюдение из этого плана в следующий ход.',
   'nudge.reportCta':
-    'Ответьте одним предложением — оно станет вашей записью и откроет следующий бросок.',
+    'Ответьте здесь, что вы переживаете на этом плане — игра сохранит это как вашу запись.',
   'nudge.cta': 'Игра продолжается там, где вы стоите — /roll вернёт вас в неё.',
   'nudge.wayOut': 'Это слово приходит раз в день. /quiet останавливает его в любой момент.',
   'quiet.on': 'Тихо. Ежедневное слово больше не приходит — /quiet вернёт его, когда захотите.',

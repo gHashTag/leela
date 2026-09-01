@@ -2398,9 +2398,6 @@ export function createBot({
       return;
     }
 
-    const chatId = chatIdOf(ctx);
-    const room = chatId ? await store.get(chatId) : null;
-
     // Only where the words are already a conversation with the bot. In a group
     // the same sentence is table talk between the people at it, and a
     // companion that answered every remark would talk over the game — so both
@@ -2408,6 +2405,10 @@ export function createBot({
     // `ctx.chat.type` that `deliver` trusts to know a chat is the player's own.
     const alone = ctx.chat?.type === 'private';
     const who = sender(ctx);
+    const chatId = chatIdOf(ctx);
+    const room =
+      (chatId ? await store.get(chatId) : null) ??
+      (alone && who ? (await store.roomOf?.(who.id)) ?? null : null);
 
     if (!room) {
       /**

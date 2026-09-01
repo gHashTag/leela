@@ -100,6 +100,15 @@ export interface PlanContext {
   journey?: ReadonlyArray<JourneyEntry>;
 }
 
+/**
+ * The deliberately small context allowed when the companion speaks first.
+ *
+ * A reactive answer may use writing the player just chose to send. A daily
+ * invitation happens before any such choice, so it receives only public game
+ * canon: a language and the plan number whose text this package already owns.
+ */
+export type EngagementContext = Pick<PlanContext, 'language' | 'plan'>;
+
 export interface Message {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -657,11 +666,11 @@ export function questionPrompt(
  * This is deliberately not a synthetic player question. The companion is
  * speaking first, so the prompt says that plainly and constrains the shape:
  * one reflection question when writing is the next move, no question when the
- * die is already available. The system prompt supplies the canonical plan,
- * intention and path; this turn asks the model only to connect them.
+ * die is already available. The system prompt supplies only the canonical
+ * plan; this turn asks the model to turn that teaching toward the next move.
  */
 export function engagementPrompt(
-  context: PlanContext,
+  context: EngagementContext,
   reportOwed: boolean,
 ): Message[] {
   assertPlan(context.plan);
@@ -670,22 +679,24 @@ export function engagementPrompt(
     reportOwed
       ? [
           'Speak first with a proactive return invitation of at most two short sentences.',
-          'Ground one useful observation in the current plan and, only when it genuinely',
-          "helps, the player's intention or path. End with exactly one gentle, concrete",
-          'reflection question that can be answered in one sentence. Do not mention absence,',
+          'Ground one useful observation only in the current plan. End with exactly one',
+          'gentle, concrete reflection question. Do not mention absence,',
           'streaks, urgency, commands, or rolling. Do not add facts or teaching absent from',
           'the canonical plan above. Return only the invitation.',
         ]
       : [
-          'Speak first with one brief proactive observation grounded in the current plan',
-          "and, only when it genuinely helps, the player's intention or path. Give the",
-          'player room to decide what it means. Ask no question, mention no absence, streak,',
+          'Speak first with one brief proactive observation grounded only in the current',
+          'plan. Give the player room to decide what it means. Ask no question, mention no',
+          'absence, streak,',
           'urgency, command, or roll. Do not add facts or teaching absent from the canonical',
           'plan above. Return only the observation.',
         ];
 
   return [
-    { role: 'system', content: systemPrompt(context) },
+    // Rebuild the context field-by-field even if a structurally wider object
+    // reaches this function: private intention/path text must never hitch a
+    // ride on a proactive call.
+    { role: 'system', content: systemPrompt({ language: context.language, plan: context.plan }) },
     { role: 'user', content: instruction.join(' ') },
   ];
 }

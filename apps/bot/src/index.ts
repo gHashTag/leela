@@ -624,7 +624,6 @@ const initiative = createInitiative({
   store: storage.store,
   nudges: storage.nudges,
   companion: guide,
-  reports: storage.reports,
   channels,
   launchUrl: miniAppUrl(),
   hour: nudgeHour(),

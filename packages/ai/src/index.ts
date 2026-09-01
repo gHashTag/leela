@@ -31,6 +31,7 @@ export {
 } from './prompts';
 export type {
   AboutContext,
+  EngagementContext,
   JourneyEntry,
   Message,
   PlanContext,
@@ -68,6 +69,7 @@ export type {
 export {
   DEFAULT_SILENCE_MS,
   DEFAULT_TIMEOUT_MS,
+  MAX_ENGAGEMENT_CHARS,
   Guide,
   aboutFallbackText,
   engagementFallbackText,
