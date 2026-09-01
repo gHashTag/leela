@@ -811,6 +811,32 @@ export function staticFileFor(root: string, pathname: string): string | null {
   return `${root.replace(/\/+$/, '')}/${pieces.join('/')}`;
 }
 
+export interface StaticCandidate {
+  path: string;
+  status: 200 | 404;
+}
+
+/** Files to try for a public path, ending in the game's own not-found page. */
+export function staticCandidatesFor(root: string, pathname: string): readonly StaticCandidate[] {
+  let publicPath = pathname;
+  // The hand-written 404 page is shared with GitHub Pages, whose game lives
+  // below /leela/. Keep its two ways back useful on the Railway root too.
+  if (pathname === '/leela' || pathname === '/leela/') publicPath = '/';
+  if (pathname === '/leela/docs') publicPath = '/docs/';
+  if (pathname.startsWith('/leela/docs/')) publicPath = pathname.slice('/leela'.length);
+
+  const requested = staticFileFor(root, publicPath);
+  if (requested === null) return [];
+
+  const notFound = staticFileFor(root, '/404.html');
+  return [
+    { path: requested, status: 200 },
+    ...(notFound && notFound !== requested
+      ? ([{ path: notFound, status: 404 }] satisfies StaticCandidate[])
+      : []),
+  ];
+}
+
 /** The API and built board on one socket and one deployment. */
 export function serveAsk({ port, log = console.log, staticRoot, ...options }: ServeAskOptions = {}): BunServer {
   const bun = (globalThis as { Bun?: BunLike }).Bun;
@@ -835,12 +861,12 @@ export function serveAsk({ port, log = console.log, staticRoot, ...options }: Se
           return new Response('GET only', { status: 405 });
         }
 
-        const path = staticFileFor(staticRoot, pathname);
-        if (path !== null) {
-          const file = bun.file(path);
+        for (const candidate of staticCandidatesFor(staticRoot, pathname)) {
+          const file = bun.file(candidate.path);
           if (await file.exists()) {
             const immutable = pathname.split('/').includes('assets');
             return new Response(request.method === 'HEAD' ? null : file, {
+              status: candidate.status,
               headers: {
                 'cache-control': immutable
                   ? 'public, max-age=31536000, immutable'
