@@ -31,6 +31,7 @@ import {
   isBlockedByUser,
   nudgeToPrivate,
 } from './delivery';
+import { attributeConversion } from './conversions';
 import { escapeHtml, intoMessages, renderBoardMessage, renderChapter, renderPlan } from './render';
 import { FILE_TIMEOUT_MS, MAX_FILE_BYTES, asReport, decide, decideSquare, keep, within } from './take-in';
 import { offer, serialise } from './take-out';
@@ -852,6 +853,14 @@ export function createBot({
    */
   async function applyEffects(effects: Effect[] | undefined, ctx: Context): Promise<void> {
     for (const effect of effects ?? []) {
+      await attributeConversion({
+        nudges,
+        userId: effect.userId,
+        kind: effect.kind === 'report' ? 'response' : 'roll',
+        at: now(),
+        log,
+      });
+
       try {
         if (effect.kind === 'report') {
           await reports.record({ userId: effect.userId, plan: effect.plan, text: effect.text });

@@ -7,6 +7,7 @@ import { DirectChannels } from '../src/delivery';
 import {
   createInitiative,
   excerptsOf,
+  type DailyWordRecord,
   type NudgeApi,
   type TickSummary,
 } from '../src/initiative';
@@ -129,13 +130,25 @@ interface HarnessOptions {
   rooms: Room[];
   /** Where the tick's summary is kept, when a test is asking about that. */
   remember?: (at: number, summary: TickSummary) => Promise<void>;
+  /** The previous durable word, read before a new cohort replaces it. */
+  previous?: () => DailyWordRecord | null;
   blocked?: Set<string>;
   keyboardRefused?: Set<string>;
   hour?: number;
   nudges?: MemoryNudgeStore;
+  now?: () => number;
 }
 
-async function harness({ rooms, blocked, keyboardRefused, hour, nudges: memory, remember }: HarnessOptions) {
+async function harness({
+  rooms,
+  blocked,
+  keyboardRefused,
+  hour,
+  nudges: memory,
+  remember,
+  previous,
+  now = () => MORNING,
+}: HarnessOptions) {
   const store = new MemoryRoomStore();
   for (const room of rooms) await store.save(room);
 
@@ -154,7 +167,8 @@ async function harness({ rooms, blocked, keyboardRefused, hour, nudges: memory, 
     launchUrl: 'https://t27.ai/leela/',
     hour,
     remember,
-    now: () => MORNING,
+    previous,
+    now,
     schedule: (run, inMs) => {
       armed.push({ run, inMs });
       return () => {
@@ -181,6 +195,62 @@ async function harness({ rooms, blocked, keyboardRefused, hour, nudges: memory, 
 }
 
 describe('one tick, one morning', () => {
+  it('says the previous word conversions before a new cohort replaces them', async () => {
+    const table = await harness({
+      rooms: [],
+      previous: () => ({
+        at: MORNING - DAY,
+        sent: 2,
+        bridges: { model: 1, canonical: 1 },
+        conversions: { responses: 1, rolls: 1 },
+        skipped: {},
+      }),
+    });
+
+    await table.initiative.runTick(MORNING);
+
+    expect(table.said[0]).toContain(
+      'conversions: responses 1, rolls 1; skipped: none.',
+    );
+  });
+
+  it('does not describe a cohort whose conversion window is still open', async () => {
+    let remembered = 0;
+    const table = await harness({
+      rooms: [tableOf('chat-1', [{ id: 'u1', state: standing(12) }])],
+      previous: () => ({
+        at: MORNING - 1,
+        sent: 1,
+        conversions: { responses: 0, rolls: 0 },
+        skipped: {},
+      }),
+      remember: async () => {
+        remembered += 1;
+      },
+    });
+
+    await table.initiative.runTick(MORNING);
+
+    expect(table.said.some((line) => line.includes('Last daily word:'))).toBe(false);
+    expect(table.sent).toEqual([]);
+    expect(remembered).toBe(0);
+  });
+
+  it('keeps delivering when the previous conversion summary cannot be read', async () => {
+    const table = await harness({
+      rooms: [tableOf('chat-1', [{ id: 'u1', state: standing(12) }])],
+      previous: () => {
+        throw new Error('database read failed');
+      },
+    });
+
+    await expect(table.initiative.runTick(MORNING)).resolves.toMatchObject({ sent: 1 });
+    expect(table.sent).toHaveLength(1);
+    expect(table.said[0]).toBe(
+      '[initiative] could not read previous conversions: Error: database read failed',
+    );
+  });
+
   it('writes to the eligible player: the excerpt, where they stand, the way back and the way out', async () => {
     const table = await harness({ rooms: [tableOf('chat-1', [{ id: 'u1', state: standing(12) }])] });
     const summary = await table.initiative.runTick(MORNING);
@@ -367,6 +437,41 @@ describe('one tick, one morning', () => {
     expect(
       table.said.filter((line) => line.startsWith('The daily word is armed')).length,
     ).toBeGreaterThan(armedOnce);
+  });
+
+  it('retries for the remaining open-window time instead of losing a day to timer jitter', async () => {
+    let at = MORNING - 1_000;
+    const kept: number[] = [];
+    const table = await harness({
+      rooms: [tableOf('chat-1', [{ id: 'u1', state: standing(12) }])],
+      now: () => at,
+      previous: () => ({
+        at: MORNING - DAY + 1,
+        sent: 1,
+        skipped: {},
+      }),
+      remember: async (when) => {
+        kept.push(when);
+      },
+    });
+
+    table.initiative.start();
+    expect(table.armed[0]?.inMs).toBe(1_000);
+
+    at = MORNING;
+    table.armed[0]?.run();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(table.sent).toEqual([]);
+    expect(kept).toEqual([]);
+    expect(table.armed[1]?.inMs).toBe(1);
+
+    at = MORNING + 1;
+    table.armed[1]?.run();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(table.sent).toHaveLength(1);
+    expect(kept).toEqual([MORNING + 1]);
   });
 
   it('says the summary even when there was nobody to write to', async () => {

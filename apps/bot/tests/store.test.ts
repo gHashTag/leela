@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { openRoom, type Room } from '../src/commands';
-import { MemoryReportSink, MemoryRoomStore, discardReports, seedFor } from '../src/store';
+import { DAY_MS } from '../src/stars';
+import {
+  MemoryNudgeStore,
+  MemoryReportSink,
+  MemoryRoomStore,
+  discardReports,
+  seedFor,
+} from '../src/store';
 
 describe('MemoryRoomStore', () => {
   it('returns null for a chat with no table', async () => {
@@ -40,6 +47,28 @@ describe('MemoryRoomStore', () => {
 
     expect((await store.get('chat-1'))?.seed).toBe(1);
     expect((await store.get('chat-2'))?.seed).toBe(2);
+  });
+});
+
+describe('a daily word converted into play', () => {
+  it('counts each accepted action once, only inside the latest word’s day', async () => {
+    const nudges = new MemoryNudgeStore();
+    const morning = Date.UTC(2026, 8, 2, 6);
+
+    expect(await nudges.convert('u1', 'response', morning)).toBe(false);
+    await nudges.record('u1', { at: morning, excerpt: 0 });
+    expect(await nudges.convert('u1', 'response', morning - 1)).toBe(false);
+    expect(await nudges.convert('u1', 'response', morning)).toBe(true);
+    expect(await nudges.convert('u1', 'response', morning + 1)).toBe(false);
+    expect(await nudges.convert('u1', 'roll', morning + DAY_MS - 1)).toBe(true);
+    expect(await nudges.convert('u1', 'roll', morning + DAY_MS)).toBe(false);
+
+    await nudges.record('u1', { at: morning + DAY_MS, excerpt: 1 });
+    expect(await nudges.convert('u1', 'response', morning + DAY_MS)).toBe(true);
+
+    await nudges.record('u2', { at: morning, excerpt: 0 });
+    expect(await nudges.convert('u2', 'response', morning + DAY_MS)).toBe(false);
+    expect(await nudges.convert('u2', 'roll', morning + DAY_MS)).toBe(false);
   });
 });
 

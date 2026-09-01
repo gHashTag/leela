@@ -532,4 +532,18 @@ describe('the board is answered about a player, not a chat', () => {
     expect(bare, 'a route asks the chat-keyed store first').toEqual([]);
     expect(wiring).toContain('?? (await storage.store.get(userId))');
   });
+
+  it('attributes a Mini App conversion only after the die really turned', () => {
+    const start = wiring.indexOf('rollFor:');
+    const rollFor = bracesAt(wiring, start);
+    const refusal = rollFor.indexOf('after.rollsTaken === before');
+    const attribution = rollFor.indexOf('attributeConversion');
+
+    expect(start, 'the Mini App roll route exists').toBeGreaterThan(-1);
+    expect(rollFor.length, 'the Mini App roll route has a readable boundary').toBeGreaterThan(100);
+    expect(refusal, 'refused rolls are detected').toBeGreaterThan(-1);
+    expect(attribution, 'successful Mini App rolls reach daily-word attribution').toBeGreaterThan(
+      refusal,
+    );
+  });
 });

@@ -28,6 +28,7 @@ function playingAt(loka: number): GameState {
 }
 import { gameStepRow } from '@leela/db';
 import { SCHEMA, SqliteRoomQueries, addMissingColumns, openDatabase, sqliteNudgeStore, sqliteReportSink, sqliteStepSink } from '../src/sqlite';
+import { DAY_MS } from '../src/stars';
 
 const NOW = 1_700_000_000_000;
 const dir = mkdtempSync(join(tmpdir(), 'leela-sqlite-'));
@@ -796,6 +797,7 @@ describe('the last tick, kept', () => {
       sent: 1,
       skipped: { quieted: 1, 'doorstep-spent': 2 },
       bridges: { model: 1, canonical: 0 },
+      conversions: { responses: 0, rolls: 0 },
     });
   });
 
@@ -810,6 +812,7 @@ describe('the last tick, kept', () => {
       sent: 2,
       skipped: {},
       bridges: { model: 0, canonical: 0 },
+      conversions: { responses: 0, rolls: 0 },
     });
   });
 
@@ -828,6 +831,7 @@ describe('the last tick, kept', () => {
       sent: 1,
       skipped: {},
       bridges: { model: 0, canonical: 0 },
+      conversions: { responses: 0, rolls: 0 },
     });
   });
 
@@ -866,6 +870,46 @@ describe('the initiative’s memory', () => {
     const queries = database('nudge-roundtrip');
     queries.recordNudge('u1', NOW, 2);
     expect(queries.nudgeOf('u1')).toEqual({ sentAt: NOW, excerpt: 2, quieted: false, doorsteps: 0 });
+  });
+
+  it('attributes each action once and derives aggregate conversions for the tick', async () => {
+    const queries = database('nudge-conversions');
+    const nudges = sqliteNudgeStore(queries);
+    queries.recordTick(NOW, 2, {}, { model: 1, canonical: 1 });
+    await nudges.record('u1', { at: NOW, excerpt: 0 });
+    await nudges.record('u2', { at: NOW, excerpt: 1 });
+
+    expect(await nudges.convert('u1', 'response', NOW + 1)).toBe(true);
+    expect(await nudges.convert('u1', 'response', NOW + 2)).toBe(false);
+    expect(await nudges.convert('u1', 'roll', NOW + 3)).toBe(true);
+    expect(await nudges.convert('u2', 'roll', NOW + DAY_MS)).toBe(false);
+    expect(queries.lastTick()?.conversions).toEqual({ responses: 1, rolls: 1 });
+  });
+
+  it('does not turn updated_at into the exact time a player responded', async () => {
+    let clock = NOW;
+    const queries = new SqliteRoomQueries({
+      path: join(dir, 'nudge-conversion-no-timeline.db'),
+      now: () => clock,
+    });
+    open.push(queries);
+    const nudges = sqliteNudgeStore(queries);
+    await nudges.record('u1', { at: NOW, excerpt: 0 });
+
+    const database = (queries as unknown as {
+      db: { prepare(sql: string): { get(...params: unknown[]): unknown } };
+    }).db;
+    const updatedAt = () =>
+      Number(
+        (database.prepare('SELECT updated_at FROM nudges WHERE user_id = ?').get('u1') as {
+          updated_at: number;
+        }).updated_at,
+      );
+    expect(updatedAt()).toBe(NOW);
+
+    clock = NOW + 12_345;
+    expect(await nudges.convert('u1', 'response', clock)).toBe(true);
+    expect(updatedAt()).toBe(NOW);
   });
 
   it('lets neither half of the row speak for the other', () => {
@@ -937,6 +981,8 @@ describe('the initiative’s memory', () => {
     open.push(queries);
 
     expect(said.join(' ')).toContain('nudges.doorsteps');
+    expect(said.join(' ')).toContain('nudges.response_for_sent_at');
+    expect(said.join(' ')).toContain('nudges.roll_for_sent_at');
 
     // And it holds its tongue when there was nothing to do: a line every
     // restart would train an operator to skip the one that matters.

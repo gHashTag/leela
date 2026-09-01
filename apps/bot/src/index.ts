@@ -34,6 +34,7 @@ import { currentPlayer, hasWon, isWaitingToEnter } from '@leela/engine';
 import { createBot, miniAppUrl } from './bot';
 import { accessFor } from './access';
 import { PAID_COMMANDS, menuFor, roll as rollCommand } from './commands';
+import { attributeConversion } from './conversions';
 import { DirectChannels } from './delivery';
 import { createInitiative, lastWordSaid, nudgeHour } from './initiative';
 import { serveAsk, type StreamAsk, type Streamed } from './serve';
@@ -556,6 +557,13 @@ const asking = serveAsk({
 
     const moved = (outcome.effects ?? []).find((effect) => effect.kind === 'move');
     if (moved?.kind === 'move') {
+      await attributeConversion({
+        nudges: storage.nudges,
+        userId,
+        kind: 'roll',
+        at: Date.now(),
+        log: console.log,
+      });
       await storage.steps.record({
         userId: moved.userId,
         event: moved.event,
@@ -628,6 +636,7 @@ const initiative = createInitiative({
   launchUrl: miniAppUrl(),
   hour: nudgeHour(),
   log: console.log,
+  previous: storage.lastTick,
   // Kept only where keeping means something: an in-memory deployment would
   // forget it at the same moment it forgets the games. The adapter lives in
   // storage.ts so a test can reach it — inline here, nothing could.

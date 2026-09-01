@@ -5,7 +5,13 @@ import { blank } from '../../../scripts/lib/source.mjs';
 import { messageFor } from '@leela/content';
 import { Guide, ModelError, fixedModel, recordingModel, type LanguageModel } from '@leela/ai';
 import { createBot } from '../src/bot';
-import { MemoryReportSink, MemoryRoomStore, type ReportSink } from '../src/store';
+import {
+  MemoryNudgeStore,
+  MemoryReportSink,
+  MemoryRoomStore,
+  type NudgeConversion,
+  type ReportSink,
+} from '../src/store';
 import { squareText } from '@leela/journal';
 
 /**
@@ -358,6 +364,39 @@ describe('plain text', () => {
     const { bot } = harness({ reports });
     await bot.handleUpdate(message('hello?', PRIVATE));
     expect(await reports.history?.('100')).toEqual([]);
+  });
+});
+
+describe('a daily word converted into chat play', () => {
+  it('counts only accepted report and move effects, once per kind', async () => {
+    const at = Date.UTC(2026, 8, 1, 6, 0, 0);
+    const nudges = new MemoryNudgeStore();
+    await nudges.record('100', { at, excerpt: 0 });
+
+    const converted: NudgeConversion[] = [];
+    const convert = nudges.convert.bind(nudges);
+    nudges.convert = async (userId, kind, when) => {
+      const counted = await convert(userId, kind, when);
+      if (counted) converted.push(kind);
+      return counted;
+    };
+
+    const { bot, sent } = harness({
+      nudges,
+      reports: new MemoryReportSink(),
+      now: () => at + 1_000,
+    });
+
+    // A command that cannot move has no effect and must not look like play.
+    await bot.handleUpdate(message('/roll', PRIVATE));
+    expect(converted).toEqual([]);
+
+    await bot.handleUpdate(message('/new', PRIVATE));
+    await bot.handleUpdate(message('/start', PRIVATE));
+    await rollUntilTheGate(bot, sent);
+    await bot.handleUpdate(message('what this brings up', PRIVATE));
+
+    expect(converted.sort()).toEqual(['response', 'roll'].sort());
   });
 });
 

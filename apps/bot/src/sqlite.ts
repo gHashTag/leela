@@ -16,11 +16,12 @@ import { gameStepRow } from '@leela/db';
 import { hasWon } from '@leela/engine';
 import type { NewGameStepRow, SessionPlayerRow, SessionRow } from '@leela/db';
 import type { RoomQueries, StoredSeat, StoredSession } from './persistence';
-import { extendedTo } from './stars';
+import { DAY_MS, extendedTo } from './stars';
 import {
   NEVER_NUDGED,
   type Entitlement,
   type EntitlementStore,
+  type NudgeConversion,
   type NudgeRecord,
   type NudgeStore,
   type Subscription,
@@ -195,12 +196,14 @@ CREATE TABLE IF NOT EXISTS last_tick (
 );
 
 CREATE TABLE IF NOT EXISTS nudges (
-  user_id    TEXT PRIMARY KEY,
-  sent_at    INTEGER,
-  excerpt    INTEGER,
-  quieted    INTEGER NOT NULL DEFAULT 0,
-  doorsteps  INTEGER NOT NULL DEFAULT 0,
-  updated_at INTEGER NOT NULL
+  user_id             TEXT PRIMARY KEY,
+  sent_at             INTEGER,
+  excerpt             INTEGER,
+  quieted             INTEGER NOT NULL DEFAULT 0,
+  doorsteps           INTEGER NOT NULL DEFAULT 0,
+  response_for_sent_at INTEGER,
+  roll_for_sent_at     INTEGER,
+  updated_at          INTEGER NOT NULL
 );
 
 -- What a player has paid for in Telegram Stars, and until when.
@@ -718,12 +721,58 @@ export class SqliteRoomQueries implements RoomQueries {
       .run(userId, at, excerpt, doorstep ? 1 : 0, this.now());
   }
 
+  /**
+   * Attribute one accepted action to the current word, once and within a day.
+   *
+   * The stored value is the word's own `sent_at`, not the action time: enough
+   * to deduplicate and aggregate, and no second behavioural timeline to keep.
+   */
+  recordNudgeConversion(
+    userId: string,
+    kind: NudgeConversion,
+    at: number,
+  ): boolean {
+    const column = kind === 'response' ? 'response_for_sent_at' : 'roll_for_sent_at';
+    this.db
+      .prepare(
+        `UPDATE nudges
+            SET ${column} = sent_at
+          WHERE user_id = ?
+            AND sent_at IS NOT NULL
+            AND sent_at <= ?
+            AND sent_at > ?
+            AND (${column} IS NULL OR ${column} != sent_at)`,
+      )
+      .run(userId, at, at - DAY_MS);
+    const changed = this.db.prepare('SELECT changes() AS count').get() as
+      | { count?: number | bigint }
+      | undefined;
+    return Number(changed?.count ?? 0) > 0;
+  }
+
+  /** Aggregate only: no player identifier leaves the nudge table. */
+  nudgeConversions(at: number): { responses: number; rolls: number } {
+    const row = this.db
+      .prepare(
+        `SELECT
+           COUNT(CASE WHEN response_for_sent_at = ? THEN 1 END) AS responses,
+           COUNT(CASE WHEN roll_for_sent_at = ? THEN 1 END) AS rolls
+         FROM nudges`,
+      )
+      .get(at, at) as Record<string, unknown> | undefined;
+    return {
+      responses: Number(row?.responses ?? 0),
+      rolls: Number(row?.rolls ?? 0),
+    };
+  }
+
   /** What the last tick did, or null when this deployment has never ticked. */
   lastTick(): {
     at: number;
     sent: number;
     skipped: Record<string, number>;
     bridges: { model: number; canonical: number };
+    conversions: { responses: number; rolls: number };
   } | null {
     const row = this.db
       .prepare(
@@ -745,6 +794,7 @@ export class SqliteRoomQueries implements RoomQueries {
         model: (row.model_bridges as number | null) ?? 0,
         canonical: (row.canonical_bridges as number | null) ?? 0,
       },
+      conversions: this.nudgeConversions(row.at as number),
     };
   }
 
@@ -1040,6 +1090,10 @@ export function sqliteNudgeStore(queries: SqliteRoomQueries): NudgeStore {
       sent: { at: number; excerpt: number; doorstep?: boolean },
     ): Promise<void> {
       queries.recordNudge(userId, sent.at, sent.excerpt, sent.doorstep === true);
+    },
+
+    async convert(userId, kind, at): Promise<boolean> {
+      return queries.recordNudgeConversion(userId, kind, at);
     },
 
     async setQuieted(userId: string, quieted: boolean): Promise<void> {

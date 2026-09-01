@@ -7,7 +7,7 @@
  */
 
 import type { Room } from './commands';
-import { extendedTo } from './stars';
+import { DAY_MS, extendedTo } from './stars';
 
 /** A table read back, and whether one was refused to give the answer. */
 export interface ReadRoom {
@@ -245,13 +245,30 @@ export interface NudgeStore {
    * a doorstep word — the one kind that spends a counted allowance.
    */
   record(userId: string, sent: { at: number; excerpt: number; doorstep?: boolean }): Promise<void>;
+  /**
+   * Attribute the first accepted action of this kind to the latest delivered
+   * word, inside its one-day window. No text or game context is kept.
+   */
+  convert(userId: string, kind: NudgeConversion, at: number): Promise<boolean>;
   /** `/quiet` — both directions, because coming back is part of the command. */
   setQuieted(userId: string, quieted: boolean): Promise<void>;
+}
+
+export type NudgeConversion = 'response' | 'roll';
+
+/** Aggregate outcomes for one delivered daily-word cohort. */
+export interface NudgeConversionCounts {
+  responses: number;
+  rolls: number;
 }
 
 /** Nudge memory in memory. Enough for a single process and for tests. */
 export class MemoryNudgeStore implements NudgeStore {
   private readonly records = new Map<string, NudgeRecord>();
+  private readonly conversions = new Map<
+    string,
+    { response: number | null; roll: number | null }
+  >();
 
   async of(userId: string): Promise<NudgeRecord> {
     return this.records.get(userId) ?? NEVER_NUDGED;
@@ -265,6 +282,18 @@ export class MemoryNudgeStore implements NudgeStore {
       excerpt: sent.excerpt,
       doorsteps: held.doorsteps + (sent.doorstep ? 1 : 0),
     });
+  }
+
+  async convert(userId: string, kind: NudgeConversion, at: number): Promise<boolean> {
+    const nudge = await this.of(userId);
+    if (nudge.sentAt === null || at < nudge.sentAt || at - nudge.sentAt >= DAY_MS) {
+      return false;
+    }
+
+    const held = this.conversions.get(userId) ?? { response: null, roll: null };
+    if (held[kind] === nudge.sentAt) return false;
+    this.conversions.set(userId, { ...held, [kind]: nudge.sentAt });
+    return true;
   }
 
   async setQuieted(userId: string, quieted: boolean): Promise<void> {
