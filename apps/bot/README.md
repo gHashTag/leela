@@ -277,6 +277,21 @@ If subscriptions are turned on later, `SuccessfulPayment.subscription_expiration
 is Telegram's own answer to when the entitlement ends, and it is the number to
 record.
 
+**Terms and payment support precede checkout.** A priced deployment publishes
+`/terms` and `/paysupport` beside `/pro`. They point to the Terms and contact
+address already published by `@leela/docs`; the bot adds no legal promise or
+support SLA of its own, and says explicitly that Telegram cannot resolve a
+purchase made through this bot. `/pro <tier>` now sends a private acceptance
+prompt rather than an invoice. Only the player's *I have read and agree*
+callback resolves the tier against the current offer and calls `sendInvoice`.
+An old or forged callback can therefore show the current offer but cannot
+charge for a tier the deployment no longer sells. The invoice remains one step
+before payment: only Telegram's later `successful_payment` opens access. New
+invoices carry a consent-bound `v2` payload, so an unpaid `v1` invoice from the
+older direct-invoice flow is refused at pre-checkout. A `v1` payment Telegram
+already completed across the deployment boundary is still honoured after the
+money moved.
+
 The pre-checkout answer has a deadline: Telegram must receive it **within ten
 seconds**, and past that the payment fails for the player with no reason given.
 So nothing awaited stands between the update arriving and the answer going out

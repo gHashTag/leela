@@ -92,6 +92,24 @@ function typed(text: string, from = PLAYER) {
   } as never;
 }
 
+function pressed(data: string, from = PLAYER) {
+  updateId += 1;
+  return {
+    update_id: updateId,
+    callback_query: {
+      id: `callback-${updateId}`,
+      from: { id: from, is_bot: false, first_name: `P${from}`, language_code: 'en' },
+      chat_instance: 'private-chat',
+      data,
+      message: {
+        message_id: updateId,
+        date: 0,
+        chat: { id: from, type: 'private' as const },
+      },
+    },
+  } as never;
+}
+
 /** Telegram's word that the money has moved. */
 function paid(options: {
   payload: string;
@@ -181,11 +199,90 @@ function invoiceIn(sent: Harness['sent']): Record<string, unknown> {
   return invoices[0]?.payload ?? {};
 }
 
+describe('care before a Stars purchase', () => {
+  it('names the published terms and the existing payment support in both bot languages', async () => {
+    for (const language of translatedLanguages()) {
+      const { bot, texts } = priced();
+      updateId += 1;
+      const command = (text: string) =>
+        ({
+          update_id: ++updateId,
+          message: {
+            message_id: updateId,
+            date: 0,
+            chat: { id: PLAYER, type: 'private' as const },
+            from: { id: PLAYER, is_bot: false, first_name: 'P', language_code: language },
+            text,
+            entities: [{ type: 'bot_command' as const, offset: 0, length: text.length }],
+          },
+        }) as never;
+
+      await bot.handleUpdate(command('/terms'));
+      await bot.handleUpdate(command('/paysupport'));
+
+      const said = texts().join('\n');
+      expect(said, `${language} terms`).toContain(
+        `https://t27.ai/leela/docs/${language}/legal/eula.html`,
+      );
+      expect(said, `${language} support`).toContain('raoffonom@icloud.com');
+      expect(said, `${language} Telegram boundary`).toContain(
+        messageFor(language, 'pro.telegramCannotSupport'),
+      );
+    }
+  });
+
+  it('sends an invoice only after the player explicitly accepts the terms', async () => {
+    const { bot, sent, funnel } = priced();
+
+    await bot.handleUpdate(typed('/pro month'));
+
+    expect(sent.filter((call) => call.method === 'sendInvoice')).toEqual([]);
+    const prompt = sent.find((call) => call.method === 'sendMessage');
+    expect(String(prompt?.payload.text)).toContain(
+      'https://t27.ai/leela/docs/en/legal/eula.html',
+    );
+    expect(prompt?.payload.reply_markup).toMatchObject({
+      inline_keyboard: [[{ callback_data: 'pay:month' }]],
+    });
+    expect(await funnel.summary()).toMatchObject({ invoice: 0 });
+
+    await bot.handleUpdate(pressed('pay:month'));
+
+    expect(sent[1]?.method).toBe('answerCallbackQuery');
+    expect(invoiceIn(sent).currency).toBe('XTR');
+    expect(await funnel.summary()).toMatchObject({ invoice: 1 });
+  });
+
+  it('turns a stale or forged acceptance into the current offer, never an invoice', async () => {
+    const { bot, sent, texts, funnel } = priced();
+
+    await bot.handleUpdate(pressed('pay:month:extra'));
+    await bot.handleUpdate(pressed('pay:ghost'));
+
+    expect(sent.filter((call) => call.method === 'sendInvoice')).toEqual([]);
+    expect(texts().join('\n')).toContain('/pro month');
+    expect(await funnel.summary()).toMatchObject({ invoice: 0 });
+  });
+
+  it('refuses a well-formed acceptance for a tier removed from the current offer', async () => {
+    const sold = offering({ LEELA_STARS_YEAR: '1200' });
+    const { bot, sent, texts, funnel } = priced({ stars: sold });
+
+    await bot.handleUpdate(pressed('pay:month'));
+
+    expect(sent.filter((call) => call.method === 'sendInvoice')).toEqual([]);
+    expect(texts().join('\n')).toContain('/pro year');
+    expect(texts().join('\n')).not.toContain('/pro month');
+    expect(await funnel.summary()).toMatchObject({ invoice: 0 });
+  });
+});
+
 describe('the invoice a price produces', () => {
   it('is in Stars, for the exact amount the environment named', async () => {
     for (const tier of ALL_THREE) {
       const { bot, sent, funnel } = priced();
       await bot.handleUpdate(typed(`/pro ${tier.id}`));
+      await bot.handleUpdate(pressed(`pay:${tier.id}`));
 
       const invoice = invoiceIn(sent);
       expect(invoice.currency, tier.id).toBe('XTR');
@@ -285,6 +382,7 @@ describe('the invoice a price produces', () => {
         entities: [{ type: 'bot_command', offset: 0, length: 4 }],
       },
     } as never);
+    await bot.handleUpdate(pressed('pay:month'));
 
     const invoice = invoiceIn(sent);
     expect(String(invoice.chat_id)).toBe(String(PLAYER));
@@ -321,6 +419,35 @@ describe('the invoice a price produces', () => {
 });
 
 describe('a payment that arrives', () => {
+  it('honours a completed payment even when the current offer changed or went dark', async () => {
+    const cases = [
+      {
+        name: 'legacy month while only year remains for sale',
+        stars: offering({ LEELA_STARS_YEAR: '1200' }),
+        payload: 'leela:pro:month:v1',
+        tier: 'month',
+      },
+      {
+        name: 'consent-bound halfyear after every price was removed',
+        stars: null,
+        payload: payloadFor('halfyear'),
+        tier: 'halfyear',
+      },
+    ] as const;
+
+    for (const one of cases) {
+      const { bot, entitlements, texts } = priced({ stars: one.stars });
+      const charge = `completed-${one.tier}`;
+
+      await bot.handleUpdate(paid({ payload: one.payload, amount: 150, charge }));
+
+      expect((await entitlements.of(charge))?.tier, one.name).toBe(one.tier);
+      expect(texts().join('\n'), one.name).toContain(messageFor('en', 'pro.thanks', {
+        until: asDay(NOW + (one.tier === 'month' ? 30 : 182) * DAY),
+      }));
+    }
+  });
+
   it('is written down, and read back as a date', async () => {
     const { bot, entitlements, texts, funnel } = priced();
 
@@ -347,6 +474,7 @@ describe('a payment that arrives', () => {
     const { bot, sent, entitlements, texts } = priced({ funnel: broken });
 
     await bot.handleUpdate(typed('/pro month'));
+    await bot.handleUpdate(pressed('pay:month'));
     expect(sent.some((call) => call.method === 'sendInvoice')).toBe(true);
 
     await bot.handleUpdate(
@@ -407,7 +535,7 @@ describe('a payment that arrives', () => {
     // rather than thanked for something nothing here can honour.
     expect(texts()).toEqual([messageFor('en', 'pro.unmatched')]);
     expect(await entitlements.of('charge-5')).toBeNull();
-    expect(logs.join('\n')).toContain('did not match a currently sold tier');
+    expect(logs.join('\n')).toContain('did not match a known tier');
     expect(logs.join('\n')).not.toContain('recording entitlement');
     expect(logs.join('\n')).not.toContain('charge-5');
   });

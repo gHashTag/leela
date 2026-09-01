@@ -230,6 +230,8 @@ const DRIVERS: Record<string, (words: string) => Array<Record<string, unknown>>>
    * driving nothing. See `dark-until-a-price-is-named.test.ts` for that half.
    */
   pro: () => [command('/pro')],
+  terms: () => [command('/terms')],
+  paysupport: () => [command('/paysupport')],
   refund: () => [command('/refund no-such-charge')],
   pre_checkout_query: () => [
     {

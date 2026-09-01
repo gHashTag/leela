@@ -195,6 +195,16 @@ describe('the ten-second answer', () => {
 });
 
 describe('what is checked before the answer', () => {
+  it('refuses an unpaid invoice issued before explicit Terms acceptance existed', async () => {
+    const { calls } = await answerFor({
+      payload: 'leela:pro:month:v1',
+      currency: 'XTR',
+      amount: 150,
+    });
+
+    expect(calls[0]?.payload.ok).toBe(false);
+  });
+
   /**
    * Three things, all of them in hand the moment the update arrives: this rail
    * wrote the payload, the tier it names is still sold, and the amount is what

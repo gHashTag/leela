@@ -207,22 +207,37 @@ export function whyNoOperators(env: Environment): string | null {
 }
 
 /**
- * What an invoice carries back to us when it is paid.
+ * What a consent-bound invoice carries back to us when it is paid.
  *
  * The tier is in the payload because the price is not enough to identify one —
  * two tiers may be priced the same, and a price can change between the invoice
- * and the payment. `v1` is there so that a payload written by an older release
- * is recognisably not this one rather than silently misread.
+ * and the payment. `v2` distinguishes invoices issued only after the player
+ * accepted the published Terms from `v1` invoices issued before that step.
  */
 export function payloadFor(id: TierId): string {
-  return `leela:pro:${id}:v1`;
+  return `leela:pro:${id}:v2`;
 }
 
-/** The tier a payload names, or `null` if this rail did not write it. */
+/** The tier a current, consent-bound invoice names, or `null`. */
 export function tierOfPayload(payload: string): TierId | null {
-  const match = /^leela:pro:([a-z]+):v1$/.exec(payload);
+  const match = /^leela:pro:([a-z]+):v2$/.exec(payload);
   const named = match?.[1];
   return TIERS.some((tier) => tier.id === named) ? (named as TierId) : null;
+}
+
+/**
+ * Decode a payment after Telegram says the money moved.
+ *
+ * An unpaid `v1` invoice is refused by `tierOfPayload`, but a checkout approved
+ * just before deployment can deliver `successful_payment` just after it. Both
+ * generations are honoured here because losing access after a completed charge
+ * is worse than accepting an in-flight legacy purchase. This decoder is never
+ * used to approve a charge.
+ */
+export function tierOfPaidPayload(payload: string): TierShape | null {
+  const match = /^leela:pro:([a-z]+):v(?:1|2)$/.exec(payload);
+  const named = match?.[1];
+  return TIERS.find((tier) => tier.id === named) ?? null;
 }
 
 /** The tier this offering sells under that id, or `null`. */
@@ -354,7 +369,7 @@ export function offerFor(
     );
   }
 
-  lines.push('', messageFor(language, 'pro.refundable'));
+  lines.push('', messageFor(language, 'pro.refundable'), messageFor(language, 'pro.care'));
   if (held !== null) lines.push(messageFor(language, 'pro.held', { until: asDay(held) }));
 
   return lines.join('\n');

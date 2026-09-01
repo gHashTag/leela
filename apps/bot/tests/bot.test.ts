@@ -214,7 +214,7 @@ describe('the help message is the whole surface', () => {
    * A command registered tomorrow and classified as none of the three still
    * fails below, which is what this list is for.
    */
-  const EXEMPT = ['/help', '/pro', '/refund'];
+  const EXEMPT = ['/help', '/pro', '/terms', '/paysupport', '/refund'];
 
   it('names every command the bot answers', () => {
     const missing = registered()

@@ -36,6 +36,7 @@ import { MAX_MESSAGE_CHARS } from './render';
 import { bookFor, formatWait, messageFor, planFor, resolveLanguage, type Language,
   type MessageKey,
 } from '@leela/content';
+import type { TierId } from './stars';
 
 /** A table, plus the bits the bot needs that the engine does not care about. */
 export interface Room {
@@ -63,7 +64,7 @@ export interface Room {
 export interface ActionButton {
   label: string;
   /** The command this button stands for, without its slash. */
-  action: 'roll' | 'board' | 'plan' | 'join' | 'start' | 'help' | 'new';
+  action: 'roll' | 'board' | 'plan' | 'join' | 'start' | 'help' | 'new' | `pay:${TierId}`;
   /**
    * Never set. Present so `Button` is a discriminated union that existing
    * readers of `.action` still compile against: a member that simply omitted
@@ -290,7 +291,11 @@ export const BOT_COMMANDS: readonly BotCommand[] = [
  * `LEELA_STARS_OPERATORS`, and a menu entry for it would be an invitation to
  * every player to try it.
  */
-export const PAID_COMMANDS: readonly BotCommand[] = [{ command: 'pro', describedBy: 'menu.pro' }];
+export const PAID_COMMANDS: readonly BotCommand[] = [
+  { command: 'pro', describedBy: 'menu.pro' },
+  { command: 'terms', describedBy: 'menu.terms' },
+  { command: 'paysupport', describedBy: 'menu.paysupport' },
+];
 
 /**
  * The menu as Telegram wants it, in one language.
