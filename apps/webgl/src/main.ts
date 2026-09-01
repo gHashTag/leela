@@ -1,6 +1,5 @@
 import {
   LEGACY_MOBILE,
-  WIN_LOKA,
   type MoveEvent,
   MAX_SEATS,
   createSession,
@@ -219,7 +218,6 @@ void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine
    * a player's path on the other side of it.
    */
   const state = mine.standing.state;
-  rememberChatAccess(mine.standing);
 
   // A bot too old to send a state is a bot that needs deploying, and the board
   // says so rather than quietly showing a different game.
@@ -245,19 +243,43 @@ void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine
     return;
   }
 
+  // Payment access belongs to the adopted chat game. Importing it before the
+  // guards lets a rejected old-bot or multi-seat response gate the local game.
+  rememberChatAccess(mine.standing);
   chatGame = launch;
   session = { ...session, players: [{ ...session.players[0]!, state }] };
   // The board's own roll history belongs to the game it just stopped playing.
   // Kept, it would draw a die face and a trail from a different game.
   rolls = [[]];
   lastThrower = null;
-  placeSeats();
+  stillMoving = false;
+
+  // `myGame` resolves after the local game has already painted once. Replacing
+  // the session therefore has to replace every view derived from it, not only
+  // the token and article. Otherwise the chat line can say plan 6 while the
+  // header, die and companion keep describing the former local plan.
+  companion.reset({ retry: true });
+  if (entered(seat())) {
+    companion.arrived(
+      state.loka,
+      null,
+      messageFor(language, 'app.standing', { plan: state.loka, title: titleOf(state.loka) }),
+      writingsOn(readAll(store), state.loka),
+    );
+  }
+
+  showFace(RESTING_FACE, true, false);
+  showStanding(null);
+  if (visiting !== null) stopVisiting();
   showLotus();
   showPlanText(state.loka);
+  showThread();
+  showPath();
   // Said on success too, so the line means *this is the chat's game* rather
   // than *here is a number from somewhere else*.
   sayAboutTheChat('app.chatAdopted', { plan: state.loka });
   showGate();
+  settle();
 });
 
 
@@ -1468,6 +1490,7 @@ const showStanding = (event: MoveEvent | null, of: SeatedPlayer = seat()): void 
   el.planNumber.textContent = standing.number;
   el.planTitle.textContent = standing.title;
   el.progress.value = standing.progress;
+  el.progress.setAttribute('aria-label', standing.progressLabel);
   el.say.textContent = standing.say;
   el.say.dataset.tone = standing.tone;
 };
@@ -2192,4 +2215,3 @@ showIntention();
 settle();
 grow();
 el.progress.max = 1;
-el.progress.setAttribute('aria-label', `0 / ${WIN_LOKA}`);

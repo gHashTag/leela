@@ -43,6 +43,8 @@ export interface Standing {
   readonly title: string;
   /** How far to Cosmic Consciousness, 0..1. */
   readonly progress: number;
+  /** The same progress expressed for assistive technology. */
+  readonly progressLabel: string;
   /** The move, in a sentence, in the player's language. */
   readonly say: string;
   readonly tone: Tone;
@@ -60,6 +62,7 @@ export const opening = (language: Language): Standing => ({
   number: '—',
   title: messageFor(language, 'app.waiting'),
   progress: 0,
+  progressLabel: `0 / ${WIN_LOKA}`,
   say: messageFor(language, 'app.opening'),
   tone: 'wait',
 });
@@ -70,20 +73,24 @@ export const standingOn = (
   plan: number,
   titleOf: TitleOf,
   event: MoveEvent | null,
-): Standing => ({
-  plan,
-  number: String(plan),
-  title: titleOf(plan),
-  // Against the winning square rather than against 72: 68 is the end of the
-  // game and the four squares past it are the ones you are made to walk back
-  // from. A bar that reads 94% at the finish is a bar that is measuring the
-  // wrong thing.
-  progress: Math.max(0, Math.min(1, plan / WIN_LOKA)),
-  say: event
-    ? describeMove(language, event, titleOf)
-    : messageFor(language, 'app.standing', { plan, title: titleOf(plan) }),
-  tone: event ? toneOf(event.direction) : 'step',
-});
+): Standing => {
+  const progress = Math.max(0, Math.min(1, plan / WIN_LOKA));
+  return {
+    plan,
+    number: String(plan),
+    title: titleOf(plan),
+    // Against the winning square rather than against 72: 68 is the end of the
+    // game and the four squares past it are the ones you are made to walk back
+    // from. A bar that reads 94% at the finish is a bar that is measuring the
+    // wrong thing.
+    progress,
+    progressLabel: `${Math.round(progress * WIN_LOKA)} / ${WIN_LOKA}`,
+    say: event
+      ? describeMove(language, event, titleOf)
+      : messageFor(language, 'app.standing', { plan, title: titleOf(plan) }),
+    tone: event ? toneOf(event.direction) : 'step',
+  };
+};
 
 /**
  * Which of the three things a seat can be doing.

@@ -53,6 +53,13 @@ describe('the readout', () => {
     }
   });
 
+  it('describes the same progress value to assistive technology', () => {
+    expect(screenFor('en', 6, 'playing', titleOf, null).progressLabel).toBe('6 / 68');
+    expect(screenFor('en', 11, 'playing', titleOf, null).progressLabel).toBe('11 / 68');
+    expect(screenFor('en', 72, 'playing', titleOf, null).progressLabel).toBe('68 / 68');
+    expect(screenFor('en', WIN_LOKA, 'waiting', titleOf, null).progressLabel).toBe('0 / 68');
+  });
+
   it('names every square it stands on, in every language, without blanking', () => {
     for (const language of LANGUAGES) {
       for (let plan = 1; plan <= TOTAL_PLANS; plan += 1) {
@@ -504,6 +511,67 @@ describe('the companion', () => {
     companion.reset();
     expect(companion.view().lines).toHaveLength(0);
     expect(companion.view().rests).toBeNull();
+  });
+
+  it('discards a late answer and stream from the game reset replaced', async () => {
+    let finish: ((answer: string) => void) | undefined;
+    let stream: ((part: { text?: string; thinking?: string }) => void) | undefined;
+    const companion = new Companion({
+      language: 'en',
+      ask: async (_question, _rests, _lines, onChunk) =>
+        await new Promise<string>((resolve) => {
+          finish = resolve;
+          stream = onChunk;
+        }),
+    });
+
+    landing(companion, 11);
+    const stale = companion.say('Tell me about plan 11');
+    await Promise.resolve();
+    expect(companion.view().status).toBe('thinking');
+
+    companion.reset({ retry: true });
+    landing(companion, 6);
+    expect(companion.view().status).toBe('ready');
+
+    stream?.({ text: 'late plan 11 stream' });
+    finish?.('late plan 11 answer');
+    await stale;
+
+    const view = companion.view();
+    expect(view.status).toBe('ready');
+    expect(view.streaming).toBeNull();
+    expect(view.rests?.plan).toBe(6);
+    expect(view.lines.every((line) => line.plan === 6)).toBe(true);
+    expect(JSON.stringify(view)).not.toContain('late plan 11');
+  });
+
+  it('lets an adopted game retry after a refusal in the replaced game', async () => {
+    let attempts = 0;
+    const companion = new Companion({
+      language: 'en',
+      ask: async () => {
+        attempts += 1;
+        if (attempts === 1) throw new Error('temporary');
+        return 'fresh answer';
+      },
+    });
+
+    landing(companion, 11);
+    await companion.say('old question');
+    expect(companion.view().status).toBe('silenced');
+
+    companion.reset({ retry: true });
+    landing(companion, 6);
+    await companion.say('new question');
+
+    expect(attempts).toBe(2);
+    expect(companion.view().status).toBe('ready');
+    expect(companion.view().lines.at(-1)).toMatchObject({
+      text: 'fresh answer',
+      source: 'model',
+      plan: 6,
+    });
   });
 });
 
