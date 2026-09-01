@@ -50,6 +50,18 @@ Primary source: <https://core.telegram.org/bots/payments-stars>.
 
 - One repository command performs a non-mutating probe inside the active
   Railway container.
+- Its local wrapper uses the repository's linked Railway project, environment,
+  and service instead of partially overriding only the service; current
+  Railway CLI rejects that ambiguous partial override before opening SSH.
+- The Railway CLI binary is pinned in the root development manifest, so a fresh
+  checkout can run the repository command without relying on an undeclared
+  machine-global executable.
+- The canonical operator entry is the root `monitor:live` script, which gives
+  its child process the manifest-pinned binary path instead of silently using
+  an older machine-global Railway CLI.
+- The production runtime image contains that command's entry script at the
+  same repository-relative path used by the Railway SSH wrapper; a successful
+  source checkout alone is not deployment evidence.
 - It selects the most recently active seated player without printing the
   player key, signs fresh Telegram init data with the runtime token without
   printing either value, and asks the public `/api/game` endpoint.
@@ -81,6 +93,13 @@ Primary source: <https://core.telegram.org/bots/payments-stars>.
   migration, aggregate output, and failure isolation.
 - The live monitor's verdict is tested over matching, stale, 401/403, malformed,
   unreachable, and no-game cases without network or secrets.
+- A deterministic image-contract test fails if the runtime Docker stage stops
+  copying the monitor entry script.
+- The image CI starts the copied entry script inside the just-built runtime
+  image and requires it to load all imports before reaching its environment
+  gate, with exactly the declared exit and output and no extra diagnostics.
+- An adapter-contract test fails if the wrapper reintroduces a partial Railway
+  target override that the linked CLI cannot resolve.
 - Focused bot tests, normal and strict typechecks, the full bot suite,
   `bun run verify`, explicit root audits, independent review, PR checks, merge,
   Railway deployment, exact-release audit, production monitor, and Telegram

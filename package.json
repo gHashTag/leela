@@ -16,6 +16,7 @@
     "audit": "node -e \"const {readdirSync,readFileSync}=require('node:fs');const {execFileSync}=require('node:child_process');const excused=JSON.parse(readFileSync('package.json','utf8')).auditsThisGateCannotRun||{};const excuse=p=>String(excused[p]||'').trim();const onDisk=readdirSync('scripts').filter(n=>n.startsWith('audit-')&&n.endsWith('.mjs')).sort().map(n=>'scripts/'+n);const problems=[];for(const p of Object.keys(excused))if(!onDisk.includes(p))problems.push(p+': excused, and not on disk - an exemption for a file nobody has');for(const p of onDisk)if(excused[p]!==undefined&&excuse(p)==='')problems.push(p+': excused with no reason given');const toRun=onDisk.filter(p=>excuse(p)==='');if(toRun.length===0)problems.push('every audit on disk is excused, so this gate runs nothing');for(const p of onDisk)if(excuse(p)!=='')console.log('excused  '+p+': '+excuse(p));for(const p of toRun){const rt=(readFileSync(p,'utf8').match(/^#!\\s*\\/usr\\/bin\\/env\\s+(\\w+)/)||[])[1];if(!rt){problems.push(p+': no shebang, so nothing says how to run it');continue;}console.log('\\n--- '+rt+' '+p);try{execFileSync(rt,[p],{stdio:'inherit'});}catch(err){problems.push(p+': '+rt+' exited '+(err.status===undefined||err.status===null?String(err.message).split('\\n')[0]:err.status));}}if(problems.length){console.error('\\n'+problems.length+' audit(s) neither ran nor passed:');for(const t of problems)console.error('  '+t);process.exit(1);}console.log('\\n'+toRun.length+' audits ran and passed, and every other audit-*.mjs on disk is excused above with a reason.');\"",
     "coverage": "vitest run --workspace coverage.workspace.ts --coverage",
     "knip": "knip --config knip.config.mjs --include dependencies,unlisted,binaries",
+    "monitor:live": "bun scripts/monitor-live-game.mjs",
     "actionlint": "github-actionlint .github/workflows/*.yml",
     "depcruise": "depcruise --config .dependency-cruiser.mjs --output-type err-long packages apps",
     "mutate:engine": "stryker run stryker.conf.mjs",
@@ -32,6 +33,7 @@
     "scripts/audit-mutants.mjs": "edits shipped source on purpose and runs a full suite per decision, minutes of it. A gate must not mutate the tree it is checking, and a run stopped halfway is already caught by content:build and by audit-scripts, both of which read scripts/.mutants-undo.json."
   },
   "devDependencies": {
+    "@railway/cli": "5.47.1",
     "@stryker-mutator/api": "^9.6.1",
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",

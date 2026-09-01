@@ -60,6 +60,23 @@ jobs:
       - name: Build
         run: docker build -t leela-bot -f apps/bot/Dockerfile .
 
+      # This is the same path Railway SSH invokes after deployment. Running it
+      # without production variables must load the entry script and all of its
+      # runtime imports, then stop at its declared privacy-safe UNKNOWN gate.
+      - name: Load the production monitor from the built image
+        run: |
+          set +e
+          output=$(docker run --rm --entrypoint bun leela-bot run scripts/monitor-live-game.mjs --inside 2>&1)
+          code=$?
+          set -e
+          expected='UNKNOWN — the active container lacks a token, database path, or public domain.'
+
+          if [ "$code" -ne 2 ] || [ "$output" != "$expected" ]; then
+            echo "::error::the production monitor did not load cleanly to its environment gate (code $code)"
+            exit 1
+          fi
+          printf '%s\n' "$output"
+
       # Building proves it compiles; running proves it runs. The token is
       # deliberately a fake one: a 401 is the single failure the bot refuses to
       # retry, so the container says everything it has to say and then exits 0.
