@@ -547,4 +547,26 @@ describe('the board is answered about a player, not a chat', () => {
       refusal,
     );
   });
+
+  it('attributes the Mini App paywall and move milestones at their server-authoritative boundaries', () => {
+    const start = wiring.indexOf('rollFor:');
+    const rollFor = bracesAt(wiring, start);
+    const accessDecision = rollFor.indexOf('if (!beforeAccess.mayMove)');
+    const paywall = rollFor.indexOf("stage: 'paywall'");
+    const refusal = rollFor.indexOf("return { refused: messageFor(room.language, 'app.tollDue') }");
+    const durableMove = rollFor.indexOf('await storage.steps.record');
+    const afterAccess = rollFor.lastIndexOf('const access = await accessFor');
+    const moveMilestone = rollFor.indexOf('const stage = access.entitled');
+
+    expect(accessDecision).toBeGreaterThan(-1);
+    expect(paywall, 'the refused fourth Mini App move marks the paywall').toBeGreaterThan(
+      accessDecision,
+    );
+    expect(paywall).toBeLessThan(refusal);
+    expect(durableMove, 'a successful move is durable before attribution').toBeGreaterThan(-1);
+    expect(afterAccess).toBeGreaterThan(durableMove);
+    expect(moveMilestone, 'trial/return is derived from post-move access').toBeGreaterThan(
+      afterAccess,
+    );
+  });
 });

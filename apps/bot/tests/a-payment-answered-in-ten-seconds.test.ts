@@ -274,13 +274,14 @@ describe('what is checked before the answer', () => {
     expect(calls[0]?.payload.error_message).toBe(messageFor('ru', 'pro.cannotTake'));
   });
 
-  it('writes down what it refused, so a refused payment can be explained', async () => {
+  it('records a refused checkout without correlating it to a player or payload', async () => {
     const { logs } = await answerFor({ payload: payloadFor('month'), currency: 'USD', amount: 150 });
     const said = logs.join('\n');
 
-    expect(said).toContain('700');
-    expect(said).toContain('USD');
-    expect(said).toContain(payloadFor('month'));
+    expect(said).toContain('refused a pre-checkout');
+    expect(said).not.toContain('700');
+    expect(said).not.toContain('USD');
+    expect(said).not.toContain(payloadFor('month'));
   });
 
   it('says nothing to the log about one it took', async () => {

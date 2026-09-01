@@ -163,7 +163,7 @@ export class DatabaseRoomStore implements RoomStore {
     // has at least the host. Not absent: there is a row here, and something
     // has to be able to say so.
     if (seats.length === 0) {
-      this.log(`[bot] chat ${chatId}: a table with no seats`);
+      this.log('[bot] a table has no seats');
       return { room: null, unreadable: true };
     }
 
@@ -174,7 +174,7 @@ export class DatabaseRoomStore implements RoomStore {
       // command sent to this chat from now on. A throw on every update is not
       // recoverable; being told which of the two happened is.
       if (!(error instanceof StoredRowsError)) throw error;
-      this.log(`[bot] chat ${chatId}: unreadable table — ${error.message}`);
+      this.log(`[bot] unreadable table — ${error.message}`);
       return { room: null, unreadable: true };
     }
   }

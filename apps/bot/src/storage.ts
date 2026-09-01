@@ -17,17 +17,20 @@ import {
   SqliteRoomQueries,
   sqliteEntitlements,
   sqliteNudgeStore,
+  sqlitePaymentFunnel,
   sqliteReportSink,
   sqliteStepSink,
 } from './sqlite';
 import {
   MemoryEntitlementStore,
   MemoryNudgeStore,
+  MemoryPaymentFunnelStore,
   MemoryReportSink,
   MemoryRoomStore,
   MemoryStepSink,
   type EntitlementStore,
   type NudgeStore,
+  type PaymentFunnelStore,
   type ReportSink,
   type RoomStore,
   type StepSink,
@@ -64,6 +67,8 @@ export interface Storage {
    * says which of the two this deployment has.
    */
   entitlements: EntitlementStore;
+  /** First-player milestones in the free-to-paid journey. */
+  funnel: PaymentFunnelStore;
   /** Whether games survive a restart. */
   durable: boolean;
   /**
@@ -159,6 +164,7 @@ export function openStorage({
       steps: new MemoryStepSink(),
       nudges: new MemoryNudgeStore(),
       entitlements: new MemoryEntitlementStore(),
+      funnel: new MemoryPaymentFunnelStore(),
       durable: false,
     };
   }
@@ -189,6 +195,7 @@ export function openStorage({
       steps: sqliteStepSink(queries),
       nudges: sqliteNudgeStore(queries),
       entitlements: sqliteEntitlements(queries),
+      funnel: sqlitePaymentFunnel(queries),
       lastTick: () => queries.lastTick(),
       rememberTick: (at, sent, skipped, bridges) =>
         queries.recordTick(at, sent, skipped, bridges),
@@ -208,6 +215,7 @@ export function openStorage({
       steps: new MemoryStepSink(),
       nudges: new MemoryNudgeStore(),
       entitlements: new MemoryEntitlementStore(),
+      funnel: new MemoryPaymentFunnelStore(),
       durable: false,
       failure,
     };

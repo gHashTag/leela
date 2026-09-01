@@ -22,6 +22,7 @@ import {
 } from '@leela/ai';
 import {
   FALLBACK_LANGUAGE,
+  FREE_MOVES,
   LANGUAGES,
   loadEveryLanguage,
   loadedLanguages,
@@ -35,6 +36,7 @@ import { createBot, miniAppUrl } from './bot';
 import { accessFor } from './access';
 import { PAID_COMMANDS, menuFor, roll as rollCommand } from './commands';
 import { attributeConversion } from './conversions';
+import { attributePaymentStage, funnelSaid } from './payment-funnel';
 import { DirectChannels } from './delivery';
 import { createInitiative, lastWordSaid, nudgeHour } from './initiative';
 import { serveAsk, type StreamAsk, type Streamed } from './serve';
@@ -179,6 +181,7 @@ const built = {
   steps: storage.steps,
   nudges: storage.nudges,
   entitlements: storage.entitlements,
+  funnel: storage.funnel,
   channels,
   guide,
   stars,
@@ -201,7 +204,8 @@ const keeping =
   built.reports === storage.reports &&
   built.steps === storage.steps &&
   built.nudges === storage.nudges &&
-  built.entitlements === storage.entitlements;
+  built.entitlements === storage.entitlements &&
+  built.funnel === storage.funnel;
 
 console.log(
   keeping
@@ -248,6 +252,14 @@ console.log(
     ? `${built.operators.length} operator(s) may /refund a payment.`
     : `Refunds: ${whyNoOperators(process.env) ?? ''}.`,
 );
+
+try {
+  console.log(funnelSaid(await storage.funnel.summary()));
+} catch {
+  // A dashboard read cannot keep the bot from listening. No error contents:
+  // database messages can carry a path and this is an aggregate-only surface.
+  console.log('[payments] aggregate funnel could not be read at startup.');
+}
 
 /**
  * Say which languages the bot actually speaks.
@@ -534,6 +546,13 @@ const asking = serveAsk({
       now: Date.now(),
     });
     if (!beforeAccess.mayMove) {
+      await attributePaymentStage({
+        funnel: storage.funnel,
+        userId,
+        stage: 'paywall',
+        at: Date.now(),
+        log: console.log,
+      });
       return { refused: messageFor(room.language, 'app.tollDue') };
     }
 
@@ -578,6 +597,18 @@ const asking = serveAsk({
       steps: storage.steps,
       now: Date.now(),
     });
+    if (moved?.kind === 'move' && stars !== null) {
+      const stage = access.entitled ? 'return' : access.moved === FREE_MOVES ? 'trial' : null;
+      if (stage !== null) {
+        await attributePaymentStage({
+          funnel: storage.funnel,
+          userId,
+          stage,
+          at: Date.now(),
+          log: console.log,
+        });
+      }
+    }
 
     return {
       roll: moved?.event.roll ?? 0,
