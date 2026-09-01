@@ -1,0 +1,857 @@
+import { describe, expect, it } from 'vitest';
+import type { Direction } from '@leela/engine';
+import { LANGUAGES, LANGUAGE_NAMES as CONTENT_NAMES, planFor } from '@leela/content';
+import { ARROWS, MAX_ROLL, SNAKES, TOTAL_PLANS, WIN_LOKA } from '@leela/engine';
+import { MAX_REPORT_CHARS } from '@leela/journal';
+import {
+  MAX_HISTORY,
+  MAX_HISTORY_CHARS,
+  MAX_INTENTION_CHARS,
+  MAX_JOURNEY_CHARS,
+  MAX_JOURNEY_ENTRIES,
+  MAX_JOURNEY_ENTRY_CHARS,
+  MAX_PLAN_CHARS,
+  PromptError,
+  questionPrompt,
+  reportPrompt,
+  summariseJourney,
+  systemPrompt,
+  trimToParagraph,
+} from '../src';
+
+const base = { plan: 1, language: 'en' as const };
+
+describe('the prompt rests on the canonical text', () => {
+  // This is the defect the package exists to fix: the service it replaces
+  // asked the model to invent a description of the plan, with the traditional
+  // text sitting unused in the repository.
+
+  it('puts the plan text into the prompt rather than asking for one', () => {
+    const prompt = systemPrompt({ plan: 1, language: 'en' });
+    const canonical = planFor('en', 1);
+
+    expect(prompt).toContain(canonical.title);
+    expect(prompt).toContain(canonical.body.slice(0, 120));
+  });
+
+  it('never asks the model to produce the plan text itself', () => {
+    // The shape of the old defect: an instruction to generate the teaching.
+    // Matching the bare word "invent" would also catch this prompt's own
+    // instruction *not* to, so match the request, not the vocabulary.
+    const asksForContent =
+      /\b(write|create|generate|compose|produce|make up)\b[^.]{0,40}\b(description|text|teaching|meaning) of\b/i;
+
+    for (let plan = 1; plan <= TOTAL_PLANS; plan++) {
+      expect(systemPrompt({ plan, language: 'en' }), `plan ${plan}`).not.toMatch(asksForContent);
+    }
+  });
+
+  it('forbids inventing what the text does not say', () => {
+    expect(systemPrompt(base)).toMatch(/rather than\s+inventing/i);
+  });
+
+  it('tells the model the text is the source and it is not', () => {
+    const prompt = systemPrompt(base);
+    expect(prompt).toMatch(/It is the source; you are not/i);
+    expect(prompt).toMatch(/do not contradict it/i);
+  });
+
+  it('carries the right text for every plan', () => {
+    for (let plan = 1; plan <= TOTAL_PLANS; plan++) {
+      const prompt = systemPrompt({ plan, language: 'en' });
+      expect(prompt, `plan ${plan}`).toContain(planFor('en', plan).title);
+      expect(prompt).toContain(`plan ${plan}:`);
+    }
+  });
+
+  it('carries the text in the player’s own language', () => {
+    for (const language of LANGUAGES) {
+      const prompt = systemPrompt({ plan: 1, language });
+      expect(prompt, language).toContain(planFor(language, 1).title);
+    }
+  });
+
+  it('names the answer language explicitly rather than implying it', () => {
+    expect(systemPrompt({ plan: 1, language: 'ru' })).toContain('Answer in Russian.');
+    expect(systemPrompt({ plan: 1, language: 'ja' })).toContain('Answer in Japanese.');
+  });
+
+  it('names one for every language the game is published in', () => {
+    /**
+     * The shape rather than the two above. The names were a
+     * `Record<string, string>` behind a `?? 'English'`, which is a restated
+     * list of the twenty-two with the one ending that reads as correct: a
+     * twenty-third language would have been handed the traditional text in its
+     * own script under the instruction *Answer in English*, and every test here
+     * would have passed.
+     *
+     * The map is `Record<Language, string>` now, so the compiler refuses a
+     * short one — and this is the run-time half, because a name can be present
+     * and wrong.
+     */
+    for (const language of LANGUAGES) {
+      const named = /Answer in (.+)\./.exec(systemPrompt({ plan: 1, language }))?.[1];
+
+      expect(named, `${language} is named at all`).toBeTruthy();
+      expect(named, `${language} is named in English, for a model`).toMatch(/^[A-Z][A-Za-z ]+$/);
+    }
+  });
+
+  it('gives each language a name of its own', () => {
+    // A map filled in by copying a neighbouring line would pass everything
+    // above. Twenty-two languages, twenty-two names.
+    const named = LANGUAGES.map(
+      (language) => /Answer in (.+)\./.exec(systemPrompt({ plan: 1, language }))?.[1],
+    );
+
+    expect(new Set(named).size).toBe(LANGUAGES.length);
+  });
+
+  it('does not name the language in its own script, which is for a reader', () => {
+    // `@leela/content`'s `LANGUAGE_NAMES` holds the endonyms — Русский, 日本語,
+    // العربية — and those are for somebody choosing a language, not for an
+    // instruction to a model.
+    const differs = LANGUAGES.filter(
+      // English is its own endonym, so there is nothing to tell apart there.
+      (language) => CONTENT_NAMES[language] !== /Answer in (.+)\./.exec(
+        systemPrompt({ plan: 1, language }),
+      )?.[1],
+    );
+
+    expect(differs.length, 'twenty-one of the twenty-two have two names').toBe(
+      LANGUAGES.length - 1,
+    );
+    for (const language of differs) {
+      expect(systemPrompt({ plan: 1, language }), language).not.toContain(
+        `Answer in ${CONTENT_NAMES[language]}.`,
+      );
+    }
+  });
+
+  it('falls back to English for a locale the dataset does not carry', () => {
+    // `language` is typed, but a value can still arrive from a database row.
+    const prompt = systemPrompt({ plan: 1, language: 'kl' as never });
+    expect(prompt).toContain('Answer in English.');
+  });
+});
+
+describe('the prompt describes the move', () => {
+  it('says how the player arrived, when it knows', () => {
+    expect(systemPrompt({ ...base, direction: 'snake 🐍' })).toMatch(/brought down/i);
+    expect(systemPrompt({ ...base, direction: 'arrow 🏹' })).toMatch(/carried up/i);
+    expect(systemPrompt({ ...base, direction: 'step 🚶🏼' })).toMatch(/one square at a time/i);
+  });
+
+  it('says where they came from, when that is somewhere else', () => {
+    expect(systemPrompt({ ...base, plan: 23, previousPlan: 10 })).toContain('came from plan 10');
+    expect(systemPrompt({ ...base, plan: 10, previousPlan: 10 })).not.toContain('came from');
+  });
+
+  it('marks the win square as an ending and a beginning', () => {
+    expect(systemPrompt({ plan: WIN_LOKA, language: 'en' })).toMatch(/end of a game/i);
+  });
+});
+
+describe('the prompt sets limits', () => {
+  it('asks for brevity, because a companion is not an essayist', () => {
+    expect(systemPrompt(base)).toMatch(/brief/i);
+  });
+
+  it('forbids fortune-telling and verdicts on a life', () => {
+    const prompt = systemPrompt(base);
+    expect(prompt).toMatch(/do not predict the/i);
+    expect(prompt).toMatch(/what their life means/i);
+  });
+
+  it('says plainly that it is not a therapist', () => {
+    // The published app carries the same disclaimer; a companion that implies
+    // otherwise is the failure mode worth guarding against.
+    expect(systemPrompt(base)).toMatch(/not a\s+therapist/i);
+    expect(systemPrompt(base)).toMatch(/someone qualified/i);
+  });
+});
+
+describe('trimToParagraph', () => {
+  it('leaves a short text alone', () => {
+    expect(trimToParagraph('short', 100)).toBe('short');
+  });
+
+  it('cuts on a paragraph break rather than mid-sentence', () => {
+    const text = `${'a'.repeat(60)}\n\n${'b'.repeat(60)}`;
+    expect(trimToParagraph(text, 80)).toBe('a'.repeat(60));
+  });
+
+  it('falls back to a sentence end when there is no usable break', () => {
+    const text = `${'word '.repeat(15)}. ${'more '.repeat(20)}`;
+    const out = trimToParagraph(text, 80);
+    expect(out.length).toBeLessThanOrEqual(80);
+    expect(out.endsWith('.')).toBe(true);
+  });
+
+  it('never returns more than it was asked for, for any plan', () => {
+    for (let plan = 1; plan <= TOTAL_PLANS; plan++) {
+      for (const language of LANGUAGES) {
+        const trimmed = trimToParagraph(planFor(language, plan).body);
+        expect(trimmed.length, `${language} plan ${plan}`).toBeLessThanOrEqual(MAX_PLAN_CHARS);
+      }
+    }
+  });
+
+  it('keeps a useful amount of text rather than cutting to nothing', () => {
+    for (let plan = 1; plan <= TOTAL_PLANS; plan++) {
+      const body = planFor('en', plan).body;
+      const trimmed = trimToParagraph(body);
+      const kept = trimmed.length / Math.min(body.length, MAX_PLAN_CHARS);
+      expect(kept, `plan ${plan}`).toBeGreaterThan(0.4);
+    }
+  });
+});
+
+describe('reportPrompt', () => {
+  it('is a system prompt then the report', () => {
+    const messages = reportPrompt(base, 'what came up for me');
+    expect(messages).toHaveLength(2);
+    expect(messages[0].role).toBe('system');
+    expect(messages[1]).toEqual({ role: 'user', content: 'what came up for me' });
+  });
+
+  it('trims the report, and refuses an empty one', () => {
+    expect(reportPrompt(base, '  spaced  ')[1].content).toBe('spaced');
+    for (const empty of ['', '   ', '\n\t']) {
+      expect(() => reportPrompt(base, empty)).toThrow(PromptError);
+    }
+  });
+
+  it('refuses a plan off the board', () => {
+    for (const plan of [0, 73, -1, 1.5]) {
+      expect(() => reportPrompt({ ...base, plan }, 'x'), `plan ${plan}`).toThrow(PromptError);
+    }
+  });
+
+  it('carries recent history, oldest first', () => {
+    const history = [
+      { role: 'user' as const, content: 'first' },
+      { role: 'assistant' as const, content: 'answer' },
+    ];
+    const messages = reportPrompt(base, 'now', history);
+    expect(messages.map((m) => m.content)).toEqual([
+      messages[0].content,
+      'first',
+      'answer',
+      'now',
+    ]);
+  });
+
+  it('keeps only the most recent turns, so old talk cannot crowd out the text', () => {
+    const history = Array.from({ length: 30 }, (_, i) => ({
+      role: 'user' as const,
+      content: `turn ${i}`,
+    }));
+    const messages = reportPrompt(base, 'now', history);
+    expect(messages).toHaveLength(MAX_HISTORY + 2);
+    expect(messages[1].content).toBe('turn 24');
+  });
+
+  it('drops any system message from history — there is exactly one', () => {
+    const history = [
+      { role: 'system' as const, content: 'an old system prompt' },
+      { role: 'user' as const, content: 'hello' },
+    ];
+    const messages = reportPrompt(base, 'now', history);
+    expect(messages.filter((m) => m.role === 'system')).toHaveLength(1);
+    expect(messages.map((m) => m.content)).not.toContain('an old system prompt');
+  });
+});
+
+describe('questionPrompt', () => {
+  it('is shaped like a report prompt', () => {
+    const messages = questionPrompt(base, 'what does maya mean here?');
+    expect(messages[0].role).toBe('system');
+    expect(messages.at(-1)?.content).toBe('what does maya mean here?');
+  });
+
+  it('refuses an empty question', () => {
+    expect(() => questionPrompt(base, '  ')).toThrow(PromptError);
+  });
+
+  it('tells the model to admit what the text does not answer', () => {
+    expect(questionPrompt(base, 'q')[0].content).toMatch(/say so plainly/i);
+  });
+});
+
+describe('the path the report belongs to', () => {
+  // Without it a reflection on plan 40 is read as though it were the first
+  // thing the player had ever said. The game is a path.
+
+  const journey = [
+    { plan: 6, text: 'the beginning felt abrupt' },
+    { plan: 23, text: 'lighter here, and suspicious of it' },
+    { plan: 41, text: 'the same impatience as at 6' },
+  ];
+
+  it('reaches the prompt, with each square named', () => {
+    const prompt = systemPrompt({ plan: 50, language: 'en', journey });
+    for (const entry of journey) {
+      expect(prompt).toContain(entry.text);
+      expect(prompt).toContain(planFor('en', entry.plan).title);
+    }
+  });
+
+  it('is absent when there is no path, rather than an empty heading', () => {
+    const prompt = systemPrompt({ plan: 6, language: 'en', journey: [] });
+    expect(prompt).not.toMatch(/Where they have been/);
+  });
+
+  it('is absent when not given at all', () => {
+    expect(systemPrompt({ plan: 6, language: 'en' })).not.toMatch(/Where they have been/);
+  });
+
+  it('tells the model not to read it back to the player', () => {
+    const prompt = systemPrompt({ plan: 50, language: 'en', journey });
+    expect(prompt).toMatch(/not yours to repeat back/i);
+  });
+
+  it('names the squares in the player’s language', () => {
+    const prompt = systemPrompt({ plan: 50, language: 'ru', journey });
+    expect(prompt).toContain(planFor('ru', 6).title);
+  });
+});
+
+describe('the path never crowds out the plan text', () => {
+  // The plan is what the answer must be faithful to. A long path that pushed
+  // it out of the context window would leave the model nothing to rest on.
+
+  const long = Array.from({ length: 60 }, (_, i) => ({
+    plan: (i % 72) + 1,
+    text: `report ${i} `.padEnd(600, 'x'),
+  }));
+
+  it('keeps the summary within its budget however long the path', () => {
+    const summary = summariseJourney(long, 'en');
+    expect(summary.length).toBeLessThan(MAX_JOURNEY_CHARS + 200);
+  });
+
+  it('keeps at most a handful of squares', () => {
+    const lines = summariseJourney(long, 'en').split('\n').slice(1);
+    expect(lines.length).toBeLessThanOrEqual(MAX_JOURNEY_ENTRIES);
+  });
+
+  it('clips a single long report rather than dropping the rest', () => {
+    const summary = summariseJourney([{ plan: 6, text: 'x'.repeat(2000) }], 'en');
+    expect(summary.length).toBeLessThan(MAX_JOURNEY_ENTRY_CHARS + 100);
+    expect(summary).toContain('…');
+  });
+
+  it('keeps the plan text in the prompt even beside a long path', () => {
+    const prompt = systemPrompt({ plan: 50, language: 'en', journey: long });
+    const plan = planFor('en', 50);
+    expect(prompt).toContain(plan.body.slice(0, 100));
+  });
+
+  it('says how much of the path it is showing when it shows only part', () => {
+    expect(summariseJourney(long, 'en')).toMatch(/the last \d+ of 60 squares/);
+  });
+
+  it('shows the most recent squares, not the oldest', () => {
+    const summary = summariseJourney(long, 'en');
+    expect(summary).toContain('report 59');
+    expect(summary).not.toContain('report 0 ');
+  });
+
+  it('flattens whitespace, so a multi-line report stays one line', () => {
+    const summary = summariseJourney([{ plan: 6, text: 'one\n\ntwo\nthree' }], 'en');
+    expect(summary.split('\n')).toHaveLength(2); // heading plus one entry
+    expect(summary).toContain('one two three');
+  });
+});
+
+describe('when the path does not fit its budget', () => {
+  // Filling oldest-first meant the budget ran out before the newest squares,
+  // so the entries a player just wrote were the ones dropped.
+
+  const long = Array.from({ length: 20 }, (_, i) => ({
+    plan: (i % 72) + 1,
+    text: `entry ${i} `.padEnd(300, 'y'),
+  }));
+
+  it('drops the oldest entries, never the newest', () => {
+    const summary = summariseJourney(long, 'en');
+    expect(summary).toContain('entry 19');
+    expect(summary).not.toContain('entry 12 ');
+  });
+
+  it('still lists what it keeps in walking order', () => {
+    const summary = summariseJourney(long, 'en');
+    const shown = [...summary.matchAll(/entry (\d+)/g)].map((m) => Number(m[1]));
+    expect(shown).toEqual([...shown].sort((a, b) => a - b));
+  });
+});
+
+describe('when the budget is too small for even one entry', () => {
+  // Unreachable at the default budget: the longest possible entry runs to about
+  // 175 characters against 1200. Reachable at a smaller one, and a heading with
+  // nothing under it would be worse than saying nothing at all.
+
+  it('says nothing rather than printing an empty heading', () => {
+    const summary = summariseJourney([{ plan: 6, text: 'something' }], 'en', 5);
+    expect(summary).toBe('');
+  });
+
+  it('still summarises what fits when the budget allows one entry', () => {
+    const journey = [
+      { plan: 6, text: 'first' },
+      { plan: 23, text: 'second' },
+    ];
+    const summary = summariseJourney(journey, 'en', 60);
+    expect(summary).toContain('second');
+    expect(summary).not.toContain('first');
+  });
+
+  it('keeps the newest when only some fit, at any budget', () => {
+    const journey = Array.from({ length: 6 }, (_, i) => ({ plan: i + 1, text: `entry ${i}` }));
+    for (const budget of [40, 80, 200, 1200]) {
+      const summary = summariseJourney(journey, 'en', budget);
+      if (summary === '') continue;
+      expect(summary, `budget ${budget}`).toContain('entry 5');
+    }
+  });
+});
+
+describe('how the player arrived', () => {
+  /**
+   * `Guide` has accepted a direction since it was written, and the bot never
+   * passed one — so these five sentences went into the prompt exactly never.
+   * Three of them did not agree with the "They" they follow: *"They was brought
+   * down here by a snake."* Nobody had read them, because there was nothing to
+   * read: code that never runs is code nobody has read.
+   */
+
+  const DIRECTIONS: Direction[] = ['step 🚶🏼', 'snake 🐍', 'arrow 🏹', 'stop 🛑', 'win 🕉'];
+
+  const arrivalLine = (direction: Direction) =>
+    systemPrompt({ language: 'en', plan: 8, direction })
+      .split('\n')
+      .find((line) => line.startsWith('They ')) ?? '';
+
+  it('says something about every direction the engine can produce', () => {
+    // A direction with no sentence is a silent gap: the model is simply not
+    // told, and nothing anywhere says so.
+    for (const direction of DIRECTIONS) {
+      expect(arrivalLine(direction), direction).not.toBe('');
+    }
+  });
+
+  it('agrees with the pronoun it follows, in every direction', () => {
+    // The rule rather than the three that were wrong: a singular verb after
+    // "They" is the mistake, whichever sentence makes it.
+    for (const direction of DIRECTIONS) {
+      expect(arrivalLine(direction), direction).not.toMatch(/^They (was|has|is|does|goes)\b/);
+    }
+  });
+
+  it('is a whole sentence, ending where a sentence ends', () => {
+    for (const direction of DIRECTIONS) {
+      expect(arrivalLine(direction).endsWith('.'), direction).toBe(true);
+    }
+  });
+
+  it('says nothing at all when the arrival is unknown', () => {
+    // The bot cannot always find the seat, and a companion that fell silent
+    // over a missing detail would be worse than one that says less.
+    const prompt = systemPrompt({ language: 'en', plan: 8 });
+    expect(prompt.split('\n').some((line) => line.startsWith('They '))).toBe(false);
+    expect(prompt).toContain('plan 8');
+  });
+
+  it('does not repeat the square as somewhere they came from', () => {
+    // Standing on 8 having come from 8 is a jump home, and "They came from
+    // plan 8" while on plan 8 reads as a mistake to anyone, model included.
+    const prompt = systemPrompt({ language: 'en', plan: 8, previousPlan: 8 });
+    expect(prompt).not.toContain('came from plan 8');
+  });
+});
+
+describe('a prompt this package builds is a prompt this package bounds', () => {
+  /**
+   * Every part of the prompt is clipped by this package — the plan's text, each
+   * journey line, the intention — except the one it was handed. The history was
+   * clipped by *count*, so six messages of any length went in whole, and the
+   * carefully bounded prompt was bounded by whatever the caller was holding.
+   *
+   * It fails quietly, which is what makes it worth a test rather than a note. A
+   * request refused for length comes back as the fallback sentence, so a
+   * companion that had stopped answering its longest conversations would look,
+   * from inside the game, exactly like one having a bad day.
+   *
+   * Stated as a ceiling on the whole thing rather than on the piece that was
+   * missing a bound: a seventh part added tomorrow has to fit in it too.
+   */
+  const enormous = (n: number) => 'x'.repeat(n);
+
+  const worstCase = () => ({
+    plan: 23,
+    language: 'ur' as const,
+    intention: enormous(MAX_INTENTION_CHARS * 3),
+    direction: 'snake 🐍' as const,
+    previousPlan: 44,
+    journey: Array.from({ length: MAX_JOURNEY_ENTRIES * 4 }, (_, index) => ({
+      plan: (index % TOTAL_PLANS) + 1,
+      text: enormous(4000),
+    })),
+  });
+
+  const history = Array.from({ length: MAX_HISTORY * 3 }, (_, index) => ({
+    role: (index % 2 ? 'assistant' : 'user') as 'assistant' | 'user',
+    content: enormous(9000),
+  }));
+
+  const sizeOf = (messages: Array<{ content: string }>) =>
+    messages.reduce((total, message) => total + message.content.length, 0);
+
+  /**
+   * What everything the package decides comes to, plus what it carries.
+   *
+   * Derived from the constants rather than written down, so raising one of them
+   * moves this and a new part has to declare itself.
+   */
+  const CEILING = 6_400 + MAX_REPORT_CHARS + MAX_HISTORY * MAX_HISTORY_CHARS;
+
+  it('never builds one past its own ceiling, in any language, on any square', () => {
+    for (const language of LANGUAGES) {
+      for (let plan = 1; plan <= TOTAL_PLANS; plan += 1) {
+        const context = { ...worstCase(), plan, language };
+
+        expect(
+          sizeOf(reportPrompt(context, enormous(MAX_REPORT_CHARS), history)),
+          `${language}/${plan}`,
+        ).toBeLessThanOrEqual(CEILING);
+        expect(
+          sizeOf(questionPrompt(context, enormous(MAX_REPORT_CHARS), history)),
+          `${language}/${plan}`,
+        ).toBeLessThanOrEqual(CEILING);
+      }
+    }
+  });
+
+  it('is bounded in bytes as well, which is what a context window counts', () => {
+    /**
+     * A character is not a character. The same prompt, with the player writing
+     * in their own script, is about seventeen thousand characters in every one
+     * of the twenty-two languages — and 17,262 bytes in English against 47,615
+     * in Japanese. Tamil, Telugu, Bengali and Marathi sit near 2.5; Russian,
+     * Ukrainian, Arabic and Urdu near 1.8; the Latin languages at 1.0.
+     *
+     * Every constant in `prompts.ts` is justified against English — *the
+     * longest plan runs past 6000 characters* — so the ceiling the pass before
+     * put on this file is an English ceiling, and it buys a third as much
+     * context in Japanese as it looks like it does.
+     *
+     * Nothing is clipped differently for it. A denser script carries more of
+     * the plan in the same characters, which is the other half of the trade,
+     * and the clip does not even reach the Japanese and Chinese texts: their
+     * plans are shorter than `MAX_PLAN_CHARS` to begin with. What is asserted
+     * is that the cost cannot grow silently — a script needing four bytes a
+     * character, or a bound raised without anyone weighing it, fails here.
+     */
+    const BYTES_PER_CHARACTER = 3;
+    const weigh = (messages: Array<{ content: string }>) =>
+      messages.reduce((total, message) => total + new TextEncoder().encode(message.content).length, 0);
+
+    for (const language of LANGUAGES) {
+      // Written in the language's own script, since that is what a player of it
+      // writes — measuring with ASCII padding hides the whole effect.
+      const own = planFor(language, 40).body.repeat(20);
+      const said = (length: number) => own.slice(0, length);
+
+      const messages = reportPrompt(
+        {
+          ...worstCase(),
+          language,
+          intention: said(MAX_INTENTION_CHARS),
+          journey: Array.from({ length: MAX_JOURNEY_ENTRIES * 2 }, (_, index) => ({
+            plan: (index % TOTAL_PLANS) + 1,
+            text: said(400),
+          })),
+        },
+        said(MAX_REPORT_CHARS),
+        Array.from({ length: MAX_HISTORY }, (_, index) => ({
+          role: (index % 2 ? 'assistant' : 'user') as 'assistant' | 'user',
+          content: said(MAX_HISTORY_CHARS),
+        })),
+      );
+
+      expect(weigh(messages), language).toBeLessThanOrEqual(CEILING * BYTES_PER_CHARACTER);
+    }
+  });
+
+  it('clips a long exchange rather than dropping it', () => {
+    // The other half: a bound that discarded the message would lose the thread
+    // the history exists to keep.
+    const [, first] = reportPrompt(worstCase(), 'a report', [
+      { role: 'user', content: `The question begins here. ${enormous(9000)}` },
+    ]);
+
+    expect(first?.content.length).toBeLessThanOrEqual(MAX_HISTORY_CHARS);
+    expect(first?.content, 'and it is the beginning that is kept').toContain('question begins');
+  });
+
+  it('leaves a short exchange exactly as it was', () => {
+    const said = 'What is this square asking of me?';
+    const [, first] = reportPrompt(worstCase(), 'a report', [{ role: 'user', content: said }]);
+
+    expect(first?.content).toBe(said);
+  });
+});
+
+/**
+ * Arrivals read off the board, rather than typed out from memory.
+ *
+ * Two committed fixtures named their squares by hand and both named jumps this
+ * board does not hold: *a snake from 21 to 9*, and — in `guide.test.ts` — a
+ * `previousPlan` of 30 onto plan 12. Neither survives the table. From 21 the
+ * only snake head within one throw is 24, and 24 ends on 7, not 9. From 30 no
+ * throw of 1..6 reaches a snake head at all, and 12 is itself a head, so
+ * nothing settles there. A fixture that spells a jump the board does not hold
+ * is the exact defect `boardHoldsJump` was added to catch, and it caught these
+ * two: the suite went red for the prompt telling the truth.
+ *
+ * Picking a different pair of numbers by hand rots the same way the first pair
+ * did, one board change later. So the fixture is read off the same table the
+ * guard reads. Stand the player `roll` squares short of a head and the arrival
+ * is one the board can produce by construction — there is no number in the
+ * test for the board to disagree with.
+ */
+type BoardArrival = {
+  /** The square the player threw from. */
+  previousPlan: number;
+  /** The jump's head, which they landed on. */
+  head: number;
+  /** Where the jump left them, and the square the prompt describes. */
+  plan: number;
+  roll: number;
+};
+
+/**
+ * Every arrival the given table can produce: each head, each throw that can
+ * reach it, and the tail the player ends on.
+ *
+ * Two squares are left out, and neither because they are awkward. A
+ * `previousPlan` of `WIN_LOKA` is the parking space a player waits on before
+ * entering, not a square anybody came from — that is what the block below is
+ * about. And a jump that lands the player back where they threw from has no
+ * *came from* sentence to assert, because the prompt drops it as a mistake.
+ */
+function arrivalsTheBoardHolds(jumps: Readonly<Record<number, number>>): BoardArrival[] {
+  const arrivals: BoardArrival[] = [];
+
+  for (const [key, plan] of Object.entries(jumps)) {
+    const head = Number(key);
+    for (let roll = 1; roll <= MAX_ROLL; roll += 1) {
+      const previousPlan = head - roll;
+      if (previousPlan < 1 || previousPlan > TOTAL_PLANS) continue;
+      if (previousPlan === WIN_LOKA || previousPlan === plan) continue;
+      arrivals.push({ previousPlan, head, plan, roll });
+    }
+  }
+
+  return arrivals;
+}
+
+/** The first arrival of a table, for a case that needs one rather than all. */
+function anArrivalTheBoardHolds(
+  jumps: Readonly<Record<number, number>>,
+  matching: (arrival: BoardArrival) => boolean = () => true,
+): BoardArrival {
+  const found = arrivalsTheBoardHolds(jumps).find(matching);
+  // Not a soft skip: a board that holds no such jump is a board these tests
+  // are no longer about, and silently testing nothing is the worse failure.
+  if (!found) throw new Error('the board holds no jump matching that');
+  return found;
+}
+
+/** The two directions that make a claim about the board. */
+type Jump = Extract<Direction, 'snake 🐍' | 'arrow 🏹'>;
+
+/** The sentence the prompt says for each kind of jump, kept beside the table. */
+const ARRIVAL_SENTENCE: Record<Jump, string> = {
+  'snake 🐍': 'They were brought down here by a snake.',
+  'arrow 🏹': 'They were carried up here by an arrow.',
+};
+
+const JUMP_TABLES: ReadonlyArray<[Jump, Readonly<Record<number, number>>]> = [
+  ['snake 🐍', SNAKES],
+  ['arrow 🏹', ARROWS],
+];
+
+/**
+ * Entering the game is not an arrival from anywhere.
+ *
+ * A player waiting to enter is parked on `WIN_LOKA` — the engine's own choice,
+ * and the published app draws the piece there from the first screen. So the
+ * first report of **every game** carried a `previousPlan` of 68, and the prompt
+ * read it as a square they had come from: *They walked here one square at a
+ * time. They came from plan 68.* A descent from Cosmic Consciousness that never
+ * happened, in the instructions the companion answers from.
+ *
+ * The ninth sighting of the 68 ambiguity, and the first inside a model's
+ * instructions. Found by playing a game and printing the prompt the model
+ * actually received.
+ */
+describe('the game beginning', () => {
+  const entering = (plan: number) => systemPrompt({ plan, language: 'en', previousPlan: WIN_LOKA });
+
+  it('is not described as a descent from the winning square', () => {
+    // Over every square a six can put somebody on, rather than the one the
+    // seeded die happened to produce.
+    for (const plan of [1, 6, 9, 41, 67, 72]) {
+      expect(entering(plan), `plan ${plan}`).not.toContain(`came from plan ${WIN_LOKA}`);
+    }
+  });
+
+  it('is not described as a walk, or as any other kind of move', () => {
+    // `direction` for an entering throw is `step 🚶🏼`, so the sentence read
+    // *they walked here one square at a time* about a player who had been off
+    // the board entirely.
+    const prompt = systemPrompt({
+      plan: 6,
+      language: 'en',
+      previousPlan: WIN_LOKA,
+      direction: 'step 🚶🏼',
+    });
+
+    expect(prompt).not.toMatch(/They walked here|They were brought|They were carried/);
+    expect(prompt, 'and says what did happen').toContain('They have just entered the game');
+  });
+
+  it('still describes a real move from a real square', () => {
+    // The guard against the rule swallowing every arrival: a snake somebody
+    // really was brought down by is a move, and the sentence for it is the
+    // point of the section. The squares come off SNAKES rather than out of
+    // this test — see `arrivalsTheBoardHolds` for why the hand-written pair
+    // that stood here was a jump the board does not hold.
+    const { previousPlan, plan, head } = anArrivalTheBoardHolds(SNAKES);
+    const prompt = systemPrompt({ plan, language: 'en', previousPlan, direction: 'snake 🐍' });
+
+    expect(prompt, `${previousPlan} onto the head at ${head}, down to ${plan}`).toContain(
+      ARRIVAL_SENTENCE['snake 🐍'],
+    );
+    expect(prompt).toContain(`They came from plan ${previousPlan}.`);
+  });
+
+  it('still lets the winner have come from somewhere', () => {
+    // 68 as a destination is the end of a game, and the arrow that carried them
+    // there is worth saying. Only 68 as an *origin* is the parking space.
+    //
+    // The arrow is the one the board actually has: 54 lifts to 68, so the
+    // square they threw from is short of 54, not 54 itself. Written by hand,
+    // this said `previousPlan: 54` — a throw from the head, which reaches
+    // 55..60 and no arrow at all — and passed only because it never asked for
+    // the arrival sentence. It asks now.
+    const { previousPlan, plan } = anArrivalTheBoardHolds(
+      ARROWS,
+      (arrival) => arrival.plan === WIN_LOKA,
+    );
+    const prompt = systemPrompt({ plan, language: 'en', previousPlan, direction: 'arrow 🏹' });
+
+    expect(plan, 'an arrow that ends on the winning square').toBe(WIN_LOKA);
+    expect(prompt).toContain(ARRIVAL_SENTENCE['arrow 🏹']);
+    expect(prompt).toContain(`They came from plan ${previousPlan}.`);
+    expect(prompt).toContain('This is the end of a game');
+  });
+
+  it('says nothing about arriving at all for a square somebody sent', () => {
+    // The rule this joins: a received square was nobody's arrival, and the
+    // beginning of a game is nobody's arrival either.
+    const prompt = systemPrompt({
+      plan: 6,
+      language: 'en',
+      arrival: 'received',
+      previousPlan: WIN_LOKA,
+    });
+
+    // The whole sentence, not the phrase: the traditional texts talk about
+    // entering the game constantly, and the plan's own body is in the prompt.
+    expect(prompt).not.toContain('They have just entered the game');
+    expect(prompt).not.toContain(`came from plan ${WIN_LOKA}`);
+  });
+});
+
+/**
+ * Whatever the board holds, the prompt describes; whatever it does not hold,
+ * the prompt drops.
+ *
+ * The section above tests one snake and one arrow, because a sentence is
+ * easier to read about one square than about a hundred. This is the same claim
+ * asked of the whole board at once, and it is the claim that matters: not that
+ * *these* numbers work, but that the prompt's account of an arrival tracks the
+ * table it is an account of.
+ *
+ * The two halves are one grid read twice. Stand the player short of a head and
+ * the jump exists, so the sentence must be there. Stand them one square *past*
+ * the same head — a die only moves forward, so no throw can put them back on
+ * it — and the jump does not exist, so the sentence must be gone, while *where
+ * they came from* stays: that part was never a claim about a jump.
+ *
+ * The far half is filtered rather than assumed. Standing past one head can put
+ * a player within reach of another head of the same table, and if that second
+ * head happens to end on the same square, the arrival is real after all and
+ * dropping the sentence would be the wrong answer. Those cases are removed by
+ * asking the table, not by naming them — and the count that survives is
+ * asserted, so a filter that quietly empties the grid fails instead of passing.
+ */
+describe('the prompt against the whole board', () => {
+  /** Whether any single throw from `previousPlan` produces this arrival. */
+  const boardHolds = (jumps: Readonly<Record<number, number>>, previousPlan: number, plan: number) =>
+    Array.from({ length: MAX_ROLL }, (_, index) => previousPlan + index + 1).some(
+      (head) => head <= TOTAL_PLANS && jumps[head] === plan,
+    );
+
+  it('says the arrival for every jump the board can produce', () => {
+    let asked = 0;
+
+    for (const [direction, jumps] of JUMP_TABLES) {
+      for (const { previousPlan, plan, head, roll } of arrivalsTheBoardHolds(jumps)) {
+        const prompt = systemPrompt({ plan, language: 'en', previousPlan, direction });
+        const where = `${direction} ${previousPlan} +${roll} -> ${head} -> ${plan}`;
+
+        expect(prompt, where).toContain(ARRIVAL_SENTENCE[direction]);
+        expect(prompt, where).toContain(`They came from plan ${previousPlan}.`);
+        asked += 1;
+      }
+    }
+
+    // Ten snakes and ten arrows, up to six throws each, less the throws that
+    // fall off the board or land where they started.
+    expect(asked, 'the grid is not empty').toBeGreaterThan(100);
+  });
+
+  it('drops the arrival, and only the arrival, for a jump it cannot', () => {
+    let asked = 0;
+
+    for (const [direction, jumps] of JUMP_TABLES) {
+      for (const key of Object.keys(jumps)) {
+        const head = Number(key);
+        const plan = jumps[head] as number;
+        // One square past the head: the throw that reached it cannot be taken
+        // from here, because a die does not go backwards.
+        const previousPlan = head + 1;
+        if (previousPlan > TOTAL_PLANS || previousPlan === WIN_LOKA) continue;
+        if (previousPlan === plan) continue;
+        // Unless some *other* head of the same table, within reach and ending
+        // on the same square, makes the arrival true anyway.
+        if (boardHolds(jumps, previousPlan, plan)) continue;
+
+        const prompt = systemPrompt({ plan, language: 'en', previousPlan, direction });
+        const where = `${direction} ${previousPlan} -> ${plan}, past the head at ${head}`;
+
+        expect(prompt, where).not.toContain(ARRIVAL_SENTENCE[direction]);
+        // And the half that was never about a jump is still said. This is what
+        // separates dropping a false sentence from going silent about the move.
+        expect(prompt, where).toContain(`They came from plan ${previousPlan}.`);
+        asked += 1;
+      }
+    }
+
+    expect(asked, 'the grid is not empty').toBeGreaterThan(15);
+  });
+});

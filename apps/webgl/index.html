@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!--
+      `interactive-widget` is the declarative half of keeping the writing box
+      above the keyboard: it asks the engine to resize the page when one comes
+      up, rather than drawing it over the top. Engines that do not know the key
+      ignore it, and iOS is currently among them - which is why `keyboard.ts`
+      measures the visual viewport and lifts the sheet itself. Both, because the
+      declarative one is where this is going and the measured one is what works
+      on the phone in hand.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <!--
+      Both, or the browser paints the canvas black before a single rule is read.
+      This said `dark`, which is a promise about the page: the user agent fills
+      the viewport with its dark background on the very first frame, and a light
+      reader saw that flash on every load.
+    -->
+    <meta name="color-scheme" content="light dark" />
+    <title>Leela — the board in three dimensions</title>
+
+    <!--
+      The same words the mini app's head carries, for the same reason: this page
+      is a link people send each other, and a chat with nothing to build a
+      preview from renders it as a bare URL.
+
+      "The same words" WAS NOT TRUE WHEN IT WAS WRITTEN, and this comment is why
+      it went unnoticed for weeks: the mini app's head carries `og:url` and a
+      canonical and this one carried neither, while the guard that would have
+      said so - `shared-link.test.ts` - reads the mini app's head and only ever
+      that one. THE PAGE WITH THE COMMENT WAS THE TESTED PAGE, and this is the
+      one every button in the bot actually opens. `audit-preview.mjs` now reads
+      both and requires them to agree, which is the only version of "the same
+      words" that stays true.
+    -->
+    <meta name="description" content="The game of self-knowledge — 72 plans, in 22 languages." />
+    <link rel="canonical" href="https://t27.ai/leela/" />
+    <meta property="og:site_name" content="Leela" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Leela — the board in three dimensions" />
+    <meta
+      property="og:description"
+      content="The game of self-knowledge — 72 plans, in 22 languages."
+    />
+    <meta property="og:url" content="https://t27.ai/leela/" />
+
+    <!--
+      The picture, and the mark in the tab. Measured 2026-08-28 against the five
+      rivals `scripts/rivals.mjs` tracks: FOUR OF FOUR carry a favicon and THREE
+      OF FOUR carry an `og:image`. Both pages here carried the words of a
+      preview and nothing to show, and `t27.ai/favicon.ico` was a 404 - so in
+      Telegram, where two of those rivals do all their reaching and where every
+      button in our own bot points, a link to this game rendered as a line of
+      grey text beside a blank page icon.
+
+      ABSOLUTE, AND CHARACTER-FOR-CHARACTER THE SAME IN BOTH HEADS. Open Graph
+      wants an absolute URL and scrapers differ on whether they will resolve a
+      relative one; more to the point, the two pages sit at different depths -
+      `/leela/` and `/leela/classic/` - so a relative path would have to be
+      written two different ways, which is how the two heads drifted apart the
+      first time. One string, one file, checked by `audit-preview.mjs`.
+
+      The file is `apps/webgl/public/og.png`, drawn by `scripts/make-card.mjs`
+      from this repository's own art. The dimensions are stated because a
+      scraper that lays out the card before fetching the image needs them, and
+      the audit checks them against the file on disk rather than trusting them.
+    -->
+    <meta property="og:image" content="https://t27.ai/leela/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="The board's snakes and arrows, and the words: Leela, the game of self-knowledge."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="https://t27.ai/leela/icon.png" />
+    <link rel="apple-touch-icon" href="https://t27.ai/leela/icon.png" />
+
+    <!--
+      Telegram's bridge, the same tag the mini app carries. The webview does
+      not put `window.Telegram` on a page by itself; this script is what
+      defines it - and it defines it in any browser, which is why
+      `telegram.ts` treats the object as a host to greet rather than proof of
+      one. Outside Telegram the greeting reaches nobody and changes nothing.
+    -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="/src/style.css" />
+
+    <!--
+      The light, before the first paint.
+
+      The stylesheet's default tokens are the dark ones and `main.ts` sets
+      `data-look` when it runs - so a light reader met a black page for as long
+      as the bundle took to parse, then a cream one. On a phone, coming off nine
+      white onboarding screens, that reads as a fault rather than as loading.
+
+      Inline and in the head, because anything deferred is by definition after
+      the paint this exists to fix. Five lines, no imports: it cannot wait for
+      the module graph.
+
+      `look.ts` is the tested source of this rule and this is deliberately its
+      smallest possible restatement - the same key, the same order: a stored
+      choice, then the system, then dark. `settings.test.ts` holds the key in
+      step; the order is short enough to read.
+    -->
+    <script>
+      try {
+        var asked = window.localStorage.getItem('leela.look');
+        document.documentElement.dataset.look =
+          asked === 'light' || asked === 'dark'
+            ? asked
+            : window.matchMedia('(prefers-color-scheme: light)').matches
+              ? 'light'
+              : 'dark';
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <!--
+      One screen. The board is the page; everything else sits over it.
+
+      Not four screens with navigation between them, because the game is a loop
+      of throw → land → read → write → throw, and a loop that crosses a screen
+      boundary four times is a loop players leave. The reading is where the game
+      is, so it is not behind a button.
+    -->
+    <canvas id="board" aria-label="The board, 72 plans"></canvas>
+
+    <!-- Where you are. Over the board, never scrolled away. -->
+    <header class="where" id="where">
+      <span class="where-number" id="plan-number">—</span>
+      <span class="where-title" id="plan-title">Throw a six to enter the game</span>
+
+      <!--
+        Settings: one button, at the top.
+
+        They stood in the row with the die - three controls a player touches
+        once, in the middle of the two they touch every turn - then across the
+        header as three pills, competing with the plan's own name for a line
+        that is already truncated on a phone. One mark, and the rest behind it.
+      -->
+      <div class="where-settings">
+        <button
+          class="gear"
+          id="gear"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="settings"
+        >
+          <span class="gear-mark" aria-hidden="true">⋮</span>
+        </button>
+
+        <!--
+          One button, and everything behind it.
+
+          Three pills across the top were three decisions competing with the
+          plan's own name for the same line, on a phone where that name is
+          already truncated. They are settings: reached when wanted, out of the
+          way otherwise.
+        -->
+        <div class="settings" id="settings" hidden>
+          <button
+            class="lotus"
+            id="lotus"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="who"
+          >
+            <span class="lotus-mark" id="lotus-mark" aria-hidden="true"></span>
+          </button>
+          <button class="tongue" id="tongue" type="button"></button>
+          <button class="look" id="look" type="button"></button>
+          <!--
+            Whether the companion's answers are read aloud. In the menu with
+            the other once-per-visit choices, and taken out of the page - not
+            disabled - where `speechSynthesis` does not exist, which includes
+            the WKWebView inside the iOS app. See `voice.ts` for why that is
+            the design and not a gap.
+          -->
+          <button class="speak" id="speak" type="button" aria-pressed="false"></button>
+          <!--
+            The better voice, which is a download and so has to be offered
+            rather than switched on. Beside the speak toggle because it is the
+            same decision one step further in: whether to be read aloud, and
+            then by whom. Taken out of the page entirely where there is nothing
+            to offer - no Web Audio, no worker, or a board in one of the twenty
+            languages Supertonic does not speak. See `supertonic.ts`.
+          -->
+          <button class="speak" id="voice" type="button" aria-pressed="false"></button>
+        </div>
+      </div>
+
+      <progress class="where-progress" id="progress" max="1" value="0"></progress>
+    </header>
+
+    <!--
+      A square that is not the one you are standing on, opened by tapping it.
+      A strip rather than a dialog: a dialog would take the board away, and
+      comparing a square with the board is the reason to tap one.
+    -->
+    <div class="visiting" id="visiting" hidden>
+      <span id="visiting-text"></span>
+      <button type="button" id="visiting-back" class="ghost">Back to my square</button>
+    </div>
+
+    <!--
+      The sheet. Three detents — enough to play, enough to read, all of it —
+      dragged or stepped with the handle. The pattern is the one every map app
+      uses for the same problem: a surface that must be both out of the way and
+      immediately to hand, on a screen with no room for two.
+    -->
+    <section class="sheet" id="sheet" data-detent="half" aria-label="This plan, and the companion">
+      <button
+        class="handle"
+        id="handle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="sheet-body"
+        aria-label="Expand"
+      ></button>
+
+      <!--
+        One line: the throw, where you are, and who you are.
+
+        The deity strip used to stand under this as a row of its own, about a
+        hundred and thirty pixels of sheet for a choice most players make once.
+        It is a lotus at the end of this line now, and the roster opens from it.
+      -->
+      <div class="play">
+        <button class="die" id="die" type="button" aria-label="Throw the die">
+          <span class="face" id="face" aria-hidden="true"></span>
+        </button>
+        <p class="say" id="say" role="status" aria-live="polite">A six puts you on the board.</p>
+        <p class="owed" id="owed" role="status" aria-live="polite" hidden></p>
+        <!--
+          Where the chat says you stand, when this board was opened from
+          Telegram. specs/009 step 3: shown, never adopted.
+        -->
+        <p class="owed" id="in-the-chat" role="status" aria-live="polite" hidden></p>
+
+        <!--
+          Three throws free, then the game asks.
+
+          Beside the die rather than over the board: this is a fact about the
+          control the player is reaching for, and a dialog would take the board
+          away to say it. The button is only shown when there is an app to ask —
+          `toll.ts` never charges a page that cannot be paid on.
+        -->
+        <p class="toll" id="toll" role="status" aria-live="polite" hidden></p>
+        <button class="toll-open" id="toll-open" type="button" hidden></button>
+      </div>
+
+      <!--
+        Who is playing.
+
+        Every name on this list is one the seventy-two texts use — see
+        `deities.ts`. Opened from the lotus rather than always on screen, and
+        still not a dialog: choosing mid-game should not take the board away.
+      -->
+      <div class="who" id="who" hidden>
+        <div class="who-count" id="who-count" role="radiogroup"></div>
+        <div class="who-list" id="who-list" role="radiogroup" aria-label="Play as"></div>
+      </div>
+
+      <!--
+        What the player is playing for.
+
+        Above the conversation and never scrolled away, because it is the frame
+        every report below it is written inside — `apps/miniapp/src/state.ts`
+        argues that out: in Leela the intention is not a profile field, it is
+        the question the game answers.
+      -->
+      <button class="intention" id="intention" type="button">
+        <span class="intention-label" id="intention-label"></span>
+        <span class="intention-text" id="intention-text"></span>
+      </button>
+
+      <div class="sheet-body" id="sheet-body">
+        <!--
+          One column, in the order things happened.
+
+          The plan you are standing on is not a panel above the conversation —
+          it is the companion's first remark about it, and it opens out to the
+          whole text in place. Two surfaces showing the same paragraph, one of
+          them scrolled permanently out of reach, is what the first pass had.
+        -->
+        <div class="thread" id="thread" aria-live="polite" aria-label="The companion"></div>
+
+        <!--
+          A square you tapped but are not standing on, read in place of the
+          thread rather than beside it. Looking at 68 from square 9 is a real
+          part of playing, and it is not a thing the companion said to you.
+        -->
+        <article class="visiting-plan" id="visiting-plan" hidden>
+          <h2 class="plan-heading" id="plan-heading"></h2>
+          <div class="plan-text" id="plan-text"></div>
+        </article>
+
+        <!--
+          Where you have been.
+
+          Derived from the throws by `pathOf`, never stored as squares — see
+          `path.ts`. Collapsed, because it grows without bound and the thread
+          above it is what a player is reading between throws.
+        -->
+        <details class="path" id="path">
+          <summary id="path-summary">My path</summary>
+          <ol class="path-list" id="path-list"></ol>
+        </details>
+
+        <!-- Out of the browser, and back into it. -->
+        <div class="carry">
+          <p class="carry-said" id="carry-said" role="status" aria-live="polite"></p>
+        </div>
+
+        <details class="rests" id="rests">
+          <summary id="rests-summary">What this rests on</summary>
+          <dl class="rests-list" id="rests-list"></dl>
+        </details>
+      </div>
+
+      <form class="compose" id="compose">
+        <label class="visually-hidden" for="reply">What does this plan bring up?</label>
+        <textarea
+          id="reply"
+          rows="1"
+          enterkeyhint="send"
+          placeholder="What does this plan bring up?"
+        ></textarea>
+        <!--
+          The reply, spoken instead of typed. `type="button"`, because inside a
+          form the default is submit and a mic that sends the box on the way to
+          opening the microphone is a control that does the opposite of itself.
+          `main.ts` removes it - not hides it - on a platform with no
+          `SpeechRecognition`, which includes the WKWebView inside the iOS app;
+          the app's own keyboard already carries native dictation, and a second
+          microphone here would be a broken copy of it. See `voice.ts`.
+        -->
+        <button type="button" id="mic" class="mic" aria-pressed="false" aria-label="Speak your reply">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M12 14.5a3 3 0 0 0 3-3v-5a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5.5-3a5.5 5.5 0 0 1-11 0H4.5a7.5 7.5 0 0 0 6.5 7.43V22h2v-3.07a7.5 7.5 0 0 0 6.5-7.43z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
+        <button type="submit" id="send" class="send" aria-label="Send">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z" fill="currentColor" />
+          </svg>
+        </button>
+      </form>
+    </section>
+
+    <script type="module" src="/src/boot.ts"></script>
+  </body>
+</html>

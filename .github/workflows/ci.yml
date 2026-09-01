@@ -1,0 +1,403 @@
+name: CI
+
+on:
+  push:
+    branches: [unified, main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: |
+          for pkg in packages/engine packages/content packages/journal packages/db packages/storage packages/ai packages/contracts apps/bot apps/miniapp apps/docs apps/mobile apps/webgl; do
+            echo "::group::typecheck $pkg"
+            (cd "$pkg" && bunx tsc --noEmit)
+            echo "::endgroup::"
+          done
+
+      # The shipped code, with `noUncheckedIndexedAccess`. Two functions here
+      # were typed to return a value and returned undefined - `ruleSetById` for
+      # a variant no longer known, `currentPlayer` for a stale turn index - and
+      # each made a chat throw on every command, forever, three files from the
+      # row that was wrong. Tests are out of scope: `rows[0]` there is a value
+      # the test built two lines earlier.
+      - name: Typecheck what ships
+        run: |
+          for pkg in packages/engine packages/content packages/journal packages/db packages/storage packages/ai packages/contracts apps/bot apps/miniapp apps/docs apps/mobile apps/webgl; do
+            echo "::group::strict $pkg"
+            (cd "$pkg" && bunx tsc --noEmit -p tsconfig.src.json)
+            echo "::endgroup::"
+          done
+
+      - name: Test
+        run: |
+          for pkg in packages/engine packages/content packages/journal packages/db packages/storage packages/ai packages/contracts apps/bot apps/miniapp apps/docs apps/mobile apps/webgl; do
+            echo "::group::test $pkg"
+            (cd "$pkg" && bunx vitest run)
+            echo "::endgroup::"
+          done
+
+  # The bot ships as an image, and a Dockerfile that is never built is a
+  # description nobody has checked. Two defects were found in this one by hand
+  # and both fail the build step: a frozen install missing two workspace
+  # manifests, and host node_modules copied over the installed ones.
+  bot-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: docker build -t leela-bot -f apps/bot/Dockerfile .
+
+      # Building proves it compiles; running proves it runs. The token is
+      # deliberately a fake one: a 401 is the single failure the bot refuses to
+      # retry, so the container says everything it has to say and then exits 0.
+      # Anything else ending the run is the defect this job is looking for.
+      #
+      # `/data` exists in the image because of the `VOLUME` instruction, so
+      # this step does not test a missing directory — the step below does that,
+      # with a path that cannot be made.
+      - name: Start with no volume mounted
+        run: |
+          set -uo pipefail
+          docker run --rm -e BOT_TOKEN=1:TEST leela-bot > out.log 2>&1
+          code=$?
+          cat out.log
+
+          if [ "$code" -ne 0 ]; then
+            echo "::error::the bot died rather than starting (code $code)"
+            exit 1
+          fi
+          grep -q 'Leela bot starting' out.log \
+            || { echo '::error::the bot never started'; exit 1; }
+          grep -q 'kept in /data/leela.db' out.log \
+            || { echo '::error::games were not kept, with no volume mounted'; exit 1; }
+          grep -q 'token was rejected' out.log \
+            || { echo '::error::something other than the fake token ended the run'; exit 1; }
+
+      - name: Start with a path that cannot be opened
+        run: |
+          set -uo pipefail
+          docker run --rm -e BOT_TOKEN=1:TEST -e LEELA_DB=/proc/leela.db leela-bot > out.log 2>&1
+          code=$?
+          cat out.log
+
+          if [ "$code" -ne 0 ]; then
+            echo "::error::the bot died rather than falling back to memory (code $code)"
+            exit 1
+          fi
+          # Verified to discriminate: with the fallback removed, this image
+          # exits 1 and prints nothing but a stack trace.
+          #
+          # Named, with the path in it, because the answer is almost always a
+          # mount point that is not there.
+          grep -q 'could not open /proc/leela.db' out.log \
+            || { echo '::error::the failure was not named'; exit 1; }
+          grep -q 'held in memory' out.log \
+            || { echo '::error::it did not say games are held in memory'; exit 1; }
+
+  unread-fields:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+
+      # Three fields in three passes were written everywhere and read nowhere -
+      # broadcast, rerollOnRepeat, needs_report - each looking complete in
+      # review. Four findings fail this step: a field written and never read, a
+      # WRITE_ONLY excuse that no longer suppresses anything, an export with no
+      # caller anywhere, and an export its own application does not use.
+      #
+      # Reported and not enforced: the counts, a name declared in two packages -
+      # which the reader cannot tell apart without resolving imports - and a
+      # class member with no caller.
+      #
+      # This comment called the whole job report-only long after three of those
+      # gates went in, and it sat above bot-image rather than above the job it
+      # describes. A person reads the comment to decide whether a red job
+      # matters, so the retracted claim is described here and not repeated
+      # verbatim - grepping for it should find the code, not the claim.
+      - run: node scripts/audit-unread.mjs
+
+      # A flag turned on in eight packages is a flag that will be missing from
+      # the ninth. Enforced rather than reported: unlike a write-only field,
+      # there is no judgement call in whether a config file exists.
+      - run: node scripts/audit-configs.mjs
+
+      # Assertions nothing waits on. `bun run verify` exits 0 while printing the
+      # warning that names them, and an exit code is what CI reads -- so the
+      # suite said green for six malformed-input cases standing on a rescue
+      # Vitest has announced it is removing.
+      #
+      # This was scripts/audit-awaited.mjs, 125 lines walking the TypeScript AST
+      # by hand. It is deleted: typescript-eslint answers the same question with
+      # type analysis instead of shapes, so it also sees a promise the source
+      # does not spell -- one returned through a helper, or an async function
+      # handed to something that wanted a synchronous one. Both readers were run
+      # against the same planted fault first and both named it, which is why the
+      # bespoke one could be removed rather than merely doubted. The reasoning
+      # the sweep carried, including the six kept-game cases that motivated it,
+      # moved verbatim into the header of eslint.config.mjs.
+      #
+      # Enforces exactly three rules as errors: no-floating-promises,
+      # no-misused-promises, await-thenable. require-await is deliberately NOT
+      # enabled -- measured at 155 findings and 0 defects, all async test doubles
+      # or async wrappers over synchronous SQLite, which is a check people delete
+      # rather than obey. eslint.config.mjs says so at length.
+      - run: bunx eslint
+
+      # The workflows in this directory, read as GitHub Actions rather than as
+      # text. actionlint 1.7.12, through the `github-actionlint` wrapper.
+      #
+      # It found NOTHING on the day it went in - 0 findings over ci.yml and
+      # pages.yml, 2026-08-06 - and that is why it is here rather than why it is
+      # not. It is a standing guard over a class nothing else in this repository
+      # covers: an untrusted `${{ }}` interpolated straight into a `run:` block,
+      # which is a shell injection through a commit message; a `runs-on` label
+      # that does not exist, which is a job that queues forever; a `needs:`
+      # naming a job that is not there. Every one of those is a defect that
+      # ships green from a text editor.
+      #
+      # Proven to discriminate before it was trusted, and not by argument: with
+      # `run: echo ${{ github.event.head_commit.message }}` temporarily added to
+      # this file, it exits 1 naming the file, the line and the column, and says
+      # the expression is potentially untrusted and should go through an
+      # environment variable. That step was reverted.
+      #
+      # This is also the tool whose absence cost two passes of teaching bespoke
+      # code to read YAML. scripts/lib/runnable.mjs still reads this file, and
+      # keeps its own question - *is this audit run by CI* - which is about this
+      # repository and not about GitHub Actions. Neither answers the other's.
+      #
+      # `bun run actionlint`, one spelling, in the root manifest beside `knip`.
+      # KNOWN: the wrapper downloads the official binary from GitHub Releases on
+      # first run rather than at install, so this step needs the network and a
+      # release-page outage turns it red for a reason that is not a workflow.
+      - run: bun run actionlint
+
+      # The per-package counts in README.md, against the suites that produce
+      # them. Maintained by hand for forty passes, which is exactly how long a
+      # number survives before it is quietly wrong.
+      - run: node scripts/audit-claims.mjs
+
+      # The board references inside the traditional text. Reports the damage it
+      # already knows about and fails only on a loss nobody has recorded, which
+      # is what a rebuild from a different source would produce.
+      - run: node scripts/audit-numbers.mjs
+
+      # The sums the traditional text states, in every language at once. The
+      # one layer of the translation audit that needs no translator: whether
+      # nine times two hundred and eighty is 2520 is the same question in
+      # Ukrainian as it is here, and in three languages the text says it is not.
+      - run: node scripts/audit-arithmetic.mjs
+
+      # Every recorded exception, asked whether it still describes anything.
+      # Three lists were hardened one at a time and the fourth was missed for a
+      # hundred and ninety-nine passes, so the rule is a check rather than a
+      # paragraph: a list written tomorrow fails until somebody declares it.
+      - run: node scripts/audit-records.mjs
+
+      # The rules book's table of contents. Three books came through a
+      # different donor and are missing chapters the two editions agree on;
+      # this names them and fails on a fourth.
+      - run: node scripts/audit-book.mjs
+
+      # Every control the mini app draws as available, against the decision
+      # behind it. Three defects in three passes came from an act that trusted
+      # a drawing; a drawing decided inline is one nothing else can call.
+      - run: node scripts/audit-drawings.mjs
+
+      # Which functions read the seat holding the turn. Three defects in three
+      # passes came from one that had a seat of its own and did not ask for it.
+      - run: node scripts/audit-whose.mjs
+
+      # Every dependency a caller supplies, against a test that breaks it on
+      # purpose. Four passes running found one defect each, all of them
+      # behaviour the type allows and the code assumed away.
+      - run: node scripts/audit-promises.mjs
+
+      # What the game offers, on each surface that is the game. Four passes
+      # running found the phone missing something its neighbours had, each by
+      # reading rather than by anything failing.
+      - run: node scripts/audit-offers.mjs
+
+      # Every word a type declares, against the code that says it.
+      # `TurnBlockedReason` listed `finished` and returned it nowhere, so the
+      # check got written three times outside the engine and one of the three
+      # asked a different question.
+      - run: node scripts/audit-reachable.mjs
+
+      # One bound, declared once. Four had been written down twice and one of
+      # them three times, all agreeing on the day they were copied — which is
+      # why nothing had gone wrong yet and exactly why it would.
+      - run: node scripts/audit-doubles.mjs
+
+      # Every sentence the game says about itself comes from `@leela/content`.
+      # main.ts records four English strings found written into it and moved
+      # out; nothing was added to stop the next, and three more had appeared by
+      # 2026-08-28 — including `'Light' : 'Dark'` on the face of a button, on
+      # all twenty-two boards.
+      - run: node scripts/audit-spoken.mjs
+
+      # Both pages of the game are ready to be shared and say the same thing.
+      # `shared-link.test.ts` had held the mini app's head to a standard for
+      # weeks and NOTHING HELD THE 3D BOARD'S — the page t27.ai/leela/ actually
+      # serves, and the page every button in the bot opens. It had no og:url
+      # and no canonical, under a comment saying it carried "the same words the
+      # mini app's head carries". Neither page had a picture at all: measured
+      # 2026-08-28 against the five rivals in rivals.mjs, four of four carry a
+      # favicon and three of four carry an og:image.
+      - run: node scripts/audit-preview.mjs
+
+      # No two squares of the board are told to a player by one name. Found by
+      # reading the Urdu book: plan 4 and plan 8 are both لالچ. Thirty findings
+      # in seventeen of the twenty-two languages, five pairs — and the root is
+      # in the English, which renders Russian's «Алчность (матсара)» as bare
+      # "Greed", the word it already uses for plan 4. Recorded rather than
+      # repaired: choosing what plan 8 is called is a translator's decision.
+      - run: node scripts/audit-namesakes.mjs
+
+      # Nothing a reader is shown is markup, and no plan stops mid-sentence.
+      # The Malay sixth plan carried a paragraph reading `& Nbsp; & nbsp; &
+      # nbsp; & nbsp;` — four broken entities standing between a sentence and
+      # the list it introduces. A sweep for `&nbsp;` over 1,584 bodies found
+      # NOTHING, because a translator that mangles an entity does not leave it
+      # canonical; what found it was that `&` occurs in exactly one plan.
+      - run: node scripts/audit-prose.mjs
+
+      # No test puts a CEILING on elapsed wall-clock time without saying why.
+      # Three flakes here were one shape — `kept.test.ts` failed at 1283 ms
+      # against a bound of 1_000 when a dozen workspaces ran at once — and each
+      # was repaired by raising the number, which is the move #46-49 already
+      # recorded as wrong. A FLOOR is not counted: a slow machine only makes it
+      # more true.
+      - run: node scripts/audit-timing.mjs
+
+      # The steps above are also `bun run audit`, which the root manifest added
+      # so that `bun run verify` — the command README tells a person to run —
+      # can go red for the reasons this job goes red. It ran no audit at all
+      # until then, so a stale count was invisible locally and red on the push.
+      #
+      # Two spellings of "which audits run" is exactly the duplication this
+      # repository keeps finding, and they are NOT collapsed into one here, for
+      # a measured reason. `auditsRunByCi` in scripts/lib/runnable.mjs answers
+      # "is this audit run" by reading each live `run:` for `node scripts/x.mjs`
+      # — a step that says `bun run audit` names no script, so it sees none.
+      # MEASURED on 2026-08-06, in memory, without editing this file: replacing
+      # every `- run: node scripts/audit-*.mjs` line below with `bun run audit`
+      # takes `checkAuditsRun` from 0 problems to 14, each of the form "nothing
+      # runs it and it does not say what it needs". CI would go red for saying
+      # the same thing more briefly.
+      #
+      # So the single spelling is possible only once that reader follows a
+      # package script into the manifest, which is a change to
+      # scripts/lib/runnable.mjs and not to this file. Until then the two lists
+      # cannot drift silently in the direction that matters: an audit added to
+      # the directory and missed here fails `audit-scripts` below, and one
+      # missed by the gate fails
+      # packages/content/tests/a-gate-that-runs-no-audit.test.ts.
+
+      # Every script starts under the runtime it names, and every audit is
+      # either run here or says in its own header why it cannot be. audit-copies
+      # - the check that reads eighteen copies of the board - sat broken under
+      # `node` for passes, and nothing noticed, because a check nobody can run
+      # reads exactly like a check that passes.
+      - run: node scripts/audit-scripts.mjs
+
+      # Every dependency a manifest declares, against the code that uses it.
+      #
+      # It replaces nothing, and that is the finding: twenty-one audits read
+      # source, tests and workflows, and not one of them reads a package.json
+      # against the tree. `@eslint/js` was declared in the root manifest and was
+      # dead the day it arrived - one grep hit in the whole repository, its own
+      # declaration - and nothing here would ever have said so. Six workspaces
+      # declared @vitest/coverage-v8 with no coverage script to run it. And
+      # apps/mobile/app.json promised an appearance behaviour whose package was
+      # never installed, on the app published as com.leelagame.
+      #
+      # It OVERLAPS scripts/audit-unread.mjs and does not replace that either.
+      # knip resolves imports, so it finds 21 exports and 6 types with no caller
+      # where audit-unread - which counts a name mentioned anywhere, its own
+      # declaring file included, as a caller - finds none. Those classes are
+      # measured and deliberately NOT gated: 27 findings is not a number anybody
+      # triages in one sitting, and a gate over findings nobody has read is one
+      # somebody switches off. The field half of audit-unread has no substitute
+      # anywhere in this survey and keeps running.
+      #
+      # Three classes only - a package is installed or it is not, a manifest
+      # lists it or it does not, a binary is on the PATH or it is not. No
+      # judgement in any of them.
+      #
+      # `bun run knip`, not `bunx knip`: knip 6.32.0 does not discover a config
+      # file named knip.config.mjs, so the script names it with --config. The
+      # measurement, and everything above at length, is in knip.config.mjs.
+      - run: bun run knip
+
+      # The import graph, read as a graph. Twenty-one bespoke audits read
+      # source, tests, manifests and workflows, and not one asks whether a
+      # module depends on itself through its neighbours, or whether a library
+      # reaches into an application. No test asks either. dependency-cruiser
+      # 18.1.1 does, over the RUNTIME graph, and both rules were green the day
+      # they went in - which is the point: a direction that is correct today
+      # and that one convenient import would reverse.
+      #
+      # Proven to discriminate before it was trusted, and not by argument: with
+      # packages/engine/src/zz-cycle-probe.ts temporarily importing from
+      # apps/bot/src/store, this step exits 1 and names the module and the rule.
+      # That probe was deleted.
+      #
+      # THE FALSE GREEN, and the reason this step is not the whole gate.
+      # dependency-cruiser needs a resolvable `typescript` to parse TypeScript
+      # at all, and when it cannot find one it does not fail - it prints
+      # "no dependency violations found (11 modules, 5 dependencies cruised)",
+      # exits 0, and puts `missing-typescript-transpiler` on a LATER line. The
+      # real graph is 333 modules. MEASURED 2026-08-06 through
+      # `npx --yes dependency-cruiser` from a directory where typescript does
+      # not resolve. A human reads the tick, CI reads the exit code, and
+      # neither ever learns that the tool read nothing.
+      #
+      # So: `bun run depcruise`, never `bunx` and never `npx` - the script
+      # resolves the local binary in node_modules/.bin, beside the typescript
+      # this repository installs. And the count is guarded independently by
+      # packages/journal/tests/a-package-that-needs-an-app.test.ts, which
+      # re-runs the cruise as JSON and holds the module count against the
+      # TypeScript files it walks on disk. An exit code alone is not evidence
+      # that anything was read.
+      - run: bun run depcruise
+
+  content-is-reproducible:
+    # The dataset under packages/content/data is generated, and this job checks
+    # it is whole — every language the package declares, every plan, in order,
+    # with text. It cannot check it is *reproducible*: rebuilding needs the
+    # donor clones, which are not here. The generator refuses to write a dataset
+    # smaller than the one already committed, which is the half of that promise
+    # that can be kept without them. The job name is older than the promise.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Held to `LANGUAGES` in packages/content/src, not to the manifest's own
+      # list. The check this replaces iterated the languages the manifest named,
+      # so an empty manifest was zero iterations and a green job — and a stray
+      # rebuild from a source directory that did not exist emptied it exactly
+      # that way.
+      - run: bun install --frozen-lockfile
+      - run: bun scripts/audit-dataset.mjs

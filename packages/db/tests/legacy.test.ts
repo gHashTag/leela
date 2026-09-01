@@ -1,0 +1,386 @@
+import { describe, expect, it } from 'vitest';
+import { LEGACY_MOBILE, WIN_LOKA, applyRoll, canRoll } from '@leela/engine';
+import {
+  LegacyMigrationError,
+  describeMigration,
+  migrateBatch,
+  playerFromLegacy,
+  stateFromLegacy,
+  type LegacyUser,
+} from '../src/legacy';
+
+const T0 = 1_700_000_000_000;
+
+function legacy(overrides: Partial<LegacyUser> = {}): LegacyUser {
+  return {
+    email: 'a@example.com',
+    finish: false,
+    firstGame: false,
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    lastStepTime: T0,
+    owner: 'firebase-uid-1',
+    plan: 23,
+    start: true,
+    isReported: true,
+    history: [
+      { plan: 23, count: 4, status: 'arrow', createDate: T0 },
+      { plan: 10, count: 4, status: 'cube', createDate: T0 - 1000 },
+      { plan: 6, count: 6, status: 'start', createDate: T0 - 2000 },
+    ],
+    ...overrides,
+  };
+}
+
+describe('stateFromLegacy', () => {
+  it('reads a player who is mid-game', () => {
+    expect(stateFromLegacy(legacy())).toEqual({
+      loka: 23,
+      previous_loka: 10,
+      direction: 'arrow 🏹',
+      consecutive_sixes: 0,
+      position_before_three_sixes: 0,
+      is_finished: false,
+    });
+  });
+
+  it('parks a player who never entered the game on the win square', () => {
+    const state = stateFromLegacy(legacy({ start: false, plan: 68, history: [] }));
+    expect(state.loka).toBe(WIN_LOKA);
+    expect(state.is_finished).toBe(true);
+  });
+
+  it('parks a player who already won', () => {
+    const state = stateFromLegacy(legacy({ finish: true, plan: 68 }));
+    expect(state.loka).toBe(WIN_LOKA);
+    expect(state.is_finished).toBe(true);
+  });
+
+  it('reads the previous plan from history rather than inventing one', () => {
+    expect(stateFromLegacy(legacy()).previous_loka).toBe(10);
+  });
+
+  it('treats a player with no history as not having moved', () => {
+    // Equal plans is what owesReport and the report gate key off.
+    const state = stateFromLegacy(legacy({ history: [], plan: 15 }));
+    expect(state.previous_loka).toBe(15);
+    expect(state.loka).toBe(15);
+  });
+
+  it('does not trust the stored order of history', () => {
+    // The app unshifts, but an export may well come back sorted the other way.
+    const reversed = legacy({ history: [...legacy().history].reverse() });
+    expect(stateFromLegacy(reversed).previous_loka).toBe(10);
+    expect(stateFromLegacy(reversed).direction).toBe('arrow 🏹');
+  });
+
+  it('maps each history status onto a direction', () => {
+    const cases: Array<[string, string]> = [
+      ['snake', 'snake 🐍'],
+      ['arrow', 'arrow 🏹'],
+      ['liberation', 'win 🕉'],
+      ['cube', 'step 🚶🏼'],
+      ['start', ''],
+      ['something-new', ''],
+    ];
+    for (const [status, direction] of cases) {
+      const user = legacy({ history: [{ plan: 23, count: 1, status, createDate: T0 }] });
+      expect(stateFromLegacy(user).direction, status).toBe(direction);
+    }
+  });
+
+  it('carries no run of sixes, because the legacy app never tracked one', () => {
+    const state = stateFromLegacy(legacy());
+    expect(state.consecutive_sixes).toBe(0);
+    expect(state.position_before_three_sixes).toBe(0);
+  });
+
+  it('refuses a plan off the board rather than storing it', () => {
+    for (const plan of [0, 73, -1, 1.5]) {
+      expect(() => stateFromLegacy(legacy({ plan })), `plan ${plan}`).toThrow(
+        LegacyMigrationError,
+      );
+    }
+  });
+});
+
+describe('playerFromLegacy', () => {
+  it('keeps the migrated player on the rules they installed', () => {
+    expect(playerFromLegacy(legacy(), 'new-1').ruleset).toBe('legacy-mobile');
+  });
+
+  it('preserves the Firebase uid for reconciliation', () => {
+    const row = playerFromLegacy(legacy(), 'new-1');
+    expect(row.id).toBe('new-1');
+    expect(row.legacyId).toBe('firebase-uid-1');
+  });
+
+  it('joins the name, and leaves it unset when there is none', () => {
+    expect(playerFromLegacy(legacy(), 'x').fullName).toBe('Ada Lovelace');
+    expect(
+      playerFromLegacy(legacy({ firstName: '', lastName: '' }), 'x').fullName,
+    ).toBeUndefined();
+  });
+
+  it('does not hand an unreported player a free roll', () => {
+    expect(playerFromLegacy(legacy({ isReported: false }), 'x').needsReport).toBe(true);
+    expect(playerFromLegacy(legacy({ isReported: true }), 'x').needsReport).toBe(false);
+  });
+
+  it('carries the last roll time, and leaves it null for someone who never rolled', () => {
+    expect(playerFromLegacy(legacy(), 'x').lastRollAt).toEqual(new Date(T0));
+    expect(playerFromLegacy(legacy({ lastStepTime: 0 }), 'x').lastRollAt).toBeNull();
+  });
+
+  it('reduces a loose locale to a primary subtag', () => {
+    expect(playerFromLegacy(legacy({ lang: 'ru-RU' }), 'x').language).toBe('ru');
+    expect(playerFromLegacy(legacy({ lang: 'EN_us' }), 'x').language).toBe('en');
+    expect(playerFromLegacy(legacy({ lang: undefined }), 'x').language).toBe('en');
+    expect(playerFromLegacy(legacy({ lang: 'nonsense' }), 'x').language).toBe('en');
+  });
+});
+
+describe('a migrated player can keep playing', () => {
+  it('resumes from exactly where they stood', () => {
+    const state = stateFromLegacy(legacy({ plan: 11, history: [] }));
+    const { state: next } = applyRoll(state, 4, LEGACY_MOBILE);
+    expect(next.previous_loka).toBe(11);
+    expect(next.loka).toBe(15);
+  });
+
+  it('keeps the extra throw on a six that the legacy app gave them', () => {
+    const state = stateFromLegacy(legacy({ plan: 11, history: [] }));
+    expect(applyRoll(state, 6, LEGACY_MOBILE).event.grantsExtraTurn).toBe(true);
+  });
+
+  it('is not blocked by a gate their variant never had', () => {
+    const state = stateFromLegacy(legacy({ isReported: false }));
+    const verdict = canRoll(
+      state,
+      { reportSubmitted: false, lastRollAt: T0, lastReportAt: null, now: T0 + 1 },
+      LEGACY_MOBILE,
+    );
+    expect(verdict.allowed).toBe(true);
+  });
+
+  it('stays finished after having won, because the app they came from does', () => {
+    // `stepCount === 6 && !isFinished` in `store/helper.ts`: the published app
+    // will not let a winner back in with a throw. Their "Start over" button is
+    // the deliberate act that begins another game. This test asserted the
+    // opposite until the app's own logic was read.
+    const state = stateFromLegacy(legacy({ finish: true, plan: 68, history: [
+      { plan: 68, count: 1, status: 'liberation', createDate: 2 },
+      { plan: 67, count: 3, status: 'cube', createDate: 1 },
+    ] }));
+
+    expect(applyRoll(state, 3, LEGACY_MOBILE).state.loka).toBe(WIN_LOKA);
+    expect(applyRoll(state, 6, LEGACY_MOBILE).state.loka).toBe(WIN_LOKA);
+  });
+
+  it('can still enter when they never started, however their export looks', () => {
+    // A migrated player who never played has `previous_plan` equal to their
+    // plan, because the export carried no history. That reads as "has not
+    // moved" and must not read as "has won" — otherwise a six would never let
+    // them in and the migration would have stranded them.
+    const fresh = stateFromLegacy(legacy({ start: false, finish: false, plan: 68, history: [] }));
+    expect(fresh.previous_loka).toBe(fresh.loka);
+    expect(applyRoll(fresh, 6, LEGACY_MOBILE).state.loka).toBe(6);
+  });
+});
+
+describe('migrateBatch', () => {
+  it('converts everyone it can and reports the rest', () => {
+    const users = [
+      legacy({ owner: 'ok-1', plan: 10 }),
+      legacy({ owner: 'bad-1', plan: 99 }),
+      legacy({ owner: 'ok-2', plan: 40 }),
+    ];
+
+    const { migrated, failures } = migrateBatch(users, (u) => `new-${u.owner}`);
+
+    expect(migrated.map((p) => p.legacyId)).toEqual(['ok-1', 'ok-2']);
+    expect(failures).toHaveLength(1);
+    expect(failures[0].owner).toBe('bad-1');
+    expect(failures[0].reason).toMatch(/off the board/);
+  });
+
+  it('does not stop at the first bad row', () => {
+    const users = [legacy({ owner: 'bad', plan: 0 }), legacy({ owner: 'good', plan: 5 })];
+    expect(migrateBatch(users, (u) => u.owner).migrated).toHaveLength(1);
+  });
+
+  it('handles an empty export', () => {
+    expect(migrateBatch([], (u) => u.owner)).toEqual({
+      migrated: [],
+      skipped: [],
+      failures: [],
+    });
+  });
+});
+
+describe('a migration that can be run twice', () => {
+  // A live migration is never one attempt. Without knowing who has already
+  // come across, a second pass returns rows that exist, and the unique index
+  // on legacy_id rejects them — taking the whole transaction down, including
+  // the accounts that had not been migrated yet.
+
+  const users = [
+    legacy({ owner: 'uid-1', plan: 10 }),
+    legacy({ owner: 'uid-2', plan: 20 }),
+    legacy({ owner: 'uid-3', plan: 30 }),
+  ];
+
+  it('skips accounts that are already in the database', () => {
+    const report = migrateBatch(users, {
+      idFor: (u) => `new-${u.owner}`,
+      alreadyMigrated: ['uid-1', 'uid-3'],
+    });
+
+    expect(report.migrated.map((p) => p.legacyId)).toEqual(['uid-2']);
+    expect(report.skipped).toEqual(['uid-1', 'uid-3']);
+    expect(report.failures).toEqual([]);
+  });
+
+  it('is a no-op on a second run', () => {
+    const first = migrateBatch(users, { idFor: (u) => u.owner });
+    const second = migrateBatch(users, {
+      idFor: (u) => u.owner,
+      alreadyMigrated: first.migrated.map((p) => p.legacyId as string),
+    });
+
+    expect(second.migrated).toEqual([]);
+    expect(second.skipped).toHaveLength(users.length);
+  });
+
+  it('does not count a skip as a failure', () => {
+    // An operator reading "3 failed" would go looking for a problem there is
+    // not one of.
+    const report = migrateBatch(users, {
+      idFor: (u) => u.owner,
+      alreadyMigrated: users.map((u) => u.owner),
+    });
+    expect(report.failures).toEqual([]);
+    expect(describeMigration(report)).toContain('already migrated');
+  });
+
+  it('catches an account listed twice in one export', () => {
+    const duplicated = [...users, legacy({ owner: 'uid-2', plan: 40 })];
+    const report = migrateBatch(duplicated, { idFor: (u) => u.owner });
+
+    expect(report.migrated).toHaveLength(3);
+    expect(report.failures).toEqual([
+      { owner: 'uid-2', index: 3, reason: 'appears more than once in this export' },
+    ]);
+  });
+
+  it('still accepts the plain id function it was first written with', () => {
+    const report = migrateBatch(users, (u) => `new-${u.owner}`);
+    expect(report.migrated).toHaveLength(3);
+    expect(report.skipped).toEqual([]);
+  });
+
+  it('reads as a sentence an operator can act on', () => {
+    const report = migrateBatch([...users, legacy({ owner: 'bad', plan: 99 })], {
+      idFor: (u) => u.owner,
+      alreadyMigrated: ['uid-1'],
+    });
+    expect(describeMigration(report)).toBe('2 to migrate, 1 already migrated, 1 failed');
+  });
+
+  it('says nothing about categories that are empty', () => {
+    expect(describeMigration(migrateBatch(users, (u) => u.owner))).toBe('3 to migrate');
+  });
+});
+
+describe('a dump with holes in it', () => {
+  // A Firebase export can contain a deleted document, or a record with no uid.
+  // Reporting twelve identical "(no owner)" lines gives an operator no way to
+  // find any of the twelve.
+
+  const good = legacy({ owner: 'uid-1', plan: 10 });
+
+  it('says which record was wrong, by position', () => {
+    const report = migrateBatch([good, null, good, undefined] as never[], {
+      idFor: (u) => u?.owner ?? 'x',
+    });
+
+    expect(report.failures.map((f) => f.index)).toEqual([1, 2, 3]);
+  });
+
+  it('explains a hole in terms an operator can act on', () => {
+    const report = migrateBatch([null] as never[], { idFor: () => 'x' });
+
+    expect(report.failures[0].reason).toBe('record 0 is null, not an object');
+    // Not the internal error a property access would have produced.
+    expect(report.failures[0].reason).not.toMatch(/is not an object \(evaluating/);
+  });
+
+  it('distinguishes a hole from a record with no uid', () => {
+    const anonymous = { ...good, owner: '' } as never;
+    const report = migrateBatch([null, anonymous] as never[], { idFor: () => 'x' });
+
+    expect(report.failures[0].owner).toBe('(not a record)');
+    expect(report.failures[1].owner).toBe('(no owner)');
+    expect(report.failures[1].reason).toMatch(/cannot be matched to an account/);
+  });
+
+  it('migrates everything around the holes', () => {
+    const report = migrateBatch(
+      [good, null, legacy({ owner: 'uid-2', plan: 20 }), undefined] as never[],
+      { idFor: (u) => u.owner },
+    );
+
+    expect(report.migrated.map((p) => p.legacyId)).toEqual(['uid-1', 'uid-2']);
+    expect(report.failures).toHaveLength(2);
+  });
+
+  it('never throws, whatever is in the array', () => {
+    const rubbish = [null, undefined, 0, '', 'a string', [], true, NaN] as never[];
+    expect(() => migrateBatch(rubbish, { idFor: () => 'x' })).not.toThrow();
+    expect(migrateBatch(rubbish, { idFor: () => 'x' }).failures).toHaveLength(rubbish.length);
+  });
+
+  it('reports a non-Error thrown by idFor without losing it', () => {
+    const report = migrateBatch([good], {
+      idFor: () => {
+        throw 'a bare string';
+      },
+    });
+    expect(report.failures[0].reason).toBe('a bare string');
+  });
+});
+
+describe('an id that cannot be assigned', () => {
+  /**
+   * `idFor` is supplied by whoever runs the migration — a lookup against a
+   * table that may be down, a generator that may collide. A migration that
+   * stops on the first one it cannot name would leave an operator to find out
+   * how far it got by reading the database.
+   *
+   * It does not stop: the row becomes a failure with the reason attached, and
+   * everything else in the export still migrates. Written down because that
+   * rests on one `try` inside the loop, and a `try` around the loop would read
+   * almost the same and behave nothing like it.
+   */
+  it('fails that row and migrates the rest', () => {
+    const users = [
+      legacy({ owner: 'first', plan: 10 }),
+      legacy({ owner: 'second', plan: 20 }),
+      legacy({ owner: 'third', plan: 30 }),
+    ];
+
+    // The options form, which is the one that names what is being broken:
+    // `idFor` is a lookup somebody supplies, and a lookup can be down.
+    const report = migrateBatch(users, {
+      idFor: (user) => {
+        if (user.owner === 'second') throw new Error('the directory is down');
+        return `new-${user.owner}`;
+      },
+    });
+
+    expect(report.migrated.map((player) => player.legacyId)).toEqual(['first', 'third']);
+    expect(report.failures).toHaveLength(1);
+    expect(report.failures[0]?.reason).toMatch(/directory is down/);
+    expect(report.failures[0]?.owner, 'and which row it was').toBe('second');
+  });
+});

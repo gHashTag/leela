@@ -1,0 +1,23 @@
+{
+  // The shipped code, held to three rules the editor configuration does not —
+  // the same three every other workspace here is held to, for the reasons
+  // written out in `apps/miniapp/tsconfig.src.json`.
+  //
+  // `noUncheckedIndexedAccess` earns its place in this app immediately: the
+  // board is read out of `BOARD_ROWS` by index, the atlas addresses its tiles
+  // by index, and the frenet frames a snake's body is swept along are indexed
+  // per segment. Every one of those can miss, and without this flag the type
+  // says it cannot.
+  //
+  // Tests are deliberately out of scope: `rows[0]` in a test is a value the
+  // test constructed two lines earlier, and a guard there adds noise without
+  // adding truth.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "types": ["vite/client"]
+  },
+  "include": ["src"]
+}

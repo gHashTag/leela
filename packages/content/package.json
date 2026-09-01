@@ -1,0 +1,27 @@
+{
+  "name": "@leela/content",
+  "version": "1.0.0",
+  "description": "The 72 plans and the rules of Leela, in 22 languages, merged from four repositories.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./data/*": "./data/*"
+  },
+  "files": ["src", "data"],
+  "scripts": {
+    "build": "node ../../scripts/build-content.mjs",
+    "test": "vitest run --testTimeout=30000 --hookTimeout=60000",
+    "typecheck": "tsc --noEmit",
+    "typecheck:strict": "tsc --noEmit -p tsconfig.src.json"
+  },
+  "dependencies": {
+    "@leela/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  },
+  "license": "MIT"
+}

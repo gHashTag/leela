@@ -1,0 +1,21 @@
+# The build context. Without this the host's node_modules are uploaded and then
+# copied over the ones the image installed — Bun's isolated linker puts the
+# workspace links inside each package's own node_modules, and the host's are
+# links made for a Mac.
+node_modules
+**/node_modules
+
+# Build output, test output, and the parts of the repository a bot never reads.
+dist
+**/dist
+coverage
+**/coverage
+.git
+.github
+specs
+.specify
+.claude
+*.db
+*.db-shm
+*.db-wal
+.env
