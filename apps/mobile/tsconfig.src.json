@@ -1,0 +1,38 @@
+{
+  // The shipped code, held to one rule the editor configuration does not:
+  // `noUncheckedIndexedAccess`. An index into an array or a record can miss,
+  // and without this the type says it cannot.
+  //
+  // Two functions in this repository were typed to return a value and returned
+  // `undefined`: `ruleSetById` for a variant no longer known, `currentPlayer`
+  // for a stale turn index. Each made a chat throw on every command, forever,
+  // three files from the row that was wrong. This is the flag that would have
+  // said so at the keyboard.
+  //
+  // Tests are deliberately out of scope. `rows[0]` in a test is a value the
+  // test constructed two lines earlier, and a guard there adds noise without
+  // adding truth.
+  //
+  // And two flags the editor does not turn on either. `noUnusedLocals` is what
+  // would have caught three functions in `packages/db/src/legacy.ts` — dead the
+  // moment `stateFromLegacy` began delegating, and invisible to everything:
+  // `audit-unread` reads exports and fields, and a private function is neither.
+  // They were found by hand, a pass later, only because one of them had been
+  // copied. `noUnusedParameters` is its other half: an argument nothing reads
+  // is a question the caller was asked and nobody answered.
+  //
+  // Tests are out of scope here for the reason above: a helper written for one
+  // test and left is noise, not a defect.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // No Node globals in what ships to a phone. `tests/` get them from the
+    // configuration above; `src/` and the screen are what a device runs, and
+    // `process` in them is a mistake that should not typecheck.
+    "types": [],
+    "jsx": "react-jsx"
+  },
+  "include": ["src"]
+}

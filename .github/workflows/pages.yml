@@ -1,0 +1,120 @@
+name: Deploy mini app
+
+# Both boards are static files, so GitHub Pages is enough to host them — and
+# Telegram needs a public HTTPS URL before it will open a Web App at all. One
+# artifact, three surfaces: the 3D board at the root, the 2D board it replaced
+# still reachable under classic/, and the book under docs/.
+#
+# Deploys from `unified`, which is where the work lives; `main` still holds the
+# published mobile app's history and is deliberately untouched.
+
+on:
+  push:
+    branches: [unified]
+    paths:
+      - 'apps/webgl/**'
+      - 'apps/miniapp/**'
+      - 'apps/docs/**'
+      - 'packages/engine/**'
+      - 'packages/content/**'
+      # The format every surface reads and writes. The mini app declares it and
+      # imports it, and this list was written without it — so a push that
+      # touched only the journal changed what players run and published
+      # nothing. `audit-configs` reads this list against the dependency graph.
+      - 'packages/journal/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time. Queued rather than cancelled: a half-finished
+# deploy would leave the app broken for whoever is playing.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      # A broken build must not reach players, and the tests are quick.
+      #
+      # This file states what the artifact is made of twice — in `paths:` above
+      # and in this list — and for one pass the two disagreed: the journal was
+      # added up there and not down here, so the format both surfaces read and
+      # write could be red and still deploy green. `audit-configs` now reads
+      # both against the dependency graph, so the next divergence is loud.
+      - name: Test what is being shipped
+        run: |
+          for pkg in packages/engine packages/content packages/journal apps/webgl apps/miniapp apps/docs; do
+            (cd "$pkg" && bunx vitest run)
+          done
+
+      - name: Build
+        run: |
+          # The 3D board is the artifact root — what https://t27.ai/leela/
+          # serves, and what the bot's button opens. Two things are pinned at
+          # build time: where its companion asks, because `askUrl()` reads
+          # `window.__leelaAsk` and the entry sets that from VITE_ASK_ORIGIN;
+          # and `--base=./`, for the reason apps/miniapp's vite.config.ts pins
+          # the same value — Vite's default `/` writes asset paths a page
+          # served from /leela/ cannot reach, and the smoke checks fail a
+          # deploy over exactly that.
+          VITE_ASK_ORIGIN=https://leela-production-e9a0.up.railway.app \
+            bun run --cwd apps/webgl build -- --base=./
+          # The 2D board is not deleted, it moves: the same bundle, one
+          # directory down. Built to a relative base, so the files work from
+          # classic/ unchanged.
+          bun run --cwd apps/miniapp build
+          cp -R apps/miniapp/dist apps/webgl/dist/classic
+          # The book is served from a subdirectory of the game, so it is built
+          # into the same artifact rather than deployed separately — one repo
+          # gets one Pages site.
+          bun run --cwd apps/docs build ../webgl/dist/docs
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/webgl/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  # deploy-pages reports success when the upload succeeded, which is not the
+  # same as the game being playable. A build that emits a broken asset path, or
+  # a book whose pages did not reach the artifact, deploys green.
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - name: Check the live site
+        run: bun run --cwd apps/miniapp scripts/smoke-run.ts "${{ needs.deploy.outputs.page_url || 'https://t27.ai/leela/' }}"

@@ -1,0 +1,220 @@
+/**
+ * A room, on disk.
+ *
+ * Splitting a `Room` into rows and back is pure, so it can be tested exactly —
+ * and it needs to be, because the failure mode is silent: a game that reloads
+ * with the wrong turn holder, or in the wrong language, looks like a game.
+ *
+ * The actual queries live behind `RoomQueries`, a four-method interface. That
+ * keeps this file free of a driver and lets the store be tested against a fake
+ * without a Postgres to hand.
+ */
+
+import { StoredRowsError, sessionFromRows, sessionUpdate, seatUpdate } from '@leela/db';
+import type { SessionPlayerRow, SessionRow } from '@leela/db';
+import { resolveLanguage } from '@leela/content';
+import type { Room } from './commands';
+import type { ReadRoom, RoomStore } from './store';
+
+/** The session row a room writes, minus the columns the database fills in. */
+export interface StoredSession {
+  id: string;
+  host_id: string;
+  ruleset: string;
+  turn_index: number;
+  roll_count: number;
+  dice_seed: number | null;
+  is_open: boolean;
+  language: string;
+}
+
+/**
+ * A seat row, minus the surrogate key.
+ *
+ * Derived from `seatUpdate` rather than restated. It was restated once, and a
+ * column added to the engine's seat was spread into this object at runtime,
+ * dropped from the type, and never written to SQLite — a game that reloaded
+ * having forgotten when its last report was written. Whatever the mapping
+ * produces is what a store has to store.
+ */
+export type StoredSeat = ReturnType<typeof seatUpdate> & {
+  session_id: string;
+  user_id: string;
+  seat: number;
+  name: string | null;
+};
+
+/** Split a room into the rows that represent it. */
+export function roomToRows(room: Room): { session: StoredSession; seats: StoredSeat[] } {
+  const base = sessionUpdate(room.session);
+
+  return {
+    session: {
+      id: room.chatId,
+      // Seat zero opened the table; that is the whole definition of the host.
+      // A room with no seats never comes from `createSession`, and an empty
+      // host id is a row a reader will refuse rather than a crash here.
+      host_id: room.session.players[0]?.id ?? '',
+      ruleset: base.ruleset,
+      turn_index: base.turn_index,
+      // The engine's roll count and the bot's are the same number, so storing
+      // both would be two places to get out of step.
+      roll_count: room.rollsTaken,
+      dice_seed: room.seed,
+      // `is_open` means "still taking players", which is the inverse of started.
+      is_open: !room.started,
+      language: room.language,
+    },
+    seats: room.session.players.map((player, seat) => ({
+      session_id: room.chatId,
+      user_id: player.id,
+      seat,
+      name: player.name ?? room.names[player.id] ?? null,
+      ...seatUpdate(player),
+    })),
+  };
+}
+
+/** Rebuild a room from its rows. Seats may arrive in any order. */
+export function roomFromRows(
+  session: Pick<
+    SessionRow,
+    'id' | 'turn_index' | 'roll_count' | 'dice_seed' | 'is_open'
+  > & { ruleset: string | null; language: string | null },
+  seats: ReadonlyArray<SessionPlayerRow>,
+): Room {
+  const engineSession = sessionFromRows(session, seats);
+
+  const names: Record<string, string> = {};
+  for (const seat of seats) {
+    if (seat.name) names[seat.user_id] = seat.name;
+  }
+
+  return {
+    chatId: session.id,
+    session: engineSession,
+    // A row written before `dice_seed` existed still has to produce a die;
+    // zero is a valid seed and keeps the game deterministic either way.
+    seed: session.dice_seed ?? 0,
+    rollsTaken: session.roll_count,
+    language: resolveLanguage(session.language),
+    started: !session.is_open,
+    names,
+  };
+}
+
+/**
+ * The queries a room store needs. Four methods, so a fake is cheap.
+ *
+ * Implementations must apply `upsertSession` and `replaceSeats` atomically —
+ * a room half-written after a roll is a game with the wrong turn holder.
+ */
+export interface RoomQueries {
+  loadSession(chatId: string): Promise<SessionRow | null>;
+  loadSeats(chatId: string): Promise<SessionPlayerRow[]>;
+  /** Insert or update the session row and replace its seats, in one transaction. */
+  save(session: StoredSession, seats: StoredSeat[]): Promise<void>;
+  remove(chatId: string): Promise<void>;
+  /**
+   * Which table this player sits at, most recently played first.
+   *
+   * Optional: a queries object that cannot answer says so by not having it,
+   * and `DatabaseRoomStore` reports no room rather than inventing one.
+   */
+  sessionOfPlayer?(playerId: string): Promise<string | null>;
+  /**
+   * Every table's chat id, in the order they were last played, oldest first.
+   *
+   * Optional under `sessionOfPlayer`'s convention. The order mirrors the
+   * memory store's map — last save last — so a caller taking the newest seat
+   * per player gets the same answer from either store.
+   */
+  allSessions?(): Promise<string[]>;
+}
+
+/** A room store backed by the database. */
+export class DatabaseRoomStore implements RoomStore {
+  constructor(
+    private readonly queries: RoomQueries,
+    /**
+     * Where a corrupt row is reported. A room that cannot be read is a fact
+     * about the deployment, and the player is told there is no table — so
+     * without this line nobody ever finds out why their game vanished.
+     */
+    private readonly log: (message: string) => void = console.error,
+  ) {}
+
+  /**
+   * The table, and whether a row was refused to give that answer.
+   *
+   * Both halves used to be `null`, and the log line beside them says why that
+   * mattered: *without this line nobody ever finds out why their game
+   * vanished*. It went to a server log, and the people at the table were told
+   * there was no table — so `/end` cleared nothing and `/new` sailed past the
+   * guard that refuses to replace a game in progress, writing a fresh table
+   * over every seat at the old one.
+   */
+  async read(chatId: string): Promise<ReadRoom> {
+    const session = await this.queries.loadSession(chatId);
+    if (!session) return { room: null, unreadable: false };
+
+    const seats = await this.queries.loadSeats(chatId);
+    // A session with no seats is corrupt rather than empty — a table always
+    // has at least the host. Not absent: there is a row here, and something
+    // has to be able to say so.
+    if (seats.length === 0) {
+      this.log(`[bot] chat ${chatId}: a table with no seats`);
+      return { room: null, unreadable: true };
+    }
+
+    try {
+      return { room: roomFromRows(session, seats), unreadable: false };
+    } catch (error) {
+      // A row the engine cannot be handed is not a reason to break every
+      // command sent to this chat from now on. A throw on every update is not
+      // recoverable; being told which of the two happened is.
+      if (!(error instanceof StoredRowsError)) throw error;
+      this.log(`[bot] chat ${chatId}: unreadable table — ${error.message}`);
+      return { room: null, unreadable: true };
+    }
+  }
+
+  /** The table alone, for a caller with nothing to say about the difference. */
+  async get(chatId: string): Promise<Room | null> {
+    return (await this.read(chatId)).room;
+  }
+
+  async save(room: Room): Promise<void> {
+    const { session, seats } = roomToRows(room);
+    await this.queries.save(session, seats);
+  }
+
+  async delete(chatId: string): Promise<void> {
+    await this.queries.remove(chatId);
+  }
+
+  /** The table this player sits at, wherever it is. */
+  async roomOf(playerId: string): Promise<Room | null> {
+    const chatId = await this.queries.sessionOfPlayer?.(playerId);
+    return chatId ? this.get(chatId) : null;
+  }
+
+  /**
+   * Every table held, oldest-played first.
+   *
+   * Through `read` rather than `get`, so a row the engine refuses is logged by
+   * the same line every other refusal goes through — and then skipped: the
+   * initiative visiting every table must not be stopped by the one that will
+   * not assemble. A queries object without `allSessions` enumerates nothing,
+   * which is `roomOf`'s convention for a question it cannot answer.
+   */
+  async allRooms(): Promise<Room[]> {
+    const ids = (await this.queries.allSessions?.()) ?? [];
+    const rooms: Room[] = [];
+    for (const id of ids) {
+      const { room } = await this.read(id);
+      if (room) rooms.push(room);
+    }
+    return rooms;
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": [
+      "node"
+    ],
+    "jsx": "react-jsx",
+    "allowJs": true
+  },
+  "include": [
+    "src",
+    "tests",
+    "index.ts",
+    // `app.config.ts` decides the bundle identifier a build installs under, and
+    // until this line it was in no program at all: `tsc --noEmit --listFiles`
+    // named it in neither this configuration nor `tsconfig.src.json`, and
+    // `eslint apps/mobile/app.config.ts` answered "File ignored because no
+    // matching configuration was supplied". The one file standing between a
+    // simulator build and the published `com.leelagame` app was the one file
+    // nothing checked.
+    //
+    // DELIBERATELY NOT IN `tsconfig.src.json`, and this is the omission a
+    // reader is most likely to try to "fix". That program sets `"types": []`
+    // because `process` must not typecheck in what ships to a phone — see its
+    // own comment — and `app.config.ts` reads `process.env.APP_VARIANT`. It is
+    // build-time configuration, not shipped code: adding it there would either
+    // fail to compile or force the Node globals back into the program that
+    // exists to keep them out.
+    "app.config.ts"
+  ],
+  "extends": "expo/tsconfig.base"
+}

@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Leela Chakra",
+    "slug": "leela",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "newArchEnabled": true,
+    "updates": {
+      "enabled": false
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "xyz.ghashtag.dharma"
+    },
+    "android": {
+      "package": "com.leelagame"
+    }
+  }
+}

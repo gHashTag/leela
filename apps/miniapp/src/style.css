@@ -1,0 +1,831 @@
+/*
+ * Leela, in a Telegram mini app.
+ *
+ * Every colour comes from Telegram's theme variables, so the app matches
+ * whatever theme the player is using rather than fighting it. The fallbacks
+ * are only for opening the page in a plain browser during development.
+ */
+
+:root {
+  --bg: var(--tg-theme-bg-color, #ffffff);
+  --text: var(--tg-theme-text-color, #1a1a1a);
+  --hint: var(--tg-theme-hint-color, #8b8b8b);
+  --link: var(--tg-theme-link-color, #2a7ab0);
+  --button: var(--tg-theme-button-color, #2a7ab0);
+  --button-text: var(--tg-theme-button-text-color, #ffffff);
+  --surface: var(--tg-theme-secondary-bg-color, #f2f2f6);
+
+  /* Measured against the surface they sit on, not chosen by eye. The originals
+     were 3.0-4.5:1 — below the 4.5:1 that small text needs, in both themes at
+     once, which is what happens when one palette is used for both. */
+  --snake: #a3301c;
+  --arrow: #1f6b39;
+  --win: #7a5a12;
+
+  /* Named and never declared, for as long as they have been used. `--muted` is
+     the older name for `--hint` and resolved to nothing, so the two header
+     icons and the hints under the writing box rendered at full text weight;
+     `--accent`, `--on-accent` and `--rule` always fell through to their
+     hard-coded fallbacks, so the gold marks and the field borders ignored the
+     player's theme entirely. Declared here they follow it.
+
+     `--spin`, `--gem` and `--board-art` are deliberately absent: those are set
+     from script — `main.ts:830`, `main.ts:1375`, `paint.ts:51` — and declaring
+     them here would be a second answer to a question script already answers. */
+  --muted: var(--hint);
+  --accent: var(--win);
+  --on-accent: var(--button-text);
+  --rule: var(--tg-theme-section-separator-color, #d9d9de);
+
+  --gap: 3px;
+  --radius: 7px;
+
+  /*
+   * The inset a sheet holds its contents at.
+   *
+   * ONE declaration because two rules need the same number and they were two
+   * numbers, one of which was missing. `.reader article` was padded by 18 and
+   * `.sheet-controls` — its sibling, outside that padding — by nothing, so in
+   * EVERY ONE OF THE FIVE DIALOGS the buttons stood 18 pixels to the left of
+   * the words above them, flush against the sheet's edge. Measured on the live
+   * classic board at 375 CSS pixels on 2026-08-29: content at 37, buttons at
+   * 19, in all five.
+   */
+  --sheet-pad: 18px;
+}
+
+/*
+ * The same hues, lifted for a dark surface.
+ *
+ * Two triggers, because neither alone is enough: the media query covers a plain
+ * browser, and `data-theme` is set from Telegram's own `colorScheme`, which is
+ * authoritative inside the app and can differ from the system setting.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --snake: #f08a72;
+    --arrow: #5fc684;
+    --win: #e0b544;
+  }
+}
+
+[data-theme='dark'] {
+  --snake: #f08a72;
+  --arrow: #5fc684;
+  --win: #e0b544;
+}
+
+[data-theme='light'] {
+  --snake: #a3301c;
+  --arrow: #1f6b39;
+  --win: #7a5a12;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+}
+
+/* --- where you are ------------------------------------------------------- */
+
+.head {
+  display: grid;
+  /* The `1fr` used to sit on the third track, which is `#players` — an `.icon`
+     hard-fixed to 44px — while `.where` took `auto`, meaning max-content. So
+     the title pushed the row wider than the screen and the last button went off
+     the edge: in Russian "📚 All plans" is unreachable entirely. The flexible
+     track belongs to the one thing that can give. */
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+/*
+ * The two the published app puts in its header — `:information_source:` for the
+ * rules book and `:books:` for all 72 plans (GameScreen's Header). Sized as
+ * touch targets rather than as text: they sit beside a title and above a board,
+ * and a 20px glyph is not something a thumb can aim at.
+ */
+.icon {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+  background: transparent;
+  color: var(--muted);
+}
+
+.icon:hover {
+  color: var(--text);
+}
+
+.head progress {
+  grid-column: 1 / -1;
+}
+
+.where {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 28px;
+  /* A grid item's automatic minimum is its min-content, so `.where` overflows
+     its own track without this however flexible the track is. `.plan-title`
+     has carried `text-overflow: ellipsis` since it was written and never once
+     ellipsised. */
+  min-width: 0;
+}
+
+.plan-number {
+  font-size: 26px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--link);
+}
+
+.plan-title {
+  font-size: 15px;
+  color: var(--hint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+progress {
+  width: 100%;
+  height: 3px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--surface);
+  appearance: none;
+}
+
+progress::-webkit-progress-bar {
+  background: var(--surface);
+  border-radius: 2px;
+}
+
+progress::-webkit-progress-value {
+  background: var(--link);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* --- the board ----------------------------------------------------------- */
+
+/*
+ * Nine columns of squares. The rows size themselves from the cells rather than
+ * stretching to fill: a board of tall rectangles does not read as a board, and
+ * eight rows stretched over a phone screen is what that produces.
+ */
+/*
+ * A file input that reads as a button.
+ *
+ * The input itself is hidden from sight but not from the keyboard or from a
+ * screen reader — a `display: none` input cannot be reached at all, which is
+ * the accessibility mistake this app already made once with the squares.
+ */
+/* `display` set on an element beats the `hidden` attribute, which is only a UA
+   `display: none`. The journal's import label was hidden in script and stayed
+   on screen under every plan's text — visible in a simulator, invisible to the
+   code that set it. Anything that can be hidden says so here. */
+[hidden] {
+  display: none !important;
+}
+
+.file {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.file input {
+  position: absolute;
+  /* Logical, because the audit is right: a file input stretched over its label
+     has no business claiming which way the page reads. */
+  inset-inline: 0;
+  inset-block: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* A note under a sheet: quieter than the text it belongs to. */
+.hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* The row under a sheet, so Save and Close sit together. */
+.sheet-controls {
+  display: flex;
+  gap: var(--gap);
+  align-items: center;
+  margin-top: 12px;
+  /* Held at the sheet's own inset. It is a SIBLING of the scrolling article
+     rather than inside it — that is what keeps the buttons still while the
+     text scrolls — and it therefore has to be told the inset itself. Without
+     this the buttons were flush to the sheet's edges: a `border-radius` pill
+     with a gap above it, touching the corner, which no drawing intends. */
+  padding: 0 var(--sheet-pad) var(--sheet-pad);
+}
+
+/*
+ * A form that carries nothing but a button is a way to submit, not a box.
+ *
+ * `<form method="dialog"><button>Close</button></form>` is how a sheet closes
+ * itself without script. As a flex item that wrapper took a share of the row
+ * the button never asked for, with three measured consequences: in `paste` the
+ * two buttons came out unequal because only the unwrapped one got `flex: 1`;
+ * in every sheet the row's spacing was computed for a box nobody can see; and
+ * in `intention` — where `main.ts` sets `hidden` on the BUTTON, so that a
+ * player who has not yet said what they are playing for cannot leave without
+ * answering — THE EMPTY FORM WENT ON HOLDING 28 PIXELS, so Save was 28 short
+ * and a gap sat to its right. `hidden` hides the button; it does not hide the
+ * element wrapping it.
+ *
+ * `display: contents` removes the wrapper's box and leaves its semantics: the
+ * button becomes the flex item, `flex: 1` reaches it, and a hidden button
+ * takes no room. The form still submits, because this is a property about
+ * boxes and not about forms.
+ */
+.sheet-controls form {
+  display: contents;
+}
+
+#writer-text {
+  width: 100%;
+  box-sizing: border-box;
+  /* Short enough that Save stays above the keyboard. A control you have to
+     dismiss the keyboard to reach is one people do not find. */
+  max-height: 28vh;
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--rule, #d9d9de);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  resize: vertical;
+}
+
+/*
+ * The die, as the published app throws it: a pressable image that spins and
+ * settles on the face you threw. `Dice/assets/{1..6}.png`, 65pt in the
+ * original, above the board and centred.
+ *
+ * A real `<button>` rather than a pressable div, for the same reason the
+ * squares are: it is the control the whole game runs through, and a keyboard
+ * has to be able to reach it.
+ */
+.die {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  flex: 0 0 auto;
+  /* Directly under the board and centred. The published app puts it above,
+     which on a phone this tall is out of reach of a thumb — and the die is the
+     control the whole game runs through. Under the board it is both next to
+     what it acts on and where a hand already is. */
+  align-self: center;
+  width: 60px;
+  height: 60px;
+  margin: 14px auto 4px;
+  background: transparent no-repeat center / contain;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.die:active {
+  transform: scale(0.94);
+}
+
+/* Dimmed while it cannot be thrown — `opacityCube`, 0.4 in the original. */
+.die:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(var(--spin, 360deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The value is already decided before the spin starts, so removing it
+     changes how the throw feels and nothing else. */
+  .die {
+    animation: none !important;
+  }
+}
+
+/*
+ * The board players know, as the published app drew it.
+ *
+ * `leela/src/components/GameBoard/images/{light,dark}.png` — the snakes, the
+ * arrows and the Flower of Life on 68, and nothing else. The numbers are not
+ * in the painting: `GameBoard/index.tsx` lays a nine-by-eight grid of circles
+ * over it and writes each number itself, leaving 68 blank because the flower
+ * is already there.
+ *
+ * The first attempt used `assets/about/images/gameboard.png`, which is the
+ * illustration from the rules screen — same board, but with the numbers and a
+ * border of feathers and crystals baked in. It looked close and was the wrong
+ * file.
+ */
+.board {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 520px;
+  /* Centred in whatever vertical room is left. The painting is wider than it
+     is tall, so on a phone there is always some — and all of it collecting
+     under the board reads as a page that failed to finish loading. */
+  margin: auto;
+  /* The painting's shape, read from the file rather than from a screenshot:
+     714 x 630. The first attempt said 639, which stretched the whole board by
+     1.4% and took the lower rows with it. */
+  aspect-ratio: 714 / 630;
+  border-radius: var(--radius);
+}
+
+/*
+ * With the painting. Unlike the rules illustration, this art has a transparent
+ * background and comes in two, so it follows the interface instead of being
+ * pinned to white — which is what the published app does.
+ *
+ * The image is set from `paint.ts` once it has loaded: a CSS background gives
+ * no way to find out that it did not.
+ */
+.board.painted {
+  background: var(--board-art) no-repeat center / 100% 100%;
+}
+
+/*
+ * The squares, inside the painting.
+ *
+ * The offsets are `GameBoard`'s own layout rather than an adjustment until it
+ * looked right:
+ *
+ *   art    343 x 307   (curImageHeight, times the image's aspect)
+ *   grid   297 x 280   (9 boxes of 31+1+1, 8 of 31+2+2)
+ *   at      23 x  28   inside it, centred horizontally
+ *
+ * A grid stretched across the whole painting — the first attempt — puts every
+ * snake and every arrow about a square away from where it belongs.
+ */
+.squares {
+  position: absolute;
+  top: 9.12%;
+  bottom: -0.33%;
+  inset-inline: 7.32%;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+}
+
+.cell {
+  /* A <button> brings its own font, border and background; reset them so the
+     square is a hit target over the painting and nothing else. */
+  appearance: none;
+  border: 0;
+  font: inherit;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 4px;
+  /* Round, as the published app has them: `borderRadius: s(31) / 2`. */
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--hint);
+  font-size: clamp(9px, 2.6vw, 13px);
+  font-variant-numeric: tabular-nums;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cell:active {
+  background: rgb(0 0 0 / 8%);
+}
+
+/* No glyph over the painting: the snakes and the arrows are the painting, and
+   a second copy in the corner of a square is a caption on a photograph. On the
+   plain board they are all there is, so they stay there. */
+.board:not(.painted) .cell.snake .mark {
+  color: var(--snake);
+}
+
+.board:not(.painted) .cell.arrow .mark {
+  color: var(--arrow);
+}
+
+.board.painted .mark {
+  display: none;
+}
+
+.board:not(.painted) .cell.win {
+  box-shadow: inset 0 0 0 2px var(--win);
+}
+
+/* A visible focus ring, because the cells are now reachable by keyboard and an
+   invisible focus is the same problem in a different disguise. */
+.cell:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+/* Where the player stands. The ring reads at a glance on any theme. */
+/* Over the painting the squares carry the numbers, because the painting does
+   not. The plain board is the same grid with a surface behind each circle. */
+.board.painted .cell {
+  background: transparent;
+}
+
+/* Scoped to `.board` so it outranks the rule above rather than tying with it:
+   the gem is the whole point of knowing where the player is. */
+.board .cell.here {
+  color: transparent;
+  background: var(--gem) no-repeat center / 88% 88%;
+  z-index: 1;
+}
+
+/*
+ * The player is a gem, which is what the published app puts on the square —
+ * `Gem/images/one.png`. Placed above, where it can outrank the painted-board
+ * rule that clears every square's background.
+ */
+
+/* The square just left, so a move is legible as a movement. */
+.cell.from {
+  box-shadow: inset 0 0 0 2px var(--link);
+}
+
+/* 68 is Cosmic Consciousness, and the Flower of Life is already painted there.
+   The published app writes a space in that box for the same reason. */
+.cell.win {
+  color: transparent;
+  box-shadow: none;
+}
+
+.cell .mark {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+/* --- what just happened --------------------------------------------------- */
+
+.say {
+  display: flex;
+  align-items: center;
+  /* Sits just above the controls rather than stretching: a sentence centred in
+     half a screen of empty grey reads as a layout mistake. */
+  margin-top: auto;
+  min-height: 44px;
+  padding: 11px 13px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 14px;
+}
+
+.say.snake {
+  box-shadow: inset 3px 0 0 var(--snake);
+}
+.say.arrow {
+  box-shadow: inset 3px 0 0 var(--arrow);
+}
+.say.win {
+  box-shadow: inset 3px 0 0 var(--win);
+}
+
+/* --- controls -------------------------------------------------------------- */
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  flex: 1;
+  padding: 13px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button.primary {
+  background: var(--button);
+  color: var(--button-text);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* --- the plan text --------------------------------------------------------- */
+
+.reader {
+  width: min(680px, 92vw);
+  max-height: 82vh;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+.reader::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+/*
+ * Anything a person types into.
+ *
+ * Sixteen pixels because that is iOS Safari's threshold: focus a field whose
+ * text is smaller and the whole page zooms in to meet it. The stylesheet had
+ * no `textarea` rule at all, so both writers used the browser's default — and
+ * on an iPhone the report dialog has been magnifying the board and clipping
+ * itself off the right-hand edge since the day it was written. It does not
+ * happen in a desktop browser, which is why weeks of looking never showed it.
+ */
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--surface);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.reader article {
+  max-height: calc(82vh - 70px);
+  padding: var(--sheet-pad);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reader h2 {
+  margin: 0 0 10px;
+  font-size: 19px;
+}
+
+.reader p {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.reader form {
+  padding: 10px 14px calc(14px + env(safe-area-inset-bottom));
+}
+
+/* A die that actually rolls, for the moment between press and result. */
+@keyframes tumble {
+  0% { transform: rotate(0) scale(1); }
+  50% { transform: rotate(180deg) scale(1.12); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.rolling {
+  animation: tumble 0.45s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * A list of titles that opens a text.
+ *
+ * One shape for both of the published app's lists — `RULES_SCREEN` and
+ * `PLANS_SCREEN` are the same `FlatList` of `RenderPlanItem` there, and the
+ * same thing to a reader here.
+ */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.list button {
+  width: 100%;
+  text-align: start;
+  background: transparent;
+  padding: 12px 10px;
+  border-radius: var(--radius);
+}
+
+.list button:hover {
+  background: var(--surface);
+}
+
+/* The square the player is standing on, marked as the app marks it. */
+.list button.here {
+  font-weight: 650;
+  color: var(--accent, inherit);
+  background: var(--surface);
+}
+
+/* A button that is a link in everything but semantics: it changes something,
+   so it is a button, and it sits in prose, so it does not shout. */
+.quiet {
+  width: auto;
+  padding: 6px 0;
+  background: transparent;
+  color: var(--link);
+  font-weight: 500;
+}
+
+/*
+ * Another player at the table.
+ *
+ * The published app draws a gem per seat, all the same picture with a z-index
+ * apart. One gem is the player whose turn it is — the one this device is
+ * waiting on — and the others are a number in a ring: a board of six identical
+ * gems tells nobody which one is theirs.
+ */
+.board .cell.other {
+  color: transparent;
+}
+
+.board .cell.other::after {
+  content: attr(data-seat);
+  position: absolute;
+  inset: 12%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--link);
+  color: var(--text);
+  font-size: 0.62em;
+  font-weight: 650;
+}
+
+/* Whose path this is, when there is more than one on the device. */
+.reader .seat {
+  margin-top: 22px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* What the player wrote about this square before, under the traditional text.
+   Set apart from the plan's own words on purpose: the teaching and a player's
+   account of meeting it are two different voices, and a reader who cannot tell
+   them apart is reading neither. */
+.reader blockquote.mine {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0 0.5rem 0.75rem;
+  border-inline-start: 2px solid var(--accent, #b8860b);
+}
+
+.reader h3.mine {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  opacity: 0.75;
+}
+
+.reader blockquote.mine cite {
+  display: block;
+  font-size: 0.8rem;
+  font-style: normal;
+  opacity: 0.6;
+}
+
+.reader blockquote.mine p {
+  margin: 0.25rem 0 0;
+  white-space: pre-wrap;
+}
+
+/* The teaching, after a player's own account of meeting it. */
+.reader blockquote.mine + p {
+  margin-top: 1.25rem;
+}
+
+/* How many times this square has come back. Sits at the end of the title in
+   the list of all 72, which is the only place a whole game is visible at once. */
+.returns {
+  margin-inline-start: 0.5rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: var(--accent, #b8860b);
+  color: var(--on-accent, #fff);
+}
+
+/* The squares that came back, at the top of a player's own path. Tappable,
+   because the point of knowing 41 came back four times is reading the four. */
+.came-back {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+}
+
+.came-back .chip {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--accent, #b8860b);
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* A rules chapter shown in a language the reader did not ask for. Said quietly
+   and said anyway: "written for you" and "the only copy there is" are not the
+   same offer. */
+.quiet-mark {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+/* The earlier accounts, above the box asking for the next one. Bounded, because
+   a player who has stood here six times should still be able to see the box. */
+#writer-before {
+  max-height: 32vh;
+  overflow-y: auto;
+}
+
+#writer-before blockquote.mine {
+  margin: 0 0 0.5rem;
+  padding: 0.4rem 0 0.4rem 0.6rem;
+  border-inline-start: 2px solid var(--accent, #b8860b);
+}
+
+#writer-before blockquote.mine cite {
+  display: block;
+  font-size: 0.75rem;
+  font-style: normal;
+  opacity: 0.6;
+}
+
+#writer-before blockquote.mine p {
+  margin: 0.2rem 0 0;
+  white-space: pre-wrap;
+}

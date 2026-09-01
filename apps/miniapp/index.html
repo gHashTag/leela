@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Leela</title>
+
+    <!--
+      What a link to the game looks like when somebody shares it.
+
+      Every one of the book's 1,784 pages carries a description and an Open
+      Graph set, written because the bot posts links into Telegram and Telegram
+      builds its preview from them. This page — the game itself, the link
+      players actually send each other and the one every button in the bot
+      points at — carried a charset, a viewport and a title. A chat rendered it
+      as a bare URL.
+
+      The same words the book's own root page uses, so the two agree rather than
+      inventing a second description of one game. In English: the head is served
+      identically to everybody, and which language a player reads is decided
+      after the page has loaded.
+    -->
+    <meta
+      name="description"
+      content="The game of self-knowledge — 72 plans, in 22 languages."
+    />
+    <link rel="canonical" href="https://t27.ai/leela/" />
+    <meta property="og:site_name" content="Leela" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Leela" />
+    <meta
+      property="og:description"
+      content="The game of self-knowledge — 72 plans, in 22 languages."
+    />
+    <meta property="og:url" content="https://t27.ai/leela/" />
+
+    <!--
+      The picture, and the mark in the tab. The reasoning is written out once,
+      on the 3D board's head, because that page is what `https://t27.ai/leela/`
+      serves and it is the one the bot's buttons open. In short: measured
+      against the five rivals, four of four carry a favicon and three of four
+      carry an `og:image`, and this game carried neither on either page.
+
+      These lines are character-for-character what that head carries, and
+      `audit-preview.mjs` requires it. They are absolute rather than relative
+      precisely BECAUSE this page sits one level deeper, at `/leela/classic/`:
+      a relative path would have to differ between the two heads, and a rule
+      that says "the same, but written differently here" is not a rule anything
+      can check.
+    -->
+    <meta property="og:image" content="https://t27.ai/leela/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="The board's snakes and arrows, and the words: Leela, the game of self-knowledge."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="https://t27.ai/leela/icon.png" />
+    <link rel="apple-touch-icon" href="https://t27.ai/leela/icon.png" />
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <main id="app">
+      <header class="head">
+        <!-- The published app's own two: `:information_source:` opens the
+             rules book, `:books:` opens all 72 plans. See GameScreen's Header. -->
+        <button id="rules" class="icon" type="button" aria-label="Rules" title="Rules">&#8505;</button>
+        <div class="where">
+          <span class="plan-number" id="plan-number">—</span>
+          <span class="plan-title" id="plan-title">Waiting for a six</span>
+        </div>
+        <button id="players" class="icon" type="button" aria-label="Players" title="Players">&#128101;</button>
+        <button id="plans" class="icon" type="button" aria-label="All plans" title="All plans">&#128218;</button>
+        <progress id="progress" max="68" value="0"></progress>
+      </header>
+
+      <section class="board" id="board" aria-label="The board, 72 plans"></section>
+
+      <button id="roll" class="die" type="button" aria-label="Roll"></button>
+
+      <section class="say" id="say" role="status" aria-live="polite">
+        A six puts you on the board.
+      </section>
+
+      <footer class="controls">
+        <button id="restart" hidden>Start over</button>
+        <button id="report">Write a report</button>
+        <button id="read">Read this plan</button>
+        <button id="path">My path</button>
+      </footer>
+    </main>
+
+    <!-- One dialog for both lists: the rules book's chapters and all 72
+         plans are the same thing on screen — titles that open a text. -->
+    <dialog id="list" class="reader">
+      <article>
+        <h2 id="list-title"></h2>
+        <ul id="list-items" class="list"></ul>
+      </article>
+      <footer class="sheet-controls">
+        <form method="dialog"><button class="primary" type="submit">Close</button></form>
+      </footer>
+    </dialog>
+
+    <!-- Asked before the board, as the published app asks it: `if
+         (!prof.intention) navigate('CHANGE_INTENTION_SCREEN', { blockGoBack:
+         true })`. In Leela the intention is the question the game answers. -->
+    <!-- A square somebody sent, or one this app sent to a notes app. The path
+         leaves as a file and comes back as a file; a square leaves as words and
+         had no way back in at all. -->
+    <dialog id="paste" class="reader">
+      <article>
+        <h2 id="paste-title"></h2>
+        <textarea id="paste-text" rows="6" maxlength="4200" aria-describedby="paste-hint"></textarea>
+        <p class="hint" id="paste-hint"></p>
+      </article>
+      <footer class="sheet-controls">
+        <form method="dialog"><button type="submit">Close</button></form>
+        <button id="paste-take" class="primary" type="button">Take it in</button>
+      </footer>
+    </dialog>
+
+    <dialog id="intention" class="reader">
+      <article>
+        <h2 id="intention-title"></h2>
+        <textarea id="intention-text" rows="3" maxlength="800" aria-describedby="intention-hint"></textarea>
+        <p class="hint" id="intention-hint"></p>
+      </article>
+      <footer class="sheet-controls">
+        <button id="intention-save" class="primary" type="button">Save</button>
+        <form method="dialog"><button id="intention-close" type="submit" hidden>Close</button></form>
+      </footer>
+    </dialog>
+
+    <dialog id="writer" class="reader">
+      <article>
+        <h2 id="writer-title"></h2>
+        <!-- What was written here the last times. The square's own returns lived
+             one dialog away, and the moment they matter is the moment the game
+             is asking for another one. -->
+        <div id="writer-before"></div>
+        <!-- `maxlength` so the boundary is met while typing rather than discovered
+             afterwards: `record` used to cut the text and say nothing. -->
+        <textarea id="writer-text" rows="4" maxlength="4000" aria-describedby="writer-hint"></textarea>
+        <p class="hint" id="writer-hint"></p>
+      </article>
+      <footer class="sheet-controls">
+        <button id="writer-save" class="primary" type="button">Save</button>
+        <button id="writer-share" type="button" hidden>Share</button>
+        <!-- Only inside Telegram, and only when the app was opened from a
+             keyboard button: `sendData` exists nowhere else, and offering a
+             control that cannot work is the defect this app spent three passes
+             on. -->
+        <button id="writer-ask" type="button" hidden>Ask the companion</button>
+        <form method="dialog"><button type="submit">Close</button></form>
+      </footer>
+    </dialog>
+
+    <dialog id="reader" class="reader">
+      <article>
+        <h2 id="reader-title"></h2>
+        <div id="reader-body"></div>
+      </article>
+      <footer class="sheet-controls">
+        <form method="dialog"><button class="primary" type="submit">Close</button></form>
+        <button id="path-export" type="button" hidden>Save a copy</button>
+        <button id="path-paste" type="button" hidden>Paste a square</button>
+        <label class="file" id="path-import-label">
+          <span id="path-import">Bring one back</span>
+          <input id="path-import-input" type="file" accept="application/json,.json" />
+        </label>
+      </footer>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
