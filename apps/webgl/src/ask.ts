@@ -38,16 +38,17 @@ import type { Ask, Line, Rests } from './companion';
  */
 
 /**
- * A refusal the route explained.
+ * A refusal the route explained internally.
  *
- * Kept apart from every other failure because the companion writes whatever it
- * catches into `note`, which is the one diagnostic the screen offers. A route
- * answering 503 *no model configured* used to reach the player as *the model
- * answered with nothing* - the response was never sent, so the model had
- * answered nothing at all - and the note pointed at the model instead of at the
- * key that was missing.
+ * Kept apart from network absence, but deliberately closed at this boundary:
+ * provider balances, route topology and deployment configuration are operator
+ * diagnostics, not player-facing copy and not necessarily in their language.
  */
-export class Refused extends Error {}
+export class Refused extends Error {
+  constructor() {
+    super('companion unavailable');
+  }
+}
 
 /*
  * Long, because the thinking is the point.
@@ -229,11 +230,9 @@ export const askOverHttp =
       });
 
       if (!response.ok) {
-        // The route says why in its body; it is the only side that knows.
-        const said = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Refused(said?.error ?? `the route answered ${response.status}`);
+        throw new Refused();
       }
-      if (!response.body) throw new Refused('the route answered with no body');
+      if (!response.body) throw new Refused();
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -271,7 +270,7 @@ export const askOverHttp =
               error?: string;
               done?: boolean;
             };
-            if (event.error) throw new Refused(event.error);
+            if (event.error) throw new Refused();
             if (event.thinking) onChunk?.({ thinking: event.thinking });
             if (event.text) {
               answer += event.text;

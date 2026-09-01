@@ -30,11 +30,11 @@
  */
 
 import {
-  ModelError,
   ModelTimeout,
   type LanguageModel,
   type Message,
 } from '@leela/ai';
+import type { Language } from '@leela/content';
 import type { GameState } from '@leela/engine';
 import type { Report } from '@leela/journal';
 
@@ -104,6 +104,9 @@ const ASK_MINUTE_MS = 60_000;
  */
 export const MODEL_DEADLINE_MS = 170_000;
 
+/** The only model/stream failure detail that crosses the public HTTP boundary. */
+export const COMPANION_UNAVAILABLE = 'companion unavailable';
+
 /** Railway injects `PORT`; a laptop gets this. */
 export const DEFAULT_PORT = 8788;
 
@@ -154,6 +157,8 @@ export interface Standing {
   /** True before the six that puts them on the board. */
   waiting: boolean;
   won: boolean;
+  /** The language the active chat room is playing in. */
+  language?: Language;
   /**
    * The whole state the rules run on, so the board can BE this game rather
    * than describe it.
@@ -376,6 +381,12 @@ function answering({ model, stream, now = Date.now, token, gameOf, rollFor, repo
       });
 
     const path = new URL(request.url).pathname;
+    // Same-origin GET/HEAD requests normally have no Origin header. `/api/game`
+    // is a read-only GET and is still protected by Telegram's signed initData,
+    // so the missing browser header is not evidence of a foreign caller. Keep
+    // this exception path- and method-exact: the model and every mutation still
+    // require an explicitly allowed origin.
+    const signedGameRead = path === '/api/game' && request.method === 'GET' && origin === '';
     if (path !== '/api/ask' && path !== '/api/game' && path !== '/api/reports' && path !== '/api/roll') {
       return refuse(404, 'no such route');
     }
@@ -385,7 +396,7 @@ function answering({ model, stream, now = Date.now, token, gameOf, rollFor, repo
     // preflight rather than after the question has travelled.
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
-    if (!allowed) {
+    if (!allowed && !signedGameRead) {
       return refuse(403, origin ? `${origin} may not ask here` : 'an origin is required to ask here');
     }
 
@@ -568,7 +579,7 @@ function answering({ model, stream, now = Date.now, token, gameOf, rollFor, repo
 
     // 503, not 500: the service is simply not configured here, and the board
     // falls back to reading the plan rather than blaming a model it never had.
-    if (!model && !stream) return refuse(503, 'no model configured');
+    if (!model && !stream) return refuse(503, COMPANION_UNAVAILABLE);
 
     const messages: Message[] = [
       { role: 'system', content: system },
@@ -625,14 +636,15 @@ function answering({ model, stream, now = Date.now, token, gameOf, rollFor, repo
                 }
               }
               if (!sawAnything) {
-                say({ error: 'empty completion' });
+                say({ error: COMPANION_UNAVAILABLE });
               } else if (!saidAnyText) {
-                say({ error: 'the model spent the whole budget thinking and never answered' });
+                say({ error: COMPANION_UNAVAILABLE });
               }
             } catch (error) {
               // Past the first byte a status is no longer possible; the frame
               // is what remains, and the client keeps what it already shows.
-              say({ error: error instanceof Error ? error.message : String(error) });
+              void error;
+              say({ error: COMPANION_UNAVAILABLE });
             } finally {
               say({ done: true });
               clearTimeout(timer);
@@ -649,9 +661,8 @@ function answering({ model, stream, now = Date.now, token, gameOf, rollFor, repo
         return new Response(body, { status: 200, headers });
       } catch (error) {
         clearTimeout(timer);
-        if (error instanceof ModelTimeout) return refuse(504, error.message);
-        if (error instanceof ModelError) return refuse(502, error.message);
-        return refuse(502, String(error));
+        if (error instanceof ModelTimeout) return refuse(504, COMPANION_UNAVAILABLE);
+        return refuse(502, COMPANION_UNAVAILABLE);
       }
     }
 
@@ -662,7 +673,7 @@ function answering({ model, stream, now = Date.now, token, gameOf, rollFor, repo
       // reasoning: the live probe of 2026-08-22 got back an empty `content`
       // and nothing else. 16000 is the dev route's measured price for a model
       // that thinks first; the answer itself still ends within a paragraph.
-      if (!model) return refuse(503, 'no model configured');
+      if (!model) return refuse(503, COMPANION_UNAVAILABLE);
       const answer = await Promise.race([
         model.complete(messages, { maxTokens: 16_000, signal: controller.signal }),
         deadline,
@@ -691,11 +702,10 @@ function answering({ model, stream, now = Date.now, token, gameOf, rollFor, repo
         },
       });
     } catch (error) {
-      // The order matters: a `ModelTimeout` is a `ModelError` too, and 504
-      // says nothing answered where 502 says something refused.
-      if (error instanceof ModelTimeout) return refuse(504, error.message);
-      if (error instanceof ModelError) return refuse(502, error.message);
-      return refuse(502, String(error));
+      // 504 distinguishes a deadline from an upstream refusal for operations,
+      // while the public body stays closed in both cases.
+      if (error instanceof ModelTimeout) return refuse(504, COMPANION_UNAVAILABLE);
+      return refuse(502, COMPANION_UNAVAILABLE);
     } finally {
       clearTimeout(timer);
     }

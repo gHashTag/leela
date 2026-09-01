@@ -370,10 +370,13 @@ export class Companion {
           ...(reasoned.trim() ? { thinking: reasoned } : {}),
         },
       ];
-    } catch (error) {
+    } catch {
       this.streaming = null;
       this.silenced = true;
-      this.note = error instanceof Error ? error.message : String(error);
+      // Provider, route and deployment detail is not player-facing copy. The
+      // localized fallback below is the whole visible failure; operational
+      // detail stays at the server boundary and never enters the view.
+      this.note = null;
       this.lines = [
         ...this.lines,
         {

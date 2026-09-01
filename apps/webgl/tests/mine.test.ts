@@ -38,6 +38,7 @@ group('what the bot said', () => {
       moved: 3,
       entitled: false,
       canSubscribe: true,
+      language: 'ru',
     };
 
     await expect(myGame({ initData: LAUNCH, fetch: answering(200, standing) }))
@@ -71,8 +72,14 @@ group('what it refuses to call an answer', () => {
     // none.
     const answer = await myGame({ initData: LAUNCH, fetch: answering(401, { error: 'the signature does not match' }) });
 
-    expect(answer.kind).toBe('unasked');
-    expect(answer.kind === 'unasked' && answer.why).toContain('401');
+    expect(answer).toEqual({ kind: 'unasked', reason: 'unauthorized' });
+  });
+
+  it('keeps an HTTP refusal as a closed code, never player-visible English prose', async () => {
+    const answer = await myGame({ initData: LAUNCH, fetch: answering(403) });
+
+    expect(answer).toEqual({ kind: 'unasked', reason: 'forbidden' });
+    expect(JSON.stringify(answer)).not.toContain('the bot answered');
   });
 
   it('does not turn an outage into an empty game either', async () => {
@@ -97,8 +104,7 @@ group('what it refuses to call an answer', () => {
 
     const answer = await myGame({ initData: LAUNCH, fetch: broken });
 
-    expect(answer.kind).toBe('unasked');
-    expect(answer.kind === 'unasked' && answer.why).toContain('could not be reached');
+    expect(answer).toEqual({ kind: 'unasked', reason: 'unreachable' });
   });
 
   it('gives up rather than holding the board', async () => {
@@ -113,7 +119,7 @@ group('what it refuses to call an answer', () => {
 
     const answer = await myGame({ initData: LAUNCH, fetch: never, timeoutMs: 5 });
 
-    expect(answer.kind === 'unasked' && answer.why).toContain('in time');
+    expect(answer).toEqual({ kind: 'unasked', reason: 'timeout' });
   });
 
   it('waits a bounded time by default, and the bound is short', async () => {
@@ -231,6 +237,13 @@ group('asking the chat to throw', () => {
 
     const down = await askForARoll({ initData: 'x', fetch: answering(503, {}) });
     expect(down.kind).toBe('unasked');
+  });
+
+  it('does not invent an English refusal when a 409 body is missing or malformed', async () => {
+    for (const body of [{}, null, { error: 42 }]) {
+      await expect(askForARoll({ initData: 'x', fetch: answering(409, body) }))
+        .resolves.toEqual({ kind: 'unasked', reason: 'unreadable' });
+    }
   });
 
   it('REFUSES A FACE IT CANNOT DRAW, rather than walking on it', async () => {

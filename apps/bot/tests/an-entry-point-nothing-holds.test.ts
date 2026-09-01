@@ -507,6 +507,7 @@ describe('the board is answered about a player, not a chat', () => {
     // nothing, which has happened twice in this repository.
     expect(wiring.length).toBeGreaterThan(2000);
     expect(wiring).toContain('gameOf');
+    expect(wiring).toContain('language: room.language');
     expect(wiring).toContain('rollFor');
   });
 

@@ -12,6 +12,7 @@ export {
   LANGUAGE_NAMES,
   LANGUAGES,
   directionOf,
+  isLanguage,
   messageFor,
   planFor,
   plansFor,

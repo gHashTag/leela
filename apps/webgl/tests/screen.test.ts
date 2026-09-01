@@ -476,17 +476,19 @@ describe('the companion', () => {
     expect(companion.view().lines.at(-1)?.text.length).toBeGreaterThan(0);
   });
 
-  it('falls into an answer rather than an exception when the model throws', async () => {
+  it('falls into a localized answer without exposing the provider failure', async () => {
     const companion = new Companion({
       language: 'en',
       ask: async () => {
-        throw new Error('402 no balance');
+        throw new Error('provider-secret: 402 no balance');
       },
     });
     landing(companion, 34);
     await expect(companion.say('What now?')).resolves.toBeUndefined();
     expect(companion.view().status).toBe('silenced');
-    expect(companion.view().note).toContain('402');
+    expect(companion.view().note).toBeNull();
+    expect(JSON.stringify(companion.view())).not.toContain('provider-secret');
+    expect(companion.view().lines.at(-1)?.text).toBe(messageFor('en', 'companion.unavailable', { plan: 34 }));
   });
 
   it('carries the whole text when the opening remark is an abridgement of it', () => {

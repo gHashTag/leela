@@ -75,4 +75,19 @@ describe('every word the screen says', () => {
 
     expect(unreplaced.map((one) => `${one.id}: ${one.said}`)).toEqual([]);
   });
+
+  it('aligns language only after the chat game passes every adoption guard', () => {
+    const source = sourceOf('main.ts');
+    const stateGuard = source.indexOf('if (state === undefined)');
+    const seatsGuard = source.indexOf('if (session.players.length !== 1)');
+    const busyGuard = source.indexOf('if (busy) return;');
+    const alignment = source.indexOf('alignWithChat(');
+    const adoption = source.indexOf('chatGame = launch');
+
+    expect(Math.min(stateGuard, seatsGuard, busyGuard, alignment, adoption)).toBeGreaterThan(-1);
+    expect(alignment).toBeGreaterThan(stateGuard);
+    expect(alignment).toBeGreaterThan(seatsGuard);
+    expect(alignment).toBeGreaterThan(busyGuard);
+    expect(alignment).toBeLessThan(adoption);
+  });
 });

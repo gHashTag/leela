@@ -87,6 +87,14 @@ describe('choosing a language', () => {
     expect(messageFor('ru', 'start.already')).toBe('Игра уже идёт.');
   });
 
+  it('never puts an English transport diagnostic inside a localized sentence', () => {
+    const said = messageFor('ru', 'app.chatUnreachable');
+
+    expect(said).not.toContain('{why}');
+    expect(said).not.toContain('the bot answered');
+    expect(said).toContain('Чат недоступен');
+  });
+
   it('resolves a locale onto its language', () => {
     expect(messageFor('ru-RU', 'start.already')).toBe(messageFor('ru', 'start.already'));
   });

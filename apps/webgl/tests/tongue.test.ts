@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   SPEAKS,
+  alignWithChat,
   isSpoken,
   nextLanguage,
   openingLanguage,
@@ -130,6 +131,25 @@ describe('remembering', () => {
  * different things.
  */
 describe('the language the chat is speaking', () => {
+  it('aligns a saved browser language with the adopted chat game exactly once', () => {
+    const store = kept({ 'leela.language': 'en' });
+
+    expect(alignWithChat(store, 'en', 'ru')).toBe(true);
+    expect(store.read()['leela.language']).toBe('ru');
+    expect(alignWithChat(store, 'ru', 'ru')).toBe(false);
+  });
+
+  it('does not reload toward a language whose interface is not translated', () => {
+    const store = kept({ 'leela.language': 'ru' });
+
+    expect(alignWithChat(store, 'ru', 'ja')).toBe(false);
+    expect(store.read()['leela.language']).toBe('ru');
+  });
+
+  it('does not request a reload when storage is unavailable', () => {
+    expect(alignWithChat(null, 'en', 'ru')).toBe(false);
+  });
+
   it('FOLLOWS TELEGRAM RATHER THAN THE PHONE', () => {
     // The screenshot's exact shape: a Russian account on an English phone.
     expect(openingLanguage(null, 'en-US', 'ru')).toBe('ru');

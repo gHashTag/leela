@@ -166,7 +166,7 @@ describe('a route that explains itself', () => {
       headers: { 'content-type': 'application/json' },
     });
 
-  it('carries the reason the route gave, rather than blaming the model', async () => {
+  it('closes the route reason before it can reach the player', async () => {
     // The defect this exists for: with no key the route answers 503 *no model
     // configured*, the ask returned '', and the companion - which treats no
     // answer as the model answering nothing - wrote *the model answered with
@@ -174,15 +174,15 @@ describe('a route that explains itself', () => {
     // reached. Somebody reading that note goes looking at the model instead of
     // at the key that is missing.
     await withFetch(answering(503, { error: 'no model configured' }), async () => {
-      await expect(
-        askOverHttp('en', textFor)('what does this plan ask', rests, []),
-      ).rejects.toThrow('no model configured');
+      const asked = expect(askOverHttp('en', textFor)('what does this plan ask', rests, [])).rejects;
+      await asked.toThrow('companion unavailable');
+      await asked.not.toThrow('no model configured');
     });
   });
 
-  it('says what it was told even when the route explains nothing', async () => {
+  it('uses the same closed refusal when the route explains nothing', async () => {
     await withFetch(answering(502, {}), async () => {
-      await expect(askOverHttp('en', textFor)('anything', rests, [])).rejects.toThrow('502');
+      await expect(askOverHttp('en', textFor)('anything', rests, [])).rejects.toThrow('companion unavailable');
     });
   });
 
