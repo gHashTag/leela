@@ -22,6 +22,7 @@ import {
   type PlanContext,
   PromptError,
   aboutPrompt,
+  engagementPrompt,
   questionPrompt,
   reportPrompt,
   type Arrival,
@@ -110,6 +111,20 @@ export function aboutFallbackText(language: Language): string {
   return messageFor(language, 'ask.silent');
 }
 
+/**
+ * The useful sentence left when the proactive model is absent or unavailable.
+ *
+ * Unlike the conversational fallback, this never announces an outage to a
+ * player who did not ask for a model. The plan excerpt is still in the same
+ * message; this bridge merely names the reflection or movement it can open.
+ */
+export function engagementFallbackText(options: EngagementOptions): string {
+  return messageFor(
+    options.language,
+    options.reportOwed ? 'nudge.agentReport' : 'nudge.agentRoll',
+  );
+}
+
 export interface AskOptions {
   language: Language;
   plan: number;
@@ -132,6 +147,11 @@ export interface AskOptions {
    * Summarised into the prompt rather than quoted whole.
    */
   journey?: ReadonlyArray<JourneyEntry>;
+}
+
+/** Context for the one message in which the companion speaks first. */
+export interface EngagementOptions extends AskOptions {
+  reportOwed: boolean;
 }
 
 /**
@@ -205,6 +225,14 @@ export class Guide {
     return this.ask(
       () => questionPrompt(contextOf(options), question, options.history),
       () => fallbackText(contextOf(options)),
+    );
+  }
+
+  /** Offer one plan-grounded next step without waiting for a question. */
+  async engage(options: EngagementOptions): Promise<Reflection> {
+    return this.ask(
+      () => engagementPrompt(contextOf(options), options.reportOwed),
+      () => engagementFallbackText(options),
     );
   }
 

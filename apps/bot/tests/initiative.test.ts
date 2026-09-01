@@ -438,13 +438,14 @@ describe('the last daily word, said at startup', () => {
     });
 
     expect(said).toBe(
-      'Last daily word: 2026-08-24 06:00 UTC — sent 1; skipped: quieted 1, doorstep-spent 2.',
+      'Last daily word: 2026-08-24 06:00 UTC — sent 1; bridges: model 0, canonical 0; ' +
+        'skipped: quieted 1, doorstep-spent 2.',
     );
   });
 
   it('says none rather than trailing off when nothing was skipped', () => {
     expect(lastWordSaid({ at: Date.UTC(2026, 7, 24, 6, 0, 0), sent: 3, skipped: {} })).toContain(
-      'sent 3; skipped: none.',
+      'sent 3; bridges: model 0, canonical 0; skipped: none.',
     );
   });
 });

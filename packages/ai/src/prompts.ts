@@ -652,6 +652,45 @@ export function questionPrompt(
 }
 
 /**
+ * A proactive bridge from the plan to the next action the engine accepts.
+ *
+ * This is deliberately not a synthetic player question. The companion is
+ * speaking first, so the prompt says that plainly and constrains the shape:
+ * one reflection question when writing is the next move, no question when the
+ * die is already available. The system prompt supplies the canonical plan,
+ * intention and path; this turn asks the model only to connect them.
+ */
+export function engagementPrompt(
+  context: PlanContext,
+  reportOwed: boolean,
+): Message[] {
+  assertPlan(context.plan);
+
+  const instruction =
+    reportOwed
+      ? [
+          'Speak first with a proactive return invitation of at most two short sentences.',
+          'Ground one useful observation in the current plan and, only when it genuinely',
+          "helps, the player's intention or path. End with exactly one gentle, concrete",
+          'reflection question that can be answered in one sentence. Do not mention absence,',
+          'streaks, urgency, commands, or rolling. Do not add facts or teaching absent from',
+          'the canonical plan above. Return only the invitation.',
+        ]
+      : [
+          'Speak first with one brief proactive observation grounded in the current plan',
+          "and, only when it genuinely helps, the player's intention or path. Give the",
+          'player room to decide what it means. Ask no question, mention no absence, streak,',
+          'urgency, command, or roll. Do not add facts or teaching absent from the canonical',
+          'plan above. Return only the observation.',
+        ];
+
+  return [
+    { role: 'system', content: systemPrompt(context) },
+    { role: 'user', content: instruction.join(' ') },
+  ];
+}
+
+/**
  * How much of the caller's rules text a prompt will carry.
  *
  * Measured before it was chosen: the engine's board renders at 607 characters

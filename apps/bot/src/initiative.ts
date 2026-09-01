@@ -8,19 +8,26 @@
  * and the way out (`/quiet`) said plainly in the first message ever sent.
  *
  * The engine is a set of *skills* — message templates with sleeping
- * conditions. v1 ships one, the plan's daily word; `eligible` is its sleeping
- * condition and `compose` its template, both pure so every branch is a test
- * rather than a hope. The driver around them owns the clock and the sends.
+ * conditions. `eligible` chooses the word and `compose` shapes it, both pure
+ * so every branch is a test rather than a hope. A configured companion adds
+ * one brief bridge from the canonical plan, intention and path to the next
+ * action the report gate actually accepts; the canonical bridge survives any
+ * model failure.
  *
  * What is deliberately absent, with the spec's reasons: streaks (play to
- * protect a number is the opposite of a reflection game), per-user send
- * times (Telegram exposes no timezone), and model-written nudges (a daily
- * model call per player buys spend and variance for no measured need — the
- * canon already owns the words).
+ * protect a number is the opposite of a reflection game), guessed per-user
+ * send times (Telegram exposes no timezone), and extra messages. The agent
+ * personalizes the one existing daily word; it does not create a campaign.
  */
 
 import { Keyboard } from 'grammy';
 import type { ReplyKeyboardMarkup } from 'grammy/types';
+import {
+  engagementFallbackText,
+  type EngagementOptions,
+  type Guide,
+  type Reflection,
+} from '@leela/ai';
 import { lastSentenceEnd, messageFor, planFor, type Language, type Plan } from '@leela/content';
 import { hasWon } from '@leela/engine';
 import { launchButton, standingSquare, type Room } from './commands';
@@ -35,7 +42,7 @@ import { DirectChannels, isBlockedByUser } from './delivery';
  * here would reach it only through a cycle.
  */
 import { DAY_MS } from './stars';
-import type { NudgeStore, RoomStore } from './store';
+import type { NudgeStore, ReportSink, RoomStore } from './store';
 
 /**
  * How long a player may be silent and still be written to: fourteen days.
@@ -303,7 +310,12 @@ export function compose(
   language: Language,
   plan: Plan,
   lastExcerpt: number | null,
-  said: { firstNudge: boolean; word?: Word },
+  said: {
+    firstNudge: boolean;
+    word?: Word;
+    bridge?: string;
+    reportOwed?: boolean;
+  },
 ): Composed {
   if (said.word === 'doorstep') {
     // No excerpt and no standing line: this player stands on no plan, and a
@@ -330,7 +342,10 @@ export function compose(
     ...(said.word === 'freshStart' ? [messageFor(language, 'nudge.freshStart'), ''] : []),
     ...(excerpt ? [excerpt, ''] : []),
     messageFor(language, 'nudge.standing', { plan: plan.plan, title: plan.title }),
-    messageFor(language, 'nudge.cta'),
+    ...(said.bridge ? ['', said.bridge] : []),
+    said.reportOwed
+      ? messageFor(language, 'nudge.reportCta')
+      : messageFor(language, 'nudge.cta'),
     ...(said.firstNudge ? ['', messageFor(language, 'nudge.wayOut')] : []),
   ];
 
@@ -351,7 +366,12 @@ export function compose(
  * printing a sentence with a hole in it.
  */
 export function lastWordSaid(
-  record: { at: number; sent: number; skipped: Record<string, number> } | null,
+  record: {
+    at: number;
+    sent: number;
+    skipped: Record<string, number>;
+    bridges?: Partial<BridgeCounts>;
+  } | null,
 ): string {
   if (record === null) return 'Last daily word: none yet on this database.';
 
@@ -360,12 +380,23 @@ export function lastWordSaid(
     .map(([because, count]) => `${because} ${count}`)
     .join(', ');
 
-  return `Last daily word: ${when} UTC — sent ${record.sent}; skipped: ${reasons || 'none'}.`;
+  const model = record.bridges?.model ?? 0;
+  const canonical = record.bridges?.canonical ?? 0;
+  return (
+    `Last daily word: ${when} UTC — sent ${record.sent}; ` +
+    `bridges: model ${model}, canonical ${canonical}; skipped: ${reasons || 'none'}.`
+  );
+}
+
+export interface BridgeCounts {
+  model: number;
+  canonical: number;
 }
 
 /** What one tick did, for the summary line and for tests. */
 export interface TickSummary {
   sent: number;
+  bridges: BridgeCounts;
   skipped: Partial<Record<SkipReason, number>>;
 }
 
@@ -390,6 +421,10 @@ export interface InitiativeOptions {
   store: RoomStore;
   /** The per-player memory, from the same storage the games live in. */
   nudges: NudgeStore;
+  /** The same companion the reactive chat uses, narrowed to proactive work. */
+  companion?: Pick<Guide, 'engage' | 'status'>;
+  /** The intention and path that make the bridge personal rather than generic. */
+  reports?: Pick<ReportSink, 'history' | 'intention'>;
   /**
    * The same allow-list the transport keeps, shared rather than copied: a 403
    * the bot met answering `/path` is a morning this must not spend, and a
@@ -439,6 +474,8 @@ export function createInitiative({
   api,
   store,
   nudges,
+  companion,
+  reports,
   channels,
   launchUrl,
   hour = DEFAULT_NUDGE_HOUR,
@@ -507,7 +544,11 @@ export function createInitiative({
   }
 
   async function runTick(at: number): Promise<TickSummary> {
-    const summary: TickSummary = { sent: 0, skipped: {} };
+    const summary: TickSummary = {
+      sent: 0,
+      bridges: { model: 0, canonical: 0 },
+      skipped: {},
+    };
     const skip = (because: SkipReason) => {
       summary.skipped[because] = (summary.skipped[because] ?? 0) + 1;
     };
@@ -546,9 +587,56 @@ export function createInitiative({
       }
 
       const plan = planFor(room.language, seat.state.loka);
+      let bridge: Reflection | null = null;
+      let reportOwed: boolean | undefined;
+
+      if (verdict.word !== 'doorstep') {
+        reportOwed = !seat.reportSubmitted;
+        const base: EngagementOptions = {
+          language: room.language,
+          plan: plan.plan,
+          reportOwed,
+          direction: seat.state.direction || undefined,
+          previousPlan: seat.state.previous_loka,
+        };
+        bridge = { text: engagementFallbackText(base), fromModel: false };
+
+        // A sleeping/cooling companion costs no history read and no model
+        // call. When it is awake, intention and history are independent reads
+        // and arrive together; stores return newest first, while prompts read
+        // a walked path oldest first.
+        if (companion?.status().available) {
+          try {
+            const [intention, history] = await Promise.all([
+              reports?.intention?.(userId),
+              reports?.history?.(userId),
+            ]);
+            bridge = await companion.engage({
+              ...base,
+              intention: intention ?? undefined,
+              journey: history
+                ? [...history]
+                    .reverse()
+                    .map((entry) => ({ plan: entry.plan, text: entry.text }))
+                : undefined,
+            });
+          } catch (error) {
+            // `Guide` already falls back on world failures. This catches a
+            // malformed injected implementation or a store read failure: the
+            // morning still carries the canonical bridge, and says why.
+            log(
+              `[initiative] companion failed for plan ${plan.plan}; ` +
+                `using the canonical bridge: ${String(error)}`,
+            );
+          }
+        }
+      }
+
       const word = compose(room.language, plan, memory.excerpt, {
         firstNudge: memory.sentAt === null,
         word: verdict.word,
+        bridge: bridge?.text,
+        reportOwed,
       });
 
       const outcome = await deliver(userId, room.language, word.text);
@@ -561,6 +649,7 @@ export function createInitiative({
           doorstep: verdict.word === 'doorstep',
         });
         summary.sent += 1;
+        if (bridge) summary.bridges[bridge.fromModel ? 'model' : 'canonical'] += 1;
       } else {
         skip(outcome);
       }
@@ -571,7 +660,12 @@ export function createInitiative({
     const reasons = (Object.entries(summary.skipped) as Array<[SkipReason, number]>)
       .map(([because, count]) => `${because} ${count}`)
       .join(', ');
+    // Kept byte-for-byte: specs/008 made this line an operational contract.
     log(`[initiative] sent ${summary.sent}; skipped: ${reasons || 'none'}`);
+    log(
+      `[initiative] bridges: model ${summary.bridges.model}, ` +
+        `canonical ${summary.bridges.canonical}`,
+    );
 
     // Kept as well as said. The line above is read by whoever is watching;
     // this is read by whoever is not, which has been everybody.
@@ -607,6 +701,11 @@ export function createInitiative({
       // The supervisor restarts polling after a dropped socket, and each
       // restart says start; a second chain would be a second morning.
       if (cancel !== null || stopped) return;
+      log(
+        companion
+          ? '[initiative] plan-aware companion configured; canonical fallback ready.'
+          : '[initiative] no companion configured; canonical plan bridge ready.',
+      );
       arm();
     },
     stop(): void {

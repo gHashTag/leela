@@ -21,6 +21,7 @@ export {
   MAX_RULES_CHARS,
   PromptError,
   aboutPrompt,
+  engagementPrompt,
   questionPrompt,
   reportPrompt,
   summariseJourney,
@@ -28,7 +29,12 @@ export {
   systemPrompt,
   trimToParagraph,
 } from './prompts';
-export type { AboutContext, JourneyEntry, Message, PlanContext } from './prompts';
+export type {
+  AboutContext,
+  JourneyEntry,
+  Message,
+  PlanContext,
+} from './prompts';
 
 export {
   DEFAULT_BASE_URL,
@@ -64,6 +70,14 @@ export {
   DEFAULT_TIMEOUT_MS,
   Guide,
   aboutFallbackText,
+  engagementFallbackText,
   fallbackText,
 } from './guide';
-export type { AboutOptions, AskOptions, GuideOptions, GuideStatus, Reflection } from './guide';
+export type {
+  AboutOptions,
+  AskOptions,
+  EngagementOptions,
+  GuideOptions,
+  GuideStatus,
+  Reflection,
+} from './guide';

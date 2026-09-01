@@ -32,6 +32,7 @@ import {
   type RoomStore,
   type StepSink,
 } from './store';
+import type { BridgeCounts, TickSummary } from './initiative';
 
 /** How long a finished table is kept before it is forgotten. */
 export const KEEP_FINISHED_MS = 7 * 24 * 60 * 60 * 1000;
@@ -74,8 +75,18 @@ export interface Storage {
    * games, and pretending otherwise would put a sentence in the banner that
    * the next restart makes a lie.
    */
-  lastTick?: () => { at: number; sent: number; skipped: Record<string, number> } | null;
-  rememberTick?: (at: number, sent: number, skipped: Record<string, number>) => void;
+  lastTick?: () => {
+    at: number;
+    sent: number;
+    skipped: Record<string, number>;
+    bridges: BridgeCounts;
+  } | null;
+  rememberTick?: (
+    at: number,
+    sent: number,
+    skipped: Record<string, number>,
+    bridges: BridgeCounts,
+  ) => void;
   /**
    * Why they do not, when a path was given and could not be used.
    *
@@ -109,12 +120,12 @@ export interface Storage {
  */
 export function remembering(
   storage: Pick<Storage, 'rememberTick'>,
-): ((at: number, summary: { sent: number; skipped: Record<string, number> }) => Promise<void>) | undefined {
+): ((at: number, summary: TickSummary) => Promise<void>) | undefined {
   const keep = storage.rememberTick;
   if (keep === undefined) return undefined;
 
   return async (at, summary) => {
-    keep(at, summary.sent, summary.skipped);
+    keep(at, summary.sent, summary.skipped, summary.bridges);
   };
 }
 
@@ -184,7 +195,8 @@ export function openStorage({
       nudges: sqliteNudgeStore(queries),
       entitlements: sqliteEntitlements(queries),
       lastTick: () => queries.lastTick(),
-      rememberTick: (at, sent, skipped) => queries.recordTick(at, sent, skipped),
+      rememberTick: (at, sent, skipped, bridges) =>
+        queries.recordTick(at, sent, skipped, bridges),
       durable: true,
       stopPruning,
     };
