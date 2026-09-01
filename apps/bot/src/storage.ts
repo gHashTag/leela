@@ -32,7 +32,7 @@ import {
   type RoomStore,
   type StepSink,
 } from './store';
-import type { BridgeCounts, TickSummary } from './initiative';
+import type { BridgeCounts, DailyWordRecord, TickSummary } from './initiative';
 
 /** How long a finished table is kept before it is forgotten. */
 export const KEEP_FINISHED_MS = 7 * 24 * 60 * 60 * 1000;
@@ -75,12 +75,7 @@ export interface Storage {
    * games, and pretending otherwise would put a sentence in the banner that
    * the next restart makes a lie.
    */
-  lastTick?: () => {
-    at: number;
-    sent: number;
-    skipped: Record<string, number>;
-    bridges: BridgeCounts;
-  } | null;
+  lastTick?: () => DailyWordRecord | null;
   rememberTick?: (
     at: number,
     sent: number,

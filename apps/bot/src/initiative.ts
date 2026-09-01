@@ -49,7 +49,7 @@ import { DirectChannels, isBlockedByUser } from './delivery';
  * here would reach it only through a cycle.
  */
 import { DAY_MS } from './stars';
-import type { NudgeStore, RoomStore } from './store';
+import type { NudgeConversionCounts, NudgeStore, RoomStore } from './store';
 
 /**
  * How long a player may be silent and still be written to: fourteen days.
@@ -374,14 +374,15 @@ export function compose(
  * `null` is a deployment that has never ticked, and it says so rather than
  * printing a sentence with a hole in it.
  */
-export function lastWordSaid(
-  record: {
-    at: number;
-    sent: number;
-    skipped: Record<string, number>;
-    bridges?: Partial<BridgeCounts>;
-  } | null,
-): string {
+export interface DailyWordRecord {
+  at: number;
+  sent: number;
+  skipped: Record<string, number>;
+  bridges?: Partial<BridgeCounts>;
+  conversions?: Partial<NudgeConversionCounts>;
+}
+
+export function lastWordSaid(record: DailyWordRecord | null): string {
   if (record === null) return 'Last daily word: none yet on this database.';
 
   const when = new Date(record.at).toISOString().slice(0, 16).replace('T', ' ');
@@ -391,9 +392,12 @@ export function lastWordSaid(
 
   const model = record.bridges?.model ?? 0;
   const canonical = record.bridges?.canonical ?? 0;
+  const responses = record.conversions?.responses ?? 0;
+  const rolls = record.conversions?.rolls ?? 0;
   return (
     `Last daily word: ${when} UTC — sent ${record.sent}; ` +
-    `bridges: model ${model}, canonical ${canonical}; skipped: ${reasons || 'none'}.`
+    `bridges: model ${model}, canonical ${canonical}; ` +
+    `conversions: responses ${responses}, rolls ${rolls}; skipped: ${reasons || 'none'}.`
   );
 }
 
@@ -407,6 +411,8 @@ export interface TickSummary {
   sent: number;
   bridges: BridgeCounts;
   skipped: Partial<Record<SkipReason, number>>;
+  /** Present only when an open prior cohort held this tick. */
+  retryInMs?: number;
 }
 
 /**
@@ -451,6 +457,8 @@ export interface InitiativeOptions {
    * reached for, like everything else this engine touches.
    */
   remember?: (at: number, summary: TickSummary) => Promise<void>;
+  /** Read the previous durable cohort before this tick replaces its row. */
+  previous?: () => DailyWordRecord | null;
   /** Injected so a test never waits for morning, as storage.ts injects its own. */
   schedule?: (run: () => void, inMs: number) => () => void;
   log?: (message: string) => void;
@@ -487,6 +495,7 @@ export function createInitiative({
   hour = DEFAULT_NUDGE_HOUR,
   now = Date.now,
   remember,
+  previous,
   schedule = (run, inMs) => {
     const timer = setTimeout(run, inMs);
     // A morning word is not a reason to keep the process alive.
@@ -555,6 +564,28 @@ export function createInitiative({
       bridges: { model: 0, canonical: 0 },
       skipped: {},
     };
+
+    // A new tick overwrites the one durable summary row. Say the completed
+    // cohort first, after its 24-hour conversion window has closed, so the
+    // outcome is observable without keeping a per-player analytics history.
+    try {
+      const prior = previous?.() ?? null;
+      if (prior) {
+        if (at - prior.at < DAY_MS) {
+          // A changed send hour can make the next scheduled strike arrive in
+          // 23 hours. Holding that strike preserves both the player's quiet
+          // day and the only durable cohort until its window is complete.
+          log('[initiative] previous conversion window is still open; tick held.');
+          summary.retryInMs = Math.max(1, prior.at + DAY_MS - at);
+          return summary;
+        }
+        log(`[initiative] ${lastWordSaid(prior)}`);
+      }
+    } catch (error) {
+      // Metrics are a note about the game, never a reason to withhold it.
+      log(`[initiative] could not read previous conversions: ${String(error)}`);
+    }
+
     const skip = (because: SkipReason) => {
       summary.skipped[because] = (summary.skipped[because] ?? 0) + 1;
     };
@@ -725,17 +756,26 @@ export function createInitiative({
   let cancel: (() => void) | null = null;
   let stopped = false;
 
-  function arm(): void {
+  function arm(retryInMs?: number): void {
     if (stopped) return;
     // Said each time the chain is armed: once at startup, and once more after
     // every tick, so a log carries the proof that the next morning is coming
     // rather than only that the last one went.
-    log(nextWordDue(now(), hour));
+    const inMs = retryInMs ?? msUntilHour(now(), hour);
+    log(
+      retryInMs === undefined
+        ? nextWordDue(now(), hour)
+        : `[initiative] held daily word retries in ${inMs}ms.`,
+    );
     cancel = schedule(() => {
-      void runTick(now())
-        .catch((error) => log(`[initiative] the tick failed: ${String(error)}`))
-        .finally(arm);
-    }, msUntilHour(now(), hour));
+      void runTick(now()).then(
+        (result) => arm(result.retryInMs),
+        (error) => {
+          log(`[initiative] the tick failed: ${String(error)}`);
+          arm();
+        },
+      );
+    }, inMs);
   }
 
   return {

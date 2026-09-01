@@ -107,7 +107,7 @@ describe('the tick reaches the banner, through a real database and a restart', (
 
     expect(said).toBe(
       'Last daily word: 2026-08-24 06:00 UTC — sent 1; ' +
-        'bridges: model 0, canonical 0; skipped: none.',
+        'bridges: model 0, canonical 0; conversions: responses 0, rolls 0; skipped: none.',
     );
   });
 
@@ -139,7 +139,7 @@ describe('the tick reaches the banner, through a real database and a restart', (
     // The reason is the whole value of the record: "sent 0" alone would leave
     // an operator unable to tell a quieted player from a broken engine.
     expect(said).toContain(
-      'sent 0; bridges: model 0, canonical 0; skipped: quieted 1.',
+      'sent 0; bridges: model 0, canonical 0; conversions: responses 0, rolls 0; skipped: quieted 1.',
     );
   });
 
