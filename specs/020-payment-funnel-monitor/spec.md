@@ -53,6 +53,12 @@ Primary source: <https://core.telegram.org/bots/payments-stars>.
 - Its local wrapper uses the repository's linked Railway project, environment,
   and service instead of partially overriding only the service; current
   Railway CLI rejects that ambiguous partial override before opening SSH.
+- The Railway CLI binary is pinned in the root development manifest, so a fresh
+  checkout can run the repository command without relying on an undeclared
+  machine-global executable.
+- The canonical operator entry is the root `monitor:live` script, which gives
+  its child process the manifest-pinned binary path instead of silently using
+  an older machine-global Railway CLI.
 - The production runtime image contains that command's entry script at the
   same repository-relative path used by the Railway SSH wrapper; a successful
   source checkout alone is not deployment evidence.

@@ -157,10 +157,14 @@ describe('the production image contract', () => {
     const monitor = blank(
       readFileSync(new URL('../../../scripts/monitor-live-game.mjs', import.meta.url), 'utf8'),
     );
+    const manifest = JSON.parse(
+      readFileSync(new URL('../../../package.json', import.meta.url), 'utf8'),
+    );
 
     expect(monitor).toContain(
       "['ssh', 'bun', 'run', 'scripts/monitor-live-game.mjs', '--inside']",
     );
     expect(monitor).not.toContain("['ssh', '--service'");
+    expect(manifest.scripts?.['monitor:live']).toBe('bun scripts/monitor-live-game.mjs');
   });
 });

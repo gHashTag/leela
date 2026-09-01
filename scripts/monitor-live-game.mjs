@@ -2,7 +2,7 @@
 /**
  * Compare one live signed Mini App game with the active Railway database.
  *
- *     bun scripts/monitor-live-game.mjs
+ *     bun run monitor:live
  *
  * The local half opens no database and reads no secret; it asks Railway to run
  * the inside half in the active container. The inside half prints only the
