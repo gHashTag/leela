@@ -34,6 +34,12 @@ import {
 } from './delivery';
 import { attributeConversion } from './conversions';
 import { attributePaymentStage } from './payment-funnel';
+import {
+  PAYMENT_SUPPORT_EMAIL,
+  acceptanceAction,
+  termsUrl,
+  tierAskedByAcceptance,
+} from './purchase-care';
 import { escapeHtml, intoMessages, renderBoardMessage, renderChapter, renderPlan } from './render';
 import { FILE_TIMEOUT_MS, MAX_FILE_BYTES, asReport, decide, decideSquare, keep, within } from './take-in';
 import { offer, serialise } from './take-out';
@@ -45,6 +51,7 @@ import {
   offering,
   operatorIds,
   tierOf,
+  tierOfPaidPayload,
   tierOfPayload,
   type PricedTier,
 } from './stars';
@@ -1782,11 +1789,11 @@ export function createBot({
   });
 
   /**
-   * The Telegram Stars rail — and everything about it is inside this `if`.
+   * The Telegram Stars offer and new-checkout rail live inside this `if`.
    *
    * The owner's configured prices are the switch. With no price in the
    * environment, `stars` is `null`, none of the four
-   * registrations below happens, `/pro` is not in the menu or the help, no
+   * priced-only registration below happens, `/pro` is not in the menu or the help, no
    * invoice can be assembled — `invoiceFor` refuses one and says why — and a
    * deployment answers exactly what it answered before this block existed.
    *
@@ -1795,29 +1802,92 @@ export function createBot({
    * is false: a dark bot answering `/pro` with **nothing** would be a change,
    * because an unknown command has been answered with *I do not know that one*
    * since long before this rail. So what that file holds is that `/pro` is
-   * answered byte for byte as any unknown word is, that a `pre_checkout_query`
-   * or a `successful_payment` produces zero calls, and that nothing said
-   * anywhere carries a word from the Stars catalogue.
+   * answered byte for byte as any unknown word is and that a
+   * `pre_checkout_query` produces zero calls. A completed payment is the one
+   * necessary exception: its settlement handler below this block remains live
+   * so a restart or price removal cannot consume Stars without granting access.
    *
    * When it is priced, the first three successful moves are free and a live
    * entitlement opens every later roll. `/roll` and `/api/roll` ask the same
    * `accessFor` decision, so chat and mini app cannot sell different games.
    */
   if (stars) {
+    /** Send the invoice only after the player accepted the published Terms. */
+    async function sendStarsInvoice(
+      ctx: Context,
+      userId: string,
+      language: Language,
+      tier: PricedTier,
+    ): Promise<void> {
+      const destination = destinationOf(ctx, { broadcast: false }, userId);
+      if (destination.kind === 'chat-fallback') {
+        await nudgeOnce(ctx);
+        return;
+      }
+
+      const invoice = invoiceFor(language, stars, tier.id);
+      const to = destination.kind === 'chat' ? String(ctx.chat?.id ?? '') : destination.userId;
+
+      try {
+        await ctx.api.sendInvoice(
+          to,
+          invoice.title,
+          invoice.description,
+          invoice.payload,
+          invoice.currency,
+          invoice.prices,
+          // Empty for Stars. Provider tokens belong to other currencies.
+          { provider_token: '' },
+        );
+        await markPayment(userId, 'invoice');
+        if (destination.kind === 'direct') channels.allow(destination.userId);
+      } catch (error) {
+        if (!isBlockedByUser(error)) throw error;
+        if (destination.kind === 'direct') channels.refuse(destination.userId);
+        await nudgeOnce(ctx);
+      }
+    }
+
+    bot.command('terms', async (ctx) => {
+      const who = sender(ctx);
+      if (!who) return;
+      const language = languageOf(ctx);
+      await deliver(ctx, [
+        {
+          text: messageFor(language, 'pro.terms', { terms: termsUrl(language) }),
+          broadcast: false,
+        },
+      ]);
+    });
+
+    bot.command('paysupport', async (ctx) => {
+      const who = sender(ctx);
+      if (!who) return;
+      const language = languageOf(ctx);
+      await deliver(ctx, [
+        {
+          text:
+            messageFor(language, 'pro.paymentSupport', { support: PAYMENT_SUPPORT_EMAIL }) +
+            `\n${messageFor(language, 'pro.telegramCannotSupport')}`,
+          broadcast: false,
+        },
+      ]);
+    });
+
     /**
-     * `/pro` — the tiers, and then one invoice.
+     * `/pro` — the tiers, then explicit acceptance before an invoice.
      *
      * Two shapes in one command, as `/plan` and `/rules` already have: bare,
      * it lists what is on offer and what this player already holds; with a
-     * tier's name, it sends the invoice for that tier. A tier nobody sells
-     * falls back to the list rather than to a refusal, because the list is the
-     * answer to *what can I ask for*.
+     * tier's name, it asks the player to read and accept the published Terms.
+     * A tier nobody sells falls back to the list rather than to a refusal,
+     * because the list is the answer to *what can I ask for*.
      *
      * **Answered privately**, through the same decision every private reply
      * goes through. A payment is between a player and the bot: at a table, the
-     * offer and the invoice both go to the player's own chat, and where there
-     * is no private chat to send them to the group is told only that there is
-     * something to read — never what it was.
+     * offer, acceptance and invoice all go to the player's own chat, and where
+     * there is no private chat to send them to the group is told only that
+     * there is something to read — never what it was.
      */
     bot.command('pro', async (ctx) => {
       const who = sender(ctx);
@@ -1844,34 +1914,42 @@ export function createBot({
         return;
       }
 
-      // Assembled by `stars.ts`, which refuses to build one for a tier that is
-      // not sold — so an invoice for nothing cannot leave this file even if
-      // the guard above is one day edited away.
-      const invoice = invoiceFor(language, stars, tier.id);
-      const to = destination.kind === 'chat' ? String(ctx.chat?.id ?? '') : destination.userId;
+      await deliver(ctx, [
+        {
+          text: messageFor(language, 'pro.accept', { terms: termsUrl(language) }),
+          broadcast: false,
+          buttons: [
+            {
+              label: messageFor(language, 'pro.acceptButton'),
+              action: acceptanceAction(tier.id),
+            },
+          ],
+        },
+      ]);
+    });
 
-      try {
-        await ctx.api.sendInvoice(
-          to,
-          invoice.title,
-          invoice.description,
-          invoice.payload,
-          invoice.currency,
-          invoice.prices,
-          // Empty for Stars. A provider token is BotFather's answer for the
-          // other currencies, and sending one here is how a Stars invoice is
-          // refused by Telegram.
-          { provider_token: '' },
-        );
-        await markPayment(who.id, 'invoice');
-        if (destination.kind === 'direct') channels.allow(destination.userId);
-      } catch (error) {
-        // The same 403 memory `/save` keeps, and the same fallback: a player
-        // who has never opened a private chat cannot be sent an invoice.
-        if (!isBlockedByUser(error)) throw error;
-        if (destination.kind === 'direct') channels.refuse(destination.userId);
-        await nudgeOnce(ctx);
+    /**
+     * A player's affirmative action is the only route to an invoice.
+     *
+     * The callback is answered first, before Telegram or storage I/O. The tier
+     * is then resolved against this process's actual offer again: an old button
+     * for a removed tier becomes the current offer, never a stale charge.
+     */
+    bot.callbackQuery(/^pay:/, async (ctx) => {
+      await ctx.answerCallbackQuery();
+
+      const who = sender(ctx);
+      if (!who) return;
+
+      const tier = tierOf(stars, tierAskedByAcceptance(ctx.callbackQuery.data));
+      if (!tier) {
+        await deliver(ctx, [
+          { text: offerFor(languageOf(ctx), stars, null), broadcast: false },
+        ]);
+        return;
       }
+
+      await sendStarsInvoice(ctx, who.id, languageOf(ctx), tier);
     });
 
     /**
@@ -1908,55 +1986,6 @@ export function createBot({
 
       if (!taking) {
         log('[payments] refused a pre-checkout that did not match the current Stars offer.');
-      }
-    });
-
-    /**
-     * The money has moved, so the date is written down.
-     *
-     * The charge id goes only to durable entitlement storage, where a refund
-     * can find it. Operator logs deliberately carry no player, payload, or
-     * charge identifier.
-     */
-    bot.on('message:successful_payment', async (ctx) => {
-      const who = sender(ctx);
-      if (!who) return;
-
-      const payment = ctx.message.successful_payment;
-      const language = languageOf(ctx);
-
-      const tier = tierOf(stars, tierOfPayload(payment.invoice_payload));
-      if (!tier) {
-        // A payload this rail did not write, or a tier no longer sold. The
-        // money is real either way, so the player is told plainly rather than
-        // thanked for something nothing here can honour.
-        log('[payments] a successful Telegram payment did not match a currently sold tier.');
-        await ctx.reply(messageFor(language, 'pro.unmatched'));
-        return;
-      }
-
-      log('[payments] successful Telegram payment received; recording entitlement.');
-
-      try {
-        const kept = await entitlements.record({
-          userId: who.id,
-          chargeId: payment.telegram_payment_charge_id,
-          tier: tier.id,
-          // What Telegram says was paid, not what this bot's price says it
-          // should have been: the second is a guess about the first.
-          stars: payment.total_amount,
-          days: tier.days,
-          at: now(),
-        });
-        await markPayment(who.id, 'purchase');
-
-        await ctx.reply(messageFor(language, 'pro.thanks', { until: asDay(kept.until) }));
-      } catch {
-        // The report gate's rule, one surface over: they have paid, and being
-        // told nothing while the money is gone is the worst of the three
-        // things that could happen here.
-        log('[payments] a confirmed payment could not be recorded.');
-        await ctx.reply(messageFor(language, 'pro.notKept'));
       }
     });
 
@@ -2032,6 +2061,57 @@ export function createBot({
       });
     }
   }
+
+  /**
+   * The money has moved, so the date is written down even if the current
+   * deployment no longer sells that tier — or no longer sells anything.
+   *
+   * New checkout and its pre-checkout approval remain inside the priced-only
+   * block above. Settlement cannot: Telegram may deliver `successful_payment`
+   * after a price change or restart. Duration therefore comes from the static
+   * product catalogue encoded by this bot's v1/v2 payload, never from today's
+   * offer. The charge id goes only to durable entitlement storage, where a
+   * refund can find it; operator logs carry no player, payload, or charge id.
+   */
+  bot.on('message:successful_payment', async (ctx) => {
+    const who = sender(ctx);
+    if (!who) return;
+
+    const payment = ctx.message.successful_payment;
+    const language = languageOf(ctx);
+    const tier = tierOfPaidPayload(payment.invoice_payload);
+
+    if (!tier) {
+      // A payload this rail did not write. The money is real, so the player is
+      // told plainly rather than thanked for something nothing here can map.
+      log('[payments] a successful Telegram payment did not match a known tier.');
+      await ctx.reply(messageFor(language, 'pro.unmatched'));
+      return;
+    }
+
+    log('[payments] successful Telegram payment received; recording entitlement.');
+
+    try {
+      const kept = await entitlements.record({
+        userId: who.id,
+        chargeId: payment.telegram_payment_charge_id,
+        tier: tier.id,
+        // What Telegram says was paid, not what today's price says it should
+        // have been: the second may have changed since the invoice was issued.
+        stars: payment.total_amount,
+        days: tier.days,
+        at: now(),
+      });
+      await markPayment(who.id, 'purchase');
+
+      await ctx.reply(messageFor(language, 'pro.thanks', { until: asDay(kept.until) }));
+    } catch {
+      // They have paid, and being told nothing while the money is gone is the
+      // worst outcome. The reply tells the truth and the anonymous log alarms.
+      log('[payments] a confirmed payment could not be recorded.');
+      await ctx.reply(messageFor(language, 'pro.notKept'));
+    }
+  });
 
   /**
    * Tell the player their Stars came back.

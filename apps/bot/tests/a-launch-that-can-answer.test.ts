@@ -284,6 +284,20 @@ async function surfaceOffered(
     }
   }
 
+  if (stars) {
+    id += 1;
+    await bot.handleUpdate({
+      update_id: id,
+      callback_query: {
+        id: `pay-${id}`,
+        from: { id: 100, is_bot: false, first_name: 'P100' },
+        chat_instance: 'private-chat',
+        data: 'pay:month',
+        message: { message_id: id, date: 0, chat: PRIVATE },
+      },
+    } as Update);
+  }
+
   // A second player at the table, so the group's turn-taking is exercised
   // rather than one seat rolling against itself.
   for (const line of ['/join', '/roll', `/report ${'y'.repeat(120)}`]) {

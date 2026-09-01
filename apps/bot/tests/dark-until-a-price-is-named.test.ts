@@ -15,12 +15,12 @@
  * Zero calls would be a **change** in behaviour. So the claim asserted here is
  * the stronger and truer one:
  *
- *   - `/pro` and `/pro month` are answered **byte for byte** as any word this
- *     bot does not know is answered — the same one call, the same one
- *     sentence, in the same chat;
- *   - a `pre_checkout_query` and a `successful_payment` produce **zero** calls,
- *     because nothing is registered for them and the update falls off the end
- *     of the chain;
+ *   - `/pro`, `/terms`, `/paysupport`, and a tier request are answered **byte
+ *     for byte** as any word this bot does not know is answered — the same one
+ *     call, the same one sentence, in the same chat;
+ *   - a `pre_checkout_query` produces **zero** calls because new charges are
+ *     dark, while a `successful_payment` from an older priced deployment is
+ *     still fulfilled so already-spent Stars never buy nothing;
  *   - across all of it, no call is `sendInvoice` or `answerPreCheckoutQuery`,
  *     and no sentence sent carries any of the Stars catalogue's words or a
  *     star.
@@ -304,28 +304,34 @@ describe('a deployment nobody priced, driven', () => {
     expect(offering(process.env)).toBeNull();
   });
 
-  it('answers /pro exactly as it answers a word it does not know', async () => {
+  it('answers every priced-only command exactly as it answers a word it does not know', async () => {
     const known = darkBot();
     await known.bot.handleUpdate(typed('/pro'));
     await known.bot.handleUpdate(typed('/pro month'));
+    await known.bot.handleUpdate(typed('/terms'));
+    await known.bot.handleUpdate(typed('/paysupport'));
 
     const unknown = darkBot();
     await unknown.bot.handleUpdate(typed('/flibbertigibbet'));
 
     // One call each, the same method, the same sentence: the bot a player
     // meets is the bot that existed before the rail was written.
-    expect(known.sent.map((call) => call.method)).toEqual(['sendMessage', 'sendMessage']);
+    expect(known.sent.map((call) => call.method)).toEqual([
+      'sendMessage',
+      'sendMessage',
+      'sendMessage',
+      'sendMessage',
+    ]);
     expect(known.sent.map((call) => call.payload.text)).toEqual([
+      unknown.sent[0]?.payload.text,
+      unknown.sent[0]?.payload.text,
       unknown.sent[0]?.payload.text,
       unknown.sent[0]?.payload.text,
     ]);
     expect(known.sent[0]?.payload.text).toBe(messageFor('en', 'chat.unknown'));
   });
 
-  it('answers a payment update with nothing at all', async () => {
-    // Nothing is registered for either, so the update falls off the end of the
-    // chain. This is the case where *zero calls* is the literal truth, and it
-    // is also the case that cannot arise: an invoice was never sent.
+  it('starts no checkout, but fulfils a payment an older deployment completed', async () => {
     const { bot, sent } = darkBot();
 
     await bot.handleUpdate(checkingOut('leela:pro:month:v1'));
@@ -333,7 +339,10 @@ describe('a deployment nobody priced, driven', () => {
     await bot.handleUpdate(checkingOut('anything else'));
     await bot.handleUpdate(paid('anything else'));
 
-    expect(sent).toEqual([]);
+    expect(sent.map((call) => call.method)).toEqual(['sendMessage', 'sendMessage']);
+    const thanks = messageFor('en', 'pro.thanks', { until: '__DATE__' }).split('__DATE__')[0];
+    expect(String(sent[0]?.payload.text)).toContain(thanks);
+    expect(sent[1]?.payload.text).toBe(messageFor('en', 'pro.unmatched'));
   });
 
   it('says nothing about money at all, across its whole command surface', async () => {
@@ -345,6 +354,8 @@ describe('a deployment nobody priced, driven', () => {
       '/pro',
       '/pro month',
       '/pro year',
+      '/terms',
+      '/paysupport',
       '/refund charge-1',
       '/new',
       '/board',
@@ -358,7 +369,15 @@ describe('a deployment nobody priced, driven', () => {
 
     // And nothing said carries a word from the Stars catalogue, or a star.
     const said = sent.map((call) => String(call.payload.text ?? '')).join('\n');
-    for (const key of ['pro.free', 'pro.buys', 'pro.refundable', 'pro.thanks', 'menu.pro'] as const) {
+    for (const key of [
+      'pro.free',
+      'pro.buys',
+      'pro.refundable',
+      'pro.terms',
+      'pro.paymentSupport',
+      'pro.thanks',
+      'menu.pro',
+    ] as const) {
       for (const language of ['en', 'ru'] as const) {
         expect(said, `${language} ${key}`).not.toContain(messageFor(language, key));
       }

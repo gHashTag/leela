@@ -811,6 +811,15 @@ const EN = {
   // operator's act and not automatic, and the sentence says exactly that
   // rather than promising a right or a turnaround nobody has agreed to.
   'pro.refundable': 'Paid in Telegram Stars. A refund is possible, through whoever runs this bot.',
+  'pro.care': 'Before paying, read /terms. /paysupport is the contact for a purchase problem.',
+  'pro.terms': 'Terms of Use: {terms}\nRead them before paying. Continue only if you agree.',
+  'pro.paymentSupport':
+    'Payment support: {support}\nInclude the purchase date and tier; do not post payment details publicly.',
+  'pro.telegramCannotSupport':
+    'Telegram support cannot resolve purchases made through this bot; use the payment support above.',
+  'pro.accept':
+    'Before checkout, read the Terms of Use: {terms}\nContinue only if you have read and agree to them.',
+  'pro.acceptButton': 'I have read and agree — continue',
   'pro.held': 'Your game is open until {until}.',
   // The invoice itself. Telegram takes 1–32 characters of title and 1–255 of
   // description, and refuses the whole call rather than trimming.
@@ -868,6 +877,8 @@ const EN = {
   // `PAID_COMMANDS` in `apps/bot/src/commands.ts`. A dark deployment publishes
   // the same seventeen entries it published before this key existed.
   'menu.pro': 'Support the work, in Telegram Stars',
+  'menu.terms': 'Terms for a Stars purchase',
+  'menu.paysupport': 'Help with a Stars payment',
   'menu.help': 'What this bot can do',
 
   help: [
@@ -1294,6 +1305,16 @@ const RU: Partial<Record<MessageKey, Message>> = {
     other: '{command} — {count} дней за {stars} ⭐',
   },
   'pro.refundable': 'Оплата в Telegram Stars. Возврат возможен — через того, кто держит бота.',
+  'pro.care': 'Перед оплатой прочтите /terms. Для вопросов о покупке есть /paysupport.',
+  'pro.terms':
+    'Условия использования: {terms}\nПрочтите их перед оплатой. Продолжайте, только если согласны.',
+  'pro.paymentSupport':
+    'Поддержка по оплате: {support}\nУкажите дату и тариф покупки; не публикуйте платёжные данные.',
+  'pro.telegramCannotSupport':
+    'Поддержка Telegram не решает вопросы покупок через этого бота; используйте поддержку по оплате выше.',
+  'pro.accept':
+    'Перед оплатой прочтите условия использования: {terms}\nПродолжайте, только если прочитали и принимаете их.',
+  'pro.acceptButton': 'Я прочитал(а) и согласен(на) — продолжить',
   'pro.held': 'Игра открыта до {until}.',
   'pro.title': 'Лила — подписка',
   'pro.description': 'Открывает все ходы в Лиле на {days} дней с момента оплаты.',
@@ -1331,6 +1352,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'menu.end': 'Закрыть стол',
   'menu.quiet': 'Остановить ежедневное слово или вернуть его',
   'menu.pro': 'Поддержать работу в Telegram Stars',
+  'menu.terms': 'Условия покупки за Stars',
+  'menu.paysupport': 'Помощь с оплатой Stars',
   'menu.help': 'Что умеет этот бот',
 
   help: [
