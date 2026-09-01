@@ -193,7 +193,7 @@ describe('a stored table the engine will not take', () => {
     ]);
   });
 
-  it('says which row it refused, where an operator can act on it', async () => {
+  it('says why it refused the row without exporting the chat identifier', async () => {
     // The log is not the player's answer, and it is still the only place the
     // reason exists. A refusal that does not name the chat is one nobody can
     // find twice.
@@ -207,7 +207,7 @@ describe('a stored table the engine will not take', () => {
     await new DatabaseRoomStore(queries, (line) => said.push(line)).read(rows.session.id);
 
     expect(said).toHaveLength(1);
-    expect(said[0]).toContain(rows.session.id);
+    expect(said[0]).not.toContain(rows.session.id);
     expect(said[0]).toContain('900');
   });
 });

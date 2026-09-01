@@ -299,7 +299,7 @@ describe('a row the engine cannot be handed', () => {
     }
   });
 
-  it('says why, so the row can be found', async () => {
+  it('says why without exporting the chat identifier', async () => {
     const said: string[] = [];
     const store = new DatabaseRoomStore(
       queriesReturning({ ...goodSession, ruleset: 'gone' }, [goodSeat]),
@@ -309,7 +309,7 @@ describe('a row the engine cannot be handed', () => {
     await store.get('c1');
 
     expect(said).toHaveLength(1);
-    expect(said[0]).toContain('c1');
+    expect(said[0]).not.toContain('c1');
     expect(said[0]).toContain('gone');
   });
 
@@ -369,8 +369,9 @@ describe('every table held', () => {
 
     const rooms = await store.allRooms();
     expect(rooms.map((room) => room.chatId)).toEqual(['chat-8']);
-    // Logged through the same line every other refused row goes through.
-    expect(said.some((line) => line.includes('chat-7'))).toBe(true);
+    // Logged through the same anonymous line every other refused row uses.
+    expect(said.some((line) => line.includes('table has no seats'))).toBe(true);
+    expect(said.some((line) => line.includes('chat-7'))).toBe(false);
   });
 
   it('enumerates nothing when the queries cannot list, rather than guessing', async () => {

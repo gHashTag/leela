@@ -90,6 +90,54 @@ export interface StepSink {
   moved(userId: string): Promise<number>;
 }
 
+/** The first-player milestones in the paid continuation journey. */
+export type PaymentMilestone = 'trial' | 'paywall' | 'invoice' | 'purchase' | 'return';
+
+export interface PaymentFunnelSummary {
+  trial: number;
+  paywall: number;
+  invoice: number;
+  purchase: number;
+  return: number;
+}
+
+/**
+ * First milestones only. The player key already identifies every operational
+ * row in this database; no writing, username, message, invoice, or charge is
+ * copied into this analytics boundary.
+ */
+export interface PaymentFunnelStore {
+  record(userId: string, stage: PaymentMilestone, at: number): Promise<void>;
+  summary(): Promise<PaymentFunnelSummary>;
+}
+
+/** Per-process funnel memory for non-durable deployments and tests. */
+export class MemoryPaymentFunnelStore implements PaymentFunnelStore {
+  private readonly reached = new Map<string, Partial<Record<PaymentMilestone, number>>>();
+
+  async record(userId: string, stage: PaymentMilestone, at: number): Promise<void> {
+    const held = this.reached.get(userId) ?? {};
+    if (held[stage] !== undefined) return;
+    this.reached.set(userId, { ...held, [stage]: at });
+  }
+
+  async summary(): Promise<PaymentFunnelSummary> {
+    const counts: PaymentFunnelSummary = {
+      trial: 0,
+      paywall: 0,
+      invoice: 0,
+      purchase: 0,
+      return: 0,
+    };
+    for (const milestones of this.reached.values()) {
+      for (const stage of Object.keys(counts) as PaymentMilestone[]) {
+        if (milestones[stage] !== undefined) counts[stage] += 1;
+      }
+    }
+    return counts;
+  }
+}
+
 /** A sink that drops moves, for running without storage. */
 export const discardSteps: StepSink = {
   async record() {

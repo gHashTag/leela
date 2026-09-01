@@ -10,6 +10,7 @@ import { Bot, InlineKeyboard, InputFile, Keyboard, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 import {
   FALLBACK_LANGUAGE,
+  FREE_MOVES,
   SUBSCRIBE_REQUEST,
   type Language,
   bookFor,
@@ -32,6 +33,7 @@ import {
   nudgeToPrivate,
 } from './delivery';
 import { attributeConversion } from './conversions';
+import { attributePaymentStage } from './payment-funnel';
 import { escapeHtml, intoMessages, renderBoardMessage, renderChapter, renderPlan } from './render';
 import { FILE_TIMEOUT_MS, MAX_FILE_BYTES, asReport, decide, decideSquare, keep, within } from './take-in';
 import { offer, serialise } from './take-out';
@@ -49,12 +51,14 @@ import {
 import {
   MemoryEntitlementStore,
   MemoryNudgeStore,
+  MemoryPaymentFunnelStore,
   MemoryRoomStore,
   discardReports,
   discardSteps,
   seedFor,
   type EntitlementStore,
   type NudgeStore,
+  type PaymentFunnelStore,
   type ReportSink,
   type RoomStore,
   type StepSink,
@@ -135,6 +139,8 @@ export interface BotOptions {
    * been told in the meantime, rather than pretend a payment never happened.
    */
   entitlements?: EntitlementStore;
+  /** First-player paid journey milestones. Failure never gates play or pay. */
+  funnel?: PaymentFunnelStore;
   /**
    * Telegram ids of whoever may hand money back, from
    * `LEELA_STARS_OPERATORS`. Empty by default and empty in most deployments:
@@ -357,6 +363,7 @@ export function createBot({
   // environment sells nothing. See `stars.ts`.
   stars = offering(process.env),
   entitlements = new MemoryEntitlementStore(),
+  funnel = new MemoryPaymentFunnelStore(),
   operators = operatorIds(process.env),
 }: BotOptions) {
   const bot = new Bot(token, botInfo ? { botInfo } : undefined);
@@ -453,9 +460,13 @@ export function createBot({
   // time the bot appeared not to work.
   bot.use(async (ctx, next) => {
     const text = ctx.message?.text ?? ctx.channelPost?.text;
-    const from = ctx.from ? `${ctx.from.id}${ctx.from.username ? ` @${ctx.from.username}` : ''}` : 'unknown';
-    const chat = ctx.chat ? `${ctx.chat.type}:${ctx.chat.id}` : 'no-chat';
-    log(`[bot] <- ${chat} ${from}: ${text ?? `(${Object.keys(ctx.update).filter((k) => k !== 'update_id').join(',')})`}`);
+    const chat = ctx.chat?.type ?? 'no-chat';
+    const kind = text
+      ? `message:text${text.startsWith('/') ? ` ${commandOf(ctx)}` : ''}`
+      : Object.keys(ctx.update)
+          .filter((key) => key !== 'update_id')
+          .join(',');
+    log(`[bot] <- ${chat} ${kind}`);
 
     const started = now();
     await next();
@@ -830,6 +841,31 @@ export function createBot({
     return match ? `/${match[1]}` : 'the command';
   }
 
+  /** One paid-journey milestone, deliberately unable to interrupt its cause. */
+  const markPayment = (userId: string, stage: Parameters<PaymentFunnelStore['record']>[1]) =>
+    attributePaymentStage({ funnel, userId, stage, at: now(), log });
+
+  /** Trial completion or first paid continuation, after the move is durable. */
+  async function markMoveMilestone(userId: string): Promise<void> {
+    if (stars === null) return;
+    try {
+      const access = await accessFor({ userId, stars, entitlements, steps, now: now() });
+      if (access.entitled) {
+        await markPayment(userId, 'return');
+      } else if (access.moved === FREE_MOVES) {
+        await markPayment(userId, 'trial');
+      }
+    } catch {
+      // Access is already enforced before the throw. This second read is
+      // analytics after the saved move and cannot retroactively reject it.
+      try {
+        log('[payments] move milestone could not be derived.');
+      } catch {
+        // The metric logger is no more important than the metric.
+      }
+    }
+  }
+
   /**
    * Perform the writes a turn asked for, and say when one did not happen.
    *
@@ -870,6 +906,7 @@ export function createBot({
             event: effect.event,
             ruleset: effect.ruleset,
           });
+          await markMoveMilestone(effect.userId);
         }
       } catch (error) {
         console.error(`[bot] failed to store a ${effect.kind}`, error);
@@ -1244,7 +1281,7 @@ export function createBot({
       // and said out loud, because the alternative is deleting somebody's game
       // to tidy up a log line.
       if (there.unreadable) {
-        log(`[bot] chat ${from} is now ${to}: a table that cannot be read cannot be moved`);
+        log('[bot] a migrated table cannot be read and therefore cannot be moved');
       }
       return;
     }
@@ -1345,6 +1382,7 @@ export function createBot({
           now: now(),
         });
         if (!access.mayMove) {
+          await markPayment(who.id, 'paywall');
           await offerPaidPlay(ctx, who.id, room.language);
           return;
         }
@@ -1825,6 +1863,7 @@ export function createBot({
           // refused by Telegram.
           { provider_token: '' },
         );
+        await markPayment(who.id, 'invoice');
         if (destination.kind === 'direct') channels.allow(destination.userId);
       } catch (error) {
         // The same 403 memory `/save` keeps, and the same fallback: a player
@@ -1868,20 +1907,16 @@ export function createBot({
       );
 
       if (!taking) {
-        log(
-          `[bot] refused a pre-checkout from ${query.from.id}: ` +
-            `${query.total_amount} ${query.currency} against "${query.invoice_payload}"`,
-        );
+        log('[payments] refused a pre-checkout that did not match the current Stars offer.');
       }
     });
 
     /**
      * The money has moved, so the date is written down.
      *
-     * The charge id goes to the log before anything else can fail, because it
-     * is the only handle a refund has: a payment whose id is nowhere is a
-     * payment nobody can give back, which is the one state Telegram's rules
-     * and this repository's own honesty both refuse.
+     * The charge id goes only to durable entitlement storage, where a refund
+     * can find it. Operator logs deliberately carry no player, payload, or
+     * charge identifier.
      */
     bot.on('message:successful_payment', async (ctx) => {
       const who = sender(ctx);
@@ -1890,19 +1925,17 @@ export function createBot({
       const payment = ctx.message.successful_payment;
       const language = languageOf(ctx);
 
-      log(
-        `[bot] ${who.id} paid ${payment.total_amount} ${payment.currency} ` +
-          `for "${payment.invoice_payload}" — charge ${payment.telegram_payment_charge_id}`,
-      );
-
       const tier = tierOf(stars, tierOfPayload(payment.invoice_payload));
       if (!tier) {
         // A payload this rail did not write, or a tier no longer sold. The
         // money is real either way, so the player is told plainly rather than
         // thanked for something nothing here can honour.
+        log('[payments] a successful Telegram payment did not match a currently sold tier.');
         await ctx.reply(messageFor(language, 'pro.unmatched'));
         return;
       }
+
+      log('[payments] successful Telegram payment received; recording entitlement.');
 
       try {
         const kept = await entitlements.record({
@@ -1915,15 +1948,14 @@ export function createBot({
           days: tier.days,
           at: now(),
         });
+        await markPayment(who.id, 'purchase');
 
         await ctx.reply(messageFor(language, 'pro.thanks', { until: asDay(kept.until) }));
-      } catch (error) {
+      } catch {
         // The report gate's rule, one surface over: they have paid, and being
         // told nothing while the money is gone is the worst of the three
         // things that could happen here.
-        log(
-          `[bot] could not keep the payment ${payment.telegram_payment_charge_id}: ${String(error)}`,
-        );
+        log('[payments] a confirmed payment could not be recorded.');
         await ctx.reply(messageFor(language, 'pro.notKept'));
       }
     });
@@ -1983,12 +2015,12 @@ export function createBot({
 
         try {
           await entitlements.refund(chargeId, now());
-        } catch (error) {
+        } catch {
           // The money is already back and this bot's own record is not. The
           // floor's *something went wrong* would be the wrong sentence for
           // that — it reads as *nothing happened*, and what happened is a
           // refund — so the operator is told which half succeeded.
-          log(`[bot] refunded ${chargeId} and could not clear the record: ${String(error)}`);
+          log('[payments] refunded, but could not clear the local entitlement record.');
           await ctx.reply(messageFor(language, 'pro.refundNotCleared', { charge: chargeId }));
           return;
         }
@@ -2027,7 +2059,7 @@ export function createBot({
       channels.allow(userId);
     } catch (error) {
       if (isBlockedByUser(error)) channels.refuse(userId);
-      log(`[bot] refunded ${userId} and could not tell them: ${String(error)}`);
+      log('[payments] refunded, but the player could not be notified.');
     }
   }
 

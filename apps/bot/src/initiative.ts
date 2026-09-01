@@ -549,7 +549,7 @@ export function createInitiative({
         // learns it here, as they do from `offerTheBoard`.
         const retrying = attempt < attempts.length - 1;
         log(
-          `[initiative] send to ${userId} failed` +
+          '[initiative] one send failed' +
             `${retrying ? ', retrying without the keyboard' : ''}: ${String(error)}`,
         );
       }

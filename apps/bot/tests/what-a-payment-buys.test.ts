@@ -36,7 +36,12 @@ import {
   tierOfPayload,
   type PricedTier,
 } from '../src/stars';
-import { MemoryEntitlementStore, type EntitlementStore } from '../src/store';
+import {
+  MemoryEntitlementStore,
+  MemoryPaymentFunnelStore,
+  type EntitlementStore,
+  type PaymentFunnelStore,
+} from '../src/store';
 
 const BOT_INFO = {
   id: 1,
@@ -117,6 +122,7 @@ interface Harness {
   bot: ReturnType<typeof createBot>;
   sent: Array<{ method: string; payload: Record<string, unknown> }>;
   entitlements: EntitlementStore;
+  funnel: PaymentFunnelStore;
   texts(): string[];
   logs: string[];
 }
@@ -125,6 +131,7 @@ function priced(
   options: {
     stars?: readonly PricedTier[] | null;
     entitlements?: EntitlementStore;
+    funnel?: PaymentFunnelStore;
     operators?: readonly string[];
     now?: () => number;
     refuseRefund?: string;
@@ -133,6 +140,7 @@ function priced(
   const sent: Array<{ method: string; payload: Record<string, unknown> }> = [];
   const logs: string[] = [];
   const entitlements = options.entitlements ?? new MemoryEntitlementStore();
+  const funnel = options.funnel ?? new MemoryPaymentFunnelStore();
 
   const bot = createBot({
     token: '1:TEST',
@@ -141,6 +149,7 @@ function priced(
     now: options.now ?? (() => NOW),
     stars: options.stars === undefined ? ALL_THREE : options.stars,
     entitlements,
+    funnel,
     operators: options.operators ?? [String(OPERATOR)],
   });
 
@@ -156,6 +165,7 @@ function priced(
     bot,
     sent,
     entitlements,
+    funnel,
     logs,
     texts: () =>
       sent
@@ -174,7 +184,7 @@ function invoiceIn(sent: Harness['sent']): Record<string, unknown> {
 describe('the invoice a price produces', () => {
   it('is in Stars, for the exact amount the environment named', async () => {
     for (const tier of ALL_THREE) {
-      const { bot, sent } = priced();
+      const { bot, sent, funnel } = priced();
       await bot.handleUpdate(typed(`/pro ${tier.id}`));
 
       const invoice = invoiceIn(sent);
@@ -191,6 +201,7 @@ describe('the invoice a price produces', () => {
       expect(invoice.provider_token, tier.id).toBe('');
       expect(invoice.payload, tier.id).toBe(payloadFor(tier.id));
       expect(tierOfPayload(String(invoice.payload)), tier.id).toBe(tier.id);
+      expect(await funnel.summary(), tier.id).toMatchObject({ invoice: 1 });
     }
   });
 
@@ -311,7 +322,7 @@ describe('the invoice a price produces', () => {
 
 describe('a payment that arrives', () => {
   it('is written down, and read back as a date', async () => {
-    const { bot, entitlements, texts } = priced();
+    const { bot, entitlements, texts, funnel } = priced();
 
     await bot.handleUpdate(
       paid({ payload: payloadFor('month'), amount: 150, charge: 'charge-1' }),
@@ -321,9 +332,31 @@ describe('a payment that arrives', () => {
     expect(live?.until).toBe(NOW + 30 * DAY);
     expect(texts().join('\n')).toContain(asDay(NOW + 30 * DAY));
     expect(texts().join('\n')).toContain(messageFor('en', 'pro.thanks', { until: asDay(NOW + 30 * DAY) }));
+    expect(await funnel.summary()).toMatchObject({ purchase: 1 });
   });
 
-  it('keeps the charge id where a refund can find it', async () => {
+  it('still sends the invoice and keeps the payment when funnel storage is down', async () => {
+    const broken: PaymentFunnelStore = {
+      async record() {
+        throw new Error('analytics unavailable');
+      },
+      async summary() {
+        throw new Error('analytics unavailable');
+      },
+    };
+    const { bot, sent, entitlements, texts } = priced({ funnel: broken });
+
+    await bot.handleUpdate(typed('/pro month'));
+    expect(sent.some((call) => call.method === 'sendInvoice')).toBe(true);
+
+    await bot.handleUpdate(
+      paid({ payload: payloadFor('month'), amount: 150, charge: 'charge-funnel-down' }),
+    );
+    expect(await entitlements.of('charge-funnel-down')).not.toBeNull();
+    expect(texts().join('\n')).toContain(messageFor('en', 'pro.thanks', { until: asDay(NOW + 30 * DAY) }));
+  });
+
+  it('keeps the charge id only where a refund can find it, not in operator logs', async () => {
     const { bot, entitlements, logs } = priced();
 
     await bot.handleUpdate(paid({ payload: payloadFor('year'), amount: 1200, charge: 'charge-9' }));
@@ -333,8 +366,7 @@ describe('a payment that arrives', () => {
     expect(held?.tier).toBe('year');
     expect(held?.stars).toBe(1200);
     expect(held?.refundedAt).toBeNull();
-    // And in the log, which is where an operator reads it from.
-    expect(logs.join('\n')).toContain('charge-9');
+    expect(logs.join('\n')).not.toContain('charge-9');
   });
 
   it('records what Telegram says was paid, not what the price says it should be', async () => {
@@ -366,8 +398,8 @@ describe('a payment that arrives', () => {
     expect(await entitlements.subscribed(String(PLAYER), NOW + 31 * DAY)).toBeNull();
   });
 
-  it('says so plainly when the payload names nothing this bot sells', async () => {
-    const { bot, entitlements, texts } = priced();
+  it('says so plainly and raises an anonymous alarm when the payload names nothing this bot sells', async () => {
+    const { bot, entitlements, texts, logs } = priced();
 
     await bot.handleUpdate(paid({ payload: 'somebody else:v9', amount: 150, charge: 'charge-5' }));
 
@@ -375,6 +407,9 @@ describe('a payment that arrives', () => {
     // rather than thanked for something nothing here can honour.
     expect(texts()).toEqual([messageFor('en', 'pro.unmatched')]);
     expect(await entitlements.of('charge-5')).toBeNull();
+    expect(logs.join('\n')).toContain('did not match a currently sold tier');
+    expect(logs.join('\n')).not.toContain('recording entitlement');
+    expect(logs.join('\n')).not.toContain('charge-5');
   });
 
   it('tells the player when the record refuses the write, rather than thanking them', async () => {
@@ -390,9 +425,17 @@ describe('a payment that arrives', () => {
     await bot.handleUpdate(paid({ payload: payloadFor('month'), amount: 150, charge: 'charge-6' }));
 
     expect(texts()).toEqual([messageFor('en', 'pro.notKept')]);
-    // And the charge id is in the log regardless, because it is the only way
-    // back from here.
-    expect(logs.join('\n')).toContain('charge-6');
+    expect(logs.join('\n')).not.toContain('charge-6');
+  });
+
+  it('does not copy an inbound player id or full command into operator logs', async () => {
+    const { bot, logs } = priced();
+
+    await bot.handleUpdate(typed('/pro private-tail'));
+
+    expect(logs.join('\n')).not.toContain(String(PLAYER));
+    expect(logs.join('\n')).not.toContain('private-tail');
+    expect(logs.join('\n')).toContain('[bot] <- private message:text /pro');
   });
 });
 
@@ -647,7 +690,8 @@ describe('giving the money back', () => {
     expect(harness.texts()).toContain(
       messageFor('en', 'pro.refundNotCleared', { charge: 'charge-r' }),
     );
-    expect(harness.logs.join('\n')).toContain('could not clear the record');
+    expect(harness.logs.join('\n')).toContain('could not clear');
+    expect(harness.logs.join('\n')).not.toContain('charge-r');
   });
 
   it('says so rather than pretending, for a charge it has never heard of', async () => {

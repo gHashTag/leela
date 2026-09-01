@@ -24,6 +24,9 @@ import {
   type NudgeConversion,
   type NudgeRecord,
   type NudgeStore,
+  type PaymentFunnelStore,
+  type PaymentFunnelSummary,
+  type PaymentMilestone,
   type Subscription,
 } from './store';
 
@@ -229,6 +232,20 @@ CREATE TABLE IF NOT EXISTS entitlements (
 );
 
 CREATE INDEX IF NOT EXISTS entitlements_user ON entitlements (user_id, until DESC);
+
+-- First player milestones in the paid continuation journey. One row per
+-- existing Telegram player key, no message, writing, username, invoice,
+-- amount, payload, or charge copied into analytics. Each timestamp is written
+-- once; aggregate counts are the only operator-facing read.
+CREATE TABLE IF NOT EXISTS payment_funnel (
+  user_id     TEXT PRIMARY KEY,
+  trial_at    INTEGER,
+  paywall_at  INTEGER,
+  invoice_at  INTEGER,
+  purchase_at INTEGER,
+  return_at   INTEGER,
+  updated_at  INTEGER NOT NULL
+);
 `;
 
 /**
@@ -922,6 +939,69 @@ export class SqliteRoomQueries implements RoomQueries {
       .run(at, this.now(), chargeId);
   }
 
+  /** Keep the first time one player reached one paid-play milestone. */
+  recordPaymentMilestone(userId: string, stage: PaymentMilestone, at: number): void {
+    // The union is still converted through a closed map before it reaches SQL:
+    // values can be bound, column names cannot, and analytics must not grow an
+    // injection surface because a future caller widened a string.
+    const column: Record<PaymentMilestone, string> = {
+      trial: 'trial_at',
+      paywall: 'paywall_at',
+      invoice: 'invoice_at',
+      purchase: 'purchase_at',
+      return: 'return_at',
+    };
+    const reached = column[stage];
+
+    this.db
+      .prepare(
+        `INSERT INTO payment_funnel (user_id, ${reached}, updated_at) VALUES (?, ?, ?)
+         ON CONFLICT(user_id) DO UPDATE SET
+           ${reached} = excluded.${reached},
+           updated_at = excluded.updated_at
+         WHERE payment_funnel.${reached} IS NULL`,
+      )
+      .run(userId, at, this.now());
+  }
+
+  /** First timestamp, exposed for migration/idempotence tests and no UI. */
+  paymentMilestoneAt(userId: string, stage: PaymentMilestone): number | null {
+    const column: Record<PaymentMilestone, string> = {
+      trial: 'trial_at',
+      paywall: 'paywall_at',
+      invoice: 'invoice_at',
+      purchase: 'purchase_at',
+      return: 'return_at',
+    };
+    const row = this.db
+      .prepare(`SELECT ${column[stage]} AS reached FROM payment_funnel WHERE user_id = ?`)
+      .get(userId) as { reached?: number | null } | undefined;
+    return typeof row?.reached === 'number' ? row.reached : null;
+  }
+
+  /** Aggregate player counts; identifiers never cross this return boundary. */
+  paymentFunnelSummary(): PaymentFunnelSummary {
+    const row = this.db
+      .prepare(
+        `SELECT
+           SUM(CASE WHEN trial_at IS NOT NULL THEN 1 ELSE 0 END) AS trial,
+           SUM(CASE WHEN paywall_at IS NOT NULL THEN 1 ELSE 0 END) AS paywall,
+           SUM(CASE WHEN invoice_at IS NOT NULL THEN 1 ELSE 0 END) AS invoice,
+           SUM(CASE WHEN purchase_at IS NOT NULL THEN 1 ELSE 0 END) AS purchase,
+           SUM(CASE WHEN return_at IS NOT NULL THEN 1 ELSE 0 END) AS return
+         FROM payment_funnel`,
+      )
+      .get() as Partial<Record<PaymentMilestone, number | null>> | undefined;
+
+    return {
+      trial: Number(row?.trial ?? 0),
+      paywall: Number(row?.paywall ?? 0),
+      invoice: Number(row?.invoice ?? 0),
+      purchase: Number(row?.purchase ?? 0),
+      return: Number(row?.return ?? 0),
+    };
+  }
+
   /** Every report a player has written, newest first. */
   reportsFor(userId: string): Array<{ plan: number; text: string; createdAt: Date }> {
     const rows = this.db
@@ -1075,6 +1155,18 @@ export function sqliteEntitlements(queries: SqliteRoomQueries): EntitlementStore
 
       queries.refundEntitlement(chargeId, at);
       return { ...held, refundedAt: at };
+    },
+  };
+}
+
+/** Paid-play funnel milestones, backed by the deployment database. */
+export function sqlitePaymentFunnel(queries: SqliteRoomQueries): PaymentFunnelStore {
+  return {
+    async record(userId, stage, at): Promise<void> {
+      queries.recordPaymentMilestone(userId, stage, at);
+    },
+    async summary(): Promise<PaymentFunnelSummary> {
+      return queries.paymentFunnelSummary();
     },
   };
 }
