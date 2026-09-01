@@ -1,4 +1,4 @@
-import { type Language, resolveLanguage } from './canon';
+import { isLanguage, type Language, resolveLanguage } from './canon';
 import { telegramLanguage, telegramOf } from './telegram';
 
 /** English, when nothing else can be honoured. Not imported: `canon` does not
@@ -98,6 +98,24 @@ export const writeLanguage = (store: Store | null, language: Language): boolean 
   } catch {
     return false;
   }
+};
+
+/**
+ * Make an adopted Telegram game authoritative for the board's interface.
+ *
+ * Returns true only when a supported language was durably changed, which is
+ * the caller's signal to reload. A second call then returns false, so a reload
+ * cannot loop. Unsupported room languages keep the current fully translated
+ * interface until their chrome exists.
+ */
+export const alignWithChat = (
+  store: Store | null,
+  current: Language,
+  chatLanguage: unknown,
+): boolean => {
+  if (store === null || typeof chatLanguage !== 'string' || !isLanguage(chatLanguage)) return false;
+  if (!isSpoken(chatLanguage) || chatLanguage === current) return false;
+  return writeLanguage(store, chatLanguage);
 };
 
 /** What to label the button with: the language it switches *to*. */

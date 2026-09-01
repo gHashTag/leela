@@ -30,6 +30,7 @@
  * on the boot path is a black screen.
  */
 
+import { isLanguage, type Language } from '@leela/content';
 import type { GameState } from '@leela/engine';
 
 /** What the bot will say about one player, and no more. */
@@ -37,6 +38,8 @@ export interface Standing {
   plan: number;
   waiting: boolean;
   won: boolean;
+  /** The language of the active Telegram room, when the bot can name it. */
+  language?: Language;
   /**
    * The whole state the rules run on — `specs/009` step 4.
    *
@@ -68,10 +71,19 @@ export interface Rolled {
  * *write what this plan brings up first* are things a player can act on, and
  * they arrive in the player's own language because the bot composed them.
  */
+export type TransportFailure =
+  | 'outside-telegram'
+  | 'unauthorized'
+  | 'forbidden'
+  | 'unavailable'
+  | 'unreadable'
+  | 'timeout'
+  | 'unreachable';
+
 export type Throw =
   | { kind: 'rolled'; rolled: Rolled }
   | { kind: 'refused'; why: string }
-  | { kind: 'unasked'; why: string };
+  | { kind: 'unasked'; reason: TransportFailure };
 
 /**
  * What asking produced.
@@ -84,7 +96,7 @@ export type Throw =
 export type Mine =
   | { kind: 'standing'; standing: Standing }
   | { kind: 'none' }
-  | { kind: 'unasked'; why: string };
+  | { kind: 'unasked'; reason: TransportFailure };
 
 /** How long to wait before the board gets on with drawing itself. */
 export const ASK_TIMEOUT_MS = 8_000;
@@ -145,6 +157,7 @@ const standingIn = (value: unknown): Standing | null => {
     moved?: unknown;
     entitled?: unknown;
     canSubscribe?: unknown;
+    language?: unknown;
   };
   if (typeof held.plan !== 'number' || !Number.isFinite(held.plan)) return null;
   if (typeof held.waiting !== 'boolean' || typeof held.won !== 'boolean') return null;
@@ -155,6 +168,7 @@ const standingIn = (value: unknown): Standing | null => {
     plan: held.plan,
     waiting: held.waiting,
     won: held.won,
+    ...(typeof held.language === 'string' && isLanguage(held.language) ? { language: held.language } : {}),
     ...(state === null ? {} : { state }),
     ...(typeof held.yourTurn === 'boolean' ? { yourTurn: held.yourTurn } : {}),
     ...(typeof held.moved === 'number' && Number.isFinite(held.moved) ? { moved: held.moved } : {}),
@@ -197,7 +211,7 @@ export async function myGame({
   fetch: typeof globalThis.fetch;
   timeoutMs?: number;
 }): Promise<Mine> {
-  if (initData === '') return { kind: 'unasked', why: 'this board was not opened from Telegram' };
+  if (initData === '') return { kind: 'unasked', reason: 'outside-telegram' };
 
   const stop = new AbortController();
   const timer = setTimeout(() => stop.abort(), timeoutMs);
@@ -212,16 +226,21 @@ export async function myGame({
     // them. Everything else — 401, 503, a proxy's 502 — is this board failing
     // to ask, and must not be shown as "you have no game".
     if (answer.status === 404) return { kind: 'none' };
-    if (answer.status !== 200) return { kind: 'unasked', why: `the bot answered ${answer.status}` };
+    if (answer.status !== 200) {
+      return {
+        kind: 'unasked',
+        reason: answer.status === 401 ? 'unauthorized' : answer.status === 403 ? 'forbidden' : 'unavailable',
+      };
+    }
 
     const standing = standingIn(await answer.json().catch(() => null));
     return standing === null
-      ? { kind: 'unasked', why: 'the bot answered something this board cannot read' }
+      ? { kind: 'unasked', reason: 'unreadable' }
       : { kind: 'standing', standing };
   } catch (error) {
     return {
       kind: 'unasked',
-      why: error instanceof Error && error.name === 'AbortError' ? 'the bot did not answer in time' : 'the bot could not be reached',
+      reason: error instanceof Error && error.name === 'AbortError' ? 'timeout' : 'unreachable',
     };
   } finally {
     clearTimeout(timer);
@@ -251,7 +270,7 @@ export async function askForARoll({
   fetch: typeof globalThis.fetch;
   timeoutMs?: number;
 }): Promise<Throw> {
-  if (initData === '') return { kind: 'unasked', why: 'this board was not opened from Telegram' };
+  if (initData === '') return { kind: 'unasked', reason: 'outside-telegram' };
 
   const stop = new AbortController();
   const timer = setTimeout(() => stop.abort(), timeoutMs);
@@ -265,24 +284,28 @@ export async function askForARoll({
 
     if (answer.status === 409) {
       const said = (await answer.json().catch(() => null)) as { error?: unknown } | null;
+      return typeof said?.error === 'string' && said.error.trim() !== ''
+        ? { kind: 'refused', why: said.error }
+        : { kind: 'unasked', reason: 'unreadable' };
+    }
+    if (answer.status !== 200) {
       return {
-        kind: 'refused',
-        why: typeof said?.error === 'string' ? said.error : 'the die will not turn yet',
+        kind: 'unasked',
+        reason: answer.status === 401 ? 'unauthorized' : answer.status === 403 ? 'forbidden' : 'unavailable',
       };
     }
-    if (answer.status !== 200) return { kind: 'unasked', why: `the bot answered ${answer.status}` };
 
     const rolled = rolledIn(await answer.json().catch(() => null));
     return rolled === null
-      ? { kind: 'unasked', why: 'the bot answered a throw this board cannot read' }
+      ? { kind: 'unasked', reason: 'unreadable' }
       : { kind: 'rolled', rolled };
   } catch (error) {
     return {
       kind: 'unasked',
-      why:
+      reason:
         error instanceof Error && error.name === 'AbortError'
-          ? 'the bot did not answer in time'
-          : 'the bot could not be reached',
+          ? 'timeout'
+          : 'unreachable',
     };
   } finally {
     clearTimeout(timer);

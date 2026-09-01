@@ -195,21 +195,26 @@ describe('a streaming answerer', () => {
     });
     const response = await handle(asked({ system: 's', question: 'q' }));
     expect(response.status).toBe(502);
-    expect(await refusal(response)).toContain('429');
+    const said = await refusal(response);
+    expect(said).toBe('companion unavailable');
+    expect(said).not.toContain('429');
   });
 
   it('says which empty it was: a whole budget of thinking and no answer', async () => {
     const handle = askRoute({ stream: streamOf([{ thinking: 'only thought' }]) });
     const response = await handle(asked({ system: 's', question: 'q' }));
     const text = await response.text();
-    expect(text).toContain('spent the whole budget thinking');
+    expect(text).toContain('companion unavailable');
+    expect(text).not.toContain('spent the whole budget thinking');
     expect(text.endsWith(`data: ${JSON.stringify({ done: true })}\n\n`)).toBe(true);
   });
 
   it('says which empty it was: nothing at all', async () => {
     const handle = askRoute({ stream: streamOf([]) });
     const response = await handle(asked({ system: 's', question: 'q' }));
-    expect(await response.text()).toContain('empty completion');
+    const text = await response.text();
+    expect(text).toContain('companion unavailable');
+    expect(text).not.toContain('empty completion');
   });
 
   it('a failure past the first byte is said in-stream and the stream still ends', async () => {
@@ -223,7 +228,8 @@ describe('a streaming answerer', () => {
     const response = await handle(asked({ system: 's', question: 'q' }));
     const text = await response.text();
     expect(text).toContain('half an ans');
-    expect(text).toContain('the socket went away');
+    expect(text).toContain('companion unavailable');
+    expect(text).not.toContain('the socket went away');
     expect(text.endsWith(`data: ${JSON.stringify({ done: true })}\n\n`)).toBe(true);
   });
 
@@ -332,15 +338,15 @@ describe('asked too much', () => {
 });
 
 describe('a provider that fails', () => {
-  it('says no model configured as 503, naming the key and not the model', async () => {
+  it('says only that the companion is unavailable when no model is configured', async () => {
     const handle = askRoute({});
     const response = await handle(asked({ system: 's', question: 'q' }));
 
     expect(response.status).toBe(503);
-    expect(await refusal(response)).toBe('no model configured');
+    expect(await refusal(response)).toBe('companion unavailable');
   });
 
-  it("carries the provider's own sentence out as a refusal", async () => {
+  it("does not carry the provider's own sentence out as a refusal", async () => {
     const refusing: LanguageModel = {
       id: 'refusing',
       complete: async () => {
@@ -351,7 +357,9 @@ describe('a provider that fails', () => {
     const response = await handle(asked({ system: 's', question: 'q' }));
 
     expect(response.status).toBe(502);
-    expect(await refusal(response)).toContain('402');
+    const said = await refusal(response);
+    expect(said).toBe('companion unavailable');
+    expect(said).not.toContain('402');
   });
 
   it('says something even for a failure with no shape', async () => {
@@ -365,7 +373,9 @@ describe('a provider that fails', () => {
     const response = await handle(asked({ system: 's', question: 'q' }));
 
     expect(response.status).toBe(502);
-    expect(await refusal(response)).toContain('kaput');
+    const said = await refusal(response);
+    expect(said).toBe('companion unavailable');
+    expect(said).not.toContain('kaput');
   });
 
   it('gives up on a model that never answers', async () => {
@@ -379,7 +389,7 @@ describe('a provider that fails', () => {
 
       const response = await answering;
       expect(response.status).toBe(504);
-      expect(await refusal(response)).toMatch(/did not answer/);
+      expect(await refusal(response)).toBe('companion unavailable');
     } finally {
       vi.useRealTimers();
     }

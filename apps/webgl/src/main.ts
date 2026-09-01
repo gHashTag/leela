@@ -41,6 +41,7 @@ import { askOverHost, hostCanAnswer } from './asked';
 import {
   LABELS,
   boardLanguage,
+  alignWithChat,
   nextLanguage,
   openingStore,
   writeLanguage,
@@ -169,9 +170,9 @@ const rememberChatAccess = (standing: ChatStanding): void => {
  * bundle carried the code, the route answered, the guards were sound — and the
  * one thing nobody could see was WHICH branch had returned early.
  *
- * A silence covering four facts is not a small thing. `myGame` already composes
- * the reason — *not opened from Telegram*, *the bot answered 503*, *did not
- * answer in time* — and it was being thrown away one line after it arrived.
+ * A silence covering four facts is not a small thing. `myGame` carries a closed
+ * reason code — never player-visible transport prose — and this boundary maps
+ * it onto the catalogue language before anything reaches the screen.
  */
 const sayAboutTheChat = (key: Parameters<typeof messageFor>[1], params: Record<string, string | number> = {}): void => {
   el.inTheChat.textContent = messageFor(language, key, params);
@@ -183,8 +184,7 @@ void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine
     // Two facts, and they read differently to a player: nobody signed this
     // launch, or the bot could not be reached. The first is not a fault.
     sayAboutTheChat(
-      mine.why.includes('not opened from Telegram') ? 'app.chatNotOpened' : 'app.chatUnreachable',
-      { why: mine.why },
+      mine.reason === 'outside-telegram' ? 'app.chatNotOpened' : 'app.chatUnreachable',
     );
     return;
   }
@@ -236,6 +236,14 @@ void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine
   }
 
   if (busy) return;
+
+  // A room becomes authoritative only when its game is actually adopted.
+  // Old responses, multi-seat local boards and an in-flight move keep both
+  // the local state and the player's explicit language choice untouched.
+  if (alignWithChat(languageStore, language, mine.standing.language)) {
+    window.location.reload();
+    return;
+  }
 
   chatGame = launch;
   session = { ...session, players: [{ ...session.players[0]!, state }] };
@@ -1667,7 +1675,9 @@ const takeTurn = async (): Promise<void> => {
     const asked = await askForARoll({ initData: chatGame, fetch: (...args) => fetch(...args) });
 
     if (asked.kind !== 'rolled') {
-      el.say.textContent = asked.why;
+      el.say.textContent = asked.kind === 'refused'
+        ? asked.why
+        : messageFor(language, asked.reason === 'outside-telegram' ? 'app.chatNotOpened' : 'app.chatUnreachable');
       el.say.dataset.tone = 'step';
       el.die.disabled = false;
       busy = false;

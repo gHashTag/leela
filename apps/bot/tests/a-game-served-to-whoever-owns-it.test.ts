@@ -55,6 +55,18 @@ const ask = (
   );
 
 group('a game served to whoever Telegram says owns it', () => {
+  it('accepts the signed same-origin GET shape browsers send without Origin', async () => {
+    const answer = await askRoute({ now: () => NOW, token: TOKEN, gameOf: async () => standing })(
+      new Request('https://leela.example/api/game', {
+        headers: { authorization: `tma ${launchAs(1)}` },
+      }),
+    );
+
+    expect(answer.status).toBe(200);
+    expect(await answer.json()).toEqual(standing);
+    expect(answer.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
   it('answers the caller their own game, and asks for it by the vouched id', async () => {
     const asked: string[] = [];
     const answer = await ask(launchAs(8675309), {
@@ -123,6 +135,23 @@ group('what it refuses at the door', () => {
     );
 
     expect(answer.status).toBe(403);
+  });
+
+  it('does not turn the GET exception into no-origin model or mutation access', async () => {
+    const noOrigin = (path: string, method: string) =>
+      askRoute({ now: () => NOW, token: TOKEN })(
+        new Request(`https://leela.example${path}`, {
+          method,
+          headers: path === '/api/ask'
+            ? { 'content-type': 'application/json' }
+            : { authorization: `tma ${launchAs(1)}` },
+          body: path === '/api/ask' ? JSON.stringify({ system: 's', question: 'q' }) : undefined,
+        }),
+      );
+
+    expect((await noOrigin('/api/ask', 'POST')).status).toBe(403);
+    expect((await noOrigin('/api/roll', 'POST')).status).toBe(403);
+    expect((await noOrigin('/api/reports', 'POST')).status).toBe(403);
   });
 
   it('answers a preflight without a body, as the ask route does', async () => {

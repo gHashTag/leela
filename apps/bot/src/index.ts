@@ -491,6 +491,7 @@ const asking = serveAsk({
       plan: seat.state.loka,
       waiting: isWaitingToEnter(seat.state),
       won: hasWon(seat.state),
+      language: room.language,
       // The whole state, so the board can BE this game rather than describe it
       // — `specs/009` step 4, adopt. See `Standing` in serve.ts for why three
       // fields could not be played on.
@@ -585,6 +586,7 @@ const asking = serveAsk({
         plan: seat.state.loka,
         waiting: isWaitingToEnter(seat.state),
         won: hasWon(seat.state),
+        language: after.language,
         state: seat.state,
         yourTurn: currentPlayer(after.session).id === userId,
         moved: access.moved,

@@ -99,7 +99,7 @@ export const askOverHost =
     onChunk?: (part: { text?: string; thinking?: string }) => void,
   ): Promise<string> => {
     const host = poster();
-    if (!host) throw new Refused('no host to ask');
+    if (!host) throw new Refused();
 
     const id = nextId();
     const told: Told = {
@@ -129,7 +129,7 @@ export const askOverHost =
 
       const timer = setTimeout(() => {
         finish();
-        reject(new Refused('the host did not answer'));
+        reject(new Refused());
       }, TIMEOUT_MS);
 
       waiting.set(id, (part) => {
@@ -140,14 +140,14 @@ export const askOverHost =
         }
         if (part.error) {
           finish();
-          reject(new Refused(part.error));
+          reject(new Refused());
           return;
         }
         if (part.done) {
           finish();
           // An empty completion is not an answer; the companion has a fallback
           // for exactly this and should be allowed to use it.
-          if (!answer.trim()) reject(new Refused('empty completion'));
+          if (!answer.trim()) reject(new Refused());
           else resolve(answer);
         }
       });
