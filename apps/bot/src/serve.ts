@@ -55,6 +55,7 @@ import { whoSent } from './vouched';
  */
 export const ALLOWED_ORIGINS = [
   'https://t27.ai',
+  'https://leela-production-e9a0.up.railway.app',
   'http://localhost:5173',
   'http://localhost:4173',
 ];
@@ -777,6 +778,7 @@ interface BunServer {
 }
 
 interface BunLike {
+  file(path: string): Blob & { exists(): Promise<boolean> };
   serve(options: {
     port: number;
     idleTimeout: number;
@@ -788,10 +790,29 @@ export interface ServeAskOptions extends AskRouteOptions {
   /** Defaults to `PORT` from the environment, then `DEFAULT_PORT`. */
   port?: number;
   log?: (line: string) => void;
+  /** Built 3D board served beside the API, when this image carries one. */
+  staticRoot?: string;
 }
 
-/** The route on a socket. All the deciding is `askRoute`'s; this adds a port. */
-export function serveAsk({ port, log = console.log, ...options }: ServeAskOptions = {}): BunServer {
+/** Map a public path into the built board without allowing traversal. */
+export function staticFileFor(root: string, pathname: string): string | null {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return null;
+  }
+
+  if (!decoded.startsWith('/') || decoded.includes('\0')) return null;
+  const pieces = decoded.split('/').filter(Boolean);
+  if (pieces.some((piece) => piece === '.' || piece === '..')) return null;
+  if (decoded.endsWith('/') || pieces.length === 0) pieces.push('index.html');
+
+  return `${root.replace(/\/+$/, '')}/${pieces.join('/')}`;
+}
+
+/** The API and built board on one socket and one deployment. */
+export function serveAsk({ port, log = console.log, staticRoot, ...options }: ServeAskOptions = {}): BunServer {
   const bun = (globalThis as { Bun?: BunLike }).Bun;
   if (!bun) {
     // Refuse at startup rather than 404 at the first question: a process this
@@ -807,7 +828,31 @@ export function serveAsk({ port, log = console.log, ...options }: ServeAskOption
     // question is quiet for as long as the model thinks. 255 seconds is the
     // most Bun accepts.
     idleTimeout: 255,
-    fetch: (request: Request, at: BunServer) => handle(request, at.requestIP(request)?.address),
+    fetch: async (request: Request, at: BunServer) => {
+      const pathname = new URL(request.url).pathname;
+      if (staticRoot && !pathname.startsWith('/api/')) {
+        if (request.method !== 'GET' && request.method !== 'HEAD') {
+          return new Response('GET only', { status: 405 });
+        }
+
+        const path = staticFileFor(staticRoot, pathname);
+        if (path !== null) {
+          const file = bun.file(path);
+          if (await file.exists()) {
+            const immutable = pathname.split('/').includes('assets');
+            return new Response(request.method === 'HEAD' ? null : file, {
+              headers: {
+                'cache-control': immutable
+                  ? 'public, max-age=31536000, immutable'
+                  : 'no-cache',
+              },
+            });
+          }
+        }
+      }
+
+      return handle(request, at.requestIP(request)?.address);
+    },
   };
 
   // The deadline must speak before Bun hangs up, or the refusal is written to
@@ -818,6 +863,9 @@ export function serveAsk({ port, log = console.log, ...options }: ServeAskOption
   }
 
   const server = bun.serve(listening);
-  log(`Answering /api/ask on port ${server.port} for ${ALLOWED_ORIGINS.join(', ')}.`);
+  log(
+    `Answering /api/ask on port ${server.port} for ${ALLOWED_ORIGINS.join(', ')}.` +
+      (staticRoot ? ` Serving the 3D board from ${staticRoot}.` : ''),
+  );
   return server;
 }
