@@ -6,11 +6,15 @@ const policyFiles = ['AGENTS.md', 'CLAUDE.md', '.specify/memory/constitution.md'
 
 const required = [
   'Direct pushes to `main` are forbidden.',
+  'A requested repository change implies',
   'open a PR to `main`',
-  'wait for every required check',
+  'wait for every configured check',
   'Force-pushing shared or protected branches is forbidden.',
-  'explicitly requests the concrete operation and target',
-  'A secret pasted into chat is compromised and',
+  'A request about an existing live surface authorizes deployment',
+  'platform control bots such as `@BotFather`',
+  'Creating infrastructure, changing',
+  'prices, charging money, or messaging users or public channels is not implied.',
+  'When the owner supplies a newly rotated secret',
 ] as const;
 
 function policyProblems(documents: Readonly<Record<string, string>>): string[] {
@@ -19,7 +23,11 @@ function policyProblems(documents: Readonly<Record<string, string>>): string[] {
     for (const sentence of required) {
       if (!text.includes(sentence)) problems.push(`${name}: missing ${sentence}`);
     }
-    if (/Push to `unified` only|No deploying, publishing|Never touch the keystore/.test(text)) {
+    if (
+      /Push to `unified` only|No deploying, publishing|Never touch the keystore|A secret pasted into chat is compromised/.test(
+        text,
+      )
+    ) {
       problems.push(`${name}: still carries the retracted absolute prohibition`);
     }
   }
@@ -27,7 +35,7 @@ function policyProblems(documents: Readonly<Record<string, string>>): string[] {
 }
 
 describe('the authority every coding agent reads', () => {
-  it('agrees on PR-only main integration and scoped live operations', () => {
+  it('agrees on autonomous PR integration and scoped live operations', () => {
     const documents = Object.fromEntries(
       policyFiles.map((name) => [name, readFileSync(new URL(name, ROOT), 'utf8')]),
     );
@@ -35,6 +43,11 @@ describe('the authority every coding agent reads', () => {
   });
 
   it('rejects the stale rule that blocked an owner-authorized repair', () => {
-    expect(policyProblems({ 'stale.md': '- Push to `unified` only. Never `main`.' })).not.toEqual([]);
+    expect(
+      policyProblems({
+        'stale.md':
+          '- Push to `unified` only. Never `main`. A secret pasted into chat is compromised.',
+      }),
+    ).not.toEqual([]);
   });
 });
