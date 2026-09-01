@@ -1587,7 +1587,7 @@ describe('a write a turn asked for, that did not happen', () => {
 
   const failing = (kind: 'report' | 'move') => {
     const reports = new MemoryReportSink();
-    const steps = { record: async () => undefined };
+    const steps = { record: async () => undefined, moved: async () => 0 };
     if (kind === 'report') {
       reports.record = async () => {
         throw new Error('the database went away');

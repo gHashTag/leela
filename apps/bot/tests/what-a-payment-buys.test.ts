@@ -8,11 +8,9 @@
  * can be read back after the process that took the money has gone, and a refund
  * that goes to Telegram first and to this bot's own record second.
  *
- * **What a payment buys is a date, and the tests say so.** Nothing here asserts
- * that a square opens or a report is answered differently, because nothing in
- * this bot gates on `subscribed` — there is no toll in Telegram today and this
- * rail does not add one. What is asserted is that the fact is recorded and can
- * be asked for, which is the whole of what was built.
+ * **What a payment buys is access until a date.** The access decision itself
+ * is held in `paid-play.test.ts`; this file holds the Stars transaction that
+ * creates, extends, reports and refunds that entitlement.
  *
  * The environments are built by hand rather than read from `process.env`: the
  * gate is `offering`'s to answer and it is answered exhaustively next door, so

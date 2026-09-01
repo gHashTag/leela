@@ -182,6 +182,12 @@ export interface Standing {
   state?: GameState;
   /** Whether the die is theirs to throw right now, by the session's own rule. */
   yourTurn?: boolean;
+  /** Successful moves already consumed from the free allowance. */
+  moved?: number;
+  /** Whether a live paid period was found for this player. */
+  entitled?: boolean;
+  /** Whether this deployment has a Stars offer that can reopen the die. */
+  canSubscribe?: boolean;
 }
 
 /**

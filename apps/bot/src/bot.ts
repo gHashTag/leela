@@ -10,6 +10,7 @@ import { Bot, InlineKeyboard, InputFile, Keyboard, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 import {
   FALLBACK_LANGUAGE,
+  SUBSCRIBE_REQUEST,
   type Language,
   bookFor,
   messageFor,
@@ -20,6 +21,7 @@ import { isSessionOver, isWaitingToEnter, rulesText } from '@leela/engine';
 import { MAX_INTENTION_CHARS, isIntention, withoutOne } from '@leela/journal';
 import type { Guide } from '@leela/ai';
 import { Conversations } from './conversation';
+import { accessFor } from './access';
 import * as commands from './commands';
 import type { Button, Effect, Reply, Room } from './commands';
 import {
@@ -1300,8 +1302,46 @@ export function createBot({
     return { intention: (await reports.intention(userId)) ?? '' };
   }
 
+  /** The paid continuation, sent privately from either surface. */
+  async function offerPaidPlay(ctx: Context, userId: string, language: Language): Promise<void> {
+    if (stars === null) {
+      await ctx.reply(messageFor(language, 'pro.cannotTake'));
+      return;
+    }
+
+    const held = await entitlements.subscribed(userId, now());
+    await deliver(ctx, [
+      {
+        text: `${messageFor(language, 'app.tollDue')}\n\n${offerFor(language, stars, held?.until ?? null)}`,
+        broadcast: false,
+      },
+    ]);
+  }
+
   bot.command('roll', async (ctx) => {
     const who = sender(ctx);
+    const chatId = chatIdOf(ctx);
+
+    // The same durable, per-player allowance `/api/roll` asks. The room is
+    // checked first so a player with no table still hears the ordinary game
+    // answer rather than a payment offer for a game that does not exist.
+    if (who && chatId && stars !== null) {
+      const room = await store.get(chatId);
+      if (room?.session.players.some((player) => player.id === who.id)) {
+        const access = await accessFor({
+          userId: who.id,
+          stars,
+          entitlements,
+          steps,
+          now: now(),
+        });
+        if (!access.mayMove) {
+          await offerPaidPlay(ctx, who.id, room.language);
+          return;
+        }
+      }
+    }
+
     const asked = who ? await askedOf(who.id) : undefined;
 
     // The table's language, taken from inside `withRoom` rather than read a
@@ -1411,6 +1451,15 @@ export function createBot({
 
     const language = languageOf(ctx);
     const sent = ctx.message.web_app_data.data;
+
+    // The paywall button uses the same reply-keyboard bridge as a handed-over
+    // square, with a versioned value that cannot be mistaken for one. Return
+    // to the chat with the three offers; no journal reader sees this message.
+    if (sent === SUBSCRIBE_REQUEST) {
+      await offerPaidPlay(ctx, who.id, language);
+      return;
+    }
+
     const existing = reports.history ? await reports.history(who.id) : null;
     const outcome = decideSquare(sent, existing?.map(asReport) ?? null, now());
 
@@ -1688,9 +1737,8 @@ export function createBot({
   /**
    * The Telegram Stars rail — and everything about it is inside this `if`.
    *
-   * Whether this game charges for anything, and what for, is the owner's
-   * decision and has not been made. So the rail is written, tested and dark:
-   * with no price in the environment, `stars` is `null`, none of the four
+   * The owner's configured prices are the switch. With no price in the
+   * environment, `stars` is `null`, none of the four
    * registrations below happens, `/pro` is not in the menu or the help, no
    * invoice can be assembled — `invoiceFor` refuses one and says why — and a
    * deployment answers exactly what it answered before this block existed.
@@ -1704,11 +1752,9 @@ export function createBot({
    * or a `successful_payment` produces zero calls, and that nothing said
    * anywhere carries a word from the Stars catalogue.
    *
-   * **The rail gates nothing.** There is no toll in this bot today and this
-   * does not add one: a payment is recorded and exposed through
-   * `entitlements.subscribed`, and every square, report, throw and answer is
-   * as free as it was. What the copy in `@leela/content` says about that is
-   * the whole of what is true — see the note above `pro.free`.
+   * When it is priced, the first three successful moves are free and a live
+   * entitlement opens every later roll. `/roll` and `/api/roll` ask the same
+   * `accessFor` decision, so chat and mini app cannot sell different games.
    */
   if (stars) {
     /**
@@ -1743,8 +1789,7 @@ export function createBot({
 
       if (!tier) {
         // What they already hold, said back to them. The one place this bot
-        // reads an entitlement out loud — and it changes nothing about the
-        // game, which is what the sentence beside it says.
+        // reads an entitlement out loud, beside the access it opens.
         const held = await entitlements.subscribed(who.id, now());
         await deliver(ctx, [
           { text: offerFor(language, stars, held?.until ?? null), broadcast: false },

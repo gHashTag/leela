@@ -1,12 +1,10 @@
 /**
  * The Telegram Stars rail: dark until somebody names a price.
  *
- * Whether this game charges for anything, and what for, is the owner's
- * decision and has not been made. So the rail is built, tested, and **off**:
- * with none of `LEELA_STARS_MONTH`, `LEELA_STARS_HALFYEAR`,
- * `LEELA_STARS_YEAR` set, `offering` answers `null`, no command is registered,
- * no invoice can be assembled, and a deployment behaves exactly as it did
- * before this file existed.
+ * The owner prices the game in the environment. With none of
+ * `LEELA_STARS_MONTH`, `LEELA_STARS_HALFYEAR`, `LEELA_STARS_YEAR` set,
+ * `offering` answers `null`, no command is registered, no invoice can be
+ * assembled, and the shared access decision leaves play open.
  *
  * Everything here is pure. The transport in `bot.ts` reads the environment
  * once, at startup, and hands the answer down — so a variable changed under a
@@ -334,10 +332,10 @@ export function asDay(at: number): string {
 /**
  * What `/pro` says: the offer, the tiers, and what is already held.
  *
- * Every claim in it is bounded by `messages.ts`'s own rule — the game is free,
- * this buys a date, and nothing opens or closes with it. The list is built
- * from the priced tiers rather than from a written-out list of three, so a
- * deployment that priced one names one.
+ * Every claim in it is bounded by the shared access rule: three successful
+ * moves are free, and an entitlement opens later rolls until its date. The
+ * list is built from the priced tiers rather than from a written-out list of
+ * three, so a deployment that priced one names one.
  */
 export function offerFor(
   language: Language,

@@ -25,6 +25,7 @@ import {
   MemoryNudgeStore,
   MemoryReportSink,
   MemoryRoomStore,
+  MemoryStepSink,
   type EntitlementStore,
   type NudgeStore,
   type ReportSink,
@@ -47,9 +48,9 @@ export const PRUNE_EVERY_MS = 24 * 60 * 60 * 1000;
 export interface Storage {
   store: RoomStore;
   reports: ReportSink;
-  steps?: StepSink;
+  steps: StepSink;
   /**
-   * The initiative's per-player memory. Always present, unlike `steps`: the
+   * The initiative's per-player memory. Always present, like `steps`: the
    * daily word must not knock twice in one morning even when nothing is kept,
    * so the memory fallback is a working store rather than an absence.
    */
@@ -149,6 +150,7 @@ export function openStorage({
     return {
       store: new MemoryRoomStore(),
       reports: new MemoryReportSink(),
+      steps: new MemoryStepSink(),
       nudges: new MemoryNudgeStore(),
       entitlements: new MemoryEntitlementStore(),
       durable: false,
@@ -196,6 +198,7 @@ export function openStorage({
     return {
       store: new MemoryRoomStore(),
       reports: new MemoryReportSink(),
+      steps: new MemoryStepSink(),
       nudges: new MemoryNudgeStore(),
       entitlements: new MemoryEntitlementStore(),
       durable: false,

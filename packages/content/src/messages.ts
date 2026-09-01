@@ -481,15 +481,9 @@ const EN = {
   'app.voiceOff': 'Back to the plain voice',
   'app.voiceFailed': 'The better voice would not come; the plain one still reads',
 
-  /**
-   * Three throws free, then the game asks for a subscription.
-   *
-   * Two sentences, not one. The warning comes on the last free throw — before
-   * the die stops rather than after — and the ask comes when it has. A single
-   * message would have to be either a nag or a surprise.
-   */
-  'app.tollLast': 'One free throw left.',
-  'app.tollDue': 'The three free throws are used. A subscription opens the rest of the board.',
+  /** Three successful moves free, then one shared subscription gate. */
+  'app.tollLast': 'One free move left.',
+  'app.tollDue': 'The three free moves are used. A subscription opens the rest of the board.',
   /**
    * Where a line came from, printed beside it.
    *
@@ -794,24 +788,11 @@ const EN = {
 
   // --- what a star buys ------------------------------------------------------
   //
-  // Telegram Stars, and the one rule these sentences are written under: **say
-  // nothing that is not true of the product today.** Nothing in this game is
-  // behind a payment — not a square, not a report, not the companion — and
-  // `apps/bot/src/stars.ts` deliberately gates nothing, so a line here
-  // promising a feature would be promising something no code delivers. What is
-  // true is that a payment is support for the work and that the bot keeps a
-  // date for it, and that is what these say.
-  //
-  // A deployment that has named no price says none of this at all: `/pro` is
-  // not registered, so these keys are unreachable rather than merely unused.
-  // Present tense, deliberately. *Leela stays free* would be a promise about
-  // a decision nobody has made, in the product's own voice, enforced by
-  // nothing — the one shape of sentence this catalogue is written to avoid.
-  // What is checkable is what is true now, and it is checkable today.
-  'pro.free': 'Leela is free to play: no square, no report and no answer is behind this.',
-  'pro.buys':
-    'A subscription is support for the work. What it buys is a date this bot keeps for you — ' +
-    'nothing in the game opens when it is set, and nothing closes when it runs out.',
+  // Telegram Stars. A deployment with no price exposes none of this and gates
+  // nothing. A priced deployment gives three successful moves and then uses
+  // the same entitlement for the chat die and the mini-app die.
+  'pro.free': 'Your first three successful moves are free.',
+  'pro.buys': 'A subscription opens the rest of the game until the date this bot keeps for you.',
   // One line per priced tier. `{command}` is what to send, so the list is also
   // the instructions; the count is days, because that is what the arithmetic
   // behind it actually adds.
@@ -823,16 +804,12 @@ const EN = {
   // operator's act and not automatic, and the sentence says exactly that
   // rather than promising a right or a turnaround nobody has agreed to.
   'pro.refundable': 'Paid in Telegram Stars. A refund is possible, through whoever runs this bot.',
-  'pro.held': 'You are supporting the work until {until}.',
+  'pro.held': 'Your game is open until {until}.',
   // The invoice itself. Telegram takes 1–32 characters of title and 1–255 of
   // description, and refuses the whole call rather than trimming.
-  'pro.title': 'Leela — support',
-  'pro.description':
-    'Support for Leela, kept as a date {days} days from the payment. ' +
-    'It unlocks nothing: everything in the game is free.',
-  'pro.thanks':
-    'Thank you. It is kept until {until}. Nothing in the game has changed, which is the ' +
-    'honest part of this — you have supported the work, not bought your way past it.',
+  'pro.title': 'Leela — subscription',
+  'pro.description': 'Open every move in Leela for {days} days from payment.',
+  'pro.thanks': 'Thank you. The die stays open until {until}.',
   // The two ways a payment can arrive and not be recorded. Both say plainly
   // that money changed hands and that a refund is the way back, because the
   // alternative is a player who has paid and been told nothing.
@@ -845,7 +822,7 @@ const EN = {
   // Shown by Telegram inside the payment sheet when the bot refuses, so it is
   // read at the moment somebody is trying to pay.
   'pro.cannotTake': 'This bot cannot take that payment: the offer it was made against is gone.',
-  'pro.refunded': '{stars} ⭐ have been returned to you. The date they bought has been let go.',
+  'pro.refunded': '{stars} ⭐ have been returned to you. Paid access has ended.',
   // What the operator reads. Localised like everything else: whoever runs a
   // deployment reads it in their own language too.
   'pro.refundDone': 'Refunded {stars} ⭐ to {user}, and the entitlement is cleared.',
@@ -1145,8 +1122,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.voiceGetting': 'Загружаю голос… {percent}%',
   'app.voiceOff': 'Вернуть обычный голос',
   'app.voiceFailed': 'Живой голос не загрузился; читает обычный',
-  'app.tollLast': 'Остался один бесплатный бросок.',
-  'app.tollDue': 'Три бесплатных броска использованы. Подписка открывает остальную доску.',
+  'app.tollLast': 'Остался один бесплатный ход.',
+  'app.tollDue': 'Три бесплатных хода использованы. Подписка открывает остальную доску.',
   'app.fromText': 'из текста',
   'app.fromModel': 'модель',
   'app.unanswered': 'без ответа',
@@ -1295,14 +1272,10 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'quiet.on': 'Тихо. Ежедневное слово больше не приходит — /quiet вернёт его, когда захотите.',
   'quiet.off': 'Ежедневное слово вернётся завтра.',
 
-  // Telegram Stars. Под тем же правилом, что и английские: ничего, что не
-  // верно о продукте сегодня. Ни один план, ни один отчёт и ни один ответ не
-  // закрыт оплатой, и код ничего не закрывает.
-  'pro.free':
-    'Лила бесплатна: ни один план, ни один отчёт и ни один ответ этим не закрыт.',
-  'pro.buys':
-    'Подписка — это поддержка работы. Она покупает дату, которую бот хранит для вас: ' +
-    'пока она есть, в игре ничего не открывается, и когда она заканчивается, ничего не закрывается.',
+  // Telegram Stars. Без цен платёжный контур невидим и ничего не блокирует.
+  // С ценами одна подписка открывает ходы и в чате, и в мини-приложении.
+  'pro.free': 'Первые три успешных хода бесплатны.',
+  'pro.buys': 'Подписка открывает продолжение игры до даты, которую бот хранит для вас.',
   'pro.tier': {
     one: '{command} — {count} день за {stars} ⭐',
     few: '{command} — {count} дня за {stars} ⭐',
@@ -1310,14 +1283,10 @@ const RU: Partial<Record<MessageKey, Message>> = {
     other: '{command} — {count} дней за {stars} ⭐',
   },
   'pro.refundable': 'Оплата в Telegram Stars. Возврат возможен — через того, кто держит бота.',
-  'pro.held': 'Вы поддерживаете работу до {until}.',
-  'pro.title': 'Лила — поддержка',
-  'pro.description':
-    'Поддержка Лилы: бот хранит дату — {days} дней с момента оплаты. ' +
-    'Ничего не открывает: в игре всё бесплатно.',
-  'pro.thanks':
-    'Спасибо. Дата сохранена до {until}. В игре ничего не изменилось — и это здесь честная часть: ' +
-    'вы поддержали работу, а не купили обход.',
+  'pro.held': 'Игра открыта до {until}.',
+  'pro.title': 'Лила — подписка',
+  'pro.description': 'Открывает все ходы в Лиле на {days} дней с момента оплаты.',
+  'pro.thanks': 'Спасибо. Кубик открыт до {until}.',
   'pro.notKept':
     'Платёж дошёл до Telegram, а записать его бот не смог. Ничего не потеряно, чего не вернуть: ' +
     'скажите тому, кто держит бота, и назовите дату.',
@@ -1325,7 +1294,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
     'Платёж пришёл, и бот не понимает, за что он, поэтому не записал ничего. ' +
     'Попросите возврат у того, кто держит бота.',
   'pro.cannotTake': 'Бот не может принять этот платёж: предложения, по которому он выставлен, больше нет.',
-  'pro.refunded': '{stars} ⭐ вернулись к вам. Дата, которую они купили, отпущена.',
+  'pro.refunded': '{stars} ⭐ вернулись к вам. Платный доступ завершён.',
   'pro.refundDone': 'Возвращено {stars} ⭐ игроку {user}, запись очищена.',
   'pro.refundWhich': 'Какой платёж? Отправьте /refund и идентификатор списания из журнала.',
   'pro.refundUnknown': 'Здесь нет платежа с идентификатором {charge}.',

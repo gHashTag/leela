@@ -51,9 +51,9 @@ import type { SeatedPlayer } from '@leela/engine';
 import { canDraw } from './drawable';
 import { createBoard } from './scene';
 import { atEnd, bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
-import { askForARoll, myGame } from './mine';
+import { askForARoll, myGame, type Standing as ChatStanding } from './mine';
 import { sendMyPath } from './sending';
-import { launchOf, meetTelegram, nameAskOrigin, telegramOf } from './telegram';
+import { askTelegramToSubscribe, launchOf, meetTelegram, nameAskOrigin, telegramOf } from './telegram';
 import { css } from './theme';
 import {
   hearing,
@@ -143,6 +143,23 @@ const launch = launchOf(telegramOf());
  */
 let chatGame: string | null = null;
 
+/** The server-authoritative paid state for a game adopted from the chat. */
+let chatAccess: { taken: number; entitled: boolean; hosted: boolean } | null = null;
+
+const rememberChatAccess = (standing: ChatStanding): void => {
+  if (
+    typeof standing.moved === 'number' &&
+    typeof standing.entitled === 'boolean' &&
+    typeof standing.canSubscribe === 'boolean'
+  ) {
+    chatAccess = {
+      taken: standing.moved,
+      entitled: standing.entitled,
+      hosted: standing.canSubscribe,
+    };
+  }
+};
+
 /**
  * Say which of the five things happened, always.
  *
@@ -202,6 +219,7 @@ void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine
    * a player's path on the other side of it.
    */
   const state = mine.standing.state;
+  rememberChatAccess(mine.standing);
 
   // A bot too old to send a state is a bot that needs deploying, and the board
   // says so rather than quietly showing a different game.
@@ -231,6 +249,7 @@ void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine
   // Said on success too, so the line means *this is the chat's game* rather
   // than *here is a number from somewhere else*.
   sayAboutTheChat('app.chatAdopted', { plan: state.loka });
+  showGate();
 });
 
 
@@ -473,7 +492,8 @@ if (window.visualViewport) {
  * the player has just paid for it.
  */
 el.tollOpen.addEventListener('click', () => {
-  askToSubscribe();
+  if (askToSubscribe()) return;
+  askTelegramToSubscribe(telegramOf());
 });
 
 window.addEventListener(ENTITLEMENT_CHANGED, () => showGate());
@@ -1117,7 +1137,7 @@ const showGate = (): void => {
    * The account comes first when both are due: it is the thing they can do
    * something about without a card.
    */
-  const toll = tollFor({
+  const toll = tollFor(chatAccess ?? {
     // Moves, not throws. A six is what puts you on the board, and charging for
     // the throws that failed to find one meant 58% of new players met the
     // paywall having never stood on a plane.
@@ -1141,7 +1161,7 @@ const showGate = (): void => {
   el.owed.textContent = held ? messageFor(language, 'app.owed') : '';
   el.owed.hidden = !held;
 
-  // Said on the last free throw and when they have run out; silent otherwise,
+  // Said on the last free move and when they have run out; silent otherwise,
   // and silent for anybody who will never be asked - `left` is null for them.
   const say = !toll.mayThrow
     ? messageFor(language, 'app.tollDue')
@@ -1653,6 +1673,7 @@ const takeTurn = async (): Promise<void> => {
       busy = false;
       return;
     }
+    rememberChatAccess(asked.rolled.standing);
     value = asked.rolled.roll;
   } else {
     value = rollDie();

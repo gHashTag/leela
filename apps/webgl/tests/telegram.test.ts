@@ -3,7 +3,14 @@ import { readFileSync } from 'node:fs';
 
 import { blank } from '../../../scripts/lib/source.mjs';
 
-import { meetTelegram, nameAskOrigin, telegramOf, themeVars } from '../src/telegram';
+import { SUBSCRIBE_REQUEST } from '@leela/content';
+import {
+  askTelegramToSubscribe,
+  meetTelegram,
+  nameAskOrigin,
+  telegramOf,
+  themeVars,
+} from '../src/telegram';
 
 /**
  * Everything this file guards arrives from software this repository does not
@@ -197,6 +204,43 @@ describe('telegramOf', () => {
     } finally {
       delete page.Telegram;
     }
+  });
+});
+
+describe('the subscription handoff', () => {
+  it('sends the shared versioned request and returns to the bot', () => {
+    const sent: string[] = [];
+    let closed = 0;
+    const app = {
+      ready: () => undefined,
+      expand: () => undefined,
+      initData: 'signed launch',
+      sendData: (data: string) => sent.push(data),
+      close: () => { closed += 1; },
+    };
+
+    expect(askTelegramToSubscribe(app)).toBe(true);
+    expect(sent).toEqual([SUBSCRIBE_REQUEST]);
+    expect(closed).toBe(1);
+  });
+
+  it('sends nothing outside a signed Telegram launch', () => {
+    let sent = 0;
+    const empty = {
+      ready: () => undefined,
+      expand: () => undefined,
+      initData: '',
+      sendData: () => { sent += 1; },
+    };
+
+    expect(askTelegramToSubscribe(null)).toBe(false);
+    expect(askTelegramToSubscribe(empty)).toBe(false);
+    expect(askTelegramToSubscribe({
+      ready: () => undefined,
+      expand: () => undefined,
+      initData: 'signed',
+    })).toBe(false);
+    expect(sent).toBe(0);
   });
 });
 

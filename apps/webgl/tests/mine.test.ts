@@ -30,6 +30,20 @@ group('what the bot said', () => {
     expect(answer).toEqual({ kind: 'standing', standing: { plan: 8, waiting: false, won: false } });
   });
 
+  it('carries the bot’s access decision without inventing a browser balance', async () => {
+    const standing = {
+      plan: 8,
+      waiting: false,
+      won: false,
+      moved: 3,
+      entitled: false,
+      canSubscribe: true,
+    };
+
+    await expect(myGame({ initData: LAUNCH, fetch: answering(200, standing) }))
+      .resolves.toEqual({ kind: 'standing', standing });
+  });
+
   it('carries the launch as the scheme the bot checks', async () => {
     let sent: string | null = null;
     const spy = (async (_url: string, init?: RequestInit) => {

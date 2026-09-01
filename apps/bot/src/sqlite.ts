@@ -632,6 +632,14 @@ export class SqliteRoomQueries implements RoomQueries {
     }));
   }
 
+  /** Successful moves a player has made; refused throws keep the same plan. */
+  movesFor(userId: string): number {
+    const row = this.db
+      .prepare('SELECT COUNT(*) AS count FROM game_steps WHERE user_id = ? AND from_plan <> to_plan')
+      .get(userId) as Record<string, unknown> | undefined;
+    return Number(row?.count ?? 0);
+  }
+
   /**
    * Keep a report. The same database, so one file holds a whole deployment.
    *
@@ -871,6 +879,9 @@ export function sqliteStepSink(queries: SqliteRoomQueries) {
       ruleset: import('@leela/engine').RuleSet;
     }): Promise<void> {
       queries.recordStep(gameStepRow(step.userId, step.event, step.ruleset));
+    },
+    async moved(userId: string): Promise<number> {
+      return queries.movesFor(userId);
     },
   };
 }

@@ -9,6 +9,8 @@
 
 import { TOTAL_PLANS } from '@leela/engine';
 
+export { FREE_MOVES, SUBSCRIBE_REQUEST } from './access';
+
 export interface Plan {
   /** 1..72 */
   plan: number;

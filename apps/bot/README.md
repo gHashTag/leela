@@ -242,14 +242,14 @@ wrote. The startup line says which of the two states this process is in, and
 names the variable when it is a typo — otherwise a mistyped price is invisible,
 because the bot runs either way.
 
-**What a subscription buys, said plainly.** A date, and nothing else. Nothing in
-this game is behind a payment — not a square, not a report, not the companion —
-and `subscribed(userId, now)` is recorded and exposed and read by no gate. The
-copy in `@leela/content` says exactly that (*it unlocks nothing: everything in
-the game is free*), because the alternative is selling a benefit that no code
-delivers. It says it in the present tense: *stays free* would be a promise about
-a decision nobody has made, enforced by nothing. If a benefit is ever decided
-on, the entitlements are already on the disk to honour it from.
+**What a subscription buys, said plainly.** Every player receives three
+successful moves for free. A throw that cannot enter the board or would
+overshoot it does not consume that allowance. From the fourth successful move,
+one live entitlement opens both `/roll` in the chat and `/api/roll` used by the
+mini app until its recorded expiry. The count is durable and per player, so a
+reload, another chat, or another surface cannot refill or double-spend it. A
+deployment with no configured price remains fully open and shows no payment
+surface.
 
 **Refunds.** Telegram requires that a bot taking Stars can give them back.
 `/refund <charge id>` calls `refundStarPayment` and then clears this bot's own
