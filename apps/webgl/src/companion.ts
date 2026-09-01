@@ -185,6 +185,8 @@ export class Companion {
   private silenced = false;
   private rests: Rests | null = null;
   private journey: number[] = [];
+  /** Invalidates model work that belongs to a game the screen replaced. */
+  private generation = 0;
 
   constructor({ language, ask, modelName, onProgress }: CompanionOptions) {
     this.onProgress = onProgress ?? null;
@@ -331,12 +333,14 @@ export class Companion {
       return;
     }
 
+    const generation = this.generation;
     this.thinking = true;
     this.note = null;
     try {
       this.streaming = { text: '', thinking: '' };
       const answer = (
         await this.ask(said, rests, this.lines, (part) => {
+          if (generation !== this.generation) return;
           if (!this.streaming) return;
           if (part.thinking) this.streaming.thinking += part.thinking;
           if (part.text) this.streaming.text += part.text;
@@ -353,6 +357,10 @@ export class Companion {
           }
         })
       ).trim();
+      // The awaited answer belongs to the game and plan captured above. A chat
+      // adoption can replace both while it is in flight; late work must not
+      // append a fact from the discarded game to the new thread.
+      if (generation !== this.generation) return;
       const reasoned = this.streaming?.thinking ?? '';
       this.streaming = null;
       // Nothing is not an answer. `@leela/ai` learned this from a provider
@@ -371,6 +379,7 @@ export class Companion {
         },
       ];
     } catch {
+      if (generation !== this.generation) return;
       this.streaming = null;
       this.silenced = true;
       // Provider, route and deployment detail is not player-facing copy. The
@@ -387,16 +396,23 @@ export class Companion {
         },
       ];
     } finally {
-      this.thinking = false;
+      if (generation === this.generation) this.thinking = false;
     }
   }
 
-  /** A new game. The thread goes with it; the model's refusal does not. */
-  reset(): void {
+  /**
+   * A new game. The thread goes with it. A server adoption also retries a
+   * refusal, because that refusal belonged to the replaced game's request.
+   */
+  reset({ retry = false }: { readonly retry?: boolean } = {}): void {
+    this.generation += 1;
     this.lines = [];
     this.journey = [];
     this.rests = null;
     this.note = null;
+    this.thinking = false;
+    this.streaming = null;
+    if (retry) this.silenced = false;
   }
 }
 
