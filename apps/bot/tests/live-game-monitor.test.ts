@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { CLASSIC, applyRoll, initialState } from '@leela/engine';
+import { blank } from '../../../scripts/lib/source.mjs';
 import {
   liveGameExitCode,
   liveGamePlayerIsActive,
@@ -132,5 +134,33 @@ describe('the player selected for a production probe', () => {
         is_finished: true,
       }),
     ).toBe(false);
+  });
+});
+
+describe('the production image contract', () => {
+  it('ships the Railway SSH monitor at the repository-relative path its wrapper invokes', () => {
+    const dockerfile = readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8');
+    const runtime = dockerfile
+      .split(/(?=^FROM )/gm)
+      .find((stage) => /^FROM manifests AS runtime$/m.test(stage));
+    const instructions = runtime
+      ?.split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line !== '' && !line.startsWith('#'));
+
+    expect(instructions).toContain(
+      'COPY scripts/monitor-live-game.mjs scripts/monitor-live-game.mjs',
+    );
+  });
+
+  it('uses the linked Railway target instead of a partial service override', () => {
+    const monitor = blank(
+      readFileSync(new URL('../../../scripts/monitor-live-game.mjs', import.meta.url), 'utf8'),
+    );
+
+    expect(monitor).toContain(
+      "['ssh', 'bun', 'run', 'scripts/monitor-live-game.mjs', '--inside']",
+    );
+    expect(monitor).not.toContain("['ssh', '--service'");
   });
 });

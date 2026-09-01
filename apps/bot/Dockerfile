@@ -61,6 +61,7 @@ RUN bun install --frozen-lockfile --production
 # ones replaces links that were made for this image with links made for a Mac.
 COPY packages packages
 COPY apps/bot apps/bot
+COPY scripts/monitor-live-game.mjs scripts/monitor-live-game.mjs
 COPY --from=web-builder /app/apps/webgl/dist apps/webgl/dist
 
 # Where games and reports live. The volume is mounted by the platform (Railway

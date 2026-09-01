@@ -10,6 +10,8 @@
 - [x] Wire all five milestones with failure isolation.
 - [x] Add aggregate operator evidence.
 - [x] Implement and test the signed Railway sync/403 monitor.
+- [x] Prove the monitor entry script is shipped in the Railway runtime image.
+- [x] Pass adversarial follow-up review of the monitor image and CLI adapter.
 - [x] Run focused, package, repository, and explicit audit gates.
 - [x] Obtain independent review and resolve findings.
 - [ ] Open PR, pass checks, merge, deploy, and verify production.

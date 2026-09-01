@@ -27,7 +27,7 @@ const inside = process.argv.includes('--inside');
 if (!inside) {
   const remote = spawnSync(
     'railway',
-    ['ssh', '--service', 'leela', 'bun', 'run', 'scripts/monitor-live-game.mjs', '--inside'],
+    ['ssh', 'bun', 'run', 'scripts/monitor-live-game.mjs', '--inside'],
     { cwd: process.cwd(), encoding: 'utf8', timeout: 60_000 },
   );
   if (remote.error || remote.status === null) {
