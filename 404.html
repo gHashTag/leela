@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leela — that page is not here</title>
+<meta name="robots" content="noindex">
+<!--
+  The page a wrong address lands on.
+
+  A book of 1,784 pages published at a public URL collects old links, and a
+  static host answers a missing one with its own page: *Page not found · GitHub
+  Pages*, in English, about GitHub, with no way back to the game or the book. A
+  reader who mistyped a plan number was simply somewhere else.
+
+  In English because nothing about a wrong URL says who arrived at it — the same
+  reason a language without a translated privacy policy is served the English
+  one rather than an empty page.
+
+  Plain HTML with no script and no build step: this is the page that has to work
+  when something else did not.
+-->
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, 'Times New Roman', serif;
+    background: #fbfbfa;
+    color: #1a1a1a;
+  }
+  main { max-width: 32rem; padding: 2rem; text-align: center; }
+  h1 { font-size: 1.5rem; font-weight: normal; margin: 0 0 0.75rem; }
+  p { margin: 0 0 1.75rem; color: #555; line-height: 1.5; }
+  a {
+    display: inline-block;
+    margin: 0 0.4rem;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    text-decoration: none;
+    color: inherit;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #121212; color: #ededed; }
+    p { color: #a5a5a5; }
+  }
+</style>
+</head>
+<body>
+  <main>
+    <h1>That page is not here.</h1>
+    <p>The board has 72 plans and the book has them in 22 languages — but not at this address.</p>
+    <a href="/leela/">The game</a>
+    <a href="/leela/docs/">The book</a>
+  </main>
+</body>
+</html>
