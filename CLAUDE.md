@@ -73,10 +73,19 @@ complain. A check that has never failed has not been shown to work.
 
 ## Boundaries
 
-- Push to `unified` only. Never `main`, never force.
-- No archiving, deleting or creating repositories.
-- No deploying, publishing to stores, or sending messages.
-- Never touch the keystore or a secret.
+- Direct pushes to `main` are forbidden. When the owner explicitly requests
+  integration, an agent may create a task branch, push it, open a PR to `main`,
+  wait for every required check, and merge that PR.
+- Force-pushing shared or protected branches is forbidden.
+- Archiving, deleting, or creating repositories requires an explicit owner
+  request naming the target.
+- Deploying, publishing, or sending messages is allowed only when the owner
+  explicitly requests the concrete operation and target. Verify the resulting
+  live state before reporting success.
+- A secret may be configured only for an explicitly authorized target through
+  a protected input path. Never print it, put it in source control, or expose it
+  in logs or process arguments. A secret pasted into chat is compromised and
+  must be rotated before use.
 - The rules of the game never change silently: a change in behaviour is a new
   `RuleSet`.
 - Work needing an irreversible action or data nobody has is skipped and

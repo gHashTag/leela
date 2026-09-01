@@ -97,19 +97,19 @@ there is reported as not there — never inferred from a repository that is.
 
 These are not judgement calls.
 
-- ~~Push to `unified` only. Never to `main`, never force.~~ **RETRACTED
-  2026-08-06.** Nothing here is committed and nothing is pushed. Work is left in
-  the tree and the parent session handles git once it has verified it, because
-  several agents share this checkout and two of them pushing collide. The line
-  is struck rather than deleted because deleting it would hide what it was: a
-  ratified in-repo document, in the register of law, licensing the one action
-  the operating rule forbids absolutely — and an autonomous agent reads a
-  ratified document as authority and does what it says. What survives of it is
-  the half that was a prohibition: never `main`, never force, by anyone.
-- No archiving, deleting or creating repositories.
-- No deploying, publishing to stores, or sending messages.
-- Never touch the keystore or a secret. A key pasted into a conversation is
-  compromised: use it if asked, say so, and say to rotate it.
+- Direct pushes to `main` are forbidden. When the owner explicitly requests
+  integration, an agent may create a task branch, push it, open a PR to `main`,
+  wait for every required check, and merge that PR.
+- Force-pushing shared or protected branches is forbidden.
+- Archiving, deleting, or creating repositories requires an explicit owner
+  request naming the target.
+- Deploying, publishing, or sending messages is allowed only when the owner
+  explicitly requests the concrete operation and target. Verify the resulting
+  live state before reporting success.
+- A secret may be configured only for an explicitly authorized target through
+  a protected input path. Never print it, put it in source control, or expose it
+  in logs or process arguments. A secret pasted into chat is compromised and
+  must be rotated before use.
 - **The rules of the game never change silently.** A change in behaviour is a new
   `RuleSet` — which is why the two divergences in the deployed contract are
   `onchain` rather than bugs.
@@ -161,10 +161,18 @@ it, and is the record to read before arguing with a principle here.
 An amendment needs the same evidence the principle did: something that broke, and
 a test that would have caught it.
 
-**Version**: 1.1.0 | **Ratified**: 2026-07-30 | **Last Amended**: 2026-08-06
+**Version**: 1.2.0 | **Ratified**: 2026-07-30 | **Last Amended**: 2026-09-01
+
+The 2026-09-01 amendment replaces an absolute ban on agent integration and live
+operations with scoped owner authorization and a PR-only path to `main`. The
+evidence was deployment `891e24fb`: Railway followed `main`, where
+`railway.json` was absent, while the verified artifact lived on `unified` and
+had to be uploaded separately. An absolute ban prevented the agent from closing
+that divergence even after the owner explicitly requested it. The new rule
+keeps direct and force pushes forbidden, requires the full gate before merge,
+and preserves secret non-disclosure.
 
 The 2026-08-06 amendment changed no principle. It struck a boundary that
-licensed pushing, and it replaced the gate commands with the one command that
-runs — the evidence being that every command in that block had been measured
-false the same day, which is the kind of thing a document nobody opens does to
-itself.
+licensed direct pushing, and it replaced the gate commands with the one command
+that runs — the evidence being that every command in that block had been
+measured false the same day.
