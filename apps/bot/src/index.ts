@@ -443,6 +443,7 @@ const asking = serveAsk({
   model,
   stream: process.env.ZAI_API_KEY ? zaiStream(process.env.ZAI_API_KEY) : undefined,
   token,
+  staticRoot: process.env.LEELA_WEB_ROOT,
   /**
    * One player's own game, for `/api/game` — `specs/009`, which the owner
    * settled on 2026-08-28 with «да 3D поле везде!».

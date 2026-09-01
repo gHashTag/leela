@@ -8,7 +8,7 @@
 # TypeScript is run directly. Bun executes it, the packages have no build step,
 # and adding one here would mean a second description of what the source is.
 
-FROM oven/bun:1.3.12-slim
+FROM oven/bun:1.3.12-slim AS manifests
 
 WORKDIR /app
 
@@ -36,6 +36,23 @@ COPY apps/mobile/package.json apps/mobile/
 # Same for the three-dimensional board, for the same reason.
 COPY apps/webgl/package.json apps/webgl/
 
+FROM manifests AS web-builder
+
+RUN bun install --frozen-lockfile
+
+COPY packages packages
+COPY apps/webgl apps/webgl
+COPY apps/miniapp apps/miniapp
+COPY apps/docs apps/docs
+
+RUN VITE_ASK_ORIGIN=https://leela-production-e9a0.up.railway.app \
+      bun run --cwd apps/webgl build -- --base=./ \
+  && bun run --cwd apps/miniapp build \
+  && cp -R apps/miniapp/dist apps/webgl/dist/classic \
+  && bun run --cwd apps/docs build ../webgl/dist/docs
+
+FROM manifests AS runtime
+
 RUN bun install --frozen-lockfile --production
 
 # Sources over the top. Bun's isolated linker puts the workspace links inside
@@ -44,11 +61,13 @@ RUN bun install --frozen-lockfile --production
 # ones replaces links that were made for this image with links made for a Mac.
 COPY packages packages
 COPY apps/bot apps/bot
+COPY --from=web-builder /app/apps/webgl/dist apps/webgl/dist
 
 # Where games and reports live. The volume is mounted by the platform (Railway
 # rejects a Dockerfile VOLUME outright: "use Railway Volumes"); without one the
 # bot still runs and says so on startup, and forgets everything on next deploy.
 ENV LEELA_DB=/data/leela.db
+ENV LEELA_WEB_ROOT=/app/apps/webgl/dist
 
 # `supervise` in src/index.ts restarts the polling loop when a poll fails,
 # which is the failure a `bot.catch` does not cover.
