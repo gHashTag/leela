@@ -93,23 +93,43 @@ given disk. `bun scripts/audit-copies.mjs` names which are present and which are
 absent, and says how much of the tree each of its findings covers. What is not
 there is reported as not there — never inferred from a repository that is.
 
+### VIII. Finish the operating loop
+
+An implementation that never reaches the player is not a finished live fix.
+For a requested repository change, the normal reversible path — task branch,
+tests, PR, configured checks, and merge — is part of the work rather than a set
+of chores returned to the owner. For a defect on an existing live Leela
+surface, deployment and live verification are part of the same outcome.
+
+Autonomy means pursuing that outcome through failures: read the logs, repair
+the cause, retry transient infrastructure, and verify the public behaviour. It
+does not mean inventing a product decision or widening the target. Pricing,
+new infrastructure, destructive changes, public messages, purchases, and
+unrelated accounts remain the owner's decisions.
+
 ## Boundaries
 
 These are not judgement calls.
 
-- Direct pushes to `main` are forbidden. When the owner explicitly requests
-  integration, an agent may create a task branch, push it, open a PR to `main`,
-  wait for every required check, and merge that PR.
+- Direct pushes to `main` are forbidden. A requested repository change implies
+  integration unless the owner asks for review-only work: create a task branch,
+  push it, open a PR to `main`, wait for every configured check, and merge it.
 - Force-pushing shared or protected branches is forbidden.
 - Archiving, deleting, or creating repositories requires an explicit owner
   request naming the target.
-- Deploying, publishing, or sending messages is allowed only when the owner
-  explicitly requests the concrete operation and target. Verify the resulting
-  live state before reporting success.
+- A request about an existing live surface authorizes deployment to that named
+  surface and the operational configuration needed by the requested change.
+  Updating the named bot's menu, commands, webhook, or a non-charging invoice
+  probe through its API is deployment work. So are operational messages to
+  platform control bots such as `@BotFather` when they affect only that named
+  bot and no direct API or CLI path exists. Creating infrastructure, changing
+  prices, charging money, or messaging users or public channels is not implied.
 - A secret may be configured only for an explicitly authorized target through
   a protected input path. Never print it, put it in source control, or expose it
-  in logs or process arguments. A secret pasted into chat is compromised and
-  must be rotated before use.
+  in logs or process arguments. When the owner supplies a newly rotated secret
+  and explicitly names where to install it, install it without repeating it;
+  use a secret setter, protected environment input, or stdin. If its provenance
+  or rotation is uncertain, stop and request rotation.
 - **The rules of the game never change silently.** A change in behaviour is a new
   `RuleSet` — which is why the two divergences in the deployed contract are
   `onchain` rather than bugs.
