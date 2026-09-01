@@ -86,6 +86,8 @@ export interface StepSink {
     event: import('@leela/engine').MoveEvent;
     ruleset: import('@leela/engine').RuleSet;
   }): Promise<void>;
+  /** Successful moves this player has made, across their kept history. */
+  moved(userId: string): Promise<number>;
 }
 
 /** A sink that drops moves, for running without storage. */
@@ -93,7 +95,31 @@ export const discardSteps: StepSink = {
   async record() {
     // Nothing. The game still plays; the history is simply not kept.
   },
+  async moved() {
+    // Nothing was kept, so this sink can prove no kept move.
+    return 0;
+  },
 };
+
+/** Moves held for the lifetime of a process when no durable store is open. */
+export class MemoryStepSink implements StepSink {
+  private readonly steps: Array<{
+    userId: string;
+    event: import('@leela/engine').MoveEvent;
+  }> = [];
+
+  async record(step: {
+    userId: string;
+    event: import('@leela/engine').MoveEvent;
+    ruleset: import('@leela/engine').RuleSet;
+  }): Promise<void> {
+    this.steps.push({ userId: step.userId, event: step.event });
+  }
+
+  async moved(userId: string): Promise<number> {
+    return this.steps.filter((step) => step.userId === userId && !step.event.isBlocked).length;
+  }
+}
 
 export interface ReportSink {
   /**
@@ -287,9 +313,9 @@ export interface Subscription {
  * write one: an entitlement is created by a payment Telegram has confirmed and
  * by nothing else.
  *
- * **Nothing in the game asks `subscribed`.** There is no toll in this bot
- * today and this store does not add one — it records what was paid and exposes
- * it, and every square, report and answer stays exactly as free as it was.
+ * Both chat rolls and mini-app rolls ask `subscribed` after the player's three
+ * successful free moves. The store is therefore part of access control: a
+ * confirmed payment opens play until its recorded expiry, on both surfaces.
  */
 export interface EntitlementStore {
   /**

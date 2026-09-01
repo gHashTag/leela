@@ -1,3 +1,5 @@
+import { SUBSCRIBE_REQUEST } from '@leela/content';
+
 /**
  * The page, when somebody else is hosting it.
  *
@@ -31,6 +33,8 @@ interface TelegramWebApp {
    * signature it carries against the token (`apps/bot/src/vouched.ts`).
    */
   readonly initData?: unknown;
+  sendData?(data: string): void;
+  close?(): void;
 }
 
 /**
@@ -95,6 +99,14 @@ export const telegramOf = (): TelegramWebApp | null => {
  */
 export const launchOf = (app: TelegramWebApp | null): string =>
   typeof app?.initData === 'string' ? app.initData : '';
+
+/** Return from the board to the bot with a request for its priced tiers. */
+export const askTelegramToSubscribe = (app: TelegramWebApp | null): boolean => {
+  if (launchOf(app) === '' || typeof app?.sendData !== 'function') return false;
+  app.sendData(SUBSCRIBE_REQUEST);
+  app.close?.();
+  return true;
+};
 
 /**
  * Which of Telegram's colours lands on which of the page's own tokens.

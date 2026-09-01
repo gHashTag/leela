@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { FREE_THROWS, isLastFree, movesTaken, throwsTaken, tollFor } from '../src/toll';
 
 /**
- * Three throws free, then the game asks.
+ * Three successful moves free, then the game asks.
  *
  * The rule lives in one function because it would otherwise be written twice —
  * once where the die is disabled and once where the message is chosen — and the
@@ -33,7 +33,7 @@ describe('what the free allowance counts', () => {
   });
 
   it('gives every player three moves however unlucky the die was', () => {
-    // The promise the screen makes - "your first three throws are free" - is now
+    // The promise the screen makes - "your first three moves are free" - is now
     // one the game keeps for everybody rather than for the 42% who rolled a six.
     const unlucky = [3, 1, 4, 2, 5, 5, 2, 1, 6];
     expect(movesTaken([unlucky])).toBe(1);
@@ -51,7 +51,7 @@ describe('what the free allowance counts', () => {
   });
 });
 
-describe('the first three throws', () => {
+describe('the first three moves', () => {
   it('are free, and say how many are left', () => {
     expect(tollFor(inApp(0))).toEqual({ mayThrow: true, left: 3 });
     expect(tollFor(inApp(1))).toEqual({ mayThrow: true, left: 2 });
@@ -87,14 +87,14 @@ describe('who is never asked', () => {
 
   it('and `left` is null for them, not zero', () => {
     // Null is "never asked"; zero is "asked now". A screen that reads them
-    // alike tells a browser it has run out of free throws.
+    // alike tells a browser it has run out of free moves.
     expect(tollFor(inApp(3)).left).toBe(0);
     expect(tollFor(inApp(3, true)).left).toBeNull();
   });
 });
 
 describe('the warning', () => {
-  it('comes on the last free throw, not after it', () => {
+  it('comes on the last free move, not after it', () => {
     // Before the die stops rather than after: saying it every throw is nagging,
     // saying it once the die has stopped is a surprise.
     expect(isLastFree(tollFor(inApp(2)))).toBe(true);

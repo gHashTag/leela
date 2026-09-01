@@ -5,12 +5,12 @@ name: Deploy mini app
 # artifact, three surfaces: the 3D board at the root, the 2D board it replaced
 # still reachable under classic/, and the book under docs/.
 #
-# Deploys from `unified`, which is where the work lives; `main` still holds the
-# published mobile app's history and is deliberately untouched.
+# `main` is the reviewed, published line for every surface. A merged PR that
+# changes the board therefore publishes the same source the bot deploys from.
 
 on:
   push:
-    branches: [unified]
+    branches: [main]
     paths:
       - 'apps/webgl/**'
       - 'apps/miniapp/**'

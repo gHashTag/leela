@@ -49,6 +49,9 @@ export interface Standing {
    */
   state?: GameState;
   yourTurn?: boolean;
+  moved?: number;
+  entitled?: boolean;
+  canSubscribe?: boolean;
 }
 
 /** What one throw of the chat's die produced. */
@@ -133,7 +136,16 @@ const stateIn = (value: unknown): GameState | null => {
 const standingIn = (value: unknown): Standing | null => {
   if (typeof value !== 'object' || value === null) return null;
 
-  const held = value as { plan?: unknown; waiting?: unknown; won?: unknown; state?: unknown; yourTurn?: unknown };
+  const held = value as {
+    plan?: unknown;
+    waiting?: unknown;
+    won?: unknown;
+    state?: unknown;
+    yourTurn?: unknown;
+    moved?: unknown;
+    entitled?: unknown;
+    canSubscribe?: unknown;
+  };
   if (typeof held.plan !== 'number' || !Number.isFinite(held.plan)) return null;
   if (typeof held.waiting !== 'boolean' || typeof held.won !== 'boolean') return null;
 
@@ -145,6 +157,9 @@ const standingIn = (value: unknown): Standing | null => {
     won: held.won,
     ...(state === null ? {} : { state }),
     ...(typeof held.yourTurn === 'boolean' ? { yourTurn: held.yourTurn } : {}),
+    ...(typeof held.moved === 'number' && Number.isFinite(held.moved) ? { moved: held.moved } : {}),
+    ...(typeof held.entitled === 'boolean' ? { entitled: held.entitled } : {}),
+    ...(typeof held.canSubscribe === 'boolean' ? { canSubscribe: held.canSubscribe } : {}),
   };
 };
 

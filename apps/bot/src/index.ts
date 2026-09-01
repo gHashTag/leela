@@ -25,12 +25,14 @@ import {
   LANGUAGES,
   loadEveryLanguage,
   loadedLanguages,
+  messageFor,
   messageCoverage,
   messageIssues,
   translatedLanguages,
 } from '@leela/content';
 import { currentPlayer, hasWon, isWaitingToEnter } from '@leela/engine';
 import { createBot, miniAppUrl } from './bot';
+import { accessFor } from './access';
 import { PAID_COMMANDS, menuFor, roll as rollCommand } from './commands';
 import { DirectChannels } from './delivery';
 import { createInitiative, lastWordSaid, nudgeHour } from './initiative';
@@ -237,7 +239,7 @@ console.log(
 console.log(
   stars
     ? `Telegram Stars: ${stars.map((tier) => `${tier.id} ${tier.stars}XTR`).join(', ')}. ` +
-      'A subscription buys a date and unlocks nothing; the game stays free.'
+      'The first three successful moves are free; a live subscription opens the rest.'
     : `Telegram Stars: nothing is sold — ${whyNothingIsSold(process.env) ?? ''}.`,
 );
 console.log(
@@ -475,6 +477,13 @@ const asking = serveAsk({
     const room = (await storage.store.roomOf?.(userId)) ?? (await storage.store.get(userId));
     const seat = room?.session.players.find((player) => player.id === userId);
     if (seat === undefined || room === null || room === undefined) return null;
+    const access = await accessFor({
+      userId,
+      stars,
+      entitlements: storage.entitlements,
+      steps: storage.steps,
+      now: Date.now(),
+    });
 
     return {
       plan: seat.state.loka,
@@ -488,6 +497,9 @@ const asking = serveAsk({
       // the die on the board must agree about whose throw it is, and the only
       // way they agree is by asking the same function.
       yourTurn: currentPlayer(room.session).id === userId,
+      moved: access.moved,
+      entitled: access.entitled,
+      canSubscribe: stars !== null,
     };
   },
   /**
@@ -511,6 +523,17 @@ const asking = serveAsk({
     if (room === null || room === undefined) return null;
     if (room.session.players.find((player) => player.id === userId) === undefined) return null;
 
+    const beforeAccess = await accessFor({
+      userId,
+      stars,
+      entitlements: storage.entitlements,
+      steps: storage.steps,
+      now: Date.now(),
+    });
+    if (!beforeAccess.mayMove) {
+      return { refused: messageFor(room.language, 'app.tollDue') };
+    }
+
     const before = room.rollsTaken;
     const outcome = rollCommand(room, userId, Date.now());
     const after = outcome.room;
@@ -531,6 +554,20 @@ const asking = serveAsk({
     if (seat === undefined) return null;
 
     const moved = (outcome.effects ?? []).find((effect) => effect.kind === 'move');
+    if (moved?.kind === 'move') {
+      await storage.steps.record({
+        userId: moved.userId,
+        event: moved.event,
+        ruleset: moved.ruleset,
+      });
+    }
+    const access = await accessFor({
+      userId,
+      stars,
+      entitlements: storage.entitlements,
+      steps: storage.steps,
+      now: Date.now(),
+    });
 
     return {
       roll: moved?.event.roll ?? 0,
@@ -541,6 +578,9 @@ const asking = serveAsk({
         won: hasWon(seat.state),
         state: seat.state,
         yourTurn: currentPlayer(after.session).id === userId,
+        moved: access.moved,
+        entitled: access.entitled,
+        canSubscribe: stars !== null,
       },
     };
   },

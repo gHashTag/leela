@@ -11,6 +11,7 @@ import {
   WIN_LOKA,
   applyRoll,
   hasWon,
+  initialState,
   type GameState,
 } from '@leela/engine';
 
@@ -442,6 +443,20 @@ describe('a game keeps a history a person can read', () => {
 
     await sink.record({ userId: 'u1', event, ruleset: CLASSIC });
     expect(queries.stepsFor('u2')).toEqual([]);
+  });
+
+  it('counts successful moves and not refused throws, per player', async () => {
+    const sink = sqliteStepSink(database('steps-moved'));
+    const stopped = applyRoll(initialState(), 1, CLASSIC).event;
+    const entered = applyRoll(initialState(), 6, CLASSIC).event;
+
+    await sink.record({ userId: 'u1', event: stopped, ruleset: CLASSIC });
+    await sink.record({ userId: 'u1', event: entered, ruleset: CLASSIC });
+    await sink.record({ userId: 'u2', event: entered, ruleset: CLASSIC });
+
+    expect(await sink.moved('u1')).toBe(1);
+    expect(await sink.moved('u2')).toBe(1);
+    expect(await sink.moved('u3')).toBe(0);
   });
 
   it('survives a restart, like everything else in the file', async () => {
