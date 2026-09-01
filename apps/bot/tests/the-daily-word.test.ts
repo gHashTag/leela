@@ -4,7 +4,12 @@ import type { GameState } from '@leela/engine';
 import { messageFor, planFor, type Language } from '@leela/content';
 import type { Room } from '../src/commands';
 import { DirectChannels } from '../src/delivery';
-import { createInitiative, excerptsOf, type NudgeApi } from '../src/initiative';
+import {
+  createInitiative,
+  excerptsOf,
+  type NudgeApi,
+  type TickSummary,
+} from '../src/initiative';
 import { MemoryNudgeStore, MemoryRoomStore } from '../src/store';
 
 /**
@@ -123,7 +128,7 @@ function fakeApi({
 interface HarnessOptions {
   rooms: Room[];
   /** Where the tick's summary is kept, when a test is asking about that. */
-  remember?: (at: number, summary: { sent: number; skipped: Record<string, number> }) => Promise<void>;
+  remember?: (at: number, summary: TickSummary) => Promise<void>;
   blocked?: Set<string>;
   keyboardRefused?: Set<string>;
   hour?: number;
@@ -180,7 +185,7 @@ describe('one tick, one morning', () => {
     const table = await harness({ rooms: [tableOf('chat-1', [{ id: 'u1', state: standing(12) }])] });
     const summary = await table.initiative.runTick(MORNING);
 
-    expect(summary).toEqual({ sent: 1, skipped: {} });
+    expect(summary).toEqual({ sent: 1, bridges: { model: 0, canonical: 1 }, skipped: {} });
     expect(table.sent).toHaveLength(1);
 
     const word = table.sent[0];
@@ -298,7 +303,7 @@ describe('one tick, one morning', () => {
 
     const summary = await table.initiative.runTick(MORNING + 2 * DAY);
 
-    expect(summary).toEqual({ sent: 1, skipped: {} });
+    expect(summary).toEqual({ sent: 1, bridges: { model: 0, canonical: 1 }, skipped: {} });
     expect(table.sent[2].text).toContain('You are standing on 6');
     // The allowance stopped where it stopped: two spent, and the third is not
     // owed to somebody who is playing.
@@ -328,7 +333,11 @@ describe('one tick, one morning', () => {
       rooms: [tableOf('chat-1', [{ id: 'u-waiting', state: waiting(), lastRollAt: null }])],
     });
 
-    expect(await table.initiative.runTick(MORNING)).toEqual({ sent: 1, skipped: {} });
+    expect(await table.initiative.runTick(MORNING)).toEqual({
+      sent: 1,
+      bridges: { model: 0, canonical: 0 },
+      skipped: {},
+    });
   });
 
   it('says when the next word is due, at the moment it arms', async () => {
@@ -373,7 +382,11 @@ describe('one message a day', () => {
 
     await table.initiative.runTick(MORNING);
     const again = await table.initiative.runTick(MORNING + 2 * 60 * 60 * 1000);
-    expect(again).toEqual({ sent: 0, skipped: { 'nudged-today': 1 } });
+    expect(again).toEqual({
+      sent: 0,
+      bridges: { model: 0, canonical: 0 },
+      skipped: { 'nudged-today': 1 },
+    });
     expect(table.sent).toHaveLength(1);
 
     const tomorrow = await table.initiative.runTick(MORNING + DAY);
@@ -409,7 +422,11 @@ describe('the channel', () => {
     });
 
     const summary = await table.initiative.runTick(MORNING);
-    expect(summary).toEqual({ sent: 0, skipped: { blocked: 1 } });
+    expect(summary).toEqual({
+      sent: 0,
+      bridges: { model: 0, canonical: 0 },
+      skipped: { blocked: 1 },
+    });
     // Remembered where every other refusal is remembered, so tomorrow costs
     // nothing rather than another failed call.
     expect(table.channels.canWrite('u1')).toBe(false);

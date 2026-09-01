@@ -185,11 +185,13 @@ CREATE TABLE IF NOT EXISTS intentions (
 -- grows, and a column per reason would need a migration every time the engine
 -- learns a new way to stay quiet.
 CREATE TABLE IF NOT EXISTS last_tick (
-  id         INTEGER PRIMARY KEY CHECK (id = 1),
-  at         INTEGER NOT NULL,
-  sent       INTEGER NOT NULL,
-  skipped    TEXT NOT NULL,
-  updated_at INTEGER NOT NULL
+  id                INTEGER PRIMARY KEY CHECK (id = 1),
+  at                INTEGER NOT NULL,
+  sent              INTEGER NOT NULL,
+  skipped           TEXT NOT NULL,
+  model_bridges     INTEGER NOT NULL DEFAULT 0,
+  canonical_bridges INTEGER NOT NULL DEFAULT 0,
+  updated_at        INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS nudges (
@@ -717,8 +719,17 @@ export class SqliteRoomQueries implements RoomQueries {
   }
 
   /** What the last tick did, or null when this deployment has never ticked. */
-  lastTick(): { at: number; sent: number; skipped: Record<string, number> } | null {
-    const row = this.db.prepare('SELECT at, sent, skipped FROM last_tick WHERE id = 1').get() as
+  lastTick(): {
+    at: number;
+    sent: number;
+    skipped: Record<string, number>;
+    bridges: { model: number; canonical: number };
+  } | null {
+    const row = this.db
+      .prepare(
+        'SELECT at, sent, skipped, model_bridges, canonical_bridges FROM last_tick WHERE id = 1',
+      )
+      .get() as
       | Record<string, unknown>
       | undefined;
     if (!row) return null;
@@ -730,21 +741,34 @@ export class SqliteRoomQueries implements RoomQueries {
       // not a reason to take the bot down at boot: the sentence is a
       // convenience and the tick is the product.
       skipped: parseSkipped(row.skipped),
+      bridges: {
+        model: (row.model_bridges as number | null) ?? 0,
+        canonical: (row.canonical_bridges as number | null) ?? 0,
+      },
     };
   }
 
   /** Remember a tick. One row: the question is whether the last one worked. */
-  recordTick(at: number, sent: number, skipped: Record<string, number>): void {
+  recordTick(
+    at: number,
+    sent: number,
+    skipped: Record<string, number>,
+    bridges: { model: number; canonical: number } = { model: 0, canonical: 0 },
+  ): void {
     this.db
       .prepare(
-        `INSERT INTO last_tick (id, at, sent, skipped, updated_at) VALUES (1, ?, ?, ?, ?)
+        `INSERT INTO last_tick
+           (id, at, sent, skipped, model_bridges, canonical_bridges, updated_at)
+         VALUES (1, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(id) DO UPDATE SET
            at = excluded.at,
            sent = excluded.sent,
            skipped = excluded.skipped,
+           model_bridges = excluded.model_bridges,
+           canonical_bridges = excluded.canonical_bridges,
            updated_at = excluded.updated_at`,
       )
-      .run(at, sent, JSON.stringify(skipped), this.now());
+      .run(at, sent, JSON.stringify(skipped), bridges.model, bridges.canonical, this.now());
   }
 
   /** `/quiet`, either direction — and it must not invent a send that never was. */

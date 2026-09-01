@@ -775,6 +775,13 @@ const EN = {
   // player stands nowhere yet.
   'nudge.doorstepCta': 'One throw is the whole of it — /roll casts the die.',
   'nudge.standing': 'You are standing on {plan}. {title}.',
+  // A deterministic bridge when the proactive companion is absent or cannot
+  // answer. The plan excerpt above it is the teaching; this only turns the
+  // teaching toward the next action the engine will accept.
+  'nudge.agentReport': 'What does this plan ask you to notice honestly, right now?',
+  'nudge.agentRoll': 'Carry one honest observation from this plan into your next throw.',
+  'nudge.reportCta':
+    'Reply here with what you are experiencing on this plan — the game will save it as your reflection.',
   // One call back into the game, and it has to stand on its own: the board
   // button rides beneath it when Telegram takes the keyboard, and when the
   // whole send is refused over the markup the retry goes out without it —
@@ -1267,6 +1274,10 @@ const RU: Partial<Record<MessageKey, Message>> = {
     'не потеряно и ничего ещё не начато.',
   'nudge.doorstepCta': 'Всё дело в одном броске — /roll бросает кубик.',
   'nudge.standing': 'Вы стоите на плане {plan}. {title}.',
+  'nudge.agentReport': 'Что этот план просит вас честно заметить прямо сейчас?',
+  'nudge.agentRoll': 'Возьмите одно честное наблюдение из этого плана в следующий ход.',
+  'nudge.reportCta':
+    'Ответьте здесь, что вы переживаете на этом плане — игра сохранит это как вашу запись.',
   'nudge.cta': 'Игра продолжается там, где вы стоите — /roll вернёт вас в неё.',
   'nudge.wayOut': 'Это слово приходит раз в день. /quiet останавливает его в любой момент.',
   'quiet.on': 'Тихо. Ежедневное слово больше не приходит — /quiet вернёт его, когда захотите.',

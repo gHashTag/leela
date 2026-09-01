@@ -402,6 +402,20 @@ describe('what must not move', () => {
     expect(calls[0]?.at(-1)?.content).toBe(words);
   });
 
+  it('a private reply files the account owed at the player\'s group table', async () => {
+    const words = 'what this plan asks me to see without looking away';
+    const room = owingAnAccount(String(GROUP.id));
+    const table = await botWith({ room });
+
+    const answered = await table.tell(PRIVATE, words);
+
+    expect((await table.reports.history(String(ADA.id)))[0]?.text).toBe(words);
+    expect(
+      (await table.store.get(String(GROUP.id)))?.session.players[0]?.reportSubmitted,
+    ).toBe(true);
+    expect(answered).not.toContain(messageFor('en', 'chat.noTableHelp'));
+  });
+
   it('words leading with a slash are still a command nobody registered', async () => {
     const { model, calls } = answering('never this');
     const table = await botWith({ model });

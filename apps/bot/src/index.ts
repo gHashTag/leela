@@ -623,6 +623,7 @@ const initiative = createInitiative({
   api: bot.api,
   store: storage.store,
   nudges: storage.nudges,
+  companion: guide,
   channels,
   launchUrl: miniAppUrl(),
   hour: nudgeHour(),

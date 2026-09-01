@@ -780,7 +780,12 @@ describe('the last tick, kept', () => {
     const path = join(dir, 'tick-restart.db');
 
     const first = new SqliteRoomQueries({ path, now: () => NOW });
-    first.recordTick(NOW, 1, { quieted: 1, 'doorstep-spent': 2 });
+    first.recordTick(
+      NOW,
+      1,
+      { quieted: 1, 'doorstep-spent': 2 },
+      { model: 1, canonical: 0 },
+    );
     first.close();
 
     const second = new SqliteRoomQueries({ path, now: () => NOW });
@@ -790,6 +795,7 @@ describe('the last tick, kept', () => {
       at: NOW,
       sent: 1,
       skipped: { quieted: 1, 'doorstep-spent': 2 },
+      bridges: { model: 1, canonical: 0 },
     });
   });
 
@@ -799,7 +805,12 @@ describe('the last tick, kept', () => {
     queries.recordTick(NOW, 0, { lapsed: 1 });
     queries.recordTick(NOW + 86_400_000, 2, {});
 
-    expect(queries.lastTick()).toEqual({ at: NOW + 86_400_000, sent: 2, skipped: {} });
+    expect(queries.lastTick()).toEqual({
+      at: NOW + 86_400_000,
+      sent: 2,
+      skipped: {},
+      bridges: { model: 0, canonical: 0 },
+    });
   });
 
   it('reads a malformed record as no reasons rather than refusing to start', () => {
@@ -812,7 +823,37 @@ describe('the last tick, kept', () => {
       "UPDATE last_tick SET skipped = 'not json at all' WHERE id = 1",
     );
 
-    expect(queries.lastTick()).toEqual({ at: NOW, sent: 1, skipped: {} });
+    expect(queries.lastTick()).toEqual({
+      at: NOW,
+      sent: 1,
+      skipped: {},
+      bridges: { model: 0, canonical: 0 },
+    });
+  });
+
+  it('adds bridge counters to an older deployed tick row without losing it', () => {
+    const path = join(dir, 'tick-bridge-migration.db');
+    const older = openDatabase(path);
+    older.exec(`CREATE TABLE last_tick (
+  id         INTEGER PRIMARY KEY CHECK (id = 1),
+  at         INTEGER NOT NULL,
+  sent       INTEGER NOT NULL,
+  skipped    TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);`);
+    older.prepare('INSERT INTO last_tick VALUES (1, ?, 1, ?, ?)').run(NOW, '{}', NOW);
+    older.close();
+
+    const said: string[] = [];
+    const queries = new SqliteRoomQueries({ path, now: () => NOW, log: (line) => said.push(line) });
+    open.push(queries);
+
+    expect(said.join(' ')).toContain('last_tick.model_bridges');
+    expect(said.join(' ')).toContain('last_tick.canonical_bridges');
+    expect(queries.lastTick()?.bridges).toEqual({ model: 0, canonical: 0 });
+
+    queries.recordTick(NOW + 1, 1, {}, { model: 1, canonical: 0 });
+    expect(queries.lastTick()?.bridges).toEqual({ model: 1, canonical: 0 });
   });
 });
 

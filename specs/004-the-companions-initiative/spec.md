@@ -50,9 +50,10 @@ and the daily cap and /quiet govern both.
 - **Per-user send-time optimization** — Telegram exposes no timezone; a fixed
   morning hour (env-set) is the honest v1, and the hour is one variable to
   move later, not a per-user model to guess.
-- **Model-written nudges** — a daily model call per player buys spend and
-  variance for no measured need; the canon already owns the words. The model
-  stays where the player asks.
+- **Model-written teaching (v1)** — a daily model call must not replace the
+  canon; the canon owns the words. `specs/016-plan-aware-engagement` later adds
+  a bounded companion bridge after an explicit owner request: the plan excerpt
+  stays canonical, and model failure falls back without losing the message.
 
 ## Acceptance
 
