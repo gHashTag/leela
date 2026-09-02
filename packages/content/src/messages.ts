@@ -780,6 +780,12 @@ const EN = {
   // teaching toward the next action the engine will accept.
   'nudge.agentReport': 'What does this plan ask you to notice honestly, right now?',
   'nudge.agentRoll': 'Carry one honest observation from this plan into your next throw.',
+
+  // --- public invitation ----------------------------------------------------
+  'public.plan': 'Plan of the day: {plan}. {title}',
+  'public.question': 'Leela asks:',
+  'public.invitation': 'There is no right answer. Bring your own question to the board.',
+  'public.play': '🎲 Play Leela',
   'nudge.reportCta':
     'Reply here with what you are experiencing on this plan — the game will save it as your reflection.',
   // One call back into the game, and it has to stand on its own: the board
@@ -1287,6 +1293,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'nudge.standing': 'Вы стоите на плане {plan}. {title}.',
   'nudge.agentReport': 'Что этот план просит вас честно заметить прямо сейчас?',
   'nudge.agentRoll': 'Возьмите одно честное наблюдение из этого плана в следующий ход.',
+
+  // --- публичное приглашение ------------------------------------------------
+  'public.plan': 'План дня: {plan}. {title}',
+  'public.question': 'Лила спрашивает:',
+  'public.invitation': 'Здесь нет правильного ответа. Приходите на доску со своим вопросом.',
+  'public.play': '🎲 Играть в Лилу',
   'nudge.reportCta':
     'Ответьте здесь, что вы переживаете на этом плане — игра сохранит это как вашу запись.',
   'nudge.cta': 'Игра продолжается там, где вы стоите — /roll вернёт вас в неё.',

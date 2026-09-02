@@ -18,6 +18,7 @@ import {
   sqliteEntitlements,
   sqliteNudgeStore,
   sqlitePaymentFunnel,
+  sqlitePublicOutreach,
   sqliteReportSink,
   sqliteStepSink,
 } from './sqlite';
@@ -25,12 +26,14 @@ import {
   MemoryEntitlementStore,
   MemoryNudgeStore,
   MemoryPaymentFunnelStore,
+  MemoryPublicOutreachStore,
   MemoryReportSink,
   MemoryRoomStore,
   MemoryStepSink,
   type EntitlementStore,
   type NudgeStore,
   type PaymentFunnelStore,
+  type PublicOutreachStore,
   type ReportSink,
   type RoomStore,
   type StepSink,
@@ -69,6 +72,8 @@ export interface Storage {
   entitlements: EntitlementStore;
   /** First-player milestones in the free-to-paid journey. */
   funnel: PaymentFunnelStore;
+  /** One anonymous public-post cohort per UTC day. */
+  publications: PublicOutreachStore;
   /** Whether games survive a restart. */
   durable: boolean;
   /**
@@ -165,6 +170,7 @@ export function openStorage({
       nudges: new MemoryNudgeStore(),
       entitlements: new MemoryEntitlementStore(),
       funnel: new MemoryPaymentFunnelStore(),
+      publications: new MemoryPublicOutreachStore(),
       durable: false,
     };
   }
@@ -196,6 +202,7 @@ export function openStorage({
       nudges: sqliteNudgeStore(queries),
       entitlements: sqliteEntitlements(queries),
       funnel: sqlitePaymentFunnel(queries),
+      publications: sqlitePublicOutreach(queries),
       lastTick: () => queries.lastTick(),
       rememberTick: (at, sent, skipped, bridges) =>
         queries.recordTick(at, sent, skipped, bridges),
@@ -216,6 +223,7 @@ export function openStorage({
       nudges: new MemoryNudgeStore(),
       entitlements: new MemoryEntitlementStore(),
       funnel: new MemoryPaymentFunnelStore(),
+      publications: new MemoryPublicOutreachStore(),
       durable: false,
       failure,
     };

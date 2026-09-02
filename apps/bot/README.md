@@ -211,6 +211,30 @@ and its sleeping conditions are `src/initiative.ts`; every eligibility branch,
 the excerpt rotation and the once-per-day cap are held by
 `tests/initiative.test.ts` and `tests/the-daily-word.test.ts`.
 
+## The public invitation
+
+The bot can publish one plan-led invitation per UTC day to a public Telegram
+channel. The feature is dark unless the channel is named explicitly:
+
+```
+LEELA_PUBLIC_CHANNEL=@leelachakraapp
+LEELA_PUBLIC_LANGUAGE=ru       # optional; defaults to ru
+LEELA_PUBLIC_HOUR=7            # optional; UTC, defaults to 7
+```
+
+The rotation visits all 72 plans exactly once every 72 days. Each post contains a canonical
+excerpt, one short reflective bridge from the companion (or a canonical
+fallback), and one button leading to the bot. A private `/start` creates and
+starts the player's durable single-player game and offers the signed Mini App
+board immediately; `/start` in an empty group keeps its existing help-only
+semantics.
+
+Only the channel receives a send. When Telegram links a discussion group to a
+channel, Telegram itself forwards each channel post into that group and opens
+its comment thread; sending a second copy would duplicate the invitation. The
+database keeps one anonymous daily cohort (`day`, plan, send time, bridge and
+aggregate starts), never reader ids, usernames or message text.
+
 ## Telegram Stars, dark until somebody names a price
 
 Telegram Stars (`XTR`) are the only sanctioned way for a bot to sell a digital

@@ -247,6 +247,47 @@ export const discardReports: ReportSink = {
   // No `history`: nothing was kept, and saying so beats showing an empty list.
 };
 
+/** Which wording bridged a public plan excerpt into reflection. */
+export type PublicBridge = 'model' | 'canonical';
+
+/** One anonymous daily public-post cohort. No reader identity crosses this boundary. */
+export interface PublicPostRecord {
+  day: number;
+  plan: number;
+  sentAt: number;
+  bridge: PublicBridge;
+  /** Aggregate starts attributed to this post. */
+  starts: number;
+}
+
+export interface PublicOutreachStore {
+  of(day: number): Promise<PublicPostRecord | null>;
+  /** First successful send wins, making restarts and concurrent ticks idempotent. */
+  record(post: Omit<PublicPostRecord, 'starts'>): Promise<void>;
+  /** Count a known cohort start without retaining the reader. */
+  started(day: number): Promise<void>;
+}
+
+/** Per-process public-post memory for tests and non-durable deployments. */
+export class MemoryPublicOutreachStore implements PublicOutreachStore {
+  private readonly posts = new Map<number, PublicPostRecord>();
+
+  async of(day: number): Promise<PublicPostRecord | null> {
+    return this.posts.get(day) ?? null;
+  }
+
+  async record(post: Omit<PublicPostRecord, 'starts'>): Promise<void> {
+    if (this.posts.has(post.day)) return;
+    this.posts.set(post.day, { ...post, starts: 0 });
+  }
+
+  async started(day: number): Promise<void> {
+    const post = this.posts.get(day);
+    if (!post) return;
+    this.posts.set(day, { ...post, starts: post.starts + 1 });
+  }
+}
+
 /**
  * What the companion remembers about its own initiative, per player.
  *
