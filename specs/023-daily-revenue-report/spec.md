@@ -14,9 +14,11 @@ to operate Stars payments.
   `getMyStarBalance`. The local entitlement ledger remains the source for
   Leela's product sales and refunds because it can distinguish those sales from
   other balance movements.
-- `LEELA_STARS_OPERATORS` is already the closed list allowed to refund Stars.
-  It is the narrowest existing trust boundary for a private revenue report and
-  is reused rather than creating a second, drifting administrator list.
+- `LEELA_REVENUE_REPORT_RECIPIENTS` is a report-only list of Telegram user ids.
+  It grants no refund authority. When it is absent, the existing closed
+  `LEELA_STARS_OPERATORS` list remains a backward-compatible fallback; an
+  explicitly malformed report list disables delivery rather than being read
+  partially or widening authority.
 
 Primary sources:
 
@@ -46,8 +48,10 @@ Primary sources:
 
 ### Private, durable and failure-isolated delivery
 
-- Recipients are exactly the valid ids from `LEELA_STARS_OPERATORS`. No
-  operator list means no scheduler and no sends.
+- Recipients are exactly the valid ids from
+  `LEELA_REVENUE_REPORT_RECIPIENTS`, or from `LEELA_STARS_OPERATORS` only when
+  the report-only variable is absent. No valid recipient list means no
+  scheduler and no sends.
 - Revenue reporting requires durable SQLite. An in-memory deployment stays
   dark rather than emitting a partial or restart-forgetful financial report.
 - Every successful recipient delivery is capped durably by `(UTC day,

@@ -43,6 +43,26 @@ export function revenueReportLanguage(
     : DEFAULT_REVENUE_REPORT_LANGUAGE;
 }
 
+/**
+ * Private report recipients, separate from the authority to refund Stars.
+ *
+ * An absent report-only variable keeps the previous operator behaviour. Once
+ * somebody writes the variable, it is authoritative: empty or malformed input
+ * stays empty instead of silently falling back to a more powerful role.
+ */
+export function revenueReportRecipients(
+  env: Record<string, string | undefined> = process.env,
+  operatorFallback: readonly string[] = [],
+): readonly string[] {
+  const written = env.LEELA_REVENUE_REPORT_RECIPIENTS;
+  if (written === undefined) return [...new Set(operatorFallback)];
+  if (!written.trim()) return [];
+
+  const ids = written.split(',').map((one) => one.trim());
+  if (!ids.every((id) => /^[1-9][0-9]*$/.test(id))) return [];
+  return [...new Set(ids)];
+}
+
 /** The immediately preceding completed UTC calendar day. */
 export function reportDay(at: number): number {
   return Math.floor(at / DAY_MS) - 1;
