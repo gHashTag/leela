@@ -42,6 +42,7 @@ import {
   createDailyRevenueReporter,
   revenueReportHour,
   revenueReportLanguage,
+  revenueReportRecipients,
 } from './daily-revenue-report';
 import { createInitiative, lastWordSaid, nudgeHour } from './initiative';
 import {
@@ -723,12 +724,13 @@ console.log(
  */
 const revenueHour = revenueReportHour();
 const revenueLanguage = revenueReportLanguage();
+const revenueRecipients = revenueReportRecipients(process.env, built.operators);
 const revenueReporter =
-  storage.revenueReports !== undefined && built.operators.length > 0
+  storage.revenueReports !== undefined && revenueRecipients.length > 0
     ? createDailyRevenueReporter({
         api: bot.api,
         reports: storage.revenueReports,
-        recipients: built.operators,
+        recipients: revenueRecipients,
         language: revenueLanguage,
         hour: revenueHour,
         log: console.log,
@@ -737,9 +739,9 @@ const revenueReporter =
 console.log(
   revenueReporter
     ? `[revenue] daily aggregate report enabled in ${revenueLanguage} at ` +
-        `${String(revenueHour).padStart(2, '0')}:00 UTC for ${built.operators.length} operator(s).`
-    : built.operators.length === 0
-        ? '[revenue] daily report is off because no Stars operator is configured.'
+        `${String(revenueHour).padStart(2, '0')}:00 UTC for ${revenueRecipients.length} admin recipient(s).`
+    : revenueRecipients.length === 0
+        ? '[revenue] daily report is off because no valid admin recipient is configured.'
         : '[revenue] daily report is off because durable storage is unavailable.',
 );
 

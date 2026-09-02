@@ -7,6 +7,7 @@ import {
   reportDay,
   revenueReportHour,
   revenueReportLanguage,
+  revenueReportRecipients,
 } from '../src/daily-revenue-report';
 import type { DailyRevenueSnapshot, RevenueReportStore } from '../src/store';
 import { DAY_MS } from '../src/stars';
@@ -79,6 +80,21 @@ describe('daily revenue report arithmetic', () => {
     expect(revenueReportLanguage({ LEELA_PUBLIC_LANGUAGE: 'en-US' })).toBe('en');
     expect(revenueReportLanguage({ LEELA_PUBLIC_LANGUAGE: 'en', LEELA_REVENUE_REPORT_LANGUAGE: 'ru' })).toBe('ru');
     expect(revenueReportLanguage({ LEELA_REVENUE_REPORT_LANGUAGE: 'unknown' })).toBe('ru');
+  });
+
+  it('uses a report-only recipient list without granting refund authority', () => {
+    expect(revenueReportRecipients({}, ['11'])).toEqual(['11']);
+    expect(revenueReportRecipients({ LEELA_REVENUE_REPORT_RECIPIENTS: '22, 33' }, ['11']))
+      .toEqual(['22', '33']);
+    expect(revenueReportRecipients({ LEELA_REVENUE_REPORT_RECIPIENTS: '22,22' }, ['11']))
+      .toEqual(['22']);
+  });
+
+  it('refuses an explicitly malformed report recipient list instead of falling back', () => {
+    for (const refused of ['', '0', '-1', '11,user', '1e3']) {
+      expect(revenueReportRecipients({ LEELA_REVENUE_REPORT_RECIPIENTS: refused }, ['11']))
+        .toEqual([]);
+    }
   });
 
   it('names recorded XTR, day-over-day growth, payer average and exact Telegram balance', () => {

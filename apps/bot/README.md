@@ -249,6 +249,7 @@ LEELA_STARS_MONTH=150          # optional: Stars for 30 days
 LEELA_STARS_HALFYEAR=700       # optional: Stars for 182 days
 LEELA_STARS_YEAR=1200          # optional: Stars for 365 days
 LEELA_STARS_OPERATORS=11,22    # optional: who may /refund a payment
+LEELA_REVENUE_REPORT_RECIPIENTS=11,22 # optional: report-only admins; grants no refund authority
 LEELA_REVENUE_REPORT_HOUR=1    # optional: private daily report hour, UTC
 LEELA_REVENUE_REPORT_LANGUAGE=ru # optional: defaults to public language, then ru
 ```
@@ -327,9 +328,11 @@ store at all.
 
 ### Daily private revenue growth brief
 
-A deployment with durable SQLite and at least one
-`LEELA_STARS_OPERATORS` recipient sends each operator one private aggregate
-report for the previous completed UTC day. The default delivery time is
+A deployment with durable SQLite and at least one report recipient sends each
+one a private aggregate report for the previous completed UTC day. Use
+`LEELA_REVENUE_REPORT_RECIPIENTS` for report-only access; it grants no refund
+authority. When absent, `LEELA_STARS_OPERATORS` remains the fallback. The
+default delivery time is
 `01:00 UTC`; `LEELA_REVENUE_REPORT_HOUR` changes it. A first startup after that
 hour catches up only the latest day, never a burst of old reports.
 
