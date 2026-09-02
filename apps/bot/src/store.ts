@@ -111,6 +111,45 @@ export interface PaymentFunnelStore {
   summary(): Promise<PaymentFunnelSummary>;
 }
 
+/** One completed UTC day's aggregate signals for Stars revenue growth. */
+export interface DailyRevenueSnapshot {
+  /** UTC day number, with the same epoch as the public-post cohort. */
+  day: number;
+  /** Whole Stars from successful payments recorded by Leela that day. */
+  grossStars: number;
+  /** Whole Stars whose local entitlement was marked refunded that day. */
+  refundedStars: number;
+  /** Successful payment rows, including repeat purchases by one payer. */
+  payments: number;
+  /** Distinct payers among those successful payment rows. */
+  payers: number;
+  /** Refund rows recorded that day. */
+  refunds: number;
+  /** First per-player milestones whose first timestamp falls on this day. */
+  funnel: PaymentFunnelSummary;
+  /** Starts attributed to this UTC day's public invitation. */
+  publicStarts: number;
+  /** Whether that invitation was successfully posted at all. */
+  publicPosted: boolean;
+}
+
+/**
+ * Durable, aggregate-only financial reporting.
+ *
+ * There is deliberately no memory implementation. A process that forgets
+ * purchases on restart cannot truthfully compare completed days or remember
+ * which administrator already received one.
+ */
+export interface RevenueReportStore {
+  day(day: number): Promise<DailyRevenueSnapshot>;
+  /** Atomically reserve this recipient/day before crossing into Telegram. */
+  claimDelivery(day: number, recipient: string, at: number): Promise<boolean>;
+  /** Release only an unconfirmed claim after a known Telegram refusal. */
+  releaseDelivery(day: number, recipient: string): Promise<void>;
+  /** Confirm a claim after Telegram accepted the message. */
+  recordDelivery(day: number, recipient: string, at: number): Promise<void>;
+}
+
 /** Per-process funnel memory for non-durable deployments and tests. */
 export class MemoryPaymentFunnelStore implements PaymentFunnelStore {
   private readonly reached = new Map<string, Partial<Record<PaymentMilestone, number>>>();

@@ -38,6 +38,11 @@ import { PAID_COMMANDS, menuFor, roll as rollCommand } from './commands';
 import { attributeConversion } from './conversions';
 import { attributePaymentStage, funnelSaid } from './payment-funnel';
 import { DirectChannels } from './delivery';
+import {
+  createDailyRevenueReporter,
+  revenueReportHour,
+  revenueReportLanguage,
+} from './daily-revenue-report';
 import { createInitiative, lastWordSaid, nudgeHour } from './initiative';
 import {
   createPublicOutreach,
@@ -709,6 +714,36 @@ console.log(
 );
 
 /**
+ * One private aggregate Stars brief for each trusted payment operator.
+ *
+ * It is deliberately absent without both a durable reporting store and an
+ * operator. Historical settlements and refunds remain reportable even while
+ * the current offer is unavailable. A process-memory snapshot would forget
+ * both yesterday's money and who already received it after every deploy.
+ */
+const revenueHour = revenueReportHour();
+const revenueLanguage = revenueReportLanguage();
+const revenueReporter =
+  storage.revenueReports !== undefined && built.operators.length > 0
+    ? createDailyRevenueReporter({
+        api: bot.api,
+        reports: storage.revenueReports,
+        recipients: built.operators,
+        language: revenueLanguage,
+        hour: revenueHour,
+        log: console.log,
+      })
+    : undefined;
+console.log(
+  revenueReporter
+    ? `[revenue] daily aggregate report enabled in ${revenueLanguage} at ` +
+        `${String(revenueHour).padStart(2, '0')}:00 UTC for ${built.operators.length} operator(s).`
+    : built.operators.length === 0
+        ? '[revenue] daily report is off because no Stars operator is configured.'
+        : '[revenue] daily report is off because durable storage is unavailable.',
+);
+
+/**
  * Polling has begun: say so, and only now arm the daily word — a bot that
  * cannot yet receive `/quiet` must not be writing first. Named because the
  * supervisor may start polling more than once; `initiative.start` is
@@ -718,6 +753,7 @@ async function listening(username: string): Promise<void> {
   console.log(`Listening as @${username}.`);
   initiative.start();
   await outreach.start(username);
+  await revenueReporter?.start();
 }
 
 await supervise({
@@ -736,3 +772,4 @@ await supervise({
 asking.stop();
 initiative.stop();
 outreach.stop();
+revenueReporter?.stop();
