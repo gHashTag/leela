@@ -17,6 +17,7 @@
     "coverage": "vitest run --workspace coverage.workspace.ts --coverage",
     "knip": "knip --config knip.config.mjs --include dependencies,unlisted,binaries",
     "monitor:live": "bun scripts/monitor-live-game.mjs",
+    "monitor:ai": "bun scripts/monitor-live-ai.mjs",
     "actionlint": "github-actionlint .github/workflows/*.yml",
     "depcruise": "depcruise --config .dependency-cruiser.mjs --output-type err-long packages apps",
     "mutate:engine": "stryker run stryker.conf.mjs",

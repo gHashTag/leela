@@ -62,6 +62,7 @@ RUN bun install --frozen-lockfile --production
 COPY packages packages
 COPY apps/bot apps/bot
 COPY scripts/monitor-live-game.mjs scripts/monitor-live-game.mjs
+COPY scripts/monitor-live-ai.mjs scripts/monitor-live-ai.mjs
 COPY --from=web-builder /app/apps/webgl/dist apps/webgl/dist
 
 # Where games and reports live. The volume is mounted by the platform (Railway

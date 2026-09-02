@@ -111,6 +111,36 @@ export interface PaymentFunnelStore {
   summary(): Promise<PaymentFunnelSummary>;
 }
 
+/** Telegram entry surfaces whose first touch Leela can verify or own. */
+export const ACQUISITION_SOURCES = [
+  'direct',
+  'public',
+  'guest',
+  'inline',
+  'mini_app',
+] as const;
+export type AcquisitionSource = (typeof ACQUISITION_SOURCES)[number];
+
+export interface AcquisitionRecord {
+  source: AcquisitionSource;
+  /** A bounded owned cohort, never arbitrary Telegram text. */
+  campaign: string | null;
+  startedAt: number;
+}
+
+export interface AcquisitionCount {
+  source: AcquisitionSource;
+  starts: number;
+  purchases: number;
+}
+
+/** First-touch attribution. A later surface never rewrites the first. */
+export interface AcquisitionStore {
+  record(userId: string, acquisition: AcquisitionRecord): Promise<void>;
+  /** Operational/test read; no caller logs or returns the player key. */
+  of(userId: string): Promise<AcquisitionRecord | null>;
+}
+
 /** One completed UTC day's aggregate signals for Stars revenue growth. */
 export interface DailyRevenueSnapshot {
   /** UTC day number, with the same epoch as the public-post cohort. */
@@ -131,6 +161,8 @@ export interface DailyRevenueSnapshot {
   publicStarts: number;
   /** Whether that invitation was successfully posted at all. */
   publicPosted: boolean;
+  /** First starts and first purchases grouped by their first-touch source. */
+  acquisition: AcquisitionCount[];
 }
 
 /**
@@ -174,6 +206,19 @@ export class MemoryPaymentFunnelStore implements PaymentFunnelStore {
       }
     }
     return counts;
+  }
+}
+
+/** Per-process first-touch attribution for non-durable deployments and tests. */
+export class MemoryAcquisitionStore implements AcquisitionStore {
+  private readonly first = new Map<string, AcquisitionRecord>();
+
+  async record(userId: string, acquisition: AcquisitionRecord): Promise<void> {
+    if (!this.first.has(userId)) this.first.set(userId, acquisition);
+  }
+
+  async of(userId: string): Promise<AcquisitionRecord | null> {
+    return this.first.get(userId) ?? null;
   }
 }
 

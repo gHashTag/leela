@@ -31,9 +31,13 @@ const signed = (fields: Record<string, string>, token = TOKEN): string => {
   }).toString();
 };
 
-const launchAs = (id: number, token = TOKEN) =>
+const launchAs = (id: number, token = TOKEN, startParam?: string) =>
   signed(
-    { auth_date: String(Math.floor(NOW / 1000) - 60), user: JSON.stringify({ id }) },
+    {
+      auth_date: String(Math.floor(NOW / 1000) - 60),
+      user: JSON.stringify({ id, first_name: 'Mina', language_code: 'ru' }),
+      ...(startParam ? { start_param: startParam } : {}),
+    },
     token,
   );
 
@@ -68,10 +72,10 @@ group('a game served to whoever Telegram says owns it', () => {
   });
 
   it('answers the caller their own game, and asks for it by the vouched id', async () => {
-    const asked: string[] = [];
-    const answer = await ask(launchAs(8675309), {
-      gameOf: async (id) => {
-        asked.push(id);
+    const asked: Array<{ id: string; startParam: string | null }> = [];
+    const answer = await ask(launchAs(8675309, TOKEN, 'inline'), {
+      gameOf: async (who) => {
+        asked.push({ id: who.id, startParam: who.startParam });
         return standing;
       },
     });
@@ -81,7 +85,24 @@ group('a game served to whoever Telegram says owns it', () => {
     // The id came from the signature, not from anything the caller could set
     // separately — there is nowhere else in this request it could have come
     // from, which is the point.
-    expect(asked).toEqual(['8675309']);
+    expect(asked).toEqual([{ id: '8675309', startParam: 'inline' }]);
+  });
+
+  it('attributes only a validly signed Main Mini App launch before serving its game', async () => {
+    const attributed: Array<{ id: string; startParam: string | null }> = [];
+    const answer = await ask(launchAs(7, TOKEN, 'guest'), {
+      gameOf: async () => standing,
+      openedFromMiniApp: async (who) => attributed.push({ id: who.id, startParam: who.startParam }),
+    });
+    expect(answer.status).toBe(200);
+    expect(attributed).toEqual([{ id: '7', startParam: 'guest' }]);
+
+    const forged = await ask(launchAs(7, 'not-our-token', 'inline'), {
+      gameOf: async () => standing,
+      openedFromMiniApp: async (who) => attributed.push({ id: who.id, startParam: who.startParam }),
+    });
+    expect(forged.status).toBe(401);
+    expect(attributed).toHaveLength(1);
   });
 
   it('carries the permission header, or the browser hides the answer', async () => {

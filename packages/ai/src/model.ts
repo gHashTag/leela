@@ -33,6 +33,8 @@ export class ModelError extends Error {
   constructor(
     message: string,
     readonly status?: number,
+    /** Provider business code, when a safe scalar was returned. */
+    readonly providerCode?: string,
   ) {
     super(message);
     this.name = 'ModelError';
@@ -125,7 +127,7 @@ export const DEFAULT_OPENAI_BASE_URL = 'https://api.openai.com/v1';
 export const DEFAULT_DEEPSEEK_MODEL = 'deepseek-chat';
 export const DEFAULT_DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1';
 
-export const DEFAULT_ZAI_MODEL = 'glm-4.6';
+export const DEFAULT_ZAI_MODEL = 'glm-4.7';
 /** Pay-as-you-go. Coding Plan keys need a different path — see `zAI`. */
 export const DEFAULT_ZAI_BASE_URL = 'https://api.z.ai/api/paas/v4';
 export const ZAI_CODING_BASE_URL = 'https://api.z.ai/api/coding/paas/v4';
@@ -180,10 +182,22 @@ function chatCompletions(config: ChatCompletionsConfig): LanguageModel {
       });
 
       if (!response.ok) {
-        const detail = await response.text().catch(() => '');
+        let providerCode: string | undefined;
+        try {
+          const refused = (await response.json()) as {
+            code?: unknown;
+            error?: { code?: unknown };
+          };
+          const code = refused.error?.code ?? refused.code;
+          if (typeof code === 'string' || typeof code === 'number') providerCode = String(code);
+        } catch {
+          // A provider refusal does not need its body copied into a log. The
+          // HTTP status remains actionable even when the body is not JSON.
+        }
         throw new ModelError(
-          `the model refused the request (${response.status})${detail ? `: ${detail.slice(0, 200)}` : ''}`,
+          `the model refused the request (${response.status})${providerCode ? `; provider code ${providerCode}` : ''}`,
           response.status,
+          providerCode,
         );
       }
 

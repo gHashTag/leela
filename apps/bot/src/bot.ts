@@ -56,6 +56,7 @@ import {
   type PricedTier,
 } from './stars';
 import {
+  MemoryAcquisitionStore,
   MemoryEntitlementStore,
   MemoryNudgeStore,
   MemoryPaymentFunnelStore,
@@ -65,6 +66,7 @@ import {
   discardSteps,
   seedFor,
   type EntitlementStore,
+  type AcquisitionStore,
   type NudgeStore,
   type PaymentFunnelStore,
   type PublicOutreachStore,
@@ -73,6 +75,17 @@ import {
   type StepSink,
 } from './store';
 import { startedFromPublic } from './public-outreach';
+import {
+  acquisitionFromStart,
+  attributeAcquisition,
+} from './acquisition';
+import {
+  discoveryPlan,
+  discoveryResult,
+  guestMessageOf,
+  guestQuestion,
+} from './discovery';
+import { planOfDay } from './public-outreach';
 
 export interface BotOptions {
   token: string;
@@ -153,6 +166,8 @@ export interface BotOptions {
   funnel?: PaymentFunnelStore;
   /** Anonymous public-post cohorts used only to count deep-link starts. */
   publications?: PublicOutreachStore;
+  /** First owned Telegram entry surface per player. */
+  acquisitions?: AcquisitionStore;
   /**
    * Telegram ids of whoever may hand money back, from
    * `LEELA_STARS_OPERATORS`. Empty by default and empty in most deployments:
@@ -377,6 +392,7 @@ export function createBot({
   entitlements = new MemoryEntitlementStore(),
   funnel = new MemoryPaymentFunnelStore(),
   publications = new MemoryPublicOutreachStore(),
+  acquisitions = new MemoryAcquisitionStore(),
   operators = operatorIds(process.env),
 }: BotOptions) {
   const bot = new Bot(token, botInfo ? { botInfo } : undefined);
@@ -387,6 +403,7 @@ export function createBot({
   // What each player has asked lately, so that one of them cannot spend the
   // companion's balance for everybody. See `ASK_ALLOWANCE`.
   const asks = new Allowance(ASK_ALLOWANCE, ASK_WINDOW_MS, MAX_ASKERS);
+  const guestAsks = new Allowance(6, ASK_WINDOW_MS, MAX_ASKERS);
 
   // The messages whose attached bytes have already been taken in. See
   // `takeInDocument`: more than one route now reaches a document's bytes, and
@@ -484,6 +501,66 @@ export function createBot({
     const started = now();
     await next();
     log(`[bot] -> handled in ${now() - started}ms`);
+  });
+
+  /**
+   * Telegram Bot API 10.0 arrived ahead of grammY's generated update types.
+   * The raw update still reaches middleware, so recognise exactly that one
+   * shape and call the raw API method without teaching the rest of the bot a
+   * made-up Context field.
+   */
+  bot.use(async (ctx, next) => {
+    const guest = guestMessageOf(ctx.update);
+    if (!guest) return next();
+
+    const caller = guest.from;
+    const language = resolveLanguage(caller?.language_code);
+    let plan = planOfDay(now());
+    if (caller) {
+      try {
+        const room = await store.roomOf?.(String(caller.id));
+        const seat = room?.session.players.find((player) => player.id === String(caller.id));
+        if (seat) plan = seat.state.loka;
+      } catch {
+        // Discovery remains useful with the deterministic daily plan.
+      }
+    }
+
+    const question = guestQuestion(guest.text, ctx.me.username);
+    let bridge = messageFor(language, 'nudge.agentReport');
+    if (guide && caller && question && guestAsks.take(String(caller.id), now()) === 0) {
+      const reflection = await guide.answer(question, { language, plan });
+      if (reflection.fromModel) bridge = reflection.text;
+    }
+
+    const result = discoveryResult({
+      language,
+      plan,
+      bridge,
+      username: ctx.me.username,
+      campaign: 'guest',
+    });
+    try {
+      const raw = ctx.api.raw as unknown as {
+        answerGuestQuery(payload: { guest_query_id: string; result: unknown }): Promise<unknown>;
+      };
+      await raw.answerGuestQuery({ guest_query_id: guest.guest_query_id, result });
+    } catch {
+      log('[guest] answer could not be delivered.');
+    }
+  });
+
+  bot.on('inline_query', async (ctx) => {
+    const language = resolveLanguage(ctx.from.language_code);
+    const plan = discoveryPlan(ctx.inlineQuery.query, planOfDay(now()));
+    const result = discoveryResult({
+      language,
+      plan,
+      bridge: messageFor(language, 'nudge.agentReport'),
+      username: ctx.me.username,
+      campaign: 'inline',
+    });
+    await ctx.answerInlineQuery([result], { cache_time: 300, is_personal: true });
   });
 
   /**
@@ -1097,6 +1174,15 @@ export function createBot({
       ?.replace(/^\/start(?:@[A-Za-z0-9_]+)?(?:\s+)?/i, '')
       .trim();
     const publicCohort = startedFromPublic(payload);
+    if (isPrivate) {
+      await attributeAcquisition({
+        store: acquisitions,
+        userId: who.id,
+        attribution: acquisitionFromStart(payload),
+        at: now(),
+        log,
+      });
+    }
     if (isPrivate && publicCohort !== null) {
       try {
         await publications.started(publicCohort);

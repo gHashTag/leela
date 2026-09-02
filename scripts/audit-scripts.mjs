@@ -211,6 +211,8 @@ const DOCS = [
   'apps/webgl/NOTES.md',
   'specs/022-public-telegram-outreach/plan.md',
   'specs/023-daily-revenue-report/plan.md',
+  'specs/024-telegram-acquisition-surfaces/plan.md',
+  'specs/024-telegram-acquisition-surfaces/CHECKPOINT.md',
 ];
 
 const documented = new Map();

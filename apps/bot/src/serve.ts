@@ -37,6 +37,7 @@ import {
 import type { Language } from '@leela/content';
 import type { GameState } from '@leela/engine';
 import type { Report } from '@leela/journal';
+import type { Vouched } from './vouched';
 
 import { Allowance, MAX_ASKERS } from './bot';
 import { CODE_HEADER, SERVING_HEADER, runningFingerprint, servingFingerprint } from './serving';
@@ -260,7 +261,9 @@ export interface AskRouteOptions {
    * route stays a thing a test can drive with no database and no bot — which is
    * what the file's own header says it is for.
    */
-  gameOf?: (userId: string) => Promise<Standing | null>;
+  gameOf?: (who: Vouched) => Promise<Standing | null>;
+  /** Best-effort first-touch attribution after signature verification. */
+  openedFromMiniApp?: (who: Vouched) => Promise<unknown>;
   /**
    * Throw the chat's die for this player, apply it, and store the result.
    *
@@ -360,7 +363,16 @@ const corsFor = (origin: string): Record<string, string> => ({
  * without Bun: everything this file decides is decided here, and the server
  * below only supplies the port and the peer address.
  */
-function answering({ model, stream, now = Date.now, token, gameOf, rollFor, reports }: AskRouteOptions = {}): AskRoute {
+function answering({
+  model,
+  stream,
+  now = Date.now,
+  token,
+  gameOf,
+  openedFromMiniApp,
+  rollFor,
+  reports,
+}: AskRouteOptions = {}): AskRoute {
   // The same guard `/ask` in the chat stands behind, with the address where
   // the player id would be. See `Allowance` in bot.ts for why checking is
   // spending, and `MAX_ASKERS` for why the map is capped.
@@ -430,7 +442,8 @@ function answering({ model, stream, now = Date.now, token, gameOf, rollFor, repo
         return refuse(503, 'this deployment keeps no games to serve');
       }
 
-      const standing = await gameOf(vouched.who.id).catch(() => null);
+      await openedFromMiniApp?.(vouched.who).catch(() => undefined);
+      const standing = await gameOf(vouched.who).catch(() => null);
       if (standing === null) return refuse(404, 'no game of yours here yet');
 
       return new Response(JSON.stringify(standing), {
@@ -668,8 +681,8 @@ function answering({ model, stream, now = Date.now, token, gameOf, rollFor, repo
 
     try {
       // The default token ceiling stands: the prompt asks for a short
-      // paragraph — but glm-4.6 reasons before it speaks whether or not anyone
-      // asked, and the default 800-token ceiling is spent entirely on that
+      // paragraph — but Coding Plan models may reason before they speak whether
+      // or not anyone asked, and the default 800-token ceiling can be spent on
       // reasoning: the live probe of 2026-08-22 got back an empty `content`
       // and nothing else. 16000 is the dev route's measured price for a model
       // that thinks first; the answer itself still ends within a paragraph.

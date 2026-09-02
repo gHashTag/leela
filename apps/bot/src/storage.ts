@@ -16,6 +16,7 @@ import { DatabaseRoomStore } from './persistence';
 import {
   SqliteRoomQueries,
   sqliteEntitlements,
+  sqliteAcquisitions,
   sqliteNudgeStore,
   sqlitePaymentFunnel,
   sqlitePublicOutreach,
@@ -25,6 +26,7 @@ import {
 } from './sqlite';
 import {
   MemoryEntitlementStore,
+  MemoryAcquisitionStore,
   MemoryNudgeStore,
   MemoryPaymentFunnelStore,
   MemoryPublicOutreachStore,
@@ -32,6 +34,7 @@ import {
   MemoryRoomStore,
   MemoryStepSink,
   type EntitlementStore,
+  type AcquisitionStore,
   type NudgeStore,
   type PaymentFunnelStore,
   type PublicOutreachStore,
@@ -74,6 +77,8 @@ export interface Storage {
   entitlements: EntitlementStore;
   /** First-player milestones in the free-to-paid journey. */
   funnel: PaymentFunnelStore;
+  /** First owned Telegram entry surface per player. */
+  acquisitions: AcquisitionStore;
   /** One anonymous public-post cohort per UTC day. */
   publications: PublicOutreachStore;
   /** Aggregate daily revenue reads and delivery caps; durable deployments only. */
@@ -174,6 +179,7 @@ export function openStorage({
       nudges: new MemoryNudgeStore(),
       entitlements: new MemoryEntitlementStore(),
       funnel: new MemoryPaymentFunnelStore(),
+      acquisitions: new MemoryAcquisitionStore(),
       publications: new MemoryPublicOutreachStore(),
       durable: false,
     };
@@ -206,6 +212,7 @@ export function openStorage({
       nudges: sqliteNudgeStore(queries),
       entitlements: sqliteEntitlements(queries),
       funnel: sqlitePaymentFunnel(queries),
+      acquisitions: sqliteAcquisitions(queries),
       publications: sqlitePublicOutreach(queries),
       revenueReports: sqliteRevenueReports(queries),
       lastTick: () => queries.lastTick(),
@@ -228,6 +235,7 @@ export function openStorage({
       nudges: new MemoryNudgeStore(),
       entitlements: new MemoryEntitlementStore(),
       funnel: new MemoryPaymentFunnelStore(),
+      acquisitions: new MemoryAcquisitionStore(),
       publications: new MemoryPublicOutreachStore(),
       durable: false,
       failure,

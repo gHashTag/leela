@@ -426,6 +426,25 @@ describe('failures a retry cannot fix', () => {
     expect(first.text).toBe(second.text);
     expect(second.text).toContain('6');
   });
+
+  it('silences Z.AI provider code 1113 even though its HTTP status is 429', async () => {
+    let calls = 0;
+    const model: LanguageModel = {
+      id: 'zai:glm-4.7',
+      async complete() {
+        calls += 1;
+        throw new ModelError('the model refused the request (429)', 429, '1113');
+      },
+    };
+    const guide = new Guide({ model, log: quiet, now: clock().now });
+
+    await guide.answer('what does this plan ask', ask);
+    await guide.answer('and now', ask);
+
+    expect(calls).toBe(1);
+    expect(guide.status().available).toBe(false);
+    expect(guide.status().reason).toContain('1113');
+  });
 });
 
 describe('the deadline', () => {

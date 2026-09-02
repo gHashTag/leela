@@ -501,6 +501,7 @@ describe('an entry point nothing holds', () => {
  */
 describe('the board is answered about a player, not a chat', () => {
   const wiring = read('../src/index.ts');
+  const firstContact = read('../src/main-mini-app.ts');
 
   it('is reading the file it means to', () => {
     // Every check that reads a tree can read an empty one and pass over
@@ -511,15 +512,19 @@ describe('the board is answered about a player, not a chat', () => {
     expect(wiring).toContain('rollFor');
   });
 
-  it('ASKS `roomOf` FOR BOTH ROUTES, not the chat-keyed `get`', () => {
+  it('ASKS `roomOf` FOR BOTH ROUTES, including first contact, not the chat-keyed `get`', () => {
     /*
      * Both, and the same way. A board that can READ a game it cannot ROLL in is
      * worse than one that can do neither: the player sees their real position
      * and then the die refuses, with no sentence that explains the difference.
      */
-    const lookups = wiring.match(/storage\.store\.roomOf\?\.\(userId\)/g) ?? [];
+    const rollLookups = wiring.match(/storage\.store\.roomOf\?\.\(userId\)/g) ?? [];
+    const gameDelegations = wiring.match(/roomForMiniApp\(\{ who, store: storage\.store/g) ?? [];
+    const gameLookups = firstContact.match(/store\.roomOf\?\.\(who\.id\)/g) ?? [];
 
-    expect(lookups.length, 'one of the two routes still looks a player up by chat').toBe(2);
+    expect(rollLookups.length, 'the roll route still looks a player up by chat').toBe(1);
+    expect(gameDelegations.length, 'the game route does not delegate first contact by player').toBe(1);
+    expect(gameLookups.length, 'first contact still looks a player up by chat').toBe(1);
   });
 
   it('keeps `get` only as the fallback, never as the first question', () => {

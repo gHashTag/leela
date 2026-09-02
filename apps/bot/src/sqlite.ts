@@ -18,6 +18,9 @@ import type { NewGameStepRow, SessionPlayerRow, SessionRow } from '@leela/db';
 import type { RoomQueries, StoredSeat, StoredSession } from './persistence';
 import { DAY_MS, extendedTo } from './stars';
 import {
+  ACQUISITION_SOURCES,
+  type AcquisitionRecord,
+  type AcquisitionStore,
   NEVER_NUDGED,
   type Entitlement,
   type EntitlementStore,
@@ -250,6 +253,17 @@ CREATE TABLE IF NOT EXISTS payment_funnel (
   purchase_at INTEGER,
   return_at   INTEGER,
   updated_at  INTEGER NOT NULL
+);
+
+-- One owned first-touch source per Telegram player. Campaigns are bounded by
+-- the parser before this table sees them; neither chat nor message text is
+-- copied into analytics.
+CREATE TABLE IF NOT EXISTS acquisition_sources (
+  user_id    TEXT PRIMARY KEY,
+  source     TEXT NOT NULL,
+  campaign   TEXT,
+  started_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
 );
 
 -- One anonymous public-post cohort per UTC day. Telegram automatically copies
@@ -1032,6 +1046,40 @@ export class SqliteRoomQueries implements RoomQueries {
     };
   }
 
+  recordAcquisition(userId: string, acquisition: AcquisitionRecord): void {
+    this.db
+      .prepare(
+        `INSERT OR IGNORE INTO acquisition_sources
+           (user_id, source, campaign, started_at, updated_at)
+         VALUES (?, ?, ?, ?, ?)`,
+      )
+      .run(
+        userId,
+        acquisition.source,
+        acquisition.campaign,
+        acquisition.startedAt,
+        this.now(),
+      );
+  }
+
+  acquisitionOf(userId: string): AcquisitionRecord | null {
+    const row = this.db
+      .prepare(
+        `SELECT source, campaign, started_at
+           FROM acquisition_sources
+          WHERE user_id = ?`,
+      )
+      .get(userId) as Record<string, unknown> | undefined;
+    if (!row || !(ACQUISITION_SOURCES as readonly string[]).includes(String(row.source))) {
+      return null;
+    }
+    return {
+      source: row.source as AcquisitionRecord['source'],
+      campaign: typeof row.campaign === 'string' ? row.campaign : null,
+      startedAt: Number(row.started_at),
+    };
+  }
+
   /** Aggregate one complete UTC day; no identifier crosses this boundary. */
   revenueDay(day: number): DailyRevenueSnapshot {
     const start = day * DAY_MS;
@@ -1065,6 +1113,22 @@ export class SqliteRoomQueries implements RoomQueries {
     const post = this.db
       .prepare('SELECT starts FROM public_posts WHERE day = ?')
       .get(day) as { starts?: number } | null | undefined;
+    const acquired = this.db
+      .prepare(
+        `SELECT
+           a.source AS source,
+           SUM(CASE WHEN a.started_at >= ? AND a.started_at < ? THEN 1 ELSE 0 END) AS starts,
+           SUM(CASE WHEN p.purchase_at >= ? AND p.purchase_at < ? THEN 1 ELSE 0 END) AS purchases
+         FROM acquisition_sources a
+         LEFT JOIN payment_funnel p ON p.user_id = a.user_id
+         GROUP BY a.source`,
+      )
+      .all(start, end, start, end) as Array<{
+        source: string;
+        starts: number | null;
+        purchases: number | null;
+      }>;
+    const bySource = new Map(acquired.map((row) => [row.source, row]));
 
     return {
       day,
@@ -1082,6 +1146,11 @@ export class SqliteRoomQueries implements RoomQueries {
       },
       publicStarts: Number(post?.starts ?? 0),
       publicPosted: post != null,
+      acquisition: ACQUISITION_SOURCES.map((source) => ({
+        source,
+        starts: Number(bySource.get(source)?.starts ?? 0),
+        purchases: Number(bySource.get(source)?.purchases ?? 0),
+      })),
     };
   }
 
@@ -1322,6 +1391,18 @@ export function sqlitePaymentFunnel(queries: SqliteRoomQueries): PaymentFunnelSt
     },
     async summary(): Promise<PaymentFunnelSummary> {
       return queries.paymentFunnelSummary();
+    },
+  };
+}
+
+/** First-touch acquisition, backed by the deployment database. */
+export function sqliteAcquisitions(queries: SqliteRoomQueries): AcquisitionStore {
+  return {
+    async record(userId, acquisition): Promise<void> {
+      queries.recordAcquisition(userId, acquisition);
+    },
+    async of(userId): Promise<AcquisitionRecord | null> {
+      return queries.acquisitionOf(userId);
     },
   };
 }

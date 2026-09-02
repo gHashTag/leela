@@ -46,7 +46,23 @@ group('a launch Telegram signed', () => {
     const answer = whoSent(launch(), TOKEN, { now: NOW });
 
     expect(answer.ok).toBe(true);
-    expect(answer.ok && answer.who).toMatchObject({ id: '8675309', language: 'ru' });
+    expect(answer.ok && answer.who).toMatchObject({
+      id: '8675309',
+      name: 'Mina',
+      language: 'ru',
+      startParam: null,
+      startParamValid: true,
+    });
+  });
+
+  it('carries a bounded start parameter only after its signature was checked', () => {
+    const answer = whoSent(launch({ start_param: 'guest' }), TOKEN, { now: NOW });
+    expect(answer.ok && answer.who.startParam).toBe('guest');
+    expect(answer.ok && answer.who.startParamValid).toBe(true);
+
+    const oversized = whoSent(launch({ start_param: 'x'.repeat(65) }), TOKEN, { now: NOW });
+    expect(oversized.ok && oversized.who.startParam).toBeNull();
+    expect(oversized.ok && oversized.who.startParamValid).toBe(false);
   });
 
   it('says nothing about a language Telegram did not send', () => {
