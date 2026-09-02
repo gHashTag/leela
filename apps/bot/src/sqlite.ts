@@ -27,6 +27,9 @@ import {
   type PaymentFunnelStore,
   type PaymentFunnelSummary,
   type PaymentMilestone,
+  type PublicBridge,
+  type PublicOutreachStore,
+  type PublicPostRecord,
   type Subscription,
 } from './store';
 
@@ -245,6 +248,18 @@ CREATE TABLE IF NOT EXISTS payment_funnel (
   purchase_at INTEGER,
   return_at   INTEGER,
   updated_at  INTEGER NOT NULL
+);
+
+-- One anonymous public-post cohort per UTC day. Telegram automatically copies
+-- a channel post into its linked discussion group, so there is one delivery
+-- record and one aggregate start counter, never a reader id or message text.
+CREATE TABLE IF NOT EXISTS public_posts (
+  day          INTEGER PRIMARY KEY,
+  plan         INTEGER NOT NULL,
+  sent_at      INTEGER NOT NULL,
+  model_bridge INTEGER NOT NULL DEFAULT 0,
+  starts       INTEGER NOT NULL DEFAULT 0,
+  updated_at   INTEGER NOT NULL
 );
 `;
 
@@ -1002,6 +1017,40 @@ export class SqliteRoomQueries implements RoomQueries {
     };
   }
 
+  /** One anonymous public-post cohort, or no successful post for that day. */
+  publicPost(day: number): PublicPostRecord | null {
+    const row = this.db
+      .prepare('SELECT day, plan, sent_at, model_bridge, starts FROM public_posts WHERE day = ?')
+      .get(day) as Record<string, unknown> | undefined;
+    if (!row) return null;
+
+    return {
+      day: row.day as number,
+      plan: row.plan as number,
+      sentAt: row.sent_at as number,
+      bridge: asBoolean(row.model_bridge) ? 'model' : 'canonical',
+      starts: row.starts as number,
+    };
+  }
+
+  /** Keep only the first successful send for a UTC day. */
+  recordPublicPost(day: number, plan: number, sentAt: number, bridge: PublicBridge): void {
+    this.db
+      .prepare(
+        `INSERT INTO public_posts (day, plan, sent_at, model_bridge, starts, updated_at)
+         VALUES (?, ?, ?, ?, 0, ?)
+         ON CONFLICT(day) DO NOTHING`,
+      )
+      .run(day, plan, sentAt, bridge === 'model' ? 1 : 0, this.now());
+  }
+
+  /** Attribute one start to a known day without storing who started. */
+  recordPublicStart(day: number): void {
+    this.db
+      .prepare('UPDATE public_posts SET starts = starts + 1, updated_at = ? WHERE day = ?')
+      .run(this.now(), day);
+  }
+
   /** Every report a player has written, newest first. */
   reportsFor(userId: string): Array<{ plan: number; text: string; createdAt: Date }> {
     const rows = this.db
@@ -1167,6 +1216,21 @@ export function sqlitePaymentFunnel(queries: SqliteRoomQueries): PaymentFunnelSt
     },
     async summary(): Promise<PaymentFunnelSummary> {
       return queries.paymentFunnelSummary();
+    },
+  };
+}
+
+/** Anonymous public-post cohorts, backed by the deployment database. */
+export function sqlitePublicOutreach(queries: SqliteRoomQueries): PublicOutreachStore {
+  return {
+    async of(day): Promise<PublicPostRecord | null> {
+      return queries.publicPost(day);
+    },
+    async record(post): Promise<void> {
+      queries.recordPublicPost(post.day, post.plan, post.sentAt, post.bridge);
+    },
+    async started(day): Promise<void> {
+      queries.recordPublicStart(day);
     },
   };
 }

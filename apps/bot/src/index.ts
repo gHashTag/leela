@@ -39,6 +39,12 @@ import { attributeConversion } from './conversions';
 import { attributePaymentStage, funnelSaid } from './payment-funnel';
 import { DirectChannels } from './delivery';
 import { createInitiative, lastWordSaid, nudgeHour } from './initiative';
+import {
+  createPublicOutreach,
+  publicChannel,
+  publicHour,
+  publicLanguage,
+} from './public-outreach';
 import { serveAsk, type StreamAsk, type Streamed } from './serve';
 import { offering, operatorIds, whyNoOperators, whyNothingIsSold } from './stars';
 import { openStorage, remembering } from './storage';
@@ -182,6 +188,7 @@ const built = {
   nudges: storage.nudges,
   entitlements: storage.entitlements,
   funnel: storage.funnel,
+  publications: storage.publications,
   channels,
   guide,
   stars,
@@ -205,7 +212,8 @@ const keeping =
   built.steps === storage.steps &&
   built.nudges === storage.nudges &&
   built.entitlements === storage.entitlements &&
-  built.funnel === storage.funnel;
+  built.funnel === storage.funnel &&
+  built.publications === storage.publications;
 
 console.log(
   keeping
@@ -677,14 +685,39 @@ const initiative = createInitiative({
 });
 
 /**
+ * One public invitation per UTC day. A configured Telegram channel is the
+ * entire feature flag; the linked discussion group receives Telegram's own
+ * automatic copy, so no second send or second schedule exists here.
+ */
+const outreachChannel = publicChannel();
+const outreachLanguage = publicLanguage();
+const outreachHour = publicHour();
+const outreach = createPublicOutreach({
+  api: bot.api,
+  posts: storage.publications,
+  companion: guide,
+  channel: outreachChannel,
+  language: outreachLanguage,
+  hour: outreachHour,
+  log: console.log,
+});
+console.log(
+  outreachChannel
+    ? `[public] outreach enabled in ${outreachLanguage} at ${String(outreachHour).padStart(2, '0')}:00 UTC; ` +
+        `${storage.durable ? 'durable' : 'in-memory'} daily cohorts.`
+    : '[public] outreach is off; set LEELA_PUBLIC_CHANNEL to enable it.',
+);
+
+/**
  * Polling has begun: say so, and only now arm the daily word — a bot that
  * cannot yet receive `/quiet` must not be writing first. Named because the
  * supervisor may start polling more than once; `initiative.start` is
  * idempotent and this is its one caller.
  */
-function listening(username: string): void {
+async function listening(username: string): Promise<void> {
   console.log(`Listening as @${username}.`);
   initiative.start();
+  await outreach.start(username);
 }
 
 await supervise({
@@ -702,3 +735,4 @@ await supervise({
 // longer listening must not go on speaking first.
 asking.stop();
 initiative.stop();
+outreach.stop();

@@ -209,6 +209,7 @@ const DOCS = [
   // same minute — the guard that keeps this list from being five documents
   // somebody once thought of.
   'apps/webgl/NOTES.md',
+  'specs/022-public-telegram-outreach/plan.md',
 ];
 
 const documented = new Map();

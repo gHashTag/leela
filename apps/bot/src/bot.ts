@@ -59,6 +59,7 @@ import {
   MemoryEntitlementStore,
   MemoryNudgeStore,
   MemoryPaymentFunnelStore,
+  MemoryPublicOutreachStore,
   MemoryRoomStore,
   discardReports,
   discardSteps,
@@ -66,10 +67,12 @@ import {
   type EntitlementStore,
   type NudgeStore,
   type PaymentFunnelStore,
+  type PublicOutreachStore,
   type ReportSink,
   type RoomStore,
   type StepSink,
 } from './store';
+import { startedFromPublic } from './public-outreach';
 
 export interface BotOptions {
   token: string;
@@ -148,6 +151,8 @@ export interface BotOptions {
   entitlements?: EntitlementStore;
   /** First-player paid journey milestones. Failure never gates play or pay. */
   funnel?: PaymentFunnelStore;
+  /** Anonymous public-post cohorts used only to count deep-link starts. */
+  publications?: PublicOutreachStore;
   /**
    * Telegram ids of whoever may hand money back, from
    * `LEELA_STARS_OPERATORS`. Empty by default and empty in most deployments:
@@ -371,6 +376,7 @@ export function createBot({
   stars = offering(process.env),
   entitlements = new MemoryEntitlementStore(),
   funnel = new MemoryPaymentFunnelStore(),
+  publications = new MemoryPublicOutreachStore(),
   operators = operatorIds(process.env),
 }: BotOptions) {
   const bot = new Bot(token, botInfo ? { botInfo } : undefined);
@@ -1086,8 +1092,33 @@ export function createBot({
     const who = sender(ctx);
     if (!chatId || !who) return;
 
+    const isPrivate = ctx.chat?.type === 'private';
+    const payload = ctx.message?.text
+      ?.replace(/^\/start(?:@[A-Za-z0-9_]+)?(?:\s+)?/i, '')
+      .trim();
+    const publicCohort = startedFromPublic(payload);
+    if (isPrivate && publicCohort !== null) {
+      try {
+        await publications.started(publicCohort);
+      } catch {
+        // Attribution is useful and never a reason to hold the game closed.
+        log('[public] could not count a start.');
+      }
+    }
+
     const room = await store.get(chatId);
     if (!room) {
+      if (isPrivate) {
+        const opened = commands.openRoom(chatId, who, seedFor(chatId, now()), {
+          language: ctx.from?.language_code,
+        });
+        if (!opened.room) return;
+        const begun = commands.start(opened.room, who.id);
+        if (begun.room && !(await keepTheGame(begun.room, ctx))) return;
+        await deliver(ctx, begun.replies);
+        await offerTheBoard(ctx, who.id, begun.room?.language ?? opened.room.language);
+        return;
+      }
       await deliver(ctx, commands.help(languageOf(ctx), alsoOffered).replies);
       return;
     }
@@ -1095,6 +1126,7 @@ export function createBot({
     const result = commands.start(room, who.id);
     if (result.room && !(await keepTheGame(result.room, ctx))) return;
     await deliver(ctx, result.replies);
+    if (isPrivate) await offerTheBoard(ctx, who.id, result.room?.language ?? room.language);
   });
 
   bot.command('help', async (ctx) => deliver(ctx, commands.help(languageOf(ctx), alsoOffered).replies));
