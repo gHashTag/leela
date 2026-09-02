@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { createBot } from '../src/bot';
 import { publicDay, publicStartPayload } from '../src/public-outreach';
-import { MemoryPublicOutreachStore, MemoryRoomStore } from '../src/store';
+import {
+  MemoryAcquisitionStore,
+  MemoryPublicOutreachStore,
+  MemoryRoomStore,
+} from '../src/store';
 
 const BOT_INFO = {
   id: 1,
@@ -41,12 +45,14 @@ function command(text: string, type: 'private' | 'group' = 'private') {
 function harness() {
   const store = new MemoryRoomStore();
   const publications = new MemoryPublicOutreachStore();
+  const acquisitions = new MemoryAcquisitionStore();
   const sent: Array<{ method: string; payload: Record<string, unknown> }> = [];
   const bot = createBot({
     token: '1:TEST',
     botInfo: BOT_INFO,
     store,
     publications,
+    acquisitions,
     now: () => AT,
     log: () => undefined,
   });
@@ -54,12 +60,12 @@ function harness() {
     sent.push({ method, payload: payload as Record<string, unknown> });
     return { ok: true, result: { message_id: 1 } } as never;
   });
-  return { bot, store, publications, sent };
+  return { bot, store, publications, acquisitions, sent };
 }
 
 describe('public first contact', () => {
   it('opens and starts one durable private game and puts the signed board within reach', async () => {
-    const { bot, store, publications, sent } = harness();
+    const { bot, store, publications, acquisitions, sent } = harness();
     const day = publicDay(AT);
     await publications.record({ day, plan: 41, sentAt: AT - 1_000, bridge: 'canonical' });
 
@@ -69,6 +75,11 @@ describe('public first contact', () => {
     expect(room?.started).toBe(true);
     expect(room?.language).toBe('ru');
     expect((await publications.of(day))?.starts).toBe(1);
+    expect(await acquisitions.of('100')).toEqual({
+      source: 'public',
+      campaign: publicStartPayload(day).slice('public_'.length),
+      startedAt: AT,
+    });
     expect(sent.some(({ payload }) => JSON.stringify(payload.reply_markup).includes('web_app'))).toBe(true);
     expect(sent.map(({ payload }) => String(payload.text)).join('\n')).toContain('Игра начинается');
   });
@@ -77,6 +88,7 @@ describe('public first contact', () => {
     const privateRun = harness();
     await privateRun.bot.handleUpdate(command('/start'));
     expect((await privateRun.store.get('100'))?.started).toBe(true);
+    expect(await privateRun.acquisitions.of('100')).toMatchObject({ source: 'direct' });
 
     const groupRun = harness();
     await groupRun.bot.handleUpdate(command('/start', 'group'));

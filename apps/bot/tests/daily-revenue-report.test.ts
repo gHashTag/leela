@@ -28,6 +28,13 @@ function snapshot(
     funnel: { trial: 0, paywall: 0, invoice: 0, purchase: 0, return: 0 },
     publicStarts: 0,
     publicPosted: false,
+    acquisition: [
+      { source: 'direct', starts: 0, purchases: 0 },
+      { source: 'public', starts: 0, purchases: 0 },
+      { source: 'guest', starts: 0, purchases: 0 },
+      { source: 'inline', starts: 0, purchases: 0 },
+      { source: 'mini_app', starts: 0, purchases: 0 },
+    ],
     ...changed,
   };
 }
@@ -109,6 +116,13 @@ describe('daily revenue report arithmetic', () => {
         funnel: { trial: 9, paywall: 7, invoice: 4, purchase: 3, return: 2 },
         publicStarts: 5,
         publicPosted: true,
+        acquisition: [
+          { source: 'direct', starts: 2, purchases: 1 },
+          { source: 'public', starts: 5, purchases: 2 },
+          { source: 'guest', starts: 3, purchases: 1 },
+          { source: 'inline', starts: 4, purchases: 0 },
+          { source: 'mini_app', starts: 6, purchases: 2 },
+        ],
       }),
       snapshot(DAY - 1, { grossStars: 100, payments: 1, payers: 1 }),
       { amount: 123, nanostar_amount: 500_000_000 },
@@ -127,6 +141,9 @@ describe('daily revenue report arithmetic', () => {
     expect(text).toContain('UTC');
     expect(text).toContain('зафиксировано Leela');
     expect(text).toContain('лимит → пейвол → счёт → покупка → возврат в игру');
+    expect(text).toContain('гостевой режим: 3 → 1');
+    expect(text).toContain('инлайн-режим: 4 → 0');
+    expect(text).toContain('главное мини-приложение: 6 → 2');
     expect(text).not.toMatch(/trial|paywall|invoice|purchase|return|gross|checkout|hook|CTA|\bnet\b/i);
     expect(text).not.toMatch(/user|charge|payload/i);
   });

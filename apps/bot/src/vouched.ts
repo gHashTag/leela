@@ -36,10 +36,16 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 export interface Vouched {
   /** The Telegram user id, as a string, because every id in this bot is one. */
   id: string;
+  /** A display name from the signed user object, bounded for room storage. */
+  name: string;
   /** `language_code`, when Telegram sent one. Never inferred. */
   language: string | null;
   /** When Telegram signed this, epoch ms. */
   authAt: number;
+  /** Signed Main Mini App campaign, only when it matches Telegram's bound. */
+  startParam: string | null;
+  /** False only when Telegram signed a start_param outside the accepted bound. */
+  startParamValid: boolean;
 }
 
 export type Verdict = { ok: true; who: Vouched } | { ok: false; why: string };
@@ -112,17 +118,37 @@ export function whoSent(
 
   if (typeof user !== 'object' || user === null) return { ok: false, why: 'initData names no user' };
 
-  const held = user as { id?: unknown; language_code?: unknown };
+  const held = user as {
+    id?: unknown;
+    first_name?: unknown;
+    last_name?: unknown;
+    username?: unknown;
+    language_code?: unknown;
+  };
   if (typeof held.id !== 'number' && typeof held.id !== 'string') {
     return { ok: false, why: 'the user has no id' };
   }
+
+  const name = [held.first_name, held.last_name]
+    .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
+    .join(' ')
+    .trim();
+  const fallbackName = typeof held.username === 'string' ? held.username.trim() : '';
+  const startParam = fields.get('start_param');
+  const startParamValid = startParam === null || /^[A-Za-z0-9_-]{1,64}$/.test(startParam);
 
   return {
     ok: true,
     who: {
       id: String(held.id),
+      name: (name || fallbackName || 'Player').slice(0, 128),
       language: typeof held.language_code === 'string' ? held.language_code : null,
       authAt,
+      startParam:
+        startParam !== null && startParamValid
+          ? startParam
+          : null,
+      startParamValid,
     },
   };
 }

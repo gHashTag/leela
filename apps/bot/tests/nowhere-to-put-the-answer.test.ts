@@ -184,6 +184,20 @@ const square = (words: string) => `12. a square\n\n${words}`;
  * cannot fall behind the file it drives.
  */
 const DRIVERS: Record<string, (words: string) => Array<Record<string, unknown>>> = {
+  // Telegram users can invoke an inline-enabled bot from any chat without
+  // first receiving markup from it. The answer is a share-safe plan card and
+  // deliberately never reaches the private companion.
+  inline_query: () => [
+    {
+      update_id: (update += 1),
+      inline_query: {
+        id: String(update),
+        from: ADA,
+        query: '41',
+        offset: '',
+      },
+    },
+  ],
   // A command in a caption: the middleware that rewrites the update so the
   // command handlers can see it. It reaches the report gate the long way round.
   'message::bot_command': (words) => [

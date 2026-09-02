@@ -137,6 +137,12 @@ export function composeDailyRevenueReport(
   balance: StarAmount | undefined,
 ): string {
   const average = current.payments === 0 ? 0 : current.grossStars / current.payments;
+  const sources = current.acquisition
+    .map(
+      ({ source, starts, purchases }) =>
+        `${messageFor(language, `revenue.source.${source}`)}: ${starts} → ${purchases}`,
+    )
+    .join('\n');
   return messageFor(language, 'revenue.report', {
     date: new Date(current.day * DAY_MS).toISOString().slice(0, 10),
     balance: balanceFor(language, balance),
@@ -154,6 +160,7 @@ export function composeDailyRevenueReport(
     purchase: current.funnel.purchase,
     return: current.funnel.return,
     publicStarts: current.publicStarts,
+    sources,
     focus: growthFocusFor(language, current, previous),
   });
 }

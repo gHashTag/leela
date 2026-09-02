@@ -65,6 +65,13 @@ describe('the durable daily revenue report', () => {
       funnel: { trial: 2, paywall: 2, invoice: 1, purchase: 1, return: 1 },
       publicStarts: 5,
       publicPosted: true,
+      acquisition: [
+        { source: 'direct', starts: 0, purchases: 0 },
+        { source: 'public', starts: 0, purchases: 0 },
+        { source: 'guest', starts: 0, purchases: 0 },
+        { source: 'inline', starts: 0, purchases: 0 },
+        { source: 'mini_app', starts: 0, purchases: 0 },
+      ],
     });
     queries.close();
   });
@@ -88,6 +95,13 @@ describe('the durable daily revenue report', () => {
       funnel: { trial: 0, paywall: 0, invoice: 0, purchase: 0, return: 0 },
       publicStarts: 0,
       publicPosted: false,
+      acquisition: [
+        { source: 'direct', starts: 0, purchases: 0 },
+        { source: 'public', starts: 0, purchases: 0 },
+        { source: 'guest', starts: 0, purchases: 0 },
+        { source: 'inline', starts: 0, purchases: 0 },
+        { source: 'mini_app', starts: 0, purchases: 0 },
+      ],
     });
     await expect(reports.claimDelivery(20_000, '11', 90)).resolves.toBe(true);
     await expect(reports.claimDelivery(20_000, '11', 95)).resolves.toBe(false);

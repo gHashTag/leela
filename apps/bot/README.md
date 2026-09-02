@@ -34,10 +34,14 @@ OPENAI_MODEL=gpt-4o-mini       # optional: defaults to gpt-4o-mini
 The companion takes any of four: `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`,
 `ZAI_API_KEY` or `OPENROUTER_API_KEY`, each with an optional `*_MODEL`. The
 first one set wins, in that order. Set `ZAI_PLAN=coding` for a Z.AI Coding Plan
-key — sent to the pay-as-you-go host it returns error 1113, which reads as an
-expired key. All three publish the same chat-completions format, so the
-choice is a host and not a code path — and the startup line names the provider
-and model it picked up, so a key in the wrong variable is visible immediately.
+key and keep it on the Coding endpoint; the current default is `glm-4.7`.
+Provider code 1113 on that endpoint means the Coding Plan has no available
+quota and opens the companion's cool-down instead of retrying every player
+message. All four publish the same chat-completions format, so the choice is a
+host and not a code path — and the startup line names the provider and model it
+picked up, so a key in the wrong variable is visible immediately. Run
+`bun run monitor:ai` to verify that production returns answer text without
+printing the answer or any credentials.
 
 The process says on startup which of the two it is doing, rather than losing
 games quietly.

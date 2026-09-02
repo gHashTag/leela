@@ -796,7 +796,13 @@ const EN = {
     'trial → paywall → invoice → purchase → return\n' +
     '{trial} → {paywall} → {invoice} → {purchase} → {return}\n' +
     'Starts from the public post: {publicStarts}\n\n' +
+    'Acquisition (first starts → first purchases):\n{sources}\n\n' +
     'Growth focus: {focus}',
+  'revenue.source.direct': 'direct bot',
+  'revenue.source.public': 'public post',
+  'revenue.source.guest': 'Guest Mode',
+  'revenue.source.inline': 'Inline Mode',
+  'revenue.source.mini_app': 'Main Mini App',
   'revenue.balanceUnavailable': 'unavailable',
   'revenue.changeNew': '{delta} XTR (new growth)',
   'revenue.changeNA': '{delta} XTR (n/a)',
@@ -1340,7 +1346,13 @@ const RU: Partial<Record<MessageKey, Message>> = {
     'лимит → пейвол → счёт → покупка → возврат в игру\n' +
     '{trial} → {paywall} → {invoice} → {purchase} → {return}\n' +
     'Стартов из публичного поста: {publicStarts}\n\n' +
+    'Привлечение (первые старты → первые покупки):\n{sources}\n\n' +
     'Фокус роста: {focus}',
+  'revenue.source.direct': 'напрямую в боте',
+  'revenue.source.public': 'публичный пост',
+  'revenue.source.guest': 'гостевой режим',
+  'revenue.source.inline': 'инлайн-режим',
+  'revenue.source.mini_app': 'главное мини-приложение',
   'revenue.balanceUnavailable': 'недоступен',
   'revenue.changeNew': '{delta} XTR (новый рост)',
   'revenue.changeNA': '{delta} XTR (n/a)',

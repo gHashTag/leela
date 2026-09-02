@@ -34,7 +34,12 @@ import {
 import { currentPlayer, hasWon, isWaitingToEnter } from '@leela/engine';
 import { createBot, miniAppUrl } from './bot';
 import { accessFor } from './access';
-import { PAID_COMMANDS, menuFor, roll as rollCommand } from './commands';
+import {
+  PAID_COMMANDS,
+  menuFor,
+  roll as rollCommand,
+} from './commands';
+import { acquisitionFromMiniApp, attributeAcquisition } from './acquisition';
 import { attributeConversion } from './conversions';
 import { attributePaymentStage, funnelSaid } from './payment-funnel';
 import { DirectChannels } from './delivery';
@@ -54,6 +59,7 @@ import {
 import { serveAsk, type StreamAsk, type Streamed } from './serve';
 import { offering, operatorIds, whyNoOperators, whyNothingIsSold } from './stars';
 import { openStorage, remembering } from './storage';
+import { roomForMiniApp } from './main-mini-app';
 import { asReport, keep } from './take-in';
 import { supervise } from './supervisor';
 
@@ -194,6 +200,7 @@ const built = {
   nudges: storage.nudges,
   entitlements: storage.entitlements,
   funnel: storage.funnel,
+  acquisitions: storage.acquisitions,
   publications: storage.publications,
   channels,
   guide,
@@ -219,6 +226,7 @@ const keeping =
   built.nudges === storage.nudges &&
   built.entitlements === storage.entitlements &&
   built.funnel === storage.funnel &&
+  built.acquisitions === storage.acquisitions &&
   built.publications === storage.publications;
 
 console.log(
@@ -414,10 +422,25 @@ function zaiStream(apiKey: string): StreamAsk {
     });
 
     if (!upstream.ok || !upstream.body) {
-      const detail = upstream.ok ? 'no body' : await upstream.text().catch(() => '');
+      let providerCode: string | undefined;
+      if (!upstream.ok) {
+        try {
+          const refused = (await upstream.json()) as {
+            code?: unknown;
+            error?: { code?: unknown };
+          };
+          const code = refused.error?.code ?? refused.code;
+          if (typeof code === 'string' || typeof code === 'number') providerCode = String(code);
+        } catch {
+          // The status remains actionable; response bodies never enter logs.
+        }
+      }
       throw new ModelError(
-        `the model refused the request (${upstream.status})${detail ? `: ${detail.slice(0, 200)}` : ''}`,
+        upstream.ok
+          ? 'the model returned no stream'
+          : `the model refused the request (${upstream.status})${providerCode ? `; provider code ${providerCode}` : ''}`,
         upstream.status,
+        providerCode,
       );
     }
 
@@ -487,7 +510,17 @@ const asking = serveAsk({
    * difference instead of asking got it wrong — the leaderboard, `/new`, the
    * mini app's header, the trail marker.
    */
-  gameOf: async (userId) => {
+  openedFromMiniApp: async (who) => {
+    await attributeAcquisition({
+      store: storage.acquisitions,
+      userId: who.id,
+      attribution: acquisitionFromMiniApp(who.startParam, who.startParamValid),
+      at: Date.now(),
+      log: console.log,
+    });
+  },
+  gameOf: async (who) => {
+    const userId = who.id;
     /*
      * **`roomOf`, not `get`.** A room is keyed by the CHAT it lives in, and this
      * is handed a PLAYER — the two are the same number only in a private chat
@@ -502,7 +535,7 @@ const asking = serveAsk({
      * `get(userId)` stays as the fallback for a store that has no `roomOf`,
      * which is the convention the interface already documents.
      */
-    const room = (await storage.store.roomOf?.(userId)) ?? (await storage.store.get(userId));
+    const room = await roomForMiniApp({ who, store: storage.store, log: console.log });
     const seat = room?.session.players.find((player) => player.id === userId);
     if (seat === undefined || room === null || room === undefined) return null;
     const access = await accessFor({

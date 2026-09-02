@@ -443,11 +443,12 @@ export class Guide {
       if (error instanceof PromptError) throw error;
 
       const status = error instanceof ModelError ? error.status : undefined;
+      const providerCode = error instanceof ModelError ? error.providerCode : undefined;
 
-      if (status !== undefined && NEEDS_A_HUMAN.has(status)) {
+      if (status !== undefined && (NEEDS_A_HUMAN.has(status) || providerCode === '1113')) {
         // Loud, and once per cool-down rather than once per report.
         this.silentUntil = this.now() + this.silenceMs;
-        this.silentReason = reasonFor(status, this.silenceMs);
+        this.silentReason = reasonFor(status, this.silenceMs, providerCode);
         this.log(`companion silenced: ${this.silentReason}`, error);
       } else if (error instanceof ModelTimeout) {
         this.log(`model timed out after ${this.timeoutMs}ms`, error);
@@ -463,7 +464,11 @@ export class Guide {
 }
 
 /** A refusal, in terms an operator can act on rather than a status code. */
-function reasonFor(status: number, silenceMs: number): string {
+function reasonFor(status: number, silenceMs: number, providerCode?: string): string {
+  if (providerCode === '1113') {
+    const minutes = Math.round(silenceMs / 60_000);
+    return `the Z.AI Coding Plan has no available quota (${status}/1113); trying again in ${minutes} minute${minutes === 1 ? '' : 's'}`;
+  }
   const what =
     status === 401
       ? 'the key was refused'

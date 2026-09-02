@@ -126,6 +126,7 @@ const INVOICE_BORNE: Record<string, { needs: string; sent(call: Sent): boolean }
  * has now watched that question go unasked once.
  */
 const PLAYER_BORNE = new Set([
+  'inline_query',
   'message::bot_command',
   'message:caption',
   'message:document',

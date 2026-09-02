@@ -135,6 +135,25 @@ describe('test doubles', () => {
   });
 });
 
+describe('Z.AI Coding Plan failures', () => {
+  it('defaults to a model the current Coding Plan actually serves', () => {
+    expect(DEFAULT_ZAI_MODEL).toBe('glm-4.7');
+  });
+
+  it('retains the provider code without reclassifying the HTTP response', async () => {
+    const model = zAI({
+      apiKey: 'secret',
+      baseUrl: ZAI_CODING_BASE_URL,
+      fetch: fetchReturning({ error: { code: '1113', message: 'Insufficient balance' } }, 429),
+    });
+
+    await expect(model.complete(messages)).rejects.toMatchObject({
+      status: 429,
+      providerCode: '1113',
+    });
+  });
+});
+
 /**
  * Two providers, one contract.
  *
