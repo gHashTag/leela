@@ -786,6 +786,37 @@ const EN = {
   'public.question': 'Leela asks:',
   'public.invitation': 'There is no right answer. Bring your own question to the board.',
   'public.play': '🎲 Play Leela',
+  'revenue.report':
+    '📈 Leela · Stars · {date} UTC\n\n' +
+    'Current Telegram balance: {balance}\n' +
+    'Leela-recorded net: {net} XTR · change: {change}\n' +
+    'Gross: {gross} XTR · refunds: {refunded} XTR ({refunds})\n' +
+    'Purchases: {payments} · payers: {payers} · average purchase: {average} XTR\n\n' +
+    'First milestones today:\n' +
+    'trial → paywall → invoice → purchase → return\n' +
+    '{trial} → {paywall} → {invoice} → {purchase} → {return}\n' +
+    'Starts from the public post: {publicStarts}\n\n' +
+    'Growth focus: {focus}',
+  'revenue.balanceUnavailable': 'unavailable',
+  'revenue.changeNew': '{delta} XTR (new growth)',
+  'revenue.changeNA': '{delta} XTR (n/a)',
+  'revenue.changePercent': '{delta} XTR ({percent}%)',
+  'revenue.focus.checkout':
+    'More first invoices than first purchases were observed. Check price clarity, trust and checkout friction.',
+  'revenue.focus.offer':
+    'More first paywalls than first invoices were observed. Check the /pro transition and offer CTA.',
+  'revenue.focus.return':
+    'More purchases than first paid returns were observed. Strengthen the post-purchase invitation back to the board.',
+  'revenue.focus.fourth':
+    'More players reached the free limit than the fourth-move paywall. Strengthen the prompt to continue the game.',
+  'revenue.focus.public':
+    'The public post recorded no starts. Test its hook and play CTA without changing the price.',
+  'revenue.focus.acquire':
+    'No recorded Stars today. Focus on bringing new players to a third move and a clear offer.',
+  'revenue.focus.momentum':
+    'Positive net momentum is visible. Preserve the working acquisition and checkout path while watching refunds.',
+  'revenue.focus.protect':
+    'Protect recorded net: watch refunds and the first-event gaps before changing price.',
   'nudge.reportCta':
     'Reply here with what you are experiencing on this plan — the game will save it as your reflection.',
   // One call back into the game, and it has to stand on its own: the board
@@ -1299,6 +1330,37 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'public.question': 'Лила спрашивает:',
   'public.invitation': 'Здесь нет правильного ответа. Приходите на доску со своим вопросом.',
   'public.play': '🎲 Играть в Лилу',
+  'revenue.report':
+    '📈 Leela · Stars · {date} UTC\n\n' +
+    'Текущий баланс Telegram: {balance}\n' +
+    'Итого, зафиксировано Leela: {net} XTR · изменение: {change}\n' +
+    'Начислено: {gross} XTR · возвраты: {refunded} XTR ({refunds})\n' +
+    'Покупки: {payments} · плательщики: {payers} · средний чек: {average} XTR\n\n' +
+    'Первые события дня:\n' +
+    'лимит → пейвол → счёт → покупка → возврат в игру\n' +
+    '{trial} → {paywall} → {invoice} → {purchase} → {return}\n' +
+    'Стартов из публичного поста: {publicStarts}\n\n' +
+    'Фокус роста: {focus}',
+  'revenue.balanceUnavailable': 'недоступен',
+  'revenue.changeNew': '{delta} XTR (новый рост)',
+  'revenue.changeNA': '{delta} XTR (n/a)',
+  'revenue.changePercent': '{delta} XTR ({percent}%)',
+  'revenue.focus.checkout':
+    'Наблюдалось больше первых счетов, чем первых покупок. Проверьте ясность цены, доверие и удобство оплаты.',
+  'revenue.focus.offer':
+    'Наблюдалось больше первых пейволов, чем первых счетов. Проверьте переход в /pro и ясность предложения.',
+  'revenue.focus.return':
+    'Покупок больше, чем первых платных возвратов. Усильте приглашение вернуться на доску после оплаты.',
+  'revenue.focus.fourth':
+    'Больше игроков дошли до бесплатного лимита, чем до четвёртого хода. Усильте приглашение продолжить игру.',
+  'revenue.focus.public':
+    'Публичный пост не зафиксировал стартов. Проверьте первую фразу и призыв к игре без изменения цены.',
+  'revenue.focus.acquire':
+    'Сегодня нет зафиксированных Stars. Фокус — довести новых игроков до третьего хода и ясного оффера.',
+  'revenue.focus.momentum':
+    'Положительная динамика итога заметна. Сохраните работающий путь привлечения и оплаты, следя за возвратами.',
+  'revenue.focus.protect':
+    'Фокус — сохранить итог: следите за возвратами и разрывами первых событий до изменения цены.',
   'nudge.reportCta':
     'Ответьте здесь, что вы переживаете на этом плане — игра сохранит это как вашу запись.',
   'nudge.cta': 'Игра продолжается там, где вы стоите — /roll вернёт вас в неё.',

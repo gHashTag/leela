@@ -210,6 +210,7 @@ const DOCS = [
   // somebody once thought of.
   'apps/webgl/NOTES.md',
   'specs/022-public-telegram-outreach/plan.md',
+  'specs/023-daily-revenue-report/plan.md',
 ];
 
 const documented = new Map();

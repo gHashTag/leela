@@ -19,6 +19,7 @@ import {
   sqliteNudgeStore,
   sqlitePaymentFunnel,
   sqlitePublicOutreach,
+  sqliteRevenueReports,
   sqliteReportSink,
   sqliteStepSink,
 } from './sqlite';
@@ -34,6 +35,7 @@ import {
   type NudgeStore,
   type PaymentFunnelStore,
   type PublicOutreachStore,
+  type RevenueReportStore,
   type ReportSink,
   type RoomStore,
   type StepSink,
@@ -74,6 +76,8 @@ export interface Storage {
   funnel: PaymentFunnelStore;
   /** One anonymous public-post cohort per UTC day. */
   publications: PublicOutreachStore;
+  /** Aggregate daily revenue reads and delivery caps; durable deployments only. */
+  revenueReports?: RevenueReportStore;
   /** Whether games survive a restart. */
   durable: boolean;
   /**
@@ -203,6 +207,7 @@ export function openStorage({
       entitlements: sqliteEntitlements(queries),
       funnel: sqlitePaymentFunnel(queries),
       publications: sqlitePublicOutreach(queries),
+      revenueReports: sqliteRevenueReports(queries),
       lastTick: () => queries.lastTick(),
       rememberTick: (at, sent, skipped, bridges) =>
         queries.recordTick(at, sent, skipped, bridges),

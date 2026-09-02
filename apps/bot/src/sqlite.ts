@@ -30,6 +30,8 @@ import {
   type PublicBridge,
   type PublicOutreachStore,
   type PublicPostRecord,
+  type DailyRevenueSnapshot,
+  type RevenueReportStore,
   type Subscription,
 } from './store';
 
@@ -260,6 +262,19 @@ CREATE TABLE IF NOT EXISTS public_posts (
   model_bridge INTEGER NOT NULL DEFAULT 0,
   starts       INTEGER NOT NULL DEFAULT 0,
   updated_at   INTEGER NOT NULL
+);
+
+-- One private aggregate revenue report per completed UTC day and configured
+-- Stars operator. Per-recipient state matters: Telegram sends are not a
+-- transaction, so one blocked operator must not make a successful delivery to
+-- another operator repeat after a restart.
+CREATE TABLE IF NOT EXISTS admin_revenue_reports (
+  day        INTEGER NOT NULL,
+  recipient  TEXT NOT NULL,
+  claimed_at INTEGER NOT NULL,
+  sent_at    INTEGER,
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (day, recipient)
 );
 `;
 
@@ -1017,6 +1032,97 @@ export class SqliteRoomQueries implements RoomQueries {
     };
   }
 
+  /** Aggregate one complete UTC day; no identifier crosses this boundary. */
+  revenueDay(day: number): DailyRevenueSnapshot {
+    const start = day * DAY_MS;
+    const end = start + DAY_MS;
+    const money = this.db
+      .prepare(
+        `SELECT
+           COALESCE(SUM(CASE WHEN paid_at >= ? AND paid_at < ? THEN stars ELSE 0 END), 0) AS gross_stars,
+           COALESCE(SUM(CASE WHEN refunded_at >= ? AND refunded_at < ? THEN stars ELSE 0 END), 0) AS refunded_stars,
+           SUM(CASE WHEN paid_at >= ? AND paid_at < ? THEN 1 ELSE 0 END) AS payments,
+           COUNT(DISTINCT CASE WHEN paid_at >= ? AND paid_at < ? THEN user_id END) AS payers,
+           SUM(CASE WHEN refunded_at >= ? AND refunded_at < ? THEN 1 ELSE 0 END) AS refunds
+         FROM entitlements`,
+      )
+      .get(start, end, start, end, start, end, start, end, start, end) as
+      | Record<string, number | null>
+      | undefined;
+    const funnel = this.db
+      .prepare(
+        `SELECT
+           SUM(CASE WHEN trial_at >= ? AND trial_at < ? THEN 1 ELSE 0 END) AS trial,
+           SUM(CASE WHEN paywall_at >= ? AND paywall_at < ? THEN 1 ELSE 0 END) AS paywall,
+           SUM(CASE WHEN invoice_at >= ? AND invoice_at < ? THEN 1 ELSE 0 END) AS invoice,
+           SUM(CASE WHEN purchase_at >= ? AND purchase_at < ? THEN 1 ELSE 0 END) AS purchase,
+           SUM(CASE WHEN return_at >= ? AND return_at < ? THEN 1 ELSE 0 END) AS return
+         FROM payment_funnel`,
+      )
+      .get(start, end, start, end, start, end, start, end, start, end) as
+      | Partial<Record<PaymentMilestone, number | null>>
+      | undefined;
+    const post = this.db
+      .prepare('SELECT starts FROM public_posts WHERE day = ?')
+      .get(day) as { starts?: number } | null | undefined;
+
+    return {
+      day,
+      grossStars: Number(money?.gross_stars ?? 0),
+      refundedStars: Number(money?.refunded_stars ?? 0),
+      payments: Number(money?.payments ?? 0),
+      payers: Number(money?.payers ?? 0),
+      refunds: Number(money?.refunds ?? 0),
+      funnel: {
+        trial: Number(funnel?.trial ?? 0),
+        paywall: Number(funnel?.paywall ?? 0),
+        invoice: Number(funnel?.invoice ?? 0),
+        purchase: Number(funnel?.purchase ?? 0),
+        return: Number(funnel?.return ?? 0),
+      },
+      publicStarts: Number(post?.starts ?? 0),
+      publicPosted: post != null,
+    };
+  }
+
+  /**
+   * Atomically reserve a private delivery before the Telegram side effect.
+   *
+   * The unique key is the cross-process lock. A claim left by a crash remains
+   * reserved: retrying it could duplicate a message Telegram accepted just
+   * before the process died. A caught Telegram refusal is released below.
+   */
+  claimRevenueReportDelivery(day: number, recipient: string, at: number): boolean {
+    const result = this.db
+      .prepare(
+        `INSERT INTO admin_revenue_reports (day, recipient, claimed_at, sent_at, updated_at)
+         VALUES (?, ?, ?, NULL, ?)
+         ON CONFLICT(day, recipient) DO NOTHING`,
+      )
+      .run(day, recipient, at, this.now()) as { changes?: number | bigint };
+    return Number(result.changes ?? 0) > 0;
+  }
+
+  /** A known failed send may be attempted again; a confirmed row may not. */
+  releaseRevenueReportDelivery(day: number, recipient: string): void {
+    this.db
+      .prepare(
+        'DELETE FROM admin_revenue_reports WHERE day = ? AND recipient = ? AND sent_at IS NULL',
+      )
+      .run(day, recipient);
+  }
+
+  /** Confirm the already-claimed successful delivery. */
+  recordRevenueReportDelivery(day: number, recipient: string, sentAt: number): void {
+    this.db
+      .prepare(
+        `UPDATE admin_revenue_reports
+         SET sent_at = COALESCE(sent_at, ?), updated_at = ?
+         WHERE day = ? AND recipient = ?`,
+      )
+      .run(sentAt, this.now(), day, recipient);
+  }
+
   /** One anonymous public-post cohort, or no successful post for that day. */
   publicPost(day: number): PublicPostRecord | null {
     const row = this.db
@@ -1216,6 +1322,24 @@ export function sqlitePaymentFunnel(queries: SqliteRoomQueries): PaymentFunnelSt
     },
     async summary(): Promise<PaymentFunnelSummary> {
       return queries.paymentFunnelSummary();
+    },
+  };
+}
+
+/** Completed-day revenue snapshots and per-operator delivery caps. */
+export function sqliteRevenueReports(queries: SqliteRoomQueries): RevenueReportStore {
+  return {
+    async day(day): Promise<DailyRevenueSnapshot> {
+      return queries.revenueDay(day);
+    },
+    async claimDelivery(day, recipient, at): Promise<boolean> {
+      return queries.claimRevenueReportDelivery(day, recipient, at);
+    },
+    async releaseDelivery(day, recipient): Promise<void> {
+      queries.releaseRevenueReportDelivery(day, recipient);
+    },
+    async recordDelivery(day, recipient, at): Promise<void> {
+      queries.recordRevenueReportDelivery(day, recipient, at);
     },
   };
 }

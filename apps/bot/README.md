@@ -249,6 +249,8 @@ LEELA_STARS_MONTH=150          # optional: Stars for 30 days
 LEELA_STARS_HALFYEAR=700       # optional: Stars for 182 days
 LEELA_STARS_YEAR=1200          # optional: Stars for 365 days
 LEELA_STARS_OPERATORS=11,22    # optional: who may /refund a payment
+LEELA_REVENUE_REPORT_HOUR=1    # optional: private daily report hour, UTC
+LEELA_REVENUE_REPORT_LANGUAGE=ru # optional: defaults to public language, then ru
 ```
 
 With **none** of the three set, `offering(process.env)` in `src/stars.ts`
@@ -322,6 +324,31 @@ So nothing awaited stands between the update arriving and the answer going out
 — `tests/a-payment-answered-in-ten-seconds.test.ts` proves it by handing the bot
 stores whose promises never settle, and by asserting that the path touches no
 store at all.
+
+### Daily private revenue growth brief
+
+A deployment with durable SQLite and at least one
+`LEELA_STARS_OPERATORS` recipient sends each operator one private aggregate
+report for the previous completed UTC day. The default delivery time is
+`01:00 UTC`; `LEELA_REVENUE_REPORT_HOUR` changes it. A first startup after that
+hour catches up only the latest day, never a burst of old reports.
+
+The brief keeps Telegram's current bot balance separate from what Leela itself
+recorded: gross XTR, recorded refunds, net XTR, change from the preceding day,
+purchase and payer counts, average purchase, daily first funnel milestones and
+starts from the public invitation. One deterministic growth focus points to an
+observed gap without calling it a cohort conversion or claiming causality.
+Stars are virtual items, so the report never invents a fiat value.
+
+Delivery is capped in `admin_revenue_reports` per UTC day and recipient. One
+blocked operator does not suppress the others; a failed send is not marked as
+delivered. A durable claim is taken before the Telegram call, so overlapping
+Railway processes cannot both send; a known refusal releases it for retry. A
+claim left by a process crash stays reserved because Telegram may already have
+accepted the message. Logs name only aggregate outcomes, never recipient ids, player ids,
+charge ids, payloads or per-player amounts. The scheduler stays off in a
+process-memory deployment because such a process cannot truthfully compare
+completed days or remember delivery across a Railway restart.
 
 ## The mini app's companion
 
