@@ -82,6 +82,25 @@ export interface Palette {
   readonly piece: number;
   /** The ring under the player. */
   readonly halo: number;
+  /**
+   * The arrow's shaft, head and fletching.
+   *
+   * These were three module constants shared by both schemes, on the same
+   * reasoning that keeps the snakes shared — *a python is not a different
+   * colour at night.* That reasoning is right about a creature and wrong about
+   * this, and the proof is not an argument: with one shaft light enough to read
+   * on the void, the arrows on the paper board **disappeared completely**, and
+   * with one dark enough for paper they were the muddy sand that made the void
+   * board unreadable. Thirty snakes repainted from two swatches becomes two
+   * creatures; one arrow given two shafts is still one arrow, drawn in the wood
+   * you can actually see against the ground it is lying on.
+   *
+   * The snakes stay shared. They are dark on both grounds already, and their
+   * variety is the thing the shared-material rule exists to protect.
+   */
+  readonly arrowWood: number;
+  readonly arrowSteel: number;
+  readonly arrowFeather: number;
   /** Ambient light strength. */
   readonly ambient: number;
   /** Key light strength. */
@@ -108,6 +127,12 @@ export const SPACE: Palette = {
   win: 0xb8912f,
   piece: 0xff5cf7,
   halo: 0x201b12,
+  // Bone, bright steel, near-white fletching. On the void the arrow is the pale
+  // thing and the snake is the dark one, which is the whole distinction at a
+  // glance.
+  arrowWood: 0xe9e3d6,
+  arrowSteel: 0xe4e9ee,
+  arrowFeather: 0xf7f5f0,
   ambient: 0.28,
   key: 1.15,
   envIntensity: 0.42,
@@ -131,7 +156,12 @@ export const SPACE: Palette = {
 export const PAPER: Palette = {
   // The page, not a colour. See `background` on `Palette`.
   background: null,
-  cell: 0xe8e0cd,
+  // Paper, not parchment. `0xe8e0cd` was a cream that read as grubby grey once
+  // the room light hit it, and "the beige looks crude" was the first thing its
+  // owner said about this board in either scheme. Lifted to a warm white, which
+  // is what an actual page under a lamp is; `border` stays where it was, so the
+  // ink on that page got darker relative to it rather than lighter.
+  cell: 0xf5f2ea,
   border: 0x7a6c4e,
   // Dark, not pale: on paper a number has to carry itself the other way.
   label: '#241f18',
@@ -142,7 +172,25 @@ export const PAPER: Palette = {
   arrow: 0x2c5c42,
   win: 0x9a7000,
   piece: 0xc41fa8,
-  halo: 0xd8cfb8,
+  halo: 0xe6e1d5,
+  // Blued steel, not wood, and that is a measurement rather than a taste.
+  //
+  // On the page the ground is the pale thing, so the arrow must be dark — and
+  // every snake is dark too, so the two collapse into each other. A search over
+  // the whole colour cube says the best any colour can do here is 2.42:1
+  // against the nearest snake while still clearing the paper at 3:1, and it
+  // reaches that only as hot pink. **The lightness split that works on the void
+  // is not available on paper at all.** Every warm dark shaft — walnut, ochre,
+  // burnt umber — lands inside the snakes' own family at ΔE 6-22, because the
+  // snakes ARE the warm dark colours.
+  //
+  // So the arrow leaves the family instead. Blued steel is a real arrow finish,
+  // it is the one cool dark on the board, and it clears every snake by ΔE 24
+  // where walnut managed 6.7. The board keeps its warmth; the thing that must
+  // not be mistaken for a snake stops being the same colour as one.
+  arrowWood: 0x25314f,
+  arrowSteel: 0x445470,
+  arrowFeather: 0x303c52,
   // Brighter room, softer key: a lit table has fill from every side, so the
   // shadow that models a tube on the void would read as grime here.
   ambient: 0.62,
@@ -164,16 +212,31 @@ export const PAPER: Palette = {
 export const SNAKE_SKINS: readonly number[] = [
   0x4c5240, // olive python
   0x7d3a2c, // madder red
-  0x6d5c3c, // tan viper
+  0x54452c, // tan viper, darkened out of the shaft's band
   0x2f3a35, // near-black green
-  0x8a6f4a, // sand
+  0x5f4c31, // sand, darkened out of the shaft's band
   0x5a4038, // dark brown
 ];
 
-/** Arrow furniture: a wooden shaft, a steel head, a pale feather. */
-export const ARROW_WOOD = 0x9a7648;
-export const ARROW_STEEL = 0xc2c7cb;
-export const ARROW_FEATHER = 0xded3bd;
+/**
+ * The arrow furniture used to live here, as `ARROW_WOOD`, `ARROW_STEEL` and
+ * `ARROW_FEATHER`, shared by both schemes. It is on `Palette` now, and the
+ * comment there says why one shaft could not serve two grounds.
+ *
+ * The old shaft was `0x9a7648`, and it was the board's worst defect rather than
+ * a matter of taste: **four of the nine colours sat in one sandy band** — that
+ * shaft, the tan viper, the sand and the dark brown — so an arrow and a snake
+ * were the same colour at a glance. That is the single distinction the whole
+ * game rests on. One carries you up, the other drops you, and the board could
+ * not say which without being read edge by edge.
+ *
+ * The fix is a LIGHTNESS split rather than a hue one, so the naturalism above
+ * survives: on each ground the arrow sits at the opposite end of the scale from
+ * every snake, and hue may then repeat freely — a brown snake under a bone
+ * arrow is unmistakable, and so is a walnut arrow under a pale one.
+ * `a-snake-must-not-look-like-an-arrow.test.ts` holds the margin, checks BOTH
+ * palettes against their own ground, and fails on the values that shipped.
+ */
 
 /** `#rrggbb`, for the places that take a string. */
 export const css = (colour: number): string => `#${colour.toString(16).padStart(6, '0')}`;
