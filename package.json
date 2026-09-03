@@ -21,7 +21,8 @@
     "actionlint": "github-actionlint .github/workflows/*.yml",
     "depcruise": "depcruise --config .dependency-cruiser.mjs --output-type err-long packages apps",
     "mutate:engine": "stryker run stryker.conf.mjs",
-    "verify": "bun run content:build && bun run typecheck && bun run typecheck:strict && bun run audit && bun run test"
+    "verify": "bun run content:build && bun run typecheck && bun run typecheck:strict && bun run audit && bun run test",
+    "monitor:play": "bun run scripts/monitor-live-play.mjs"
   },
   "auditsThisGateCannotRun": {
     "scripts/audit-pushed.mjs": "reads ~/.leela/daily-quote.log, which is on the machine that sends and nowhere else. CI has no such file and its absence is not the absence of a push - the audit exits 2 for that, never 0. Written 2026-08-31 after a morning with no 06:00 line at all: a laptop asleep at six is a push that never happened, recorded only in a file nobody opened. It also catches a send OFF the hour, which is somebody running the sender by hand and every subscriber being pushed to for it.",

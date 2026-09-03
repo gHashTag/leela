@@ -16,9 +16,6 @@ import {
   plans,
 } from './layout';
 import {
-  ARROW_FEATHER,
-  ARROW_STEEL,
-  ARROW_WOOD,
   SNAKE_SKINS,
   SPACE,
   type Palette,
@@ -911,7 +908,7 @@ export const createBoard = (
       kind === 'snake'
         ? // Assigned by position, so the board is the same board every load.
           partMaterial(SNAKE_SKINS[at % SNAKE_SKINS.length] as number, 0.42, 0.08)
-        : partMaterial(ARROW_WOOD, 0.72, 0.05);
+        : partMaterial(palette.arrowWood, 0.72, 0.05);
 
     const start = curve.getPointAt(0);
     const end = curve.getPointAt(1);
@@ -972,7 +969,7 @@ export const createBoard = (
       // arrow rather than as a hose with a cone on it.
       group.add(new THREE.Mesh(taperedTube(curve, arrowProfile(ARROW_SHAFT), 40, 8), material));
 
-      const steel = partMaterial(ARROW_STEEL, 0.26, 0.92);
+      const steel = partMaterial(palette.arrowSteel, 0.26, 0.92);
       const head = new THREE.Mesh(new THREE.ConeGeometry(ARROW_SHAFT * 4.2, 0.3, 14), steel);
       // Outward, like the snake's — this read `intoEnd.clone().negate()` and
       // turned every arrowhead on the board back down its own shaft. See
@@ -981,7 +978,7 @@ export const createBoard = (
       head.castShadow = true;
       group.add(head);
 
-      const feather = partMaterial(ARROW_FEATHER, 0.95, 0.0);
+      const feather = partMaterial(palette.arrowFeather, 0.95, 0.0);
       for (const turn of [0, 1, 2]) {
         const fin = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.16, 0.12), feather);
         fin.position.copy(start).add(intoStart.clone().multiplyScalar(-0.06));
