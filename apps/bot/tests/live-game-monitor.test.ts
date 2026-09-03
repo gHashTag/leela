@@ -148,9 +148,12 @@ describe('the production image contract', () => {
       .map((line) => line.trim())
       .filter((line) => line !== '' && !line.startsWith('#'));
 
-    expect(instructions).toContain(
-      'COPY scripts/monitor-live-game.mjs scripts/monitor-live-game.mjs',
-    );
+    // Shipped by whatever mechanism the Dockerfile uses. This asserted the
+    // literal COPY line until a glob replaced it, and the literal is what made
+    // the guard per-monitor: it protected this one and let a third through.
+    // `every-monitor-reaches-the-image.test.ts` is the general form.
+    expect(instructions?.some((line) => /^COPY\s+scripts\/monitor-(live-game\.mjs|\*[\w.*-]*)\s/.test(line)))
+      .toBe(true);
   });
 
   it('uses the linked Railway target instead of a partial service override', () => {
