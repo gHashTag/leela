@@ -43,7 +43,9 @@ describe('the canary deployment contract', () => {
       readFileSync(new URL('../../../package.json', import.meta.url), 'utf8'),
     );
 
-    expect(dockerfile).toContain('COPY scripts/monitor-live-ai.mjs scripts/monitor-live-ai.mjs');
+    // Shipped by whatever mechanism the Dockerfile uses; see
+    // every-monitor-reaches-the-image.test.ts for why the literal line went.
+    expect(/^COPY\s+scripts\/monitor-(live-ai\.mjs|\*[\w.*-]*)\s/m.test(dockerfile)).toBe(true);
     expect(monitor).toContain("['ssh', 'bun', 'run', 'scripts/monitor-live-ai.mjs', '--inside']");
     expect(monitor).not.toContain('console.log(body)');
     expect(manifest.scripts?.['monitor:ai']).toBe('bun scripts/monitor-live-ai.mjs');
