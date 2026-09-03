@@ -83,3 +83,20 @@ export type {
   GuideStatus,
   Reflection,
 } from './guide';
+
+export { pooled, keysFrom } from './pool';
+export type { PooledOptions } from './pool';
+export {
+  DEFAULT_RATE_LIMIT_COOLDOWN_MS,
+  ZAI_INSUFFICIENT_BALANCE,
+  availableCount,
+  freshState,
+  isAvailable,
+  isTerminal,
+  nextKey,
+  reasonFor,
+  recordFailure,
+  recordSuccess,
+  reset,
+} from './key-rotation';
+export type { CooldownReason, KeyState } from './key-rotation';
