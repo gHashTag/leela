@@ -97,13 +97,44 @@ describe('live play monitor', () => {
     expect(ids(healthy({ entitlements: expired }))).toContain('paywall-with-no-door-ever-used');
   });
 
-  it('reports a funnel that has recorded nothing while moves exist', () => {
-    expect(ids(healthy({ funnel: [] }))).toContain('funnel-recorded-nothing');
+  it('reports an empty funnel only once a row was owed', () => {
+    // Owed: this player has three counted moves, which is the trial threshold.
+    const atTheLimit = [
+      throwAt({ userId: 'u1', fromPlan: 6, toPlan: 10 }),
+      throwAt({ userId: 'u1', fromPlan: 10, toPlan: 14 }),
+      throwAt({ userId: 'u1', fromPlan: 14, toPlan: 20 }),
+    ];
+    expect(ids(healthy({ funnel: [], throws: atTheLimit })))
+      .toContain('funnel-recorded-nothing');
+  });
+
+  it('does NOT blame the funnel when nobody reached the limit', () => {
+    // The production state on 2026-09-03, and the false alarm this check
+    // actually produced: one counted move in the game's whole history, a
+    // threshold of three, and an empty funnel that was simply CORRECT. The
+    // owner was asked to fix a funnel that had nothing wrong with it.
+    const oneMove = [
+      throwAt({ userId: 'u1', fromPlan: 68, toPlan: 6 }),
+      throwAt({ userId: 'u2', roll: 3, fromPlan: 68, toPlan: 68 }),
+      throwAt({ userId: 'u2', roll: 1, fromPlan: 68, toPlan: 68 }),
+    ];
+    expect(ids(healthy({ funnel: [], throws: oneMove })))
+      .not.toContain('funnel-recorded-nothing');
   });
 
   it('does not blame the funnel when nobody has moved yet', () => {
     const noMoves = [throwAt({ roll: 2, fromPlan: 68, toPlan: 68 })];
     expect(ids(healthy({ funnel: [], throws: noMoves }))).not.toContain('funnel-recorded-nothing');
+  });
+
+  it('does not blame the funnel when there is no paywall to walk through', () => {
+    const atTheLimit = [
+      throwAt({ userId: 'u1', fromPlan: 6, toPlan: 10 }),
+      throwAt({ userId: 'u1', fromPlan: 10, toPlan: 14 }),
+      throwAt({ userId: 'u1', fromPlan: 14, toPlan: 20 }),
+    ];
+    expect(ids(healthy({ funnel: [], throws: atTheLimit, freeMoves: null })))
+      .not.toContain('funnel-recorded-nothing');
   });
 
   it('names the offer when everyone who saw the wall never saw an invoice', () => {
