@@ -166,20 +166,48 @@ export function findings(s: Snapshot): Finding[] {
     }
   }
 
-  // 3. Instrumentation that has never fired.
-  if (s.funnel.length === 0 && s.throws.some((t) => !stalled(t))) {
+  // 3. Instrumentation that has never fired — WHEN IT SHOULD HAVE.
+  //
+  // This check used to read `funnel.length === 0 && any real move exists`, and
+  // it was wrong. It reported the funnel as broken on one counted move in the
+  // whole game's history, when the first funnel row is only written at three.
+  // The owner asked me to fix the funnel; there was nothing wrong with it.
+  // Nobody had reached the trial threshold and nobody had been refused, so zero
+  // rows was the correct answer and **my instrument was the defect.**
+  //
+  // The rule now: complain only when a row was OWED. A player at or past the
+  // free-move limit should have a `trial`; a player who threw and was refused
+  // should have a `paywall`. Absent those, an empty funnel is no evidence at
+  // all — and reporting no-evidence as damage is how a monitor stops being
+  // read, which costs more than the check is worth.
+  const counted = new Map<string, number>();
+  for (const t of s.throws) {
+    if (!stalled(t)) counted.set(t.userId, (counted.get(t.userId) ?? 0) + 1);
+  }
+  const owedARow =
+    s.freeMoves === null
+      ? []
+      : [...counted.entries()].filter(([, n]) => n >= (s.freeMoves as number));
+
+  if (s.funnel.length === 0 && owedARow.length > 0) {
     out.push({
       id: 'funnel-recorded-nothing',
       severity: 'costly',
       says:
-        'The payment funnel has no rows at all, while real moves exist. Every question ' +
-        'about where players are lost is currently unanswerable.',
-      evidence: `payment_funnel rows=0; moves=${s.throws.filter((t) => !stalled(t)).length}`,
+        `${owedARow.length} player(s) reached the ${s.freeMoves}-move limit and the payment ` +
+        'funnel has no rows at all. A milestone that was owed was not written, so every ' +
+        'question about where players are lost is currently unanswerable.',
+      evidence:
+        `payment_funnel rows=0; at-or-past-limit=${owedARow.map(([, n]) => n).join(',')}; ` +
+        `freeMoves=${s.freeMoves}`,
       fix:
-        'markMoveMilestone only writes at exactly moved === FREE_MOVES, so a player who ' +
-        'passes that count while the write fails is never recorded again, and one who was ' +
-        'already past it when the feature shipped is never recorded at all. Make the trial ' +
-        'marker idempotent on >= rather than ===, and backfill from game_steps.',
+        'The store upserts `WHERE trial_at IS NULL`, so a retry is free and the first ' +
+        'timestamp stands — a missing row is the CALLER not writing, not the table ' +
+        'refusing. Do NOT start by loosening `markMoveMilestone`\'s `moved === FREE_MOVES` ' +
+        'to `>=`: both roll surfaces call accessFor first and refuse when mayMove is false, ' +
+        'so a free player is stopped ON the limit and can never take the step that would ' +
+        'carry them past it. The two are identical in every reachable state. Look instead ' +
+        'at whether the milestone runs at all after the move is durable.',
     });
   }
 
