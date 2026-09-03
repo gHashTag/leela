@@ -893,6 +893,24 @@ export function report(
               max: MAX_REPORT_CHARS,
             })}`,
         false,
+        // The keyboard the throw took away.
+        //
+        // `buttonsFor` drops `roll` while a report is owed, which is right: the
+        // game is waiting for an account of where the player landed, and
+        // offering the die then is offering to skip it. But `roll` was the only
+        // command that put the keyboard back, and filing the report is exactly
+        // the moment the debt clears — so the last markup on screen stayed the
+        // one drawn WITHOUT the die.
+        //
+        // The bot then said **"Отчёт принят. Можно бросать."** with nothing to
+        // throw with. Its owner read that as the moves being broken, and he was
+        // right: a permission granted in a sentence and withheld in the
+        // interface is indistinguishable from a bug. `/roll` still worked, and
+        // knowing to type it is not something a player should have to do.
+        //
+        // Same shape as the attachment at the end of `roll`: the keyboard rides
+        // the last reply, derived from the room AFTER the write, never assumed.
+        isSessionOver(next.session) ? undefined : buttonsFor(next),
       ),
     ],
     // The report is what the game is played for; keeping it is the point.
