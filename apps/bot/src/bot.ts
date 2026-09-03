@@ -2458,7 +2458,9 @@ export function createBot({
         room,
         replies: [
           {
-            text: renderPlan(room.language, number, found.title, found.body, Number(second) || 1),
+            text:
+              renderPlan(room.language, number, found.title, found.body, Number(second) || 1) +
+              commands.reportOwedNote(room, who.id, number),
             broadcast: false,
             html: true,
             buttons: room.started
@@ -2541,7 +2543,9 @@ export function createBot({
       room,
       replies: [
         {
-          text: renderPlan(room.language, seated.state.loka, found.title, found.body),
+          text:
+            renderPlan(room.language, seated.state.loka, found.title, found.body) +
+            commands.reportOwedNote(room, playerId, seated.state.loka),
           broadcast: false,
           html: true,
         },
