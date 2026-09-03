@@ -16,6 +16,7 @@ import {
 import type { StarAmount } from 'grammy/types';
 import { msUntilHour } from './initiative';
 import { DAY_MS } from './stars';
+import { operatorBlock, type Health } from './operator-advice';
 import type { DailyRevenueSnapshot, RevenueReportStore } from './store';
 
 export const DEFAULT_REVENUE_REPORT_HOUR = 1;
@@ -135,6 +136,11 @@ export function composeDailyRevenueReport(
   current: DailyRevenueSnapshot,
   previous: DailyRevenueSnapshot,
   balance: StarAmount | undefined,
+  // Defaulted, so every existing caller and test keeps its meaning: an absent
+  // probe is `companion: null`, which the operator block prints as UNKNOWN
+  // rather than as health. The one thing this must never do is turn "nobody
+  // asked" into a silent green.
+  health: Health = { companion: null },
 ): string {
   const average = current.payments === 0 ? 0 : current.grossStars / current.payments;
   const sources = current.acquisition
@@ -162,7 +168,11 @@ export function composeDailyRevenueReport(
     publicStarts: current.publicStarts,
     sources,
     focus: growthFocusFor(language, current, previous),
-  });
+  }) +
+    // Appended rather than folded into `revenue.report`, so the money block
+    // stays byte-identical to what an operator already reads every morning and
+    // the new material is unmistakably new.
+    `\n\n${operatorBlock(language, current, previous, health)}`;
 }
 
 interface RevenueApi {
@@ -172,6 +182,15 @@ interface RevenueApi {
 
 export interface DailyRevenueReporterOptions {
   api: RevenueApi;
+  /**
+   * Asks the companion's provider, once per report.
+   *
+   * A function rather than a value, because the answer must be about the
+   * morning the report is sent and not about the morning the bot booted. It
+   * defaults to reporting UNKNOWN: a deployment that wires no probe says so on
+   * the report instead of implying health.
+   */
+  health?: () => Promise<Health>;
   reports: RevenueReportStore;
   recipients: readonly string[];
   language: Language;
@@ -206,6 +225,7 @@ export function createDailyRevenueReporter({
     return () => clearTimeout(timer);
   },
   log = console.log,
+  health = async () => ({ companion: null }),
 }: DailyRevenueReporterOptions): DailyRevenueReporter {
   let armed = false;
   let cancel: (() => void) | undefined;
@@ -243,7 +263,17 @@ export function createDailyRevenueReporter({
     } catch {
       log('[revenue] Telegram balance is unavailable; local aggregates will still be sent.');
     }
-    const text = composeDailyRevenueReport(language, current, previous, balance);
+    // A probe that throws must not take the money report down with it: the
+    // numbers are the part an operator cannot reconstruct, and an unknown
+    // companion is a printable state.
+    let live: Health = { companion: null };
+    try {
+      live = await health();
+    } catch {
+      log('[revenue] the companion could not be asked; the report says so.');
+    }
+
+    const text = composeDailyRevenueReport(language, current, previous, balance, live);
     let sent = 0;
 
     for (const candidate of candidates) {
