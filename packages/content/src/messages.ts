@@ -821,6 +821,56 @@ const EN = {
     'No recorded Stars today. Focus on bringing new players to a third move and a clear offer.',
   'revenue.focus.momentum':
     'Positive net momentum is visible. Preserve the working acquisition and checkout path while watching refunds.',
+  // ── The operator block ────────────────────────────────────────────────────
+  // Two languages, like the rest of the revenue report: this is written for
+  // whoever runs the bot, not for a player, so it is not in the 22-language
+  // catalogue and does not need to be.
+  'ops.errors': 'Errors:',
+  'ops.advice': 'What to do:',
+  'ops.kind.fix': '· fix —',
+  'ops.kind.reach': '· reach —',
+  'ops.nothingIsSent':
+    'These are recommendations. The bot sends nothing on their account: any ' +
+    'mailing is yours to send, deliberately.',
+  'ops.companion.unknown':
+    'The companion was not asked this run, so nothing here says whether it answers. ' +
+    'That is unknown, not healthy.',
+  'ops.companion.refusing':
+    'The companion is refusing ({provider}): "{said}" — every board and every chat is ' +
+    'answering with canonical text where a player was promised a reply.',
+  'ops.advice.companion':
+    'Repair the companion before anything else. While it refuses, every person you ' +
+    'bring in meets a fallback, and their willingness to open the next message is the ' +
+    'one asset that does not grow back.',
+  'ops.advice.checkout':
+    'Invoices opened and were not paid. That is the price step and the only one of the ' +
+    'five where that is true — compare the Stars amount against what the player was ' +
+    'told before the invoice opened.',
+  'ops.advice.offer':
+    'Players reached the wall and never saw an invoice. The step that fails is the ' +
+    'offer, not the price: read what the bot actually sends when the free moves run out.',
+  'ops.advice.fourth':
+    'Players finished the trial and did not reach the wall. Something between the third ' +
+    'move and the offer is losing them.',
+  'ops.advice.thirdMove':
+    '{starts} player(s) started and not one reached the third move. The bottleneck is ' +
+    'the first session, not the price — a mailing would send more people into the same ' +
+    'gap.',
+  'ops.advice.postedNobodyCame':
+    'The invitation went out and nobody came. That is a message problem rather than a ' +
+    'reach problem: the same post to more people would land the same way.',
+  'ops.advice.nothingWentOut':
+    'Nobody arrived and nothing was posted. Today reach is the only lever there is — ' +
+    'and the people you already have are the cheapest place to start.',
+  'ops.advice.fixBeforeReach':
+    'Nobody arrived today, and the funnel is already losing the people who do. Fix ' +
+    'that first; reach spent on a leak is spent twice.',
+  'ops.advice.momentum':
+    'More payers than the day before. Do again, deliberately, whatever was done — and ' +
+    'write down which it was, or the next report cannot tell you.',
+  'ops.advice.hold':
+    'Nothing is visibly broken and nothing is visibly growing. That is the state where ' +
+    'a measured experiment beats an urgent one.',
   'revenue.focus.protect':
     'Protect recorded net: watch refunds and the first-event gaps before changing price.',
   'nudge.reportCta':
@@ -1371,6 +1421,51 @@ const RU: Partial<Record<MessageKey, Message>> = {
     'Сегодня нет зафиксированных Stars. Фокус — довести новых игроков до третьего хода и ясного оффера.',
   'revenue.focus.momentum':
     'Положительная динамика итога заметна. Сохраните работающий путь привлечения и оплаты, следя за возвратами.',
+  // ── Операторский блок ─────────────────────────────────────────────────────
+  'ops.errors': 'Ошибки:',
+  'ops.advice': 'Что делать:',
+  'ops.kind.fix': '· починить —',
+  'ops.kind.reach': '· охват —',
+  'ops.nothingIsSent':
+    'Это советы. Бот по ним ничего не отправляет: любая рассылка уходит только с ' +
+    'вашего осознанного решения.',
+  'ops.companion.unknown':
+    'Спутника в этот прогон не спрашивали, поэтому здесь ничего не сказано о том, ' +
+    'отвечает ли он. Это «неизвестно», а не «в порядке».',
+  'ops.companion.refusing':
+    'Спутник отказывает ({provider}): «{said}» — каждая доска и каждый чат отвечают ' +
+    'заготовленным текстом там, где игроку обещан ответ.',
+  'ops.advice.companion':
+    'Сначала почините спутника. Пока он отказывает, каждый приведённый человек ' +
+    'встречает заглушку, а его готовность открыть следующее сообщение — единственный ' +
+    'ресурс, который не восстанавливается.',
+  'ops.advice.checkout':
+    'Счета открывали и не оплатили. Это шаг цены — единственный из пяти, про который ' +
+    'это верно. Сверьте сумму в звёздах с тем, что игроку сказали до открытия счёта.',
+  'ops.advice.offer':
+    'Игроки дошли до стены и не увидели счёта. Отказывает оффер, а не цена: прочитайте, ' +
+    'что бот на самом деле присылает, когда бесплатные ходы кончились.',
+  'ops.advice.fourth':
+    'Игроки закончили пробу и не дошли до стены. Между третьим ходом и оффером что-то ' +
+    'их теряет.',
+  'ops.advice.thirdMove':
+    'Пришло игроков: {starts}, до третьего хода не дошёл ни один. Узкое место — первая ' +
+    'сессия, а не цена; рассылка отправит в тот же провал больше людей.',
+  'ops.advice.postedNobodyCame':
+    'Приглашение вышло, и никто не пришёл. Это беда текста, а не охвата: тот же пост ' +
+    'на большую аудиторию сработает так же.',
+  'ops.advice.nothingWentOut':
+    'Никто не пришёл, и ничего не публиковалось. Сегодня охват — единственный рычаг, ' +
+    'и дешевле всего начать с тех, кто у вас уже есть.',
+  'ops.advice.fixBeforeReach':
+    'Сегодня никто не пришёл, а воронка уже теряет тех, кто приходит. Сначала это; ' +
+    'охват, потраченный на течь, тратится дважды.',
+  'ops.advice.momentum':
+    'Плательщиков больше, чем накануне. Повторите осознанно то, что делали, — и ' +
+    'запишите, что именно, иначе следующий отчёт этого не подскажет.',
+  'ops.advice.hold':
+    'Ничего заметно не сломано и ничего заметно не растёт. В таком состоянии ' +
+    'измеренный эксперимент лучше срочного.',
   'revenue.focus.protect':
     'Фокус — сохранить итог: следите за возвратами и разрывами первых событий до изменения цены.',
   'nudge.reportCta':

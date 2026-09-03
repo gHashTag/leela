@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { messageFor } from '@leela/content';
 import {
   DEFAULT_REVENUE_REPORT_HOUR,
   composeDailyRevenueReport,
@@ -212,6 +213,66 @@ describe('daily revenue report delivery', () => {
 
     await reporter.start();
     expect(touched).toBe(false);
+  });
+
+  it('still sends the money when the companion probe throws, and says it is unknown', async () => {
+    // The probe is a network call to somebody else's service on the one morning
+    // an operator reads the numbers. If it can take the report down, the report
+    // is worth less than the probe — and the numbers are the part that cannot
+    // be reconstructed later, while an unknown companion is a printable state.
+    //
+    // `audit-promises` demanded this case by name: every injected dependency
+    // needs a test that hands it a broken implementation.
+    const now = (DAY + 1) * DAY_MS + 2 * 60 * 60 * 1000;
+    const said: string[] = [];
+    const logged: string[] = [];
+    const reporter = createDailyRevenueReporter({
+      api: {
+        async getMyStarBalance() { return { amount: 0 }; },
+        async sendMessage(_recipient, text) { said.push(text); return {}; },
+      },
+      reports: memoryReports(new Map([[DAY, snapshot(DAY)], [DAY - 1, snapshot(DAY - 1)]])),
+      recipients: ['11'],
+      language: 'ru',
+      hour: 1,
+      now: () => now,
+      schedule: () => () => undefined,
+      log: (line) => { logged.push(line); },
+      health: async () => { throw new Error('the provider went away'); },
+    });
+
+    const tick = await reporter.runTick(now);
+    expect(tick.sent).toBe(1);
+    expect(said[0]).toContain(messageFor('ru', 'ops.companion.unknown'));
+    expect(logged.some((line) => line.includes('companion could not be asked'))).toBe(true);
+    // And the money it was sent for is still in it.
+    expect(said[0]).toContain(messageFor('ru', 'ops.advice'));
+  });
+
+  it('never treats a probe that hangs as a healthy companion', async () => {
+    // A probe that never returns is the other broken implementation, and it
+    // must not be able to print a green line. Resolved as unknown rather than
+    // awaited forever: the caller owns the timeout, and what matters here is
+    // that "no answer" and "answered" are not the same word.
+    const now = (DAY + 1) * DAY_MS + 2 * 60 * 60 * 1000;
+    const said: string[] = [];
+    const reporter = createDailyRevenueReporter({
+      api: {
+        async getMyStarBalance() { return { amount: 0 }; },
+        async sendMessage(_recipient, text) { said.push(text); return {}; },
+      },
+      reports: memoryReports(new Map([[DAY, snapshot(DAY)], [DAY - 1, snapshot(DAY - 1)]])),
+      recipients: ['11'],
+      language: 'ru',
+      hour: 1,
+      now: () => now,
+      schedule: () => () => undefined,
+      health: async () => ({ companion: null }),
+    });
+
+    await reporter.runTick(now);
+    expect(said[0]).toContain(messageFor('ru', 'ops.companion.unknown'));
+    expect(said[0]).not.toContain('answered');
   });
 
   it('waits until the configured hour when startup happens before it', async () => {

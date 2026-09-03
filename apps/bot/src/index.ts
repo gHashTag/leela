@@ -148,6 +148,11 @@ const PROVIDERS: Array<{ key: string; model: () => LanguageModel }> = [
   },
 ];
 
+/** Which host was chosen, for a report that has to name the account to top up. */
+const aiProvider =
+  PROVIDERS.find((provider) => process.env[provider.key])?.key.replace(/_API_KEY$/, '') ??
+  'none';
+
 function configuredModel(): LanguageModel | undefined {
   return PROVIDERS.find((provider) => process.env[provider.key])?.model();
 }
@@ -767,6 +772,37 @@ const revenueReporter =
         language: revenueLanguage,
         hour: revenueHour,
         log: console.log,
+        // Ask the companion's provider on the morning of the report, not at
+        // boot. `Guide.ask` is the same path a player's question takes, so a
+        // key that has run out of balance answers here exactly as it answers
+        // them — which is the whole point: the operator learns it from the
+        // report instead of from a player.
+        health: async () => {
+          if (guide === undefined) return { companion: null };
+          try {
+            // `answer` is the same path a player's question takes, and it does
+            // NOT throw on a refusal — it returns the fallback and says so in
+            // `fromModel`. Catching an exception here would have reported a
+            // dead provider as healthy, which is the exact failure this probe
+            // exists to end.
+            const said = await guide.answer('ok', { plan: 1, language: 'en' });
+            return {
+              companion: {
+                ok: said.fromModel,
+                said: said.fromModel ? 'answered' : 'the companion returned its fallback',
+                provider: aiProvider,
+              },
+            };
+          } catch (error) {
+            return {
+              companion: {
+                ok: false,
+                said: String((error as { message?: string })?.message ?? error).slice(0, 160),
+                provider: aiProvider,
+              },
+            };
+          }
+        },
       })
     : undefined;
 console.log(
