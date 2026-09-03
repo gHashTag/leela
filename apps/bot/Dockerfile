@@ -61,8 +61,22 @@ RUN bun install --frozen-lockfile --production
 # ones replaces links that were made for this image with links made for a Mac.
 COPY packages packages
 COPY apps/bot apps/bot
-COPY scripts/monitor-live-game.mjs scripts/monitor-live-game.mjs
-COPY scripts/monitor-live-ai.mjs scripts/monitor-live-ai.mjs
+# Every monitor, by pattern rather than by name.
+#
+# These were two `COPY` lines naming two files, and a third monitor was written,
+# tested, merged and deployed before anyone found out it was not in the image —
+# `railway ssh bun run scripts/monitor-live-play.mjs --inside` answered `Module
+# not found`, from a container running the very commit that added it. Railway
+# said RUNNING on the right commit hash, the deploy was green, and the thing did
+# not exist. **A list that has to be extended by hand is a list that will be
+# short**, and the failure it produces looks like a deploy problem rather than a
+# missing file.
+#
+# The glob is why this is a pattern and not a third named line. Nothing else in
+# `scripts/` belongs in a production image: the twenty-eight `audit-*.mjs` read
+# the source tree, which is not shipped, and would be dead weight and dead ends.
+# `monitor-*` is exactly the set that runs against the live service.
+COPY scripts/monitor-*.mjs scripts/
 COPY --from=web-builder /app/apps/webgl/dist apps/webgl/dist
 
 # Where games and reports live. The volume is mounted by the platform (Railway
