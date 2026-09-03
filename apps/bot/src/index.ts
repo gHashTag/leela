@@ -9,15 +9,17 @@
  */
 
 import {
+  deepSeek,
   DEFAULT_ZAI_BASE_URL,
   DEFAULT_ZAI_MODEL,
   Guide,
+  keysFrom,
   ModelError,
-  ZAI_CODING_BASE_URL,
-  deepSeek,
   openAI,
   openRouter,
+  pooled,
   zAI,
+  ZAI_CODING_BASE_URL,
   type LanguageModel,
 } from '@leela/ai';
 import {
@@ -126,15 +128,22 @@ const PROVIDERS: Array<{ key: string; model: () => LanguageModel }> = [
   },
   {
     key: 'ZAI_API_KEY',
-    model: () =>
-      zAI({
-        apiKey: process.env.ZAI_API_KEY as string,
-        model: process.env.ZAI_MODEL,
-        // Z.AI sells two kinds of key against two paths. A Coding Plan key sent
-        // to the pay-as-you-go host comes back as error 1113, which reads as an
-        // expired key and sends whoever holds a good one off to buy another.
-        baseUrl: process.env.ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : undefined,
-      }),
+    model: () => {
+      // A POOL, not a key. One exhausted account used to silence the companion
+      // on every surface for a day while a working key sat unused in another
+      // account; `ZAI_API_KEY_2`, `_3`, … join the rotation, and a key that
+      // answers 1113 is parked rather than retried.
+      const keys = keysFrom('ZAI_API_KEY', process.env);
+      const baseUrl = process.env.ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : undefined;
+      const one = (apiKey: string) => zAI({ apiKey, model: process.env.ZAI_MODEL, baseUrl });
+      // Z.AI sells two kinds of key against two paths. A Coding Plan key sent
+      // to the pay-as-you-go host comes back as error 1113, which reads as an
+      // expired key and sends whoever holds a good one off to buy another —
+      // see trios/apps/trios-macos/.trinity/ZAI-ENDPOINT-FACTS.md. Rotation
+      // parks such a key as depleted, which is right for THIS host and says
+      // nothing about the key: the repair there is `ZAI_PLAN`, not a purchase.
+      return keys.length <= 1 ? one(keys[0] ?? '') : pooled({ keys, modelFor: one, log: console.log });
+    },
   },
   {
     key: 'OPENROUTER_API_KEY',
