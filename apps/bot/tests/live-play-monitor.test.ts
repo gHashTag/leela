@@ -35,6 +35,7 @@ const healthy = (over: Partial<Snapshot> = {}): Snapshot => ({
   entitlements: [{ userId: 'u1', until: NOW + 30 * 24 * HOUR, refundedAt: null }],
   funnel: [{ userId: 'u1', trialAt: NOW - 5 * HOUR, paywallAt: null, invoiceAt: null, purchaseAt: NOW - 4 * HOUR }],
   log: ['[initiative] sent 2', 'The daily word is armed.'],
+  companion: { ok: true, status: 200, said: 'answered', provider: 'z.ai' },
   freeMoves: 3,
   now: NOW,
   ...over,
@@ -162,9 +163,44 @@ describe('live play monitor', () => {
     expect(ids(healthy({ tables: cold }))).toContain('tables-opened-and-never-played');
   });
 
-  it('reports the companion refusing requests', () => {
+  it('reports the companion refusing, in the provider\'s own words', () => {
+    // Production on 2026-09-03: the owner found this by typing into the chat
+    // twice and getting the same canned line. The provider had been saying why
+    // since 06:00, in one sentence, and nothing surfaced it.
+    const found = findings(healthy({
+      companion: {
+        ok: false,
+        status: 429,
+        said: 'Insufficient balance or no resource package. Please recharge.',
+        provider: 'z.ai',
+      },
+    }));
+    const one = found.find((f) => f.id === 'companion-refuses-right-now');
+    expect(one?.severity).toBe('blocking');
+    expect(one?.says).toContain('Insufficient balance');
+    expect(one?.evidence).toContain('provider=z.ai');
+  });
+
+  it('stays quiet when the provider answers, even with stale refusals in the log', () => {
+    // The whole point of asking rather than inferring. A refusal from an hour
+    // ago is not a refusal now, and a monitor that cannot tell them apart is
+    // still red long after the account was topped up.
     const log = ['[guide] companion silenced: no available quota (429/1113)'];
-    expect(ids(healthy({ log }))).toContain('companion-is-out-of-quota');
+    expect(ids(healthy({ log }))).not.toContain('companion-refuses-right-now');
+    expect(ids(healthy({ log }))).not.toContain('companion-was-refusing-in-this-window');
+  });
+
+  it('will not read an unasked provider as a healthy one', () => {
+    // `companion: null` means nobody asked. With refusals in the log that is
+    // worth saying; silence would be reading no-evidence as success, which is
+    // the failure this whole file exists to avoid.
+    const log = ['[guide] companion silenced: no available quota (429/1113)'];
+    expect(ids(healthy({ log, companion: null })))
+      .toContain('companion-was-refusing-in-this-window');
+  });
+
+  it('says nothing about a companion that is simply not configured', () => {
+    expect(ids(healthy({ companion: null }))).not.toContain('companion-was-refusing-in-this-window');
   });
 
   it('puts blocking findings first and carries a fix on every one', () => {
@@ -175,7 +211,7 @@ describe('live play monitor', () => {
       entitlements: [],
       funnel: [],
       tables: [{ id: 't0', rollCount: 0, updatedAt: NOW }],
-      log: ['ModelError: the model refused the request (429)'],
+      companion: { ok: false, status: 429, said: 'Insufficient balance.', provider: 'z.ai' },
     });
     const found = findings(bad);
     expect(found.length).toBeGreaterThan(2);
@@ -190,7 +226,9 @@ describe('live play monitor', () => {
     // check must read that as "no evidence" rather than as damage, or the first
     // run after any migration is a wall of false alarms nobody reads again.
     const fresh: Snapshot = {
-      throws: [], tables: [], entitlements: [], funnel: [], log: [], freeMoves: 3, now: NOW,
+      throws: [], tables: [], entitlements: [], funnel: [], log: [],
+      companion: { ok: true, status: 200, said: 'answered', provider: 'z.ai' },
+      freeMoves: 3, now: NOW,
     };
     expect(findings(fresh)).toEqual([]);
   });

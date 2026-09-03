@@ -59,6 +59,24 @@ export interface Snapshot {
   readonly funnel: readonly FunnelRow[];
   /** Lines from the running service, newest last. */
   readonly log: readonly string[];
+  /**
+   * What the companion's provider says when asked, right now.
+   *
+   * `null` when nothing asked it, which is not the same as "it is fine" and is
+   * reported as such. The log check below can only see a refusal that happens
+   * to fall inside the captured window; this is the provider's own answer, and
+   * it is the difference between "Спутник сейчас недоступен" as a mystery and
+   * as a sentence with a reason in it.
+   */
+  readonly companion: {
+    readonly ok: boolean;
+    /** HTTP status, or null when the request never completed. */
+    readonly status: number | null;
+    /** The provider's own words, already free of any key. */
+    readonly said: string;
+    /** Which host was asked, for a message that names the account to top up. */
+    readonly provider: string;
+  } | null;
   /** Free moves the paywall grants, or null when no paywall is configured. */
   readonly freeMoves: number | null;
   /** Now, in epoch milliseconds. */
@@ -261,19 +279,47 @@ export function findings(s: Snapshot): Finding[] {
     });
   }
 
-  // 5. The companion.
+  // 5. The companion, asked rather than inferred.
+  //
+  // The owner found this the way nobody should: by typing into the chat twice
+  // and getting the same canned line back. The provider had been refusing since
+  // at least 06:00 and the only trace was a stack in the log.
   const refusals = s.log.filter((l) => /companion silenced|ModelError|429/.test(l));
-  if (refusals.length > 0) {
+
+  if (s.companion !== null && !s.companion.ok) {
+    // Blocking, and not because the game stops — it does not, the canonical
+    // bridges hold. It is blocking because every player who asks a question is
+    // being answered by a fallback while the product promises a companion, and
+    // nothing on any surface says which one they got.
     out.push({
-      id: 'companion-is-out-of-quota',
+      id: 'companion-refuses-right-now',
+      severity: 'blocking',
+      says:
+        `The companion's provider is refusing requests as of this scan, so every board and ` +
+        'every chat answers with canonical text where a player was promised a reply. ' +
+        `It says: "${s.companion.said}"`,
+      evidence:
+        `provider=${s.companion.provider}; status=${s.companion.status ?? 'no response'}; ` +
+        `log refusals in window=${refusals.length}`,
+      fix:
+        'Read the sentence above before touching code — a balance message and an expired ' +
+        'key are the same silence on the surface and different repairs. `configuredModel` ' +
+        'takes the FIRST key present and never tries another, so one empty account silences ' +
+        'every surface: OPENAI_API_KEY and DEEPSEEK_API_KEY are ordered BEFORE ZAI_API_KEY ' +
+        'and would take over on the next deploy, while OPENROUTER_API_KEY is ordered after ' +
+        'it and would do nothing until the Z.AI key is removed.',
+    });
+  } else if (s.companion === null && refusals.length > 0) {
+    out.push({
+      id: 'companion-was-refusing-in-this-window',
       severity: 'costly',
       says:
-        'The AI companion is refusing requests, so the board answers with canonical text ' +
-        'where a player was promised a reply.',
+        'The provider was not asked directly, and the log carries refusals — so the ' +
+        'companion was silent at least some of the time in this window.',
       evidence: `${refusals.length} refusal line(s); newest: ${refusals[refusals.length - 1]?.slice(0, 120)}`,
       fix:
-        'Quota, not code. Top up the provider or configure a second one; the fallback ' +
-        'already works, but it is a different product from the one the copy sells.',
+        'Run the scan where the key lives so the provider can be asked outright. A log ' +
+        'window is evidence of a past refusal and never evidence of a present success.',
     });
   }
 

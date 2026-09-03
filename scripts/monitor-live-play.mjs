@@ -45,6 +45,50 @@ if (inside) {
 
   const free = Number(process.env.LEELA_STARS_MONTH ?? '') > 0 ? 3 : null;
 
+  // Ask the companion's provider outright. The log can only show a refusal
+  // that fell inside the captured window; this is the provider's own answer
+  // now, and it turns "Спутник сейчас недоступен" from a mystery into a
+  // sentence with a reason in it. One request, four tokens, no player data.
+  //
+  // The key never leaves this process: only the status and the provider's
+  // words are printed, and the words are read from the JSON body, which
+  // carries no credential.
+  const companion = await (async () => {
+    const providers = [
+      ['openai', process.env.OPENAI_API_KEY, 'https://api.openai.com/v1', process.env.OPENAI_MODEL],
+      ['deepseek', process.env.DEEPSEEK_API_KEY, 'https://api.deepseek.com/v1', process.env.DEEPSEEK_MODEL],
+      ['z.ai', process.env.ZAI_API_KEY,
+        process.env.ZAI_PLAN === 'coding'
+          ? 'https://api.z.ai/api/coding/paas/v4'
+          : 'https://api.z.ai/api/paas/v4',
+        process.env.ZAI_MODEL],
+      ['openrouter', process.env.OPENROUTER_API_KEY, 'https://openrouter.ai/api/v1', process.env.OPENROUTER_MODEL],
+    ];
+    // The same order and the same first-wins rule as `configuredModel`, so the
+    // probe asks the host the bot actually uses rather than one it might.
+    const chosen = providers.find(([, key]) => key);
+    if (!chosen) return null;
+    const [provider, key, base, model] = chosen;
+    try {
+      const r = await fetch(`${base}/chat/completions`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: 'ok' }], max_tokens: 4 }),
+      });
+      const text = await r.text();
+      let said = '';
+      try {
+        const j = JSON.parse(text);
+        said = j?.error?.message ?? j?.msg ?? (r.ok ? 'answered' : text.slice(0, 120));
+      } catch {
+        said = text.slice(0, 120);
+      }
+      return { ok: r.ok, status: r.status, said: String(said).slice(0, 160), provider };
+    } catch (error) {
+      return { ok: false, status: null, said: String(error).slice(0, 120), provider };
+    }
+  })();
+
   const snapshot = {
     throws: rows(
       'SELECT user_id, roll, from_plan, to_plan, created_at FROM game_steps ORDER BY created_at',
@@ -76,12 +120,13 @@ if (inside) {
     })),
     // The container cannot read its own log stream; the local half does that.
     log: [],
+    companion,
     freeMoves: free,
     now: Date.now(),
   };
 
   const found = findings(snapshot);
-  console.log(`SCANNED — throws ${snapshot.throws.length}, tables ${snapshot.tables.length}, subscriptions ${snapshot.entitlements.length}, funnel rows ${snapshot.funnel.length}`);
+  console.log(`SCANNED — throws ${snapshot.throws.length}, tables ${snapshot.tables.length}, subscriptions ${snapshot.entitlements.length}, funnel rows ${snapshot.funnel.length}, companion ${companion === null ? 'not configured' : companion.ok ? 'answering' : 'REFUSING'}`);
   for (const line of report(found)) console.log(line);
   process.exit(found.length === 0 ? 0 : 1);
 }
@@ -118,7 +163,7 @@ const fromLog = lines.length === 0
   : report(
       findings({
         throws: [], tables: [], entitlements: [], funnel: [],
-        log: lines, freeMoves: null, now: Date.now(),
+        log: lines, companion: null, freeMoves: null, now: Date.now(),
       }),
     ).filter((l) => !l.startsWith('live play: nothing to report'));
 
