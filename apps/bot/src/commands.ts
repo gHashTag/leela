@@ -965,8 +965,32 @@ export function plan(room: Room, byPlayerId: string, requested?: number): Comman
   const found = planFor(room.language, number);
   return {
     room,
-    replies: [say(`${number}. ${found.title}\n\n${found.body}`, false)],
+    replies: [
+      say(`${number}. ${found.title}\n\n${found.body}${reportOwedNote(room, byPlayerId, number)}`, false),
+    ],
   };
+}
+
+/**
+ * The line appended when the plan just shown is the viewer's own current
+ * square and they have not filed a report for it.
+ *
+ * A player who read `/plan` for a square someone else stands on, or one they
+ * are merely curious about, is not the player the report gate is asking
+ * anything of — that case returns empty, deliberately, rather than a
+ * reminder that would be about the wrong square.
+ *
+ * Written to end this exact defect: `/plan` handed over a long plan text with
+ * no sentence anywhere in it saying what to do next. A player who had only
+ * this surface — no mini app, no `/roll` refusal to learn the rule from —
+ * read a page of philosophy and had no way to know a message was expected of
+ * them before the game would move again.
+ */
+export function reportOwedNote(room: Room, byPlayerId: string, shownPlan: number): string {
+  const seated = room.session.players.find((p) => p.id === byPlayerId);
+  if (seated === undefined || isWaitingToEnter(seated.state)) return '';
+  if (shownPlan !== seated.state.loka || seated.reportSubmitted) return '';
+  return `\n\n${messageFor(room.language, 'plan.reportOwed')}`;
 }
 
 /**

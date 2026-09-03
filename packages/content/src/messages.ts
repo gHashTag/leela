@@ -70,6 +70,15 @@ const EN = {
   'roll.reportRequired':
     'You are standing on {plan}. {title}.\n' +
     'Write what it brings up before you move on — send /report followed by your words.',
+  /**
+   * The same instruction, standalone — appended after `/plan` shows the
+   * player's own square. `roll.reportRequired` restates the plan and title
+   * because it answers a refused throw with no other context on screen; this
+   * one is a suffix to text that already carries both, so it says only the
+   * part that was missing: what to do, and that nothing else works first.
+   */
+  'plan.reportOwed':
+    'Write what it brings up before you can roll again — send /report followed by your words.',
   'roll.cooldown': 'Not yet. Your next throw is in {wait}.',
   /**
    * The wait itself, which used to be built in `@leela/engine`.
@@ -1032,6 +1041,8 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'roll.reportRequired':
     'Вы стоите на плане {plan}. {title}.\n' +
     'Напишите, что он в вас поднимает, прежде чем идти дальше — отправьте /report и свои слова.',
+  'plan.reportOwed':
+    'Напишите, что он в вас поднимает, прежде чем бросать снова — отправьте /report и свои слова.',
   'roll.cooldown': 'Пока нет. Следующий бросок через {wait}.',
   'wait.hoursMinutes': '{hours} ч {minutes} мин',
   'wait.minutesSeconds': '{minutes} мин {seconds} с',
