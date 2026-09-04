@@ -39,21 +39,23 @@ describe('the free allowance', () => {
     // remembered: a constant copied by hand is a constant that drifts, which is
     // exactly how the app came to promise two of something the game counted
     // three of.
-    const toll = readFileSync(
-      join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'leela',
-        'apps',
-        'webgl',
-        'src',
-        'toll.ts'
-      ),
+    const board = join(__dirname, '..', '..', '..', 'leela', 'apps', 'webgl', 'src')
+    const toll = readFileSync(join(board, 'toll.ts'), 'utf8')
+    const literal = toll.match(/FREE_THROWS\s*=\s*(\d+)/)
+    if (literal !== null) {
+      expect(Number(literal[1])).toBe(FREE_THROWS)
+      return
+    }
+    // `toll.ts` now aliases the count rather than declaring it: follow the
+    // alias to `@leela/content`, the one place it may legitimately move to
+    // without this test losing the ability to say what "the board" means.
+    const aliased = toll.match(/FREE_THROWS\s*=\s*(\w+)/)
+    expect(aliased).not.toBeNull()
+    const content = readFileSync(
+      join(board, '..', '..', '..', 'packages', 'content', 'src', 'access.ts'),
       'utf8'
     )
-    const declared = toll.match(/FREE_THROWS\s*=\s*(\d+)/)
+    const declared = content.match(new RegExp(`${aliased?.[1]}\\s*=\\s*(\\d+)`))
     expect(declared).not.toBeNull()
     expect(Number(declared?.[1])).toBe(FREE_THROWS)
   })
