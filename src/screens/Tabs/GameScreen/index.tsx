@@ -79,6 +79,15 @@ const GameScreen = observer(({ navigation }: GameScreenT) => {
   const limit = 15
 
   useEffect(() => {
+    // The feed is an online feature. This screen is one of the tabs
+    // registered unconditionally in Navigation.tsx (unlike PostScreen, which
+    // is only added when `DiceStore.online`), and Material Top Tabs mounts
+    // registered screens rather than only the focused one — so this effect
+    // ran on every launch, offline or not, and called `firestore()` before
+    // anything checked whether Firebase was even configured. Guarded the same
+    // way `useGameAndProfileIsOnline` guards its own subscriptions.
+    if (!DiceStore.online) return
+
     const uid = getUid()
 
     const query = uid

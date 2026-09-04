@@ -333,7 +333,19 @@ const uploadImg = async (image: { path: string }) => {
 }
 
 function getUid() {
-  return auth().currentUser?.uid
+  // `auth()` resolves the default Firebase app before it touches
+  // `currentUser`, and it throws when none was configured — which is the
+  // supported state now that `GoogleService-Info.plist` is optional
+  // (AppDelegate.mm skips `[FIRApp configure]` rather than crash on a
+  // missing or placeholder file). `useGameAndProfileIsOnline` calls this on
+  // every launch, before its own `DiceStore.online` check ever runs, so an
+  // app with no Firebase configured crashed on the board screen itself —
+  // the one screen a fresh install always reaches.
+  try {
+    return auth().currentUser?.uid
+  } catch {
+    return undefined
+  }
 }
 
 interface getTimeT {
