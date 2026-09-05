@@ -64,7 +64,7 @@ export interface Room {
 export interface ActionButton {
   label: string;
   /** The command this button stands for, without its slash. */
-  action: 'roll' | 'board' | 'plan' | 'join' | 'start' | 'help' | 'new' | `pay:${TierId}`;
+  action: 'roll' | 'board' | 'plan' | 'join' | 'start' | 'help' | 'new' | 'report' | `pay:${TierId}`;
   /**
    * Never set. Present so `Button` is a discriminated union that existing
    * readers of `.action` still compile against: a member that simply omitted
@@ -324,7 +324,16 @@ export function buttonsFor(room: Room): Button[] {
   const holder = currentPlayer(room.session);
   const owes = owesReport(holder.state, room.session.rules) && !holder.reportSubmitted;
 
-  return playingButtons(room.language).filter((button) => button.action !== 'roll' || !owes);
+  // A row that only ever removed `roll` left a gap where the next thing to
+  // do belongs: the die vanished and nothing stood in its place. `report`
+  // rides the same seat `roll` would rather than a fourth button squeezed in
+  // beside it, because it is the same question either way — *what happens if
+  // I tap here* — and a table owing a report has exactly one answer to it.
+  return playingButtons(room.language).map((button) =>
+    button.action === 'roll' && owes
+      ? { label: messageFor(room.language, 'button.report'), action: 'report' as const }
+      : button,
+  );
 }
 
 /** Whoever is being addressed, by name where we have one. */
@@ -611,6 +620,13 @@ export function roll(
     );
   }
 
+  // Whether the mover owes a report on the square they just landed on,
+  // remembered here rather than recomputed below: `roll.againAfter` already
+  // says this, in its own words, for the one case where the next throw is
+  // the same player's — saying it twice in two consecutive messages would be
+  // the same sentence contradicting itself in tone if not in fact.
+  let mentionedReportOwed = false;
+
   if (isSessionOver(next.session)) {
     replies.push(say(describeStandings(next)));
 
@@ -652,6 +668,7 @@ export function roll(
       replies.push(say(messageFor(room.language, 'roll.again')));
     } else if (afterwards.reason === 'report-required') {
       replies.push(say(messageFor(room.language, 'roll.againAfter')));
+      mentionedReportOwed = true;
     }
     // A cooldown says nothing here: `online` measures the wait from the moment
     // the report is written, so any figure named now would be wrong by the time
@@ -668,6 +685,19 @@ export function roll(
         }),
       ),
     );
+  }
+
+  // Every square that leaves the mover owing a report says so, attached to
+  // the sentence that already names them — `replies[0]`, always their own
+  // move — rather than to whatever is said last, which by then may be about
+  // somebody else's turn. This is the gap `/plan` closed on its own square
+  // and a throw never did on its: a solo table's plain move, or a move that
+  // hands the turn on, said nothing about what now stands between this
+  // player and their own next throw until they asked.
+  const mover = replies[0];
+  if (mover && !isSessionOver(next.session) && !mentionedReportOwed) {
+    const owed = reportOwedNote(next, move.playerId, move.event.to);
+    if (owed) mover.text += owed;
   }
 
   // The keyboard rides the last reply, which is what the transport attaches it
