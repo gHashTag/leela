@@ -100,9 +100,28 @@ export const telegramOf = (): TelegramWebApp | null => {
 export const launchOf = (app: TelegramWebApp | null): string =>
   typeof app?.initData === 'string' ? app.initData : '';
 
+type SubscribeCapable = TelegramWebApp & { sendData: (data: string) => void };
+
+const canSubscribeViaTelegram = (app: TelegramWebApp | null): app is SubscribeCapable =>
+  launchOf(app) !== '' && typeof app?.sendData === 'function';
+
+/**
+ * Whether tapping Subscribe would actually reach the bot.
+ *
+ * Split out from `askTelegramToSubscribe` so a caller can tell, before
+ * touching anything, whether the tap is about to close the app — Telegram
+ * closes a Mini App the instant `sendData` is called, with no way to hold the
+ * screen open, so a caller that wants to say anything before that happens
+ * (`main.ts` does) needs to know first whether there is anything to say it
+ * about. A transition message in front of a tap that `sendData` was always
+ * going to ignore would be its own kind of lie.
+ */
+export const mayAskTelegramToSubscribe = (app: TelegramWebApp | null): boolean =>
+  canSubscribeViaTelegram(app);
+
 /** Return from the board to the bot with a request for its priced tiers. */
 export const askTelegramToSubscribe = (app: TelegramWebApp | null): boolean => {
-  if (launchOf(app) === '' || typeof app?.sendData !== 'function') return false;
+  if (!canSubscribeViaTelegram(app)) return false;
   app.sendData(SUBSCRIBE_REQUEST);
   app.close?.();
   return true;
