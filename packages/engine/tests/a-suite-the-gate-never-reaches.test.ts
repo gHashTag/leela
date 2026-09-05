@@ -410,9 +410,13 @@ describe.skipIf(!hasBun)('what `--filter \'*\'` does when a workspace stops decl
   it('is loud when every workspace loses it, which is why losing one is the dangerous case', () => {
     const none = ran(null, null);
 
-    // Bun 1.1 says "No packages matched the filter"; 1.2 inserts "workspace".
-    // The assertion is about the loudness, not the edition's phrasing.
-    expect(none.output).toMatch(/No (?:workspace )?packages matched the filter/);
+    // Bun 1.1 says "No packages matched the filter"; 1.2 inserts "workspace";
+    // a later release drops that sentence entirely for "Script \"test\" not
+    // found in N packages matching \"*\"". The assertion is about the
+    // loudness, not any one edition's phrasing.
+    expect(none.output).toMatch(
+      /No (?:workspace )?packages matched the filter|Script "[^"]+" not found in \d+ packages? matching/,
+    );
     expect(none.status).not.toBe(0);
   });
 });
