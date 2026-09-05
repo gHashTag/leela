@@ -97,6 +97,9 @@ describe('every button the bot offers', () => {
       expect(buttonsFor(room).map((button: Button) => button.action)).not.toContain('roll');
       // And what is left is what they need in order to say yes.
       expect(buttonsFor(room).map((button: Button) => button.action)).toContain('plan');
+      // `roll` does not just vanish: something stands in the seat it held, so
+      // the row is never one button shorter than the game it is drawn under.
+      expect(buttonsFor(room).map((button: Button) => button.action)).toContain('report');
       return;
     }
 

@@ -280,6 +280,8 @@ const EN = {
   'button.roll': '🎲 Roll',
   'button.plan': '📖 My plan',
   'button.board': '🗺 Board',
+  /** Stands where `button.roll` would be, whenever rolling is what is blocked. */
+  'button.report': '📝 Write report',
   'button.join': '🪑 Join',
   'button.start': '▶️ Start',
 
@@ -1163,6 +1165,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'button.roll': '🎲 Бросок',
   'button.plan': '📖 Мой план',
   'button.board': '🗺 Доска',
+  'button.report': '📝 Написать отчёт',
   'button.join': '🪑 Сесть',
   'button.start': '▶️ Начать',
 
