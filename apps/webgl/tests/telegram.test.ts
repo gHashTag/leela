@@ -6,6 +6,7 @@ import { blank } from '../../../scripts/lib/source.mjs';
 import { SUBSCRIBE_REQUEST } from '@leela/content';
 import {
   askTelegramToSubscribe,
+  mayAskTelegramToSubscribe,
   meetTelegram,
   nameAskOrigin,
   telegramOf,
@@ -241,6 +242,28 @@ describe('the subscription handoff', () => {
       initData: 'signed',
     })).toBe(false);
     expect(sent).toBe(0);
+  });
+
+  it('tells a caller in advance whether the tap will do anything', () => {
+    // The guard `askTelegramToSubscribe` fires against, exposed so a caller
+    // can decide whether to say something before the app closes — showing a
+    // transition message in front of a tap that was always going to be a
+    // no-op would be its own kind of lie.
+    const capable = {
+      ready: () => undefined,
+      expand: () => undefined,
+      initData: 'signed launch',
+      sendData: () => undefined,
+    };
+
+    expect(mayAskTelegramToSubscribe(capable)).toBe(true);
+    expect(mayAskTelegramToSubscribe(null)).toBe(false);
+    expect(mayAskTelegramToSubscribe({ ready: () => undefined, expand: () => undefined, initData: '' })).toBe(
+      false,
+    );
+    expect(
+      mayAskTelegramToSubscribe({ ready: () => undefined, expand: () => undefined, initData: 'signed' }),
+    ).toBe(false);
   });
 });
 

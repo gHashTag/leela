@@ -506,6 +506,17 @@ const EN = {
   'app.unanswered': 'unanswered',
   'app.restsOn': 'What this rests on',
   'app.tollOpen': 'Subscribe',
+  /**
+   * Shown for the moment between tapping Subscribe and the app closing.
+   *
+   * Telegram closes a Mini App the instant it calls `sendData` — there is no
+   * way to keep the screen open — and the chat message with the actual tiers
+   * arrives a beat later, over the network. Closing with nothing on screen
+   * reads as the tap having done nothing; this sentence is what the player
+   * sees in the half-second before the screen goes, so the close reads as a
+   * handoff rather than a failure.
+   */
+  'app.tollRedirect': 'Opening the offer in your chat with the bot…',
 
   /**
    * The same game, drawn in three dimensions.
@@ -1251,6 +1262,7 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.unanswered': 'без ответа',
   'app.restsOn': 'На чём это стоит',
   'app.tollOpen': 'Оформить подписку',
+  'app.tollRedirect': 'Открываю предложение в чате с ботом…',
   'app.board3d': 'Доска в 3D',
   'app.board3dClose': 'Вернуться к доске',
   'app.board3dUnreachable': 'Доска в 3D недоступна по адресу {url}.',

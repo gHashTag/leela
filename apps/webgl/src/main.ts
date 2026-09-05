@@ -53,7 +53,14 @@ import { createBoard } from './scene';
 import { atEnd, bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
 import { askForARoll, myGame, type Standing as ChatStanding } from './mine';
 import { sendMyPath } from './sending';
-import { askTelegramToSubscribe, launchOf, meetTelegram, nameAskOrigin, telegramOf } from './telegram';
+import {
+  askTelegramToSubscribe,
+  launchOf,
+  mayAskTelegramToSubscribe,
+  meetTelegram,
+  nameAskOrigin,
+  telegramOf,
+} from './telegram';
 import { css } from './theme';
 import {
   hearing,
@@ -521,9 +528,33 @@ if (window.visualViewport) {
  * a reload in the middle of a purchase would take the board away at the moment
  * the player has just paid for it.
  */
+
+/**
+ * How long `app.tollRedirect` stays the only thing on screen before the Mini
+ * App closes on the Telegram path.
+ *
+ * Short enough that a player who taps twice does not sit through it, long
+ * enough that the sentence is read rather than flashed. There is no signal to
+ * wait for instead — Telegram gives no event for "about to close" — so this
+ * is a guess, tuned by eye rather than measured.
+ */
+const TOLL_REDIRECT_DELAY_MS = 500;
+
 el.tollOpen.addEventListener('click', () => {
   if (askToSubscribe()) return;
-  askTelegramToSubscribe(telegramOf());
+
+  const app = telegramOf();
+  if (!mayAskTelegramToSubscribe(app)) return;
+
+  // Telegram closes a Mini App the instant `sendData` runs, with no
+  // transition it will show for us — the tap would otherwise read as the app
+  // just vanishing, with the tiers arriving a moment later in a chat the
+  // player has already stopped looking at. This is the one window to say
+  // where it went before the screen does.
+  el.tollOpen.disabled = true;
+  el.toll.textContent = messageFor(language, 'app.tollRedirect');
+  el.toll.hidden = false;
+  window.setTimeout(() => askTelegramToSubscribe(app), TOLL_REDIRECT_DELAY_MS);
 });
 
 window.addEventListener(ENTITLEMENT_CHANGED, () => showGate());
