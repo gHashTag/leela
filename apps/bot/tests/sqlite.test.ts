@@ -97,7 +97,7 @@ describe('a game survives a restart', () => {
     }
 
     const result = roll(restored, holder.id, NOW);
-    expect(result.replies[0].text).not.toMatch(/not started|\/report/i);
+    expect(result.replies[0].text).not.toMatch(/not started/i);
     expect((result.room as Room).rollsTaken).toBe(room.rollsTaken + 1);
   });
 });

@@ -186,7 +186,13 @@ describe('the report gate in a chat', () => {
     expect(roll(room, 'u1', NOW).replies[0].text).toMatch(/\/report/);
 
     room = report(room, 'u1', 'this is where I am').room as Room;
-    expect(roll(room, 'u1', NOW).replies[0].text).not.toMatch(/\/report/);
+
+    // Read structurally rather than off the text: the throw this unblocks
+    // may itself land on a square that owes its own report, which now says
+    // so in the same reply — a granted throw and a refused one can no longer
+    // be told apart by whether `/report` appears at all.
+    const before = room.rollsTaken;
+    expect((roll(room, 'u1', NOW).room as Room).rollsTaken).toBe(before + 1);
   });
 
   it('does not accept an empty report', () => {
@@ -743,6 +749,7 @@ describe('what the bot says about whose throw it is', () => {
 
     for (let turn = 0; turn < 300; turn += 1) {
       const holder = room.session.players[room.session.turnIndex];
+      const before = room.rollsTaken;
       const result = roll(room, holder.id, NOW);
       const said = result.replies.map((reply) => reply.text).join(' ');
       const next = result.room as Room;
@@ -750,9 +757,14 @@ describe('what the bot says about whose throw it is', () => {
       room = next;
 
       // A refused throw is not a throw: the gate holds the seat and nothing
-      // was granted or passed.
-      if (result.replies.some((reply) => reply.text.includes('/report'))) {
-        room = report(room, holder.id, 'noted').room as Room;
+      // was granted or passed. Read structurally — `rollsTaken` only moves on
+      // a throw that actually happened — rather than by sniffing the text for
+      // `/report`, which a granted throw may now say too, proactively, about
+      // the fresh square it just landed the player on.
+      if (next.rollsTaken === before) {
+        if (result.replies.some((reply) => reply.text.includes('/report'))) {
+          room = report(room, holder.id, 'noted').room as Room;
+        }
         continue;
       }
 

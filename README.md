@@ -267,14 +267,14 @@ cd packages/engine && bun test
 | `@leela/storage` | 38 | addressing files in an S3-compatible bucket, after Firebase Storage |
 | `@leela/ai` | 283 | the companion — prompts built from the plan text |
 | `@leela/contracts` | 95 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
-| `@leela/bot` | 1203 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
+| `@leela/bot` | 1205 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 239 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
 | `@leela/miniapp` | 720 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | `@leela/mobile` | 421 | the board on a phone (Expo), moved by the engine and by nothing else |
 | `@leela/webgl` | 618 | the board in three dimensions, in a browser, on the same rules the apps play |
 | everything else | — | not yet ported |
 
-5110 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+5112 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 

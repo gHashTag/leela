@@ -270,7 +270,7 @@ describe('every command answers', () => {
 describe('a button press is answered before anything else', () => {
   // Telegram leaves a spinner on the button until `answerCallbackQuery` is
   // called. An action that does nothing must still stop the spinner.
-  const ACTIONS = ['new', 'join', 'start', 'roll', 'board', 'plan', 'help', 'nonsense'];
+  const ACTIONS = ['new', 'join', 'start', 'roll', 'board', 'plan', 'help', 'report', 'nonsense'];
 
   it.each(ACTIONS)('answers the callback for %s', async (action) => {
     const { bot, sent } = harness();
@@ -283,6 +283,18 @@ describe('a button press is answered before anything else', () => {
     await bot.handleUpdate(callback('roll', PRIVATE));
     const answered = sent.findIndex((s) => s.method === 'answerCallbackQuery');
     expect(answered).toBe(0);
+  });
+
+  it('answers report with the sentence itself, not a silent acknowledgement', async () => {
+    // `report` has nowhere to hand off to — there is no table to read here —
+    // so the whole point of the button would be lost if this fell through to
+    // the plain, wordless `answerCallbackQuery()` every other action gets.
+    const { bot, sent } = harness();
+    await bot.handleUpdate(callback('report', PRIVATE));
+    const answered = sent.find((s) => s.method === 'answerCallbackQuery');
+    expect(answered?.payload).toMatchObject({ show_alert: true });
+    expect(typeof answered?.payload.text).toBe('string');
+    expect((answered?.payload.text as string).length).toBeGreaterThan(0);
   });
 });
 

@@ -2479,9 +2479,24 @@ export function createBot({
    * button for the user, so it happens first and unconditionally.
    */
   bot.on('callback_query:data', async (ctx) => {
+    const action = ctx.callbackQuery.data;
+
+    // Answered as a native popup rather than the usual silent acknowledgement:
+    // `report` rides the seat `roll` would occupy exactly when rolling is
+    // refused for want of one, so the tap that used to do nothing at all now
+    // says, on the spot, the one sentence that unblocks it. A callback query
+    // can be answered only once, so this returns rather than falling through
+    // to the plain `answerCallbackQuery()` below.
+    if (action === 'report') {
+      await ctx.answerCallbackQuery({
+        text: messageFor(languageOf(ctx), 'plan.reportOwed'),
+        show_alert: true,
+      });
+      return;
+    }
+
     await ctx.answerCallbackQuery();
 
-    const action = ctx.callbackQuery.data;
     const who = sender(ctx);
     const chatId = chatIdOf(ctx);
     if (!who || !chatId) return;
