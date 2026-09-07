@@ -40,6 +40,7 @@ platform :ios do
 
   desc "Everything that must be true before a build leaves this machine"
   lane :check do
+    sh("cd .. && node --test scripts/check-ios-firebase.test.mjs && node scripts/check-ios-firebase.mjs")
     sh("cd .. && npx jest --silent")
     if File.directory?(BOARD)
       sh("cd #{BOARD.shellescape} && npx vitest run")

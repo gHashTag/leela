@@ -1,0 +1,30 @@
+{
+  "recorded_at": "2026-09-07T14:35:23Z",
+  "task_id": "ios-release-7.1-9",
+  "claim_id": null,
+  "code_commit": "0da79ec0",
+  "checkpoints": [
+    { "action": "original native transport probe", "result": "EXPECTED_RED", "evidence": { "facts": ["Exact source called Z.AI directly instead of production /api/ask"] } },
+    { "action": "native Jest", "result": "PASS", "evidence": { "command": "LEELA_BOARD_REPO=/Users/playra/leela-loop/apps/webgl npx jest --runInBand --silent", "exit_code": 0, "facts": ["103 suites", "441 tests", "89.868 seconds on final pre-archive rerun"] } },
+    { "action": "WebGL build and tests", "result": "PASS", "evidence": { "artifact": "main 1ffba948", "facts": ["Production bundle built", "40 test files", "620 tests"] } },
+    { "action": "independent scoped code review", "result": "PASS", "evidence": { "facts": ["No blocking code findings", "24 focused tests passed", "3 RevenueCat React tests passed with 30-second cold-run timeout"] } },
+    { "action": "live native transport canary", "result": "PASS", "evidence": { "exit_code": 0, "facts": ["Synthetic input only", "Nonempty Russian output", "140 response characters", "3154 milliseconds", "No provider key supplied by client"] } },
+    { "action": "staged credential scan", "result": "PASS", "evidence": { "exit_code": 0, "facts": ["Zero matches for known private configuration and NVIDIA credential shape"] } },
+    { "action": "first archive invocation", "result": "FAIL", "evidence": { "exit_code": 65, "facts": ["Firebase resource absent from initial Xcode input graph", "Existing resource restored before fresh retry"] } },
+    { "action": "signed archive and independent artifact audit", "result": "PASS", "evidence": { "exit_code": 0, "artifact": "build/leela-7.1-8.xcarchive", "facts": ["7.1 (8), xyz.ghashtag.dharma, iphoneos26.5", "Deep strict code signature verified", "Binary and dSYM UUID 8324A00E-3042-39E7-A74B-972D1AEB8ED6", "JS SHA256 bd4b1c64ef56a85bfdf1efcf948da1df0712d68488c7e9d4bbd167fafb792ae3", "All 33 board files byte-match verified production build", "No known private configuration or provider credential shapes found"] } },
+    { "action": "IPA export", "result": "PASS", "evidence": { "exit_code": 0, "artifact": "build/export-7.1-8/leela.ipa", "facts": ["24 MB", "Exported identity and JS hash match archive"] } },
+    { "action": "TestFlight upload and Apple processing", "result": "PASS", "evidence": { "exit_code": 0, "artifact": "ASC build 0e6e4843-5924-415c-ad96-ac03460ee202", "facts": ["Upload succeeded 2026-09-07 21:20:58 Asia/Bangkok", "Apple processingState VALID verified via read-only API", "Submission skipped; no external distribution or tester notification", "Export-compliance attribute usesNonExemptEncryption is null; declaration remains to be completed", "App Store version remains PENDING_DEVELOPER_RELEASE with old build; not published"] } },
+    { "action": "build 8 Firebase artifact review", "result": "FAIL", "evidence": { "artifact": "build/leela-7.1-8.xcarchive", "facts": ["Inherited placeholder skips Firebase initialization", "Account/cloud functionality unavailable in candidate", "Build 8 superseded, not released"] } },
+    { "action": "Firebase release preflight regression", "result": "PASS", "evidence": { "exit_code": 0, "facts": ["Original placeholder rejected with invalid_api_key, missing_project_id, invalid_google_app_id", "4 regression tests passed", "Matching original public configuration restored privately", "Independent review found no blocking change finding", "Identity Toolkit read-only project configuration HTTP 200; numeric project ID matches app config sender/app ID", "Shape/read-only API success is not account/cloud end-to-end success"] } },
+    { "action": "public App Privacy readiness", "result": "BLOCKED", "evidence": { "facts": ["Public listing says Data Not Collected", "RevenueCat requires Purchase History disclosure", "Browser App Store Connect login missing", "Public dataUsages API returns 404 PATH_ERROR"] } }
+  ],
+  "residual_risks": [
+    "Replacement build9 archive and simulator build are in progress; no new artifact/runtime PASS yet",
+    "Firebase account/cloud end-to-end operation is unverified",
+    "Export-compliance declaration for uploaded build remains open",
+    "Actual sandbox purchase and restore not exercised",
+    "926 baseline TypeScript diagnostics; no full typecheck PASS",
+    "Dependency audit is not clean; bounded triage found no additional exploitable release blocker",
+    "App Privacy and policy need reconciliation before App Review submission"
+  ]
+}

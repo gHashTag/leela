@@ -76,3 +76,75 @@ an isolated worktree; original dirty native build/source folders are untouched.
   against the same installed dependencies: 926 pre-existing diagnostics.
   Candidate test-global collisions found during comparison were then fixed
   with explicit Jest imports; a full typecheck PASS is still not claimed.
+- Native full suite rerun after explicit Jest imports: 103/103 suites and
+  441/441 tests PASS (89.868 s under archive load).
+- First archive exited 65 because Firebase resource was absent when Xcode
+  captured its input graph. The existing 301-byte placeholder resource for
+  this bundle ID was copied from the exact approved native source, privately
+  and outside Git. A fresh archive invocation is in progress; no success claim.
+- Dependency audit reports 62 findings (1 critical, 42 high); this is NOT a
+  clean audit. Independent bounded triage found xmldom only in the Voice Expo
+  config plugin; no native untrusted XML path. Axios uses fixed SendPulse URLs
+  with the RN XHR adapter, Nanoid sizes are positive constants, and the native
+  Markdown screen is not registered. No additional exploitable release blocker
+  was established in these paths. Do not broadly upgrade dependencies during
+  the archive; preserve these findings for a separate hardening effort.
+
+## Checkpoint: signed archive
+
+- Fresh archive retry: **ARCHIVE SUCCEEDED**, exit 0.
+- Artifact: `build/leela-7.1-8.xcarchive`, 301 MB; app 7.1 (8),
+  `xyz.ghashtag.dharma`, SDK `iphoneos26.5`.
+- Actual artifact audit PASS: deep/strict code signature; shared /api/ask
+  transport and consent marker present; verified public RevenueCat setting
+  present; zero matches for known private configuration or NVIDIA credential
+  shape. All 33 embedded board files byte-match the verified WebGL build.
+- Native JS SHA-256:
+  `bd4b1c64ef56a85bfdf1efcf948da1df0712d68488c7e9d4bbd167fafb792ae3`.
+- IPA export and a Release simulator build are in progress. No App Store
+  submission or publication. Privacy/login and actual sandbox transaction QA
+  remain open gates.
+- Independent artifact review also PASS: binary/dSYM UUID match
+  `8324A00E-3042-39E7-A74B-972D1AEB8ED6`; app privacy manifest is present and
+  syntactically valid. Its empty collected-data array does not establish
+  disclosure correctness; reconcile it with policy/App Privacy before release.
+- IPA export: **EXPORT SUCCEEDED**, 24 MB. Exported IPA identity is 7.1 (8)
+  and its JS SHA-256 is identical to the verified archive. Upload started with
+  submission/distribution skipped; no external tester notifications requested.
+
+## Checkpoint: Apple processing
+
+- Upload exited 0; App Store Connect accepted the package at 21:20:58 Bangkok.
+- Read-only Apple API confirms build `0e6e4843-5924-415c-ad96-ac03460ee202`
+  (8) is **VALID**. This is processing success, not App Review approval.
+- Old 7.1 version remains PENDING_DEVELOPER_RELEASE; it has not been published
+  or replaced. No external tester distribution or notification was requested.
+- The uploaded build's export-compliance answer is still null and must be
+  completed before distribution; do not infer TestFlight installability from
+  processingState alone. App Privacy/login and sandbox transaction QA remain
+  gates. Release simulator build/runtime check is still in progress.
+
+## Follow-up contract: Firebase release configuration
+
+Independent artifact review found a release blocker in build 8: the inherited
+Firebase plist is a placeholder, so native startup intentionally disables
+account/cloud functionality. An existing matching public Firebase app config
+was located in the original native donor checkout without printing its values.
+
+Before a replacement build leaves this machine, a read-only preflight must
+reject missing, placeholder, wrong-bundle and incomplete Firebase resources;
+accept the existing matching configured resource; and print no config values.
+The exact archive must independently pass the same check. Build 8 remains
+unreleased; the replacement uses unused build number 9. Runtime authentication
+availability is a separate check from syntactic configuration validity.
+
+- RED: the build-8 placeholder fails with invalid_api_key, missing_project_id
+  and invalid_google_app_id. GREEN: four validator regressions pass, and the
+  restored existing config passes without printing any values.
+- Read-only Identity Toolkit project configuration returned HTTP 200. Its
+  numeric project ID matches the config sender ID and app-ID project segment.
+- Independent follow-up review: no blocking findings in restoration/preflight.
+  Account/cloud end-to-end success remains unverified.
+- Build-8 simulator compilation was deliberately interrupted after the
+  artifact blocker was confirmed. Replacement archive and simulator build for
+  7.1 (9) started from the corrected config; no predicted outcome recorded.
