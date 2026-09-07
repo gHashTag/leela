@@ -32,6 +32,8 @@ does not grant access or close the subscription screen.
 The approved 7.1 (7) remains untouched. Uploaded build 8 is superseded because
 its Firebase placeholder disabled account/cloud functions. Build 9 was not
 uploaded and is superseded by the native-copy correction in build 10. Build 10
-passed simulator launch/board visual QA; signed archive and TestFlight processing
-checks are still pending before replacing the approved build.
+passed simulator launch/board visual QA, signed archive and exported IPA audits.
+Upload succeeded; Apple processing is VALID for build
+`9d09eb43-a3d0-423a-9a8f-7b80ce602631`. App Privacy, export compliance and
+account/purchase QA remain gates before replacing the approved build.
 Replacing that build requires another Apple review; an upload is not a release.

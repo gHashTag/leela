@@ -166,3 +166,29 @@ Prepare build 10 with shared spec 026: native hosts must have no chat-connection
 status text, visually or accessibly, in any language; browser/Mini App diagnostics
 must remain unchanged. Verify the rebuilt board on the simulator before export.
 Existing social links are separate legacy features, not newly added game copy.
+
+- Native-copy regression: RED reproduced the banner and unguarded DOM writes;
+  GREEN covers every status in 22 languages. Independent review: no blockers.
+- Full shared gate and all PR45 checks passed; merged to main as `915da655`.
+- Build10 simulator Release succeeded; fresh install/relaunch rendered the
+  board without the banner. Screenshot: `build/ios-7.1-10-board-settled.png`.
+  All embedded board bytes match the rebuilt shared source. Native Jest passed
+  103 suites / 441 tests. Native candidate source pushed as `700b084a` to PR44.
+- Initial archive10 compiled/linked but Hermes signing failed with an internal
+  error while disk space was 478 MiB. Preserve the verified simulator app at
+  `build/leela-7.1-10-simulator.app`; remove only the owned rebuildable simulator
+  cache, then retry signing/archive. No application/user data or sources removed.
+
+- Retry archive10 succeeded after cache cleanup. Exact archive and IPA audits
+  passed: identity 7.1(10), strict/deep signature, verified Firebase/public
+  RevenueCat config, 33/33 board files matching shared source, no private/provider
+  key matches. Independent artifact review found no blocking issue.
+- Export succeeded. Initial upload failed with SSL EOF before transfer;
+  retry succeeded at 23:05:12 Bangkok. App Store Connect processing must still
+  be checked before claiming VALID. No App Review submission/public release.
+
+- Read-only Apple API now confirms build `9d09eb43-a3d0-423a-9a8f-7b80ce602631`
+  (10), uploaded 2026-09-07T09:05:57-07:00, processing **VALID**. The native-copy
+  correction is implemented, merged in shared main, rebuilt, visually verified,
+  signed, exported and uploaded. Publication remains gated by App Privacy/login,
+  export compliance and actual account/purchase/restore QA. No old build released.
