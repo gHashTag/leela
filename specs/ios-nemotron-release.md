@@ -148,3 +148,21 @@ availability is a separate check from syntactic configuration validity.
 - Build-8 simulator compilation was deliberately interrupted after the
   artifact blocker was confirmed. Replacement archive and simulator build for
   7.1 (9) started from the corrected config; no predicted outcome recorded.
+- Replacement native regressions: 103 suites / 441 tests PASS, 234.741 seconds
+  under concurrent native build load.
+- Initial build-9 archive intentionally interrupted (exit 75) after observing
+  32 compiler processes and about 16 GiB swap on a 16 GiB host. Complete the
+  simulator first, then retry archive with `xcodebuild -jobs 4`; this is resource
+  scheduling, not a claimed compiler failure.
+
+## Follow-up contract: native copy (owner correction)
+
+Build 9 archive and simulator Release both compiled successfully. The actual
+simulator opened onboarding and rendered the board after Skip. Its shared
+WebGL status banner incorrectly described being outside Telegram. The owner
+explicitly rejects this copy in the native mobile app. Do not upload build 9.
+
+Prepare build 10 with shared spec 026: native hosts must have no chat-connection
+status text, visually or accessibly, in any language; browser/Mini App diagnostics
+must remain unchanged. Verify the rebuilt board on the simulator before export.
+Existing social links are separate legacy features, not newly added game copy.

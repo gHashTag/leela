@@ -1,8 +1,8 @@
 {
-  "recorded_at": "2026-09-07T14:35:23Z",
-  "task_id": "ios-release-7.1-9",
+  "recorded_at": "2026-09-07T15:29:00Z",
+  "task_id": "ios-release-7.1-10",
   "claim_id": null,
-  "code_commit": "0da79ec0",
+  "code_commit": "954b9a7e",
   "checkpoints": [
     { "action": "original native transport probe", "result": "EXPECTED_RED", "evidence": { "facts": ["Exact source called Z.AI directly instead of production /api/ask"] } },
     { "action": "native Jest", "result": "PASS", "evidence": { "command": "LEELA_BOARD_REPO=/Users/playra/leela-loop/apps/webgl npx jest --runInBand --silent", "exit_code": 0, "facts": ["103 suites", "441 tests", "89.868 seconds on final pre-archive rerun"] } },
@@ -16,10 +16,17 @@
     { "action": "TestFlight upload and Apple processing", "result": "PASS", "evidence": { "exit_code": 0, "artifact": "ASC build 0e6e4843-5924-415c-ad96-ac03460ee202", "facts": ["Upload succeeded 2026-09-07 21:20:58 Asia/Bangkok", "Apple processingState VALID verified via read-only API", "Submission skipped; no external distribution or tester notification", "Export-compliance attribute usesNonExemptEncryption is null; declaration remains to be completed", "App Store version remains PENDING_DEVELOPER_RELEASE with old build; not published"] } },
     { "action": "build 8 Firebase artifact review", "result": "FAIL", "evidence": { "artifact": "build/leela-7.1-8.xcarchive", "facts": ["Inherited placeholder skips Firebase initialization", "Account/cloud functionality unavailable in candidate", "Build 8 superseded, not released"] } },
     { "action": "Firebase release preflight regression", "result": "PASS", "evidence": { "exit_code": 0, "facts": ["Original placeholder rejected with invalid_api_key, missing_project_id, invalid_google_app_id", "4 regression tests passed", "Matching original public configuration restored privately", "Independent review found no blocking change finding", "Identity Toolkit read-only project configuration HTTP 200; numeric project ID matches app config sender/app ID", "Shape/read-only API success is not account/cloud end-to-end success"] } },
-    { "action": "public App Privacy readiness", "result": "BLOCKED", "evidence": { "facts": ["Public listing says Data Not Collected", "RevenueCat requires Purchase History disclosure", "Browser App Store Connect login missing", "Public dataUsages API returns 404 PATH_ERROR"] } }
+    { "action": "build9 native regression rerun", "result": "PASS", "evidence": { "exit_code": 0, "facts": ["103 suites", "441 tests", "234.741 seconds under concurrent native build load"] } },
+    { "action": "build9 initial archive scheduling", "result": "BLOCKED", "evidence": { "exit_code": 75, "facts": ["Deliberately interrupted to reduce build memory pressure", "16 GiB host RAM, about 16 GiB swap and 32 compiler processes observed during concurrent archive/simulator builds", "Simulator build continues; archive retry limited to four jobs", "No compiler failure claimed"] } },
+    { "action": "public App Privacy readiness", "result": "BLOCKED", "evidence": { "facts": ["Public listing says Data Not Collected", "RevenueCat requires Purchase History disclosure", "Browser App Store Connect login missing", "Public dataUsages API returns 404 PATH_ERROR", "No saved Fastlane web account/session files or FASTLANE_SESSION available"] } },
+    { "action": "build9 completed build and runtime", "result": "PASS", "evidence": { "exit_code": 0, "artifact": "build/leela-7.1-9.xcarchive", "facts": ["Archive retry succeeded", "Simulator Release build succeeded", "Actual simulator onboarding and board rendering verified", "Simulator screenshot board-settled exposed outside-Telegram banner; build9 superseded by owner correction, not uploaded", "AI consent UI and transactions not verified"] } },
+    { "action": "native copy shared-source regression and review", "result": "PASS", "evidence": { "facts": ["Spec026 RED reproduced native banner and direct DOM bypass", "GREEN 35 tests covers 22 languages and 7 statuses", "Independent reviewer no blocking findings", "Shared WebGL bundle rebuilt"] } },
+    { "action": "build10 native regression", "result": "PASS", "evidence": { "command": "LEELA_BOARD_REPO=/Users/playra/leela-loop/apps/webgl npx jest --runInBand --silent", "exit_code": 0, "facts": ["103 suites", "441 tests", "47.055 seconds"] } },
+    { "action": "build10 simulator Release build", "result": "PASS", "evidence": { "command": "node /tmp/leela-ios-build.mjs sim", "exit_code": 0, "artifact": "build/SimulatorData/Build/Products/Release-iphonesimulator/leela.app", "facts": ["BUILD SUCCEEDED; runtime verification follows fresh install/relaunch"] } },
+    { "action": "build10 simulator relaunch and visual verification", "result": "PASS", "evidence": { "artifact": "build/ios-7.1-10-board-settled.png", "facts": ["Installed build10, launched PID78741", "Actual board renders; Telegram banner absent", "All embedded board files byte-match rebuilt shared dist", "Bundled Firebase validation PASS", "Initial launch screenshot was pending/black; settled screenshot verifies rendered board"] } }
   ],
   "residual_risks": [
-    "Replacement build9 archive and simulator build are in progress; no new artifact/runtime PASS yet",
+    "Replacement build10 signed archive in progress; simulator correction verified",
     "Firebase account/cloud end-to-end operation is unverified",
     "Export-compliance declaration for uploaded build remains open",
     "Actual sandbox purchase and restore not exercised",
