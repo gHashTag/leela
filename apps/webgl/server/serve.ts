@@ -16,6 +16,8 @@ import { askHandler } from './ask';
  *
  * Configuration, all from the environment and none of it in the repository:
  *
+ *   NVIDIA_API_KEY                        selects NVIDIA Nemotron first
+ *   NVIDIA_MODEL                          optional NVIDIA model override
  *   ZAI_KEY | ZAI_API_KEY | OPEN_AI_KEY   the model key (any one of the three)
  *   ZAI_PLAN=coding                       for a coding-plan key, which the
  *                                         default host rejects
@@ -51,6 +53,7 @@ server.listen(PORT, () => {
   // silently unconfigured looks identical to one that works until somebody
   // asks it a question.
   const configured = Boolean(
+    process.env.NVIDIA_API_KEY?.trim() ||
     (process.env.ZAI_KEY ?? process.env.ZAI_API_KEY ?? process.env.OPEN_AI_KEY ?? '').trim(),
   );
   console.log(`leela ask listening on ${PORT}, model key ${configured ? 'present' : 'MISSING'}`);

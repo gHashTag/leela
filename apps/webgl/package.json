@@ -13,6 +13,7 @@
     "typecheck:strict": "tsc --noEmit -p tsconfig.src.json"
   },
   "dependencies": {
+    "@leela/ai": "workspace:*",
     "@leela/content": "workspace:*",
     "@leela/engine": "workspace:*",
     "@leela/journal": "workspace:*",

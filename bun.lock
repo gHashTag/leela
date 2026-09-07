@@ -98,6 +98,7 @@
       "name": "@leela/webgl",
       "version": "1.0.0",
       "dependencies": {
+        "@leela/ai": "workspace:*",
         "@leela/content": "workspace:*",
         "@leela/engine": "workspace:*",
         "@leela/journal": "workspace:*",
