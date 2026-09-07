@@ -17,6 +17,7 @@ on:
       - 'apps/docs/**'
       - 'packages/engine/**'
       - 'packages/content/**'
+      - 'packages/ai/**'
       # The format every surface reads and writes. The mini app declares it and
       # imports it, and this list was written without it — so a push that
       # touched only the journal changed what players run and published
@@ -57,7 +58,7 @@ jobs:
       # both against the dependency graph, so the next divergence is loud.
       - name: Test what is being shipped
         run: |
-          for pkg in packages/engine packages/content packages/journal apps/webgl apps/miniapp apps/docs; do
+          for pkg in packages/engine packages/content packages/journal packages/ai apps/webgl apps/miniapp apps/docs; do
             (cd "$pkg" && bunx vitest run)
           done
 

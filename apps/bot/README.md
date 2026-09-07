@@ -31,13 +31,19 @@ OPENAI_API_KEY=sk-...          # optional: the companion that answers reports
 OPENAI_MODEL=gpt-4o-mini       # optional: defaults to gpt-4o-mini
 ```
 
-The companion takes any of four: `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`,
+The companion takes `NVIDIA_API_KEY`, `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`,
 `ZAI_API_KEY` or `OPENROUTER_API_KEY`, each with an optional `*_MODEL`. The
-first one set wins, in that order. Set `ZAI_PLAN=coding` for a Z.AI Coding Plan
+first nonblank key wins, in that order. NVIDIA defaults to
+`nvidia/nemotron-3-super-120b-a12b` at `https://integrate.api.nvidia.com/v1`.
+The bot, proactive agent, admin AI health check and Mini App use the same
+selected companion; retained Z.AI keys cannot override NVIDIA on the board.
+The standalone board server also accepts NVIDIA_API_KEY and NVIDIA_MODEL.
+Keep credentials server-side, in protected environment variables.
+Set `ZAI_PLAN=coding` for a Z.AI Coding Plan
 key and keep it on the Coding endpoint; the current default is `glm-4.7`.
 Provider code 1113 on that endpoint means the Coding Plan has no available
 quota and opens the companion's cool-down instead of retrying every player
-message. All four publish the same chat-completions format, so the choice is a
+message. The providers publish the same chat-completions format, so the choice is a
 host and not a code path — and the startup line names the provider and model it
 picked up, so a key in the wrong variable is visible immediately. Run
 `bun run monitor:ai` to verify that production returns answer text without

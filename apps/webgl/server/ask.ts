@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { NVIDIA_BASE_URL, NVIDIA_DEFAULT_MODEL, NVIDIA_CHAT_TEMPLATE } from '@leela/ai/nvidia-config';
 
 /**
  * The route the board asks, in one place, for every host that serves it.
@@ -92,7 +93,8 @@ export const askHandler = async (
      * under a name the board did not look for, and the companion was offline
      * on a laptop where the bot was answering fine.
      */
-    const key = (
+    const nvidiaKey = process.env.NVIDIA_API_KEY?.trim();
+    const key = nvidiaKey || (
       process.env.ZAI_KEY ??
       process.env.ZAI_API_KEY ??
       process.env.OPEN_AI_KEY ??
@@ -111,14 +113,17 @@ export const askHandler = async (
       };
       if (!question?.trim()) return send(res, 400, { error: 'empty question' });
 
-      const upstream = await fetch(`${baseUrl()}/chat/completions`, {
+      const upstream = await fetch(`${nvidiaKey ? NVIDIA_BASE_URL : baseUrl()}/chat/completions`, {
         method: 'POST',
+        signal: AbortSignal.timeout(170_000),
         headers: {
           authorization: `Bearer ${key}`,
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          model: process.env.ZAI_MODEL ?? MODEL,
+          model: nvidiaKey
+            ? process.env.NVIDIA_MODEL?.trim() || NVIDIA_DEFAULT_MODEL
+            : process.env.ZAI_MODEL ?? MODEL,
           messages: [
             ...(system ? [{ role: 'system', content: system }] : []),
             { role: 'user', content: question },
@@ -146,13 +151,14 @@ export const askHandler = async (
           // reasoning as a separate field; the page shows it while it works and
           // drops it when the answer arrives.
           stream: true,
-          thinking: { type: 'enabled' },
+          ...(nvidiaKey
+            ? { chat_template_kwargs: NVIDIA_CHAT_TEMPLATE }
+            : { thinking: { type: 'enabled' } }),
         }),
       });
 
       if (!upstream.ok || !upstream.body) {
-        const detail = upstream.ok ? 'no body' : await upstream.text();
-        return send(res, 502, { error: `upstream ${upstream.status}`, detail });
+        return send(res, 502, { error: 'companion unavailable' });
       }
 
       // Server-sent events, forwarded as they arrive. `no-transform` matters:
@@ -242,7 +248,7 @@ export const askHandler = async (
       say({ done: true });
       res.end();
       return;
-    } catch (error) {
-      return send(res, 502, { error: String(error) });
+    } catch {
+      return send(res, 502, { error: 'companion unavailable' });
     }
   };

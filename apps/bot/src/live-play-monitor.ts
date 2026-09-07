@@ -303,11 +303,10 @@ export function findings(s: Snapshot): Finding[] {
         `log refusals in window=${refusals.length}`,
       fix:
         'Read the sentence above before touching code — a balance message and an expired ' +
-        'key are the same silence on the surface and different repairs. `configuredModel` ' +
-        'takes the FIRST key present and never tries another, so one empty account silences ' +
-        'every surface: OPENAI_API_KEY and DEEPSEEK_API_KEY are ordered BEFORE ZAI_API_KEY ' +
-        'and would take over on the next deploy, while OPENROUTER_API_KEY is ordered after ' +
-        'it and would do nothing until the Z.AI key is removed.',
+        'key are the same silence on the surface and different repairs. The shared companion ' +
+        'selector takes the first nonblank key: NVIDIA_API_KEY, OPENAI_API_KEY, ' +
+        'DEEPSEEK_API_KEY, ZAI_API_KEY, then OPENROUTER_API_KEY. Numbered Z.AI keys ' +
+        'join its rotation pool. Verify the selected provider after the next deploy.',
     });
   } else if (s.companion === null && refusals.length > 0) {
     out.push({

@@ -13,6 +13,7 @@
 
 import { lastSentenceEnd } from '@leela/content';
 import type { Message } from './prompts';
+import { NVIDIA_BASE_URL, NVIDIA_DEFAULT_MODEL, NVIDIA_CHAT_TEMPLATE } from './nvidia-config';
 
 export interface CompletionOptions {
   /** Hard ceiling on the reply. A companion answers briefly. */
@@ -138,6 +139,7 @@ interface ChatCompletionsConfig extends Required<Pick<ProviderOptions, 'apiKey' 
   /** What to call the reply ceiling. See the note in `chatCompletions`. */
   tokenLimitField: 'max_tokens' | 'max_completion_tokens';
   headers?: Record<string, string>;
+  chatTemplateKwargs?: { enable_thinking: boolean };
 }
 
 /**
@@ -177,6 +179,7 @@ function chatCompletions(config: ChatCompletionsConfig): LanguageModel {
           messages,
           [config.tokenLimitField]: options.maxTokens ?? DEFAULT_MAX_TOKENS,
           temperature: options.temperature ?? DEFAULT_TEMPERATURE,
+          ...(config.chatTemplateKwargs ? { chat_template_kwargs: config.chatTemplateKwargs } : {}),
         }),
         signal: options.signal,
       });
@@ -339,6 +342,22 @@ export function zAI({
     fetch,
     id: `zai:${model}`,
     tokenLimitField: 'max_tokens',
+  });
+}
+
+/** NVIDIA's hosted Nemotron: concise answers without a separate reasoning budget. */
+export function nvidia({
+  apiKey,
+  model = NVIDIA_DEFAULT_MODEL,
+  baseUrl = NVIDIA_BASE_URL,
+  fetch = globalThis.fetch,
+}: ProviderOptions): LanguageModel {
+  if (!apiKey) throw new ModelError('a NVIDIA API key is required');
+  return chatCompletions({
+    apiKey, model, baseUrl, fetch,
+    id: `nvidia:${model}`,
+    tokenLimitField: 'max_tokens',
+    chatTemplateKwargs: NVIDIA_CHAT_TEMPLATE,
   });
 }
 

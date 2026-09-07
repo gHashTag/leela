@@ -59,6 +59,7 @@ export {
   recordingModel,
   zAI,
 } from './model';
+export { companionFromEnvironment, COMPANION_PROVIDERS } from './companion-config';
 export type {
   CompletionOptions,
   LanguageModel,

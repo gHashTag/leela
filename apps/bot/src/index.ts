@@ -9,18 +9,13 @@
  */
 
 import {
-  deepSeek,
+  companionFromEnvironment,
+  COMPANION_PROVIDERS,
   DEFAULT_ZAI_BASE_URL,
   DEFAULT_ZAI_MODEL,
   Guide,
-  keysFrom,
   ModelError,
-  openAI,
-  openRouter,
-  pooled,
-  zAI,
   ZAI_CODING_BASE_URL,
-  type LanguageModel,
 } from '@leela/ai';
 import {
   FALLBACK_LANGUAGE,
@@ -104,69 +99,10 @@ const storage = openStorage({ path: databasePath, log: console.error });
  * help with it, not a requirement for it.
  */
 
-/**
- * Which provider, when more than one key is set.
- *
- * The first key present wins, in the order below, and the startup line names
- * what was chosen — so a key in the wrong variable shows up on the first line
- * rather than at the first report. All three speak the same wire format, so
- * this is a choice of host, not of code.
- */
-const PROVIDERS: Array<{ key: string; model: () => LanguageModel }> = [
-  {
-    key: 'OPENAI_API_KEY',
-    model: () =>
-      openAI({ apiKey: process.env.OPENAI_API_KEY as string, model: process.env.OPENAI_MODEL }),
-  },
-  {
-    key: 'DEEPSEEK_API_KEY',
-    model: () =>
-      deepSeek({
-        apiKey: process.env.DEEPSEEK_API_KEY as string,
-        model: process.env.DEEPSEEK_MODEL,
-      }),
-  },
-  {
-    key: 'ZAI_API_KEY',
-    model: () => {
-      // A POOL, not a key. One exhausted account used to silence the companion
-      // on every surface for a day while a working key sat unused in another
-      // account; `ZAI_API_KEY_2`, `_3`, … join the rotation, and a key that
-      // answers 1113 is parked rather than retried.
-      const keys = keysFrom('ZAI_API_KEY', process.env);
-      const baseUrl = process.env.ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : undefined;
-      const one = (apiKey: string) => zAI({ apiKey, model: process.env.ZAI_MODEL, baseUrl });
-      // Z.AI sells two kinds of key against two paths. A Coding Plan key sent
-      // to the pay-as-you-go host comes back as error 1113, which reads as an
-      // expired key and sends whoever holds a good one off to buy another —
-      // see trios/apps/trios-macos/.trinity/ZAI-ENDPOINT-FACTS.md. Rotation
-      // parks such a key as depleted, which is right for THIS host and says
-      // nothing about the key: the repair there is `ZAI_PLAN`, not a purchase.
-      return keys.length <= 1 ? one(keys[0] ?? '') : pooled({ keys, modelFor: one, log: console.log });
-    },
-  },
-  {
-    key: 'OPENROUTER_API_KEY',
-    model: () =>
-      openRouter({
-        apiKey: process.env.OPENROUTER_API_KEY as string,
-        model: process.env.OPENROUTER_MODEL,
-        referer: 'https://github.com/gHashTag/leela',
-        title: 'Leela',
-      }),
-  },
-];
-
-/** Which host was chosen, for a report that has to name the account to top up. */
-const aiProvider =
-  PROVIDERS.find((provider) => process.env[provider.key])?.key.replace(/_API_KEY$/, '') ??
-  'none';
-
-function configuredModel(): LanguageModel | undefined {
-  return PROVIDERS.find((provider) => process.env[provider.key])?.model();
-}
-
-const model = configuredModel();
+/** One selection for reports, proactive messages, admin health and the board. */
+const companion = companionFromEnvironment(process.env, { log: console.log });
+const aiProvider = companion?.provider ?? 'none';
+const model = companion?.model;
 // The same 16000-token ceiling the ask route pays, for the same reason: a
 // reasoning model spends the default 800 on thought and returns empty text.
 const guide = model ? new Guide({ model, completion: { maxTokens: 16_000 } }) : undefined;
@@ -263,7 +199,7 @@ console.log(
     ? // The id names the provider and the model, so a log says which of the
       // two keys was picked up rather than only that one was.
       `A companion is configured (${model.id}) and will respond to reports.`
-    : `No ${PROVIDERS.map((p) => p.key).join(', ')}: ` +
+    : `No ${COMPANION_PROVIDERS.map((p) => `${p}_API_KEY`).join(', ')}: ` +
       'reports are kept, but nothing responds to them.',
 );
 
@@ -505,7 +441,7 @@ async function* deltasOf(body: ReadableStream<Uint8Array>): AsyncIterable<Stream
 
 const asking = serveAsk({
   model,
-  stream: process.env.ZAI_API_KEY ? zaiStream(process.env.ZAI_API_KEY) : undefined,
+  stream: aiProvider === 'ZAI' && process.env.ZAI_API_KEY ? zaiStream(process.env.ZAI_API_KEY) : undefined,
   token,
   staticRoot: process.env.LEELA_WEB_ROOT,
   /**
