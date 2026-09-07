@@ -63,17 +63,10 @@ export const BOARD_URL = `${BOARD_DIR}/index.html`
 /**
  * Everything in one place.
  *
- * There is no server. The board asks *this screen* for an answer, and this
- * screen calls the model with `streamZaiChat` - the client the app has always
- * had, key from `.env`, reasoning and text streamed back as they arrive.
- *
- * The alternative was a deployed proxy, and it was tried: it worked, and it
- * meant the companion stopped the moment a machine somewhere was shut. A game
- * you install should not have an owner who can turn it off.
- *
- * What this costs, plainly: the key ships inside the app, where somebody
- * determined can pull it out of the package. A key on a server cannot be taken
- * that way. That is the trade this design makes.
+ * The board asks this screen for an answer. The shared native transport asks
+ * Leela's production companion API; model selection and provider credentials
+ * stay on the server. This also lets the native app inherit a provider repair
+ * without publishing a new secret-bearing app archive.
  *
  * Two things happen to be true and are worth keeping true: the model is reached
  * over HTTPS, and nothing else in the game needs a network at all - the die,

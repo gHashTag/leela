@@ -102,8 +102,8 @@ const SubscriptionScreen: React.FC = () => {
   const handlePurchase = async () => {
     if (purchasePackage && selectedPackage) {
       try {
-        await purchasePackage(selectedPackage)
-        goBack()
+        const purchased = await purchasePackage(selectedPackage)
+        if (purchased) goBack()
       } catch (error) {
         captureException(error, 'handlePurchase')
         Alert.alert(

@@ -10,6 +10,7 @@ import { PostStore } from '../store/PostStore'
 import { getProfile } from '../screens/helper'
 import { UserT } from '../types/types'
 import { DiceStore, actionsDice } from '../store/DiceStore'
+import { hasProEntitlement } from './entitlement'
 
 // Use your RevenueCat API keys
 const APIKeys = {
@@ -18,7 +19,7 @@ const APIKeys = {
 }
 
 interface RevenueCatProps {
-  purchasePackage?: (pack: PurchasesPackage) => Promise<void>
+  purchasePackage?: (pack: PurchasesPackage) => Promise<boolean>
   restorePermissions?: () => Promise<CustomerInfo>
   user: UserState
   packages: PurchasesPackage[]
@@ -36,7 +37,7 @@ export interface UserState {
 }
 
 const RevenueCatContext = createContext<RevenueCatProps>({
-  purchasePackage: async () => {},
+  purchasePackage: async () => false,
   restorePermissions: async () => ({}) as CustomerInfo,
   user: { pro: false },
   packages: [],
@@ -84,11 +85,16 @@ export const RevenueCatProvider = ({ children }: any) => {
 
         // Listen for customer updates
         Purchases.addCustomerInfoUpdateListener(async (info) => {
-          updateCustomerInformation(info)
+          try {
+            await updateCustomerInformation(info)
+          } catch (error) {
+            captureException(error, 'updateCustomerInformation')
+          }
         })
 
         // Load all offerings and the user object with entitlements
         await loadOfferings()
+        await updateCustomerInformation(await Purchases.getCustomerInfo())
       } else {
         console.log(
           '[leela] RevenueCat not configured — running without purchases'
@@ -98,7 +104,7 @@ export const RevenueCatProvider = ({ children }: any) => {
         actionSubscribeStore.unBlock()
       }
     }
-    init()
+    init().catch((error) => captureException(error, 'RevenueCat initialization'))
   }, [])
 
   // Load all offerings a user can (currently) purchase
@@ -115,7 +121,8 @@ export const RevenueCatProvider = ({ children }: any) => {
 
   // Update user state based on previous purchases
   const updateCustomerInformation = async (customerInfo: CustomerInfoT) => {
-    let newUser: UserState = { pro: false }
+    let newUser: UserState = { pro: hasProEntitlement(customerInfo) }
+    setUser(newUser)
     const online = DiceStore.online
     if (online) {
       const curProf: UserT | undefined = await getProfile()
@@ -125,8 +132,7 @@ export const RevenueCatProvider = ({ children }: any) => {
 
       const isAdmin = status === 'Admin' || status === 'Free'
 
-      const hasProPlan =
-        customerInfo?.entitlements?.active?.hasOwnProperty('pro plan')
+      const hasProPlan = hasProEntitlement(customerInfo)
 
       /*
        * The game is not stopped for money any more.
@@ -152,25 +158,29 @@ export const RevenueCatProvider = ({ children }: any) => {
 
   // Purchase a package
   const purchasePackage = async (pack: PurchasesPackage) => {
-    if (!RU_STORE) {
+    if (String(RU_STORE) !== 'true') {
       try {
-        await Purchases.purchasePackage(pack)
+        const result = await Purchases.purchasePackage(pack)
+        await updateCustomerInformation(result.customerInfo)
+        return hasProEntitlement(result.customerInfo)
       } catch (e: any) {
-        if (!e.userCancelled) {
-          captureException(e, 'userCancelled')
-        }
+        if (e.userCancelled) return false
+        captureException(e, 'purchasePackage')
+        throw e
       }
     }
+    throw new Error('Purchases are unavailable in this store')
   }
 
   // Restore previous purchases
   const restorePermissions = async () => {
     try {
       const customer = await Purchases.restorePurchases()
-      return customer ?? {}
+      await updateCustomerInformation(customer)
+      return customer
     } catch (error) {
       captureException(error, 'restorePermissions')
-      return {}
+      throw error
     }
   }
 

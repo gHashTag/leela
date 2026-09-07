@@ -117,7 +117,7 @@ describe('the same values as the board', () => {
     // Two surfaces of one game. The board's stylesheet is the source; these are
     // copies, and a copy that is only checked by eye stops being one.
     const css = readFileSync(
-      join(
+      process.env.LEELA_BOARD_REPO ? join(process.env.LEELA_BOARD_REPO, 'src', 'style.css') : join(
         __dirname,
         '..',
         '..',

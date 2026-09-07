@@ -2,7 +2,7 @@ import React, { memo, useCallback, useEffect, useState } from 'react'
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { Alert, ScrollView, StyleSheet, View } from 'react-native'
 import { s, vs } from 'react-native-size-matters'
 
 import {
@@ -19,6 +19,7 @@ import { primary } from '../../constants'
 import { RootStackParamList } from '../../types/types'
 import { getForceAiLanguage, setForceAiLanguage } from '../../utils/aiLanguage'
 import { loadSoundEnabled, saveSoundEnabled } from '../../utils/soundSettings'
+import { aiConsentText, hasAIConsent, requestAIConsent, revokeAIConsent } from '../../utils/aiConsent'
 
 interface SectionT {
   title: string
@@ -45,6 +46,17 @@ export const SettingsScene = memo(
     const { t } = useTranslation()
     const [sound, setSound] = useState<boolean | null>(null)
     const [aiLang, setAiLang] = useState<boolean | null>(null)
+    const [aiConsent, setAiConsent] = useState(false)
+
+    useEffect(() => {
+      let mounted = true
+      const refresh = () => {
+        hasAIConsent().then((value) => { if (mounted) setAiConsent(value) }).catch(() => { if (mounted) setAiConsent(false) })
+      }
+      refresh()
+      const unsubscribe = navigation.addListener?.('focus', refresh)
+      return () => { mounted = false; unsubscribe?.() }
+    }, [navigation])
 
     useEffect(() => {
       let mounted = true
@@ -118,6 +130,27 @@ export const SettingsScene = memo(
       {
         title: t('settings.ai'),
         rows: [
+          {
+            key: 'aiConsent',
+            title: aiConsentText().title,
+            subtitle: aiConsent ? aiConsentText().revoke : aiConsentText().message,
+            icon: '🔒',
+            toggle: true,
+            value: aiConsent,
+            onPress: async () => {
+              try {
+                if (aiConsent) {
+                  await revokeAIConsent()
+                  setAiConsent(false)
+                } else {
+                  setAiConsent(await requestAIConsent(true))
+                }
+              } catch {
+                Alert.alert(aiConsentText().title, aiConsentText().saveError)
+              }
+            },
+            testID: 'settings-ai-consent'
+          },
           {
             key: 'aiLanguage',
             title: t('aiLanguage.title'),

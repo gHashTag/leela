@@ -1,8 +1,8 @@
-import { LEELA_ID, OPEN_AI_KEY, ZAI_PLAN } from '@env'
+import { LEELA_ID } from '@env'
 import DeviceInfo from 'react-native-device-info'
 import { createNavigationContainerRef } from '@react-navigation/native'
 import * as Sentry from '@sentry/react-native'
-import axios from 'axios'
+import { streamZaiChat } from './utils/aiStream'
 import { Alert, Dimensions, Linking, Platform } from 'react-native'
 import Rate from 'react-native-rate'
 import i18next from './i18n'
@@ -28,23 +28,12 @@ export const navigate = (name: string, params?: any) => {
   }
 }
 
-const ZAI_CODING_BASE_URL = 'https://api.z.ai/api/coding/paas/v4'
-const ZAI_DEFAULT_BASE_URL = 'https://api.z.ai/api/paas/v4'
-const ZAI_DEFAULT_MODEL = 'glm-4.6'
-
 export const generateComment = async ({
   message,
   systemMessage,
   planText,
   pro
 }: MessageAIT): Promise<{ response: string; gpt: string }> => {
-  // Z.AI Coding Plan is the only key we ship with.
-  // Coding Plan keys must hit /api/coding/paas/v4; the pay-as-you-go
-  // host returns error 1113, which looks like an expired key.
-  const baseURL =
-    ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : ZAI_DEFAULT_BASE_URL
-  const model = ZAI_DEFAULT_MODEL
-
   const fullSystemMessage = await buildAiSystemMessage(
     systemMessage,
     planText,
@@ -52,23 +41,8 @@ export const generateComment = async ({
   )
 
   try {
-    const response = await axios.post(
-      `${baseURL}/chat/completions`,
+    const response = await streamZaiChat(
       {
-        model,
-        // **The whole reason the companion said nothing.**
-        //
-        // `glm-4.6` reasons before it answers, and the reasoning is billed
-        // against the same `max_tokens`. Measured on a real report: 1200 of
-        // 1200 completion tokens were `reasoning_tokens`, `finish_reason` came
-        // back `length`, and `content` was an empty string — the model was cut
-        // off mid-thought and never reached a word of its answer. What the app
-        // then filed as the comment was `reasoning_content`: four thousand
-        // characters of *"1. Analyze the User's Input"*, or nothing at all.
-        //
-        // Turned off, the same request answers in three sentences with
-        // `finish_reason: stop` and no reasoning tokens at all.
-        thinking: { type: 'disabled' },
         messages: [
           // The plan's text belongs to the instructions, not to a turn the
           // assistant is pretending to have taken. It was the **last** message
@@ -82,22 +56,14 @@ export const generateComment = async ({
             role: 'user',
             content: message
           }
-        ],
-        max_tokens: 1200,
-        temperature: 0.1
+        ]
       },
-      {
-        headers: {
-          Authorization: `Bearer ${OPEN_AI_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
+      {}
     )
 
-    const choice = response?.data?.choices?.[0]?.message
     return {
-      response: choice?.content || choice?.reasoning_content || '',
-      gpt: response?.data?.model ?? model
+      response: response.content,
+      gpt: response.model
     }
   } catch (error) {
     captureException(error, 'generateComment')

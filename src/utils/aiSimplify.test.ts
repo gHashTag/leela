@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { streamZaiChat } from './aiStream'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
   clearSimplifiedAnswer,
@@ -8,8 +8,8 @@ import {
   SIMPLIFY_MIN_LENGTH
 } from './aiSimplify'
 
-jest.mock('axios')
-const mockedAxios = axios as jest.Mocked<typeof axios>
+jest.mock('./aiStream')
+const mockedStream = streamZaiChat as jest.MockedFunction<typeof streamZaiChat>
 const mockedAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>
 
 describe('simplifyAnswer', () => {
@@ -20,32 +20,30 @@ describe('simplifyAnswer', () => {
   it('returns null when text is below the minimum length', async () => {
     const result = await simplifyAnswer('short')
     expect(result).toBeNull()
-    expect(mockedAxios.post).not.toHaveBeenCalled()
+    expect(mockedStream).not.toHaveBeenCalled()
   })
 
   it('returns null for empty text', async () => {
     const result = await simplifyAnswer('')
     expect(result).toBeNull()
-    expect(mockedAxios.post).not.toHaveBeenCalled()
+    expect(mockedStream).not.toHaveBeenCalled()
   })
 
   it('returns the simplified content from the API', async () => {
     const longText = 'a'.repeat(SIMPLIFY_MIN_LENGTH + 1)
-    mockedAxios.post.mockResolvedValue({
-      data: {
-        choices: [{ message: { content: 'Simpler version.' } }]
-      }
+    mockedStream.mockResolvedValue({
+      content: 'Simpler version.'
     } as any)
 
     const result = await simplifyAnswer(longText)
     expect(result).toBe('Simpler version.')
-    expect(mockedAxios.post).toHaveBeenCalledTimes(1)
+    expect(mockedStream).toHaveBeenCalledTimes(1)
   })
 
   it('returns null when the API response has no content', async () => {
     const longText = 'a'.repeat(SIMPLIFY_MIN_LENGTH + 1)
-    mockedAxios.post.mockResolvedValue({
-      data: { choices: [{ message: {} }] }
+    mockedStream.mockResolvedValue({
+      content: ''
     } as any)
 
     const result = await simplifyAnswer(longText)
@@ -54,7 +52,7 @@ describe('simplifyAnswer', () => {
 
   it('returns null when the API throws', async () => {
     const longText = 'a'.repeat(SIMPLIFY_MIN_LENGTH + 1)
-    mockedAxios.post.mockRejectedValue(new Error('network error'))
+    mockedStream.mockRejectedValue(new Error('network error'))
 
     const result = await simplifyAnswer(longText)
     expect(result).toBeNull()
