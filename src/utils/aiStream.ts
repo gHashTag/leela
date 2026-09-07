@@ -1,12 +1,9 @@
-import { OPEN_AI_KEY, ZAI_PLAN } from '@env'
+import { companionRequest } from './companionRequest'
+import { requireAIConsent } from './aiConsent'
 
-const ZAI_CODING_BASE_URL = 'https://api.z.ai/api/coding/paas/v4'
-const ZAI_DEFAULT_BASE_URL = 'https://api.z.ai/api/paas/v4'
-const ZAI_DEFAULT_MODEL = 'glm-4.6'
+/** Credentials and provider selection belong to the production server only. */
+const COMPANION_ORIGIN = 'https://leela-production-e9a0.up.railway.app'
 const SSE_DONE = '[DONE]'
-
-const getBaseURL = () =>
-  ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : ZAI_DEFAULT_BASE_URL
 
 export interface ZaiStreamMessage {
   role: 'system' | 'user' | 'assistant'
@@ -63,21 +60,14 @@ function parseSseEvents(raw: string) {
   return parsed
 }
 
-export const streamZaiChat = (
+export const streamZaiChat = async (
   options: ZaiStreamOptions,
   callbacks: ZaiStreamCallbacks
 ): Promise<ZaiStreamResult> => {
-  const baseURL = getBaseURL()
-  const model = options.model ?? ZAI_DEFAULT_MODEL
-  const body = {
-    model,
-    messages: options.messages,
-    stream: true,
-    max_tokens: options.maxTokens ?? 4000,
-    temperature: options.temperature ?? 0.1,
-    ...(options.thinking ? { thinking: options.thinking } : {})
-  }
-
+  // Keep this legacy export name so all existing screens share one transport.
+  const model = 'leela-companion'
+  const body = companionRequest(options.messages)
+  await requireAIConsent()
   return new Promise((resolve, reject) => {
     let reasoning = ''
     let content = ''
@@ -91,42 +81,29 @@ export const streamZaiChat = (
     // reasoning and corrupting the JSON that followed.
     let readOffset = 0
     let done = false
+    let streamFailed = false
 
     const applyEvent = (event: unknown) => {
-      const parsed = event as {
-        choices?: {
-          delta?: { reasoning_content?: string; content?: string }
-          finish_reason?: string
-        }[]
-        usage?: unknown
-      }
-      const choice = parsed.choices?.[0]
-      const delta = choice?.delta
-
-      if (delta?.reasoning_content) {
-        const chunkText = delta.reasoning_content
+      const parsed = event as { text?: string; thinking?: string; done?: boolean; error?: unknown }
+      if (parsed.error !== undefined) streamFailed = true
+      if (typeof parsed.thinking === 'string') {
+        const chunkText = parsed.thinking
         reasoning += chunkText
         callbacks.onReasoning?.(chunkText, reasoning)
       }
 
-      if (delta?.content) {
-        const chunkText = delta.content
+      if (typeof parsed.text === 'string') {
+        const chunkText = parsed.text
         content += chunkText
         callbacks.onContent?.(chunkText, content)
       }
 
-      if (choice?.finish_reason) {
-        finishReason = choice.finish_reason
-      }
-
-      if (parsed.usage) {
-        usage = parsed.usage
-      }
+      if (parsed.done) finishReason = 'stop'
     }
 
     const request = new XMLHttpRequest()
-    request.open('POST', `${baseURL}/chat/completions`)
-    request.setRequestHeader('Authorization', `Bearer ${OPEN_AI_KEY}`)
+    request.open('POST', `${COMPANION_ORIGIN}/api/ask`)
+    request.setRequestHeader('Origin', COMPANION_ORIGIN)
     request.setRequestHeader('Content-Type', 'application/json')
     request.setRequestHeader('Accept', 'text/event-stream')
     /*
@@ -170,7 +147,8 @@ export const streamZaiChat = (
       if (done) return
 
       if (request.status < 200 || request.status >= 300) {
-        const message = `Z.AI streaming failed: HTTP ${request.status} — ${request.responseText}`
+        done = true
+        const message = `Companion unavailable: HTTP ${request.status}`
         const error = new Error(message)
         callbacks.onError?.(error)
         reject(error)
@@ -194,6 +172,12 @@ export const streamZaiChat = (
       }
 
       done = true
+      if (streamFailed) {
+        const error = new Error('Companion unavailable')
+        callbacks.onError?.(error)
+        reject(error)
+        return
+      }
       const result: ZaiStreamResult = {
         content,
         reasoning,
@@ -206,19 +190,19 @@ export const streamZaiChat = (
     }
 
     request.onerror = () => {
-      const error = new Error('Z.AI streaming request failed (network error)')
+      const error = new Error('Companion request failed (network error)')
       callbacks.onError?.(error)
       reject(error)
     }
 
     request.ontimeout = () => {
-      const error = new Error('Z.AI streaming request timed out')
+      const error = new Error('Companion request timed out')
       callbacks.onError?.(error)
       reject(error)
     }
 
     request.onabort = () => {
-      const error = new Error('Z.AI streaming request was aborted')
+      const error = new Error('Companion request was aborted')
       callbacks.onError?.(error)
       reject(error)
     }

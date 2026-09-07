@@ -28,8 +28,18 @@
       The same words the mini app's head carries, for the same reason: this page
       is a link people send each other, and a chat with nothing to build a
       preview from renders it as a bare URL.
+
+      "The same words" WAS NOT TRUE WHEN IT WAS WRITTEN, and this comment is why
+      it went unnoticed for weeks: the mini app's head carries `og:url` and a
+      canonical and this one carried neither, while the guard that would have
+      said so - `shared-link.test.ts` - reads the mini app's head and only ever
+      that one. THE PAGE WITH THE COMMENT WAS THE TESTED PAGE, and this is the
+      one every button in the bot actually opens. `audit-preview.mjs` now reads
+      both and requires them to agree, which is the only version of "the same
+      words" that stays true.
     -->
     <meta name="description" content="The game of self-knowledge — 72 plans, in 22 languages." />
+    <link rel="canonical" href="https://t27.ai/leela/" />
     <meta property="og:site_name" content="Leela" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Leela — the board in three dimensions" />
@@ -37,6 +47,48 @@
       property="og:description"
       content="The game of self-knowledge — 72 plans, in 22 languages."
     />
+    <meta property="og:url" content="https://t27.ai/leela/" />
+
+    <!--
+      The picture, and the mark in the tab. Measured 2026-08-28 against the five
+      rivals `scripts/rivals.mjs` tracks: FOUR OF FOUR carry a favicon and THREE
+      OF FOUR carry an `og:image`. Both pages here carried the words of a
+      preview and nothing to show, and `t27.ai/favicon.ico` was a 404 - so in
+      Telegram, where two of those rivals do all their reaching and where every
+      button in our own bot points, a link to this game rendered as a line of
+      grey text beside a blank page icon.
+
+      ABSOLUTE, AND CHARACTER-FOR-CHARACTER THE SAME IN BOTH HEADS. Open Graph
+      wants an absolute URL and scrapers differ on whether they will resolve a
+      relative one; more to the point, the two pages sit at different depths -
+      `/leela/` and `/leela/classic/` - so a relative path would have to be
+      written two different ways, which is how the two heads drifted apart the
+      first time. One string, one file, checked by `audit-preview.mjs`.
+
+      The file is `apps/webgl/public/og.png`, drawn by `scripts/make-card.mjs`
+      from this repository's own art. The dimensions are stated because a
+      scraper that lays out the card before fetching the image needs them, and
+      the audit checks them against the file on disk rather than trusting them.
+    -->
+    <meta property="og:image" content="https://t27.ai/leela/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="The board's snakes and arrows, and the words: Leela, the game of self-knowledge."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="https://t27.ai/leela/icon.png" />
+    <link rel="apple-touch-icon" href="https://t27.ai/leela/icon.png" />
+
+    <!--
+      Telegram's bridge, the same tag the mini app carries. The webview does
+      not put `window.Telegram` on a page by itself; this script is what
+      defines it - and it defines it in any browser, which is why
+      `telegram.ts` treats the object as a host to greet rather than proof of
+      one. Outside Telegram the greeting reaches nobody and changes nothing.
+    -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <!--
       The light, before the first paint.
@@ -66,8 +118,8 @@
               : 'dark';
       } catch (e) {}
     </script>
-    <script type="module" crossorigin src="./assets/index-CYpoaQtN.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CX5nsVCt.css">
+    <script type="module" crossorigin src="./assets/index-CASSdV2g.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-B0ksojF8.css">
   </head>
   <body>
     <!--
@@ -126,6 +178,23 @@
           </button>
           <button class="tongue" id="tongue" type="button"></button>
           <button class="look" id="look" type="button"></button>
+          <!--
+            Whether the companion's answers are read aloud. In the menu with
+            the other once-per-visit choices, and taken out of the page - not
+            disabled - where `speechSynthesis` does not exist, which includes
+            the WKWebView inside the iOS app. See `voice.ts` for why that is
+            the design and not a gap.
+          -->
+          <button class="speak" id="speak" type="button" aria-pressed="false"></button>
+          <!--
+            The better voice, which is a download and so has to be offered
+            rather than switched on. Beside the speak toggle because it is the
+            same decision one step further in: whether to be read aloud, and
+            then by whom. Taken out of the page entirely where there is nothing
+            to offer - no Web Audio, no worker, or a board in one of the twenty
+            languages Supertonic does not speak. See `supertonic.ts`.
+          -->
+          <button class="speak" id="voice" type="button" aria-pressed="false"></button>
         </div>
       </div>
 
@@ -171,9 +240,14 @@
         </button>
         <p class="say" id="say" role="status" aria-live="polite">A six puts you on the board.</p>
         <p class="owed" id="owed" role="status" aria-live="polite" hidden></p>
+        <!--
+          Where the chat says you stand, when this board was opened from
+          Telegram. specs/009 step 3: shown, never adopted.
+        -->
+        <p class="owed" id="in-the-chat" role="status" aria-live="polite" hidden></p>
 
         <!--
-          Three throws free, then the game asks.
+          Three successful moves free, then the game asks.
 
           Beside the die rather than over the board: this is a fact about the
           control the player is reaching for, and a dialog would take the board
@@ -261,6 +335,23 @@
           enterkeyhint="send"
           placeholder="What does this plan bring up?"
         ></textarea>
+        <!--
+          The reply, spoken instead of typed. `type="button"`, because inside a
+          form the default is submit and a mic that sends the box on the way to
+          opening the microphone is a control that does the opposite of itself.
+          `main.ts` removes it - not hides it - on a platform with no
+          `SpeechRecognition`, which includes the WKWebView inside the iOS app;
+          the app's own keyboard already carries native dictation, and a second
+          microphone here would be a broken copy of it. See `voice.ts`.
+        -->
+        <button type="button" id="mic" class="mic" aria-pressed="false" aria-label="Speak your reply">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M12 14.5a3 3 0 0 0 3-3v-5a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5.5-3a5.5 5.5 0 0 1-11 0H4.5a7.5 7.5 0 0 0 6.5 7.43V22h2v-3.07a7.5 7.5 0 0 0 6.5-7.43z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
         <button type="submit" id="send" class="send" aria-label="Send">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z" fill="currentColor" />

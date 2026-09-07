@@ -10,13 +10,8 @@ import {
   saveQueuedPosts
 } from './offlinePostQueue'
 
-jest.mock('axios', () => ({
-  post: jest.fn().mockResolvedValue({
-    data: {
-      choices: [{ message: { content: 'AI answer' } }],
-      model: 'test'
-    }
-  })
+jest.mock('./aiStream', () => ({
+  streamZaiChat: jest.fn().mockResolvedValue({ content: 'AI answer', model: 'test' })
 }))
 
 describe('offlinePostQueue', () => {

@@ -24,14 +24,13 @@
 
 default_platform(:ios)
 
-BOARD = File.expand_path("../../../leela/apps/webgl", __dir__)
+BOARD = ENV.fetch("LEELA_BOARD_REPO") { File.expand_path("../../../leela/apps/webgl", __dir__) }
 
 platform :ios do
   desc "Rebuild the 3D board so the app bundles the current one"
   lane :board do
     unless File.directory?(BOARD)
-      UI.important("no board checkout at #{BOARD}; shipping ios/board as it stands")
-      next
+      UI.user_error!("Board checkout missing at #{BOARD}; set LEELA_BOARD_REPO before preparing a release")
     end
     sh("cd #{BOARD.shellescape} && npx vite build")
     # The copy itself belongs to the Xcode build phase (`ios/sync_board.sh`),
@@ -41,6 +40,7 @@ platform :ios do
 
   desc "Everything that must be true before a build leaves this machine"
   lane :check do
+    sh("cd .. && node --test scripts/check-ios-firebase.test.mjs && node scripts/check-ios-firebase.mjs")
     sh("cd .. && npx jest --silent")
     if File.directory?(BOARD)
       sh("cd #{BOARD.shellescape} && npx vitest run")

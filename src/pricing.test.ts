@@ -39,7 +39,9 @@ describe('the free allowance', () => {
     // remembered: a constant copied by hand is a constant that drifts, which is
     // exactly how the app came to promise two of something the game counted
     // three of.
-    const board = join(__dirname, '..', '..', '..', 'leela', 'apps', 'webgl', 'src')
+    const board = process.env.LEELA_BOARD_REPO
+      ? join(process.env.LEELA_BOARD_REPO, 'src')
+      : join(__dirname, '..', '..', '..', 'leela', 'apps', 'webgl', 'src')
     const toll = readFileSync(join(board, 'toll.ts'), 'utf8')
     const literal = toll.match(/FREE_THROWS\s*=\s*(\d+)/)
     if (literal !== null) {
