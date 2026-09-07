@@ -21,6 +21,7 @@ import { standingFor, toneOf, turnPassed } from './hud';
 import { fanOffset, hopPoint, planPosition } from './layout';
 import { browserStore, finishedTable, read, write, type KeptSeat } from './kept';
 import { ENTITLEMENT_CHANGED, askToSubscribe, entitled, hostOf } from './hosted';
+import { showChatStatus } from './chat-status';
 import { pathOf } from './path';
 import { boxFor, roomFor } from './room';
 import {
@@ -181,8 +182,7 @@ const rememberChatAccess = (standing: ChatStanding): void => {
  * it onto the catalogue language before anything reaches the screen.
  */
 const sayAboutTheChat = (key: Parameters<typeof messageFor>[1], params: Record<string, string | number> = {}): void => {
-  el.inTheChat.textContent = messageFor(language, key, params);
-  el.inTheChat.hidden = false;
+  showChatStatus(el.inTheChat, messageFor(language, key, params));
 };
 
 void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine) => {
@@ -200,8 +200,7 @@ void myGame({ initData: launch, fetch: (...args) => fetch(...args) }).then((mine
     return;
   }
 
-  el.inTheChat.textContent = messageFor(language, 'app.inTheChat', { plan: mine.standing.plan });
-  el.inTheChat.hidden = false;
+  sayAboutTheChat('app.inTheChat', { plan: mine.standing.plan });
 
   /*
    * **ADOPT — `specs/009` step 4, answered 2026-08-31.**
