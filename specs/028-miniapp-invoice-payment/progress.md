@@ -67,6 +67,11 @@ The registry now includes this document; no test or audit was weakened.
 Final documentation edits must be included before the runnable-document
 regression check, not appended after verification.
 
+Registering the document also adds one generated content test. A fresh full
+claims measurement passed all twelve suites and updated README to 5,248
+total (content 718; 5,247 passed and one existing skipped). This supersedes
+the earlier 5,247-total measurement above.
+
 ## Browser QA
 
 On the built static artifact, real form interactions with simulated Telegram
