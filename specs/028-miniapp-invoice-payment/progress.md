@@ -58,6 +58,15 @@ in this clean cloud checkout. No `--force` was used and no dataset file was
 changed. The remaining phases were run independently; this limitation must
 not be relabeled as a successful content rebuild.
 
+## Pull request verification
+
+PR #46 was opened from `fix-miniapp-invoice-payment`. The first CI run
+caught this progress document missing from the audited command-document
+registry: the final evidence section had been added after the local suites.
+The registry now includes this document; no test or audit was weakened.
+Final documentation edits must be included before the runnable-document
+regression check, not appended after verification.
+
 ## Browser QA
 
 On the built static artifact, real form interactions with simulated Telegram
