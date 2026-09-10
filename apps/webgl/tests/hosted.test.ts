@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { announce, announcePath, hostOf, type Host } from '../src/hosted';
+import { announce, announcePath, askToSubscribe, entitled, ENTITLEMENT_CHANGED, hostOf, type Host } from '../src/hosted';
 import { write, type Kept } from '../src/kept';
 import { add } from '../src/written';
 
@@ -41,6 +41,7 @@ const listening = (): Host & { heard: string[] } => {
 
 afterEach(() => {
   delete (globalThis as { ReactNativeWebView?: unknown }).ReactNativeWebView;
+  delete (globalThis as { __leelaPro?: unknown }).__leelaPro;
 });
 
 describe('finding the host', () => {
@@ -167,5 +168,26 @@ describe('every saved change', () => {
     };
     expect(write(full, A_GAME)).toBe(false);
     expect(host.heard).toHaveLength(1);
+  });
+});
+
+
+describe('native subscription remains the native host’s responsibility', () => {
+  it('still sends the original IAP handoff, with no Telegram invoice', () => {
+    const host = listening();
+    expect(askToSubscribe(host)).toBe(true);
+    expect(host.heard.map((message) => JSON.parse(message))).toEqual([{ leela: 1, what: 'subscribe' }]);
+    expect(askToSubscribe(null)).toBe(false);
+  });
+
+  it('still reads the exact native entitlement and keeps the hosted event name', () => {
+    const page = globalThis as { __leelaPro?: unknown };
+    expect(ENTITLEMENT_CHANGED).toBe('leela:entitlement');
+    for (const value of [undefined, null, false, 'true', 1, {}]) {
+      page.__leelaPro = value;
+      expect(entitled()).toBe(false);
+    }
+    page.__leelaPro = true;
+    expect(entitled()).toBe(true);
   });
 });

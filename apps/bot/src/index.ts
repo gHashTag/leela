@@ -444,6 +444,21 @@ const asking = serveAsk({
   stream: aiProvider === 'ZAI' && process.env.ZAI_API_KEY ? zaiStream(process.env.ZAI_API_KEY) : undefined,
   token,
   staticRoot: process.env.LEELA_WEB_ROOT,
+  payments: {
+    tiers: stars,
+    entitled: async (userId, at) => (await storage.entitlements.subscribed(userId, at)) !== null,
+    createLink: (invoice, signal) => bot.api.createInvoiceLink(
+      invoice.title,
+      invoice.description,
+      invoice.payload,
+      '', // Stars have no provider token; this is a one-off purchase.
+      invoice.currency,
+      [...invoice.prices],
+      undefined,
+      // grammy types its signal against the pre-native Node shim.
+      signal as Parameters<typeof bot.api.createInvoiceLink>[7],
+    ),
+  },
   /**
    * One player's own game, for `/api/game` — `specs/009`, which the owner
    * settled on 2026-08-28 with «да 3D поле везде!».

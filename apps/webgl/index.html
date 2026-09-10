@@ -254,7 +254,7 @@
           `toll.ts` never charges a page that cannot be paid on.
         -->
         <p class="toll" id="toll" role="status" aria-live="polite" hidden></p>
-        <button class="toll-open" id="toll-open" type="button" hidden></button>
+        <button class="toll-open" id="toll-open" type="button" aria-controls="subscription" hidden></button>
       </div>
 
       <!--
@@ -283,6 +283,7 @@
       </button>
 
       <div class="sheet-body" id="sheet-body">
+        <section class="subscription" id="subscription" aria-labelledby="subscription-title" hidden></section>
         <!--
           One column, in the order things happened.
 

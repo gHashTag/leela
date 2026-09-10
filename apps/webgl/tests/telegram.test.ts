@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs';
 
 import { blank } from '../../../scripts/lib/source.mjs';
 
-import { SUBSCRIBE_REQUEST } from '@leela/content';
 import {
-  askTelegramToSubscribe,
-  mayAskTelegramToSubscribe,
+  invoiceSupport,
+  invoiceUrl,
+  openTelegramInvoice,
   meetTelegram,
   nameAskOrigin,
   telegramOf,
@@ -208,62 +208,93 @@ describe('telegramOf', () => {
   });
 });
 
-describe('the subscription handoff', () => {
-  it('sends the shared versioned request and returns to the bot', () => {
+describe('the in-app invoice', () => {
+  const url = 'https://t.me/$invoice_test';
+  const host = () => ({ ready: () => undefined, expand: () => undefined, initData: 'signed menu launch' });
+
+  it('a menu launch opens an invoice without sending data or closing the board', () => {
     const sent: string[] = [];
+    const opened: string[] = [];
     let closed = 0;
     const app = {
-      ready: () => undefined,
-      expand: () => undefined,
-      initData: 'signed launch',
-      sendData: (data: string) => sent.push(data),
+      ...host(),
+      openInvoice: (url: string) => opened.push(url),
+      sendData: (value: string) => sent.push(value),
       close: () => { closed += 1; },
     };
-
-    expect(askTelegramToSubscribe(app)).toBe(true);
-    expect(sent).toEqual([SUBSCRIBE_REQUEST]);
-    expect(closed).toBe(1);
+    expect(invoiceSupport(app)).toBeNull();
+    expect(openTelegramInvoice(app, url, () => undefined)).toBeNull();
+    expect(sent).toEqual([]);
+    expect(closed).toBe(0);
+    expect(opened).toEqual([url]);
   });
 
-  it('sends nothing outside a signed Telegram launch', () => {
-    let sent = 0;
-    const empty = {
-      ready: () => undefined,
-      expand: () => undefined,
-      initData: '',
-      sendData: () => { sent += 1; },
-    };
-
-    expect(askTelegramToSubscribe(null)).toBe(false);
-    expect(askTelegramToSubscribe(empty)).toBe(false);
-    expect(askTelegramToSubscribe({
-      ready: () => undefined,
-      expand: () => undefined,
-      initData: 'signed',
-    })).toBe(false);
-    expect(sent).toBe(0);
+  it('a signed menu launch needs openInvoice, never sendData', () => {
+    expect(invoiceSupport({ ...host(), openInvoice: () => undefined })).toBeNull();
+    expect(invoiceSupport(host())).toBe('unsupported');
   });
 
-  it('tells a caller in advance whether the tap will do anything', () => {
-    // The guard `askTelegramToSubscribe` fires against, exposed so a caller
-    // can decide whether to say something before the app closes — showing a
-    // transition message in front of a tap that was always going to be a
-    // no-op would be its own kind of lie.
-    const capable = {
-      ready: () => undefined,
-      expand: () => undefined,
-      initData: 'signed launch',
-      sendData: () => undefined,
-    };
+  it('opens nothing without a signed launch, even when the script is loaded', () => {
+    let opened = 0;
+    for (const initData of ['', '  ', undefined, null, 42, {}]) {
+      const app = { ...host(), initData, openInvoice: () => { opened += 1; } };
+      expect(invoiceSupport(app)).toBe('outside-telegram');
+      expect(openTelegramInvoice(app, url, () => undefined)).toBe('outside-telegram');
+    }
+    expect(openTelegramInvoice(null, url, () => undefined)).toBe('outside-telegram');
+    expect(opened).toBe(0);
+  });
 
-    expect(mayAskTelegramToSubscribe(capable)).toBe(true);
-    expect(mayAskTelegramToSubscribe(null)).toBe(false);
-    expect(mayAskTelegramToSubscribe({ ready: () => undefined, expand: () => undefined, initData: '' })).toBe(
-      false,
-    );
-    expect(
-      mayAskTelegramToSubscribe({ ready: () => undefined, expand: () => undefined, initData: 'signed' }),
-    ).toBe(false);
+  it('checks API capability, version and refusal without throwing', () => {
+    for (const openInvoice of [undefined, null, true, 42, {}, 'yes']) {
+      expect(invoiceSupport({ ...host(), openInvoice })).toBe('unsupported');
+    }
+    for (const isVersionAtLeast of [null, false, 'yes', () => false, () => { throw new Error('old'); }]) {
+      expect(invoiceSupport({ ...host(), openInvoice: () => {}, isVersionAtLeast })).toBe('unsupported');
+    }
+    expect(openTelegramInvoice({ ...host(), openInvoice: () => { throw new Error('closed'); } }, url, () => {})).toBe('failed');
+  });
+
+  it('preserves the method receiver and validates all callback statuses', () => {
+    const statuses: string[] = [];
+    const app = {
+      ...host(),
+      isVersionAtLeast(this: { initData: string }, version: string) {
+        expect(this.initData).toBe('signed menu launch');
+        expect(version).toBe('6.1');
+        return true;
+      },
+      openInvoice(this: { initData: string }, asked: string, callback: (status: unknown) => void) {
+        expect(this.initData).toBe('signed menu launch');
+        expect(asked).toBe(url);
+        for (const status of ['paid', 'pending', 'cancelled', 'failed', undefined, {}, true, 'PAID']) callback(status);
+      },
+    };
+    expect(openTelegramInvoice(app, url, (status) => statuses.push(status))).toBeNull();
+    expect(statuses).toEqual(['paid', 'pending', 'cancelled', 'failed', 'unknown', 'unknown', 'unknown', 'unknown']);
+  });
+
+  it('only opens HTTPS Telegram invoice URLs', () => {
+    for (const domain of ['t.me', 'telegram.me']) {
+      for (const path of ['$invoice_test-1', 'invoice/invoice_test-1']) {
+        const good = `https://${domain}/${path}`;
+        expect(invoiceUrl(good)).toBe(good);
+      }
+    }
+    for (const bad of [
+      undefined, null, 42, {}, [], '', 'javascript:alert(1)', 'data:text/html,x',
+      '/$invoice', '//t.me/$invoice', 'http://t.me/$invoice', 'tg://invoice?slug=x',
+      'https://evil.test/$invoice', 'https://t.me.evil.test/$invoice', 'https://t.me@evil.test/$invoice',
+      'https://evil@t.me/$invoice', 'https://t.me:443/$invoice', 'https://t.me/anything',
+      'https://t.me/$', 'https://t.me/invoice/', 'https://t.me/$invoice?x=1', 'https://t.me/$invoice#x',
+      'https://t.me/%24invoice', 'https://t.me/$invoice/extra', 'https://t.me/a/../$invoice',
+      'https://t.me/$invoice\n', ' https://t.me/$invoice', 'https://t.me/\\$invoice',
+    ]) {
+      expect(invoiceUrl(bad), String(bad)).toBeNull();
+      if (typeof bad === 'string') {
+        expect(openTelegramInvoice({ ...host(), openInvoice: () => { throw new Error('must not run'); } }, bad, () => {})).toBe('unreadable');
+      }
+    }
   });
 });
 

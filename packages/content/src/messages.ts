@@ -508,16 +508,33 @@ const EN = {
   'app.unanswered': 'unanswered',
   'app.restsOn': 'What this rests on',
   'app.tollOpen': 'Subscribe',
-  /**
-   * Shown for the moment between tapping Subscribe and the app closing.
-   *
-   * Telegram closes a Mini App the instant it calls `sendData` — there is no
-   * way to keep the screen open — and the chat message with the actual tiers
-   * arrives a beat later, over the network. Closing with nothing on screen
-   * reads as the tap having done nothing; this sentence is what the player
-   * sees in the half-second before the screen goes, so the close reads as a
-   * handoff rather than a failure.
-   */
+  /** In-Mini-App checkout: amounts and durations are always server supplied. */
+  'app.subscriptionChoose': 'Choose your access',
+  'app.subscriptionTier': {
+    one: '{count} day — {stars} Stars',
+    other: '{count} days — {stars} Stars',
+  },
+  'app.subscriptionTerms': 'Terms of Use',
+  'app.subscriptionAccept': 'I have read and agree to the Terms of Use.',
+  'app.subscriptionPay': 'Pay with Telegram Stars',
+  'app.subscriptionLoading': 'Loading the current offers…',
+  'app.subscriptionCreating': 'Preparing your invoice…',
+  'app.subscriptionInvoice': 'Complete or cancel the invoice in Telegram. Your board stays here.',
+  'app.subscriptionChecking': 'Checking payment with the server…',
+  'app.subscriptionConfirmed': 'Your access is confirmed. You can continue the game.',
+  'app.subscriptionRetry': 'Try again',
+  'app.subscriptionCheckAgain': 'Check access again',
+  'app.subscriptionOutside': 'Open this board from the bot in Telegram to pay, then try again.',
+  'app.subscriptionUnsupported': 'This Telegram version cannot open invoices. Update Telegram and try again.',
+  'app.subscriptionUnauthorized': 'Telegram could not verify this session. Reopen the board from the bot and try again.',
+  'app.subscriptionUnavailable': 'Payment is unavailable right now. Your game is unchanged. Try again shortly.',
+  'app.subscriptionUnreadable': 'The payment response could not be verified. Please try again.',
+  'app.subscriptionTimeout': 'The server did not answer in time. Please try again.',
+  'app.subscriptionCancelled': 'Payment was cancelled. You can choose an offer and try again.',
+  'app.subscriptionFailed': 'The invoice could not be completed. Please try again.',
+  'app.subscriptionUnconfirmed': 'Access is not confirmed yet. Check again without paying twice. If this continues, contact /paysupport in the bot.',
+
+  /** Legacy chat handoff wording, retained for older consumers. */
   'app.tollRedirect': 'Opening the offer in your chat with the bot…',
 
   /**
@@ -1265,6 +1282,33 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.unanswered': 'без ответа',
   'app.restsOn': 'На чём это стоит',
   'app.tollOpen': 'Оформить подписку',
+  'app.subscriptionChoose': 'Выберите доступ',
+  'app.subscriptionTier': {
+    one: '{count} день — звёзды: {stars}',
+    few: '{count} дня — звёзды: {stars}',
+    many: '{count} дней — звёзды: {stars}',
+    other: '{count} дней — звёзды: {stars}',
+  },
+  'app.subscriptionTerms': 'Условия использования',
+  'app.subscriptionAccept': 'Я прочитал(а) и принимаю условия использования.',
+  'app.subscriptionPay': 'Оплатить звёздами Telegram',
+  'app.subscriptionLoading': 'Загружаем актуальные предложения…',
+  'app.subscriptionCreating': 'Готовим счёт…',
+  'app.subscriptionInvoice': 'Завершите или отмените оплату в Telegram. Поле останется здесь.',
+  'app.subscriptionChecking': 'Проверяем оплату на сервере…',
+  'app.subscriptionConfirmed': 'Доступ подтверждён. Можно продолжать игру.',
+  'app.subscriptionRetry': 'Попробовать снова',
+  'app.subscriptionCheckAgain': 'Проверить доступ ещё раз',
+  'app.subscriptionOutside': 'Для оплаты откройте это поле из бота в Telegram и попробуйте снова.',
+  'app.subscriptionUnsupported': 'Эта версия Telegram не открывает счета. Обновите Telegram и попробуйте снова.',
+  'app.subscriptionUnauthorized': 'Не удалось проверить сеанс Telegram. Заново откройте поле из бота и попробуйте снова.',
+  'app.subscriptionUnavailable': 'Оплата пока недоступна. Игра не изменилась. Попробуйте чуть позже.',
+  'app.subscriptionUnreadable': 'Ответ об оплате не прошёл проверку. Попробуйте снова.',
+  'app.subscriptionTimeout': 'Сервер не ответил вовремя. Попробуйте снова.',
+  'app.subscriptionCancelled': 'Оплата отменена. Можно выбрать предложение и попробовать снова.',
+  'app.subscriptionFailed': 'Не удалось завершить оплату счёта. Попробуйте снова.',
+  'app.subscriptionUnconfirmed': 'Доступ пока не подтверждён. Проверьте ещё раз, не платите повторно. Если ожидание затянулось, напишите /paysupport боту.',
+
   'app.tollRedirect': 'Открываю предложение в чате с ботом…',
   'app.board3d': 'Доска в 3D',
   'app.board3dClose': 'Вернуться к доске',

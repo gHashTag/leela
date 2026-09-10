@@ -1559,3 +1559,87 @@ body {
 .toll-open[hidden] {
   display: none;
 }
+
+/* Checkout shares the sheet's type, surfaces and touch targets. */
+.subscription {
+  margin-block: var(--sp0) var(--sp1);
+  padding-block: var(--sp0) var(--sp1);
+  border-bottom: 1px solid var(--rule);
+  color: var(--text);
+  font-size: var(--f-1);
+}
+
+.subscription h2 {
+  margin: 0;
+  font-size: var(--f1);
+}
+
+.subscription form,
+.subscription fieldset {
+  display: grid;
+  gap: var(--sp0);
+}
+
+.subscription fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.subscription legend {
+  padding: var(--sp0) 0;
+  font-weight: 600;
+}
+
+.subscription-choice {
+  display: flex;
+  align-items: center;
+  gap: var(--sp0);
+  min-height: var(--touch);
+  padding: var(--sp0);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.subscription-choice:has(input:checked) {
+  border-color: var(--accent);
+}
+
+.subscription-choice input {
+  flex: none;
+  width: var(--sp1);
+  height: var(--sp1);
+  accent-color: var(--accent);
+}
+
+.subscription-terms {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  color: var(--text);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+.subscription-status {
+  margin-block: var(--sp0);
+  line-height: 1.5;
+}
+
+.subscription .toll-open {
+  width: 100%;
+  padding: var(--sp0) var(--sp1);
+}
+
+.subscription button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Give the purchase its room without rebuilding or clearing the game beneath. */
+.sheet[data-checkout='true'] :is(#owed, #in-the-chat, #toll, #toll-open, .intention, .compose) {
+  display: none;
+}
