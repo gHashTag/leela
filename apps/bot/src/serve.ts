@@ -34,14 +34,16 @@ import {
   type LanguageModel,
   type Message,
 } from '@leela/ai';
-import type { Language } from '@leela/content';
+import { isLanguage, type Language } from '@leela/content';
 import type { GameState } from '@leela/engine';
 import type { Report } from '@leela/journal';
 import type { Vouched } from './vouched';
 
 import { Allowance, MAX_ASKERS } from './bot';
+import { termsUrl } from './purchase-care';
 import { CODE_HEADER, SERVING_HEADER, runningFingerprint, servingFingerprint } from './serving';
-import { decide } from './take-in';
+import { invoiceFor, tierOf, type PricedTier, type StarsInvoice } from './stars';
+import { decide, within } from './take-in';
 import { whoSent } from './vouched';
 
 /**
@@ -91,6 +93,10 @@ export const MAX_QUESTION_CHARS = 5000;
  */
 export const ASKS_PER_MINUTE = 4;
 const ASK_MINUTE_MS = 60_000;
+const MAX_PAYMENT_BYTES = 512;
+const PAYMENT_BODY_MS = 5_000;
+const PAYMENT_UPSTREAM_MS = 8_000;
+const MAX_INVOICES_IN_FLIGHT = 8;
 
 /**
  * How long the model may take, and why the number is under the client's.
@@ -296,6 +302,12 @@ export interface AskRouteOptions {
     of: (userId: string) => Promise<Report[] | null>;
     keep: (userId: string, added: readonly Report[]) => Promise<void>;
   };
+  /** Link creation cannot grant access; only Telegram's payment update can. */
+  payments?: {
+    tiers: readonly PricedTier[] | null;
+    entitled: (userId: string, at: number) => Promise<boolean>;
+    createLink: (invoice: StarsInvoice, signal: AbortSignal) => Promise<string>;
+  };
 }
 
 export type AskRoute = (request: Request, address?: string) => Promise<Response>;
@@ -356,6 +368,44 @@ const corsFor = (origin: string): Record<string, string> => ({
   'access-control-max-age': '86400',
 });
 
+/** Bound the incoming stream, not merely the parsed document. */
+async function paymentBody(request: Request): Promise<
+  { ok: true; value: unknown } | { ok: false; status: number }
+> {
+  const length = request.headers.get('content-length');
+  if (length !== null) {
+    if (!/^\d+$/.test(length)) return { ok: false, status: 400 };
+    if (Number(length) > MAX_PAYMENT_BYTES) return { ok: false, status: 413 };
+  }
+  const reader = request.body?.getReader();
+  if (!reader) return { ok: false, status: 400 };
+  try {
+    return await within((async () => {
+      try {
+        const decoder = new TextDecoder('utf-8', { fatal: true });
+        let bytes = 0;
+        let text = '';
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          bytes += value.byteLength;
+          if (bytes > MAX_PAYMENT_BYTES) return { ok: false as const, status: 413 };
+          text += decoder.decode(value, { stream: true });
+        }
+        text += decoder.decode();
+        return { ok: true as const, value: JSON.parse(text) as unknown };
+      } catch {
+        return { ok: false as const, status: 400 };
+      }
+    })(), PAYMENT_BODY_MS, 'payment body');
+  } catch {
+    return { ok: false, status: 408 };
+  } finally {
+    void reader.cancel().catch(() => undefined);
+    reader.releaseLock();
+  }
+}
+
 /**
  * The route itself, as a plain `Request -> Response` function.
  *
@@ -372,19 +422,28 @@ function answering({
   openedFromMiniApp,
   rollFor,
   reports,
+  payments,
 }: AskRouteOptions = {}): AskRoute {
   // The same guard `/ask` in the chat stands behind, with the address where
   // the player id would be. See `Allowance` in bot.ts for why checking is
   // spending, and `MAX_ASKERS` for why the map is capped.
   const asks = new Allowance(ASKS_PER_MINUTE, ASK_MINUTE_MS, MAX_ASKERS);
+  const subscriptions = new Allowance(20, ASK_MINUTE_MS, MAX_ASKERS);
+  const invoices = new Allowance(4, ASK_MINUTE_MS, MAX_ASKERS);
+  let invoicesInFlight = 0;
 
   return async (request, address) => {
+    const path = new URL(request.url).pathname;
+    const paymentRequest = path === '/api/subscription' || path === '/api/invoice';
     const origin = request.headers.get('origin') ?? '';
     const allowed = ALLOWED_ORIGINS.includes(origin);
     // Refusals to an allowed origin carry the permission headers too: without
     // them the browser hides the body, and the client reports a network error
     // where the route had written the reason.
-    const cors = allowed ? corsFor(origin) : {};
+    const cors = {
+      ...(allowed ? corsFor(origin) : {}),
+      ...(paymentRequest ? { 'cache-control': 'no-store', vary: 'Origin' } : {}),
+    };
 
     const refuse = (status: number, error: string): Response =>
       new Response(JSON.stringify({ error }), {
@@ -392,14 +451,13 @@ function answering({
         headers: { 'content-type': 'application/json', ...cors },
       });
 
-    const path = new URL(request.url).pathname;
     // Same-origin GET/HEAD requests normally have no Origin header. `/api/game`
     // is a read-only GET and is still protected by Telegram's signed initData,
     // so the missing browser header is not evidence of a foreign caller. Keep
     // this exception path- and method-exact: the model and every mutation still
     // require an explicitly allowed origin.
     const signedGameRead = path === '/api/game' && request.method === 'GET' && origin === '';
-    if (path !== '/api/ask' && path !== '/api/game' && path !== '/api/reports' && path !== '/api/roll') {
+    if (!paymentRequest && path !== '/api/ask' && path !== '/api/game' && path !== '/api/reports' && path !== '/api/roll') {
       return refuse(404, 'no such route');
     }
 
@@ -410,6 +468,72 @@ function answering({
 
     if (!allowed && !signedGameRead) {
       return refuse(403, origin ? `${origin} may not ask here` : 'an origin is required to ask here');
+    }
+
+    if (paymentRequest) {
+      if (request.method !== 'POST') return refuse(405, 'POST only');
+      const carried = request.headers.get('authorization') ?? '';
+      if (carried.length > 16_384) return refuse(401, 'invalid launch data');
+      const vouched = whoSent(carried.startsWith('tma ') ? carried.slice(4) : '', token ?? '', { now: now() });
+      if (!vouched.ok) return refuse(401, vouched.why);
+
+      const allowance = path === '/api/invoice' ? invoices : subscriptions;
+      const wait = allowance.take(vouched.who.id, now());
+      if (wait > 0) return refuse(429, `asked too often; try again in ${Math.ceil(wait / 1000)}s`);
+      if (!payments || (path === '/api/invoice' && !payments.tiers?.length)) {
+        return refuse(503, 'payments unavailable');
+      }
+      const contentType = request.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
+      if (contentType !== 'application/json') return refuse(415, 'JSON required');
+      const read = await paymentBody(request);
+      if (!read.ok) return refuse(read.status, 'invalid payment request');
+      if (typeof read.value !== 'object' || read.value === null || Array.isArray(read.value)) {
+        return refuse(400, 'invalid payment request');
+      }
+      const body = read.value as Record<string, unknown>;
+      const keys = path === '/api/invoice' ? ['language', 'tier', 'acceptedTerms'] : ['language'];
+      if (Object.keys(body).length !== keys.length || Object.keys(body).some((key) => !keys.includes(key)) ||
+          typeof body.language !== 'string' || !isLanguage(body.language)) {
+        return refuse(400, 'invalid payment request');
+      }
+      const language = body.language;
+      const json = (value: unknown): Response => new Response(JSON.stringify(value), {
+        status: 200, headers: { 'content-type': 'application/json', ...cors },
+      });
+
+      if (path === '/api/subscription') {
+        try {
+          const entitled = await within(
+            Promise.resolve().then(() => payments.entitled(vouched.who.id, now())),
+            PAYMENT_UPSTREAM_MS, 'subscription lookup',
+          );
+          return json({ tiers: payments.tiers ?? [], termsUrl: termsUrl(language), entitled });
+        } catch {
+          return refuse(503, 'payments unavailable');
+        }
+      }
+      if (body.acceptedTerms !== true || typeof body.tier !== 'string' || !tierOf(payments.tiers, body.tier)) {
+        return refuse(400, 'invalid payment request');
+      }
+      if (invoicesInFlight >= MAX_INVOICES_IN_FLIGHT) return refuse(503, 'payments unavailable');
+      const controller = new AbortController();
+      invoicesInFlight += 1;
+      try {
+        const invoice = invoiceFor(language, payments.tiers, body.tier);
+        const url = await within(
+          Promise.resolve().then(() => payments.createLink(invoice, controller.signal)),
+          PAYMENT_UPSTREAM_MS, 'invoice creation',
+        );
+        if (typeof url !== 'string' || url.length > 2048 || !/^https:\/\/t\.me\/\$[A-Za-z0-9_-]+$/.test(url)) {
+          return refuse(503, 'payments unavailable');
+        }
+        return json({ url });
+      } catch {
+        return refuse(503, 'payments unavailable');
+      } finally {
+        controller.abort();
+        invoicesInFlight -= 1;
+      }
     }
 
     /*

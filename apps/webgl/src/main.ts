@@ -55,14 +55,14 @@ import { atEnd, bringIntoView, dragged, stepped, type Detent, type Heights } fro
 import { askForARoll, myGame, type Standing as ChatStanding } from './mine';
 import { sendMyPath } from './sending';
 import {
-  askTelegramToSubscribe,
   launchOf,
-  mayAskTelegramToSubscribe,
   meetTelegram,
   nameAskOrigin,
   telegramOf,
 } from './telegram';
 import { css } from './theme';
+import { Subscription } from './subscription';
+import { subscriptionSheet } from './subscription-sheet';
 import {
   hearing,
   listen,
@@ -338,6 +338,7 @@ const el = {
   inTheChat: need<HTMLElement>('#in-the-chat'),
   toll: need<HTMLElement>('#toll'),
   tollOpen: need<HTMLButtonElement>('#toll-open'),
+  subscription: need<HTMLElement>('#subscription'),
   planHeading: need<HTMLElement>('#plan-heading'),
   planText: need<HTMLElement>('#plan-text'),
   thread: need<HTMLElement>('#thread'),
@@ -516,44 +517,39 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('scroll', followKeyboard);
 }
 
-/**
- * The paywall's two ends.
- *
- * The board cannot sell anything — a receipt is native, and a page in a web
- * view has no store to talk to. So it asks, and the app owns the screen and the
- * transaction. See `askToSubscribe` in `hosted.ts`.
- *
- * And when the app comes back entitled it fires an event rather than reloading:
- * a reload in the middle of a purchase would take the board away at the moment
- * the player has just paid for it.
- */
-
-/**
- * How long `app.tollRedirect` stays the only thing on screen before the Mini
- * App closes on the Telegram path.
- *
- * Short enough that a player who taps twice does not sit through it, long
- * enough that the sentence is read rather than flashed. There is no signal to
- * wait for instead — Telegram gives no event for "about to close" — so this
- * is a guess, tuned by eye rather than measured.
- */
-const TOLL_REDIRECT_DELAY_MS = 500;
+/** Native purchases stay with the host; Telegram invoices stay in this sheet. */
+let beforeCheckout: Detent | null = null;
+const subscription = new Subscription({
+  app: telegramOf,
+  language: () => language,
+  fetch: (...args) => fetch(...args),
+  changed: (state) => paymentSheet.render(state),
+  confirmed: () => {
+    // This callback is reachable only after the server says entitled. Update
+    // access alone: re-adopting the game would erase in-flight reflections.
+    if (chatAccess !== null) chatAccess = { ...chatAccess, entitled: true };
+    showGate();
+  },
+});
+const paymentSheet = subscriptionSheet(el.subscription, subscription, language, () => {
+  delete el.sheet.dataset.checkout;
+  if (beforeCheckout !== null) showDetent(beforeCheckout);
+  beforeCheckout = null;
+  (el.tollOpen.hidden ? el.handle : el.tollOpen).focus();
+});
 
 el.tollOpen.addEventListener('click', () => {
   if (askToSubscribe()) return;
-
-  const app = telegramOf();
-  if (!mayAskTelegramToSubscribe(app)) return;
-
-  // Telegram closes a Mini App the instant `sendData` runs, with no
-  // transition it will show for us — the tap would otherwise read as the app
-  // just vanishing, with the tiers arriving a moment later in a chat the
-  // player has already stopped looking at. This is the one window to say
-  // where it went before the screen does.
-  el.tollOpen.disabled = true;
-  el.toll.textContent = messageFor(language, 'app.tollRedirect');
-  el.toll.hidden = false;
-  window.setTimeout(() => askTelegramToSubscribe(app), TOLL_REDIRECT_DELAY_MS);
+  beforeCheckout ??= detent;
+  el.sheet.dataset.checkout = 'true';
+  showDetent('full');
+  paymentSheet.show();
+  // Wait for layout: the original gate/composer are outside this scroller and
+  // make checkout needlessly cramped. They return unchanged on dismissal.
+  requestAnimationFrame(() => {
+    el.sheetBody.scrollTop += el.subscription.getBoundingClientRect().top - el.sheetBody.getBoundingClientRect().top;
+  });
+  void subscription.start();
 });
 
 window.addEventListener(ENTITLEMENT_CHANGED, () => showGate());
@@ -1845,6 +1841,8 @@ window.addEventListener('keydown', (event) => {
   // or the browser fires both this and the button's own click.
   if (document.activeElement === el.die) return;
   if (document.activeElement === el.reply) return;
+  // Space/Enter choose a tier, accept terms or pay; they must never throw the die.
+  if (event.target instanceof Element && event.target.closest('#subscription, #toll-open')) return;
   if (event.code === 'Space' || event.code === 'Enter') {
     event.preventDefault();
     void takeTurn();

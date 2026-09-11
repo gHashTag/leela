@@ -1,5 +1,3 @@
-import { SUBSCRIBE_REQUEST } from '@leela/content';
-
 /**
  * The page, when somebody else is hosting it.
  *
@@ -11,7 +9,7 @@ import { SUBSCRIBE_REQUEST } from '@leela/content';
  *
  * No SDK. `telegram-web-app.js` is a script tag in `index.html`, the same one
  * the mini app carries, and everything it defines arrives as an untyped object
- * on `window`. The interface below is the four members this file touches and
+ * on `window`. The interface below is the small part this file touches and
  * nothing more: typing the rest would be writing down promises about software
  * this repository does not build.
  */
@@ -33,8 +31,8 @@ interface TelegramWebApp {
    * signature it carries against the token (`apps/bot/src/vouched.ts`).
    */
   readonly initData?: unknown;
-  sendData?(data: string): void;
-  close?(): void;
+  readonly openInvoice?: unknown;
+  readonly isVersionAtLeast?: unknown;
 }
 
 /**
@@ -100,31 +98,50 @@ export const telegramOf = (): TelegramWebApp | null => {
 export const launchOf = (app: TelegramWebApp | null): string =>
   typeof app?.initData === 'string' ? app.initData : '';
 
-type SubscribeCapable = TelegramWebApp & { sendData: (data: string) => void };
+export type TelegramInvoiceProblem = 'outside-telegram' | 'unsupported' | 'unreadable' | 'failed';
 
-const canSubscribeViaTelegram = (app: TelegramWebApp | null): app is SubscribeCapable =>
-  launchOf(app) !== '' && typeof app?.sendData === 'function';
+/** The script exists in plain browsers too. Only the server verifies the launch. */
+export const invoiceSupport = (app: TelegramWebApp | null): TelegramInvoiceProblem | null => {
+  if (launchOf(app).trim() === '') return 'outside-telegram';
+  if (typeof app?.openInvoice !== 'function') return 'unsupported';
+  try {
+    if (app.isVersionAtLeast !== undefined &&
+      (typeof app.isVersionAtLeast !== 'function' || app.isVersionAtLeast('6.1') !== true)) return 'unsupported';
+  } catch {
+    return 'unsupported';
+  }
+  return null;
+};
+
+/** Only Telegram's invoice paths, never a redirect, arbitrary host or script URL. */
+export const invoiceUrl = (value: unknown): string | null =>
+  typeof value === 'string' && value.trim() === value &&
+  /^https:\/\/(?:t\.me|telegram\.me)\/(?:\$|invoice\/)[A-Za-z0-9_-]{1,512}$/.test(value)
+    ? value : null;
 
 /**
- * Whether tapping Subscribe would actually reach the bot.
- *
- * Split out from `askTelegramToSubscribe` so a caller can tell, before
- * touching anything, whether the tap is about to close the app — Telegram
- * closes a Mini App the instant `sendData` is called, with no way to hold the
- * screen open, so a caller that wants to say anything before that happens
- * (`main.ts` does) needs to know first whether there is anything to say it
- * about. A transition message in front of a tap that `sendData` was always
- * going to ignore would be its own kind of lie.
+ * Keep the board open. A callback says what the SDK saw, NOT who is entitled;
+ * subscription.ts asks the server before changing the gate. Optional methods
+ * are foreign values and are checked at the point of use, with their receiver
+ * preserved (Telegram's implementation uses `this`).
  */
-export const mayAskTelegramToSubscribe = (app: TelegramWebApp | null): boolean =>
-  canSubscribeViaTelegram(app);
-
-/** Return from the board to the bot with a request for its priced tiers. */
-export const askTelegramToSubscribe = (app: TelegramWebApp | null): boolean => {
-  if (!canSubscribeViaTelegram(app)) return false;
-  app.sendData(SUBSCRIBE_REQUEST);
-  app.close?.();
-  return true;
+export const openTelegramInvoice = (
+  app: TelegramWebApp | null,
+  url: string,
+  closed: (status: 'paid' | 'pending' | 'cancelled' | 'failed' | 'unknown') => void,
+): TelegramInvoiceProblem | null => {
+  const problem = invoiceSupport(app);
+  if (problem !== null) return problem;
+  if (invoiceUrl(url) === null) return 'unreadable';
+  try {
+    if (typeof app?.openInvoice !== 'function') return 'unsupported';
+    app.openInvoice(url, (status: unknown) => {
+      closed(status === 'paid' || status === 'pending' || status === 'cancelled' || status === 'failed' ? status : 'unknown');
+    });
+    return null;
+  } catch {
+    return 'failed';
+  }
 };
 
 /**

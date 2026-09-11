@@ -213,6 +213,7 @@ const DOCS = [
   'specs/023-daily-revenue-report/plan.md',
   'specs/024-telegram-acquisition-surfaces/plan.md',
   'specs/024-telegram-acquisition-surfaces/CHECKPOINT.md',
+  'specs/028-miniapp-invoice-payment/progress.md',
 ];
 
 const documented = new Map();
