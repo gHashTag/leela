@@ -59,6 +59,9 @@ import { openStorage, remembering } from './storage';
 import { roomForMiniApp } from './main-mini-app';
 import { asReport, keep } from './take-in';
 import { supervise } from './supervisor';
+import { editorialOwners } from './editorial';
+import { openEditorialStore } from './editorial-store';
+import { editorial999FromEnvironment } from './editorial-999';
 
 const token = process.env.BOT_TOKEN;
 
@@ -156,6 +159,13 @@ const built = {
   guide,
   stars,
   operators: operatorIds(process.env),
+  editorial: {
+    store: openEditorialStore({ path: databasePath, durable: storage.durable }),
+    owners: editorialOwners(process.env),
+    targetUsername: process.env.LEELA_AGENT_USERNAME,
+    model,
+    bridge: editorial999FromEnvironment(process.env),
+  },
 };
 
 const bot = createBot(built);
