@@ -86,6 +86,7 @@ import {
   guestQuestion,
 } from './discovery';
 import { planOfDay } from './public-outreach';
+import { registerEditorialCommands, type EditorialOptions } from './editorial';
 
 export interface BotOptions {
   token: string;
@@ -175,6 +176,8 @@ export interface BotOptions {
    * else the command does not exist.
    */
   operators?: readonly string[];
+  /** Isolated private editorial workflow; no game Guide or journal context. */
+  editorial?: EditorialOptions;
 }
 
 /** Who sent this update, as the commands layer wants them. */
@@ -394,6 +397,7 @@ export function createBot({
   publications = new MemoryPublicOutreachStore(),
   acquisitions = new MemoryAcquisitionStore(),
   operators = operatorIds(process.env),
+  editorial,
 }: BotOptions) {
   const bot = new Bot(token, botInfo ? { botInfo } : undefined);
 
@@ -502,6 +506,10 @@ export function createBot({
     await next();
     log(`[bot] -> handled in ${now() - started}ms`);
   });
+
+  // Before guest discovery and caption-file import: editorial updates must not
+  // read or write player context, even when an attachment carries the command.
+  if (editorial) registerEditorialCommands(bot, editorial);
 
   /**
    * Telegram Bot API 10.0 arrived ahead of grammY's generated update types.

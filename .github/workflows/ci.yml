@@ -60,6 +60,17 @@ jobs:
       - name: Build
         run: docker build -t leela-bot -f apps/bot/Dockerfile .
 
+      - name: Load the editorial kit from the built image
+        run: |
+          docker run --rm --entrypoint bun leela-bot -e '
+            import { loadEditorialKit } from "./apps/bot/src/editorial-kit.ts";
+            const kit = loadEditorialKit();
+            if (kit.days.length !== 30 || kit.skills.length !== 3 || !kit.soul.trim()) {
+              throw new Error("The runtime editorial kit is incomplete");
+            }
+            console.log("Packaged editorial kit loaded: 30 days and 3 skills");
+          '
+
       # This is the same path Railway SSH invokes after deployment. Running it
       # without production variables must load the entry script and all of its
       # runtime imports, then stop at its declared privacy-safe UNKNOWN gate.

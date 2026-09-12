@@ -107,6 +107,86 @@ without waiting a second.
 | `/board` | where everyone stands |
 | `/end` | clear the table |
 
+## Private editorial agent
+
+The editorial workflow is separate from the game companion. Its shipped
+[SOUL](editorial/SOUL.md), [30-day draft plan](editorial/CONTENT_PLAN.md) and
+[three focused skills](editorial/skills/) are read for editorial commands,
+not just kept as documentation. The runtime Docker image copies this kit with
+`apps/bot`. It does not replace the shared Trinity SOUL or any personal SOUL in
+999. The plan's day numbers are unscheduled slots, not publication dates.
+
+The intended content administrator is `@playom`. A username is not authority:
+the actual account sends `/agent_claim` in a private chat, then a different
+trusted owner checks `/agent_claims` and approves the nonce with
+`/agent_approve <claim>`. Telegram supplies the numeric sender ID; arguments,
+forwarded messages and profile text cannot supply it. Claims expire after
+24 hours, approved grants after 30 days. `/agent_revoke <Telegram ID>` revokes
+both pending and approved claims. Do not add this role to the refund operators.
+
+Configuration, held in the deployment's protected environment:
+
+| Variable | Meaning |
+|---|---|
+| `LEELA_DB` | Existing durable database on the mounted volume; editorial tables are separate from game data. No in-memory role fallback. |
+| `LEELA_AGENT_OWNERS` | Comma/space-separated trusted numeric owner IDs. If absent, reuse the existing `LEELA_STARS_OPERATORS` trust root; an explicitly empty or invalid value disables editorial ownership. |
+| `LEELA_AGENT_USERNAME` | Claim target, defaults to `playom`; this does not grant rights. |
+| Existing model configuration | The same selected provider as the companion, but a separate editorial prompt and no game/journal context. |
+| `LEELA_999_AGENT_KEY` | Optional dedicated draft-only key for the verified content administrator; never a full 999 key or bot token. |
+
+Missing durable storage or trusted owners disables editorial access without
+stopping the game. Missing model access still leaves the plan readable for an
+approved administrator. There is no automatic message, recurring task, public
+publishing tool, payment operation or player-journal reader in this workflow.
+
+| Private command | Purpose |
+|---|---|
+| `/agent status` | Current role and configuration status; does not claim that 999 is connected. |
+| `/agent_claim` | Request a role from the actual target account. |
+| `/agent_claims` | Owner-only pending requests for separate identity review. |
+| `/agent_approve <claim>` | Owner-only approval; self-approval is forbidden. |
+| `/agent_revoke <ID>` | Owner-only revocation. |
+| `/content_plan [day]` | Show the 30-slot overview or one selected slot. |
+| `/content_draft <day> [brief]` | Prepare one private, unposted draft; bounded output and timeout, six expensive requests per hour. |
+| `/agent_999 status` | Verify the restricted scope and numeric identity without importing content. |
+| `/agent_sync999` | Explicitly import the three private skills and 30 idea cards after identity verification. |
+
+### Restricted 999 bridge
+
+Deploy the corresponding scope implementation in
+[999-multibots-telegraf](https://github.com/gHashTag/999-multibots-telegraf)
+before enabling the bridge. Set `LEELA_EDITORIAL_AGENT_KEYS` in that render
+service to a dedicated random key bound to the owner-approved numeric ID,
+and set the same key as `LEELA_999_AGENT_KEY` in Leela. Do not put raw values in
+Git, chat, URLs, browser code or logs. Code deployment alone does not provision
+these variables or grant the role.
+
+The bridge uses the fixed HTTPS MCP endpoint and requires the
+`draft-only-v1` marker, exactly six tools and a matching `whoami.telegram_id`.
+Only `whoami`, `skills_list`, `skills_create`, `plan_list`, `plan_goal_create`
+and `plan_item_add` are allowed. The 999 server also enforces the scope before
+dispatch, forbids alternate credential/path bypass, and restricts content to
+the bound user's private `Leela:` namespace. Other users, public publishing,
+full agent chat, A2A, payment tools and personal SOUL edits are unavailable.
+
+An import locks a durable sentinel next to `LEELA_DB` before reading the remote
+lists, reconciles exact names and marked content, skips matching records, and
+stops on conflicts rather than overwriting. A timed-out write is ambiguous:
+there is no remote unique day-title constraint, so do not blindly retry or
+claim exactly-once delivery. The sentinel survives a crash; after a restart,
+stop all importers, manually reconcile remote drafts and only then remove the
+remaining `.leela-999-<key fingerprint>.pending` file. Replicas with separate
+volumes are not coordinated: deploy one importer. Missing or unwritable
+durable storage disables imports, not the read-only identity status check.
+Imported cards remain `idea`, never `done` or "published". Native revocation
+cancels ongoing work and checks the current role before each new request;
+a remote write already sent cannot be rolled back.
+
+Revoking native Leela access does not delete the remote drafts or revoke a
+stolen 999 key. Remove the dedicated key from the 999 deployment and Leela's
+environment as well, using the normal protected rollout process. No live
+account grant, credential provisioning or delivery is implied by these files.
+
 ## How it is put together
 
 `commands.ts` is the whole game: pure functions from `(room, input)` to
