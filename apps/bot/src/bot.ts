@@ -509,7 +509,16 @@ export function createBot({
 
   // Before guest discovery and caption-file import: editorial updates must not
   // read or write player context, even when an attachment carries the command.
-  if (editorial) registerEditorialCommands(bot, editorial);
+  // `seated` is the one question the agent asks about the game, and it is the
+  // same lookup `answerInWords` makes for a private chat: the table keyed by
+  // that chat, else the table the player is sitting at elsewhere. An
+  // administrator with a table keeps talking to the game, not to the agent.
+  if (editorial) {
+    registerEditorialCommands(bot, {
+      ...editorial,
+      seated: editorial.seated ?? (async (id) => Boolean((await store.get(id)) ?? (await store.roomOf?.(id)))),
+    });
+  }
 
   /**
    * Telegram Bot API 10.0 arrived ahead of grammY's generated update types.

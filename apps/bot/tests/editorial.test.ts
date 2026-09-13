@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { recordingModel } from '@leela/ai';
-import { loadLanguage, planFor } from '@leela/content';
+import { loadLanguage, messageFor, planFor } from '@leela/content';
 import { createBot } from '../src/bot';
 import { editorialOwners, type EditorialOptions } from '../src/editorial';
 import { openEditorialStore, type EditorialStore } from '../src/editorial-store';
@@ -79,6 +79,22 @@ function setup(overrides: Partial<EditorialOptions> = {}, root = fixture(), paid
     return sent.slice(first).filter((s) => s.method === 'sendMessage')
       .map((s) => String(s.payload.text)).join('\n');
   }
+  // Plain words, no bot_command entity: what an administrator types when she
+  // talks to the agent rather than commands it.
+  async function say(text: string, user = 101, username: string | undefined = 'playom',
+    type: 'private' | 'group' | 'supergroup' = 'private', updateId = ++nextUpdate) {
+    const first = sent.length;
+    await bot.handleUpdate({
+      update_id: updateId,
+      message: {
+        message_id: updateId, date: 1, from: { id: user, is_bot: false, first_name: 'Not identity', username },
+        chat: type === 'private' ? { id: user, type, first_name: 'User' } : { id: -222, type, title: 'Group' },
+        text,
+      },
+    });
+    return sent.slice(first).filter((s) => s.method === 'sendMessage')
+      .map((s) => String(s.payload.text)).join('\n');
+  }
   async function approve() {
     const claimReply = await send('/agent_claim');
     const claim = claimReply.match(/\b[a-f0-9]{32}\b/)?.[0];
@@ -87,7 +103,7 @@ function setup(overrides: Partial<EditorialOptions> = {}, root = fixture(), paid
     expect(reply).toContain('одобрен');
     return claim!;
   }
-  return { bot, options, store, path, root, model, sent, send, approve, history, readFile, logs, paymentRead,
+  return { bot, options, store, path, root, model, sent, send, say, approve, history, readFile, logs, paymentRead,
     advance: (ms: number) => { time += ms; } };
 }
 
@@ -524,6 +540,181 @@ describe('editorial generation is bounded and has only public context', () => {
     resolve('PRIVATE_DRAFT_CANARY');
     await pending;
     expect(h.sent.some((s) => String(s.payload.text).includes('PRIVATE_DRAFT_CANARY'))).toBe(false);
+  });
+});
+
+describe('the administrator talks to the agent in free text, and nobody else does', () => {
+  const gameAnswer = messageFor('en', 'chat.noTableHelp');
+
+  it('answers an approved administrator from the kit and keeps a short private memory of the talk', async () => {
+    const h = setup();
+    await h.approve();
+    expect(await h.send('/agent help')).toContain('обычным текстом');
+    const reply = await h.say('Какой день плана лучше открыть первым?');
+    expect(reply).toBe('Крючок\nТекст\nПрактика\nВопрос\nВизуал\nМягкий CTA');
+    expect(h.model.calls).toHaveLength(1);
+    const first = h.model.calls[0];
+    const prompt = first.messages.map((message) => message.content).join('\n');
+    for (const text of ['Fixture editorial identity', 'Fixture reusable instruction', 'День 1 — Тема 1', 'День 30 — Тема 30',
+      'Какой день плана лучше открыть первым?', 'не публикация', '/content_draft']) {
+      expect(prompt).toContain(text);
+    }
+    // Titles, not slots: a whole day is what /content_draft is for.
+    expect(prompt).not.toContain('Exclusive slot 1 end.');
+    expect(prompt).not.toContain('PLAYER_JOURNAL_CANARY');
+    expect(first.messages[0].role).toBe('system');
+    expect(first.messages[first.messages.length - 1]).toEqual({ role: 'user', content: 'Какой день плана лучше открыть первым?' });
+    expect(first.options?.signal).toBeInstanceOf(AbortSignal);
+    expect(first.options?.maxTokens).toBeLessThanOrEqual(8000);
+    const payload = h.sent[h.sent.length - 1].payload;
+    expect(payload.chat_id).toBe(101);
+    expect(payload.parse_mode).toBeUndefined();
+    expect(h.history).not.toHaveBeenCalled();
+    expect(h.readFile).not.toHaveBeenCalled();
+
+    // The next question carries the previous exchange; the memory is capped at
+    // twelve exchanges and the oldest falls off first.
+    await h.say('А второй?');
+    const second = h.model.calls[1].messages;
+    expect(second.slice(1)).toEqual([
+      { role: 'user', content: 'Какой день плана лучше открыть первым?' },
+      { role: 'assistant', content: 'Крючок\nТекст\nПрактика\nВопрос\nВизуал\nМягкий CTA' },
+      { role: 'user', content: 'А второй?' },
+    ]);
+    for (let turn = 3; turn <= 15; turn++) {
+      h.advance(2_500);
+      await h.say(`Вопрос ${turn}`);
+    }
+    const last = h.model.calls[h.model.calls.length - 1].messages;
+    expect(last).toHaveLength(1 + 2 * 12 + 1);
+    expect(last[1]).toEqual({ role: 'user', content: 'Вопрос 3' });
+    expect(last[last.length - 1]).toEqual({ role: 'user', content: 'Вопрос 15' });
+  });
+
+  it('leaves every other text to the game: strangers, owners, groups, commands', async () => {
+    const h = setup();
+    expect(await h.say('Привет, агент')).toBe(gameAnswer);
+    expect(await h.say('Привет, агент', 900, 'owner')).toBe(gameAnswer);
+    await h.approve();
+    expect(await h.say('Привет, агент', 102, 'playom')).toBe(gameAnswer);
+    expect(await h.say('Привет, агент', 101, 'playom', 'group')).toBe(gameAnswer);
+    expect(await h.say('Привет, агент', 101, 'playom', 'supergroup')).toBe(gameAnswer);
+    expect(await h.say('/unknown_command')).toBe(messageFor('en', 'chat.unknown'));
+    expect(await h.send('/new')).not.toBe('');
+    expect(h.model.calls).toHaveLength(0);
+    expect(h.history).not.toHaveBeenCalled();
+  });
+
+  it('steps aside for an administrator who holds a table, through the injected hook and the real store', async () => {
+    const hook = setup({ seated: async () => true });
+    await hook.approve();
+    expect(await hook.say('Привет, агент')).toBe(gameAnswer);
+    expect(hook.model.calls).toHaveLength(0);
+
+    const failing = setup({ seated: async () => { throw new Error('TABLE_STORE_CANARY'); } });
+    await failing.approve();
+    expect(await failing.say('Привет, агент')).toBe(gameAnswer);
+    expect(failing.model.calls).toHaveLength(0);
+    expect(failing.logs.join('\n')).not.toContain('TABLE_STORE_CANARY');
+
+    const real = setup();
+    await real.approve();
+    expect(await real.say('До стола')).not.toBe(gameAnswer);
+    expect(real.model.calls).toHaveLength(1);
+    expect(await real.send('/new')).not.toBe('');
+    const atTable = await real.say('Слова за столом');
+    expect(atTable).not.toBe('Крючок\nТекст\nПрактика\nВопрос\nВизуал\nМягкий CTA');
+    expect(real.model.calls).toHaveLength(1);
+    expect(await real.send('/end')).not.toBe('');
+    expect(await real.say('После стола')).toBe('Крючок\nТекст\nПрактика\nВопрос\nВизуал\nМягкий CTA');
+    expect(real.model.calls).toHaveLength(2);
+  });
+
+  it('deduplicates, rate-limits in the cheap class and never blocks a draft', async () => {
+    const h = setup();
+    await h.approve();
+    // The claim itself spent one request; let its minute pass so the count below is the talk's own.
+    h.advance(60_001);
+    await h.say('Первый', 101, 'playom', 'private', 3010);
+    expect(await h.say('Первый', 101, 'playom', 'private', 3010)).toContain('повтор');
+    expect(await h.send('/content_draft 1')).toContain('Черновик');
+    expect(await h.say('Сразу после черновика')).not.toContain('лимит');
+    expect(h.model.calls).toHaveLength(3);
+    for (let count = h.model.calls.length; count < 30; count++) {
+      h.advance(1_000);
+      expect(await h.say(`Вопрос ${count}`)).not.toContain('лимит');
+    }
+    expect(h.model.calls).toHaveLength(30);
+    h.advance(1_000);
+    expect(await h.say('Тридцать первый')).toContain('лимит');
+    expect(h.model.calls).toHaveLength(30);
+    expect(await h.send('/agent status')).toContain('администратор контента');
+    h.advance(60_001);
+    expect(await h.say('Через минуту')).not.toContain('лимит');
+    expect(h.model.calls).toHaveLength(31);
+    expect(await h.say('x'.repeat(2001))).toContain('2000');
+    expect(h.model.calls).toHaveLength(31);
+  });
+
+  it.each([null, { tool_calls: [{ name: 'publish' }] }, '', ' ', 'x'.repeat(3501), 'bad\u0007bell'])(
+    'recovers from malformed chat output %# without exposing it or remembering it', async (output) => {
+      let calls = 0;
+      const h = setup({ model: { id: 'bad', complete: async () => { calls++; return output as string; } } });
+      await h.approve();
+      expect(await h.say('Вопрос')).toContain('не удалось');
+      expect(h.sent.some((s) => String(s.payload.text).includes('bell'))).toBe(false);
+      expect(await h.send('/new')).not.toBe('');
+      expect(calls).toBe(1);
+    });
+
+  it('names a missing model or kit, times out, and never logs the provider', async () => {
+    const noModel = setup({ model: undefined });
+    await noModel.approve();
+    expect(await noModel.say('Вопрос')).toContain('недоступ');
+    const noKit = setup({ kitRoot: '/not/a/kit' });
+    await noKit.approve();
+    expect(await noKit.say('Вопрос')).toContain('недоступ');
+    expect(noKit.model.calls).toHaveLength(0);
+    let signal: AbortSignal | undefined;
+    const hung = setup({ timeoutMs: 5, model: {
+      id: 'hung',
+      complete: (_messages, options) => { signal = options?.signal; return new Promise(() => undefined); },
+    } });
+    await hung.approve();
+    expect(await hung.say('Вопрос')).toContain('время');
+    expect(signal?.aborted).toBe(true);
+    const broken = setup({ model: { id: 'broken', complete: async () => { throw new Error('SECRET_PROVIDER_KEY'); } } });
+    await broken.approve();
+    expect(await broken.say('Вопрос')).toContain('не удалось');
+    expect(broken.logs.join('\n')).not.toContain('SECRET_PROVIDER_KEY');
+    expect(await broken.send('/new')).not.toBe('');
+  });
+
+  it('revocation cancels an answer in flight, forgets the talk, and a new grant starts clean', async () => {
+    let resolve!: (value: string) => void;
+    const complete = vi.fn(() => new Promise<string>((done) => { resolve = done; }));
+    const h = setup({ model: { id: 'slow', complete } });
+    await h.approve();
+    const pending = h.say('Первый вопрос');
+    await vi.waitFor(() => expect(complete).toHaveBeenCalledOnce());
+    expect(await h.say('Второй, пока первый готовится')).toContain('готовится');
+    await h.send('/agent_revoke 101', 900, 'owner');
+    resolve('PRIVATE_CHAT_CANARY');
+    expect(await pending).toContain('отозван');
+    expect(h.sent.some((s) => String(s.payload.text).includes('PRIVATE_CHAT_CANARY'))).toBe(false);
+    expect(await h.say('После отзыва')).toBe(gameAnswer);
+    expect(complete).toHaveBeenCalledTimes(1);
+
+    // A finished exchange is remembered; the owner's revoke erases it.
+    const remembered = setup();
+    await remembered.approve();
+    await remembered.say('Запомни это');
+    await remembered.send('/agent_revoke 101', 900, 'owner');
+    await remembered.approve();
+    await remembered.say('Что я просила запомнить?');
+    expect(remembered.model.calls).toHaveLength(2);
+    expect(remembered.model.calls[1].messages).toHaveLength(2);
+    expect(JSON.stringify(remembered.model.calls[1].messages)).not.toContain('Запомни это');
   });
 });
 
