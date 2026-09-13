@@ -124,6 +124,11 @@ forwarded messages and profile text cannot supply it. Claims expire after
 24 hours, approved grants after 30 days. `/agent_revoke <Telegram ID>` revokes
 both pending and approved claims. Do not add this role to the refund operators.
 
+Once approved, the administrator may also write to the agent in plain text in
+the same private chat; the answer comes from the same model and kit, stays
+private, and remembers at most the last twelve exchanges in process memory.
+While she holds a game table, plain text belongs to the game as before.
+
 Configuration, held in the deployment's protected environment:
 
 | Variable | Meaning |

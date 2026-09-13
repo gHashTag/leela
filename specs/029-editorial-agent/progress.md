@@ -72,6 +72,37 @@ did not start: GitHub reported failed recent account payments or a spending
 limit requiring adjustment. This is an infrastructure blocker, not a passed
 CI run or a measured test failure. No billing settings were changed.
 
+## Free-text conversation (2026-09-13)
+
+The owner asked for feedback with the agent inside the bot, not only through
+slash commands. `registerEditorialCommands` now also registers a
+`message:text` handler, ahead of the game's text catch-all, that answers plain
+text from the approved content administrator in her private chat.
+
+- Everything else falls through to the game unchanged: group text, any text
+  starting with `/`, senders without an active approved grant, malformed
+  sender shapes, and an administrator who currently holds a table. The last
+  check is an injected `seated` hook; `bot.ts` supplies the same lookup
+  `answerInWords` makes for a private chat (`store.get(chatId)`, then
+  `store.roomOf`). The editorial module still has no room or report store.
+- The answer uses the same model, timeout, in-flight cap and revoke abort as
+  drafts. The system prompt carries the SOUL, the skills and the plan's day
+  titles with the same honesty, no-tools and no-publication rules; a full slot
+  remains the job of `/content_draft`. A short per-user memory of at most
+  twelve exchanges lives in process memory only and is erased on revoke.
+- Requests are recorded as `content_chat` in the durable request log: they
+  count against the 30-per-minute cap and are deduplicated by update ID, but
+  they are not in the expensive class, so a chat message never blocks or is
+  blocked by the draft/999 spacing. Messages above 2000 characters are
+  refused before the model is called. Output validation and error texts are
+  those of the draft path.
+- `/agent help` now says the administrator may also write in free text.
+
+Measured locally with network doubles on Node 22: the editorial suite grows
+from 60 to 72 tests, the bot suite from 1,411 to 1,423; ordinary and strict
+types pass. No live model call, live Telegram delivery or production grant was
+exercised; this section does not claim the live conversation is working.
+
 ## Activation still requires
 
 1. Successful configured CI and owner approval for merge/deployment.
