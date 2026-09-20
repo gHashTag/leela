@@ -64,7 +64,7 @@ export interface Room {
 export interface ActionButton {
   label: string;
   /** The command this button stands for, without its slash. */
-  action: 'roll' | 'board' | 'plan' | 'join' | 'start' | 'help' | 'new' | 'report' | `pay:${TierId}`;
+  action: 'roll' | 'board' | 'plan' | 'join' | 'start' | 'help' | 'new' | 'report' | `pay:${TierId}` | `tier:${TierId}`;
   /**
    * Never set. Present so `Button` is a discriminated union that existing
    * readers of `.action` still compile against: a member that simply omitted

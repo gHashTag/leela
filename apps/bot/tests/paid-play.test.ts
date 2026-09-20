@@ -196,6 +196,9 @@ describe('Telegram uses the shared decision', () => {
 
     expect(said(sent)).toContain(messageFor('en', 'app.tollDue'));
     expect(said(sent)).toContain('/pro month');
+    expect(sent.find(call => call.method === 'sendMessage')?.payload.reply_markup).toMatchObject({
+      inline_keyboard: [[{ callback_data: 'tier:month' }]],
+    });
     expect((await store.get(String(PLAYER)))?.rollsTaken).toBe(0);
     expect(await funnel.summary()).toMatchObject({ paywall: 1 });
   });
@@ -223,6 +226,9 @@ describe('Telegram uses the shared decision', () => {
     expect(said(sent)).toContain(messageFor('en', 'app.tollDue'));
     expect(said(sent)).toContain('/pro month');
     expect(said(sent)).not.toContain(messageFor('en', 'square.unreadable'));
+    expect(sent.find(call => call.method === 'sendMessage')?.payload.reply_markup).toMatchObject({
+      inline_keyboard: [[{ callback_data: 'tier:month' }]],
+    });
     // The server-authoritative /api/roll refusal owns attribution. sendData is
     // only a transport bridge and can also be forged or replayed directly.
     expect(await funnel.summary()).toMatchObject({ paywall: 0 });

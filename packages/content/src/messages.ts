@@ -922,6 +922,10 @@ const EN = {
     one: '{command} — {count} day for {stars} ⭐',
     other: '{command} — {count} days for {stars} ⭐',
   },
+  'pro.chooseTier': {
+    one: '{count} day · {stars} ⭐',
+    other: '{count} days · {stars} ⭐',
+  },
   // Refunds are Telegram's own mechanism and this bot can call it. It is an
   // operator's act and not automatic, and the sentence says exactly that
   // rather than promising a right or a turnaround nobody has agreed to.
@@ -1510,6 +1514,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
     few: '{command} — {count} дня за {stars} ⭐',
     many: '{command} — {count} дней за {stars} ⭐',
     other: '{command} — {count} дней за {stars} ⭐',
+  },
+  'pro.chooseTier': {
+    one: '{count} день · {stars} ⭐',
+    few: '{count} дня · {stars} ⭐',
+    many: '{count} дней · {stars} ⭐',
+    other: '{count} дней · {stars} ⭐',
   },
   'pro.refundable': 'Оплата в Telegram Stars. Возврат возможен — через того, кто держит бота.',
   'pro.care': 'Перед оплатой прочтите /terms. Для вопросов о покупке есть /paysupport.',

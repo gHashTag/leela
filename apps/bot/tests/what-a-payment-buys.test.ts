@@ -75,7 +75,7 @@ const ALL_THREE = offering(PRICED) as readonly PricedTier[];
 
 let updateId = 0;
 
-function typed(text: string, from = PLAYER) {
+function typed(text: string, from = PLAYER, language = 'en') {
   updateId += 1;
   return {
     update_id: updateId,
@@ -83,7 +83,7 @@ function typed(text: string, from = PLAYER) {
       message_id: updateId,
       date: 0,
       chat: { id: from, type: 'private' as const },
-      from: { id: from, is_bot: false, first_name: `P${from}` },
+      from: { id: from, is_bot: false, first_name: `P${from}`, language_code: language },
       text,
       entities: [
         { type: 'bot_command' as const, offset: 0, length: (text.split(' ')[0] ?? '').length },
@@ -92,13 +92,13 @@ function typed(text: string, from = PLAYER) {
   } as never;
 }
 
-function pressed(data: string, from = PLAYER) {
+function pressed(data: string, from = PLAYER, language = 'en') {
   updateId += 1;
   return {
     update_id: updateId,
     callback_query: {
       id: `callback-${updateId}`,
-      from: { id: from, is_bot: false, first_name: `P${from}`, language_code: 'en' },
+      from: { id: from, is_bot: false, first_name: `P${from}`, language_code: language },
       chat_instance: 'private-chat',
       data,
       message: {
@@ -200,6 +200,44 @@ function invoiceIn(sent: Harness['sent']): Record<string, unknown> {
 }
 
 describe('care before a Stars purchase', () => {
+  it('offers clickable choices for every priced subset and completes each choice only after consent', async () => {
+    for (const language of translatedLanguages()) for (let mask = 1; mask < 8; mask++) {
+      const tiers = ALL_THREE.filter((_, index) => mask & (1 << index));
+      const { bot, sent } = priced({ stars: tiers });
+      await bot.handleUpdate(typed('/pro', PLAYER, language));
+      const offer = sent.find(call => call.method === 'sendMessage');
+      const markup = offer?.payload.reply_markup as { inline_keyboard?: Array<Array<{ text: string; callback_data: string }>> } | undefined;
+      const buttons = markup?.inline_keyboard?.flat() ?? [];
+      expect(buttons.map(button => button.callback_data)).toEqual(tiers.map(tier => `tier:${tier.id}`));
+      for (const [index, tier] of tiers.entries()) {
+        expect(buttons[index]?.text).toContain(String(tier.stars));
+        expect(buttons[index]?.text).toContain(String(tier.days));
+        sent.length = 0;
+        await bot.handleUpdate(pressed(`tier:${tier.id}`, PLAYER, language));
+        expect(sent[0]?.method).toBe('answerCallbackQuery');
+        expect(sent.some(call => call.method === 'sendInvoice')).toBe(false);
+        expect(sent.find(call => call.method === 'sendMessage')?.payload.reply_markup).toMatchObject({
+          inline_keyboard: [[{ callback_data: `pay:${tier.id}` }]],
+        });
+        await bot.handleUpdate(pressed(`pay:${tier.id}`, PLAYER, language));
+        expect(invoiceIn(sent).prices).toEqual([{label: messageFor(language, 'pro.title'), amount: tier.stars}]);
+      }
+    }
+  });
+
+  it('makes malformed and removed selection buttons return an actionable current offer', async () => {
+    const { bot, sent } = priced({ stars: [ALL_THREE[2]!] });
+    for (const action of ['tier:month', 'tier:ghost', 'tier:year:extra', 'pay:month']) {
+      sent.length = 0;
+      await bot.handleUpdate(pressed(action));
+      expect(sent[0]?.method).toBe('answerCallbackQuery');
+      expect(sent.some(call => call.method === 'sendInvoice')).toBe(false);
+      expect(sent.find(call => call.method === 'sendMessage')?.payload.reply_markup).toMatchObject({
+        inline_keyboard: [[{ callback_data: 'tier:year' }]],
+      });
+    }
+  });
+
   it('names the published terms and the existing payment support in both bot languages', async () => {
     for (const language of translatedLanguages()) {
       const { bot, texts } = priced();
