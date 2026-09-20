@@ -21,6 +21,9 @@ export const SCHEMA_VERSION = 1;
 /** The longest report kept. A bound, because storage is one. */
 export const MAX_REPORT_CHARS = 4000;
 
+/** Actual board movements included before a paid host asks for access. */
+export const FREE_MOVES = 3;
+
 /**
  * Where a device keeps what a player wrote, and the two drafts around it.
  *

@@ -32,8 +32,10 @@ import {
 import { createBot, miniAppUrl } from './bot';
 import { PAID_COMMANDS, menuFor } from './commands';
 import { DirectChannels } from './delivery';
+import { gameRoute } from './game-api';
 import { createInitiative, lastWordSaid, nudgeHour } from './initiative';
-import { serveAsk, type StreamAsk, type Streamed } from './serve';
+import { escapeHtml } from './render';
+import { ALLOWED_ORIGINS, serveAsk, type StreamAsk, type Streamed } from './serve';
 import { offering, operatorIds, whyNoOperators, whyNothingIsSold } from './stars';
 import { openStorage, remembering } from './storage';
 import { supervise } from './supervisor';
@@ -235,7 +237,7 @@ console.log(
 console.log(
   stars
     ? `Telegram Stars: ${stars.map((tier) => `${tier.id} ${tier.stars}XTR`).join(', ')}. ` +
-      'A subscription buys a date and unlocks nothing; the game stays free.'
+      'Each player gets three actual movements free; a live entitlement unlocks further rolls.'
     : `Telegram Stars: nothing is sold — ${whyNothingIsSold(process.env) ?? ''}.`,
 );
 console.log(
@@ -438,6 +440,26 @@ async function* deltasOf(body: ReadableStream<Uint8Array>): AsyncIterable<Stream
 const asking = serveAsk({
   model,
   stream: process.env.ZAI_API_KEY ? zaiStream(process.env.ZAI_API_KEY) : undefined,
+  game: gameRoute({
+    botToken: token,
+    store: storage.store,
+    reports: storage.reports,
+    steps: storage.steps,
+    entitlements: storage.entitlements,
+    stars,
+    createInvoiceLink: async (invoice) => bot.api.createInvoiceLink(
+      invoice.title,
+      invoice.description,
+      invoice.payload,
+      '',
+      invoice.currency,
+      [...invoice.prices],
+    ),
+    allowedOrigins: ALLOWED_ORIGINS,
+    broadcast: async (chatId, text, html) => {
+      await bot.api.sendMessage(chatId, html ? text : escapeHtml(text), { parse_mode: 'HTML' });
+    },
+  }),
 });
 
 /**

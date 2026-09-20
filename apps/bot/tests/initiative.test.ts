@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { messageFor, planFor, type Plan } from '@leela/content';
+import { advance, submitReport } from '@leela/engine';
+import { join, openRoom, start, type Room } from '../src/commands';
 import {
   FRESH_START_UNTIL_MS,
   DEFAULT_NUDGE_HOUR,
@@ -7,6 +9,7 @@ import {
   LAPSED_AFTER_MS,
   compose,
   eligible,
+  engagementAction,
   excerptsOf,
   msUntilHour,
   nextExcerpt,
@@ -117,6 +120,36 @@ describe('the sleeping condition', () => {
     expect(
       eligible(reachable({ lastNudgedAt: justAfterMidnight }), Date.UTC(2026, 7, 21, 23, 0, 0)),
     ).toEqual({ send: false, because: 'nudged-today' });
+  });
+});
+
+describe('the engagement skill', () => {
+  const begun = (): Room => {
+    const opened = openRoom('-1001', { id: 'u1', name: 'Ada' }, 4).room as Room;
+    const seated = join(opened, { id: 'u2', name: 'Lin' }).room as Room;
+    return start(seated, 'u1').room as Room;
+  };
+
+  it('asks the current player to reflect when the report gate is closed', () => {
+    const room = begun();
+    const arrived = { ...room, session: advance(room.session, 6, NOW).session };
+    expect(engagementAction(arrived, 'u1', NOW)).toBe('reflect');
+    expect(compose('en', planFor('en', 6), null, { firstNudge: false }, 'reflect').text)
+      .toContain(messageFor('en', 'nudge.reflectCta'));
+  });
+
+  it('offers a roll only when the current player can actually roll', () => {
+    const room = begun();
+    const arrived = advance(room.session, 6, NOW).session;
+    const reported = { ...room, session: submitReport(arrived, 'u1', NOW) };
+    expect(engagementAction(reported, 'u1', NOW)).toBe('roll');
+  });
+
+  it('lets everybody else read instead of telling them to act out of turn', () => {
+    const room = begun();
+    expect(engagementAction(room, 'u2', NOW)).toBe('read');
+    expect(compose('en', planFor('en', 6), null, { firstNudge: false }, 'read').text)
+      .toContain(messageFor('en', 'nudge.readCta'));
   });
 });
 

@@ -94,8 +94,12 @@ reproducible when a surface migrates.
 ## Sessions
 
 Leela is traditionally played in a facilitated group, and the published app
-seated six players around one device. The rewrite dropped that. No competing
-app offers group play across devices either, so the engine models it directly:
+seated six players around one device. The rewrite dropped that, so the engine
+models it directly. The Telegram chat and the linked 3D mini app now render and
+advance this same stored session across devices. The linked app also reads and
+writes the seated player's private intention and reports through the bot
+service, so the question, report gate and path do not fork between chat and
+board:
 
 ```ts
 import { advance, createSession, submitReport } from '@leela/engine';
@@ -235,14 +239,14 @@ cd packages/engine && bun test
 | `@leela/storage` | 38 | addressing files in an S3-compatible bucket, after Firebase Storage |
 | `@leela/ai` | 237 | the companion — prompts built from the plan text |
 | `@leela/contracts` | 95 | `LeelaGame.sol`, board verified against the engine — [readme](packages/contracts/README.md) |
-| `@leela/bot` | 925 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
+| `@leela/bot` | 941 | group play in Telegram, durable on SQLite — [readme](apps/bot/README.md) |
 | `@leela/docs` | 239 | the book, live at [t27.ai/leela/docs](https://t27.ai/leela/docs/) — [readme](apps/docs/README.md) |
 | `@leela/miniapp` | 561 | the board as a mini app, live at [t27.ai/leela](https://t27.ai/leela/) — [readme](apps/miniapp/README.md) |
 | `@leela/mobile` | 408 | the board on a phone (Expo), moved by the engine and by nothing else |
-| `@leela/webgl` | 543 | the board in three dimensions, in a browser, on the same rules the apps play |
+| `@leela/webgl` | 551 | the board in three dimensions, in a browser, on the same rules the apps play |
 | everything else | — | not yet ported |
 
-4502 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+4526 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 

@@ -19,6 +19,7 @@
 import { loadLanguage } from '@leela/content';
 
 import { boardLanguage } from './tongue';
+import { preloadSharedGame } from './shared';
 
 /**
  * Run the board whatever happened to the fetch.
@@ -29,7 +30,15 @@ import { boardLanguage } from './tongue';
  * the degradation is visible rather than silent, which is the failure this
  * project keeps having.
  */
-const run = (): Promise<unknown> => import('./main');
+const run = async (): Promise<unknown> => {
+  const telegram = (globalThis as { Telegram?: { WebApp?: { initData?: unknown } } }).Telegram?.WebApp;
+  globalThis.__leelaSharedGame = (await preloadSharedGame({
+    href: window.location.href,
+    initData: typeof telegram?.initData === 'string' ? telegram.initData : '',
+    origin: import.meta.env.VITE_ASK_ORIGIN,
+  })) ?? undefined;
+  return import('./main');
+};
 
 void loadLanguage(boardLanguage()).then(run, (why: unknown) => {
   console.warn(`[board] could not load the plan text; running in English: ${String(why)}`);

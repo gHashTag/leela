@@ -3,6 +3,7 @@ import {
   WIN_LOKA,
   type MoveEvent,
   MAX_SEATS,
+  canCurrentPlayerRoll,
   createSession,
   currentPlayer,
   rollDie,
@@ -13,7 +14,7 @@ import {
 // stayed behind - a reader would take it for the language still being decided
 // on this line.
 import { directionOf, messageFor, planFor, titlesFor } from './canon';
-import { describeMove, type Language } from '@leela/content';
+import { describeMove, formatWait, type Language } from '@leela/content';
 import { revisited, seatId, writingsOn, MAX_REPORT_CHARS } from '@leela/journal';
 
 import { Companion, type Line, type Rests } from './companion';
@@ -50,7 +51,17 @@ import type { SeatedPlayer } from '@leela/engine';
 import { canDraw } from './drawable';
 import { createBoard } from './scene';
 import { atEnd, bringIntoView, dragged, stepped, type Detent, type Heights } from './sheet';
-import { meetTelegram, nameAskOrigin, telegramOf } from './telegram';
+import { meetTelegram, nameAskOrigin, openTelegramInvoice, telegramOf } from './telegram';
+import {
+  defaultTier,
+  invoiceSharedGame,
+  readSharedGame,
+  reportSharedGame,
+  rollSharedGame,
+  setSharedIntention,
+  sharedSession,
+  sharedTurn,
+} from './shared';
 import { css } from './theme';
 import {
   hearing,
@@ -108,7 +119,10 @@ import {
 // host - gets its greeting and lends the chrome its colours. Theme tokens
 // swapped after first paint are a flash of the wrong room.
 nameAskOrigin(globalThis as { __leelaAsk?: string }, import.meta.env.VITE_ASK_ORIGIN);
-meetTelegram(telegramOf(), document.documentElement.style);
+const telegram = telegramOf();
+meetTelegram(telegram, document.documentElement.style);
+const shared = globalThis.__leelaSharedGame ?? null;
+const writings = () => shared ? [...shared.player.reports].reverse() : readAll(store);
 
 const HOP_MS = 260;
 
@@ -158,6 +172,20 @@ const el = {
   owed: need<HTMLElement>('#owed'),
   toll: need<HTMLElement>('#toll'),
   tollOpen: need<HTMLButtonElement>('#toll-open'),
+  paywall: need<HTMLDialogElement>('#paywall'),
+  paywallClose: need<HTMLButtonElement>('#paywall-close'),
+  paywallTitle: need<HTMLElement>('#paywall-title'),
+  paywallFree: need<HTMLElement>('#paywall-free'),
+  paywallRolls: need<HTMLElement>('#paywall-rolls'),
+  paywallSync: need<HTMLElement>('#paywall-sync'),
+  paywallNoAds: need<HTMLElement>('#paywall-no-ads'),
+  paywallBuy: need<HTMLButtonElement>('#paywall-buy'),
+  paywallStatus: need<HTMLElement>('#paywall-status'),
+  paywallTerms: need<HTMLElement>('#paywall-terms'),
+  paywallWhyTitle: need<HTMLElement>('#paywall-why-title'),
+  paywallWhyText: need<HTMLElement>('#paywall-why-text'),
+  paywallPlansLabel: need<HTMLElement>('#paywall-plans-label'),
+  tollPlans: need<HTMLFieldSetElement>('#toll-plans'),
   planHeading: need<HTMLElement>('#plan-heading'),
   planText: need<HTMLElement>('#plan-text'),
   thread: need<HTMLElement>('#thread'),
@@ -333,8 +361,108 @@ if (window.visualViewport) {
  * a reload in the middle of a purchase would take the board away at the moment
  * the player has just paid for it.
  */
+type PaywallTier = 'month' | 'halfyear' | 'year';
+let selectedTier: PaywallTier | null = null;
+let paymentStatus = '';
+
+const tierName = (tier: PaywallTier): string => messageFor(language, ({
+  month: 'pro.month',
+  halfyear: 'pro.halfyear',
+  year: 'pro.year',
+} as const)[tier]);
+
+const renderPaywall = (): void => {
+  if (!shared) return;
+  const { access } = shared.player;
+  if (!access.tiers.some(({ id }) => id === selectedTier)) {
+    selectedTier = defaultTier(access.tiers)?.id ?? null;
+  }
+
+  el.paywallTitle.textContent = messageFor(language, 'app.paywallTitle');
+  el.paywallPlansLabel.textContent = messageFor(language, 'app.paywallTitle');
+  el.paywallFree.textContent = messageFor(language, 'app.paywallFree', { count: access.freeMoves });
+  el.paywallRolls.textContent = messageFor(language, 'app.paywallRolls');
+  el.paywallSync.textContent = messageFor(language, 'app.paywallSync');
+  el.paywallNoAds.textContent = messageFor(language, 'app.paywallNoAds');
+  el.paywallBuy.textContent = messageFor(language, 'app.paywallBuy');
+  el.paywallBuy.disabled = busy || selectedTier === null;
+  el.paywallTerms.textContent = messageFor(language, 'app.paywallTerms');
+  el.paywallStatus.textContent = paymentStatus;
+  el.paywallWhyTitle.textContent = messageFor(language, 'app.paywallWhyTitle');
+  el.paywallWhyText.textContent = messageFor(language, 'app.paywallWhyText', { count: access.freeMoves });
+  el.paywallClose.setAttribute('aria-label', messageFor(language, 'app.close'));
+
+  const legend = el.paywallPlansLabel;
+  el.tollPlans.replaceChildren(legend, ...access.tiers.map((tier) => {
+    const label = document.createElement('label');
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'leela-stars-tier';
+    radio.value = tier.id;
+    radio.checked = tier.id === selectedTier;
+    const name = document.createElement('span');
+    name.className = 'toll-plan-name';
+    name.textContent = messageFor(language, 'pro.tier', {
+      command: tierName(tier.id),
+      count: tier.days,
+      stars: tier.stars,
+    });
+    label.append(radio, name);
+    return label;
+  }));
+};
+
 el.tollOpen.addEventListener('click', () => {
-  askToSubscribe();
+  if (!shared) {
+    askToSubscribe();
+    return;
+  }
+  paymentStatus = '';
+  renderPaywall();
+  if (!el.paywall.open) el.paywall.showModal();
+});
+
+el.paywallClose.addEventListener('click', () => el.paywall.close());
+el.tollPlans.addEventListener('change', (event) => {
+  const radio = (event.target as Element).closest<HTMLInputElement>('input[type="radio"]');
+  if (!radio) return;
+  selectedTier = radio.value as PaywallTier;
+  renderPaywall();
+});
+
+el.paywallBuy.addEventListener('click', async () => {
+  if (!shared || busy || !selectedTier) return;
+  busy = true;
+  paymentStatus = '';
+  showGate();
+  try {
+    const offered = await invoiceSharedGame(shared, selectedTier);
+    if (!offered.invoiceUrl) throw new Error('Telegram returned no invoice link');
+    const status = await openTelegramInvoice(telegram, offered.invoiceUrl);
+    if (status === 'paid' || status === 'pending') {
+      // `invoiceClosed` can precede the bot's `successful_payment` update.
+      // Access remains server-owned, so retry the read rather than trusting the
+      // callback as a receipt.
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const fresh = await readSharedGame(shared);
+        shared.snapshot = fresh.snapshot;
+        shared.player = fresh.player;
+        if (fresh.player.access.mayRoll) break;
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+      if (shared.player.access.mayRoll) el.paywall.close();
+      else paymentStatus = messageFor(language, 'app.paywallPending');
+    } else if (status === 'failed') {
+      paymentStatus = messageFor(language, 'app.paywallFailed');
+    }
+  } catch (error) {
+    console.error('[paywall] Telegram Stars checkout failed', error);
+    paymentStatus = messageFor(language, 'app.paywallFailed');
+  } finally {
+    busy = false;
+    showGate();
+    renderPaywall();
+  }
 });
 
 window.addEventListener(ENTITLEMENT_CHANGED, () => showGate());
@@ -345,7 +473,22 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 // What the last visit left behind, read before anything is built from it.
 const store = browserStore();
-const saved = read(store, LEGACY_MOBILE);
+const saved = shared?.snapshot
+  ? {
+      seats: shared.snapshot.players.map((player, at) => ({
+        id: player.id,
+        deity: deityForSeat(at).id,
+        state: player.state,
+        rolls: shared.snapshot?.rolls[at] ?? [],
+      })),
+      turnIndex: shared.snapshot.turnIndex,
+      lastThrower: shared.snapshot.lastThrower,
+      deity: null,
+      why: null,
+    }
+  : shared
+    ? { seats: [], turnIndex: 0, lastThrower: null, deity: null, why: shared.error }
+    : read(store, LEGACY_MOBILE);
 
 /*
  * The board is built in the light the reader chose; see `look.ts` — but only
@@ -473,6 +616,10 @@ const companion = new Companion({
 let saidUnkept = false;
 
 const keep = (): void => {
+  // A linked board is kept by the bot before the API returns it. Writing the
+  // same table into this browser would recreate the second game this mode
+  // exists to remove.
+  if (shared) return;
   const kept = write(store, {
     turnIndex: session.turnIndex,
     lastThrower,
@@ -570,6 +717,7 @@ const showSeatCount = (): void => {
       button.textContent = String(many);
       button.setAttribute('aria-checked', String(many === session.players.length));
       button.setAttribute('aria-label', messageFor(language, 'app.seatTurn', { seat: many }));
+      button.disabled = shared !== null;
       button.addEventListener('click', () => {
         const staying = session.players.map((player, seatIndex) => ({
           id: player.id,
@@ -631,7 +779,11 @@ for (const each of DEITIES) {
 }
 
 seatTable(saved.seats.length || 1, saved.seats);
-if (finishedTable(saved.seats)) {
+if (shared?.snapshot) {
+  session = sharedSession(shared.snapshot);
+  rolls = shared.snapshot.rolls.map((history) => [...history]);
+  lastThrower = shared.snapshot.lastThrower;
+} else if (finishedTable(saved.seats)) {
   // A restored table nobody can move in is reseated — the same answer the
   // winning arm gives when the last seat finishes live. Seated as-is it is a
   // dead end with the lights on: `advance` throws at a session that is over,
@@ -934,10 +1086,65 @@ const showThread = (): void => {
  * where the player is already reading.
  */
 const showGate = (): void => {
+  if (shared) {
+    const snapshot = shared.snapshot;
+    let reason = shared.error ? messageFor(language, 'app.gameNotRead') : '';
+    let shut = true;
+
+    if (snapshot) {
+      const holder = currentPlayer(session);
+      if (!snapshot.started) {
+        reason = messageFor(language, 'roll.notStarted');
+      } else if (holder.id !== shared.userId) {
+        reason = messageFor(language, 'roll.notYourTurn', { name: holder.name ?? holder.id });
+      } else {
+        const verdict = canCurrentPlayerRoll(session, Date.now());
+        shut = !verdict.allowed;
+        if (!verdict.allowed && verdict.reason === 'report-required') {
+          const plan = planFor(language, holder.state.loka);
+          reason = messageFor(language, 'roll.reportRequired', {
+            plan: holder.state.loka,
+            title: plan.title,
+          });
+        } else if (!verdict.allowed) {
+          reason = messageFor(language, 'roll.cooldown', {
+            wait: formatWait(language, verdict.waitMs),
+          });
+        } else {
+          reason = '';
+        }
+      }
+
+      if (!shut && !shared.player.access.mayRoll) {
+        shut = true;
+        reason = messageFor(language, 'app.tollDue');
+      }
+    }
+
+    el.die.disabled = shut || busy;
+    el.die.classList.toggle('waiting', shut);
+    el.die.setAttribute('aria-label', reason || messageFor(language, 'app.play'));
+    el.owed.textContent = reason;
+    el.owed.hidden = reason === '';
+    const access = shared.player.access;
+    const toll = access.enabled && access.left === 1 && access.mayRoll
+      ? messageFor(language, 'app.tollLast')
+      : !access.mayRoll
+        ? messageFor(language, 'app.tollDue')
+        : '';
+    el.toll.textContent = toll;
+    el.toll.hidden = toll === '';
+    el.tollOpen.textContent = messageFor(language, 'app.tollOpen');
+    el.tollOpen.hidden = access.mayRoll || access.tiers.length === 0;
+    renderPaywall();
+    if (access.mayRoll && el.paywall.open) el.paywall.close();
+    return;
+  }
+
   const rests = companion.view().rests;
   const standing = {
     plan: rests ? rests.plan : null,
-    written: rests ? writingsOn(readAll(store), rests.plan).length : 0,
+    written: rests ? writingsOn(writings(), rests.plan).length : 0,
     rollsAgain: stillMoving,
   };
   const held = holdsTheDie(standing);
@@ -1223,14 +1430,27 @@ const showPath = (at: number = seatAt()): void => {
  * actually asking.
  */
 const showIntention = (): void => {
-  const asked = readIntention(store);
+  const asked = shared ? shared.player.intention : readIntention(store);
   el.intention.dataset.asked = String(asked !== null);
   el.intentionText.textContent = asked ?? messageFor(language, 'app.reportPlaceholder');
 };
 
-el.intention.addEventListener('click', () => {
-  const asked = window.prompt(messageFor(language, 'app.intention'), readIntention(store) ?? '');
+el.intention.addEventListener('click', async () => {
+  const held = shared ? shared.player.intention : readIntention(store);
+  const asked = window.prompt(messageFor(language, 'app.intention'), held ?? '');
   if (asked === null) return;
+  if (shared) {
+    try {
+      const answer = await setSharedIntention(shared, asked);
+      shared.player = answer.player;
+      shared.snapshot = answer.snapshot;
+      el.carrySaid.textContent = '';
+    } catch (error) {
+      el.carrySaid.textContent = String(error instanceof Error ? error.message : error);
+    }
+    showIntention();
+    return;
+  }
   // `writeIntention` says no both for a question the game cannot hold and for a
   // storage that refused. The player is in front of us, so they are told.
   el.carrySaid.textContent = writeIntention(store, asked)
@@ -1458,16 +1678,61 @@ const takeTurn = async (): Promise<void> => {
   el.die.disabled = true;
   if (visiting) stopVisiting();
 
-  const threw = seatAt();
-  lastThrower = threw;
-  const mover = seat().id;
-  const turn = throwFor(session, rollDie());
+  let threw = seatAt();
+  let mover = seat().id;
+  let turn: Thrown;
+
+  if (shared) {
+    if (!shared.snapshot) {
+      el.say.textContent = messageFor(language, 'app.gameNotRead');
+      busy = false;
+      showGate();
+      return;
+    }
+
+    const before = session;
+    try {
+      const answer = await rollSharedGame(shared);
+      shared.snapshot = answer.snapshot;
+      shared.player = answer.player;
+      shared.error = null;
+      session = sharedSession(answer.snapshot);
+      rolls = answer.snapshot.rolls.map((history) => [...history]);
+      lastThrower = answer.snapshot.lastThrower;
+
+      if (!answer.move) {
+        el.say.textContent = answer.replies.join(' · ');
+        showStanding(null);
+        showLotus();
+        settle();
+        busy = false;
+        showGate();
+        return;
+      }
+
+      const applied = sharedTurn(before, answer);
+      if (!applied) throw new Error('the game server returned no move');
+      ({ threw, turn } = applied);
+      mover = turn.seatId;
+    } catch (error) {
+      shared.error = String(error instanceof Error ? error.message : error);
+      console.error(`[shared-game] ${shared.error}`);
+      el.say.textContent = messageFor(language, 'app.gameNotRead');
+      busy = false;
+      showGate();
+      return;
+    }
+  } else {
+    lastThrower = threw;
+    turn = throwFor(session, rollDie());
+    session = turn.session;
+    rolls[threw]?.push(turn.roll);
+  }
+
   // Set before anything draws. Setting it after meant the gate ran on the
   // previous throw's answer, so a six re-enabled the die while the labels
   // beside it still read 'waiting for your reflection'.
   stillMoving = turn.rollsAgain;
-  session = turn.session;
-  rolls[threw]?.push(turn.roll);
   showFace(turn.roll);
   if (!reducedMotion.matches) {
     el.die.classList.add('rolling');
@@ -1500,7 +1765,7 @@ const takeTurn = async (): Promise<void> => {
       moved.state.loka,
       turn.event,
       el.say.textContent ?? '',
-      writingsOn(readAll(store), moved.state.loka),
+      writingsOn(writings(), moved.state.loka),
     );
     showThread();
   }
@@ -1516,7 +1781,7 @@ const takeTurn = async (): Promise<void> => {
     // they are ready rather than resetting the board underneath them.
     el.say.textContent = messageFor(language, 'app.won');
     el.say.dataset.tone = 'win';
-    if (turn.tableOver) {
+    if (turn.tableOver && !shared) {
       // Everybody has finished, so a fresh table is what the die is for next.
       // This used to run on `won` alone: at a table of three, the first player
       // to reach 68 seated a new session over two games in progress. The
@@ -1629,8 +1894,32 @@ el.compose.addEventListener('submit', (event) => {
   // only set once somebody has landed — which is the same guard the seat check
   // was making, stated in terms of the thing being written about.
   const about = companion.view().rests;
-  if (about) keepWritten(store, { plan: about.plan, text: said, at: Date.now() });
+  if (shared && about) {
+    void reportSharedGame(shared, said)
+      .then((answer) => {
+        shared.snapshot = answer.snapshot;
+        shared.player = answer.player;
+        session = sharedSession(answer.snapshot);
+        rolls = answer.snapshot.rolls.map((history) => [...history]);
+        lastThrower = answer.snapshot.lastThrower;
+        if (!answer.accepted) {
+          el.carrySaid.textContent = answer.replies.join(' · ');
+          showGate();
+          return;
+        }
+        el.carrySaid.textContent = '';
+        showGate();
+        void companion.say(said).then(showThread);
+        showThread();
+      })
+      .catch((error) => {
+        el.carrySaid.textContent = String(error instanceof Error ? error.message : error);
+        showGate();
+      });
+    return;
+  }
 
+  if (about) keepWritten(store, { plan: about.plan, text: said, at: Date.now() });
   void companion.say(said).then(showThread);
   showThread();
 });
@@ -1931,7 +2220,7 @@ if (saved.seats.length > 0 && entered(seat())) {
     seat().state.loka,
     null,
     messageFor(language, 'app.standing', { plan: seat().state.loka, title: titleOf(seat().state.loka) }),
-    writingsOn(readAll(store), seat().state.loka),
+    writingsOn(writings(), seat().state.loka),
   );
 } else if (saved.why) {
   el.say.textContent = messageFor(language, 'app.gameNotRead');

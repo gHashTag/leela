@@ -208,6 +208,30 @@
         <button class="toll-open" id="toll-open" type="button" hidden></button>
       </div>
 
+      <dialog class="paywall" id="paywall" aria-labelledby="paywall-title">
+        <section class="paywall-card">
+          <button class="paywall-close" id="paywall-close" type="button" aria-label="Close">×</button>
+          <p class="paywall-mark" aria-hidden="true">✦</p>
+          <h2 id="paywall-title"></h2>
+          <p class="paywall-free" id="paywall-free"></p>
+          <ul class="paywall-benefits">
+            <li id="paywall-rolls"></li>
+            <li id="paywall-sync"></li>
+            <li id="paywall-no-ads"></li>
+          </ul>
+          <fieldset class="toll-plans" id="toll-plans">
+            <legend class="visually-hidden" id="paywall-plans-label"></legend>
+          </fieldset>
+          <button class="paywall-buy" id="paywall-buy" type="button"></button>
+          <p class="paywall-status" id="paywall-status" role="status" aria-live="polite"></p>
+          <p class="paywall-terms" id="paywall-terms"></p>
+          <details class="paywall-why">
+            <summary id="paywall-why-title"></summary>
+            <p id="paywall-why-text"></p>
+          </details>
+        </section>
+      </dialog>
+
       <!--
         Who is playing.
 

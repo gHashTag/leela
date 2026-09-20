@@ -50,6 +50,15 @@ COPY apps/bot apps/bot
 # bot still runs and says so on startup, and forgets everything on next deploy.
 ENV LEELA_DB=/data/leela.db
 
+# The public Stars catalogue. These are image defaults rather than secrets:
+# Railway may override any one of them without rebuilding, while a deployment
+# that supplies no pricing variables no longer accidentally ships the game
+# free. Relative to twelve monthly purchases, half a year is about 22% less and
+# a year about 33% less.
+ENV LEELA_STARS_MONTH=150 \
+    LEELA_STARS_HALFYEAR=700 \
+    LEELA_STARS_YEAR=1200
+
 # `supervise` in src/index.ts restarts the polling loop when a poll fails,
 # which is the failure a `bot.catch` does not cover.
 CMD ["bun", "run", "apps/bot/src/index.ts"]

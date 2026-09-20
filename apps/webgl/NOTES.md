@@ -70,14 +70,10 @@ them rather than rediscovering them. Each says how it was measured.
    sale, one rating. Every competitor above is dormant too, so this is a race
    nobody is running — but 1 against 154 is still 1. *Measured by the lookup
    API above, 2026-08-23. Owner-gated: pressing Add for Review is his.*
-2. **No shared table.** Seats exist in the model, and two people still cannot
-   sit at one board across two devices. The chat has group play; the browser
-   board does not. That is the whole of what LeelaRoom sells. *Unchanged and
-   re-read in the source, 2026-08-23.*
-3. **Nothing is measured.** No analytics, so "does anyone finish a game" is
+2. **Nothing is measured.** No analytics, so "does anyone finish a game" is
    unanswerable. Adding it is a privacy decision, not only a technical one.
    *Confirmed by grep, 2026-08-23: no analytics of any kind in this app.*
-4. **The tests cannot see the picture.** They cover geometry, rules, text,
+3. **The tests cannot see the picture.** They cover geometry, rules, text,
    voice and storage — everything except whether the board *looks* right. A
    render regression ships green. *Count in the README table, which is
    audited; not repeated here.*
@@ -161,7 +157,22 @@ Ordered by what unblocks the most:
    the first week. The question is whether anything drew, and the answer is a
    count of distinct colours. Needs a browser in CI, which is the owner's
    call to make and the spec's whole subject.
-2. A shared table (2) — the one thing a competitor sells that this cannot do.
-   Needs a server holding sessions, which the `/api/ask` deployment already
-   proves is affordable.
-3. Analytics, if and only if the privacy question in (3) is answered first.
+2. Analytics, if and only if the privacy question in weak point 2 is answered
+   first.
+
+The shared table that used to be item 2 closed on 2026-08-26: a bot launch
+carries the chat id, Railway validates Telegram's signed launch data and the
+player's seat, and both `/roll` and the 3D die call the same `commands.roll`
+against the same persisted room. A linked launch that cannot authenticate does
+not fall back to a local game. The authenticated reply also contains only the
+requesting player's intention and reports. Linked intention edits and report
+submissions write through the bot's durable stores and command rules; local
+storage remains the record only for a standalone board.
+
+The linked board also shares the bot's Stars entitlement. Each Telegram player
+gets three actual movements at a table; failed entry throws and overshoots do
+not spend them. After that the API refuses rolls, the board renders every
+configured Stars tier, opens Telegram's native invoice, and rereads the server
+after payment. The callback itself is not treated as a receipt. With no valid
+Stars price the gate is off, so a deployment cannot strand a player at an
+unpayable screen.

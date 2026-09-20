@@ -1,8 +1,7 @@
 /**
  * The Telegram Stars rail: dark until somebody names a price.
  *
- * Whether this game charges for anything, and what for, is the owner's
- * decision and has not been made. So the rail is built, tested, and **off**:
+ * The owner still decides the amount. The rail is **off** without one:
  * with none of `LEELA_STARS_MONTH`, `LEELA_STARS_HALFYEAR`,
  * `LEELA_STARS_YEAR` set, `offering` answers `null`, no command is registered,
  * no invoice can be assembled, and a deployment behaves exactly as it did
@@ -334,8 +333,8 @@ export function asDay(at: number): string {
 /**
  * What `/pro` says: the offer, the tiers, and what is already held.
  *
- * Every claim in it is bounded by `messages.ts`'s own rule — the game is free,
- * this buys a date, and nothing opens or closes with it. The list is built
+ * Every claim in it is bounded by `messages.ts`'s own rule — three movements
+ * are free and a live date opens later rolls. The list is built
  * from the priced tiers rather than from a written-out list of three, so a
  * deployment that priced one names one.
  */

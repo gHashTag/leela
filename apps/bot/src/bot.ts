@@ -45,7 +45,6 @@ import {
   asDay,
   invoiceFor,
   offerFor,
-  offering,
   operatorIds,
   tierOf,
   tierOfPayload,
@@ -64,6 +63,10 @@ import {
   type RoomStore,
   type StepSink,
 } from './store';
+import { tableMiniAppUrl } from './miniapp-url';
+import { accessFor } from './access';
+
+export { tableMiniAppUrl } from './miniapp-url';
 
 export interface BotOptions {
   token: string;
@@ -385,7 +388,7 @@ export function createBot({
   channels = new DirectChannels(),
   // The environment decides whether anything is sold, and the default
   // environment sells nothing. See `stars.ts`.
-  stars = offering(process.env),
+  stars = null,
   entitlements = new MemoryEntitlementStore(),
   operators = operatorIds(process.env),
 }: BotOptions) {
@@ -693,11 +696,14 @@ export function createBot({
     if (destination.kind === 'chat-fallback') return;
 
     const where = destination.kind === 'direct' ? destination.userId : chatIdOf(ctx);
-    if (!where || offered.has(where)) return;
+    const table = chatIdOf(ctx);
+    if (!where || !table) return;
+    const offeredKey = `${where}\n${table}`;
+    if (offered.has(offeredKey)) return;
 
     // Marked before the send, not after: two throws in flight would otherwise
     // both find it unsent and draw the keyboard twice.
-    offered.add(where);
+    offered.add(offeredKey);
     while (offered.size > MAX_OFFERED) {
       const oldest = offered.values().next();
       if (oldest.done) break;
@@ -709,13 +715,15 @@ export function createBot({
       // sentence out of `@leela/content` and the button beside it carries the
       // meaning. The keyboard is the payload of this message, not decoration.
       await ctx.api.sendMessage(where, messageFor(language, 'menu.board'), {
-        reply_markup: keyboard([commands.launchButton(language, launchUrl)]),
+        reply_markup: keyboard([
+          commands.launchButton(language, tableMiniAppUrl(launchUrl, table)),
+        ]),
         link_preview_options: { is_disabled: true },
       });
       if (destination.kind === 'direct') channels.allow(where);
     } catch (error) {
       // Unsent, so unremembered: the next throw tries again.
-      offered.delete(where);
+      offered.delete(offeredKey);
 
       if (isBlockedByUser(error)) {
         channels.refuse(userId);
@@ -1034,7 +1042,8 @@ export function createBot({
 
   async function withRoom(
     ctx: Context,
-    run: (room: Room, who: { id: string; name: string }) => commands.CommandResult,
+    run: (room: Room, who: { id: string; name: string }) =>
+      commands.CommandResult | Promise<commands.CommandResult>,
   ): Promise<void> {
     const chatId = chatIdOf(ctx);
     const who = sender(ctx);
@@ -1046,7 +1055,7 @@ export function createBot({
       return;
     }
 
-    const result = run(room, who);
+    const result = await run(room, who);
 
     // Kept first, and nothing said if it was not. The effects belong to a turn
     // that happened, and so do the replies describing it.
@@ -1342,9 +1351,18 @@ export function createBot({
     // from the room, and it is only defined when there was a room at all —
     // which is also exactly when a board is worth offering.
     let language: Language | undefined;
-    await withRoom(ctx, (room, holder) => {
+    await withRoom(ctx, async (room, holder) => {
       language = room.language;
-      return commands.roll(room, holder.id, now(), asked);
+      const attempted = commands.roll(room, holder.id, now(), asked);
+      const hasMove = attempted.effects?.some(({ kind }) => kind === 'move') ?? false;
+      if (!hasMove) return attempted;
+      const access = await accessFor(room, holder.id, entitlements, stars, now());
+      return access.mayRoll
+        ? attempted
+        : {
+            room,
+            replies: [{ text: messageFor(room.language, 'pro.required'), broadcast: false }],
+          };
     });
 
     // Where the donor put its `Gameboard` button: under the step.
@@ -1737,11 +1755,9 @@ export function createBot({
    * or a `successful_payment` produces zero calls, and that nothing said
    * anywhere carries a word from the Stars catalogue.
    *
-   * **The rail gates nothing.** There is no toll in this bot today and this
-   * does not add one: a payment is recorded and exposed through
-   * `entitlements.subscribed`, and every square, report, throw and answer is
-   * as free as it was. What the copy in `@leela/content` says about that is
-   * the whole of what is true — see the note above `pro.free`.
+   * When prices exist, the same entitlement used here is also the server-side
+   * gate after the player's three free movements. With no prices this entire
+   * block and the gate are both off, so an unpayable deployment stays playable.
    */
   if (stars) {
     /**

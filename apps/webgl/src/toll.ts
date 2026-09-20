@@ -1,5 +1,5 @@
 /**
- * Three throws free, then the game asks for a subscription.
+ * Three actual movements free, then the game asks for access.
  *
  * The decision lives here, in one function, because it is the kind of rule that
  * otherwise ends up written twice — once where the die is disabled and once
@@ -17,6 +17,7 @@
  * one player five throws and another two. It counted throws until it was
  * measured - see `movesTaken` for why a refused throw is no longer charged.
  */
+import { FREE_MOVES } from '@leela/journal';
 import { pathOf } from './path';
 
 /**
@@ -26,10 +27,10 @@ import { pathOf } from './path';
  * because the app's own `pricing.ts` mirrors it by this name. What it counts
  * changed - see `movesTaken`.
  */
-export const FREE_THROWS = 3;
+export const FREE_THROWS = FREE_MOVES;
 
 export interface Standing {
-  /** Throws already taken in this game. */
+  /** Actual movements already taken in this game. */
   readonly taken: number;
   /** Whether the player holds a subscription, as the host reported it. */
   readonly entitled: boolean;
@@ -46,7 +47,7 @@ export interface Standing {
 export interface Toll {
   /** Whether the die may turn. */
   readonly mayThrow: boolean;
-  /** Throws left before the question, or null when it will never be asked. */
+  /** Movements left before the question, or null when it will never be asked. */
   readonly left: number | null;
 }
 
@@ -62,7 +63,7 @@ export const tollFor = ({ taken, entitled, hosted }: Standing): Toll => {
 /**
  * Whether this is the throw worth warning about.
  *
- * One throw left is the moment to say so — before the die stops rather than
+ * One movement left is the moment to say so — before the die stops rather than
  * after. Saying it on every throw is nagging; saying it only when the die has
  * already stopped is a surprise.
  */

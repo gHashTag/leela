@@ -36,6 +36,7 @@ import {
   type Message,
 } from '@leela/ai';
 import { Allowance, MAX_ASKERS } from './bot';
+import { GAME_PATH, type GameRoute } from './game-api';
 
 /**
  * Who may ask from a browser.
@@ -128,6 +129,8 @@ export interface AskRouteOptions {
   now?: () => number;
   /** When set, answers stream as deltas; `model` stays the fallback. */
   stream?: StreamAsk;
+  /** The authenticated table route sharing this listener, when configured. */
+  game?: GameRoute;
 }
 
 export type AskRoute = (request: Request, address?: string) => Promise<Response>;
@@ -163,13 +166,15 @@ const corsFor = (origin: string): Record<string, string> => ({
  * without Bun: everything this file decides is decided here, and the server
  * below only supplies the port and the peer address.
  */
-export function askRoute({ model, stream, now = Date.now }: AskRouteOptions = {}): AskRoute {
+export function askRoute({ model, stream, game, now = Date.now }: AskRouteOptions = {}): AskRoute {
   // The same guard `/ask` in the chat stands behind, with the address where
   // the player id would be. See `Allowance` in bot.ts for why checking is
   // spending, and `MAX_ASKERS` for why the map is capped.
   const asks = new Allowance(ASKS_PER_MINUTE, ASK_MINUTE_MS, MAX_ASKERS);
 
   return async (request, address) => {
+    if (new URL(request.url).pathname === GAME_PATH && game) return game(request);
+
     const origin = request.headers.get('origin') ?? '';
     const allowed = ALLOWED_ORIGINS.includes(origin);
     // Refusals to an allowed origin carry the permission headers too: without

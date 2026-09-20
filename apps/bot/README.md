@@ -204,6 +204,13 @@ player ever receives ends by naming `/quiet`, which stops it; `/quiet` again
 brings it back. What was sent, when, and which excerpt live in the same
 storage the games do — in memory when the games are.
 
+The call to action is selected from the live session, not from a generic
+retention script. If the player may roll it offers the turn; if the report gate
+is closed it asks for reflection; if another player holds the die or a cooldown
+is running it offers the plan to read and says that nothing is due. The copy is
+deterministic and grounded in the canonical plan text. The reply-keyboard URL
+also carries that room's chat id, so a daily word cannot open a separate board.
+
 `LEELA_NUDGE_HOUR` sets the hour it goes out, an integer 0–23 read as UTC
 because the deployment's clock is UTC; the default is 6, which on Railway is
 09:00 in Moscow. Anything else in the variable takes the default. The engine
@@ -211,29 +218,24 @@ and its sleeping conditions are `src/initiative.ts`; every eligibility branch,
 the excerpt rotation and the once-per-day cap are held by
 `tests/initiative.test.ts` and `tests/the-daily-word.test.ts`.
 
-## Telegram Stars, dark until somebody names a price
+## Telegram Stars after three free movements
 
 Telegram Stars (`XTR`) are the only sanctioned way for a bot to sell a digital
-good, and this bot has the rail for them. It is **off**.
-
-Whether this game charges for anything, and what for, is the owner's decision
-and it has not been made. So the rail is written, tested, and gated on one
-thing — a price in the environment:
+good. Each seated player gets three actual movements at a table for free; later
+valid rolls require a live entitlement. The Railway image supplies the public
+150/700/1200 Stars catalogue below; deployment variables can override it:
 
 ```
-LEELA_STARS_MONTH=150          # optional: Stars for 30 days
-LEELA_STARS_HALFYEAR=700       # optional: Stars for 182 days
-LEELA_STARS_YEAR=1200          # optional: Stars for 365 days
+LEELA_STARS_MONTH=150          # default: Stars for 30 days
+LEELA_STARS_HALFYEAR=700       # default: Stars for 182 days
+LEELA_STARS_YEAR=1200          # default: Stars for 365 days
 LEELA_STARS_OPERATORS=11,22    # optional: who may /refund a payment
 ```
 
-With **none** of the three set, `offering(process.env)` in `src/stars.ts`
-answers `null` and that is the whole feature off: no `/pro` is registered, it is
-in no menu and no help text, no invoice can be assembled — `invoiceFor` refuses
-one and says why — and a `pre_checkout_query` or a `successful_payment` falls
-off the end of the chain unanswered. A deployment with no price behaves exactly
-as it did before the rail was written, and `/pro` typed into one is answered
-byte for byte as any other word this bot does not know.
+The three image defaults mean the ordinary Railway deployment is paid after the
+free allowance. If an operator deliberately overrides all three with empty
+values, `offering(process.env)` in `src/stars.ts` answers `null` and that is the
+whole feature off: no `/pro`, menu item, invoice, or dead checkout is exposed.
 
 **One bad price darkens all of them.** A deployment with a good
 `LEELA_STARS_YEAR` and a mistyped `LEELA_STARS_MONTH` is one somebody meant to
@@ -242,14 +244,10 @@ wrote. The startup line says which of the two states this process is in, and
 names the variable when it is a typo — otherwise a mistyped price is invisible,
 because the bot runs either way.
 
-**What a subscription buys, said plainly.** A date, and nothing else. Nothing in
-this game is behind a payment — not a square, not a report, not the companion —
-and `subscribed(userId, now)` is recorded and exposed and read by no gate. The
-copy in `@leela/content` says exactly that (*it unlocks nothing: everything in
-the game is free*), because the alternative is selling a benefit that no code
-delivers. It says it in the present tense: *stays free* would be a promise about
-a decision nobody has made, enforced by nothing. If a benefit is ever decided
-on, the entitlements are already on the disk to honour it from.
+**What access buys, said plainly.** The entitlement's date opens later rolls in
+both `/roll` and the linked Mini App. Failed entry throws and overshoots do not
+spend the allowance. Reports, plans, the player's path and companion remain
+available. With no valid price, the server does not arm a gate nobody can pay.
 
 **Refunds.** Telegram requires that a bot taking Stars can give them back.
 `/refund <charge id>` calls `refundStarPayment` and then clears this bot's own
@@ -285,6 +283,17 @@ stores whose promises never settle, and by asserting that the path touches no
 store at all.
 
 ## The mini app's companion
+
+The board button is table-aware. The URL carries the source chat id, while the
+game state and authority do not: the 3D page presents Telegram's signed
+`initData` to `/api/game`, and the service checks both the signature and that
+the user is seated. Reads return the stored room; throws run through the same
+`commands.roll` path as `/roll`, are saved and move-logged first, then announced
+back into the chat. The same authenticated response carries only that player's
+intention and reports; intention changes write to the same store as
+`/intention`, and reflections run through `commands.report` before they join the
+same private path as `/report`. A failed linked launch never opens a second
+local game.
 
 The mini app has the plans, the returns, the arrival and the whole path —
 everything `packages/ai` is given except the model. It is a static page, a model

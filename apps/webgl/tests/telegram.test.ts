@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 
 import { blank } from '../../../scripts/lib/source.mjs';
 
-import { meetTelegram, nameAskOrigin, telegramOf, themeVars } from '../src/telegram';
+import { meetTelegram, nameAskOrigin, openTelegramInvoice, telegramOf, themeVars } from '../src/telegram';
 
 /**
  * Everything this file guards arrives from software this repository does not
@@ -226,5 +226,24 @@ describe('nameAskOrigin', () => {
     const page: { __leelaAsk?: string } = { __leelaAsk: 'https://host.example' };
     nameAskOrigin(page, undefined);
     expect(page.__leelaAsk).toBe('https://host.example');
+  });
+});
+
+describe('Telegram Stars checkout', () => {
+  it('returns only Telegram documented invoice states', async () => {
+    const app = {
+      ready() {}, expand() {},
+      openInvoice(_url: string, callback?: (status: string) => void) { callback?.('paid'); },
+    };
+    await expect(openTelegramInvoice(app, 'https://t.me/$invoice')).resolves.toBe('paid');
+  });
+
+  it('fails cleanly outside checkout and on a foreign status', async () => {
+    await expect(openTelegramInvoice(null, 'https://t.me/$invoice')).rejects.toThrow(/unavailable/i);
+    const app = {
+      ready() {}, expand() {},
+      openInvoice(_url: string, callback?: (status: string) => void) { callback?.('invented'); },
+    };
+    await expect(openTelegramInvoice(app, 'https://t.me/$invoice')).rejects.toThrow(/unreadable/i);
   });
 });

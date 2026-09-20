@@ -14,13 +14,36 @@
  * this repository does not build.
  */
 
-interface TelegramWebApp {
+export interface TelegramWebApp {
   ready(): void;
   expand(): void;
+  /** Signed launch data; empty outside a real Telegram Mini App launch. */
+  readonly initData?: unknown;
   /** `'light' | 'dark'` when Telegram wrote it; unknown until checked. */
   readonly colorScheme?: unknown;
   /** `#rrggbb` strings when Telegram wrote them; unknown until checked. */
   readonly themeParams?: unknown;
+  openInvoice?(url: string, callback?: (status: string) => void): void;
+}
+
+export type InvoiceStatus = 'paid' | 'cancelled' | 'failed' | 'pending';
+
+/** Open Telegram's native Stars sheet and refuse undocumented outcomes. */
+export function openTelegramInvoice(app: TelegramWebApp | null, url: string): Promise<InvoiceStatus> {
+  return new Promise((resolve, reject) => {
+    if (!app?.openInvoice || !/^https:\/\//.test(url)) {
+      reject(new Error('Telegram invoice checkout is unavailable'));
+      return;
+    }
+    try {
+      app.openInvoice(url, (status) => {
+        if (['paid', 'cancelled', 'failed', 'pending'].includes(status)) resolve(status as InvoiceStatus);
+        else reject(new Error('Telegram returned an unreadable invoice status'));
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
 }
 
 /**

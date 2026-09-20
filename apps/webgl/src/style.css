@@ -1555,6 +1555,97 @@ body {
   cursor: pointer;
 }
 
+.toll-plans {
+  display: grid;
+  gap: var(--sp0);
+  padding: 0;
+  border: 0;
+}
+
+.toll-plans label {
+  min-height: var(--touch);
+  padding: 0 var(--sp1);
+  display: flex;
+  align-items: center;
+  gap: var(--sp1);
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.toll-plans label:has(input:checked) {
+  border: 2px solid var(--accent);
+  background: var(--raised, var(--surface));
+}
+
+.toll-plans input { accent-color: var(--accent); }
+.toll-plan-name { flex: 1; font-weight: 650; }
+.toll-plan-price { white-space: nowrap; }
+
+.paywall {
+  width: min(100% - 2 * var(--sp1), 32rem);
+  max-height: min(92dvh, 52rem);
+  padding: 0;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+}
+
+.paywall::backdrop {
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.paywall-card {
+  position: relative;
+  padding: var(--sp3) var(--sp2) var(--sp2);
+  overflow: auto;
+  color: var(--text);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--rule);
+  border-radius: calc(var(--radius) * 2);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+
+.paywall-close {
+  position: absolute;
+  top: var(--sp1);
+  right: var(--sp1);
+  width: var(--touch);
+  height: var(--touch);
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  font-size: 1.8rem;
+}
+
+.paywall-mark { margin: 0; color: var(--accent); font-size: 2rem; }
+.paywall h2 { margin: var(--sp0) 0; font-size: var(--f2); }
+.paywall-free { margin: 0 0 var(--sp2); color: var(--hint); }
+.paywall-benefits { margin: 0 0 var(--sp2); padding-left: 1.25rem; }
+.paywall-benefits li { margin: 0 0 var(--sp0); }
+
+.paywall-buy {
+  width: 100%;
+  min-height: var(--touch);
+  margin-top: var(--sp2);
+  padding: 0 var(--sp1);
+  font: inherit;
+  font-weight: 700;
+  color: var(--on-accent);
+  background: var(--accent);
+  border: 0;
+  border-radius: var(--radius);
+}
+
+.paywall-terms { margin: var(--sp1) 0; color: var(--hint); font-size: var(--f-1); text-align: center; }
+.paywall-status { min-height: 1.3em; margin: var(--sp0) 0 0; color: var(--text); font-size: var(--f-1); text-align: center; }
+.paywall-why { color: var(--hint); font-size: var(--f-1); }
+.paywall-why summary { cursor: pointer; text-align: center; text-decoration: underline; }
+.paywall-why p { margin-bottom: 0; }
+
 .toll[hidden],
 .toll-open[hidden] {
   display: none;

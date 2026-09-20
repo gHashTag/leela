@@ -287,9 +287,8 @@ export interface Subscription {
  * write one: an entitlement is created by a payment Telegram has confirmed and
  * by nothing else.
  *
- * **Nothing in the game asks `subscribed`.** There is no toll in this bot
- * today and this store does not add one — it records what was paid and exposes
- * it, and every square, report and answer stays exactly as free as it was.
+ * The Telegram roll gate asks `subscribed` after a player's three free actual
+ * movements. Reports, plans and companion answers do not.
  */
 export interface EntitlementStore {
   /**

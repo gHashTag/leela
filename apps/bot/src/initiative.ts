@@ -22,7 +22,7 @@
 import { Keyboard } from 'grammy';
 import type { ReplyKeyboardMarkup } from 'grammy/types';
 import { lastSentenceEnd, messageFor, planFor, type Language, type Plan } from '@leela/content';
-import { hasWon } from '@leela/engine';
+import { canCurrentPlayerRoll, currentPlayer, hasWon } from '@leela/engine';
 import { launchButton, standingSquare, type Room } from './commands';
 import { DirectChannels, isBlockedByUser } from './delivery';
 /**
@@ -36,6 +36,7 @@ import { DirectChannels, isBlockedByUser } from './delivery';
  */
 import { DAY_MS } from './stars';
 import type { NudgeStore, RoomStore } from './store';
+import { tableMiniAppUrl } from './miniapp-url';
 
 /**
  * How long a player may be silent and still be written to: fourteen days.
@@ -166,6 +167,23 @@ export interface Candidate {
 
 /** Which of the companion's words a tick sends. */
 export type Word = 'daily' | 'freshStart' | 'doorstep';
+
+/** The one truthful action the proactive companion can offer right now. */
+export type EngagementAction = 'roll' | 'reflect' | 'read';
+
+/**
+ * Pick a skill from engine state, not from a retention score.
+ *
+ * The player holding the die may either roll or owe the account that opens it.
+ * Everybody else can read without being told to act out of turn. A cooldown is
+ * also a reading moment: another `/roll` cannot change it.
+ */
+export function engagementAction(room: Room, userId: string, now: number): EngagementAction {
+  if (currentPlayer(room.session).id !== userId) return 'read';
+  const verdict = canCurrentPlayerRoll(room.session, now);
+  if (verdict.allowed) return 'roll';
+  return verdict.reason === 'report-required' ? 'reflect' : 'read';
+}
 
 export type Verdict = { send: true; word: Word } | { send: false; because: SkipReason };
 
@@ -304,6 +322,7 @@ export function compose(
   plan: Plan,
   lastExcerpt: number | null,
   said: { firstNudge: boolean; word?: Word },
+  action: EngagementAction = 'roll',
 ): Composed {
   if (said.word === 'doorstep') {
     // No excerpt and no standing line: this player stands on no plan, and a
@@ -330,7 +349,14 @@ export function compose(
     ...(said.word === 'freshStart' ? [messageFor(language, 'nudge.freshStart'), ''] : []),
     ...(excerpt ? [excerpt, ''] : []),
     messageFor(language, 'nudge.standing', { plan: plan.plan, title: plan.title }),
-    messageFor(language, 'nudge.cta'),
+    messageFor(
+      language,
+      action === 'reflect'
+        ? 'nudge.reflectCta'
+        : action === 'read'
+          ? 'nudge.readCta'
+          : 'nudge.cta',
+    ),
     ...(said.firstNudge ? ['', messageFor(language, 'nudge.wayOut')] : []),
   ];
 
@@ -459,8 +485,8 @@ export function createInitiative({
    * Telegram's one restriction on it is that it may not go to a group, and
    * this engine never writes to one: every send below is to a user's own chat.
    */
-  function launchKeyboard(language: Language): Keyboard {
-    const button = launchButton(language, launchUrl);
+  function launchKeyboard(language: Language, chatId: string): Keyboard {
+    const button = launchButton(language, tableMiniAppUrl(launchUrl, chatId));
     return new Keyboard().webApp(button.label, button.webAppUrl).resized();
   }
 
@@ -474,10 +500,10 @@ export function createInitiative({
    * the word must not be lost over its button. The text already names /roll,
    * so the way back survives the keyboard not doing.
    */
-  async function deliver(userId: string, language: Language, text: string): Promise<'sent' | 'blocked' | 'undelivered'> {
+  async function deliver(userId: string, language: Language, chatId: string, text: string): Promise<'sent' | 'blocked' | 'undelivered'> {
     const attempts: Array<Parameters<NudgeApi['sendMessage']>[2]> = [
       {
-        reply_markup: launchKeyboard(language),
+        reply_markup: launchKeyboard(language, chatId),
         link_preview_options: { is_disabled: true },
       },
       { link_preview_options: { is_disabled: true } },
@@ -549,9 +575,9 @@ export function createInitiative({
       const word = compose(room.language, plan, memory.excerpt, {
         firstNudge: memory.sentAt === null,
         word: verdict.word,
-      });
+      }, engagementAction(room, userId, at));
 
-      const outcome = await deliver(userId, room.language, word.text);
+      const outcome = await deliver(userId, room.language, room.chatId, word.text);
       if (outcome === 'sent') {
         // Remembered only when it arrived: a failed send has not spent the
         // day, and tomorrow's tick owes this player another knock.

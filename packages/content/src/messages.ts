@@ -482,14 +482,14 @@ const EN = {
   'app.voiceFailed': 'The better voice would not come; the plain one still reads',
 
   /**
-   * Three throws free, then the game asks for a subscription.
+   * Three actual movements free, then the game asks for Stars access.
    *
    * Two sentences, not one. The warning comes on the last free throw — before
    * the die stops rather than after — and the ask comes when it has. A single
    * message would have to be either a nag or a surprise.
    */
-  'app.tollLast': 'One free throw left.',
-  'app.tollDue': 'The three free throws are used. A subscription opens the rest of the board.',
+  'app.tollLast': 'One free move left.',
+  'app.tollDue': 'The three free moves are used. Telegram Stars access opens further rolls.',
   /**
    * Where a line came from, printed beside it.
    *
@@ -503,6 +503,18 @@ const EN = {
   'app.unanswered': 'unanswered',
   'app.restsOn': 'What this rests on',
   'app.tollOpen': 'Subscribe',
+  'app.paywallTitle': 'Choose access',
+  'app.paywallFree': 'Your first {count} actual moves are free. Unlock the die to continue.',
+  'app.paywallRolls': 'The game continues after the free moves',
+  'app.paywallSync': 'One access works in both the Telegram bot and Mini App',
+  'app.paywallNoAds': 'No advertising',
+  'app.paywallBuy': 'Unlock with Telegram Stars',
+  'app.paywallTerms': 'One-time Stars payment for the stated number of days. No automatic renewal.',
+  'app.paywallPending': 'Telegram is still confirming the payment. Your access will refresh automatically.',
+  'app.paywallFailed': 'The purchase did not complete. Nothing was charged here; you can try again.',
+  'app.paywallWhyTitle': 'Why am I seeing this?',
+  'app.paywallWhyText':
+    'Every player gets {count} actual moves to meet the game before paying. A throw that does not move your piece is not charged.',
 
   /**
    * The same game, drawn in three dimensions.
@@ -745,6 +757,10 @@ const EN = {
   // whole send is refused over the markup the retry goes out without it —
   // /roll is then the only way back this line offers, so it is named here.
   'nudge.cta': 'The game goes on from where you stand — /roll picks it back up.',
+  'nudge.reflectCta':
+    'The next move is reflection, not another throw. Open the board and write what this plan shows you.',
+  'nudge.readCta':
+    'Nothing is due from you now. Open the board to read this plan and return when the turn is yours.',
   // The opt-out, first-class: the first daily word a player ever receives ends
   // with this sentence, so the way out arrives before the second knock does.
   'nudge.wayOut': 'This word arrives once a day. /quiet stops it whenever you wish.',
@@ -754,23 +770,20 @@ const EN = {
   // --- what a star buys ------------------------------------------------------
   //
   // Telegram Stars, and the one rule these sentences are written under: **say
-  // nothing that is not true of the product today.** Nothing in this game is
-  // behind a payment — not a square, not a report, not the companion — and
-  // `apps/bot/src/stars.ts` deliberately gates nothing, so a line here
-  // promising a feature would be promising something no code delivers. What is
-  // true is that a payment is support for the work and that the bot keeps a
-  // date for it, and that is what these say.
+  // nothing that is not true of the product today.** Three actual movements
+  // are free, and a live entitlement opens later rolls. Reports, plans and the
+  // companion remain open.
   //
   // A deployment that has named no price says none of this at all: `/pro` is
   // not registered, so these keys are unreachable rather than merely unused.
-  // Present tense, deliberately. *Leela stays free* would be a promise about
-  // a decision nobody has made, in the product's own voice, enforced by
-  // nothing — the one shape of sentence this catalogue is written to avoid.
-  // What is checkable is what is true now, and it is checkable today.
-  'pro.free': 'Leela is free to play: no square, no report and no answer is behind this.',
+  'pro.free': 'Your first three actual movements at each table are free.',
   'pro.buys':
-    'A subscription is support for the work. What it buys is a date this bot keeps for you — ' +
-    'nothing in the game opens when it is set, and nothing closes when it runs out.',
+    'Stars access unlocks further rolls until its end date. Writing, plans and the companion stay open.',
+  'pro.required':
+    'Your three free moves are used. Open the Mini App to pay with Telegram Stars, or use /pro.',
+  'pro.month': 'One month',
+  'pro.halfyear': 'Six months',
+  'pro.year': 'One year',
   // One line per priced tier. `{command}` is what to send, so the list is also
   // the instructions; the count is days, because that is what the arithmetic
   // behind it actually adds.
@@ -782,16 +795,14 @@ const EN = {
   // operator's act and not automatic, and the sentence says exactly that
   // rather than promising a right or a turnaround nobody has agreed to.
   'pro.refundable': 'Paid in Telegram Stars. A refund is possible, through whoever runs this bot.',
-  'pro.held': 'You are supporting the work until {until}.',
+  'pro.held': 'Further rolls are open until {until}.',
   // The invoice itself. Telegram takes 1–32 characters of title and 1–255 of
   // description, and refuses the whole call rather than trimming.
-  'pro.title': 'Leela — support',
+  'pro.title': 'Leela — full board',
   'pro.description':
-    'Support for Leela, kept as a date {days} days from the payment. ' +
-    'It unlocks nothing: everything in the game is free.',
+    'Unlock further rolls in Leela for {days} days. Your reports, plans and companion remain available.',
   'pro.thanks':
-    'Thank you. It is kept until {until}. Nothing in the game has changed, which is the ' +
-    'honest part of this — you have supported the work, not bought your way past it.',
+    'Thank you. Further rolls are unlocked until {until}.',
   // The two ways a payment can arrive and not be recorded. Both say plainly
   // that money changed hands and that a refund is the way back, because the
   // alternative is a player who has paid and been told nothing.
@@ -1104,13 +1115,25 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'app.voiceGetting': 'Загружаю голос… {percent}%',
   'app.voiceOff': 'Вернуть обычный голос',
   'app.voiceFailed': 'Живой голос не загрузился; читает обычный',
-  'app.tollLast': 'Остался один бесплатный бросок.',
-  'app.tollDue': 'Три бесплатных броска использованы. Подписка открывает остальную доску.',
+  'app.tollLast': 'Остался один бесплатный ход.',
+  'app.tollDue': 'Три бесплатных хода использованы. Доступ за Telegram Stars открывает следующие броски.',
   'app.fromText': 'из текста',
   'app.fromModel': 'модель',
   'app.unanswered': 'без ответа',
   'app.restsOn': 'На чём это стоит',
   'app.tollOpen': 'Оформить подписку',
+  'app.paywallTitle': 'Выберите доступ',
+  'app.paywallFree': 'Первые {count} фактических хода бесплатны. Откройте кубик, чтобы продолжить.',
+  'app.paywallRolls': 'Игра продолжается после бесплатных ходов',
+  'app.paywallSync': 'Один доступ действует в Telegram-боте и мини‑приложении',
+  'app.paywallNoAds': 'Без рекламы',
+  'app.paywallBuy': 'Открыть за Telegram Stars',
+  'app.paywallTerms': 'Разовый платёж Stars на указанный срок. Автопродления нет.',
+  'app.paywallPending': 'Telegram ещё подтверждает платёж. Доступ обновится автоматически.',
+  'app.paywallFailed': 'Покупка не завершена. Здесь ничего не списано; можно попробовать снова.',
+  'app.paywallWhyTitle': 'Почему я это вижу?',
+  'app.paywallWhyText':
+    'Каждому игроку даются {count} фактических хода, чтобы познакомиться с игрой до оплаты. Бросок без перемещения не списывается.',
   'app.board3d': 'Доска в 3D',
   'app.board3dClose': 'Вернуться к доске',
   'app.board3dUnreachable': 'Доска в 3D недоступна по адресу {url}.',
@@ -1240,6 +1263,10 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'nudge.doorstepCta': 'Всё дело в одном броске — /roll бросает кубик.',
   'nudge.standing': 'Вы стоите на плане {plan}. {title}.',
   'nudge.cta': 'Игра продолжается там, где вы стоите — /roll вернёт вас в неё.',
+  'nudge.reflectCta':
+    'Следующий ход — размышление, а не новый бросок. Откройте доску и запишите, что показывает этот план.',
+  'nudge.readCta':
+    'Сейчас от вас ничего не требуется. Откройте доску, прочтите этот план и вернитесь, когда ход будет вашим.',
   'nudge.wayOut': 'Это слово приходит раз в день. /quiet останавливает его в любой момент.',
   'quiet.on': 'Тихо. Ежедневное слово больше не приходит — /quiet вернёт его, когда захотите.',
   'quiet.off': 'Ежедневное слово вернётся завтра.',
@@ -1247,11 +1274,14 @@ const RU: Partial<Record<MessageKey, Message>> = {
   // Telegram Stars. Под тем же правилом, что и английские: ничего, что не
   // верно о продукте сегодня. Ни один план, ни один отчёт и ни один ответ не
   // закрыт оплатой, и код ничего не закрывает.
-  'pro.free':
-    'Лила бесплатна: ни один план, ни один отчёт и ни один ответ этим не закрыт.',
+  'pro.free': 'Первые три фактических перемещения за каждым столом бесплатны.',
   'pro.buys':
-    'Подписка — это поддержка работы. Она покупает дату, которую бот хранит для вас: ' +
-    'пока она есть, в игре ничего не открывается, и когда она заканчивается, ничего не закрывается.',
+    'Доступ за Stars открывает следующие броски до даты окончания. Записи, планы и агент остаются доступны.',
+  'pro.required':
+    'Три бесплатных хода использованы. Откройте мини‑приложение для оплаты Telegram Stars или используйте /pro.',
+  'pro.month': 'Один месяц',
+  'pro.halfyear': 'Шесть месяцев',
+  'pro.year': 'Один год',
   'pro.tier': {
     one: '{command} — {count} день за {stars} ⭐',
     few: '{command} — {count} дня за {stars} ⭐',
@@ -1259,14 +1289,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
     other: '{command} — {count} дней за {stars} ⭐',
   },
   'pro.refundable': 'Оплата в Telegram Stars. Возврат возможен — через того, кто держит бота.',
-  'pro.held': 'Вы поддерживаете работу до {until}.',
-  'pro.title': 'Лила — поддержка',
+  'pro.held': 'Следующие броски открыты до {until}.',
+  'pro.title': 'Лила — вся доска',
   'pro.description':
-    'Поддержка Лилы: бот хранит дату — {days} дней с момента оплаты. ' +
-    'Ничего не открывает: в игре всё бесплатно.',
+    'Открывает следующие броски в Лиле на {days} дней. Записи, планы и агент остаются доступны.',
   'pro.thanks':
-    'Спасибо. Дата сохранена до {until}. В игре ничего не изменилось — и это здесь честная часть: ' +
-    'вы поддержали работу, а не купили обход.',
+    'Спасибо. Следующие броски открыты до {until}.',
   'pro.notKept':
     'Платёж дошёл до Telegram, а записать его бот не смог. Ничего не потеряно, чего не вернуть: ' +
     'скажите тому, кто держит бота, и назовите дату.',

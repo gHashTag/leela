@@ -153,12 +153,13 @@ promising 368 kB. Nobody rechecks a number that is already written down.
 The language comes from the Telegram user's `language_code`, falling back to
 the browser's, then to English.
 
-## What is missing
+## Which game this page is
 
-- Group play across devices. Several players share *this* device — each with
-  their own journal, intention and draft — but a table spread across phones
-  needs `initData` verified server-side, which needs somewhere to run. Group
-  play in one chat lives in the bot, and the two do not share a game yet.
+This 2D page is the standalone classic board now served at `/leela/classic/`.
+Several players may still share one device. The bot's board button opens the 3D
+page at `/leela/` instead; that launch validates Telegram `initData` on the bot
+service and reads and advances the chat's stored table, so chat and board no
+longer start independent games.
 
 ## Every name comes from the catalogue
 
