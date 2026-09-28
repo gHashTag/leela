@@ -682,6 +682,8 @@ export function createBot({
     const markup = new InlineKeyboard();
     for (const button of buttons) {
       if (button.action) markup.text(button.label, button.action);
+      // Keep duration and price readable on narrow phone screens.
+      if (button.action?.startsWith('tier:')) markup.row();
     }
     return markup;
   }
@@ -1473,6 +1475,13 @@ export function createBot({
     return { intention: (await reports.intention(userId)) ?? '' };
   }
 
+  function pricedChoices(language: Language): Button[] {
+    return (stars ?? []).map((tier) => ({
+      label: messageFor(language, 'pro.chooseTier', { count: tier.days, stars: tier.stars }),
+      action: `tier:${tier.id}`,
+    }));
+  }
+
   /** The paid continuation, sent privately from either surface. */
   async function offerPaidPlay(ctx: Context, userId: string, language: Language): Promise<void> {
     if (stars === null) {
@@ -1485,6 +1494,7 @@ export function createBot({
       {
         text: `${messageFor(language, 'app.tollDue')}\n\n${offerFor(language, stars, held?.until ?? null)}`,
         broadcast: false,
+        buttons: pricedChoices(language),
       },
     ]);
   }
@@ -1930,6 +1940,14 @@ export function createBot({
    * `accessFor` decision, so chat and mini app cannot sell different games.
    */
   if (stars) {
+    async function askPurchaseConsent(ctx: Context, language: Language, tier: PricedTier): Promise<void> {
+      await deliver(ctx, [{
+        text: messageFor(language, 'pro.accept', { terms: termsUrl(language) }),
+        broadcast: false,
+        buttons: [{ label: messageFor(language, 'pro.acceptButton'), action: acceptanceAction(tier.id) }],
+      }]);
+    }
+
     /** Send the invoice only after the player accepted the published Terms. */
     async function sendStarsInvoice(
       ctx: Context,
@@ -2027,23 +2045,31 @@ export function createBot({
         // reads an entitlement out loud, beside the access it opens.
         const held = await entitlements.subscribed(who.id, now());
         await deliver(ctx, [
-          { text: offerFor(language, stars, held?.until ?? null), broadcast: false },
+          { text: offerFor(language, stars, held?.until ?? null), broadcast: false, buttons: pricedChoices(language) },
         ]);
         return;
       }
 
-      await deliver(ctx, [
-        {
-          text: messageFor(language, 'pro.accept', { terms: termsUrl(language) }),
+      await askPurchaseConsent(ctx, language, tier);
+    });
+
+    // Choosing a tier is not consent and must never issue an invoice.
+    bot.callbackQuery(/^tier:/, async (ctx) => {
+      await ctx.answerCallbackQuery();
+      const who = sender(ctx);
+      if (!who) return;
+      const language = languageOf(ctx);
+      const tier = tierOf(stars, /^tier:([a-z]+)$/.exec(ctx.callbackQuery.data)?.[1] ?? null);
+      if (!tier) {
+        const held = await entitlements.subscribed(who.id, now());
+        await deliver(ctx, [{
+          text: offerFor(language, stars, held?.until ?? null),
           broadcast: false,
-          buttons: [
-            {
-              label: messageFor(language, 'pro.acceptButton'),
-              action: acceptanceAction(tier.id),
-            },
-          ],
-        },
-      ]);
+          buttons: pricedChoices(language),
+        }]);
+        return;
+      }
+      await askPurchaseConsent(ctx, language, tier);
     });
 
     /**
@@ -2062,7 +2088,7 @@ export function createBot({
       const tier = tierOf(stars, tierAskedByAcceptance(ctx.callbackQuery.data));
       if (!tier) {
         await deliver(ctx, [
-          { text: offerFor(languageOf(ctx), stars, null), broadcast: false },
+          { text: offerFor(languageOf(ctx), stars, null), broadcast: false, buttons: pricedChoices(languageOf(ctx)) },
         ]);
         return;
       }
