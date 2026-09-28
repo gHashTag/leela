@@ -1,0 +1,100 @@
+# Autonomous UX Improvement Loop Report
+**Cycle:** 23  
+**Date:** 2026-08-08  
+**Theme:** Contextual game-rule tooltips for new players
+
+---
+
+## 1. Research findings
+
+### Weak spots in the current first-game learning flow
+- `FirstRollHelper` only told new players to "tap the dice"; it did not explain that a **six** is required to enter the game, how **arrows** and **snakes** work, or that each plane asks for a **report**.
+- After dismissing the helper there was no way to see rule hints again without leaving the game screen or reinstalling.
+- The onboarding screen already explained the rules, but it was not visible while playing, so users forgot them during the first game.
+- There was no contextual prompt explaining why a non-six first roll did not move the piece.
+- Rule content existed only as a long `rulesOfPlay.content` paragraph, not as reusable short tooltips.
+
+### Competitors / patterns consulted
+- **Chess.com / Lichess**: move the piece first, then show a short "Why" tooltip; first games use coach marks on specific squares.
+- **Monopoly GO**: contextual floating tips appear when the user lands on a special tile for the first time, not as a wall of text.
+- **Apple Arcade onboarding**: tips are shown in small bottom cards with a "Don't show again" and "Tell me more" action.
+- **Streaks / Fabulous**: habit apps use progressive disclosure — one rule per turn, not all at once.
+
+---
+
+## 2. Implementation summary
+
+### 2.1 `src/utils/gameTooltipState.ts` — tip persistence
+- Added AsyncStorage keys for `needSix`, `arrow`, `snake`, and `report` tips plus an `allHidden` master flag.
+- Added `hasSeenTip`, `markTipSeen`, `hideAllTips`, and `resetAllTips` helpers with best-effort error handling.
+
+### 2.2 `src/components/GameTooltip/index.tsx` — reusable tooltip card
+- Created a bottom card with icon, title, body, and three actions:
+  - **Got it** — dismiss and mark the tip seen;
+  - **Learn more** — dismiss and navigate to `RULES_SCREEN`;
+  - **Hide all tips** — set the master flag and hide every game tip.
+- Styled consistently with the existing `FirstRollHelper` palette.
+
+### 2.3 `src/screens/Tabs/GameScreen/index.tsx` — contextual tip triggers
+- Added state for the currently active tip and a pending tip queue (only one shown at a time).
+- Added an effect that inspects the latest move in the player history:
+  - shows the **need-six** tip when the user has not entered the game and rolled a non-six;
+  - shows the **arrow** tip after landing at the foot of an arrow;
+  - shows the **snake** tip after landing on a snake head;
+  - shows the **report** tip after a normal landing on a non-68 plane.
+- "Learn more" navigates to `RULES_SCREEN`; "Hide all tips" clears all future tips.
+
+### 2.4 Localization
+- Added `gameTooltip.*` keys to all 10 locale files:
+  - `needSixTitle` / `needSixBody`;
+  - `arrowTitle` / `arrowBody`;
+  - `snakeTitle` / `snakeBody`;
+  - `reportTitle` / `reportBody`;
+  - `gotIt`, `learnMore`, `hideTips`.
+- Translated into English, Russian, and French; other locales fall back to English.
+
+### 2.5 Tests
+- Added `src/utils/gameTooltipState.test.ts` (4 tests): unseen state, mark seen, hide all, reset all.
+- Added `src/components/GameTooltip/GameTooltip.test.tsx` (4 tests): render, got-it, learn-more, hide-all.
+- Exported `GameTooltip` from `src/components/index.ts` so it is available elsewhere.
+
+---
+
+## 3. Verification
+
+```
+Test Suites: 86 passed, 86 total
+Tests:       384 passed, 384 total
+```
+
+The TypeScript checker still reports pre-existing React-type mismatch errors across the codebase, but no new errors were introduced by this cycle. The new utility, tooltip component, and `GameScreen` integration compile and pass.
+
+---
+
+## 4. Collaboration options for the next loop
+
+### Option A — Consolidated Profile / Settings tab with Pro upsell and account tools
+Subscription status, restore purchase, data export, language, support, diagnostics, and sign-out are scattered across the tab bar and modals. Design a single Profile screen that surfaces all account tools and a Pro upsell.
+
+### Option B — Apply cancel/retry/partial-output pattern to `CreatePost` AI stream
+`CreatePost` has basic cancel/retry from cycle 18, but it does not yet persist partial output after a stop or offer "Edit report" pre-fill. Port the message-level recovery pattern there.
+
+### Option C — Persist offline game progress and resume after app kill/background
+Currently an offline game in progress can be lost if the app is killed. Add a save/resume card for offline games using AsyncStorage so players can continue their board state after reopening the app.
+
+---
+
+## 5. Files changed
+
+- `src/utils/gameTooltipState.ts` (new)
+- `src/utils/gameTooltipState.test.ts` (new)
+- `src/components/GameTooltip/index.tsx` (new)
+- `src/components/GameTooltip/GameTooltip.test.tsx` (new)
+- `src/components/index.ts`
+- `src/screens/Tabs/GameScreen/index.tsx`
+- `src/locales/*/translation.json` (10 files)
+- `UX_IMPROVEMENT_PLAN_V28.md` (new)
+
+---
+
+*Report generated by the autonomous UX improvement loop for Leela.*

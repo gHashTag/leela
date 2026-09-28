@@ -19,7 +19,9 @@
 #   scripts/daily-quote-cron.sh          # the real thing — sends two pushes
 #   scripts/daily-quote-cron.sh --dry    # print today's pick, send nothing
 #
-# Run by ~/Library/LaunchAgents/ai.t27.leela.dailyquote.plist at 06:00 local.
+# Run by ~/Library/LaunchAgents/ai.t27.leela.dailyquote.plist at 06:00 local and
+# once when launchd loads it. The load-time run catches up a missed 06:00 after
+# a reboot; the guard below prevents an early send when login happens before 06:00.
 
 set -uo pipefail
 
@@ -41,6 +43,13 @@ mkdir -p "$LEELA_HOME"
 log() {
   printf '%s %s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$1" >>"$LOG"
 }
+
+current_hour="${DAILY_QUOTE_CURRENT_HOUR:-$(date '+%H')}"
+if [ "$DRY" != 1 ] && [ "$current_hour" -lt 6 ]; then
+  log "SKIP before 06:00 — waiting for the calendar trigger"
+  echo "nothing sent: before 06:00"
+  exit 0
+fi
 
 # ---------------------------------------------------------------------------
 # Ask the selector what today is.

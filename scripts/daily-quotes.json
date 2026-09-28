@@ -384,7 +384,7 @@
       "body": "Дхарма — это сознательное действие, действие, соответствующее реальности момента."
     },
     "en": {
-      "title": "22. Plane of dharma  (Dharma-loka)",
+      "title": "22. Plane of dharma (Dharma-loka)",
       "body": "Conscious action is dharma—conscious action in accord with the reality of the moment."
     },
     "source": {
@@ -402,7 +402,7 @@
       "body": "Описания сверкающих ангелов и божеств можно найти в мифологиях всех народов."
     },
     "en": {
-      "title": "23. Celestial plane  (svarga-loka)",
+      "title": "23. Celestial plane (svarga-loka)",
       "body": "Shining angels and gods are mentioned everywhere in all mythologies."
     },
     "source": {
@@ -650,7 +650,7 @@
   {
     "id": "plan-37",
     "ru": {
-      "title": "37 Джняна (гьяна)",
+      "title": "37. Джняна (гьяна)",
       "body": "Игрок может реализовать свою мудрость, только получив опыт ясности сознания."
     },
     "en": {
@@ -684,6 +684,42 @@
     }
   },
   {
+    "id": "plan-39",
+    "ru": {
+      "title": "39. Апана-лока",
+      "body": "Апана буквально означает «направленный вниз», и эта энергия ответственна за выделение энергии из тела."
+    },
+    "en": {
+      "title": "39. Apana Loka",
+      "body": "Apana literally means \"downwards\" and this energy is responsible for the release of energy from the body."
+    },
+    "source": {
+      "plan": "plan_39",
+      "files": [
+        "packages/content/data/plans.ru.json",
+        "packages/content/data/plans.en.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-40",
+    "ru": {
+      "title": "40. Въяна-лока",
+      "body": "Въяна берет праническую энергию в легких и распределяет ее по всем системам тела."
+    },
+    "en": {
+      "title": "40. Vyana-loka",
+      "body": "Vyana takes pranic energy in the lungs and distributes it to all body systems."
+    },
+    "source": {
+      "plan": "plan_40",
+      "files": [
+        "packages/content/data/plans.ru.json",
+        "packages/content/data/plans.en.json"
+      ]
+    }
+  },
+  {
     "id": "plan-41",
     "ru": {
       "title": "41. Человеческий план (джана-лока)",
@@ -702,13 +738,31 @@
     }
   },
   {
+    "id": "plan-42",
+    "ru": {
+      "title": "42. План Агни (Агни-лока)",
+      "body": "Весь этот мир, наполненный многообразными существами и явлениями, включая и человека, рожден от Божественного Огня."
+    },
+    "en": {
+      "title": "42. Plan of Agni (Agni-loka)",
+      "body": "This whole world, filled with diverse beings and phenomena, including man, was born from the Divine Fire."
+    },
+    "source": {
+      "plan": "plan_42",
+      "files": [
+        "packages/content/data/plans.ru.json",
+        "packages/content/data/plans.en.json"
+      ]
+    }
+  },
+  {
     "id": "plan-43",
     "ru": {
       "title": "43. Рождение человека (манушъя-джанма)",
       "body": "Это рождение не регистрируется ни в родильном доме, ни в канцелярии."
     },
     "en": {
-      "title": "43. Birth of man (manushya janma) ",
+      "title": "43. Birth of man (manushya janma)",
       "body": "This birth is never registered in courthouses and hospitals."
     },
     "source": {
@@ -758,7 +812,7 @@
   {
     "id": "plan-46",
     "ru": {
-      "title": "46 Различение (вивека)",
+      "title": "46. Различение (вивека)",
       "body": "Это голос внутренней мудрости игрока, который позволяет ему отличать тонкое от грубого, видеть ноумен в каждом феномене."
     },
     "en": {
@@ -776,7 +830,7 @@
   {
     "id": "plan-47",
     "ru": {
-      "title": "47.План нейтральности (сарасвати)",
+      "title": "47. План нейтральности (сарасвати)",
       "body": "Конечная цель йоги — поднять эту энергию к седьмой чакре, расположенной на макушке головы."
     },
     "en": {
@@ -954,6 +1008,42 @@
     }
   },
   {
+    "id": "plan-57",
+    "ru": {
+      "title": "57. План газов (вайю-лока)",
+      "body": "Они становятся пранической энергией на физическом плане и дыханием жизни дышащих душ."
+    },
+    "en": {
+      "title": "57. Air plane (vayu loka)",
+      "body": "They become pranic energy on the physical plane and the breath of life of breathing souls."
+    },
+    "source": {
+      "plan": "plan_57",
+      "files": [
+        "packages/content/data/plans.ru.json",
+        "packages/content/data/plans.en.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-58",
+    "ru": {
+      "title": "58. План сияния (теджа-лока)",
+      "body": "В Упанишадах говорится о четырех состояниях сознания, или «Я»."
+    },
+    "en": {
+      "title": "58. Plan of Radiance (Teja Loka)",
+      "body": "The Upanishads speak of four states of consciousness, or \"I\"."
+    },
+    "source": {
+      "plan": "plan_58",
+      "files": [
+        "packages/content/data/plans.ru.json",
+        "packages/content/data/plans.en.json"
+      ]
+    }
+  },
+  {
     "id": "plan-59",
     "ru": {
       "title": "59. План реальности (сатья-лока)",
@@ -1068,7 +1158,7 @@
       "body": "В течение одного дыхания он видит рождение, развитие и последующее разрушение всего творения."
     },
     "en": {
-      "title": "65.  Plane of inner space (uranta-loka)",
+      "title": "65. Plane of inner space (uranta-loka)",
       "body": "He finds the evolution and dissolution of all creation within the space of a single breath."
     },
     "source": {
@@ -1130,6 +1220,24 @@
       "files": [
         "src/locales/ru/translation.json",
         "src/locales/en/translation.json"
+      ]
+    }
+  },
+  {
+    "id": "plan-69",
+    "ru": {
+      "title": "69. План Абсолюта (Брахма-лока)",
+      "body": "Укрепившиеся в истине обитают здесь, не испытывая страха перед последующим возвращением к исполнению кармических ролей."
+    },
+    "en": {
+      "title": "69. Plan of the Absolute (Brahma-loka)",
+      "body": "Those who are firmly rooted in the truth live here without fear of a subsequent return to fulfilling karmic roles."
+    },
+    "source": {
+      "plan": "plan_69",
+      "files": [
+        "packages/content/data/plans.ru.json",
+        "packages/content/data/plans.en.json"
       ]
     }
   },

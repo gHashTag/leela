@@ -1,0 +1,64 @@
+{
+  "appStoreAccessibilityNutritionLabels": {
+    "description": "Accessibility support declared for Leela Chakra Ai on the App Store product page.",
+    "device": "iPhone",
+    "labels": {
+      "voiceOver": {
+        "supported": true,
+        "evidence": [
+          "All interactive controls have accessibilityRole and accessibilityLabel.",
+          "Game board cells expose plane, cell number, and feature labels.",
+          "Dice, turn indicator, roll result, and win celebration are announced.",
+          "Modals use accessibilityViewIsModal and trap focus via onRequestClose."
+        ]
+      },
+      "largerText": {
+        "supported": true,
+        "evidence": [
+          "MAX_FONT_SCALE capped at 1.6 via src/utils/fontScale.ts.",
+          "Text component applies scaled fontSize/lineHeight to all headings.",
+          "Buttons, tabs, cards, and header adapt line counts at accessibility sizes.",
+          "Scrollable containers used throughout so large text remains reachable."
+        ]
+      },
+      "reducedMotion": {
+        "supported": true,
+        "evidence": [
+          "useReducedMotion hook listens to system setting.",
+          "Dice roll, WinCelebration particles, Gem movement, and BoardLegend modal respect Reduce Motion.",
+          "Turn indicator and roll announcement skip haptic/visual fade when enabled."
+        ]
+      },
+      "sufficientContrast": {
+        "supported": true,
+        "evidence": [
+          "High contrast theme available in Settings with black/yellow/white palette.",
+          "High contrast GameBoard uses #FFFFFF on #000000 and #000000 on #FFFF00.",
+          "Active BoardLegend symbol gets a black border in addition to color."
+        ]
+      },
+      "differentiateWithoutColor": {
+        "supported": true,
+        "evidence": [
+          "Game board cells announce snake head, arrow base, and final cell independently of color.",
+          "Current/previous/next cells differ by border/background, not only hue.",
+          "BoardLegend symbols differ by shape (circle, diamond, arrow, snake)."
+        ]
+      },
+      "darkInterface": {
+        "supported": true,
+        "evidence": [
+          "App supports system light/dark appearance via useColorScheme.",
+          "Theme selector allows explicit light/dark/system override."
+        ]
+      }
+    },
+    "notClaimed": [
+      "Voice Control: not yet tested end-to-end.",
+      "Captions: audio content is limited; no captions are provided.",
+      "Audio Descriptions: no video content requires descriptions."
+    ],
+    "auditDate": "2026-08-08",
+    "nextAudit": "2026-09-08"
+  }
+}
