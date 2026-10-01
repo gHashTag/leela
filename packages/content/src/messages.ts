@@ -956,7 +956,12 @@ const EN = {
   // The invoice itself. Telegram takes 1–32 characters of title and 1–255 of
   // description, and refuses the whole call rather than trimming.
   'pro.title': 'Leela — subscription',
-  'pro.description': 'Open every move in Leela for {days} days from payment.',
+  // Plural by the count, like `pro.tier`: a flat `{days} days` printed
+  // "182 дней" in Russian on the invoice itself.
+  'pro.description': {
+    one: 'Open every move in Leela for {count} day from payment.',
+    other: 'Open every move in Leela for {count} days from payment.',
+  },
   'pro.thanks': 'Thank you. The die stays open until {until}.',
   // The two ways a payment can arrive and not be recorded. Both say plainly
   // that money changed hands and that a refund is the way back, because the
@@ -989,26 +994,14 @@ const EN = {
   // The menu Telegram shows behind the `/` button. Short by necessity: it is a
   // list of one-liners in a popover, not documentation, and Telegram refuses a
   // description over 256 characters — refusing the whole menu, not the entry.
-  'menu.new': 'Open a table',
-  'menu.join': 'Take a seat',
-  'menu.start': 'Begin the game (host only)',
-  'menu.roll': 'Throw the die',
-  'menu.intention': 'Say what you are playing for',
-  'menu.report': 'Reflect on the square you stand on',
-  'menu.plan': 'Read a plan',
-  'menu.rules': 'The rules of the game, in chapters',
-  'menu.ask': 'Ask the companion about where you stand',
-  'menu.path': 'What you have written, and where',
-  'menu.returns': 'The squares that came back',
-  'menu.take': 'Take in a square somebody sent you',
-  'menu.save': 'Your path, as a file to keep',
+  'menu.start': 'Open the game',
+  // Not a menu entry any more: the sentence above the button that opens the
+  // mini app, sent once by `offerTheBoard` in `apps/bot/src/bot.ts`.
   'menu.board': 'Where everyone stands',
-  'menu.end': 'Clear the table',
-  'menu.quiet': 'Stop the daily word, or bring it back',
   // Only in the menu of a deployment that has named a price — see
   // `PAID_COMMANDS` in `apps/bot/src/commands.ts`. A dark deployment publishes
-  // the same seventeen entries it published before this key existed.
-  'menu.pro': 'Support the work, in Telegram Stars',
+  // only `/start` and `/help`.
+  'menu.pro': 'Subscription: prices and payment in Telegram Stars',
   'menu.terms': 'Terms for a Stars purchase',
   'menu.paysupport': 'Help with a Stars payment',
   'menu.help': 'What this bot can do',
@@ -1568,7 +1561,12 @@ const RU: Partial<Record<MessageKey, Message>> = {
   'pro.acceptButton': 'Я прочитал(а) и согласен(на) — продолжить',
   'pro.held': 'Игра открыта до {until}.',
   'pro.title': 'Лила — подписка',
-  'pro.description': 'Открывает все ходы в Лиле на {days} дней с момента оплаты.',
+  'pro.description': {
+    one: 'Открывает все ходы в Лиле на {count} день с момента оплаты.',
+    few: 'Открывает все ходы в Лиле на {count} дня с момента оплаты.',
+    many: 'Открывает все ходы в Лиле на {count} дней с момента оплаты.',
+    other: 'Открывает все ходы в Лиле на {count} дней с момента оплаты.',
+  },
   'pro.thanks': 'Спасибо. Кубик открыт до {until}.',
   'pro.notKept':
     'Платёж дошёл до Telegram, а записать его бот не смог. Ничего не потеряно, чего не вернуть: ' +
@@ -1586,23 +1584,9 @@ const RU: Partial<Record<MessageKey, Message>> = {
     'Возврат состоялся; дата, купленная этим платежом, здесь всё ещё считается.',
   'pro.refundFailed': 'Telegram отказал в возврате: {why}',
 
-  'menu.new': 'Открыть стол',
-  'menu.join': 'Занять место',
-  'menu.start': 'Начать игру (только ведущий)',
-  'menu.roll': 'Бросить кубик',
-  'menu.intention': 'Сказать, ради чего вы играете',
-  'menu.report': 'Написать о клетке, на которой стоите',
-  'menu.plan': 'Прочитать план',
-  'menu.rules': 'Правила игры, по главам',
-  'menu.ask': 'Спросить спутника о том, где вы стоите',
-  'menu.path': 'Что вы написали и где',
-  'menu.returns': 'Клетки, которые вернулись',
-  'menu.take': 'Принять клетку, которую вам прислали',
-  'menu.save': 'Ваш путь — файлом, который можно сохранить',
+  'menu.start': 'Открыть игру',
   'menu.board': 'Кто где стоит',
-  'menu.end': 'Закрыть стол',
-  'menu.quiet': 'Остановить ежедневное слово или вернуть его',
-  'menu.pro': 'Поддержать работу в Telegram Stars',
+  'menu.pro': 'Подписка: цены и оплата в Telegram Stars',
   'menu.terms': 'Условия покупки за Stars',
   'menu.paysupport': 'Помощь с оплатой Stars',
   'menu.help': 'Что умеет этот бот',

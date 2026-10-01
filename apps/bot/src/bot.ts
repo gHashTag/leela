@@ -1209,6 +1209,18 @@ export function createBot({
       }
     }
 
+    // The price before anything else, in a private chat of a priced deployment.
+    // Play moved to the mini app, so `/start` is where most players first meet
+    // this bot — and the first a player heard of the subscription used to be
+    // the paywall on the fourth move. Said here from the same `offerFor` that
+    // `/pro` and the paywall use, so the three cannot quote different prices.
+    if (isPrivate && stars) {
+      const held = await entitlements.subscribed(who.id, now());
+      await deliver(ctx, [
+        { text: offerFor(languageOf(ctx), stars, held?.until ?? null), broadcast: false },
+      ]);
+    }
+
     const room = await store.get(chatId);
     if (!room) {
       if (isPrivate) {
