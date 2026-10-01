@@ -38,6 +38,15 @@ And one more found on the way: the invoice said "на 182 дней" because
   stays: it is the line above the mini-app button.
 - `pro.description` is plural by count, like `pro.tier`.
 
+- `GET /api/prices` is public and read-only. It returns `{currency, freeMoves,
+  tiers[{id, days, stars}]}` from the same `offering(env)`. The owner's
+  business DM assistant (TRI-27, in `gHashTag/999-multibots-telegraf`) quoted
+  another product's token packs to a client asking about Leela, because it had
+  no way to read Leela's prices. `/api/subscription` answers only the mini app,
+  which needs an allowed origin and signed initData. A price is public and
+  this route carries nothing about any player. A dark deployment answers an
+  empty list.
+
 ## Not in scope
 
 - Prices themselves. They are unchanged.
@@ -45,6 +54,11 @@ And one more found on the way: the invoice said "на 182 дней" because
   is a deployment step (see `progress.md`).
 
 ## Checks
+
+- `apps/bot/tests/prices-anyone-can-read.test.ts`: for every environment
+  configuration, `/api/prices` must say exactly what the bot's own offer says.
+  It must answer any origin, read no entitlement, create no invoice, and refuse
+  every method except GET and HEAD.
 
 - `apps/bot/tests/start-says-the-price.test.ts`: a priced private `/start` must
   open with the offer in every translated language, for a new player and for a
