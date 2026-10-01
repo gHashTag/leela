@@ -53,16 +53,19 @@ const OPERATOR_ONLY = new Set(['refund']);
 const PAID = new Set(PAID_COMMANDS.map((one) => one.command));
 
 describe('every command the bot answers', () => {
-  it('is in the menu, or is one of the two kinds that must not be', () => {
+  it('is reachable — in the menu or the help — or is one of the two kinds that must not be', () => {
+    // The menu no longer carries the chat game: play moved to the mini app, and
+    // the sixteen chat commands live in `/help` alone. What this still catches
+    // is a registration nobody can find in either place.
     const inMenu = new Set(BOT_COMMANDS.map((one) => one.command));
+    const inHelp = new Set(offered(FALLBACK_LANGUAGE));
     const missing = answered.filter(
-      (name) => !inMenu.has(name) && !PAID.has(name) && !OPERATOR_ONLY.has(name),
+      (name) =>
+        !inMenu.has(name) && !inHelp.has(name) && !PAID.has(name) && !OPERATOR_ONLY.has(name),
     );
 
     expect(answered.length, 'no handlers found — the reader is wrong').toBeGreaterThan(0);
-    // A command classified as neither still fails here, which is the point: a
-    // registration nobody has said anything about is the thing being caught.
-    expect(missing, 'answered but not offered in the menu').toEqual([]);
+    expect(missing, 'answered and offered nowhere').toEqual([]);
   });
 
   it('is in the help text, except the help text itself', () => {
@@ -76,6 +79,20 @@ describe('every command the bot answers', () => {
     expect(missing, 'answered but not in the help text').toEqual([]);
     expect(listed.has('help'), 'the help text lists itself').toBe(false);
     expect(BOT_COMMANDS.some((one) => one.command === 'help')).toBe(true);
+  });
+});
+
+describe('the menu, now that play is in the mini app', () => {
+  it('offers a way in and a way to read the help, and no way to play in the chat', () => {
+    // Every chat-game command the help text names is a way to play in the chat.
+    // None of them belongs behind the `/` button any more; `/start` does, because
+    // it opens the game and says the price, and `/help` does, because a menu that
+    // hides the way to read the help is the trap the menu was made to close.
+    const chatGame = new Set(offered(FALLBACK_LANGUAGE));
+    const standing = BOT_COMMANDS.map((one) => one.command);
+
+    expect(standing).toEqual(['start', 'help']);
+    expect(standing.filter((name) => name !== 'start' && chatGame.has(name))).toEqual([]);
   });
 });
 

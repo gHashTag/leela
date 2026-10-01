@@ -34,7 +34,7 @@ import {
   type LanguageModel,
   type Message,
 } from '@leela/ai';
-import { isLanguage, type Language } from '@leela/content';
+import { FREE_MOVES, isLanguage, type Language } from '@leela/content';
 import type { GameState } from '@leela/engine';
 import type { Report } from '@leela/journal';
 import type { Vouched } from './vouched';
@@ -457,6 +457,41 @@ function answering({
     // this exception path- and method-exact: the model and every mutation still
     // require an explicitly allowed origin.
     const signedGameRead = path === '/api/game' && request.method === 'GET' && origin === '';
+
+    /*
+     * The price list, to anybody, read from the same `offering(env)` the bot's
+     * `/pro`, the paywall and the mini app quote. `specs/030`: an assistant
+     * answering for this bot in the owner's private messages quoted another
+     * product's token packs, because it could not read these and had none of
+     * its own. A price is public by nature and this carries nothing about any
+     * player, so it needs no origin and no signature; a dark deployment
+     * answers an empty list rather than inventing one.
+     */
+    if (path === '/api/prices') {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return new Response(JSON.stringify({ error: 'GET only' }), {
+          status: 405,
+          headers: { 'content-type': 'application/json', allow: 'GET, HEAD' },
+        });
+      }
+      const tiers = payments?.tiers ?? [];
+      return new Response(
+        JSON.stringify({
+          currency: 'XTR',
+          freeMoves: tiers.length > 0 ? FREE_MOVES : null,
+          tiers: tiers.map(({ id, days, stars }) => ({ id, days, stars })),
+        }),
+        {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            'access-control-allow-origin': '*',
+            'cache-control': 'public, max-age=300',
+          },
+        },
+      );
+    }
+
     if (!paymentRequest && path !== '/api/ask' && path !== '/api/game' && path !== '/api/reports' && path !== '/api/roll') {
       return refuse(404, 'no such route');
     }

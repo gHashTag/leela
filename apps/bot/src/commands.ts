@@ -258,23 +258,17 @@ export interface BotCommand {
   readonly describedBy: MessageKey;
 }
 
+/**
+ * The standing menu: only what a player needs now that play is in the mini app.
+ *
+ * It held all sixteen chat-game commands while the chat was where the game was
+ * played. Play moved to the mini app, and a menu of sixteen ways to play in the
+ * chat sent players away from it. The chat commands are still answered — a
+ * table in a group still plays there — and `/help` still names every one of
+ * them; `menu.test.ts` holds both to the handlers.
+ */
 export const BOT_COMMANDS: readonly BotCommand[] = [
-  { command: 'new', describedBy: 'menu.new' },
-  { command: 'join', describedBy: 'menu.join' },
   { command: 'start', describedBy: 'menu.start' },
-  { command: 'roll', describedBy: 'menu.roll' },
-  { command: 'intention', describedBy: 'menu.intention' },
-  { command: 'report', describedBy: 'menu.report' },
-  { command: 'plan', describedBy: 'menu.plan' },
-  { command: 'rules', describedBy: 'menu.rules' },
-  { command: 'ask', describedBy: 'menu.ask' },
-  { command: 'path', describedBy: 'menu.path' },
-  { command: 'returns', describedBy: 'menu.returns' },
-  { command: 'take', describedBy: 'menu.take' },
-  { command: 'save', describedBy: 'menu.save' },
-  { command: 'board', describedBy: 'menu.board' },
-  { command: 'end', describedBy: 'menu.end' },
-  { command: 'quiet', describedBy: 'menu.quiet' },
   { command: 'help', describedBy: 'menu.help' },
 ];
 

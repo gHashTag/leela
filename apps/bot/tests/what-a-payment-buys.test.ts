@@ -337,6 +337,22 @@ describe('the invoice a price produces', () => {
     expect(texts().join('\n')).toContain('/pro year');
   });
 
+  it('names the days the way the price list does, for every count a tier can hold', () => {
+    // The invoice printed "182 дней" while the price list beside it said
+    // "182 дня": one sentence was plural by count and the other was not. The
+    // word after the number has to agree between the two for every count.
+    const wordAfter = (text: string, count: number) =>
+      text.match(new RegExp(`(?:^|\\s)${count} (\\S+)`))?.[1];
+
+    for (const language of translatedLanguages()) {
+      for (let count = 1; count <= 400; count += 1) {
+        const invoice = messageFor(language, 'pro.description', { count });
+        const listed = messageFor(language, 'pro.tier', { command: '/pro x', count, stars: 1 });
+        expect(wordAfter(invoice, count), `${language}/${count}`).toBe(wordAfter(listed, count));
+      }
+    }
+  });
+
   it('fits inside what Telegram accepts, in every language with a catalogue', () => {
     // Telegram refuses the whole call for an over-long title or description,
     // not the field — so a sentence that grew in translation would take the
@@ -353,7 +369,7 @@ describe('the invoice a price produces', () => {
         expect(invoice.description.length, `${language} description`).toBeGreaterThan(0);
         expect(invoice.description, `${language} description`).toContain(String(tier.days));
         expect(
-          messageFor(language, 'pro.description', { days: tier.days }).length,
+          messageFor(language, 'pro.description', { count: tier.days }).length,
           `${language} description unsliced`,
         ).toBeLessThanOrEqual(255);
 

@@ -321,7 +321,7 @@ export function invoiceFor(
   // `stars.test.ts` holds every translated language to fitting without this.
   return {
     title: messageFor(language, 'pro.title').slice(0, MAX_INVOICE_TITLE),
-    description: messageFor(language, 'pro.description', { days: tier.days }).slice(
+    description: messageFor(language, 'pro.description', { count: tier.days }).slice(
       0,
       MAX_INVOICE_DESCRIPTION,
     ),
