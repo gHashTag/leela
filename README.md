@@ -274,7 +274,7 @@ cd packages/engine && bun test
 | `@leela/webgl` | 715 | the board in three dimensions, in a browser, on the same rules the apps play |
 | everything else | — | not yet ported |
 
-5437 tests, run on every push by [CI](.github/workflows/ci.yml), which also
+5446 tests, run on every push by [CI](.github/workflows/ci.yml), which also
 builds the bot's image and starts it, and reports fields that are written and
 never read, and exports with no caller:
 
