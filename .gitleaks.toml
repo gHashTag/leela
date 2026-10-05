@@ -1,0 +1,28 @@
+# Secret gate for gHashTag/leela. Shared rules: canonical copy in gHashTag/t27 .gitleaks.toml (PR #6433).
+# Other gHashTag repos copy the [[rules]] block below; change it here first.
+#
+# Three layers, each catching what the one before missed:
+#   1. lefthook pre-commit  -> gitleaks scans staged changes (lefthook.yml)
+#   2. lefthook pre-push    -> gitleaks scans commits not yet on any remote
+#   3. CI secret-scan       -> gitleaks scans the PR range; cannot be skipped
+#                              with --no-verify (.github/workflows/secret-scan.yml)
+# Secrets belong in the environment or in gitignored files, never in the tree.
+
+[extend]
+useDefault = true
+
+# The default rules miss Wi-Fi passphrases and other plain passwords.
+[[rules]]
+id = "hardcoded-password-literal"
+description = "Hardcoded password/passphrase string literal (e.g. Wi-Fi credentials in firmware)"
+regex = '''(?i)\b[a-z_]*(passphrase|password|passwd|wifi_?pass|psk)[a-z_]*\b["']?\s*[:=]\s*["']([^"'<>${}\s]{6,})["']'''
+secretGroup = 2
+keywords = ["passphrase", "password", "passwd", "wifi", "psk"]
+[[rules.allowlists]]
+regexTarget = "match"
+regexes = ['''(?i)(your|example|changeme|placeholder|dummy|test|xxx|\*\*\*)''']
+
+[[allowlists]]
+description = "Verified non-secret line: npm package name in the lockfile"
+regexTarget = "line"
+regexes = ['''"@inquirer/password": "\^[0-9.]+"''']

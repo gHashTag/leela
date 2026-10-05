@@ -1,0 +1,14 @@
+# Git hooks for leela. Install once per clone: `lefthook install`
+# Requires gitleaks (`brew install gitleaks`). A missing gitleaks fails the
+# hook on purpose: the secret gate must not silently turn itself off.
+# Rules live in .gitleaks.toml; the CI twin is .github/workflows/secret-scan.yml.
+
+pre-commit:
+  commands:
+    secret-gate:
+      run: gitleaks git --staged --no-banner --redact --config .gitleaks.toml .
+
+pre-push:
+  commands:
+    secret-gate:
+      run: gitleaks git --no-banner --redact --config .gitleaks.toml --log-opts="HEAD --not --remotes" .
