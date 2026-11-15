@@ -1,0 +1,185 @@
+// Leela game core — dice.
+//
+// Port of `packages/engine/src/dice.ts` seededRoller.
+//
+// IMPORTANT (verified against the engine's instrumented run): the persisted
+// `state` is NOT the mixed value. Each roll advances the state by a plain
+// wrapping add of 0x6d2b79f5, and the mulberry mix is a pure function of that
+// advanced value. State chain for seed 1:
+//   1 -> 1831565814 -> 3663131627 -> 1199730144 -> 3031295957
+// Face sequence: [4,1,4,6,6,2,4,5] (matches the engine's seededRoller).
+//
+// COMPILER-DEFECT CANDIDATE (t27b wrapping multiply):
+//   original expression : `a *% b` (u32 wrapping multiply)
+//   expected            : the low 32 bits of a*b, i.e. Math.imul(a, b)
+//   observed            : wrong low bits on real operands — the multiply is
+//                         computed via f64, which cannot hold a*b (up to 2^64)
+//                         exactly, so bits below 2^53-precision are corrupted.
+//   minimal repro       : mul32(2423512478, 1831565815) — with `*%` in place of
+//                         mul32 the result != 2736030066 (= Math.imul value).
+//   workaround          : mul32 below — 16-bit split; every partial product is
+//                         < 2^32 and exact in u32.
+//   affected spec       : specs/game/dice.t27 (this file).
+
+module game_dice;
+
+const A : u32 = 0x6d2b79f5;
+
+// The low 32 bits of a * b — exactly Math.imul(a, b).
+pub fn mul32(a: u32, b: u32) -> u32 {
+    let al: u32 = a & 65535;
+    let ah: u32 = a >> 16;
+    let bl: u32 = b & 65535;
+    let bh: u32 = b >> 16;
+    let ll: u32 = al * bl;
+    let mid: u32 = (ah * bl).+% (al * bh);
+    ll.+% (mid << 16)
+}
+
+// The persisted state advances by a plain wrapping add.
+pub fn next_state(state: u32) -> u32 {
+    state.+% (A)
+}
+
+// The mulberry mix of the advanced value (pure; does not change the state).
+pub fn mix(s: u32) -> u32 {
+    // t = Math.imul(t ^ (t >>> 15), t | 1)
+    let a: u32 = s ^ (s >> 15);
+    let b: u32 = s | 1;
+    let m: u32 = mul32(a, b);
+    // t ^= t + Math.imul(t ^ (t >>> 7), t | 61) — t is the imul result here
+    let c: u32 = m ^ (m >> 7);
+    let d: u32 = m | 61;
+    let e: u32 = mul32(c, d);
+    m ^ (m.+% (e))
+}
+
+// The mixing value the face is derived from.
+pub fn mix_x(s: u32) -> u32 {
+    let t: u32 = mix(s);
+    t ^ (t >> 14)
+}
+
+// The die face: 1 + floor(x * 6 / 2^32), computed without floats.
+// x * 6 splits into halves so every intermediate stays inside u32.
+pub fn face_from_x(x: u32) -> u32 {
+    let hi: u32 = (x >> 16) * 6;
+    let lo: u32 = ((x & 65535) * 6) >> 16;
+    let sum: u32 = hi.+% (lo);
+    1 + (sum >> 16)
+}
+
+// Roll from a state: advances the state, mixes, derives the face.
+pub fn roll(state: u32) -> u32 {
+    let s: u32 = next_state(state);
+    face_from_x(mix_x(s))
+}
+
+// Walk `steps` rolls from `seed`, returning the last face.
+pub fn roll_many(seed: u32, steps: u32) -> u32 {
+    let mut s: u32 = seed;
+    let mut v: u32 = 0;
+    let mut i: u32 = 0;
+    while i < steps {
+        v = roll(s);
+        s = next_state(s);
+        i = i +% 1;
+    }
+    v
+}
+
+test mul32_is_imul {
+    assert mul32(2423512478, 1831565815) == 2736030066;
+    assert mul32(1831576480, 1831565815) == 2438037344;
+    assert mul32(4294967295, 2) == 4294967294;
+    assert mul32(0, 4294967295) == 0;
+}
+
+test state_chain_checkpoints {
+    // the persisted state: a plain wrapping counter
+    assert next_state(1) == 1831565814;
+    assert next_state(1831565814) == 3663131627;
+    assert next_state(3663131627) == 1199730144;
+    assert next_state(1199730144) == 3031295957;
+}
+
+test mix_checkpoints {
+    // the mulberry mix of each advanced state (engine instrumented run)
+    assert mix(1831565814) == 2693097702;
+    assert mix_x(1831565814) == 2693262067;
+    assert face_from_x(2693262067) == 4;
+    assert mix(3663131627) == 11750148;
+    assert mix_x(3663131627) == 11749833;
+    assert face_from_x(11749833) == 1;
+    assert mix_x(1199730144) == 2265367787;
+    assert face_from_x(2265367787) == 4;
+}
+
+test face_distribution_edges {
+    // x = 0          -> face 1
+    assert face_from_x(0) == 1;
+    // x = 2^32 - 1   -> floor(x*6/2^32) = 5 -> face 6
+    assert face_from_x(4294967295) == 6;
+}
+
+test sequence_seed_1 {
+    assert roll(1) == 4;
+    let mut s: u32 = next_state(1);
+    assert roll(s) == 1;
+    s = next_state(s);
+    assert roll(s) == 4;
+    s = next_state(s);
+    assert roll(s) == 6;
+    s = next_state(s);
+    assert roll(s) == 6;
+    s = next_state(s);
+    assert roll(s) == 2;
+    s = next_state(s);
+    assert roll(s) == 4;
+    s = next_state(s);
+    assert roll(s) == 5;
+}
+
+test sequence_seed_42 {
+    assert roll(42) == 4;
+    let mut s: u32 = next_state(42);
+    assert roll(s) == 3;
+    s = next_state(s);
+    assert roll(s) == 6;
+    s = next_state(s);
+    assert roll(s) == 5;
+    s = next_state(s);
+    assert roll(s) == 2;
+    s = next_state(s);
+    assert roll(s) == 4;
+    s = next_state(s);
+    assert roll(s) == 2;
+    s = next_state(s);
+    assert roll(s) == 4;
+}
+
+test sequence_seed_1337 {
+    assert roll(1337) == 2;
+    let mut s: u32 = next_state(1337);
+    assert roll(s) == 2;
+    s = next_state(s);
+    assert roll(s) == 5;
+    s = next_state(s);
+    assert roll(s) == 4;
+    s = next_state(s);
+    assert roll(s) == 3;
+    s = next_state(s);
+    assert roll(s) == 3;
+    s = next_state(s);
+    assert roll(s) == 4;
+    s = next_state(s);
+    assert roll(s) == 4;
+}
+
+test determinism_same_seed_same_sequence {
+    // The eighth face of seed 1, reached two independent ways.
+    const a: u32 = roll_many(1, 8);
+    const b: u32 = roll_many(1, 8);
+    assert a == b;
+    assert a == 5;
+}

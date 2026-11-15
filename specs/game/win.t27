@@ -1,0 +1,110 @@
+// Leela game core — win.
+//
+// Port of `hasWon` from `packages/engine/src/game.ts:213`.
+//
+//   hasWon(state) = loka == WIN_LOKA && is_finished
+//                   && previous_loka !== 0 && previous_loka !== loka
+//
+// WIN_LOKA = 68. The previous_loka guards exist for migrated players: a fresh
+// player has previous_loka = 0, and a migrated one has it equal to their plan
+// (stateFromLegacy sets the two the same when the export carried no history),
+// which reads as "has not moved yet" and must not read as "has won".
+//
+// DEVIATION NOTE (engine over order): the brief asked for
+// `previous=66, current=68 -> not win`, but 66 + 2 = 68 is an exact arrival
+// and the engine's hasWon returns WIN for it. The engine is the authority
+// (constitution: read the sources); the test below asserts the engine's
+// behaviour and the brief's case is covered by the is_finished and
+// previous_loka = 0 guards instead.
+
+module game_win;
+
+pub const WIN_LOKA : u32 = 68;
+
+// The win predicate. `finished` = 1 when the state's is_finished flag is set.
+pub fn is_win(loka: u32, finished: u32, previous_loka: u32) -> u32 {
+    if loka == WIN_LOKA {
+        if finished == 1 {
+            if previous_loka != 0 {
+                if previous_loka != loka { 1 } else { 0 }
+            } else {
+                0
+            }
+        } else {
+            0
+        }
+    } else {
+        0
+    }
+}
+
+// The event code: 3 = win, everything else is reported by move.t27 codes.
+pub fn code_if_win(loka: u32, finished: u32, previous_loka: u32) -> u32 {
+    if is_win(loka, finished, previous_loka) == 1 { 3 } else { 0 }
+}
+
+// ---- contract tests --------------------------------------------------
+
+test fresh_player_previous_zero_not_win {
+    // a fresh player: previous_loka = 0, sitting on 68, finished flag set
+    assert is_win(68, 1, 0) == 0;
+    assert code_if_win(68, 1, 0) == 0;
+}
+
+test arrow_54_68_is_win {
+    // lifted by the 54 -> 68 arrow: previous is 54
+    assert is_win(68, 1, 54) == 1;
+    assert code_if_win(68, 1, 54) == 3;
+}
+
+test exact_step_67_plus_1_is_win {
+    assert is_win(68, 1, 67) == 1;
+    assert code_if_win(68, 1, 67) == 3;
+}
+
+test exact_step_66_plus_2_is_win {
+    // engine: 66 + 2 = 68 is an exact arrival -> WIN (see deviation note)
+    assert is_win(68, 1, 66) == 1;
+}
+
+test snake_72_51_is_not_win {
+    // the pawn at 71 threw a 1, landed on 72, the snake pulled it to 51
+    assert is_win(51, 0, 71) == 0;
+    // and even if a state recorded loka 51 with a finished flag, 51 != 68
+    assert is_win(51, 1, 71) == 0;
+}
+
+test migrated_player_on_68_with_history_wins {
+    // stateFromLegacy carries previous_loka = plan; a migrated player who has
+    // genuinely moved to 68 has previous != 0 and != 68
+    assert is_win(68, 1, 54) == 1;
+    assert is_win(68, 1, 20) == 1;
+}
+
+test migrated_player_on_68_without_history_not_win {
+    // the export carried no history: previous_loka set equal to loka
+    assert is_win(68, 1, 68) == 0;
+    // and the fresh-player case
+    assert is_win(68, 1, 0) == 0;
+}
+
+test arrow_applied_once_is_deterministic {
+    // re-evaluating the same state gives the same verdict
+    const a: u32 = is_win(68, 1, 54);
+    const b: u32 = is_win(68, 1, 54);
+    assert a == 1;
+    assert a == b;
+}
+
+test not_68_is_never_win {
+    assert is_win(67, 1, 66) == 0;
+    assert is_win(69, 1, 68) == 0;
+    assert is_win(51, 1, 50) == 0;
+    assert is_win(72, 1, 71) == 0;
+}
+
+test unfinished_flag_blocks_win {
+    // a player standing on 68 with the flag not yet set is not a winner
+    assert is_win(68, 0, 67) == 0;
+    assert is_win(68, 0, 54) == 0;
+}
