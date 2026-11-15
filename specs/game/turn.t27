@@ -1,0 +1,180 @@
+// Leela game core — turn.
+//
+// Port of `handleConsecutiveSixes` from `packages/engine/src/rules.ts`.
+//
+// Two shipped generations disagree about what a six means:
+//   legacy-mobile (threeSixesReset = false): a six always grants an extra
+//     throw; the consecutive counter grows but nothing consumes it.
+//   neuroleela (threeSixesReset = true, the default): the counter grows; the
+//     THIRD six in a row sends the pawn back to where the run began
+//     (SIXES_TO_RESET = 3) and zeroes the counter.
+//
+// Pure functions: roll, counters and flags in; new counters and position out.
+// No Firebase, no paywall, no UI.
+
+module game_turn;
+
+pub const SIX : u32 = 6;
+pub const SIXES_TO_RESET : u32 = 3;
+
+// `reset_enabled` = 1 for the neuroleela ruleset, 0 for legacy-mobile.
+
+// New consecutive-six counter after a roll.
+pub fn new_consecutive(roll: u32, consecutive: u32, reset_enabled: u32) -> u32 {
+    if roll != SIX { 0 }
+    else {
+        let grown: u32 = consecutive +% 1;
+        if reset_enabled == 1 {
+            if grown == SIXES_TO_RESET { 0 } else { grown }
+        } else {
+            grown
+        }
+    }
+}
+
+// New position after a roll (before the board's snakes/arrows are applied).
+// A third six under neuroleela sends the pawn back to where the run began.
+pub fn new_position(roll: u32, current_loka: u32, consecutive: u32,
+                    before_three_sixes: u32, reset_enabled: u32) -> u32 {
+    if roll != SIX { current_loka +% roll }
+    else {
+        let grown: u32 = consecutive +% 1;
+        if reset_enabled == 1 {
+            if grown == SIXES_TO_RESET { before_three_sixes }
+            else { current_loka +% roll }
+        } else {
+            current_loka +% roll
+        }
+    }
+}
+
+// Where the current run began. Only the first six of a run records it.
+pub fn new_before_three_sixes(roll: u32, current_loka: u32, consecutive: u32,
+                              before_three_sixes: u32, reset_enabled: u32) -> u32 {
+    if roll != SIX { before_three_sixes }
+    else {
+        let grown: u32 = consecutive +% 1;
+        if reset_enabled == 1 {
+            if grown == SIXES_TO_RESET { before_three_sixes }
+            else {
+                if consecutive == 0 { current_loka } else { before_three_sixes }
+            }
+        } else {
+            if consecutive == 0 { current_loka } else { before_three_sixes }
+        }
+    }
+}
+
+// Whether the roll keeps the turn with the player (legacy: every six does,
+// there is no reset; neuro: never — the turn always passes).
+pub fn grants_extra_turn(roll: u32, reset_enabled: u32) -> u32 {
+    if reset_enabled == 0 {
+        if roll == SIX { 1 } else { 0 }
+    } else {
+        0
+    }
+}
+
+// Whether this roll was the third six that burned the run (neuro only).
+pub fn is_reset(roll: u32, consecutive: u32, reset_enabled: u32) -> u32 {
+    if reset_enabled == 1 {
+        if roll == SIX {
+            if consecutive +% 1 == SIXES_TO_RESET { 1 } else { 0 }
+        } else {
+            0
+        }
+    } else {
+        0
+    }
+}
+
+// ---- contract tests --------------------------------------------------
+// LEG = legacy-mobile (reset_enabled = 0); NEU = neuroleela (reset_enabled = 1).
+// Pawn sits at 40 in the examples; run-start marker 0 means "no run yet".
+
+test legacy_first_six_grants_extra_turn {
+    assert grants_extra_turn(6, 0) == 1;
+    assert new_consecutive(6, 0, 0) == 1;
+    // the run's start is recorded on the first six
+    assert new_before_three_sixes(6, 40, 0, 0, 0) == 40;
+    // position advances normally
+    assert new_position(6, 40, 0, 0, 0) == 46;
+}
+
+test legacy_second_six_grants_extra_turn {
+    assert grants_extra_turn(6, 0) == 1;
+    assert new_consecutive(6, 1, 0) == 2;
+    // the start marker is kept from the first six
+    assert new_before_three_sixes(6, 46, 1, 40, 0) == 40;
+    assert new_position(6, 46, 1, 40, 0) == 52;
+}
+
+test legacy_third_six_still_grants_extra_turn {
+    // legacy has no three-sixes rule at all
+    assert grants_extra_turn(6, 0) == 1;
+    assert new_consecutive(6, 2, 0) == 3;
+    assert is_reset(6, 2, 0) == 0;
+    assert new_before_three_sixes(6, 52, 2, 40, 0) == 40;
+    assert new_position(6, 52, 2, 40, 0) == 58;
+}
+
+test legacy_non_six_no_extra_turn {
+    assert grants_extra_turn(5, 0) == 0;
+    assert grants_extra_turn(1, 0) == 0;
+    // and the counter resets
+    assert new_consecutive(5, 3, 0) == 0;
+}
+
+test neuro_first_six_counts_one {
+    assert new_consecutive(6, 0, 1) == 1;
+    assert is_reset(6, 0, 1) == 0;
+    // run start recorded
+    assert new_before_three_sixes(6, 40, 0, 0, 1) == 40;
+    assert new_position(6, 40, 0, 0, 1) == 46;
+}
+
+test neuro_second_six_counts_two {
+    assert new_consecutive(6, 1, 1) == 2;
+    assert is_reset(6, 1, 1) == 0;
+    // marker kept
+    assert new_before_three_sixes(6, 46, 1, 40, 1) == 40;
+    assert new_position(6, 46, 1, 40, 1) == 52;
+}
+
+test neuro_third_six_resets {
+    // the counter zeroes and the pawn goes back to where the run began
+    assert new_consecutive(6, 2, 1) == 0;
+    assert is_reset(6, 2, 1) == 1;
+    assert new_position(6, 52, 2, 40, 1) == 40;
+    assert new_before_three_sixes(6, 52, 2, 40, 1) == 40;
+}
+
+test neuro_non_six_zeroes_counter {
+    assert new_consecutive(5, 2, 1) == 0;
+    assert new_consecutive(1, 2, 1) == 0;
+    // the marker is simply carried over
+    assert new_before_three_sixes(5, 52, 2, 40, 1) == 40;
+    // and the position advances by the roll
+    assert new_position(5, 52, 2, 40, 1) == 57;
+}
+
+test two_sixes_then_non_six {
+    // six, six
+    let c1: u32 = new_consecutive(6, 0, 1);
+    assert c1 == 1;
+    let c2: u32 = new_consecutive(6, c1, 1);
+    assert c2 == 2;
+    // then a non-six zeroes it
+    assert new_consecutive(3, c2, 1) == 0;
+}
+
+test legacy_two_sixes_then_non_six {
+    let c1: u32 = new_consecutive(6, 0, 0);
+    assert c1 == 1;
+    let c2: u32 = new_consecutive(6, c1, 0);
+    assert c2 == 2;
+    assert new_consecutive(3, c2, 0) == 0;
+    // legacy extra turn was granted twice, then not on the three
+    assert grants_extra_turn(6, 0) == 1;
+    assert grants_extra_turn(3, 0) == 0;
+}

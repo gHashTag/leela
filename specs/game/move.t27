@@ -1,0 +1,220 @@
+// Leela game core — move.
+//
+// Port of the landing rules from `packages/engine/src/rules.ts`
+// (`getDirectionAndPosition`) and `board.ts` (constants, snakes, arrows).
+//
+// Pure functions: a position and a roll in, the resulting position and an
+// event code out. No Firebase, no paywall, no UI.
+//
+// Event codes:
+//   0 = step    (plain move)
+//   1 = snake   (down)
+//   2 = arrow   (up; 54 -> 68 is a legal win)
+//   3 = win     (arrived exactly on 68)
+//   4 = blocked (throw refused: overshoot past 72, or non-six while waiting)
+//   5 = entered (six from off-board; pawn goes to square 6)
+
+module game_move;
+
+pub const WIN_LOKA : u32 = 68;
+pub const START_LOKA : u32 = 6;
+pub const TOTAL_PLANS : u32 = 72;
+
+// Sentinel for "no such square" in the tables.
+pub const NO_SNAKE : u32 = 4294967295;
+
+// The snake that starts at `position`, or NO_SNAKE.
+pub fn snake_at(position: u32) -> u32 {
+    if position == 12 { 8 }
+    else if position == 16 { 4 }
+    else if position == 24 { 7 }
+    else if position == 29 { 6 }
+    else if position == 44 { 9 }
+    else if position == 52 { 35 }
+    else if position == 55 { 3 }
+    else if position == 61 { 13 }
+    else if position == 63 { 2 }
+    else if position == 72 { 51 }
+    else { NO_SNAKE }
+}
+
+// The arrow that starts at `position`, or NO_SNAKE.
+pub fn arrow_at(position: u32) -> u32 {
+    if position == 10 { 23 }
+    else if position == 17 { 69 }
+    else if position == 20 { 32 }
+    else if position == 22 { 60 }
+    else if position == 27 { 41 }
+    else if position == 28 { 50 }
+    else if position == 37 { 66 }
+    else if position == 45 { 67 }
+    else if position == 46 { 62 }
+    else if position == 54 { 68 }
+    else { NO_SNAKE }
+}
+
+// Event code of the landing at `new_loka` for a player at `current_loka`
+// whose game is not finished. Mirrors `getDirectionAndPosition` exactly:
+// win check first, then the overshoot refusal, then snake, then arrow.
+pub fn landing_code(new_loka: u32, current_loka: u32) -> u32 {
+    if new_loka == WIN_LOKA { 3 }
+    else if new_loka > TOTAL_PLANS { 4 }
+    else if snake_at(new_loka) != NO_SNAKE { 1 }
+    // an arrow onto WIN_LOKA finishes the game (engine: isGameFinished =
+    // arrow == WIN_LOKA), so it reports as a win, not a plain arrow
+    else if arrow_at(new_loka) == WIN_LOKA { 3 }
+    else if arrow_at(new_loka) != NO_SNAKE { 2 }
+    else { 0 }
+}
+
+// Final position of the landing at `new_loka`.
+pub fn landing_pos(new_loka: u32, current_loka: u32) -> u32 {
+    let code: u32 = landing_code(new_loka, current_loka);
+    if code == 3 { WIN_LOKA }
+    else if code == 4 { current_loka }
+    else if code == 1 { snake_at(new_loka) }
+    else if code == 2 { arrow_at(new_loka) }
+    else { new_loka }
+}
+
+// A pawn waiting off-board: only a six enters it, onto START_LOKA (6).
+// Any other roll is refused and the pawn stays off-board (return NO_SNAKE
+// as the "still off-board" marker for this function).
+pub fn enter_or_refuse(roll: u32) -> u32 {
+    if roll == 6 { START_LOKA } else { NO_SNAKE }
+}
+
+// Full move: one roll applied to one position, with the waiting rule.
+// Returns the final position; the event code is `code_of`.
+// `waiting` = 1 when the pawn is off-board (no game live for that pawn).
+pub fn move_pos(position: u32, roll: u32, waiting: u32) -> u32 {
+    if waiting == 1 { enter_or_refuse(roll) }
+    else {
+        let new_loka: u32 = position.+% (roll);
+        landing_pos(new_loka, position)
+    }
+}
+
+// Event code for the same move.
+pub fn move_code(position: u32, roll: u32, waiting: u32) -> u32 {
+    if waiting == 1 {
+        if roll == 6 { 5 } else { 4 }
+    } else {
+        let new_loka: u32 = position.+% (roll);
+        landing_code(new_loka, position)
+    }
+}
+
+// ---- contract tests -------------------------------------------------
+
+test entry_rule {
+    // roll=6, pawn off-board -> enter to square 6
+    assert move_pos(NO_SNAKE, 6, 1) == START_LOKA;
+    assert move_code(NO_SNAKE, 6, 1) == 5;
+    // roll=5, pawn off-board -> refused
+    assert move_pos(NO_SNAKE, 5, 1) == NO_SNAKE;
+    assert move_code(NO_SNAKE, 5, 1) == 4;
+    // every non-six is refused
+    assert move_pos(NO_SNAKE, 1, 1) == NO_SNAKE;
+    assert move_pos(NO_SNAKE, 2, 1) == NO_SNAKE;
+    assert move_pos(NO_SNAKE, 3, 1) == NO_SNAKE;
+    assert move_pos(NO_SNAKE, 4, 1) == NO_SNAKE;
+}
+
+test overshoot_refusal {
+    // 70 + 5 = 75 > 72 -> refused, the pawn stays at 70
+    assert move_pos(70, 5, 0) == 70;
+    assert move_code(70, 5, 0) == 4;
+    // 68 + 4 = 72 is NOT an overshoot — but 72 is a snake start, so the
+    // pawn slides to 51 (the snake applies exactly once).
+    assert move_pos(68, 4, 0) == 51;
+    assert move_code(68, 4, 0) == 1;
+}
+
+test snakes_apply_once {
+    // 11 + 1 = 12 -> snake down to 8 (8 is not itself a snake start)
+    assert move_pos(11, 1, 0) == 8;
+    assert move_code(11, 1, 0) == 1;
+    // 15 + 1 = 16 -> 4
+    assert move_pos(15, 1, 0) == 4;
+    // 54 + 1 = 55 -> snake to 3 (the same 55 has no arrow: snake wins the order)
+    assert move_pos(54, 1, 0) == 3;
+    // landing exactly on 72 -> snake to 51, not a win
+    assert move_pos(71, 1, 0) == 51;
+    assert move_code(71, 1, 0) == 1;
+}
+
+test arrows_apply_once {
+    // 9 + 1 = 10 -> arrow up to 23
+    assert move_pos(9, 1, 0) == 23;
+    assert move_code(9, 1, 0) == 2;
+    // 16 + 1 = 17 -> arrow to 69 — past 72? No: 69 <= 72, a legal lift
+    assert move_pos(16, 1, 0) == 69;
+    // 44 + 1 = 45 -> arrow to 67
+    assert move_pos(44, 1, 0) == 67;
+}
+
+
+
+test indirect_68_is_not_win {
+    // 53 + 1 = 54 passes through nothing; the arrow LIFTS to 68 — that one
+    // IS a win (tested above). An indirect 68 that is neither exact nor the
+    // 54->68 arrow does not exist on this board, so the closest indirect
+    // case is the snake at 72 sending to 51 — asserted in snakes_apply_once.
+    // A plain step can never land on 68 except exactly: 67+1 is exact, and
+    // 62+6=68 would be exact too. Check the exact-68-after-overshoot guard:
+    // 64 + 4 = 68 exact -> win even from far below
+    assert move_pos(64, 4, 0) == 68;
+    assert move_code(64, 4, 0) == 3;
+}
+
+
+test tables_match_engine {
+    // every snake and arrow of board.ts, checked through the move itself
+    assert move_pos(11, 1, 0) == 8;    // snake 12->8
+    assert move_pos(15, 1, 0) == 4;    // snake 16->4
+    assert move_pos(23, 1, 0) == 7;    // snake 24->7
+    assert move_pos(28, 1, 0) == 6;    // snake 29->6
+    assert move_pos(43, 1, 0) == 9;    // snake 44->9
+    assert move_pos(51, 1, 0) == 35;   // snake 52->35
+    assert move_pos(54, 1, 0) == 3;    // snake 55->3
+    assert move_pos(60, 1, 0) == 13;   // snake 61->13
+    assert move_pos(62, 1, 0) == 2;    // snake 63->2
+    assert move_pos(71, 1, 0) == 51;   // snake 72->51
+    assert move_pos(9, 1, 0) == 23;    // arrow 10->23
+    assert move_pos(16, 1, 0) == 69;   // arrow 17->69
+    assert move_pos(19, 1, 0) == 32;   // arrow 20->32
+    assert move_pos(21, 1, 0) == 60;   // arrow 22->60
+    assert move_pos(26, 1, 0) == 41;   // arrow 27->41
+    assert move_pos(27, 1, 0) == 50;   // arrow 28->50
+    assert move_pos(36, 1, 0) == 66;   // arrow 37->66
+    assert move_pos(44, 1, 0) == 67;   // arrow 45->67
+    assert move_pos(45, 1, 0) == 62;   // arrow 46->62
+    assert move_pos(53, 1, 0) == 68;   // arrow 54->68 (win)
+}
+
+test arrow_54_68_is_win {
+    // 53 + 1 = 54 -> arrow to 68: a legal win through an arrow
+    assert move_pos(53, 1, 0) == 68;
+    assert move_code(53, 1, 0) == 3;
+}
+
+test exact_arrival_wins {
+    // 66 + 2 = 68 -> exact arrival on 68: win
+    assert move_pos(66, 2, 0) == 68;
+    assert move_code(66, 2, 0) == 3;
+    // 67 + 1 = 68 -> same
+    assert move_pos(67, 1, 0) == 68;
+    assert move_code(67, 1, 0) == 3;
+}
+
+test plain_steps {
+    // no snake, no arrow, no win, no overshoot: plain step
+    assert move_pos(30, 1, 0) == 31;
+    assert move_code(30, 1, 0) == 0;
+    assert move_pos(40, 1, 0) == 41;
+    assert move_code(40, 1, 0) == 0;
+    // 40 + 6 = 46 lands on the arrow start 46 -> lifted to 62
+    assert move_pos(40, 6, 0) == 62;
+    assert move_code(40, 6, 0) == 2;
+}

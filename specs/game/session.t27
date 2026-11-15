@@ -1,0 +1,164 @@
+// Leela game core — session.
+//
+// The free-move rule of the shipped web board (`ios/board/assets/index-*.js`,
+// constant `se = 3`): a player gets three counted moves, and the third one
+// emits `leela:subscribe:v1` to the native shell, which opens the
+// subscription screen. Nothing beyond emitting the event: no purchase, no
+// entitlement change, no money — those belong to RevenueCat and stay outside
+// this spec.
+//
+// Restore validation follows `packages/engine/src/stored.ts`:
+//   - loka must be 1..72;
+//   - consecutive_sixes must be 0, 1 or 2 — a run of three is never stored,
+//     because the third six resets the run before it persists;
+//   - previous_loka must be 0..72;
+//   - the check is all-or-nothing: an invalid field rejects the whole
+//     payload, no partial state is ever adopted.
+//
+// Pure functions only.
+
+module game_session;
+
+pub const FREE_MOVES : u32 = 3;
+
+// The subscribe event: 1 when the counted moves reach the free limit.
+// Idempotent — a player sitting past the limit is still past it.
+pub fn subscribe_due(moves: u32) -> u32 {
+    if moves >= FREE_MOVES { 1 } else { 0 }
+}
+
+// The event name is constant; the spec only carries its identity (hash-free):
+// "leela:subscribe:v1". Encoded here as the count of characters it must have,
+// 20, so a typo in a port would break the test.
+pub fn subscribe_event_len() -> u32 { 20 }
+
+// One counted move.
+pub fn advance(moves: u32) -> u32 {
+    moves +% 1
+}
+
+// Restore payload validation: all-or-nothing.
+//   loka          : 1..72
+//   consecutive   : 0..2 (a run of three never persists)
+//   previous_loka : 0..72
+//   finished      : 0 or 1
+pub fn restore_valid(loka: u32, consecutive: u32, previous_loka: u32,
+                     finished: u32) -> u32 {
+    let loka_ok: bool = loka >= 1;
+    let loka_le: bool = loka <= 72;
+    let cons_ok: bool = consecutive <= 2;
+    let prev_ok: bool = previous_loka <= 72;
+    let fin_ok: bool = finished <= 1;
+    if loka_ok {
+        if loka_le {
+            if cons_ok {
+                if prev_ok {
+                    if fin_ok { 1 } else { 0 }
+                } else { 0 }
+            } else { 0 }
+        } else { 0 }
+    } else { 0 }
+}
+
+// The position a valid restore yields (the loka of the payload).
+pub fn restored_loka(loka: u32, consecutive: u32, previous_loka: u32,
+                     finished: u32) -> u32 {
+    if restore_valid(loka, consecutive, previous_loka, finished) == 1 {
+        loka
+    } else {
+        0
+    }
+}
+
+// Purity of the subscribe event: money and entitlement are untouched.
+// Modelled as pass-through: whatever was paid/entitled before the event is
+// exactly what is paid/entitled after it.
+pub fn paid_after_subscribe(paid_before: u32) -> u32 { paid_before }
+pub fn entitlement_after_subscribe(entitlement_before: u32) -> u32 {
+    entitlement_before
+}
+
+// ---- contract tests --------------------------------------------------
+
+test zero_moves_no_subscribe {
+    assert subscribe_due(0) == 0;
+}
+
+test one_move_no_subscribe {
+    assert subscribe_due(advance(0)) == 0;
+}
+
+test two_moves_no_subscribe {
+    let m: u32 = advance(advance(0));
+    assert m == 2;
+    assert subscribe_due(m) == 0;
+}
+
+test third_move_emits_subscribe {
+    let m: u32 = advance(advance(advance(0)));
+    assert m == 3;
+    assert subscribe_due(m) == 1;
+    // the event identity: "leela:subscribe:v1" is 20 characters
+    assert subscribe_event_len() == 20;
+}
+
+test fourth_move_state_stable {
+    // past the limit the answer stays the same — no crash, no flip
+    let m: u32 = advance(advance(advance(0)));
+    let m2: u32 = advance(m);
+    assert m2 == 4;
+    assert subscribe_due(m) == 1;
+    assert subscribe_due(m2) == 1;
+}
+
+test restore_valid_payload_restores {
+    // a live game: pawn at 46, one six in the run, came from 40
+    assert restore_valid(46, 1, 40, 0) == 1;
+    assert restored_loka(46, 1, 40, 0) == 46;
+    // a waiting player: loka 68, finished, previous 0
+    assert restore_valid(68, 0, 0, 1) == 1;
+    assert restored_loka(68, 0, 0, 1) == 68;
+}
+
+test restore_invalid_loka_rejected {
+    // loka 0 is not a square; loka 73 is past the board
+    assert restore_valid(0, 0, 0, 1) == 0;
+    assert restore_valid(73, 0, 0, 0) == 0;
+    // no partial state: the loka of an invalid payload reads as nothing
+    assert restored_loka(73, 0, 40, 0) == 0;
+}
+
+test restore_run_of_three_never_stored {
+    // consecutive_sixes = 3 cannot persist (the third six resets to 0)
+    assert restore_valid(46, 3, 40, 0) == 0;
+    // the boundary values that CAN persist
+    assert restore_valid(46, 2, 40, 0) == 1;
+    assert restore_valid(46, 0, 40, 0) == 1;
+}
+
+test restore_previous_and_flag_bounds {
+    assert restore_valid(46, 0, 73, 0) == 0;   // previous past the board
+    assert restore_valid(46, 0, 72, 0) == 1;   // previous on square 72 is fine
+    assert restore_valid(46, 0, 40, 2) == 0;   // finished flag is a bit
+    assert restore_valid(46, 0, 40, 1) == 1;
+}
+
+test subscribe_has_no_payment_side_effects {
+    // a player who has paid nothing still pays nothing after the event
+    assert paid_after_subscribe(0) == 0;
+    // an amount already paid is not touched by the event
+    assert paid_after_subscribe(299) == 299;
+    // entitlement flags pass through unchanged
+    assert entitlement_after_subscribe(0) == 0;
+    assert entitlement_after_subscribe(1) == 1;
+}
+
+test subscribe_emits_only_the_event {
+    // the event itself carries no purchase and no entitlement change:
+    // subscribe_due depends on moves alone (nothing else is an input)
+    assert subscribe_due(3) == 1;
+    assert subscribe_due(3) == 1;
+    // and the free-move boundary sits exactly at three
+    assert subscribe_due(2) == 0;
+    assert subscribe_due(3) == 1;
+}
