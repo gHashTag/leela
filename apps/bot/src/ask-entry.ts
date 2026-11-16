@@ -13,11 +13,63 @@ import {
   type LanguageModel,
 } from '@leela/ai'
 
-const model: LanguageModel = zAI({
-  apiKey: process.env.ZAI_API_KEY as string,
-  model: process.env.ZAI_MODEL,
-  baseUrl: process.env.ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : undefined,
-})
+// Provider selection: AI_PROVIDER=nvidia wins when its key is present;
+// Z.AI stays as the fallback. Both speak the OpenAI chat wire.
+const useNvidia = (): boolean =>
+  process.env.AI_PROVIDER === 'nvidia' && Boolean(process.env.NVIDIA_API_KEY)
+
+const model: LanguageModel = useNvidia()
+  ? ({
+      // OpenAI-compatible: the provider client only needs the base and key.
+      ...zAI({
+        apiKey: process.env.NVIDIA_API_KEY as string,
+        model: process.env.AI_MODEL,
+        baseUrl: process.env.AI_BASE_URL,
+      }),
+      modelId: process.env.AI_MODEL ?? 'nvidia/llama-3.1-70b-instruct',
+    } as LanguageModel)
+  : zAI({
+      apiKey: process.env.ZAI_API_KEY as string,
+      model: process.env.ZAI_MODEL,
+      baseUrl: process.env.ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : undefined,
+    })
+
+function nvidiaStream(apiKey: string): (ask: { system: string; question: string; maxTokens: number; signal?: AbortSignal }) => Promise<AsyncIterable<Streamed>> {
+  const baseUrl = process.env.AI_BASE_URL ?? 'https://integrate.api.nvidia.com/v1'
+  const nvidiaModel = process.env.AI_MODEL ?? 'nvidia/llama-3.1-70b-instruct'
+
+  return async ({ system, question, maxTokens, signal }) => {
+    const upstream = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${apiKey}`,
+        accept: 'text/event-stream',
+      },
+      body: JSON.stringify({
+        model: nvidiaModel,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: question },
+        ],
+        max_tokens: maxTokens,
+        temperature: 0.6,
+        stream: true,
+      }),
+      signal,
+    })
+
+    if (!upstream.ok || !upstream.body) {
+      const detail = upstream.ok ? 'no body' : await upstream.text().catch(() => '')
+      throw new ModelError(
+        `the model refused the request (${upstream.status})${detail ? `: ${detail.slice(0, 200)}` : ''}`,
+        upstream.status,
+      )
+    }
+
+    return deltasOf(upstream.body)
+  }
+}
 
 function zaiStream(apiKey: string): (ask: { system: string; question: string; maxTokens: number; signal?: AbortSignal }) => Promise<AsyncIterable<Streamed>> {
   const baseUrl = process.env.ZAI_PLAN === 'coding' ? ZAI_CODING_BASE_URL : DEFAULT_ZAI_BASE_URL
@@ -93,4 +145,10 @@ async function* deltasOf(body: ReadableStream<Uint8Array>): AsyncIterable<Stream
   }
 }
 
-serveAsk({ model, stream: process.env.ZAI_API_KEY ? zaiStream(process.env.ZAI_API_KEY) : undefined })
+const stream = useNvidia()
+  ? nvidiaStream(process.env.NVIDIA_API_KEY as string)
+  : process.env.ZAI_API_KEY
+    ? zaiStream(process.env.ZAI_API_KEY)
+    : undefined
+
+serveAsk({ model, stream })
