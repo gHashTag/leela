@@ -26,7 +26,7 @@ const model: LanguageModel = useNvidia()
         model: process.env.AI_MODEL,
         baseUrl: process.env.AI_BASE_URL,
       }),
-      modelId: process.env.AI_MODEL ?? 'nvidia/llama-3.1-70b-instruct',
+      modelId: process.env.AI_MODEL ?? 'nvidia/nemotron-3.5-lightning-30b-a3b',
     } as LanguageModel)
   : zAI({
       apiKey: process.env.ZAI_API_KEY as string,
@@ -36,7 +36,7 @@ const model: LanguageModel = useNvidia()
 
 function nvidiaStream(apiKey: string): (ask: { system: string; question: string; maxTokens: number; signal?: AbortSignal }) => Promise<AsyncIterable<Streamed>> {
   const baseUrl = process.env.AI_BASE_URL ?? 'https://integrate.api.nvidia.com/v1'
-  const nvidiaModel = process.env.AI_MODEL ?? 'nvidia/llama-3.1-70b-instruct'
+  const nvidiaModel = process.env.AI_MODEL ?? 'nvidia/nemotron-3.5-lightning-30b-a3b'
 
   return async ({ system, question, maxTokens, signal }) => {
     const upstream = await fetch(`${baseUrl}/chat/completions`, {
